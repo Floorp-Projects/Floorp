@@ -45,6 +45,9 @@ private:
   MaybeExecuteCallback(nsIInputStreamCallback* aCallback,
                        nsIEventTarget* aEventTarget);
 
+  nsresult
+  EnsureAsyncRemoteStream();
+
   bool
   IsFileMetadata() const;
 
@@ -72,6 +75,7 @@ private:
   } mState;
 
   nsCOMPtr<nsIInputStream> mRemoteStream;
+  nsCOMPtr<nsIAsyncInputStream> mAsyncRemoteStream;
 
   // These 2 values are set only if mState is ePending.
   nsCOMPtr<nsIInputStreamCallback> mCallback;

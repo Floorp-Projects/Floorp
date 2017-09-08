@@ -9,11 +9,16 @@
 #include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/InputStreamParams.h"
 #include "nsIAsyncInputStream.h"
+#include "nsIStreamTransportService.h"
+#include "nsITransport.h"
+#include "nsNetCID.h"
 
 namespace mozilla {
 namespace dom {
 
 namespace {
+
+static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 class CallbackRunnable final : public CancelableRunnable
 {
@@ -108,7 +113,14 @@ IPCBlobInputStream::Available(uint64_t* aLength)
 
   if (mState == eRunning) {
     MOZ_ASSERT(mRemoteStream);
-    return mRemoteStream->Available(aLength);
+
+    nsresult rv = EnsureAsyncRemoteStream();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(mAsyncRemoteStream);
+    return mAsyncRemoteStream->Available(aLength);
   }
 
   MOZ_ASSERT(mState == eClosed);
@@ -124,7 +136,15 @@ IPCBlobInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
   }
 
   if (mState == eRunning) {
-    return mRemoteStream->Read(aBuffer, aCount, aReadCount);
+    MOZ_ASSERT(mRemoteStream);
+
+    nsresult rv = EnsureAsyncRemoteStream();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(mAsyncRemoteStream);
+    return mAsyncRemoteStream->Read(aBuffer, aCount, aReadCount);
   }
 
   MOZ_ASSERT(mState == eClosed);
@@ -141,7 +161,15 @@ IPCBlobInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
   }
 
   if (mState == eRunning) {
-    return mRemoteStream->ReadSegments(aWriter, aClosure, aCount, aResult);
+    MOZ_ASSERT(mRemoteStream);
+
+    nsresult rv = EnsureAsyncRemoteStream();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(mAsyncRemoteStream);
+    return mAsyncRemoteStream->ReadSegments(aWriter, aClosure, aCount, aResult);
   }
 
   MOZ_ASSERT(mState == eClosed);
@@ -161,6 +189,11 @@ IPCBlobInputStream::Close()
   if (mActor) {
     mActor->ForgetStream(this);
     mActor = nullptr;
+  }
+
+  if (mAsyncRemoteStream) {
+    mAsyncRemoteStream->Close();
+    mAsyncRemoteStream = nullptr;
   }
 
   if (mRemoteStream) {
@@ -287,35 +320,26 @@ IPCBlobInputStream::MaybeExecuteCallback(nsIInputStreamCallback* aCallback,
   MOZ_ASSERT(mState == eRunning);
   MOZ_ASSERT(mRemoteStream);
 
-  // If the stream supports nsIAsyncInputStream, we need to call its AsyncWait
-  // and wait for OnInputStreamReady.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mRemoteStream);
-  if (asyncStream) {
-    // If the callback has been already set, we return an error.
-    if (mCallback && aCallback) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mCallback = aCallback;
-    mCallbackEventTarget = aCallbackEventTarget;
-
-    if (!mCallback) {
-      return NS_OK;
-    }
-
-    RefPtr<nsIEventTarget> target = GetCurrentThreadEventTarget();
-    return asyncStream->AsyncWait(this, 0, 0, target);
+  // If the callback has been already set, we return an error.
+  if (mCallback && aCallback) {
+    return NS_ERROR_FAILURE;
   }
 
-  MOZ_ASSERT(!mCallback);
-  MOZ_ASSERT(!mCallbackEventTarget);
+  mCallback = aCallback;
+  mCallbackEventTarget = aCallbackEventTarget;
 
-  if (!aCallback) {
+  if (!mCallback) {
     return NS_OK;
   }
 
-  CallbackRunnable::Execute(aCallback, aCallbackEventTarget, this);
-  return NS_OK;
+  nsresult rv = EnsureAsyncRemoteStream();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(mAsyncRemoteStream);
+
+  return mAsyncRemoteStream->AsyncWait(this, 0, 0, aCallbackEventTarget);
 }
 
 // nsIInputStreamCallback
@@ -329,18 +353,20 @@ IPCBlobInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
   }
 
   MOZ_ASSERT(mState == eRunning);
-  MOZ_ASSERT(mRemoteStream == aStream);
+  MOZ_ASSERT(mAsyncRemoteStream == aStream);
 
   // The callback has been canceled in the meantime.
   if (!mCallback) {
     return NS_OK;
   }
 
-  CallbackRunnable::Execute(mCallback, mCallbackEventTarget, this);
+  nsCOMPtr<nsIInputStreamCallback> callback;
+  callback.swap(mCallback);
 
-  mCallback = nullptr;
-  mCallbackEventTarget = nullptr;
-
+  nsCOMPtr<nsIEventTarget> callbackEventTarget;
+  callbackEventTarget.swap(mCallbackEventTarget);
+ 
+  CallbackRunnable::Execute(callback, callbackEventTarget, this);
   return NS_OK;
 }
 
@@ -412,6 +438,62 @@ IPCBlobInputStream::GetFileDescriptor(PRFileDesc** aRetval)
   }
 
   return fileMetadata->GetFileDescriptor(aRetval);
+}
+
+nsresult
+IPCBlobInputStream::EnsureAsyncRemoteStream()
+{
+  if (!mRemoteStream) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // We already have an async remote stream.
+  if (mAsyncRemoteStream) {
+    return NS_OK;
+  }
+
+  // If the stream is blocking, we want to make it unblocking using a pipe.
+  bool nonBlocking = false;
+  nsresult rv = mRemoteStream->IsNonBlocking(&nonBlocking);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mRemoteStream);
+  if (!asyncStream || !nonBlocking) {
+    nsCOMPtr<nsIStreamTransportService> sts =
+      do_GetService(kStreamTransportServiceCID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsITransport> transport;
+    rv = sts->CreateInputTransport(mRemoteStream,
+                                   /* aStartOffset */ 0,
+                                   /* aReadLimit */ -1,
+                                   /* aCloseWhenDone */ true,
+                                   getter_AddRefs(transport));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIInputStream> wrapper;
+    rv = transport->OpenInputStream(/* aFlags */ 0,
+                                    /* aSegmentSize */ 0,
+                                    /* aSegmentCount */ 0,
+                                    getter_AddRefs(wrapper));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    asyncStream = do_QueryInterface(wrapper);
+  }
+
+  MOZ_ASSERT(asyncStream);
+  mAsyncRemoteStream = asyncStream;
+
+  return NS_OK;
+
 }
 
 } // namespace dom
