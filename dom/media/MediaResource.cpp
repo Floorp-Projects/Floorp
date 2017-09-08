@@ -150,17 +150,20 @@ ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
 }
 
 nsresult
-ChannelMediaResource::Listener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
-                                                       nsIChannel* aNewChannel,
-                                                       uint32_t aFlags,
-                                                       nsIAsyncVerifyRedirectCallback* cb)
+ChannelMediaResource::Listener::AsyncOnChannelRedirect(
+  nsIChannel* aOld,
+  nsIChannel* aNew,
+  uint32_t aFlags,
+  nsIAsyncVerifyRedirectCallback* cb)
 {
   nsresult rv = NS_OK;
-  if (mResource)
-    rv = mResource->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+  if (mResource) {
+    rv = mResource->OnChannelRedirect(aOld, aNew, aFlags, mOffset);
+  }
 
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
@@ -421,12 +424,14 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
 }
 
 nsresult
-ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew,
-                                        uint32_t aFlags)
+ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
+                                        nsIChannel* aNew,
+                                        uint32_t aFlags,
+                                        int64_t aOffset)
 {
   mChannel = aNew;
   mSuspendAgent.NotifyChannelOpened(mChannel);
-  return SetupChannelHeaders(GetOffset());
+  return SetupChannelHeaders(aOffset);
 }
 
 nsresult
@@ -515,7 +520,7 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   }
 
   MOZ_ASSERT(GetOffset() == 0, "Who set offset already?");
-  mListener = new Listener(this);
+  mListener = new Listener(this, 0);
   *aStreamListener = mListener;
   NS_ADDREF(*aStreamListener);
   return NS_OK;
@@ -528,7 +533,7 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
   MOZ_ASSERT(mChannel);
   MOZ_ASSERT(!mListener, "Listener should have been removed by now");
 
-  mListener = new Listener(this);
+  mListener = new Listener(this, aOffset);
   nsresult rv = mChannel->SetNotificationCallbacks(mListener.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
