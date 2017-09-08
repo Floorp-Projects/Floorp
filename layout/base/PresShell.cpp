@@ -2036,7 +2036,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
                                                           nsITimer::TYPE_ONE_SHOT,
                                                           "AsyncResizeEventCallback");
       }
-    } else {
+    } else if (mPresContext->ShouldFireResizeEvent()) {
       RefPtr<nsRunnableMethod<PresShell>> event = NewRunnableMethod(
         "PresShell::FireResizeEvent", this, &PresShell::FireResizeEvent);
       nsresult rv = mDocument->Dispatch(TaskCategory::Other,
@@ -2044,6 +2044,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
       if (NS_SUCCEEDED(rv)) {
         mResizeEvent = Move(event);
         SetNeedStyleFlush();
+        mPresContext->WillFireResizeEvent();
       }
     }
   }
