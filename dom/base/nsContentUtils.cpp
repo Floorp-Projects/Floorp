@@ -1635,7 +1635,7 @@ nsContentUtils::SandboxFlagsToString(uint32_t aFlags, nsAString& aString)
 #define SANDBOX_KEYWORD(string, atom, flags)                \
   if (!(aFlags & (flags))) {                                \
     if (!aString.IsEmpty()) {                               \
-      aString.Append(NS_LITERAL_STRING(" "));               \
+      aString.AppendLiteral(u" ");                          \
     }                                                       \
     aString.Append(nsDependentAtomString(nsGkAtoms::atom)); \
   }
