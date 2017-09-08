@@ -530,7 +530,7 @@ DocAccessible::RelativeBounds(nsIFrame** aRelativeFrame) const
       return nsRect();
 
     nsRect scrollPort;
-    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollableExternal();
+    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
       scrollPort = sf->GetScrollPortRect();
     } else {
