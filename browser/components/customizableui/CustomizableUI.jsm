@@ -40,6 +40,7 @@ const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
 const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
 const kPrefUIDensity                 = "browser.uidensity";
 const kPrefAutoTouchMode             = "browser.touchmode.auto";
+const kPrefAutoHideDownloadsButton   = "browser.download.autohideButton";
 
 const kExpectedWindowURL = "chrome://browser/content/browser.xul";
 
@@ -177,7 +178,7 @@ var CustomizableUIInternal = {
     this.addListener(this);
     this._defineBuiltInWidgets();
     this.loadSavedState();
-    this._introduceNewBuiltinWidgets();
+    this._updateForNewVersion();
     this._markObsoleteBuiltinButtonsSeen();
 
     this.registerArea(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, {
@@ -262,7 +263,7 @@ var CustomizableUIInternal = {
     }
   },
 
-  _introduceNewBuiltinWidgets() {
+  _updateForNewVersion() {
     // We should still enter even if gSavedState.currentVersion >= kVersion
     // because the per-widget pref facility is independent of versioning.
     if (!gSavedState) {
@@ -2597,6 +2598,7 @@ var CustomizableUIInternal = {
       gUIStateBeforeReset.uiDensity = Services.prefs.getIntPref(kPrefUIDensity);
       gUIStateBeforeReset.autoTouchMode = Services.prefs.getBoolPref(kPrefAutoTouchMode);
       gUIStateBeforeReset.currentTheme = LightweightThemeManager.currentTheme;
+      gUIStateBeforeReset.autoHideDownloadsButton = Services.prefs.getBoolPref(kPrefAutoHideDownloadsButton);
       gUIStateBeforeReset.newElementCount = gNewElementCount;
     } catch (e) { }
 
@@ -2606,6 +2608,7 @@ var CustomizableUIInternal = {
     Services.prefs.clearUserPref(kPrefDrawInTitlebar);
     Services.prefs.clearUserPref(kPrefUIDensity);
     Services.prefs.clearUserPref(kPrefAutoTouchMode);
+    Services.prefs.clearUserPref(kPrefAutoHideDownloadsButton);
     LightweightThemeManager.currentTheme = null;
     gNewElementCount = 0;
     log.debug("State reset");
@@ -2674,11 +2677,10 @@ var CustomizableUIInternal = {
     }
     gUndoResetting = true;
 
-    let uiCustomizationState = gUIStateBeforeReset.uiCustomizationState;
-    let drawInTitlebar = gUIStateBeforeReset.drawInTitlebar;
-    let currentTheme = gUIStateBeforeReset.currentTheme;
-    let uiDensity = gUIStateBeforeReset.uiDensity;
-    let autoTouchMode = gUIStateBeforeReset.autoTouchMode;
+    const {
+      uiCustomizationState, drawInTitlebar, currentTheme, uiDensity,
+      autoTouchMode, autoHideDownloadsButton,
+    } = gUIStateBeforeReset;
     gNewElementCount = gUIStateBeforeReset.newElementCount;
 
     // Need to clear the previous state before setting the prefs
@@ -2689,6 +2691,7 @@ var CustomizableUIInternal = {
     Services.prefs.setBoolPref(kPrefDrawInTitlebar, drawInTitlebar);
     Services.prefs.setIntPref(kPrefUIDensity, uiDensity);
     Services.prefs.setBoolPref(kPrefAutoTouchMode, autoTouchMode);
+    Services.prefs.setBoolPref(kPrefAutoHideDownloadsButton, autoHideDownloadsButton);
     LightweightThemeManager.currentTheme = currentTheme;
     this.loadSavedState();
     // If the user just customizes toolbar/titlebar visibility, gSavedState will be null
