@@ -2079,7 +2079,7 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    if (strArg->mightBeType(MIRType::Object))
+    if (strArg->type() != MIRType::String && strArg->type() != MIRType::Value)
         return InliningStatus_NotInlined;
 
     if (lastIndexArg->type() != MIRType::Int32)
@@ -2123,7 +2123,7 @@ IonBuilder::inlineRegExpSearcher(CallInfo& callInfo)
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    if (strArg->mightBeType(MIRType::Object))
+    if (strArg->type() != MIRType::String && strArg->type() != MIRType::Value)
         return InliningStatus_NotInlined;
 
     if (lastIndexArg->type() != MIRType::Int32)
@@ -2167,7 +2167,7 @@ IonBuilder::inlineRegExpTester(CallInfo& callInfo)
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    if (strArg->mightBeType(MIRType::Object))
+    if (strArg->type() != MIRType::String && strArg->type() != MIRType::Value)
         return InliningStatus_NotInlined;
 
     if (lastIndexArg->type() != MIRType::Int32)
