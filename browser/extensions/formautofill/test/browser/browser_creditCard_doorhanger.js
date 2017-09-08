@@ -51,7 +51,6 @@ add_task(async function test_submit_creditCard_saved() {
 
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
-      await TestUtils.topicObserved("formautofill-storage-changed");
     }
   );
 

@@ -90,7 +90,7 @@ function getTempFile(leafName) {
   return file;
 }
 
-async function initProfileStorage(fileName, records) {
+async function initProfileStorage(fileName, records, collectionName = "addresses") {
   let {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
   let path = getTempFile(fileName).path;
   let profileStorage = new ProfileStorage(path);
@@ -103,7 +103,7 @@ async function initProfileStorage(fileName, records) {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
   for (let record of records) {
-    do_check_true(profileStorage.addresses.add(record));
+    do_check_true(profileStorage[collectionName].add(record));
     await onChanged;
   }
   await profileStorage._saveImmediately();
