@@ -573,9 +573,6 @@ protected:
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
   bool               mReopenOnError;
-  // When this flag is set, we should not report the next close of the
-  // channel.
-  bool               mIgnoreClose;
 
   // Any thread access
   MediaCacheStream mCacheStream;
