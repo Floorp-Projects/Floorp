@@ -524,8 +524,8 @@ function ignoreContents(entry)
     if (entry.isSafeArgument(2)) {
         var secondArgWhitelist = [
             /nsStringBuffer::ToString/,
-            /AppendUTF8toUTF16/,
-            /AppendASCIItoUTF16/,
+            /AppendUTF\d+toUTF\d+/,
+            /AppendASCIItoUTF\d+/,
         ];
         if (entry.matches(secondArgWhitelist))
             return true;
