@@ -920,7 +920,7 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
 
     nsCOMPtr<nsIURI> wellKnown;
     nsAutoCString uri(origin);
-    uri.Append(NS_LITERAL_CSTRING("/.well-known/http-opportunistic"));
+    uri.AppendLiteral("/.well-known/http-opportunistic");
     NS_NewURI(getter_AddRefs(wellKnown), uri);
 
     auto *checker = new WellKnownChecker(wellKnown, origin, caps, ci, map);
