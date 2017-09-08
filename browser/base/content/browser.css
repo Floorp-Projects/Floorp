@@ -184,6 +184,7 @@ tabbrowser {
   transition: transform 200ms var(--animation-easing-function);
 }
 
+#TabsToolbar[movingtab] > .chromeclass-toolbar-additional,
 #TabsToolbar[movingtab] > .tabbrowser-tabs {
   padding-bottom: 15px;
 }
