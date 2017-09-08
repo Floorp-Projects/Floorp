@@ -1095,18 +1095,20 @@ MOZ_ALWAYS_INLINE const char*
 GetObjectClassName(JSContext* cx, HandleObject obj);
 
 /*
- * Return an object that may be used as `this` in place of obj. For most
- * objects this just returns obj.
+ * Prepare a |this| value to be returned to script. This includes replacing
+ * Windows with their corresponding WindowProxy.
  *
- * Some JSObjects shouldn't be exposed directly to script. This includes (at
- * least) WithEnvironmentObjects and Window objects. However, since both of
- * those can be on scope chains, we sometimes would expose those as `this` if
- * we were not so vigilant about calling GetThisValue where appropriate.
- *
- * See comments at ComputeImplicitThis.
+ * Helpers are also provided to first extract the |this| from specific
+ * types of environment.
  */
 Value
 GetThisValue(JSObject* obj);
+
+Value
+GetThisValueOfLexical(JSObject* env);
+
+Value
+GetThisValueOfWith(JSObject* env);
 
 /* * */
 
