@@ -604,12 +604,12 @@ function isZero(exp)
 // which are safe using a sorted array, so that this can be propagated down the
 // stack. Zero is |this|, and arguments are indexed starting at one.
 
-function WorklistEntry(name, safeArguments, stack)
+function WorklistEntry(name, safeArguments, stack, parameterNames)
 {
     this.name = name;
     this.safeArguments = safeArguments;
     this.stack = stack;
-    this.parameterNames = {};
+    this.parameterNames = parameterNames;
 }
 
 WorklistEntry.prototype.readable = function()
@@ -944,7 +944,7 @@ function process(entry, body, addCallee)
             switch (callee.kind) {
             case "direct":
                 var safeArguments = getEdgeSafeArguments(entry, edge, callee.name);
-                addCallee(new CallSite(callee.name, safeArguments, location, entry.parameterNames));
+                addCallee(new CallSite(callee.name, safeArguments, location, {}));
                 break;
               case "resolved-field":
                 break;
@@ -1040,7 +1040,8 @@ function maybeProcessMissingFunction(entry, addCallee)
 function processRoot(name)
 {
     var safeArguments = [];
-    var worklist = [new WorklistEntry(name, safeArguments, [new CallSite(name, safeArguments, null, {})])];
+    var parameterNames = {};
+    var worklist = [new WorklistEntry(name, safeArguments, [new CallSite(name, safeArguments, null, parameterNames)], parameterNames)];
 
     while (worklist.length > 0) {
         var entry = worklist.pop();
@@ -1081,7 +1082,7 @@ function processRoot(name)
         for (var callee of callees) {
             if (!ignoreCallEdge(entry, callee.callee)) {
                 var nstack = [callee, ...entry.stack];
-                worklist.push(new WorklistEntry(callee.callee, callee.safeArguments, nstack));
+                worklist.push(new WorklistEntry(callee.callee, callee.safeArguments, nstack, callee.parameterNames));
             }
         }
     }
