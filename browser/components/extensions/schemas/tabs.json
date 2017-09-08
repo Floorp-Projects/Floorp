@@ -748,6 +748,11 @@
                 "minimum": 0,
                 "optional": true,
                 "description": "The ID of the tab that opened this tab. If specified, the opener tab must be in the same window as this tab."
+              },
+              "loadReplace": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the load should replace the current history entry for the tab."
               }
             }
           },
