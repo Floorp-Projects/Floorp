@@ -162,13 +162,15 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
   Epoch epoch = mEpochs.FirstElement();
   if (!epoch.IsLabeled()) {
     QueueEntry entry = mUnlabeled.FirstElement();
-    if (IsReadyToRun(entry.mRunnable, nullptr)) {
-      PopEpoch();
-      mUnlabeled.Pop();
-      MOZ_ASSERT(entry.mEpochNumber == epoch.mEpochNumber);
-      MOZ_ASSERT(entry.mRunnable.get());
-      return entry.mRunnable.forget();
+    if (!IsReadyToRun(entry.mRunnable, nullptr)) {
+      return nullptr;
     }
+
+    PopEpoch();
+    mUnlabeled.Pop();
+    MOZ_ASSERT(entry.mEpochNumber == epoch.mEpochNumber);
+    MOZ_ASSERT(entry.mRunnable.get());
+    return entry.mRunnable.forget();
   }
 
   if (!sCurrentSchedulerGroup) {
