@@ -183,6 +183,7 @@ class nsWindowSizes
   macro(Style, mLayoutServoStyleSetsStylistRevalidationSelectors) \
   macro(Style, mLayoutServoStyleSetsStylistOther) \
   macro(Style, mLayoutServoStyleSetsOther) \
+  macro(Style, mLayoutServoElementDataObjects) \
   macro(Other, mLayoutTextRunsSize) \
   macro(Other, mLayoutPresContextSize) \
   macro(Other, mLayoutFramePropertiesSize) \
