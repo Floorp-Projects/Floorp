@@ -12745,10 +12745,6 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
                                            nsIFrame* aPrevSibling,
                                            InsertionKind aInsertionKind)
 {
-  // FIXME(emilio): Use the argument instead of always reconstruct async
-  // (to be landed in a separate bug, see bug 1395719 comment 17).
-  aInsertionKind = InsertionKind::Async;
-
   if (aItems.IsEmpty()) {
     return false;
   }
