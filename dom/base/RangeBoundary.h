@@ -190,6 +190,19 @@ public:
     return mParent && (mRef || mOffset.isSome());
   }
 
+  bool
+  IsSetAndValid() const
+  {
+    if (!IsSet()) {
+      return false;
+    }
+
+    if (Ref()) {
+      return Ref()->GetParentNode() == Container();
+    }
+    return Offset() <= Container()->Length();
+  }
+
   // Convenience methods for switching between the two types
   // of RangeBoundary.
   RangeBoundaryBase<nsINode*, nsIContent*>
