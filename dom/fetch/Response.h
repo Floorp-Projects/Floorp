@@ -105,7 +105,10 @@ public:
   Headers* Headers_();
 
   void
-  GetBody(nsIInputStream** aStream) { return mInternalResponse->GetBody(aStream); }
+  GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr)
+  {
+    mInternalResponse->GetBody(aStream, aBodyLength);
+  }
 
   using FetchBody::GetBody;
 
