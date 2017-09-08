@@ -16,3 +16,8 @@
 #permissionsBox > richlistitem {
   min-height: 35px;
 }
+
+.website-status {
+  margin: 1px;
+  margin-inline-end: 5px;
+}
