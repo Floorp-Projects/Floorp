@@ -112,6 +112,16 @@ struct ImageDescriptor: public wr::WrImageDescriptor {
     stride = aByteStride;
     is_opaque = gfx::IsOpaqueFormat(aFormat);
   }
+
+  ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride, gfx::SurfaceFormat aFormat, bool opaque)
+  {
+    format = wr::SurfaceFormatToImageFormat(aFormat).value();
+    width = aSize.width;
+    height = aSize.height;
+    stride = aByteStride;
+    is_opaque = opaque;
+  }
+
 };
 
 // Whenever possible, use wr::WindowId instead of manipulating uint64_t.
