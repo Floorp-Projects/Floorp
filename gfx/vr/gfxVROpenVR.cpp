@@ -57,7 +57,7 @@ VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
   MOZ_COUNT_CTOR_INHERITED(VRDisplayOpenVR, VRDisplayHost);
 
   mDisplayInfo.mDisplayName.AssignLiteral("OpenVR HMD");
-  mDisplayInfo.mIsConnected = true;
+  mDisplayInfo.mIsConnected = mVRSystem->IsTrackedDeviceConnected(::vr::k_unTrackedDeviceIndex_Hmd);
   mDisplayInfo.mIsMounted = false;
   mDisplayInfo.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None |
                                   VRDisplayCapabilityFlags::Cap_Orientation |
@@ -65,6 +65,7 @@ VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
                                   VRDisplayCapabilityFlags::Cap_External |
                                   VRDisplayCapabilityFlags::Cap_Present |
                                   VRDisplayCapabilityFlags::Cap_StageParameters;
+  mIsHmdPresent = ::vr::VR_IsHmdPresent();
 
   ::vr::ETrackedPropertyError err;
   bool bHasProximitySensor = mVRSystem->GetBoolTrackedDeviceProperty(::vr::k_unTrackedDeviceIndex_Hmd, ::vr::Prop_ContainsProximitySensor_Bool, &err);
@@ -174,24 +175,44 @@ VRDisplayOpenVR::ZeroSensor()
   UpdateStageParameters();
 }
 
+bool
+VRDisplayOpenVR::GetIsHmdPresent()
+{
+  return mIsHmdPresent;
+}
+
 void
 VRDisplayOpenVR::PollEvents()
 {
   ::vr::VREvent_t event;
-  while (mVRSystem->PollNextEvent(&event, sizeof(event))) {
+  while (mVRSystem && mVRSystem->PollNextEvent(&event, sizeof(event))) {
     switch (event.eventType) {
       case ::vr::VREvent_TrackedDeviceUserInteractionStarted:
-        mDisplayInfo.mIsMounted = true;
+        if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
+          mDisplayInfo.mIsMounted = true;
+        }
         break;
       case ::vr::VREvent_TrackedDeviceUserInteractionEnded:
-        mDisplayInfo.mIsMounted = false;
+        if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
+          mDisplayInfo.mIsMounted = false;
+        }
+        break;
+      case ::vr::EVREventType::VREvent_TrackedDeviceActivated:
+        if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
+          mDisplayInfo.mIsConnected = true;
+        }
+        break;
+      case ::vr::EVREventType::VREvent_TrackedDeviceDeactivated:
+        if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
+          mDisplayInfo.mIsConnected = false;
+        }
         break;
       case ::vr::EVREventType::VREvent_DriverRequestedQuit:
       case ::vr::EVREventType::VREvent_Quit:
       case ::vr::EVREventType::VREvent_ProcessQuit:
       case ::vr::EVREventType::VREvent_QuitAcknowledged:
       case ::vr::EVREventType::VREvent_QuitAborted_UserPrompt:
-        mDisplayInfo.mIsConnected = false;
+        mIsHmdPresent = false;
         break;
       default:
         // ignore
@@ -378,9 +399,8 @@ VRDisplayOpenVR::SubmitFrame(MacIOSurface* aMacIOSurface,
 void
 VRDisplayOpenVR::NotifyVSync()
 {
-  // We update mIsConneced once per frame.
-  mDisplayInfo.mIsConnected = ::vr::VR_IsHmdPresent();
-
+  // We check if HMD is available once per frame.
+  mIsHmdPresent = ::vr::VR_IsHmdPresent();
   // Make sure we respond to OpenVR events even when not presenting
   PollEvents();
 
@@ -591,7 +611,7 @@ bool
 VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
   if (!::vr::VR_IsHmdPresent() ||
-      (mOpenVRHMD && !mOpenVRHMD->GetIsConnected())) {
+      (mOpenVRHMD && !mOpenVRHMD->GetIsHmdPresent())) {
     // OpenVR runtime could be quit accidentally,
     // and we make it re-initialize.
     mOpenVRHMD = nullptr;
