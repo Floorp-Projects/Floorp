@@ -1409,7 +1409,7 @@ js::proxy_revocable(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(proxyVal.toObject().is<ProxyObject>());
 
     RootedObject revoker(cx, NewFunctionByIdWithReserved(cx, RevokeProxy, 0, 0,
-                         AtomToId(cx->names().revoke)));
+                         NameToId(cx->names().revoke)));
     if (!revoker)
         return false;
 
