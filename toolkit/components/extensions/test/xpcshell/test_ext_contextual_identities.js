@@ -4,6 +4,18 @@ do_get_profile();
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://modules/AddonManager.jsm");
+
+function waitForPrefChange(pref) {
+  return new Promise(resolve => {
+    function observeChange() {
+      Services.prefs.removeObserver(pref, observeChange);
+      resolve();
+    }
+
+    Services.prefs.addObserver(pref, observeChange);
+  });
+}
+
 add_task(async function startup() {
   await ExtensionTestUtils.startAddonManager();
 });
@@ -207,7 +219,11 @@ add_task(async function test_contextualIdentity_with_permissions() {
   await extension.startup();
   await extension.awaitFinish("contextualIdentities");
   equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
+  const prefChange = waitForPrefChange(CONTAINERS_PREF);
   await extension.unload();
+  if (initial === false) {
+    await prefChange;
+  }
   equal(Services.prefs.getBoolPref(CONTAINERS_PREF), initial, "Pref should now be initial state");
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
@@ -232,17 +248,6 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
         },
         permissions: ["contextualIdentities"],
       },
-    });
-  }
-
-  function waitForPrefChange(pref) {
-    return new Promise(resolve => {
-      function observeChange() {
-        Services.prefs.removeObserver(pref, observeChange);
-        resolve();
-      }
-
-      Services.prefs.addObserver(pref, observeChange);
     });
   }
 
