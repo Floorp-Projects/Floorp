@@ -22,7 +22,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream
                                , public nsIInputStreamCallback
                                , public nsICloneableInputStream
                                , public nsIIPCSerializableInputStream
-                               , public nsIFileMetadata
+                               , public nsIAsyncFileMetadata
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -32,6 +32,7 @@ public:
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSIFILEMETADATA
+  NS_DECL_NSIASYNCFILEMETADATA
 
   explicit IPCBlobInputStream(IPCBlobInputStreamChild* aActor);
 
@@ -42,14 +43,11 @@ private:
   ~IPCBlobInputStream();
 
   nsresult
-  MaybeExecuteCallback(nsIInputStreamCallback* aCallback,
-                       nsIEventTarget* aEventTarget);
+  MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCallback,
+                                  nsIEventTarget* aEventTarget);
 
   nsresult
   EnsureAsyncRemoteStream();
-
-  bool
-  IsFileMetadata() const;
 
   RefPtr<IPCBlobInputStreamChild> mActor;
 
@@ -78,8 +76,12 @@ private:
   nsCOMPtr<nsIAsyncInputStream> mAsyncRemoteStream;
 
   // These 2 values are set only if mState is ePending.
-  nsCOMPtr<nsIInputStreamCallback> mCallback;
-  nsCOMPtr<nsIEventTarget> mCallbackEventTarget;
+  nsCOMPtr<nsIInputStreamCallback> mInputStreamCallback;
+  nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget;
+
+  // These 2 values are set only if mState is ePending.
+  nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback;
+  nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget;
 };
 
 } // namespace dom
