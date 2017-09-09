@@ -489,11 +489,7 @@ class MessageManagerProxy {
     this.listeners = new DefaultMap(() => new Map());
 
     if (target instanceof Ci.nsIMessageSender) {
-      Object.defineProperty(this, "messageManager", {
-        value: target,
-        configurable: true,
-        writable: true,
-      });
+      this.messageManager = target;
     } else {
       this.addListeners(target);
     }
@@ -511,9 +507,8 @@ class MessageManagerProxy {
     if (this.eventTarget) {
       this.removeListeners(this.eventTarget);
       this.eventTarget = null;
-    } else {
-      this.messageManager = null;
     }
+    this.messageManager = null;
   }
 
   /**
@@ -541,9 +536,6 @@ class MessageManagerProxy {
    *        may change during the life of the proxy object, so should
    *        not be stored elsewhere.
    */
-  get messageManager() {
-    return this.eventTarget && this.eventTarget.messageManager;
-  }
 
   /**
    * Sends a message on the proxied message manager.
@@ -622,11 +614,12 @@ class MessageManagerProxy {
   addListeners(target) {
     target.addEventListener("SwapDocShells", this);
 
-    for (let {message, listener, listenWhenClosed} of this.iterListeners()) {
-      target.addMessageListener(message, listener, listenWhenClosed);
-    }
-
     this.eventTarget = target;
+    this.messageManager = target.messageManager;
+
+    for (let {message, listener, listenWhenClosed} of this.iterListeners()) {
+      this.messageManager.addMessageListener(message, listener, listenWhenClosed);
+    }
   }
 
   /**
@@ -640,7 +633,7 @@ class MessageManagerProxy {
     target.removeEventListener("SwapDocShells", this);
 
     for (let {message, listener} of this.iterListeners()) {
-      target.removeMessageListener(message, listener);
+      this.messageManager.removeMessageListener(message, listener);
     }
   }
 
