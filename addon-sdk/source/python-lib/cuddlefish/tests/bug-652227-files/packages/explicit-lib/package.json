@@ -1,4 +1,0 @@
-{
-  "lib": "./alt2-lib",
-  "loader": "alt2-lib/loader.js"
-}
