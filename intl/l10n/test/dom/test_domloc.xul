@@ -16,7 +16,7 @@
   const { MessageContext } =
     Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
 
-  function * generateMessages(locales, resourceIds) {
+  async function * generateMessages(locales, resourceIds) {
     const mc = new MessageContext(locales);
     mc.addMessages(`
 file-menu
