@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <script type="text/javascript" src="u2futil.js"></script>
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+function keyHandleFromRegResponse(aRegResponse) {
+  // Parse the response data from the U2F token
+  var registrationData = base64ToBytesUrlSafe(aRegResponse.registrationData);
+  local_is(registrationData[0], 0x05, "Reserved byte is correct")
+
+  var keyHandleLength = registrationData[66];
+  var keyHandleBytes = registrationData.slice(67, 67 + keyHandleLength);
+
+  return {
+    version: "U2F_V2",
+    keyHandle: bytesToBase64UrlSafe(keyHandleBytes),
+  };
+}
+
+local_expectThisManyTests(1);
+
+// Ensure the SpecialPowers push worked properly
+local_isnot(window.u2f, undefined, "U2F API endpoint must exist");
+
+var challenge = new Uint8Array(16);
+window.crypto.getRandomValues(challenge);
+
+var regRequest = {
+  version: "U2F_V2",
+  challenge: bytesToBase64UrlSafe(challenge),
+};
+
+var testState = {
+  key1: null,
+  key2: null,
+}
+
+// Get two valid keys and present them
+window.u2f.register(window.location.origin, [regRequest], [], function(aRegResponse) {
+  testState.key1 = keyHandleFromRegResponse(aRegResponse);
+  registerSecondKey();
+});
+
+// Get the second key...
+// It's OK to repeat the regRequest; not material for this test
+function registerSecondKey() {
+  window.u2f.register(window.location.origin, [regRequest], [], function(aRegResponse) {
+    testState.key2 = keyHandleFromRegResponse(aRegResponse);
+
+    registerWithInvalidAndValidKey();
+  });
+}
+
+function registerWithInvalidAndValidKey() {
+  window.u2f.register(window.location.origin, [regRequest],
+                      [invalidKey, testState.key1], function(aRegResponse) {
+    // Expect a failure response since key1 is already registered
+    local_is(aRegResponse.errorCode, 4, "The register should have skipped since there was a valid key");
+
+    testSignSingleKey();
+  });
+}
+
+// It should also work with just one key
+function testSignSingleKey() {
+  window.u2f.sign(window.location.origin, bytesToBase64UrlSafe(challenge),
+                  [testState.key1], function(aSignResponse) {
+    local_is(aSignResponse.errorCode, 0, "The signing did not error with one key");
+    local_isnot(aSignResponse.clientData, undefined, "The signing provided clientData with one key");
+
+    testSignDual();
+  });
+}
+
+function testSignDual() {
+  // It's OK to sign with either one
+  window.u2f.sign(window.location.origin, bytesToBase64UrlSafe(challenge),
+                  [testState.key1, testState.key2], function(aSignResponse) {
+    local_is(aSignResponse.errorCode, 0, "The signing did not error with two keys");
+    local_isnot(aSignResponse.clientData, undefined, "The signing provided clientData with two keys");
+
+    testSignWithInvalidKey();
+  });
+}
+
+// Just a key that came from a random profile; syntactically valid but not
+// unwrappable.
+var invalidKey = {
+  "version": "U2F_V2",
+  "keyHandle": "rQdreHgHrmKfsnGPAElEP9yfTx6eq2eU3_Y8n0RRsGKML0DY2d1_a8_-sOtxDr3"
+};
+
+function testSignWithInvalidKey() {
+  window.u2f.sign(window.location.origin, bytesToBase64UrlSafe(challenge),
+                  [invalidKey, testState.key2], function(aSignResponse) {
+    local_is(aSignResponse.errorCode, 0, "The signing did not error when given an invalid key");
+    local_isnot(aSignResponse.clientData, undefined, "The signing provided clientData even when given an invalid key");
+
+    testSignWithInvalidKeyReverse();
+  });
+}
+
+function testSignWithInvalidKeyReverse() {
+  window.u2f.sign(window.location.origin, bytesToBase64UrlSafe(challenge),
+                  [testState.key2, invalidKey], function(aSignResponse) {
+    local_is(aSignResponse.errorCode, 0, "The signing did not error when given an invalid key");
+    local_isnot(aSignResponse.clientData, undefined, "The signing provided clientData even when given an invalid key");
+
+    local_completeTest();
+  });
+}
+</script>
+
+</body>
+</html>

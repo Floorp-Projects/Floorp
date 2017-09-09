@@ -8,7 +8,7 @@
 #include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/dom/U2FHIDTokenManager.h"
 #include "mozilla/dom/U2FSoftTokenManager.h"
-#include "mozilla/dom/PWebAuthnTransactionParent.h"
+#include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -165,7 +165,7 @@ U2FTokenManager::AbortTransaction(const nsresult& aError)
 }
 
 void
-U2FTokenManager::MaybeClearTransaction(PWebAuthnTransactionParent* aParent)
+U2FTokenManager::MaybeClearTransaction(WebAuthnTransactionParent* aParent)
 {
   // Only clear if we've been requested to do so by our current transaction
   // parent.
@@ -218,7 +218,7 @@ U2FTokenManager::GetTokenManagerImpl()
 }
 
 void
-U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
+U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
                           const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthRegister"));
@@ -300,7 +300,7 @@ U2FTokenManager::MaybeAbortRegister(uint64_t aTransactionId,
 }
 
 void
-U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
+U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
                       const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthSign"));
@@ -379,7 +379,7 @@ U2FTokenManager::MaybeAbortSign(uint64_t aTransactionId, const nsresult& aError)
 }
 
 void
-U2FTokenManager::Cancel(PWebAuthnTransactionParent* aParent)
+U2FTokenManager::Cancel(WebAuthnTransactionParent* aParent)
 {
   if (mTransactionParent != aParent) {
     return;

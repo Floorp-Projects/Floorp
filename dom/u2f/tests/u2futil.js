@@ -1,19 +1,22 @@
-function promiseU2FRegister(aAppId, aChallenges, aExcludedKeys, aFunc) {
-  return new Promise(function(resolve, reject) {
-      u2f.register(aAppId, aChallenges, aExcludedKeys, function(res){
-        aFunc(res);
-        resolve(res);
-      });
-  });
+// Used by local_addTest() / local_completeTest()
+var _countCompletions = 0;
+var _expectedCompletions = 0;
+var _parentOrigin = "http://mochi.test:8888";
+
+function local_setParentOrigin(aOrigin) {
+  _parentOrigin = aOrigin;
 }
 
-function promiseU2FSign(aAppId, aChallenge, aAllowedKeys, aFunc) {
-  return new Promise(function(resolve, reject) {
-      u2f.sign(aAppId, aChallenge, aAllowedKeys, function(res){
-        aFunc(res);
-        resolve(res);
-      });
-  });
+function handleEventMessage(event) {
+  if ("test" in event.data) {
+    let summary = event.data.test + ": " + event.data.msg;
+    log(event.data.status + ": " + summary);
+    ok(event.data.status, summary);
+  } else if ("done" in event.data) {
+    SimpleTest.finish();
+  } else {
+    ok(false, "Unexpected message in the test harness: " + event.data)
+  }
 }
 
 function log(msg) {
@@ -22,6 +25,57 @@ function log(msg) {
   if (logBox) {
     logBox.textContent += "\n" + msg;
   }
+}
+
+function local_is(value, expected, message) {
+  if (value === expected) {
+    local_ok(true, message);
+  } else {
+    local_ok(false, message + " unexpectedly: " + value + " !== " + expected);
+  }
+}
+
+function local_isnot(value, expected, message) {
+  if (value !== expected) {
+    local_ok(true, message);
+  } else {
+    local_ok(false, message + " unexpectedly: " + value + " === " + expected);
+  }
+}
+
+function local_ok(expression, message) {
+  let body = {"test": this.location.pathname, "status":expression, "msg": message}
+  parent.postMessage(body, _parentOrigin);
+}
+
+function local_doesThrow(fn, name) {
+  let gotException = false;
+  try {
+    fn();
+  } catch (ex) { gotException = true; }
+  local_ok(gotException, name);
+};
+
+function local_expectThisManyTests(count) {
+  if (_expectedCompletions > 0) {
+    local_ok(false, "Error: local_expectThisManyTests should only be called once.");
+  }
+  _expectedCompletions = count;
+}
+
+function local_completeTest() {
+  _countCompletions += 1
+  if (_countCompletions == _expectedCompletions) {
+    log("All tests completed.")
+    local_finished();
+  }
+  if (_countCompletions > _expectedCompletions) {
+    local_ok(false, "Error: local_completeTest called more than local_addTest.");
+  }
+}
+
+function local_finished() {
+  parent.postMessage({"done":true}, _parentOrigin);
 }
 
 function string2buffer(str) {
