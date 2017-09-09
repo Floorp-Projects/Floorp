@@ -42,7 +42,6 @@ add_task(async function test() {
   let backupState = SessionStore.getBrowserState();
   SessionStore.setBrowserState(JSON.stringify(TEST_STATE));
   let win = await promiseWindow;
-  await promiseWindowRestored(win);
 
   // The window has now been opened. Check the state that is returned,
   // this should come from the cache while the window isn't restored, yet.
