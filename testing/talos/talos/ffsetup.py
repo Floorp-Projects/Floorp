@@ -94,7 +94,7 @@ class FFSetup(object):
             extensions.append(self.test_config['extensions'])
 
         if self.browser_config['develop'] or \
-           self.browser_config['branch_name'] == 'Try':
+           'try' in str.lower(self.browser_config['branch_name']):
             extensions = [os.path.dirname(i) for i in extensions]
 
         profile = Profile.clone(

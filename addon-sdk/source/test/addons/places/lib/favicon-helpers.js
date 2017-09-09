@@ -9,7 +9,7 @@ const httpd = loader.require('./httpd');
 const { pathFor } = require('sdk/system');
 const { startServerAsync } = httpd;
 const basePath = pathFor('ProfD');
-const { atob } = Cu.import("resource://gre/modules/Services.jsm", {});
+Cu.importGlobalProperties(["atob"]);
 const historyService = Cc["@mozilla.org/browser/nav-history-service;1"]
                        .getService(Ci.nsINavHistoryService);
 const { events } = require('sdk/places/events');

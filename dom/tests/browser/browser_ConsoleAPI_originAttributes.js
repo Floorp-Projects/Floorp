@@ -4,7 +4,7 @@
 const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
       .getService(Ci.nsIConsoleAPIStorage);
 
-const {WebExtensionPolicy} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {WebExtensionPolicy} = Cu.getGlobalForObject(Cu.import("resource://gre/modules/Services.jsm", {}));
 
 const FAKE_ADDON_ID = "test-webext-addon@mozilla.org";
 const EXPECTED_CONSOLE_ID = `addon/${FAKE_ADDON_ID}`;

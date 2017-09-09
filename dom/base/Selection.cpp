@@ -3881,32 +3881,22 @@ Selection::NotifySelectionListeners()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Selection::StartBatchChanges()
 {
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
     frameSelection->StartBatchChanges();
   }
-  return NS_OK;
 }
 
-
-
-NS_IMETHODIMP
-Selection::EndBatchChanges()
-{
-  return EndBatchChangesInternal();
-}
-
-nsresult
-Selection::EndBatchChangesInternal(int16_t aReason)
+void
+Selection::EndBatchChanges(int16_t aReason)
 {
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
     frameSelection->EndBatchChanges(aReason);
   }
-  return NS_OK;
 }
 
 void

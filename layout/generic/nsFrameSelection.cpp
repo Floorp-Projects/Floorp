@@ -2908,9 +2908,7 @@ nsFrameSelection::DeleteFromDocument()
   // Collapse to the new location.
   // If we deleted one character, then we move back one element.
   // FIXME  We don't know how to do this past frame boundaries yet.
-  if (isCollapsed)
-    mDomSelections[index]->Collapse(mDomSelections[index]->GetAnchorNode(), mDomSelections[index]->AnchorOffset()-1);
-  else if (mDomSelections[index]->AnchorOffset() > 0)
+  if (mDomSelections[index]->AnchorOffset() > 0)
     mDomSelections[index]->Collapse(mDomSelections[index]->GetAnchorNode(), mDomSelections[index]->AnchorOffset());
 #ifdef DEBUG
   else

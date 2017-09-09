@@ -167,6 +167,7 @@ PrepareScript(nsIURI* uri,
 static bool
 EvalScript(JSContext* cx,
            HandleObject targetObj,
+           HandleObject loadScope,
            MutableHandleValue retval,
            nsIURI* uri,
            bool startupCache,
@@ -181,6 +182,17 @@ EvalScript(JSContext* cx,
         JS::AutoObjectVector envChain(cx);
         if (!envChain.append(targetObj)) {
             return false;
+        }
+        if (loadScope != targetObj &&
+            loadScope &&
+            !JS_IsGlobalObject(loadScope))
+        {
+            MOZ_DIAGNOSTIC_ASSERT(js::GetObjectCompartment(loadScope) ==
+                                  js::GetObjectCompartment(targetObj));
+
+            if (!envChain.append(loadScope)) {
+                return false;
+            }
         }
         if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
             return false;
@@ -241,10 +253,12 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AsyncScriptLoader)
 
     AsyncScriptLoader(nsIChannel* aChannel, bool aWantReturnValue,
-                      JSObject* aTargetObj, const nsAString& aCharset,
-                      bool aCache, Promise* aPromise)
+                      JSObject* aTargetObj, JSObject* aLoadScope,
+                      const nsAString& aCharset, bool aCache,
+                      Promise* aPromise)
         : mChannel(aChannel)
         , mTargetObj(aTargetObj)
+        , mLoadScope(aLoadScope)
         , mPromise(aPromise)
         , mCharset(aCharset)
         , mWantReturnValue(aWantReturnValue)
@@ -261,6 +275,7 @@ private:
 
     RefPtr<nsIChannel> mChannel;
     Heap<JSObject*> mTargetObj;
+    Heap<JSObject*> mLoadScope;
     RefPtr<Promise> mPromise;
     nsString mCharset;
     bool mWantReturnValue;
@@ -276,6 +291,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AsyncScriptLoader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
   tmp->mTargetObj = nullptr;
+  tmp->mLoadScope = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AsyncScriptLoader)
@@ -284,6 +300,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(AsyncScriptLoader)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mTargetObj)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLoadScope)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AsyncScriptLoader)
@@ -368,6 +385,7 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     NS_ENSURE_SUCCESS(rv, rv);
 
     RootedObject targetObj(cx, mTargetObj);
+    RootedObject loadScope(cx, mLoadScope);
 
     if (!PrepareScript(uri, cx, targetObj, spec.get(), mCharset,
                        reinterpret_cast<const char*>(aBuf), aLength,
@@ -377,7 +395,7 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
 
     JS::Rooted<JS::Value> retval(cx);
-    if (EvalScript(cx, targetObj, &retval, uri, mCache,
+    if (EvalScript(cx, targetObj, loadScope, &retval, uri, mCache,
                    mCache && !mWantReturnValue,
                    &script)) {
         autoPromise.ResolvePromise(retval);
@@ -389,6 +407,7 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 nsresult
 mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
                                       HandleObject targetObj,
+                                      HandleObject loadScope,
                                       const nsAString& charset,
                                       nsIIOService* serv,
                                       bool wantReturnValue,
@@ -435,6 +454,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
         new AsyncScriptLoader(channel,
                               wantReturnValue,
                               targetObj,
+                              loadScope,
                               charset,
                               cache,
                               promise);
@@ -553,17 +573,21 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 {
     nsresult rv = NS_OK;
     RootedObject targetObj(cx);
-    if (options.target) {
+    RootedObject loadScope(cx);
+    mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+    loader->FindTargetObject(cx, &loadScope);
+
+    if (options.target)
         targetObj = options.target;
-    } else {
-        mozJSComponentLoader* loader = mozJSComponentLoader::Get();
-        loader->FindTargetObject(cx, &targetObj);
-        MOZ_ASSERT(JS_IsGlobalObject(targetObj));
-    }
+    else
+        targetObj = loadScope;
 
     targetObj = JS_FindCompilationScope(cx, targetObj);
-    if (!targetObj)
+    if (!targetObj || !loadScope)
         return NS_ERROR_FAILURE;
+
+    if (js::GetObjectCompartment(loadScope) != js::GetObjectCompartment(targetObj))
+        loadScope = nullptr;
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
@@ -656,7 +680,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     // If we are doing an async load, trigger it and bail out.
     if (!script && options.async) {
-        return ReadScriptAsync(uri, targetObj, options.charset, serv,
+        return ReadScriptAsync(uri, targetObj, loadScope, options.charset, serv,
                                options.wantReturnValue, !!cache, retval);
     }
 
@@ -670,7 +694,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         return NS_OK;
     }
 
-    Unused << EvalScript(cx, targetObj, retval, uri, !!cache,
+    Unused << EvalScript(cx, targetObj, loadScope, retval, uri, !!cache,
                          !ignoreCache && !options.wantReturnValue,
                          &script);
     return NS_OK;

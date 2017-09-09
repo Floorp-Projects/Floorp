@@ -72,7 +72,12 @@ public:
   NS_DECL_NSISELECTION
   NS_DECL_NSISELECTIONPRIVATE
 
-  nsresult EndBatchChangesInternal(int16_t aReason = nsISelectionListener::NO_REASON);
+  // match this up with EndbatchChanges. will stop ui updates while multiple
+  // selection methods are called
+  void StartBatchChanges();
+
+  // match this up with StartBatchChanges
+  void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
 
   nsIDocument* GetParentObject() const;
 
@@ -533,7 +538,7 @@ public:
   ~SelectionBatcher()
   {
     if (mSelection) {
-      mSelection->EndBatchChangesInternal();
+      mSelection->EndBatchChanges();
     }
   }
 };

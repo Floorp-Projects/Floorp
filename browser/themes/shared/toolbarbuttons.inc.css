@@ -3,13 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --toolbarbutton-hover-background: hsla(240,5%,5%,.1);
-  --toolbarbutton-active-background: hsla(240,5%,5%,.15);
-
   --toolbarbutton-hover-transition-duration: 150ms;
   --toolbarbutton-active-transition-duration: 10ms;
 
   --toolbarbutton-inner-padding: 6px;
+
+  /* These hover and active colors should work on both light and dark
+     backgrounds. We'll later set colors that cater for light and dark
+     backgrounds specifically when we can detect them. */
+  --toolbarbutton-hover-background: hsla(0,0%,70%,.4);
+  --toolbarbutton-active-background: hsla(0,0%,70%,.6);
 
   --backbutton-background: hsla(0,100%,100%,.8);
   --backbutton-hover-background: var(--backbutton-background);
@@ -30,6 +33,15 @@
   --toolbarbutton-inner-padding: 9px;
 }
 
+/* We use :-moz-lwtheme-* for toolbarbuttons that aren't inside a toolbar, and
+   [brighttext] to cater for OS themes where :-moz-lwtheme-* doesn't apply. */
+:root:-moz-lwtheme-darktext,
+toolbar:not([brighttext]) {
+  --toolbarbutton-hover-background: hsla(240,5%,5%,.1);
+  --toolbarbutton-active-background: hsla(240,5%,5%,.15);
+}
+
+:root:-moz-lwtheme-brighttext,
 toolbar[brighttext] {
   --toolbarbutton-hover-background: hsla(0,0%,100%,.2);
   --toolbarbutton-active-background: hsla(0,0%,100%,.3);

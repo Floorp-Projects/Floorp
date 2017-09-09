@@ -77,10 +77,10 @@ if (typeof(require) === "function" && typeof(module) === "object") {
 }
 // If loaded in the context of JSM make a loader & require and define
 // new symbols as exported ones.
-else if (typeof(__URI__) === "string" && this["Components"]) {
+else if (typeof(this.__URI__) === "string" && Components) {
   const builtin = Object.keys(this);
   const uri = __URI__.replace("toolkit/require.js", "");
-  make(this, uri, this["Components"]);
+  make(this, uri, Components);
 
   this.EXPORTED_SYMBOLS = Object.
                             keys(this).

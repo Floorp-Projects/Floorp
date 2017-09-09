@@ -286,6 +286,23 @@ struct PlainOldDataSerializer
   }
 };
 
+/**
+ * A helper class for serializing empty structs. Since the struct is empty there
+ * is nothing to write, and a priori we know the result of the read.
+ */
+template <typename T>
+struct EmptyStructSerializer
+{
+  typedef T paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {}
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    *aResult = {};
+    return true;
+  }
+};
+
 template<>
 struct ParamTraits<int8_t>
 {
@@ -922,7 +939,7 @@ struct ParamTraits<mozilla::Variant<Ts...>>
   static void Write(Message* msg, const paramType& param)
   {
     WriteParam(msg, param.tag);
-    param.match(VariantWriter(msg));
+    param.match(VariantWriter{msg});
   }
 
   // Because VariantReader is a nested struct, we need the dummy template
@@ -945,12 +962,12 @@ struct ParamTraits<mozilla::Variant<Ts...>>
         // actually interested in the N - 1 tag.
         typename mozilla::detail::Nth<N - 1, Ts...>::Type val;
         if (ReadParam(msg, iter, &val)) {
-          *result = paramType::AsVariant(val);
+          *result = mozilla::AsVariant(val);
           return true;
         }
         return false;
       } else {
-        return Next::Read(msg, iter, tag);
+        return Next::Read(msg, iter, tag, result);
       }
     }
 

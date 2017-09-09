@@ -258,7 +258,15 @@ class Script {
     if (this.runAt === "document_end") {
       await promiseDocumentReady(window.document);
     } else if (this.runAt === "document_idle") {
-      await promiseDocumentLoaded(window.document);
+      let readyThenIdle = promiseDocumentReady(window.document).then(() => {
+        return new Promise(resolve =>
+          window.requestIdleCallback(resolve, {timeout: idleTimeout}));
+      });
+
+      await Promise.race([
+        readyThenIdle,
+        promiseDocumentLoaded(window.document),
+      ]);
     }
 
     return this.inject(context);
@@ -321,12 +329,6 @@ class Script {
 
     let scripts = await scriptsPromise;
     let result;
-
-    if (this.runAt === "document_idle") {
-      await new Promise(resolve =>
-          context.contentWindow.requestIdleCallback(resolve,
-                                                    {timeout: idleTimeout}));
-    }
 
     // The evaluations below may throw, in which case the promise will be
     // automatically rejected.

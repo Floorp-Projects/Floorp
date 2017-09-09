@@ -31,6 +31,7 @@ class VRDisplayOpenVR : public VRDisplayHost
 public:
   virtual void NotifyVSync() override;
   void ZeroSensor() override;
+  bool GetIsHmdPresent();
 
 protected:
   virtual VRHMDSensorState GetSensorState() override;
@@ -64,6 +65,7 @@ protected:
 
   VRTelemetry mTelemetry;
   bool mIsPresenting;
+  bool mIsHmdPresent;
 
   void UpdateStageParameters();
   void PollEvents();
