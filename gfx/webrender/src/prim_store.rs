@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect, DeviceIntSize, DevicePoint};
-use api::{ExtendMode, FontRenderMode, GlyphInstance, GradientStop};
+use api::{BorderRadius, ExtendMode, FontRenderMode, GlyphInstance, GradientStop};
 use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize, TextShadow};
 use api::{GlyphKey, LayerToWorldTransform, TileOffset, YuvColorSpace, YuvFormat};
 use api::{device_length, FontInstance, LayerVector2D, LineOrientation, LineStyle};
@@ -651,47 +651,46 @@ pub struct ClipData {
 }
 
 impl ClipData {
-    pub fn from_clip_region(clip: &ComplexClipRegion) -> ClipData {
+    pub fn rounded_rect(rect: &LayerRect, radii: &BorderRadius, mode: ClipMode) -> ClipData {
         ClipData {
             rect: ClipRect {
-                rect: clip.rect,
-                // TODO(gw): Support other clip modes for regions?
-                mode: ClipMode::Clip as u32 as f32,
+                rect: *rect,
+                mode: mode as u32 as f32,
             },
             top_left: ClipCorner {
                 rect: LayerRect::new(
-                    LayerPoint::new(clip.rect.origin.x, clip.rect.origin.y),
-                    LayerSize::new(clip.radii.top_left.width, clip.radii.top_left.height)),
-                outer_radius_x: clip.radii.top_left.width,
-                outer_radius_y: clip.radii.top_left.height,
+                    LayerPoint::new(rect.origin.x, rect.origin.y),
+                    LayerSize::new(radii.top_left.width, radii.top_left.height)),
+                outer_radius_x: radii.top_left.width,
+                outer_radius_y: radii.top_left.height,
                 inner_radius_x: 0.0,
                 inner_radius_y: 0.0,
             },
             top_right: ClipCorner {
                 rect: LayerRect::new(
-                    LayerPoint::new(clip.rect.origin.x + clip.rect.size.width - clip.radii.top_right.width, clip.rect.origin.y),
-                    LayerSize::new(clip.radii.top_right.width, clip.radii.top_right.height)),
-                outer_radius_x: clip.radii.top_right.width,
-                outer_radius_y: clip.radii.top_right.height,
+                    LayerPoint::new(rect.origin.x + rect.size.width - radii.top_right.width, rect.origin.y),
+                    LayerSize::new(radii.top_right.width, radii.top_right.height)),
+                outer_radius_x: radii.top_right.width,
+                outer_radius_y: radii.top_right.height,
                 inner_radius_x: 0.0,
                 inner_radius_y: 0.0,
             },
             bottom_left: ClipCorner {
                 rect: LayerRect::new(
-                    LayerPoint::new(clip.rect.origin.x, clip.rect.origin.y + clip.rect.size.height - clip.radii.bottom_left.height),
-                    LayerSize::new(clip.radii.bottom_left.width, clip.radii.bottom_left.height)),
-                outer_radius_x: clip.radii.bottom_left.width,
-                outer_radius_y: clip.radii.bottom_left.height,
+                    LayerPoint::new(rect.origin.x, rect.origin.y + rect.size.height - radii.bottom_left.height),
+                    LayerSize::new(radii.bottom_left.width, radii.bottom_left.height)),
+                outer_radius_x: radii.bottom_left.width,
+                outer_radius_y: radii.bottom_left.height,
                 inner_radius_x: 0.0,
                 inner_radius_y: 0.0,
             },
             bottom_right: ClipCorner {
                 rect: LayerRect::new(
-                    LayerPoint::new(clip.rect.origin.x + clip.rect.size.width - clip.radii.bottom_right.width,
-                                    clip.rect.origin.y + clip.rect.size.height - clip.radii.bottom_right.height),
-                    LayerSize::new(clip.radii.bottom_right.width, clip.radii.bottom_right.height)),
-                outer_radius_x: clip.radii.bottom_right.width,
-                outer_radius_y: clip.radii.bottom_right.height,
+                    LayerPoint::new(rect.origin.x + rect.size.width - radii.bottom_right.width,
+                                    rect.origin.y + rect.size.height - radii.bottom_right.height),
+                    LayerSize::new(radii.bottom_right.width, radii.bottom_right.height)),
+                outer_radius_x: radii.bottom_right.width,
+                outer_radius_y: radii.bottom_right.height,
                 inner_radius_x: 0.0,
                 inner_radius_y: 0.0,
             },

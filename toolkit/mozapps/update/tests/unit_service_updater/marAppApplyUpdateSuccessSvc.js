@@ -33,10 +33,17 @@ function setupUpdaterTestFinished() {
 function runUpdateFinished() {
   checkAppBundleModTime();
   standardInit();
-  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
+  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   let updatesDir = getUpdatesPatchDir();
   Assert.ok(updatesDir.exists(),

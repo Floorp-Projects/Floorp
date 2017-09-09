@@ -228,7 +228,7 @@ impl FrameBuilder {
                                    clip_and_scroll: ClipAndScrollInfo,
                                    local_clip: &LocalClip,
                                    corner_instances: [BorderCornerInstance; 4],
-                                   extra_clips: &[ClipSource]) {
+                                   clip_sources: Vec<ClipSource>) {
         let radius = &border.radius;
         let left = &border.left;
         let right = &border.right;
@@ -274,7 +274,7 @@ impl FrameBuilder {
         self.add_primitive(clip_and_scroll,
                            &rect,
                            local_clip,
-                           extra_clips,
+                           clip_sources,
                            PrimitiveContainer::Border(prim_cpu));
     }
 
@@ -425,7 +425,7 @@ impl FrameBuilder {
                                              clip_and_scroll,
                                              local_clip,
                                              corner_instances,
-                                             &extra_clips);
+                                             extra_clips);
         }
     }
 }

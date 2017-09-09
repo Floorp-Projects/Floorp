@@ -1827,6 +1827,7 @@ nsresult
 Preferences::AddStrongObserver(nsIObserver* aObserver,
                                const char* aPref)
 {
+  MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sRootBranch->AddObserver(aPref, aObserver, false);
 }
@@ -1836,6 +1837,7 @@ nsresult
 Preferences::AddWeakObserver(nsIObserver* aObserver,
                              const char* aPref)
 {
+  MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sRootBranch->AddObserver(aPref, aObserver, true);
 }
@@ -1845,6 +1847,7 @@ nsresult
 Preferences::RemoveObserver(nsIObserver* aObserver,
                             const char* aPref)
 {
+  MOZ_ASSERT(aObserver);
   if (!sPreferences && sShutdown) {
     return NS_OK; // Observers have been released automatically.
   }
@@ -1857,6 +1860,7 @@ nsresult
 Preferences::AddStrongObservers(nsIObserver* aObserver,
                                 const char** aPrefs)
 {
+  MOZ_ASSERT(aObserver);
   for (uint32_t i = 0; aPrefs[i]; i++) {
     nsresult rv = AddStrongObserver(aObserver, aPrefs[i]);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1869,6 +1873,7 @@ nsresult
 Preferences::AddWeakObservers(nsIObserver* aObserver,
                               const char** aPrefs)
 {
+  MOZ_ASSERT(aObserver);
   for (uint32_t i = 0; aPrefs[i]; i++) {
     nsresult rv = AddWeakObserver(aObserver, aPrefs[i]);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1881,6 +1886,7 @@ nsresult
 Preferences::RemoveObservers(nsIObserver* aObserver,
                              const char** aPrefs)
 {
+  MOZ_ASSERT(aObserver);
   if (!sPreferences && sShutdown) {
     return NS_OK; // Observers have been released automatically.
   }
@@ -1928,6 +1934,7 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
                               void* aClosure,
                               MatchKind aMatchKind)
 {
+  MOZ_ASSERT(aCallback);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   ValueObserverHashKey hashKey(aPref, aCallback, aMatchKind);
@@ -1953,6 +1960,7 @@ Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
                                      void* aClosure,
                                      MatchKind aMatchKind)
 {
+  MOZ_ASSERT(aCallback);
   WATCHING_PREF_RAII();
   nsresult rv = RegisterCallback(aCallback, aPref, aClosure, aMatchKind);
   if (NS_SUCCEEDED(rv)) {
@@ -1968,6 +1976,7 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
                                 void* aClosure,
                                 MatchKind aMatchKind)
 {
+  MOZ_ASSERT(aCallback);
   if (!sPreferences && sShutdown) {
     return NS_OK; // Observers have been released automatically.
   }
