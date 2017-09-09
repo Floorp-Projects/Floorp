@@ -36,6 +36,16 @@
     { css: ". {}", error: "Expected identifier for class selector but found ‘ ’.  Ruleset ignored due to bad selector." },
 
     { css: ":not() {}", error: "Missing argument in negation pseudo-class ‘)’.  Ruleset ignored due to bad selector." },
+
+    { css: "@media (totally-unknown-feature) {}", error: "Expected media feature name but found ‘totally-unknown-feature’." },
+    { css: "@media \"foo\" {}", error: "Expected identifier in media list but found ‘\"foo\"’." },
+    { css: "@media (min-width) {}", error: "Media features with min- or max- must have a value." },
+    { css: "@media (device-height: -1px) {}", error: "Found invalid value for media feature." },
+    { css: "@media (min-width: -1px) {}", error: "Found invalid value for media feature." },
+    { css: "@media (min-resolution: 2) {}", error: "Found invalid value for media feature." },
+    { css: "@media (min-monochrome: 1.1) {}", error: "Found invalid value for media feature." },
+    { css: "@media (min-aspect-ratio: 1) {}", error: "Found invalid value for media feature." },
+    { css: "@media (orientation: invalid-orientation-value) {}", error: "Found invalid value for media feature." },
   ];
 
   var test = -1;
