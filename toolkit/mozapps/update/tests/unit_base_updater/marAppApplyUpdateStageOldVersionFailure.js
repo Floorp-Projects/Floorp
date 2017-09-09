@@ -57,11 +57,19 @@ function runUpdateFinished() {
   reloadUpdateManagerData();
 
   standardInit();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     ERR_OLDER_VERSION_OR_SAME_BUILD, 1);
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile, !IS_MACOSX, false);
+
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                     ERR_OLDER_VERSION_OR_SAME_BUILD, 1);
 
   let updatesDir = getUpdatesPatchDir();
   Assert.ok(updatesDir.exists(),

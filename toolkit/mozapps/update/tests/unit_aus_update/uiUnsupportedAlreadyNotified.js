@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Cu.import("resource://testing-common/MockRegistrar.jsm");
-
 const WindowWatcher = {
   openWindow(aParent, aUrl, aName, aFeatures, aArgs) {
     check_showUpdateAvailable();

@@ -32,10 +32,17 @@ function setupUpdaterTestFinished() {
 function runUpdateFinished() {
   checkAppBundleModTime();
   standardInit();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     LOADSOURCE_ERROR_WRONG_SIZE, 1);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContents(LOG_PARTIAL_FAILURE);
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                     LOADSOURCE_ERROR_WRONG_SIZE, 1);
   checkCallbackLog();
 }

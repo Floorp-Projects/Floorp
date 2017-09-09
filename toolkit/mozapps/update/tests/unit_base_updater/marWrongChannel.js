@@ -34,10 +34,17 @@ function setupUpdaterTestFinished() {
  */
 function runUpdateFinished() {
   standardInit();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     MAR_CHANNEL_MISMATCH_ERROR, 1);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                     MAR_CHANNEL_MISMATCH_ERROR, 1);
   waitForFilesInUse();
 }

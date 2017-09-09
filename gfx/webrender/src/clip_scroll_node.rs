@@ -6,7 +6,7 @@ use api::{ClipId, DeviceIntRect, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use api::{LayerToScrollTransform, LayerToWorldTransform, LayerVector2D, PipelineId};
 use api::{ScrollClamping, ScrollEventPhase, ScrollLocation, ScrollSensitivity, StickyFrameInfo};
 use api::WorldPoint;
-use clip::{ClipRegion, ClipSource, ClipSources};
+use clip::{ClipRegion, ClipSources};
 use clip_scroll_tree::TransformUpdateState;
 use geometry::ray_intersects_rect;
 use spring::{DAMPING, STIFFNESS, Spring};
@@ -42,7 +42,7 @@ impl ClipInfo {
     pub fn new(clip_region: ClipRegion, packed_layer_index: PackedLayerIndex) -> ClipInfo {
         let clip_rect = LayerRect::new(clip_region.origin, clip_region.main.size);
         ClipInfo {
-            clip_sources: ClipSources::new(vec![ClipSource::Region(clip_region)]),
+            clip_sources: ClipSources::from(clip_region),
             packed_layer_index,
             screen_bounding_rect: None,
             clip_rect: clip_rect,
