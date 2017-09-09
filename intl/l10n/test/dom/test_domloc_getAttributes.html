@@ -10,7 +10,7 @@
   const { DOMLocalization } =
     Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
 
-  function * mockGenerateMessages(locales, resourceIds) {}
+  async function * mockGenerateMessages(locales, resourceIds) {}
 
   window.onload = function () {
     SimpleTest.waitForExplicitFinish();

@@ -36,7 +36,7 @@ Components.utils.importGlobalProperties(["fetch"]); /* globals fetch */
  *     '/platform/toolkit.ftl'
  *   ]);
  *
- * the generator will return an iterator over the following contexts:
+ * the generator will return an async iterator over the following contexts:
  *
  *   {
  *     locale: 'de',
@@ -85,9 +85,9 @@ const L10nRegistry = {
    *
    * @param {Array} requestedLangs
    * @param {Array} resourceIds
-   * @returns {Iterator<MessageContext>}
+   * @returns {AsyncIterator<MessageContext>}
    */
-  * generateContexts(requestedLangs, resourceIds) {
+  async * generateContexts(requestedLangs, resourceIds) {
     const sourcesOrder = Array.from(this.sources.keys()).reverse();
     for (const locale of requestedLangs) {
       yield * generateContextsForLocale(locale, sourcesOrder, resourceIds);
@@ -179,9 +179,9 @@ function generateContextID(locale, sourcesOrder, resourceIds) {
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
  * @param {Array} [resolvedOrder]
- * @returns {Iterator<MessageContext>}
+ * @returns {AsyncIterator<MessageContext>}
  */
-function* generateContextsForLocale(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
+async function* generateContextsForLocale(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
   const resolvedLength = resolvedOrder.length;
   const resourcesLength = resourceIds.length;
 
@@ -202,7 +202,10 @@ function* generateContextsForLocale(locale, sourcesOrder, resourceIds, resolvedO
     // If the number of resolved sources equals the number of resources,
     // create the right context and return it if it loads.
     if (resolvedLength + 1 === resourcesLength) {
-      yield generateContext(locale, order, resourceIds);
+      const ctx = await generateContext(locale, order, resourceIds);
+      if (ctx !== null) {
+        yield ctx;
+      }
     } else {
       // otherwise recursively load another generator that walks over the
       // partially resolved list of sources.
@@ -215,25 +218,41 @@ function* generateContextsForLocale(locale, sourcesOrder, resourceIds, resolvedO
  * Generates a single MessageContext by loading all resources
  * from the listed sources for a given locale.
  *
+ * The function casts all error cases into a Promise that resolves with
+ * value `null`.
+ * This allows the caller to be an async generator without using
+ * try/catch clauses.
+ *
  * @param {String} locale
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
  * @returns {Promise<MessageContext>}
  */
-async function generateContext(locale, sourcesOrder, resourceIds) {
+function generateContext(locale, sourcesOrder, resourceIds) {
   const ctxId = generateContextID(locale, sourcesOrder, resourceIds);
-  if (!L10nRegistry.ctxCache.has(ctxId)) {
-    const ctx = new MessageContext(locale);
-    for (let i = 0; i < resourceIds.length; i++) {
-      const data = await L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceIds[i]);
-      if (data === null) {
-        return false;
-      }
-      ctx.addMessages(data);
-    }
-    L10nRegistry.ctxCache.set(ctxId, ctx);
+  if (L10nRegistry.ctxCache.has(ctxId)) {
+    return L10nRegistry.ctxCache.get(ctxId);
   }
-  return L10nRegistry.ctxCache.get(ctxId);
+
+  const fetchPromises = resourceIds.map((resourceId, i) => {
+    return L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceId);
+  });
+
+  const ctxPromise = Promise.all(fetchPromises).then(
+    dataSets => {
+      const ctx = new MessageContext(locale);
+      for (const data of dataSets) {
+        if (data === null) {
+          return null;
+        }
+        ctx.addMessages(data);
+      }
+      return ctx;
+    },
+    () => null
+  );
+  L10nRegistry.ctxCache.set(ctxId, ctxPromise);
+  return ctxPromise;
 }
 
 /**
@@ -245,10 +264,33 @@ async function generateContext(locale, sourcesOrder, resourceIds) {
  * come from the cache.
  **/
 class FileSource {
+  /**
+   * @param {string}         name
+   * @param {Array<string>}  locales
+   * @param {string}         prePath
+   *
+   * @returns {IndexedFileSource}
+   */
   constructor(name, locales, prePath) {
     this.name = name;
     this.locales = locales;
     this.prePath = prePath;
+    this.indexed = false;
+
+    // The cache object stores information about the resources available
+    // in the Source.
+    //
+    // It can take one of three states:
+    //   * true - the resource is available but not fetched yet
+    //   * false - the resource is not available
+    //   * Promise - the resource has been fetched
+    //
+    // If the cache has no entry for a given path, that means that there
+    // is no information available about whether the resource is available.
+    //
+    // If the `indexed` property is set to `true` it will be treated as the
+    // resource not being available. Otherwise, the resource may be
+    // available and we do not have any information about it yet.
     this.cache = {};
   }
 
@@ -263,31 +305,45 @@ class FileSource {
 
     const fullPath = this.getPath(locale, path);
     if (!this.cache.hasOwnProperty(fullPath)) {
-      return undefined;
+      return this.indexed ? false : undefined;
     }
-
-    if (this.cache[fullPath] === null) {
+    if (this.cache[fullPath] === false) {
       return false;
+    }
+    if (this.cache[fullPath].then) {
+      return undefined;
     }
     return true;
   }
 
-  async fetchFile(locale, path) {
+  fetchFile(locale, path) {
     if (!this.locales.includes(locale)) {
-      return null;
+      return Promise.reject(`The source has no resources for locale "${locale}"`);
     }
 
     const fullPath = this.getPath(locale, path);
-    if (this.hasFile(locale, path) === undefined) {
-      let file = await L10nRegistry.load(fullPath);
 
-      if (file === undefined) {
-        this.cache[fullPath] = null;
-      } else {
-        this.cache[fullPath] = file;
+    if (this.cache.hasOwnProperty(fullPath)) {
+      if (this.cache[fullPath] === false) {
+        return Promise.reject(`The source has no resources for path "${fullPath}"`);
+      }
+      if (this.cache[fullPath].then) {
+        return this.cache[fullPath];
+      }
+    } else {
+      if (this.indexed) {
+        return Promise.reject(`The source has no resources for path "${fullPath}"`);
       }
     }
-    return this.cache[fullPath];
+    return this.cache[fullPath] = L10nRegistry.load(fullPath).then(
+      data => {
+        return this.cache[fullPath] = data;
+      },
+      err => {
+        this.cache[fullPath] = false;
+        return Promise.reject(err);
+      }
+    );
   }
 }
 
@@ -299,44 +355,40 @@ class FileSource {
  * contain most of the files that the app will request for (e.g. an addon).
  **/
 class IndexedFileSource extends FileSource {
+  /**
+   * @param {string}         name
+   * @param {Array<string>}  locales
+   * @param {string}         prePath
+   * @param {Array<string>}  paths
+   *
+   * @returns {IndexedFileSource}
+   */
   constructor(name, locales, prePath, paths) {
     super(name, locales, prePath);
-    this.paths = paths;
-  }
-
-  hasFile(locale, path) {
-    if (!this.locales.includes(locale)) {
-      return false;
-    }
-    const fullPath = this.getPath(locale, path);
-    return this.paths.includes(fullPath);
-  }
-
-  async fetchFile(locale, path) {
-    if (!this.locales.includes(locale)) {
-      return null;
-    }
-
-    const fullPath = this.getPath(locale, path);
-    if (this.paths.includes(fullPath)) {
-      let file = await L10nRegistry.load(fullPath);
-
-      if (file === undefined) {
-        return null;
-      } else {
-        return file;
-      }
-    } else {
-      return null;
+    this.indexed = true;
+    for (const path of paths) {
+      this.cache[path] = true;
     }
   }
 }
 
 /**
+ * The low level wrapper around Fetch API. It unifies the error scenarios to
+ * always produce a promise rejection.
+ *
  * We keep it as a method to make it easier to override for testing purposes.
- **/
+ *
+ * @param {string} url
+ *
+ * @returns {Promise<string>}
+ */
 L10nRegistry.load = function(url) {
-  return fetch(url).then(data => data.text()).catch(() => undefined);
+  return fetch(url).then(response => {
+    if (!response.ok) {
+      return Promise.reject(response.statusText);
+    }
+    return response.text()
+  });
 };
 
 this.L10nRegistry = L10nRegistry;

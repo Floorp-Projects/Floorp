@@ -208,6 +208,8 @@ e.setAttribute("style", "transition-property: color, width; transition-duration:
 is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
 e.setAttribute("style", "transition-property: color, width; transition-duration: 1s, 200ms; transition-timing-function: ease-in, linear; transition-delay: 0s, 1s, 0s");
 is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
+e.setAttribute("style", "transition: color, width; transition-delay: 0s");
+is(e.style.transition, "", "should not have transition shorthand (lists different lengths)");
 
 e.setAttribute("style", "animation-name: bounce, roll; animation-duration: 1s, 200ms; animation-timing-function: ease-in, linear; animation-delay: 0s, 1s; animation-direction: normal, reverse; animation-fill-mode: forwards, backwards; animation-iteration-count: infinite, 2; animation-play-state: paused, running;");
 isnot(e.style.animation, "", "should have animation shorthand (lists same length)");

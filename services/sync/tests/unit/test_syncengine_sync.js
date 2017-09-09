@@ -1539,23 +1539,6 @@ add_task(async function test_uploadOutgoing_largeRecords() {
 });
 
 
-add_task(async function test_syncFinish_noDelete() {
-  _("SyncEngine._syncFinish resets tracker's score");
-
-  let server = httpd_setup({});
-
-  await SyncTestingInfrastructure(server);
-  let engine = makeRotaryEngine();
-  engine._delete = {}; // Nothing to delete
-  engine._tracker.score = 100;
-
-  // _syncFinish() will reset the engine's score.
-  await engine._syncFinish();
-  do_check_eq(engine.score, 0);
-  server.stop(run_next_test);
-});
-
-
 add_task(async function test_syncFinish_deleteByIds() {
   _("SyncEngine._syncFinish deletes server records slated for deletion (list of record IDs).");
 

@@ -438,7 +438,10 @@ this.tabs = class extends ExtensionAPI {
               return Promise.reject({message: `Illegal URL: ${url}`});
             }
 
-            nativeTab.linkedBrowser.loadURI(url);
+            let flags = updateProperties.loadReplace
+              ? Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY
+              : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+            nativeTab.linkedBrowser.loadURIWithFlags(url, {flags});
           }
 
           if (updateProperties.active !== null) {

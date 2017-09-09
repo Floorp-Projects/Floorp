@@ -117,6 +117,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "javascript.options.wasm_ionjit",
   "javascript.options.werror",
   "javascript.use_us_english_locale",
+  "jsloader.shareGlobal",
   "layout.idle_period.required_quiescent_frames",
   "layout.idle_period.time_limit",
   "layout.interruptible-reflow.enabled",

@@ -19,7 +19,7 @@ add_task(async function test_unknown_permissions() {
   let {messages} = await promiseConsoleOutput(
     () => extension.startup());
 
-  const {WebExtensionPolicy} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {WebExtensionPolicy} = Cu.getGlobalForObject(Cu.import("resource://gre/modules/Extension.jsm", {}));
 
   let policy = WebExtensionPolicy.getByID(extension.id);
   Assert.deepEqual(Array.from(policy.permissions).sort(), ["activeTab", "http://*/*"]);

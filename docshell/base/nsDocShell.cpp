@@ -9145,7 +9145,7 @@ nsDocShell::RestoreFromHistory()
       mContentViewer->SetBounds(newBounds);
     } else {
       nsIScrollableFrame* rootScrollFrame =
-        shell->GetRootScrollFrameAsScrollableExternal();
+        shell->GetRootScrollFrameAsScrollable();
       if (rootScrollFrame) {
         rootScrollFrame->PostScrolledAreaEventForCurrentArea();
       }
@@ -13590,7 +13590,7 @@ nsDocShell::GetRootScrollFrame()
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
   NS_ENSURE_TRUE(shell, nullptr);
 
-  return shell->GetRootScrollFrameAsScrollableExternal();
+  return shell->GetRootScrollFrameAsScrollable();
 }
 
 NS_IMETHODIMP

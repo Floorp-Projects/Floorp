@@ -201,7 +201,9 @@ mozJSComponentLoader::mozJSComponentLoader()
       mImports(16),
       mInProgressImports(16),
       mLocations(16),
-      mInitialized(false)
+      mInitialized(false),
+      mShareLoaderGlobal(false),
+      mLoaderGlobal(dom::RootingCx())
 {
     MOZ_ASSERT(!sSelf, "mozJSComponentLoader should be a singleton");
 
@@ -299,6 +301,10 @@ NS_IMPL_ISUPPORTS(mozJSComponentLoader,
 nsresult
 mozJSComponentLoader::ReallyInit()
 {
+    MOZ_ASSERT(!mInitialized);
+
+    mShareLoaderGlobal = Preferences::GetBool("jsloader.shareGlobal");
+
     nsresult rv;
     nsCOMPtr<nsIObserverService> obsSvc =
         do_GetService(kObserverServiceContractID, &rv);
@@ -428,7 +434,13 @@ void
 mozJSComponentLoader::FindTargetObject(JSContext* aCx,
                                        MutableHandleObject aTargetObject)
 {
-    aTargetObject.set(CurrentGlobalOrNull(aCx));
+    aTargetObject.set(js::GetJSMEnvironmentOfScriptedCaller(aCx));
+
+    // The above could fail if the scripted caller is not a
+    // component/JSM (it could be a DOM scope, for instance).
+    if (!aTargetObject) {
+        aTargetObject.set(CurrentGlobalOrNull(aCx));
+    }
 }
 
 // This requires that the keys be strings and the values be pointers.
@@ -458,7 +470,7 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 
 void
 mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
-                                         nsACString& aLocation,
+                                         const nsACString& aLocation,
                                          JSAddonId* aAddonID,
                                          MutableHandleObject aGlobal)
 {
@@ -508,27 +520,97 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     aGlobal.set(global);
 }
 
+bool
+mozJSComponentLoader::ReuseGlobal(bool aIsAddon, nsIURI* aURI)
+{
+    if (aIsAddon || !mShareLoaderGlobal)
+        return false;
+
+    nsCString spec;
+    NS_ENSURE_SUCCESS(aURI->GetSpec(spec), false);
+
+    // The loader calls Object.freeze on global properties, which
+    // causes problems if the global is shared with other code.
+    if (spec.EqualsASCII("resource://gre/modules/commonjs/toolkit/loader.js")) {
+        return false;
+    }
+
+    // Various tests call addDebuggerToGlobal on the result of
+    // importing this JSM, which would be annoying to fix.
+    if (spec.EqualsASCII("resource://gre/modules/jsdebugger.jsm")) {
+        return false;
+    }
+
+    // Some SpecialPowers jsms call Cu.forcePermissiveCOWs(),
+    // which sets a per-compartment flag that disables certain
+    // security wrappers, so don't use the shared global for them
+    // to avoid breaking tests.
+    if (FindInReadable(NS_LITERAL_CSTRING("chrome://specialpowers/"), spec)) {
+        return false;
+    }
+
+    return true;
+}
+
+JSObject*
+mozJSComponentLoader::GetSharedGlobal(JSContext* aCx)
+{
+    if (!mLoaderGlobal) {
+        MOZ_ASSERT(mShareLoaderGlobal);
+
+        JS::RootedObject globalObj(aCx);
+        CreateLoaderGlobal(aCx, NS_LITERAL_CSTRING("shared JSM global"),
+                           nullptr, &globalObj);
+
+        // If we fail to create a module global this early, we're not going to
+        // get very far, so just bail out now.
+        MOZ_RELEASE_ASSERT(globalObj);
+        mLoaderGlobal = globalObj;
+
+        // AutoEntryScript required to invoke debugger hook, which is a
+        // Gecko-specific concept at present.
+        dom::AutoEntryScript aes(globalObj,
+                                 "component loader report global");
+        JS_FireOnNewGlobalObject(aes.cx(), globalObj);
+    }
+
+    return mLoaderGlobal;
+}
+
 JSObject*
 mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
                                                nsIFile* aComponentFile,
                                                nsIURI* aURI,
+                                               bool* aReuseGlobal,
                                                bool* aRealFile)
 {
     nsAutoCString nativePath;
     NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
 
-    RootedObject globalObj(aCx);
+    JSAddonId* addonId = MapURIToAddonID(aURI);
+    bool reuseGlobal = ReuseGlobal(!!addonId, aURI);
 
-    CreateLoaderGlobal(aCx, nativePath, MapURIToAddonID(aURI), &globalObj);
+    *aReuseGlobal = reuseGlobal;
+
+    bool createdNewGlobal = false;
+    RootedObject globalObj(aCx);
+    if (reuseGlobal) {
+        globalObj = GetSharedGlobal(aCx);
+    } else if (!globalObj) {
+        CreateLoaderGlobal(aCx, nativePath, addonId, &globalObj);
+        createdNewGlobal = true;
+    }
 
     // |thisObj| is the object we set properties on for a particular .jsm.
-    // XXX Right now, thisObj is always globalObj, but if we start
-    // sharing globals between jsms, they won't be the same.
-    // See bug 1186409.
     RootedObject thisObj(aCx, globalObj);
     NS_ENSURE_TRUE(thisObj, nullptr);
 
     JSAutoCompartment ac(aCx, thisObj);
+
+    if (reuseGlobal) {
+        thisObj = js::NewJSMEnvironment(aCx);
+        NS_ENSURE_TRUE(thisObj, nullptr);
+    }
 
     *aRealFile = false;
 
@@ -567,7 +649,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     if (!JS_DefineProperty(aCx, thisObj, "__URI__", exposedUri, 0))
         return nullptr;
 
-    {
+    if (createdNewGlobal) {
         // AutoEntryScript required to invoke debugger hook, which is a
         // Gecko-specific concept at present.
         dom::AutoEntryScript aes(globalObj,
@@ -596,10 +678,11 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     bool realFile = false;
     nsresult rv = aInfo.EnsureURI();
     NS_ENSURE_SUCCESS(rv, rv);
+    bool reuseGlobal = false;
     RootedObject obj(cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(),
-                                                  &realFile));
+                                                  &reuseGlobal, &realFile));
     NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
-    MOZ_ASSERT(JS_IsGlobalObject(obj));
+    MOZ_ASSERT(JS_IsGlobalObject(obj) == !reuseGlobal);
 
     JSAutoCompartment ac(cx, obj);
 
@@ -662,7 +745,10 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
             // Note: exceptions will get handled further down;
             // don't early return for them here.
             auto buf = map.get<char>();
-            Compile(cx, options, buf.get(), map.size(), &script);
+            if (reuseGlobal)
+                CompileForNonSyntacticScope(cx, options, buf.get(), map.size(), &script);
+            else
+                Compile(cx, options, buf.get(), map.size(), &script);
         } else {
             rv = aInfo.EnsureScriptChannel();
             NS_ENSURE_SUCCESS(rv, rv);
@@ -693,7 +779,10 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
 
             buf[len] = '\0';
 
-            Compile(cx, options, buf.get(), bytesRead, &script);
+            if (reuseGlobal)
+                CompileForNonSyntacticScope(cx, options, buf.get(), bytesRead, &script);
+            else
+                Compile(cx, options, buf.get(), bytesRead, &script);
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
@@ -736,8 +825,16 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         dom::AutoEntryScript aes(CurrentGlobalOrNull(cx),
                                  "component loader load module");
         JSContext* aescx = aes.cx();
-        JS::RootedValue rval(cx);
-        if (!JS::CloneAndExecuteScript(aescx, script, &rval)) {
+
+        bool executeOk = false;
+        if (JS_IsGlobalObject(obj)) {
+            JS::RootedValue rval(cx);
+            executeOk = JS::CloneAndExecuteScript(aescx, script, &rval);
+        } else {
+            executeOk = js::ExecuteInJSMEnvironment(aescx, script, obj);
+        }
+
+        if (!executeOk) {
             if (aPropagateExceptions && aes.HasException()) {
                 // Ignore return value because we're returning an error code
                 // anyway.
@@ -764,6 +861,18 @@ void
 mozJSComponentLoader::UnloadModules()
 {
     mInitialized = false;
+
+    if (mLoaderGlobal) {
+        dom::AutoJSAPI jsapi;
+        jsapi.Init();
+        JSContext* cx = jsapi.cx();
+        RootedObject global(cx, mLoaderGlobal);
+        JSAutoCompartment ac(cx, global);
+        MOZ_ASSERT(JS_HasExtensibleLexicalEnvironment(global));
+        JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalEnvironment(global));
+        JS_SetAllNonReservedSlotsToUndefined(cx, global);
+        mLoaderGlobal = nullptr;
+    }
 
     mInProgressImports.Clear();
     mImports.Clear();
@@ -1129,6 +1238,9 @@ mozJSComponentLoader::Unload(const nsACString & aLocation)
         mLocations.Remove(mod->resolvedURL);
         mImports.Remove(info.Key());
     }
+
+    // If this is the last module to be unloaded, we will leak mLoaderGlobal
+    // until UnloadModules is called. So be it.
 
     return NS_OK;
 }

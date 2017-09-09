@@ -6,6 +6,7 @@
 package org.mozilla.gecko.activitystream.ranking;
 
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
@@ -68,11 +69,18 @@ import java.lang.annotation.RetentionPolicy;
         }
     }
 
+    /**
+     * The BOOKMARK_ID colmun value is set to -1 for non-bookmarks in
+     * {@link org.mozilla.gecko.db.BrowserProvider#getHighlightCandidates(SQLiteDatabase, String)}
+     */
+    private static final int COLUMN_VALUE_NON_BOOKMARK = -1;
+
     @VisibleForTesting final Features features = new Features();
     private Highlight highlight;
     private @Nullable String imageUrl;
     private String host;
     private double score;
+    private boolean isBookmark;
 
     /**
      * @return the HighlightCandidate, or null if the candidate is invalid.
@@ -116,6 +124,8 @@ import java.lang.annotation.RetentionPolicy;
             // impacting performance so we changed it to a boolean return.
             return false;
         }
+
+        candidate.isBookmark = cursor.getDouble(cursorIndices.bookmarkIDColumnIndex) != COLUMN_VALUE_NON_BOOKMARK;
 
         candidate.features.put(
                 FEATURE_AGE_IN_DAYS,
@@ -206,6 +216,10 @@ import java.lang.annotation.RetentionPolicy;
 
     /* package-private */ String getHost() {
         return host;
+    }
+
+    /* package-private */ boolean isBookmark() {
+        return isBookmark;
     }
 
     /**

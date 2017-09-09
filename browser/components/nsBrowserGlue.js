@@ -920,7 +920,7 @@ BrowserGlue.prototype = {
   },
 
   _sendMediaTelemetry() {
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = Services.appShell.hiddenDOMWindow;
     let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
     v.reportCanPlayTelemetry();
   },
