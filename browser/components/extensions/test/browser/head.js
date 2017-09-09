@@ -334,7 +334,11 @@ async function openExtensionContextMenu(selector = "#img1") {
 async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
-  EventUtils.synthesizeMouseAtCenter(itemToSelect, modifiers);
+  if (itemToSelect) {
+    EventUtils.synthesizeMouseAtCenter(itemToSelect, modifiers);
+  } else {
+    contentAreaContextMenu.hidePopup();
+  }
   await popupHiddenPromise;
 
   // Bug 1351638: parent menu fails to close intermittently, make sure it does.
@@ -361,11 +365,15 @@ function closeToolsMenu(itemToSelect, win = window) {
   const hidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
   if (AppConstants.platform === "macosx") {
     // Mocking on OSX, see above.
-    itemToSelect.doCommand();
+    if (itemToSelect) {
+      itemToSelect.doCommand();
+    }
     menu.dispatchEvent(new MouseEvent("popuphiding"));
     menu.dispatchEvent(new MouseEvent("popuphidden"));
-  } else {
+  } else if (itemToSelect) {
     EventUtils.synthesizeMouseAtCenter(itemToSelect, {}, win);
+  } else {
+    menu.hidePopup();
   }
   return hidden;
 }
