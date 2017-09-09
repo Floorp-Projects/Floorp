@@ -37,13 +37,12 @@ var state = {windows: [{tabs: [{entries: [
   }
 ]}]}]}
 
-add_task(async function test() {
+function test() {
   registerCleanupFunction(function() {
     ss.setBrowserState(stateBackup);
   });
 
   /* This test fails by hanging. */
   ss.setBrowserState(JSON.stringify(state));
-  await promiseWindowRestored(window);
   ok(true, "Didn't hang!");
-});
+}

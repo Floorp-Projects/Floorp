@@ -37,13 +37,11 @@ add_task(async function() {
   // Open a new window and restore it to an initial state.
   let win = await promiseNewWindowLoaded({private: false});
   SessionStore.setWindowState(win, JSON.stringify(initialState), true);
-  await promiseWindowRestored(win);
   is(SessionStore.getClosedTabCount(win), 2, "2 closed tabs after restoring initial state");
 
   // Restore the new state but do not overwrite existing tabs (this should
   // cause the closed tabs to be merged).
   SessionStore.setWindowState(win, JSON.stringify(restoreState), false);
-  await promiseWindowRestored(win);
 
   // Verify the windows closed tab data is correct.
   let iClosed = initialState.windows[0]._closedTabs;

@@ -28,10 +28,8 @@ function test() {
         if (/NS_ERROR_MALFORMED_URI/.test(e))
           gotError = true;
       }
-      promiseWindowRestored(theWin).then(() => {
-        ok(!gotError, "Didn't get a malformed URI error.");
-        BrowserTestUtils.closeWindow(theWin).then(finish);
-      });
+      ok(!gotError, "Didn't get a malformed URI error.");
+      BrowserTestUtils.closeWindow(theWin).then(finish);
     });
   }, {once: true});
 }
