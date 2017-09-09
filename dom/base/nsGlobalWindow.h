@@ -1234,17 +1234,6 @@ public:
     return win.forget();
   }
 
-  void Get_content(JSContext* aCx,
-                   JS::MutableHandle<JSObject*> aRetval,
-                   mozilla::dom::SystemCallerGuarantee aCallerType,
-                   mozilla::ErrorResult& aError)
-  {
-    if (mDoc) {
-      mDoc->WarnOnceAbout(nsIDocument::eWindow_Content);
-    }
-    GetContent(aCx, aRetval, aCallerType, aError);
-  }
-
   already_AddRefed<mozilla::dom::Promise>
   CreateImageBitmap(JSContext* aCx,
                     const mozilla::dom::ImageBitmapSource& aImage,
