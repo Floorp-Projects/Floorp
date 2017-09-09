@@ -494,8 +494,10 @@ mod tests {
     fn test_prefs() {
         let encoded_profile = example_profile();
         let mut prefs: BTreeMap<String, Json> = BTreeMap::new();
-        prefs.insert("browser.display.background_color".into(),
-                     Json::String("#00ff00".into()));
+        prefs.insert(
+            "browser.display.background_color".into(),
+            Json::String("#00ff00".into()),
+        );
 
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("profile".into(), encoded_profile);
@@ -512,11 +514,14 @@ mod tests {
         let prefs_set = profile.user_prefs().unwrap();
         println!("{:#?}", prefs_set.prefs);
 
-        assert_eq!(prefs_set.get("startup.homepage_welcome_url"),
-                   Some(&Pref::new("data:text/html,PASS")));
-        assert_eq!(prefs_set.get("browser.display.background_color"),
-                   Some(&Pref::new("#00ff00")));
-        assert_eq!(prefs_set.get("marionette.defaultPrefs.port"),
-                   Some(&Pref::new(2828)));
+        assert_eq!(
+            prefs_set.get("startup.homepage_welcome_url"),
+            Some(&Pref::new("data:text/html,PASS"))
+        );
+        assert_eq!(
+            prefs_set.get("browser.display.background_color"),
+            Some(&Pref::new("#00ff00"))
+        );
+        assert_eq!(prefs_set.get("marionette.port"), Some(&Pref::new(2828)));
     }
 }
