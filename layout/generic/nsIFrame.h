@@ -4486,6 +4486,13 @@ private:
   nsIFrame*       mFrame;
 };
 
+// Use nsIFrame's fast-path to avoid QueryFrame:
+inline do_QueryFrameHelper<nsIFrame>
+do_QueryFrame(AutoWeakFrame& s)
+{
+  return do_QueryFrameHelper<nsIFrame>(s.GetFrame());
+}
+
 /**
  * @see AutoWeakFrame
  */
@@ -4542,6 +4549,13 @@ private:
 
   nsIFrame* mFrame;
 };
+
+// Use nsIFrame's fast-path to avoid QueryFrame:
+inline do_QueryFrameHelper<nsIFrame>
+do_QueryFrame(WeakFrame& s)
+{
+  return do_QueryFrameHelper<nsIFrame>(s.GetFrame());
+}
 
 inline bool
 nsFrameList::ContinueRemoveFrame(nsIFrame* aFrame)
