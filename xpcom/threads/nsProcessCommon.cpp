@@ -576,13 +576,13 @@ nsProcess::RunProcess(bool aBlocking, char** aMyArgv, nsIObserver* aObserver,
     return NS_ERROR_FAILURE;
   }
 #elif defined(XP_UNIX)
-  base::file_handle_mapping_vector fdMap;
+  base::LaunchOptions options;
   std::vector<std::string> argvVec;
   for (char** arg = aMyArgv; *arg != nullptr; ++arg) {
     argvVec.push_back(*arg);
   }
   pid_t newPid;
-  if (base::LaunchApp(argvVec, fdMap, false, &newPid)) {
+  if (base::LaunchApp(argvVec, options, &newPid)) {
     static_assert(sizeof(pid_t) <= sizeof(int32_t),
                   "mPid is large enough to hold a pid");
     mPid = static_cast<int32_t>(newPid);

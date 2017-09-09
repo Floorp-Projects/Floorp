@@ -272,7 +272,8 @@ void FreeThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList) {
 }
 
 bool LaunchApp(const std::wstring& cmdline,
-               bool wait, bool start_hidden, ProcessHandle* process_handle) {
+               const LaunchOptions& options,
+               ProcessHandle* process_handle) {
 
   // We want to inherit the std handles so dump() statements and assertion
   // messages in the child process can be seen - but we *do not* want to
@@ -289,7 +290,7 @@ bool LaunchApp(const std::wstring& cmdline,
   STARTUPINFO &startup_info = startup_info_ex.StartupInfo;
   startup_info.cb = sizeof(startup_info);
   startup_info.dwFlags = STARTF_USESHOWWINDOW;
-  startup_info.wShowWindow = start_hidden ? SW_HIDE : SW_SHOW;
+  startup_info.wShowWindow = options.start_hidden ? SW_HIDE : SW_SHOW;
 
   // Per the comment in CreateThreadAttributeList, lpAttributeList will contain
   // a pointer to handlesToInherit, so make sure they have the same lifetime.
@@ -340,7 +341,7 @@ bool LaunchApp(const std::wstring& cmdline,
   // Handles must be closed or they will leak
   CloseHandle(process_info.hThread);
 
-  if (wait)
+  if (options.wait)
     WaitForSingleObject(process_info.hProcess, INFINITE);
 
   // If the caller wants the process handle, we won't close it.
@@ -353,9 +354,9 @@ bool LaunchApp(const std::wstring& cmdline,
 }
 
 bool LaunchApp(const CommandLine& cl,
-               bool wait, bool start_hidden, ProcessHandle* process_handle) {
-  return LaunchApp(cl.command_line_string(), wait,
-                   start_hidden, process_handle);
+               const LaunchOptions& options,
+               ProcessHandle* process_handle) {
+  return LaunchApp(cl.command_line_string(), options, process_handle);
 }
 
 bool KillProcess(ProcessHandle process, int exit_code, bool wait) {
