@@ -102,6 +102,8 @@
     "schema": "chrome://browser/content/schemas/menus.json",
     "scopes": ["addon_parent"],
     "paths": [
+      ["contextMenus"],
+      ["menus"],
       ["menusInternal"]
     ]
   },
