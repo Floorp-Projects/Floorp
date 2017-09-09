@@ -1480,22 +1480,6 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
   let {x, y, width, height} = cmd.parameters;
   let origRect = this.curBrowser.rect;
 
-  // Exit fullscreen and wait for window to resize.
-  async function exitFullscreen() {
-    return new Promise(resolve => {
-      win.addEventListener("sizemodechange", whenIdle(win, resolve), {once: true});
-      win.fullScreen = false;
-    });
-  }
-
-  // Restore window and wait for the window state to change.
-  async function restoreWindow() {
-    return new Promise(resolve => {
-      win.addEventListener("sizemodechange", whenIdle(win, resolve), {once: true});
-      win.restore();
-    });
-  }
-
   // Synchronous resize to |width| and |height| dimensions.
   async function resizeWindow(width, height) {
     return new Promise(resolve => {
@@ -1531,13 +1515,13 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
     });
   }
 
-  switch (win.windowState) {
-    case win.STATE_FULLSCREEN:
-      await exitFullscreen();
+  switch (WindowState.from(win.windowState)) {
+    case WindowState.Fullscreen:
+      await exitFullscreen(win);
       break;
 
-    case win.STATE_MINIMIZED:
-      await restoreWindow();
+    case WindowState.Minimized:
+      await restoreWindow(win);
       break;
   }
 
@@ -3015,8 +2999,11 @@ GeckoDriver.prototype.minimizeWindow = async function(cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let state = WindowState.from(win.windowState);
-  if (state != WindowState.Minimized) {
+  if (WindowState.from(win.windowState) == WindowState.Fullscreen) {
+    await exitFullscreen(win);
+  }
+
+  if (WindowState.from(win.windowState) != WindowState.Minimized) {
     await new Promise(resolve => {
       win.addEventListener("sizemodechange", whenIdle(win, resolve), {once: true});
       win.minimize();
@@ -3049,6 +3036,16 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
+  switch (WindowState.from(win.windowState)) {
+    case WindowState.Fullscreen:
+      await exitFullscreen(win);
+      break;
+
+    case WindowState.Minimized:
+      await restoreWindow(win);
+      break;
+  }
+
   const origSize = {
     outerWidth: win.outerWidth,
     outerHeight: win.outerHeight,
@@ -3070,8 +3067,7 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
     });
   }
 
-  let state = WindowState.from(win.windowState);
-  if (state != WindowState.Maximized) {
+  if (WindowState.from(win.windowState) != win.Maximized) {
     await new TimedPromise(resolve => {
       win.addEventListener("sizemodechange", resolve, {once: true});
       win.maximize();
@@ -3126,8 +3122,11 @@ GeckoDriver.prototype.fullscreenWindow = async function(cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let state = WindowState.from(win.windowState);
-  if (state != WindowState.Fullscreen) {
+  if (WindowState.from(win.windowState) == WindowState.Minimized) {
+    await restoreWindow(win);
+  }
+
+  if (WindowState.from(win.windowState) != WindowState.Fullscreen) {
     await new Promise(resolve => {
       win.addEventListener("sizemodechange", resolve, {once: true});
       win.fullScreen = true;
@@ -3696,6 +3695,32 @@ function getOuterWindowId(win) {
   return win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)
       .outerWindowID;
+}
+
+/**
+ * Exit fullscreen and wait for <var>window</var> to resize.
+ *
+ * @param {ChromeWindow} window
+ *     Window to exit fullscreen.
+ */
+async function exitFullscreen(window) {
+  return new Promise(resolve => {
+    window.addEventListener("sizemodechange", whenIdle(window, resolve), {once: true});
+    window.fullScreen = false;
+  });
+}
+
+/**
+ * Restore window and wait for the window state to change.
+ *
+ * @param {ChromeWindow} window
+ *     Window to restore.
+ */
+async function restoreWindow(window) {
+  return new Promise(resolve => {
+    window.addEventListener("sizemodechange", whenIdle(window, resolve), {once: true});
+    window.restore();
+  });
 }
 
 /**
