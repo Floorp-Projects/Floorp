@@ -10,14 +10,10 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     'U2F.h',
     'U2FAuthenticator.h',
-    'U2FUtil.h',
 ]
 
 UNIFIED_SOURCES += [
     'U2F.cpp',
-    'U2FManager.cpp',
-    'U2FTransactionChild.cpp',
-    'U2FTransactionParent.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -27,7 +23,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/crypto',
-    '/dom/webauthn',
     '/security/manager/ssl',
     '/security/pkix/include',
     '/security/pkix/lib',

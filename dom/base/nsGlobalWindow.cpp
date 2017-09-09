@@ -5402,8 +5402,8 @@ nsGlobalWindow::GetU2f(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mU2F) {
-    RefPtr<U2F> u2f = new U2F(AsInner());
-    u2f->Init(aError);
+    RefPtr<U2F> u2f = new U2F();
+    u2f->Init(AsInner(), aError);
     if (NS_WARN_IF(aError.Failed())) {
       return nullptr;
     }

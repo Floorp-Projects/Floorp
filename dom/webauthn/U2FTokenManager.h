@@ -36,12 +36,12 @@ public:
   };
   NS_INLINE_DECL_REFCOUNTING(U2FTokenManager)
   static U2FTokenManager* Get();
-  void Register(PWebAuthnTransactionParent* aTransactionParent,
+  void Register(WebAuthnTransactionParent* aTransactionParent,
                 const WebAuthnTransactionInfo& aTransactionInfo);
-  void Sign(PWebAuthnTransactionParent* aTransactionParent,
+  void Sign(WebAuthnTransactionParent* aTransactionParent,
             const WebAuthnTransactionInfo& aTransactionInfo);
-  void Cancel(PWebAuthnTransactionParent* aTransactionParent);
-  void MaybeClearTransaction(PWebAuthnTransactionParent* aParent);
+  void Cancel(WebAuthnTransactionParent* aTransactionParent);
+  void MaybeClearTransaction(WebAuthnTransactionParent* aParent);
   static void Initialize();
 private:
   U2FTokenManager();
@@ -57,7 +57,7 @@ private:
   // Using a raw pointer here, as the lifetime of the IPC object is managed by
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
-  PWebAuthnTransactionParent* mTransactionParent;
+  WebAuthnTransactionParent* mTransactionParent;
   RefPtr<U2FTokenTransport> mTokenManagerImpl;
   MozPromiseRequestHolder<U2FRegisterPromise> mRegisterPromise;
   MozPromiseRequestHolder<U2FSignPromise> mSignPromise;
