@@ -43,6 +43,15 @@ public:
     , mPendingWrapperRestyles(aPendingWrapperRestyles)
     , mPendingWrapperRestyleOffset(aPendingWrapperRestyles.Length())
     , mChangesHandled(nsChangeHint(0))
+#ifdef DEBUG
+    // If !mOwner, then we wouldn't have processed our wrapper restyles, because
+    // we only process those when handling an element with a frame.  But that's
+    // OK, because if we started our traversal at an element with no frame
+    // (e.g. it's display:contents), that means the wrapper frames in our list
+    // actually inherit from one of its ancestors, not from it, and hence not
+    // restyling them is OK.
+    , mAssertWrapperRestyleLength(false)
+#endif // DEBUG
   {}
 
   // We shouldn't assume that changes handled from our parent are handled for
@@ -159,7 +168,7 @@ private:
   // Whether we should assert in our destructor that we've processed all of the
   // relevant wrapper restyles.
 #ifdef DEBUG
-  const bool mAssertWrapperRestyleLength = true;
+  const bool mAssertWrapperRestyleLength;
 #endif // DEBUG
 };
 
