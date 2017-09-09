@@ -111,6 +111,16 @@ public:
     // clearly identify in DMD's output the memory measured here.
     *aCVsSize += ServoComputedValuesMallocEnclosingSizeOf(this);
     mSource.AddSizeOfExcludingThis(aSizes);
+
+    if (mNextInheritingAnonBoxStyle &&
+        !aSizes.mState.HaveSeenPtr(mNextInheritingAnonBoxStyle)) {
+      mNextInheritingAnonBoxStyle->AddSizeOfIncludingThis(aSizes, aCVsSize);
+    }
+
+    if (mNextLazyPseudoStyle &&
+        !aSizes.mState.HaveSeenPtr(mNextLazyPseudoStyle)) {
+      mNextLazyPseudoStyle->AddSizeOfIncludingThis(aSizes, aCVsSize);
+    }
   }
 
 private:
