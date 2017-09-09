@@ -297,6 +297,12 @@ HTMLEditor::ShowResizersInner(nsIDOMElement* aResizedElement)
     NS_ERROR("call HideResizers first");
     return NS_ERROR_UNEXPECTED;
   }
+
+  nsCOMPtr<nsINode> resizedNode = do_QueryInterface(aResizedElement);
+  if (NS_WARN_IF(!IsDescendantOfEditorRoot(resizedNode))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   mResizedObject = do_QueryInterface(aResizedElement);
   NS_ENSURE_STATE(mResizedObject);
 
