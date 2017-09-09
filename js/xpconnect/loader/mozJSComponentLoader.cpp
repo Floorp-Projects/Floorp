@@ -304,7 +304,16 @@ mozJSComponentLoader::ReallyInit()
 {
     MOZ_ASSERT(!mInitialized);
 
-    mShareLoaderGlobal = Preferences::GetBool("jsloader.shareGlobal");
+    const char* shareGlobal = PR_GetEnv("MOZ_LOADER_SHARE_GLOBAL");
+    if (shareGlobal && *shareGlobal) {
+        nsDependentCString val(shareGlobal);
+        mShareLoaderGlobal = !(val.EqualsLiteral("0") ||
+                               val.LowerCaseEqualsLiteral("no") ||
+                               val.LowerCaseEqualsLiteral("false") ||
+                               val.LowerCaseEqualsLiteral("off"));
+    } else {
+        mShareLoaderGlobal = Preferences::GetBool("jsloader.shareGlobal");
+    }
 
     nsresult rv;
     nsCOMPtr<nsIObserverService> obsSvc =
