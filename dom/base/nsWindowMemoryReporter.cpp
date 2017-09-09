@@ -418,6 +418,13 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   aWindowTotalSizes->mLayoutServoStyleSetsOther +=
     windowSizes.mLayoutServoStyleSetsOther;
 
+  REPORT_SIZE("/layout/servo-element-data-objects",
+              windowSizes.mLayoutServoElementDataObjects,
+              "Memory used for Servo ElementData objects, but not the things"
+              "hanging off them.");
+  aWindowTotalSizes->mLayoutServoElementDataObjects +=
+    windowSizes.mLayoutServoElementDataObjects;
+
   REPORT_SIZE("/layout/text-runs", windowSizes.mLayoutTextRunsSize,
               "Memory used for text-runs (glyph layout) in the PresShell's "
               "frame tree, within a window.");
@@ -714,6 +721,10 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          windowTotalSizes.mLayoutServoStyleSetsOther,
          "This is the sum of all windows' 'layout/servo-style-sets/' numbers.");
 
+  REPORT("window-objects/layout/servo-element-data-objects",
+         windowTotalSizes.mLayoutServoElementDataObjects,
+         "This is the sum of all windows' 'layout/servo-element-data-objects' "
+         "numbers.");
 
   REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRunsSize,
          "This is the sum of all windows' 'layout/text-runs' numbers.");

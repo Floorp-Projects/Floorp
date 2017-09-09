@@ -33,9 +33,16 @@ function runUpdateFinished() {
  */
 function checkPostUpdateAppLogFinished() {
   standardInit();
-  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
+  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
 }

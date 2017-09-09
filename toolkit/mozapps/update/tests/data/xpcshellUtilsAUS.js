@@ -53,7 +53,6 @@ function getLogSuffix() {
 }
 
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/ctypes.jsm", this);
 
 const DIR_MACOS = IS_MACOSX ? "Contents/MacOS/" : "";
 const DIR_RESOURCES = IS_MACOSX ? "Contents/Resources/" : "";
@@ -140,7 +139,7 @@ var gTestID;
 
 var gTestserver;
 
-var gRegisteredServiceCleanup;
+var gIncrementalDownloadErrorType;
 
 var gCheckFunc;
 var gResponseBody;
@@ -193,6 +192,11 @@ var DEBUG_AUS_TEST = true;
 const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("../data", false)).spec;
 /* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
+
+XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
+                                  "resource://gre/modules/ctypes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
+                                  "resource://testing-common/MockRegistrar.jsm");
 
 var gTestFiles = [];
 var gTestDirs = [];
@@ -749,16 +753,6 @@ var gTestDirsPartialSuccess = [
 // Concatenate the common files to the beginning of the array.
 gTestDirsPartialSuccess = gTestDirsCommon.concat(gTestDirsPartialSuccess);
 
-// This makes it possible to run most tests on xulrunner where the update
-// channel default preference is not set.
-if (MOZ_APP_NAME == "xulrunner") {
-  try {
-    gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
-  } catch (e) {
-    setUpdateChannel("test_channel");
-  }
-}
-
 /**
  * Helper function for setting up the test environment.
  */
@@ -773,20 +767,6 @@ function setupTestCommon() {
   gTestID = caller.filename.toString().split("/").pop().split(".")[0];
 
   createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
-
-  // Tests that don't work with XULRunner.
-  const XUL_RUNNER_INCOMPATIBLE = ["marAppApplyUpdateAppBinInUseStageSuccess_win",
-                                   "marAppApplyUpdateStageSuccess",
-                                   "marAppApplyUpdateSuccess",
-                                   "marAppApplyUpdateAppBinInUseStageSuccessSvc_win",
-                                   "marAppApplyUpdateStageSuccessSvc",
-                                   "marAppApplyUpdateSuccessSvc"];
-  // Replace with Array.prototype.includes when it has stabilized.
-  if (MOZ_APP_NAME == "xulrunner" &&
-      XUL_RUNNER_INCOMPATIBLE.indexOf(gTestID) != -1) {
-    logTestInfo("Unable to run this test on xulrunner");
-    return false;
-  }
 
   if (IS_SERVICE_TEST && !shouldRunServiceTest()) {
     return false;
@@ -877,20 +857,16 @@ function setupTestCommon() {
 function cleanupTestCommon() {
   debugDump("start - general test cleanup");
 
-  // Force the update manager to reload the update data to prevent it from
-  // writing the old data to the files that have just been removed.
-  reloadUpdateManagerData();
-
   if (gChannel) {
     gPrefRoot.removeObserver(PREF_APP_UPDATE_CHANNEL, observer);
   }
 
-  // Call app update's observe method passing xpcom-shutdown to test that the
+  // Call app update's observe method passing quit-application to test that the
   // shutdown of app update runs without throwing or leaking. The observer
   // method is used directly instead of calling notifyObservers so components
   // outside of the scope of this test don't assert and thereby cause app update
   // tests to fail.
-  gAUS.observe(null, "xpcom-shutdown", "");
+  gAUS.observe(null, "quit-application", "");
 
   gTestserver = null;
 
@@ -989,6 +965,14 @@ function cleanupTestCommon() {
  * inspected.
  */
 function doTestFinish() {
+  // Create empty update xml files and force the update manager to reload the
+  // update data. This will prevent the update manager from writing the test
+  // update data to the files when the test ends.
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), true);
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
+  reloadUpdateManagerData();
+  gUpdateManager.saveUpdates();
+
   if (DEBUG_AUS_TEST) {
     // This prevents do_print errors from being printed by the xpcshell test
     // harness due to nsUpdateService.js logging to the console when the
@@ -996,6 +980,49 @@ function doTestFinish() {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, false);
     gAUS.observe(null, "nsPref:changed", PREF_APP_UPDATE_LOG);
   }
+  do_execute_soon(testFinishWaitForUpdateXMLFiles);
+}
+
+/**
+ * Waits until the active-update.xml and updates.xml files don't exist and then
+ * calls do_test_finished to end the test. This is necessary due to these files
+ * being written asynchronously by nsIUpdateManager.
+ */
+function testFinishWaitForUpdateXMLFiles() {
+  let tmpActiveUpdateXML = getUpdatesRootDir();
+  tmpActiveUpdateXML.append(FILE_ACTIVE_UPDATE_XML + ".tmp");
+  if (tmpActiveUpdateXML.exists()) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, testFinishWaitForUpdateXMLFiles);
+    return;
+  }
+
+  let tmpUpdatesXML = getUpdatesRootDir();
+  tmpUpdatesXML.append(FILE_UPDATES_XML + ".tmp");
+  if (tmpUpdatesXML.exists()) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, testFinishWaitForUpdateXMLFiles);
+    return;
+  }
+
+  let activeUpdateXML = getUpdatesXMLFile(true);
+  if (activeUpdateXML.exists()) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, testFinishWaitForUpdateXMLFiles);
+    return;
+  }
+
+  let updatesXML = getUpdatesXMLFile(false);
+  if (updatesXML.exists()) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, testFinishWaitForUpdateXMLFiles);
+    return;
+  }
+
   do_execute_soon(do_test_finished);
 }
 
@@ -1123,6 +1150,56 @@ function checkUpdateManager(aStatusFileState, aHasActiveUpdate,
       reloadUpdateManagerData();
     }
   }
+}
+
+/**
+ * Waits until the active-update.xml and updates.xml files exists or not based
+ * on the parameters specified when calling this function or the default values
+ * if the parameters are not specified. After these conditions are met the
+ * waitForUpdateXMLFilesFinished function is called. This is necessary due to
+ * these files being written asynchronously by nsIUpdateManager.
+ *
+ * @param   aActiveUpdateExists (optional)
+ *          Whether the active-update.xml file should exist (default is false).
+ * @param   aUpdatesExists (optional)
+ *          Whether the updates.xml file should exist (default is true).
+ */
+function waitForUpdateXMLFiles(aActiveUpdateExists = false, aUpdatesExists = true) {
+  let tmpActiveUpdateXML = getUpdatesRootDir();
+  tmpActiveUpdateXML.append(FILE_ACTIVE_UPDATE_XML + ".tmp");
+  if (tmpActiveUpdateXML.exists()) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
+    return;
+  }
+
+  let tmpUpdatesXML = getUpdatesRootDir();
+  tmpUpdatesXML.append(FILE_UPDATES_XML + ".tmp");
+  if (tmpUpdatesXML.exists()) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
+    return;
+  }
+
+  let activeUpdateXML = getUpdatesXMLFile(true);
+  if (activeUpdateXML.exists() != aActiveUpdateExists) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
+    return;
+  }
+
+  let updatesXML = getUpdatesXMLFile(false);
+  if (updatesXML.exists() != aUpdatesExists) {
+    // Since the file is removed asynchronously wait until it has been removed.
+    // Uses do_timeout instead of do_execute_soon to lessen log spew.
+    do_timeout(10, () => waitForUpdateXMLFiles(aActiveUpdateExists, aUpdatesExists));
+    return;
+  }
+
+  do_execute_soon(waitForUpdateXMLFilesFinished);
 }
 
 /**
@@ -3603,7 +3680,7 @@ const downloadListener = {
   onStopRequest: function DL_onStopRequest(aRequest, aContext, aStatus) {
     gStatusResult = aStatus;
     // Use a timeout to allow the request to complete
-    do_execute_soon(gCheckFunc);
+    do_execute_soon(downloadListenerStop);
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
@@ -3993,6 +4070,132 @@ function runUpdateUsingApp(aExpectedStatus) {
 
   debugDump("finish - launching application to apply update");
 }
+
+/* This Mock incremental downloader is used to verify that connection interrupts
+ * work correctly in updater code. The implementation of the mock incremental
+ * downloader is very simple, it simply copies the file to the destination
+ * location.
+ */
+function initMockIncrementalDownload() {
+  const INC_CONTRACT_ID = "@mozilla.org/network/incremental-download;1";
+  let incrementalDownloadCID =
+    MockRegistrar.register(INC_CONTRACT_ID, IncrementalDownload);
+  do_register_cleanup(() => {
+    MockRegistrar.unregister(incrementalDownloadCID);
+  });
+}
+
+function IncrementalDownload() {
+  this.wrappedJSObject = this;
+}
+
+IncrementalDownload.prototype = {
+  /* nsIIncrementalDownload */
+  init(uri, file, chunkSize, intervalInSeconds) {
+    this._destination = file;
+    this._URI = uri;
+    this._finalURI = uri;
+  },
+
+  start(observer, ctxt) {
+    let tm = Cc["@mozilla.org/thread-manager;1"].
+             getService(Ci.nsIThreadManager);
+    // Do the actual operation async to give a chance for observers to add
+    // themselves.
+    tm.dispatchToMainThread(() => {
+      this._observer = observer.QueryInterface(Ci.nsIRequestObserver);
+      this._ctxt = ctxt;
+      this._observer.onStartRequest(this, this._ctxt);
+      let mar = getTestDirFile(FILE_SIMPLE_MAR);
+      mar.copyTo(this._destination.parent, this._destination.leafName);
+      let status = Cr.NS_OK;
+      switch (gIncrementalDownloadErrorType++) {
+        case 0:
+          status = Cr.NS_ERROR_NET_RESET;
+          break;
+        case 1:
+          status = Cr.NS_ERROR_CONNECTION_REFUSED;
+          break;
+        case 2:
+          status = Cr.NS_ERROR_NET_RESET;
+          break;
+        case 3:
+          status = Cr.NS_OK;
+          break;
+        case 4:
+          status = Cr.NS_ERROR_OFFLINE;
+          // After we report offline, we want to eventually show offline
+          // status being changed to online.
+          let tm2 = Cc["@mozilla.org/thread-manager;1"].
+                    getService(Ci.nsIThreadManager);
+          tm2.dispatchToMainThread(function() {
+            Services.obs.notifyObservers(gAUS,
+                                         "network:offline-status-changed",
+                                         "online");
+          });
+          break;
+      }
+      this._observer.onStopRequest(this, this._ctxt, status);
+    });
+  },
+
+  get URI() {
+    return this._URI;
+  },
+
+  get currentSize() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  get destination() {
+    return this._destination;
+  },
+
+  get finalURI() {
+    return this._finalURI;
+  },
+
+  get totalSize() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /* nsIRequest */
+  cancel(aStatus) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  suspend() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  isPending() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  _loadFlags: 0,
+  get loadFlags() {
+    return this._loadFlags;
+  },
+  set loadFlags(val) {
+    this._loadFlags = val;
+  },
+
+  _loadGroup: null,
+  get loadGroup() {
+    return this._loadGroup;
+  },
+  set loadGroup(val) {
+    this._loadGroup = val;
+  },
+
+  _name: "",
+  get name() {
+    return this._name;
+  },
+
+  _status: 0,
+  get status() {
+    return this._status;
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIncrementalDownload])
+};
 
 /**
  * Sets the environment that will be used by the application process when it is
