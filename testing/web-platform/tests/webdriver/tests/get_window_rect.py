@@ -1,85 +1,161 @@
-from support.asserts import assert_error, assert_dialog_handled, assert_success
-from support.fixtures import create_dialog
-from support.inline import inline
+from tests.support.asserts import assert_error, assert_dialog_handled, assert_success
+from tests.support.fixtures import create_dialog
+from tests.support.inline import inline
 
 
 alert_doc = inline("<script>window.alert()</script>")
 
 
+def get_window_rect(session):
+    return session.transport.send("POST", "session/%s/window/rect" % session.session_id)
+
+
 # 10.7.1 Get Window Rect
 
-def test_get_window_rect_no_browsing_context(session, create_window):
-    # Step 1
+
+def test_no_browsing_context(session, create_window):
+    """
+    1. If the current top-level browsing context is no longer open,
+    return error with error code no such window.
+
+    """
     session.window_handle = create_window()
     session.close()
-    result = session.transport.send("GET", "session/%s/window/rect" % session.session_id)
+    response = get_window_rect(session)
+    assert_error(response, "no such window")
 
-    assert_error(result, "no such window")
+
+def test_handle_prompt_dismiss_and_notify():
+    """TODO"""
 
 
-def test_get_window_rect_prompt_accept(new_session):
-    # Step 2
+def test_handle_prompt_accept_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_ignore():
+    """TODO"""
+
+
+def test_handle_prompt_accept(new_session):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - accept state
+           Accept the current user prompt.
+
+    """
     _, session = new_session({"alwaysMatch": {"unhandledPromptBehavior": "accept"}})
     session.url = inline("<title>WD doc title</title>")
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
-    result = session.transport.send("GET",
-                                    "session/%s/window/rect" % session.session_id)
-    assert result.status == 200
+    response = get_window_rect(session)
+    assert response.status == 200
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
-    result = session.transport.send("GET",
-                                    "session/%s/window/rect" % session.session_id)
-    assert result.status == 200
+    response = get_window_rect(session)
+    assert response.status == 200
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
-    result = session.transport.send("GET",
-                                    "session/%s/window/rect" % session.session_id)
-    assert result.status == 200
+    response = get_window_rect(session)
+    assert response.status == 200
     assert_dialog_handled(session, "dismiss #3")
 
 
-def test_get_window_rect_handle_prompt_missing_value(session, create_dialog):
-    # Step 2
+def test_handle_prompt_missing_value(session, create_dialog):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - missing value default state
+           1. Dismiss the current user prompt.
+           2. Return error with error code unexpected alert open.
+
+    """
     session.url = inline("<title>WD doc title</title>")
     create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = session.transport.send("GET",
-                                    "session/%s/window/rect" % session.session_id)
+    response = get_window_rect(session)
 
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = session.transport.send("GET",
-                                    "session/%s/window/rect" % session.session_id)
-
-    assert_error(result, "unexpected alert open")
+    response = get_window_rect(session)
+    assert_error(response, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = session.transport.send("GET",
-                                    "session/%s/window/rect" % session.session_id)
-
-    assert_error(result, "unexpected alert open")
+    response = get_window_rect(session)
+    assert_error(response, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #3")
 
 
-def test_get_window_rect_payload(session):
-    # step 3
-    result = session.transport.send("GET", "session/%s/window/rect" % session.session_id)
+def test_payload(session):
+    """
+    3. Return success with the JSON serialization of the current top-level
+    browsing context's window rect.
 
-    assert result.status == 200
-    assert isinstance(result.body["value"], dict)
-    assert "width" in result.body["value"]
-    assert "height" in result.body["value"]
-    assert "x" in result.body["value"]
-    assert "y" in result.body["value"]
-    assert isinstance(result.body["value"]["width"], (int, float))
-    assert isinstance(result.body["value"]["height"], (int, float))
-    assert isinstance(result.body["value"]["x"], (int, float))
-    assert isinstance(result.body["value"]["y"], (int, float))
+    [...]
+
+    A top-level browsing context's window rect is defined as a
+    dictionary of the screenX, screenY, width and height attributes of
+    the WindowProxy. Its JSON representation is the following:
+
+    "x"
+        WindowProxy's screenX attribute.
+
+    "y"
+        WindowProxy's screenY attribute.
+
+    "width"
+        Width of the top-level browsing context's outer dimensions,
+        including any browser chrome and externally drawn window
+        decorations in CSS reference pixels.
+
+    "height"
+        Height of the top-level browsing context's outer dimensions,
+        including any browser chrome and externally drawn window
+        decorations in CSS reference pixels.
+
+    """
+    response = get_window_rect(session)
+
+    assert response.status == 200
+    assert isinstance(response.body["value"], dict)
+    value = response.body["value"]
+    assert "width" in value
+    assert "height" in value
+    assert "x" in value
+    assert "y" in value
+    assert isinstance(value["width"], int)
+    assert isinstance(value["height"], int)
+    assert isinstance(value["x"], int)
+    assert isinstance(value["y"], int)
