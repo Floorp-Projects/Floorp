@@ -150,9 +150,6 @@ public:
   void SetNextDriver(GraphDriver* aNextDriver);
   void SetPreviousDriver(GraphDriver* aPreviousDriver);
 
-  /* Return whether we have been scheduled to start. */
-  bool Scheduled();
-
   /**
    * If we are running a real time graph, get the current time stamp to schedule
    * video frames. This has to be reimplemented by real time drivers.
@@ -256,9 +253,6 @@ protected:
   // driver at the end of this iteration.
   // This must be accessed using the {Set,Get}NextDriver methods.
   RefPtr<GraphDriver> mNextDriver;
-  // This is initially false, but set to true as soon the driver has been
-  // scheduled to start through GraphDriver::Start().
-  bool mScheduled;
   virtual ~GraphDriver()
   { }
 };
