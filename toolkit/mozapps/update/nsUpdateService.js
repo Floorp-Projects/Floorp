@@ -191,13 +191,20 @@ const APPID_TO_TOPIC = {
   "{33cb9019-c295-46dd-be21-8c4936574bee}": "xul-window-visible",
 };
 
+// A var is used for the delay so tests can set a smaller value.
+var gSaveUpdateXMLDelay = 2000;
 var gUpdateMutexHandle = null;
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
                                   "resource://gre/modules/WindowsRegistry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
+                                  "resource://gre/modules/DeferredTask.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
   return getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
@@ -1573,7 +1580,10 @@ const UpdateServiceFactory = {
  */
 function UpdateService() {
   LOG("Creating UpdateService");
-  Services.obs.addObserver(this, "xpcom-shutdown");
+  // The observor notification to shut down the service must be before
+  // profile-before-change since nsIUpdateManager uses profile-before-change
+  // to shutdown and write the update xml files.
+  Services.obs.addObserver(this, "quit-application");
   Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
 }
 
@@ -1652,7 +1662,7 @@ UpdateService.prototype = {
           gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
         }
         break;
-      case "xpcom-shutdown":
+      case "quit-application":
         Services.obs.removeObserver(this, topic);
         Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
 
@@ -2511,10 +2521,16 @@ UpdateService.prototype = {
  * @constructor
  */
 function UpdateManager() {
-  // Ensure the active update file is loaded and that the active update is set
-  // in the update manager if there is an existing active update.
+  if (Services.appinfo.ID == "xpcshell@tests.mozilla.org") {
+    // Use a smaller value for xpcshell tests so they don't have to wait as
+    // long for the files to be saved.
+    gSaveUpdateXMLDelay = 0;
+  }
+
+  // Load the active-update.xml file to see if there is an active update.
   let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
   if (activeUpdates.length > 0) {
+    // Set the active update directly on the var used to cache the value.
     this._activeUpdate = activeUpdates[0];
     // This check is performed here since UpdateService:_postUpdateProcessing
     // won't be called when there isn't an update.status file.
@@ -2554,11 +2570,21 @@ UpdateManager.prototype = {
   observe: function UM_observe(subject, topic, data) {
     // Hack to be able to run and cleanup tests by reloading the update data.
     if (topic == "um-reload-update-data") {
+      if (this._updatesXMLSaver) {
+        this._updatesXMLSaver.disarm();
+        AsyncShutdown.profileBeforeChange.removeBlocker(this._updatesXMLSaverCallback);
+        this._updatesXMLSaver = null;
+        this._updatesXMLSaverCallback = null;
+      }
+      // Set the write delay to 0 for mochitest-chrome and mochitest-browser
+      // tests.
+      gSaveUpdateXMLDelay = 0;
       this._activeUpdate = null;
       let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
       if (activeUpdates.length > 0) {
         this._activeUpdate = activeUpdates[0];
       }
+      this._updatesDirty = true;
       delete this._updates;
       let updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
       Object.defineProperty(this, "_updates", {
@@ -2617,6 +2643,17 @@ UpdateManager.prototype = {
           "list. Exception: " + ex);
     }
     fileStream.close();
+    if (updates.length == 0) {
+      LOG("UpdateManager:_loadXMLFileIntoArray - update xml file " + fileName +
+          " exists but doesn't contain any updates");
+      // The file exists but doesn't contain any updates so remove it.
+      try {
+        file.remove(false);
+      } catch (e) {
+        LOG("UpdateManager:_loadXMLFileIntoArray - error removing " + fileName +
+            " file. Exception: " + e);
+      }
+    }
     return updates;
   },
 
@@ -2677,53 +2714,68 @@ UpdateManager.prototype = {
    * @param   fileName
    *          The file name in the updates directory to write to.
    */
-  _writeUpdatesToXMLFile: function UM__writeUpdatesToXMLFile(updates, fileName) {
+  _writeUpdatesToXMLFile: async function UM__writeUpdatesToXMLFile(updates, fileName) {
     let file = getUpdateFile([fileName]);
     if (updates.length == 0) {
       LOG("UpdateManager:_writeUpdatesToXMLFile - no updates to write. " +
           "removing file: " + file.path);
-      try {
-        file.remove(false);
-      } catch (e) {
-      }
+      await OS.File.remove(file.path, {ignoreAbsent: true});
       return;
     }
 
-    var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-              createInstance(Ci.nsIFileOutputStream);
-    var modeFlags = FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
-                    FileUtils.MODE_TRUNCATE;
-    if (!file.exists()) {
-      file.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-    }
-    fos.init(file, modeFlags, FileUtils.PERMS_FILE, 0);
-
+    const EMPTY_UPDATES_DOCUMENT_OPEN = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\">";
+    const EMPTY_UPDATES_DOCUMENT_CLOSE = "</updates>";
     try {
       var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                    createInstance(Ci.nsIDOMParser);
-      const EMPTY_UPDATES_DOCUMENT = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\"></updates>";
-      var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
+      var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT_OPEN + EMPTY_UPDATES_DOCUMENT_CLOSE, "text/xml");
 
       for (var i = 0; i < updates.length; ++i) {
         doc.documentElement.appendChild(updates[i].serialize(doc));
       }
 
-      var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
-                       createInstance(Ci.nsIDOMSerializer);
-      serializer.serializeToStream(doc.documentElement, fos, null);
+      var xml = EMPTY_UPDATES_DOCUMENT_OPEN + doc.documentElement.innerHTML +
+                EMPTY_UPDATES_DOCUMENT_CLOSE;
+      await OS.File.writeAtomic(file.path, xml, {encoding: "utf-8",
+                                                 tmpPath: file.path + ".tmp"});
+      await OS.File.setPermissions(file.path, {unixMode: FileUtils.PERMS_FILE});
     } catch (e) {
+      LOG("UpdateManager:_writeUpdatesToXMLFile - Exception: " + e);
     }
-
-    FileUtils.closeSafeFileOutputStream(fos);
   },
 
+  _updatesXMLSaver: null,
+  _updatesXMLSaverCallback: null,
   /**
    * See nsIUpdateService.idl
    */
   saveUpdates: function UM_saveUpdates() {
+    if (!this._updatesXMLSaver) {
+      this._updatesXMLSaverCallback = () => this._updatesXMLSaver.finalize();
+
+      this._updatesXMLSaver = new DeferredTask(() => this._saveUpdatesXML(),
+                                               gSaveUpdateXMLDelay);
+      AsyncShutdown.profileBeforeChange.addBlocker(
+        "UpdateManager: writing update xml data", this._updatesXMLSaverCallback);
+    } else {
+      this._updatesXMLSaver.disarm();
+    }
+
+    this._updatesXMLSaver.arm();
+  },
+
+  /**
+   * Saves the active-updates.xml and updates.xml when the updates history has
+   * been modified files.
+   */
+  _saveUpdatesXML: function UM__saveUpdatesXML() {
+    AsyncShutdown.profileBeforeChange.removeBlocker(this._updatesXMLSaverCallback);
+    this._updatesXMLSaver = null;
+    this._updatesXMLSaverCallback = null;
+
     // The active update stored in the active-update.xml file will change during
-    // the lifetime of an active update and should always be updated when
-    // saveUpdates is called.
+    // the lifetime of an active update and the file should always be updated
+    // when saveUpdates is called.
     this._writeUpdatesToXMLFile(this._activeUpdate ? [this._activeUpdate] : [],
                                 FILE_ACTIVE_UPDATE_XML);
     // The update history stored in the updates.xml file should only need to be
@@ -2731,7 +2783,7 @@ UpdateManager.prototype = {
     // |_updatesDirty| will be true.
     if (this._updatesDirty) {
       this._updatesDirty = false;
-      this._writeUpdatesToXMLFile(this._updates.slice(0, 10), FILE_UPDATES_XML);
+      this._writeUpdatesToXMLFile(this._updates, FILE_UPDATES_XML);
     }
   },
 

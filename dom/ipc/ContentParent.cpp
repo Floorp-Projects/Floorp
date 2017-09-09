@@ -26,6 +26,7 @@
 #include "imgIContainer.h"
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #include "mozilla/a11y/AccessibleWrap.h"
+#include "mozilla/a11y/Compatibility.h"
 #endif
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -1306,8 +1307,11 @@ ContentParent::Init()
   // process.
   if (nsIPresShell::IsAccessibilityActive()) {
 #if defined(XP_WIN)
-    Unused << SendActivateA11y(::GetCurrentThreadId(),
-                                a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      // Don't init content a11y if we detect an incompat version of JAWS in use.
+      if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
+        Unused << SendActivateA11y(::GetCurrentThreadId(),
+                                   a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      }
 #else
     Unused << SendActivateA11y(0, 0);
 #endif
@@ -2841,8 +2845,11 @@ ContentParent::Observe(nsISupports* aSubject,
       // Make sure accessibility is running in content process when
       // accessibility gets initiated in chrome process.
 #if defined(XP_WIN)
-      Unused << SendActivateA11y(::GetCurrentThreadId(),
-                                  a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      // Don't init content a11y if we detect an incompat version of JAWS in use.
+      if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
+        Unused << SendActivateA11y(::GetCurrentThreadId(),
+                                   a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      }
 #else
       Unused << SendActivateA11y(0, 0);
 #endif

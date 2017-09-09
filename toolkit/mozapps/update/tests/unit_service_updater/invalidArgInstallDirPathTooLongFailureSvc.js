@@ -41,10 +41,17 @@ function setupUpdaterTestFinished() {
  */
 function runUpdateFinished() {
   standardInit();
+  checkPostUpdateRunningFile(false);
+  checkFilesAfterUpdateFailure(getApplyDirFile);
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
   let errorCode = IS_SERVICE_TEST ? SERVICE_INVALID_INSTALL_DIR_PATH_ERROR
                                   : INVALID_INSTALL_DIR_PATH_ERROR;
   checkUpdateManager(STATE_NONE, false, STATE_FAILED, errorCode, 1);
-  checkPostUpdateRunningFile(false);
-  checkFilesAfterUpdateFailure(getApplyDirFile);
   waitForFilesInUse();
 }

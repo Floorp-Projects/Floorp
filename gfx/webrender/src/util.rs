@@ -267,21 +267,12 @@ pub fn pack_as_float(value: u32) -> f32 {
 
 
 pub trait ComplexClipRegionHelpers {
-    /// Return an aligned rectangle that is inside the clip region and doesn't intersect
-    /// any of the bounding rectangles of the rounded corners.
-    fn get_inner_rect_safe(&self) -> Option<LayoutRect>;
     /// Return the approximately largest aligned rectangle that is fully inside
     /// the provided clip region.
     fn get_inner_rect_full(&self) -> Option<LayoutRect>;
 }
 
 impl ComplexClipRegionHelpers for ComplexClipRegion {
-    fn get_inner_rect_safe(&self) -> Option<LayoutRect> {
-        // value of `k==1.0` is used for extraction of the corner rectangles
-        // see `SEGMENT_CORNER_*` in `clip_shared.glsl`
-        extract_inner_rect_impl(&self.rect, &self.radii, 1.0)
-    }
-
     fn get_inner_rect_full(&self) -> Option<LayoutRect> {
         // this `k` optimal for a simple case of all border radii being equal
         let k = 1.0 - 0.5 * FRAC_1_SQRT_2; // could be nicely approximated to `0.3`
@@ -308,6 +299,15 @@ fn extract_inner_rect_impl<U>(rect: &TypedRect<f32, U>,
     } else {
         None
     }
+}
+
+/// Return an aligned rectangle that is inside the clip region and doesn't intersect
+/// any of the bounding rectangles of the rounded corners.
+pub fn extract_inner_rect_safe<U>(rect: &TypedRect<f32, U>,
+                                  radii: &BorderRadius) -> Option<TypedRect<f32, U>> {
+    // value of `k==1.0` is used for extraction of the corner rectangles
+    // see `SEGMENT_CORNER_*` in `clip_shared.glsl`
+    extract_inner_rect_impl(rect, radii, 1.0)
 }
 
 /// Consumes the old vector and returns a new one that may reuse the old vector's allocated

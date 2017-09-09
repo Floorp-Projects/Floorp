@@ -85,6 +85,7 @@ public:
     MOZ_MUST_USE nsresult CreateWildCard(nsHttpConnectionInfo **outParam);
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nullptr; }
+    const nsCString& GetProxyHost() const { return mProxyInfo ? mProxyInfo->Host() : EmptyCString(); }
     int32_t     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
     const char *ProxyType() const { return mProxyInfo ? mProxyInfo->Type() : nullptr; }
     const char *ProxyUsername() const { return mProxyInfo ? mProxyInfo->Username().get() : nullptr; }

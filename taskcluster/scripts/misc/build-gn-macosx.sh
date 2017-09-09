@@ -8,7 +8,7 @@ UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=xz
 
 CROSS_CCTOOLS_PATH=$WORKSPACE/build/src/cctools
-CROSS_SYSROOT=$WORKSPACE/build/src/MacOSX10.10.sdk
+CROSS_SYSROOT=$WORKSPACE/build/src/MacOSX10.11.sdk
 
 export LD_LIBRARY_PATH=$WORKSPACE/build/src/clang/lib
 export CC=$WORKSPACE/build/src/clang/bin/clang
