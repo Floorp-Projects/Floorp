@@ -35,8 +35,6 @@ static nsString* gInstantiator = nullptr;
 void
 a11y::PlatformInit()
 {
-  Compatibility::Init();
-
   nsWinUtils::MaybeStartWindowEmulation();
   ia2AccessibleText::InitTextChangeData();
 

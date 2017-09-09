@@ -9,6 +9,7 @@
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsWeakReference.h"
 
 #include "mozILocaleService.h"
 
@@ -68,7 +69,8 @@ namespace intl {
  * but we negotiate between languages etc.
  */
 class LocaleService : public mozILocaleService,
-                      public nsIObserver
+                      public nsIObserver,
+                      public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

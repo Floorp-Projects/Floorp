@@ -38,7 +38,7 @@ addLoadEvent(async function() {
         ok(true, "The window has been unloaded");
         SimpleTest.executeSoon(() => { resolve(0); });
       }, { once: true });
-      aWindow.location = "data:text/plain,2";
+      aWindow.location = "file_bug635636_2.html";
     });
   }
 

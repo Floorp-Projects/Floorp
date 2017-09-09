@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ComplexClipRegion, ImageMask, ImageRendering};
+use api::{BorderRadius, ComplexClipRegion, ImageMask, ImageRendering};
 use api::{LayerPoint, LayerRect, LayerToWorldTransform, LocalClip};
 use border::BorderCornerClipSource;
 use gpu_cache::GpuCache;
@@ -49,20 +49,6 @@ impl ClipRegion {
         };
         ClipRegion::create_for_clip_node(*local_clip.clip_rect(), complex_clips, None)
     }
-
-    pub fn create_for_local_clip(local_clip: &LocalClip) -> ClipRegion {
-        let complex_clips = match local_clip {
-            &LocalClip::Rect(_) => Vec::new(),
-            &LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
-        };
-
-        ClipRegion {
-            origin: LayerPoint::zero(),
-            main: *local_clip.clip_rect(),
-            image_mask: None,
-            complex_clips,
-        }
-    }
 }
 
 #[repr(C)]
@@ -83,15 +69,34 @@ impl Not for ClipMode {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum ClipSource {
-    Complex(LayerRect, f32, ClipMode),
-    Region(ClipRegion),
+    Rectangle(LayerRect),
+    RoundedRectangle(LayerRect, BorderRadius, ClipMode),
+    Image(ImageMask),
     /// TODO(gw): This currently only handles dashed style
     /// clips, where the border style is dashed for both
     /// adjacent border edges. Expand to handle dotted style
     /// and different styles per edge.
     BorderCorner(BorderCornerClipSource),
+}
+
+impl From<ClipRegion> for ClipSources {
+    fn from(region: ClipRegion) -> ClipSources {
+        let mut clips = Vec::new();
+
+        if let Some(info) = region.image_mask {
+            clips.push(ClipSource::Image(info));
+        }
+
+        clips.push(ClipSource::Rectangle(region.main));
+
+        for complex in region.complex_clips {
+            clips.push(ClipSource::RoundedRectangle(complex.rect, complex.radii, ClipMode::Clip));
+        }
+
+        ClipSources::new(clips)
+    }
 }
 
 #[derive(Debug)]
@@ -130,7 +135,7 @@ impl ClipSources {
                     device_pixel_ratio);
 
         for clip in &self.clips {
-            if let ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }, ..) = *clip {
+            if let ClipSource::Image(ref mask) = *clip {
                 resource_cache.request_image(mask.image,
                                              ImageRendering::Auto,
                                              None,

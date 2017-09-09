@@ -2,20 +2,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://testing-common/MockRegistrar.jsm");
-
-/**
- * Test that nsIUpdatePrompt doesn't display UI for showUpdateAvailable and
- * showUpdateError when the app.update.silent preference is true.
- */
-
 const WindowWatcher = {
   openWindow(aParent, aUrl, aName, aFeatures, aArgs) {
-    gCheckFunc();
+    do_throw("should not have called openWindow!");
   },
 
   getNewPrompter(aParent) {
-    gCheckFunc();
+    do_throw("should not have seen getNewPrompter!");
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
@@ -38,7 +31,7 @@ function run_test() {
 
   standardInit();
 
-  debugDump("testing showUpdateAvailable should not call openWindow");
+  logTestInfo("testing showUpdateAvailable should not call openWindow");
   let patchProps = {state: STATE_FAILED};
   let patches = getLocalPatchString(patchProps);
   let updates = getLocalUpdateString({}, patches);
@@ -46,7 +39,6 @@ function run_test() {
   writeStatusFile(STATE_FAILED);
   reloadUpdateManagerData();
 
-  gCheckFunc = check_showUpdateAvailable;
   let update = gUpdateManager.activeUpdate;
   gUP.showUpdateAvailable(update);
   // Report a successful check after the call to showUpdateAvailable since it
@@ -54,8 +46,7 @@ function run_test() {
   Assert.ok(true,
             "calling showUpdateAvailable should not attempt to open a window");
 
-  debugDump("testing showUpdateError should not call getNewPrompter");
-  gCheckFunc = check_showUpdateError;
+  logTestInfo("testing showUpdateError should not call getNewPrompter");
   update.errorCode = WRITE_ERROR;
   gUP.showUpdateError(update);
   // Report a successful check after the call to showUpdateError since it
@@ -63,13 +54,13 @@ function run_test() {
   Assert.ok(true,
             "calling showUpdateError should not attempt to open a window");
 
+  gUpdateManager.cleanupActiveUpdate();
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
   doTestFinish();
-}
-
-function check_showUpdateAvailable() {
-  do_throw("showUpdateAvailable should not have called openWindow!");
-}
-
-function check_showUpdateError() {
-  do_throw("showUpdateError should not have seen getNewPrompter!");
 }

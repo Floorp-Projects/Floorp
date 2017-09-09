@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://testing-common/MockRegistrar.jsm");
-
 const WindowWatcher = {
   getNewPrompter: function WW_getNewPrompter(aParent) {
     Assert.ok(!aParent,

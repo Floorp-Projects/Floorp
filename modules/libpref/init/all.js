@@ -1384,7 +1384,7 @@ pref("privacy.popups.disable_from_plugins", 3);
 
 // send "do not track" HTTP header, disabled by default
 pref("privacy.donottrackheader.enabled",    false);
-// If true, close buton will be shown on permission prompts
+// If true, close button will be shown on permission prompts
 // and for all PopupNotifications, the secondary action of
 // the popup will be called when the popup is dismissed.
 pref("privacy.permissionPrompts.showCloseButton", false);
@@ -5868,13 +5868,13 @@ pref("fuzzing.enabled", false);
 
 #if defined(XP_WIN)
 #if defined(NIGHTLY_BUILD)
-pref("layers.mlgpu.dev-enabled", true);
+pref("layers.mlgpu.enabled", true);
 
 // Both this and the master "enabled" pref must be on to use Advanced Layers
 // on Windows 7.
 pref("layers.mlgpu.enable-on-windows7", true);
 #else
-pref("layers.mlgpu.dev-enabled", false);
+pref("layers.mlgpu.enabled", false);
 pref("layers.mlgpu.enable-on-windows7", false);
 #endif
 #endif
