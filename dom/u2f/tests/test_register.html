@@ -1,91 +1,33 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <head>
-  <title>FIDO U2F: Register behavior</title>
+  <title>Test for Register behavior for FIDO Universal Second Factor</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="u2futil.js"></script>
-  <script type="text/javascript" src="pkijs/common.js"></script>
-  <script type="text/javascript" src="pkijs/asn1.js"></script>
-  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
-  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <script src="u2futil.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<h1>FIDO U2F: Register behavior</h1>
-<ul>
-  <li><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681 (initial implementation)</a></li>
-  <li><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1245527">Mozilla Bug 1245527 (hardware rewrite)</a></li>
-</ul>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681</a>
+
+<div id="framediv">
+  <iframe id="testing_frame"></iframe>
+</div>
 
 <pre id="log"></pre>
 
 <script class="testbody" type="text/javascript">
-"use strict";
 
-var version = "U2F_V2";
-var challenge = new Uint8Array(16);
+SimpleTest.waitForExplicitFinish();
 
-add_task(async function(){
-  is(window.location.origin, "https://example.com", "Is loaded correctly");
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
+                                   ["security.webauth.u2f_enable_softtoken", true],
+                                   ["security.webauth.u2f_enable_usbtoken", false]]},
+function() {
+  // listen for messages from the test harness
+  window.addEventListener("message", handleEventMessage);
+  document.getElementById('testing_frame').src = "https://example.com/tests/dom/u2f/tests/frame_register.html";
 });
 
-add_task(async function(){
-  // basic check
-  await promiseU2FRegister("https://example.com/appId", [{
-    version: version,
-    challenge: bytesToBase64UrlSafe(challenge),
-  }], [], function(res){
-    is(res.errorCode, 0, "AppID should work from the domain");
-  });
-
-  await promiseU2FRegister("https://example.net/appId", [{
-    version: version,
-    challenge: bytesToBase64UrlSafe(challenge),
-  }], [], function(res){
-    is(res.errorCode, 2, "AppID should not work from other domains");
-  });
-
-  await promiseU2FRegister("", [], [], function(res){
-    is(res.errorCode, 2, "Empty register requests");
-  });
-
-  SimpleTest.doesThrow(function(){
-    u2f.register("", null, [], null);
-  }, "Non-array register requests");
-
-  SimpleTest.doesThrow(function(){
-    u2f.register("", [], null, null);
-  }, "Non-array sign requests");
-
-  SimpleTest.doesThrow(function(){
-    u2f.register("", null, null, null);
-  }, "Non-array for both arguments");
-
-  await promiseU2FRegister("", [{}], [], function(res){
-    is(res.errorCode, 2, "Empty request");
-  });
-
-  await promiseU2FRegister("https://example.net/appId", [{
-      version: version,
-    }], [], function(res){
-      is(res.errorCode, 2, "Missing challenge");
-  });
-
-  await promiseU2FRegister("https://example.net/appId", [{
-      challenge: bytesToBase64UrlSafe(challenge),
-    }], [], function(res){
-     is(res.errorCode, 2, "Missing version");
-  });
-
-  await promiseU2FRegister("https://example.net/appId", [{
-      version: "a_version_00",
-      challenge: bytesToBase64UrlSafe(challenge),
-    }], [], function(res){
-      is(res.errorCode, 2, "Invalid version");
-  });
-
-});
 </script>
 
 </body>

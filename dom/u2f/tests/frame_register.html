@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <script src="u2futil.js"></script>
+</head>
+<body>
+<p>Test for Register behavior for FIDO Universal Second Factor</p>
+<script class="testbody" type="text/javascript">
+"use strict";
+
+var version = "U2F_V2";
+var challenge = new Uint8Array(16);
+
+local_is(window.location.origin, "https://example.com", "Is loaded correctly");
+
+local_expectThisManyTests(7);
+
+// basic check
+u2f.register("https://example.com/appId", [{
+  version: version,
+  challenge: bytesToBase64UrlSafe(challenge),
+}], [], function(res){
+  local_is(res.errorCode, 0, "AppID should work from the domain");
+  local_completeTest();
+});
+
+u2f.register("https://example.net/appId", [{
+  version: version,
+  challenge: bytesToBase64UrlSafe(challenge),
+}], [], function(res){
+  local_is(res.errorCode, 2, "AppID should not work from other domains");
+  local_completeTest();
+});
+
+u2f.register("", [], [], function(res){
+  local_is(res.errorCode, 2, "Empty register requests");
+  local_completeTest();
+});
+
+local_doesThrow(function(){
+  u2f.register("", null, [], null);
+}, "Non-array register requests");
+
+local_doesThrow(function(){
+  u2f.register("", [], null, null);
+}, "Non-array sign requests");
+
+local_doesThrow(function(){
+  u2f.register("", null, null, null);
+}, "Non-array for both arguments");
+
+u2f.register("", [{}], [], function(res){
+  local_is(res.errorCode, 2, "Empty request");
+  local_completeTest();
+});
+
+u2f.register("https://example.net/appId", [{
+    version: version,
+  }], [], function(res){
+    local_is(res.errorCode, 2, "Missing challenge");
+    local_completeTest();
+});
+
+u2f.register("https://example.net/appId", [{
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+   local_is(res.errorCode, 2, "Missing version");
+   local_completeTest();
+});
+
+u2f.register("https://example.net/appId", [{
+    version: "a_version_00",
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_is(res.errorCode, 2, "Invalid version");
+    local_completeTest();
+});
+
+</script>
+</body>
+</html>

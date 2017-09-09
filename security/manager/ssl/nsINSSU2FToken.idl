@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIU2FToken.idl"
+
+/**
+ * Interface used to interact with the NSS-backed software U2F Token
+ */
+[scriptable, uuid(d9104a00-140b-4f86-a4b0-4998878ef4e6 )]
+interface nsINSSU2FToken : nsIU2FToken {
+};
+
+%{C++
+#define NS_NSSU2FTOKEN_CONTRACTID  "@mozilla.org/dom/u2f/nss-u2f-token;1"
+%}
