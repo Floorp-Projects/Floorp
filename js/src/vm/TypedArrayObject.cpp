@@ -979,12 +979,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                         uint32_t count, uint32_t unit,
                         MutableHandle<ArrayBufferObject*> buffer);
 
-    static bool
-    CloneArrayBufferNoCopy(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> srcBuffer,
-                           bool isWrapped, uint32_t srcByteOffset, uint32_t srcLength,
-                           SpeciesConstructorOverride override,
-                           MutableHandle<ArrayBufferObject*> buffer);
-
     static JSObject*
     fromArray(JSContext* cx, HandleObject other, HandleObject proto = nullptr);
 
@@ -1099,47 +1093,6 @@ GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped,
     return SpeciesConstructor(cx, wrappedObj, defaultCtor, IsArrayBufferSpecies);
 }
 
-// ES 2017 draft rev 8633ffd9394b203b8876bb23cb79aff13eb07310 24.1.1.4.
-template<typename T>
-/* static */ bool
-TypedArrayObjectTemplate<T>::CloneArrayBufferNoCopy(JSContext* cx,
-                                                    Handle<ArrayBufferObjectMaybeShared*> srcBuffer,
-                                                    bool isWrapped, uint32_t srcByteOffset,
-                                                    uint32_t srcLength,
-                                                    SpeciesConstructorOverride override,
-                                                    MutableHandle<ArrayBufferObject*> buffer)
-{
-    // Step 1 (skipped).
-
-    // Step 2.a.
-    RootedObject cloneCtor(cx, GetSpeciesConstructor(cx, srcBuffer, isWrapped, override));
-    if (!cloneCtor)
-        return false;
-
-    // Step 2.b.
-    if (srcBuffer->isDetached()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
-        return false;
-    }
-
-    // Steps 3-4 (skipped).
-
-    // Steps 5.
-    if (!AllocateArrayBuffer(cx, cloneCtor, srcLength, 1, buffer))
-        return false;
-
-    // Step 6.
-    if (srcBuffer->isDetached()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
-        return false;
-    }
-
-    // Steps 7-8 (done in caller).
-
-    // Step 9.
-    return true;
-}
-
 template<typename T>
 /* static */ JSObject*
 TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other,
@@ -1156,7 +1109,7 @@ TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other,
     return fromObject(cx, other, proto);
 }
 
-// ES2017 draft rev 6390c2f1b34b309895d31d8c0512eac8660a0210
+// ES2018 draft rev 272beb67bc5cd9fd18a220665198384108208ee1
 // 22.2.4.3 TypedArray ( typedArray )
 template<typename T>
 /* static */ JSObject*
@@ -1171,7 +1124,7 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
 
     // Step 2 (Already performed in caller).
 
-    // Step 4 (Allocation deferred until later).
+    // Steps 3-4 (Allocation deferred until later).
 
     // Step 5.
     Rooted<TypedArrayObject*> srcArray(cx);
@@ -1208,51 +1161,51 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     // Steps 10-11.
     Scalar::Type srcType = srcArray->type();
 
-    // Step 12 (skipped).
-
-    // Step 13.
-    uint32_t srcByteOffset = srcArray->byteOffset();
+    // Steps 12-13 (skipped).
 
     // Steps 16-17.
     bool isShared = srcArray->isSharedMemory();
     SpeciesConstructorOverride override = isShared ? SpeciesConstructorOverride::ArrayBuffer
                                                    : SpeciesConstructorOverride::None;
 
-    // Steps 8, 16-17.
+    RootedObject bufferCtor(cx, GetSpeciesConstructor(cx, srcData, isWrapped, override));
+    if (!bufferCtor)
+        return nullptr;
+
+    // Steps 8, 18-19.
     Rooted<ArrayBufferObject*> buffer(cx);
     if (ArrayTypeID() == srcType) {
-        // Step 16.a.
-        uint32_t srcLength = srcArray->byteLength();
-
-        // Steps 16.b-c.
-        if (!CloneArrayBufferNoCopy(cx, srcData, isWrapped, srcByteOffset, srcLength, override,
-                                    &buffer))
-        {
-            return nullptr;
-        }
-    } else {
-        // Steps 17.a-b.
-        RootedObject bufferCtor(cx, GetSpeciesConstructor(cx, srcData, isWrapped, override));
-        if (!bufferCtor)
-            return nullptr;
-
-        // Steps 14-15, 17.c.
-        if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, BYTES_PER_ELEMENT, &buffer))
-            return nullptr;
-
-        // Step 17.d.
-        if (srcArray->hasDetachedBuffer()) {
+        // Step 18.a.
+        if (srcData->isDetached()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
             return nullptr;
         }
+
+        // Step 15.
+        uint32_t byteLength = srcArray->byteLength();
+
+        // Step 18.b.
+        // 24.1.1.4 CloneArrayBuffer(...), steps 1-3.
+        if (!AllocateArrayBuffer(cx, bufferCtor, byteLength, 1, &buffer))
+            return nullptr;
+    } else {
+        // Steps 14-15, 19.a.
+        if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, BYTES_PER_ELEMENT, &buffer))
+            return nullptr;
     }
 
-    // Steps 3-4 (remaining part), 18-21.
+    // Step 19.b or 24.1.1.4 step 4.
+    if (srcData->isDetached()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return nullptr;
+    }
+
+    // Steps 3-4 (remaining part), 20-23.
     Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, elementLength, proto));
     if (!obj)
         return nullptr;
 
-    // Steps 17.e-h or 24.1.1.4 step 8.
+    // Steps 19.c-f or 24.1.1.4 steps 5-7.
     MOZ_ASSERT(!obj->isSharedMemory());
     if (isShared) {
         if (!ElementSpecific<T, SharedOps>::setFromTypedArray(obj, srcArray, 0))
@@ -1262,7 +1215,7 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
             return nullptr;
     }
 
-    // Step 22.
+    // Step 24.
     return obj;
 }
 
