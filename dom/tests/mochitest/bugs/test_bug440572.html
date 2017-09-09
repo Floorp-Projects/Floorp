@@ -29,7 +29,7 @@ function runtests()
 {
   is(messages.size, 3, "received the right number of messages.");
   is(messages.get("test"), "success", "test in frame failed.");
-  isnot(messages.get("content"), "success", "parent[\"content\"] should be the WebIDL property of Window.");
+  is(messages.get("content"), "success", "parent[\"content\"] should be the subframe named 'content'");
   isnot(messages.get("dump"), "success", "parent[\"dump\"] should be the WebIDL property of Window.");
 
   SimpleTest.finish();
