@@ -104,7 +104,7 @@ const TEST_DATA = [
     numMutations: 2,
     test: function* (testActor) {
       yield testActor.eval(`
-        let node1 = content.document.querySelector("#node1");
+        let node1 = document.querySelector("#node1");
         node1.classList.add("pseudo");
       `);
     },
@@ -119,7 +119,7 @@ const TEST_DATA = [
     numMutations: 2,
     test: function* (testActor) {
       yield testActor.eval(`
-        let node1 = content.document.querySelector("#node1");
+        let node1 = document.querySelector("#node1");
         node1.classList.remove("pseudo");
       `);
     },
@@ -146,7 +146,7 @@ const TEST_DATA = [
     desc: "Adding a second text child",
     test: function* (testActor) {
       yield testActor.eval(`
-        let node1 = content.document.querySelector("#node1");
+        let node1 = document.querySelector("#node1");
         let newText = node1.ownerDocument.createTextNode("more");
         node1.appendChild(newText);
       `);
@@ -223,7 +223,7 @@ const TEST_DATA = [
     desc: "Removing child nodes",
     test: function* (testActor) {
       yield testActor.eval(`
-        let node4 = content.document.querySelector("#node4");
+        let node4 = document.querySelector("#node4");
         while (node4.firstChild) {
           node4.removeChild(node4.firstChild);
         }
@@ -238,8 +238,8 @@ const TEST_DATA = [
     desc: "Appending a child to a different parent",
     test: function* (testActor) {
       yield testActor.eval(`
-        let node17 = content.document.querySelector("#node17");
-        let node2 = content.document.querySelector("#node2");
+        let node17 = document.querySelector("#node17");
+        let node2 = document.querySelector("#node2");
         node2.appendChild(node17);
       `);
     },
@@ -271,9 +271,9 @@ const TEST_DATA = [
     //        node19
     test: function* (testActor) {
       yield testActor.eval(`
-        let node18 = content.document.querySelector("#node18");
-        let node20 = content.document.querySelector("#node20");
-        let node1 = content.document.querySelector("#node1");
+        let node18 = document.querySelector("#node18");
+        let node20 = document.querySelector("#node20");
+        let node1 = document.querySelector("#node1");
         node1.appendChild(node20);
         node20.appendChild(node18);
       `);
