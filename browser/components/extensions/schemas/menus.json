@@ -394,6 +394,41 @@
             "optional": true
           }
         ]
+      },
+      {
+        "name": "onShown",
+        "type": "function",
+        "description": "Fired when a menu is shown that contains a menu item that was created by the extension.",
+        "parameters": [
+          {
+            "name": "info",
+            "type": "object",
+            "description": "Information about the context of the menu action and the created menu items",
+            "properties": {
+              "menuIds": {
+                "description": "A list of IDs of the menu items that were shown.",
+                "type": "array",
+                "items": {
+                  "choices": [
+                    { "type": "integer" },
+                    { "type": "string" }
+                  ]
+                }
+              },
+              "contexts": {
+                "description": "A list of all contexts that apply to the menu.",
+                "type": "array",
+                "items": {"$ref": "ContextType"}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "onHidden",
+        "type": "function",
+        "description": "Fired when a menu is hidden. This event is only fired if the menu contained a menu item that was created by the extension.",
+        "parameters": []
       }
     ]
   }

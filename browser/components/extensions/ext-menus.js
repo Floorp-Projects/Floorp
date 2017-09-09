@@ -8,6 +8,7 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
 var {
+  DefaultMap,
   ExtensionError,
 } = ExtensionUtils;
 
@@ -26,6 +27,10 @@ var gMenuMap = new Map();
 
 // Map[Extension -> MenuItem]
 var gRootItems = new Map();
+
+// Map[Extension -> ID[]]
+// Menu IDs that were eligible for being shown in the current menu.
+var gShownMenuItems = new DefaultMap(() => []);
 
 // If id is not specified for an item we use an integer.
 var gNextMenuItemID = 0;
@@ -71,6 +76,7 @@ var gMenuBuilder = {
       xulMenu.appendChild(rootElement);
       this.itemsToCleanUp.add(rootElement);
     }
+    this.afterBuildingMenu(contextData);
   },
 
   // Builds a context menu for browserAction and pageAction buttons.
@@ -101,6 +107,7 @@ var gMenuBuilder = {
         menu.insertBefore(child, separator);
       }
     }
+    this.afterBuildingMenu(contextData);
   },
 
   buildElementWithChildren(item, contextData) {
@@ -279,6 +286,12 @@ var gMenuBuilder = {
       item.extension.emit("webext-menu-menuitem-click", info, tab);
     });
 
+    // Don't publish the ID of the root because the root element is
+    // auto-generated.
+    if (item.parent) {
+      gShownMenuItems.get(item.extension).push(item.id);
+    }
+
     return element;
   },
 
@@ -302,6 +315,23 @@ var gMenuBuilder = {
     element.setAttribute("image", resolvedURL);
   },
 
+  afterBuildingMenu(contextData) {
+    if (gShownMenuItems.size === 0) {
+      return;
+    }
+    let commonMenuInfo = {
+      contexts: Array.from(getMenuContexts(contextData)),
+    };
+    // TODO(robwu): Add more contextual information.
+    // The menus.onShown event is fired before the user has consciously
+    // interacted with an extension, so beware of privacy implications of
+    // sharing event data without permission checks.
+    for (let [extension, menuIds] of gShownMenuItems.entries()) {
+      let info = Object.assign({menuIds}, commonMenuInfo);
+      extension.emit("webext-menu-shown", info);
+    }
+  },
+
   handleEvent(event) {
     if (this.xulMenu != event.target || event.type != "popuphidden") {
       return;
@@ -314,6 +344,10 @@ var gMenuBuilder = {
       item.remove();
     }
     this.itemsToCleanUp.clear();
+    for (let extension of gShownMenuItems.keys()) {
+      extension.emit("webext-menu-hidden");
+    }
+    gShownMenuItems.clear();
   },
 
   itemsToCleanUp: new Set(),
@@ -666,6 +700,7 @@ this.menusInternal = class extends ExtensionAPI {
     if (gMenuMap.has(extension)) {
       gMenuMap.delete(extension);
       gRootItems.delete(extension);
+      gShownMenuItems.delete(extension);
       if (!gMenuMap.size) {
         menuTracker.unregister();
       }
@@ -675,7 +710,30 @@ this.menusInternal = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
 
+    const menus = {
+      onShown: new EventManager(context, "menus.onShown", fire => {
+        let listener = (event, data) => {
+          fire.sync(data);
+        };
+        extension.on("webext-menu-shown", listener);
+        return () => {
+          extension.off("webext-menu-shown", listener);
+        };
+      }).api(),
+      onHidden: new EventManager(context, "menus.onHidden", fire => {
+        let listener = () => {
+          fire.sync();
+        };
+        extension.on("webext-menu-hidden", listener);
+        return () => {
+          extension.off("webext-menu-hidden", listener);
+        };
+      }).api(),
+    };
+
     return {
+      contextMenus: menus,
+      menus,
       menusInternal: {
         create: function(createProperties) {
           // Note that the id is required by the schema. If the addon did not set
