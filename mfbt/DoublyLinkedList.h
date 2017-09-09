@@ -117,8 +117,15 @@ class DoublyLinkedList final
     return (mHead != nullptr) == (mTail != nullptr);
   }
 
-  static bool ElementNotInList(T* aElm) {
-    return !SiblingAccess::GetNext(aElm) && !SiblingAccess::GetPrev(aElm);
+  bool ElementNotInList(T* aElm) {
+    if (!SiblingAccess::GetNext(aElm) && !SiblingAccess::GetPrev(aElm)) {
+      // Both mNext and mPrev being NULL can mean two things:
+      // - the element is not in the list.
+      // - the element is the first and only element in the list.
+      // So check for the latter.
+      return mHead != aElm;
+    }
+    return false;
   }
 
 public:
