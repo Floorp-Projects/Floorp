@@ -19,6 +19,7 @@ import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.activitystream.homepanel.StreamHighlightItemRowContextMenuListener;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageRowModel;
 import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.util.ViewUtil;
@@ -144,7 +145,7 @@ public class WebpageItemRow extends StreamViewHolder {
         private final UUID viewTagAtStart;
 
         UpdatePageDomainAsyncTask(final Context contextReference, final URI uri, final TextView pageDomainView) {
-            super(contextReference, uri, false, 0); // hostSLD.
+            super(contextReference, uri, false, 1); // subdomain.domain.
             this.pageDomainViewWeakReference = new WeakReference<>(pageDomainView);
 
             // See isTagSameAsStartTag for details.
@@ -153,17 +154,17 @@ public class WebpageItemRow extends StreamViewHolder {
         }
 
         @Override
-        protected void onPostExecute(final String hostSLD) {
-            super.onPostExecute(hostSLD);
+        protected void onPostExecute(final String domainTitle) {
+            super.onPostExecute(domainTitle);
             final TextView viewToUpdate = pageDomainViewWeakReference.get();
 
             if (viewToUpdate == null || !isTagSameAsStartTag(viewToUpdate)) {
                 return;
             }
 
-            // hostSLD will be the empty String if the host cannot be determined. This is fine: it's very unlikely
+            // The title will be the empty String if the host cannot be determined. This is fine: it's very unlikely
             // and the page title will be URL if there's an error there so we wouldn't want to write the URL again here.
-            viewToUpdate.setText(hostSLD);
+            viewToUpdate.setText(StringUtils.stripCommonSubdomains(domainTitle));
         }
 
         /**
