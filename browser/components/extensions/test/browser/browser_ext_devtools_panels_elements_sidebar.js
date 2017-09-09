@@ -7,6 +7,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://devtools/shared/Loader.jsm");
 
+function isActiveSidebarTabTitle(inspector, expectedTabTitle, message) {
+  const actualTabTitle = inspector.panelDoc.querySelector(".tabs-menu-item.is-active").innerText;
+  is(actualTabTitle, expectedTabTitle, message);
+}
+
 add_task(async function test_devtools_panels_elements_sidebar() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
 
@@ -70,6 +75,9 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   is(shownSidebarInstance, "sidebar1", "Got the shown event on the first extension sidebar");
 
+  isActiveSidebarTabTitle(inspector, "Test Sidebar 1",
+                          "Got the expected title on the active sidebar tab");
+
   const sidebarPanel1 = inspector.sidebar.getTabPanel(sidebarIds[0]);
 
   ok(sidebarPanel1, "Got a rendered sidebar panel for the first registered extension sidebar");
@@ -93,6 +101,9 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   is(shownSidebarInstance2, "sidebar2", "Got the shown event on the second extension sidebar");
   is(hiddenSidebarInstance1, "sidebar1", "Got the hidden event on the first extension sidebar");
+
+  isActiveSidebarTabTitle(inspector, "Test Sidebar 2",
+                          "Got the expected title on the active sidebar tab");
 
   const sidebarPanel2 = inspector.sidebar.getTabPanel(sidebarIds[1]);
 
