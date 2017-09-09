@@ -120,7 +120,7 @@ exports.isIdentity = isIdentity;
 
 /**
  * Returns the transformation matrix for the given node, relative to the ancestor passed
- * as second argument.
+ * as second argument; considering the ancestor transformation too.
  * If no ancestor is specified, it will returns the transformation matrix relative to the
  * node's parent element.
  *
@@ -132,7 +132,8 @@ exports.isIdentity = isIdentity;
  *        The transformation matrix.
  */
 function getNodeTransformationMatrix(node, ancestor = node.parentElement) {
-  let { a, b, c, d, e, f } = node.getTransformToAncestor(ancestor);
+  let { a, b, c, d, e, f } = ancestor.getTransformToParent()
+                                     .multiply(node.getTransformToAncestor(ancestor));
 
   return [
     a, c, e,
