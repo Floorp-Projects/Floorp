@@ -249,6 +249,12 @@ def test_maximize_twice_is_idempotent(session):
     assert session.window.size == max_size
 
 
+"""
+TODO(ato): Implicit session start does not use configuration passed on
+from wptrunner.  This causes an exception.
+
+See https://bugzil.la/1398459.
+
 def test_maximize_when_resized_to_max_size(session):
     # Determine the largest available window size by first maximising
     # the window and getting the window rect dimensions.
@@ -258,7 +264,7 @@ def test_maximize_when_resized_to_max_size(session):
     available = session.window.maximize()
     session.end()
 
-    session.window.size = (int(available["width"]), int(available["height"]))
+    session.window.size = available
 
     # In certain window managers a window extending to the full available
     # dimensions of the screen may not imply that the window is maximised,
@@ -268,3 +274,4 @@ def test_maximize_when_resized_to_max_size(session):
     before = session.window.size
     session.window.maximize()
     assert session.window.size == before
+"""
