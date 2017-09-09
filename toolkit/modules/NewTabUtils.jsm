@@ -926,8 +926,9 @@ var ActivityStreamProvider = {
    * @param {Array} links
    *          an array containing objects without favicon data or mimeTypes yet
    *
-   * @returns {Promise} Returns a promise with the array of links with favicon data,
-   *                    mimeType, and byte array length
+   * @returns {Promise} Returns a promise with the array of links with the largest
+   *                    favicon available (as a byte array), mimeType, byte array
+   *                    length, and favicon size (width)
    */
   async _addFavicons(aLinks) {
     if (aLinks.length) {
@@ -938,7 +939,7 @@ var ActivityStreamProvider = {
       await Promise.all(aLinks.map(link => new Promise(resolve => {
         return PlacesUtils.favicons.getFaviconDataForPage(
             Services.io.newURI(link.url),
-            (iconuri, len, data, mime) => {
+            (iconuri, len, data, mime, size) => {
               // Due to the asynchronous behaviour of inserting a favicon into
               // moz_favicons, the data may not be available to us just yet,
               // since we listen on a history entry being inserted. As a result,
@@ -948,18 +949,22 @@ var ActivityStreamProvider = {
               if (!iconuri) {
                 link.favicon = null;
                 link.mimeType = null;
+                link.faviconSize = null;
               } else {
                 link.favicon = data;
                 link.mimeType = mime;
                 link.faviconLength = len;
+                link.faviconSize = size;
               }
               return resolve(link);
-            });
+            },
+            0); // preferredWidth: get the biggest width available
         }).catch(() => {
           // If something goes wrong - that's ok - just return a null favicon
           // without rejecting the entire Promise.all
           link.favicon = null;
           link.mimeType = null;
+          link.faviconSize = null;
           return link;
         })
       ));

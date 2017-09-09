@@ -15,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIAddonInterposition.h"
 #include "nsIXULRuntime.h"
+#include "mozJSComponentLoader.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
@@ -166,6 +167,8 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
     if (addonId) {
         // We forbid CPOWs unless they're specifically allowed.
         priv->allowCPOWs = gAllowCPOWAddonSet ? gAllowCPOWAddonSet->has(addonId) : false;
+        MOZ_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(aGlobal),
+                   "Don't load addons into the shared JSM global");
     }
 }
 

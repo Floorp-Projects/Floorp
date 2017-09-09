@@ -25,6 +25,17 @@ add_task(async function testExecuteScript() {
 
     const MAX_TRIES = 10;
 
+    let onUpdatedPromise = (tabId, url, status) => {
+      return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(_, changed, tab) {
+          if (tabId == tab.id && changed.status == status && tab.url == url) {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+    };
+
     try {
       [tab] = await browser.tabs.query({active: true, currentWindow: true});
 
@@ -32,14 +43,8 @@ add_task(async function testExecuteScript() {
       for (let tries = 0; !success && tries < MAX_TRIES; tries++) {
         let url = `${URL}?r=${Math.random()}`;
 
-        let loadingPromise = new Promise(resolve => {
-          browser.tabs.onUpdated.addListener(function listener(tabId, changed, tab_) {
-            if (tabId == tab.id && changed.status == "loading" && tab_.url == url) {
-              browser.tabs.onUpdated.removeListener(listener);
-              resolve();
-            }
-          });
-        });
+        let loadingPromise = onUpdatedPromise(tab.id, url, "loading");
+        let completePromise = onUpdatedPromise(tab.id, url, "complete");
 
         // TODO: Test allFrames and frameId.
 
@@ -74,15 +79,17 @@ add_task(async function testExecuteScript() {
         // regardless of retries.
         browser.test.assertTrue(states[1] == "interactive" || states[1] == "complete",
                                 `document_end state is valid: ${states[1]}`);
-        browser.test.assertTrue(states[2] == "complete",
+        browser.test.assertTrue(states[2] == "interactive" || states[2] == "complete",
                                 `document_idle state is valid: ${states[2]}`);
 
         // If we have the earliest valid states for each script, we're done.
         // Otherwise, try again.
         success = (states[0] == "loading" &&
                    states[1] == "interactive" &&
-                   states[2] == "complete" &&
-                   states[3] == "complete");
+                   states[2] == "interactive" &&
+                   states[3] == "interactive");
+
+        await completePromise;
       }
 
       browser.test.assertTrue(success, "Got the earliest expected states at least once");

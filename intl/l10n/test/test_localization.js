@@ -23,15 +23,15 @@ add_task(async function test_methods_calling() {
   const originalLoad = L10nRegistry.load;
   const originalRequested = LocaleService.getRequestedLocales();
 
-  L10nRegistry.load = function(url) {
+  L10nRegistry.load = async function(url) {
     return fs[url];
   }
 
   const source = new FileSource('test', ['de', 'en-US'], '/localization/{locale}');
   L10nRegistry.registerSource(source);
 
-  function * generateMessages(resIds) {
-    yield * L10nRegistry.generateContexts(['de', 'en-US'], resIds);
+  async function * generateMessages(resIds) {
+    yield * await L10nRegistry.generateContexts(['de', 'en-US'], resIds);
   }
 
   const l10n = new Localization([

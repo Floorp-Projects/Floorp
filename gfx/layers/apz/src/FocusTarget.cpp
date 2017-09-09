@@ -100,7 +100,7 @@ IsEditableNode(nsINode* aNode)
 FocusTarget::FocusTarget()
   : mSequenceNumber(0)
   , mFocusHasKeyEventListeners(false)
-  , mType(FocusTarget::eNone)
+  , mData(AsVariant(NoFocusTarget()))
 {
 }
 
@@ -108,6 +108,7 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
                          uint64_t aFocusSequenceNumber)
   : mSequenceNumber(aFocusSequenceNumber)
   , mFocusHasKeyEventListeners(false)
+  , mData(AsVariant(NoFocusTarget()))
 {
   MOZ_ASSERT(aRootPresShell);
   MOZ_ASSERT(NS_IsMainThread());
@@ -119,7 +120,6 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
     FT_LOG("Creating nil target with seq=%" PRIu64 " (can't find retargeted presshell)\n",
            aFocusSequenceNumber);
 
-    mType = FocusTarget::eNone;
     return;
   }
 
@@ -128,7 +128,6 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
     FT_LOG("Creating nil target with seq=%" PRIu64 " (no document)\n",
            aFocusSequenceNumber);
 
-    mType = FocusTarget::eNone;
     return;
   }
 
@@ -160,7 +159,6 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
            aFocusSequenceNumber,
            static_cast<int>(mFocusHasKeyEventListeners));
 
-    mType = FocusTarget::eNone;
     return;
   }
 
@@ -175,8 +173,7 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
              mFocusHasKeyEventListeners,
              rfp->GetLayersId());
 
-      mType = FocusTarget::eRefLayer;
-      mData.mRefLayerId = rfp->GetLayersId();
+      mData = AsVariant<RefLayerId>(rfp->GetLayersId());
       return;
     }
 
@@ -184,7 +181,6 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
            aFocusSequenceNumber,
            mFocusHasKeyEventListeners);
 
-    mType = FocusTarget::eNone;
     return;
   }
 
@@ -198,7 +194,6 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
            aFocusSequenceNumber,
            mFocusHasKeyEventListeners);
 
-    mType = FocusTarget::eNone;
     return;
   }
 
@@ -215,35 +210,24 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
 
   // We might have the globally focused element for scrolling. Gather a ViewID for
   // the horizontal and vertical scroll targets of this element.
-  mType = FocusTarget::eScrollLayer;
-  mData.mScrollTargets.mHorizontal =
-    nsLayoutUtils::FindIDForScrollableFrame(horizontal);
-  mData.mScrollTargets.mVertical =
-    nsLayoutUtils::FindIDForScrollableFrame(vertical);
+  ScrollTargets target;
+  target.mHorizontal =  nsLayoutUtils::FindIDForScrollableFrame(horizontal);
+  target.mVertical = nsLayoutUtils::FindIDForScrollableFrame(vertical);
+  mData = AsVariant(target);
 
   FT_LOG("Creating scroll target with seq=%" PRIu64 ", kl=%d, h=%" PRIu64 ", v=%" PRIu64 "\n",
          aFocusSequenceNumber,
          mFocusHasKeyEventListeners,
-         mData.mScrollTargets.mHorizontal,
-         mData.mScrollTargets.mVertical);
+         target.mHorizontal,
+         target.mVertical);
 }
 
 bool
 FocusTarget::operator==(const FocusTarget& aRhs) const
 {
-  if (mSequenceNumber != aRhs.mSequenceNumber ||
-      mFocusHasKeyEventListeners != aRhs.mFocusHasKeyEventListeners ||
-      mType != aRhs.mType) {
-    return false;
-  }
-
-  if (mType == FocusTarget::eRefLayer) {
-      return mData.mRefLayerId == aRhs.mData.mRefLayerId;
-  } else if (mType == FocusTarget::eScrollLayer) {
-      return mData.mScrollTargets.mHorizontal == aRhs.mData.mScrollTargets.mHorizontal &&
-             mData.mScrollTargets.mVertical == aRhs.mData.mScrollTargets.mVertical;
-  }
-  return true;
+  return mSequenceNumber == aRhs.mSequenceNumber &&
+         mFocusHasKeyEventListeners == aRhs.mFocusHasKeyEventListeners &&
+         mData == aRhs.mData;
 }
 
 } // namespace layers

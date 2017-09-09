@@ -54,7 +54,7 @@ var DEBUG = false; // non-const *only* so tweakable in server tests
 /** True if debugging output should be timestamped. */
 var DEBUG_TIMESTAMP = false; // non-const so tweakable in server tests
 
-var gGlobalObject = this;
+var gGlobalObject = Cu.getGlobalForObject(this);
 
 /**
  * Asserts that the given condition holds.  If it doesn't, the given message is

@@ -656,14 +656,8 @@ nsIPresShell::SetVerifyReflowEnable(bool aEnabled)
   gVerifyReflowEnabled = aEnabled;
 }
 
-/* virtual */ void
-nsIPresShell::AddAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame)
-{
-  AddAutoWeakFrameInternal(aWeakFrame);
-}
-
 void
-nsIPresShell::AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
+nsIPresShell::AddAutoWeakFrame(AutoWeakFrame* aWeakFrame)
 {
   if (aWeakFrame->GetFrame()) {
     aWeakFrame->GetFrame()->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
@@ -672,14 +666,8 @@ nsIPresShell::AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
   mAutoWeakFrames = aWeakFrame;
 }
 
-/* virtual */ void
-nsIPresShell::AddWeakFrameExternal(WeakFrame* aWeakFrame)
-{
-  AddWeakFrameInternal(aWeakFrame);
-}
-
 void
-nsIPresShell::AddWeakFrameInternal(WeakFrame* aWeakFrame)
+nsIPresShell::AddWeakFrame(WeakFrame* aWeakFrame)
 {
   if (aWeakFrame->GetFrame()) {
     aWeakFrame->GetFrame()->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
@@ -688,14 +676,8 @@ nsIPresShell::AddWeakFrameInternal(WeakFrame* aWeakFrame)
   mWeakFrames.PutEntry(aWeakFrame);
 }
 
-/* virtual */ void
-nsIPresShell::RemoveAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame)
-{
-  RemoveAutoWeakFrameInternal(aWeakFrame);
-}
-
 void
-nsIPresShell::RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
+nsIPresShell::RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame)
 {
   if (mAutoWeakFrames == aWeakFrame) {
     mAutoWeakFrames = aWeakFrame->GetPreviousWeakFrame();
@@ -710,14 +692,8 @@ nsIPresShell::RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
   }
 }
 
-/* virtual */ void
-nsIPresShell::RemoveWeakFrameExternal(WeakFrame* aWeakFrame)
-{
-  RemoveWeakFrameInternal(aWeakFrame);
-}
-
 void
-nsIPresShell::RemoveWeakFrameInternal(WeakFrame* aWeakFrame)
+nsIPresShell::RemoveWeakFrame(WeakFrame* aWeakFrame)
 {
   MOZ_ASSERT(mWeakFrames.GetEntry(aWeakFrame));
   mWeakFrames.RemoveEntry(aWeakFrame);
@@ -2476,12 +2452,6 @@ PresShell::CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
 //end implementations nsISelectionController
 
 nsIFrame*
-nsIPresShell::GetRootFrameExternal() const
-{
-  return mFrameConstructor->GetRootFrame();
-}
-
-nsIFrame*
 nsIPresShell::GetRootScrollFrame() const
 {
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
@@ -2504,12 +2474,6 @@ nsIPresShell::GetRootScrollFrameAsScrollable() const
   NS_ASSERTION(scrollableFrame,
                "All scroll frames must implement nsIScrollableFrame");
   return scrollableFrame;
-}
-
-nsIScrollableFrame*
-nsIPresShell::GetRootScrollFrameAsScrollableExternal() const
-{
-  return GetRootScrollFrameAsScrollable();
 }
 
 nsIPageSequenceFrame*
@@ -9824,35 +9788,21 @@ PresShell::Observe(nsISupports* aSubject,
 }
 
 bool
-nsIPresShell::AddRefreshObserverInternal(nsARefreshObserver* aObserver,
-                                         FlushType aFlushType)
+nsIPresShell::AddRefreshObserver(nsARefreshObserver* aObserver,
+                                 FlushType aFlushType)
 {
   nsPresContext* presContext = GetPresContext();
   return presContext &&
       presContext->RefreshDriver()->AddRefreshObserver(aObserver, aFlushType);
 }
 
-/* virtual */ bool
-nsIPresShell::AddRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                         FlushType aFlushType)
-{
-  return AddRefreshObserverInternal(aObserver, aFlushType);
-}
-
 bool
-nsIPresShell::RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
-                                            FlushType aFlushType)
+nsIPresShell::RemoveRefreshObserver(nsARefreshObserver* aObserver,
+                                    FlushType aFlushType)
 {
   nsPresContext* presContext = GetPresContext();
   return presContext &&
       presContext->RefreshDriver()->RemoveRefreshObserver(aObserver, aFlushType);
-}
-
-/* virtual */ bool
-nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                            FlushType aFlushType)
-{
-  return RemoveRefreshObserverInternal(aObserver, aFlushType);
 }
 
 /* virtual */ bool

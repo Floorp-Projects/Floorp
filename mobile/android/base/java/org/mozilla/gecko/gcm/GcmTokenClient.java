@@ -84,7 +84,13 @@ public class GcmTokenClient {
         Log.i(LOG_TAG, "Cached GCM token does not exist; requesting new token with sender ID: " + senderID);
 
         final InstanceID instanceID = InstanceID.getInstance(context);
-        token = instanceID.getToken(senderID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+        try {
+            token = instanceID.getToken(senderID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+        } catch (SecurityException e) {
+            // Degrade gracefully (see upstream exception handling) if we couldn't get the token.
+            // See Bug 1335110.
+            throw new IOException("Could not get token due to a security exception", e);
+        }
         timestamp = System.currentTimeMillis();
 
         if (debug) {

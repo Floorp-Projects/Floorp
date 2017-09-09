@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
-const global = this;
+const global = Cu.getGlobalForObject(this);
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 

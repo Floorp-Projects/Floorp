@@ -1404,10 +1404,6 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
     return;
   }
 
-  if (uri.Find("enablejsapi=1", true, 0, -1) != kNotFound) {
-    return;
-  }
-
   // Some YouTube urls have parameters in path components, e.g.
   // http://youtube.com/embed/7LcUOEP7Brc&start=35. These URLs work with flash,
   // but break iframe/object embedding. If this situation occurs with rewritten

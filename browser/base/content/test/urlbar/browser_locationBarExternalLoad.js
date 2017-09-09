@@ -2,6 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.autoFill", false]],
+  });
   const url = "data:text/html,<body>hi";
   await testURL(url, urlEnter);
   await testURL(url, urlClick);
@@ -14,8 +17,12 @@ function urlEnter(url) {
 }
 
 function urlClick(url) {
-  gURLBar.value = url;
   gURLBar.focus();
+  gURLBar.value = "";
+  for (let c of url) {
+    EventUtils.synthesizeKey(c, {});
+  }
+
   EventUtils.synthesizeMouseAtCenter(gURLBar.goButton, {});
 }
 

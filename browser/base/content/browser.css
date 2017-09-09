@@ -683,8 +683,8 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 
 #urlbar[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
-#urlbar[usertyping] > .urlbar-textbox-container > .urlbar-history-dropmarker,
-.urlbar-go-button[pageproxystate="valid"],
+.urlbar-history-dropmarker[usertyping],
+.urlbar-go-button:not([usertyping]),
 .urlbar-go-button:not([parentfocused="true"]),
 #urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
 #urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,

@@ -37,11 +37,17 @@ import android.view.View;
         final int right = parent.getWidth() - parent.getPaddingRight();
 
         final int childCount = parent.getChildCount();
-        for (int i = START_DRAWING_AT_POSITION; i < childCount; i++) {
+        for (int i = 0; i < childCount; i++) {
             final View child = parent.getChildAt(i);
+
+            if (parent.getChildAdapterPosition(child) < START_DRAWING_AT_POSITION) {
+                continue;
+            }
+
             if (child.getVisibility() == View.GONE) {
                 continue;
             }
+
             final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child
                     .getLayoutParams();
             final int top = child.getBottom() + params.bottomMargin;
