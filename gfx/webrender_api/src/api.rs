@@ -186,6 +186,8 @@ pub enum DebugCommand {
     FetchDocuments,
     // Fetch current passes and batches.
     FetchPasses,
+    // Fetch clip-scroll tree.
+    FetchClipScrollTree,
 }
 
 #[derive(Clone, Deserialize, Serialize)]

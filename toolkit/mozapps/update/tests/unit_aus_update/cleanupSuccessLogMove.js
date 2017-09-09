@@ -21,11 +21,23 @@ function run_test() {
 
   standardInit();
 
+  Assert.ok(!gUpdateManager.activeUpdate,
+            "there should not be an active update");
+  Assert.equal(gUpdateManager.updateCount, 1,
+               "the update manager update count" + MSG_SHOULD_EQUAL);
+  do_execute_soon(waitForUpdateXMLFiles);
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
   let cancelations = Services.prefs.getIntPref(PREF_APP_UPDATE_CANCELATIONS, 0);
   Assert.equal(cancelations, 0,
                "the " + PREF_APP_UPDATE_CANCELATIONS + " preference " +
                MSG_SHOULD_EQUAL);
 
+  let log = getUpdateLog(FILE_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = getUpdateLog(FILE_LAST_UPDATE_LOG);

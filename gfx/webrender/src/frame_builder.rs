@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderDetails, BorderDisplayItem, BoxShadowClipMode, ClipAndScrollInfo, ClipId, ColorF};
+use api::{BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode, ClipAndScrollInfo, ClipId, ColorF};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExtendMode, FontInstance, FontRenderMode};
 use api::{GlyphInstance, GlyphOptions, GradientStop};
@@ -198,13 +198,13 @@ impl FrameBuilder {
                         clip_and_scroll: ClipAndScrollInfo,
                         rect: &LayerRect,
                         local_clip: &LocalClip,
-                        extra_clips: &[ClipSource],
+                        mut clip_sources: Vec<ClipSource>,
                         container: PrimitiveContainer) -> PrimitiveIndex {
         self.create_clip_scroll_group_if_necessary(clip_and_scroll);
 
-        let mut clip_sources = extra_clips.to_vec();
-        if let &LocalClip::RoundedRect(_, _) = local_clip {
-            clip_sources.push(ClipSource::Region(ClipRegion::create_for_local_clip(local_clip)))
+        if let &LocalClip::RoundedRect(main, region) = local_clip {
+            clip_sources.push(ClipSource::Rectangle(main));
+            clip_sources.push(ClipSource::RoundedRectangle(region.rect, region.radii, ClipMode::Clip));
         }
 
         let clip_sources = ClipSources::new(clip_sources);
@@ -242,12 +242,12 @@ impl FrameBuilder {
                          clip_and_scroll: ClipAndScrollInfo,
                          rect: &LayerRect,
                          local_clip: &LocalClip,
-                         extra_clips: &[ClipSource],
+                         clip_sources: Vec<ClipSource>,
                          container: PrimitiveContainer) -> PrimitiveIndex {
         let prim_index = self.create_primitive(clip_and_scroll,
                                                rect,
                                                local_clip,
-                                               extra_clips,
+                                               clip_sources,
                                                container);
 
         self.add_primitive_to_draw_list(prim_index, clip_and_scroll);
@@ -445,7 +445,7 @@ impl FrameBuilder {
         let prim_index = self.add_primitive(clip_and_scroll,
                                             &LayerRect::zero(),
                                             local_clip,
-                                            &[],
+                                            Vec::new(),
                                             PrimitiveContainer::TextShadow(prim));
 
         self.shadow_prim_stack.push(prim_index);
@@ -479,7 +479,7 @@ impl FrameBuilder {
         let prim_index = self.add_primitive(clip_and_scroll,
                                             rect,
                                             local_clip,
-                                            &[],
+                                            Vec::new(),
                                             PrimitiveContainer::Rectangle(prim));
 
         match flags {
@@ -535,14 +535,14 @@ impl FrameBuilder {
             self.add_primitive(clip_and_scroll,
                                &new_rect.translate(&shadow.offset),
                                local_clip,
-                               &[],
+                               Vec::new(),
                                PrimitiveContainer::Line(line));
         }
 
         let prim_index = self.create_primitive(clip_and_scroll,
                                                &new_rect,
                                                local_clip,
-                                               &[],
+                                               Vec::new(),
                                                PrimitiveContainer::Line(line));
 
         if color.a > 0.0 {
@@ -830,7 +830,7 @@ impl FrameBuilder {
             PrimitiveContainer::AngleGradient(gradient_cpu)
         };
 
-        self.add_primitive(clip_and_scroll, &rect, local_clip, &[], prim);
+        self.add_primitive(clip_and_scroll, &rect, local_clip, Vec::new(), prim);
     }
 
     pub fn add_radial_gradient(&mut self,
@@ -862,7 +862,7 @@ impl FrameBuilder {
         self.add_primitive(clip_and_scroll,
                            &rect,
                            local_clip,
-                           &[],
+                           Vec::new(),
                            PrimitiveContainer::RadialGradient(radial_gradient_cpu));
     }
 
@@ -974,7 +974,7 @@ impl FrameBuilder {
             self.add_primitive(clip_and_scroll,
                                &rect.translate(&text_prim.offset),
                                local_clip,
-                               &[],
+                               Vec::new(),
                                PrimitiveContainer::TextRun(text_prim));
         }
 
@@ -983,7 +983,7 @@ impl FrameBuilder {
         let prim_index = self.create_primitive(clip_and_scroll,
                                                &rect,
                                                local_clip,
-                                               &[],
+                                               Vec::new(),
                                                PrimitiveContainer::TextRun(prim));
 
         // Only add a visual element if it can contribute to the scene.
@@ -1031,8 +1031,9 @@ impl FrameBuilder {
         let box_clip_mode = !bs_clip_mode;
 
         // Clip the inside and then the outside of the box.
-        let extra_clips = [ClipSource::Complex(bs_rect, border_radius, bs_clip_mode),
-                           ClipSource::Complex(*box_bounds, border_radius, box_clip_mode)];
+        let border_radius = BorderRadius::uniform(border_radius);
+        let extra_clips = vec![ClipSource::RoundedRectangle(bs_rect, border_radius, bs_clip_mode),
+                               ClipSource::RoundedRectangle(*box_bounds, border_radius, box_clip_mode)];
 
         let prim = RectanglePrimitive {
             color: *color,
@@ -1041,7 +1042,7 @@ impl FrameBuilder {
         self.add_primitive(clip_and_scroll,
                            &rect_to_draw,
                            local_clip,
-                           &extra_clips,
+                           extra_clips,
                            PrimitiveContainer::Rectangle(prim));
     }
 
@@ -1192,9 +1193,9 @@ impl FrameBuilder {
 
                 let mut extra_clips = Vec::new();
                 if border_radius >= 0.0 {
-                    extra_clips.push(ClipSource::Complex(*box_bounds,
-                                                border_radius,
-                                                extra_clip_mode));
+                    extra_clips.push(ClipSource::RoundedRectangle(*box_bounds,
+                                                                  BorderRadius::uniform(border_radius),
+                                                                  extra_clip_mode));
                 }
 
                 let prim_cpu = BoxShadowPrimitiveCpu {
@@ -1211,7 +1212,7 @@ impl FrameBuilder {
                 self.add_primitive(clip_and_scroll,
                                    &outer_rect,
                                    local_clip,
-                                   extra_clips.as_slice(),
+                                   extra_clips,
                                    PrimitiveContainer::BoxShadow(prim_cpu));
             }
         }
@@ -1245,7 +1246,7 @@ impl FrameBuilder {
         self.add_primitive(clip_and_scroll,
                            &rect,
                            local_clip,
-                           &[],
+                           Vec::new(),
                            PrimitiveContainer::Image(prim_cpu));
     }
 
@@ -1276,7 +1277,7 @@ impl FrameBuilder {
         self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_rect,
-                           &[],
+                           Vec::new(),
                            PrimitiveContainer::YuvImage(prim_cpu));
     }
 

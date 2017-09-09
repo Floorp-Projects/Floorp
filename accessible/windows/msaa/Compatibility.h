@@ -52,17 +52,15 @@ public:
    */
   static void GetHumanReadableConsumersStr(nsAString &aResult);
 
+  /**
+   * Initialize compatibility mode information.
+   */
+  static void Init();
+
 private:
   Compatibility();
   Compatibility(const Compatibility&);
   Compatibility& operator = (const Compatibility&);
-
-  /**
-   * Initialize compatibility mode. Called by platform (see Platform.h) during
-   * accessibility initialization.
-   */
-  static void Init();
-  friend void PlatformInit();
 
   /**
    * List of detected consumers of a11y (used for statistics/telemetry and compat)

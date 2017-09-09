@@ -1266,6 +1266,13 @@ nsAccessibilityService::Init()
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
+#if defined(XP_WIN)
+  // This information needs to be initialized before the observer fires.
+  if (XRE_IsParentProcess()) {
+    Compatibility::Init();
+  }
+#endif // defined(XP_WIN)
+
   static const char16_t kInitIndicator[] = { '1', 0 };
   observerService->NotifyObservers(nullptr, "a11y-init-or-shutdown", kInitIndicator);
 
