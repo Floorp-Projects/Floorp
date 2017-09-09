@@ -1177,7 +1177,7 @@ IsTokenSane(Token* tp)
 {
     // Nb: TOK_EOL should never be used in an actual Token;  it should only be
     // returned as a TokenKind from peekTokenSameLine().
-    if (tp->type < 0 || tp->type >= TOK_LIMIT || tp->type == TOK_EOL)
+    if (tp->type >= TOK_LIMIT || tp->type == TOK_EOL)
         return false;
 
     if (tp->pos.end < tp->pos.begin)
