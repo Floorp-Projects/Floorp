@@ -25,33 +25,26 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 namespace base {
 
 bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               bool wait, ProcessHandle* process_handle) {
-  return LaunchApp(argv, fds_to_remap, environment_map(),
-                   wait, process_handle);
-}
-
-bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               const environment_map& env_vars_to_set,
-               bool wait, ProcessHandle* process_handle) {
+               const LaunchOptions& options,
+               ProcessHandle* process_handle)
+{
   mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
   // Illegal to allocate memory after fork and before execvp
   InjectiveMultimap fd_shuffle1, fd_shuffle2;
-  fd_shuffle1.reserve(fds_to_remap.size());
-  fd_shuffle2.reserve(fds_to_remap.size());
+  fd_shuffle1.reserve(options.fds_to_remap.size());
+  fd_shuffle2.reserve(options.fds_to_remap.size());
 
-  EnvironmentArray envp = BuildEnvironmentArray(env_vars_to_set);
+  EnvironmentArray envp = BuildEnvironmentArray(options.environ);
 
   pid_t pid = fork();
   if (pid < 0)
     return false;
 
   if (pid == 0) {
-    for (file_handle_mapping_vector::const_iterator
-        it = fds_to_remap.begin(); it != fds_to_remap.end(); ++it) {
-      fd_shuffle1.push_back(InjectionArc(it->first, it->second, false));
-      fd_shuffle2.push_back(InjectionArc(it->first, it->second, false));
+    // In the child:
+    for (const auto& fd_map : options.fds_to_remap) {
+      fd_shuffle1.push_back(InjectionArc(fd_map.first, fd_map.second, false));
+      fd_shuffle2.push_back(InjectionArc(fd_map.first, fd_map.second, false));
     }
 
     if (!ShuffleFileDescriptors(&fd_shuffle1))
@@ -69,24 +62,24 @@ bool LaunchApp(const std::vector<std::string>& argv,
     // only on debug builds; otherwise it's a signal-safe no-op.)
     DLOG(ERROR) << "FAILED TO exec() CHILD PROCESS, path: " << argv_cstr[0];
     _exit(127);
-  } else {
-    gProcessLog.print("==> process %d launched child process %d\n",
-                      GetCurrentProcId(), pid);
-    if (wait)
-      HANDLE_EINTR(waitpid(pid, 0, 0));
-
-    if (process_handle)
-      *process_handle = pid;
   }
+
+  // In the parent:
+  gProcessLog.print("==> process %d launched child process %d\n",
+                    GetCurrentProcId(), pid);
+  if (options.wait)
+    HANDLE_EINTR(waitpid(pid, 0, 0));
+
+  if (process_handle)
+    *process_handle = pid;
 
   return true;
 }
 
 bool LaunchApp(const CommandLine& cl,
-               bool wait, bool start_hidden,
+               const LaunchOptions& options,
                ProcessHandle* process_handle) {
-  file_handle_mapping_vector no_files;
-  return LaunchApp(cl.argv(), no_files, wait, process_handle);
+  return LaunchApp(cl.argv(), options, process_handle);
 }
 
 }  // namespace base
