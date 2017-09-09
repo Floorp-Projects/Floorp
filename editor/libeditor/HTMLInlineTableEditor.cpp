@@ -48,8 +48,13 @@ HTMLEditor::ShowInlineTableEditingUI(nsIDOMElement* aCell)
   NS_ENSURE_ARG_POINTER(aCell);
 
   // do nothing if aCell is not a table cell...
-  if (!HTMLEditUtils::IsTableCell(aCell)) {
+  nsCOMPtr<Element> cell = do_QueryInterface(aCell);
+  if (!cell || !HTMLEditUtils::IsTableCell(cell)) {
     return NS_OK;
+  }
+
+  if (NS_WARN_IF(!IsDescendantOfEditorRoot(cell))) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   if (mInlineEditedCell) {
