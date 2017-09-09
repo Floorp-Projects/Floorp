@@ -60,7 +60,8 @@ using namespace xpc;
 using namespace JS;
 
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
-static const char kJSCachePrefix[] = "jsloader";
+
+#define JS_CACHE_PREFIX(aType) "jsloader/" aType
 
 /**
  * Buffer sizes for serialization and deserialization of scripts.
@@ -701,7 +702,8 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
 
     aInfo.EnsureResolvedURI();
 
-    nsAutoCString cachePath(kJSCachePrefix);
+    nsAutoCString cachePath(reuseGlobal ? JS_CACHE_PREFIX("non-syntactic")
+                                        : JS_CACHE_PREFIX("global"));
     rv = PathifyURI(aInfo.ResolvedURI(), cachePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
