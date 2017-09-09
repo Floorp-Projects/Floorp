@@ -6,13 +6,9 @@ const {
   FileSource,
   IndexedFileSource
 } = Components.utils.import("resource://gre/modules/L10nRegistry.jsm", {});
-Components.utils.import("resource://gre/modules/Timer.jsm");
 
 let fs;
 L10nRegistry.load = async function(url) {
-  if (!fs.hasOwnProperty(url)) {
-    return Promise.reject('Resource unavailable');
-  }
   return fs[url];
 }
 
@@ -31,13 +27,14 @@ add_task(async function test_methods_calling() {
   fs = {
     '/localization/en-US/browser/menu.ftl': 'key = Value',
   };
+  const originalLoad = L10nRegistry.load;
 
   const source = new FileSource('test', ['en-US'], '/localization/{locale}');
   L10nRegistry.registerSource(source);
 
   const ctxs = L10nRegistry.generateContexts(['en-US'], ['/browser/menu.ftl']);
 
-  const ctx = (await ctxs.next()).value;
+  const ctx = await ctxs.next().value;
 
   equal(ctx.hasMessage('key'), true);
 
@@ -67,17 +64,17 @@ add_task(async function test_has_one_source() {
   // returns a single context
 
   let ctxs = L10nRegistry.generateContexts(['en-US'], ['test.ftl']);
-  let ctx0 = (await ctxs.next()).value;
+  let ctx0 = await ctxs.next().value;
   equal(ctx0.hasMessage('key'), true);
 
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
 
   // returns no contexts for missing locale
 
   ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
 
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -110,31 +107,31 @@ add_task(async function test_has_two_sources() {
   // returns correct contexts for en-US
 
   let ctxs = L10nRegistry.generateContexts(['en-US'], ['test.ftl']);
-  let ctx0 = (await ctxs.next()).value;
+  let ctx0 = await ctxs.next().value;
 
   equal(ctx0.hasMessage('key'), true);
   let msg = ctx0.getMessage('key');
   equal(ctx0.format(msg), 'platform value');
 
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
 
   // returns correct contexts for [pl, en-US]
 
   ctxs = L10nRegistry.generateContexts(['pl', 'en-US'], ['test.ftl']);
-  ctx0 = (await ctxs.next()).value;
+  ctx0 = await ctxs.next().value;
   equal(ctx0.locales[0], 'pl');
   equal(ctx0.hasMessage('key'), true);
   let msg0 = ctx0.getMessage('key');
   equal(ctx0.format(msg0), 'app value');
 
-  let ctx1 = (await ctxs.next()).value;
+  let ctx1 = await ctxs.next().value;
   equal(ctx1.locales[0], 'en-US');
   equal(ctx1.hasMessage('key'), true);
   let msg1 = ctx1.getMessage('key');
   equal(ctx1.format(msg1), 'platform value');
 
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -191,19 +188,19 @@ add_task(async function test_override() {
   equal(L10nRegistry.sources.has('langpack-pl'), true);
 
   let ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
-  let ctx0 = (await ctxs.next()).value;
+  let ctx0 = await ctxs.next().value;
   equal(ctx0.locales[0], 'pl');
   equal(ctx0.hasMessage('key'), true);
   let msg0 = ctx0.getMessage('key');
   equal(ctx0.format(msg0), 'addon value');
 
-  let ctx1 = (await ctxs.next()).value;
+  let ctx1 = await ctxs.next().value;
   equal(ctx1.locales[0], 'pl');
   equal(ctx1.hasMessage('key'), true);
   let msg1 = ctx1.getMessage('key');
   equal(ctx1.format(msg1), 'value');
 
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -224,7 +221,7 @@ add_task(async function test_updating() {
   };
 
   let ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
-  let ctx0 = (await ctxs.next()).value;
+  let ctx0 = await ctxs.next().value;
   equal(ctx0.locales[0], 'pl');
   equal(ctx0.hasMessage('key'), true);
   let msg0 = ctx0.getMessage('key');
@@ -239,7 +236,7 @@ add_task(async function test_updating() {
 
   equal(L10nRegistry.sources.size, 1);
   ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
-  ctx0 = (await ctxs.next()).value;
+  ctx0 = await ctxs.next().value;
   msg0 = ctx0.getMessage('key');
   equal(ctx0.format(msg0), 'new value');
 
@@ -270,19 +267,19 @@ add_task(async function test_removing() {
   equal(L10nRegistry.sources.has('langpack-pl'), true);
 
   let ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
-  let ctx0 = (await ctxs.next()).value;
+  let ctx0 = await ctxs.next().value;
   equal(ctx0.locales[0], 'pl');
   equal(ctx0.hasMessage('key'), true);
   let msg0 = ctx0.getMessage('key');
   equal(ctx0.format(msg0), 'addon value');
 
-  let ctx1 = (await ctxs.next()).value;
+  let ctx1 = await ctxs.next().value;
   equal(ctx1.locales[0], 'pl');
   equal(ctx1.hasMessage('key'), true);
   let msg1 = ctx1.getMessage('key');
   equal(ctx1.format(msg1), 'value');
 
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
   // Remove langpack
 
@@ -292,13 +289,13 @@ add_task(async function test_removing() {
   equal(L10nRegistry.sources.has('langpack-pl'), false);
 
   ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
-  ctx0 = (await ctxs.next()).value;
+  ctx0 = await ctxs.next().value;
   equal(ctx0.locales[0], 'pl');
   equal(ctx0.hasMessage('key'), true);
   msg0 = ctx0.getMessage('key');
   equal(ctx0.format(msg0), 'value');
 
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
   // Remove app source
 
@@ -307,109 +304,9 @@ add_task(async function test_removing() {
   equal(L10nRegistry.sources.size, 0);
 
   ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
-  equal((await ctxs.next()).done, true);
+  equal(ctxs.next().done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
   L10nRegistry.ctxCache.clear();
-});
-
-/**
- * This test verifies that the logic works correctly when there's a missing
- * file in the FileSource scenario.
- */
-add_task(async function test_missing_file() {
-  let oneSource = new FileSource('app', ['en-US'], './app/data/locales/{locale}/');
-  L10nRegistry.registerSource(oneSource);
-  let twoSource = new FileSource('platform', ['en-US'], './platform/data/locales/{locale}/');
-  L10nRegistry.registerSource(twoSource);
-
-  fs = {
-    './app/data/locales/en-US/test.ftl': 'key = value en-US',
-    './platform/data/locales/en-US/test.ftl': 'key = value en-US',
-    './platform/data/locales/en-US/test2.ftl': 'key2 = value2 en-US'
-  };
-
-
-  // has two sources
-
-  equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has('app'), true);
-  equal(L10nRegistry.sources.has('platform'), true);
-
-
-  // returns a single context
-
-  let ctxs = L10nRegistry.generateContexts(['en-US'], ['test.ftl', 'test2.ftl']);
-  let ctx0 = (await ctxs.next()).value;
-  let ctx1 = (await ctxs.next()).value;
-
-  equal((await ctxs.next()).done, true);
-
-
-  // cleanup
-  L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
-});
-
-/**
- * This test verifies that each file is that all files requested
- * by a single context are fetched at the same time, even
- * if one I/O is slow.
- */
-add_task(async function test_parallel_io() {
-  /* eslint-disable mozilla/no-arbitrary-setTimeout */
-  let originalLoad = L10nRegistry.load;
-  let fetchIndex = new Map();
-
-  L10nRegistry.load = function(url) {
-    if (!fetchIndex.has(url)) {
-      fetchIndex.set(url, 0);
-    }
-    fetchIndex.set(url, fetchIndex.get(url) + 1);
-
-    if (url === '/en-US/slow-file.ftl') {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Despite slow-file being the first on the list,
-          // by the time the it finishes loading, the other
-          // two files are already fetched.
-          equal(fetchIndex.get('/en-US/test.ftl'), 1);
-          equal(fetchIndex.get('/en-US/test2.ftl'), 1);
-
-          resolve('');
-        }, 10);
-      });
-    };
-    return Promise.resolve('');
-  }
-  let oneSource = new FileSource('app', ['en-US'], '/{locale}/');
-  L10nRegistry.registerSource(oneSource);
-
-  fs = {
-    '/en-US/test.ftl': 'key = value en-US',
-    '/en-US/test2.ftl': 'key2 = value2 en-US',
-    '/en-US/slow-file.ftl': 'key-slow = value slow en-US',
-  };
-
-  // returns a single context
-
-  let ctxs = L10nRegistry.generateContexts(['en-US'], ['slow-file.ftl', 'test.ftl', 'test2.ftl']);
-
-  equal(fetchIndex.size, 0);
-
-  let ctx0 = await ctxs.next();
-
-  equal(ctx0.done, false);
-
-  equal((await ctxs.next()).done, true);
-
-  // When requested again, the cache should make the load operation not
-  // increase the fetchedIndex count
-  let ctxs2= L10nRegistry.generateContexts(['en-US'], ['test.ftl', 'test2.ftl', 'slow-file.ftl']);
-
-  // cleanup
-  L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
-  L10nRegistry.load = originalLoad;
 });
