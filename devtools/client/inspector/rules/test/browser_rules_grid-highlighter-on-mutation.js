@@ -37,7 +37,7 @@ add_task(function* () {
   let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   info("Remove the #grid container in the content page");
   testActor.eval(`
-    document.querySelector("#grid").remove();
+    content.document.querySelector("#grid").remove();
   `);
   yield onHighlighterHidden;
   ok(!highlighters.gridHighlighterShown, "CSS grid highlighter is hidden.");
