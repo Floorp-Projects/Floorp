@@ -16,6 +16,7 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
 #include "nsXULAppAPI.h"        // for GeckoProcessType
@@ -118,6 +119,11 @@ protected:
   bool mIsFileContent;
   Monitor mMonitor;
   FilePath mProcessPath;
+  // GeckoChildProcessHost holds the launch options so they can be set
+  // up on the main thread using main-thread-only APIs like prefs, and
+  // then used for the actual launch on another thread.  This pointer
+  // is set to null to free the options after the child is launched.
+  UniquePtr<base::LaunchOptions> mLaunchOptions;
 
   // This value must be accessed while holding mMonitor.
   enum {
@@ -151,10 +157,6 @@ protected:
   int32_t mSandboxLevel;
 #endif
 #endif // XP_WIN
-
-#if defined(OS_POSIX)
-  base::file_handle_mapping_vector mFileMap;
-#endif
 
   ProcessHandle mChildProcessHandle;
 #if defined(OS_MACOSX)
