@@ -1,5 +1,6 @@
+from tests.support.asserts import assert_error, assert_success, assert_dialog_handled
+from tests.support.fixtures import create_dialog
 from tests.support.inline import inline
-from tests.support.asserts import assert_error, assert_success
 
 
 alert_doc = inline("<script>window.alert()</script>")
@@ -12,25 +13,152 @@ def minimize(session):
 # 10.7.4 Minimize Window
 
 
-def test_minimize_no_browsing_context(session, create_window):
-    # step 1
+def test_no_browsing_context(session, create_window):
+    """
+    1. If the current top-level browsing context is no longer open,
+    return error with error code no such window.
+
+    """
     session.window_handle = create_window()
     session.close()
     response = minimize(session)
     assert_error(response, "no such window")
 
 
-def test_handle_user_prompt(session):
-    # step 2
-    session.url = alert_doc
+def test_handle_prompt_dismiss_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_accept_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_ignore():
+    """TODO"""
+
+
+def test_handle_prompt_accept(new_session):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - accept state
+           Accept the current user prompt.
+
+    """
+    _, session = new_session({"alwaysMatch": {"unhandledPromptBehavior": "accept"}})
+    session.url = inline("<title>WD doc title</title>")
+
+    create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
+    response = minimize(session)
+    assert response.status == 200
+    assert_dialog_handled(session, "dismiss #1")
+
+    create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
+    response = minimize(session)
+    assert response.status == 200
+    assert_dialog_handled(session, "dismiss #2")
+
+    create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
+    response = minimize(session)
+    assert response.status == 200
+    assert_dialog_handled(session, "dismiss #3")
+
+
+def test_handle_prompt_missing_value(session, create_dialog):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - missing value default state
+           1. Dismiss the current user prompt.
+           2. Return error with error code unexpected alert open.
+
+    """
+    session.url = inline("<title>WD doc title</title>")
+    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
+
+    response = minimize(session)
+
+    assert_error(response, "unexpected alert open")
+    assert_dialog_handled(session, "dismiss #1")
+
+    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
+
     response = minimize(session)
     assert_error(response, "unexpected alert open")
+    assert_dialog_handled(session, "dismiss #2")
+
+    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
+
+    response = minimize(session)
+    assert_error(response, "unexpected alert open")
+    assert_dialog_handled(session, "dismiss #3")
+
+
+def test_fully_exit_fullscreen(session):
+    """
+    4. Fully exit fullscreen.
+
+    [...]
+
+    To fully exit fullscreen a document document, run these steps:
+
+      1. If document's fullscreen element is null, terminate these steps.
+
+      2. Unfullscreen elements whose fullscreen flag is set, within
+      document's top layer, except for document's fullscreen element.
+
+      3. Exit fullscreen document.
+
+    """
+    session.window.fullscreen()
+    assert session.execute_script("return window.fullScreen") is True
+
+    response = minimize(session)
+    assert_success(response)
+    assert session.execute_script("return window.fullScreen") is False
+    assert session.execute_script("return document.hidden") is True
 
 
 def test_minimize(session):
+    """
+    5. Iconify the window.
+
+    [...]
+
+    To iconify the window, given an operating system level window with an
+    associated top-level browsing context, run implementation-specific
+    steps to iconify, minimize, or hide the window from the visible
+    screen. Do not return from this operation until the visibility state
+    of the top-level browsing context's active document has reached the
+    hidden state, or until the operation times out.
+
+    """
     assert not session.execute_script("return document.hidden")
 
-    # step 4
     response = minimize(session)
     assert_success(response)
 
