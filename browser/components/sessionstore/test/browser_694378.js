@@ -24,12 +24,9 @@ function test() {
     info(ex);
   }
 
-  promiseWindowRestored(window).then(() => {
-    ok(!gotError, "ss.setWindowState did not throw an error");
+  ok(!gotError, "ss.setWindowState did not throw an error");
 
-    // Make sure that we reset the state. Use a full state just in case things get crazy.
-    let blankState = { windows: [{ tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }]}]};
-    waitForBrowserState(blankState, finish);
-  });
+  // Make sure that we reset the state. Use a full state just in case things get crazy.
+  let blankState = { windows: [{ tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }]}]};
+  waitForBrowserState(blankState, finish);
 }
-
