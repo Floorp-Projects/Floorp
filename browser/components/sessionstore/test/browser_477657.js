@@ -25,43 +25,36 @@ function test() {
        "window value was set before the window was overwritten");
     ss.setWindowState(newWin, JSON.stringify(newState), true);
 
-    promiseWindowRestored(newWin).then(() => {
-      // use newWin.setTimeout(..., 0) to mirror sss_restoreWindowFeatures
+    // use newWin.setTimeout(..., 0) to mirror sss_restoreWindowFeatures
+    newWin.setTimeout(function() {
+      is(ss.getWindowValue(newWin, uniqueKey), "",
+         "window value was implicitly cleared");
+
+      is(newWin.windowState, newWin.STATE_MAXIMIZED,
+         "the window was maximized");
+
+      is(JSON.parse(ss.getClosedTabData(newWin)).length, 1,
+         "the closed tab was added before the window was overwritten");
+      delete newState.windows[0]._closedTabs;
+      delete newState.windows[0].sizemode;
+      ss.setWindowState(newWin, JSON.stringify(newState), true);
+
       newWin.setTimeout(function() {
-        is(ss.getWindowValue(newWin, uniqueKey), "",
-          "window value was implicitly cleared");
+        is(JSON.parse(ss.getClosedTabData(newWin)).length, 0,
+           "closed tabs were implicitly cleared");
 
         is(newWin.windowState, newWin.STATE_MAXIMIZED,
-          "the window was maximized");
-
-        is(JSON.parse(ss.getClosedTabData(newWin)).length, 1,
-          "the closed tab was added before the window was overwritten");
-        delete newState.windows[0]._closedTabs;
-        delete newState.windows[0].sizemode;
+           "the window remains maximized");
+        newState.windows[0].sizemode = "normal";
         ss.setWindowState(newWin, JSON.stringify(newState), true);
 
-        promiseWindowRestored(newWin).then(() => {
-          newWin.setTimeout(function() {
-            is(JSON.parse(ss.getClosedTabData(newWin)).length, 0,
-              "closed tabs were implicitly cleared");
+        newWin.setTimeout(function() {
+          isnot(newWin.windowState, newWin.STATE_MAXIMIZED,
+                "the window was explicitly unmaximized");
 
-            is(newWin.windowState, newWin.STATE_MAXIMIZED,
-              "the window remains maximized");
-            newState.windows[0].sizemode = "normal";
-            ss.setWindowState(newWin, JSON.stringify(newState), true);
-
-            promiseWindowRestored(newWin).then(() => {
-              newWin.setTimeout(function() {
-                isnot(newWin.windowState, newWin.STATE_MAXIMIZED,
-                  "the window was explicitly unmaximized");
-
-                BrowserTestUtils.closeWindow(newWin).then(finish);
-              }, 0);
-            });
-          }, 0);
-        });
+          BrowserTestUtils.closeWindow(newWin).then(finish);
+        }, 0);
       }, 0);
-    });
+    }, 0);
   });
 }
-
