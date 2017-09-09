@@ -1,4 +1,0 @@
-{
-  "directories": { "lib": "./alt-lib" },
-  "loader": "alt-lib/loader.js"
-}
