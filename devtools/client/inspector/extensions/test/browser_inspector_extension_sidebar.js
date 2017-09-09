@@ -22,6 +22,8 @@ add_task(async function () {
 
   is(sidebar.title, sidebarTitle,
      "Got the expected title in the extension sidebar instance");
+  is(sidebar.provider.props.title, sidebarTitle,
+     "Got the expeted title in the provider props");
 
   let inspectorStoreState = inspector.store.getState();
 
