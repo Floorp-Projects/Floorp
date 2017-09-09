@@ -191,6 +191,33 @@ def test_maximize(session):
 
 
 def test_payload(session):
+    """
+    7. Return success with the JSON serialization of the current top-level
+    browsing context's window rect.
+
+    [...]
+
+    A top-level browsing context's window rect is defined as a
+    dictionary of the screenX, screenY, width and height attributes of
+    the WindowProxy. Its JSON representation is the following:
+
+    "x"
+        WindowProxy's screenX attribute.
+
+    "y"
+        WindowProxy's screenY attribute.
+
+    "width"
+        Width of the top-level browsing context's outer dimensions,
+        including any browser chrome and externally drawn window
+        decorations in CSS reference pixels.
+
+    "height"
+        Height of the top-level browsing context's outer dimensions,
+        including any browser chrome and externally drawn window
+        decorations in CSS reference pixels.
+
+    """
     before_size = session.window.size
 
     response = maximize(session)
@@ -204,10 +231,10 @@ def test_payload(session):
     assert "height" in value
     assert "x" in value
     assert "y" in value
-    assert isinstance(value["width"], (int, float))
-    assert isinstance(value["height"], (int, float))
-    assert isinstance(value["x"], (int, float))
-    assert isinstance(value["y"], (int, float))
+    assert isinstance(value["width"], int)
+    assert isinstance(value["height"], int)
+    assert isinstance(value["x"], int)
+    assert isinstance(value["y"], int)
 
     assert before_size != session.window.size
 
