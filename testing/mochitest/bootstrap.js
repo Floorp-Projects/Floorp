@@ -50,15 +50,7 @@ function loadMochitest(e) {
   WindowListener.setupWindow(win);
   Services.wm.addListener(WindowListener);
 
-  let overlay;
-  if (flavor == "jetpack-addon") {
-    overlay = "chrome://mochikit/content/jetpack-addon-overlay.xul";
-  } else if (flavor == "jetpack-package") {
-    overlay = "chrome://mochikit/content/jetpack-package-overlay.xul";
-  } else {
-    overlay = "chrome://mochikit/content/browser-test-overlay.xul";
-  }
-
+  let overlay = "chrome://mochikit/content/browser-test-overlay.xul";
   win.document.loadOverlay(overlay, null);
 }
 
