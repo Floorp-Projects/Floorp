@@ -646,8 +646,18 @@ public:
         }
         aFontEntry->mSkipDefaultFeatureSpaceCheck = mSkipDefaultFeatureSpaceCheck;
         mAvailableFonts.AppendElement(aFontEntry);
-        mIsSimpleFamily = false; // CheckForSimpleFamily may set this later,
-                                 // but at this point we're not sure
+
+        // If we're adding a face to a family that has been marked as "simple",
+        // we need to ensure any null entries are removed, as well as clearing
+        // the flag (which may be set again later).
+        if (mIsSimpleFamily) {
+            for (size_t i = mAvailableFonts.Length() - 1; i-- > 0; ) {
+                if (!mAvailableFonts[i]) {
+                    mAvailableFonts.RemoveElementAt(i);
+                }
+            }
+            mIsSimpleFamily = false;
+        }
     }
 
     // note that the styles for this family have been added
