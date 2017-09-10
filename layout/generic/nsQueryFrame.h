@@ -125,7 +125,7 @@ private:
   // downcasting is safe.
   template<class Src, class Dst>
   struct FastQueryFrame<Src, Dst,
-    typename mozilla::EnableIf<mozilla::IsBaseOf<nsIFrame, Src>::value>::type,
+    typename mozilla::EnableIf<mozilla::IsBaseOf<nsIFrame, Src>::value>::Type,
     typename mozilla::EnableIf<mozilla::IsBaseOf<nsIFrame, Dst>::value>::Type>
   {
     static Dst* QueryFrame(Src* aFrame) {
