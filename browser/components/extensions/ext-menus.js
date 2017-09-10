@@ -215,9 +215,7 @@ var gMenuBuilder = {
       element.setAttribute("label", label);
     }
 
-    if (item.id && item.extension && item.extension.id) {
-      element.setAttribute("id", `${makeWidgetId(item.extension.id)}_${item.id}`);
-    }
+    element.setAttribute("id", item.elementId);
 
     if (item.icons) {
       this.setMenuItemIcon(element, item.extension, contextData, item.icons);
@@ -462,6 +460,18 @@ MenuItem.prototype = {
 
   get id() {
     return this._id;
+  },
+
+  get elementId() {
+    let id = this.id;
+    // If the ID is an integer, it is auto-generated and globally unique.
+    // If the ID is a string, it is only unique within one extension and the
+    // ID needs to be concatenated with the extension ID.
+    if (typeof id !== "number") {
+      // To avoid collisions with numeric IDs, add a prefix to string IDs.
+      id = `_${id}`;
+    }
+    return `${makeWidgetId(this.extension.id)}-menuitem-${id}`;
   },
 
   ensureValidParentId(parentId) {
