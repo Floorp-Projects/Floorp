@@ -19,6 +19,10 @@ public class testSessionOOMSave extends SessionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
+        // Having the Activity Stream home panel active during this test seems to cause relatively
+        // frequent intermittent crashes, so for now, we avoid loading it by setting a different
+        // default panel for this test (bug 1396324).
+        // TODO: Remove the workaround once crashes have been fixed (bug 1398532).
         final HomeConfig homeConfig = HomeConfig.getDefault(getInstrumentation().getTargetContext());
         final HomeConfig.State state = homeConfig.load();
         mEditor = state.edit();
