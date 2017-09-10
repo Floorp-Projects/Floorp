@@ -928,10 +928,14 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
         PermitAssignmentPattern,
         ForbidAssignmentPattern
     };
-    void checkDestructuringAssignmentTarget(Node expr, TokenPos exprPos,
+    bool checkDestructuringAssignmentTarget(Node expr, TokenPos exprPos,
+                                            PossibleError* exprPossibleError,
                                             PossibleError* possibleError,
                                             TargetBehavior behavior = TargetBehavior::PermitAssignmentPattern);
-    void checkDestructuringAssignmentElement(Node expr, TokenPos exprPos,
+    void checkDestructuringAssignmentName(Node name, TokenPos namePos,
+                                          PossibleError* possibleError);
+    bool checkDestructuringAssignmentElement(Node expr, TokenPos exprPos,
+                                             PossibleError* exprPossibleError,
                                              PossibleError* possibleError);
 
     Node newNumber(const Token& tok) {
