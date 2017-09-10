@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Test content script async loading</title>
@@ -13,12 +13,21 @@
 
 add_task(async function test_async_loading() {
   const adder = `(function add(a = 1) { this.count += a; })();\n`;
-  const extension = ExtensionTestUtils.loadExtension({
+
+  const extension = {
     manifest: {
-      content_scripts: [{
-        matches: ["https://example.org/"],
-        js: ["first.js", "second.js"],
-      }],
+      content_scripts: [
+        {
+          run_at: "document_start",
+          matches: ["https://example.org/"],
+          js: ["first.js", "second.js"],
+        },
+        {
+          run_at: "document_end",
+          matches: ["https://example.org/"],
+          js: ["third.js"],
+        },
+      ],
     },
     files: {
       "first.js": `
@@ -33,21 +42,40 @@ add_task(async function test_async_loading() {
         this.order = (this.order || 0) + 1;
         browser.test.sendMessage("second", this.order);
       `,
+      "third.js": `
+        this.order = (this.order || 0) + 1;
+        browser.test.sendMessage("third", this.order);
+      `,
     },
-  });
+  };
 
-  await extension.startup();
+  async function checkOrder(extension) {
+    const [first, second, third] = await Promise.all([
+      extension.awaitMessage("first"),
+      extension.awaitMessage("second"),
+      extension.awaitMessage("third"),
+    ]);
+
+    is(first, 1, "first.js finished execution first.");
+    is(second, 2, "second.js finished execution second.");
+    is(third, 3, "third.js finished execution third.");
+  }
+
+  info("Test pages observed while extension is running");
+  const observed = ExtensionTestUtils.loadExtension(extension);
+  await observed.startup();
+
   const win = window.open("https://example.org/");
+  await checkOrder(observed);
+  await observed.unload();
 
-  const [first, second] = await Promise.all([
-    extension.awaitMessage("first"),
-    extension.awaitMessage("second"),
-  ]);
+  info("Test pages already existing on extension startup");
+  const existing = ExtensionTestUtils.loadExtension(extension);
 
-  is(first, 1, "first.js finished execution first.");
-  is(second, 2, "second.js finished execution second.");
+  await existing.startup();
+  await checkOrder(existing);
+  await existing.unload();
 
-  await extension.unload();
   win.close();
 });
 
