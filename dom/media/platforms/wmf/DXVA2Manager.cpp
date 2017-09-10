@@ -429,7 +429,8 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
-  if (adapter.VendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
+  if ((adapter.VendorId == 0x1022  || adapter.VendorId == 0x1002) &&
+      !gfxPrefs::PDMWMFSkipBlacklist()) {
     for (const auto& model : sAMDPreUVD4) {
       if (adapter.DeviceId == model) {
         mIsAMDPreUVD4 = true;
@@ -908,7 +909,8 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
-  if (adapterDesc.VendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
+  if ((adapterDesc.VendorId == 0x1022 || adapterDesc.VendorId == 0x1002) &&
+      !gfxPrefs::PDMWMFSkipBlacklist()) {
     for (const auto& model : sAMDPreUVD4) {
       if (adapterDesc.DeviceId == model) {
         mIsAMDPreUVD4 = true;
@@ -1307,7 +1309,7 @@ DXVA2Manager::IsNV12Supported(uint32_t aVendorID,
                               uint32_t aDeviceID,
                               const nsAString& aDriverVersionString)
 {
-  if (aVendorID == 0x1022) {
+  if (aVendorID == 0x1022 || aVendorID == 0x1002) {
     // AMD
     // Block old cards regardless of driver version.
     for (const auto& model : sAMDPreUVD4) {
