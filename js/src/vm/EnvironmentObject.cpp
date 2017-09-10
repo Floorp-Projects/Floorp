@@ -3187,7 +3187,8 @@ js::CreateObjectsForEnvironmentChain(JSContext* cx, AutoObjectVector& chain,
 #ifdef DEBUG
     for (size_t i = 0; i < chain.length(); ++i) {
         assertSameCompartment(cx, chain[i]);
-        MOZ_ASSERT(!chain[i]->is<GlobalObject>());
+        MOZ_ASSERT(!chain[i]->is<GlobalObject>() &&
+                   !chain[i]->is<NonSyntacticVariablesObject>());
     }
 #endif
 
