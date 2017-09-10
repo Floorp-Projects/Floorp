@@ -34,7 +34,8 @@ bool
 D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice)
 {
   if (aAllocator) {
-    if (gfxPrefs::PDMWMFUseNV12Format()) {
+    if (gfxPrefs::PDMWMFUseNV12Format() &&
+        gfx::DeviceManagerDx::Get()->CanUseNV12()) {
       mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
     } else {
       mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
