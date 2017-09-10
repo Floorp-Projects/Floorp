@@ -1765,7 +1765,7 @@ static bool
 CombineArrayObjectElements(JSContext* cx, ArrayObject* obj, JSValueType* elementType)
 {
     if (obj->inDictionaryMode() ||
-        obj->lastProperty()->propid() != AtomToId(cx->names().length) ||
+        obj->lastProperty()->propid() != NameToId(cx->names().length) ||
         !obj->lastProperty()->previous()->isEmptyShape())
     {
         // Only use an unboxed representation if the object has no properties.

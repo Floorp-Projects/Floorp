@@ -1441,14 +1441,6 @@ js::NumberToAtom(JSContext* cx, double d)
 }
 
 JSFlatString*
-js::NumberToString(JSContext* cx, double d)
-{
-    if (JSString* str = NumberToStringWithBase<CanGC>(cx, d, 10))
-        return &str->asFlat();
-    return nullptr;
-}
-
-JSFlatString*
 js::IndexToString(JSContext* cx, uint32_t index)
 {
     if (StaticStrings::hasUint(index))

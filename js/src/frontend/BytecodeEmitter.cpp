@@ -3666,22 +3666,6 @@ BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 }
 
 bool
-BytecodeEmitter::reportStrictModeError(ParseNode* pn, unsigned errorNumber, ...)
-{
-    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
-
-    va_list args;
-    va_start(args, errorNumber);
-    // FIXME: parser.tokenStream() should be a TokenStreamAnyChars for bug 1351107,
-    // but caused problems, cf. bug 1363116.
-    bool result = parser.tokenStream()
-                        .reportStrictModeErrorNumberVA(nullptr, pos.begin, sc->strict(),
-                                                       errorNumber, args);
-    va_end(args);
-    return result;
-}
-
-bool
 BytecodeEmitter::emitNewInit(JSProtoKey key)
 {
     const size_t len = 1 + UINT32_INDEX_LEN;
@@ -3710,8 +3694,8 @@ BytecodeEmitter::iteratorResultShape(unsigned* shape)
     if (!obj)
         return false;
 
-    Rooted<jsid> value_id(cx, AtomToId(cx->names().value));
-    Rooted<jsid> done_id(cx, AtomToId(cx->names().done));
+    Rooted<jsid> value_id(cx, NameToId(cx->names().value));
+    Rooted<jsid> done_id(cx, NameToId(cx->names().done));
     if (!NativeDefineProperty(cx, obj, value_id, UndefinedHandleValue, nullptr, nullptr,
                               JSPROP_ENUMERATE))
     {
@@ -3756,18 +3740,6 @@ BytecodeEmitter::emitFinishIteratorResult(bool done)
     if (!emit1(done ? JSOP_TRUE : JSOP_FALSE))
         return false;
     if (!emitIndex32(JSOP_INITPROP, done_id))
-        return false;
-    return true;
-}
-
-bool
-BytecodeEmitter::emitToIteratorResult(bool done)
-{
-    if (!emitPrepareIteratorResult())    // VALUE OBJ
-        return false;
-    if (!emit1(JSOP_SWAP))               // OBJ VALUE
-        return false;
-    if (!emitFinishIteratorResult(done)) // RESULT
         return false;
     return true;
 }
