@@ -13,7 +13,7 @@ Tests for plugin stream error conditions.
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runNextTest()">
+<body onload="startTests()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=517078">
   Mozilla Bug 517078</a> - Plugin Stream Error Tests
 <p id="display"></p>
@@ -159,6 +159,12 @@ function continueTest() {
                       .appendChild(document.createElement("br"));
 
   index++;
+}
+
+function startTests() {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.block_toplevel_data_uri_navigations", false],
+  ]}, runNextTest);
 }
 
 </script>

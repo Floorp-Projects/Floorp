@@ -15,8 +15,10 @@
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.setBoolPref("security.data_uri.unique_opaque_origin", true);
+SpecialPowers.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", false);
 SimpleTest.registerCleanupFunction(() => {
   SpecialPowers.clearUserPref("security.data_uri.unique_opaque_origin");
+  SpecialPowers.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
 });
 
 function imgListener(img) {
