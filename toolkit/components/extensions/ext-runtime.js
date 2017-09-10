@@ -124,12 +124,12 @@ this.runtime = class extends ExtensionAPI {
 
           let uri;
           try {
-            uri = Services.io.newURI(url);
+            uri = new URL(url);
           } catch (e) {
             return Promise.reject({message: `Invalid URL: ${JSON.stringify(url)}`});
           }
 
-          if (uri.scheme != "http" && uri.scheme != "https") {
+          if (uri.protocol != "http:" && uri.protocol != "https:") {
             return Promise.reject({message: "url must have the scheme http or https"});
           }
 
