@@ -504,10 +504,6 @@ const DownloadsIndicatorView = {
   },
 
   onCommand(aEvent) {
-    if (aEvent.type == "mousedown" && aEvent.button != 0) {
-      return;
-    }
-
     // If the downloads button is in the menu panel, open the Library
     let widgetGroup = CustomizableUI.getWidget("downloads-button");
     if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {

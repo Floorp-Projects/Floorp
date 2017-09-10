@@ -359,9 +359,6 @@ const PanelUI = {
 
     let domEvent = null;
     if (aEvent) {
-      if (aEvent.type == "mousedown" && aEvent.button != 0) {
-        return;
-      }
       if (aEvent.type == "command" && aEvent.inputSource != null) {
         // Synthesize a new DOM mouse event to pass on the inputSource.
         domEvent = document.createEvent("MouseEvent");
