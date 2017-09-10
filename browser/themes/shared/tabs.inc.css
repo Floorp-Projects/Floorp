@@ -522,11 +522,11 @@
 
 %ifdef CAN_DRAW_IN_TITLEBAR
 %ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar] #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
-:root[tabsintitlebar] #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::before
+:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
+:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::before
 %else
-:root[tabsintitlebar] .tabbrowser-tab::after,
-:root[tabsintitlebar] .tabbrowser-tab::before
+:root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::after,
+:root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::before
 %endif
 {
   border-image: none;
