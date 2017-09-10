@@ -53,6 +53,11 @@
 #include "SVGImageContext.h"
 #include "Units.h"
 
+#if defined(XP_WIN)
+// Undefine LoadImage to prevent naming conflict with Windows.
+#undef LoadImage
+#endif
+
 #define ONLOAD_CALLED_TOO_EARLY 1
 
 using namespace mozilla;
@@ -341,32 +346,53 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   aLists.Content()->AppendToTop(&list);
 }
 
-DrawResult
-nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
-                            const nsRect& aDirtyRect, nsPoint aPt,
-                            uint32_t aFlags)
+already_AddRefed<imgIContainer>
+nsImageBoxFrame::GetImageContainerForPainting(const nsPoint& aPt,
+                                              DrawResult& aDrawResult,
+                                              Maybe<nsPoint>& aAnchorPoint,
+                                              nsRect& aDest)
 {
   if (!mImageRequest) {
     // This probably means we're drawn by a native theme.
-    return DrawResult::SUCCESS;
+    aDrawResult = DrawResult::SUCCESS;
+    return nullptr;
   }
 
   // Don't draw if the image's size isn't available.
   uint32_t imgStatus;
   if (!NS_SUCCEEDED(mImageRequest->GetImageStatus(&imgStatus)) ||
       !(imgStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-    return DrawResult::NOT_READY;
+    aDrawResult = DrawResult::NOT_READY;
+    return nullptr;
   }
 
   nsCOMPtr<imgIContainer> imgCon;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
   if (!imgCon) {
-    return DrawResult::NOT_READY;
+    aDrawResult = DrawResult::NOT_READY;
+    return nullptr;
   }
 
+  aDest = GetDestRect(aPt, aAnchorPoint);
+  aDrawResult = DrawResult::SUCCESS;
+  return imgCon.forget();
+}
+
+DrawResult
+nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
+                            const nsRect& aDirtyRect, nsPoint aPt,
+                            uint32_t aFlags)
+{
+  DrawResult result;
   Maybe<nsPoint> anchorPoint;
-  nsRect dest = GetDestRect(aPt, anchorPoint);
+  nsRect dest;
+  nsCOMPtr<imgIContainer> imgCon = GetImageContainerForPainting(aPt, result,
+                                                                anchorPoint,
+                                                                dest);
+  if (!imgCon) {
+    return result;
+  }
 
   // don't draw if the image is not dirty
   // XXX(seth): Can this actually happen anymore?
