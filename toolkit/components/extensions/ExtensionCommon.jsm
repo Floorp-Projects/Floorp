@@ -46,7 +46,6 @@ var {
   getConsole,
   getInnerWindowID,
   getUniqueId,
-  instanceOf,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
@@ -377,8 +376,10 @@ class BaseContext {
       return error;
     }
     let message, fileName;
-    if (instanceOf(error, "Object") || error instanceof ExtensionError ||
-        (typeof error == "object" && this.principal.subsumes(Cu.getObjectPrincipal(error)))) {
+    if (error && typeof error === "object" &&
+        (ChromeUtils.getClassName(error) === "Object" ||
+         error instanceof ExtensionError ||
+         this.principal.subsumes(Cu.getObjectPrincipal(error)))) {
       message = error.message;
       fileName = error.fileName;
     } else {
@@ -1450,6 +1451,9 @@ LocaleData.prototype = {
   addLocale(locale, messages, extension) {
     let result = new Map();
 
+    let isPlainObject = obj => (obj && typeof obj === "object" &&
+                                ChromeUtils.getClassName(obj) === "Object");
+
     // Chrome does not document the semantics of its localization
     // system very well. It handles replacements by pre-processing
     // messages, replacing |$[a-zA-Z0-9@_]+$| tokens with the value of their
@@ -1461,7 +1465,7 @@ LocaleData.prototype = {
     // 1. It also accepts |$| followed by any number of sequential
     // digits, but refuses to process a localized string which
     // provides more than 9 substitutions.
-    if (!instanceOf(messages, "Object")) {
+    if (!isPlainObject(messages)) {
       extension.packagingError(`Invalid locale data for ${locale}`);
       return result;
     }
@@ -1469,7 +1473,7 @@ LocaleData.prototype = {
     for (let key of Object.keys(messages)) {
       let msg = messages[key];
 
-      if (!instanceOf(msg, "Object") || typeof(msg.message) != "string") {
+      if (!isPlainObject(msg) || typeof(msg.message) != "string") {
         extension.packagingError(`Invalid locale message data for ${locale}, message ${JSON.stringify(key)}`);
         continue;
       }
@@ -1477,7 +1481,7 @@ LocaleData.prototype = {
       // Substitutions are case-insensitive, so normalize all of their names
       // to lower-case.
       let placeholders = new Map();
-      if (instanceOf(msg.placeholders, "Object")) {
+      if (isPlainObject(msg.placeholders)) {
         for (let key of Object.keys(msg.placeholders)) {
           placeholders.set(key.toLowerCase(), msg.placeholders[key]);
         }
@@ -1485,7 +1489,7 @@ LocaleData.prototype = {
 
       let replacer = (match, name) => {
         let replacement = placeholders.get(name.toLowerCase());
-        if (instanceOf(replacement, "Object") && "content" in replacement) {
+        if (isPlainObject(replacement) && "content" in replacement) {
           return replacement.content;
         }
         return "";
