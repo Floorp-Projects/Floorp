@@ -1321,6 +1321,10 @@ var gBrowserInit = {
 
     gUIDensity.init();
 
+    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      gDragSpaceObserver.init();
+    }
+
     let isResistFingerprintingEnabled = gPrefService.getBoolPref("privacy.resistFingerprinting");
 
     // Set a sane starting width/height for all resolutions on new profiles.
@@ -1808,6 +1812,10 @@ var gBrowserInit = {
     Services.obs.removeObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
 
     gUIDensity.uninit();
+
+    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      gDragSpaceObserver.uninit();
+    }
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -5578,6 +5586,38 @@ var gTabletModePageCounter = {
 function displaySecurityInfo() {
   BrowserPageInfo(null, "securityTab");
 }
+
+// Adds additional drag space to the window by listening to
+// the corresponding preference.
+var gDragSpaceObserver = {
+  pref: "browser.tabs.extraDragSpace",
+
+  init() {
+    this.update();
+    gPrefService.addObserver(this.pref, this);
+  },
+
+  uninit() {
+    gPrefService.removeObserver(this.pref, this);
+  },
+
+  observe(aSubject, aTopic, aPrefName) {
+    if (aTopic != "nsPref:changed" || aPrefName != this.pref) {
+      return;
+    }
+
+    this.update();
+  },
+
+  update() {
+    if (gPrefService.getBoolPref(this.pref)) {
+      document.documentElement.setAttribute("extradragspace", "true");
+    } else {
+      document.documentElement.removeAttribute("extradragspace");
+    }
+    TabsInTitlebar.updateAppearance(true);
+  },
+};
 
 // Updates the UI density (for touch and compact mode) based on the uidensity pref.
 var gUIDensity = {
