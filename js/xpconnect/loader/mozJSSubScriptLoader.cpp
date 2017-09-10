@@ -180,24 +180,40 @@ EvalScript(JSContext* cx,
         if (!JS::CloneAndExecuteScript(cx, script, retval)) {
             return false;
         }
+    } else if (js::IsJSMEnvironment(targetObj)) {
+        if (!ExecuteInJSMEnvironment(cx, script, targetObj)) {
+            return false;
+        }
+        retval.setUndefined();
     } else {
         JS::AutoObjectVector envChain(cx);
         if (!envChain.append(targetObj)) {
             return false;
         }
-        if (loadScope != targetObj &&
-            loadScope &&
-            !JS_IsGlobalObject(loadScope))
-        {
-            MOZ_DIAGNOSTIC_ASSERT(js::GetObjectCompartment(loadScope) ==
-                                  js::GetObjectCompartment(targetObj));
-
-            if (!envChain.append(loadScope)) {
+        if (!loadScope) {
+            // A null loadScope means we are cross-compartment. In this case, we
+            // should check the target isn't in the JSM loader shared-global or
+            // we will contaiminate all JSMs in the compartment.
+            //
+            // NOTE: If loadScope is already a shared-global JSM, we can't
+            // determine which JSM the target belongs to and have to assume it
+            // is in our JSM.
+            JSObject* targetGlobal = js::GetGlobalForObjectCrossCompartment(targetObj);
+            MOZ_DIAGNOSTIC_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(targetGlobal),
+                                  "Don't load subscript into target in a shared-global JSM");
+            if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
                 return false;
             }
-        }
-        if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
-            return false;
+        } else if (JS_IsGlobalObject(loadScope)) {
+            if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
+                return false;
+            }
+        } else {
+            MOZ_ASSERT(js::IsJSMEnvironment(loadScope));
+            if (!js::ExecuteInJSMEnvironment(cx, script, loadScope, envChain)) {
+                return false;
+            }
+            retval.setUndefined();
         }
     }
 
