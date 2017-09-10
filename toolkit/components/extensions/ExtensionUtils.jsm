@@ -6,10 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["ExtensionUtils"];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -302,9 +299,7 @@ function promiseDocumentLoaded(doc) {
   }
 
   return new Promise(resolve => {
-    doc.defaultView.addEventListener("load", function(event) {
-      resolve(doc);
-    }, {once: true});
+    doc.defaultView.addEventListener("load", () => resolve(doc), {once: true});
   });
 }
 
