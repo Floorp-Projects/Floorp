@@ -260,8 +260,7 @@ const query = function* (detailsIn, props, context) {
     return true;
   }
 
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+  for (const cookie of XPCOMUtils.IterSimpleEnumerator(enumerator, Ci.nsICookie2)) {
     if (matches(cookie)) {
       yield {cookie, isPrivate, storeId};
     }
