@@ -175,7 +175,11 @@ var testFrameNotLoadedInDataURI = function() {
 SimpleTest.waitForExplicitFinish();
 
 // load the test harness
-document.getElementById("harness").src = "file_x-frame-options_main.html";
+SpecialPowers.pushPrefEnv({
+  "set": [["security.data_uri.block_toplevel_data_uri_navigations", false],]
+}, function() {
+  document.getElementById("harness").src = "file_x-frame-options_main.html";
+});
 
 </script>
 </pre>
