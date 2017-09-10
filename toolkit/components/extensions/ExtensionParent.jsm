@@ -52,7 +52,6 @@ var {
   defineLazyGetter,
   promiseDocumentLoaded,
   promiseEvent,
-  promiseFileContents,
   promiseObserved,
 } = ExtensionUtils;
 
@@ -1435,9 +1434,9 @@ StartupCache = {
   async _readData() {
     let result = new Map();
     try {
-      let data = await promiseFileContents(this.file);
+      let {buffer} = await OS.File.read(this.file);
 
-      result = aomStartup.decodeBlob(data);
+      result = aomStartup.decodeBlob(buffer);
     } catch (e) {
       if (!e.becauseNoSuchFile) {
         Cu.reportError(e);

@@ -37,11 +37,6 @@ function getUniqueId() {
   return `${nextId++}-${uniqueProcessID}`;
 }
 
-async function promiseFileContents(path) {
-  let res = await OS.File.read(path);
-  return res.buffer;
-}
-
 
 /**
  * An Error subclass for which complete error messages are always passed
@@ -63,55 +58,11 @@ function runSafeSyncWithoutClone(f, ...args) {
   }
 }
 
-// Run a function and report exceptions.
-function runSafeWithoutClone(f, ...args) {
-  if (typeof(f) != "function") {
-    dump(`Extension error: expected function\n${filterStack(Error())}`);
-    return;
-  }
-
-  Promise.resolve().then(() => {
-    runSafeSyncWithoutClone(f, ...args);
-  });
-}
-
-// Run a function, cloning arguments into context.cloneScope, and
-// report exceptions. |f| is expected to be in context.cloneScope.
-function runSafeSync(context, f, ...args) {
-  if (context.unloaded) {
-    Cu.reportError("runSafeSync called after context unloaded");
-    return;
-  }
-
-  try {
-    args = Cu.cloneInto(args, context.cloneScope);
-  } catch (e) {
-    Cu.reportError(e);
-    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${filterStack(Error())}`);
-  }
-  return runSafeSyncWithoutClone(f, ...args);
-}
-
-// Run a function, cloning arguments into context.cloneScope, and
-// report exceptions. |f| is expected to be in context.cloneScope.
-function runSafe(context, f, ...args) {
-  try {
-    args = Cu.cloneInto(args, context.cloneScope);
-  } catch (e) {
-    Cu.reportError(e);
-    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${filterStack(Error())}`);
-  }
-  if (context.unloaded) {
-    dump(`runSafe failure: context is already unloaded ${filterStack(new Error())}\n`);
-    return undefined;
-  }
-  return runSafeWithoutClone(f, ...args);
-}
-
 // Return true if the given value is an instance of the given
 // native type.
 function instanceOf(value, type) {
-  return {}.toString.call(value) == `[object ${type}]`;
+  return (value && typeof value === "object" &&
+          ChromeUtils.getClassName(value) === type);
 }
 
 /**
@@ -684,12 +635,8 @@ this.ExtensionUtils = {
   promiseDocumentLoaded,
   promiseDocumentReady,
   promiseEvent,
-  promiseFileContents,
   promiseObserved,
-  runSafe,
-  runSafeSync,
   runSafeSyncWithoutClone,
-  runSafeWithoutClone,
   withHandlingUserInput,
   DefaultMap,
   DefaultWeakMap,
