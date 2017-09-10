@@ -230,6 +230,45 @@ add_task(async function onSearch() {
 
   SitePermissions.remove(URI, "desktop-notification");
   SitePermissions.remove(u, "desktop-notification");
+
+  doc.getElementById("cancel").click();
+});
+
+add_task(async function onPermissionsSort() {
+  SitePermissions.set(URI, "desktop-notification", SitePermissions.ALLOW);
+  let u = Services.io.newURI("http://www.test.com");
+  SitePermissions.set(u, "desktop-notification", SitePermissions.BLOCK);
+
+  await openPermissionsDialog();
+  let doc = sitePermissionsDialog.document;
+  let richlistbox = doc.getElementById("permissionsBox");
+
+  // Test default arrangement(Allow followed by Block).
+  Assert.equal(richlistbox.getItemAtIndex(0).getAttribute("origin"), "http://www.example.com");
+  Assert.equal(richlistbox.getItemAtIndex(1).getAttribute("origin"), "http://www.test.com");
+
+  doc.getElementById("statusCol").click();
+
+  // Test the rearrangement(Block followed by Allow).
+  Assert.equal(richlistbox.getItemAtIndex(0).getAttribute("origin"), "http://www.test.com");
+  Assert.equal(richlistbox.getItemAtIndex(1).getAttribute("origin"), "http://www.example.com");
+
+  doc.getElementById("siteCol").click();
+
+  // Test the rearrangement(Website names arranged in alphabhetical order).
+  Assert.equal(richlistbox.getItemAtIndex(0).getAttribute("origin"), "http://www.example.com");
+  Assert.equal(richlistbox.getItemAtIndex(1).getAttribute("origin"), "http://www.test.com");
+
+  doc.getElementById("siteCol").click();
+
+  // Test the rearrangement(Website names arranged in reverse alphabhetical order).
+  Assert.equal(richlistbox.getItemAtIndex(0).getAttribute("origin"), "http://www.test.com");
+  Assert.equal(richlistbox.getItemAtIndex(1).getAttribute("origin"), "http://www.example.com");
+
+  SitePermissions.remove(URI, "desktop-notification");
+  SitePermissions.remove(u, "desktop-notification");
+
+  doc.getElementById("cancel").click();
 });
 
 add_task(async function removeTab() {

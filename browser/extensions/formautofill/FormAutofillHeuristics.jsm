@@ -409,7 +409,7 @@ this.FormAutofillHeuristics = {
    *        all field details in the form.
    */
   getFormInfo(form, allowDuplicates = false) {
-    if (form.autocomplete == "off" || form.elements.length <= 0) {
+    if (form.elements.length <= 0) {
       return [];
     }
 
@@ -442,7 +442,7 @@ this.FormAutofillHeuristics = {
     let info = element.getAutocompleteInfo();
     // An input[autocomplete="on"] will not be early return here since it stll
     // needs to find the field name.
-    if (info && info.fieldName && info.fieldName != "on") {
+    if (info && info.fieldName && info.fieldName != "on" && info.fieldName != "off") {
       info._reason = "autocomplete";
       return info;
     }
@@ -451,11 +451,14 @@ this.FormAutofillHeuristics = {
       return null;
     }
 
+    let isAutoCompleteOff = element.autocomplete == "off" ||
+      (element.form && element.form.autocomplete == "off");
+
     // "email" type of input is accurate for heuristics to determine its Email
     // field or not. However, "tel" type is used for ZIP code for some web site
     // (e.g. HomeDepot, BestBuy), so "tel" type should be not used for "tel"
     // prediction.
-    if (element.type == "email") {
+    if (element.type == "email" && !isAutoCompleteOff) {
       return {
         fieldName: "email",
         section: "",
@@ -464,7 +467,14 @@ this.FormAutofillHeuristics = {
       };
     }
 
-    let regexps = Object.keys(this.RULES);
+    const FIELDNAMES_IGNORING_AUTOCOMPLETE_OFF = [
+      "cc-name",
+      "cc-number",
+      "cc-exp-month",
+      "cc-exp-year",
+      "cc-exp",
+    ];
+    let regexps = isAutoCompleteOff ? FIELDNAMES_IGNORING_AUTOCOMPLETE_OFF : Object.keys(this.RULES);
 
     let labelStrings;
     let getElementStrings = {};
