@@ -7743,9 +7743,38 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
 
   // Deal with possible :after generated content on the parent
   nsIFrame* parentAfterFrame;
+  nsContainerFrame* preAdjustedParentFrame = parentFrame;
   parentFrame =
     ::AdjustAppendParentForAfterContent(this, insertion.mContainer, parentFrame,
                                         aFirstNewContent, &parentAfterFrame);
+
+  // See if the containing block has :first-letter style applied.
+  bool haveFirstLetterStyle = false, haveFirstLineStyle = false;
+  nsContainerFrame* containingBlock = GetFloatContainingBlock(parentFrame);
+  if (containingBlock) {
+    haveFirstLetterStyle = HasFirstLetterStyle(containingBlock);
+    haveFirstLineStyle =
+      ShouldHaveFirstLineStyle(containingBlock->GetContent(),
+                               containingBlock->StyleContext());
+  }
+
+  if (haveFirstLetterStyle) {
+    AutoWeakFrame wf(parentAfterFrame);
+    // Before we get going, remove the current letter frames
+    RemoveLetterFrames(mPresShell, containingBlock);
+
+    if (parentAfterFrame && !wf) {
+      // Ouch, parentAfterFrame was a letter frame and we just deleted it!
+      // Retry AdjustAppendParentForAfterContent; fortunately this is rare.
+      parentFrame =
+        ::AdjustAppendParentForAfterContent(this, insertion.mContainer,
+                                            preAdjustedParentFrame,
+                                            aFirstNewContent, &parentAfterFrame);
+      if (parentFrame != preAdjustedParentFrame) {
+        containingBlock = GetFloatContainingBlock(parentFrame);
+      }
+    }
+  }
 
   // Create some new frames
   //
@@ -7760,22 +7789,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
                                 matchContext.ptrOr(aProvidedTreeMatchContext),
                                 GetAbsoluteContainingBlock(parentFrame, FIXED_POS),
                                 GetAbsoluteContainingBlock(parentFrame, ABS_POS),
-                                GetFloatContainingBlock(parentFrame));
-
-  // See if the containing block has :first-letter style applied.
-  bool haveFirstLetterStyle = false, haveFirstLineStyle = false;
-  nsContainerFrame* containingBlock = state.mFloatedItems.containingBlock;
-  if (containingBlock) {
-    haveFirstLetterStyle = HasFirstLetterStyle(containingBlock);
-    haveFirstLineStyle =
-      ShouldHaveFirstLineStyle(containingBlock->GetContent(),
-                               containingBlock->StyleContext());
-  }
-
-  if (haveFirstLetterStyle) {
-    // Before we get going, remove the current letter frames
-    RemoveLetterFrames(state.mPresShell, containingBlock);
-  }
+                                containingBlock);
 
   LayoutFrameType frameType = parentFrame->Type();
 
