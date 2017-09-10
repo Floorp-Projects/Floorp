@@ -76,10 +76,12 @@ class DefaultWeakMap extends WeakMap {
   }
 
   get(key) {
-    if (!this.has(key)) {
-      this.set(key, this.defaultConstructor(key));
+    let value = super.get(key);
+    if (value === undefined && !this.has(key)) {
+      value = this.defaultConstructor(key);
+      this.set(key, value);
     }
-    return super.get(key);
+    return value;
   }
 }
 
@@ -90,10 +92,12 @@ class DefaultMap extends Map {
   }
 
   get(key) {
-    if (!this.has(key)) {
-      this.set(key, this.defaultConstructor(key));
+    let value = super.get(key);
+    if (value === undefined && !this.has(key)) {
+      value = this.defaultConstructor(key);
+      this.set(key, value);
     }
-    return super.get(key);
+    return value;
   }
 }
 
@@ -138,11 +142,13 @@ class EventEmitter {
    *        The listener to call when events are emitted.
    */
   on(event, listener) {
-    if (!this[LISTENERS].has(event)) {
-      this[LISTENERS].set(event, new Set());
+    let listeners = this[LISTENERS].get(event);
+    if (!listeners) {
+      listeners = new Set();
+      this[LISTENERS].set(event, listeners);
     }
 
-    this[LISTENERS].get(event).add(listener);
+    listeners.add(listener);
   }
 
   /**
@@ -154,9 +160,8 @@ class EventEmitter {
    *        The listener function to remove.
    */
   off(event, listener) {
-    if (this[LISTENERS].has(event)) {
-      let set = this[LISTENERS].get(event);
-
+    let set = this.listeners.get(event);
+    if (set) {
       set.delete(listener);
       set.delete(this[ONCE_MAP].get(listener));
       if (!set.size) {
@@ -255,7 +260,7 @@ class LimitedSet extends Set {
   }
 
   add(item) {
-    if (!this.has(item) && this.size >= this.limit + this.slop) {
+    if (this.size >= this.limit + this.slop && !this.has(item)) {
       this.truncate(this.limit - 1);
     }
     super.add(item);
