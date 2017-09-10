@@ -167,10 +167,6 @@ this.FormAutofillUtils = {
 
   ALLOWED_TYPES: ["text", "email", "tel", "number"],
   isFieldEligibleForAutofill(element) {
-    if (element.autocomplete == "off") {
-      return false;
-    }
-
     let tagName = element.tagName;
     if (tagName == "INPUT") {
       // `element.type` can be recognized as `text`, if it's missing or invalid.

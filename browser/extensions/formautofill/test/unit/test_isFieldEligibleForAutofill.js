@@ -31,7 +31,7 @@ const TESTCASES = [
   {
     document: `<input id="targetElement" type="text" autocomplete="off">`,
     fieldId: "targetElement",
-    expectedResult: false,
+    expectedResult: true,
   },
   {
     document: `<input id="targetElement">`,
@@ -46,7 +46,7 @@ const TESTCASES = [
   {
     document: `<select id="targetElement" autocomplete="off"></select>`,
     fieldId: "targetElement",
-    expectedResult: false,
+    expectedResult: true,
   },
   {
     document: `<select id="targetElement"></select>`,
