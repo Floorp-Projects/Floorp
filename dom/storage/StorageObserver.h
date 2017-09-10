@@ -10,7 +10,7 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"
-#include "nsTArray.h"
+#include "nsTObserverArray.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -64,7 +64,7 @@ private:
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
 
   // Weak references
-  nsTArray<StorageObserverSink*> mSinks;
+  nsTObserverArray<StorageObserverSink*> mSinks;
   nsCOMPtr<nsITimer> mDBThreadStartDelayTimer;
 };
 
