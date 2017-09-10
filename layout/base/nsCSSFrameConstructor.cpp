@@ -2686,10 +2686,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     static const FrameConstructionData rootSVGData = FCDATA_DECL(0, nullptr);
     already_AddRefed<nsStyleContext> extraRef =
       RefPtr<nsStyleContext>(styleContext).forget();
-    FrameConstructionItem item(&rootSVGData, aDocElement,
-                               aDocElement->NodeInfo()->NameAtom(),
-                               kNameSpaceID_SVG, nullptr, extraRef, true,
-                               nullptr);
+    AutoFrameConstructionItem item(this, &rootSVGData, aDocElement,
+                                   aDocElement->NodeInfo()->NameAtom(),
+                                   kNameSpaceID_SVG, nullptr, extraRef, true,
+                                   nullptr);
 
     nsFrameItems frameItems;
     contentFrame = static_cast<nsContainerFrame*>(
@@ -2736,10 +2736,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     static const FrameConstructionData rootTableData = FCDATA_DECL(0, nullptr);
     already_AddRefed<nsStyleContext> extraRef =
       RefPtr<nsStyleContext>(styleContext).forget();
-    FrameConstructionItem item(&rootTableData, aDocElement,
-                               aDocElement->NodeInfo()->NameAtom(),
-                               kNameSpaceID_None, nullptr, extraRef, true,
-                               nullptr);
+    AutoFrameConstructionItem item(this, &rootTableData, aDocElement,
+                                   aDocElement->NodeInfo()->NameAtom(),
+                                   kNameSpaceID_None, nullptr, extraRef, true,
+                                   nullptr);
 
     nsFrameItems frameItems;
     // if the document is a table then just populate it.
@@ -3075,7 +3075,7 @@ nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(nsFrameConstructorStat
     return;
   }
 
-  FrameConstructionItemList itemsToConstruct;
+  AutoFrameConstructionItemList itemsToConstruct(this);
   nsContainerFrame* frameAsContainer = do_QueryFrame(aFrame);
   AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems, itemsToConstruct);
 
@@ -3284,7 +3284,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     childItems.AddChild(customFrame);
 
     // The other piece of NAC can take the normal path.
-    FrameConstructionItemList fcItems;
+    AutoFrameConstructionItemList fcItems(this);
     AddFCItemsForAnonymousContent(aState, comboboxFrame, newAnonymousItems,
                                   fcItems);
     ConstructFramesFromItemList(aState, fcItems, comboboxFrame,
@@ -4725,7 +4725,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
       ancestorPusher.PushStyleScope(aContent->AsElement());
     }
 
-    FrameConstructionItemList items;
+    AutoFrameConstructionItemList items(this);
     AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items);
     ConstructFramesFromItemList(aState, items, gfxScrollFrame,
                                 /* aParentIsWrapperAnonBox = */ false,
@@ -5752,7 +5752,7 @@ nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
 
   // Lie about the tag and namespace so we don't trigger anything
   // interesting during frame construction.
-  aItems.AppendItem(&sPageBreakData, aContent, nsCSSAnonBoxes::pageBreak,
+  aItems.AppendItem(this, &sPageBreakData, aContent, nsCSSAnonBoxes::pageBreak,
                     kNameSpaceID_None, nullptr, pseudoStyle.forget(),
                     true, nullptr);
 }
@@ -6170,14 +6170,14 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     if (summary && summary->IsMainSummary()) {
       // If details is open, the main summary needs to be rendered as if it is
       // the first child, so add the item to the front of the item list.
-      item = aItems.PrependItem(data, aContent, aTag, aNameSpaceID,
+      item = aItems.PrependItem(this, data, aContent, aTag, aNameSpaceID,
                                 pendingBinding, styleContext.forget(),
                                 aSuppressWhiteSpaceOptimizations, aAnonChildren);
     }
   }
 
   if (!item) {
-    item = aItems.AppendItem(data, aContent, aTag, aNameSpaceID,
+    item = aItems.AppendItem(this, data, aContent, aTag, aNameSpaceID,
                              pendingBinding, styleContext.forget(),
                              aSuppressWhiteSpaceOptimizations, aAnonChildren);
   }
@@ -7797,7 +7797,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
 
   FlattenedChildIterator iter(aContainer);
   bool haveNoXBLChildren = (!iter.XBLInvolved() || !iter.GetNextChild());
-  FrameConstructionItemList items;
+  AutoFrameConstructionItemList items(this);
   if (aFirstNewContent->GetPreviousSibling() &&
       GetParentType(frameType) == eTypeBlock &&
       haveNoXBLChildren) {
@@ -8368,7 +8368,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     }
   }
 
-  FrameConstructionItemList items;
+  AutoFrameConstructionItemList items(this);
   ParentType parentType = GetParentType(frameType);
   FlattenedChildIterator iter(aContainer);
   bool haveNoXBLChildren = (!iter.XBLInvolved() || !iter.GetNextChild());
@@ -9504,7 +9504,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
       nsIContent* content = fixed->GetContent();
       nsStyleContext* styleContext =
         nsLayoutUtils::GetStyleFrame(content)->StyleContext();
-      FrameConstructionItemList items;
+      AutoFrameConstructionItemList items(this);
       AddFrameConstructionItemsInternal(state, content, canvasFrame,
                                         content->NodeInfo()->NameAtom(),
                                         content->GetNameSpaceID(),
@@ -10304,7 +10304,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
       if (!nextChildNeedsAnonItem) {
         // There's nothing after the whitespace that we need to wrap, so we
         // just drop this run of whitespace.
-        iter.DeleteItemsTo(afterWhitespaceIter);
+        iter.DeleteItemsTo(this, afterWhitespaceIter);
         if (hitEnd) {
           // Nothing left to do -- we're finished!
           return;
@@ -10346,7 +10346,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
                   NS_NewBlockFormattingContext);
 
     FrameConstructionItem* newItem =
-      new FrameConstructionItem(&sBlockFormattingContextFCData,
+      new (this) FrameConstructionItem(&sBlockFormattingContextFCData,
                                 // Use the content of our parent frame
                                 parentContent,
                                 // Lie about the tag; it doesn't matter anyway
@@ -10377,7 +10377,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
 
     // Eat up all items between |iter| and |endIter| and put them in our
     // wrapper. This advances |iter| to point to |endIter|.
-    iter.AppendItemsToList(endIter, newItem->mChildItems);
+    iter.AppendItemsToList(this, endIter, newItem->mChildItems);
 
     iter.InsertItem(newItem);
   } while (!iter.IsDone());
@@ -10510,7 +10510,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
     if (whitespaceType == eRubyInterLevelWhitespace) {
       // Remove inter-level whitespace.
       bool atStart = (aIter == endIter);
-      endIter.DeleteItemsTo(contentEndIter);
+      endIter.DeleteItemsTo(this, contentEndIter);
       if (atStart) {
         aIter = endIter;
       }
@@ -10559,7 +10559,7 @@ nsCSSFrameConstructor::TrimLeadingAndTrailingWhitespaces(
       iter.item().IsWhitespace(aState)) {
     FCItemIterator spaceEndIter(iter);
     spaceEndIter.SkipWhitespace(aState);
-    iter.DeleteItemsTo(spaceEndIter);
+    iter.DeleteItemsTo(this, spaceEndIter);
   }
 
   iter.SetToEnd();
@@ -10575,7 +10575,7 @@ nsCSSFrameConstructor::TrimLeadingAndTrailingWhitespaces(
     } while (iter.item().IsWhitespace(aState));
     iter.Next();
     if (iter != spaceEndIter) {
-      iter.DeleteItemsTo(spaceEndIter);
+      iter.DeleteItemsTo(this, spaceEndIter);
     }
   }
 }
@@ -10706,7 +10706,7 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
                IsTableParentType(spaceEndIter.item().DesiredParentType())) ||
               (trailingSpaces && ourParentType != eTypeBlock)) {
             bool updateStart = (iter == endIter);
-            endIter.DeleteItemsTo(spaceEndIter);
+            endIter.DeleteItemsTo(this, spaceEndIter);
             NS_ASSERTION(trailingSpaces == endIter.IsDone(),
                          "These should match");
 
@@ -10851,7 +10851,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
   }
 
   FrameConstructionItem* newItem =
-    new FrameConstructionItem(&pseudoData.mFCData,
+    new (this) FrameConstructionItem(&pseudoData.mFCData,
                               // Use the content of our parent frame
                               aParentContent,
                               // Lie about the tag; it doesn't matter anyway
@@ -10892,7 +10892,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
 
   // Eat up all items between |aIter| and |aEndIter| and put them in our
   // wrapper Advances |aIter| to point to |aEndIter|.
-  aIter.AppendItemsToList(aEndIter, newItem->mChildItems);
+  aIter.AppendItemsToList(this, aEndIter, newItem->mChildItems);
 
   aIter.InsertItem(newItem);
 }
@@ -10922,17 +10922,17 @@ nsCSSFrameConstructor::CreateNeededPseudoSiblings(
     ResolveInheritingAnonymousBoxStyle(*pseudoData.mPseudoType,
                                        aParentFrame->StyleContext());
   FrameConstructionItem* newItem =
-    new FrameConstructionItem(&pseudoData.mFCData,
-                              // Use the content of the parent frame
-                              aParentFrame->GetContent(),
-                              // Tag type
-                              *pseudoData.mPseudoType,
-                              // Use the namespace of the rtc frame
-                              iter.item().mNameSpaceID,
-                              // no pending binding
-                              nullptr,
-                              pseudoStyle,
-                              true, nullptr);
+    new (this) FrameConstructionItem(&pseudoData.mFCData,
+                                     // Use the content of the parent frame
+                                     aParentFrame->GetContent(),
+                                     // Tag type
+                                     *pseudoData.mPseudoType,
+                                     // Use the namespace of the rtc frame
+                                     iter.item().mNameSpaceID,
+                                     // no pending binding
+                                     nullptr,
+                                     pseudoStyle,
+                                     true, nullptr);
   newItem->mIsAllInline = true;
   newItem->mChildItems.SetParentHasNoXBLChildren(true);
   iter.InsertItem(newItem);
@@ -11238,7 +11238,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   nsFrameConstructorState::PendingBindingAutoPusher pusher(aState,
                                                            aPendingBinding);
 
-  FrameConstructionItemList itemsToConstruct;
+  AutoFrameConstructionItemList itemsToConstruct(this);
 
   // If we have first-letter or first-line style then frames can get
   // moved around so don't set these flags.
@@ -12316,7 +12316,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
 
     BeginUpdate();
 
-    FrameConstructionItemList items;
+    AutoFrameConstructionItemList items(this);
     AddFrameConstructionItemsInternal(state, aChild, aParentFrame,
                                       aChild->NodeInfo()->NameAtom(),
                                       aChild->GetNameSpaceID(),
@@ -12991,7 +12991,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
         }
 
         if (okToDrop) {
-          iter.DeleteItemsTo(spaceEndIter);
+          iter.DeleteItemsTo(this, spaceEndIter);
         } else {
           // We're done: we don't want to drop the whitespace, and it has the
           // wrong parent type.
@@ -13384,7 +13384,7 @@ Iterator::AppendItemToList(FrameConstructionItemList& aTargetList)
 
 void
 nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::AppendItemsToList(const Iterator& aEnd,
+Iterator::AppendItemsToList(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd,
                             FrameConstructionItemList& aTargetList)
 {
   NS_ASSERTION(&aTargetList != &mList, "Unexpected call");
@@ -13415,8 +13415,7 @@ Iterator::AppendItemsToList(const Iterator& aEnd,
   aTargetList.mUndisplayedItems.SwapElements(mList.mUndisplayedItems);
 
   // reset mList
-  mList.~FrameConstructionItemList();
-  new (&mList) FrameConstructionItemList();
+  mList.Reset(aFCtor);
 
   // Point ourselves to aEnd, as advertised
   SetToEnd();
@@ -13440,7 +13439,7 @@ Iterator::InsertItem(FrameConstructionItem* aItem)
 
 void
 nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::DeleteItemsTo(const Iterator& aEnd)
+Iterator::DeleteItemsTo(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd)
 {
   NS_PRECONDITION(&mList == &aEnd.mList, "End iterator for some other list?");
   NS_PRECONDITION(*this != aEnd, "Shouldn't be at aEnd yet");
@@ -13451,7 +13450,7 @@ Iterator::DeleteItemsTo(const Iterator& aEnd)
     Next();
     item->remove();
     mList.AdjustCountsForItem(item, -1);
-    delete item;
+    item->Delete(aFCtor);
   } while (*this != aEnd);
 }
 
