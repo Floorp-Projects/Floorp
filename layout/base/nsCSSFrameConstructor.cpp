@@ -1609,6 +1609,8 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
   , mRootElementStyleFrame(nullptr)
   , mDocElementContainingBlock(nullptr)
   , mPageSequenceFrame(nullptr)
+  , mFirstFreeFCItem(nullptr)
+  , mFCItemsInUse(0)
   , mCurrentDepth(0)
 #ifdef DEBUG
   , mUpdateCount(0)
@@ -13467,4 +13469,34 @@ nsCSSFrameConstructor::CountersDirty()
   NS_PRECONDITION(mUpdateCount != 0, "Instant counter updates are bad news");
   mCountersDirty = true;
   mPresShell->SetNeedLayoutFlush();
+}
+
+void*
+nsCSSFrameConstructor::AllocateFCItem()
+{
+  void* item;
+  if (mFirstFreeFCItem) {
+    item = mFirstFreeFCItem;
+    mFirstFreeFCItem = mFirstFreeFCItem->mNext;
+  } else {
+    item = mFCItemPool.Allocate(sizeof(FrameConstructionItem));
+  }
+  ++mFCItemsInUse;
+  return item;
+}
+
+void
+nsCSSFrameConstructor::FreeFCItem(FrameConstructionItem* aItem)
+{
+  MOZ_ASSERT(mFCItemsInUse != 0);
+  if (--mFCItemsInUse == 0) {
+    // The arena is now unused - clear it but retain one chunk.
+    mFirstFreeFCItem = nullptr;
+    mFCItemPool.Clear();
+  } else {
+    // Prepend it to the list of free items.
+    FreeFCItemLink* item = reinterpret_cast<FreeFCItemLink*>(aItem);
+    item->mNext = mFirstFreeFCItem;
+    mFirstFreeFCItem = item;
+  }
 }
