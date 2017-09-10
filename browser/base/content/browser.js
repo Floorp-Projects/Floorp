@@ -5510,6 +5510,10 @@ function setToolbarVisibility(toolbar, isVisible, persist = true) {
   toolbar.dispatchEvent(event);
 
   BookmarkingUI.onToolbarVisibilityChange();
+
+  if (toolbar.getAttribute("type") == "menubar" && CustomizationHandler.isCustomizing()) {
+    gCustomizeMode._updateDragSpaceCheckbox();
+  }
 }
 
 function updateToggleControlLabel(control) {
