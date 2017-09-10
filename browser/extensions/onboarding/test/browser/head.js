@@ -89,7 +89,7 @@ function promiseOnboardingOverlayOpened(browser) {
     ContentTask.spawn(browser, {}, () =>
       content.document.querySelector("#onboarding-overlay").classList.contains(
         "onboarding-opened")),
-    "Should close onboarding overlay",
+    "Should open onboarding overlay",
     100,
     30
   );
