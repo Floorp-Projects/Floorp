@@ -1206,8 +1206,6 @@ class WindowTrackerBase extends EventEmitter {
     });
 
     this._windowIds = new DefaultWeakMap(window => {
-      window.QueryInterface(Ci.nsIInterfaceRequestor);
-
       return getWinUtils(window).outerWindowID;
     });
   }

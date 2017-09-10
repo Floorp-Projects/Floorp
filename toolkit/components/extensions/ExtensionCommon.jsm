@@ -46,6 +46,7 @@ var {
   getConsole,
   getInnerWindowID,
   getUniqueId,
+  getWinUtils,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
@@ -668,9 +669,7 @@ class LocalAPIImplementation extends SchemaAPIInterface {
     let promise;
     try {
       if (requireUserInput) {
-        let winUtils = this.context.contentWindow
-                           .getInterface(Ci.nsIDOMWindowUtils);
-        if (!winUtils.isHandlingUserInput) {
+        if (!getWinUtils(this.context.contentWindow).isHandlingUserInput) {
           throw new ExtensionError(`${this.name} may only be called from a user input handler`);
         }
       }
