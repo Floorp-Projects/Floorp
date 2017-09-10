@@ -186,13 +186,12 @@ intrinsic_IsConstructor(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
 
-    RootedValue val(cx, args[0]);
-    if (!IsConstructor(val)) {
+    if (!IsConstructor(args[0])) {
         args.rval().setBoolean(false);
         return true;
     }
 
-    RootedObject obj(cx, &val.toObject());
+    JSObject* obj = &args[0].toObject();
     if (!IsWrapper(obj)) {
         args.rval().setBoolean(true);
         return true;

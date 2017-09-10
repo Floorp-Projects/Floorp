@@ -571,17 +571,20 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
                                                     gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
   if (!geometry || !invalidRegion.IsEmpty() || fallbackData->IsInvalid()) {
     if (gfxPrefs::WebRenderBlobImages()) {
+      bool snapped;
+      bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(clippedBounds);
+
       RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
-      // TODO: should use 'format' to replace gfx::SurfaceFormat::B8G8R8X8. Currently blob image doesn't support A8 format.
+      // TODO: should use 'format' to replace gfx::SurfaceFormat::B8G8R8A8. Currently blob image doesn't support A8 format.
       RefPtr<gfx::DrawTarget> dummyDt =
-        gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
+        gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
       PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
       recorder->Finish();
 
       Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
       wr::ImageKey key = WrBridge()->GetNextImageKey();
-      wr::ImageDescriptor descriptor(imageSize.ToUnknownSize(), 0, dt->GetFormat());
+      wr::ImageDescriptor descriptor(imageSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
       aBuilder.Resources().AddBlobImage(key, descriptor, bytes);
       fallbackData->SetKey(key);
     } else {

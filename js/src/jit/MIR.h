@@ -13644,7 +13644,8 @@ class MHasClass
       : MUnaryInstruction(classOpcode, object)
       , class_(clasp)
     {
-        MOZ_ASSERT(object->type() == MIRType::Object);
+        MOZ_ASSERT(object->type() == MIRType::Object ||
+                   (object->type() == MIRType::Value && object->mightBeType(MIRType::Object)));
         setResultType(MIRType::Boolean);
         setMovable();
     }

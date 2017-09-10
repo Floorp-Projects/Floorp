@@ -42,30 +42,6 @@ namespace gc {
 class RelocationOverlay;
 } // namespace gc
 
-inline JSObject*
-CastAsObject(GetterOp op)
-{
-    return JS_FUNC_TO_DATA_PTR(JSObject*, op);
-}
-
-inline JSObject*
-CastAsObject(SetterOp op)
-{
-    return JS_FUNC_TO_DATA_PTR(JSObject*, op);
-}
-
-inline Value
-CastAsObjectJsval(GetterOp op)
-{
-    return ObjectOrNullValue(CastAsObject(op));
-}
-
-inline Value
-CastAsObjectJsval(SetterOp op)
-{
-    return ObjectOrNullValue(CastAsObject(op));
-}
-
 /******************************************************************************/
 
 extern const Class IntlClass;
@@ -885,28 +861,13 @@ inline bool
 GetPropertyNoGC(JSContext* cx, JSObject* obj, const Value& receiver, jsid id, Value* vp);
 
 inline bool
-GetPropertyNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, jsid id, Value* vp)
-{
-    return GetPropertyNoGC(cx, obj, ObjectValue(*receiver), id, vp);
-}
-
-inline bool
 GetPropertyNoGC(JSContext* cx, JSObject* obj, const Value& receiver, PropertyName* name, Value* vp)
 {
     return GetPropertyNoGC(cx, obj, receiver, NameToId(name), vp);
 }
 
 inline bool
-GetPropertyNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, PropertyName* name, Value* vp)
-{
-    return GetPropertyNoGC(cx, obj, ObjectValue(*receiver), name, vp);
-}
-
-inline bool
 GetElementNoGC(JSContext* cx, JSObject* obj, const Value& receiver, uint32_t index, Value* vp);
-
-inline bool
-GetElementNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, uint32_t index, Value* vp);
 
 // Returns whether |obj| or an object on its proto chain may have an interesting
 // symbol property (see JSObject::hasInterestingSymbolProperty). If it returns
@@ -1125,29 +1086,9 @@ JSObject*
 GetBuiltinPrototypePure(GlobalObject* global, JSProtoKey protoKey);
 
 extern bool
-SetClassAndProto(JSContext* cx, HandleObject obj,
-                 const Class* clasp, Handle<TaggedProto> proto);
-
-extern bool
 IsStandardPrototype(JSObject* obj, JSProtoKey key);
 
 } /* namespace js */
-
-/*
- * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.
- */
-extern const char js_watch_str[];
-extern const char js_unwatch_str[];
-extern const char js_hasOwnProperty_str[];
-extern const char js_isPrototypeOf_str[];
-extern const char js_propertyIsEnumerable_str[];
-
-#ifdef JS_OLD_GETTER_SETTER_METHODS
-extern const char js_defineGetter_str[];
-extern const char js_defineSetter_str[];
-extern const char js_lookupGetter_str[];
-extern const char js_lookupSetter_str[];
-#endif
 
 namespace js {
 
@@ -1284,9 +1225,6 @@ LookupNameUnqualified(JSContext* cx, HandlePropertyName name, HandleObject scope
 
 namespace js {
 
-extern JSObject*
-FindVariableScope(JSContext* cx, JSFunction** funp);
-
 bool
 LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id, JSObject** objp,
                    PropertyResult* propp);
@@ -1313,9 +1251,6 @@ HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id, bool* result);
 bool
 GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandle<JS::PropertyDescriptor> desc);
-
-bool
-GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
 /*
  * Like JS::FromPropertyDescriptor, but ignore desc.object() and always set vp
@@ -1412,12 +1347,9 @@ extern bool
 GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* method,
                          MutableHandleObject objp);
 
-/* Helpers for throwing. These always return false. */
+/* Helper for throwing, always returns false. */
 extern bool
 Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details = nullptr);
-
-extern bool
-Throw(JSContext* cx, JSObject* obj, unsigned errorNumber);
 
 /*
  * ES6 rev 29 (6 Dec 2014) 7.3.13. Mark obj as non-extensible, and adjust each
@@ -1441,11 +1373,13 @@ FreezeObject(JSContext* cx, HandleObject obj)
 extern bool
 TestIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level, bool* resultp);
 
-extern bool
-SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor, MutableHandleValue pctor);
+extern MOZ_MUST_USE JSObject*
+SpeciesConstructor(JSContext* cx, HandleObject obj, HandleObject defaultCtor,
+                   bool (*isDefaultSpecies)(JSContext*, JSFunction*));
 
-extern bool
-SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey, MutableHandleValue pctor);
+extern MOZ_MUST_USE JSObject*
+SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
+                   bool (*isDefaultSpecies)(JSContext*, JSFunction*));
 
 extern bool
 GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj);
