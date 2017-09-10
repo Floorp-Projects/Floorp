@@ -446,9 +446,14 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 {
     aTargetObject.set(js::GetJSMEnvironmentOfScriptedCaller(aCx));
 
-    // The above could fail if the scripted caller is not a
-    // component/JSM (it could be a DOM scope, for instance).
-    if (!aTargetObject) {
+    // The above could fail if the scripted caller is not a component/JSM (it
+    // could be a DOM scope, for instance).
+    //
+    // If the target object was not in the JSM shared global, return the global
+    // instead. This is needed when calling the subscript loader within a frame
+    // script, since it the FrameScript NSVO will have been found.
+    if (!aTargetObject ||
+        !IsLoaderGlobal(js::GetGlobalForObjectCrossCompartment(aTargetObject))) {
         aTargetObject.set(CurrentGlobalOrNull(aCx));
     }
 }
