@@ -1714,7 +1714,6 @@ this.Langpack = class extends ExtensionData {
             chromeEntries.push(["locale", alias, language, path[platform]]);
           }
         }
-
       }
     }
     return chromeEntries;
