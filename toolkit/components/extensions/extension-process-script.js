@@ -192,11 +192,22 @@ DocumentManager = {
 
   injectExtensionScripts(extension) {
     for (let window of this.enumerateWindows()) {
+      let runAt = {document_start: [], document_end: [], document_idle: []};
+
       for (let script of extension.contentScripts) {
         if (script.matchesWindow(window)) {
-          contentScripts.get(script).injectInto(window);
+          runAt[script.runAt].push(script);
         }
       }
+
+      let inject = matcher => contentScripts.get(matcher).injectInto(window);
+      let injectAll = matchers => Promise.all(matchers.map(inject));
+
+      // Intentionally using `.then` instead of `await`, we only need to
+      // chain injecting other scripts into *this* window, not all windows.
+      injectAll(runAt.document_start)
+        .then(() => injectAll(runAt.document_end))
+        .then(() => injectAll(runAt.document_idle));
     }
   },
 
