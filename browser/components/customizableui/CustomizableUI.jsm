@@ -4230,9 +4230,6 @@ OverflowableToolbar.prototype = {
         this._enable();
         break;
       case "mousedown":
-        if (aEvent.button != 0) {
-          break;
-        }
         if (aEvent.target == this._chevron) {
           this._onClickChevron(aEvent);
         } else {
