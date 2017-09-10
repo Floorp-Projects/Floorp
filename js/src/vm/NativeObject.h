@@ -1397,16 +1397,6 @@ NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleV
                      JSGetterOp getter, JSSetterOp setter, unsigned attrs,
                      ObjectOpResult& result);
 
-extern bool
-NativeDefineProperty(JSContext* cx, HandleNativeObject obj, PropertyName* name,
-                     HandleValue value, GetterOp getter, SetterOp setter,
-                     unsigned attrs, ObjectOpResult& result);
-
-extern bool
-NativeDefineElement(JSContext* cx, HandleNativeObject obj, uint32_t index, HandleValue value,
-                    JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                    ObjectOpResult& result);
-
 /* If the result out-param is omitted, throw on failure. */
 extern bool
 NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleValue value,

@@ -713,6 +713,7 @@ protected:
   friend class nsLineBox;   // needed to pass aDestructRoot through to children
   friend class nsContainerFrame; // needed to pass aDestructRoot through to children
   friend class nsFrame; // need to assign mParent
+  template<class Source> friend class do_QueryFrameHelper; // to read mClass
 public:
 
   /**
@@ -4486,6 +4487,13 @@ private:
   nsIFrame*       mFrame;
 };
 
+// Use nsIFrame's fast-path to avoid QueryFrame:
+inline do_QueryFrameHelper<nsIFrame>
+do_QueryFrame(AutoWeakFrame& s)
+{
+  return do_QueryFrameHelper<nsIFrame>(s.GetFrame());
+}
+
 /**
  * @see AutoWeakFrame
  */
@@ -4542,6 +4550,13 @@ private:
 
   nsIFrame* mFrame;
 };
+
+// Use nsIFrame's fast-path to avoid QueryFrame:
+inline do_QueryFrameHelper<nsIFrame>
+do_QueryFrame(WeakFrame& s)
+{
+  return do_QueryFrameHelper<nsIFrame>(s.GetFrame());
+}
 
 inline bool
 nsFrameList::ContinueRemoveFrame(nsIFrame* aFrame)

@@ -146,6 +146,9 @@ linux-talos-stylo-disabled:
     - talos-perf-reftest-stylo-disabled
     - talos-perf-reftest-singletons-stylo-disabled
 
+windows-reftest-gpu:
+    - reftest-gpu
+
 windows-tests:
     - cppunit
     - crashtest
@@ -167,7 +170,6 @@ windows-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-gpu
     - reftest-no-accel
     - web-platform-tests
     - web-platform-tests-reftests
