@@ -183,6 +183,40 @@ class ResponseHeaderChanger extends HeaderChanger {
   }
 }
 
+const MAYBE_CACHED_EVENTS = new Set([
+  "onResponseStarted", "onBeforeRedirect", "onCompleted", "onErrorOccurred",
+]);
+
+const OPTIONAL_PROPERTIES = [
+  "requestHeaders", "responseHeaders", "statusCode", "statusLine", "error", "redirectUrl",
+  "requestBody", "scheme", "realm", "isProxy", "challenger", "proxyInfo", "ip",
+];
+
+function serializeRequestData(eventName) {
+  let data = {
+    requestId: this.requestId,
+    url: this.url,
+    originUrl: this.originUrl,
+    documentUrl: this.documentUrl,
+    method: this.method,
+    type: this.type,
+    timeStamp: Date.now(),
+    frameId: this.windowId,
+    parentFrameId: this.parentWindowId,
+  };
+
+  if (MAYBE_CACHED_EVENTS.has(eventName)) {
+    data.fromCache = !!this.fromCache;
+  }
+
+  for (let opt of OPTIONAL_PROPERTIES) {
+    if (typeof this[opt] !== "undefined") {
+      data[opt] = this[opt];
+    }
+  }
+  return data;
+}
+
 var HttpObserverManager;
 
 var nextFakeRequestId = 1;
@@ -213,7 +247,7 @@ var ContentPolicyManager = {
       }
       let response = null;
       let listenerKind = "onStop";
-      let data = Object.assign({requestId, browser}, msg.data);
+      let data = Object.assign({requestId, browser, serialize: serializeRequestData}, msg.data);
       data.URI = data.url;
 
       delete data.ids;
@@ -694,6 +728,8 @@ HttpObserverManager = {
       ip: channel.remoteAddress,
 
       proxyInfo: channel.proxyInfo,
+
+      serialize: serializeRequestData,
     };
 
     // force the protocol to be ws again.
