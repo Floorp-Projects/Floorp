@@ -29,9 +29,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=364461
 /** Test for Bug 364461 **/
 
 SimpleTest.waitForExplicitFinish();
-window.open("bug364461_window.xul", "bug364461",
-            "chrome,width=600,height=600");
 
+SpecialPowers.pushPrefEnv({
+  "set":[["security.data_uri.block_toplevel_data_uri_navigations", false]]
+}, runTests);
+
+function runTests() {
+  window.open("bug364461_window.xul", "bug364461",
+              "chrome,width=600,height=600");
+}
 ]]>
 </script>
 
