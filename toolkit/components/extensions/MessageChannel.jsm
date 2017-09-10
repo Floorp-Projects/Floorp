@@ -286,12 +286,37 @@ this.MessageChannel = {
       MESSAGE_RESPONSE, this._handleResponse.bind(this));
 
     /**
-     * Contains a list of pending responses, either waiting to be
-     * received or waiting to be sent. @see _addPendingResponse
+     * @property {Set<Deferred>} pendingResponses
+     * Contains a set of pending responses, either waiting to be
+     * received or waiting to be sent.
+     *
+     * The response object must be a deferred promise with the following
+     * properties:
+     *
+     *  promise:
+     *    The promise object which resolves or rejects when the response
+     *    is no longer pending.
+     *
+     *  reject:
+     *    A function which, when called, causes the `promise` object to be
+     *    rejected.
+     *
+     *  sender:
+     *    A sender object, as passed to `sendMessage.
+     *
+     *  messageManager:
+     *    The message manager the response will be sent or received on.
+     *
+     * When the promise resolves or rejects, it must be removed from the
+     * list.
+     *
+     * These values are used to clear pending responses when execution
+     * contexts are destroyed.
      */
     this.pendingResponses = new Set();
 
     /**
+     * @property {LimitedSet<string>} abortedResponses
      * Contains the message name of a limited number of aborted response
      * handlers, the responses for which will be ignored.
      */
@@ -544,16 +569,17 @@ this.MessageChannel = {
     deferred.messageManager = target;
     deferred.channelId = channelId;
 
-    this._addPendingResponse(deferred);
-
     // The channel ID is used as the message name when routing responses.
     // Add a message listener to the response broker, and remove it once
     // we've gotten (or canceled) a response.
     let broker = this.responseManagers.get(target);
     broker.addHandler(channelId, deferred);
 
+    this.pendingResponses.add(deferred);
+
     let cleanup = () => {
       broker.removeHandler(channelId, deferred);
+      this.pendingResponses.delete(deferred);
     };
     deferred.promise.then(cleanup, cleanup);
 
@@ -650,6 +676,13 @@ this.MessageChannel = {
       channelId: data.channelId,
       respondingSide: true,
     };
+
+    let cleanup = () => {
+      this.pendingResponses.delete(deferred);
+      target.dispose();
+    };
+    this.pendingResponses.add(deferred);
+
     deferred.promise = new Promise((resolve, reject) => {
       deferred.reject = reject;
 
@@ -699,13 +732,10 @@ this.MessageChannel = {
         }
 
         target.sendAsyncMessage(MESSAGE_RESPONSE, response);
-      }).catch(e => {
+      }).then(cleanup, e => {
+        cleanup();
         Cu.reportError(e);
-      }).then(() => {
-        target.dispose();
       });
-
-    this._addPendingResponse(deferred);
   },
 
   /**
@@ -735,42 +765,6 @@ this.MessageChannel = {
     } else {
       handlers[0].reject(data.error);
     }
-  },
-
-  /**
-   * Adds a pending response to the the `pendingResponses` list.
-   *
-   * The response object must be a deferred promise with the following
-   * properties:
-   *
-   *  promise:
-   *    The promise object which resolves or rejects when the response
-   *    is no longer pending.
-   *
-   *  reject:
-   *    A function which, when called, causes the `promise` object to be
-   *    rejected.
-   *
-   *  sender:
-   *    A sender object, as passed to `sendMessage.
-   *
-   *  messageManager:
-   *    The message manager the response will be sent or received on.
-   *
-   * When the promise resolves or rejects, it will be removed from the
-   * list.
-   *
-   * These values are used to clear pending responses when execution
-   * contexts are destroyed.
-   *
-   * @param {Deferred} deferred
-   */
-  _addPendingResponse(deferred) {
-    let cleanup = () => {
-      this.pendingResponses.delete(deferred);
-    };
-    this.pendingResponses.add(deferred);
-    deferred.promise.then(cleanup, cleanup);
   },
 
   /**
