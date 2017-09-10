@@ -27,8 +27,8 @@ async function _lazyInit() {
   prefs.data = {};
 
   try {
-    let blob = await ExtensionUtils.promiseFileContents(path);
-    prefs.data = JSON.parse(new TextDecoder().decode(blob));
+    let {buffer} = await OS.File.read(path);
+    prefs.data = JSON.parse(new TextDecoder().decode(buffer));
   } catch (e) {
     if (!e.becauseNoSuchFile) {
       Cu.reportError(e);
