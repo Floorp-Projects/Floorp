@@ -52,6 +52,7 @@ var gSitePermissionsManager = {
     document.title = params.windowTitle;
 
     this._loadPermissions();
+    this.buildPermissionsList();
 
     this._searchBox.focus();
   },
@@ -75,14 +76,13 @@ var gSitePermissionsManager = {
 
     if (data == "added") {
       this._addPermissionToList(permission);
-      if (this._searchBox.value != "") {
-        this.filterPermissionsList();
-      }
+      this.buildPermissionsList();
     } else if (data == "changed") {
       let p = this._permissions.get(permission.principal.origin);
       p.capability = permission.capability;
       p.capabilityString = this._getCapabilityString(permission.capability);
       this._handleCapabilityChange(p);
+      this.buildPermissionsList();
     } else if (data == "deleted") {
       this._removePermissionFromList(permission.principal.origin);
     }
@@ -118,7 +118,6 @@ var gSitePermissionsManager = {
     let p = new Permission(perm.principal, perm.type, perm.capability,
                            capabilityString);
     this._permissions.set(p.origin, p);
-    this._createPermissionListItem(p);
   },
 
   _removePermissionFromList(origin) {
@@ -134,9 +133,6 @@ var gSitePermissionsManager = {
       let nextPermission = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
       this._addPermissionToList(nextPermission);
     }
-
-    // disable "remove all" button if there are none
-    this._setRemoveButtonState();
   },
 
   _createPermissionListItem(permission) {
@@ -260,22 +256,70 @@ var gSitePermissionsManager = {
     window.close();
   },
 
-  filterPermissionsList() {
+  buildPermissionsList(sortCol) {
     // Clear old entries.
     let oldItems = this._list.querySelectorAll("richlistitem");
     for (let item of oldItems) {
       item.remove();
     }
 
+    // Sort permissions.
+    let sortedPermissions = this._sortPermissions(sortCol);
+
     let keyword = this._searchBox.value.toLowerCase().trim();
-    let permissions = this._permissions;
-    for (let [origin, permission] of permissions) {
-      if (keyword && !origin.includes(keyword)) {
+    for (let permission of sortedPermissions) {
+      if (keyword && !permission.origin.includes(keyword)) {
         continue;
       }
 
       this._createPermissionListItem(permission);
     }
+
     this._setRemoveButtonState();
+  },
+
+  _sortPermissions(column) {
+    let permissions = Array.from(this._permissions.values());
+    let sortDirection;
+
+    if (!column) {
+      column = document.querySelector("treecol[data-isCurrentSortCol=true]");
+      sortDirection = column.getAttribute("data-last-sortDirection") || "ascending";
+    } else {
+      sortDirection = column.getAttribute("data-last-sortDirection");
+      sortDirection = sortDirection === "ascending" ? "descending" : "ascending";
+    }
+
+    let sortFunc = null;
+    switch (column.id) {
+      case "siteCol":
+        sortFunc = (a, b) => {
+          return a.origin.localeCompare(b.origin);
+        };
+        break;
+
+      case "statusCol":
+        sortFunc = (a, b) => {
+          return a.capabilityString.localeCompare(b.capabilityString);
+        };
+        break;
+    }
+
+    if (sortDirection === "descending") {
+      permissions.sort((a, b) => sortFunc(b, a));
+    } else {
+      permissions.sort(sortFunc);
+    }
+
+    let cols = this._list.querySelectorAll("treecol");
+    cols.forEach(c => {
+      c.removeAttribute("data-isCurrentSortCol");
+      c.removeAttribute("sortDirection");
+    });
+    column.setAttribute("data-isCurrentSortCol", "true");
+    column.setAttribute("sortDirection", sortDirection);
+    column.setAttribute("data-last-sortDirection", sortDirection);
+
+    return permissions;
   },
 };
