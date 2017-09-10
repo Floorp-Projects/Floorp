@@ -139,8 +139,9 @@ StorageObserver::Notify(const char* aTopic,
                         const nsAString& aOriginAttributesPattern,
                         const nsACString& aOriginScope)
 {
-  for (uint32_t i = 0; i < mSinks.Length(); ++i) {
-    StorageObserverSink* sink = mSinks[i];
+  nsTObserverArray<StorageObserverSink*>::ForwardIterator iter(mSinks);
+  while (iter.HasMore()) {
+    StorageObserverSink* sink = iter.GetNext();
     sink->Observe(aTopic, aOriginAttributesPattern, aOriginScope);
   }
 }
