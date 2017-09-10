@@ -5867,16 +5867,11 @@ pref("fuzzing.enabled", false);
 #endif
 
 #if defined(XP_WIN)
-#if defined(NIGHTLY_BUILD)
 pref("layers.mlgpu.enabled", true);
 
 // Both this and the master "enabled" pref must be on to use Advanced Layers
 // on Windows 7.
 pref("layers.mlgpu.enable-on-windows7", true);
-#else
-pref("layers.mlgpu.enabled", false);
-pref("layers.mlgpu.enable-on-windows7", false);
-#endif
 #endif
 
 // Set advanced layers preferences here to have them show up in about:config or
