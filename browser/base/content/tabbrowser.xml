@@ -669,7 +669,7 @@
               if (!this._shouldShowProgress(aRequest))
                 return;
 
-              if (this.mTotalProgress && aWebProgress.isTopLevel)
+              if (this.mTotalProgress)
                 this.mTab.setAttribute("progress", "true");
 
               this._callProgressListeners("onProgressChange",
@@ -756,8 +756,7 @@
                 }
 
                 if (this._shouldShowProgress(aRequest)) {
-                  if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
-                      aWebProgress.isTopLevel) {
+                  if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
                     this._syncThrobberAnimations();
                   }
