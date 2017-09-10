@@ -92,10 +92,6 @@ IsInteger(const Value& val);
 extern MOZ_MUST_USE bool JS_FASTCALL
 NumberValueToStringBuffer(JSContext* cx, const Value& v, StringBuffer& sb);
 
-/* Same as js_NumberToString, different signature. */
-extern JSFlatString*
-NumberToString(JSContext* cx, double d);
-
 extern JSFlatString*
 IndexToString(JSContext* cx, uint32_t index);
 

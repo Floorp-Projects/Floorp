@@ -749,9 +749,6 @@ DefineFunction(JSContext* cx, HandleObject obj, HandleId id, JSNative native,
                unsigned nargs, unsigned flags,
                gc::AllocKind allocKind = gc::AllocKind::FUNCTION);
 
-bool
-FunctionHasResolveHook(const JSAtomState& atomState, jsid id);
-
 extern bool
 fun_toString(JSContext* cx, unsigned argc, Value* vp);
 
