@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "D3D11Checks.h"
+#include "DXVA2Manager.h"
 #include "gfxConfig.h"
 #include "GfxDriverInfo.h"
 #include "gfxPrefs.h"
@@ -407,6 +408,24 @@ D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter)
   RefPtr<IDXGIAdapter2> check;
   HRESULT hr = adapter->QueryInterface(__uuidof(IDXGIAdapter2), getter_AddRefs(check));
   return SUCCEEDED(hr) && check;
+}
+
+/* static */ bool
+D3D11Checks::DoesNV12Work(ID3D11Device* device)
+{
+  DXGI_ADAPTER_DESC desc;
+  PodZero(&desc);
+  if (!GetDxgiDesc(device, &desc)) {
+    // Failed to retrieve device information, assume it doesn't work
+    return false;
+  }
+
+  nsString version;
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  if (gfxInfo) {
+    gfxInfo->GetAdapterDriverVersion(version);
+  }
+  return DXVA2Manager::IsNV12Supported(desc.VendorId, desc.DeviceId, version);
 }
 
 } // namespace gfx
