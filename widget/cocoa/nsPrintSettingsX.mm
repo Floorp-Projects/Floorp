@@ -332,15 +332,28 @@ nsPrintSettingsX::SetToFileName(const char16_t *aToFileName)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
-  nsString filename = nsDependentString(aToFileName);
-
-  NSURL* jobSavingURL =
-      [NSURL fileURLWithPath: nsCocoaUtils::ToNSString(filename)];
-  if (jobSavingURL) {
-    [printInfoDict setObject: NSPrintSaveJob forKey: NSPrintJobDisposition];
-    [printInfoDict setObject: jobSavingURL forKey: NSPrintJobSavingURL];
+  if (XRE_IsContentProcess() &&
+      Preferences::GetBool("print.print_via_parent")) {
+    // On content sandbox, NSPrintJobSavingURL will returns error since
+    // sandbox disallows file access.
+    return nsPrintSettings::SetToFileName(aToFileName);
   }
+
+  NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
+
+  if (aToFileName && aToFileName[0]) {
+    NSURL* jobSavingURL =
+        [NSURL fileURLWithPath: nsCocoaUtils::ToNSString(
+                                  nsDependentString(aToFileName))];
+    if (jobSavingURL) {
+      [printInfoDict setObject: NSPrintSaveJob forKey: NSPrintJobDisposition];
+      [printInfoDict setObject: jobSavingURL forKey: NSPrintJobSavingURL];
+    }
+    mToFileName = aToFileName;
+  } else {
+    mToFileName.Truncate();
+  }
+
   NSPrintInfo* newPrintInfo =
       [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
   if (NS_WARN_IF(!newPrintInfo)) {
