@@ -161,6 +161,7 @@ function gotoPref(aCategory) {
   }
   category = friendlyPrefCategoryNameToInternalName(category);
   if (category != "paneSearchResults") {
+    gSearchResultsPane.query = null;
     gSearchResultsPane.searchInput.value = "";
     gSearchResultsPane.getFindSelection(window).removeAllRanges();
     gSearchResultsPane.removeAllSearchTooltips();
