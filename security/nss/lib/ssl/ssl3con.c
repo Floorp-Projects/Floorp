@@ -9752,13 +9752,12 @@ ssl3_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length,
 
         hashAlg = ssl_SignatureSchemeToHashType(sigScheme);
 
-        if (hashes->u.pointer_to_hash_input.data) {
-            rv = ssl3_ComputeHandshakeHash(hashes->u.pointer_to_hash_input.data,
-                                           hashes->u.pointer_to_hash_input.len,
-                                           hashAlg, &localHashes);
-        } else {
-            rv = SECFailure;
-        }
+        /* Read from the message buffer, but we need to use only up to the end
+         * of the previous handshake message. The length of the transcript up to
+         * that point is saved in |hashes->u.transcriptLen|. */
+        rv = ssl3_ComputeHandshakeHash(ss->ssl3.hs.messages.buf,
+                                       hashes->u.transcriptLen,
+                                       hashAlg, &localHashes);
 
         if (rv == SECSuccess) {
             hashesForVerify = &localHashes;
@@ -11658,15 +11657,15 @@ ssl3_HandleHandshakeMessage(sslSocket *ss, PRUint8 *b, PRUint32 length,
                  * additional handshake messages will have been added to the
                  * buffer, e.g. the certificate_verify message itself.)
                  *
-                 * Therefore, we use SSL3Hashes.u.pointer_to_hash_input
-                 * to signal the current state of the buffer.
+                 * Therefore, we use SSL3Hashes.u.transcriptLen to save how much
+                 * data there is and read directly from ss->ssl3.hs.messages
+                 * when calculating the hashes.
                  *
                  * ssl3_HandleCertificateVerify will detect
                  *     hashType == handshake_hash_record
                  * and use that information to calculate the hash.
                  */
-                hashes.u.pointer_to_hash_input.data = ss->ssl3.hs.messages.buf;
-                hashes.u.pointer_to_hash_input.len = ss->ssl3.hs.messages.len;
+                hashes.u.transcriptLen = ss->ssl3.hs.messages.len;
                 hashesPtr = &hashes;
             } else {
                 computeHashes = PR_TRUE;
