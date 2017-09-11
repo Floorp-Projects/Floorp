@@ -205,10 +205,10 @@ public:
   nsresult Init(int64_t aContentLength);
 
   // Set up this stream with the cache, assuming it's for the same data
-  // as the aOriginal stream. Can fail on OOM.
+  // as the aOriginal stream.
   // Exactly one of InitAsClone or Init must be called before any other method
-  // on this class. Does nothing if already initialized.
-  nsresult InitAsClone(MediaCacheStream* aOriginal);
+  // on this class.
+  void InitAsClone(MediaCacheStream* aOriginal);
 
   // These are called on the main thread.
   // Tell us whether the stream is seekable or not. Non-seekable streams
@@ -434,9 +434,6 @@ private:
   // These fields are main-thread-only.
   ChannelMediaResource*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  // Set to true when MediaCache::Update() has finished while this stream
-  // was present.
-  bool                   mHasHadUpdate;
   // Set to true when the stream has been closed either explicitly or
   // due to an internal cache error
   bool                   mClosed;

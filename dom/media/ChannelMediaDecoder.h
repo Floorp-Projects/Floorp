@@ -93,7 +93,6 @@ private:
   // Create a new state machine to run this decoder.
   MediaDecoderStateMachine* CreateStateMachine();
 
-  nsresult OpenResource(nsIStreamListener** aStreamListener);
   nsresult Load(BaseMediaResource* aOriginal);
 
   // Called by MediaResource when the download has ended.

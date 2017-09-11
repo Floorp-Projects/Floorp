@@ -1,4 +1,4 @@
-asserts-if(stylo,0-1) load 43040-1.html # bug 1324691
+load 43040-1.html
 load 90613-1.html
 load 116848-1.html
 load 149320-1.html
