@@ -845,8 +845,16 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   // all stored data, before we return.
   auto clearAfter = MakeScopeExit([&] {
     if (clipboardData) {
-      clipboardData->SetMode(DataTransfer::Mode::Protected);
-      clipboardData->ClearAll();
+      clipboardData->Disconnect();
+
+      // NOTE: Disconnect may not actually clear the DataTransfer if the
+      // dom.events.dataTransfer.protected.enabled pref is not on, so we make
+      // sure we clear here, as not clearing could provide the DataTransfer
+      // access to information from the system clipboard at an arbitrary point
+      // in the future.
+      if (originalEventMessage == ePaste) {
+        clipboardData->ClearAll();
+      }
     }
   });
 
