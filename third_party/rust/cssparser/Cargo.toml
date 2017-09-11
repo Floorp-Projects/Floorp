@@ -12,7 +12,7 @@
 
 [package]
 name = "cssparser"
-version = "0.20.1"
+version = "0.20.2"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
@@ -25,24 +25,21 @@ repository = "https://github.com/servo/rust-cssparser"
 [dependencies.procedural-masquerade]
 version = "0.1"
 
-[dependencies.dtoa-short]
-version = "0.3"
-
-[dependencies.itoa]
-version = "0.3"
-
-[dependencies.serde]
-version = "1.0"
+[dependencies.heapsize]
+version = ">= 0.3, < 0.5"
 optional = true
-
-[dependencies.cssparser-macros]
-version = "0.3"
 
 [dependencies.phf]
 version = "0.7"
 
-[dependencies.heapsize]
-version = ">= 0.3, < 0.5"
+[dependencies.itoa]
+version = "0.3"
+
+[dependencies.dtoa-short]
+version = "0.3"
+
+[dependencies.serde]
+version = "1.0"
 optional = true
 
 [dependencies.smallvec]
@@ -50,6 +47,9 @@ version = "0.4.3"
 
 [dependencies.matches]
 version = "0.1"
+
+[dependencies.cssparser-macros]
+version = "0.3"
 [dev-dependencies.encoding_rs]
 version = "0.7"
 
