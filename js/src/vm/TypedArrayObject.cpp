@@ -1887,6 +1887,25 @@ TypedArrayObject::setElement(TypedArrayObject& obj, uint32_t index, double d)
     MOZ_CRASH("Unknown TypedArray type");
 }
 
+void
+TypedArrayObject::getElements(Value* vp)
+{
+    uint32_t length = this->length();
+    MOZ_ASSERT_IF(length > 0, !hasDetachedBuffer());
+
+    switch (type()) {
+#define GET_ELEMENTS(T, N) \
+      case Scalar::N: \
+        for (uint32_t i = 0; i < length; ++i, ++vp) \
+            *vp = N##Array::getIndexValue(this, i); \
+        break;
+JS_FOR_EACH_TYPED_ARRAY(GET_ELEMENTS)
+#undef GET_ELEMENTS
+      default:
+        MOZ_CRASH("Unknown TypedArray type");
+    }
+}
+
 /***
  *** JS impl
  ***/
