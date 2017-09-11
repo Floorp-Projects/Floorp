@@ -1943,9 +1943,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Position the popup below the navbar.  To get the y-coordinate,
           // which is an offset from the bottom of the input, subtract the
           // bottom of the navbar from the buttom of the input.
-          let yOffset =
+          let yOffset = Math.round(
             this.DOMWindowUtils.getBoundsWithoutFlushing(document.getElementById("nav-bar")).bottom -
-            this.DOMWindowUtils.getBoundsWithoutFlushing(aInput).bottom;
+            this.DOMWindowUtils.getBoundsWithoutFlushing(aInput).bottom);
+
           this.openPopup(aElement, "after_start", 0, yOffset, false, false);
         ]]></body>
       </method>
