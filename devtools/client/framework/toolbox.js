@@ -501,7 +501,10 @@ Toolbox.prototype = {
 
       // Start rendering the toolbox toolbar before selecting the tool, as the tools
       // can take a few hundred milliseconds seconds to start up.
-      this.component.setCanRender();
+      // But wait for toolbar buttons to be set before updating this react component.
+      buttonsPromise.then(() => {
+        this.component.setCanRender();
+      });
 
       yield this.selectTool(this._defaultToolId);
 
