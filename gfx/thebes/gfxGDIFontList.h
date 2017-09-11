@@ -109,7 +109,7 @@ class GDIFontEntry : public gfxFontEntry
 public:
     LPLOGFONTW GetLogFont() { return &mLogFont; }
 
-    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr);
+    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
 
     void FillLogFont(LOGFONTW *aLogFont, uint16_t aWeight, gfxFloat aSize);
 
@@ -194,7 +194,8 @@ protected:
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
 
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
+    virtual gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle,
+                                        bool aNeedsBold) override;
 
     virtual nsresult CopyFontTable(uint32_t aTableTag,
                                    nsTArray<uint8_t>& aBuffer) override;

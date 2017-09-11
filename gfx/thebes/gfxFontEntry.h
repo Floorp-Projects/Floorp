@@ -413,8 +413,7 @@ protected:
     // lookup the cmap in cached font data
     virtual already_AddRefed<gfxCharacterMap>
     GetCMAPFromFontInfo(FontInfoData *aFontInfoData,
-                        uint32_t& aUVSOffset,
-                        bool& aSymbolFont);
+                        uint32_t& aUVSOffset);
 
     // helper for HasCharacter(), which is what client code should call
     virtual bool TestCharacterMap(uint32_t aCh);

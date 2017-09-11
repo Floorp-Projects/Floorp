@@ -166,11 +166,9 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
     RefPtr<gfxCharacterMap> charmap;
     nsresult rv;
-    bool unicodeFont = false, symbolFont = false;
 
     if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
-                                                        mUVSOffset,
-                                                        symbolFont))) {
+                                                        mUVSOffset))) {
         rv = NS_OK;
     } else {
         uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
@@ -180,8 +178,7 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
         if (NS_SUCCEEDED(rv)) {
             rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
-                                        *charmap, mUVSOffset,
-                                        unicodeFont, symbolFont);
+                                        *charmap, mUVSOffset);
         }
     }
 
@@ -1110,17 +1107,14 @@ int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
             cmapData.SetLength(cmapSize, fallible)) {
             ::GetFontData(hdc, kCMAP, 0, cmapData.Elements(), cmapSize);
             bool cmapLoaded = false;
-            bool unicodeFont = false, symbolFont = false;
             RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
             uint32_t offset;
 
             if (NS_SUCCEEDED(gfxFontUtils::ReadCMAP(cmapData.Elements(),
                                                     cmapSize, *charmap,
-                                                    offset, unicodeFont,
-                                                    symbolFont))) {
+                                                    offset))) {
                 fontData.mCharacterMap = charmap;
                 fontData.mUVSOffset = offset;
-                fontData.mSymbolFont = symbolFont;
                 cmapLoaded = true;
                 famData->mFontInfo.mLoadStats.cmaps++;
             }
