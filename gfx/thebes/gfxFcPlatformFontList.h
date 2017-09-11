@@ -99,8 +99,6 @@ public:
 
     FcPattern* GetPattern() { return mFontPattern; }
 
-    bool SupportsLangGroup(nsIAtom *aLangGroup) const override;
-
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
     bool TestCharacterMap(uint32_t aCh) override;
 
@@ -200,6 +198,8 @@ public:
                          nsTArray<gfxFontEntry*>& aFontEntryList,
                          bool& aNeedsSyntheticBold,
                          bool aIgnoreSizeTolerance) override;
+
+    bool SupportsLangGroup(nsIAtom *aLangGroup) const override;
 
 protected:
     virtual ~gfxFontconfigFontFamily();
