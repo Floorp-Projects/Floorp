@@ -51,7 +51,7 @@ private:
   EnsureAsyncRemoteStream();
 
   void
-  SetRange(uint64_t aStart, uint64_t aLength);
+  InitWithExistingRange(uint64_t aStart, uint64_t aLength);
 
   RefPtr<IPCBlobInputStreamChild> mActor;
 
