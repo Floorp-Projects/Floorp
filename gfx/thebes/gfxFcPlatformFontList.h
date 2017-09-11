@@ -99,8 +99,6 @@ public:
 
     FcPattern* GetPattern() { return mFontPattern; }
 
-    bool SupportsLangGroup(nsIAtom *aLangGroup) const override;
-
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
     bool TestCharacterMap(uint32_t aCh) override;
 
@@ -201,8 +199,16 @@ public:
                          bool& aNeedsSyntheticBold,
                          bool aIgnoreSizeTolerance) override;
 
+    bool FilterForFontList(nsIAtom* aLangGroup,
+                           const nsACString& aGeneric) const final {
+        return SupportsLangGroup(aLangGroup);
+    }
+
 protected:
     virtual ~gfxFontconfigFontFamily();
+
+    // helper for FilterForFontList
+    bool SupportsLangGroup(nsIAtom *aLangGroup) const;
 
     nsTArray<nsCountedRef<FcPattern> > mFontPatterns;
 

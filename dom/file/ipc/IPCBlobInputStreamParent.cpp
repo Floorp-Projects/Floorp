@@ -26,7 +26,7 @@ IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
     return nullptr;
   }
 
-  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aChildID);
+  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aSize, aChildID);
 
   return new IPCBlobInputStreamParent(id, aSize, aManager);
 }
@@ -109,7 +109,7 @@ IPCBlobInputStreamParent::RecvStreamNeeded()
   MOZ_ASSERT(mContentManager || mPBackgroundManager);
 
   nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, getter_AddRefs(stream));
+  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize, getter_AddRefs(stream));
   if (!stream) {
     if (!SendStreamReady(void_t())) {
       return IPC_FAIL(this, "SendStreamReady failed");
@@ -161,7 +161,7 @@ bool
 IPCBlobInputStreamParent::HasValidStream() const
 {
   nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, getter_AddRefs(stream));
+  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize, getter_AddRefs(stream));
   return !!stream;
 }
 

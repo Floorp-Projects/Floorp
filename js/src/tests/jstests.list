@@ -296,8 +296,8 @@ skip script test262/built-ins/WeakSet/proto-from-ctor-realm.js
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317394
-skip script test262/built-ins/DataView/prototype/byteOffset/detached-buffer.js
-skip script test262/built-ins/DataView/prototype/byteLength/detached-buffer.js
+skip-if(release_or_beta) script test262/built-ins/DataView/prototype/byteOffset/detached-buffer.js
+skip-if(release_or_beta) script test262/built-ins/DataView/prototype/byteLength/detached-buffer.js
 
 # We're still waiting for a final decision on https://github.com/tc39/ecma402/pull/84.
 skip script test262/intl402/Collator/10.1.1_1.js
