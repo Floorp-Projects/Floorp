@@ -18,6 +18,13 @@
 namespace js {
 namespace frontend {
 
+enum class SourceKind {
+    // We are parsing from a text source (Parser.h)
+    Text,
+    // We are parsing from a binary source (BinSource.h)
+    Binary,
+};
+
 // Parse handler used when generating a full parse tree for all code which the
 // parser encounters.
 class FullParseHandler
@@ -37,6 +44,8 @@ class FullParseHandler
     const Rooted<LazyScript*> lazyOuterFunction_;
     size_t lazyInnerFunctionIndex;
     size_t lazyClosedOverBindingIndex;
+
+    const SourceKind sourceKind_;
 
   public:
     /* new_ methods for creating parse nodes. These report OOM on context. */
@@ -65,14 +74,23 @@ class FullParseHandler
         return node->isInParens() && (node->isKind(PNK_OBJECT) || node->isKind(PNK_ARRAY));
     }
 
-    FullParseHandler(JSContext* cx, LifoAlloc& alloc, LazyScript* lazyOuterFunction)
+    FullParseHandler(JSContext* cx, LifoAlloc& alloc, LazyScript* lazyOuterFunction,
+                     SourceKind kind = SourceKind::Text)
       : allocator(cx, alloc),
         lazyOuterFunction_(cx, lazyOuterFunction),
         lazyInnerFunctionIndex(0),
-        lazyClosedOverBindingIndex(0)
+        lazyClosedOverBindingIndex(0),
+        sourceKind_(SourceKind::Text)
     {}
 
     static ParseNode* null() { return nullptr; }
+
+    // The FullParseHandler may be used to create nodes for text sources
+    // (from Parser.h) or for binary sources (from BinSource.h). In the latter
+    // case, some common assumptions on offsets are incorrect, e.g. in `a + b`,
+    // `a`, `b` and `+` may be stored in any order. We use `sourceKind()`
+    // to determine whether we need to check these assumptions.
+    SourceKind sourceKind() const { return sourceKind_; }
 
     ParseNode* freeTree(ParseNode* pn) { return allocator.freeTree(pn); }
     void prepareNodeForMutation(ParseNode* pn) { return allocator.prepareNodeForMutation(pn); }
@@ -224,7 +242,7 @@ class FullParseHandler
         ParseNode* elision = new_<NullaryNode>(PNK_ELISION, pos);
         if (!elision)
             return false;
-        literal->append(elision);
+        addList(/* list = */ literal, /* child = */ elision);
         literal->pn_xflags |= PNX_ARRAYHOLESPREAD | PNX_NONCONST;
         return true;
     }
@@ -233,7 +251,7 @@ class FullParseHandler
         ParseNode* spread = newSpread(begin, inner);
         if (!spread)
             return false;
-        literal->append(spread);
+        addList(/* list = */ literal, /* child = */ spread);
         literal->pn_xflags |= PNX_ARRAYHOLESPREAD | PNX_NONCONST;
         return true;
     }
@@ -241,7 +259,7 @@ class FullParseHandler
     void addArrayElement(ParseNode* literal, ParseNode* element) {
         if (!element->isConstant())
             literal->pn_xflags |= PNX_NONCONST;
-        literal->append(element);
+        addList(/* list = */ literal, /* child = */ element);
     }
 
     ParseNode* newCall(const TokenPos& pos) {
@@ -280,7 +298,9 @@ class FullParseHandler
     ParseNode* newSuperBase(ParseNode* thisName, const TokenPos& pos) {
         return new_<UnaryNode>(PNK_SUPERBASE, pos, thisName);
     }
-
+    ParseNode* newCatchBlock(ParseNode* catchName, ParseNode* catchGuard, ParseNode* catchBody) {
+        return new_<TernaryNode>(PNK_CATCH, catchName, catchGuard, catchBody);
+    }
     MOZ_MUST_USE bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
         // Object literals with mutated [[Prototype]] are non-constant so that
         // singleton objects will have Object.prototype as their [[Prototype]].
@@ -289,22 +309,19 @@ class FullParseHandler
         ParseNode* mutation = newUnary(PNK_MUTATEPROTO, begin, expr);
         if (!mutation)
             return false;
-        literal->append(mutation);
+        addList(/* list = */ literal, /* child = */ mutation);
         return true;
     }
 
     MOZ_MUST_USE bool addPropertyDefinition(ParseNode* literal, ParseNode* key, ParseNode* val) {
         MOZ_ASSERT(literal->isKind(PNK_OBJECT));
         MOZ_ASSERT(literal->isArity(PN_LIST));
-        MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
-                   key->isKind(PNK_OBJECT_PROPERTY_NAME) ||
-                   key->isKind(PNK_STRING) ||
-                   key->isKind(PNK_COMPUTED_NAME));
+        MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
         ParseNode* propdef = newBinary(PNK_COLON, key, val, JSOP_INITPROP);
         if (!propdef)
             return false;
-        literal->append(propdef);
+        addList(/* list = */ literal, /* child = */ propdef);
         return true;
     }
 
@@ -319,7 +336,7 @@ class FullParseHandler
         ParseNode* propdef = newBinary(PNK_SHORTHAND, name, expr, JSOP_INITPROP);
         if (!propdef)
             return false;
-        literal->append(propdef);
+        addList(/* list = */ literal, /* child = */ propdef);
         return true;
     }
 
@@ -331,7 +348,7 @@ class FullParseHandler
         ParseNode* spread = newSpread(begin, inner);
         if (!spread)
             return false;
-        literal->append(spread);
+        addList(/* list = */ literal, /* child = */ spread);
         return true;
     }
 
@@ -339,16 +356,13 @@ class FullParseHandler
                                                 AccessorType atype)
     {
         MOZ_ASSERT(literal->isArity(PN_LIST));
-        MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
-                   key->isKind(PNK_OBJECT_PROPERTY_NAME) ||
-                   key->isKind(PNK_STRING) ||
-                   key->isKind(PNK_COMPUTED_NAME));
         literal->pn_xflags |= PNX_NONCONST;
 
-        ParseNode* propdef = newBinary(PNK_COLON, key, fn, AccessorTypeToJSOp(atype));
+        ParseNode* propdef = newObjectMethodOrPropertyDefinition(key, fn, atype);
         if (!propdef)
             return false;
-        literal->append(propdef);
+
+        addList(/* list = */ literal, /* child = */ propdef);
         return true;
     }
 
@@ -356,15 +370,12 @@ class FullParseHandler
                                                AccessorType atype, bool isStatic)
     {
         MOZ_ASSERT(methodList->isKind(PNK_CLASSMETHODLIST));
-        MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
-                   key->isKind(PNK_OBJECT_PROPERTY_NAME) ||
-                   key->isKind(PNK_STRING) ||
-                   key->isKind(PNK_COMPUTED_NAME));
+        MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
         ParseNode* classMethod = new_<ClassMethod>(key, fn, AccessorTypeToJSOp(atype), isStatic);
         if (!classMethod)
             return false;
-        methodList->append(classMethod);
+        addList(/* list = */ methodList, /* child = */ classMethod);
         return true;
     }
 
@@ -403,7 +414,7 @@ class FullParseHandler
     void addStatementToList(ParseNode* list, ParseNode* stmt) {
         MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
 
-        list->append(stmt);
+        addList(/* list = */ list, /* child = */ stmt);
 
         if (isFunctionStmt(stmt)) {
             // PNX_FUNCDEFS notifies the emitter that the block contains
@@ -423,7 +434,7 @@ class FullParseHandler
         MOZ_ASSERT(casepn->isKind(PNK_CASE));
         MOZ_ASSERT(casepn->pn_right->isKind(PNK_STATEMENTLIST));
 
-        list->append(casepn);
+        addList(/* list = */ list, /* child = */ casepn);
 
         if (casepn->pn_right->pn_xflags & PNX_FUNCDEFS)
             list->pn_xflags |= PNX_FUNCDEFS;
@@ -439,7 +450,7 @@ class FullParseHandler
 
         MOZ_ASSERT(genName->getOp() == JSOP_GETNAME);
         genName->setOp(JSOP_SETNAME);
-        ParseNode* genInit = newBinary(PNK_ASSIGN, genName, makeGen);
+        ParseNode* genInit = newAssignment(PNK_ASSIGN, /* lhs = */ genName, /* rhs = */ makeGen);
         if (!genInit)
             return false;
 
@@ -640,6 +651,20 @@ class FullParseHandler
                !node->pn_funbox->isArrow();
     }
 
+    ParseNode* newObjectMethodOrPropertyDefinition(ParseNode* key, ParseNode* fn, AccessorType atype) {
+        MOZ_ASSERT(isUsableAsObjectPropertyName(key));
+
+        return newBinary(PNK_COLON, key, fn, AccessorTypeToJSOp(atype));
+    }
+
+    bool setComprehensionLambdaBody(ParseNode* pn, ParseNode* body) {
+        MOZ_ASSERT(body->isKind(PNK_STATEMENTLIST));
+        ParseNode* paramsBody = newList(PNK_PARAMSBODY, body);
+        if (!paramsBody)
+            return false;
+        setFunctionFormalParametersAndBody(pn, paramsBody);
+        return true;
+    }
     void setFunctionFormalParametersAndBody(ParseNode* pn, ParseNode* kid) {
         MOZ_ASSERT_IF(kid, kid->isKind(PNK_PARAMSBODY));
         pn->pn_body = kid;
@@ -650,11 +675,11 @@ class FullParseHandler
         funbox->functionNode = pn;
     }
     void addFunctionFormalParameter(ParseNode* pn, ParseNode* argpn) {
-        pn->pn_body->append(argpn);
+        addList(/* list = */ pn->pn_body, /* child = */ argpn);
     }
     void setFunctionBody(ParseNode* fn, ParseNode* body) {
         MOZ_ASSERT(fn->pn_body->isKind(PNK_PARAMSBODY));
-        fn->pn_body->append(body);
+        addList(/* list = */ fn->pn_body, /* child = */ body);
     }
 
     ParseNode* newModule(const TokenPos& pos) {
@@ -670,7 +695,7 @@ class FullParseHandler
         if (!newExpr)
             return nullptr;
 
-        addList(newExpr, ctor);
+        addList(/* list = */ newExpr, /* child = */ ctor);
         return newExpr;
     }
 
@@ -711,6 +736,13 @@ class FullParseHandler
 
     bool isSuperBase(ParseNode* node) {
         return node->isKind(PNK_SUPERBASE);
+    }
+
+    bool isUsableAsObjectPropertyName(ParseNode* node) {
+        return node->isKind(PNK_NUMBER)
+            || node->isKind(PNK_OBJECT_PROPERTY_NAME)
+            || node->isKind(PNK_STRING)
+            || node->isKind(PNK_COMPUTED_NAME);
     }
 
     inline MOZ_MUST_USE bool finishInitializerAssignment(ParseNode* pn, ParseNode* init);
@@ -778,7 +810,10 @@ class FullParseHandler
     }
 
     void addList(ParseNode* list, ParseNode* kid) {
-        list->append(kid);
+        if (sourceKind_ == SourceKind::Text)
+            list->append(kid);
+        else
+            list->appendWithoutOrderAssumption(kid);
     }
 
     void setOp(ParseNode* pn, JSOp op) {
@@ -857,10 +892,11 @@ FullParseHandler::addCatchBlock(ParseNode* catchList, ParseNode* lexicalScope,
                                 ParseNode* catchName, ParseNode* catchGuard,
                                 ParseNode* catchBody)
 {
-    ParseNode* catchpn = new_<TernaryNode>(PNK_CATCH, catchName, catchGuard, catchBody);
+    MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
+    ParseNode* catchpn = newCatchBlock(catchName, catchGuard, catchBody);
     if (!catchpn)
         return false;
-    catchList->append(lexicalScope);
+    addList(/* list = */ catchList, /* child = */ lexicalScope);
     lexicalScope->setScopeBody(catchpn);
     return true;
 }
