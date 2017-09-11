@@ -1658,14 +1658,17 @@ JS_PUBLIC_API(void)
 JS::ForEachProfiledFrame(JSContext* cx, void* addr, ForEachProfiledFrameOp& op)
 {
     js::jit::JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-    js::jit::JitcodeGlobalEntry& entry = table->lookupInfallible(addr);
+    js::jit::JitcodeGlobalEntry* entry = table->lookup(addr);
+
+    if (!entry)
+        return;
 
     // Extract the stack for the entry.  Assume maximum inlining depth is <64
     const char* labels[64];
-    uint32_t depth = entry.callStackAtAddr(cx->runtime(), addr, labels, 64);
+    uint32_t depth = entry->callStackAtAddr(cx->runtime(), addr, labels, 64);
     MOZ_ASSERT(depth < 64);
     for (uint32_t i = depth; i != 0; i--) {
-        JS::ForEachProfiledFrameOp::FrameHandle handle(cx->runtime(), entry, addr, labels[i - 1], i - 1);
+        JS::ForEachProfiledFrameOp::FrameHandle handle(cx->runtime(), *entry, addr, labels[i - 1], i - 1);
         op(handle);
     }
 }
