@@ -13,8 +13,7 @@
 /* We call window.open() using different URIs and make sure the triggeringPrincipal
  * loadingPrincipal are correct.
  * Test1: window.open(http:)
- * Test2: window.open(data:)
- * Test3: window.open(javascript:)
+ * Test2: window.open(javascript:)
  */
 
 const TRIGGERING_PRINCIPAL_URI =
@@ -22,7 +21,7 @@ const TRIGGERING_PRINCIPAL_URI =
 
 SimpleTest.waitForExplicitFinish();
 
-const NUM_TESTS = 3;
+const NUM_TESTS = 2;
 var test_counter = 0;
 
 function checkFinish() {
@@ -54,31 +53,7 @@ httpWin.onload = function() {
 }
 
 // ----------------------------------------------------------------------------
-// Test 2: window.open(data:)
-var dataWin = window.open("data:text/html,<html><script>opener.postMessage('loaded','*');<\/script></html>", "_blank", "width=10,height=10");
-window.onmessage = function (evt) {
-  is(evt.data, "loaded", "message should be loaded");
-
-  var doc = SpecialPowers.wrap(dataWin).document;
-  var dataChannel = doc.docShell.currentDocumentChannel;
-  var dataTriggeringPrincipal = dataChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
-  var dataLoadingPrincipal = dataChannel.loadInfo.loadingPrincipal;
-
-  is(dataTriggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
-     "TriggeringPrincipal for window.open(data:) should be the principal of the document");
-
-  is(doc.referrer, "",
-     "Referrer for window.open(data:) should be empty");
-
-  is(dataLoadingPrincipal, null,
-     "LoadingPrincipal for window.open(data:) should be null");
-
-  dataWin.close();
-  checkFinish();
-}
-
-// ----------------------------------------------------------------------------
-// Test 3: window.open(javascript:)
+// Test 2: window.open(javascript:)
 var jsWin = window.open("javascript:'<html><body>js</body></html>';", "_blank", "width=10,height=10");
 jsWin.onload = function() {
   var jsChannel = SpecialPowers.wrap(jsWin.document).docShell.currentDocumentChannel;

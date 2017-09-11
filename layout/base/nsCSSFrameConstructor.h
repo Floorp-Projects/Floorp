@@ -11,6 +11,7 @@
 #ifndef nsCSSFrameConstructor_h___
 #define nsCSSFrameConstructor_h___
 
+#include "mozilla/ArenaAllocator.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/RestyleManager.h"
@@ -62,6 +63,7 @@ public:
   nsCSSFrameConstructor(nsIDocument* aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor() {
     MOZ_ASSERT(mUpdateCount == 0, "Dying in the middle of our own update?");
+    MOZ_ASSERT(mFCItemsInUse == 0);
   }
 
   // get the alternate text for a content node
@@ -838,40 +840,17 @@ private:
                   const FrameConstructionDataByTag* aDataPtr,
                   uint32_t aDataLength);
 
-  /* A class representing a list of FrameConstructionItems */
-  class FrameConstructionItemList final {
+  /* A class representing a list of FrameConstructionItems.  Instances of this
+     class are only created as AutoFrameConstructionItemList, or as a member
+     of FrameConstructionItem. */
+  class FrameConstructionItemList
+  {
   public:
-    FrameConstructionItemList() :
-      mInlineCount(0),
-      mBlockCount(0),
-      mLineParticipantCount(0),
-      mItemCount(0),
-      mLineBoundaryAtStart(false),
-      mLineBoundaryAtEnd(false),
-      mParentHasNoXBLChildren(false),
-      mTriedConstructingFrames(false)
+    void Reset(nsCSSFrameConstructor* aFCtor)
     {
-      memset(mDesiredParentCounts, 0, sizeof(mDesiredParentCounts));
-    }
-
-    ~FrameConstructionItemList() {
-      while (FrameConstructionItem* item = mItems.popFirst()) {
-        delete item;
-      }
-
-      // Create the undisplayed entries for our mUndisplayedItems, if any, but
-      // only if we have tried constructing frames for this item list.  If we
-      // haven't, then we're just throwing it away and will probably try again.
-      if (!mUndisplayedItems.IsEmpty() && mTriedConstructingFrames) {
-        // We could store the frame manager in a member, but just
-        // getting it off the style context is not too bad.
-        nsFrameManager *mgr =
-          mUndisplayedItems[0].mStyleContext->PresContext()->FrameManager();
-        for (uint32_t i = 0; i < mUndisplayedItems.Length(); ++i) {
-          UndisplayedItem& item = mUndisplayedItems[i];
-          mgr->RegisterDisplayNoneStyleFor(item.mContent, item.mStyleContext);
-        }
-      }
+      Destroy(aFCtor);
+      this->~FrameConstructionItemList();
+      new (this) FrameConstructionItemList();
     }
 
     void SetLineBoundaryAtStart(bool aBoundary) { mLineBoundaryAtStart = aBoundary; }
@@ -895,7 +874,8 @@ private:
     // skip constructing whitespace frames for this item or items
     // around it cannot be performed.
     // Also, the return value is always non-null, thanks to infallible 'new'.
-    FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
+    FrameConstructionItem* AppendItem(nsCSSFrameConstructor* aFCtor,
+                                      const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
                                       nsIAtom* aTag,
                                       int32_t aNameSpaceID,
@@ -905,10 +885,10 @@ private:
                                       nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren)
     {
       FrameConstructionItem* item =
-        new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
-                                  aPendingBinding, aStyleContext,
-                                  aSuppressWhiteSpaceOptimizations,
-                                  aAnonChildren);
+        new (aFCtor) FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
+                                           aPendingBinding, aStyleContext,
+                                           aSuppressWhiteSpaceOptimizations,
+                                           aAnonChildren);
       mItems.insertBack(item);
       ++mItemCount;
       ++mDesiredParentCounts[item->DesiredParentType()];
@@ -916,7 +896,8 @@ private:
     }
 
     // Arguments are the same as AppendItem().
-    FrameConstructionItem* PrependItem(const FrameConstructionData* aFCData,
+    FrameConstructionItem* PrependItem(nsCSSFrameConstructor* aFCtor,
+                                       const FrameConstructionData* aFCData,
                                        nsIContent* aContent,
                                        nsIAtom* aTag,
                                        int32_t aNameSpaceID,
@@ -926,10 +907,10 @@ private:
                                        nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren)
     {
       FrameConstructionItem* item =
-        new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
-                                  aPendingBinding, aStyleContext,
-                                  aSuppressWhiteSpaceOptimizations,
-                                  aAnonChildren);
+        new (aFCtor) FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
+                                           aPendingBinding, aStyleContext,
+                                           aSuppressWhiteSpaceOptimizations,
+                                           aAnonChildren);
       mItems.insertFront(item);
       ++mItemCount;
       ++mDesiredParentCounts[item->DesiredParentType()];
@@ -1041,7 +1022,8 @@ private:
       // some special cases.  After this method returns, this iterator will
       // point to the item aEnd points to now; aEnd is not modified.
       // aTargetList must not be the list this iterator is iterating over.
-      void AppendItemsToList(const Iterator& aEnd,
+      void AppendItemsToList(nsCSSFrameConstructor*     aFCtor,
+                             const Iterator&            aEnd,
                              FrameConstructionItemList& aTargetList);
 
       // Insert aItem in this iterator's list right before the item pointed to
@@ -1056,14 +1038,65 @@ private:
       // to by aEnd.  When this returns, this iterator will point to the same
       // item as aEnd.  This iterator must not equal aEnd when this method is
       // called.
-      void DeleteItemsTo(const Iterator& aEnd);
+      void DeleteItemsTo(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd);
 
     private:
       FrameConstructionItem* mCurrent;
       FrameConstructionItemList& mList;
     };
 
+  protected:
+    FrameConstructionItemList() :
+      mInlineCount(0),
+      mBlockCount(0),
+      mLineParticipantCount(0),
+      mItemCount(0),
+      mLineBoundaryAtStart(false),
+      mLineBoundaryAtEnd(false),
+      mParentHasNoXBLChildren(false),
+      mTriedConstructingFrames(false)
+    {
+      MOZ_COUNT_CTOR(FrameConstructionItemList);
+      memset(mDesiredParentCounts, 0, sizeof(mDesiredParentCounts));
+    }
+
+    void Destroy(nsCSSFrameConstructor* aFCtor)
+    {
+      while (FrameConstructionItem* item = mItems.popFirst()) {
+        item->Delete(aFCtor);
+      }
+
+      // Create the undisplayed entries for our mUndisplayedItems, if any, but
+      // only if we have tried constructing frames for this item list.  If we
+      // haven't, then we're just throwing it away and will probably try again.
+      if (!mUndisplayedItems.IsEmpty() && mTriedConstructingFrames) {
+        for (uint32_t i = 0; i < mUndisplayedItems.Length(); ++i) {
+          UndisplayedItem& item = mUndisplayedItems[i];
+          aFCtor->RegisterDisplayNoneStyleFor(item.mContent, item.mStyleContext);
+        }
+      }
+    }
+
+    // Prevent stack instances (except as AutoFrameConstructionItemList).
+    friend struct FrameConstructionItem;
+    ~FrameConstructionItemList()
+    {
+      MOZ_COUNT_DTOR(FrameConstructionItemList);
+      MOZ_ASSERT(mItems.isEmpty(), "leaking");
+    }
   private:
+    // Not allocated from the heap!
+    void* operator new(size_t) = delete;
+    void* operator new[](size_t) = delete;
+#ifdef _MSC_VER  /* Visual Studio */
+    void operator delete(void*) { MOZ_CRASH("FrameConstructionItemList::del"); }
+#else
+    void operator delete(void*) = delete;
+#endif
+    void operator delete[](void*) = delete;
+    // Placement new is used by Reset().
+    void* operator new(size_t, void* aPtr) { return aPtr; }
+
     struct UndisplayedItem {
       UndisplayedItem(nsIContent* aContent, nsStyleContext* aStyleContext) :
         mContent(aContent), mStyleContext(aStyleContext)
@@ -1077,6 +1110,7 @@ private:
     // should be either +1 or -1 depending on which is happening.
     void AdjustCountsForItem(FrameConstructionItem* aItem, int32_t aDelta);
 
+    nsTArray<UndisplayedItem> mUndisplayedItems;
     mozilla::LinkedList<FrameConstructionItem> mItems;
     uint32_t mInlineCount;
     uint32_t mBlockCount;
@@ -1093,8 +1127,20 @@ private:
     bool mParentHasNoXBLChildren;
     // True if we have tried constructing frames from this list
     bool mTriedConstructingFrames;
+  };
 
-    nsTArray<UndisplayedItem> mUndisplayedItems;
+  /* A struct representing a list of FrameConstructionItems on the stack. */
+  struct MOZ_RAII AutoFrameConstructionItemList final
+    : public FrameConstructionItemList
+  {
+    template<typename... Args>
+    explicit AutoFrameConstructionItemList(nsCSSFrameConstructor* aFCtor, Args&&... args)
+      : FrameConstructionItemList(std::forward<Args>(args)...)
+      , mFCtor(aFCtor)
+    { MOZ_ASSERT(mFCtor); }
+    ~AutoFrameConstructionItemList() { Destroy(mFCtor); }
+  private:
+    nsCSSFrameConstructor* const mFCtor;
   };
 
   typedef FrameConstructionItemList::Iterator FCItemIterator;
@@ -1102,7 +1148,8 @@ private:
   /* A struct representing an item for which frames might need to be
    * constructed.  This contains all the information needed to construct the
    * frame other than the parent frame and whatever would be stored in the
-   * frame constructor state. */
+   * frame constructor state.  You probably want to use
+   * AutoFrameConstructionItem instead of this struct. */
   struct FrameConstructionItem final
     : public mozilla::LinkedListElement<FrameConstructionItem> {
     FrameConstructionItem(const FrameConstructionData* aFCData,
@@ -1123,6 +1170,7 @@ private:
       mHasInlineEnds(false), mIsPopup(false),
       mIsLineParticipant(false), mIsForSVGAElement(false)
     {
+      MOZ_COUNT_CTOR(FrameConstructionItem);
       if (aAnonChildren) {
         NS_ASSERTION(!(mFCData->mBits & FCDATA_FUNC_IS_FULL_CTOR) ||
                      mFCData->mFullConstructor ==
@@ -1135,11 +1183,19 @@ private:
         mAnonChildren.SwapElements(*aAnonChildren);
       }
     }
-    ~FrameConstructionItem() {
+
+    void* operator new(size_t, nsCSSFrameConstructor* aFCtor)
+    { return aFCtor->AllocateFCItem(); }
+
+    void Delete(nsCSSFrameConstructor* aFCtor)
+    {
+      mChildItems.Destroy(aFCtor);
       if (mIsGeneratedContent) {
         mContent->UnbindFromTree();
         NS_RELEASE(mContent);
       }
+      this->~FrameConstructionItem();
+      aFCtor->FreeFCItem(this);
     }
 
     ParentType DesiredParentType() {
@@ -1238,7 +1294,44 @@ private:
     bool mIsForSVGAElement:1;
 
   private:
+    // Not allocated from the general heap - instead, use the new/Delete APIs
+    // that take a nsCSSFrameConstructor* (which manages our arena allocation).
+    void* operator new(size_t) = delete;
+    void* operator new[](size_t) = delete;
+#ifdef _MSC_VER  /* Visual Studio */
+    void operator delete(void*) { MOZ_CRASH("FrameConstructionItem::delete"); }
+#else
+    void operator delete(void*) = delete;
+#endif
+    void operator delete[](void*) = delete;
     FrameConstructionItem(const FrameConstructionItem& aOther) = delete; /* not implemented */
+    // Not allocated from the stack!
+    ~FrameConstructionItem()
+    {
+      MOZ_COUNT_DTOR(FrameConstructionItem);
+      MOZ_ASSERT(mChildItems.IsEmpty(), "leaking");
+    }
+  };
+
+  /**
+   * Convenience struct to assist in managing a temporary FrameConstructionItem
+   * using a local variable. Castable to FrameConstructionItem so that it can
+   * be passed transparently to functions that expect that type.
+   * (This struct exists because FrameConstructionItem is arena-allocated, and
+   * it's nice to abstract away its allocation/deallocation.)
+   */
+  struct MOZ_RAII AutoFrameConstructionItem final
+  {
+    template<typename... Args>
+    explicit AutoFrameConstructionItem(nsCSSFrameConstructor* aFCtor, Args&&... args)
+      : mFCtor(aFCtor)
+      , mItem(new (aFCtor) FrameConstructionItem(std::forward<Args>(args)...))
+    { MOZ_ASSERT(mFCtor); }
+    ~AutoFrameConstructionItem() { mItem->Delete(mFCtor); }
+    operator FrameConstructionItem&() { return *mItem; }
+  private:
+    nsCSSFrameConstructor* const mFCtor;
+    FrameConstructionItem* const mItem;
   };
 
   /**
@@ -2143,6 +2236,10 @@ public:
   friend class nsFrameConstructorState;
 
 private:
+  // For allocating FrameConstructionItems from the mFCItemPool arena.
+  friend struct FrameConstructionItem;
+  void* AllocateFCItem();
+  void FreeFCItem(FrameConstructionItem*);
 
   nsIDocument*        mDocument;  // Weak ref
 
@@ -2157,6 +2254,13 @@ private:
   // the real "initial containing block" according to CSS 2.1.
   nsContainerFrame*   mDocElementContainingBlock;
   nsIFrame*           mPageSequenceFrame;
+
+  // FrameConstructionItem arena + list of freed items available for re-use.
+  mozilla::ArenaAllocator<4096, 8> mFCItemPool;
+  struct FreeFCItemLink { FreeFCItemLink* mNext; };
+  FreeFCItemLink* mFirstFreeFCItem;
+  size_t mFCItemsInUse;
+
   nsQuoteList         mQuoteList;
   nsCounterManager    mCounterManager;
   // Current ProcessChildren depth.
