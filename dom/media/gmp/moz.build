@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
 ]
 
 EXPORTS += [
+    'ChromiumCDMCallback.h',
     'ChromiumCDMParent.h',
     'ChromiumCDMProxy.h',
     'DecryptJob.h',
@@ -72,6 +73,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'ChromiumCDMAdapter.cpp',
+    'ChromiumCDMCallbackProxy.cpp',
     'ChromiumCDMChild.cpp',
     'ChromiumCDMParent.cpp',
     'ChromiumCDMProxy.cpp',
