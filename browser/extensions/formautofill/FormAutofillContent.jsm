@@ -115,6 +115,12 @@ AutofillProfileAutoCompleteSearch.prototype = {
     //   - (address only) less than 3 inputs are covered by all saved fields in the storage.
     if (!searchPermitted || !savedFieldNames.has(info.fieldName) || filledRecordGUID || (isAddressField &&
         allFieldNames.filter(field => savedFieldNames.has(field)).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD)) {
+      if (focusedInput.autocomplete == "off") {
+        // Create a dummy AddressResult as an empty search result.
+        let result = new AddressResult("", "", [], [], {});
+        listener.onSearchResult(this, result);
+        return;
+      }
       let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
                           .createInstance(Ci.nsIAutoCompleteSearch);
       formHistory.startSearch(searchString, searchParam, previousResult, {

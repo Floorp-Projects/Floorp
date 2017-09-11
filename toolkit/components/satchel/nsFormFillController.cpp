@@ -1067,7 +1067,12 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
     isPwmgrInput = true;
   }
 
-  if (isPwmgrInput || hasList || autocomplete) {
+  bool isAutofillInput = false;
+  if (mAutofillInputs.Get(inputNode)) {
+    isAutofillInput = true;
+  }
+
+  if (isAutofillInput || isPwmgrInput ||  hasList || autocomplete) {
     StartControllingInput(aInput);
   }
 }
