@@ -277,6 +277,7 @@ BrowserToolboxProcess.prototype = {
       command,
       arguments: args,
       environmentAppend: true,
+      stderr: "stdout",
       environment: {
         // Disable safe mode for the new process in case this was opened via the
         // keyboard shortcut.
