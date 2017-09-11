@@ -152,8 +152,6 @@ public:
     const hb_set_t*
     InputsForOpenTypeFeature(Script aScript, uint32_t aFeatureTag);
 
-    virtual bool IsSymbolFont();
-
     virtual bool HasFontTable(uint32_t aTableTag);
 
     inline bool HasGraphiteTables() {
@@ -206,13 +204,6 @@ public:
                                 const mozilla::gfx::Color& aDefaultColor,
                                 nsTArray<uint16_t>& layerGlyphs,
                                 nsTArray<mozilla::gfx::Color>& layerColors);
-
-    virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
-        return true;
-    }
-    virtual bool SupportsLangGroup(nsIAtom *aLangGroup) const {
-        return true;
-    }
 
     // Access to raw font table data (needed for Harfbuzz):
     // returns a pointer to data owned by the fontEntry or the OS,
@@ -351,7 +342,6 @@ public:
     bool             mIsDataUserFont : 1;      // platform font entry (data)
     bool             mIsLocalUserFont : 1;     // platform font entry (local)
     bool             mStandardFace : 1;
-    bool             mSymbolFont  : 1;
     bool             mIgnoreGDEF  : 1;
     bool             mIgnoreGSUB  : 1;
     bool             mSVGInitialized : 1;
@@ -423,8 +413,7 @@ protected:
     // lookup the cmap in cached font data
     virtual already_AddRefed<gfxCharacterMap>
     GetCMAPFromFontInfo(FontInfoData *aFontInfoData,
-                        uint32_t& aUVSOffset,
-                        bool& aSymbolFont);
+                        uint32_t& aUVSOffset);
 
     // helper for HasCharacter(), which is what client code should call
     virtual bool TestCharacterMap(uint32_t aCh);
@@ -762,6 +751,17 @@ public:
 
     void SetSkipSpaceFeatureCheck(bool aSkipCheck) {
         mSkipDefaultFeatureSpaceCheck = aSkipCheck;
+    }
+
+    // Check whether this family is appropriate to include in the Preferences
+    // font list for the given langGroup and CSS generic, if the platform lets
+    // us determine this.
+    // Return true if the family should be included in the list, false to omit.
+    // Default implementation returns true for everything, so no filtering
+    // will occur; individual platforms may override.
+    virtual bool FilterForFontList(nsIAtom* aLangGroup,
+                                   const nsACString& aGeneric) const {
+        return true;
     }
 
 protected:
