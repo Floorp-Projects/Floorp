@@ -8246,8 +8246,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       // made protected, and then disconnected.
       DataTransfer* dataTransfer = aEvent->AsDragEvent()->mDataTransfer;
       if (dataTransfer) {
-        dataTransfer->SetMode(DataTransfer::Mode::Protected);
-        dataTransfer->ClearAll();
+        dataTransfer->Disconnect();
       }
       break;
     }
