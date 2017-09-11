@@ -68,7 +68,7 @@ public:
 
   void OnSessionMessage(const nsAString& aSessionId,
                         dom::MediaKeyMessageType aMessageType,
-                        nsTArray<uint8_t>& aMessage) override;
+                        const nsTArray<uint8_t>& aMessage) override;
 
   void OnExpirationChange(const nsAString& aSessionId,
                           GMPTimestamp aExpiryTime) override;
