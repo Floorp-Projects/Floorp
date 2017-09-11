@@ -1576,6 +1576,8 @@ XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "loadBookmarksInBackground"
                                       PREF_LOAD_BOOKMARKS_IN_BACKGROUND, false);
 XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "loadBookmarksInTabs",
                                       PREF_LOAD_BOOKMARKS_IN_TABS, false);
+XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "openInTabClosesMenu",
+  "browser.bookmarks.openInTabClosesMenu", false);
 
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
                                    "@mozilla.org/docshell/urifixup;1",
