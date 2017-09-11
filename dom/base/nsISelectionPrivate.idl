@@ -28,7 +28,7 @@ native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
 [scriptable, builtinclass, uuid(0c9f4f74-ee7e-4fe9-be6b-0ba856368178)]
-interface nsISelectionPrivate : nsISelection
+interface nsISelectionPrivate : nsISupports
  {
     const short ENDOFPRECEDINGLINE=0;
     const short STARTOFNEXTLINE=1;
