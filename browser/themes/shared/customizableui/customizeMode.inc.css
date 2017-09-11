@@ -497,3 +497,12 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
     background-image: url("chrome://browser/skin/customizableui/empty-overflow-panel@2x.png");
   }
 }
+
+#downloads-button-autohide-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 5px 12px;
+}
+
+#downloads-button-autohide-checkbox {
+  margin: 0;
+  padding: 0;
+}
