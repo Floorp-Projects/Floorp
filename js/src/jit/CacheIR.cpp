@@ -12,7 +12,6 @@
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRSpewer.h"
-#include "jit/IonCaches.h"
 
 #include "vm/SelfHosting.h"
 #include "jsobjinlines.h"
