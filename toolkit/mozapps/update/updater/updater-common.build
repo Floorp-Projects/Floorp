@@ -100,7 +100,7 @@ if have_progressui == 0:
 SOURCES += sorted(srcs)
 
 DEFINES['NS_NO_XPCOM'] = True
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
