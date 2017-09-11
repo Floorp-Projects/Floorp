@@ -5,16 +5,19 @@
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.balrog:transforms
-   - taskgraph.transforms.task:transforms
+  - taskgraph.transforms.name_sanity:transforms
+  - taskgraph.transforms.partials:transforms
+  - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - beetmover
-  - beetmover-l10n
-  - beetmover-repackage
-  - beetmover-partials
+  - repackage-signing
 
 only-for-attributes:
   - nightly
-  - signed
+
+only-for-build-platforms:
+  - macosx64-nightly/opt
+  - win32-nightly/opt
+  - win64-nightly/opt
+  - linux-nightly/opt
+  - linux64-nightly/opt
