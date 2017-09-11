@@ -306,8 +306,15 @@ class CompileFlags(ContextDerivedValue, dict):
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
-        dict.__init__(self,
-                      ((k, TypedList(unicode)(v)) for k, v, _ in self.flag_variables))
+        # Providing defaults here doesn't play well with multiple templates
+        # modifying COMPILE_FLAGS from the same moz.build, because the merge
+        # done after the template runs can't tell which values coming from
+        # a template were set and which were provided as defaults.
+        template_name = getattr(context, 'template', None)
+        if template_name in (None, 'Gyp'):
+            dict.__init__(self, ((k, TypedList(unicode)(v)) for k, v, _ in self.flag_variables))
+        else:
+            dict.__init__(self)
 
     def __setitem__(self, key, value):
         if key not in self._known_keys:
