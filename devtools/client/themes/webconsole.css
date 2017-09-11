@@ -789,6 +789,7 @@ a.learn-more-link.webconsole-learn-more-link {
   margin: 0 3px;
   display: flex;
   align-items: center;
+  -moz-user-select: none;
 }
 
 .webconsole-filterbar-secondary .devtools-separator {
