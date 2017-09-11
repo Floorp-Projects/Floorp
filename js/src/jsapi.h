@@ -5520,10 +5520,11 @@ JS_ParseJSONWithReviver(JSContext* cx, JS::HandleString str, JS::HandleValue rev
  * The locale string remains owned by the caller.
  */
 extern JS_PUBLIC_API(bool)
-JS_SetDefaultLocale(JSContext* cx, const char* locale);
+JS_SetDefaultLocale(JSRuntime* rt, const char* locale);
 
 /**
  * Look up the default locale for the ECMAScript Internationalization API.
+ * NB: The locale information is retrieved from cx's runtime.
  */
 extern JS_PUBLIC_API(JS::UniqueChars)
 JS_GetDefaultLocale(JSContext* cx);
@@ -5532,7 +5533,7 @@ JS_GetDefaultLocale(JSContext* cx);
  * Reset the default locale to OS defaults.
  */
 extern JS_PUBLIC_API(void)
-JS_ResetDefaultLocale(JSContext* cx);
+JS_ResetDefaultLocale(JSRuntime* rt);
 
 /**
  * Locale specific string conversion and error message callbacks.
@@ -5549,14 +5550,14 @@ struct JSLocaleCallbacks {
  * JSContext.  Passing nullptr restores the default behaviour.
  */
 extern JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSContext* cx, const JSLocaleCallbacks* callbacks);
+JS_SetLocaleCallbacks(JSRuntime* rt, const JSLocaleCallbacks* callbacks);
 
 /**
  * Return the address of the current locale callbacks struct, which may
  * be nullptr.
  */
 extern JS_PUBLIC_API(const JSLocaleCallbacks*)
-JS_GetLocaleCallbacks(JSContext* cx);
+JS_GetLocaleCallbacks(JSRuntime* rt);
 
 /************************************************************************/
 
