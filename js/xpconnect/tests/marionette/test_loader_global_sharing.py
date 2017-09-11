@@ -71,8 +71,6 @@ class TestLoaderGlobalSharing(MarionetteTestCase):
     def setUp(self):
         super(TestLoaderGlobalSharing, self).setUp()
 
-        self.default_pref_value = self.marionette.get_pref(GLOBAL_SHARING_PREF)
-
         self.setUpSession()
 
     def tearDown(self):
@@ -109,11 +107,7 @@ class TestLoaderGlobalSharing(MarionetteTestCase):
 
             have_sharing = self.get_global_sharing_enabled()
 
-            # FIXME: User preference values currently do not always take
-            # effect early enough to influence loader behavior.
-            msg = ('Global sharing state should match settings: %r != %r'
-                   % (have_sharing, expect_sharing))
-            if var is not None or pref == self.default_pref_value:
-                self.assertEqual(have_sharing, expect_sharing, msg)
-            elif have_sharing != expect_sharing:
-                print('TEST-EXPECTED-FAIL: ' + msg)
+            self.assertEqual(
+                have_sharing, expect_sharing,
+                'Global sharing state should match settings: %r != %r'
+                % (have_sharing, expect_sharing))
