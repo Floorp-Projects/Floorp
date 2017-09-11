@@ -13,11 +13,6 @@ Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-initTestLogging("Trace");
-Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-Log.repository.getLogger("Sync.Engine.Clients").level = Log.Level.Trace;
-Log.repository.getLogger("Sqlite").level = Log.Level.Info; // less noisy
-
 const LAST_BOOKMARK_SYNC_PREFS = [
   "bookmarks.lastSync",
   "bookmarks.lastSyncLocal",
@@ -46,6 +41,11 @@ add_task(async function setup() {
   Service.recordTelemetryEvent = (object, method, value, extra = undefined) => {
     recordedEvents.push({ object, method, value, extra });
   };
+
+  initTestLogging("Trace");
+  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.Engine.Clients").level = Log.Level.Trace;
+  Log.repository.getLogger("Sqlite").level = Log.Level.Info; // less noisy
 });
 
 function checkRecordedEvents(expected, message) {

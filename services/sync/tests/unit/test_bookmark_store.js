@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
@@ -9,37 +10,27 @@ Cu.import("resource://services-sync/util.js");
 
 const PARENT_ANNO = "sync/parent";
 
-let engine;
-let store;
-let tracker;
-
 const fxuri = CommonUtils.makeURI("http://getfirefox.com/");
 const tburi = CommonUtils.makeURI("http://getthunderbird.com/");
-
-add_task(async function setup() {
-  await Service.engineManager.register(BookmarksEngine);
-
-  engine = Service.engineManager.get("bookmarks");
-  store = engine._store;
-  tracker = engine._tracker;
-
-  // Don't write some persistence files asynchronously.
-  tracker.persistChangedIDs = false;
-});
 
 add_task(async function test_ignore_specials() {
   _("Ensure that we can't delete bookmark roots.");
 
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   // Belt...
   let record = new BookmarkFolder("bookmarks", "toolbar", "folder");
   record.deleted = true;
-  do_check_neq(null, (await store.idForGUID("toolbar")));
+  do_check_neq(null, (await PlacesUtils.promiseItemId(
+    PlacesSyncUtils.bookmarks.syncIdToGuid("toolbar"))));
 
   await store.applyIncoming(record);
   await store.deletePending();
 
   // Ensure that the toolbar exists.
-  do_check_neq(null, (await store.idForGUID("toolbar")));
+  do_check_neq(null, (await PlacesUtils.promiseItemId(
+    PlacesSyncUtils.bookmarks.syncIdToGuid("toolbar"))));
 
   // This will fail painfully in getItemType if the deletion worked.
   await engine._buildGUIDMap();
@@ -47,13 +38,19 @@ add_task(async function test_ignore_specials() {
   // Braces...
   await store.remove(record);
   await store.deletePending();
-  do_check_neq(null, (await store.idForGUID("toolbar")));
+  do_check_neq(null, (await PlacesUtils.promiseItemId(
+    PlacesSyncUtils.bookmarks.syncIdToGuid("toolbar"))));
   await engine._buildGUIDMap();
 
   await store.wipe();
+
+  await engine.finalize();
 });
 
 add_task(async function test_bookmark_create() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   try {
     _("Ensure the record isn't present yet.");
     let ids = PlacesUtils.bookmarks.getBookmarkIdsForURI(fxuri, {});
@@ -72,8 +69,8 @@ add_task(async function test_bookmark_create() {
     await store.applyIncoming(fxrecord);
 
     _("Verify it has been created correctly.");
-    let id = await store.idForGUID(fxrecord.id);
-    do_check_eq((await store.GUIDForId(id)), fxrecord.id);
+    let id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(fxrecord.id));
+    do_check_eq((await PlacesUtils.promiseItemGuid(id)), fxrecord.id);
     do_check_eq(PlacesUtils.bookmarks.getItemType(id),
                 PlacesUtils.bookmarks.TYPE_BOOKMARK);
     do_check_true(PlacesUtils.bookmarks.getBookmarkURI(id).equals(fxuri));
@@ -105,8 +102,8 @@ add_task(async function test_bookmark_create() {
     await store.applyIncoming(tbrecord);
 
     _("Verify it has been created correctly.");
-    id = await store.idForGUID(tbrecord.id);
-    do_check_eq((await store.GUIDForId(id)), tbrecord.id);
+    id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(tbrecord.id));
+    do_check_eq((await PlacesUtils.promiseItemGuid(id)), tbrecord.id);
     do_check_eq(PlacesUtils.bookmarks.getItemType(id),
                 PlacesUtils.bookmarks.TYPE_BOOKMARK);
     do_check_true(PlacesUtils.bookmarks.getBookmarkURI(id).equals(tburi));
@@ -124,10 +121,14 @@ add_task(async function test_bookmark_create() {
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 add_task(async function test_bookmark_update() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   try {
     _("Create a bookmark whose values we'll change.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -138,7 +139,7 @@ add_task(async function test_bookmark_update() {
       bmk1_id, "bookmarkProperties/description", "Firefox is awesome.", 0,
       PlacesUtils.annotations.EXPIRE_NEVER);
     PlacesUtils.bookmarks.setKeywordForBookmark(bmk1_id, "firefox");
-    let bmk1_guid = await store.GUIDForId(bmk1_id);
+    let bmk1_guid = await PlacesUtils.promiseItemGuid(bmk1_id);
 
     _("Update the record with some null values.");
     let record = await store.createRecord(bmk1_guid);
@@ -158,16 +159,20 @@ add_task(async function test_bookmark_update() {
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 add_task(async function test_bookmark_createRecord() {
+  let engine = Service.engineManager.get("bookmarks");
+  let store = engine._store;
+
   try {
     _("Create a bookmark without a description or title.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder, fxuri,
       PlacesUtils.bookmarks.DEFAULT_INDEX, null);
-    let bmk1_guid = await store.GUIDForId(bmk1_id);
+    let bmk1_guid = await PlacesUtils.promiseItemGuid(bmk1_id);
 
     _("Verify that the record is created accordingly.");
     let record = await store.createRecord(bmk1_guid);
@@ -182,6 +187,9 @@ add_task(async function test_bookmark_createRecord() {
 });
 
 add_task(async function test_folder_create() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   try {
     _("Create a folder.");
     let folder = new BookmarkFolder("bookmarks", "testfolder-1");
@@ -191,7 +199,7 @@ add_task(async function test_folder_create() {
     await store.applyIncoming(folder);
 
     _("Verify it has been created correctly.");
-    let id = await store.idForGUID(folder.id);
+    let id = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(folder.id));
     do_check_eq(PlacesUtils.bookmarks.getItemType(id),
                 PlacesUtils.bookmarks.TYPE_FOLDER);
     do_check_eq(PlacesUtils.bookmarks.getItemTitle(id), folder.title);
@@ -209,15 +217,19 @@ add_task(async function test_folder_create() {
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 add_task(async function test_folder_createRecord() {
+  let engine = Service.engineManager.get("bookmarks");
+  let store = engine._store;
+
   try {
     _("Create a folder.");
     let folder1_id = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.toolbarFolder, "Folder1", 0);
-    let folder1_guid = await store.GUIDForId(folder1_id);
+    let folder1_guid = await PlacesUtils.promiseItemGuid(folder1_id);
 
     _("Create two bookmarks in that folder without assigning them GUIDs.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -233,8 +245,8 @@ add_task(async function test_folder_createRecord() {
     do_check_eq(record.parentName, "Bookmarks Toolbar");
 
     _("Verify the folder's children. Ensures that the bookmarks were given GUIDs.");
-    let bmk1_guid = await store.GUIDForId(bmk1_id);
-    let bmk2_guid = await store.GUIDForId(bmk2_id);
+    let bmk1_guid = await PlacesUtils.promiseItemGuid(bmk1_id);
+    let bmk2_guid = await PlacesUtils.promiseItemGuid(bmk2_id);
     do_check_eq(record.children.length, 2);
     do_check_eq(record.children[0], bmk1_guid);
     do_check_eq(record.children[1], bmk2_guid);
@@ -246,12 +258,15 @@ add_task(async function test_folder_createRecord() {
 });
 
 add_task(async function test_deleted() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   try {
     _("Create a bookmark that will be deleted.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder, fxuri,
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bmk1_guid = await store.GUIDForId(bmk1_id);
+    let bmk1_guid = await PlacesUtils.promiseItemGuid(bmk1_id);
 
     _("Delete the bookmark through the store.");
     let record = new PlacesItem("bookmarks", bmk1_guid);
@@ -273,21 +288,25 @@ add_task(async function test_deleted() {
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 add_task(async function test_move_folder() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   try {
     _("Create two folders and a bookmark in one of them.");
     let folder1_id = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.toolbarFolder, "Folder1", 0);
-    let folder1_guid = await store.GUIDForId(folder1_id);
+    let folder1_guid = await PlacesUtils.promiseItemGuid(folder1_id);
     let folder2_id = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.toolbarFolder, "Folder2", 0);
-    let folder2_guid = await store.GUIDForId(folder2_id);
+    let folder2_guid = await PlacesUtils.promiseItemGuid(folder2_id);
     let bmk_id = PlacesUtils.bookmarks.insertBookmark(
       folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bmk_guid = await store.GUIDForId(bmk_id);
+    let bmk_guid = await PlacesUtils.promiseItemGuid(bmk_id);
 
     _("Get a record, reparent it and apply it to the store.");
     let record = await store.createRecord(bmk_guid);
@@ -297,14 +316,19 @@ add_task(async function test_move_folder() {
 
     _("Verify the new parent.");
     let new_folder_id = PlacesUtils.bookmarks.getFolderIdForItem(bmk_id);
-    do_check_eq((await store.GUIDForId(new_folder_id)), folder2_guid);
+    do_check_eq((await PlacesUtils.promiseItemGuid(new_folder_id)), folder2_guid);
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 add_task(async function test_move_order() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+  let tracker = engine._tracker;
+
   // Make sure the tracker is turned on.
   Svc.Obs.notify("weave:engine:start-tracking");
   try {
@@ -312,11 +336,11 @@ add_task(async function test_move_order() {
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder, fxuri,
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bmk1_guid = await store.GUIDForId(bmk1_id);
+    let bmk1_guid = await PlacesUtils.promiseItemGuid(bmk1_id);
     let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder, tburi,
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
-    let bmk2_guid = await store.GUIDForId(bmk2_id);
+    let bmk2_guid = await PlacesUtils.promiseItemGuid(bmk2_id);
 
     _("Verify order.");
     do_check_eq(PlacesUtils.bookmarks.getItemIndex(bmk1_id), 0);
@@ -344,17 +368,21 @@ add_task(async function test_move_order() {
     Svc.Obs.notify("weave:engine:stop-tracking");
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 add_task(async function test_orphan() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   try {
 
     _("Add a new bookmark locally.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder, fxuri,
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bmk1_guid = await store.GUIDForId(bmk1_id);
+    let bmk1_guid = await PlacesUtils.promiseItemGuid(bmk1_id);
     do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(bmk1_id),
                 PlacesUtils.bookmarks.toolbarFolder);
     let error;
@@ -379,14 +407,18 @@ add_task(async function test_orphan() {
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 add_task(async function test_reparentOrphans() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   try {
     let folder1_id = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.toolbarFolder, "Folder1", 0);
-    let folder1_guid = await store.GUIDForId(folder1_id);
+    let folder1_guid = await PlacesUtils.promiseItemGuid(folder1_id);
 
     _("Create a bogus orphan record and write the record back to the store to trigger _reparentOrphans.");
     PlacesUtils.annotations.setItemAnnotation(
@@ -404,12 +436,16 @@ add_task(async function test_reparentOrphans() {
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 
 // Tests Bug 806460, in which query records arrive with empty folder
 // names and missing bookmark URIs.
 add_task(async function test_empty_query_doesnt_die() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   let record = new BookmarkQuery("bookmarks", "8xoDGqKrXf1P");
   record.folderName    = "";
   record.queryId       = "";
@@ -422,6 +458,7 @@ add_task(async function test_empty_query_doesnt_die() {
   delete record.folderName;
   await store.applyIncoming(record);
 
+  await engine.finalize();
 });
 
 function assertDeleted(id) {
@@ -435,6 +472,9 @@ function assertDeleted(id) {
 }
 
 add_task(async function test_delete_buffering() {
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
+
   await store.wipe();
   await PlacesTestUtils.markBookmarksAsSynced();
 
@@ -462,9 +502,9 @@ add_task(async function test_delete_buffering() {
     await store.applyIncoming(fxRecord);
     await store.applyIncoming(tbRecord);
 
-    let folderId = await store.idForGUID(folder.id);
-    let fxRecordId = await store.idForGUID(fxRecord.id);
-    let tbRecordId = await store.idForGUID(tbRecord.id);
+    let folderId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(folder.id));
+    let fxRecordId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(fxRecord.id));
+    let tbRecordId = await PlacesUtils.promiseItemId(PlacesSyncUtils.bookmarks.syncIdToGuid(tbRecord.id));
 
     _("Check everything was created correctly.");
 
@@ -522,6 +562,7 @@ add_task(async function test_delete_buffering() {
   } finally {
     _("Clean up.");
     await store.wipe();
+    await engine.finalize();
   }
 });
 

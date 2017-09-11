@@ -10,8 +10,7 @@ let tracker;
 
 add_task(async function setup() {
   initTestLogging("Trace");
-  await Service.engineManager.register(BookmarksEngine);
-  engine = Service.engineManager.get("bookmarks");
+  engine = new BookmarksEngine(Service);
   store = engine._store;
   tracker = engine._tracker;
 });

@@ -42,6 +42,13 @@ add_task(async function setup() {
   await generateNewKeys(Service.collectionKeys);
 });
 
+add_task(async function setup() {
+  await Service.engineManager.unregister("bookmarks");
+
+  initTestLogging("Trace");
+  generateNewKeys(Service.collectionKeys);
+});
+
 add_task(async function test_delete_invalid_roots_from_server() {
   _("Ensure that we delete the Places and Reading List roots from the server.");
 
@@ -194,6 +201,7 @@ add_task(async function test_processIncoming_error_orderChildren() {
 
   } finally {
     await store.wipe();
+    await engine.resetClient();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await PlacesSyncUtils.bookmarks.reset();
@@ -379,6 +387,7 @@ async function test_restoreOrImport(aReplace) {
 
   } finally {
     await store.wipe();
+    await engine.resetClient();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await PlacesSyncUtils.bookmarks.reset();
@@ -477,6 +486,7 @@ add_task(async function test_mismatched_types() {
 
   } finally {
     await store.wipe();
+    await engine.resetClient();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await PlacesSyncUtils.bookmarks.reset();
@@ -637,6 +647,7 @@ add_task(async function test_misreconciled_root() {
   do_check_eq(parentIDBefore, parentIDAfter);
 
   await store.wipe();
+  await engine.resetClient();
   await PlacesSyncUtils.bookmarks.reset();
   await promiseStopServer(server);
 });
@@ -785,6 +796,7 @@ add_task(async function test_sync_dateAdded() {
 
   } finally {
     await store.wipe();
+    await engine.resetClient();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await PlacesSyncUtils.bookmarks.reset();
