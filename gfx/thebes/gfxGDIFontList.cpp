@@ -120,11 +120,10 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
                            gfxUserFontData *aUserFontData,
                            bool aFamilyHasItalicFace)
     : gfxFontEntry(aFaceName),
-      mWindowsFamily(0), mWindowsPitch(0),
       mFontType(aFontType),
       mForceGDI(false),
       mFamilyHasItalicFace(aFamilyHasItalicFace),
-      mCharset(), mUnicodeRanges()
+      mUnicodeRanges()
 {
     mUserFontData.reset(aUserFontData);
     mStyle = aStyle;
@@ -486,7 +485,9 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         if (fe->mWeight == logFont.lfWeight &&
             fe->IsItalic() == (logFont.lfItalic == 0xFF)) {
             // update the charset bit here since this could be different
-            fe->mCharset.set(metrics.tmCharSet);
+            // XXX Can we still do this now that we store mCharset
+            // on the font family rather than the font entry?
+            ff->mCharset.set(metrics.tmCharSet);
             return 1; 
         }
     }
@@ -504,12 +505,6 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         return 1;
 
     ff->AddFontEntry(fe);
-
-    // mark the charset bit
-    fe->mCharset.set(metrics.tmCharSet);
-
-    fe->mWindowsFamily = logFont.lfPitchAndFamily & 0xF0;
-    fe->mWindowsPitch = logFont.lfPitchAndFamily & 0x0F;
 
     if (nmetrics->ntmFontSig.fsUsb[0] != 0x00000000 &&
         nmetrics->ntmFontSig.fsUsb[1] != 0x00000000 &&
@@ -713,6 +708,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
                                       DWORD fontType,
                                       LPARAM lParam)
 {
+    const NEWTEXTMETRICW& metrics = lpntme->ntmTm;
     const LOGFONTW& lf = lpelfe->elfLogFont;
 
     if (lf.lfFaceName[0] == '@') {
@@ -726,7 +722,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
 
     if (!fontList->mFontFamilies.GetWeak(name)) {
         nsDependentString faceName(lf.lfFaceName);
-        RefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
+        RefPtr<GDIFontFamily> family = new GDIFontFamily(faceName);
         fontList->mFontFamilies.Put(name, family);
 
         // if locale is such that CJK font names are the default coming from
@@ -739,6 +735,12 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
 
         if (fontList->mBadUnderlineFamilyNames.Contains(name))
             family->SetBadUnderlineFamily();
+
+        family->mWindowsFamily = lf.lfPitchAndFamily & 0xF0;
+        family->mWindowsPitch = lf.lfPitchAndFamily & 0x0F;
+
+        // mark the charset bit
+        family->mCharset.set(metrics.tmCharSet);
     }
 
     return 1;

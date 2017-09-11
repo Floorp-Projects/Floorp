@@ -207,13 +207,6 @@ public:
                                 nsTArray<uint16_t>& layerGlyphs,
                                 nsTArray<mozilla::gfx::Color>& layerColors);
 
-    virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
-        return true;
-    }
-    virtual bool SupportsLangGroup(nsIAtom *aLangGroup) const {
-        return true;
-    }
-
     // Access to raw font table data (needed for Harfbuzz):
     // returns a pointer to data owned by the fontEntry or the OS,
     // which will remain valid until the blob is destroyed.
@@ -762,6 +755,14 @@ public:
 
     void SetSkipSpaceFeatureCheck(bool aSkipCheck) {
         mSkipDefaultFeatureSpaceCheck = aSkipCheck;
+    }
+
+    virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
+        return true;
+    }
+
+    virtual bool SupportsLangGroup(nsIAtom *aLangGroup) const {
+        return true;
     }
 
 protected:
