@@ -1176,7 +1176,7 @@ body,
 
 .requests-list-network-summary-button > .summary-info-icon {
   background: url(chrome://devtools/skin/images/profiler-stopwatch.svg) no-repeat;
-  filter: var(--icon-filter);
+  filter: var(--theme-icon-filter);
   width: 16px;
   height: 16px;
   opacity: 0.8;

@@ -118,6 +118,6 @@
   height: 16px;
   vertical-align: sub;
   margin-inline-start: 5px;
-  filter: var(--icon-filter);
+  filter: var(--theme-icon-filter);
   opacity: 0.6;
 }
