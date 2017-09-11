@@ -4647,6 +4647,17 @@ HTMLMediaElement::GetCanPlay(const nsAString& aType,
     // demuxer can handle VP9 in fragmented MP4.
     return CANPLAY_NO;
   }
+  if (status == CANPLAY_YES &&
+      (*containerType).ExtendedType().Codecs().IsEmpty()) {
+    // Per spec: 'Generally, a user agent should never return "probably" for a
+    // type that allows the `codecs` parameter if that parameter is not present.'
+    // As all our currently-supported types allow for `codecs`, we can do this
+    // check here.
+    // TODO: Instead, missing `codecs` should be checked in each decoder's
+    // `IsSupportedType` call from `CanHandleCodecsType()`.
+    // See bug 1399023.
+    return CANPLAY_MAYBE;
+  }
   return status;
 }
 
@@ -4664,9 +4675,11 @@ HTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
   case CANPLAY_YES:
     aResult.AssignLiteral("probably");
     break;
-  default:
   case CANPLAY_MAYBE:
     aResult.AssignLiteral("maybe");
+    break;
+  default:
+    MOZ_ASSERT_UNREACHABLE("Unexpected case.");
     break;
   }
 
