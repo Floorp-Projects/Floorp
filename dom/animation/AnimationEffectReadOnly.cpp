@@ -183,7 +183,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   // Determine the 0-based index of the current iteration.
   // https://w3c.github.io/web-animations/#current-iteration
   result.mCurrentIteration =
-    IsInfinite(result.mIterations) &&
+    result.mIterations >= UINT64_MAX &&
       result.mPhase == ComputedTiming::AnimationPhase::After
     ? UINT64_MAX // In GetComputedTimingDictionary(),
                  // we will convert this into Infinity
