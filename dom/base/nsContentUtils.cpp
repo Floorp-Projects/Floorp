@@ -2523,7 +2523,7 @@ nsContentUtils::IsCallerContentXBL()
       return true;
     }
 
-    return xpc::IsContentXBLScope(c);
+    return xpc::IsContentXBLCompartment(c);
 }
 
 bool

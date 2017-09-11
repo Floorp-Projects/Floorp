@@ -178,6 +178,36 @@
  * If any API wants to retrieve a 'real inputStream when the migration is in
  * progress, that operation is stored in a pending queue and processed at the
  * end of the migration.
+ *
+ * IPCBlob and nsIAsyncInputStream
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ * IPCBlobInputStream is always async. If the remote inputStream is not async,
+ * IPCBlobInputStream will create a pipe stream around it in order to be
+ * consistently async.
+ *
+ * Slicing IPCBlob
+ * ~~~~~~~~~~~~~~~
+ *
+ * Normally, slicing a blob consists of the creation of a new Blob, with a
+ * SlicedInputStream() wrapping a clone of the original inputStream. But this
+ * approach is extremely inefficient with IPCBlob, because it could be that we
+ * wrap the pipe stream and not the remote inputStream (See the previous section
+ * of this documentation). If we end up doing so, also if the remote
+ * inputStream is seekable, the pipe will not be, and in order to reach the
+ * starting point, SlicedInputStream will do consecutive read()s.
+ *
+ * This problem is fixed implmenting nsICloneableWithRange in IPCBlobInputStream
+ * and using cloneWithRange() when a StreamBlobImpl is sliced. When the remote
+ * stream is received, it will be sliced directly.
+ *
+ * If we want to represent the hierarchy of the InputStream classes, instead
+ * of having: |SlicedInputStream(IPCBlobInputStream(Async Pipe(RemoteStream)))|,
+ * we have: |IPCBlobInputStream(Async Pipe(SlicedInputStream(RemoteStream)))|.
+ *
+ * When IPCBlobInputStream is serialized and sent to the parent process, start
+ * and range are sent too and SlicedInputStream is used in the parent side as
+ * well.
  */
 
 namespace mozilla {

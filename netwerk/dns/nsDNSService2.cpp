@@ -992,6 +992,11 @@ nsDNSService::ResolveNative(const nsACString        &aHostname,
                             const OriginAttributes  &aOriginAttributes,
                             nsIDNSRecord           **result)
 {
+    // Synchronous resolution is not available on the main thread.
+    if (NS_IsMainThread()) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     // grab reference to global host resolver and IDN service.  beware
     // simultaneous shutdown!!
     RefPtr<nsHostResolver> res;
