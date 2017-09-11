@@ -28,9 +28,15 @@ add_task(async function checkStateDuringPrefFlips() {
   gCustomizeMode.addToPanel(downloadsButton);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button shouldn't be hidden in the panel");
+  ok(!Services.prefs.getBoolPref(kDownloadAutoHidePref),
+     "Pref got set to false when the user moved the button");
   gCustomizeMode.addToToolbar(downloadsButton);
+  ok(!Services.prefs.getBoolPref(kDownloadAutoHidePref),
+     "Pref remains false when the user moved the button");
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, true);
   ok(downloadsButton.hasAttribute("hidden"),
-     "Button should be hidden again in the toolbar");
+     "Button should be hidden again in the toolbar " +
+     "now that we flipped the pref");
   Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button shouldn't be hidden with autohide turned off");
@@ -47,7 +53,9 @@ add_task(async function checkStateDuringPrefFlips() {
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should still not be hidden with autohide turned back on " +
      "because it's in the panel");
-  gCustomizeMode.addToToolbar(downloadsButton);
+  // Use CUI directly instead of the customize mode APIs,
+  // to avoid tripping the "automatically turn off autohide" code.
+  CustomizableUI.addWidgetToArea("downloads-button", "nav-bar");
   ok(downloadsButton.hasAttribute("hidden"),
      "Button should be hidden again in the toolbar");
   gCustomizeMode.removeFromArea(downloadsButton);
@@ -68,6 +76,11 @@ add_task(async function checkStateInCustomizeMode() {
   await promiseCustomizeStart();
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should be shown in customize mode.");
+  await promiseCustomizeEnd();
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden if it's in the toolbar " +
+     "after customize mode without any moves.");
+  await promiseCustomizeStart();
   gCustomizeMode.addToPanel(downloadsButton);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should be shown in customize mode when moved to the panel");
@@ -89,8 +102,9 @@ add_task(async function checkStateInCustomizeMode() {
   await promiseCustomizeStart();
   gCustomizeMode.addToToolbar(downloadsButton);
   await promiseCustomizeEnd();
-  ok(downloadsButton.hasAttribute("hidden"),
-     "Button should be hidden if it's in the toolbar after customize mode.");
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the toolbar after " +
+     "customize mode because we moved it.");
   await promiseCustomizeStart();
   await gCustomizeMode.reset();
   ok(!downloadsButton.hasAttribute("hidden"),
@@ -124,13 +138,16 @@ add_task(async function checkStateInCustomizeModeMultipleWindows() {
   ok(otherDownloadsButton.hasAttribute("hidden"),
      "Button should be hidden in the other window.");
 
-  gCustomizeMode.addToPanel(downloadsButton);
+  // Use CUI directly instead of the customize mode APIs,
+  // to avoid tripping the "automatically turn off autohide" code.
+  CustomizableUI.addWidgetToArea("downloads-button",
+                                 CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should still be shown in customize mode.");
   ok(!otherDownloadsButton.hasAttribute("hidden"),
      "Button should be shown in the other window too because it's in a panel.");
 
-  gCustomizeMode.addToToolbar(downloadsButton);
+  CustomizableUI.addWidgetToArea("downloads-button", CustomizableUI.AREA_NAVBAR);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should still be shown in customize mode.");
   ok(otherDownloadsButton.hasAttribute("hidden"),
@@ -156,6 +173,8 @@ add_task(async function checkStateInCustomizeModeMultipleWindows() {
      "Button should be shown in the other window too because it's in a panel.");
 
   gCustomizeMode.removeFromArea(downloadsButton);
+  ok(!Services.prefs.getBoolPref(kDownloadAutoHidePref),
+     "Autohide pref turned off by moving the button");
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should still be shown in customize mode.");
   // Don't need to assert in the other window - button is gone there.
