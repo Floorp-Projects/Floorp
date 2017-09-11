@@ -31,8 +31,7 @@ bool
 BinTokenReaderTester::raiseError(const char* description)
 {
     MOZ_ASSERT(!cx_->isExceptionPending());
-    TokenPos pos;
-    latestTokenPos(pos);
+    TokenPos pos = this->pos();
     JS_ReportErrorASCII(cx_, "BinAST parsing error: %s at offsets %u => %u",
                         description, pos.begin, pos.end);
     return false;
@@ -416,12 +415,20 @@ BinTokenReaderTester::offset() const
     return latestKnownGoodPos_;
 }
 
-void
-BinTokenReaderTester::latestTokenPos(TokenPos& pos)
+TokenPos
+BinTokenReaderTester::pos()
 {
-    pos.begin = latestKnownGoodPos_;
+    return pos(latestKnownGoodPos_);
+}
+
+TokenPos
+BinTokenReaderTester::pos(size_t start)
+{
+    TokenPos pos;
+    pos.begin = start;
     pos.end = current_ - start_;
     MOZ_ASSERT(pos.end >= pos.begin);
+    return pos;
 }
 
 void
