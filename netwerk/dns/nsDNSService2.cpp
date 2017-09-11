@@ -992,6 +992,29 @@ nsDNSService::ResolveNative(const nsACString        &aHostname,
                             const OriginAttributes  &aOriginAttributes,
                             nsIDNSRecord           **result)
 {
+    // Synchronous resolution is not available on the main thread.
+    if (NS_IsMainThread()) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    return ResolveInternal(aHostname, flags, aOriginAttributes, result);
+}
+
+nsresult
+nsDNSService::DeprecatedSyncResolve(const nsACString        &aHostname,
+                                    uint32_t                 flags,
+                                    const OriginAttributes  &aOriginAttributes,
+                                    nsIDNSRecord           **result)
+{
+    return ResolveInternal(aHostname, flags, aOriginAttributes, result);
+}
+
+nsresult
+nsDNSService::ResolveInternal(const nsACString        &aHostname,
+                              uint32_t                 flags,
+                              const OriginAttributes  &aOriginAttributes,
+                              nsIDNSRecord           **result)
+{
     // grab reference to global host resolver and IDN service.  beware
     // simultaneous shutdown!!
     RefPtr<nsHostResolver> res;
