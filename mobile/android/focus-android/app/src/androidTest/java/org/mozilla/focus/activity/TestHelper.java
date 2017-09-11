@@ -136,10 +136,10 @@ public final class TestHelper {
             .resourceId("org.mozilla.focus.debug:id/add_to_homescreen")
             .enabled(true));
     static UiObject AddtoHSCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("android:id/button2")
+            .resourceId("org.mozilla.focus.debug:id/addtohomescreen_dialog_cancel")
             .enabled(true));
     static UiObject AddtoHSOKBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("android:id/button1")
+            .resourceId("org.mozilla.focus.debug:id/addtohomescreen_dialog_add")
             .enabled(true));
     static UiObject shortcutTitle = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/edit_title")
