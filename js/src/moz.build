@@ -647,7 +647,10 @@ if CONFIG['JS_BUILD_BINAST']:
     # specification:
     UNIFIED_SOURCES += ['frontend/BinTokenReaderTester.cpp']
     # The rest of BinAST should eventually move to release.
-    UNIFIED_SOURCES += ['frontend/BinToken.cpp']
+    UNIFIED_SOURCES += [
+        'frontend/BinSource.cpp',
+        'frontend/BinToken.cpp'
+    ]
 
 # Wasm code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64
 # so that it is easy to use the huge-mapping optimization for other
