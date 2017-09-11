@@ -29,18 +29,22 @@ import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.HorizontalScrollView;
 
 import org.mozilla.gecko.switchboard.SwitchBoard;
+import org.mozilla.gecko.widget.themed.ThemedView;
 
 /**
 * {@code ToolbarDisplayLayout} is the UI for when the toolbar is in
@@ -58,8 +62,10 @@ import org.mozilla.gecko.switchboard.SwitchBoard;
 * which is the main event bus for the toolbar subsystem.
 */
 public class ToolbarDisplayLayout extends ThemedLinearLayout {
-
     private static final String LOGTAG = "GeckoToolbarDisplayLayout";
+
+    private static final int MIN_DOMAIN_SCROLL_MARGIN_DP = 10;
+
     private boolean mTrackingProtectionEnabled;
 
     // To be used with updateFromTab() to allow the caller
@@ -97,7 +103,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private boolean mIsAttached;
 
     private final ThemedTextView mTitle;
+    private final ThemedView mTitleBackground;
     private final int mTitlePadding;
+    private final HorizontalScrollView mTitleScroll;
+    private final int mMinUrlScrollMargin;
     private ToolbarPrefs mPrefs;
     private OnTitleChangeListener mTitleChangeListener;
 
@@ -141,7 +150,28 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         LayoutInflater.from(context).inflate(R.layout.toolbar_display_layout, this);
 
         mTitle = (ThemedTextView) findViewById(R.id.url_bar_title);
+        mTitleBackground = (ThemedView) findViewById(R.id.url_bar_title_bg);
         mTitlePadding = mTitle.getPaddingRight();
+        mTitleScroll = (HorizontalScrollView) findViewById(R.id.url_bar_title_scroll_view);
+
+        final OnLayoutChangeListener resizeListener = new OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                final int oldWidth = oldRight - oldLeft;
+                final int newWidth = right - left;
+
+                if (newWidth != oldWidth) {
+                    scrollTitle();
+                }
+            }
+        };
+        mTitle.addTextChangedListener(new TextChangeListener());
+        mTitle.addOnLayoutChangeListener(resizeListener);
+        mTitleScroll.addOnLayoutChangeListener(resizeListener);
+
+        mMinUrlScrollMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                                                              MIN_DOMAIN_SCROLL_MARGIN_DP,
+                                                              getResources().getDisplayMetrics());
 
         mUrlColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_urltext));
         mPrivateUrlColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_urltext_private));
@@ -168,6 +198,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mSiteSecurity.setPrivateMode(isPrivate);
         mStop.setPrivateMode(isPrivate);
         mPageActionLayout.setPrivateMode(isPrivate);
+        mTitle.setPrivateMode(isPrivate);
+        mTitleBackground.setPrivateMode(isPrivate);
     }
 
     @Override
@@ -245,6 +277,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
         if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
             mTitle.setPrivateMode(tab.isPrivate());
+            mTitleBackground.setPrivateMode(tab.isPrivate());
         }
     }
 
@@ -392,6 +425,53 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
     }
 
+    private void scrollTitle() {
+        final Editable text = mTitle.getEditableText();
+        final int textViewWidth = mTitle.getWidth();
+        final int textWidth = textViewWidth - mTitlePadding;
+        final int scrollViewWidth = mTitleScroll.getWidth();
+        if (textWidth <= scrollViewWidth) {
+            // The text fits within the ScrollView, so nothing to do here...
+            if (textViewWidth > scrollViewWidth) {
+                // ... although if the TextView is sufficiently padded on the right side, it might
+                // push the text out of view on the left side, so scroll to the beginning just to be
+                // on the safe side.
+                mTitleScroll.scrollTo(0, 0);
+            }
+            return;
+        }
+
+        final ForegroundColorSpan spanToCheck =
+                mTitle.isPrivateMode() ? mPrivateDomainColorSpan : mDomainColorSpan;
+        int domainEnd = text.getSpanEnd(spanToCheck);
+        if (domainEnd == -1) {
+            // We're not showing a domain, just scroll to the start of the text.
+            mTitleScroll.scrollTo(0, 0);
+            return;
+        }
+
+        // If we're showing an URL that is larger than the URL bar, we want to align the end of
+        // the domain part with the right side of URL bar, so as to put the focus on the base
+        // domain and avoid phishing attacks using long subdomains that have been crafted to be cut
+        // off at just the right place and then resemble a legitimate base domain.
+        final int domainTextWidth = StringUtils.getTextWidth(text.toString(), 0, domainEnd, mTitle.getPaint());
+        final int overhang = textViewWidth - domainTextWidth;
+        // For optimal alignment, we want to take the fadingEdge into account and align the domain
+        // with the start of the fade out.
+        final int maxFadingEdge = mTitleScroll.getHorizontalFadingEdgeLength();
+
+        // The width of the fadingEdge corresponds to the width of the child view that is overhanging
+        // the ScrollView, clamped by maxFadingEdge.
+        int targetMargin = overhang / 2;
+        targetMargin = Math.min(targetMargin, maxFadingEdge);
+        // Even when there is no fadingEdge, we want to keep a little margin between the domain and
+        // the end of the URL bar, so as to show the first character or so of the path part.
+        targetMargin = Math.max(targetMargin, mMinUrlScrollMargin);
+
+        final int scrollTarget = domainTextWidth + targetMargin - scrollViewWidth;
+        mTitleScroll.scrollTo(scrollTarget, 0);
+    }
+
     private void updateProgress(@NonNull Tab tab) {
         final boolean shouldShowThrobber = tab.getState() == Tab.STATE_LOADING;
 
@@ -475,5 +555,18 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
     void destroy() {
         mSiteIdentityPopup.destroy();
+    }
+
+    private class TextChangeListener implements TextWatcher {
+        @Override
+        public void afterTextChanged(Editable text) {
+            scrollTitle();
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) { }
     }
 }

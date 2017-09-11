@@ -3,7 +3,7 @@
 <head>
   <script>
   var res = {};
-  var request = indexedDB.open(parent.location, 2);
+  var request = indexedDB.open(opener.location, 2);
   request.onblocked = function() {
     res.blockedFired = true;
   }
@@ -17,7 +17,7 @@
       res.value = JSON.stringify(e.target.result);
     }
     trans.oncomplete = function() {
-      parent.postMessage(JSON.stringify(res), "http://mochi.test:8888");
+      opener.postMessage(JSON.stringify(res), "http://mochi.test:8888");
     }
   };
 

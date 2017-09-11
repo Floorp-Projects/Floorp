@@ -503,6 +503,22 @@ IMEHandler::AssociateIMEContext(nsWindowBase* aWindowBase, bool aEnable)
 void
 IMEHandler::InitInputContext(nsWindow* aWindow, InputContext& aInputContext)
 {
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->GetWindowHandle(),
+             "IMEHandler::SetInputContext() requires non-nullptr HWND");
+
+  static bool sInitialized = false;
+  if (!sInitialized) {
+    sInitialized = true;
+    // Some TIPs like QQ Input (Simplified Chinese) may need normal window
+    // (i.e., windows except message window) when initializing themselves.
+    // Therefore, we need to initialize TSF/IMM modules after first normal
+    // window is created.  InitInputContext() should be called immediately
+    // after creating each normal window, so, here is a good place to
+    // initialize these modules.
+    Initialize();
+  }
+
   // For a11y, the default enabled state should be 'enabled'.
   aInputContext.mIMEState.mEnabled = IMEState::ENABLED;
 
