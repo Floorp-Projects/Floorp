@@ -150,6 +150,10 @@ def HostRustLibrary(name, features=None):
 def DisableStlWrapping():
     COMPILE_FLAGS['STL'] = []
 
+@template
+def NoVisibilityFlags():
+    COMPILE_FLAGS['VISIBILITY'] = []
+
 
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')
