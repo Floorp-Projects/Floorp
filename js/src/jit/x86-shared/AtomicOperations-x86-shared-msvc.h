@@ -340,66 +340,20 @@ inline T
 js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 {
     MOZ_ASSERT(tier1Constraints(addr));
+    // This is also appropriate for double, int64, and uint64 on 32-bit
+    // platforms since there are no guarantees of access-atomicity.
     return *addr;
 }
-
-#ifdef _M_IX86
-# define MSC_RACYLOADOP(T)                        \
-    template<>                                    \
-    inline T                                      \
-    AtomicOperations::loadSafeWhenRacy(T* addr) { \
-        MOZ_ASSERT(tier1Constraints(addr));       \
-        return (T)_InterlockedCompareExchange64((__int64 volatile*)addr, 0, 0); \
-    }
-
-namespace js { namespace jit {
-
-// For double and float there are no access-atomicity guarantees so go directly
-// to the default implementation.
-MSC_RACYLOADOP(int64_t)
-MSC_RACYLOADOP(uint64_t)
-
-} }
-
-# undef MSC_RACYLOADOP
-#endif // _M_IX86
 
 template<typename T>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 {
     MOZ_ASSERT(tier1Constraints(addr));
+    // This is also appropriate for double, int64, and uint64 on 32-bit
+    // platforms since there are no guarantees of access-atomicity.
     *addr = val;
 }
-
-#ifdef _M_IX86
-namespace js { namespace jit {
-
-# define MSC_RACYSTOREOP(T)                               \
-    template<>                                            \
-    inline void                                           \
-    AtomicOperations::storeSafeWhenRacy(T* addr, T val) { \
-        MOZ_ASSERT(tier1Constraints(addr));               \
-        T oldval = *addr;                                 \
-        for (;;) {                                        \
-            T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr, \
-                                                         (__int64)val,            \
-                                                         (__int64)oldval);        \
-            if (nextval == oldval)                        \
-                break;                                    \
-            oldval = nextval;                             \
-        }                                                 \
-    }
-
-// For double and float there are no access-atomicity guarantees so go directly
-// to the default implementation.
-MSC_RACYSTOREOP(int64_t)
-MSC_RACYSTOREOP(uint64_t)
-
-# undef MSC_STOREOP
-
-} }
-#endif // _M_IX86
 
 inline void
 js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes)
