@@ -3269,9 +3269,9 @@ DefineStaticJSVals(JSContext* cx);
 } // namespace mozilla
 
 bool
-xpc_LocalizeContext(JSContext* cx);
+xpc_LocalizeRuntime(JSRuntime* rt);
 void
-xpc_DelocalizeContext(JSContext* cx);
+xpc_DelocalizeRuntime(JSRuntime* rt);
 
 /***************************************************************************/
 // Inlines use the above - include last.
