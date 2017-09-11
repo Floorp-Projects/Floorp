@@ -6,8 +6,9 @@
 <!-- We disable AlwaysShowAction because we interpret the menu
      attributes ourselves and thus the warning isn't relevant to us. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:tools="http://schemas.android.com/tools"
-      tools:ignore="AlwaysShowAction">
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
+    tools:ignore="AlwaysShowAction">
 
     <item android:id="@+id/back"
           android:icon="@drawable/ic_menu_back"
@@ -55,6 +56,7 @@
 
     <item android:id="@+id/addons_top_level"
           android:title="@string/addons"
+          gecko:itemType="icon_menu_item"
           android:visible="false" />
 
     <item android:id="@+id/page"
