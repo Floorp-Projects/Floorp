@@ -171,7 +171,6 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
     if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
                                                         mUVSOffset,
                                                         symbolFont))) {
-        mSymbolFont = symbolFont;
         rv = NS_OK;
     } else {
         uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
@@ -184,7 +183,6 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
                                         *charmap, mUVSOffset,
                                         unicodeFont, symbolFont);
         }
-        mSymbolFont = symbolFont;
     }
 
     mHasCmapTable = NS_SUCCEEDED(rv);
@@ -211,14 +209,6 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
     }
 
     return rv;
-}
-
-bool
-GDIFontEntry::IsSymbolFont()
-{
-    // initialize cmap first
-    HasCmapTable();
-    return mSymbolFont;  
 }
 
 gfxFont *

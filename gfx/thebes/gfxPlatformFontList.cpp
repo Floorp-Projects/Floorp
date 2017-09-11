@@ -483,24 +483,8 @@ gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
 {
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
         RefPtr<gfxFontFamily>& family = iter.Data();
-        // use the first variation for now.  This data should be the same
-        // for all the variations and should probably be moved up to
-        // the Family
-        gfxFontStyle style;
-        style.language = aLangGroup;
-        bool needsBold;
-        RefPtr<gfxFontEntry> fontEntry = family->FindFontForStyle(style, needsBold);
-        NS_ASSERTION(fontEntry, "couldn't find any font entry in family");
-        if (!fontEntry) {
-            continue;
-        }
-
-        /* skip symbol fonts */
-        if (fontEntry->IsSymbolFont()) {
-            continue;
-        }
-
-        if (family->SupportsLangGroup(aLangGroup) &&
+        if (!family->IsSymbolFontFamily() &&
+            family->SupportsLangGroup(aLangGroup) &&
             family->MatchesGenericFamily(aGenericFamily)) {
             nsAutoString localizedFamilyName;
             family->LocalizedName(localizedFamilyName);
