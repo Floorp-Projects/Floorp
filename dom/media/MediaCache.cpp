@@ -450,7 +450,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
                                    bool aIsPrivateBrowsing)
   : mMediaCache(nullptr)
   , mClient(aClient)
-  , mHasHadUpdate(false)
   , mClosed(false)
   , mDidNotifyDataEnded(false)
   , mResourceID(0)
@@ -1426,7 +1425,6 @@ MediaCache::Update()
     default:
       break;
     }
-    stream->mHasHadUpdate = true;
   }
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
@@ -2536,10 +2534,7 @@ nsresult
 MediaCacheStream::Init(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (mMediaCache) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(!mMediaCache, "Has been initialized.");
 
   if (aContentLength > 0) {
     uint32_t length = uint32_t(std::min(aContentLength, int64_t(UINT32_MAX)));
@@ -2561,17 +2556,13 @@ MediaCacheStream::Init(int64_t aContentLength)
   return NS_OK;
 }
 
-nsresult
+void
 MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
 {
-  if (!aOriginal->IsAvailableForSharing())
-    return NS_ERROR_FAILURE;
+  MOZ_ASSERT(aOriginal->IsAvailableForSharing());
+  MOZ_ASSERT(!mMediaCache, "Has been initialized.");
+  MOZ_ASSERT(aOriginal->mMediaCache, "Don't clone an uninitialized stream.");
 
-  if (mMediaCache) {
-    return NS_OK;
-  }
-
-  NS_ASSERTION(aOriginal->mMediaCache, "Don't clone an uninitialized stream");
   // Use the same MediaCache as our clone.
   mMediaCache = aOriginal->mMediaCache;
 
@@ -2609,8 +2600,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
     // stream offset is zero
     mMediaCache->AddBlockOwnerAsReadahead(cacheBlockIndex, this, i);
   }
-
-  return NS_OK;
 }
 
 nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
