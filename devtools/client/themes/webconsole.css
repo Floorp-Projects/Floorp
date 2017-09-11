@@ -787,6 +787,8 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-filterbar-primary .filter-checkbox {
   flex-shrink: 0;
   margin: 0 3px;
+  display: flex;
+  align-items: center;
 }
 
 .webconsole-filterbar-secondary .devtools-separator {
