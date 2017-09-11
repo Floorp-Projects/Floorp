@@ -13674,5 +13674,16 @@
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
     "description": "The amount of time spent(ms) of a session for viewing content in OpenVR."
+  },
+  "FORM_FILLING_REQUIRED_TIME_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["autofill@lists.mozilla.org", "jcheng@mozilla.com", "chsiang@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 300000,
+    "n_buckets": 22,
+    "keyed": true,
+    "bug_numbers": [1341569],
+    "description": "Milliseconds between starting to fill an autofill-eligible form field and submitting the form, keyed by the combination of form type and filling type."
   }
 }
