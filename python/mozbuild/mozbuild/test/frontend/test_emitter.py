@@ -77,6 +77,9 @@ class TestEmitterBasic(unittest.TestCase):
             BIN_SUFFIX='.prog',
             OS_TARGET='WINNT',
             COMPILE_ENVIRONMENT='1',
+            STL_FLAGS=['-I/path/to/topobjdir/dist/stl_wrappers'],
+            VISIBILITY_FLAGS=['-include',
+                              '$(topsrcdir)/config/gcc_hidden.h'],
         )
         if extra_substs:
             substs.update(extra_substs)
@@ -182,7 +185,6 @@ class TestEmitterBasic(unittest.TestCase):
         wanted = {
             'ALLOW_COMPILER_WARNINGS': True,
             'NO_DIST_INSTALL': True,
-            'VISIBILITY_FLAGS': '',
             'RCFILE': 'foo.rc',
             'RESFILE': 'bar.res',
             'RCINCLUDE': 'bar.rc',
@@ -204,11 +206,11 @@ class TestEmitterBasic(unittest.TestCase):
         self.maxDiff = maxDiff
 
     def test_compile_flags(self):
-        reader = self.reader('compile-flags',
-                             extra_substs={'STL_FLAGS': ['-I/path/to/objdir/dist/stl_wrappers']})
+        reader = self.reader('compile-flags')
         sources, flags, lib = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['STL'], reader.config.substs['STL_FLAGS'])
+        self.assertEqual(flags.flags['VISIBILITY'], reader.config.substs['VISIBILITY_FLAGS'])
 
     def test_compile_flags_validation(self):
         reader = self.reader('compile-flags-field-validation')
@@ -221,13 +223,17 @@ class TestEmitterBasic(unittest.TestCase):
                                      'A list of strings must be provided'):
             self.read_topsrcdir(reader)
 
-
     def test_disable_stl_wrapping(self):
-        reader = self.reader('disable-stl-wrapping',
-                             extra_substs={'STL_FLAGS': ['-I/path/to/objdir/dist/stl_wrappers']})
+        reader = self.reader('disable-stl-wrapping')
         sources, flags, lib = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['STL'], [])
+
+    def test_visibility_flags(self):
+        reader = self.reader('visibility-flags')
+        sources, flags, lib = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['VISIBILITY'], [])
 
     def test_use_yasm(self):
         # When yasm is not available, this should raise.

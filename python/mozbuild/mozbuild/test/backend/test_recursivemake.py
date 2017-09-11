@@ -319,9 +319,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'ALLOW_COMPILER_WARNINGS': [
                 'ALLOW_COMPILER_WARNINGS := 1',
             ],
-            'VISIBILITY_FLAGS': [
-                'VISIBILITY_FLAGS :=',
-            ],
             'RCFILE': [
                 'RCFILE := foo.rc',
             ],

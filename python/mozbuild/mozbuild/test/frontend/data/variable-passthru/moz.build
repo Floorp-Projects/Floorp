@@ -4,8 +4,6 @@
 
 DIST_INSTALL = False
 
-NO_VISIBILITY_FLAGS = True
-
 DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']
 
 RCFILE = 'foo.rc'
