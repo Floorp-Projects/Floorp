@@ -746,7 +746,13 @@ function test_image_dataTransfer() {
   }
 }
 
-SimpleTest.waitForFocus(doTests);
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({
+    // NOTE: These tests operate under the assumption that the protected mode of
+    // DataTransfer is enabled.
+    "set": [["dom.events.dataTransfer.protected.enabled", true]]
+  }, doTests);
+});
 
 </script>
 </pre>
