@@ -25,6 +25,9 @@ function test() {
       ok(a.isCompatible, a.type + " " + a.name + " " + a.version + " should be compatible");
       allCompatible = allCompatible && a.isCompatible;
     }
+    // Add a reminder.
+    if (!allCompatible)
+      ok(false, "As this test failed, test browser_bug557956.js should have failed, too.");
 
     finish();
   });
