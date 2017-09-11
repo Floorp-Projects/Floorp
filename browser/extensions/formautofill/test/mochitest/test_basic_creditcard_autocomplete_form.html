@@ -19,8 +19,6 @@ Form autofill test: simple form credit card autofill
 
 "use strict";
 
-const {FormAutofillUtils} = SpecialPowers.Cu.import("resource://formautofill/FormAutofillUtils.jsm");
-
 const MOCK_STORAGE = [{
   "cc-name": "John Doe",
   "cc-number": "1234567812345678",
@@ -37,14 +35,6 @@ const reducedMockRecord = {
   "cc-name": "John Doe",
   "cc-number": "1234123456785678",
 };
-
-function patchRecordCCNumber(record) {
-  const ccNumber = record["cc-number"];
-  const normalizedCCNumber = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
-  const ccNumberFmt = FormAutofillUtils.fmtMaskedCreditCardLabel(normalizedCCNumber);
-
-  return Object.assign({}, record, {ccNumberFmt});
-}
 
 function checkElementFilled(element, expectedvalue) {
   const focusedElem = document.activeElement;
