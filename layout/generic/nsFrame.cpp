@@ -2455,7 +2455,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
             &untransformedDirtyRect)) {
         dirtyRect = untransformedDirtyRect;
       } else {
-        NS_WARNING("Unable to untransform dirty rect!");
         // This should only happen if the transform is singular, in which case nothing is visible anyway
         dirtyRect.SetEmpty();
       }

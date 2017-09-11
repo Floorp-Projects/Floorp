@@ -30,6 +30,7 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   yield testResizingViewport(ui, true, false);
   yield testEnableTouchSimulation(ui);
   yield testResizingViewport(ui, false, true);
+  yield testDisableTouchSimulation(ui);
 });
 
 function* waitStartup(ui) {
@@ -56,22 +57,32 @@ function* testChangingDevice(ui) {
   testViewportDeviceSelectLabel(ui, testDevice.name);
 }
 
-function* testResizingViewport(ui, device, expected) {
-  info(`Test resizing the viewport, device ${device}, expected ${expected}`);
+function* testResizingViewport(ui, device, touch) {
+  info(`Test resizing the viewport, device ${device}, touch ${touch}`);
 
-  let deviceRemoved = once(ui, "device-removed");
+  let deviceRemoved;
+  if (device) {
+    deviceRemoved = once(ui, "device-removed");
+  }
   yield testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
   if (device) {
     yield deviceRemoved;
   }
-  yield testTouchEventsOverride(ui, expected);
+  yield testTouchEventsOverride(ui, touch);
   testViewportDeviceSelectLabel(ui, "no device selected");
 }
 
 function* testEnableTouchSimulation(ui) {
   info("Test enabling touch simulation via button");
 
-  yield enableTouchSimulation(ui);
+  yield toggleTouchSimulation(ui);
   yield testTouchEventsOverride(ui, true);
+}
+
+function* testDisableTouchSimulation(ui) {
+  info("Test disabling touch simulation via button");
+
+  yield toggleTouchSimulation(ui);
+  yield testTouchEventsOverride(ui, false);
 }
