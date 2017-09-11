@@ -10,9 +10,6 @@ Cu.import("resource://services-sync/service.js");
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
-let engine;
-let store;
-
 // Record borrowed from Bug 631361.
 const record631361 = {
   id: "M5bwUKK8hPyF",
@@ -66,12 +63,13 @@ add_task(async function setup() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.Store.Bookmarks").level  = Log.Level.Trace;
-
-  engine = Service.engineManager.get("bookmarks");
-  store = engine._store;
 });
 
 add_task(async function test_livemark_descriptions() {
+  let engine = new BookmarksEngine(Service);
+  await engine.initialize();
+  let store = engine._store;
+
   let record = record631361.payload;
 
   async function doRecord(r) {
@@ -91,9 +89,15 @@ add_task(async function test_livemark_descriptions() {
   let id = await store.idForGUID(record.id);
   PlacesUtils.annotations.setItemAnnotation(id, DESCRIPTION_ANNO, "", 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);
+
+  await engine.finalize();
 });
 
 add_task(async function test_livemark_invalid() {
+  let engine = new BookmarksEngine(Service);
+  await engine.initialize();
+  let store = engine._store;
+
   _("Livemarks considered invalid by nsLivemarkService are skipped.");
 
   _("Parent is unknown. Will be set to unfiled.");
@@ -121,4 +125,6 @@ add_task(async function test_livemark_invalid() {
   await store.create(lmParentRec);
   // No exception, but no creation occurs.
   do_check_eq(-1, (await store.idForGUID(lmParentRec.id, true)));
+
+  await engine.finalize();
 });
