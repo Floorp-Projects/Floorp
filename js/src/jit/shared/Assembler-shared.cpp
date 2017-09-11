@@ -4,37 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/IonCaches.h"
-
-#include "mozilla/TemplateLib.h"
-
-#include "jstypes.h"
-
-#include "builtin/TypedObject.h"
-#include "jit/BaselineIC.h"
-#include "jit/Ion.h"
-#include "jit/JitcodeMap.h"
-#include "jit/JitSpewer.h"
-#include "jit/Linker.h"
-#include "jit/Lowering.h"
-#ifdef JS_ION_PERF
-# include "jit/PerfSpewer.h"
-#endif
-#include "jit/VMFunctions.h"
-#include "js/Proxy.h"
-#include "proxy/Proxy.h"
-#include "vm/Shape.h"
-#include "vm/Stack.h"
+#include "jit/shared/Assembler-shared.h"
 
 #include "jit/MacroAssembler-inl.h"
-#include "jit/shared/Lowering-shared-inl.h"
-#include "vm/Interpreter-inl.h"
-#include "vm/Shape-inl.h"
 
-using namespace js;
 using namespace js::jit;
-
-using mozilla::tl::FloorLog2;
 
 void
 CodeLocationJump::repoint(JitCode* code, MacroAssembler* masm)

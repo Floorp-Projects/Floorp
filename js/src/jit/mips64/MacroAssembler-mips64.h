@@ -9,7 +9,6 @@
 
 #include "jsopcode.h"
 
-#include "jit/IonCaches.h"
 #include "jit/JitFrames.h"
 #include "jit/mips-shared/MacroAssembler-mips-shared.h"
 #include "jit/MoveResolver.h"

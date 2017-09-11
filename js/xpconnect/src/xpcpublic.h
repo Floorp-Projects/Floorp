@@ -77,7 +77,8 @@ private:
 JSObject*
 TransplantObject(JSContext* cx, JS::HandleObject origobj, JS::HandleObject target);
 
-bool IsContentXBLScope(JSCompartment* compartment);
+bool IsContentXBLCompartment(JSCompartment* compartment);
+bool IsContentXBLScope(JS::Realm* realm);
 bool IsInContentXBLScope(JSObject* obj);
 
 // Return a raw XBL scope object corresponding to contentScope, which must
@@ -127,6 +128,9 @@ UseContentXBLScope(JSCompartment* c);
 // force creation of a new one if one is needed again.
 void
 ClearContentXBLScope(JSObject* global);
+
+bool
+IsAddonCompartment(JSCompartment* c);
 
 bool
 IsInAddonScope(JSObject* obj);

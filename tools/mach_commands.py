@@ -182,8 +182,6 @@ class FormatProvider(MachCommandBase):
         fmt = plat.lower() + "/clang-format-5.0"
         fmt_diff = "clang-format-diff-5.0"
 
-        # We are currently using an unmodified snapshot of upstream clang-format.
-        # This is a temporary work around until clang 5.0 has been released with our changes.
         if plat == "Windows":
             fmt += ".exe"
         else:
