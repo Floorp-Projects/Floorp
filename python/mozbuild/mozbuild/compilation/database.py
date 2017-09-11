@@ -71,7 +71,7 @@ class CompileDBBackend(CommonBackend):
 
         if isinstance(obj, DirectoryTraversal):
             self._envs[obj.objdir] = obj.config
-            for var in ('VISIBILITY_FLAGS', 'WARNINGS_AS_ERRORS'):
+            for var in ('WARNINGS_AS_ERRORS',):
                 value = obj.config.substs.get(var)
                 if value:
                     self._local_flags[obj.objdir][var] = value
@@ -103,7 +103,7 @@ class CompileDBBackend(CommonBackend):
                 self._gyp_dirs.add(obj.objdir)
             for var in ('MOZBUILD_CFLAGS', 'MOZBUILD_CXXFLAGS',
                         'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS',
-                        'RTL_FLAGS', 'VISIBILITY_FLAGS'):
+                        'RTL_FLAGS'):
                 if var in obj.variables:
                     self._local_flags[obj.objdir][var] = obj.variables[var]
             if (obj.variables.get('ALLOW_COMPILER_WARNINGS') and
@@ -236,11 +236,9 @@ class CompileDBBackend(CommonBackend):
                 value = value.split()
             db.extend(value)
 
-        if canonical_suffix in ('.mm', '.cpp'):
-            db.append('$(COMPUTED_CXXFLAGS)')
+        db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
         db.extend((
-            '$(VISIBILITY_FLAGS)',
             '$(DEFINES)',
             '-I%s' % mozpath.join(cenv.topsrcdir, reldir),
             '-I%s' % objdir,

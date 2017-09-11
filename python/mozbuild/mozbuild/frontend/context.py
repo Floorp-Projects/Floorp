@@ -301,6 +301,8 @@ class CompileFlags(ContextDerivedValue, dict):
     def __init__(self, context):
         self.flag_variables = (
             ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
+            ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 

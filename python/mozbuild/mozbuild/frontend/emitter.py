@@ -935,10 +935,6 @@ class TreeMetadataEmitter(LoggingMixin):
             if v in context and context[v]:
                 passthru.variables['MOZBUILD_' + v] = context[v]
 
-        # NO_VISIBILITY_FLAGS is slightly different
-        if context['NO_VISIBILITY_FLAGS']:
-            passthru.variables['VISIBILITY_FLAGS'] = ''
-
         if isinstance(context, TemplateContext) and context.template == 'Gyp':
             passthru.variables['IS_GYP_DIR'] = True
 
