@@ -1,0 +1,3 @@
+== green.html red.html
+!= green.html green.html
+!= red.html red.html
