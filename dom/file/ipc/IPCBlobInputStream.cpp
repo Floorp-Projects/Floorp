@@ -156,7 +156,7 @@ IPCBlobInputStream::Available(uint64_t* aLength)
   }
 
   if (mState == eRunning) {
-    MOZ_ASSERT(mRemoteStream);
+    MOZ_ASSERT(mRemoteStream || mAsyncRemoteStream);
 
     // This will go away eventually: an async input stream can return 0 in
     // Available(), but this is not currently fully supported in the rest of
@@ -188,7 +188,7 @@ IPCBlobInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
   }
 
   if (mState == eRunning) {
-    MOZ_ASSERT(mRemoteStream);
+    MOZ_ASSERT(mRemoteStream || mAsyncRemoteStream);
 
     nsresult rv = EnsureAsyncRemoteStream();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -213,7 +213,7 @@ IPCBlobInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
   }
 
   if (mState == eRunning) {
-    MOZ_ASSERT(mRemoteStream);
+    MOZ_ASSERT(mRemoteStream || mAsyncRemoteStream);
 
     nsresult rv = EnsureAsyncRemoteStream();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -391,7 +391,7 @@ IPCBlobInputStream::MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCal
                                                     nsIEventTarget* aCallbackEventTarget)
 {
   MOZ_ASSERT(mState == eRunning);
-  MOZ_ASSERT(mRemoteStream);
+  MOZ_ASSERT(mRemoteStream || mAsyncRemoteStream);
 
   // If the callback has been already set, we return an error.
   if (mInputStreamCallback && aCallback) {
@@ -549,13 +549,13 @@ IPCBlobInputStream::GetFileDescriptor(PRFileDesc** aRetval)
 nsresult
 IPCBlobInputStream::EnsureAsyncRemoteStream()
 {
-  if (!mRemoteStream) {
-    return NS_ERROR_FAILURE;
-  }
-
   // We already have an async remote stream.
   if (mAsyncRemoteStream) {
     return NS_OK;
+  }
+
+  if (!mRemoteStream) {
+    return NS_ERROR_FAILURE;
   }
 
   // If the stream is blocking, we want to make it unblocking using a pipe.
@@ -597,6 +597,7 @@ IPCBlobInputStream::EnsureAsyncRemoteStream()
 
   MOZ_ASSERT(asyncStream);
   mAsyncRemoteStream = asyncStream;
+  mRemoteStream = nullptr;
 
   return NS_OK;
 
