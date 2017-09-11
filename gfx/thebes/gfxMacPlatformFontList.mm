@@ -152,11 +152,9 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
     RefPtr<gfxCharacterMap> charmap;
     nsresult rv;
-    bool symbolFont = false; // currently ignored
 
     if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
-                                                        mUVSOffset,
-                                                        symbolFont))) {
+                                                        mUVSOffset))) {
         rv = NS_OK;
     } else {
         uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
@@ -164,14 +162,12 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         AutoTable cmapTable(this, kCMAP);
 
         if (cmapTable) {
-            bool unicodeFont = false; // currently ignored
             uint32_t cmapLen;
             const uint8_t* cmapData =
                 reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
                                                                   &cmapLen));
             rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen,
-                                        *charmap, mUVSOffset,
-                                        unicodeFont, symbolFont);
+                                        *charmap, mUVSOffset);
         } else {
             rv = NS_ERROR_NOT_AVAILABLE;
         }
@@ -1479,16 +1475,12 @@ MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
                 uint32_t cmapLen = CFDataGetLength(cmapTable);
                 RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
                 uint32_t offset;
-                bool unicodeFont = false; // ignored
-                bool symbolFont = false;
                 nsresult rv;
 
-                rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen, *charmap, offset,
-                                            unicodeFont, symbolFont);
+                rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen, *charmap, offset);
                 if (NS_SUCCEEDED(rv)) {
                     fontData.mCharacterMap = charmap;
                     fontData.mUVSOffset = offset;
-                    fontData.mSymbolFont = symbolFont;
                     mLoadStats.cmaps++;
                 }
                 CFRelease(cmapTable);

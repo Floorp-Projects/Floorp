@@ -595,14 +595,13 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
 
 already_AddRefed<gfxCharacterMap>
 gfxFontEntry::GetCMAPFromFontInfo(FontInfoData *aFontInfoData,
-                                  uint32_t& aUVSOffset,
-                                  bool& aSymbolFont)
+                                  uint32_t& aUVSOffset)
 {
     if (!aFontInfoData || !aFontInfoData->mLoadCmaps) {
         return nullptr;
     }
 
-    return aFontInfoData->GetCMAP(mName, aUVSOffset, aSymbolFont);
+    return aFontInfoData->GetCMAP(mName, aUVSOffset);
 }
 
 hb_blob_t *
