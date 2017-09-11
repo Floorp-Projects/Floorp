@@ -8,8 +8,16 @@
 
 #include "mozilla/Vector.h"
 
+#if defined(XP_UNIX)
+
 #include <dirent.h>
 #include <sys/stat.h>
+
+#elif defined(XP_WIN)
+
+#include <windows.h>
+
+#endif
 
 #include "frontend/BinSource.h"
 #include "frontend/FullParseHandler.h"
@@ -20,12 +28,12 @@
 
 using UsedNameTracker = js::frontend::UsedNameTracker;
 
-extern void readFull(const char* path, Vector<char>& buf);
+extern void readFull(const char* path, Vector<uint8_t>& buf);
 
 void readFull(JSContext* cx, const char* path, Vector<char16_t>& buf) {
     buf.shrinkTo(0);
 
-    Vector<char> intermediate(cx);
+    Vector<uint8_t> intermediate(cx);
     readFull(path, intermediate);
 
     if (!buf.appendAll(intermediate))
@@ -34,13 +42,6 @@ void readFull(JSContext* cx, const char* path, Vector<char16_t>& buf) {
 
 BEGIN_TEST(testBinASTReaderECMAScript2)
 {
-    const char PATH[] = "jsapi-tests/binast/parser/tester/";
-
-    // Read the list of files in the directory.
-    DIR* dir = opendir(PATH);
-    if (!dir)
-        MOZ_CRASH();
-
     const char BIN_SUFFIX[] = ".binjs";
     const char TXT_SUFFIX[] = ".js";
 
@@ -48,19 +49,46 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
     options.setIntroductionType("unit test parse")
            .setFileAndLine("<string>", 1);
 
+#if defined(XP_UNIX)
+
+    const char PATH[] = "jsapi-tests/binast/parser/tester/";
+
+    // Read the list of files in the directory.
+    DIR* dir = opendir(PATH);
+    if (!dir)
+        MOZ_CRASH();
+
+
     while (auto entry = readdir(dir)) {
         // Find files whose name ends with ".binjs".
-        if (entry->d_namlen < sizeof(BIN_SUFFIX))
+        const char* d_name = entry->d_name;
+
+#elif defined(XP_WIN)
+
+    const char PATH[] = "jsapi-tests\\binast\\parser\\tester\\*.binjs";
+
+    WIN32_FIND_DATA FindFileData;
+    HANDLE hFind = FindFirstFile(PATH, &FindFileData);
+    for (bool found = (hFind != INVALID_HANDLE_VALUE);
+            found;
+            found = FindNextFile(hFind, &FindFileData)
+    {
+        const char* d_name = FindFileData.cFileName;
+
+#endif // defined(XP_UNIX) || defined(XP_WIN)
+
+        const size_t namlen = strlen(d_name);
+        if (namlen < sizeof(BIN_SUFFIX))
             continue;
-        if (strncmp(entry->d_name + entry->d_namlen - (sizeof(BIN_SUFFIX) - 1), BIN_SUFFIX, sizeof(BIN_SUFFIX)) != 0)
+        if (strncmp(d_name + namlen - (sizeof(BIN_SUFFIX) - 1), BIN_SUFFIX, sizeof(BIN_SUFFIX)) != 0)
             continue;
 
         // Find text file.
-        UniqueChars txtPath(static_cast<char*>(js_malloc(entry->d_namlen + sizeof(PATH) + 1)));
+        UniqueChars txtPath(static_cast<char*>(js_malloc(namlen + sizeof(PATH) + 1)));
         strncpy(txtPath.get(), PATH, sizeof(PATH));
-        strncpy(txtPath.get() + sizeof(PATH) - 1, entry->d_name, entry->d_namlen);
-        strncpy(txtPath.get() + sizeof(PATH) + entry->d_namlen - sizeof(BIN_SUFFIX), TXT_SUFFIX, sizeof(TXT_SUFFIX));
-        txtPath[sizeof(PATH) + entry->d_namlen - sizeof(BIN_SUFFIX) + sizeof(TXT_SUFFIX) - 1] = 0;
+        strncpy(txtPath.get() + sizeof(PATH) - 1, d_name, namlen);
+        strncpy(txtPath.get() + sizeof(PATH) + namlen - sizeof(BIN_SUFFIX), TXT_SUFFIX, sizeof(TXT_SUFFIX));
+        txtPath[sizeof(PATH) + namlen - sizeof(BIN_SUFFIX) + sizeof(TXT_SUFFIX) - 1] = 0;
         fprintf(stderr, "Testing %s\n", txtPath.get());
 
         // Read text file.
@@ -86,12 +114,12 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
         }
 
         // Read binary file.
-        UniqueChars binPath(static_cast<char*>(js_malloc(entry->d_namlen + sizeof(PATH) + 1)));
+        UniqueChars binPath(static_cast<char*>(js_malloc(namlen + sizeof(PATH) + 1)));
         strncpy(binPath.get(), PATH, sizeof(PATH));
-        strncpy(binPath.get() + sizeof(PATH) - 1, entry->d_name, entry->d_namlen);
-        binPath[entry->d_namlen + sizeof(PATH) - 1] = 0;
+        strncpy(binPath.get() + sizeof(PATH) - 1, d_name, namlen);
+        binPath[namlen + sizeof(PATH) - 1] = 0;
 
-        Vector<char> binSource(cx);
+        Vector<uint8_t> binSource(cx);
         readFull(binPath.get(), binSource);
 
         // Parse binary file.
@@ -157,6 +185,11 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
 
 #endif // defined(DEBUG)
     }
+
+#if defined(XP_WIN)
+    if (!FindClose(hFind))
+        MOZ_CRASH("Could not close Find");
+#endif // defined(XP_WIN)
 
     return true;
 }
