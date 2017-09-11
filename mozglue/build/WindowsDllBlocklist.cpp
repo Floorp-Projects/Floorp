@@ -248,7 +248,7 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   { "nahimicmsiosd.dll", ALL_VERSIONS },
 
   // Bug 1268470 - crashes with Kaspersky Lab on Windows 8
-  { "klsihk64.dll", ALL_VERSIONS, DllBlockInfo::BLOCK_WIN8_ONLY },
+  { "klsihk64.dll", MAKE_VERSION(14, 0, 456, 0xffff), DllBlockInfo::BLOCK_WIN8_ONLY },
 
   { nullptr, 0 }
 };
