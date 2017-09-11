@@ -15,7 +15,7 @@ namespace mozilla {
 
 class MediaRawData;
 class DecryptJob;
-
+class ChromiumCDMCallbackProxy;
 class ChromiumCDMProxy : public CDMProxy
 {
 public:
@@ -125,6 +125,7 @@ private:
   Mutex mCDMMutex;
   RefPtr<gmp::ChromiumCDMParent> mCDM;
   RefPtr<AbstractThread> mGMPThread;
+  UniquePtr<ChromiumCDMCallbackProxy> mCallback;
 };
 
 } // namespace mozilla
