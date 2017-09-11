@@ -61,11 +61,18 @@ class ParentDevToolsPanel {
     this.id = this.panelOptions.id;
 
     this.onToolboxPanelSelect = this.onToolboxPanelSelect.bind(this);
+    this.onToolboxHostWillChange = this.onToolboxHostWillChange.bind(this);
+    this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
 
     this.unwatchExtensionProxyContextLoad = null;
     this.waitTopLevelContext = new Promise(resolve => {
       this._resolveTopLevelContext = resolve;
     });
+
+    // References to the panel browser XUL element and the toolbox window global which
+    // contains the devtools panel UI.
+    this.browser = null;
+    this.browserContainerWindow = null;
 
     this.panelAdded = false;
     this.addPanel();
@@ -103,7 +110,13 @@ class ParentDevToolsPanel {
 
     this.createBrowserElement(window);
 
+    // Store the last panel's container element (used to restore it when the toolbox
+    // host is switched between docked and undocked).
+    this.browserContainerWindow = window;
+
     toolbox.on("select", this.onToolboxPanelSelect);
+    toolbox.on("host-will-change", this.onToolboxHostWillChange);
+    toolbox.on("host-changed", this.onToolboxHostChanged);
 
     // Return a cleanup method that is when the panel is destroyed, e.g.
     // - when addon devtool panel has been disabled by the user from the toolbox preferences,
@@ -113,8 +126,48 @@ class ParentDevToolsPanel {
     //   it removes the tool definition from the toolbox, which will call this destroy method.
     return () => {
       this.destroyBrowserElement();
+      this.browserContainerWindow = null;
       toolbox.off("select", this.onToolboxPanelSelect);
+      toolbox.off("host-will-change", this.onToolboxHostWillChange);
+      toolbox.off("host-changed", this.onToolboxHostChanged);
     };
+  }
+
+  onToolboxHostWillChange() {
+    // NOTE: Using a content iframe here breaks the devtools panel
+    // switching between docked and undocked mode,
+    // because of a swapFrameLoader exception (see bug 1075490),
+    // destroy the browser and recreate it after the toolbox host has been
+    // switched is a reasonable workaround to fix the issue on release and beta
+    // Firefox versions (at least until the underlying bug can be fixed).
+    if (this.browser) {
+      // Fires a panel.onHidden event before destroying the browser element because
+      // the toolbox hosts is changing.
+      if (this.visible) {
+        this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelHidden", {
+          toolboxPanelId: this.id,
+        });
+      }
+
+      this.destroyBrowserElement();
+    }
+  }
+
+  async onToolboxHostChanged() {
+    if (this.browserContainerWindow) {
+      this.createBrowserElement(this.browserContainerWindow);
+
+      // Fires a panel.onShown event once the browser element has been recreated
+      // after the toolbox hosts has been changed (needed to provide the new window
+      // object to the extension page that has created the devtools panel).
+      if (this.visible) {
+        await this.waitTopLevelContext;
+
+        this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelShown", {
+          toolboxPanelId: this.id,
+        });
+      }
+    }
   }
 
   async onToolboxPanelSelect(what, id) {
@@ -150,10 +203,12 @@ class ParentDevToolsPanel {
       toolbox.removeAdditionalTool(this.id);
     }
 
-    this.context = null;
-    this.toolbox = null;
     this.waitTopLevelContext = null;
     this._resolveTopLevelContext = null;
+    this.context = null;
+    this.toolbox = null;
+    this.browser = null;
+    this.browserContainerWindow = null;
   }
 
   createBrowserElement(window) {
@@ -179,12 +234,6 @@ class ParentDevToolsPanel {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
-    } else if (!AppConstants.RELEASE_OR_BETA) {
-      // NOTE: Using a content iframe here breaks the devtools panel
-      // switching between docked and undocked mode,
-      // because of a swapFrameLoader exception (see bug 1075490).
-      browser.setAttribute("type", "chrome");
-      browser.setAttribute("forcemessagemanager", true);
     }
 
     let hasTopLevelContext = false;
