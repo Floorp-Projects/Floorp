@@ -152,8 +152,6 @@ public:
     const hb_set_t*
     InputsForOpenTypeFeature(Script aScript, uint32_t aFeatureTag);
 
-    virtual bool IsSymbolFont();
-
     virtual bool HasFontTable(uint32_t aTableTag);
 
     inline bool HasGraphiteTables() {
@@ -344,7 +342,6 @@ public:
     bool             mIsDataUserFont : 1;      // platform font entry (data)
     bool             mIsLocalUserFont : 1;     // platform font entry (local)
     bool             mStandardFace : 1;
-    bool             mSymbolFont  : 1;
     bool             mIgnoreGDEF  : 1;
     bool             mIgnoreGSUB  : 1;
     bool             mSVGInitialized : 1;
@@ -763,6 +760,10 @@ public:
 
     virtual bool SupportsLangGroup(nsIAtom *aLangGroup) const {
         return true;
+    }
+
+    virtual bool IsSymbolFontFamily() const {
+        return false;
     }
 
 protected:

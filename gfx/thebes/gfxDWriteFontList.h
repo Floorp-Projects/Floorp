@@ -55,6 +55,8 @@ public:
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
 
+    bool IsSymbolFontFamily() const final;
+
     void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontListSizes* aSizes) const final;
     void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -153,8 +155,6 @@ public:
     gfxFontEntry* Clone() const override;
 
     virtual ~gfxDWriteFontEntry();
-
-    virtual bool IsSymbolFont();
 
     virtual hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
