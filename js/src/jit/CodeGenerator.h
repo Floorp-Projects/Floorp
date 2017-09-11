@@ -8,7 +8,6 @@
 #define jit_CodeGenerator_h
 
 #include "jit/CacheIR.h"
-#include "jit/IonCaches.h"
 #if defined(JS_ION_PERF)
 # include "jit/PerfSpewer.h"
 #endif
