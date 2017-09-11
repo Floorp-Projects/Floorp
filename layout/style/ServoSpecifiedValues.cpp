@@ -28,17 +28,7 @@ ServoSpecifiedValues::ServoSpecifiedValues(nsPresContext* aContext,
 bool
 ServoSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
 {
-  // We always create fresh ServoSpecifiedValues for each property
-  // mapping, so unlike Gecko there aren't existing properties from
-  // the cascade that we wish to avoid overwriting.
-  //
-  // If a property is being overwritten, that's a bug. Check for it
-  // in debug mode (this is O(n^2) behavior since Servo will traverse
-  // the array each time you add a new property)
-  MOZ_ASSERT(!Servo_DeclarationBlock_PropertyIsSet(mDecl, aId),
-             "Presentation attribute mappers should never attempt to set the "
-             "same property twice");
-  return false;
+  return Servo_DeclarationBlock_PropertyIsSet(mDecl, aId);
 }
 
 void
