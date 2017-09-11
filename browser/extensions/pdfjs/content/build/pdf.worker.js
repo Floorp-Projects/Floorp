@@ -10731,7 +10731,7 @@ var PostScriptCompiler = function PostScriptCompilerClosure() {
               return null;
             }
             n = num1.number;
-            if (n < 0 || (n | 0) !== n || stack.length < n) {
+            if (n < 0 || !Number.isInteger(n) || stack.length < n) {
               return null;
             }
             ast1 = stack[stack.length - n - 1];
@@ -10775,7 +10775,7 @@ var PostScriptCompiler = function PostScriptCompilerClosure() {
             }
             j = num2.number;
             n = num1.number;
-            if (n <= 0 || (n | 0) !== n || (j | 0) !== j || stack.length < n) {
+            if (n <= 0 || !Number.isInteger(n) || !Number.isInteger(j) || stack.length < n) {
               return null;
             }
             j = (j % n + n) % n;
@@ -27350,6 +27350,10 @@ class AnnotationFactory {
         return new PopupAnnotation(parameters);
       case 'Line':
         return new LineAnnotation(parameters);
+      case 'Square':
+        return new SquareAnnotation(parameters);
+      case 'Circle':
+        return new CircleAnnotation(parameters);
       case 'Highlight':
         return new HighlightAnnotation(parameters);
       case 'Underline':
@@ -27563,7 +27567,7 @@ class AnnotationBorderStyle {
     this.verticalCornerRadius = 0;
   }
   setWidth(width) {
-    if (width === (width | 0)) {
+    if (Number.isInteger(width)) {
       this.width = width;
     }
   }
@@ -27615,12 +27619,12 @@ class AnnotationBorderStyle {
     }
   }
   setHorizontalCornerRadius(radius) {
-    if (radius === (radius | 0)) {
+    if (Number.isInteger(radius)) {
       this.horizontalCornerRadius = radius;
     }
   }
   setVerticalCornerRadius(radius) {
-    if (radius === (radius | 0)) {
+    if (Number.isInteger(radius)) {
       this.verticalCornerRadius = radius;
     }
   }
@@ -27840,6 +27844,20 @@ class LineAnnotation extends Annotation {
     let dict = parameters.dict;
     this.data.lineCoordinates = _util.Util.normalizeRect(dict.getArray('L'));
     this._preparePopup(dict);
+  }
+}
+class SquareAnnotation extends Annotation {
+  constructor(parameters) {
+    super(parameters);
+    this.data.annotationType = _util.AnnotationType.SQUARE;
+    this._preparePopup(parameters.dict);
+  }
+}
+class CircleAnnotation extends Annotation {
+  constructor(parameters) {
+    super(parameters);
+    this.data.annotationType = _util.AnnotationType.CIRCLE;
+    this._preparePopup(parameters.dict);
   }
 }
 class HighlightAnnotation extends Annotation {
@@ -39688,7 +39706,7 @@ var Type1CharString = function Type1CharStringClosure() {
       var start = stackLength - howManyArgs;
       for (var i = start; i < stackLength; i++) {
         var value = this.stack[i];
-        if (value === (value | 0)) {
+        if (Number.isInteger(value)) {
           this.output.push(28, value >> 8 & 0xff, value & 0xff);
         } else {
           value = 65536 * value | 0;
@@ -40008,8 +40026,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.9.530';
-var pdfjsBuild = 'd1089a28';
+var pdfjsVersion = '1.9.554';
+var pdfjsBuild = 'ba219965';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 

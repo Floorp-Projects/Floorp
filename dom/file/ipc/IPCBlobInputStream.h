@@ -20,7 +20,7 @@ class IPCBlobInputStreamChild;
 
 class IPCBlobInputStream final : public nsIAsyncInputStream
                                , public nsIInputStreamCallback
-                               , public nsICloneableInputStream
+                               , public nsICloneableInputStreamWithRange
                                , public nsIIPCSerializableInputStream
                                , public nsIAsyncFileMetadata
 {
@@ -30,6 +30,7 @@ public:
   NS_DECL_NSIASYNCINPUTSTREAM
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSICLONEABLEINPUTSTREAM
+  NS_DECL_NSICLONEABLEINPUTSTREAMWITHRANGE
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSIFILEMETADATA
   NS_DECL_NSIASYNCFILEMETADATA
@@ -48,6 +49,9 @@ private:
 
   nsresult
   EnsureAsyncRemoteStream();
+
+  void
+  InitWithExistingRange(uint64_t aStart, uint64_t aLength);
 
   RefPtr<IPCBlobInputStreamChild> mActor;
 
@@ -71,6 +75,9 @@ private:
     // NS_BASE_STREAM_CLOSED.
     eClosed,
   } mState;
+
+  uint64_t mStart;
+  uint64_t mLength;
 
   nsCOMPtr<nsIInputStream> mRemoteStream;
   nsCOMPtr<nsIAsyncInputStream> mAsyncRemoteStream;

@@ -794,14 +794,12 @@ public:
 
     static uint32_t
     FindPreferredSubtable(const uint8_t *aBuf, uint32_t aBufLength,
-                          uint32_t *aTableOffset, uint32_t *aUVSTableOffset,
-                          bool *aSymbolEncoding);
+                          uint32_t *aTableOffset, uint32_t *aUVSTableOffset);
 
     static nsresult
     ReadCMAP(const uint8_t *aBuf, uint32_t aBufLength,
              gfxSparseBitSet& aCharacterMap,
-             uint32_t& aUVSOffset,
-             bool& aUnicodeFont, bool& aSymbolFont);
+             uint32_t& aUVSOffset);
 
     static uint32_t
     MapCharToGlyphFormat4(const uint8_t *aBuf, char16_t aCh);

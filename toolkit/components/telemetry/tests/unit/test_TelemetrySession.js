@@ -1483,6 +1483,126 @@ add_task(async function test_sendShutdownPing() {
   PingServer.resetPingHandler();
 });
 
+add_task(async function test_sendFirstShutdownPing() {
+  if (gIsAndroid ||
+      (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)) {
+    // We don't support the pingsender on Android, yet, see bug 1335917.
+    // We also don't suppor the pingsender testing on Treeherder for
+    // Linux 32 bit (due to missing libraries). So skip it there too.
+    // See bug 1310703 comment 78.
+    return;
+  }
+
+  let storageContainsFirstShutdown = async function() {
+    let pendingPings = await TelemetryStorage.loadPendingPingList();
+    let pings = await Promise.all(
+      pendingPings.map(async (p) => {
+        return TelemetryStorage.loadPendingPing(p.id)
+      })
+    );
+    return pings.find(p => p.type == "first-shutdown")
+  }
+
+  let checkShutdownNotSent = async function() {
+    // The failure-mode of the ping-sender is used to check that a ping was
+    // *not* sent. This can be combined with the state of the storage to infer
+    // the appropriate behavior from the preference flags.
+
+    // Assert failure if we recive a ping.
+    PingServer.registerPingHandler((req, res) => {
+      const receivedPing = decodeRequestPayload(req);
+      Assert.ok(false, `No ping should be received in this test (got ${receivedPing.id}).`);
+    });
+
+    // Assert that pings are sent on first run, forcing a forced application
+    // quit. This should be equivalent to the first test in this suite.
+    Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+    TelemetryReportingPolicy.testUpdateFirstRun();
+
+    await TelemetryController.testReset();
+    Services.obs.notifyObservers(null, "quit-application-forced");
+    await TelemetryController.testShutdown();
+    Assert.ok(await storageContainsFirstShutdown(),
+              "The 'first-shutdown' ping must be saved to disk.")
+
+    await TelemetryStorage.testClearPendingPings();
+
+    // Assert that it's not sent during subsequent runs
+    Preferences.set(TelemetryUtils.Preferences.FirstRun, false);
+    TelemetryReportingPolicy.testUpdateFirstRun();
+
+    await TelemetryController.testReset();
+    Services.obs.notifyObservers(null, "quit-application-forced");
+    await TelemetryController.testShutdown();
+    Assert.ok(!(await storageContainsFirstShutdown()),
+              "The 'first-shutdown' ping should only be written during first run.")
+
+    await TelemetryStorage.testClearPendingPings();
+
+    // Assert that the the ping is only sent if the flag is enabled.
+    Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+    Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
+    TelemetryReportingPolicy.testUpdateFirstRun();
+
+    await TelemetryController.testReset();
+    await TelemetryController.testShutdown();
+    Assert.ok(!(await storageContainsFirstShutdown()),
+              "The 'first-shutdown' ping should only be written if enabled")
+
+    await TelemetryStorage.testClearPendingPings();
+
+    // Assert that the the ping is not collected when the ping-sender is disabled.
+    // The information would be made irrelevant by the main-ping in the second session.
+    Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, true);
+    Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
+    TelemetryReportingPolicy.testUpdateFirstRun();
+
+    await TelemetryController.testReset();
+    await TelemetryController.testShutdown();
+    Assert.ok(!(await storageContainsFirstShutdown()),
+              "The 'first-shutdown' ping should only be written if ping-sender is enabled")
+
+    // Clear the state and prepare for the next test.
+    await TelemetryStorage.testClearPendingPings();
+    PingServer.clearRequests();
+    PingServer.resetPingHandler();
+  }
+
+  // Remove leftover pending pings from other tests
+  await TelemetryStorage.testClearPendingPings();
+  PingServer.clearRequests();
+  Telemetry.clearScalars();
+
+  // Set testing invariants for FirstShutdownPingEnabled
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false)
+
+  // Set primary conditions of the 'first-shutdown' ping
+  Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, true);
+  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+  TelemetryReportingPolicy.testUpdateFirstRun();
+
+  // Assert general 'first-shutdown' use-case.
+  await TelemetryController.testReset();
+  await TelemetryController.testShutdown();
+  let ping = await PingServer.promiseNextPing();
+  checkPingFormat(ping, "first-shutdown", true, true);
+  Assert.equal(ping.payload.info.reason, REASON_SHUTDOWN);
+  Assert.equal(ping.clientId, gClientID);
+
+  await TelemetryStorage.testClearPendingPings();
+
+  // Assert that the shutdown is not sent under various conditions
+  await checkShutdownNotSent();
+
+  // Reset the pref and restart Telemetry.
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false);
+  Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
+  Preferences.reset(TelemetryUtils.Preferences.FirstRun);
+  PingServer.resetPingHandler();
+});
+
 add_task(async function test_savedSessionData() {
   // Create the directory which will contain the data file, if it doesn't already
   // exist.

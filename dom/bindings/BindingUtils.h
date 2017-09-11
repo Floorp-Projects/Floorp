@@ -286,7 +286,7 @@ UnwrapObjectInternal(V& obj, U& value, prototypes::ID protoID,
   // something of type U might trigger GC (e.g. release the value currently
   // stored in there, with arbitrary consequences) and invalidate the
   // "unwrappedObj" pointer.
-  T* tempValue;
+  T* tempValue = nullptr;
   nsresult rv = UnwrapObjectInternal<T, false>(unwrappedObj, tempValue,
                                                protoID, protoDepth);
   if (NS_SUCCEEDED(rv)) {

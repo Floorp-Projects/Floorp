@@ -6,6 +6,7 @@
 
 #include "StreamBlobImpl.h"
 #include "nsStringStream.h"
+#include "nsICloneableInputStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -105,8 +106,22 @@ StreamBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
     return impl.forget();
   }
 
-  RefPtr<BlobImpl> impl =
-    new StreamBlobImpl(this, aContentType, aStart, aLength);
+  nsCOMPtr<nsICloneableInputStreamWithRange> stream =
+    do_QueryInterface(mInputStream);
+  if (stream) {
+    nsCOMPtr<nsIInputStream> clonedStream;
+    aRv = stream->CloneWithRange(aStart, aLength, getter_AddRefs(clonedStream));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    RefPtr<BlobImpl> impl =
+      new StreamBlobImpl(clonedStream, aContentType, aLength);
+    return impl.forget();
+  }
+
+  RefPtr<BlobImpl> impl;
+    impl = new StreamBlobImpl(this, aContentType, aStart, aLength);
   return impl.forget();
 }
 

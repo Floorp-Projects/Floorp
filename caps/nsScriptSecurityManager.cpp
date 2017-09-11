@@ -1301,7 +1301,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
 
     // We want to expose nsIDOMXULCommandDispatcher and nsITreeSelection implementations
     // in XBL scopes.
-    if (xpc::IsContentXBLScope(contextCompartment)) {
+    if (xpc::IsContentXBLCompartment(contextCompartment)) {
       nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher = do_QueryInterface(aObj);
       if (dispatcher) {
         return NS_OK;

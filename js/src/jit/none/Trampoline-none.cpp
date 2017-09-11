@@ -8,7 +8,6 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineIC.h"
-#include "jit/IonCaches.h"
 
 using namespace js;
 using namespace js::jit;
