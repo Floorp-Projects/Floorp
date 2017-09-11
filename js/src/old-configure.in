@@ -2058,6 +2058,11 @@ if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF_DSP)
 fi
 
+AC_SUBST(MOZ_DEV_EDITION)
+if test -n "$MOZ_DEV_EDITION"; then
+    AC_DEFINE(MOZ_DEV_EDITION)
+fi
+
 dnl ========================================================
 dnl Determine options to use for running the preprocessor.
 dnl ========================================================

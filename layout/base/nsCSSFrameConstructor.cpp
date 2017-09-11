@@ -11861,10 +11861,11 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
   // Get style context for the first-letter-frame.  Keep this in sync with
   // nsBlockFrame::UpdatePseudoElementStyles.
-  nsStyleContext* parentStyleContext =
+  nsIFrame* parentFrame =
     nsFrame::CorrectStyleParentFrame(aParentFrame,
-                                     nsCSSPseudoElements::firstLetter)->
-      StyleContext();
+                                     nsCSSPseudoElements::firstLetter);
+
+  nsStyleContext* parentStyleContext = parentFrame->StyleContext();
 
   // Use content from containing block so that we can actually
   // find a matching style rule.
@@ -11873,7 +11874,20 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
   // Create first-letter style rule
   RefPtr<nsStyleContext> sc =
     GetFirstLetterStyle(blockContent, parentStyleContext);
+
   if (sc) {
+    if (sc->IsServo() && parentFrame->IsLineFrame()) {
+      ServoStyleContext* parentStyleIgnoringFirstLine =
+        aBlockFrame->StyleContext()->AsServo();
+      sc =
+        mPresShell->StyleSet()->AsServo()->ReparentStyleContext(
+          sc->AsServo(),
+          parentStyleContext->AsServo(),
+          parentStyleIgnoringFirstLine,
+          parentStyleContext->AsServo(),
+          blockContent->AsElement());
+    }
+
     RefPtr<nsStyleContext> textSC = mPresShell->StyleSet()->
       ResolveStyleForText(aTextContent, sc);
 
@@ -12257,19 +12271,6 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
   if (parentFrame) {
     // Take the old textFrame out of the parent's child list
     RemoveFrame(kPrincipalList, textFrame);
-
-    // When we got the first-letter style from servo, it gave us the style not
-    // affected by the first-line bits.  So we may need to reparent the new
-    // frames' styles to deal with that.  Note that we already used parentFrame
-    // to inherit from, so the only case in which we need to fix something up is
-    // if parentFrame is itself a ::first-line frame, because in that case we
-    // have to do inheritance partially from it and partially from the block.
-    auto* restyleManager = RestyleManager();
-    if (parentFrame->IsLineFrame() && restyleManager->IsServo()) {
-      for (nsIFrame* f : letterFrames) {
-        restyleManager->ReparentStyleContext(f);
-      }
-    }
 
     // Insert in the letter frame(s)
     parentFrame->InsertFrames(kPrincipalList, prevFrame, letterFrames);

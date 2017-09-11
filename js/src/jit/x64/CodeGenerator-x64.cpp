@@ -8,7 +8,6 @@
 
 #include "mozilla/MathAlgorithms.h"
 
-#include "jit/IonCaches.h"
 #include "jit/MIR.h"
 
 #include "jsscriptinlines.h"

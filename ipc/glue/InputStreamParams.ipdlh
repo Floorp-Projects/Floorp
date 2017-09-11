@@ -55,6 +55,8 @@ struct SlicedInputStreamParams
 struct IPCBlobInputStreamParams
 {
   nsID id;
+  uint64_t start;
+  uint64_t length;
 };
 
 union InputStreamParams

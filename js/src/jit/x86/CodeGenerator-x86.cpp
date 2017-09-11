@@ -11,7 +11,6 @@
 
 #include "jsnum.h"
 
-#include "jit/IonCaches.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "js/Conversions.h"

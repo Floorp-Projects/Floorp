@@ -628,6 +628,9 @@ var NetworkHelper = {
       if (info.keaGroupName == "none") {
         info.keaGroupName = L10N.getStr("netmonitor.security.keaGroup.none");
       }
+      if (info.keaGroupName == "custom") {
+        info.keaGroupName = L10N.getStr("netmonitor.security.keaGroup.custom");
+      }
       if (info.keaGroupName == "unknown group") {
         info.keaGroupName = L10N.getStr("netmonitor.security.keaGroup.unknown");
       }

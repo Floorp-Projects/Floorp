@@ -70,6 +70,8 @@ InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
   if (aParams.type() == InputStreamParams::TIPCBlobInputStreamParams) {
     MOZ_ASSERT(XRE_IsParentProcess());
     IPCBlobInputStreamStorage::Get()->GetStream(aParams.get_IPCBlobInputStreamParams().id(),
+                                                aParams.get_IPCBlobInputStreamParams().start(),
+                                                aParams.get_IPCBlobInputStreamParams().length(),
                                                 getter_AddRefs(stream));
     return stream.forget();
   }

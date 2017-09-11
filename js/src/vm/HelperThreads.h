@@ -143,7 +143,6 @@ class GlobalHelperThreadState
 
   public:
     size_t maxIonCompilationThreads() const;
-    size_t maxUnpausedIonCompilationThreads() const;
     size_t maxWasmCompilationThreads() const;
     size_t maxWasmTier2GeneratorThreads() const;
     size_t maxParseThreads() const;
@@ -173,10 +172,6 @@ class GlobalHelperThreadState
         // make progress, ie, a work item has been enqueued and an idle helper
         // thread may pick up up the work item and perform it.
         PRODUCER,
-
-        // For notifying threads doing work which are paused that they may be
-        // able to resume making progress.
-        PAUSE
     };
 
     void wait(AutoLockHelperThreadState& locked, CondVar which,
@@ -280,16 +275,7 @@ class GlobalHelperThreadState
     void scheduleCompressionTasks(const AutoLockHelperThreadState&);
 
   public:
-    // Unlike the public methods above, the value returned by this method can
-    // change over time, even if the helper thread state lock is held
-    // throughout.
-    bool pendingIonCompileHasSufficientPriority(const AutoLockHelperThreadState& lock);
-
-    jit::IonBuilder* highestPriorityPendingIonCompile(const AutoLockHelperThreadState& lock,
-                                                      bool remove = false);
-    HelperThread* lowestPriorityUnpausedIonCompileAtThreshold(
-        const AutoLockHelperThreadState& lock);
-    HelperThread* highestPriorityPausedIonCompile(const AutoLockHelperThreadState& lock);
+    jit::IonBuilder* highestPriorityPendingIonCompile(const AutoLockHelperThreadState& lock);
 
     template <
         typename F,
@@ -335,13 +321,11 @@ class GlobalHelperThreadState
     /* Condvars for threads waiting/notifying each other. */
     js::ConditionVariable consumerWakeup;
     js::ConditionVariable producerWakeup;
-    js::ConditionVariable pauseWakeup;
 
     js::ConditionVariable& whichWakeup(CondVar which) {
         switch (which) {
           case CONSUMER: return consumerWakeup;
           case PRODUCER: return producerWakeup;
-          case PAUSE: return pauseWakeup;
           default: MOZ_CRASH("Invalid CondVar in |whichWakeup|");
         }
     }
@@ -375,13 +359,6 @@ struct HelperThread
      * or written with the helper thread state lock held.
      */
     bool terminate;
-
-    /*
-     * Indicate to a thread that it should pause execution. This is only
-     * written with the helper thread state lock held, but may be read from
-     * without the lock held.
-     */
-    mozilla::Atomic<bool, mozilla::Relaxed> pause;
 
     /* The current task being executed by this thread, if any. */
     mozilla::Maybe<HelperTaskUnion> currentTask;
@@ -471,10 +448,6 @@ SetFakeCPUCount(size_t count);
 // Get the current helper thread, or null.
 HelperThread*
 CurrentHelperThread();
-
-// Pause the current thread until it's pause flag is unset.
-void
-PauseCurrentHelperThread();
 
 // Enqueues a wasm compilation task.
 bool

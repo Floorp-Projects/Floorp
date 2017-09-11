@@ -1782,9 +1782,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
                 """)
 
         # Additionally, we want to throw if a caller does a bareword invocation
-        # of a constructor without |new|. We don't enforce this for chrome in
-        # realease builds to avoid the addon compat fallout of making that
-        # change. See bug 916644.
+        # of a constructor without |new|.
         #
         # Figure out the name of our constructor for error reporting purposes.
         # For unnamed webidl constructors, identifier.name is "constructor" but
