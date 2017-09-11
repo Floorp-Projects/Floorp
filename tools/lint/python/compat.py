@@ -9,6 +9,7 @@ import os
 import tempfile
 from distutils.spawn import find_executable
 
+import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from mozprocess import ProcessHandlerMixin
 
@@ -45,15 +46,19 @@ def run_linter(python, paths, config, **lintargs):
             return 1
         return []
 
+    root = lintargs['root']
     pattern = "**/*.py"
-    exclude = lintargs.get('exclude', [])
+    exclude = [mozpath.join(root, e) for e in lintargs.get('exclude', [])]
     files = []
     for path in paths:
+        path = mozpath.normsep(path)
         if os.path.isfile(path):
             files.append(path)
             continue
 
-        finder = FileFinder(path, ignore=exclude)
+        ignore = [e[len(path):].lstrip('/') for e in exclude
+                  if mozpath.commonprefix((path, e)) == path]
+        finder = FileFinder(path, ignore=ignore)
         files.extend([os.path.join(path, p) for p, f in finder.find(pattern)])
 
     with tempfile.NamedTemporaryFile(mode='w') as fh:
