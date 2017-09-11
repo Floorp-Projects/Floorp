@@ -75,6 +75,7 @@ mochitest-harness:
             - 'config/mozunit.py'
             - 'python/mach_commands.py'
             - 'testing/mochitest/**'
+            - 'testing/mozbase/moztest/moztest/selftest/**'
             - 'testing/mozharness/mozharness/base/log.py'
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
             - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
