@@ -334,6 +334,8 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
                 # populated here we use the value from sandbox_vars as our
                 # basis rather than overriding outright.
                 context[key] = value + context[key]
+            elif context.get(key) and isinstance(context[key], dict):
+                context[key].update(value)
             else:
                 context[key] = value
 
