@@ -25,7 +25,6 @@
                 android:layout_marginLeft="@dimen/activity_stream_base_margin"
                 android:layout_marginTop="@dimen/activity_stream_base_margin"
                 android:layout_marginBottom="@dimen/activity_stream_base_margin"
-                android:layout_gravity="center"
                 tools:background="@drawable/favicon_globe" />
 
     </FrameLayout>
