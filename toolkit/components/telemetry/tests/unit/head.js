@@ -320,6 +320,7 @@ if (runningInParent) {
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSender, false);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false);
   Services.prefs.setBoolPref("toolkit.telemetry.newProfilePing.enabled", false);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
   // Ensure browser experiments are also disabled, to avoid network activity
   // when toggling PREF_ENABLED.
   Services.prefs.setBoolPref("experiments.enabled", false);

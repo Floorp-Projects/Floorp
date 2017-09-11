@@ -29,6 +29,7 @@ this.TelemetryUtils = {
     ArchiveEnabled: "toolkit.telemetry.archive.enabled",
     CachedClientId: "toolkit.telemetry.cachedClientID",
     FirstRun: "toolkit.telemetry.reportingpolicy.firstRun",
+    FirstShutdownPingEnabled: "toolkit.telemetry.firstShutdownPing.enabled",
     HealthPingEnabled: "toolkit.telemetry.healthping.enabled",
     OverrideOfficialCheck: "toolkit.telemetry.send.overrideOfficialCheck",
     Server: "toolkit.telemetry.server",

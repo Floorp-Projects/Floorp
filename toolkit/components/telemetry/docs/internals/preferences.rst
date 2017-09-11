@@ -58,6 +58,10 @@ Preferences
 
   Allow the ``shutdown`` ping to be sent using the :doc:`ping sender <pingsender>` from the first browsing session.
 
+``toolkit.telemetry.firstShutdownPing.enabled``
+
+  Allow a duplicate of the shutdown ping from the first browsing session to be sent as a separate ``first-shutdown`` ping.
+
 ``toolkit.telemetry.newProfilePing.enabled``
 
   Enable the :doc:`../data/new-profile` ping on new profiles.

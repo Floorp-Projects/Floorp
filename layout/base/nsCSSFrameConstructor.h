@@ -79,9 +79,14 @@ public:
   /**
    * Whether insertion should be done synchronously or asynchronously.
    *
-   * Generally, insertion is synchronous if we're reconstructing something from
-   * frame construction/reconstruction, and async if we're removing stuff, like
-   * from ContentRemoved.
+   * Generally, insertion is synchronous if we're entering frame construction
+   * from restyle processing, and async if we're removing stuff, or need to
+   * reconstruct some ancestor.
+   *
+   * Note that constructing async from frame construction will post a restyle
+   * event, but won't need another whole refresh driver tick to go in. Instead
+   * change hint processing will keep going as long as there are changes in the
+   * queue.
    */
   enum class InsertionKind
   {
@@ -177,8 +182,7 @@ private:
   // Returns true if parent was recreated due to frameset child, false otherwise.
   bool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
                                 nsIContent* aStartChild,
-                                nsIContent* aEndChild,
-                                InsertionKind);
+                                nsIContent* aEndChild);
 
   /**
    * For each child in the aStartChild/aEndChild range, calls
@@ -300,14 +304,12 @@ public:
    *
    * The return value indicates whether this "reconstruct an ancestor" action
    * took place.  If true is returned, that means that the frame subtree rooted
-   * at some ancestor of aChild's frame was destroyed and either has been
-   * reconstructed or will be reconstructed async, depending on the value of
-   * aInsertionKind.
+   * at some ancestor of aChild's frame was destroyed and will be reconstructed
+   * async.
    */
   bool ContentRemoved(nsIContent* aContainer,
                       nsIContent* aChild,
                       nsIContent* aOldNextSibling,
-                      InsertionKind aInsertionKind,
                       RemoveFlags aFlags);
 
   void CharacterDataChanged(nsIContent* aContent,
@@ -1875,8 +1877,7 @@ private:
   // indicates whether this happened.  aFrame must be the result of a
   // GetPrimaryFrame() call on a content node (which means its parent is also
   // not null).
-  bool MaybeRecreateContainerForFrameRemoval(nsIFrame*     aFrame,
-                                             InsertionKind aInsertionKind);
+  bool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame);
 
   nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*     aPresShell,
                                             nsPresContext*    aPresContext,
@@ -1998,10 +1999,9 @@ private:
                            nsIFrame* aFrame,
                            FrameConstructionItemList& aItems,
                            bool aIsAppend,
-                           nsIFrame* aPrevSibling,
-                           InsertionKind);
+                           nsIFrame* aPrevSibling);
 
-  void ReframeContainingBlock(nsIFrame* aFrame, InsertionKind aInsertionKind);
+  void ReframeContainingBlock(nsIFrame* aFrame);
 
   //----------------------------------------
 
