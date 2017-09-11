@@ -18,27 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=608669
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
-var gOrigMaxTotalViewers = undefined;
-function setCachePref(enabled) {
-  var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
-  if (enabled) {
-    is(typeof gOrigMaxTotalViewers, "undefined", "don't double-enable bfcache");
-    prefBranch.setBoolPref("browser.sessionhistory.cache_subframes", true);
-    gOrigMaxTotalViewers = prefBranch.getIntPref("browser.sessionhistory.max_total_viewers");
-    prefBranch.setIntPref("browser.sessionhistory.max_total_viewers", 10);
-  }
-  else {
-    is(typeof gOrigMaxTotalViewers, "number", "don't double-disable bfcache");
-    prefBranch.setIntPref("browser.sessionhistory.max_total_viewers", gOrigMaxTotalViewers);
-    gOrigMaxTotalViewers = undefined;
-    try {
-      prefBranch.clearUserPref("browser.sessionhistory.cache_subframes");
-    } catch (e) { /* Pref didn't exist, meh */ }
-  }
-}
-
-
 /** Test for Bug 608669 **/
 SimpleTest.waitForExplicitFinish();
 
@@ -51,10 +30,6 @@ function nextTest() {
 }
 
 function* doTest() {
-  var container = document.getElementById('container');
-
-  setCachePref(true);
-
   var notificationCount = 0;
   var observer = {
     observe: function(aSubject, aTopic, aData) {
@@ -73,44 +48,31 @@ function* doTest() {
 
   is(notificationCount, 0, "initial count");
 
-  // create a new iframe
-  var iframe = document.createElement("iframe");
-  container.appendChild(iframe);
-  iframe.contentWindow.x = "y";
-  is(notificationCount, 1, "after created iframe");
-  
-  // Try loading in an iframe
-  iframe.setAttribute("src", "bug608669.xul");
-  iframe.onload = nextTest;
+  // create a new window
+  var testWin = window.open("", "bug 608669", "chrome,width=600,height=600");
+  testWin.x = "y";
+  is(notificationCount, 1, "after created window");
+
+  // Try loading in the window
+  testWin.location = "bug608669.xul";
+  window.onmessage = nextTest;
   yield undefined;
   is(notificationCount, 1, "after first load");
-  is(iframe.contentWindow.x, "y", "reused window");
+  is(testWin.x, "y", "reused window");
 
-  // Try loading again in an iframe
-  iframe.setAttribute("src", "bug608669.xul?x");
-  iframe.onload = nextTest;
+  // Try loading again in the window
+  testWin.location = "bug608669.xul?x";
+  window.onmessage = nextTest;
   yield undefined;
   is(notificationCount, 2, "after second load");
-  is("x" in iframe.contentWindow, false, "didn't reuse window");
+  is("x" in testWin, false, "didn't reuse window");
 
-  // Open a new window using window.open
-  popup = window.open("bug608669.xul", "bug 608669",
-                      "chrome,width=600,height=600");
-  popup.onload = nextTest;
-  yield undefined;
-  is(notificationCount, 3, "after window.open load");
-  popup.close();
+  testWin.close();
 
-  setCachePref(false);
   os.removeObserver(observer, "chrome-document-global-created");
   os.removeObserver(observer, "content-document-global-created");
   SimpleTest.finish();
 }
 
-
-
   ]]></script>
-  <vbox id="container" flex="1">
-    <description>Below will an iframe be added</description>
-  </vbox>
 </window>

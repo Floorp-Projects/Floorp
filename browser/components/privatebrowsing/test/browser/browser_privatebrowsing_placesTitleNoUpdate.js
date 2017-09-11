@@ -23,8 +23,9 @@ add_task(async function test() {
   info("Wait for a title change notification.");
   await promiseTitleChanged;
   await BrowserTestUtils.waitForCondition(async function() {
-    return (await PlacesUtils.history.fetch(TEST_URL)).title == TITLE_1;
-  }, "The title matches the orignal title after first visit");
+    let entry = await PlacesUtils.history.fetch(TEST_URL);
+    return entry && entry.title == TITLE_1;
+  }, "The title matches the original title after first visit");
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
     "onTitleChanged", (uri, title) => uri.spec == TEST_URL, "history");
@@ -32,8 +33,9 @@ add_task(async function test() {
   info("Wait for a title change notification.");
   await promiseTitleChanged;
   await BrowserTestUtils.waitForCondition(async function() {
-    return (await PlacesUtils.history.fetch(TEST_URL)).title == TITLE_2;
-  }, "The title matches the orignal title after updating visit");
+    let entry = await PlacesUtils.history.fetch(TEST_URL);
+    return entry && entry.title == TITLE_2;
+  }, "The title matches the original title after updating visit");
 
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
   registerCleanupFunction(async () => {
