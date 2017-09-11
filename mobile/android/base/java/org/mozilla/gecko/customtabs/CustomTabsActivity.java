@@ -8,7 +8,6 @@ package org.mozilla.gecko.customtabs;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -55,8 +54,8 @@ import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
+import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 import java.util.List;
@@ -375,10 +374,11 @@ public class CustomTabsActivity extends AppCompatActivity
         // insert default browser name to title of menu-item-Open-In
         final MenuItem openItem = geckoMenu.findItem(R.id.custom_tabs_menu_open_in);
         if (openItem != null) {
-            final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://"));
-            final ResolveInfo info = getPackageManager()
-                    .resolveActivity(browserIntent, PackageManager.MATCH_DEFAULT_ONLY);
-            final String name = info.loadLabel(getPackageManager()).toString();
+            final ResolveInfo info = PackageUtil.getDefaultBrowser(this);
+
+            final String name = (info == null)
+                    ? getString(R.string.ellipsis)
+                    : info.loadLabel(getPackageManager()).toString();
             openItem.setTitle(getString(R.string.custom_tabs_menu_item_open_in, name));
         }
 

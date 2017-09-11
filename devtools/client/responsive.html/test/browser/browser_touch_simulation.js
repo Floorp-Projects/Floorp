@@ -11,7 +11,7 @@ const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 addRDMTask(TEST_URL, function* ({ ui }) {
   yield waitBootstrap(ui);
   yield testWithNoTouch(ui);
-  yield enableTouchSimulation(ui);
+  yield toggleTouchSimulation(ui);
   yield testWithTouch(ui);
   yield testWithMetaViewportEnabled(ui);
   yield testWithMetaViewportDisabled(ui);

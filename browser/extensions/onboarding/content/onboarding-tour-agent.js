@@ -2,21 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /* globals Mozilla */
+/* globals Mozilla */
 
+(function() {
 "use strict";
 
-document.addEventListener("Agent:CanSetDefaultBrowserInBackground", () => {
+let onCanSetDefaultBrowserInBackground = () => {
   Mozilla.UITour.getConfiguration("appinfo", config => {
     let canSetInBackGround = config.canSetDefaultBrowserInBackground;
     let btn = document.getElementById("onboarding-tour-default-browser-button");
     btn.setAttribute("data-cansetbg", canSetInBackGround);
     btn.textContent = canSetInBackGround ? btn.getAttribute("data-bg") : btn.getAttribute("data-panel");
   });
-});
+};
 
-document.getElementById("onboarding-overlay")
-  .addEventListener("click", evt => {
+let onClick = evt => {
   switch (evt.target.id) {
     case "onboarding-tour-addons-button":
       Mozilla.UITour.showHighlight("addons");
@@ -63,13 +63,27 @@ document.getElementById("onboarding-overlay")
       Mozilla.UITour.hideHighlight();
       break;
   }
-  // Dismiss any highlights if a user tries to change to other tours.
-  if (evt.target.classList.contains("onboarding-tour-item")) {
-    Mozilla.UITour.hideHighlight();
+  let classList = evt.target.classList;
+  // On keyboard navigation the target would be .onboarding-tour-item.
+  // On mouse clicking the target would be .onboarding-tour-item-container.
+  if (classList.contains("onboarding-tour-item") || classList.contains("onboarding-tour-item-container")) {
+    Mozilla.UITour.hideHighlight(); // Clean up UITour if a user tries to change to other tours.
+  }
+};
+
+let overlay = document.getElementById("onboarding-overlay");
+overlay.addEventListener("click", onClick);
+overlay.addEventListener("keypress", e => {
+  let { target, key } = e;
+  let classList = target.classList;
+  if ((key == " " || key == "Enter") &&
+      // On keyboard navigation the target would be .onboarding-tour-item.
+      // On mouse clicking the target would be .onboarding-tour-item-container.
+      (classList.contains("onboarding-tour-item") || classList.contains("onboarding-tour-item-container"))) {
+    Mozilla.UITour.hideHighlight(); // Clean up UITour if a user tries to change to other tours.
   }
 });
+document.getElementById("onboarding-overlay-button").addEventListener("Agent:Destroy", () => Mozilla.UITour.hideHighlight());
+document.addEventListener("Agent:CanSetDefaultBrowserInBackground", onCanSetDefaultBrowserInBackground);
 
-document.getElementById("onboarding-overlay-button").addEventListener("Agent:Destroy", () => {
-  Mozilla.UITour.hideHighlight();
-  Mozilla.UITour.hideMenu("urlbar");
-});
+})();
