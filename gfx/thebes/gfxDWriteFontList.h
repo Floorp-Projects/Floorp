@@ -60,7 +60,15 @@ public:
     void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontListSizes* aSizes) const final;
 
+    bool FilterForFontList(nsIAtom* aLangGroup,
+                           const nsACString& aGeneric) const final {
+        return !IsSymbolFontFamily();
+    }
+
 protected:
+    // helper for FilterForFontList
+    bool IsSymbolFontFamily() const;
+
     /** This font family's directwrite fontfamily object */
     RefPtr<IDWriteFontFamily> mDWFamily;
     bool mForceGDIClassic;
@@ -153,8 +161,6 @@ public:
     gfxFontEntry* Clone() const override;
 
     virtual ~gfxDWriteFontEntry();
-
-    virtual bool IsSymbolFont();
 
     virtual hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 

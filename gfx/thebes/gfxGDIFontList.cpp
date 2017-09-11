@@ -120,11 +120,10 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
                            gfxUserFontData *aUserFontData,
                            bool aFamilyHasItalicFace)
     : gfxFontEntry(aFaceName),
-      mWindowsFamily(0), mWindowsPitch(0),
       mFontType(aFontType),
       mForceGDI(false),
       mFamilyHasItalicFace(aFamilyHasItalicFace),
-      mCharset(), mUnicodeRanges()
+      mUnicodeRanges()
 {
     mUserFontData.reset(aUserFontData);
     mStyle = aStyle;
@@ -167,12 +166,9 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
     RefPtr<gfxCharacterMap> charmap;
     nsresult rv;
-    bool unicodeFont = false, symbolFont = false;
 
     if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
-                                                        mUVSOffset,
-                                                        symbolFont))) {
-        mSymbolFont = symbolFont;
+                                                        mUVSOffset))) {
         rv = NS_OK;
     } else {
         uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
@@ -182,10 +178,8 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
         if (NS_SUCCEEDED(rv)) {
             rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
-                                        *charmap, mUVSOffset,
-                                        unicodeFont, symbolFont);
+                                        *charmap, mUVSOffset);
         }
-        mSymbolFont = symbolFont;
     }
 
     mHasCmapTable = NS_SUCCEEDED(rv);
@@ -212,14 +206,6 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
     }
 
     return rv;
-}
-
-bool
-GDIFontEntry::IsSymbolFont()
-{
-    // initialize cmap first
-    HasCmapTable();
-    return mSymbolFont;  
 }
 
 gfxFont *
@@ -486,7 +472,9 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         if (fe->mWeight == logFont.lfWeight &&
             fe->IsItalic() == (logFont.lfItalic == 0xFF)) {
             // update the charset bit here since this could be different
-            fe->mCharset.set(metrics.tmCharSet);
+            // XXX Can we still do this now that we store mCharset
+            // on the font family rather than the font entry?
+            ff->mCharset.set(metrics.tmCharSet);
             return 1; 
         }
     }
@@ -504,12 +492,6 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         return 1;
 
     ff->AddFontEntry(fe);
-
-    // mark the charset bit
-    fe->mCharset.set(metrics.tmCharSet);
-
-    fe->mWindowsFamily = logFont.lfPitchAndFamily & 0xF0;
-    fe->mWindowsPitch = logFont.lfPitchAndFamily & 0x0F;
 
     if (nmetrics->ntmFontSig.fsUsb[0] != 0x00000000 &&
         nmetrics->ntmFontSig.fsUsb[1] != 0x00000000 &&
@@ -713,6 +695,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
                                       DWORD fontType,
                                       LPARAM lParam)
 {
+    const NEWTEXTMETRICW& metrics = lpntme->ntmTm;
     const LOGFONTW& lf = lpelfe->elfLogFont;
 
     if (lf.lfFaceName[0] == '@') {
@@ -726,7 +709,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
 
     if (!fontList->mFontFamilies.GetWeak(name)) {
         nsDependentString faceName(lf.lfFaceName);
-        RefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
+        RefPtr<GDIFontFamily> family = new GDIFontFamily(faceName);
         fontList->mFontFamilies.Put(name, family);
 
         // if locale is such that CJK font names are the default coming from
@@ -739,6 +722,12 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
 
         if (fontList->mBadUnderlineFamilyNames.Contains(name))
             family->SetBadUnderlineFamily();
+
+        family->mWindowsFamily = lf.lfPitchAndFamily & 0xF0;
+        family->mWindowsPitch = lf.lfPitchAndFamily & 0x0F;
+
+        // mark the charset bit
+        family->mCharset.set(metrics.tmCharSet);
     }
 
     return 1;
@@ -1118,17 +1107,14 @@ int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
             cmapData.SetLength(cmapSize, fallible)) {
             ::GetFontData(hdc, kCMAP, 0, cmapData.Elements(), cmapSize);
             bool cmapLoaded = false;
-            bool unicodeFont = false, symbolFont = false;
             RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
             uint32_t offset;
 
             if (NS_SUCCEEDED(gfxFontUtils::ReadCMAP(cmapData.Elements(),
                                                     cmapSize, *charmap,
-                                                    offset, unicodeFont,
-                                                    symbolFont))) {
+                                                    offset))) {
                 fontData.mCharacterMap = charmap;
                 fontData.mUVSOffset = offset;
-                fontData.mSymbolFont = symbolFont;
                 cmapLoaded = true;
                 famData->mFontInfo.mLoadStats.cmaps++;
             }

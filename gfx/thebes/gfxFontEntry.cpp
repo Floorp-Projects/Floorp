@@ -65,7 +65,6 @@ gfxFontEntry::gfxFontEntry() :
     mIsDataUserFont(false),
     mIsLocalUserFont(false),
     mStandardFace(false),
-    mSymbolFont(false),
     mIgnoreGDEF(false),
     mIgnoreGSUB(false),
     mSVGInitialized(false),
@@ -104,7 +103,6 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mIsUserFontContainer(false),
     mIsDataUserFont(false),
     mIsLocalUserFont(false), mStandardFace(aIsStandardFace),
-    mSymbolFont(false),
     mIgnoreGDEF(false),
     mIgnoreGSUB(false),
     mSVGInitialized(false),
@@ -166,11 +164,6 @@ gfxFontEntry::~gfxFontEntry()
     // face objects should have been released.
     MOZ_ASSERT(!mHBFace);
     MOZ_ASSERT(!mGrFaceInitialized);
-}
-
-bool gfxFontEntry::IsSymbolFont() 
-{
-    return mSymbolFont;
 }
 
 bool gfxFontEntry::TestCharacterMap(uint32_t aCh)
@@ -602,14 +595,13 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
 
 already_AddRefed<gfxCharacterMap>
 gfxFontEntry::GetCMAPFromFontInfo(FontInfoData *aFontInfoData,
-                                  uint32_t& aUVSOffset,
-                                  bool& aSymbolFont)
+                                  uint32_t& aUVSOffset)
 {
     if (!aFontInfoData || !aFontInfoData->mLoadCmaps) {
         return nullptr;
     }
 
-    return aFontInfoData->GetCMAP(mName, aUVSOffset, aSymbolFont);
+    return aFontInfoData->GetCMAP(mName, aUVSOffset);
 }
 
 hb_blob_t *
