@@ -126,6 +126,12 @@ import java.util.concurrent.Future;
         final boolean isSiteSuggestedFromDistribution = BrowserDB.from(itemView.getContext()).getSuggestedSites()
                 .containsSiteAndSiteIsFromDistribution(topSite.getUrl());
 
+        // Some already installed distributions are unlikely to be updated (OTA, system) and their suggested
+        // site titles were written for the old top sites, where we had more room to display titles: we want
+        // to provide them with more lines. However, it's complex to distinguish a distribution intended for
+        // the old top sites and the new one so for code simplicity, we allow all distributions more lines for titles.
+        title.setMaxLines(isSiteSuggestedFromDistribution ? 2 : 1);
+
         // At a high level, the logic is: if the path non-empty or the site is suggested by a distribution, use the page
         // title, otherwise use "subdomain.domain". From a UX perspective, people refer to domains by their name ("it's
         // on wikipedia") and it's a clean look. However, if a url has a path, it will not fit on the screen with the
