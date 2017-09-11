@@ -2929,6 +2929,26 @@ nsDisplaySolidColorRegion::WriteDebugInfo(std::stringstream& aStream)
           << mColor.a << ")";
 }
 
+bool
+nsDisplaySolidColorRegion::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                   const StackingContextHelper& aSc,
+                                                   nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                   mozilla::layers::WebRenderLayerManager* aManager,
+                                                   nsDisplayListBuilder* aDisplayListBuilder)
+{
+  for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
+    nsRect rect = iter.Get();
+    LayoutDeviceRect layerRects = LayoutDeviceRect::FromAppUnits(
+      rect, mFrame->PresContext()->AppUnitsPerDevPixel());
+    wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(layerRects);
+    aBuilder.PushRect(transformedRect,
+                      transformedRect,
+                      wr::ToColorF(ToDeviceColor(mColor)));
+  }
+
+  return true;
+}
+
 static void
 RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsITheme::ThemeGeometryType aType)

@@ -16,7 +16,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -68,7 +67,10 @@ public class ExtensionPermissionsHelper implements BundleEventListener {
 
             final String iconUrl = message.getString("icon");
             if ("DEFAULT".equals(iconUrl)) {
-                headerText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_extension, 0, 0, 0);
+                final Drawable d = ResourceDrawableUtils.getDrawable(mContext, R.drawable.ic_extension);
+                if (d != null) {
+                    headerText.setCompoundDrawablesWithIntrinsicBounds(d, null, null, null);
+                }
             } else {
                 ResourceDrawableUtils.getDrawable(mContext, iconUrl, new ResourceDrawableUtils.BitmapLoader() {
                         @Override

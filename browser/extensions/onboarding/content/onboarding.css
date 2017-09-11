@@ -385,7 +385,7 @@
 }
 
 #onboarding-tour-singlesearch.onboarding-active,
-#onboarding-tour-singlesearch:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-singlesearch {
   background-image: url("img/icons_singlesearch-colored.svg");
 }
 
@@ -395,7 +395,7 @@
 }
 
 #onboarding-tour-private-browsing.onboarding-active,
-#onboarding-tour-private-browsing:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-private-browsing {
   background-image: url("img/icons_private-colored.svg");
 }
 
@@ -405,7 +405,7 @@
 }
 
 #onboarding-tour-addons.onboarding-active,
-#onboarding-tour-addons:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-addons {
   background-image: url("img/icons_addons-colored.svg");
 }
 
@@ -415,7 +415,7 @@
 }
 
 #onboarding-tour-customize.onboarding-active,
-#onboarding-tour-customize:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-customize {
   background-image: url("img/icons_customize-colored.svg");
 }
 
@@ -425,7 +425,7 @@
 }
 
 #onboarding-tour-default-browser.onboarding-active,
-#onboarding-tour-default-browser:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-default-browser {
   background-image: url("img/icons_default-colored.svg");
 }
 
@@ -435,7 +435,7 @@
 }
 
 #onboarding-tour-sync.onboarding-active,
-#onboarding-tour-sync:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-sync {
   background-image: url("img/icons_sync-colored.svg");
 }
 
@@ -445,7 +445,7 @@
 }
 
 #onboarding-tour-library.onboarding-active,
-#onboarding-tour-library:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-library {
   background-image: url("img/icons_library-colored.svg");
 }
 
@@ -455,7 +455,7 @@
 }
 
 #onboarding-tour-performance.onboarding-active,
-#onboarding-tour-performance:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-performance {
   background-image: url("img/icons_performance-colored.svg");
 }
 
@@ -465,7 +465,7 @@
 }
 
 #onboarding-tour-screenshots.onboarding-active,
-#onboarding-tour-screenshots:hover {
+.onboarding-tour-item-container:hover #onboarding-tour-screenshots {
   background-image: url("img/icons_screenshots-colored.svg");
 }
 
