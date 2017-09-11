@@ -147,6 +147,83 @@ public:
                 mFontType == GFX_FONT_TYPE_TT_OPENTYPE);
     }
 
+    virtual bool SupportsRange(uint8_t range) {
+        return mUnicodeRanges.test(range);
+    }
+
+    virtual bool SkipDuringSystemFallback() {
+        return !HasCmapTable(); // explicitly skip non-SFNT fonts
+    }
+
+    virtual bool TestCharacterMap(uint32_t aCh);
+
+    virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                        FontListSizes* aSizes) const;
+
+    gfxFontEntry* Clone() const override;
+
+    // create a font entry for a font with a given name
+    static GDIFontEntry* CreateFontEntry(const nsAString& aName,
+                                         gfxWindowsFontType aFontType,
+                                         uint8_t aStyle,
+                                         uint16_t aWeight, int16_t aStretch,
+                                         gfxUserFontData* aUserFontData,
+                                         bool aFamilyHasItalicFace);
+
+    // create a font entry for a font referenced by its fullname
+    static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
+                                       uint16_t aWeight,
+                                       int16_t aStretch,
+                                       uint8_t aStyle);
+
+    gfxWindowsFontType mFontType;
+    bool mForceGDI    : 1;
+
+    // For src:local user-fonts, we keep track of whether the platform family
+    // contains an italic face, because in this case we can't safely ask GDI
+    // to create synthetic italics (oblique) via the LOGFONT.
+    // (For other types of font, this is just set to false.)
+    bool mFamilyHasItalicFace : 1;
+
+    gfxSparseBitSet mUnicodeRanges;
+
+protected:
+    friend class gfxGDIFont;
+
+    GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
+                 uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
+                 gfxUserFontData *aUserFontData, bool aFamilyHasItalicFace);
+
+    void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
+
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
+
+    virtual nsresult CopyFontTable(uint32_t aTableTag,
+                                   nsTArray<uint8_t>& aBuffer) override;
+
+    already_AddRefed<mozilla::gfx::UnscaledFontGDI> LookupUnscaledFont(HFONT aFont);
+
+    LOGFONTW mLogFont;
+
+    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
+};
+
+// a single font family, referencing one or more faces
+class GDIFontFamily : public gfxFontFamily
+{
+public:
+    explicit GDIFontFamily(const nsAString& aName) :
+        gfxFontFamily(aName),
+        mWindowsFamily(0),
+        mWindowsPitch(0),
+        mCharset()
+    {}
+
+    virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
+
+    uint8_t mWindowsFamily;
+    uint8_t mWindowsPitch;
+
     virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
         if (aGeneric.IsEmpty()) {
             return true;
@@ -182,6 +259,8 @@ public:
 
         return false;
     }
+
+    gfxSparseBitSet mCharset;
 
     virtual bool SupportsLangGroup(nsIAtom* aLangGroup) const override {
         if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
@@ -219,80 +298,6 @@ public:
 
         return false;
     }
-
-    virtual bool SupportsRange(uint8_t range) {
-        return mUnicodeRanges.test(range);
-    }
-
-    virtual bool SkipDuringSystemFallback() { 
-        return !HasCmapTable(); // explicitly skip non-SFNT fonts
-    }
-
-    virtual bool TestCharacterMap(uint32_t aCh);
-
-    virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontListSizes* aSizes) const;
-
-    gfxFontEntry* Clone() const override;
-
-    // create a font entry for a font with a given name
-    static GDIFontEntry* CreateFontEntry(const nsAString& aName,
-                                         gfxWindowsFontType aFontType,
-                                         uint8_t aStyle,
-                                         uint16_t aWeight, int16_t aStretch,
-                                         gfxUserFontData* aUserFontData,
-                                         bool aFamilyHasItalicFace);
-
-    // create a font entry for a font referenced by its fullname
-    static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
-                                       uint16_t aWeight,
-                                       int16_t aStretch,
-                                       uint8_t aStyle);
-
-    uint8_t mWindowsFamily;
-    uint8_t mWindowsPitch;
-
-    gfxWindowsFontType mFontType;
-    bool mForceGDI    : 1;
-
-    // For src:local user-fonts, we keep track of whether the platform family
-    // contains an italic face, because in this case we can't safely ask GDI
-    // to create synthetic italics (oblique) via the LOGFONT.
-    // (For other types of font, this is just set to false.)
-    bool mFamilyHasItalicFace : 1;
-
-    gfxSparseBitSet mCharset;
-    gfxSparseBitSet mUnicodeRanges;
-
-protected:
-    friend class gfxGDIFont;
-
-    GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                 uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
-                 gfxUserFontData *aUserFontData, bool aFamilyHasItalicFace);
-
-    void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
-
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
-
-    virtual nsresult CopyFontTable(uint32_t aTableTag,
-                                   nsTArray<uint8_t>& aBuffer) override;
-
-    already_AddRefed<mozilla::gfx::UnscaledFontGDI> LookupUnscaledFont(HFONT aFont);
-
-    LOGFONTW mLogFont;
-
-    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
-};
-
-// a single font family, referencing one or more faces
-class GDIFontFamily : public gfxFontFamily
-{
-public:
-    explicit GDIFontFamily(const nsAString& aName) :
-        gfxFontFamily(aName) {}
-
-    virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
 
 private:
     static int CALLBACK FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,

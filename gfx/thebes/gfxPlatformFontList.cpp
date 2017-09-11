@@ -500,8 +500,8 @@ gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
             continue;
         }
 
-        if (fontEntry->SupportsLangGroup(aLangGroup) &&
-            fontEntry->MatchesGenericFamily(aGenericFamily)) {
+        if (family->SupportsLangGroup(aLangGroup) &&
+            family->MatchesGenericFamily(aGenericFamily)) {
             nsAutoString localizedFamilyName;
             family->LocalizedName(localizedFamilyName);
             aListOfFonts.AppendElement(localizedFamilyName);
