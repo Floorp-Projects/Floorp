@@ -563,18 +563,23 @@ this.UITour = {
       }
 
       case "showFirefoxAccounts": {
-        // 'signup' is the only action that makes sense currently, so we don't
-        // accept arbitrary actions just to be safe...
-        let p = new URLSearchParams("action=signup&entrypoint=uitour");
+        let p;
+        if (data.email) {
+          // With email parameter added, we need to use 'email' action to help FxA determine
+          // whether the email is registered or not and direct the user down the correct flow
+          p =  new URLSearchParams("action=email&entrypoint=uitour");
+          p.append("email", data.email);
+        } else {
+          // 'signup' is the default action that makes sense currently, so we don't
+          // accept arbitrary actions just to be safe...
+          p =  new URLSearchParams("action=signup&entrypoint=uitour");
+        }
         // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
         if (!this._populateCampaignParams(p, data.extraURLCampaignParams)) {
           log.warn("showFirefoxAccounts: invalid campaign args specified");
           return false;
         }
 
-        if (data.email) {
-          p.append("email", data.email);
-        }
         // We want to replace the current tab.
         browser.loadURI("about:accounts?" + p.toString());
         break;

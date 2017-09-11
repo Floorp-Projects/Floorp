@@ -69,7 +69,7 @@ add_UITour_task(async function test_firefoxAccountsWithEmail() {
   info("Load about:accounts containing an iframe to https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts(null, "foo@bar.com");
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "about:accounts?action=signup&entrypoint=uitour&email=foo%40bar.com");
+                                       "about:accounts?action=email&entrypoint=uitour&email=foo%40bar.com");
 });
 
 add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
