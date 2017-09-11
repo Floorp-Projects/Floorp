@@ -45,7 +45,7 @@ add_task(async function test_webSocket() {
   await extension.startup();
   await extension.awaitMessage("ready");
   extension.sendMessage("go");
-  await extension.awaitFinish();
+  await extension.awaitFinish("websocket");
   await extension.unload();
 });
 
