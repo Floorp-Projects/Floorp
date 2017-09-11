@@ -76,7 +76,7 @@ body,
 }
 
 .toolbar-button:active::before {
-  filter: var(--checked-icon-filter);
+  filter: var(--theme-icon-checked-filter);
 }
 
 select {
@@ -166,7 +166,7 @@ select > option.divider {
 }
 
 #global-screenshot-button:disabled {
-  filter: var(--checked-icon-filter);
+  filter: var(--theme-icon-checked-filter);
   opacity: 1 !important;
 }
 

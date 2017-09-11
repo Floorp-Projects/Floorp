@@ -294,11 +294,6 @@ checkbox:-moz-focusring {
 }
 
 /* Icon-only buttons */
-.devtools-button:empty::before,
-.devtools-toolbarbutton:not([label]):not([disabled]) > image {
-  opacity: 0.8;
-}
-
 .devtools-button:hover:empty:not(:disabled):before,
 .devtools-button.checked:empty::before,
 .devtools-toolbarbutton:not([label]):not([disabled=true]):hover > image,
@@ -315,7 +310,7 @@ checkbox:-moz-focusring {
 .devtools-button.checked::before,
 .devtools-toolbarbutton:not([label])[checked=true] > image,
 .devtools-toolbarbutton:not([label])[open=true] > image {
-  filter: var(--checked-icon-filter);
+  filter: var(--theme-icon-checked-filter);
 }
 
 /* Button states */

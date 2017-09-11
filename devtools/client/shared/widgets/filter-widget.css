@@ -231,7 +231,7 @@
 #filter-container .add,
 #filter-container .remove-button,
 #toggle-presets {
-  filter: var(--icon-filter);
+  filter: var(--theme-icon-filter);
 }
 
 .show-presets #toggle-presets {
