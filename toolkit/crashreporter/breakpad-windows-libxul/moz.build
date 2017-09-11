@@ -32,4 +32,4 @@ SOURCES += objs_handler
 SOURCES += objs_sender
 SOURCES += objs_client_common
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()

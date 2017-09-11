@@ -1126,11 +1126,6 @@ VARIABLES = {
            FINAL_TARGET_FILES.images['do-not-use'] += ['bar.svg']
         """),
 
-    'DISABLE_STL_WRAPPING': (bool, bool,
-        """Disable the wrappers for STL which allow it to work with C++ exceptions
-        disabled.
-        """),
-
     'FINAL_TARGET_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """),
@@ -2170,6 +2165,16 @@ DEPRECATION_HINTS = {
         instead of
 
             CPP_UNIT_TESTS += ['foo', 'bar']
+        ''',
+
+    'DISABLE_STL_WRAPPING': '''
+        Please use
+
+            DisableStlWrapping()
+
+        instead of
+
+            DISABLE_STL_WRAPPING = True
         ''',
 
     'HOST_PROGRAM': '''

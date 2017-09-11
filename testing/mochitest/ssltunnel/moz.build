@@ -17,7 +17,7 @@ USE_LIBS += [
 
 # This isn't XPCOM code, but it wants to use STL, so disable the STL
 # wrappers
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-shadow']

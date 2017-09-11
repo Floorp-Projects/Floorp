@@ -27,4 +27,4 @@ if CONFIG['GNU_CXX']:
 if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
