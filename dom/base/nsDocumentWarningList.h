@@ -12,5 +12,5 @@
 
 DOCUMENT_WARNING(IgnoringWillChangeOverBudget)
 DOCUMENT_WARNING(PreventDefaultFromPassiveListener)
-DOCUMENT_WARNING(SVGReferenceLoop)
-DOCUMENT_WARNING(SVGReferenceChainLengthExceeded)
+DOCUMENT_WARNING(SVGRefLoop)
+DOCUMENT_WARNING(SVGRefChainLengthExceeded)
