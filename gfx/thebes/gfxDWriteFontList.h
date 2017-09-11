@@ -55,14 +55,20 @@ public:
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
 
-    bool IsSymbolFontFamily() const final;
-
     void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontListSizes* aSizes) const final;
     void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontListSizes* aSizes) const final;
 
+    bool FilterForFontList(nsIAtom* aLangGroup,
+                           const nsACString& aGeneric) const final {
+        return !IsSymbolFontFamily();
+    }
+
 protected:
+    // helper for FilterForFontList
+    bool IsSymbolFontFamily() const;
+
     /** This font family's directwrite fontfamily object */
     RefPtr<IDWriteFontFamily> mDWFamily;
     bool mForceGDIClassic;

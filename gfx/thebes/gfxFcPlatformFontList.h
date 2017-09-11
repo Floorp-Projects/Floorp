@@ -199,10 +199,16 @@ public:
                          bool& aNeedsSyntheticBold,
                          bool aIgnoreSizeTolerance) override;
 
-    bool SupportsLangGroup(nsIAtom *aLangGroup) const override;
+    bool FilterForFontList(nsIAtom* aLangGroup,
+                           const nsACString& aGeneric) const final {
+        return SupportsLangGroup(aLangGroup);
+    }
 
 protected:
     virtual ~gfxFontconfigFontFamily();
+
+    // helper for FilterForFontList
+    bool SupportsLangGroup(nsIAtom *aLangGroup) const;
 
     nsTArray<nsCountedRef<FcPattern> > mFontPatterns;
 

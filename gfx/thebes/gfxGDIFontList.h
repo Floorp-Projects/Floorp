@@ -220,10 +220,22 @@ public:
 
     virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
 
-    uint8_t mWindowsFamily;
-    uint8_t mWindowsPitch;
+    bool FilterForFontList(nsIAtom* aLangGroup,
+                           const nsACString& aGeneric) const final {
+        return !IsSymbolFontFamily() &&
+               SupportsLangGroup(aLangGroup) &&
+               MatchesGenericFamily(aGeneric);
+    }
 
-    virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
+protected:
+    friend class gfxGDIFontList;
+
+    // helpers for FilterForFontList
+    bool IsSymbolFontFamily() const {
+        return mCharset.test(SYMBOL_CHARSET);
+    }
+
+    bool MatchesGenericFamily(const nsACString& aGeneric) const {
         if (aGeneric.IsEmpty()) {
             return true;
         }
@@ -259,9 +271,7 @@ public:
         return false;
     }
 
-    gfxSparseBitSet mCharset;
-
-    virtual bool SupportsLangGroup(nsIAtom* aLangGroup) const override {
+    bool SupportsLangGroup(nsIAtom* aLangGroup) const {
         if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
             return true;
         }
@@ -298,9 +308,10 @@ public:
         return false;
     }
 
-    bool IsSymbolFontFamily() const final {
-        return mCharset.test(SYMBOL_CHARSET);
-    }
+    uint8_t mWindowsFamily;
+    uint8_t mWindowsPitch;
+
+    gfxSparseBitSet mCharset;
 
 private:
     static int CALLBACK FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,

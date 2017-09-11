@@ -753,16 +753,15 @@ public:
         mSkipDefaultFeatureSpaceCheck = aSkipCheck;
     }
 
-    virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
+    // Check whether this family is appropriate to include in the Preferences
+    // font list for the given langGroup and CSS generic, if the platform lets
+    // us determine this.
+    // Return true if the family should be included in the list, false to omit.
+    // Default implementation returns true for everything, so no filtering
+    // will occur; individual platforms may override.
+    virtual bool FilterForFontList(nsIAtom* aLangGroup,
+                                   const nsACString& aGeneric) const {
         return true;
-    }
-
-    virtual bool SupportsLangGroup(nsIAtom *aLangGroup) const {
-        return true;
-    }
-
-    virtual bool IsSymbolFontFamily() const {
-        return false;
     }
 
 protected:

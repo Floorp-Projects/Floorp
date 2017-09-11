@@ -483,9 +483,7 @@ gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
 {
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
         RefPtr<gfxFontFamily>& family = iter.Data();
-        if (!family->IsSymbolFontFamily() &&
-            family->SupportsLangGroup(aLangGroup) &&
-            family->MatchesGenericFamily(aGenericFamily)) {
+        if (family->FilterForFontList(aLangGroup, aGenericFamily)) {
             nsAutoString localizedFamilyName;
             family->LocalizedName(localizedFamilyName);
             aListOfFonts.AppendElement(localizedFamilyName);
