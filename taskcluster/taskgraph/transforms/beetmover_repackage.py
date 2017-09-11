@@ -215,6 +215,14 @@ def make_task_description(config, jobs):
                                   }
         dependencies.update(repackage_dependencies)
 
+        # If this isn't a direct dependency, it won't be in there.
+        if 'repackage-signing' not in dependencies:
+            repackage_signing_name = "repackage-signing"
+            repackage_signing_deps = {"repackage-signing":
+                                      dep_job.dependencies[repackage_signing_name]
+                                      }
+            dependencies.update(repackage_signing_deps)
+
         attributes = copy_attributes_from_dependent_job(dep_job)
         if job.get('locale'):
             attributes['locale'] = job['locale']
@@ -273,7 +281,6 @@ def generate_upstream_artifacts(build_task_ref, build_signing_task_ref,
                 _check_platform_matched_only_one_regex(
                     tasktype, platform, plarform_was_previously_matched_by_regex, platform_regex
                 )
-
                 upstream_artifacts.append({
                     "taskId": {"task-reference": ref},
                     "taskType": tasktype,
@@ -299,8 +306,12 @@ least 2 regular expressions. First matched: "{first_matched}". Second matched: \
 
 
 def is_valid_beetmover_job(job):
-    # windows builds don't have docker-image, so fewer dependencies
-    if any(b in job['attributes']['build_platform'] for b in _WINDOWS_BUILD_PLATFORMS):
+    # beetmover after partials-signing should have six dependencies.
+    # windows builds w/o partials don't have docker-image, so fewer
+    # dependencies
+    if 'partials-signing' in job['dependencies'].keys():
+        expected_dep_count = 6
+    elif any(b in job['attributes']['build_platform'] for b in _WINDOWS_BUILD_PLATFORMS):
         expected_dep_count = 4
     else:
         expected_dep_count = 5
@@ -321,6 +332,7 @@ def make_task_worker(config, jobs):
         build_signing_task = None
         repackage_task = None
         repackage_signing_task = None
+
         for dependency in job["dependencies"].keys():
             if 'repackage-signing' in dependency:
                 repackage_signing_task = dependency
