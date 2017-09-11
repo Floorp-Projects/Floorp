@@ -30,7 +30,7 @@ describe("Top Sites Feed", () => {
       updateSection: sinon.spy(),
       sections: new Map([["highlights", {}]])
     };
-    shortURLStub = sinon.stub().callsFake(site => site.url);
+    shortURLStub = sinon.stub().callsFake(site => site.url.match(/\/([^/]+)/)[1]);
     globals.set("NewTabUtils", fakeNewTabUtils);
     ({HighlightsFeed, HIGHLIGHTS_UPDATE_TIME, SECTION_ID} = injector({
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
@@ -72,7 +72,7 @@ describe("Top Sites Feed", () => {
     it("should add hostname and image to each link", async () => {
       links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jog"}];
       await feed.fetchHighlights();
-      assert.equal(feed.highlights[0].hostname, links[0].url);
+      assert.equal(feed.highlights[0].hostname, "mozilla.org");
       assert.equal(feed.highlights[0].image, links[0].preview_image_url);
     });
     it("should not include any links already in Top Sites", async () => {
@@ -85,6 +85,30 @@ describe("Top Sites Feed", () => {
       await feed.fetchHighlights();
       assert.equal(feed.highlights.length, 1);
       assert.deepEqual(feed.highlights[0], links[0]);
+    });
+    it("should not include history of same hostname as a bookmark", async () => {
+      links = [
+        {url: "https://site.com/bookmark", type: "bookmark"},
+        {url: "https://site.com/history", type: "history"}
+      ];
+
+      await feed.fetchHighlights();
+
+      assert.equal(feed.highlights.length, 1);
+      assert.deepEqual(feed.highlights[0], links[0]);
+    });
+    it("should take the first history of a hostname", async () => {
+      links = [
+        {url: "https://site.com/first", type: "history"},
+        {url: "https://site.com/second", type: "history"},
+        {url: "https://other", type: "history"}
+      ];
+
+      await feed.fetchHighlights();
+
+      assert.equal(feed.highlights.length, 2);
+      assert.deepEqual(feed.highlights[0], links[0]);
+      assert.deepEqual(feed.highlights[1], links[2]);
     });
     it("should set type to bookmark if there is a bookmarkGuid", async () => {
       links = [{url: "https://mozilla.org", type: "history", bookmarkGuid: "1234567890"}];

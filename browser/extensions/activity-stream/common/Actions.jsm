@@ -39,6 +39,7 @@ for (const type of [
   "NEW_TAB_INIT",
   "NEW_TAB_INITIAL_STATE",
   "NEW_TAB_LOAD",
+  "NEW_TAB_STATE_REQUEST",
   "NEW_TAB_UNLOAD",
   "OPEN_LINK",
   "OPEN_NEW_WINDOW",

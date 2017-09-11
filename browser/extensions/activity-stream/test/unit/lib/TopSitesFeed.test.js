@@ -295,6 +295,22 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(feed.store.dispatch);
       assert.notCalled(feed.getScreenshot);
     });
+    it("should skip getting screenshot if there is an icon of size greater than 96x96 and no tippy top", async () => {
+      sandbox.stub(feed, "getScreenshot");
+      feed.getLinksWithDefaults = () => [{
+        url: "foo.com",
+        favicon: "data:foo",
+        faviconSize: 196
+      }];
+      feed._tippyTopProvider.processSite = site => {
+        site.tippyTopIcon = null;
+        site.backgroundColor = null;
+        return site;
+      };
+      await feed.refresh(action);
+      assert.calledOnce(feed.store.dispatch);
+      assert.notCalled(feed.getScreenshot);
+    });
   });
   describe("getScreenshot", () => {
     it("should call Screenshots.getScreenshotForURL with the right url", async () => {

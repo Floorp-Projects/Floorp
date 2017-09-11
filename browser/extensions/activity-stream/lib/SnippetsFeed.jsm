@@ -121,7 +121,7 @@ this.SnippetsFeed = class SnippetsFeed {
     Services.prefs.removeObserver(TELEMETRY_PREF, this._refresh);
     Services.prefs.removeObserver(FXA_USERNAME_PREF, this._refresh);
     Services.obs.removeObserver(this, SEARCH_ENGINE_OBSERVER_TOPIC);
-    this.store.dispatch({type: at.SNIPPETS_RESET});
+    this.store.dispatch(ac.BroadcastToContent({type: at.SNIPPETS_RESET}));
   }
 
   showFirefoxAccounts(browser) {

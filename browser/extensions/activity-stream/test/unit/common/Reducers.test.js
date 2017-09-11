@@ -26,12 +26,20 @@ describe("Reducers", () => {
       const nextState = App(undefined, {type: at.LOCALE_UPDATED});
       assert.equal(nextState, INITIAL_STATE.App);
     });
-    it("should set locale, strings on LOCALE_UPDATE", () => {
+    it("should set locale, strings and text direction on LOCALE_UPDATE", () => {
       const strings = {};
       const action = {type: "LOCALE_UPDATED", data: {locale: "zh-CN", strings}};
       const nextState = App(undefined, action);
       assert.propertyVal(nextState, "locale", "zh-CN");
       assert.propertyVal(nextState, "strings", strings);
+      assert.propertyVal(nextState, "textDirection", "ltr");
+    });
+    it("should set rtl text direction for RTL locales", () => {
+      const action = {type: "LOCALE_UPDATED", data: {locale: "ar"}};
+
+      const nextState = App(undefined, action);
+
+      assert.propertyVal(nextState, "textDirection", "rtl");
     });
   });
   describe("TopSites", () => {

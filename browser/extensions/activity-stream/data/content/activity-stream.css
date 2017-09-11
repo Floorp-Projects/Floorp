@@ -64,7 +64,9 @@ input {
   .icon.icon-historyItem {
     background-image: url("assets/glyph-historyItem-16.svg"); }
   .icon.icon-trending {
-    background-image: url("assets/glyph-trending-16.svg"); }
+    background-image: url("assets/glyph-trending-16.svg");
+    transform: translateY(2px);
+    /* trending bolt is visually top heavy */ }
   .icon.icon-now {
     background-image: url("chrome://browser/skin/history.svg"); }
   .icon.icon-topsites {
@@ -317,17 +319,26 @@ main {
       opacity: 0; }
       .top-sites-list .top-site-outer .screenshot.active {
         opacity: 1; }
-    .top-sites-list .top-site-outer .tippy-top-icon {
+    .top-sites-list .top-site-outer .top-site-icon {
       position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
       border-radius: 6px;
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
       background-position: center center;
-      background-size: 96px;
-      background-repeat: no-repeat; }
+      background-repeat: no-repeat;
+      background-color: #F9F9FA; }
+    .top-sites-list .top-site-outer .rich-icon {
+      top: 0;
+      offset-inline-start: 0;
+      height: 100%;
+      width: 100%;
+      background-size: 96px; }
+    .top-sites-list .top-site-outer .default-icon {
+      z-index: 1;
+      top: -6px;
+      offset-inline-start: -6px;
+      height: 42px;
+      width: 42px;
+      background-size: 32px; }
     .top-sites-list .top-site-outer .title {
       font: message-box;
       height: 30px;
@@ -1017,11 +1028,10 @@ main {
     display: flex; }
   .card-outer .card-context-icon {
     fill: rgba(12, 12, 13, 0.6);
-    font-size: 13px;
-    margin-inline-end: 6px;
-    display: block; }
+    margin-inline-end: 6px; }
   .card-outer .card-context-label {
     flex-grow: 1;
+    line-height: 16px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; }
