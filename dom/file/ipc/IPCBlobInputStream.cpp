@@ -138,6 +138,7 @@ IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIInputStream> stream;
     IPCBlobInputStreamStorage::Get()->GetStream(mActor->ID(),
+                                                0, mLength,
                                                 getter_AddRefs(stream));
     if (stream) {
       mState = eRunning;
@@ -293,8 +294,7 @@ IPCBlobInputStream::Clone(nsIInputStream** aResult)
     return NS_ERROR_FAILURE;
   }
 
-  stream->mStart = mStart;
-  stream->mLength = mLength;
+  stream->InitWithExistingRange(mStart, mLength);
 
   stream.forget(aResult);
   return NS_OK;
@@ -332,7 +332,7 @@ IPCBlobInputStream::CloneWithRange(uint64_t aStart, uint64_t aLength,
     aLength = streamSize.value();
   }
 
-  stream->SetRange(aStart + mStart, aLength);
+  stream->InitWithExistingRange(aStart + mStart, aLength);
 
   stream.forget(aResult);
   return NS_OK;
@@ -469,11 +469,20 @@ IPCBlobInputStream::MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCal
 }
 
 void
-IPCBlobInputStream::SetRange(uint64_t aStart, uint64_t aLength)
+IPCBlobInputStream::InitWithExistingRange(uint64_t aStart, uint64_t aLength)
 {
   MOZ_ASSERT(mActor->Size() >= aStart + aLength);
   mStart = aStart;
   mLength = aLength;
+
+  // In the child, we slice in StreamReady() when we set mState to eRunning.
+  // But in the parent, we start out eRunning, so it's necessary to slice the
+  // stream as soon as we have the information during the initialization phase
+  // because the stream is immediately consumable.
+  if (mState == eRunning && mRemoteStream && XRE_IsParentProcess() &&
+      (mStart > 0 || mLength < mActor->Size())) {
+    mRemoteStream = new SlicedInputStream(mRemoteStream, mStart, mLength);
+  }
 }
 
 // nsIInputStreamCallback
@@ -512,6 +521,8 @@ IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
 {
   mozilla::ipc::IPCBlobInputStreamParams params;
   params.id() = mActor->ID();
+  params.start() = mStart;
+  params.length() = mLength;
 
   aParams = params;
 }
