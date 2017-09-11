@@ -62,12 +62,13 @@ class ParentDevToolsPanel {
 
     this.onToolboxPanelSelect = this.onToolboxPanelSelect.bind(this);
 
-    this.panelAdded = false;
-    this.addPanel();
-
+    this.unwatchExtensionProxyContextLoad = null;
     this.waitTopLevelContext = new Promise(resolve => {
       this._resolveTopLevelContext = resolve;
     });
+
+    this.panelAdded = false;
+    this.addPanel();
   }
 
   addPanel() {
@@ -88,7 +89,7 @@ class ParentDevToolsPanel {
           throw new Error("Unexpected toolbox received on addAdditionalTool build property");
         }
 
-        const destroy = this.buildPanel(window, toolbox);
+        const destroy = this.buildPanel(window);
 
         return {toolbox, destroy};
       },
@@ -97,7 +98,66 @@ class ParentDevToolsPanel {
     this.panelAdded = true;
   }
 
-  buildPanel(window, toolbox) {
+  buildPanel(window) {
+    const {toolbox} = this;
+
+    this.createBrowserElement(window);
+
+    toolbox.on("select", this.onToolboxPanelSelect);
+
+    // Return a cleanup method that is when the panel is destroyed, e.g.
+    // - when addon devtool panel has been disabled by the user from the toolbox preferences,
+    //   its ParentDevToolsPanel instance is still valid, but the built devtools panel is removed from
+    //   the toolbox (and re-built again if the user re-enables it from the toolbox preferences panel)
+    // - when the creator context has been destroyed, the ParentDevToolsPanel close method is called,
+    //   it removes the tool definition from the toolbox, which will call this destroy method.
+    return () => {
+      this.destroyBrowserElement();
+      toolbox.off("select", this.onToolboxPanelSelect);
+    };
+  }
+
+  async onToolboxPanelSelect(what, id) {
+    if (!this.waitTopLevelContext || !this.panelAdded) {
+      return;
+    }
+
+    // Wait that the panel is fully loaded and emit show.
+    await this.waitTopLevelContext;
+
+    if (!this.visible && id === this.id) {
+      this.visible = true;
+    } else if (this.visible && id !== this.id) {
+      this.visible = false;
+    }
+
+    const extensionMessage = `Extension:DevToolsPanel${this.visible ? "Shown" : "Hidden"}`;
+    this.context.parentMessageManager.sendAsyncMessage(extensionMessage, {
+      toolboxPanelId: this.id,
+    });
+  }
+
+  close() {
+    const {toolbox} = this;
+
+    if (!toolbox) {
+      throw new Error("Unable to destroy a closed devtools panel");
+    }
+
+    // Explicitly remove the panel if it is registered and the toolbox is not
+    // closing itself.
+    if (this.panelAdded && toolbox.isToolRegistered(this.id)) {
+      toolbox.removeAdditionalTool(this.id);
+    }
+
+    this.context = null;
+    this.toolbox = null;
+    this.waitTopLevelContext = null;
+    this._resolveTopLevelContext = null;
+  }
+
+  createBrowserElement(window) {
+    const {toolbox} = this;
     const {url} = this.panelOptions;
     const {document} = window;
 
@@ -130,7 +190,7 @@ class ParentDevToolsPanel {
     let hasTopLevelContext = false;
 
     // Listening to new proxy contexts.
-    const unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
+    this.unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
       // Keep track of the toolbox and target associated to the context, which is
       // needed by the API methods implementation.
       context.devToolsToolbox = toolbox;
@@ -154,65 +214,26 @@ class ParentDevToolsPanel {
     });
 
     browser.loadURI(url);
+  }
 
-    toolbox.on("select", this.onToolboxPanelSelect);
-
-    // Return a cleanup method that is when the panel is destroyed, e.g.
-    // - when addon devtool panel has been disabled by the user from the toolbox preferences,
-    //   its ParentDevToolsPanel instance is still valid, but the built devtools panel is removed from
-    //   the toolbox (and re-built again if the user re-enable it from the toolbox preferences panel)
-    // - when the creator context has been destroyed, the ParentDevToolsPanel close method is called,
-    //   it remove the tool definition from the toolbox, which will call this destroy method.
-    return () => {
+  destroyBrowserElement() {
+    const {browser, unwatchExtensionProxyContextLoad} = this;
+    if (unwatchExtensionProxyContextLoad) {
+      this.unwatchExtensionProxyContextLoad = null;
       unwatchExtensionProxyContextLoad();
+    }
+
+    if (browser) {
       browser.remove();
-      toolbox.off("select", this.onToolboxPanelSelect);
-
-      // If the panel has been disabled from the toolbox preferences,
-      // we need to re-initialize the waitTopLevelContext Promise.
-      this.waitTopLevelContext = new Promise(resolve => {
-        this._resolveTopLevelContext = resolve;
-      });
-    };
-  }
-
-  onToolboxPanelSelect(what, id) {
-    if (!this.waitTopLevelContext || !this.panelAdded) {
-      return;
-    }
-    if (!this.visible && id === this.id) {
-      // Wait that the panel is fully loaded and emit show.
-      this.waitTopLevelContext.then(() => {
-        this.visible = true;
-        this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelShown", {
-          toolboxPanelId: this.id,
-        });
-      });
-    } else if (this.visible && id !== this.id) {
-      this.visible = false;
-      this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelHidden", {
-        toolboxPanelId: this.id,
-      });
-    }
-  }
-
-  close() {
-    const {toolbox} = this;
-
-    if (!toolbox) {
-      throw new Error("Unable to destroy a closed devtools panel");
+      this.browser = null;
     }
 
-    // Explicitly remove the panel if it is registered and the toolbox is not
-    // closing itself.
-    if (this.panelAdded && toolbox.isToolRegistered(this.id) && !toolbox._destroyer) {
-      toolbox.removeAdditionalTool(this.id);
-    }
-
-    this.context = null;
-    this.toolbox = null;
-    this.waitTopLevelContext = null;
-    this._resolveTopLevelContext = null;
+    // If the panel has been removed or disabled (e.g. from the toolbox preferences
+    // or during the toolbox switching between docked and undocked),
+    // we need to re-initialize the waitTopLevelContext Promise.
+    this.waitTopLevelContext = new Promise(resolve => {
+      this._resolveTopLevelContext = resolve;
+    });
   }
 }
 
