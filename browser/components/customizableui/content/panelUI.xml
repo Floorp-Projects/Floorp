@@ -54,9 +54,9 @@
   <binding id="photonpanelmultiview" extends="chrome://browser/content/customizableui/panelUI.xml#panelmultiview">
     <content>
       <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,transitioning">
-        <xul:box anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
+        <xul:stack anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
           <children includes="panelview"/>
-        </xul:box>
+        </xul:stack>
       </xul:box>
       <xul:box class="panel-viewcontainer offscreen">
         <xul:box anonid="offscreenViewStack" class="panel-viewstack"/>
