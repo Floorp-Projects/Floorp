@@ -554,11 +554,18 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
   }
 
   aOffset = RoundedToInt(bounds.TopLeft());
-  nsRegion invalidRegion;
+
+  bool needPaint = true;
   nsAutoPtr<nsDisplayItemGeometry> geometry = fallbackData->GetGeometry();
 
-  if (geometry) {
+
+  // nsDisplayFilter is rendered via BasicLayerManager which means the invalidate
+  // region is unknown until we traverse the displaylist contained by it.
+  if (geometry && !fallbackData->IsInvalid() &&
+      aItem->GetType() != DisplayItemType::TYPE_FILTER) {
     nsRect invalid;
+    nsRegion invalidRegion;
+
     if (aItem->IsInvalid(invalid)) {
       invalidRegion.OrWith(clippedBounds);
     } else {
@@ -574,11 +581,12 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
         invalidRegion.OrWith(clippedBounds);
       }
     }
+    needPaint = !invalidRegion.IsEmpty();
   }
 
-  gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK ?
-                                                    gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
-  if (!geometry || !invalidRegion.IsEmpty() || fallbackData->IsInvalid()) {
+  if (needPaint) {
+    gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK ?
+                                                      gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
     if (gfxPrefs::WebRenderBlobImages()) {
       bool snapped;
       bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(clippedBounds);
