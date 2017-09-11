@@ -86,17 +86,6 @@ JS::RootingContext::traceStackRoots(JSTracer* trc)
     TraceStackRoots(trc, stackRoots_);
 }
 
-namespace js {
-namespace frontend {
-
-// Placeholder implementation.
-void
-TraceBinParser(JSTracer*, JS::AutoGCRooter*)
-{ }
-
-}
-}
-
 static void
 TraceExactStackRoots(const CooperatingContext& target, JSTracer* trc)
 {
@@ -571,4 +560,3 @@ JS::AddPersistentRoot(JSRuntime* rt, RootKind kind, PersistentRooted<void*>* roo
 {
     rt->heapRoots.ref()[kind].insertBack(root);
 }
-
