@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BasicCardPayment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentResponse.h"
 #include "nsContentUtils.h"
-#include "BasicCardPayment.h"
+#include "nsIURLParser.h"
+#include "nsNetCID.h"
 #include "PaymentRequestManager.h"
 
 namespace mozilla {
@@ -53,6 +55,191 @@ PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
 }
 
 nsresult
+PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
+                                       nsAString& aErrorMsg)
+{
+  /*
+   *   The syntax of a standardized payment method identifier is given by the
+   *   following [ABNF]:
+   *
+   *       stdpmi = part *( "-" part )
+   *       part = 1loweralpha *( DIGIT / loweralpha )
+   *       loweralpha =  %x61-7A
+   */
+  nsString::const_iterator start, end;
+  aIdentifier.BeginReading(start);
+  aIdentifier.EndReading(end);
+  while (start != end) {
+    // the first char must be in the range %x61-7A
+    if ((*start < 'a' || *start > 'z')) {
+      aErrorMsg.AssignLiteral("'");
+      aErrorMsg.Append(aIdentifier);
+      aErrorMsg.AppendLiteral("' is not valid. The character '");
+      aErrorMsg.Append(*start);
+      aErrorMsg.AppendLiteral("' at the beginning or after the '-' must be in the range [a-z].");
+      return NS_ERROR_RANGE_ERR;
+    }
+    ++start;
+    // the rest can be in the range %x61-7A + DIGITs
+    while (start != end && *start != '-' &&
+           ((*start >= 'a' && *start <= 'z') || (*start >= '0' && *start <= '9'))) {
+      ++start;
+    }
+    // if the char is not in the range %x61-7A + DIGITs, it must be '-'
+    if (start != end && *start != '-') {
+      aErrorMsg.AssignLiteral("'");
+      aErrorMsg.Append(aIdentifier);
+      aErrorMsg.AppendLiteral("' is not valid. The character '");
+      aErrorMsg.Append(*start);
+      aErrorMsg.AppendLiteral("' must be in the range [a-zA-z0-9-].");
+      return NS_ERROR_RANGE_ERR;
+    }
+    if (*start == '-') {
+      ++start;
+      // the last char can not be '-'
+      if (start == end) {
+        aErrorMsg.AssignLiteral("'");
+        aErrorMsg.Append(aIdentifier);
+        aErrorMsg.AppendLiteral("' is not valid. The last character '");
+        aErrorMsg.Append(*start);
+        aErrorMsg.AppendLiteral("' must be in the range [a-z0-9].");
+        return NS_ERROR_RANGE_ERR;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
+                                               nsAString& aErrorMsg)
+{
+  if (aIdentifier.IsEmpty()) {
+    aErrorMsg.AssignLiteral("Payment method identifier is required.");
+    return NS_ERROR_TYPE_ERR;
+  }
+  /*
+   *  URL-based payment method identifier
+   *
+   *  1. If url's scheme is not "https", return false.
+   *  2. If url's username or password is not the empty string, return false.
+   *  3. Otherwise, return true.
+   */
+  nsCOMPtr<nsIURLParser> urlParser = do_GetService(NS_STDURLPARSER_CONTRACTID);
+  MOZ_ASSERT(urlParser);
+  uint32_t schemePos = 0;
+  int32_t schemeLen = 0;
+  uint32_t authorityPos = 0;
+  int32_t authorityLen = 0;
+  NS_ConvertUTF16toUTF8 url(aIdentifier);
+  nsresult rv = urlParser->ParseURL(url.get(),
+                                    url.Length(),
+                                    &schemePos, &schemeLen,
+                                    &authorityPos, &authorityLen,
+                                    nullptr, nullptr);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_RANGE_ERR);
+  if (schemeLen == -1) {
+    // The PMI is not a URL-based PMI, check if it is a standardized PMI
+    return IsValidStandardizedPMI(aIdentifier, aErrorMsg);
+  }
+  if (!Substring(aIdentifier, schemePos, schemeLen).EqualsASCII("https")) {
+    aErrorMsg.AssignLiteral("'");
+    aErrorMsg.Append(aIdentifier);
+    aErrorMsg.AppendLiteral("' is not valid. The scheme must be 'https'.");
+    return NS_ERROR_RANGE_ERR;
+  }
+  if (Substring(aIdentifier, authorityPos, authorityLen).IsEmpty()) {
+    aErrorMsg.AssignLiteral("'");
+    aErrorMsg.Append(aIdentifier);
+    aErrorMsg.AppendLiteral("' is not valid. hostname can not be empty.");
+    return NS_ERROR_RANGE_ERR;
+  }
+
+  uint32_t usernamePos = 0;
+  int32_t usernameLen = 0;
+  uint32_t passwordPos = 0;
+  int32_t passwordLen = 0;
+  uint32_t hostnamePos = 0;
+  int32_t hostnameLen = 0;
+  int32_t port = 0;
+
+  NS_ConvertUTF16toUTF8 authority(Substring(aIdentifier, authorityPos, authorityLen));
+  rv = urlParser->ParseAuthority(authority.get(),
+                                 authority.Length(),
+                                 &usernamePos, &usernameLen,
+                                 &passwordPos, &passwordLen,
+                                 &hostnamePos, &hostnameLen,
+                                 &port);
+  if (NS_FAILED(rv)) {
+    // Handle the special cases that URLParser treats it as an invalid URL, but
+    // are used in web-platform-test
+    // For exmaple:
+    //     https://:@example.com             // should be considered as valid
+    //     https://:password@example.com.    // should be considered as invalid
+    int32_t atPos = authority.FindChar('@');
+    if (atPos >= 0) {
+      // only accept the case https://:@xxx
+      if (atPos == 1 && authority.CharAt(0) == ':') {
+        usernamePos = 0;
+        usernameLen = 0;
+        passwordPos = 0;
+        passwordLen = 0;
+      } else {
+        // for the fail cases, don't care about what the actual length is.
+        usernamePos = 0;
+        usernameLen = INT32_MAX;
+        passwordPos = 0;
+        passwordLen = INT32_MAX;
+      }
+    } else {
+      usernamePos = 0;
+      usernameLen = -1;
+      passwordPos = 0;
+      passwordLen = -1;
+    }
+    // Parse server information when both username and password are empty or do not
+    // exist.
+    if ((usernameLen <= 0) && (passwordLen <= 0)) {
+      if (authority.Length() - atPos - 1 == 0) {
+        aErrorMsg.AssignLiteral("'");
+        aErrorMsg.Append(aIdentifier);
+        aErrorMsg.AppendLiteral("' is not valid. hostname can not be empty.");
+        return NS_ERROR_RANGE_ERR;
+      }
+      // Re-using nsIURLParser::ParseServerInfo to extract the hostname and port
+      // information. This can help us to handle complicated IPv6 cases.
+      nsAutoCString serverInfo(Substring(authority,
+                                         atPos + 1,
+                                         authority.Length() - atPos - 1));
+      rv = urlParser->ParseServerInfo(serverInfo.get(),
+                                      serverInfo.Length(),
+                                      &hostnamePos, &hostnameLen, &port);
+      if (NS_FAILED(rv)) {
+        // ParseServerInfo returns NS_ERROR_MALFORMED_URI in all fail cases, we
+        // probably need a followup bug to figure out the fail reason.
+        return NS_ERROR_RANGE_ERR;
+      }
+    }
+  }
+  // PMI is valid when usernameLen/passwordLen equals to -1 or 0.
+  if (usernameLen > 0 || passwordLen > 0) {
+    aErrorMsg.AssignLiteral("'");
+    aErrorMsg.Append(aIdentifier);
+    aErrorMsg.AssignLiteral("' is not valid. Username and password must be empty.");
+    return NS_ERROR_RANGE_ERR;
+  }
+
+  // PMI is valid when hostnameLen is larger than 0
+  if (hostnameLen <= 0) {
+    aErrorMsg.AssignLiteral("'");
+    aErrorMsg.Append(aIdentifier);
+    aErrorMsg.AppendLiteral("' is not valid. hostname can not be empty.");
+    return NS_ERROR_RANGE_ERR;
+  }
+  return NS_OK;
+}
+
+nsresult
 PaymentRequest::IsValidMethodData(JSContext* aCx,
                                   const Sequence<PaymentMethodData>& aMethodData,
                                   nsAString& aErrorMsg)
@@ -63,11 +250,12 @@ PaymentRequest::IsValidMethodData(JSContext* aCx,
   }
 
   for (const PaymentMethodData& methodData : aMethodData) {
-    if (methodData.mSupportedMethods.IsEmpty()) {
-      aErrorMsg.AssignLiteral(
-        "Payment method identifier is required.");
-      return NS_ERROR_TYPE_ERR;
+    nsresult rv = IsValidPaymentMethodIdentifier(methodData.mSupportedMethods,
+                                                 aErrorMsg);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+
     RefPtr<BasicCardService> service = BasicCardService::GetService();
     MOZ_ASSERT(service);
     if (service->IsBasicCardPayment(methodData.mSupportedMethods)) {
@@ -299,6 +487,10 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString
   if (aDetails.mModifiers.WasPassed()) {
     const Sequence<PaymentDetailsModifier>& modifiers = aDetails.mModifiers.Value();
     for (const PaymentDetailsModifier& modifier : modifiers) {
+      rv = IsValidPaymentMethodIdentifier(modifier.mSupportedMethods, aErrorMsg);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.modifiers.total"),
                                  modifier.mTotal.mAmount,
                                  true, // isTotalItem
@@ -377,7 +569,11 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
                                   aMethodData,
                                   message);
   if (NS_FAILED(rv)) {
-    aRv.ThrowTypeError<MSG_ILLEGAL_TYPE_PR_CONSTRUCTOR>(message);
+    if (rv == NS_ERROR_TYPE_ERR) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_TYPE_PR_CONSTRUCTOR>(message);
+    } else if (rv == NS_ERROR_RANGE_ERR) {
+      aRv.ThrowRangeError<MSG_ILLEGAL_RANGE_PR_CONSTRUCTOR>(message);
+    }
     return nullptr;
   }
   rv = IsValidDetailsInit(aDetails, message);
