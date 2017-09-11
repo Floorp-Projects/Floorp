@@ -223,6 +223,13 @@ class TestEmitterBasic(unittest.TestCase):
                                      'A list of strings must be provided'):
             self.read_topsrcdir(reader)
 
+    def test_compile_flags_templates(self):
+        reader = self.reader('compile-flags-templates')
+        sources, flags, lib = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['STL'], [])
+        self.assertEqual(flags.flags['VISIBILITY'], [])
+
     def test_disable_stl_wrapping(self):
         reader = self.reader('disable-stl-wrapping')
         sources, flags, lib = self.read_topsrcdir(reader)
