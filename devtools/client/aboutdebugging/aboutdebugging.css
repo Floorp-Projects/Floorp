@@ -20,7 +20,13 @@ button {
 
 /* Category panels */
 
+#categories {
+  display: flex;
+  flex-direction: column;
+}
+
 .category {
+  border: 0 solid transparent;
   display: flex;
   flex-direction: row;
   align-items: center;
