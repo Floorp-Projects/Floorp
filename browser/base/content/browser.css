@@ -95,11 +95,6 @@ panelview:not([mainview]):not([current]) {
   visibility: collapse;
 }
 
-photonpanelmultiview panelview:not([current]) {
-  transition: none;
-  visibility: collapse;
-}
-
 panelview[mainview] > .panel-header,
 panelview:not([title]) > .panel-header {
   display: none;
