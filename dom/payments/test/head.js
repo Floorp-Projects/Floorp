@@ -7,7 +7,7 @@ function checkSimplePayment(aSimplePayment) {
 
   const methodData = aSimplePayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
   ok(methodData, "Fail to get payment methodData.");
-  is(methodData.supportedMethods, "MyPay", "supported method should be 'MyPay'.");
+  is(methodData.supportedMethods, "basic-card", "supported method should be 'basic-card'.");
   ok(!methodData.data, "methodData.data should not exist.");
 
   // checking the passed PaymentDetails parameter
@@ -36,7 +36,7 @@ function checkDupShippingOptionsPayment(aPayment) {
 
   const methodData = aPayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
   ok(methodData, "Fail to get payment methodData.");
-  is(methodData.supportedMethods, "MyPay", "methodData.supportedMethod name should be 'MyPay'.");
+  is(methodData.supportedMethods, "basic-card", "methodData.supportedMethod name should be 'basic-card'.");
   ok(!methodData.data, "methodData.data should not exist.");
 
   // checking the passed PaymentDetails parameter
