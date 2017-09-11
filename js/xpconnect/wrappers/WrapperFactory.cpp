@@ -561,7 +561,7 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
 
         // If we want to apply add-on interposition in the target compartment,
         // then we try to "upgrade" the wrapper to an interposing one.
-        if (targetCompartmentPrivate->scope->HasInterposition())
+        if (targetCompartmentPrivate->hasInterposition)
             wrapper = SelectAddonWrapper(cx, obj, wrapper);
     }
 

@@ -29,6 +29,11 @@ const HTML_VOID_ELEMENTS = [
   "hr", "img", "input", "keygen", "link", "meta", "param", "source",
   "track", "wbr" ];
 
+// Global tooltip inspector
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const INSPECTOR_L10N =
+  new LocalizationHelper("devtools/client/locales/inspector.properties");
+
 /**
  * Creates an editor for an Element node.
  *
@@ -155,6 +160,7 @@ ElementEditor.prototype = {
     this.eventNode.classList.add("markupview-events");
     this.eventNode.dataset.event = "true";
     this.eventNode.textContent = "ev";
+    this.eventNode.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
     this.elt.appendChild(this.eventNode);
   },
 

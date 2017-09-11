@@ -65,8 +65,10 @@ EventTooltip.prototype = {
 
     const sourceMapService = this._toolbox.sourceMapURLService;
 
+    const Bubbling = L10N.getStr("eventsTooltip.Bubbling");
+    const Capturing = L10N.getStr("eventsTooltip.Capturing");
     for (let listener of this._eventListenerInfos) {
-      let phase = listener.capturing ? "Capturing" : "Bubbling";
+      let phase = listener.capturing ? Capturing : Bubbling;
       let level = listener.DOM0 ? "DOM0" : "DOM2";
 
       // Create this early so we can refer to it from a closure, below.
@@ -179,7 +181,6 @@ EventTooltip.prototype = {
         let dom0 = doc.createElementNS(XHTML_NS, "span");
         dom0.className = "event-tooltip-attributes";
         dom0.textContent = level;
-        dom0.setAttribute("title", level);
         attributesBox.appendChild(dom0);
       }
 

@@ -1462,7 +1462,7 @@ exports.unreachable = unreachable;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.isValidUrl = exports.isExternalLinkTargetSet = exports.addLinkAttributes = exports.RenderingCancelledException = exports.CustomStyle = undefined;
+exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.isValidUrl = exports.isExternalLinkTargetSet = exports.addLinkAttributes = exports.RenderingCancelledException = exports.CustomStyle = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
@@ -1472,7 +1472,8 @@ var _global_scope2 = _interopRequireDefault(_global_scope);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var DEFAULT_LINK_REL = 'noopener noreferrer nofollow';
+const DEFAULT_LINK_REL = 'noopener noreferrer nofollow';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 class DOMCanvasFactory {
   create(width, height) {
     if (width <= 0 || height <= 0) {
@@ -1546,6 +1547,22 @@ class DOMCMapReaderFactory {
       };
       request.send(null);
     });
+  }
+}
+class DOMSVGFactory {
+  create(width, height) {
+    (0, _util.assert)(width > 0 && height > 0, 'Invalid SVG dimensions');
+    let svg = document.createElementNS(SVG_NS, 'svg:svg');
+    svg.setAttribute('version', '1.1');
+    svg.setAttribute('width', width + 'px');
+    svg.setAttribute('height', height + 'px');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    return svg;
+  }
+  createElement(type) {
+    (0, _util.assert)(typeof type === 'string', 'Invalid SVG element type');
+    return document.createElementNS(SVG_NS, type);
   }
 }
 var CustomStyle = function CustomStyleClosure() {
@@ -1708,6 +1725,7 @@ exports.getDefaultSetting = getDefaultSetting;
 exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
 exports.DOMCanvasFactory = DOMCanvasFactory;
 exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
+exports.DOMSVGFactory = DOMSVGFactory;
 
 /***/ }),
 /* 2 */
@@ -1763,6 +1781,10 @@ class AnnotationElementFactory {
         return new PopupAnnotationElement(parameters);
       case _util.AnnotationType.LINE:
         return new LineAnnotationElement(parameters);
+      case _util.AnnotationType.SQUARE:
+        return new SquareAnnotationElement(parameters);
+      case _util.AnnotationType.CIRCLE:
+        return new CircleAnnotationElement(parameters);
       case _util.AnnotationType.HIGHLIGHT:
         return new HighlightAnnotationElement(parameters);
       case _util.AnnotationType.UNDERLINE:
@@ -1789,6 +1811,7 @@ class AnnotationElement {
     this.downloadManager = parameters.downloadManager;
     this.imageResourcesPath = parameters.imageResourcesPath;
     this.renderInteractiveForms = parameters.renderInteractiveForms;
+    this.svgFactory = parameters.svgFactory;
     if (isRenderable) {
       this.container = this._createContainer(ignoreBorder);
     }
@@ -1872,7 +1895,8 @@ class AnnotationElement {
 }
 class LinkAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    super(parameters, true);
+    let isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action);
+    super(parameters, isRenderable);
   }
   render() {
     this.container.className = 'linkAnnotation';
@@ -2064,7 +2088,7 @@ class PopupAnnotationElement extends AnnotationElement {
     super(parameters, isRenderable);
   }
   render() {
-    const IGNORE_TYPES = ['Line'];
+    const IGNORE_TYPES = ['Line', 'Square', 'Circle'];
     this.container.className = 'popupAnnotation';
     if (IGNORE_TYPES.indexOf(this.data.parentType) >= 0) {
       return this.container;
@@ -2170,27 +2194,73 @@ class LineAnnotationElement extends AnnotationElement {
     super(parameters, isRenderable, true);
   }
   render() {
-    const SVG_NS = 'http://www.w3.org/2000/svg';
     this.container.className = 'lineAnnotation';
     let data = this.data;
     let width = data.rect[2] - data.rect[0];
     let height = data.rect[3] - data.rect[1];
-    let svg = document.createElementNS(SVG_NS, 'svg:svg');
-    svg.setAttributeNS(null, 'version', '1.1');
-    svg.setAttributeNS(null, 'width', width + 'px');
-    svg.setAttributeNS(null, 'height', height + 'px');
-    svg.setAttributeNS(null, 'preserveAspectRatio', 'none');
-    svg.setAttributeNS(null, 'viewBox', '0 0 ' + width + ' ' + height);
-    let line = document.createElementNS(SVG_NS, 'svg:line');
-    line.setAttributeNS(null, 'x1', data.rect[2] - data.lineCoordinates[0]);
-    line.setAttributeNS(null, 'y1', data.rect[3] - data.lineCoordinates[1]);
-    line.setAttributeNS(null, 'x2', data.rect[2] - data.lineCoordinates[2]);
-    line.setAttributeNS(null, 'y2', data.rect[3] - data.lineCoordinates[3]);
-    line.setAttributeNS(null, 'stroke-width', data.borderStyle.width);
-    line.setAttributeNS(null, 'stroke', 'transparent');
+    let svg = this.svgFactory.create(width, height);
+    let line = this.svgFactory.createElement('svg:line');
+    line.setAttribute('x1', data.rect[2] - data.lineCoordinates[0]);
+    line.setAttribute('y1', data.rect[3] - data.lineCoordinates[1]);
+    line.setAttribute('x2', data.rect[2] - data.lineCoordinates[2]);
+    line.setAttribute('y2', data.rect[3] - data.lineCoordinates[3]);
+    line.setAttribute('stroke-width', data.borderStyle.width);
+    line.setAttribute('stroke', 'transparent');
     svg.appendChild(line);
     this.container.append(svg);
-    this._createPopup(this.container, line, this.data);
+    this._createPopup(this.container, line, data);
+    return this.container;
+  }
+}
+class SquareAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+  render() {
+    this.container.className = 'squareAnnotation';
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let borderWidth = data.borderStyle.width;
+    let square = this.svgFactory.createElement('svg:rect');
+    square.setAttribute('x', borderWidth / 2);
+    square.setAttribute('y', borderWidth / 2);
+    square.setAttribute('width', width - borderWidth);
+    square.setAttribute('height', height - borderWidth);
+    square.setAttribute('stroke-width', borderWidth);
+    square.setAttribute('stroke', 'transparent');
+    square.setAttribute('fill', 'none');
+    svg.appendChild(square);
+    this.container.append(svg);
+    this._createPopup(this.container, square, data);
+    return this.container;
+  }
+}
+class CircleAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+  render() {
+    this.container.className = 'circleAnnotation';
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let borderWidth = data.borderStyle.width;
+    let circle = this.svgFactory.createElement('svg:ellipse');
+    circle.setAttribute('cx', width / 2);
+    circle.setAttribute('cy', height / 2);
+    circle.setAttribute('rx', width / 2 - borderWidth / 2);
+    circle.setAttribute('ry', height / 2 - borderWidth / 2);
+    circle.setAttribute('stroke-width', borderWidth);
+    circle.setAttribute('stroke', 'transparent');
+    circle.setAttribute('fill', 'none');
+    svg.appendChild(circle);
+    this.container.append(svg);
+    this._createPopup(this.container, circle, data);
     return this.container;
   }
 }
@@ -2293,7 +2363,8 @@ class AnnotationLayer {
         linkService: parameters.linkService,
         downloadManager: parameters.downloadManager,
         imageResourcesPath: parameters.imageResourcesPath || (0, _dom_utils.getDefaultSetting)('imageResourcesPath'),
-        renderInteractiveForms: parameters.renderInteractiveForms || false
+        renderInteractiveForms: parameters.renderInteractiveForms || false,
+        svgFactory: new _dom_utils.DOMSVGFactory()
       });
       if (element.isRenderable) {
         parameters.div.appendChild(element.render());
@@ -3786,8 +3857,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.9.530';
-  exports.build = build = 'd1089a28';
+  exports.version = version = '1.9.554';
+  exports.build = build = 'ba219965';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3813,6 +3884,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.SVGGraphics = undefined;
 
 var _util = __w_pdfjs_require__(0);
+
+var _dom_utils = __w_pdfjs_require__(1);
 
 var SVGGraphics = function () {
   throw new Error('Not implemented: SVGGraphics');
@@ -4843,8 +4916,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '1.9.530';
-  PDFJS.build = 'd1089a28';
+  PDFJS.version = '1.9.554';
+  PDFJS.build = 'ba219965';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -10410,8 +10483,8 @@ exports.PDFDataTransportStream = PDFDataTransportStream;
 "use strict";
 
 
-var pdfjsVersion = '1.9.530';
-var pdfjsBuild = 'd1089a28';
+var pdfjsVersion = '1.9.554';
+var pdfjsBuild = 'ba219965';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(9);
 var pdfjsDisplayAPI = __w_pdfjs_require__(4);

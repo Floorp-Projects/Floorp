@@ -526,14 +526,15 @@ class JS_PUBLIC_API(AutoRequireNoGC)
  */
 class JS_PUBLIC_API(AutoAssertNoGC) : public AutoRequireNoGC
 {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     JSContext* cx_;
 
   public:
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     // This gets the context from TLS if it is not passed in.
     explicit AutoAssertNoGC(JSContext* cx = nullptr);
     ~AutoAssertNoGC();
 #else
+  public:
     explicit AutoAssertNoGC(JSContext* cx = nullptr) {}
     ~AutoAssertNoGC() {}
 #endif

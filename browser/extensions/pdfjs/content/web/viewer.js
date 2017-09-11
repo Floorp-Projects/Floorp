@@ -91,7 +91,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.waitOnEventOrTimeout = exports.WaitOnType = exports.localized = exports.animationStarted = exports.normalizeWheelEventDelta = exports.binarySearchFirstItem = exports.watchScroll = exports.scrollIntoView = exports.getOutputScale = exports.approximateFraction = exports.roundToDivide = exports.getVisibleElements = exports.parseQueryString = exports.noContextMenuHandler = exports.getPDFFileNameFromURL = exports.ProgressBar = exports.EventBus = exports.NullL10n = exports.mozL10n = exports.RendererType = exports.cloneObj = exports.VERTICAL_PADDING = exports.SCROLLBAR_PADDING = exports.MAX_AUTO_SCALE = exports.UNKNOWN_SCALE = exports.MAX_SCALE = exports.MIN_SCALE = exports.DEFAULT_SCALE = exports.DEFAULT_SCALE_VALUE = exports.CSS_UNITS = undefined;
+exports.waitOnEventOrTimeout = exports.WaitOnType = exports.localized = exports.animationStarted = exports.normalizeWheelEventDelta = exports.binarySearchFirstItem = exports.watchScroll = exports.scrollIntoView = exports.getOutputScale = exports.approximateFraction = exports.roundToDivide = exports.getVisibleElements = exports.parseQueryString = exports.noContextMenuHandler = exports.getPDFFileNameFromURL = exports.ProgressBar = exports.EventBus = exports.NullL10n = exports.mozL10n = exports.RendererType = exports.cloneObj = exports.isValidRotation = exports.VERTICAL_PADDING = exports.SCROLLBAR_PADDING = exports.MAX_AUTO_SCALE = exports.UNKNOWN_SCALE = exports.MAX_SCALE = exports.MIN_SCALE = exports.DEFAULT_SCALE = exports.DEFAULT_SCALE_VALUE = exports.CSS_UNITS = undefined;
 
 var _pdfjsLib = __webpack_require__(1);
 
@@ -373,6 +373,9 @@ function normalizeWheelEventDelta(evt) {
   }
   return delta;
 }
+function isValidRotation(angle) {
+  return Number.isInteger(angle) && angle % 90 === 0;
+}
 function cloneObj(obj) {
   let result = Object.create(null);
   for (let i in obj) {
@@ -516,6 +519,7 @@ exports.UNKNOWN_SCALE = UNKNOWN_SCALE;
 exports.MAX_AUTO_SCALE = MAX_AUTO_SCALE;
 exports.SCROLLBAR_PADDING = SCROLLBAR_PADDING;
 exports.VERTICAL_PADDING = VERTICAL_PADDING;
+exports.isValidRotation = isValidRotation;
 exports.cloneObj = cloneObj;
 exports.RendererType = RendererType;
 exports.mozL10n = mozL10n;
@@ -1411,6 +1415,7 @@ let PDFViewerApplication = {
         this.pdfHistory.initialize(id, resetHistory);
         if (this.pdfHistory.initialBookmark) {
           this.initialBookmark = this.pdfHistory.initialBookmark;
+          this.initialRotation = this.pdfHistory.initialRotation;
         }
       }
       let initialParams = {
@@ -1423,13 +1428,16 @@ let PDFViewerApplication = {
         zoom: _ui_utils.DEFAULT_SCALE_VALUE,
         scrollLeft: '0',
         scrollTop: '0',
+        rotation: null,
         sidebarView: _pdf_sidebar.SidebarView.NONE
       }).catch(() => {});
       Promise.all([storePromise, pageModePromise]).then(([values = {}, pageMode]) => {
         let hash = this.viewerPrefs['defaultZoomValue'] ? 'zoom=' + this.viewerPrefs['defaultZoomValue'] : null;
+        let rotation = null;
         let sidebarView = this.viewerPrefs['sidebarViewOnLoad'];
         if (values.exists && this.viewerPrefs['showPreviousViewOnLoad']) {
           hash = 'page=' + values.page + '&zoom=' + (this.viewerPrefs['defaultZoomValue'] || values.zoom) + ',' + values.scrollLeft + ',' + values.scrollTop;
+          rotation = parseInt(values.rotation, 10);
           sidebarView = sidebarView || values.sidebarView | 0;
         }
         if (pageMode && !this.viewerPrefs['disablePageMode']) {
@@ -1437,12 +1445,16 @@ let PDFViewerApplication = {
         }
         return {
           hash,
+          rotation,
           sidebarView
         };
-      }).then(({ hash, sidebarView }) => {
+      }).then(({ hash, rotation, sidebarView }) => {
         initialParams.bookmark = this.initialBookmark;
         initialParams.hash = hash;
-        this.setInitialView(hash, { sidebarView });
+        this.setInitialView(hash, {
+          rotation,
+          sidebarView
+        });
         if (!this.isViewerEmbedded) {
           pdfViewer.focus();
         }
@@ -1553,13 +1565,21 @@ let PDFViewerApplication = {
       });
     });
   },
-  setInitialView(storedHash, { sidebarView } = {}) {
+  setInitialView(storedHash, { rotation, sidebarView } = {}) {
+    let setRotation = angle => {
+      if ((0, _ui_utils.isValidRotation)(angle)) {
+        this.pdfViewer.pagesRotation = angle;
+      }
+    };
     this.isInitialViewSet = true;
     this.pdfSidebar.setInitialView(sidebarView);
     if (this.initialBookmark) {
+      setRotation(this.initialRotation);
+      delete this.initialRotation;
       this.pdfLinkService.setHash(this.initialBookmark);
       this.initialBookmark = null;
     } else if (storedHash) {
+      setRotation(rotation);
       this.pdfLinkService.setHash(storedHash);
     }
     this.toolbar.setPageNumber(this.pdfViewer.currentPageNumber, this.pdfViewer.currentPageLabel);
@@ -1618,13 +1638,8 @@ let PDFViewerApplication = {
     if (!this.pdfDocument) {
       return;
     }
-    let { pdfViewer, pdfThumbnailViewer } = this;
-    let pageNumber = pdfViewer.currentPageNumber;
-    let newRotation = (pdfViewer.pagesRotation + 360 + delta) % 360;
-    pdfViewer.pagesRotation = newRotation;
-    pdfThumbnailViewer.pagesRotation = newRotation;
-    this.forceRendering();
-    pdfViewer.currentPageNumber = pageNumber;
+    let newRotation = (this.pdfViewer.pagesRotation + 360 + delta) % 360;
+    this.pdfViewer.pagesRotation = newRotation;
   },
   requestPresentationMode() {
     if (!this.pdfPresentationMode) {
@@ -1645,6 +1660,7 @@ let PDFViewerApplication = {
     eventBus.on('updateviewarea', webViewerUpdateViewarea);
     eventBus.on('pagechanging', webViewerPageChanging);
     eventBus.on('scalechanging', webViewerScaleChanging);
+    eventBus.on('rotationchanging', webViewerRotationChanging);
     eventBus.on('sidebarviewchanged', webViewerSidebarViewChanged);
     eventBus.on('pagemode', webViewerPageMode);
     eventBus.on('namedaction', webViewerNamedAction);
@@ -1700,6 +1716,7 @@ let PDFViewerApplication = {
     eventBus.off('updateviewarea', webViewerUpdateViewarea);
     eventBus.off('pagechanging', webViewerPageChanging);
     eventBus.off('scalechanging', webViewerScaleChanging);
+    eventBus.off('rotationchanging', webViewerRotationChanging);
     eventBus.off('sidebarviewchanged', webViewerSidebarViewChanged);
     eventBus.off('pagemode', webViewerPageMode);
     eventBus.off('namedaction', webViewerNamedAction);
@@ -1954,7 +1971,8 @@ function webViewerUpdateViewarea(evt) {
       'page': location.pageNumber,
       'zoom': location.scale,
       'scrollLeft': location.left,
-      'scrollTop': location.top
+      'scrollTop': location.top,
+      'rotation': location.rotation
     }).catch(function () {});
   }
   let href = PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
@@ -2063,6 +2081,11 @@ function webViewerFindFromUrlHash(evt) {
 function webViewerScaleChanging(evt) {
   PDFViewerApplication.toolbar.setPageScale(evt.presetValue, evt.scale);
   PDFViewerApplication.pdfViewer.update();
+}
+function webViewerRotationChanging(evt) {
+  PDFViewerApplication.pdfThumbnailViewer.pagesRotation = evt.pagesRotation;
+  PDFViewerApplication.forceRendering();
+  PDFViewerApplication.pdfViewer.currentPageNumber = evt.pageNumber;
 }
 function webViewerPageChanging(evt) {
   let page = evt.pageNumber;
@@ -2399,6 +2422,12 @@ class PDFLinkService {
   set page(value) {
     this.pdfViewer.currentPageNumber = value;
   }
+  get rotation() {
+    return this.pdfViewer.pagesRotation;
+  }
+  set rotation(value) {
+    this.pdfViewer.pagesRotation = value;
+  }
   navigateTo(dest) {
     let goToDestination = ({ namedDest, explicitDest }) => {
       let destRef = explicitDest[0],
@@ -2417,7 +2446,7 @@ class PDFLinkService {
           });
           return;
         }
-      } else if ((destRef | 0) === destRef) {
+      } else if (Number.isInteger(destRef)) {
         pageNumber = destRef + 1;
       } else {
         console.error(`PDFLinkService.navigateTo: "${destRef}" is not ` + `a valid destination reference, for dest="${dest}".`);
@@ -2608,7 +2637,7 @@ function isValidExplicitDestination(dest) {
     return false;
   }
   let page = dest[0];
-  if (!(typeof page === 'object' && typeof page.num === 'number' && (page.num | 0) === page.num && typeof page.gen === 'number' && (page.gen | 0) === page.gen) && !(typeof page === 'number' && (page | 0) === page && page >= 0)) {
+  if (!(typeof page === 'object' && Number.isInteger(page.num) && Number.isInteger(page.gen)) && !(Number.isInteger(page) && page >= 0)) {
     return false;
   }
   let zoom = dest[1];
@@ -2654,6 +2683,10 @@ class SimpleLinkService {
     return 0;
   }
   set page(value) {}
+  get rotation() {
+    return 0;
+  }
+  set rotation(value) {}
   navigateTo(dest) {}
   getDestinationHash(dest) {
     return '#';
@@ -3244,35 +3277,35 @@ var _preferences = __webpack_require__(26);
 var _app = __webpack_require__(4);
 
 ;
-var FirefoxCom = function FirefoxComClosure() {
+let FirefoxCom = function FirefoxComClosure() {
   return {
     requestSync(action, data) {
-      var request = document.createTextNode('');
+      let request = document.createTextNode('');
       document.documentElement.appendChild(request);
-      var sender = document.createEvent('CustomEvent');
+      let sender = document.createEvent('CustomEvent');
       sender.initCustomEvent('pdf.js.message', true, false, {
         action,
         data,
         sync: true
       });
       request.dispatchEvent(sender);
-      var response = sender.detail.response;
+      let response = sender.detail.response;
       document.documentElement.removeChild(request);
       return response;
     },
     request(action, data, callback) {
-      var request = document.createTextNode('');
+      let request = document.createTextNode('');
       if (callback) {
         document.addEventListener('pdf.js.response', function listener(event) {
-          var node = event.target;
-          var response = event.detail.response;
+          let node = event.target;
+          let response = event.detail.response;
           document.documentElement.removeChild(node);
           document.removeEventListener('pdf.js.response', listener);
           return callback(response);
         });
       }
       document.documentElement.appendChild(request);
-      var sender = document.createEvent('CustomEvent');
+      let sender = document.createEvent('CustomEvent');
       sender.initCustomEvent('pdf.js.message', true, false, {
         action,
         data,
@@ -3283,41 +3316,37 @@ var FirefoxCom = function FirefoxComClosure() {
     }
   };
 }();
-var DownloadManager = function DownloadManagerClosure() {
-  function DownloadManager() {}
-  DownloadManager.prototype = {
-    downloadUrl: function DownloadManager_downloadUrl(url, filename) {
-      FirefoxCom.request('download', {
-        originalUrl: url,
-        filename
-      });
-    },
-    downloadData: function DownloadManager_downloadData(data, filename, contentType) {
-      var blobUrl = (0, _pdfjsLib.createObjectURL)(data, contentType, false);
-      FirefoxCom.request('download', {
-        blobUrl,
-        originalUrl: blobUrl,
-        filename,
-        isAttachment: true
-      });
-    },
-    download: function DownloadManager_download(blob, url, filename) {
-      let blobUrl = window.URL.createObjectURL(blob);
-      let onResponse = err => {
-        if (err && this.onerror) {
-          this.onerror(err);
-        }
-        window.URL.revokeObjectURL(blobUrl);
-      };
-      FirefoxCom.request('download', {
-        blobUrl,
-        originalUrl: url,
-        filename
-      }, onResponse);
-    }
-  };
-  return DownloadManager;
-}();
+class DownloadManager {
+  downloadUrl(url, filename) {
+    FirefoxCom.request('download', {
+      originalUrl: url,
+      filename
+    });
+  }
+  downloadData(data, filename, contentType) {
+    let blobUrl = (0, _pdfjsLib.createObjectURL)(data, contentType, false);
+    FirefoxCom.request('download', {
+      blobUrl,
+      originalUrl: blobUrl,
+      filename,
+      isAttachment: true
+    });
+  }
+  download(blob, url, filename) {
+    let blobUrl = URL.createObjectURL(blob);
+    let onResponse = err => {
+      if (err && this.onerror) {
+        this.onerror(err);
+      }
+      URL.revokeObjectURL(blobUrl);
+    };
+    FirefoxCom.request('download', {
+      blobUrl,
+      originalUrl: url,
+      filename
+    }, onResponse);
+  }
+}
 class FirefoxPreferences extends _preferences.BasePreferences {
   _writeToStorage(prefObj) {
     return new Promise(function (resolve) {
@@ -3327,7 +3356,7 @@ class FirefoxPreferences extends _preferences.BasePreferences {
   _readFromStorage(prefObj) {
     return new Promise(function (resolve) {
       FirefoxCom.request('getPreferences', prefObj, function (prefStr) {
-        var readPrefs = JSON.parse(prefStr);
+        let readPrefs = JSON.parse(prefStr);
         resolve(readPrefs);
       });
     });
@@ -3349,8 +3378,8 @@ class MozL10n {
   }
 }
 (function listenFindEvents() {
-  var events = ['find', 'findagain', 'findhighlightallchange', 'findcasesensitivitychange'];
-  var handleEvent = function (evt) {
+  const events = ['find', 'findagain', 'findhighlightallchange', 'findcasesensitivitychange'];
+  let handleEvent = function (evt) {
     if (!_app.PDFViewerApplication.initialized) {
       return;
     }
@@ -3364,7 +3393,7 @@ class MozL10n {
       findPrevious: !!evt.detail.findPrevious
     });
   };
-  for (var i = 0, len = events.length; i < len; i++) {
+  for (let i = 0, len = events.length; i < len; i++) {
     window.addEventListener(events[i], handleEvent);
   }
 })();
@@ -3386,13 +3415,13 @@ _app.PDFViewerApplication.externalServices = {
     FirefoxCom.request('updateFindControlState', data);
   },
   initPassiveLoading(callbacks) {
-    var pdfDataRangeTransport;
+    let pdfDataRangeTransport;
     window.addEventListener('message', function windowMessage(e) {
       if (e.source !== null) {
         console.warn('Rejected untrusted message from ' + e.origin);
         return;
       }
-      var args = e.data;
+      let args = e.data;
       if (typeof args !== 'object' || !('pdfjsLoadAction' in args)) {
         return;
       }
@@ -3437,23 +3466,23 @@ _app.PDFViewerApplication.externalServices = {
     return new FirefoxPreferences();
   },
   createL10n() {
-    var mozL10n = document.mozL10n;
+    let mozL10n = document.mozL10n;
     return new MozL10n(mozL10n);
   },
   get supportsIntegratedFind() {
-    var support = FirefoxCom.requestSync('supportsIntegratedFind');
+    let support = FirefoxCom.requestSync('supportsIntegratedFind');
     return (0, _pdfjsLib.shadow)(this, 'supportsIntegratedFind', support);
   },
   get supportsDocumentFonts() {
-    var support = FirefoxCom.requestSync('supportsDocumentFonts');
+    let support = FirefoxCom.requestSync('supportsDocumentFonts');
     return (0, _pdfjsLib.shadow)(this, 'supportsDocumentFonts', support);
   },
   get supportsDocumentColors() {
-    var support = FirefoxCom.requestSync('supportsDocumentColors');
+    let support = FirefoxCom.requestSync('supportsDocumentColors');
     return (0, _pdfjsLib.shadow)(this, 'supportsDocumentColors', support);
   },
   get supportedMouseWheelZoomModifierKeys() {
-    var support = FirefoxCom.requestSync('supportedMouseWheelZoomModifierKeys');
+    let support = FirefoxCom.requestSync('supportedMouseWheelZoomModifierKeys');
     return (0, _pdfjsLib.shadow)(this, 'supportedMouseWheelZoomModifierKeys', support);
   }
 };
@@ -4416,7 +4445,7 @@ var _dom_events = __webpack_require__(2);
 
 const HASH_CHANGE_TIMEOUT = 1000;
 const POSITION_UPDATED_THRESHOLD = 50;
-const UPDATE_VIEWAREA_TIMEOUT = 2000;
+const UPDATE_VIEWAREA_TIMEOUT = 1000;
 function getCurrentHash() {
   return document.location.hash;
 }
@@ -4429,7 +4458,8 @@ function parseCurrentHash(linkService) {
   }
   return {
     hash,
-    page
+    page,
+    rotation: linkService.rotation
   };
 }
 class PDFHistory {
@@ -4438,6 +4468,7 @@ class PDFHistory {
     this.eventBus = eventBus || (0, _dom_events.getGlobalEventBus)();
     this.initialized = false;
     this.initialBookmark = null;
+    this.initialRotation = null;
     this._boundEvents = Object.create(null);
     this._isViewerInPresentationMode = false;
     this._isPagesLoaded = false;
@@ -4461,6 +4492,7 @@ class PDFHistory {
     let state = window.history.state;
     this.initialized = true;
     this.initialBookmark = null;
+    this.initialRotation = null;
     this._popStateInProgress = false;
     this._blockHashChange = 0;
     this._currentHash = getCurrentHash();
@@ -4469,19 +4501,23 @@ class PDFHistory {
     this._destination = null;
     this._position = null;
     if (!this._isValidState(state) || resetHistory) {
-      let { hash, page } = parseCurrentHash(this.linkService);
+      let { hash, page, rotation } = parseCurrentHash(this.linkService);
       if (!hash || reInitialized || resetHistory) {
         this._pushOrReplaceState(null, true);
         return;
       }
       this._pushOrReplaceState({
         hash,
-        page
+        page,
+        rotation
       }, true);
       return;
     }
     let destination = state.destination;
     this._updateInternalState(destination, state.uid, true);
+    if (destination.rotation !== undefined) {
+      this.initialRotation = destination.rotation;
+    }
     if (destination.dest) {
       this.initialBookmark = JSON.stringify(destination.dest);
       this._destination.page = null;
@@ -4516,8 +4552,15 @@ class PDFHistory {
     this._pushOrReplaceState({
       dest: explicitDest,
       hash,
-      page: pageNumber
+      page: pageNumber,
+      rotation: this.linkService.rotation
     }, forceReplace);
+    if (!this._popStateInProgress) {
+      this._popStateInProgress = true;
+      Promise.resolve().then(() => {
+        this._popStateInProgress = false;
+      });
+    }
   }
   pushCurrentPosition() {
     if (!this.initialized || this._popStateInProgress) {
@@ -4608,6 +4651,10 @@ class PDFHistory {
     return true;
   }
   _updateInternalState(destination, uid, removeTemporary = false) {
+    if (this._updateViewareaTimeout) {
+      clearTimeout(this._updateViewareaTimeout);
+      this._updateViewareaTimeout = null;
+    }
     if (removeTemporary && destination && destination.temporary) {
       delete destination.temporary;
     }
@@ -4624,7 +4671,8 @@ class PDFHistory {
     this._position = {
       hash: this._isViewerInPresentationMode ? `page=${location.pageNumber}` : location.pdfOpenParams.substring(1),
       page: this.linkService.page,
-      first: location.pageNumber
+      first: location.pageNumber,
+      rotation: location.rotation
     };
     if (this._popStateInProgress) {
       return;
@@ -4647,10 +4695,11 @@ class PDFHistory {
     this._currentHash = newHash;
     if (!state || false) {
       this._currentUid = this._uid;
-      let { hash, page } = parseCurrentHash(this.linkService);
+      let { hash, page, rotation } = parseCurrentHash(this.linkService);
       this._pushOrReplaceState({
         hash,
-        page
+        page,
+        rotation
       }, true);
       return;
     }
@@ -4668,24 +4717,11 @@ class PDFHistory {
         this._blockHashChange--;
       });
     }
-    if (state.uid < this._currentUid && this._position && this._destination) {
-      let shouldGoBack = false;
-      if (this._destination.temporary) {
-        this._pushOrReplaceState(this._position);
-        shouldGoBack = true;
-      } else if (this._destination.page && this._destination.page !== this._position.first && this._destination.page !== this._position.page) {
-        this._pushOrReplaceState(this._destination);
-        this._pushOrReplaceState(this._position);
-        shouldGoBack = true;
-      }
-      if (shouldGoBack) {
-        this._currentUid = state.uid;
-        window.history.back();
-        return;
-      }
-    }
     let destination = state.destination;
     this._updateInternalState(destination, state.uid, true);
+    if ((0, _ui_utils.isValidRotation)(destination.rotation)) {
+      this.linkService.rotation = destination.rotation;
+    }
     if (destination.dest) {
       this.linkService.navigateTo(destination.dest);
     } else if (destination.hash) {
@@ -6319,10 +6355,13 @@ class PDFThumbnailViewer {
     return this._pagesRotation;
   }
   set pagesRotation(rotation) {
-    if (!(typeof rotation === 'number' && rotation % 90 === 0)) {
+    if (!(0, _ui_utils.isValidRotation)(rotation)) {
       throw new Error('Invalid thumbnails rotation angle.');
     }
     if (!this.pdfDocument) {
+      return;
+    }
+    if (this._pagesRotation === rotation) {
       return;
     }
     this._pagesRotation = rotation;
@@ -6531,7 +6570,7 @@ class PDFViewer {
     return this._currentPageNumber;
   }
   set currentPageNumber(val) {
-    if ((val | 0) !== val) {
+    if (!Number.isInteger(val)) {
       throw new Error('Invalid page number.');
     }
     if (!this.pdfDocument) {
@@ -6600,18 +6639,29 @@ class PDFViewer {
     return this._pagesRotation;
   }
   set pagesRotation(rotation) {
-    if (!(typeof rotation === 'number' && rotation % 90 === 0)) {
+    if (!(0, _ui_utils.isValidRotation)(rotation)) {
       throw new Error('Invalid pages rotation angle.');
     }
     if (!this.pdfDocument) {
       return;
     }
+    if (this._pagesRotation === rotation) {
+      return;
+    }
     this._pagesRotation = rotation;
+    let pageNumber = this._currentPageNumber;
     for (let i = 0, ii = this._pages.length; i < ii; i++) {
       let pageView = this._pages[i];
       pageView.update(pageView.scale, rotation);
     }
-    this._setScale(this._currentScaleValue, true);
+    if (this._currentScaleValue) {
+      this._setScale(this._currentScaleValue, true);
+    }
+    this.eventBus.dispatch('rotationchanging', {
+      source: this,
+      pagesRotation: rotation,
+      pageNumber
+    });
     if (this.defaultRenderingQueue) {
       this.update();
     }
@@ -6940,6 +6990,7 @@ class PDFViewer {
       scale: normalizedScaleValue,
       top: intTop,
       left: intLeft,
+      rotation: this._pagesRotation,
       pdfOpenParams
     };
   }
@@ -7220,7 +7271,7 @@ class BasePreferences {
           throw new Error(`Set preference: "${value}" is a ${valueType}, ` + `expected a ${defaultType}.`);
         }
       } else {
-        if (valueType === 'number' && (value | 0) !== value) {
+        if (valueType === 'number' && !Number.isInteger(value)) {
           throw new Error(`Set preference: "${value}" must be an integer.`);
         }
       }

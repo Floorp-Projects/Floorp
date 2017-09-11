@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jit/CompactBuffer.h"
-#include "jit/IonCaches.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitSpewer.h"
 #include "jit/MacroAssembler.h"
