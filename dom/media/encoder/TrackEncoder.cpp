@@ -20,8 +20,10 @@ static const int DEFAULT_SAMPLING_RATE = 16000;
 static const int DEFAULT_FRAME_WIDTH = 640;
 static const int DEFAULT_FRAME_HEIGHT = 480;
 static const int DEFAULT_TRACK_RATE = USECS_PER_S;
-// 30 seconds threshold if the encoder still can't not be initialized.
-static const int INIT_FAILED_DURATION = 30;
+// 1 second threshold if the audio encoder cannot be initialized.
+static const int AUDIO_INIT_FAILED_DURATION = 1;
+// 30 second threshold if the video encoder cannot be initialized.
+static const int VIDEO_INIT_FAILED_DURATION = 30;
 
 TrackEncoder::TrackEncoder()
   : mReentrantMonitor("media.TrackEncoder")
@@ -82,11 +84,24 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
     mNotInitDuration += aQueuedMedia.GetDuration();
     if (!mInitialized &&
-        (mNotInitDuration / aGraph->GraphRate() > INIT_FAILED_DURATION) &&
+        (mNotInitDuration / aGraph->GraphRate() >=
+         AUDIO_INIT_FAILED_DURATION) &&
         mInitCounter > 1) {
-      TRACK_LOG(LogLevel::Warning, ("[AudioTrackEncoder]: Initialize failed for 30s."));
-      NotifyEndOfStream();
-      return;
+      // Perform a best effort initialization since we haven't gotten any
+      // data yet. Motivated by issues like Bug 1336367
+      TRACK_LOG(LogLevel::Warning,
+                ("[AudioTrackEncoder]: Initialize failed "
+                 "for %ds. Attempting to init with %d "
+                 "(default) channels!",
+                 AUDIO_INIT_FAILED_DURATION,
+                 DEFAULT_CHANNELS));
+      nsresult rv = Init(DEFAULT_CHANNELS, aGraph->GraphRate());
+      if (NS_FAILED(rv)) {
+        TRACK_LOG(LogLevel::Error,
+                  ("[AudioTrackEncoder]: Fail to initialize the encoder!"));
+        NotifyCancel();
+        return;
+      }
     }
   }
 
@@ -221,9 +236,11 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment)
   }
 
   mNotInitDuration += aSegment.GetDuration();
-  if ((mNotInitDuration / mTrackRate > INIT_FAILED_DURATION) &&
+  if ((mNotInitDuration / mTrackRate >= VIDEO_INIT_FAILED_DURATION) &&
       mInitCounter > 1) {
-    TRACK_LOG(LogLevel::Debug, ("[VideoTrackEncoder]: Initialize failed for %ds.", INIT_FAILED_DURATION));
+    TRACK_LOG(LogLevel::Debug,
+              ("[VideoTrackEncoder]: Initialize failed for %ds.",
+               VIDEO_INIT_FAILED_DURATION));
     NotifyEndOfStream();
     return;
   }
