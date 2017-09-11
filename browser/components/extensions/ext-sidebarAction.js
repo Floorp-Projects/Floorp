@@ -182,7 +182,7 @@ this.sidebarAction = class extends ExtensionAPI {
 
     // oncommand gets attached to menuitem, so we use the observes attribute to
     // get the command id we pass to SidebarUI.
-    broadcaster.setAttribute("oncommand", "SidebarUI.show(this.getAttribute('observes'))");
+    broadcaster.setAttribute("oncommand", "SidebarUI.toggle(this.getAttribute('observes'))");
 
     let header = document.getElementById("sidebar-switcher-target");
     header.addEventListener("SidebarShown", this.updateHeader);
