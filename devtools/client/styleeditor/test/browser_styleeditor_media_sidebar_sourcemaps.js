@@ -17,9 +17,9 @@ waitForExplicitFinish();
 add_task(function* () {
   Services.prefs.setBoolPref(MAP_PREF, true);
 
-  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+  let { ui, onMediaListChanged } = yield openStyleEditorForURL(TESTCASE_URI);
 
-  yield listenForMediaChange(ui);
+  yield onMediaListChanged;
 
   is(ui.editors.length, 1, "correct number of editors");
 
@@ -56,14 +56,6 @@ function openEditor(editor) {
   getLinkFor(editor).click();
 
   return editor.getSourceEditor();
-}
-
-function listenForMediaChange(UI) {
-  return new Promise(resolve => {
-    UI.once("media-list-changed", () => {
-      resolve();
-    });
-  });
 }
 
 function getLinkFor(editor) {
