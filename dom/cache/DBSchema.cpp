@@ -3184,7 +3184,7 @@ nsresult MigrateFrom25To26(mozIStorageConnection* aConn, bool& aRewriteSchema)
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "UPDATE entries SET response_padding_size = 0 "
       "WHERE response_type = 4" // opaque response
   ));
