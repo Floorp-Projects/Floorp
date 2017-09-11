@@ -194,8 +194,7 @@ function isObject(aObj, aExpectedObj, aMsg) {
 /**
  * is() function checking the expected value is within the range.
  */
-function isWithin(aExpected, aGot, aWithin, aMsg)
-{
+function isWithin(aExpected, aGot, aWithin, aMsg) {
   if (Math.abs(aGot - aExpected) <= aWithin) {
     ok(true, `${aMsg} - Got ${aGot}`);
   } else {
