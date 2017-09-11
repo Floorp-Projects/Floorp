@@ -9,11 +9,10 @@ links to already-completed tasks.
 Concepts
 --------
 
-* *Task Kind* - Tasks are grouped by kind, where tasks of the same kind do not
-  have interdependencies but have substantial similarities, and may depend on
-  tasks of other kinds.  Kinds are the primary means of supporting diversity,
-  in that a developer can add a new kind to do just about anything without
-  impacting other kinds.
+* *Task Kind* - Tasks are grouped by kind, where tasks of the same kind
+  have substantial similarities or share common processing logic. Kinds
+  are the primary means of supporting diversity, in that a developer can
+  add a new kind to do just about anything without impacting other kinds.
 
 * *Task Attributes* - Tasks have string attributes by which can be used for
   filtering.  Attributes are documented in :doc:`attributes`.
@@ -54,7 +53,7 @@ The full list of pre-defined keys in this file is:
 
 Any other keys are subject to interpretation by the kind implementation.
 
-The result is a nice segmentation of implementation so that the more esoteric
+The result is a segmentation of implementation so that the more esoteric
 in-tree projects can do their crazy stuff in an isolated kind without making
 the bread-and-butter build and test configuration more complicated.
 
