@@ -6,15 +6,10 @@ loader: taskgraph.loader.single_dep:loader
 
 transforms:
    - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.balrog:transforms
+   - taskgraph.transforms.beetmover_repackage_l10n:transforms
+   - taskgraph.transforms.beetmover_repackage:transforms
+   - taskgraph.transforms.beetmover_partials:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - beetmover
-  - beetmover-l10n
-  - beetmover-repackage
-  - beetmover-partials
-
-only-for-attributes:
-  - nightly
-  - signed
+  - partials-signing
