@@ -501,6 +501,9 @@ pref("browser.bookmarks.max_backups",             15);
 
 pref("browser.bookmarks.showRecentlyBookmarked",  true);
 
+// Whether menu should close after Ctrl-click, middle-click, etc.
+pref("browser.bookmarks.openInTabClosesMenu", true);
+
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
 pref("javascript.options.showInConsole",          true);
