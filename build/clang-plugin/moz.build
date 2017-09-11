@@ -48,7 +48,7 @@ third_party_paths.inputs = [
     '/tools/rewriting/ThirdPartyPaths.txt',
 ]
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 NO_VISIBILITY_FLAGS = True
 
 # libc++ is required to build plugins against clang on OS X.
