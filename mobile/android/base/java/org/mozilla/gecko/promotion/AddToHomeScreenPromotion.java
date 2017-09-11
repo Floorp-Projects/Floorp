@@ -13,7 +13,6 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.json.JSONException;
@@ -134,11 +133,6 @@ public class AddToHomeScreenPromotion extends TabsTrayVisibilityAwareDelegate im
         if (isTabsTrayVisible()) {
             // We only want to show this prompt if this tab is in the foreground and not on top
             // of the tabs tray.
-            return;
-        }
-
-        // Temporary remove add to home screen
-        if (AppConstants.Versions.feature26Plus) {
             return;
         }
 
