@@ -111,8 +111,6 @@ public:
 
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr);
 
-    virtual bool IsSymbolFont();
-
     void FillLogFont(LOGFONTW *aLogFont, uint16_t aWeight, gfxFloat aSize);
 
     static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
@@ -297,6 +295,10 @@ public:
         }
 
         return false;
+    }
+
+    bool IsSymbolFontFamily() const final {
+        return mCharset.test(SYMBOL_CHARSET);
     }
 
 private:
