@@ -203,7 +203,7 @@ IPCBlobInputStreamChild::State()
   return mState;
 }
 
-already_AddRefed<nsIInputStream>
+already_AddRefed<IPCBlobInputStream>
 IPCBlobInputStreamChild::CreateStream()
 {
   bool shouldMigrate = false;
