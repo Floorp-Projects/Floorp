@@ -1835,6 +1835,7 @@ pref("network.http.rcwn.cache_queue_priority_threshold", 2);
 // is smaller than this size.
 pref("network.http.rcwn.small_resource_size_kb", 256);
 
+pref("network.http.rcwn.min_wait_before_racing_ms", 0);
 pref("network.http.rcwn.max_wait_before_racing_ms", 500);
 
 // The ratio of the transaction count for the focused window and the count of
