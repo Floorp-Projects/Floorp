@@ -809,7 +809,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 
   // Process relocation list.
   for (uint32_t idx = 0; idx < mRelocations.Length(); idx++) {
-    if (mRelocations[idx]->IsInDocument()) {
+    // owner should be in a document and have na associated DOM node (docs sometimes don't)
+    if (mRelocations[idx]->IsInDocument() && mRelocations[idx]->HasOwnContent()) {
       mDocument->DoARIAOwnsRelocation(mRelocations[idx]);
     }
   }
