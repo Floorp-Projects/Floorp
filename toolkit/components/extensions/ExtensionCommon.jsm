@@ -195,8 +195,7 @@ class BaseContext {
 
   setContentWindow(contentWindow) {
     let {document} = contentWindow;
-    let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDocShell);
+    let {docShell} = document;
 
     this.innerWindowID = getInnerWindowID(contentWindow);
     this.messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
