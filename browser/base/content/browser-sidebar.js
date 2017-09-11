@@ -235,6 +235,13 @@ var SidebarUI = {
       // refers to no longer exists, so we should assume this sidebar
       // panel has been uninstalled. (249883)
       this._box.removeAttribute("sidebarcommand");
+      // On a startup in which the startup cache was invalidated (e.g. app update)
+      // extensions will not be started prior to delayedLoad, thus the
+      // sidebarcommand element will not exist yet.  Store the commandID so
+      // extensions may reopen if necessary.  A startup cache invalidation
+      // can be forced (for testing) by deleting compatibility.ini from the
+      // profile.
+      this.lastOpenedId = commandID;
     }
   },
 

@@ -540,7 +540,7 @@ protected:
 
   // Opens the channel, using an HTTP byte range request to start at mOffset
   // if possible. Main thread only.
-  nsresult OpenChannel(nsIStreamListener** aStreamListener);
+  nsresult OpenChannel();
   nsresult RecreateChannel();
   // Add headers to HTTP request. Main thread only.
   nsresult SetupChannelHeaders();
@@ -573,20 +573,11 @@ protected:
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
   bool               mReopenOnError;
-  // When this flag is set, we should not report the next close of the
-  // channel.
-  bool               mIgnoreClose;
 
   // Any thread access
   MediaCacheStream mCacheStream;
 
   MediaChannelStatistics mChannelStatistics;
-
-  // True if we couldn't suspend the stream and we therefore don't want
-  // to resume later. This is usually due to the channel not being in the
-  // isPending state at the time of the suspend request.
-  bool mIgnoreResume;
-
   ChannelSuspendAgent mSuspendAgent;
 };
 
