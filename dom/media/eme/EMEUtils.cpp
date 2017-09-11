@@ -72,15 +72,4 @@ KeySystemToGMPName(const nsAString& aKeySystem)
   return EmptyString();
 }
 
-CDMType
-ToCDMTypeTelemetryEnum(const nsString& aKeySystem)
-{
-  if (IsWidevineKeySystem(aKeySystem)) {
-    return CDMType::eWidevine;
-  } else if (IsClearkeyKeySystem(aKeySystem)) {
-    return CDMType::eClearKey;
-  }
-  return CDMType::eUnknown;
-}
-
 } // namespace mozilla
