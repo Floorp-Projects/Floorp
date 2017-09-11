@@ -205,16 +205,8 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   }
 
   LayoutDevicePoint ldPoint = aPoint * aScale;
-  if (!mActiveElementManager->ActiveElementUsesStyle()) {
-    // If the active element isn't visually affected by the :active style, we
-    // have no need to wait the extra sActiveDurationMs to make the activation
-    // visually obvious to the user.
-    widget::nsAutoRollup rollup(touchRollup.get());
-    APZCCallbackHelper::FireSingleTapEvent(ldPoint, aModifiers, aClickCount, widget);
-    return;
-  }
 
-  APZES_LOG("Active element uses style, scheduling timer for click event\n");
+  APZES_LOG("Scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
   dom::TabChild* tabChild = widget->GetOwningTabChild();
 

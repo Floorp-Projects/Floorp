@@ -27,8 +27,7 @@ static bool sActivationDelayMsSet = false;
 ActiveElementManager::ActiveElementManager()
   : mCanBePan(false),
     mCanBePanSet(false),
-    mSetActiveTask(nullptr),
-    mActiveElementUsesStyle(false)
+    mSetActiveTask(nullptr)
 {
   if (!sActivationDelayMsSet) {
     Preferences::AddIntVarCache(&sActivationDelayMs,
@@ -142,12 +141,6 @@ ActiveElementManager::HandleTouchEnd()
   mCanBePanSet = false;
 }
 
-bool
-ActiveElementManager::ActiveElementUsesStyle() const
-{
-  return mActiveElementUsesStyle;
-}
-
 static nsPresContext*
 GetPresContextFor(nsIContent* aContent)
 {
@@ -161,30 +154,6 @@ GetPresContextFor(nsIContent* aContent)
   return shell->GetPresContext();
 }
 
-static bool
-ElementHasActiveStyle(dom::Element* aElement)
-{
-  nsPresContext* pc = GetPresContextFor(aElement);
-  if (!pc) {
-    return false;
-  }
-  nsStyleSet* styleSet = pc->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // Bug 1397434 tracks making this optimization work for stylo.
-    AEM_LOG("Element %p uses Servo style backend, assuming dependence on active state\n", aElement);
-    return true;
-  }
-
-  for (dom::Element* e = aElement; e; e = e->GetParentElement()) {
-    if (styleSet->HasStateDependentStyle(e, NS_EVENT_STATE_ACTIVE)) {
-      AEM_LOG("Element %p's style is dependent on the active state\n", e);
-      return true;
-    }
-  }
-  AEM_LOG("Element %p doesn't use active styles\n", aElement);
-  return false;
-}
-
 void
 ActiveElementManager::SetActive(dom::Element* aTarget)
 {
@@ -192,7 +161,6 @@ ActiveElementManager::SetActive(dom::Element* aTarget)
 
   if (nsPresContext* pc = GetPresContextFor(aTarget)) {
     pc->EventStateManager()->SetContentState(aTarget, NS_EVENT_STATE_ACTIVE);
-    mActiveElementUsesStyle = ElementHasActiveStyle(aTarget);
   }
 }
 
