@@ -131,12 +131,14 @@ class AtomicOperations
     // as any racing writes are of the same size and to the same address.
 
     // Defined for all the integral types as well as for float32 and float64,
-    // but not access-atomic for floats.
+    // but not access-atomic for floats, nor for int64 and uint64 on 32-bit
+    // platforms.
     template<typename T>
     static inline T loadSafeWhenRacy(T* addr);
 
     // Defined for all the integral types as well as for float32 and float64,
-    // but not access-atomic for floats.
+    // but not access-atomic for floats, nor for int64 and uint64 on 32-bit
+    // platforms.
     template<typename T>
     static inline void storeSafeWhenRacy(T* addr, T val);
 

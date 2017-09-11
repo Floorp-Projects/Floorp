@@ -373,52 +373,20 @@ inline T
 js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 {
     static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+    // This is actually roughly right even on 32-bit platforms since in that
+    // case, double, int64, and uint64 loads need not be access-atomic.
     return *addr;
 }
-
-#ifndef HAS_64BIT_ATOMICS
-namespace js { namespace jit {
-
-template<>
-inline int64_t
-AtomicOperations::loadSafeWhenRacy(int64_t* addr) {
-    MOZ_CRASH("No 64-bit atomics");
-}
-
-template<>
-inline uint64_t
-AtomicOperations::loadSafeWhenRacy(uint64_t* addr) {
-    MOZ_CRASH("No 64-bit atomics");
-}
-
-} }
-#endif
 
 template<typename T>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 {
     static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+    // This is actually roughly right even on 32-bit platforms since in that
+    // case, double, int64, and uint64 loads need not be access-atomic.
     *addr = val;
 }
-
-#ifndef HAS_64BIT_ATOMICS
-namespace js { namespace jit {
-
-template<>
-inline void
-AtomicOperations::storeSafeWhenRacy(int64_t* addr, int64_t val) {
-    MOZ_CRASH("No 64-bit atomics");
-}
-
-template<>
-inline void
-AtomicOperations::storeSafeWhenRacy(uint64_t* addr, uint64_t val) {
-    MOZ_CRASH("No 64-bit atomics");
-}
-
-} }
-#endif
 
 inline void
 js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes)

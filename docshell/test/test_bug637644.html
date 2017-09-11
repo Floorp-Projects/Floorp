@@ -43,9 +43,8 @@ window.onmessage = function (ev) {
   }
 }
 
-var win2 = window.open("data:text/html,<script>window.onload = function() { opener.postMessage('loaded', '*'); }</" + "script><body>Should show</body>", "", "height=500,width=500");
-
-var win3 = window.open("data:text/html,<script>window.onload = function() { opener.postMessage('loaded', '*'); }</" + "script><body></body>", "", "height=500,width=500");
+var win2 = window.open("file_bug637644_1.html", "", "height=500,width=500");
+var win3 = window.open("file_bug637644_2.html", "", "height=500,width=500");
 });
 </script>
 </pre>

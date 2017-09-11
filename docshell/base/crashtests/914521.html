@@ -22,7 +22,10 @@ function f()
 
 function init()
 {
-  SpecialPowers.pushPrefEnv({"set": [["security.data_uri.unique_opaque_origin", false]]}, start);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.unique_opaque_origin", false],
+    ["security.data_uri.block_toplevel_data_uri_navigations", false],
+  ]}, start);
 }
 
 function start()
