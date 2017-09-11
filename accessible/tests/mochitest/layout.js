@@ -150,18 +150,13 @@ function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin) {
   var hyperText = getAccessible(aID, [nsIAccessibleText]);
   hyperText.getRangeExtents(aStartOffset, aEndOffset,
                             xObj, yObj, widthObj, heightObj, aCoordOrigin);
-
-  // x
   is(xObj.value, expectedX,
      "Wrong x coordinate of text between offsets (" + aStartOffset + ", " +
      aEndOffset + ") for " + prettyName(aID));
+  is(yObj.value, expectedY,
+     "Wrong y coordinate of text between offsets (" + aStartOffset + ", " +
+     aEndOffset + ") for " + prettyName(aID));
 
-  // y
-  isWithin(yObj.value, expectedY, 1,
-           `y coord of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
-           `for ${prettyName(aID)}`);
-
-  // Width
   var msg = "Wrong width of text between offsets (" + aStartOffset + ", " +
     aEndOffset + ") for " + prettyName(aID);
   if (widthObj.value == expectedWidth)
@@ -169,10 +164,9 @@ function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin) {
   else
     todo(false, msg); // fails on some windows machines
 
-  // Height
-  isWithin(heightObj.value, expectedHeight, 1,
-           `height of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
-           `for ${prettyName(aID)}`);
+  is(heightObj.value, expectedHeight,
+     "Wrong height of text between offsets (" + aStartOffset + ", " +
+     aEndOffset + ") for " + prettyName(aID));
 }
 
 /**
