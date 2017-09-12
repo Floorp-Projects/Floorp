@@ -396,3 +396,24 @@ if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
 }
 
 })();
+
+/* Column number > 0. */
+(function() {
+
+var asmSource = `function evaluate() {
+    "use asm";
+    function another() {}
+    function func() {}
+    return func
+}`
+
+var m = evaluate(`
+var f = x =>(${asmSource});
+f()`, {
+    columnNumber: 100
+});
+
+assertEq(m.toString(), asmSource);
+assertEq(m().toString(), `function func() {}`)
+
+})();
