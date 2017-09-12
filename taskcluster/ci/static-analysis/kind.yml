@@ -45,6 +45,7 @@ jobs:
             keep-artifacts: false
         toolchains:
             - linux64-clang
+            - linux64-rust
             - linux64-sccache
 
     linux64-st-an/opt:
@@ -70,6 +71,7 @@ jobs:
             keep-artifacts: false
         toolchains:
             - linux64-clang
+            - linux64-rust
             - linux64-sccache
 
     win32-st-an/debug:
@@ -93,6 +95,7 @@ jobs:
                 - builds/taskcluster_firefox_win32_clang_debug.py
         toolchains:
             - win32-clang-cl
+            - win32-rust
             - win64-sccache
 
     win32-st-an/opt:
@@ -116,6 +119,7 @@ jobs:
                 - builds/taskcluster_firefox_win32_clang.py
         toolchains:
             - win32-clang-cl
+            - win32-rust
             - win64-sccache
 
     win64-st-an/debug:
@@ -139,6 +143,7 @@ jobs:
                 - builds/taskcluster_firefox_win64_clang_debug.py
         toolchains:
             - win64-clang-cl
+            - win64-rust
             - win64-sccache
 
     win64-st-an/opt:
@@ -162,4 +167,5 @@ jobs:
                 - builds/taskcluster_firefox_win64_clang.py
         toolchains:
             - win64-clang-cl
+            - win64-rust
             - win64-sccache

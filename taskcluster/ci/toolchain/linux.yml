@@ -185,6 +185,83 @@ linux64-libdmg:
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
 
+linux64-rust-1.19:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(rust)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+        env:
+          UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', '1.19.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
+        toolchain-alias: linux64-rust
+        toolchain-artifact: public/build/rustc.tar.xz
+
+linux64-rust-macos-1.19:
+    description: "rust repack with macos-cross support"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(rust-macos)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+        env:
+          UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+           '--channel', '1.19.0',
+           '--host', 'x86_64-unknown-linux-gnu',
+           '--target', 'x86_64-unknown-linux-gnu',
+           '--target', 'x86_64-apple-darwin',
+        ]
+        toolchain-alias: linux64-rust-macos
+        toolchain-artifact: public/build/rustc.tar.xz
+
+linux64-rust-android-1.19:
+    description: "rust repack with android-cross support"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(rust-android)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+        env:
+          UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+           '--channel', '1.19.0',
+           '--host', 'x86_64-unknown-linux-gnu',
+           '--target', 'x86_64-unknown-linux-gnu',
+           '--target', 'armv7-linux-androideabi',
+           '--target', 'aarch64-linux-android',
+           '--target', 'i686-linux-android',
+        ]
+        toolchain-alias: linux64-rust-android
+        toolchain-artifact: public/build/rustc.tar.xz
+
 linux64-sccache:
     description: "sccache toolchain build"
     treeherder:
@@ -196,8 +273,6 @@ linux64-sccache:
     worker:
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: toolchain-script
         script: build-sccache.sh
@@ -206,6 +281,7 @@ linux64-sccache:
         toolchain-artifact: public/build/sccache2.tar.xz
     toolchains:
         - linux64-clang-3.9
+        - linux64-rust-1.19
 
 linux64-gn:
     description: "gn toolchain build"

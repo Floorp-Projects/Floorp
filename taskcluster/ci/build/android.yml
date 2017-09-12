@@ -24,6 +24,7 @@ android-api-16/debug:
         custom-build-variant-cfg: api-16-debug
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-x86/opt:
@@ -52,6 +53,7 @@ android-x86/opt:
         custom-build-variant-cfg: x86
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-x86-nightly/opt:
@@ -84,6 +86,7 @@ android-x86-nightly/opt:
         custom-build-variant-cfg: x86
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-api-16/opt:
@@ -112,6 +115,7 @@ android-api-16/opt:
         custom-build-variant-cfg: api-16
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-api-16-nightly/opt:
@@ -144,6 +148,7 @@ android-api-16-nightly/opt:
         custom-build-variant-cfg: api-16
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-x86-old-id/opt:
@@ -173,6 +178,7 @@ android-x86-old-id/opt:
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-x86-old-id-nightly/opt:
@@ -206,6 +212,7 @@ android-x86-old-id-nightly/opt:
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-api-16-old-id/opt:
@@ -235,6 +242,7 @@ android-api-16-old-id/opt:
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-api-16-old-id-nightly/opt:
@@ -268,6 +276,7 @@ android-api-16-old-id-nightly/opt:
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-api-16-gradle/opt:
@@ -309,6 +318,7 @@ android-api-16-gradle/opt:
         custom-build-variant-cfg: api-16-gradle
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-aarch64/opt:
@@ -337,6 +347,7 @@ android-aarch64/opt:
         custom-build-variant-cfg: aarch64
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache
 
 android-aarch64-nightly/opt:
@@ -369,4 +380,5 @@ android-aarch64-nightly/opt:
         custom-build-variant-cfg: aarch64
         tooltool-downloads: internal
     toolchains:
+        - linux64-rust-android
         - linux64-sccache

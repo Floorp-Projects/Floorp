@@ -24,6 +24,7 @@ linux64/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-dmd/opt:
@@ -54,6 +55,7 @@ linux64-dmd/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64/pgo:
@@ -83,6 +85,7 @@ linux64/pgo:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64/debug:
@@ -113,6 +116,7 @@ linux64/debug:
         - linux64-clang
         - linux64-gcc
         - linux64-sccache
+        - linux64-rust
 
 linux64-devedition-nightly/opt:
     description: "Linux64 devedition Nightly"
@@ -146,6 +150,7 @@ linux64-devedition-nightly/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-base-toolchains/opt:
@@ -175,6 +180,7 @@ linux64-base-toolchains/opt:
     toolchains:
         - linux64-clang-3.9
         - linux64-gcc-4.9
+        - linux64-rust-1.19
         - linux64-sccache
 
 linux64-base-toolchains/debug:
@@ -205,6 +211,7 @@ linux64-base-toolchains/debug:
     toolchains:
         - linux64-clang-3.9
         - linux64-gcc-4.9
+        - linux64-rust-1.19
         - linux64-sccache
 
 linux/opt:
@@ -233,6 +240,7 @@ linux/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux/debug:
@@ -262,6 +270,7 @@ linux/debug:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux/pgo:
@@ -291,6 +300,7 @@ linux/pgo:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux-devedition-nightly/opt:
@@ -325,6 +335,7 @@ linux-devedition-nightly/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux-nightly/opt:
@@ -357,6 +368,7 @@ linux-nightly/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 
@@ -388,6 +400,7 @@ linux64-asan/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 
@@ -419,6 +432,7 @@ linux64-asan-fuzzing/opt:
     toolchains:
         - linux64-clang-4
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-asan-reporter/opt:
@@ -449,6 +463,7 @@ linux64-asan-reporter/opt:
     toolchains:
         - linux64-clang-4
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-asan/debug:
@@ -479,6 +494,7 @@ linux64-asan/debug:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-nightly/opt:
@@ -511,6 +527,7 @@ linux64-nightly/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-noopt/debug:
@@ -543,6 +560,7 @@ linux64-noopt/debug:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-jsdcov/opt:
@@ -573,6 +591,7 @@ linux64-jsdcov/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
 
 linux64-ccov/opt:
@@ -603,6 +622,7 @@ linux64-ccov/opt:
         need-xvfb: true
     toolchains:
         - linux64-clang
+        - linux64-rust
         - linux64-gcc
 
 linux64-add-on-devel/opt:
@@ -634,4 +654,5 @@ linux64-add-on-devel/opt:
     toolchains:
         - linux64-clang
         - linux64-gcc
+        - linux64-rust
         - linux64-sccache
