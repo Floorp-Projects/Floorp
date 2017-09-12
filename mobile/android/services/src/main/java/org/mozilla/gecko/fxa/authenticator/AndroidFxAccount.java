@@ -15,11 +15,15 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -159,18 +163,6 @@ public class AndroidFxAccount {
     return new AndroidFxAccount(context, account);
   }
 
-  /**
-   * Persist the Firefox account to disk as a JSON object. Note that this is a wrapper around
-   * {@link AccountPickler#pickle}, and is identical to calling it directly.
-   * <p>
-   * Note that pickling is different from bundling, which involves operations on a
-   * {@link android.os.Bundle Bundle} object of miscellaneous data associated with the account.
-   * See {@link #persistBundle} and {@link #unbundle} for more.
-   */
-  public void pickle(final String filename) {
-    AccountPickler.pickle(this, filename);
-  }
-
   public Account getAndroidAccount() {
     return this.account;
   }
@@ -188,12 +180,48 @@ public class AndroidFxAccount {
     }
   }
 
+  private String getAccountUID() {
+    // UID isn't going to change for the lifetime of our account.
+    String accountUID = accountManager.getUserData(account, ACCOUNT_KEY_UID);
+    if (accountUID != null) {
+      return accountUID;
+    }
+
+    // And now, let's hear it for some side-effects!
+    // If account was created before Bug 1368147, UID won't be there.
+    // We need to ensure it is preset in the user data for ease of future reference, and so we parse
+    // it out of the persisted profile data.
+    final AccountPickler.UnpickleParams profileParams = AccountPickler.unpickleParams(
+            context, FxAccountConstants.ACCOUNT_PICKLE_FILENAME);
+
+    // Can this actually happen in the wild? The only path to recover seems to be removing the
+    // account entirely and try adding it again (user action).
+    if (profileParams == null) {
+      throw new IllegalStateException("Invalid account profile data");
+    }
+
+    final String unpickledAccountUID = profileParams.getUID();
+    // This should never happen. But it's useful to know if it does, so just crash.
+    if (unpickledAccountUID == null) {
+      throw new IllegalStateException("Unpickled account UID is null");
+    }
+
+    // Persist our UID into userData, so that we never have to do this dance again.
+    accountManager.setUserData(account, ACCOUNT_KEY_UID, unpickledAccountUID);
+
+    // Our internal caches were also keyed by 'email' instead of 'uid', so we blow them away here
+    // so that they're re-populated correctly later on.
+    invalidateCaches();
+
+    return unpickledAccountUID;
+  }
+
   /**
    * Saves the given data as the internal bundle associated with this account.
    * @param bundle to write to account.
    */
   private synchronized void persistBundle(ExtendedJSONObject bundle) {
-    perAccountBundleCache.put(account.name, bundle);
+    perAccountBundleCache.put(getAccountUID(), bundle);
     accountManager.setUserData(account, ACCOUNT_KEY_DESCRIPTOR, bundle.toJSONString());
   }
 
@@ -206,8 +234,10 @@ public class AndroidFxAccount {
    * @return bundle associated with account.
    */
   private synchronized ExtendedJSONObject unbundle(boolean allowCachedBundle) {
+    final String accountUID = getAccountUID();
+
     if (allowCachedBundle) {
-      final ExtendedJSONObject cachedBundle = perAccountBundleCache.get(account.name);
+      final ExtendedJSONObject cachedBundle = perAccountBundleCache.get(accountUID);
       if (cachedBundle != null) {
         Logger.debug(LOG_TAG, "Returning cached account bundle.");
         return cachedBundle;
@@ -231,7 +261,7 @@ public class AndroidFxAccount {
       return null;
     }
     final ExtendedJSONObject bundle = unbundleAccountV2(bundleString);
-    perAccountBundleCache.put(account.name, bundle);
+    perAccountBundleCache.put(accountUID, bundle);
     Logger.info(LOG_TAG, "Account bundle persisted to cache.");
     return bundle;
   }
@@ -316,16 +346,15 @@ public class AndroidFxAccount {
     return FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(getAccountServerURI());
   }
 
-  private String constructPrefsPath(String product, long version, String extra) throws GeneralSecurityException, UnsupportedEncodingException {
+  private String constructPrefsPath(@NonNull String accountKey, String product, long version, String extra) throws GeneralSecurityException, UnsupportedEncodingException {
     String profile = getProfile();
-    String username = account.name;
 
     if (profile == null) {
       throw new IllegalStateException("Missing profile. Cannot fetch prefs.");
     }
 
-    if (username == null) {
-      throw new IllegalStateException("Missing username. Cannot fetch prefs.");
+    if (accountKey == null) {
+      throw new IllegalStateException("Missing accountKey. Cannot fetch prefs.");
     }
 
     final String fxaServerURI = getAccountServerURI();
@@ -335,13 +364,13 @@ public class AndroidFxAccount {
 
     // This is unique for each syncing 'view' of the account.
     final String serverURLThing = fxaServerURI + "!" + extra;
-    return Utils.getPrefsPath(product, username, serverURLThing, profile, version);
+    return Utils.getPrefsPath(product, accountKey, serverURLThing, profile, version);
   }
 
   /**
    * This needs to return a string because of the tortured prefs access in GlobalSession.
    */
-  private String getSyncPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+  private String getSyncPrefsPath(final String accountKey) throws GeneralSecurityException, UnsupportedEncodingException {
     final String tokenServerURI = getTokenServerURI();
     if (tokenServerURI == null) {
       throw new IllegalStateException("No token server URI. Cannot fetch prefs.");
@@ -349,21 +378,93 @@ public class AndroidFxAccount {
 
     final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".fxa";
     final long version = CURRENT_SYNC_PREFS_VERSION;
-    return constructPrefsPath(product, version, tokenServerURI);
+    return constructPrefsPath(accountKey, product, version, tokenServerURI);
   }
 
-  private String getReadingListPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+  private String getReadingListPrefsPath(final String accountKey) throws GeneralSecurityException, UnsupportedEncodingException {
     final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".reading";
     final long version = CURRENT_RL_PREFS_VERSION;
-    return constructPrefsPath(product, version, "");
+    return constructPrefsPath(accountKey, product, version, "");
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void migrateSharedPreferencesValues(SharedPreferences sharedPreferences, Map<String, ?> values) {
+    final SharedPreferences.Editor editor = sharedPreferences.edit();
+    for (String key : values.keySet()) {
+      final Object value = values.get(key);
+      if (value instanceof String) {
+        editor.putString(key, (String) value);
+      } else if (value instanceof Integer) {
+        editor.putInt(key, ((Integer) value));
+      } else if (value instanceof Float) {
+        editor.putFloat(key, ((Float) value));
+      } else if (value instanceof Long) {
+        editor.putLong(key, ((Long) value));
+      } else if (value instanceof Boolean) {
+        editor.putBoolean(key, ((Boolean) value));
+      } else if (value instanceof Set) {
+        // This performs an unchecked cast. Let's hope it won't fail!
+        editor.putStringSet(key, ((Set<String>) value));
+      }
+    }
+    editor.apply();
+  }
+
+  private SharedPreferences maybeMigrateSharedPreferences(SharedPreferences sharedPreferences) throws UnsupportedEncodingException, GeneralSecurityException {
+    // Move everything from the old preference file to the new.
+    final SharedPreferences oldPreferences = context.getSharedPreferences(
+            getSyncPrefsPath(account.name),
+            Utils.SHARED_PREFERENCES_MODE
+    );
+    return doMaybeMigrateSharedPreferences(sharedPreferences, oldPreferences);
+  }
+
+  @VisibleForTesting
+  /* package-private */ static SharedPreferences doMaybeMigrateSharedPreferences(SharedPreferences sharedPreferences, SharedPreferences oldSharedPreferences) throws UnsupportedEncodingException, GeneralSecurityException {
+    // Bug 1368147: we used to store sync preferences with an account email in their file name; but,
+    // that is now an ephemeral entity; the path forward is to store sync preferences with an
+    // account UID in the filename. Logic below performs this migration.
+
+    // It appears that sharedPreferences have been written to before, so we don't need to migrate.
+    // This is bound to be one of the least efficient way of performing this check.
+    if (sharedPreferences.getAll().size() != 0) {
+      return sharedPreferences;
+    }
+
+    // If the old preference file doesn't exist either, or is empty - return the new one.
+    final Map<String, ?> oldPreferenceValues = oldSharedPreferences.getAll();
+    if (oldPreferenceValues.size() == 0) {
+      return sharedPreferences;
+    }
+
+    // Copy over values from existing prefs to the newly created prefs.
+    migrateSharedPreferencesValues(sharedPreferences, oldPreferenceValues);
+    // Clear out old prefs.
+    oldSharedPreferences.edit().clear().apply();
+
+    return sharedPreferences;
   }
 
   public SharedPreferences getSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
-    return context.getSharedPreferences(getSyncPrefsPath(), Utils.SHARED_PREFERENCES_MODE);
+    final SharedPreferences sharedPreferences = context.getSharedPreferences(
+            getSyncPrefsPath(getAccountUID()),
+            Utils.SHARED_PREFERENCES_MODE
+    );
+
+    maybeMigrateSharedPreferences(sharedPreferences);
+
+    return sharedPreferences;
   }
 
   private SharedPreferences getReadingListPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
-    return context.getSharedPreferences(getReadingListPrefsPath(), Utils.SHARED_PREFERENCES_MODE);
+    final SharedPreferences sharedPreferences = context.getSharedPreferences(
+            getReadingListPrefsPath(getAccountUID()),
+            Utils.SHARED_PREFERENCES_MODE
+    );
+
+    maybeMigrateSharedPreferences(sharedPreferences);
+
+    return sharedPreferences;
   }
 
   /**
@@ -390,33 +491,38 @@ public class AndroidFxAccount {
   }
 
   public static AndroidFxAccount addAndroidAccount(
-      Context context,
-      String email,
-      String profile,
-      String idpServerURI,
-      String tokenServerURI,
-      String profileServerURI,
-      State state,
+      @NonNull Context context,
+      @NonNull String uid,
+      @NonNull String email,
+      @NonNull String profile,
+      @NonNull String idpServerURI,
+      @NonNull String tokenServerURI,
+      @NonNull String profileServerURI,
+      @NonNull State state,
       final Map<String, Boolean> authoritiesToSyncAutomaticallyMap)
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
-    return addAndroidAccount(context, email, profile, idpServerURI, tokenServerURI, profileServerURI, state,
+    return addAndroidAccount(context, uid, email, profile, idpServerURI, tokenServerURI, profileServerURI, state,
         authoritiesToSyncAutomaticallyMap,
         CURRENT_ACCOUNT_VERSION, false, null);
   }
 
   /* package-private */ static AndroidFxAccount addAndroidAccount(
-      Context context,
-      String email,
-      String profile,
-      String idpServerURI,
-      String tokenServerURI,
-      String profileServerURI,
-      State state,
+      @NonNull Context context,
+      @NonNull String uid,
+      @NonNull String email,
+      @NonNull String profile,
+      @NonNull String idpServerURI,
+      @NonNull String tokenServerURI,
+      @NonNull String profileServerURI,
+      @NonNull State state,
       final Map<String, Boolean> authoritiesToSyncAutomaticallyMap,
       final int accountVersion,
       final boolean fromPickle,
       ExtendedJSONObject bundle)
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
+    if (uid == null) {
+      throw new IllegalArgumentException("uid must not be null");
+    }
     if (email == null) {
       throw new IllegalArgumentException("email must not be null");
     }
@@ -450,6 +556,7 @@ public class AndroidFxAccount {
     userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
     userdata.putString(ACCOUNT_KEY_PROFILE_SERVER, profileServerURI);
     userdata.putString(ACCOUNT_KEY_PROFILE, profile);
+    userdata.putString(ACCOUNT_KEY_UID, uid);
 
     if (bundle == null) {
       bundle = new ExtendedJSONObject();
@@ -492,7 +599,7 @@ public class AndroidFxAccount {
   }
 
   private void clearSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
-    getSyncPrefs().edit().clear().commit();
+    getSyncPrefs().edit().clear().apply();
   }
 
   private void setAuthoritiesToSyncAutomaticallyMap(Map<String, Boolean> authoritiesToSyncAutomaticallyMap) {
