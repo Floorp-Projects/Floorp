@@ -97,6 +97,11 @@ public:
 
   virtual void GetType(nsAString& aType) override;
 
+  size_t GetAllocationSize() const override
+  {
+    return 0;
+  }
+
   virtual uint64_t GetSerialNumber() const override { return mSerialNumber; }
 
   virtual already_AddRefed<BlobImpl>
