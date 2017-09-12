@@ -1428,13 +1428,14 @@ var Search = {
   updateNoResults(text, noSearchResults) {
     document.getElementById("no-search-results").classList.toggle("hidden", !noSearchResults);
     if (noSearchResults) {
+      let searchStatus;
       let section = document.querySelector(".category.selected > span");
-      let selectedTitle = section.textContent.trim();
       if (section.parentElement.id === "category-home") {
-        selectedTitle = bundle.GetStringFromName("allSections");
+        searchStatus = bundle.formatStringFromName("noSearchResultsAll", [text], 1);
+      } else {
+        let format = [section.textContent.trim(), text];
+        searchStatus = bundle.formatStringFromName("noSearchResults", format, 2);
       }
-      let format = [selectedTitle, text];
-      let searchStatus = bundle.formatStringFromName("noSearchResults", format, 2);
       document.getElementById("no-search-results-text").textContent = searchStatus;
     }
   },
@@ -1890,11 +1891,14 @@ function adjustHeaderState(title = null) {
   let selected = document.querySelector(".category.selected .category-name");
   let selectedTitle = selected.textContent.trim();
   document.getElementById("sectionTitle").textContent = title ? title : selectedTitle;
+
+  let placeholder;
   if (selected.parentElement.id === "category-home") {
-    selectedTitle = bundle.GetStringFromName("allSections");
+    placeholder = bundle.GetStringFromName("filterAllPlaceholder");
+  } else {
+    placeholder = bundle.formatStringFromName("filterPlaceholder", [ selectedTitle ], 1);
   }
   let search = document.getElementById("search");
-  let placeholder = bundle.formatStringFromName("filterPlaceholder", [ selectedTitle ], 1);
   search.setAttribute("placeholder", placeholder);
 }
 
