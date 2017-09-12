@@ -10,6 +10,7 @@
   "permissions": [
     "http://*/",
     "https://*/",
+    "tabs",
     "webRequest",
     "webRequestBlocking"
   ],

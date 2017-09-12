@@ -35,3 +35,22 @@ browser.webRequest.onErrorOccurred.addListener(
   details => {
   },
   {urls: ["https://*/*", "http://*/*"]});
+
+
+browser.tabs.onUpdated.addListener((tabId, changed, tab) => {
+});
+
+browser.tabs.onActivated.addListener(({tabId, windowId}) => {
+});
+
+browser.tabs.onCreated.addListener(tab => {
+});
+
+browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
+});
+
+browser.tabs.onAttached.addListener((tabId, attachInfo) => {
+});
+
+browser.tabs.onDetached.addListener((tabId, detachInfo) => {
+});
