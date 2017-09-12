@@ -3473,17 +3473,16 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
                                        nscolor       aBGColor,
                                        const nsRect& aBorder,
                                        int32_t       aAppUnitsPerDevPixel,
-                                       int32_t       aAppUnitsPerCSSPixel,
                                        mozilla::Side aStartBevelSide,
                                        nscoord       aStartBevelOffset,
                                        mozilla::Side aEndBevelSide,
                                        nscoord       aEndBevelOffset)
 {
   bool horizontal = ((eSideTop == aStartBevelSide) || (eSideBottom == aStartBevelSide));
-  nscoord twipsPerPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerCSSPixel);
+  nscoord oneDevPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerDevPixel);
   uint8_t ridgeGroove = NS_STYLE_BORDER_STYLE_RIDGE;
 
-  if ((twipsPerPixel >= aBorder.width) || (twipsPerPixel >= aBorder.height) ||
+  if ((oneDevPixel >= aBorder.width) || (oneDevPixel >= aBorder.height) ||
       (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle) || (NS_STYLE_BORDER_STYLE_DOTTED == aBorderStyle)) {
     // no beveling for 1 pixel border, dash or dot
     aStartBevelOffset = 0;
@@ -3503,46 +3502,48 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
       dashLength *= (horizontal) ? aBorder.height : aBorder.width;
       // make the min dash length for the ends 1/2 the dash length
       nscoord minDashLength = (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle)
-                              ? RoundFloatToPixel(((float)dashLength) / 2.0f, twipsPerPixel) : dashLength;
-      minDashLength = std::max(minDashLength, twipsPerPixel);
+                              ? RoundFloatToPixel(((float)dashLength) / 2.0f,
+                                                  aAppUnitsPerDevPixel)
+                              : dashLength;
+      minDashLength = std::max(minDashLength, oneDevPixel);
       nscoord numDashSpaces = 0;
       nscoord startDashLength = minDashLength;
       nscoord endDashLength   = minDashLength;
       if (horizontal) {
-        GetDashInfo(aBorder.width, dashLength, twipsPerPixel, numDashSpaces,
-                    startDashLength, endDashLength);
+        GetDashInfo(aBorder.width, dashLength, aAppUnitsPerDevPixel,
+                    numDashSpaces, startDashLength, endDashLength);
         nsRect rect(aBorder.x, aBorder.y, startDashLength, aBorder.height);
         DrawSolidBorderSegment(aDrawTarget, rect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel);
+                               aAppUnitsPerDevPixel, oneDevPixel);
 
         rect.x += startDashLength + dashLength;
         rect.width = aBorder.width
                      - (startDashLength + endDashLength + dashLength);
         DrawDashedSegment(aDrawTarget, rect, dashLength, aBorderColor,
-                          aAppUnitsPerDevPixel, twipsPerPixel, horizontal);
+                          aAppUnitsPerDevPixel, oneDevPixel, horizontal);
 
         rect.x += rect.width;
         rect.width = endDashLength;
         DrawSolidBorderSegment(aDrawTarget, rect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel);
+                               aAppUnitsPerDevPixel, oneDevPixel);
       }
       else {
-        GetDashInfo(aBorder.height, dashLength, twipsPerPixel, numDashSpaces,
-                    startDashLength, endDashLength);
+        GetDashInfo(aBorder.height, dashLength, aAppUnitsPerDevPixel,
+                    numDashSpaces, startDashLength, endDashLength);
         nsRect rect(aBorder.x, aBorder.y, aBorder.width, startDashLength);
         DrawSolidBorderSegment(aDrawTarget, rect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel);
+                               aAppUnitsPerDevPixel, oneDevPixel);
 
         rect.y += rect.height + dashLength;
         rect.height = aBorder.height
                       - (startDashLength + endDashLength + dashLength);
         DrawDashedSegment(aDrawTarget, rect, dashLength, aBorderColor,
-                          aAppUnitsPerDevPixel, twipsPerPixel, horizontal);
+                          aAppUnitsPerDevPixel, oneDevPixel, horizontal);
 
         rect.y += rect.height;
         rect.height = endDashLength;
         DrawSolidBorderSegment(aDrawTarget, rect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel);
+                               aAppUnitsPerDevPixel, oneDevPixel);
       }
     }
     break;
@@ -3550,19 +3551,21 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
     ridgeGroove = NS_STYLE_BORDER_STYLE_GROOVE; // and fall through to ridge
     MOZ_FALLTHROUGH;
   case NS_STYLE_BORDER_STYLE_RIDGE:
-    if ((horizontal && (twipsPerPixel >= aBorder.height)) ||
-        (!horizontal && (twipsPerPixel >= aBorder.width))) {
+    if ((horizontal && (oneDevPixel >= aBorder.height)) ||
+        (!horizontal && (oneDevPixel >= aBorder.width))) {
       // a one pixel border
       DrawSolidBorderSegment(aDrawTarget, aBorder, aBorderColor,
-                             aAppUnitsPerDevPixel, twipsPerPixel,
+                             aAppUnitsPerDevPixel, oneDevPixel,
                              aStartBevelSide, aStartBevelOffset,
                              aEndBevelSide, aEndBevelOffset);
     }
     else {
       nscoord startBevel = (aStartBevelOffset > 0)
-                            ? RoundFloatToPixel(0.5f * (float)aStartBevelOffset, twipsPerPixel, true) : 0;
+                            ? RoundFloatToPixel(0.5f * (float)aStartBevelOffset,
+                                                aAppUnitsPerDevPixel, true) : 0;
       nscoord endBevel =   (aEndBevelOffset > 0)
-                            ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset, twipsPerPixel, true) : 0;
+                            ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset,
+                                                aAppUnitsPerDevPixel, true) : 0;
       mozilla::Side ridgeGrooveSide = (horizontal) ? eSideTop : eSideLeft;
       // FIXME: In theory, this should use the visited-dependent
       // background color, but I don't care.
@@ -3571,7 +3574,8 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
       nsRect rect(aBorder);
       nscoord half;
       if (horizontal) { // top, bottom
-        half = RoundFloatToPixel(0.5f * (float)aBorder.height, twipsPerPixel);
+        half = RoundFloatToPixel(0.5f * (float)aBorder.height,
+                                 aAppUnitsPerDevPixel);
         rect.height = half;
         if (eSideTop == aStartBevelSide) {
           rect.x += startBevel;
@@ -3581,12 +3585,13 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           rect.width -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
       }
       else { // left, right
-        half = RoundFloatToPixel(0.5f * (float)aBorder.width, twipsPerPixel);
+        half = RoundFloatToPixel(0.5f * (float)aBorder.width,
+                                 aAppUnitsPerDevPixel);
         rect.width = half;
         if (eSideLeft == aStartBevelSide) {
           rect.y += startBevel;
@@ -3596,7 +3601,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           rect.height -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
       }
@@ -3618,7 +3623,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           rect.width -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
       }
@@ -3633,7 +3638,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           rect.height -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
       }
@@ -3643,14 +3648,20 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
     // We can only do "double" borders if the thickness of the border
     // is more than 2px.  Otherwise, we fall through to painting a
     // solid border.
-    if ((aBorder.width > 2*twipsPerPixel || horizontal) &&
-        (aBorder.height > 2*twipsPerPixel || !horizontal)) {
+    if ((aBorder.width > 2 * oneDevPixel || horizontal) &&
+        (aBorder.height > 2 * oneDevPixel || !horizontal)) {
       nscoord startBevel = (aStartBevelOffset > 0)
-                            ? RoundFloatToPixel(0.333333f * (float)aStartBevelOffset, twipsPerPixel) : 0;
+                            ? RoundFloatToPixel(0.333333f *
+                                                (float)aStartBevelOffset,
+                                                 aAppUnitsPerDevPixel) : 0;
       nscoord endBevel =   (aEndBevelOffset > 0)
-                            ? RoundFloatToPixel(0.333333f * (float)aEndBevelOffset, twipsPerPixel) : 0;
+                            ? RoundFloatToPixel(0.333333f *
+                                                (float)aEndBevelOffset,
+                                                aAppUnitsPerDevPixel) : 0;
       if (horizontal) { // top, bottom
-        nscoord thirdHeight = RoundFloatToPixel(0.333333f * (float)aBorder.height, twipsPerPixel);
+        nscoord thirdHeight = RoundFloatToPixel(0.333333f *
+                                                (float)aBorder.height,
+                                                aAppUnitsPerDevPixel);
 
         // draw the top line or rect
         nsRect topRect(aBorder.x, aBorder.y, aBorder.width, thirdHeight);
@@ -3662,7 +3673,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           topRect.width -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, topRect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
 
@@ -3677,12 +3688,13 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           bottomRect.width -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, bottomRect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
       }
       else { // left, right
-        nscoord thirdWidth = RoundFloatToPixel(0.333333f * (float)aBorder.width, twipsPerPixel);
+        nscoord thirdWidth = RoundFloatToPixel(0.333333f * (float)aBorder.width,
+                                               aAppUnitsPerDevPixel);
 
         nsRect leftRect(aBorder.x, aBorder.y, thirdWidth, aBorder.height);
         if (eSideLeft == aStartBevelSide) {
@@ -3693,7 +3705,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           leftRect.height -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, leftRect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
 
@@ -3707,7 +3719,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
           rightRect.height -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rightRect, aBorderColor,
-                               aAppUnitsPerDevPixel, twipsPerPixel,
+                               aAppUnitsPerDevPixel, oneDevPixel,
                                aStartBevelSide, startBevel, aEndBevelSide,
                                endBevel);
       }
@@ -3717,7 +3729,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&   aDrawTarget,
     MOZ_FALLTHROUGH;
   case NS_STYLE_BORDER_STYLE_SOLID:
     DrawSolidBorderSegment(aDrawTarget, aBorder, aBorderColor,
-                           aAppUnitsPerDevPixel, twipsPerPixel, aStartBevelSide,
+                           aAppUnitsPerDevPixel, oneDevPixel, aStartBevelSide,
                            aStartBevelOffset, aEndBevelSide, aEndBevelOffset);
     break;
   case NS_STYLE_BORDER_STYLE_OUTSET:
