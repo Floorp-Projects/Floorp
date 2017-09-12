@@ -898,7 +898,7 @@ HttpObserverManager = {
 
       if (kind === "modify" && this.listeners.afterModify.size) {
         await this.runChannelListener(channel, "afterModify");
-      } else {
+      } else if (kind !== "onError") {
         this.errorCheck(channel);
       }
     } catch (e) {
