@@ -34,7 +34,7 @@ Supported clients
 =================
 
 [Selenium] users must update to [version
-3.4](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.4.0)
+3.5](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.5.0)
 or later to use geckodriver.  Other clients that follow the [W3C WebDriver
 specification] are also supported.
 
