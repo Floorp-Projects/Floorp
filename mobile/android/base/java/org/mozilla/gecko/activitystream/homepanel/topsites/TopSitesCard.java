@@ -124,11 +124,11 @@ import java.util.concurrent.Future;
 
     private void setTopSiteTitle(final TopSite topSite) {
         URI topSiteURI = null; // not final so we can use in the Exception case.
-        boolean wasException = false;
+        boolean isInvalidURI = false;
         try {
             topSiteURI = new URI(topSite.getUrl());
         } catch (final URISyntaxException e) {
-            wasException = true;
+            isInvalidURI = true;
         }
 
         final boolean isSiteSuggestedFromDistribution = BrowserDB.from(itemView.getContext()).getSuggestedSites()
@@ -140,27 +140,31 @@ import java.util.concurrent.Future;
         // the old top sites and the new one so for code simplicity, we allow all distributions more lines for titles.
         title.setMaxLines(isSiteSuggestedFromDistribution ? 2 : 1);
 
-        // At a high level, the logic is: if the path non-empty or the site is suggested by a distribution, use the page
-        // title, otherwise use "subdomain.domain". From a UX perspective, people refer to domains by their name ("it's
-        // on wikipedia") and it's a clean look. However, if a url has a path, it will not fit on the screen with the
-        // domain so we need an alternative: the page title is an easy win (though not always perfect, e.g. when SEO
-        // keywords are added). We use page titles with distributions because that's what those distributions expect to
-        // be shown. If we ever want better top site titles, we could create a heuristic to pull the title from parts
-        // of the URL, page title, etc.
-        if (wasException ||
-                isSiteSuggestedFromDistribution ||
-                !URIUtils.isPathEmpty(topSiteURI)) {
-            // See comment below regarding setCenteredText.
-            final String pageTitle = topSite.getTitle();
+        // We use page titles with distributions because that's what the creators of those distributions expect to
+        // be shown. Also, we need a valid URI for our preferred case so we stop here if we don't have one.
+        final String pageTitle = topSite.getTitle();
+        if (isInvalidURI || isSiteSuggestedFromDistribution) {
             final String updateText = !TextUtils.isEmpty(pageTitle) ? pageTitle : topSite.getUrl();
-            setTopSiteTitleHelper(title, updateText);
+            setTopSiteTitleHelper(title, updateText); // See comment below regarding setCenteredText.
 
-        } else {
+        // This is our preferred case: we display "subdomain.domain". People refer to sites by their domain ("it's
+        // on wikipedia!") and it's a clean look so we display the domain if we can.
+        //
+        // If the path is non-empty, we'd normally go to the case below (see that comment). However, if there's no
+        // title, we'd prefer to fallback on "subdomain.domain" rather than a url, which is really ugly.
+        } else if (URIUtils.isPathEmpty(topSiteURI) ||
+                (!URIUtils.isPathEmpty(topSiteURI) && TextUtils.isEmpty(pageTitle))) {
             // Our AsyncTask calls setCenteredText(), which needs to have all drawable's in place to correctly
             // layout the text, so we need to wait with requesting the title until we've set our pin icon.
             final UpdateCardTitleAsyncTask titleAsyncTask = new UpdateCardTitleAsyncTask(itemView.getContext(),
                     topSiteURI, title);
             titleAsyncTask.execute();
+
+        // We have a site with a path that has a non-empty title. It'd be impossible to distinguish multiple sites
+        // with "subdomain.domain" so if there's a path, we have to use something else: "domain/path" would overflow
+        // before it's useful so we use the page title.
+        } else {
+            setTopSiteTitleHelper(title, pageTitle); // See comment above regarding setCenteredText.
         }
     }
 
