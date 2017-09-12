@@ -195,7 +195,7 @@ Memory.prototype = {
         this._poller.disarm();
       }
       this._poller = new DeferredTask(this._emitAllocations,
-                                      this.drainAllocationsTimeoutTimer);
+                                      this.drainAllocationsTimeoutTimer, 0);
       this._poller.arm();
     }
 
