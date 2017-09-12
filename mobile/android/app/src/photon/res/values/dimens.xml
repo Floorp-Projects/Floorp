@@ -257,4 +257,7 @@
 
     <!-- Dialogs -->
     <dimen name="dialog_switchpreferenceview_padding">24dp</dimen>
+
+    <!-- Preferences -->
+    <dimen name="preference_panel_text_size">15dp</dimen>
 </resources>
