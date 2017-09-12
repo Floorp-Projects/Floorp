@@ -57,7 +57,14 @@
   display: none;
 }
 
-/* NB: these would be margin-inline-start/end if it wasn't for the fact that OS X
+/* Making the toolbox position:relative (browser.inc.css) occludes titlebar indicators
+ * if the toolbox has a background. Fix this by positioning the relevant elements, too: */
+#titlebar-secondary-buttonbox {
+  position: relative;
+  z-index: 1;
+}
+
+/* These would be margin-inline-start/end if it wasn't for the fact that OS X
  * doesn't reverse the order of the items in the titlebar in RTL mode. */
 .titlebar-placeholder[type="caption-buttons"],
 #titlebar-buttonbox {

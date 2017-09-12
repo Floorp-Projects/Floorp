@@ -230,9 +230,6 @@ size_t Histogram::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += aMallocSizeOf(this);
-  // We're not allowed to do deep dives into STL data structures.  This
-  // is as close as we can get to measuring this array.
-  n += aMallocSizeOf(&ranges_[0]);
   n += sample_.SizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
@@ -251,7 +248,6 @@ Histogram::Histogram(Sample minimum, Sample maximum, size_t bucket_count)
     declared_max_(maximum),
     bucket_count_(bucket_count),
     flags_(kNoFlags),
-    ranges_(bucket_count + 1, 0),
     range_checksum_(0) {
   Initialize();
 }
@@ -262,7 +258,6 @@ Histogram::Histogram(TimeDelta minimum, TimeDelta maximum, size_t bucket_count)
     declared_max_(static_cast<int> (maximum.InMilliseconds())),
     bucket_count_(bucket_count),
     flags_(kNoFlags),
-    ranges_(bucket_count + 1, 0),
     range_checksum_(0) {
   Initialize();
 }
@@ -273,8 +268,7 @@ Histogram::~Histogram() {
 }
 
 void Histogram::InitializeBucketRangeFromData(const int* buckets) {
-  DCHECK_EQ(bucket_count_ + 1, ranges_.size());
-  std::copy_n(buckets, bucket_count_, ranges_.data());
+  ranges_ = buckets;
   ResetRangeChecksum();
   DCHECK(ValidateBucketRanges());
 }
@@ -340,14 +334,9 @@ void Histogram::Accumulate(Sample value, Count count, size_t index) {
   sample_.Accumulate(value, count, index);
 }
 
-void Histogram::SetBucketRange(size_t i, Sample value) {
-  DCHECK_GT(bucket_count_, i);
-  ranges_[i] = value;
-}
-
 bool Histogram::ValidateBucketRanges() const {
   // Standard assertions that all bucket ranges should satisfy.
-  DCHECK_EQ(bucket_count_ + 1, ranges_.size());
+  DCHECK_EQ(0, ranges_[bucket_count_ + 1]);
   DCHECK_EQ(0, ranges_[0]);
   DCHECK_EQ(declared_min(), ranges_[1]);
   DCHECK_EQ(declared_max(), ranges_[bucket_count_ - 1]);
@@ -356,8 +345,8 @@ bool Histogram::ValidateBucketRanges() const {
 }
 
 uint32_t Histogram::CalculateRangeChecksum() const {
-  DCHECK_EQ(ranges_.size(), bucket_count() + 1);
-  uint32_t checksum = static_cast<uint32_t>(ranges_.size());  // Seed checksum.
+  DCHECK_EQ(0, ranges_[bucket_count_ + 1]);
+  uint32_t checksum = static_cast<uint32_t>(bucket_count_ + 1);  // Seed checksum.
   for (size_t index = 0; index < bucket_count(); ++index)
     checksum = Crc32(checksum, ranges(index));
   return checksum;
@@ -374,8 +363,6 @@ void Histogram::Initialize() {
   CHECK_LT(bucket_count_, kBucketCount_MAX);
   size_t maximal_bucket_count = declared_max_ - declared_min_ + 2;
   DCHECK_LE(bucket_count_, maximal_bucket_count);
-  DCHECK_EQ(0, ranges_[0]);
-  ranges_[bucket_count_] = kSampleType_MAX;
 }
 
 // We generate the CRC-32 using the low order bits to select whether to XOR in
@@ -485,7 +472,8 @@ LinearHistogram::~LinearHistogram() {
 Histogram* LinearHistogram::FactoryGet(Sample minimum,
                                        Sample maximum,
                                        size_t bucket_count,
-                                       Flags flags) {
+                                       Flags flags,
+                                       const int* buckets) {
   Histogram* histogram(NULL);
 
   if (minimum < 1)
@@ -495,21 +483,13 @@ Histogram* LinearHistogram::FactoryGet(Sample minimum,
 
   LinearHistogram* linear_histogram =
         new LinearHistogram(minimum, maximum, bucket_count);
-  linear_histogram->InitializeBucketRange();
+  linear_histogram->InitializeBucketRangeFromData(buckets);
   linear_histogram->SetFlags(flags);
   histogram = linear_histogram;
 
   DCHECK_EQ(LINEAR_HISTOGRAM, histogram->histogram_type());
   DCHECK(histogram->HasConstructorArguments(minimum, maximum, bucket_count));
   return histogram;
-}
-
-Histogram* LinearHistogram::FactoryTimeGet(TimeDelta minimum,
-                                           TimeDelta maximum,
-                                           size_t bucket_count,
-                                           Flags flags) {
-  return FactoryGet(minimum.InMilliseconds(), maximum.InMilliseconds(),
-                    bucket_count, flags);
 }
 
 Histogram::ClassType LinearHistogram::histogram_type() const {
@@ -541,19 +521,6 @@ LinearHistogram::LinearHistogram(TimeDelta minimum,
                 maximum, bucket_count) {
 }
 
-void LinearHistogram::InitializeBucketRange() {
-  DCHECK_GT(declared_min(), 0);  // 0 is the underflow bucket here.
-  double min = declared_min();
-  double max = declared_max();
-  size_t i;
-  for (i = 1; i < bucket_count(); ++i) {
-    double linear_range = (min * (bucket_count() -1 - i) + max * (i - 1)) /
-                          (bucket_count() - 2);
-    SetBucketRange(i, static_cast<int> (linear_range + 0.5));
-  }
-  ResetRangeChecksum();
-}
-
 double LinearHistogram::GetBucketSize(Count current, size_t i) const {
   DCHECK_GT(ranges(i + 1), ranges(i));
   // Adjacent buckets with different widths would have "surprisingly" many (few)
@@ -579,11 +546,11 @@ bool LinearHistogram::PrintEmptyBucket(size_t index) const {
 // This section provides implementation for BooleanHistogram.
 //------------------------------------------------------------------------------
 
-Histogram* BooleanHistogram::FactoryGet(Flags flags) {
+Histogram* BooleanHistogram::FactoryGet(Flags flags, const int* buckets) {
   Histogram* histogram(NULL);
 
   BooleanHistogram* tentative_histogram = new BooleanHistogram();
-  tentative_histogram->InitializeBucketRange();
+  tentative_histogram->InitializeBucketRangeFromData(buckets);
   tentative_histogram->SetFlags(flags);
   histogram = tentative_histogram;
 
@@ -616,12 +583,12 @@ BooleanHistogram::Accumulate(Sample value, Count count, size_t index)
 //------------------------------------------------------------------------------
 
 Histogram *
-FlagHistogram::FactoryGet(Flags flags)
+FlagHistogram::FactoryGet(Flags flags, const int* buckets)
 {
   Histogram *h(nullptr);
 
   FlagHistogram *fh = new FlagHistogram();
-  fh->InitializeBucketRange();
+  fh->InitializeBucketRangeFromData(buckets);
   fh->SetFlags(flags);
   size_t zero_index = fh->BucketIndex(0);
   fh->LinearHistogram::Accumulate(0, 1, zero_index);
@@ -694,12 +661,12 @@ FlagHistogram::Clear() {
 //------------------------------------------------------------------------------
 
 Histogram *
-CountHistogram::FactoryGet(Flags flags)
+CountHistogram::FactoryGet(Flags flags, const int* buckets)
 {
   Histogram *h(nullptr);
 
   CountHistogram *fh = new CountHistogram();
-  fh->InitializeBucketRange();
+  fh->InitializeBucketRangeFromData(buckets);
   fh->SetFlags(flags);
   h = fh;
 
@@ -738,64 +705,6 @@ CountHistogram::AddSampleSet(const SampleSet& sample) {
   if (sample.counts(indices[0]) != 0) {
     Accumulate(1, sample.counts(indices[0]), indices[0]);
   }
-}
-
-
-//------------------------------------------------------------------------------
-// CustomHistogram:
-//------------------------------------------------------------------------------
-
-Histogram* CustomHistogram::FactoryGet(const std::vector<Sample>& custom_ranges,
-                                       Flags flags) {
-  Histogram* histogram(NULL);
-
-  // Remove the duplicates in the custom ranges array.
-  std::vector<int> ranges = custom_ranges;
-  ranges.push_back(0);  // Ensure we have a zero value.
-  std::sort(ranges.begin(), ranges.end());
-  ranges.erase(std::unique(ranges.begin(), ranges.end()), ranges.end());
-  if (ranges.size() <= 1) {
-    DCHECK(false);
-    // Note that we pushed a 0 in above, so for defensive code....
-    ranges.push_back(1);  // Put in some data so we can index to [1].
-  }
-
-  DCHECK_LT(ranges.back(), kSampleType_MAX);
-
-  CustomHistogram* custom_histogram = new CustomHistogram(ranges);
-  custom_histogram->InitializedCustomBucketRange(ranges);
-  custom_histogram->SetFlags(flags);
-  histogram = custom_histogram;
-
-  DCHECK_EQ(histogram->histogram_type(), CUSTOM_HISTOGRAM);
-  DCHECK(histogram->HasConstructorArguments(ranges[1], ranges.back(),
-                                            ranges.size()));
-  return histogram;
-}
-
-Histogram::ClassType CustomHistogram::histogram_type() const {
-  return CUSTOM_HISTOGRAM;
-}
-
-CustomHistogram::CustomHistogram(const std::vector<Sample>& custom_ranges)
-    : Histogram(custom_ranges[1], custom_ranges.back(),
-                custom_ranges.size()) {
-  DCHECK_GT(custom_ranges.size(), 1u);
-  DCHECK_EQ(custom_ranges[0], 0);
-}
-
-void CustomHistogram::InitializedCustomBucketRange(
-    const std::vector<Sample>& custom_ranges) {
-  DCHECK_GT(custom_ranges.size(), 1u);
-  DCHECK_EQ(custom_ranges[0], 0);
-  DCHECK_LE(custom_ranges.size(), bucket_count());
-  for (size_t index = 0; index < custom_ranges.size(); ++index)
-    SetBucketRange(index, custom_ranges[index]);
-  ResetRangeChecksum();
-}
-
-double CustomHistogram::GetBucketSize(Count current, size_t i) const {
-  return 1;
 }
 
 }  // namespace base

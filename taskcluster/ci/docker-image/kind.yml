@@ -26,5 +26,3 @@ jobs:
     symbol: I(agb)
   index-task:
     symbol: I(idx)
-  partial-update-generator:
-    symbol: I(pg)

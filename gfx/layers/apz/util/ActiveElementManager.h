@@ -59,12 +59,6 @@ public:
    * delayed until after touch listeners have responded to the APZ.
    */
   void HandleTouchEnd();
-  /**
-   * @return true iff the currently active element (or one of its ancestors)
-   * actually had a style for the :active pseudo-class. The currently active
-   * element is the root element if no other elements are active.
-   */
-  bool ActiveElementUsesStyle() const;
 private:
   /**
    * The target of the first touch point in the current touch block.
@@ -84,10 +78,6 @@ private:
    * A task for calling SetActive() after a timeout.
    */
   RefPtr<CancelableRunnable> mSetActiveTask;
-  /**
-   * See ActiveElementUsesStyle() documentation.
-   */
-  bool mActiveElementUsesStyle;
 
   // Helpers
   void TriggerElementActivation();

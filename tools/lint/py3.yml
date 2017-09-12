@@ -36,7 +36,6 @@ py3:
         - testing/mochitest
         - testing/mozbase
         - testing/mozharness
-        - testing/talos
         - testing/tools/iceserver
         - testing/tps
         - testing/xpcshell

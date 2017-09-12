@@ -291,7 +291,7 @@ ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type, const ch
         MOZ_ASSERT(type == WrapperDenialForCOW);
         errorMessage.emplace("Security wrapper denied access to property %s on privileged "
                              "Javascript object. Support for exposing privileged objects "
-                             "to untrusted content via __exposedProps__ is being gradually "
+                             "to untrusted content via __exposedProps__ has been "
                              "removed - use WebIDL bindings or Components.utils.cloneInto "
                              "instead. Note that only the first denied property access from a "
                              "given global object will be reported.",

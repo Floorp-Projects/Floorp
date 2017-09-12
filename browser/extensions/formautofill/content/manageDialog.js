@@ -28,7 +28,6 @@ class ManageRecords {
     this._storageInitPromise = profileStorage.initialize();
     this._subStorageName = subStorageName;
     this._elements = elements;
-    this._records = [];
     this._newRequest = false;
     this._isLoadingRecords = false;
     this.prefWin = window.opener;
@@ -152,6 +151,7 @@ class ManageRecords {
       storage.remove(option.value);
       option.remove();
     }
+    this.updateButtonsStates(this._selectedOptions);
 
     // Resume listening to storage change event
     Services.obs.addObserver(this, "formautofill-storage-changed");
@@ -327,9 +327,10 @@ class ManageAddresses extends ManageRecords {
 class ManageCreditCards extends ManageRecords {
   constructor(elements) {
     super("creditCards", elements);
-    this.hasMasterPassword = MasterPassword.isEnabled;
-    if (this.hasMasterPassword) {
-      elements.showCreditCards.setAttribute("hidden", true);
+    this._hasMasterPassword = MasterPassword.isEnabled;
+    this._isDecrypted = false;
+    if (this._hasMasterPassword) {
+      elements.showHideCreditCards.setAttribute("hidden", true);
     }
   }
 
@@ -341,7 +342,7 @@ class ManageCreditCards extends ManageRecords {
   async openEditDialog(creditCard) {
     // If master password is set, ask for password if user is trying to edit an
     // existing credit card.
-    if (!this.hasMasterPassword || !creditCard || await MasterPassword.prompt()) {
+    if (!this._hasMasterPassword || !creditCard || await MasterPassword.prompt()) {
       this.prefWin.gSubDialog.open(EDIT_CREDIT_CARD_URL, null, creditCard);
     }
   }
@@ -373,17 +374,45 @@ class ManageCreditCards extends ManageRecords {
     return parts.join(", ");
   }
 
-  async decryptOptions(options) {
+  async toggleShowHideCards(options) {
+    this._isDecrypted = !this._isDecrypted;
+    this.updateShowHideButtonState();
+    await this.updateLabels(options, this._isDecrypted);
+  }
+
+  async updateLabels(options, isDecrypted) {
     for (let option of options) {
-      option.text = await this.getLabel(option.record, true);
+      option.text = await this.getLabel(option.record, isDecrypted);
     }
-    // For testing only: Notify when credit cards have been decrypted
-    this._elements.records.dispatchEvent(new CustomEvent("OptionsDecrypted"));
+    // For testing only: Notify when credit cards labels have been updated
+    this._elements.records.dispatchEvent(new CustomEvent("LabelsUpdated"));
+  }
+
+  async renderRecordElements(records) {
+    // Revert back to encrypted form when re-rendering happens
+    this._isDecrypted = false;
+    await super.renderRecordElements(records);
+  }
+
+  updateButtonsStates(selectedCount) {
+    this.updateShowHideButtonState();
+    super.updateButtonsStates(selectedCount);
+  }
+
+  updateShowHideButtonState() {
+    if (this._elements.records.length) {
+      this._elements.showHideCreditCards.removeAttribute("disabled");
+    } else {
+      this._elements.showHideCreditCards.setAttribute("disabled", true);
+    }
+    this._elements.showHideCreditCards.textContent =
+      this._isDecrypted ? FormAutofillUtils.stringBundle.GetStringFromName("hideCreditCards") :
+                          FormAutofillUtils.stringBundle.GetStringFromName("showCreditCards");
   }
 
   handleClick(event) {
-    if (event.target == this._elements.showCreditCards) {
-      this.decryptOptions(this._elements.records.options);
+    if (event.target == this._elements.showHideCreditCards) {
+      this.toggleShowHideCards(this._elements.records.options);
     }
     super.handleClick(event);
   }

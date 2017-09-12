@@ -463,7 +463,7 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
 
   // Try to inherit a style backend.
   auto styleBackend = StyleBackendType::None;
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mScriptHandlingObject);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(scriptHandlingObject);
   if (window && window->GetExtantDoc()) {
     styleBackend = window->GetExtantDoc()->GetStyleBackendType();
   }
