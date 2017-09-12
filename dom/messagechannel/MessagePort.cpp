@@ -694,7 +694,7 @@ MessagePort::Entangled(nsTArray<ClonedMessageData>& aMessages)
   FallibleTArray<RefPtr<SharedMessagePortMessage>> data;
   if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
                                                                       data))) {
-    DispatchError();
+    // OOM, we cannot continue.
     return;
   }
 
@@ -748,7 +748,7 @@ MessagePort::MessagesReceived(nsTArray<ClonedMessageData>& aMessages)
   FallibleTArray<RefPtr<SharedMessagePortMessage>> data;
   if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
                                                                       data))) {
-    DispatchError();
+    // OOM, We cannot continue.
     return;
   }
 
@@ -1002,21 +1002,6 @@ MessagePort::RemoveDocFromBFCache()
 MessagePort::ForceClose(const MessagePortIdentifier& aIdentifier)
 {
   ForceCloseHelper::ForceClose(aIdentifier);
-}
-
-void
-MessagePort::DispatchError()
-{
-  MessageEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = false;
-
-  RefPtr<Event> event =
-    MessageEvent::Constructor(this, NS_LITERAL_STRING("messageerror"), init);
-  event->SetTrusted(true);
-
-  bool dummy;
-  DispatchEvent(event, &dummy);
 }
 
 } // namespace dom
