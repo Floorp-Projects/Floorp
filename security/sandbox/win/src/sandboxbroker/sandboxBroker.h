@@ -11,6 +11,7 @@
 #include <windows.h>
 
 #include "base/child_privileges.h"
+#include "nsXULAppAPI.h"
 
 namespace sandbox {
   class BrokerServices;
@@ -34,6 +35,7 @@ public:
 
   bool LaunchApp(const wchar_t *aPath,
                  const wchar_t *aArguments,
+                 GeckoProcessType aProcessType,
                  const bool aEnableLogging,
                  void **aProcessHandle);
   virtual ~SandboxBroker();

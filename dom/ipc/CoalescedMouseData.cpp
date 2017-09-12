@@ -26,9 +26,6 @@ CoalescedMouseData::Coalesce(const WidgetMouseEvent& aEvent,
     MOZ_ASSERT(mCoalescedInputEvent->mModifiers == aEvent.mModifiers);
     MOZ_ASSERT(mCoalescedInputEvent->mReason == aEvent.mReason);
     MOZ_ASSERT(mCoalescedInputEvent->inputSource == aEvent.inputSource);
-
-    // Assuming button changes should trigger other mouse events and dispatch
-    // the coalesced mouse move events.
     MOZ_ASSERT(mCoalescedInputEvent->button == aEvent.button);
     MOZ_ASSERT(mCoalescedInputEvent->buttons == aEvent.buttons);
     mCoalescedInputEvent->mTimeStamp = aEvent.mTimeStamp;
@@ -47,6 +44,8 @@ CoalescedMouseData::CanCoalesce(const WidgetMouseEvent& aEvent,
          (mCoalescedInputEvent->mModifiers == aEvent.mModifiers &&
           mCoalescedInputEvent->inputSource == aEvent.inputSource &&
           mCoalescedInputEvent->pointerId == aEvent.pointerId &&
+          mCoalescedInputEvent->button == aEvent.button &&
+          mCoalescedInputEvent->buttons == aEvent.buttons &&
           mGuid == aGuid &&
           mInputBlockId == aInputBlockId);
 }
