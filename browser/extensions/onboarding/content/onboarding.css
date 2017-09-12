@@ -117,6 +117,7 @@
   content: url("chrome://global/skin/icons/close.svg");
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0;
+  fill: currentColor;
 }
 
 .onboarding-close-btn:-moz-any(:hover, :active, :focus, :-moz-focusring)::before {
