@@ -750,6 +750,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'icons/processing/ColorProcessor.java',
     'icons/processing/DiskProcessor.java',
     'icons/processing/MemoryProcessor.java',
+    'icons/processing/MinimumSizeProcessor.java',
     'icons/processing/Processor.java',
     'icons/processing/ResizingProcessor.java',
     'icons/storage/DiskStorage.java',
