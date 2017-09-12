@@ -1,4 +1,4 @@
-# This file is rendered via JSON-e by
+-# This file is rendered via JSON-e by
 # - mozilla-taskcluster - https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
 # - cron tasks - taskcluster/taskgraph/cron/decision.py
 version: 1
@@ -88,7 +88,7 @@ tasks:
       # scriptworker patch!
       image: 'taskcluster/decision:2.0.0@sha256:4039fd878e5700b326d4a636e28c595c053fbcb53909c1db84ad1f513cf644ef'
 
-      maxRunTime: 1800
+      maxRunTime: 2400
 
       # TODO use mozilla-unified for the base repository once the tc-vcs
       # tar.gz archives are created or tc-vcs isn't being used.
