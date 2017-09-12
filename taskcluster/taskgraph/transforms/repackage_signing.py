@@ -129,6 +129,20 @@ def make_repackage_signing_description(config, jobs):
             'treeherder': treeherder,
         }
 
+        funsize_platforms = [
+            'linux-nightly',
+            'linux64-nightly',
+            'macosx64-nightly',
+            'win32-nightly',
+            'win64-nightly'
+        ]
+        if build_platform in funsize_platforms and is_nightly:
+            route_template = "project.releng.funsize.level-{level}.{project}"
+            task['routes'] = [
+                route_template.format(project=config.params['project'],
+                                      level=config.params['level'])
+            ]
+
         yield task
 
 

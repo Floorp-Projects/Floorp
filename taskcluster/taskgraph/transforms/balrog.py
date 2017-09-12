@@ -56,7 +56,7 @@ def make_task_description(config, jobs):
         dep_job = job['dependent-task']
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'c-Up(N)')
+        treeherder.setdefault('symbol', 'tc-Up(N)')
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',
@@ -66,18 +66,11 @@ def make_task_description(config, jobs):
 
         attributes = copy_attributes_from_dependent_job(dep_job)
 
-        treeherder_job_symbol = dep_job.attributes.get('locale', 'N')
-
         if dep_job.attributes.get('locale'):
-            treeherder['symbol'] = 'c-Up({})'.format(treeherder_job_symbol)
+            treeherder['symbol'] = 'tc-Up({})'.format(dep_job.attributes.get('locale'))
             attributes['locale'] = dep_job.attributes.get('locale')
 
         label = job['label']
-        if 'partials' in dep_job.kind:
-            label = "partials-{}".format(label)
-            treeherder['symbol'] = 'cp-Up({})'.format(treeherder_job_symbol)
-            treeherder['tier'] = 3  # remove once proven stable
-
         description = (
             "Balrog submission for locale '{locale}' for build '"
             "{build_platform}/{build_type}'".format(
@@ -101,6 +94,7 @@ def make_task_description(config, jobs):
         task = {
             'label': label,
             'description': description,
+            # do we have to define worker type somewhere?
             'worker-type': 'scriptworker-prov-v1/balrogworker-v1',
             'worker': {
                 'implementation': 'balrog',
