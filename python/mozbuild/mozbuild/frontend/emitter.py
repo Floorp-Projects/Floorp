@@ -1256,6 +1256,12 @@ class TreeMetadataEmitter(LoggingMixin):
 
             filtered = mpmanifest.tests
 
+            missing = [t['name'] for t in filtered if not os.path.exists(t['path'])]
+            if missing:
+                raise SandboxValidationError('Test manifest (%s) lists '
+                    'test that does not exist: %s' % (
+                    path, ', '.join(missing)), context)
+
             out_dir = mozpath.join(install_prefix, manifest_reldir)
             if 'install-to-subdir' in defaults:
                 # This is terrible, but what are you going to do?
