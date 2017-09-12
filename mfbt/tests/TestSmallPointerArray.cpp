@@ -19,14 +19,12 @@ void TestArrayManipulation()
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 0);
   MOZ_RELEASE_ASSERT(sizeof(testArray) == 2 * sizeof(void*));
-  MOZ_RELEASE_ASSERT(!testArray.Contains(PTR1));
 
   testArray.AppendElement(PTR1);
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 1);
   MOZ_RELEASE_ASSERT(testArray[0] == PTR1);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(0) == PTR1);
-  MOZ_RELEASE_ASSERT(testArray.Contains(PTR1));
 
   testArray.AppendElement(PTR2);
 
@@ -35,15 +33,12 @@ void TestArrayManipulation()
   MOZ_RELEASE_ASSERT(testArray.ElementAt(0) == PTR1);
   MOZ_RELEASE_ASSERT(testArray[1] == PTR2);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(1) == PTR2);
-  MOZ_RELEASE_ASSERT(testArray.Contains(PTR2));
 
-  MOZ_RELEASE_ASSERT(testArray.RemoveElement(PTR1));
-  MOZ_RELEASE_ASSERT(!testArray.RemoveElement(PTR1));
+  testArray.RemoveElement(PTR1);
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 1);
   MOZ_RELEASE_ASSERT(testArray[0] == PTR2);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(0) == PTR2);
-  MOZ_RELEASE_ASSERT(!testArray.Contains(PTR1));
 
   testArray.AppendElement(PTR1);
 
@@ -52,7 +47,6 @@ void TestArrayManipulation()
   MOZ_RELEASE_ASSERT(testArray.ElementAt(0) == PTR2);
   MOZ_RELEASE_ASSERT(testArray[1] == PTR1);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(1) == PTR1);
-  MOZ_RELEASE_ASSERT(testArray.Contains(PTR1));
 
   testArray.AppendElement(PTR3);
 
@@ -63,9 +57,8 @@ void TestArrayManipulation()
   MOZ_RELEASE_ASSERT(testArray.ElementAt(1) == PTR1);
   MOZ_RELEASE_ASSERT(testArray[2] == PTR3);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(2) == PTR3);
-  MOZ_RELEASE_ASSERT(testArray.Contains(PTR3));
 
-  MOZ_RELEASE_ASSERT(testArray.RemoveElement(PTR1));
+  testArray.RemoveElement(PTR1);
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 2);
   MOZ_RELEASE_ASSERT(testArray[0] == PTR2);
@@ -73,13 +66,13 @@ void TestArrayManipulation()
   MOZ_RELEASE_ASSERT(testArray[1] == PTR3);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(1) == PTR3);
 
-  MOZ_RELEASE_ASSERT(testArray.RemoveElement(PTR2));
+  testArray.RemoveElement(PTR2);
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 1);
   MOZ_RELEASE_ASSERT(testArray[0] == PTR3);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(0) == PTR3);
 
-  MOZ_RELEASE_ASSERT(testArray.RemoveElement(PTR3));
+  testArray.RemoveElement(PTR3);
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 0);
 
@@ -101,13 +94,13 @@ void TestArrayManipulation()
   MOZ_RELEASE_ASSERT(testArray[1] == PTR2);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(1) == PTR2);
 
-  MOZ_RELEASE_ASSERT(testArray.RemoveElement(PTR2));
+  testArray.RemoveElement(PTR2);
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 1);
   MOZ_RELEASE_ASSERT(testArray[0] == PTR1);
   MOZ_RELEASE_ASSERT(testArray.ElementAt(0) == PTR1);
 
-  MOZ_RELEASE_ASSERT(!testArray.RemoveElement(PTR3));
+  testArray.RemoveElement(PTR3);
 
   MOZ_RELEASE_ASSERT(testArray.Length() == 1);
   MOZ_RELEASE_ASSERT(testArray[0] == PTR1);
