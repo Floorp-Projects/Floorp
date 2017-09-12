@@ -670,6 +670,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_res_dir = self.query_abs_res_dir()
 
         max_verify_time = timedelta(minutes=60)
+        verify_time_exceeded = False
         start_time = datetime.now()
 
         if suites:
@@ -762,7 +763,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                         # (partial) results are made available in a timely manner.
                         self.info("TinderboxPrint: Verification too long: Not all tests were verified.<br/>")
                         # Signal verify time exceeded, to break out of suites loop also.
-                        max_verify_time = 0
+                        verify_time_exceeded = True
                         break
                     final_cmd = copy.copy(cmd)
                     final_cmd.extend(verify_args)
@@ -798,7 +799,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                         self.log("The %s suite: %s ran with return status: %s" %
                                  (suite_category, suite, tbpl_status), level=log_level)
 
-                if max_verify_time <= 0:
+                if verify_time_exceeded:
                     # Verification ran out of time, detected in inner loop.
                     break
         else:
