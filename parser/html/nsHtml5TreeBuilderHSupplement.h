@@ -138,6 +138,8 @@ bool EnsureBufferSpace(int32_t aLength);
 
 void EnableViewSource(nsHtml5Highlighter* aHighlighter);
 
+void errDeepTree();
+
 void errStrayStartTag(nsAtom* aName);
 
 void errStrayEndTag(nsAtom* aName);
