@@ -4353,7 +4353,7 @@ OverflowableToolbar.prototype = {
   _onResize(aEvent) {
     if (!this._lazyResizeHandler) {
       this._lazyResizeHandler = new DeferredTask(this._onLazyResize.bind(this),
-                                                 LAZY_RESIZE_INTERVAL_MS);
+                                                 LAZY_RESIZE_INTERVAL_MS, 0);
     }
     this._lazyResizeHandler.arm();
   },
