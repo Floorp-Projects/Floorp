@@ -1028,8 +1028,8 @@ inline void nsTableFrame::SetHasBCBorders(bool aValue)
 inline nscoord
 nsTableFrame::GetContinuousIStartBCBorderWidth() const
 {
-  int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  return BC_BORDER_END_HALF_COORD(aPixelsToTwips, mBits.mIStartContBCBorder);
+  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
+  return BC_BORDER_END_HALF_COORD(d2a, mBits.mIStartContBCBorder);
 }
 
 inline void nsTableFrame::SetContinuousIStartBCBorderWidth(nscoord aValue)
