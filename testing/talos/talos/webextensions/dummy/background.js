@@ -38,12 +38,21 @@ browser.webRequest.onErrorOccurred.addListener(
 
 
 browser.tabs.onUpdated.addListener((tabId, changed, tab) => {
+  if (changed.url) {
+    browser.pageAction.show(tabId);
+  }
+  if (changed.title) {
+    browser.pageAction.setTitle({tabId, title: `title: ${tab.title}`});
+    browser.pageAction.setIcon({tabId, path: {16: "/icon.png"}});
+  }
 });
 
 browser.tabs.onActivated.addListener(({tabId, windowId}) => {
+  browser.pageAction.show(tabId);
 });
 
 browser.tabs.onCreated.addListener(tab => {
+  browser.pageAction.show(tab.id);
 });
 
 browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
