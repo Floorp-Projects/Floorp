@@ -38,7 +38,7 @@ let gMockPrompter = {
       return false;
     }
     equal(text,
-          "Please enter the master password for the Software Security Device.",
+          "Please enter your master password.",
           "password prompt text should be as expected");
     equal(checkMsg, null, "checkMsg should be null");
     ok(this.passwordToTry, "passwordToTry should be non-null");

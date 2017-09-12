@@ -788,15 +788,20 @@ PK11PasswordPromptRunnable::RunOnTargetThread()
     return;
   }
 
-  NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(mSlot));
-  const char16_t* formatStrings[] = {
-    tokenName.get(),
-  };
   nsAutoString promptString;
-  rv = nssComponent->PIPBundleFormatStringFromName("CertPassPrompt",
-                                                   formatStrings,
-                                                   ArrayLength(formatStrings),
-                                                   promptString);
+  if (PK11_IsInternal(mSlot)) {
+    rv = nssComponent->GetPIPNSSBundleString("CertPassPromptDefault",
+                                             promptString);
+  } else {
+    NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(mSlot));
+    const char16_t* formatStrings[] = {
+      tokenName.get(),
+    };
+    rv = nssComponent->PIPBundleFormatStringFromName("CertPassPrompt",
+                                                     formatStrings,
+                                                     ArrayLength(formatStrings),
+                                                     promptString);
+  }
   if (NS_FAILED(rv)) {
     return;
   }
