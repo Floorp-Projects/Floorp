@@ -10,6 +10,7 @@ const { extend } = require("devtools/shared/extend");
 var EventEmitter = require("devtools/shared/event-emitter");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 var {settleAll} = require("devtools/shared/DevToolsUtils");
+var {lazyLoadSpec, lazyLoadFront} = require("devtools/shared/specs/index");
 
 /**
  * Types: named marshallers/demarshallers.
@@ -65,6 +66,16 @@ types.getType = function (type) {
     return reg;
   }
 
+  // Try to lazy load the spec, if not already loaded.
+  if (lazyLoadSpec(type)) {
+    // If a spec module was lazy loaded, it will synchronously call
+    // generateActorSpec, and set the type in `registeredTypes`.
+    reg = registeredTypes.get(type);
+    if (reg) {
+      return reg;
+    }
+  }
+
   // New type, see if it's a collection/lifetime type:
   let sep = type.indexOf(":");
   if (sep >= 0) {
@@ -88,12 +99,6 @@ types.getType = function (type) {
   let pieces = type.split("#", 2);
   if (pieces.length > 1) {
     return types.addActorDetail(type, pieces[0], pieces[1]);
-  }
-
-  // Might be a lazily-loaded type
-  if (type === "longstring") {
-    require("devtools/shared/specs/string");
-    return registeredTypes.get("longstring");
   }
 
   throw Error("Unknown type: " + type);
@@ -260,6 +265,13 @@ types.addDictType = function (name, specializations) {
  *    The typestring to register.
  */
 types.addActorType = function (name) {
+  // We call addActorType from:
+  //   FrontClassWithSpec when registering front synchronously,
+  //   generateActorSpec when defining specs,
+  //   specs modules to register actor type early to use them in other types
+  if (registeredTypes.has(name)) {
+    return registeredTypes.get(name);
+  }
   let type = types.addType(name, {
     _actor: true,
     category: "actor",
@@ -276,6 +288,15 @@ types.addActorType = function (name) {
       let actorID = typeof (v) === "string" ? v : v.actor;
       let front = ctx.conn.getActor(actorID);
       if (!front) {
+        // If front isn't instanciated yet, create one.
+
+        // Try lazy loading front if not already loaded.
+        // The front module will synchronously call `FrontClassWithSpec` and
+        // augment `type` with the `frontClass` attribute.
+        if (!type.frontClass) {
+          lazyLoadFront(name);
+        }
+
         front = new type.frontClass(ctx.conn); // eslint-disable-line new-cap
         front.actorID = actorID;
         ctx.marshallPool().manage(front);
@@ -446,7 +467,10 @@ types.JSON = types.addType("json");
  */
 var Arg = function (index, type) {
   this.index = index;
-  this.type = types.getType(type);
+  // Prevent force loading all Arg types by accessing it only when needed
+  loader.lazyGetter(this, "type", function () {
+    return types.getType(type);
+  });
 };
 
 Arg.prototype = {
@@ -531,7 +555,10 @@ exports.Option = function (index, type) {
  *    The return value should be marshalled as this type.
  */
 var RetVal = function (type) {
-  this.type = types.getType(type);
+  // Prevent force loading all RetVal types by accessing it only when needed
+  loader.lazyGetter(this, "type", function () {
+    return types.getType(type);
+  });
 };
 
 RetVal.prototype = {
