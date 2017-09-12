@@ -239,11 +239,13 @@ struct RangePaintInfo {
     : mRange(aRange), mBuilder(aFrame, nsDisplayListBuilderMode::PAINTING, false)
   {
     MOZ_COUNT_CTOR(RangePaintInfo);
+    mBuilder.BeginFrame();
   }
 
   ~RangePaintInfo()
   {
     mList.DeleteAll(&mBuilder);
+    mBuilder.EndFrame();
     MOZ_COUNT_DTOR(RangePaintInfo);
   }
 };
