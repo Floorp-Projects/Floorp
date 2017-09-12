@@ -2819,6 +2819,18 @@ ToSupportsIsOnPrimaryInheritanceChain(T* aObject, nsWrapperCache* aCache)
                                                                      aCache);
 }
 
+// Get the size of allocated memory to associate with a binding JSObject for a
+// native object. This is supplied to the JS engine to allow it to schedule GC
+// when necessary.
+//
+// This function supplies a default value and is overloaded for specific native
+// object types.
+inline uint64_t
+BindingJSObjectMallocBytes(void *aNativePtr)
+{
+  return 0;
+}
+
 // The BindingJSObjectCreator class is supposed to be used by a caller that
 // wants to create and initialise a binding JSObject. After initialisation has
 // been successfully completed it should call ForgetObject().
@@ -2861,6 +2873,10 @@ public:
       mNative = aNative;
       mReflector = aReflector;
     }
+
+    if (uint64_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
+      JS_updateMallocCounter(aCx, mallocBytes);
+    }
   }
 
   void
@@ -2873,6 +2889,10 @@ public:
       js::SetReservedSlot(aReflector, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
       mNative = aNative;
       mReflector = aReflector;
+    }
+
+    if (uint64_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
+      JS_updateMallocCounter(aCx, mallocBytes);
     }
   }
 

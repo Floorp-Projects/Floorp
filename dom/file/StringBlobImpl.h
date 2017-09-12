@@ -32,6 +32,11 @@ public:
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) override;
 
+  size_t GetAllocationSize() const override
+  {
+    return mData.Length();
+  }
+
 private:
   StringBlobImpl(const nsACString& aData, const nsAString& aContentType);
 
