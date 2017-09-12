@@ -315,3 +315,47 @@ decorate_task(
     `);
   })
 );
+
+decorate_task(
+  withSandboxManager(Assert),
+  withMockPreferences,
+  async function testAddonStudies(sandboxManager) {
+    const driver = new NormandyDriver(sandboxManager);
+    sandboxManager.cloneIntoGlobal("driver", driver, {cloneFunctions: true});
+
+    // Assertion helpers
+    sandboxManager.addGlobal("is", is);
+    sandboxManager.addGlobal("ok", ok);
+
+    await sandboxManager.evalInSandbox(`
+      (async function sandboxTest() {
+        const studyName = "preftest";
+        let hasStudy = await driver.preferenceExperiments.has(studyName);
+        ok(!hasStudy, "preferenceExperiments.has returns false if the study hasn't been started yet.");
+
+        await driver.preferenceExperiments.start({
+          name: studyName,
+          branch: "control",
+          preferenceName: "test.pref",
+          preferenceValue: true,
+          preferenceBranchType: "user",
+          preferenceType: "boolean",
+        });
+        hasStudy = await driver.preferenceExperiments.has(studyName);
+        ok(hasStudy, "preferenceExperiments.has returns true after the study has been started.");
+
+        let study = await driver.preferenceExperiments.get(studyName);
+        is(
+          study.branch,
+          "control",
+          "preferenceExperiments.get fetches studies from within a sandbox."
+        );
+        ok(!study.expired, "Studies are marked as active after being started by the driver.");
+
+        await driver.preferenceExperiments.stop(studyName);
+        study = await driver.preferenceExperiments.get(studyName);
+        ok(study.expired, "Studies are marked as inactive after being stopped by the driver.");
+      })();
+    `);
+  }
+);
