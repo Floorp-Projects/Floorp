@@ -57,7 +57,7 @@ this.TopSitesFeed = class TopSitesFeed {
     let frecent = await NewTabUtils.activityStreamLinks.getTopSites();
     const notBlockedDefaultSites = DEFAULT_TOP_SITES.filter(site => !NewTabUtils.blockedLinks.isBlocked({url: site.url}));
     const defaultUrls = notBlockedDefaultSites.map(site => site.url);
-    let pinned = NewTabUtils.pinnedLinks.links;
+    let pinned = this._getPinnedWithData(frecent);
     pinned = pinned.map(site => site && Object.assign({}, site, {
       isDefault: defaultUrls.indexOf(site.url) !== -1,
       hostname: shortURL(site)
@@ -122,14 +122,18 @@ this.TopSitesFeed = class TopSitesFeed {
     }
     this.lastUpdated = Date.now();
   }
-  _getPinnedWithData() {
-    // Augment the pinned links with any other extra data we have for them already in the store
-    const links = this.store.getState().TopSites.rows;
+  _getPinnedWithData(links) {
+    // Augment the pinned links with any other extra data we have for them already in the store.
+    // Alternatively you can pass in some links that you know have data you want the pinned links
+    // to also have. This is useful for start up to make sure pinned links have favicons
+    // (See github ticket #3428 fore more details)
+    let originalLinks = links ? links : this.store.getState().TopSites.rows;
     const pinned = NewTabUtils.pinnedLinks.links;
     return pinned.map(pinnedLink => {
       if (pinnedLink) {
         const hostname = shortURL(pinnedLink);
-        return Object.assign(links.find(link => link && link.url === pinnedLink.url) || {hostname}, pinnedLink);
+        const originalLink = originalLinks.find(link => link && link.url === pinnedLink.url);
+        return Object.assign(pinnedLink, originalLink || {hostname});
       }
       return pinnedLink;
     });

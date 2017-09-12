@@ -82,13 +82,22 @@ describe("ActivityStreamMessageChannel", () => {
       });
       it("should simluate init for existing ports", () => {
         sinon.stub(mm, "onActionFromContent");
-        RPmessagePorts.push({loaded: false, portID: "inited"});
-        RPmessagePorts.push({loaded: true, portID: "loaded"});
+
+        RPmessagePorts.push({
+          url: "about:monkeys",
+          loaded: false,
+          portID: "inited"
+        });
+        RPmessagePorts.push({
+          url: "about:sheep",
+          loaded: true,
+          portID: "loaded"
+        });
 
         mm.createChannel();
 
-        assert.calledWith(mm.onActionFromContent.firstCall, {type: at.NEW_TAB_INIT}, "inited");
-        assert.calledWith(mm.onActionFromContent.secondCall, {type: at.NEW_TAB_INIT}, "loaded");
+        assert.calledWith(mm.onActionFromContent.firstCall, {type: at.NEW_TAB_INIT, data: {url: "about:monkeys"}}, "inited");
+        assert.calledWith(mm.onActionFromContent.secondCall, {type: at.NEW_TAB_INIT, data: {url: "about:sheep"}}, "loaded");
       });
       it("should simluate load for loaded ports", () => {
         sinon.stub(mm, "onActionFromContent");
@@ -146,10 +155,15 @@ describe("ActivityStreamMessageChannel", () => {
     });
     describe("#onNewTabInit", () => {
       it("should dispatch a NEW_TAB_INIT action", () => {
-        const t = {portID: "foo"};
+        const t = {portID: "foo", url: "about:monkeys"};
         sinon.stub(mm, "onActionFromContent");
+
         mm.onNewTabInit({target: t});
-        assert.calledWith(mm.onActionFromContent, {type: at.NEW_TAB_INIT}, "foo");
+
+        assert.calledWith(mm.onActionFromContent, {
+          type: at.NEW_TAB_INIT,
+          data: {url: "about:monkeys"}
+        }, "foo");
       });
     });
     describe("#onNewTabLoad", () => {
@@ -244,6 +258,17 @@ describe("ActivityStreamMessageChannel", () => {
       it("should just call next if no channel is found", () => {
         store.dispatch({type: "ADD", data: 10});
         assert.equal(store.getState(), 10);
+      });
+      it("should not call next if skipMain is true", () => {
+        store.dispatch({type: "ADD", data: 10, meta: {skipMain: true}});
+        assert.equal(store.getState(), 0);
+
+        sinon.stub(mm, "send");
+        const action = ac.SendToContent({type: "ADD", data: 10, meta: {skipMain: true}}, "foo");
+        mm.createChannel();
+        store.dispatch(action);
+        assert.calledWith(mm.send, action);
+        assert.equal(store.getState(), 0);
       });
       it("should call .send if the action is SendToContent", () => {
         sinon.stub(mm, "send");

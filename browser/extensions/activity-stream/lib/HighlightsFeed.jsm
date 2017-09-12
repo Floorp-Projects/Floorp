@@ -15,6 +15,8 @@ const {Dedupe} = Cu.import("resource://activity-stream/common/Dedupe.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
+  "resource://activity-stream/lib/Screenshots.jsm");
 
 const HIGHLIGHTS_MAX_LENGTH = 9;
 const HIGHLIGHTS_UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
@@ -26,6 +28,7 @@ this.HighlightsFeed = class HighlightsFeed {
     this.highlightsLastUpdated = 0;
     this.highlights = [];
     this.dedupe = new Dedupe(this._dedupeKey);
+    this.imageCache = new Map();
   }
 
   _dedupeKey(site) {
@@ -62,10 +65,16 @@ this.HighlightsFeed = class HighlightsFeed {
         continue;
       }
 
+      // If we already have the image for the card in the cache, use that
+      // immediately. Then asynchronously fetch the image (refreshes the cache).
+      const image = this.imageCache.get(page.url);
+      this.fetchImage(page.url, page.preview_image_url);
+
       // We want the page, so update various fields for UI
       Object.assign(page, {
+        image,
+        hasImage: true, // We always have an image - fall back to a screenshot
         hostname,
-        image: page.preview_image_url,
         type: page.bookmarkGuid ? "bookmark" : page.type
       });
 
@@ -81,6 +90,23 @@ this.HighlightsFeed = class HighlightsFeed {
 
     SectionsManager.updateSection(SECTION_ID, {rows: this.highlights}, this.highlightsLastUpdated === 0 || broadcast);
     this.highlightsLastUpdated = Date.now();
+    // Clearing the image cache here is okay. The asynchronous fetchImage calls
+    // get scheduled after the body of fetchHighlights has been executed, so they
+    // then fill up the cache again for the next fetchHighlights call.
+    this.imageCache.clear();
+  }
+
+  /**
+   * Fetch an image for a given highlight, store it in the image cache, and
+   * update the card with the new image. If the highlight has a preview image
+   * then use that, else fall back to a screenshot of the page.
+   */
+  async fetchImage(url, imageUrl) {
+    const image = await Screenshots.getScreenshotForURL(imageUrl || url);
+    if (image) {
+      this.imageCache.set(url, image);
+    }
+    SectionsManager.updateSectionCard(SECTION_ID, url, {image}, true);
   }
 
   onAction(action) {
