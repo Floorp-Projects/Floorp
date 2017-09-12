@@ -44,6 +44,9 @@ browser.tabs.onUpdated.addListener((tabId, changed, tab) => {
   if (changed.title) {
     browser.pageAction.setTitle({tabId, title: `title: ${tab.title}`});
     browser.pageAction.setIcon({tabId, path: {16: "/icon.png"}});
+
+    browser.browserAction.setTitle({tabId, title: `title: ${tab.title}`});
+    browser.browserAction.setIcon({path: {16: "/icon.png"}});
   }
 });
 
