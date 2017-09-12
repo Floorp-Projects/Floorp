@@ -735,7 +735,8 @@ var Impl = {
       } finally {
         this._delayedInitTask = null;
       }
-    }, this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
+    }, this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY,
+       this._testMode ? 0 : undefined);
 
     AsyncShutdown.sendTelemetry.addBlocker("TelemetryController: shutting down",
                                            () => this.shutdown(),

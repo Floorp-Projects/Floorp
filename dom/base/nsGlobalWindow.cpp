@@ -12764,7 +12764,7 @@ nsGlobalWindow::GetParentInternal()
   if (IsInnerWindow()) {
     nsGlobalWindow* outer = GetOuterWindowInternal();
     if (!outer) {
-      NS_WARNING("No outer window available!");
+      // No outer window available!
       return nullptr;
     }
     return outer->GetParentInternal();

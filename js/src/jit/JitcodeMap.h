@@ -1042,7 +1042,7 @@ class JitcodeGlobalTable
         return skiplistSize_ == 0;
     }
 
-    const JitcodeGlobalEntry* lookup(void* ptr) {
+    JitcodeGlobalEntry* lookup(void* ptr) {
         return lookupInternal(ptr);
     }
 

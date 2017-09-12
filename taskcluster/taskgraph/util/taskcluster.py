@@ -13,9 +13,6 @@ from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-_TC_ARTIFACT_LOCATION = \
-        'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/public/build/{postfix}'
-
 
 @memoize
 def get_session():
@@ -104,10 +101,3 @@ def get_task_url(task_id, use_proxy=False):
 def get_task_definition(task_id, use_proxy=False):
     response = _do_request(get_task_url(task_id, use_proxy))
     return response.json()
-
-
-def get_taskcluster_artifact_prefix(task_id, postfix='', locale=None):
-    if locale:
-        postfix = '{}/{}'.format(locale, postfix)
-
-    return _TC_ARTIFACT_LOCATION.format(task_id=task_id, postfix=postfix)

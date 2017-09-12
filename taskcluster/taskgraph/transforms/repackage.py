@@ -10,9 +10,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
-from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
+
+_TC_ARTIFACT_LOCATION = \
+        'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/public/build/{postfix}'
 
 transforms = TransformSequence()
 
@@ -201,8 +203,8 @@ def _generate_task_mozharness_config(build_platform):
 
 
 def _generate_task_env(build_platform, build_task_ref, signing_task_ref, locale=None):
-    mar_prefix = get_taskcluster_artifact_prefix(build_task_ref, postfix='host/bin/', locale=None)
-    signed_prefix = get_taskcluster_artifact_prefix(signing_task_ref, locale=locale)
+    mar_prefix = _generate_taskcluster_prefix(build_task_ref, postfix='host/bin/', locale=None)
+    signed_prefix = _generate_taskcluster_prefix(signing_task_ref, locale=locale)
 
     if build_platform.startswith('linux') or build_platform.startswith('macosx'):
         tarball_extension = 'bz2' if build_platform.startswith('linux') else 'gz'
@@ -227,6 +229,13 @@ def _generate_task_env(build_platform, build_task_ref, signing_task_ref, locale=
         return task_env
 
     raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
+
+
+def _generate_taskcluster_prefix(task_id, postfix='', locale=None):
+    if locale:
+        postfix = '{}/{}'.format(locale, postfix)
+
+    return _TC_ARTIFACT_LOCATION.format(task_id=task_id, postfix=postfix)
 
 
 def _generate_task_output_files(build_platform, locale=None):

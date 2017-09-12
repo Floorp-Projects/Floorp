@@ -11,6 +11,10 @@ XPCOMUtils.defineLazyGetter(this, "gThemesEnabled", () => {
   return Services.prefs.getBoolPref("extensions.webextensions.themes.enabled");
 });
 
+var {
+  getWinUtils,
+} = ExtensionUtils;
+
 const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");
 
 /** Class representing a theme. */
@@ -43,9 +47,7 @@ class Theme {
    */
   load(details, targetWindow) {
     if (targetWindow) {
-      this.lwtStyles.window = targetWindow
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      this.lwtStyles.window = getWinUtils(targetWindow).outerWindowID;
     }
 
     if (details.colors) {
