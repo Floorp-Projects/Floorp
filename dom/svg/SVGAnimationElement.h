@@ -99,10 +99,19 @@ public:
                         const nsAString& aHrefStr);
   void AnimationTargetChanged();
 
-  class TargetReference : public mozilla::dom::IDTracker {
+  /**
+   * Helper that provides a reference to the element with the ID that is
+   * referenced by the animation element's 'href' attribute, if any, and that
+   * will notify the animation element if the element that that ID identifies
+   * changes to a different element (or none).  (If the 'href' attribute is not
+   * specified, then the animation target is the parent element and this helper
+   * is not used.)
+   */
+  class HrefTargetTracker final : public IDTracker {
   public:
-    explicit TargetReference(SVGAnimationElement* aAnimationElement) :
-      mAnimationElement(aAnimationElement) {}
+    explicit HrefTargetTracker(SVGAnimationElement* aAnimationElement)
+      : mAnimationElement(aAnimationElement)
+    {}
   protected:
     // We need to be notified when target changes, in order to request a
     // sample (which will clear animation effects from old target and apply
@@ -119,7 +128,7 @@ public:
     SVGAnimationElement* const mAnimationElement;
   };
 
-  TargetReference      mHrefTarget;
+  HrefTargetTracker    mHrefTarget;
   nsSMILTimedElement   mTimedElement;
 };
 
