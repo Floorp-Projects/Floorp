@@ -8,6 +8,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  DelayedInit: "resource://gre/modules/DelayedInit.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -74,6 +75,33 @@ BrowserCLH.prototype = {
         GeckoViewUtils.addLazyGetter(this, "InputWidgetHelper", {
           script: "chrome://browser/content/InputWidgetHelper.js",
         });
+
+        GeckoViewUtils.addLazyGetter(this, "LoginManagerParent", {
+          module: "resource://gre/modules/LoginManagerParent.jsm",
+          mm: [
+            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN nsBrowserGlue.js
+            "RemoteLogins:findLogins",
+            "RemoteLogins:findRecipes",
+            "RemoteLogins:onFormSubmit",
+            "RemoteLogins:autoCompleteLogins",
+            "RemoteLogins:removeLogin",
+            "RemoteLogins:insecureLoginFormPresent",
+            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN nsBrowserGlue.js
+          ],
+        });
+        GeckoViewUtils.addLazyGetter(this, "LoginManagerContent", {
+          module: "resource://gre/modules/LoginManagerContent.jsm",
+        });
+
+        // Once the first chrome window is loaded, schedule a list of startup
+        // tasks to be performed on idle.
+        GeckoViewUtils.addLazyGetter(this, "DelayedStartup", {
+          observers: ["chrome-document-loaded"],
+          once: true,
+          handler: _ => DelayedInit.scheduleList([
+            _ => Services.logins,
+          ], 10000 /* 10 seconds maximum wait. */),
+        });
         break;
       }
 
@@ -92,9 +120,46 @@ BrowserCLH.prototype = {
             mozSystemGroup: true,
           },
         });
+
+        this._initLoginManagerEvents(aWindow);
         break;
       }
     }
+  },
+
+  _initLoginManagerEvents: function(aWindow) {
+    let options = {
+      capture: true,
+      mozSystemGroup: true,
+    };
+
+    aWindow.addEventListener("DOMFormHasPassword", event => {
+      this.LoginManagerContent.onDOMFormHasPassword(event, event.target.ownerGlobal.top);
+    }, options);
+
+    aWindow.addEventListener("DOMInputPasswordAdded", event => {
+      this.LoginManagerContent.onDOMInputPasswordAdded(event, event.target.ownerGlobal.top);
+    }, options);
+
+    aWindow.addEventListener("DOMAutoComplete", event => {
+      this.LoginManagerContent.onUsernameInput(event);
+    }, options);
+
+    aWindow.addEventListener("blur", event => {
+      let win = event.target && event.target.ownerGlobal;
+      if (win && win.HTMLDocument &&
+          event.target instanceof win.HTMLInputElement) {
+        this.LoginManagerContent.onUsernameInput(event);
+      }
+    }, options);
+
+    aWindow.addEventListener("pageshow", event => {
+      let win = event.target && event.target.defaultView;
+      if (win && win.HTMLDocument &&
+          event.target instanceof win.HTMLDocument) {
+        this.LoginManagerContent.onPageShow(event, win.top);
+      }
+    }, options);
   },
 
   // QI
