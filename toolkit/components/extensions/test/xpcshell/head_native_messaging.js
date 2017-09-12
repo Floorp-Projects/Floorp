@@ -62,9 +62,9 @@ async function setupHosts(scripts) {
     case "linux":
       let dirProvider = {
         getFile(property) {
-          if (property == "XREUserNativeMessaging") {
+          if (property == "XREUserNativeManifests") {
             return tmpDir.clone();
-          } else if (property == "XRESysNativeMessaging") {
+          } else if (property == "XRESysNativeManifests") {
             return tmpDir.clone();
           }
           return null;
