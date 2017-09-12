@@ -8,11 +8,13 @@
 objects and methods for parsing and serializing Talos results
 see https://wiki.mozilla.org/Buildbot/Talos/DataFormat
 """
+from __future__ import absolute_import, print_function
 
+import csv
 import json
 import os
 import re
-import csv
+
 from talos import output, utils, filter
 
 
@@ -37,7 +39,7 @@ class TalosResults(object):
         try:
 
             for key, urls in output_formats.items():
-                _output = output.Output(self)
+                _output = output.Output(self, Results)
                 results = _output()
                 for url in urls:
                     _output.output(results, url)

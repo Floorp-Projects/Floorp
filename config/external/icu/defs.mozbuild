@@ -33,7 +33,7 @@ if CONFIG['GNU_CXX']:
 elif CONFIG['OS_TARGET'] == 'WINNT':
     CXXFLAGS += ['-GR']
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 ALLOW_COMPILER_WARNINGS = True
 
 # We allow compiler warnings, but we can at least cut down on spammy

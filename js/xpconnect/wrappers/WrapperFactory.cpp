@@ -514,8 +514,8 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
         }
 
-        // For Vanilla JSObjects exposed from chrome to content, we use a wrapper
-        // that supports __exposedProps__. We'd like to get rid of these eventually,
+        // For vanilla JSObjects exposed from chrome to content, we use a wrapper
+        // that fails silently in a few cases. We'd like to get rid of this eventually,
         // but in their current form they don't cause much trouble.
         else if (IdentifyStandardInstance(obj) == JSProto_Object) {
             wrapper = &ChromeObjectWrapper::singleton;

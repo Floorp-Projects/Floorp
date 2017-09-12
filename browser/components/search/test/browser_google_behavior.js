@@ -56,6 +56,13 @@ function promiseStateChangeURI() {
 function promiseContentSearchReady(browser) {
   return ContentTask.spawn(browser, {}, async function(args) {
     return new Promise(resolve => {
+      if (content.wrappedJSObject.gContentSearchController) {
+        let searchController = content.wrappedJSObject.gContentSearchController;
+        if (searchController.defaultEngine) {
+          resolve();
+        }
+      }
+
       content.addEventListener("ContentSearchService", function listener(aEvent) {
         if (aEvent.detail.type == "State") {
           content.removeEventListener("ContentSearchService", listener);

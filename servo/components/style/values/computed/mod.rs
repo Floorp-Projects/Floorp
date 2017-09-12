@@ -4,7 +4,7 @@
 
 //! Computed values.
 
-use Atom;
+use {Atom, Namespace};
 use context::QuirksMode;
 use euclid::Size2D;
 use font_metrics::FontMetricsProvider;
@@ -14,11 +14,11 @@ use properties;
 use properties::{ComputedValues, StyleBuilder};
 #[cfg(feature = "servo")]
 use servo_url::ServoUrl;
-use std::f32;
-use std::fmt;
+use std::{f32, fmt, ops};
 #[cfg(feature = "servo")]
 use std::sync::Arc;
 use style_traits::ToCss;
+use style_traits::cursor::Cursor;
 use super::{CSSFloat, CSSInteger};
 use super::generics::{GreaterThanOrEqualToOne, NonNegative};
 use super::generics::grid::{GridLine as GenericGridLine, TrackBreadth as GenericTrackBreadth};
@@ -332,13 +332,17 @@ impl<T> ToComputedValue for T
     }
 }
 
-trivial_to_computed_value!(Atom);
+trivial_to_computed_value!(());
+trivial_to_computed_value!(bool);
+trivial_to_computed_value!(f32);
+trivial_to_computed_value!(i32);
 trivial_to_computed_value!(u8);
 trivial_to_computed_value!(u16);
-trivial_to_computed_value!(bool);
-trivial_to_computed_value!(i32);
-trivial_to_computed_value!(f32);
+trivial_to_computed_value!(Atom);
 trivial_to_computed_value!(BorderStyle);
+trivial_to_computed_value!(Cursor);
+trivial_to_computed_value!(Namespace);
+trivial_to_computed_value!(String);
 
 /// A `<number>` value.
 pub type Number = CSSFloat;
@@ -555,6 +559,13 @@ impl NonNegativeAu {
     pub fn scale_by(self, factor: f32) -> Self {
         // scale this by zero if factor is negative.
         NonNegative::<Au>(self.0.scale_by(factor.max(0.)))
+    }
+}
+
+impl ops::Add<NonNegativeAu> for NonNegativeAu {
+    type Output = NonNegativeAu;
+    fn add(self, other: Self) -> Self {
+        (self.0 + other.0).into()
     }
 }
 

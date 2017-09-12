@@ -5,7 +5,7 @@ Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
 const TEST_SELECTORS = {
   selRecords: "#credit-cards",
   btnRemove: "#remove",
-  btnShowCreditCards: "#show-credit-cards",
+  btnShowHideCreditCards: "#show-hide-credit-cards",
   btnAdd: "#add",
   btnEdit: "#edit",
 };
@@ -17,13 +17,13 @@ add_task(async function test_manageCreditCardsInitialState() {
     await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       let selRecords = content.document.querySelector(args.selRecords);
       let btnRemove = content.document.querySelector(args.btnRemove);
-      let btnShowCreditCards = content.document.querySelector(args.btnShowCreditCards);
+      let btnShowHideCreditCards = content.document.querySelector(args.btnShowHideCreditCards);
       let btnAdd = content.document.querySelector(args.btnAdd);
       let btnEdit = content.document.querySelector(args.btnEdit);
 
       is(selRecords.length, 0, "No credit card");
       is(btnRemove.disabled, true, "Remove button disabled");
-      is(btnShowCreditCards.disabled, false, "Show Credit Cards button disabled");
+      is(btnShowHideCreditCards.disabled, true, "Show Credit Cards button disabled");
       is(btnAdd.disabled, false, "Add button enabled");
       is(btnEdit.disabled, true, "Edit button disabled");
     });
@@ -104,18 +104,44 @@ add_task(async function test_showCreditCards() {
   await BrowserTestUtils.waitForEvent(win, "FormReady");
 
   let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
-  let btnShowCreditCards = win.document.querySelector(TEST_SELECTORS.btnShowCreditCards);
+  let btnShowHideCreditCards = win.document.querySelector(TEST_SELECTORS.btnShowHideCreditCards);
 
-  EventUtils.synthesizeMouseAtCenter(btnShowCreditCards, {}, win);
-  await BrowserTestUtils.waitForEvent(selRecords, "OptionsDecrypted");
+  is(btnShowHideCreditCards.disabled, false, "Show credit cards button enabled");
+  is(btnShowHideCreditCards.textContent, "Show Credit Cards", "Label should be 'Show Credit Cards'");
 
+  // Show credit card numbers
+  EventUtils.synthesizeMouseAtCenter(btnShowHideCreditCards, {}, win);
+  await BrowserTestUtils.waitForEvent(selRecords, "LabelsUpdated");
   is(selRecords[0].text, "9999888877776666", "Decrypted credit card 3");
   is(selRecords[1].text, "1111222233334444, Timothy Berners-Lee", "Decrypted credit card 2");
   is(selRecords[2].text, "1234567812345678, John Doe", "Decrypted credit card 1");
+  is(btnShowHideCreditCards.textContent, "Hide Credit Cards", "Label should be 'Hide Credit Cards'");
 
+  // Hide credit card numbers
+  EventUtils.synthesizeMouseAtCenter(btnShowHideCreditCards, {}, win);
+  await BrowserTestUtils.waitForEvent(selRecords, "LabelsUpdated");
+  is(selRecords[0].text, "**** 6666", "Masked credit card 3");
+  is(selRecords[1].text, "**** 4444, Timothy Berners-Lee", "Masked credit card 2");
+  is(selRecords[2].text, "**** 5678, John Doe", "Masked credit card 1");
+  is(btnShowHideCreditCards.textContent, "Show Credit Cards", "Label should be 'Show Credit Cards'");
+
+  // Show credit card numbers again to test if they revert back to masked form when reloaded
+  EventUtils.synthesizeMouseAtCenter(btnShowHideCreditCards, {}, win);
+  await BrowserTestUtils.waitForEvent(selRecords, "LabelsUpdated");
+  // Ensure credit card numbers are shown again
+  is(selRecords[0].text, "9999888877776666", "Decrypted credit card 3");
+  // Remove a card to trigger reloading
   await removeCreditCards([selRecords.options[2].value]);
+  await BrowserTestUtils.waitForEvent(selRecords, "RecordsLoaded");
+  is(selRecords[0].text, "**** 6666", "Masked credit card 3");
+  is(selRecords[1].text, "**** 4444, Timothy Berners-Lee", "Masked credit card 2");
+
+  // Remove the rest of the cards
   await removeCreditCards([selRecords.options[1].value]);
   await removeCreditCards([selRecords.options[0].value]);
+  await BrowserTestUtils.waitForEvent(selRecords, "RecordsLoaded");
+  is(btnShowHideCreditCards.disabled, true, "Show credit cards button is disabled when there is no card");
+
   win.close();
 });
 
@@ -128,12 +154,12 @@ add_task(async function test_hasMasterPassword() {
 
   let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
   let btnRemove = win.document.querySelector(TEST_SELECTORS.btnRemove);
-  let btnShowCreditCards = win.document.querySelector(TEST_SELECTORS.btnShowCreditCards);
+  let btnShowHideCreditCards = win.document.querySelector(TEST_SELECTORS.btnShowHideCreditCards);
   let btnAdd = win.document.querySelector(TEST_SELECTORS.btnAdd);
   let btnEdit = win.document.querySelector(TEST_SELECTORS.btnEdit);
   let masterPasswordDialogShown = waitForMasterPasswordDialog();
 
-  is(btnShowCreditCards.hidden, true, "Show credit cards button is hidden");
+  is(btnShowHideCreditCards.hidden, true, "Show credit cards button is hidden");
 
   // Master password dialog should show when trying to edit a credit card record.
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);

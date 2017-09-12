@@ -786,8 +786,10 @@ LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
   MOZ_DIAGNOSTIC_ASSERT(aDecreaseSize >= 0);
 
   int64_t currentPaddingSize = 0;
-  nsresult rv = LockedDirectoryPaddingGet(aBaseDir, &currentPaddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv)) || aTemporaryFileExist) {
+  nsresult rv = NS_OK;
+  if (aTemporaryFileExist ||
+      NS_WARN_IF(NS_FAILED(rv =
+        LockedDirectoryPaddingGet(aBaseDir, &currentPaddingSize)))) {
     // Fail to read padding size from the dir padding file, so try to restore.
     if (rv != NS_ERROR_FILE_NOT_FOUND &&
         rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {

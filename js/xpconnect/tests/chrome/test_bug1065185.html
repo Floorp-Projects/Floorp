@@ -25,11 +25,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1065185
 
   var gLoadCount = 0;
   function loaded() {
-    switch(++gLoadCount) {
+    switch(gLoadCount++) {
       case 0:
-        doMonitor([]);
+        doMonitor([/access to property "a"/i]);
         window[0].wrappedJSObject.probe = { a: 2, __exposedProps__: { 'a': 'r' } };
-        is(window[0].eval('probe.a'), 2, "Accessed exposed prop");
+        is(window[0].eval('probe.a'), undefined, "Accessed exposed prop");
         endMonitor();
         break;
       case 1:
