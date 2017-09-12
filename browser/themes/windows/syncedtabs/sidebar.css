@@ -28,13 +28,14 @@
 }
 
 .textbox-search-icon {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
   background-position: center;
   display: inline-block;
   vertical-align: middle;
+  margin-bottom: 1px;
 }
 
 .textbox-search-icon:-moz-locale-dir(rtl) {
