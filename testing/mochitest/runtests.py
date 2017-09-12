@@ -2343,6 +2343,7 @@ toolbar#nav-bar {
             stepOptions = copy.deepcopy(options)
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.keep_open = False
+            stepOptions.runUntilFailure = True
             result = self.runTests(stepOptions)
             self.message_logger.finish()
             return result
