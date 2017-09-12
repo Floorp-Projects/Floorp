@@ -5,12 +5,24 @@
 
 "use strict";
 
+// In UTF-8 this is a heavy black heart.
+const encodedChar = "%E2%9D%A4";
+
 add_task(function* () {
   info("Test UTF-8 JSON started");
 
-  const encodedChar = "%E2%9D%A4"; // In UTF-8 this is a heavy black heart
-  const TEST_JSON_URL = "data:application/json;charset=ANSI,[\"" + encodedChar + "\"]";
+  info("Test 1: UTF-8 is used by default");
+  yield testUrl("data:application/json,[\"" + encodedChar + "\"]");
 
+  info("Test 2: The charset parameter is ignored");
+  yield testUrl("data:application/json;charset=ANSI,[\"" + encodedChar + "\"]");
+
+  info("Test 3: The UTF-8 BOM is tolerated.");
+  const bom = "%EF%BB%BF";
+  yield testUrl("data:application/json," + bom + "[\"" + encodedChar + "\"]");
+});
+
+function* testUrl(TEST_JSON_URL) {
   yield addJsonViewTab(TEST_JSON_URL);
 
   let countBefore = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
@@ -24,4 +36,4 @@ add_task(function* () {
     ".jsonPanelBox .treeTable .stringCell");
   is(objectCellText, JSON.stringify(decodeURIComponent(encodedChar)),
      "The source has been parsed as UTF-8, ignoring the charset parameter.");
-});
+}
