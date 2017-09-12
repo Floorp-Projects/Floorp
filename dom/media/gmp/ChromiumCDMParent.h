@@ -18,8 +18,6 @@
 #include "mozilla/Span.h"
 #include "ReorderQueue.h"
 
-class ChromiumCDMCallback;
-
 namespace mozilla {
 
 class MediaRawData;
@@ -40,7 +38,7 @@ public:
 
   uint32_t PluginId() const { return mPluginId; }
 
-  bool Init(ChromiumCDMCallback* aCDMCallback,
+  bool Init(ChromiumCDMProxy* aProxy,
             bool aAllowDistinctiveIdentifier,
             bool aAllowPersistentState,
             nsIEventTarget* aMainThread);
@@ -150,9 +148,10 @@ protected:
 
   const uint32_t mPluginId;
   GMPContentParent* mContentParent;
-  // Note: this pointer is a weak reference as ChromiumCDMProxy has a strong reference to the
-  // ChromiumCDMCallback.
-  ChromiumCDMCallback* mCDMCallback = nullptr;
+  // Note: this pointer is a weak reference because otherwise it would cause
+  // a cycle, as ChromiumCDMProxy has a strong reference to the
+  // ChromiumCDMParent.
+  ChromiumCDMProxy* mProxy = nullptr;
   nsDataHashtable<nsUint32HashKey, uint32_t> mPromiseToCreateSessionToken;
   nsTArray<RefPtr<DecryptJob>> mDecrypts;
 
@@ -189,7 +188,7 @@ protected:
   ReorderQueue mReorderQueue;
 
   // The main thread associated with the root document. Must be set in Init().
-  nsCOMPtr<nsIEventTarget> mMainThread;
+    nsCOMPtr<nsIEventTarget> mMainThread;
 };
 
 } // namespace gmp

@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChromiumCDMProxy.h"
-#include "ChromiumCDMCallbackProxy.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
@@ -98,9 +97,7 @@ ChromiumCDMProxy::Init(PromiseId aPromiseId,
         thread,
         __func__,
         [self, aPromiseId](RefPtr<gmp::ChromiumCDMParent> cdm) {
-          self->mCallback =
-            MakeUnique<ChromiumCDMCallbackProxy>(self, self->mMainThread);
-          if (!cdm->Init(self->mCallback.get(),
+          if (!cdm->Init(self,
                          self->mDistinctiveIdentifierRequired,
                          self->mPersistentStateRequired,
                          self->mMainThread)) {
@@ -467,7 +464,7 @@ ChromiumCDMProxy::OnResolveLoadSessionPromise(uint32_t aPromiseId,
 void
 ChromiumCDMProxy::OnSessionMessage(const nsAString& aSessionId,
                                    dom::MediaKeyMessageType aMessageType,
-                                   const nsTArray<uint8_t>& aMessage)
+                                   nsTArray<uint8_t>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mKeys.IsNull()) {
