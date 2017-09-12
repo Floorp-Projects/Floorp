@@ -28,6 +28,7 @@ public:
 
   VideoDecoderParent(VideoDecoderManagerParent* aParent,
                      const VideoInfo& aVideoInfo,
+                     float aFramerate,
                      const layers::TextureFactoryIdentifier& aIdentifier,
                      TaskQueue* aManagerTaskQueue,
                      TaskQueue* aDecodeTaskQueue,
