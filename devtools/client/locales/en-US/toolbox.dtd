@@ -179,17 +179,6 @@
 <!ENTITY options.screenshot.audio.label      "Play camera shutter sound">
 <!ENTITY options.screenshot.audio.tooltip    "Enables the camera audio sound when taking screenshot">
 
-<!-- LOCALIZATION NOTE (options.netmonitor.label): This is the label for the
-  -  heading of the group of Network Monitor preferences in the options panel. -->
-<!ENTITY options.netmonitor.label           "Network">
-
-<!-- LOCALIZATION NOTE (options.enablePersistentLogs.label): This is the
-  -  label for the checkbox that toggles persistent logs in the netmonitor,
-  -  i.e. devtools.netmonitor.persistlog a boolean preference in
-  -  about:config, in the options panel. -->
-<!ENTITY options.netmonitor.enablePersistentLogs.label    "Enable persistent logs">
-<!ENTITY options.netmonitor.enablePersistentLogs.tooltip  "If you enable this option the Network Monitor will not clear the output each time you navigate to a new page">
-
 <!-- LOCALIZATION NOTE (options.showPlatformData.label): This is the
   -  label for the checkbox that toggles the display of the platform data in the,
   -  Profiler i.e. devtools.profiler.ui.show-platform-data a boolean preference
