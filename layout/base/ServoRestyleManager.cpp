@@ -556,8 +556,10 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
                                         /* aPseudoElement = */ nullptr);
 
   // NOTE(emilio): We can't use the changes handled for the owner of the
-  // backdrop frame, since it's out of flow, and parented to the viewport frame.
-  MOZ_ASSERT(backdropFrame->GetParent()->IsViewportFrame());
+  // backdrop frame, since it's out of flow, and parented to the viewport or
+  // canvas frame (depending on the `position` value).
+  MOZ_ASSERT(backdropFrame->GetParent()->IsViewportFrame() ||
+             backdropFrame->GetParent()->IsCanvasFrame());
   nsTArray<nsIFrame*> wrappersToRestyle;
   ServoRestyleState state(aStyleSet, aChangeList, wrappersToRestyle);
   aFrame->UpdateStyleOfOwnedChildFrame(backdropFrame, newContext, state);
