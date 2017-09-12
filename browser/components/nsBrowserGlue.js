@@ -147,14 +147,14 @@ const listeners = {
     "Reader:ArticleGet": ["ReaderParent"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN LoginManagerParent.init
     "RemoteLogins:findLogins": ["LoginManagerParent"],
     "RemoteLogins:findRecipes": ["LoginManagerParent"],
     "RemoteLogins:onFormSubmit": ["LoginManagerParent"],
     "RemoteLogins:autoCompleteLogins": ["LoginManagerParent"],
     "RemoteLogins:removeLogin": ["LoginManagerParent"],
     "RemoteLogins:insecureLoginFormPresent": ["LoginManagerParent"],
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN LoginManagerParent.init
     "WCCR:registerProtocolHandler": ["Feeds"],
     "WCCR:registerContentHandler": ["Feeds"],
     "rtcpeer:CancelRequest": ["webrtcUI"],

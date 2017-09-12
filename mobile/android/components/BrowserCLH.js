@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-  DelayedInit: "resource://gre/modules/DelayedInit.jsm",
-  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-});
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 
 var Strings = {};
 
@@ -41,24 +40,47 @@ BrowserCLH.prototype = {
     protocolHandler.setSubstitution("android", Services.io.newURI(url));
   },
 
+  addObserverScripts: function(aScripts) {
+    aScripts.forEach(item => {
+      let {name, topics, script} = item;
+      XPCOMUtils.defineLazyGetter(this, name, _ => {
+        let sandbox = {};
+        if (script.endsWith(".jsm")) {
+          Cu.import(script, sandbox);
+        } else {
+          Services.scriptloader.loadSubScript(script, sandbox);
+        }
+        return sandbox[name];
+      });
+      let observer = (subject, topic, data) => {
+        Services.obs.removeObserver(observer, topic);
+        if (!item.once) {
+          Services.obs.addObserver(this[name], topic);
+        }
+        this[name].observe(subject, topic, data); // Explicitly notify new observer
+      };
+      topics.forEach(topic => {
+        Services.obs.addObserver(observer, topic);
+      });
+    });
+  },
+
   observe: function(subject, topic, data) {
     switch (topic) {
-      case "app-startup": {
+      case "app-startup":
         this.setResourceSubstitutions();
 
-        Services.obs.addObserver(this, "chrome-document-global-created");
-        Services.obs.addObserver(this, "content-document-global-created");
-
-        GeckoViewUtils.addLazyGetter(this, "DownloadNotifications", {
-          module: "resource://gre/modules/DownloadNotifications.jsm",
-          observers: ["chrome-document-loaded"],
+        let observerScripts = [{
+          name: "DownloadNotifications",
+          script: "resource://gre/modules/DownloadNotifications.jsm",
+          topics: ["chrome-document-interactive"],
           once: true,
-        });
-
+        }];
         if (AppConstants.MOZ_WEBRTC) {
-          GeckoViewUtils.addLazyGetter(this, "WebrtcUI", {
+          observerScripts.push({
+            name: "WebrtcUI",
             script: "chrome://browser/content/WebrtcUI.js",
-            observers: [
+            topics: [
               "getUserMedia:ask-device-permission",
               "getUserMedia:request",
               "PeerConnection:request",
@@ -68,98 +90,9 @@ BrowserCLH.prototype = {
             ],
           });
         }
-
-        GeckoViewUtils.addLazyGetter(this, "SelectHelper", {
-          script: "chrome://browser/content/SelectHelper.js",
-        });
-        GeckoViewUtils.addLazyGetter(this, "InputWidgetHelper", {
-          script: "chrome://browser/content/InputWidgetHelper.js",
-        });
-
-        GeckoViewUtils.addLazyGetter(this, "LoginManagerParent", {
-          module: "resource://gre/modules/LoginManagerParent.jsm",
-          mm: [
-            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN nsBrowserGlue.js
-            "RemoteLogins:findLogins",
-            "RemoteLogins:findRecipes",
-            "RemoteLogins:onFormSubmit",
-            "RemoteLogins:autoCompleteLogins",
-            "RemoteLogins:removeLogin",
-            "RemoteLogins:insecureLoginFormPresent",
-            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN nsBrowserGlue.js
-          ],
-        });
-        GeckoViewUtils.addLazyGetter(this, "LoginManagerContent", {
-          module: "resource://gre/modules/LoginManagerContent.jsm",
-        });
-
-        // Once the first chrome window is loaded, schedule a list of startup
-        // tasks to be performed on idle.
-        GeckoViewUtils.addLazyGetter(this, "DelayedStartup", {
-          observers: ["chrome-document-loaded"],
-          once: true,
-          handler: _ => DelayedInit.scheduleList([
-            _ => Services.logins,
-          ], 10000 /* 10 seconds maximum wait. */),
-        });
+        this.addObserverScripts(observerScripts);
         break;
-      }
-
-      case "chrome-document-global-created":
-      case "content-document-global-created": {
-        let win = GeckoViewUtils.getChromeWindow(subject);
-        if (win !== subject) {
-          // Only attach to top-level windows.
-          return;
-        }
-
-        GeckoViewUtils.addLazyEventListener(win, "click", {
-          handler: _ => [this.SelectHelper, this.InputWidgetHelper],
-          options: {
-            capture: true,
-            mozSystemGroup: true,
-          },
-        });
-
-        this._initLoginManagerEvents(aWindow);
-        break;
-      }
     }
-  },
-
-  _initLoginManagerEvents: function(aWindow) {
-    let options = {
-      capture: true,
-      mozSystemGroup: true,
-    };
-
-    aWindow.addEventListener("DOMFormHasPassword", event => {
-      this.LoginManagerContent.onDOMFormHasPassword(event, event.target.ownerGlobal.top);
-    }, options);
-
-    aWindow.addEventListener("DOMInputPasswordAdded", event => {
-      this.LoginManagerContent.onDOMInputPasswordAdded(event, event.target.ownerGlobal.top);
-    }, options);
-
-    aWindow.addEventListener("DOMAutoComplete", event => {
-      this.LoginManagerContent.onUsernameInput(event);
-    }, options);
-
-    aWindow.addEventListener("blur", event => {
-      let win = event.target && event.target.ownerGlobal;
-      if (win && win.HTMLDocument &&
-          event.target instanceof win.HTMLInputElement) {
-        this.LoginManagerContent.onUsernameInput(event);
-      }
-    }, options);
-
-    aWindow.addEventListener("pageshow", event => {
-      let win = event.target && event.target.defaultView;
-      if (win && win.HTMLDocument &&
-          event.target instanceof win.HTMLDocument) {
-        this.LoginManagerContent.onPageShow(event, win.top);
-      }
-    }, options);
   },
 
   // QI
