@@ -3196,11 +3196,7 @@ pref("dom.idle_period.throttled_length", 10000);
 pref("idle_queue.long_period", 50);
 
 // Support the input event queue on the main thread of content process
-#ifdef NIGHTLY_BUILD
 pref("input_event_queue.supported", true);
-#else
-pref("input_event_queue.supported", false);
-#endif
 
 // The maximum and minimum time (milliseconds) we reserve for handling input
 // events in each frame.
