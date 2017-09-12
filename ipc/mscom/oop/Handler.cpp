@@ -355,9 +355,12 @@ Handler::Register(REFCLSID aClsid)
     return HRESULT_FROM_WIN32(lastError);
   }
 
+  // The result of GetModuleFileName excludes the null terminator
+  DWORD valueSizeWithNullInBytes = (size + 1) * sizeof(wchar_t);
+
   result = RegSetValueEx(inprocHandlerKey, L"", 0, REG_EXPAND_SZ,
                          reinterpret_cast<const BYTE*>(absLibPath),
-                         sizeof(absLibPath));
+                         valueSizeWithNullInBytes);
   if (result != ERROR_SUCCESS) {
     Unregister(aClsid);
     return HRESULT_FROM_WIN32(result);

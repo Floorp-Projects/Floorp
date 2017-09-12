@@ -601,8 +601,6 @@ ScriptPreloader::WriteCache()
 {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    Unused << URLPreloader::GetSingleton().WriteCache();
-
     if (!mDataPrepared && !mSaveComplete) {
         MOZ_ASSERT(!mBlockedOnSyncDispatch);
         mBlockedOnSyncDispatch = true;
@@ -695,7 +693,10 @@ ScriptPreloader::Run()
         mal.Wait(10000);
     }
 
-    auto result = WriteCache();
+    auto result = URLPreloader::GetSingleton().WriteCache();
+    Unused << NS_WARN_IF(result.isErr());
+
+    result = WriteCache();
     Unused << NS_WARN_IF(result.isErr());
 
     result = mChildCache->WriteCache();

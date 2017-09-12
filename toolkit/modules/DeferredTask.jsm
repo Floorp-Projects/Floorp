@@ -90,8 +90,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
                                      "initWithCallback");
@@ -102,8 +100,8 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
  * Sets up a task whose execution can be triggered after a delay.
  *
  * @param aTaskFn
- *        Function or generator function to execute.  This argument is passed to
- *        the "Task.spawn" method every time the task should be executed.  This
+ *        Function to execute.  If the function returns a promise, the task is
+ *        not considered complete until that promise resolves.  This
  *        task is never re-entered while running.
  * @param aDelayMs
  *        Time between executions, in milliseconds.  Multiple attempts to run
@@ -111,10 +109,19 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
  *        inactivity is guaranteed to pass between multiple executions of the
  *        task, except on finalization, when the task may restart immediately
  *        after the previous execution finished.
+ * @param aIdleTimeoutMs
+ *        The maximum time to wait for an idle slot on the main thread after
+ *        aDelayMs have elapsed. If omitted, waits indefinitely for an idle
+ *        callback.
  */
-this.DeferredTask = function(aTaskFn, aDelayMs) {
+this.DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
   this._taskFn = aTaskFn;
   this._delayMs = aDelayMs;
+  this._timeoutMs = aIdleTimeoutMs;
+
+  if (aTaskFn.isGenerator()) {
+    Cu.reportError(new Error("Unexpected generator function passed to DeferredTask"));
+  }
 }
 
 this.DeferredTask.prototype = {
@@ -297,15 +304,16 @@ this.DeferredTask.prototype = {
   },
 
   /**
-   * Executes the associated task and catches exceptions.
+   * Executes the associated task in an idle callback and catches exceptions.
    */
   async _runTask() {
     try {
-      let result = this._taskFn();
-      if (Object.prototype.toString.call(result) == "[object Generator]") {
-        await Task.spawn(result); // eslint-disable-line mozilla/no-task
+      // If we're being finalized, execute the task immediately, so we don't
+      // risk blocking async shutdown longer than necessary.
+      if (this._finalized || this._timeoutMs === 0) {
+        await this._taskFn();
       } else {
-        await result;
+        await PromiseUtils.idleDispatch(this._taskFn, this._timeoutMs);
       }
     } catch (ex) {
       Cu.reportError(ex);

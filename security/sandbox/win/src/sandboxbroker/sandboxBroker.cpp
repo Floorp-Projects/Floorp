@@ -23,6 +23,7 @@
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsTHashtable.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/security_level.h"
 #include "WinUtils.h"
@@ -49,6 +50,9 @@ static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
 #define LOG_E(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Error, (__VA_ARGS__))
 #define LOG_W(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Warning, (__VA_ARGS__))
+
+// Used to store whether we have accumulated an error combination for this session.
+static UniquePtr<nsTHashtable<nsCStringHashKey>> sLaunchErrors;
 
 /* static */
 void
@@ -135,6 +139,7 @@ SandboxBroker::SandboxBroker()
 bool
 SandboxBroker::LaunchApp(const wchar_t *aPath,
                          const wchar_t *aArguments,
+                         GeckoProcessType aProcessType,
                          const bool aEnableLogging,
                          void **aProcessHandle)
 {
@@ -206,9 +211,25 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy,
                                        &last_warning, &last_error, &targetInfo);
   if (sandbox::SBOX_ALL_OK != result) {
-    Telemetry::Accumulate(Telemetry::SANDBOX_FAILED_LAUNCH, result);
+    nsAutoCString key;
+    key.AppendASCII(XRE_ChildProcessTypeToString(aProcessType));
+    key.AppendLiteral("/0x");
+    key.AppendInt(static_cast<uint32_t>(last_error), 16);
+
+    if (!sLaunchErrors) {
+      sLaunchErrors = MakeUnique<nsTHashtable<nsCStringHashKey>>();
+      ClearOnShutdown(&sLaunchErrors);
+    }
+
+    // Only accumulate for each combination once per session.
+    if (!sLaunchErrors->Contains(key)) {
+      Telemetry::Accumulate(Telemetry::SANDBOX_FAILED_LAUNCH_KEYED, key, result);
+      sLaunchErrors->PutEntry(key);
+    }
+
     LOG_E("Failed (ResultCode %d) to SpawnTarget with last_error=%d, last_warning=%d",
           result, last_error, last_warning);
+
     return false;
   } else if (sandbox::SBOX_ALL_OK != last_warning) {
     // If there was a warning (but the result was still ok), log it and proceed.
