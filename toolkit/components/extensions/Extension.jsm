@@ -831,7 +831,7 @@ this.ExtensionData = class {
     let perms = info.permissions || {origins: [], permissions: []};
 
     // First classify our host permissions
-    let allUrls = false, wildcards = [], sites = [];
+    let allUrls = false, wildcards = new Set(), sites = new Set();
     for (let permission of perms.origins) {
       if (permission == "<all_urls>") {
         allUrls = true;
@@ -845,9 +845,9 @@ this.ExtensionData = class {
       if (match[1] == "*") {
         allUrls = true;
       } else if (match[1].startsWith("*.")) {
-        wildcards.push(match[1].slice(2));
+        wildcards.add(match[1].slice(2));
       } else {
-        sites.push(match[1]);
+        sites.add(match[1]);
       }
     }
 
@@ -876,9 +876,9 @@ this.ExtensionData = class {
         }
       };
 
-      format(wildcards, "webextPerms.hostDescription.wildcard",
+      format(Array.from(wildcards), "webextPerms.hostDescription.wildcard",
              "webextPerms.hostDescription.tooManyWildcards");
-      format(sites, "webextPerms.hostDescription.oneSite",
+      format(Array.from(sites), "webextPerms.hostDescription.oneSite",
              "webextPerms.hostDescription.tooManySites");
     }
 
