@@ -224,7 +224,7 @@ const query = function* (detailsIn, props, context) {
         return false;
       }
 
-      if (!pathMatches(url.path)) {
+      if (!pathMatches(url.pathname)) {
         return false;
       }
     }
