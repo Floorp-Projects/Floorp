@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
 import logging
 import posixpath
 import sys, os
@@ -170,7 +168,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             # The minidumps directory is automatically created when Fennec
             # (first) starts, so its lack of presence is a hint that
             # something went wrong.
-            print("Automation Error: No crash directory (%s) found on remote device" % self.remoteMinidumpDir)
+            print "Automation Error: No crash directory (%s) found on remote device" % self.remoteMinidumpDir
             # Whilst no crash was found, the run should still display as a failure
             return True
         with mozfile.TemporaryDirectory() as dumpDir:
@@ -377,7 +375,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 if packageName:
                     self.appRoot = self.device.getAppRoot(packageName.strip())
             except Exception as detail:
-                print("unable to determine app root: " + str(detail))
+                print "unable to determine app root: " + str(detail)
                 pass
         return None
 
@@ -496,7 +494,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.device.pushDir(self.testingModulesDir, self.remoteModulesDir)
 
     def setupTestDir(self):
-        print('pushing %s' % self.xpcDir)
+        print 'pushing %s' % self.xpcDir
         try:
             # The tests directory can be quite large: 5000 files and growing!
             # Sometimes - like on a low-end aws instance running an emulator - the push
