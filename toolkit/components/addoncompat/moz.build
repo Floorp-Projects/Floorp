@@ -20,5 +20,4 @@ EXTRA_JS_MODULES += [
     'Prefetcher.jsm',
     'RemoteAddonsChild.jsm',
     'RemoteAddonsParent.jsm',
-    'ShimWaiver.jsm'
 ]
