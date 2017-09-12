@@ -172,12 +172,23 @@ this.NormandyDriver = function(sandboxManager) {
 
     // Preference Experiment API
     preferenceExperiments: {
-      start: sandboxManager.wrapAsync(PreferenceExperiments.start, {cloneArguments: true}),
-      markLastSeen: sandboxManager.wrapAsync(PreferenceExperiments.markLastSeen),
-      stop: sandboxManager.wrapAsync(PreferenceExperiments.stop),
-      get: sandboxManager.wrapAsync(PreferenceExperiments.get, {cloneInto: true}),
-      getAllActive: sandboxManager.wrapAsync(PreferenceExperiments.getAllActive, {cloneInto: true}),
-      has: sandboxManager.wrapAsync(PreferenceExperiments.has),
+      start: sandboxManager.wrapAsync(
+        PreferenceExperiments.start.bind(PreferenceExperiments),
+        {cloneArguments: true}
+      ),
+      markLastSeen: sandboxManager.wrapAsync(
+        PreferenceExperiments.markLastSeen.bind(PreferenceExperiments)
+      ),
+      stop: sandboxManager.wrapAsync(PreferenceExperiments.stop.bind(PreferenceExperiments)),
+      get: sandboxManager.wrapAsync(
+        PreferenceExperiments.get.bind(PreferenceExperiments),
+        {cloneInto: true}
+      ),
+      getAllActive: sandboxManager.wrapAsync(
+        PreferenceExperiments.getAllActive.bind(PreferenceExperiments),
+        {cloneInto: true}
+      ),
+      has: sandboxManager.wrapAsync(PreferenceExperiments.has.bind(PreferenceExperiments)),
     },
 
     // Study storage API
