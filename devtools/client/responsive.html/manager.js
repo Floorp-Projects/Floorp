@@ -8,11 +8,6 @@ const { Ci } = require("chrome");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const { startup } = require("./utils/window");
-const message = require("./utils/message");
-const { swapToInnerBrowser } = require("./browser/swap");
-const { EmulationFront } = require("devtools/shared/fronts/emulation");
-const { getStr } = require("./utils/l10n");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
@@ -22,6 +17,16 @@ loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/targe
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "throttlingProfiles",
   "devtools/client/shared/network-throttling-profiles");
+loader.lazyRequireGetter(this, "swapToInnerBrowser",
+  "devtools/client/responsive.html/browser/swap", true);
+loader.lazyRequireGetter(this, "startup",
+  "devtools/client/responsive.html/utils/window", true);
+loader.lazyRequireGetter(this, "message",
+  "devtools/client/responsive.html/utils/message");
+loader.lazyRequireGetter(this, "getStr",
+  "devtools/client/responsive.html/utils/l10n", true);
+loader.lazyRequireGetter(this, "EmulationFront",
+  "devtools/shared/fronts/emulation", true);
 
 /**
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when
