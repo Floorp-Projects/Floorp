@@ -47,34 +47,14 @@ var gMenuBuilder = {
   // to be displayed. We always clear all the items again when
   // popuphidden fires.
   build(contextData) {
-    let firstItem = true;
     let xulMenu = contextData.menu;
     xulMenu.addEventListener("popuphidden", this);
     this.xulMenu = xulMenu;
     for (let [, root] of gRootItems) {
-      let rootElement = this.buildElementWithChildren(root, contextData);
-      if (!rootElement.firstChild || !rootElement.firstChild.childNodes.length) {
-        // If the root has no visible children, there is no reason to show
-        // the root menu item itself either.
-        continue;
+      let rootElement = this.createTopLevelElement(root, contextData);
+      if (rootElement) {
+        this.appendTopLevelElement(rootElement);
       }
-      rootElement.setAttribute("ext-type", "top-level-menu");
-      rootElement = this.removeTopLevelMenuIfNeeded(rootElement);
-
-      // Display the extension icon on the root element.
-      if (root.extension.manifest.icons) {
-        this.setMenuItemIcon(rootElement, root.extension, contextData, root.extension.manifest.icons);
-      }
-
-      if (firstItem) {
-        firstItem = false;
-        const separator = xulMenu.ownerDocument.createElement("menuseparator");
-        this.itemsToCleanUp.add(separator);
-        xulMenu.append(separator);
-      }
-
-      xulMenu.appendChild(rootElement);
-      this.itemsToCleanUp.add(rootElement);
     }
     this.afterBuildingMenu(contextData);
   },
@@ -137,6 +117,34 @@ var gMenuBuilder = {
       }
     }
     return children;
+  },
+
+  createTopLevelElement(root, contextData) {
+    let rootElement = this.buildElementWithChildren(root, contextData);
+    if (!rootElement.firstChild || !rootElement.firstChild.childNodes.length) {
+      // If the root has no visible children, there is no reason to show
+      // the root menu item itself either.
+      return null;
+    }
+    rootElement.setAttribute("ext-type", "top-level-menu");
+    rootElement = this.removeTopLevelMenuIfNeeded(rootElement);
+
+    // Display the extension icon on the root element.
+    if (root.extension.manifest.icons) {
+      this.setMenuItemIcon(rootElement, root.extension, contextData, root.extension.manifest.icons);
+    }
+    return rootElement;
+  },
+
+  appendTopLevelElement(rootElement) {
+    if (this.itemsToCleanUp.size === 0) {
+      const separator = this.xulMenu.ownerDocument.createElement("menuseparator");
+      this.itemsToCleanUp.add(separator);
+      this.xulMenu.append(separator);
+    }
+
+    this.xulMenu.appendChild(rootElement);
+    this.itemsToCleanUp.add(rootElement);
   },
 
   removeTopLevelMenuIfNeeded(element) {
