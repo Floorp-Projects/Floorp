@@ -16,7 +16,8 @@
        <TextView android:id="@+android:id/title"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
-                 android:textAppearance="?android:attr/textAppearanceMedium"
+                 android:textAppearance="?android:attr/textAppearance"
+                 android:textSize="@dimen/preference_panel_text_size"
                  android:singleLine="true"
                  android:ellipsize="marquee"
                  android:fadingEdge="horizontal" />
