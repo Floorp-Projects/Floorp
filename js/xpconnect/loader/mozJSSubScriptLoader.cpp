@@ -89,6 +89,21 @@ mozJSSubScriptLoader::~mozJSSubScriptLoader()
 
 NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 
+#define JSSUB_CACHE_PREFIX(aType) "jssubloader/" aType
+
+static void
+SubscriptCachePath(JSContext* cx, nsIURI* uri, JS::HandleObject targetObj, nsACString& cachePath)
+{
+    // StartupCache must distinguish between non-syntactic vs global, as well as
+    // javascript version when computing the cache key.
+    bool hasNonSyntacticScope = !JS_IsGlobalObject(targetObj);
+    JSVersion version = JS_GetVersion(cx);
+    cachePath.Assign(hasNonSyntacticScope ? JSSUB_CACHE_PREFIX("non-syntactic")
+                                          : JSSUB_CACHE_PREFIX("global"));
+    cachePath.AppendPrintf("/%d", version);
+    PathifyURI(uri, cachePath);
+}
+
 static void
 ReportError(JSContext* cx, const nsACString& msg)
 {
@@ -206,9 +221,7 @@ EvalScript(JSContext* cx,
 
     if (script && (startupCache || preloadCache)) {
         nsAutoCString cachePath;
-        JSVersion version = JS_GetVersion(cx);
-        cachePath.AppendPrintf("jssubloader/%d", version);
-        PathifyURI(uri, cachePath);
+        SubscriptCachePath(cx, uri, targetObj, cachePath);
 
         nsCString uriStr;
         if (preloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
@@ -661,10 +674,8 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         || scheme.EqualsLiteral("blob");
     StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
 
-    JSVersion version = JS_GetVersion(cx);
     nsAutoCString cachePath;
-    cachePath.AppendPrintf("jssubloader/%d", version);
-    PathifyURI(uri, cachePath);
+    SubscriptCachePath(cx, uri, targetObj, cachePath);
 
     RootedScript script(cx);
     if (!options.ignoreCache) {
