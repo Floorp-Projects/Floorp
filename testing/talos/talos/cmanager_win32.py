@@ -1,15 +1,18 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import
 
-from cmanager import CounterManager
+import struct
+from ctypes import byref, create_string_buffer, memmove, Union, c_double, \
+    c_longlong
 from ctypes import windll
 from ctypes.wintypes import DWORD, HANDLE, LPSTR, LPCSTR, LPCWSTR, Structure, \
     pointer, LONG
-from ctypes import byref, create_string_buffer, memmove, Union, c_double, \
-    c_longlong
-import struct
+
+from cmanager_base import CounterManager
 from utils import TalosError
+
 pdh = windll.pdh
 
 _LONGLONG = c_longlong

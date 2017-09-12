@@ -624,6 +624,12 @@ XMLHttpRequestMainThread::GetResponseText(XMLHttpRequestStringSnapshot& aSnapsho
     return;
   }
 
+  // Main Fetch step 18 requires to ignore body for head/connect methods.
+  if (mRequestMethod.EqualsLiteral("HEAD") ||
+      mRequestMethod.EqualsLiteral("CONNECT")) {
+    return;
+  }
+
   // We only decode text lazily if we're also parsing to a doc.
   // Also, if we've decoded all current data already, then no need to decode
   // more.
@@ -2081,15 +2087,11 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   }
 
   // Set up responseXML
-  bool parseBody = mResponseType == XMLHttpRequestResponseType::_empty ||
-                   mResponseType == XMLHttpRequestResponseType::Document;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
-  if (parseBody && httpChannel) {
-    nsAutoCString method;
-    rv = httpChannel->GetRequestMethod(method);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    parseBody = !method.EqualsLiteral("HEAD");
-  }
+  // Note: Main Fetch step 18 requires to ignore body for head/connect methods.
+  bool parseBody = (mResponseType == XMLHttpRequestResponseType::_empty ||
+                    mResponseType == XMLHttpRequestResponseType::Document) &&
+                   !(mRequestMethod.EqualsLiteral("HEAD") ||
+                     mRequestMethod.EqualsLiteral("CONNECT"));
 
   mIsHtml = false;
   mWarnAboutSyncHtml = false;

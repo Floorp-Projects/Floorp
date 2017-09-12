@@ -158,6 +158,7 @@ enum ServoKeywordSize {
 struct ServoFontComputationData {
   ServoKeywordSize mKeyword;
   float/*32_t*/ mRatio;
+  int32_t mAbsolute;
 
   static_assert(sizeof(float) == 4, "float should be 32 bit");
 };

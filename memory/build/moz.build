@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'mozjemalloc_types.h',
     'mozmemory.h',
     'mozmemory_wrap.h',
 ]
@@ -20,6 +21,7 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
     ]
 
 SOURCES += [
+    'mozjemalloc.cpp',
     'mozmemory_wrap.c',
 ]
 
@@ -42,3 +44,13 @@ if CONFIG['OS_TARGET'] == 'Android' and CONFIG['CC_TYPE'] == 'clang':
 # Keep jemalloc separated when mozglue is statically linked
 if CONFIG['MOZ_MEMORY'] and CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
     FINAL_LIBRARY = 'mozglue'
+
+if CONFIG['GNU_CXX']:
+    # too many warnings from functions generated through rb_wrab from rb.h.
+    CXXFLAGS += ['-Wno-unused-function',
+                 '-Wno-error=uninitialized']
+
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
+
+DisableStlWrapping()

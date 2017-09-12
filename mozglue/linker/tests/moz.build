@@ -18,7 +18,7 @@ if CONFIG['ZLIB_IN_MOZGLUE']:
     USE_LIBS += [ 'modules_zlib_src' ]
 else:
     OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 PYTHON_UNITTEST_MANIFESTS += ['python.ini']
 

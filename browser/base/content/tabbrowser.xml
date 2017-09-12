@@ -5179,7 +5179,9 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            this._getSwitcher().warmupTab(aTab);
+            if (gMultiProcessBrowser) {
+              this._getSwitcher().warmupTab(aTab);
+            }
           ]]>
         </body>
       </method>

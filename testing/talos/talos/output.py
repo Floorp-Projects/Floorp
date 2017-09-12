@@ -4,15 +4,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """output formats for Talos"""
+from __future__ import absolute_import
 
 import filter
+# NOTE: we have a circular dependency with output.py when we import results
 import simplejson as json
 import utils
-
 from mozlog import get_proxy_logger
-
-# NOTE: we have a circular dependency with output.py when we import results
-import results as TalosResults
 
 LOG = get_proxy_logger()
 
@@ -24,11 +22,13 @@ class Output(object):
     def check(cls, urls):
         """check to ensure that the urls are valid"""
 
-    def __init__(self, results):
+    def __init__(self, results, tsresult_class):
         """
         - results : TalosResults instance
+        - tsresult_class : Results class
         """
         self.results = results
+        self.tsresult_class = tsresult_class
 
     def __call__(self):
         suites = []
@@ -62,7 +62,7 @@ class Output(object):
                         if page == 'NULL':
                             page = test.name()
                             if tsresult is None:
-                                tsresult = r = TalosResults.Results()
+                                tsresult = r = self.tsresult_class()
                                 r.results = [{'index': 0, 'page': test.name(),
                                               'runs': val}]
                             else:

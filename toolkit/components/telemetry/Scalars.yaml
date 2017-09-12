@@ -775,6 +775,21 @@ devtools.grid.showInfiniteLines:
     record_in_processes:
       - 'main'
 
+devtools:
+  current_theme:
+    bug_numbers:
+      - 1396811
+    description: >
+      Number of times DevTools was opened, keyed by theme.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:

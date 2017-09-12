@@ -17,7 +17,7 @@ UNIFIED_SOURCES += [
 
 Library('psshparser')
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 DEFINES['MOZ_NO_MOZALLOC'] = True
 
 TEST_DIRS += [

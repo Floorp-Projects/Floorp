@@ -385,6 +385,17 @@ RequestContext::CancelTailedRequest(nsIRequestTailUnblockCallback * aRequest)
   LOG(("RequestContext::CancelTailedRequest %p req=%p removed=%d",
        this, aRequest, removed));
 
+  // Stop untail timer if all tail requests are canceled.
+  if (removed && mTailQueue.IsEmpty()) {
+    if (mUntailTimer) {
+      mUntailTimer->Cancel();
+      mUntailTimer = nullptr;
+    }
+
+    // Must drop to stop tailing requests
+    mUntailAt = TimeStamp();
+  }
+
   return NS_OK;
 }
 

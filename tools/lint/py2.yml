@@ -48,7 +48,6 @@ py2:
         - testing/remotecppunittests.py
         - testing/runcppunittests.py
         - testing/runtimes
-        - testing/talos
         - testing/tools
         - testing/tps
         - testing/web-platform

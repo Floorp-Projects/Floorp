@@ -5,6 +5,9 @@
 
 const {actionTypes: at} = Components.utils.import("resource://activity-stream/common/Actions.jsm", {});
 
+// Locales that should be displayed RTL
+const RTL_LIST = ["ar", "he", "fa", "ur"];
+
 const TOP_SITES_DEFAULT_LENGTH = 6;
 const TOP_SITES_SHOWMORE_LENGTH = 12;
 
@@ -16,6 +19,8 @@ const INITIAL_STATE = {
     locale: "",
     // Localized strings with defaults
     strings: null,
+    // The text direction for the locale
+    textDirection: "",
     // The version of the system-addon
     version: null
   },
@@ -48,7 +53,8 @@ function App(prevState = INITIAL_STATE.App, action) {
       let {locale, strings} = action.data;
       return Object.assign({}, prevState, {
         locale,
-        strings
+        strings,
+        textDirection: RTL_LIST.indexOf(locale.split("-")[0]) >= 0 ? "rtl" : "ltr"
       });
     }
     default:

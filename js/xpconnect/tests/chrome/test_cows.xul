@@ -49,13 +49,6 @@ sandbox.getCOW = getCOW;
 const TEST_API = ['is', 'isnot', 'ok', 'todo_is', 'todo_isnot', 'todo'];
 TEST_API.forEach(function(name) { sandbox[name] = window[name]; });
 
-sandbox.alienObject = {
-  __exposedProps__: {funProp: 'r'},
-  funProp: function foo(x) {
-    return x + 1;
-  }
-};
-
 sandbox.chromeGet = function (obj, prop) { return obj[prop]; };
 
 function COWTests() {
@@ -74,17 +67,6 @@ function COWTests() {
     // functions like assertIsWritable(myObj, 'someproperty') might
     // be useful.
 
-    function isProp(obj, propName, value, desc) {
-      try {
-          is(obj[propName], value, "getting " + propName + " on " + desc);
-          ok(propName in obj,
-             propName + " on " + desc + " should exist");
-          ok(Object.hasOwnProperty.call(obj, propName),
-             propName + " on " + desc + " should exist");
-      } catch (e) {
-          ok(false, "getting " + propName + " on " + desc + " threw " + e);
-      }
-    }
     function isPropHidden(obj, propName, desc) {
       try {
           is(obj[propName], undefined,
@@ -103,7 +85,7 @@ function COWTests() {
     var empty = {};
     var nonempty = {foo: 42, bar: 33};
     is(getCOW(empty).foo, undefined,
-       "shouldn't throw when accessing exposed properties that doesn't exist");
+       "shouldn't throw when accessing exposed properties that don't exist");
 
     PROPS_TO_TEST.forEach(function(name) {
         isPropHidden(getCOW(nonempty), name, "object without exposedProps");
@@ -135,18 +117,12 @@ function COWTests() {
     var strict = { __exposedProps__: { foo: "r" }, foo: "foo property" };
     var strictCOWr = getCOW(strict);
     PROPS_TO_TEST.forEach(function(name) {
-        if (name == "foo") {
-            isProp(strictCOWr, name, "foo property",
-                   "object with exposed 'foo'");
-        }
-        else {
-            isPropHidden(strictCOW, name, "object with exposed 'foo'");
-        }
+        isPropHidden(strictCOW, name, "object with exposed 'foo'");
     });
-    is(getNames(strictCOWr).length, 1,
-       "object with exposedProps only enumerate exposed props");
-    is(getNames(strictCOWr)[0], "foo",
-       "object with exposedProps only enumerate exposed props");
+    is(getNames(strictCOWr).length, 0,
+       "exposed props does not enumerate anything");
+    is(getNames(strictCOWr)[0], undefined,
+       "exposed props does not enumerate anything");
 
     // Test writable property
     var writable = getCOW({ __exposedProps__: {foo: 'w'}});
@@ -154,25 +130,18 @@ function COWTests() {
         ok(!("foo" in writable),
            "non-existing write-only property shouldn't exist");
         writable.foo = 5;
-        is(chromeGet(writable, "foo"), 5, "writing to a write-only exposed prop works");
-        todo("foo" in writable,
-             "existing write-only property should exist");
+        ok(false, "writing to a write-only exposed prop should throw");
     } catch (e) {
-        ok(false, "writing to a write-only exposed prop shouldn't throw " + e);
+        ok(/Permission denied/.test(e),
+           "writing to a write-only exposed prop should throw the right error");
     }
-    try {
-        writable.foo;
-        todo(false, "reading from a write-only exposed prop should throw");
-    } catch (e) {
-        todo(/Permission denied/.test(e),
-             "reading from a write-only exposed prop should throw");
-    }
+    is(writable.foo, undefined,
+       "reading from a write-only exposed prop should return undefined");
     try {
         delete writable.foo;
-        is(chromeGet(writable, "foo"), undefined,
-           "deleting a write-only exposed prop works");
+        ok(false, "deleting a write-only exposed prop should throw");
     } catch (e) {
-        ok(false, "deleting a write-only exposed prop shouldn't throw " + e);
+        ok(true, "deleting a write-only exposed prop should throw " + e);
     }
 
     // Test readable property
@@ -180,8 +149,8 @@ function COWTests() {
                      foo: 5,
                      bar: 6 };
     try {
-        isProp(getCOW(readable), "foo", 5,
-               "reading from a readable exposed prop works");
+        isPropHidden(getCOW(readable), "foo", undefined,
+                     "reading from a readable exposed prop shouldn't work");
     } catch (e) {
         ok(false, "reading from a readable exposed prop shouldn't throw " + e);
     }
@@ -202,8 +171,7 @@ function COWTests() {
 
     try {
         var props = getNames(getCOW(readable));
-        is(props.length, 1, "COW w/ one exposed prop should enumerate once");
-        is(props[0], 'foo', "COW w/ one exposed prop should enumerate it");
+        is(props.length, 0, "COW w/ one exposed prop should not enumerate");
     } catch (e) {
         ok(false, "COW w/ a readable prop should not raise exc " +
                   "on enumeration: " + e);
@@ -215,21 +183,17 @@ function COWTests() {
         ok(!("foo" in readwrite),
            "non-existing readwrite property shouldn't exist");
         readwrite.foo = 5;
-        is(readwrite.foo, 5, "writing to a readwrite exposed prop looks like it worked");
-        is(chromeGet(readwrite, "foo"), 5, "writing to a readwrite exposed prop works");
-        ok("foo" in readwrite,
-           "existing readwrite property should exist");
+        ok(false, "writing to a readwrite exposed prop should throw");
     } catch (e) {
-        ok(false, "writing to a readwrite exposed prop shouldn't throw " + e);
+        ok(/Permission denied/.test(e),
+           "writing to a readwrite exposed prop should throw the right error");
     }
     try {
         delete readwrite.foo;
-        is(readwrite.foo, undefined, "deleting readwrite prop looks like it worked");
-        ok(!("foo" in readwrite), "deleting readwrite prop looks like it really worked");
-        is(chromeGet(readwrite, "foo"), undefined,
-           "deleting a readwrite exposed prop works");
+        ok(false, "deleting a readwrite prop should throw");
     } catch (e) {
-        ok(false, "deleting a readwrite exposed prop shouldn't throw " + e);
+        ok(/Permission denied/.test(e),
+           "deleting a readwrite exposed prop should throw the right error");
     }
 
     // Readables and functions

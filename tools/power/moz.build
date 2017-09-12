@@ -18,4 +18,4 @@ if do_rapl:
         'rapl',
     ])
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()

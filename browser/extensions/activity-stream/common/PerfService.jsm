@@ -1,26 +1,28 @@
 /* globals Services */
 "use strict";
 
-let usablePerfObj;
-
-let Cu;
-const isRunningInChrome = typeof Window === "undefined";
-
 /* istanbul ignore if */
-if (isRunningInChrome) {
-  Cu = Components.utils;
-} else {
-  Cu = {import() {}};
+if (typeof Components !== "undefined" && Components.utils) {
+  Components.utils.import("resource://gre/modules/Services.jsm");
 }
 
-Cu.import("resource://gre/modules/Services.jsm");
+let usablePerfObj;
 
 /* istanbul ignore if */
-if (isRunningInChrome) {
+/* istanbul ignore else */
+if (typeof Services !== "undefined") {
   // Borrow the high-resolution timer from the hidden window....
   usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
-} else { // we must be running in content space
+} else if (typeof performance !== "undefined") {
+  // we must be running in content space
   usablePerfObj = performance;
+} else {
+  // This is a dummy object so this file doesn't crash in the node prerendering
+  // task.
+  usablePerfObj = {
+    now() {},
+    mark() {}
+  };
 }
 
 this._PerfService = function _PerfService(options) {

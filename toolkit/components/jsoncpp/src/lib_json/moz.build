@@ -27,7 +27,7 @@ elif not CONFIG['_MSC_VER']:
     ]
 
 # Required to build with exceptions enabled
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 Library('jsoncpp')
 

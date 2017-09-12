@@ -231,7 +231,6 @@
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError);
         },
-        // These next two tests should be removed in Bug 1381126.
         function () {
           // Test basic good Create call but using an origin (Bug 1380421)
           let rp = {id: window.origin};
@@ -239,22 +238,20 @@
             rp: rp, user: user, challenge: chall, parameters: [param]
           };
           return credm.create({publicKey: makeCredentialOptions})
-                      .then(keepThisPublicKeyCredential("origin"))
-                      .then(arrivingHereIsGood)
-                      .catch(arrivingHereIsBad);
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
         },
         function () {
           // Test basic good Get call but using an origin (Bug 1380421)
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: window.origin,
-            allowList: [gTrackedCredential["origin"]]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
-                      .then(arrivingHereIsGood)
-                      .catch(arrivingHereIsBad);
+                      .then(arrivingHereIsBad)
+                      .catch(expectSecurityError);
         }
-        // End remove in Bug 1381126.
       ];
       var i = 0;
       var runNextTest = () => {

@@ -568,10 +568,8 @@ pref("apz.second_tap_tolerance", "0.3");
 pref("apz.touch_move_tolerance", "0.03");
 pref("apz.touch_start_tolerance", "0.06");
 
-#ifdef NIGHTLY_BUILD
-// Temporary fix of Bug 1390145 for Fennec Nightly
+// Enabling this on Fennec is blocked on a proper fix for bug 1390145.
 pref("apz.frame_delay.enabled", false);
-#endif
 
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);

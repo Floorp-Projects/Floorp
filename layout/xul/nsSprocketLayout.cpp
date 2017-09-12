@@ -736,7 +736,6 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
     nsSize pref(0,0);
     nsSize minSize(0,0);
     nsSize maxSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
-    nscoord ascent = 0;
     bool collapsed = child->IsXULCollapsed();
 
     if (!collapsed) {
@@ -747,10 +746,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
       pref = child->GetXULPrefSize(aState);
       minSize = child->GetXULMinSize(aState);
       maxSize = nsBox::BoundsCheckMinMax(minSize, child->GetXULMaxSize(aState));
-      ascent = child->GetXULBoxAscent(aState);
-      nsMargin margin;
-      child->GetXULMargin(margin);
-      ascent += margin.top;
+      child->GetXULBoxAscent(aState);
     //}
 
       pref = nsBox::BoundsCheck(minSize, pref, maxSize);

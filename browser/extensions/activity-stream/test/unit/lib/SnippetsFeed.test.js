@@ -1,5 +1,5 @@
 const {SnippetsFeed} = require("lib/SnippetsFeed.jsm");
-const {actionTypes: at} = require("common/Actions.jsm");
+const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
 const {GlobalOverrider} = require("test/unit/utils");
 
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -78,13 +78,13 @@ describe("SnippetsFeed", () => {
     feed.onAction({type: at.UNINIT});
     assert.calledOnce(feed.uninit);
   });
-  it("should dispatch a SNIPPETS_RESET on uninit", () => {
+  it("should broadcast a SNIPPETS_RESET on uninit", () => {
     const feed = new SnippetsFeed();
     feed.store = {dispatch: sandbox.stub()};
 
     feed.uninit();
 
-    assert.calledWith(feed.store.dispatch, {type: at.SNIPPETS_RESET});
+    assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({type: at.SNIPPETS_RESET}));
   });
   it("should dispatch an update event when the Search observer is called", async () => {
     const feed = new SnippetsFeed();

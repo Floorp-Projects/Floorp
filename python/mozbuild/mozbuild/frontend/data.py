@@ -23,6 +23,8 @@ from mozpack.chrome.manifest import ManifestEntry
 import mozpack.path as mozpath
 from .context import FinalTargetValue
 
+from collections import defaultdict, OrderedDict
+
 from ..util import (
     group_unified_files,
 )
@@ -156,6 +158,25 @@ class VariablePassthru(ContextDerived):
     def __init__(self, context):
         ContextDerived.__init__(self, context)
         self.variables = {}
+
+
+class ComputedFlags(ContextDerived):
+    """Aggregate flags for consumption by various backends.
+    """
+    __slots__ = ('flags',)
+
+    def __init__(self, context, reader_flags):
+        ContextDerived.__init__(self, context)
+        self.flags = reader_flags
+
+    def get_flags(self):
+        flags = defaultdict(list)
+        for key, _, dest_vars in self.flags.flag_variables:
+            value = self.flags.get(key)
+            if value:
+                for dest_var in dest_vars:
+                    flags[dest_var].extend(value)
+        return flags.items()
 
 class XPIDLFile(ContextDerived):
     """Describes an XPIDL file to be compiled."""

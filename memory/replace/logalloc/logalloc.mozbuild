@@ -9,7 +9,7 @@ SOURCES += [
     'LogAlloc.cpp',
 ]
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 USE_STATIC_LIBS = True
 NO_PGO = True
 DEFINES['MOZ_NO_MOZALLOC'] = True

@@ -36,6 +36,7 @@ from ..frontend.data import (
     BaseLibrary,
     BaseProgram,
     ChromeManifestEntry,
+    ComputedFlags,
     ConfigFileSubstitution,
     ContextDerived,
     ContextWrapped,
@@ -593,6 +594,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, PerSourceFlag):
             self._process_per_source_flag(obj, backend_file)
+
+        elif isinstance(obj, ComputedFlags):
+            self._process_computed_flags(obj, backend_file)
 
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
@@ -1213,6 +1217,10 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_per_source_flag(self, per_source_flag, backend_file):
         for flag in per_source_flag.flags:
             backend_file.write('%s_FLAGS += %s\n' % (mozpath.basename(per_source_flag.file_name), flag))
+
+    def _process_computed_flags(self, computed_flags, backend_file):
+        for var, flags in computed_flags.get_flags():
+            backend_file.write('COMPUTED_%s += %s\n' % (var, make_quote(' '.join(flags))))
 
     def _process_java_jar_data(self, jar, backend_file):
         target = jar.name

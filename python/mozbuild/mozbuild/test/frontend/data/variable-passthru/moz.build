@@ -4,8 +4,6 @@
 
 DIST_INSTALL = False
 
-NO_VISIBILITY_FLAGS = True
-
 DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']
 
 RCFILE = 'foo.rc'
@@ -19,7 +17,5 @@ LDFLAGS += ['-framework Foo', '-x']
 HOST_CFLAGS += ['-funroll-loops', '-wall']
 HOST_CXXFLAGS += ['-funroll-loops-harder', '-wall-day-everyday']
 WIN32_EXE_LDFLAGS += ['-subsystem:console']
-
-DISABLE_STL_WRAPPING = True
 
 ALLOW_COMPILER_WARNINGS = True

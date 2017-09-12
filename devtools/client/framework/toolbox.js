@@ -12,6 +12,7 @@ const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
+const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 var {Ci, Cu, Cc} = require("chrome");
@@ -650,6 +651,11 @@ Toolbox.prototype = {
     this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
                                              system.getScreenDimensions());
     this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
+
+    // Log current theme. The question we want to answer is:
+    // "What proportion of users use which themes?"
+    let currentTheme = Services.prefs.getCharPref("devtools.theme");
+    this._telemetry.logKeyedScalar(CURRENT_THEME_SCALAR, currentTheme, 1);
   },
 
   /**

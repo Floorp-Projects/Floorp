@@ -26,4 +26,4 @@ SOURCES += objs_client_common
 
 USE_STATIC_LIBS = True
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()

@@ -478,7 +478,11 @@ impl<'i: 't, 't> Parser<'i, 't> {
     #[inline]
     pub fn parse_comma_separated<F, T, E>(&mut self, mut parse_one: F) -> Result<Vec<T>, ParseError<'i, E>>
     where F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
-        let mut values = vec![];
+        // Vec grows from 0 to 4 by default on first push().  So allocate with
+        // capacity 1, so in the somewhat common case of only one item we don't
+        // way overallocate.  Note that we always push at least one item if
+        // parsing succeeds.
+        let mut values = Vec::with_capacity(1);
         loop {
             self.skip_whitespace();  // Unnecessary for correctness, but may help try() in parse_one rewind less.
             values.push(self.parse_until_before(Delimiter::Comma, &mut parse_one)?);

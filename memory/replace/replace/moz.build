@@ -10,4 +10,4 @@ SOURCES += [
     'ReplaceMalloc.cpp',
 ]
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()

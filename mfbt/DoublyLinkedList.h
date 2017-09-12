@@ -65,30 +65,14 @@
 namespace mozilla {
 
 /**
- * Provides access to a next and previous element pointer named |mNext| and
- * |mPrev| respectively. This class is the default and will work if the list
- * element derives from DoublyLinkedListElement.
- *
- * Although designed to work with DoublyLinkedListElement this will als work
- * with any class that defines |mNext| and |mPrev| members with the correct
- * type.
- */
-template <typename T>
-struct DoublyLinkedSiblingAccess {
-  static void SetNext(T* aElm, T* aNext) { aElm->mNext = aNext; }
-  static T* GetNext(T* aElm) { return aElm->mNext; }
-  static void SetPrev(T* aElm, T* aPrev) { aElm->mPrev = aPrev; }
-  static T* GetPrev(T* aElm) { return aElm->mPrev; }
-};
-
-/**
  *  Deriving from this will allow T to be inserted into and removed from a
  *  DoublyLinkedList.
  */
 template <typename T>
-struct DoublyLinkedListElement
+class DoublyLinkedListElement
 {
-  friend struct DoublyLinkedSiblingAccess<T>;
+  template<typename U, typename E> friend class DoublyLinkedList;
+  friend T;
   T* mNext;
   T* mPrev;
 
@@ -97,13 +81,35 @@ public:
 };
 
 /**
+ * Provides access to a DoublyLinkedListElement within T.
+ *
+ * The default implementation of this template works for types that derive
+ * from DoublyLinkedListElement, but one can specialize for their class so
+ * that some appropriate DoublyLinkedListElement reference is returned.
+ *
+ * For more complex cases (multiple DoublyLinkedListElements, for example),
+ * one can define their own trait class and use that as ElementAccess for
+ * DoublyLinkedList. See TestDoublyLinkedList.cpp for an example.
+ */
+template <typename T>
+struct GetDoublyLinkedListElement
+{
+  static_assert(mozilla::IsBaseOf<DoublyLinkedListElement<T>, T>::value,
+                "You need your own specialization of GetDoublyLinkedListElement"
+                " or use a separate Trait.");
+  static DoublyLinkedListElement<T>& Get(T* aThis)
+  {
+    return *aThis;
+  }
+};
+
+/**
  * A doubly linked list. |T| is the type of element stored in this list. |T|
  * must contain or have access to unique next and previous element pointers.
- * The template argument |SiblingAccess| provides code to tell this list how to
- * get and set the next and previous pointers. The actual storage of next/prev
- * links may reside anywhere and be encoded in any way.
+ * The template argument |ElementAccess| provides code to tell this list how to
+ * get a reference to a DoublyLinkedListElement that may reside anywhere.
  */
-template <typename T, typename SiblingAccess = DoublyLinkedSiblingAccess<T>>
+template <typename T, typename ElementAccess = GetDoublyLinkedListElement<T>>
 class DoublyLinkedList final
 {
   T* mHead;
@@ -117,8 +123,15 @@ class DoublyLinkedList final
     return (mHead != nullptr) == (mTail != nullptr);
   }
 
-  static bool ElementNotInList(T* aElm) {
-    return !SiblingAccess::GetNext(aElm) && !SiblingAccess::GetPrev(aElm);
+  bool ElementNotInList(T* aElm) {
+    if (!ElementAccess::Get(aElm).mNext && !ElementAccess::Get(aElm).mPrev) {
+      // Both mNext and mPrev being NULL can mean two things:
+      // - the element is not in the list.
+      // - the element is the first and only element in the list.
+      // So check for the latter.
+      return mHead != aElm;
+    }
+    return false;
   }
 
 public:
@@ -141,7 +154,7 @@ public:
     T* operator ->() const { return mCurrent; }
 
     Iterator& operator++() {
-      mCurrent = SiblingAccess::GetNext(mCurrent);
+      mCurrent = ElementAccess::Get(mCurrent).mNext;
       return *this;
     }
 
@@ -152,7 +165,7 @@ public:
     }
 
     Iterator& operator--() {
-      mCurrent = SiblingAccess::GetPrev(mCurrent);
+      mCurrent = ElementAccess::Get(mCurrent).mPrev;
       return *this;
     }
 
@@ -200,10 +213,10 @@ public:
     MOZ_ASSERT(ElementNotInList(aElm));
     MOZ_ASSERT(isStateValid());
 
-    SiblingAccess::SetNext(aElm, mHead);
+    ElementAccess::Get(aElm).mNext = mHead;
     if (mHead) {
-      MOZ_ASSERT(!SiblingAccess::GetPrev(mHead));
-      SiblingAccess::SetPrev(mHead, aElm);
+      MOZ_ASSERT(!ElementAccess::Get(mHead).mPrev);
+      ElementAccess::Get(mHead).mPrev = aElm;
     }
 
     mHead = aElm;
@@ -221,9 +234,9 @@ public:
     MOZ_ASSERT(isStateValid());
 
     T* result = mHead;
-    mHead = result ? SiblingAccess::GetNext(result) : nullptr;
+    mHead = result ? ElementAccess::Get(result).mNext : nullptr;
     if (mHead) {
-      SiblingAccess::SetPrev(mHead, nullptr);
+      ElementAccess::Get(mHead).mPrev = nullptr;
     }
 
     if (mTail == result) {
@@ -231,8 +244,8 @@ public:
     }
 
     if (result) {
-      SiblingAccess::SetNext(result, nullptr);
-      SiblingAccess::SetPrev(result, nullptr);
+      ElementAccess::Get(result).mNext = nullptr;
+      ElementAccess::Get(result).mPrev = nullptr;
     }
 
     return result;
@@ -247,11 +260,11 @@ public:
     MOZ_ASSERT(ElementNotInList(aElm));
     MOZ_ASSERT(isStateValid());
 
-    SiblingAccess::SetNext(aElm, nullptr);
-    SiblingAccess::SetPrev(aElm, mTail);
+    ElementAccess::Get(aElm).mNext = nullptr;
+    ElementAccess::Get(aElm).mPrev = mTail;
     if (mTail) {
-      MOZ_ASSERT(!SiblingAccess::GetNext(mTail));
-      SiblingAccess::SetNext(mTail, aElm);
+      MOZ_ASSERT(!ElementAccess::Get(mTail).mNext);
+      ElementAccess::Get(mTail).mNext = aElm;
     }
 
     mTail = aElm;
@@ -269,9 +282,9 @@ public:
     MOZ_ASSERT(isStateValid());
 
     T* result = mTail;
-    mTail = result ? SiblingAccess::GetPrev(result) : nullptr;
+    mTail = result ? ElementAccess::Get(result).mPrev : nullptr;
     if (mTail) {
-      SiblingAccess::SetNext(mTail, nullptr);
+      ElementAccess::Get(mTail).mNext = nullptr;
     }
 
     if (mHead == result) {
@@ -279,8 +292,8 @@ public:
     }
 
     if (result) {
-      SiblingAccess::SetNext(result, nullptr);
-      SiblingAccess::SetPrev(result, nullptr);
+      ElementAccess::Get(result).mNext = nullptr;
+      ElementAccess::Get(result).mPrev = nullptr;
     }
 
     return result;
@@ -301,13 +314,13 @@ public:
     }
 
     T* after = &(*aIter);
-    T* before = SiblingAccess::GetPrev(after);
+    T* before = ElementAccess::Get(after).mPrev;
     MOZ_ASSERT(before);
 
-    SiblingAccess::SetNext(before, aElm);
-    SiblingAccess::SetPrev(aElm, before);
-    SiblingAccess::SetNext(aElm, after);
-    SiblingAccess::SetPrev(after, aElm);
+    ElementAccess::Get(before).mNext = aElm;
+    ElementAccess::Get(aElm).mPrev = before;
+    ElementAccess::Get(aElm).mNext = after;
+    ElementAccess::Get(after).mPrev = aElm;
   }
 
   /**
@@ -315,26 +328,26 @@ public:
    */
   void remove(T* aElm) {
     MOZ_ASSERT(aElm);
-    MOZ_ASSERT(SiblingAccess::GetNext(aElm) || SiblingAccess::GetPrev(aElm) ||
+    MOZ_ASSERT(ElementAccess::Get(aElm).mNext || ElementAccess::Get(aElm).mPrev ||
                (aElm == mHead && aElm == mTail),
                "Attempted to remove element not in this list");
 
-    if (T* prev = SiblingAccess::GetPrev(aElm)) {
-      SiblingAccess::SetNext(prev, SiblingAccess::GetNext(aElm));
+    if (T* prev = ElementAccess::Get(aElm).mPrev) {
+      ElementAccess::Get(prev).mNext = ElementAccess::Get(aElm).mNext;
     } else {
       MOZ_ASSERT(mHead == aElm);
-      mHead = SiblingAccess::GetNext(aElm);
+      mHead = ElementAccess::Get(aElm).mNext;
     }
 
-    if (T* next = SiblingAccess::GetNext(aElm)) {
-      SiblingAccess::SetPrev(next, SiblingAccess::GetPrev(aElm));
+    if (T* next = ElementAccess::Get(aElm).mNext) {
+      ElementAccess::Get(next).mPrev = ElementAccess::Get(aElm).mPrev;
     } else {
       MOZ_ASSERT(mTail == aElm);
-      mTail = SiblingAccess::GetPrev(aElm);
+      mTail = ElementAccess::Get(aElm).mPrev;
     }
 
-    SiblingAccess::SetNext(aElm, nullptr);
-    SiblingAccess::SetPrev(aElm, nullptr);
+    ElementAccess::Get(aElm).mNext = nullptr;
+    ElementAccess::Get(aElm).mPrev = nullptr;
   }
 
   /**
@@ -351,6 +364,19 @@ public:
    */
   bool contains(const T& aElm) {
     return find(aElm) != Iterator();
+  }
+
+  /**
+   * Returns whether the given element might be in the list. Note that this
+   * assumes the element is either in the list or not in the list, and ignores
+   * the case where the element might be in another list in order to make the
+   * check fast.
+   */
+  bool ElementProbablyInList(T* aElm) {
+    if (isEmpty()) {
+      return false;
+    }
+    return !ElementNotInList(aElm);
   }
 };
 

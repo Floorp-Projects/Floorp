@@ -25,10 +25,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "ProxyService",
 
 const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
 
+// DNS is resolved on the SOCKS proxy server.
+const {TRANSPARENT_PROXY_RESOLVES_HOST} = Ci.nsIProxyInfo;
+
 // The length of time (seconds) to wait for a proxy to resolve before ignoring it.
 const PROXY_TIMEOUT_SEC = 10;
 
 const {
+  ExtensionError,
   defineLazyGetter,
 } = ExtensionUtils;
 
@@ -42,11 +46,144 @@ const {
 const PROXY_TYPES = Object.freeze({
   DIRECT: "direct",
   HTTPS: "https",
-  PROXY: "proxy",
-  HTTP: "http", // Synonym for PROXY_TYPES.PROXY
-  SOCKS: "socks",  // SOCKS5
+  PROXY: "http", // Synonym for PROXY_TYPES.HTTP
+  HTTP: "http",
+  SOCKS: "socks", // SOCKS5
   SOCKS4: "socks4",
 });
+
+const ProxyInfoData = {
+  validate(proxyData) {
+    if (proxyData.type && proxyData.type.toLowerCase() === "direct") {
+      return {type: proxyData.type};
+    }
+    for (let prop of ["type", "host", "port", "username", "password", "proxyDNS", "failoverTimeout"]) {
+      this[prop](proxyData);
+    }
+    return proxyData;
+  },
+
+  type(proxyData) {
+    let {type} = proxyData;
+    if (typeof type !== "string" || !PROXY_TYPES.hasOwnProperty(type.toUpperCase())) {
+      throw new ExtensionError(`FindProxyForURL: Invalid proxy server type: "${type}"`);
+    }
+    proxyData.type = PROXY_TYPES[type.toUpperCase()];
+  },
+
+  host(proxyData) {
+    let {host} = proxyData;
+    if (typeof host !== "string" || host.includes(" ")) {
+      throw new ExtensionError(`FindProxyForURL: Invalid proxy server host: "${host}"`);
+    }
+    if (!host.length) {
+      throw new ExtensionError("FindProxyForURL: Proxy server host cannot be empty");
+    }
+    proxyData.host = host;
+  },
+
+  port(proxyData) {
+    let port = Number.parseInt(proxyData.port, 10);
+    if (!Number.isInteger(port)) {
+      throw new ExtensionError(`FindProxyForURL: Invalid proxy server port: "${port}"`);
+    }
+
+    if (port < 1 || port > 0xffff) {
+      throw new ExtensionError(`FindProxyForURL: Proxy server port ${port} outside range 1 to 65535`);
+    }
+    proxyData.port = port;
+  },
+
+  username(proxyData) {
+    let {username} = proxyData;
+    if (username !== undefined && typeof username !== "string") {
+      throw new ExtensionError(`FindProxyForURL: Invalid proxy server username: "${username}"`);
+    }
+  },
+
+  password(proxyData) {
+    let {password} = proxyData;
+    if (password !== undefined && typeof password !== "string") {
+      throw new ExtensionError(`FindProxyForURL: Invalid proxy server password: "${password}"`);
+    }
+  },
+
+  proxyDNS(proxyData) {
+    let {proxyDNS, type} = proxyData;
+    if (proxyDNS !== undefined) {
+      if (typeof proxyDNS !== "boolean") {
+        throw new ExtensionError(`FindProxyForURL: Invalid proxyDNS value: "${proxyDNS}"`);
+      }
+      if (proxyDNS && type !== PROXY_TYPES.SOCKS && type !== PROXY_TYPES.SOCKS4) {
+        throw new ExtensionError(`FindProxyForURL: proxyDNS can only be true for SOCKS proxy servers`);
+      }
+    }
+  },
+
+  failoverTimeout(proxyData) {
+    let {failoverTimeout} = proxyData;
+    if (failoverTimeout !== undefined && (!Number.isInteger(failoverTimeout) || failoverTimeout < 1)) {
+      throw new ExtensionError(`FindProxyForURL: Invalid failover timeout: "${failoverTimeout}"`);
+    }
+  },
+
+  createProxyInfoFromData(proxyDataList, defaultProxyInfo) {
+    let {type, host, port, username, password, proxyDNS, failoverTimeout} =
+        ProxyInfoData.validate(proxyDataList.shift());
+    if (type === PROXY_TYPES.DIRECT) {
+      return defaultProxyInfo;
+    }
+    let failoverProxy = proxyDataList.length > 0 ? this.createProxyInfoFromData(proxyDataList, defaultProxyInfo) : defaultProxyInfo;
+    // When Bug 1360404 is fixed use ProxyService.newProxyInfoWithAuth() for all types.
+    if (type === PROXY_TYPES.SOCKS || type === PROXY_TYPES.SOCKS4) {
+      return ProxyService.newProxyInfoWithAuth(
+              type, host, port, username, password, proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
+              failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC, failoverProxy);
+    }
+    return ProxyService.newProxyInfo(
+            type, host, port, proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
+            failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC, failoverProxy);
+  },
+
+  /**
+   * Creates a new proxy info data object using the return value of FindProxyForURL.
+   *
+   * @param {Array<string>} rule A single proxy rule returned by FindProxyForURL.
+   *    (e.g. "PROXY 1.2.3.4:8080", "SOCKS 1.1.1.1:9090" or "DIRECT")
+   * @returns {nsIProxyInfo} The proxy info to apply for the given URI.
+   */
+  parseProxyInfoDataFromPAC(rule) {
+    if (!rule) {
+      throw new ExtensionError("FindProxyForURL: Missing Proxy Rule");
+    }
+
+    let parts = rule.toLowerCase().split(/\s+/);
+    if (!parts[0] || parts.length > 2) {
+      throw new ExtensionError(`FindProxyForURL: Invalid arguments passed for proxy rule: "${rule}"`);
+    }
+    let type = parts[0];
+    let [host, port] = parts.length > 1 ? parts[1].split(":") : [];
+
+    switch (PROXY_TYPES[type.toUpperCase()]) {
+      case PROXY_TYPES.HTTP:
+      case PROXY_TYPES.HTTPS:
+      case PROXY_TYPES.SOCKS:
+      case PROXY_TYPES.SOCKS4:
+        if (!host || !port) {
+          throw new ExtensionError(`FindProxyForURL: Invalid host or port from proxy rule: "${rule}"`);
+        }
+        return {type, host, port};
+      case PROXY_TYPES.DIRECT:
+        if (host || port) {
+          throw new ExtensionError(`FindProxyForURL: Invalid argument for proxy type: "${type}"`);
+        }
+        return {type};
+      default:
+        throw new ExtensionError(`FindProxyForURL: Unrecognized proxy type: "${type}"`);
+    }
+  },
+
+};
 
 class ProxyScriptContext extends BaseContext {
   constructor(extension, url, contextInfo = {}) {
@@ -104,6 +241,40 @@ class ProxyScriptContext extends BaseContext {
     return this.sandbox;
   }
 
+  proxyInfoFromProxyData(proxyData, defaultProxyInfo) {
+    switch (typeof proxyData) {
+      case "string":
+        let proxyRules = [];
+        try {
+          for (let result of proxyData.split(";")) {
+            proxyRules.push(ProxyInfoData.parseProxyInfoDataFromPAC(result.trim()));
+          }
+        } catch (e) {
+          // If we have valid proxies already, lets use them and just emit
+          // errors for the failovers.
+          if (proxyRules.length === 0) {
+            throw e;
+          }
+          let error = this.normalizeError(e);
+          this.extension.emit("proxy-error", {
+            message: error.message,
+            fileName: error.fileName,
+            lineNumber: error.lineNumber,
+            stack: error.stack,
+          });
+        }
+        proxyData = proxyRules;
+        // fall through
+      case "object":
+        if (Array.isArray(proxyData) && proxyData.length > 0) {
+          return ProxyInfoData.createProxyInfoFromData(proxyData, defaultProxyInfo);
+        }
+        // Not an array, fall through to error.
+      default:
+        throw new ExtensionError("FindProxyForURL: Return type must be a string or array of objects");
+    }
+  }
+
   /**
    * This method (which is required by the nsIProtocolProxyService interface)
    * is called to apply proxy filter rules for the given URI and proxy object
@@ -116,10 +287,10 @@ class ProxyScriptContext extends BaseContext {
    * @returns {Object} The proxy info to apply for the given URI.
    */
   applyFilter(service, uri, defaultProxyInfo) {
-    let ret;
     try {
       // Bug 1337001 - provide path and query components to non-https URLs.
-      ret = this.FindProxyForURL(uri.prePath, uri.host, this.contextInfo);
+      let ret = this.FindProxyForURL(uri.prePath, uri.host, this.contextInfo);
+      return this.proxyInfoFromProxyData(ret, defaultProxyInfo);
     } catch (e) {
       let error = this.normalizeError(e);
       this.extension.emit("proxy-error", {
@@ -128,108 +299,8 @@ class ProxyScriptContext extends BaseContext {
         lineNumber: error.lineNumber,
         stack: error.stack,
       });
-      return defaultProxyInfo;
     }
-
-    if (!ret || typeof ret !== "string") {
-      this.extension.emit("proxy-error", {
-        message: "FindProxyForURL: Return type must be a string",
-      });
-      return defaultProxyInfo;
-    }
-
-    let rules = ret.split(";");
-    let proxyInfo = this.createProxyInfo(rules);
-
-    return proxyInfo || defaultProxyInfo;
-  }
-
-  /**
-   * Creates a new proxy info object using the return value of FindProxyForURL.
-   *
-   * @param {Array<string>} rules The list of proxy rules returned by FindProxyForURL.
-   *    (e.g. ["PROXY 1.2.3.4:8080", "SOCKS 1.1.1.1:9090", "DIRECT"])
-   * @returns {nsIProxyInfo} The proxy info to apply for the given URI.
-   */
-  createProxyInfo(rules) {
-    if (!rules.length) {
-      return null;
-    }
-
-    let rule = rules[0].trim();
-
-    if (!rule) {
-      this.extension.emit("proxy-error", {
-        message: "FindProxyForURL: Missing Proxy Rule",
-      });
-      return null;
-    }
-
-    let parts = rule.split(/\s+/);
-    if (!parts[0]) {
-      this.extension.emit("proxy-error", {
-        message: `FindProxyForURL: Too many arguments passed for proxy rule: "${rule}"`,
-      });
-      return null;
-    }
-
-    if (parts.length > 2) {
-      this.extension.emit("proxy-error", {
-        message: `FindProxyForURL: Too many arguments passed for proxy rule: "${rule}"`,
-      });
-      return null;
-    }
-
-    switch (parts[0].toLowerCase()) {
-      case PROXY_TYPES.PROXY:
-      case PROXY_TYPES.HTTP:
-      case PROXY_TYPES.HTTPS:
-      case PROXY_TYPES.SOCKS:
-      case PROXY_TYPES.SOCKS4:
-        if (!parts[1]) {
-          this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Missing argument for proxy type: "${parts[0]}"`,
-          });
-          return null;
-        }
-
-        if (parts.length != 2) {
-          this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Too many arguments for proxy rule: "${rule}"`,
-          });
-          return null;
-        }
-
-        let [host, port] = parts[1].split(":");
-        if (!host || !port) {
-          this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Unable to parse host and port from proxy rule: "${rule}"`,
-          });
-          return null;
-        }
-
-        let type = parts[0];
-        if (parts[0].toLowerCase() == PROXY_TYPES.PROXY) {
-          // PROXY_TYPES.HTTP and PROXY_TYPES.PROXY are synonyms
-          type = PROXY_TYPES.HTTP;
-        }
-
-        let failoverProxy = this.createProxyInfo(rules.slice(1));
-        return ProxyService.newProxyInfo(type, host, port, 0,
-          PROXY_TIMEOUT_SEC, failoverProxy);
-      case PROXY_TYPES.DIRECT:
-        if (parts.length != 1) {
-          this.extension.emit("proxy-error", {
-            message: `FindProxyForURL: Invalid argument for proxy type: "${parts[0]}"`,
-          });
-        }
-        return null;
-      default:
-        this.extension.emit("proxy-error", {
-          message: `FindProxyForURL: Unrecognized proxy type: "${parts[0]}"`,
-        });
-        return null;
-    }
+    return defaultProxyInfo;
   }
 
   /**

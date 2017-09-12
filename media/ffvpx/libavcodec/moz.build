@@ -56,7 +56,7 @@ SOURCES += [
 ]
 
 SYMBOLS_FILE = 'avcodec.symbols'
-NO_VISIBILITY_FLAGS = True
+NoVisibilityFlags()
 
 USE_LIBS += [
      'mozavutil'

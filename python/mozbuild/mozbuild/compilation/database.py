@@ -10,6 +10,7 @@ import types
 from mozbuild.compilation import util
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.data import (
+    ComputedFlags,
     Sources,
     GeneratedSources,
     DirectoryTraversal,
@@ -70,7 +71,7 @@ class CompileDBBackend(CommonBackend):
 
         if isinstance(obj, DirectoryTraversal):
             self._envs[obj.objdir] = obj.config
-            for var in ('STL_FLAGS', 'VISIBILITY_FLAGS', 'WARNINGS_AS_ERRORS'):
+            for var in ('WARNINGS_AS_ERRORS',):
                 value = obj.config.substs.get(var)
                 if value:
                     self._local_flags[obj.objdir][var] = value
@@ -102,18 +103,19 @@ class CompileDBBackend(CommonBackend):
                 self._gyp_dirs.add(obj.objdir)
             for var in ('MOZBUILD_CFLAGS', 'MOZBUILD_CXXFLAGS',
                         'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS',
-                        'RTL_FLAGS', 'VISIBILITY_FLAGS'):
+                        'RTL_FLAGS'):
                 if var in obj.variables:
                     self._local_flags[obj.objdir][var] = obj.variables[var]
-            if (obj.variables.get('DISABLE_STL_WRAPPING') and
-                    'STL_FLAGS' in self._local_flags[obj.objdir]):
-                del self._local_flags[obj.objdir]['STL_FLAGS']
             if (obj.variables.get('ALLOW_COMPILER_WARNINGS') and
                     'WARNINGS_AS_ERRORS' in self._local_flags[obj.objdir]):
                 del self._local_flags[obj.objdir]['WARNINGS_AS_ERRORS']
 
         elif isinstance(obj, PerSourceFlag):
             self._per_source_flags[obj.file_name].extend(obj.flags)
+
+        elif isinstance(obj, ComputedFlags):
+            for var, flags in obj.get_flags():
+                self._local_flags[obj.objdir]['COMPUTED_%s' % var] = flags
 
         return True
 
@@ -234,11 +236,9 @@ class CompileDBBackend(CommonBackend):
                 value = value.split()
             db.extend(value)
 
-        if canonical_suffix in ('.mm', '.cpp'):
-            db.append('$(STL_FLAGS)')
+        db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
         db.extend((
-            '$(VISIBILITY_FLAGS)',
             '$(DEFINES)',
             '-I%s' % mozpath.join(cenv.topsrcdir, reldir),
             '-I%s' % objdir,

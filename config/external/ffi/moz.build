@@ -10,7 +10,7 @@ if CONFIG['MOZ_SYSTEM_FFI']:
     OS_LIBS += CONFIG['MOZ_FFI_LIBS']
 else:
     ALLOW_COMPILER_WARNINGS = True
-    NO_VISIBILITY_FLAGS = True
+    NoVisibilityFlags()
 
     CONFIGURE_DEFINE_FILES += [
         '../../../js/src/ctypes/libffi/fficonfig.h',

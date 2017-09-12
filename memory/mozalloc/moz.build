@@ -3,7 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-NO_VISIBILITY_FLAGS = True
+NoVisibilityFlags()
 
 EXPORTS.mozilla += [
     'mozalloc.h',
@@ -38,7 +38,7 @@ FINAL_LIBRARY = 'mozglue'
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
 DEFINES['_GNU_SOURCE'] = True
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 DEFINES['IMPL_MFBT'] = True
 

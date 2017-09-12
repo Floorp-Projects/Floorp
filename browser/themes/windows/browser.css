@@ -1099,6 +1099,9 @@ notification[value="translation"] {
 #private-browsing-indicator-titlebar {
   display: block;
   position: absolute;
+  /* Need to ensure this gets positioned on top of the position:relative #navigator-toolbox
+   * in case the dark/light themes give that item a background. */
+  z-index: 1;
 }
 
 #main-window[privatebrowsingmode=temporary][tabsintitlebar] #private-browsing-indicator-titlebar > .private-browsing-indicator {

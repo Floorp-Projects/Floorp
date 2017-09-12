@@ -17,7 +17,7 @@
 
 using namespace mozilla;
 
-uint32_t NS_GetUnusedAtomCount(void);
+int32_t NS_GetUnusedAtomCount(void);
 
 namespace TestAtoms {
 
@@ -177,7 +177,7 @@ TEST(Atoms, ConcurrentAccessing)
   static const size_t kThreadCount = 4;
   // Force a GC before so that we don't have any unused atom.
   NS_GetNumberOfAtoms();
-  EXPECT_EQ(NS_GetUnusedAtomCount(), uint32_t(0));
+  EXPECT_EQ(NS_GetUnusedAtomCount(), int32_t(0));
   nsCOMPtr<nsIThread> threads[kThreadCount];
   for (size_t i = 0; i < kThreadCount; i++) {
     nsresult rv = NS_NewThread(getter_AddRefs(threads[i]), new nsAtomRunner);
@@ -187,7 +187,7 @@ TEST(Atoms, ConcurrentAccessing)
     threads[i]->Shutdown();
   }
   // We should have one unused atom from this test.
-  EXPECT_EQ(NS_GetUnusedAtomCount(), uint32_t(1));
+  EXPECT_EQ(NS_GetUnusedAtomCount(), int32_t(1));
 }
 
 }

@@ -104,15 +104,6 @@ ChromePowers.prototype.executeAfterFlushingMessageQueue = function(aCallback) {
   aCallback();
 };
 
-// Expose everything but internal APIs (starting with underscores) to
-// web content.  We cannot use Object.keys to view SpecialPowers.prototype since
-// we are using the functions from SpecialPowersAPI.prototype
-ChromePowers.prototype.__exposedProps__ = {};
-for (var i in ChromePowers.prototype) {
-  if (i.charAt(0) != "_")
-    ChromePowers.prototype.__exposedProps__[i] = "r";
-}
-
 if ((window.parent !== null) &&
     (window.parent !== undefined) &&
     (window.parent.wrappedJSObject.SpecialPowers) &&

@@ -5,8 +5,10 @@ test talos' filter module:
 
 http://hg.mozilla.org/build/talos/file/tip/talos/filter.py
 """
+from __future__ import absolute_import
 
 import unittest
+
 import talos.filter
 
 

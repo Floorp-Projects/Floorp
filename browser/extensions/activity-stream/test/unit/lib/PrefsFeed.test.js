@@ -1,16 +1,20 @@
 const {PrefsFeed} = require("lib/PrefsFeed.jsm");
 const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
+const {PrerenderData} = require("common/PrerenderData.jsm");
+const {initialPrefs} = PrerenderData;
 
-const FAKE_PREFS = new Map([["foo", {value: 1}], ["bar", {value: 2}]]);
+const PRERENDER_PREF_NAME = "prerender";
 
 describe("PrefsFeed", () => {
   let feed;
+  let FAKE_PREFS;
   beforeEach(() => {
+    FAKE_PREFS = new Map([["foo", 1], ["bar", 2]]);
     feed = new PrefsFeed(FAKE_PREFS);
     feed.store = {dispatch: sinon.spy()};
     feed._prefs = {
-      get: sinon.spy(item => FAKE_PREFS.get(item).value),
-      set: sinon.spy(),
+      get: sinon.spy(item => FAKE_PREFS.get(item)),
+      set: sinon.spy((name, value) => FAKE_PREFS.set(name, value)),
       observe: sinon.spy(),
       observeBranch: sinon.spy(),
       ignore: sinon.spy(),
@@ -40,5 +44,43 @@ describe("PrefsFeed", () => {
   it("should send a PREF_CHANGED action when onPrefChanged is called", () => {
     feed.onPrefChanged("foo", 2);
     assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({type: at.PREF_CHANGED, data: {name: "foo", value: 2}}));
+  });
+  describe("INIT prerendering", () => {
+    it("should set a prerender pref on init", () => {
+      feed.onAction({type: at.INIT});
+      assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME);
+    });
+    it("should set prerender pref to true if prefs match initial values", () => {
+      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      feed.onAction({type: at.INIT});
+      assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
+    });
+    it("should set prerender pref to false if a pref does not match its initial value", () => {
+      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      FAKE_PREFS.set("feeds.section.topstories", false);
+      feed.onAction({type: at.INIT});
+      assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
+    });
+  });
+  describe("onPrefChanged prerendering", () => {
+    it("should not change the prerender pref if the pref is not included in invalidatingPrefs", () => {
+      feed.onPrefChanged("foo123", true);
+      assert.notCalled(feed._prefs.set);
+    });
+    it("should set the prerender pref to false if a pref in invalidatingPrefs is changed from its original value", () => {
+      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+
+      feed._prefs.set("feeds.section.topstories", false);
+      feed.onPrefChanged("feeds.section.topstories", false);
+      assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
+    });
+    it("should set the prerender pref back to true if the invalidatingPrefs are changed back to their original values", () => {
+      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      FAKE_PREFS.set("feeds.section.topstories", false);
+
+      feed._prefs.set("feeds.section.topstories", true);
+      feed.onPrefChanged("feeds.section.topstories", true);
+      assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
+    });
   });
 });

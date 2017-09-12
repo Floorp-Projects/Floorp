@@ -16,7 +16,7 @@ DEFINES['WEBRTC_INTELLIGIBILITY_ENHANCER'] = 0
 DEFINES['WEBRTC_MOZILLA_BUILD'] = 1
 
 # Hit build errors on windows with xutility otherwise
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 LOCAL_INCLUDES += [
     '../',

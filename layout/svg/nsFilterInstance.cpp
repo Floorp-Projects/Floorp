@@ -61,22 +61,38 @@ UserSpaceMetricsForFrame(nsIFrame* aFrame)
 
 void
 nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
-                                     DrawTarget* aDrawTarget,
-                                     const gfxMatrix& aTransform,
+                                     gfxContext* aCtx,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion *aDirtyArea,
                                      imgDrawingParams& aImgParams)
 {
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
+
+  gfxContextMatrixAutoSaveRestore autoSR(aCtx);
+  gfxSize scaleFactors = aCtx->CurrentMatrix().ScaleFactors(true);
+  gfxMatrix scaleMatrix(scaleFactors.width, 0.0f,
+                        0.0f, scaleFactors.height,
+                        0.0f, 0.0f);
+
+  gfxMatrix reverseScaleMatrix = scaleMatrix;
+  DebugOnly<bool> invertible = reverseScaleMatrix.Invert();
+  MOZ_ASSERT(invertible);
+  // Pull scale vector out of aCtx's transform, put all scale factors, which
+  // includes css and css-to-dev-px scale, into scaleMatrixInDevUnits.
+  aCtx->SetMatrix(reverseScaleMatrix * aCtx->CurrentMatrix());
+
+  gfxMatrix scaleMatrixInDevUnits =
+    scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(aFilteredFrame);
+
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
   nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
                             *metrics, filterChain, /* InputIsTainted */ true,
-                            aPaintCallback, aTransform, aDirtyArea, nullptr,
-                            nullptr, nullptr);
+                            aPaintCallback, scaleMatrixInDevUnits,
+                            aDirtyArea, nullptr, nullptr, nullptr);
   if (instance.IsInitialized()) {
-    instance.Render(aDrawTarget, aImgParams);
+    instance.Render(aCtx, aImgParams);
   }
 }
 
@@ -473,7 +489,7 @@ nsFilterInstance::BuildSourceImage(imgDrawingParams& aImgParams)
 }
 
 void
-nsFilterInstance::Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams)
+nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams)
 {
   MOZ_ASSERT(mTargetFrame, "Need a frame for rendering");
 
@@ -488,10 +504,8 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams)
     return;
   }
 
-  AutoRestoreTransform autoRestoreTransform(aDrawTarget);
-  Matrix newTM =
-    aDrawTarget->GetTransform().PreTranslate(filterRect.x, filterRect.y);
-  aDrawTarget->SetTransform(newTM);
+  gfxContextMatrixAutoSaveRestore autoSR(aCtx);
+  aCtx->SetMatrix(aCtx->CurrentMatrix().PreTranslate(filterRect.x, filterRect.y));
 
   ComputeNeededBoxes();
 
@@ -499,7 +513,7 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams)
   BuildSourcePaints(aImgParams);
 
   FilterSupport::RenderFilterDescription(
-    aDrawTarget, mFilterDescription, IntRectToRect(filterRect),
+    aCtx->GetDrawTarget(), mFilterDescription, IntRectToRect(filterRect),
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
