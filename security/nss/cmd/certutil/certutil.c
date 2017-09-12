@@ -365,7 +365,7 @@ ChangeTrustAttributes(CERTCertDBHandle *handle, PK11SlotInfo *slot,
     CERTCertificate *cert;
     CERTCertTrust *trust;
 
-    cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
+    cert = CERT_FindCertByNicknameOrEmailAddrCX(handle, name, pwdata);
     if (!cert) {
         SECU_PrintError(progName, "could not find certificate named \"%s\"",
                         name);
@@ -1048,15 +1048,10 @@ PrintSyntax(char *progName)
         "\t\t [-f pwfile] [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -G [-h token-name] -k dsa [-q pqgfile -g key-size] [-f pwfile]\n"
         "\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
-#ifndef NSS_DISABLE_ECC
     FPS "\t%s -G [-h token-name] -k ec -q curve [-f pwfile]\n"
         "\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|ec|rsa|all]\n",
         progName);
-#else
-    FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|rsa|all]\n",
-        progName);
-#endif /* NSS_DISABLE_ECC */
     FPS "\t\t [-f pwfile] [-X] [-d certdir] [-P dbprefix]\n");
     FPS "\t%s --upgrade-merge --source-dir upgradeDir --upgrade-id uniqueID\n",
         progName);
@@ -1248,17 +1243,10 @@ luG(enum usage_level ul, const char *command)
         return;
     FPS "%-20s Name of token in which to generate key (default is internal)\n",
         "   -h token-name");
-#ifndef NSS_DISABLE_ECC
     FPS "%-20s Type of key pair to generate (\"dsa\", \"ec\", \"rsa\" (default))\n",
         "   -k key-type");
     FPS "%-20s Key size in bits, (min %d, max %d, default %d) (not for ec)\n",
         "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
-#else
-    FPS "%-20s Type of key pair to generate (\"dsa\", \"rsa\" (default))\n",
-        "   -k key-type");
-    FPS "%-20s Key size in bits, (min %d, max %d, default %d)\n",
-        "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
-#endif /* NSS_DISABLE_ECC */
     FPS "%-20s Set the public exponent value (3, 17, 65537) (rsa only)\n",
         "   -y exp");
     FPS "%-20s Specify the password file\n",
@@ -1267,7 +1255,6 @@ luG(enum usage_level ul, const char *command)
         "   -z noisefile");
     FPS "%-20s read PQG value from pqgfile (dsa only)\n",
         "   -q pqgfile");
-#ifndef NSS_DISABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
         "   -q curve-name");
     FPS "%-20s One of nistp256, nistp384, nistp521, curve25519.\n", "");
@@ -1289,7 +1276,6 @@ luG(enum usage_level ul, const char *command)
     FPS "%-20s c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1, \n", "");
     FPS "%-20s secp112r2, secp128r1, secp128r2, sect113r1, sect113r2\n", "");
     FPS "%-20s sect131r1, sect131r2\n", "");
-#endif
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
         "   -d keydir");
     FPS "%-20s Cert & Key database prefix\n",
@@ -1379,9 +1365,7 @@ luK(enum usage_level ul, const char *command)
         "   -h token-name ");
 
     FPS "%-20s Key type (\"all\" (default), \"dsa\","
-#ifndef NSS_DISABLE_ECC
                                                     " \"ec\","
-#endif
                                                     " \"rsa\")\n",
         "   -k key-type");
     FPS "%-20s The nickname of the key or associated certificate\n",
@@ -1524,11 +1508,7 @@ luR(enum usage_level ul, const char *command)
         "   -s subject");
     FPS "%-20s Output the cert request to this file\n",
         "   -o output-req");
-#ifndef NSS_DISABLE_ECC
     FPS "%-20s Type of key pair to generate (\"dsa\", \"ec\", \"rsa\" (default))\n",
-#else
-    FPS "%-20s Type of key pair to generate (\"dsa\", \"rsa\" (default))\n",
-#endif /* NSS_DISABLE_ECC */
         "   -k key-type-or-id");
     FPS "%-20s or nickname of the cert key to use \n",
         "");
@@ -1538,12 +1518,10 @@ luR(enum usage_level ul, const char *command)
         "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
     FPS "%-20s Name of file containing PQG parameters (dsa only)\n",
         "   -q pqgfile");
-#ifndef NSS_DISABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
         "   -q curve-name");
     FPS "%-20s See the \"-G\" option for a full list of supported names.\n",
         "");
-#endif /* NSS_DISABLE_ECC */
     FPS "%-20s Specify the password file\n",
         "   -f pwfile");
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
@@ -1709,11 +1687,7 @@ luS(enum usage_level ul, const char *command)
         "   -c issuer-name");
     FPS "%-20s Set the certificate trust attributes (see -A above)\n",
         "   -t trustargs");
-#ifndef NSS_DISABLE_ECC
     FPS "%-20s Type of key pair to generate (\"dsa\", \"ec\", \"rsa\" (default))\n",
-#else
-    FPS "%-20s Type of key pair to generate (\"dsa\", \"rsa\" (default))\n",
-#endif /* NSS_DISABLE_ECC */
         "   -k key-type-or-id");
     FPS "%-20s Name of token in which to generate key (default is internal)\n",
         "   -h token-name");
@@ -1721,12 +1695,10 @@ luS(enum usage_level ul, const char *command)
         "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
     FPS "%-20s Name of file containing PQG parameters (dsa only)\n",
         "   -q pqgfile");
-#ifndef NSS_DISABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
         "   -q curve-name");
     FPS "%-20s See the \"-G\" option for a full list of supported names.\n",
         "");
-#endif /* NSS_DISABLE_ECC */
     FPS "%-20s Self sign\n",
         "   -x");
     FPS "%-20s Cert serial number\n",
@@ -2625,12 +2597,10 @@ certutil_main(int argc, char **argv, PRBool initialize)
                        progName, MIN_KEY_BITS, MAX_KEY_BITS);
             return 255;
         }
-#ifndef NSS_DISABLE_ECC
         if (keytype == ecKey) {
             PR_fprintf(PR_STDERR, "%s -g:  Not for ec keys.\n", progName);
             return 255;
         }
-#endif /* NSS_DISABLE_ECC */
     }
 
     /*  -h specify token name  */
@@ -2659,10 +2629,8 @@ certutil_main(int argc, char **argv, PRBool initialize)
             keytype = rsaKey;
         } else if (PL_strcmp(arg, "dsa") == 0) {
             keytype = dsaKey;
-#ifndef NSS_DISABLE_ECC
         } else if (PL_strcmp(arg, "ec") == 0) {
             keytype = ecKey;
-#endif /* NSS_DISABLE_ECC */
         } else if (PL_strcmp(arg, "all") == 0) {
             keytype = nullKey;
         } else {
@@ -2715,16 +2683,10 @@ certutil_main(int argc, char **argv, PRBool initialize)
 
     /*  -q PQG file or curve name */
     if (certutil.options[opt_PQGFile].activated) {
-#ifndef NSS_DISABLE_ECC
         if ((keytype != dsaKey) && (keytype != ecKey)) {
             PR_fprintf(PR_STDERR, "%s -q: specifies a PQG file for DSA keys"
                                   " (-k dsa) or a named curve for EC keys (-k ec)\n)",
                        progName);
-#else  /* } */
-        if (keytype != dsaKey) {
-            PR_fprintf(PR_STDERR, "%s -q: PQG file is for DSA key (-k dsa).\n)",
-                       progName);
-#endif /* NSS_DISABLE_ECC */
             return 255;
         }
     }

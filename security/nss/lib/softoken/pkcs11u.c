@@ -1261,13 +1261,11 @@ static const CK_ATTRIBUTE_TYPE dhPubKeyAttrs[] = {
 };
 static const CK_ULONG dhPubKeyAttrsCount =
     sizeof(dhPubKeyAttrs) / sizeof(dhPubKeyAttrs[0]);
-#ifndef NSS_DISABLE_ECC
 static const CK_ATTRIBUTE_TYPE ecPubKeyAttrs[] = {
     CKA_EC_PARAMS, CKA_EC_POINT
 };
 static const CK_ULONG ecPubKeyAttrsCount =
     sizeof(ecPubKeyAttrs) / sizeof(ecPubKeyAttrs[0]);
-#endif
 
 static const CK_ATTRIBUTE_TYPE commonPrivKeyAttrs[] = {
     CKA_DECRYPT, CKA_SIGN, CKA_SIGN_RECOVER, CKA_UNWRAP, CKA_SUBJECT,
@@ -1294,13 +1292,11 @@ static const CK_ATTRIBUTE_TYPE dhPrivKeyAttrs[] = {
 };
 static const CK_ULONG dhPrivKeyAttrsCount =
     sizeof(dhPrivKeyAttrs) / sizeof(dhPrivKeyAttrs[0]);
-#ifndef NSS_DISABLE_ECC
 static const CK_ATTRIBUTE_TYPE ecPrivKeyAttrs[] = {
     CKA_EC_PARAMS, CKA_VALUE
 };
 static const CK_ULONG ecPrivKeyAttrsCount =
     sizeof(ecPrivKeyAttrs) / sizeof(ecPrivKeyAttrs[0]);
-#endif
 
 static const CK_ATTRIBUTE_TYPE certAttrs[] = {
     CKA_CERTIFICATE_TYPE, CKA_VALUE, CKA_SUBJECT, CKA_ISSUER, CKA_SERIAL_NUMBER
@@ -1405,12 +1401,10 @@ stfk_CopyTokenPrivateKey(SFTKObject *destObject, SFTKTokenObject *src_to)
             crv = stfk_CopyTokenAttributes(destObject, src_to, dhPrivKeyAttrs,
                                            dhPrivKeyAttrsCount);
             break;
-#ifndef NSS_DISABLE_ECC
         case CKK_EC:
             crv = stfk_CopyTokenAttributes(destObject, src_to, ecPrivKeyAttrs,
                                            ecPrivKeyAttrsCount);
             break;
-#endif
         default:
             crv = CKR_DEVICE_ERROR; /* shouldn't happen unless we store more types
                                      * of token keys into our database. */
@@ -1467,12 +1461,10 @@ stfk_CopyTokenPublicKey(SFTKObject *destObject, SFTKTokenObject *src_to)
             crv = stfk_CopyTokenAttributes(destObject, src_to, dhPubKeyAttrs,
                                            dhPubKeyAttrsCount);
             break;
-#ifndef NSS_DISABLE_ECC
         case CKK_EC:
             crv = stfk_CopyTokenAttributes(destObject, src_to, ecPubKeyAttrs,
                                            ecPubKeyAttrsCount);
             break;
-#endif
         default:
             crv = CKR_DEVICE_ERROR; /* shouldn't happen unless we store more types
                                      * of token keys into our database. */

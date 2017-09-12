@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0313
+#define FREEBL_VERSION 0x0314
 
 struct FREEBLVectorStr {
 
@@ -735,6 +735,29 @@ struct FREEBLVectorStr {
     int (*p_EC_GetPointSize)(const ECParams *);
 
     /* Version 3.019 came to here */
+
+    SECStatus (*p_BLAKE2B_Hash)(unsigned char *dest, const char *src);
+    SECStatus (*p_BLAKE2B_HashBuf)(unsigned char *output,
+                                   const unsigned char *input, PRUint32 inlen);
+    SECStatus (*p_BLAKE2B_MAC_HashBuf)(unsigned char *output,
+                                       const unsigned char *input,
+                                       unsigned int inlen,
+                                       const unsigned char *key,
+                                       unsigned int keylen);
+    BLAKE2BContext *(*p_BLAKE2B_NewContext)();
+    void (*p_BLAKE2B_DestroyContext)(BLAKE2BContext *ctx, PRBool freeit);
+    SECStatus (*p_BLAKE2B_Begin)(BLAKE2BContext *ctx);
+    SECStatus (*p_BLAKE2B_MAC_Begin)(BLAKE2BContext *ctx, const PRUint8 *key,
+                                     const size_t keylen);
+    SECStatus (*p_BLAKE2B_Update)(BLAKE2BContext *ctx, const unsigned char *in,
+                                  unsigned int inlen);
+    SECStatus (*p_BLAKE2B_End)(BLAKE2BContext *ctx, unsigned char *out,
+                               unsigned int *digestLen, size_t maxDigestLen);
+    unsigned int (*p_BLAKE2B_FlattenSize)(BLAKE2BContext *ctx);
+    SECStatus (*p_BLAKE2B_Flatten)(BLAKE2BContext *ctx, unsigned char *space);
+    BLAKE2BContext *(*p_BLAKE2B_Resurrect)(unsigned char *space, void *arg);
+
+    /* Version 3.020 came to here */
 
     /* Add new function pointers at the end of this struct and bump
      * FREEBL_VERSION at the beginning of this file. */

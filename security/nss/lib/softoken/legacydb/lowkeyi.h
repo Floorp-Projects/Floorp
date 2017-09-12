@@ -26,10 +26,8 @@ extern void lg_prepare_low_rsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void lg_prepare_low_pqg_params_for_asn1(PQGParams *params);
 extern void lg_prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void lg_prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
-#ifndef NSS_DISABLE_ECC
 extern void lg_prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void lg_prepare_low_ecparams_for_asn1(ECParams *params);
-#endif /* NSS_DISABLE_ECC */
 
 typedef char *(*NSSLOWKEYDBNameFunc)(void *arg, int dbVersion);
 
@@ -134,7 +132,6 @@ extern char *
 nsslowkey_FindKeyNicknameByPublicKey(NSSLOWKEYDBHandle *handle,
                                      SECItem *modulus, SDB *sdb);
 
-#ifndef NSS_DISABLE_ECC
 /*
  * smaller version of EC_FillParams. In this code, we only need
  * oid and DER data.
@@ -145,7 +142,7 @@ SECStatus LGEC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
 /* Copy all of the fields from srcParams into dstParams */
 SECStatus LGEC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
                           const ECParams *srcParams);
-#endif
+
 SEC_END_PROTOS
 
 #endif /* _LOWKEYI_H_ */

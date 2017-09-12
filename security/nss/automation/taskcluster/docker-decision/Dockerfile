@@ -12,6 +12,9 @@ RUN chmod +x /home/worker/bin/*
 ADD setup.sh /tmp/setup.sh
 RUN bash /tmp/setup.sh
 
+# Change user.
+USER worker
+
 # Env variables.
 ENV HOME /home/worker
 ENV SHELL /bin/bash
