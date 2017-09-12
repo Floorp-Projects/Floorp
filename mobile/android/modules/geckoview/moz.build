@@ -13,5 +13,6 @@ EXTRA_JS_MODULES += [
     'GeckoViewProgress.jsm',
     'GeckoViewScroll.jsm',
     'GeckoViewSettings.jsm',
+    'GeckoViewUtils.jsm',
     'Messaging.jsm',
 ]
