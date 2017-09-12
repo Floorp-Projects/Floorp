@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource:///modules/E10SUtils.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
+  LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
@@ -1820,6 +1821,8 @@ var gBrowserInit = {
     DownloadsButton.uninit();
 
     gAccessibilityServiceIndicator.uninit();
+
+    LanguagePrompt.uninit();
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
