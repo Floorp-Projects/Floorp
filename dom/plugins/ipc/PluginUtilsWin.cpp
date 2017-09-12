@@ -86,7 +86,7 @@ public:
     NPAudioDeviceChangeDetailsIPC changeDetails;
     changeDetails.flow = (int32_t)flow;
     changeDetails.role = (int32_t)role;
-    changeDetails.defaultDevice = std::wstring(device_id);
+    changeDetails.defaultDevice = device_id ? std::wstring(device_id) : L"";
 
     // Make sure that plugin is notified on the main thread.
     RefPtr<AudioDeviceChangedRunnable> runnable =
