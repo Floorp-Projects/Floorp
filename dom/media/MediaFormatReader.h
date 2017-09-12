@@ -575,6 +575,29 @@ private:
     // Use NullDecoderModule or not.
     bool mIsNullDecode;
 
+    class
+    {
+    public:
+      float Mean() const { return mMean; }
+
+      void Update(const media::TimeUnit& aValue)
+      {
+        if (aValue == media::TimeUnit::Zero()) {
+          return;
+        }
+        mMean += (1.0f / aValue.ToSeconds() - mMean) / ++mCount;
+      }
+
+      void Reset()
+      {
+        mMean = 0;
+        mCount = 0;
+      }
+
+    private:
+      float mMean = 0;
+      uint64_t mCount = 0;
+    } mMeanRate;
   };
 
   template <typename Type>
