@@ -6,12 +6,19 @@ package org.mozilla.gecko.fxa.authenticator;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.PeriodicSync;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
@@ -35,20 +42,22 @@ import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.fxa.sync.FxAccountProfileService;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Target;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
@@ -72,6 +81,19 @@ public class AndroidFxAccount {
   private static final String ACCOUNT_KEY_PROFILE = "profile";
   private static final String ACCOUNT_KEY_IDP_SERVER = "idpServerURI";
   private static final String ACCOUNT_KEY_PROFILE_SERVER = "profileServerURI";
+  private static final String ACCOUNT_KEY_UID = "uid";
+
+  // Ephemeral field used to support renaming an account on API versions prior to 21.
+  // On these API levels we can't simply rename an account: we need to delete it, and then create it
+  // again. This will cause our "account was just deleted" side-effects to run in
+  // FxAccountAuthenticator@getAccountRemovalAllowed, and we actually need them to not run.
+  // If they run, our account pickle is blown away, our FxA device record is removed, etc.
+  // And so, while renaming the account, we set this flag in userData, and check for it in our cleanup
+  // logic.
+  // It's important that when renaming is complete - or fails - that this flag is reset, otherwise
+  // normal account deletion will not function correctly.
+  /* package-private */ static final String ACCOUNT_KEY_RENAME_IN_PROGRESS = "accountBeingRenamed";
+  /* package-private */ static final String ACCOUNT_VALUE_RENAME_IN_PROGRESS = "true";
 
   private static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
   private static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
@@ -111,11 +133,27 @@ public class AndroidFxAccount {
     DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP = Collections.unmodifiableMap(m);
   }
 
+  // List of accounts keys which are explicitly carried over when account is renamed on pre-21 devices.
+  private static final List<String> ACCOUNT_KEY_TO_CARRY_OVER_ON_RENAME_SET;
+  static {
+    ArrayList<String> keysToCarryOver = new ArrayList<>(6);
+    keysToCarryOver.add(ACCOUNT_KEY_ACCOUNT_VERSION);
+    keysToCarryOver.add(ACCOUNT_KEY_IDP_SERVER);
+    keysToCarryOver.add(ACCOUNT_KEY_TOKEN_SERVER);
+    keysToCarryOver.add(ACCOUNT_KEY_PROFILE_SERVER);
+    keysToCarryOver.add(ACCOUNT_KEY_PROFILE);
+    keysToCarryOver.add(ACCOUNT_KEY_DESCRIPTOR);
+    ACCOUNT_KEY_TO_CARRY_OVER_ON_RENAME_SET = Collections.unmodifiableList(keysToCarryOver);
+  }
+
   private static final String PREF_KEY_LAST_SYNCED_TIMESTAMP = "lastSyncedTimestamp";
 
   protected final Context context;
   private final AccountManager accountManager;
-  protected final Account account;
+
+  // This is really, really meant to be final. Only changed when account name changes.
+  // See Bug 1368147.
+  protected volatile Account account;
 
   /**
    * A cache associating Account name (email address) to a representation of the
@@ -981,11 +1019,17 @@ public class AndroidFxAccount {
       super.onReceiveResult(resultCode, bundle);
       switch (resultCode) {
         case Activity.RESULT_OK:
-          final String resultData = bundle.getString(FxAccountProfileService.KEY_RESULT_STRING);
-          updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
           Logger.info(LOG_TAG, "Profile JSON fetch succeeded!");
+          final String resultData = bundle.getString(FxAccountProfileService.KEY_RESULT_STRING);
           FxAccountUtils.pii(LOG_TAG, "Profile JSON fetch returned: " + resultData);
-          LocalBroadcastManager.getInstance(context).sendBroadcast(makeProfileJSONUpdatedIntent());
+
+          renameAccountIfNecessary(resultData, new Runnable() {
+            @Override
+            public void run() {
+              updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
+              LocalBroadcastManager.getInstance(context).sendBroadcast(makeProfileJSONUpdatedIntent());
+            }
+          });
           break;
         case Activity.RESULT_CANCELED:
           Logger.warn(LOG_TAG, "Failed to fetch profile JSON; ignoring.");
@@ -995,6 +1039,189 @@ public class AndroidFxAccount {
           break;
       }
     }
+  }
+
+  private void renameAccountIfNecessary(final String profileData, final Runnable callback) {
+    final ExtendedJSONObject profileJSON;
+    try {
+      profileJSON = new ExtendedJSONObject(profileData);
+    } catch (NonObjectJSONException | IOException e) {
+      Logger.error(LOG_TAG, "Error processing fetched account json string", e);
+      callback.run();
+      return;
+    }
+    if (!profileJSON.containsKey("email")) {
+      Logger.error(LOG_TAG, "Profile JSON missing email key");
+      callback.run();
+      return;
+    }
+    final String email = profileJSON.getString("email");
+
+    // If primary email didn't change, there's nothing for us to do.
+    if (account.name.equals(email)) {
+      callback.run();
+      return;
+    }
+
+    Logger.info(LOG_TAG, "Renaming Android Account.");
+    FxAccountUtils.pii(LOG_TAG, "Renaming Android account from " + account.name + " to " + email);
+
+    // Then, get the currently auto-syncing authorities.
+    // We'll toggle these on once we re-add the account.
+    final Map<String, Boolean> currentAuthoritiesToSync = getAuthoritiesToSyncAutomaticallyMap();
+
+    // We also need to manually carry over current sync intervals.
+    final Map<String, List<PeriodicSync>> periodicSyncsForAuthorities = new HashMap<>();
+    for (String authority : currentAuthoritiesToSync.keySet()) {
+      periodicSyncsForAuthorities.put(authority, ContentResolver.getPeriodicSyncs(account, authority));
+    }
+
+    final Runnable migrateSyncSettings = new Runnable() {
+      @Override
+      public void run() {
+        // Set up auto-syncing for the newly added account.
+        setAuthoritiesToSyncAutomaticallyMap(currentAuthoritiesToSync);
+
+        // Set up all of the periodic syncs we had prior.
+        for (String authority : periodicSyncsForAuthorities.keySet()) {
+          final List<PeriodicSync> periodicSyncs = periodicSyncsForAuthorities.get(authority);
+          for (PeriodicSync periodicSync : periodicSyncs) {
+            ContentResolver.addPeriodicSync(
+                    account,
+                    periodicSync.authority,
+                    periodicSync.extras,
+                    periodicSync.period
+            );
+          }
+        }
+      }
+    };
+
+    // On API21+, we can simply "rename" the account, which will recreate it carrying over user data.
+    // Our regular "account was just deleted" side-effects will not run.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      doOptionalProfileRename21Plus(email, migrateSyncSettings, callback);
+
+    // Prior to API21, we have to perform this operation manually: make a copy of the user data,
+    // delete current account, and then re-create it.
+    // We also need to ensure our regular "account was just deleted" side-effects are not invoked.
+    } else {
+      doOptionalProfileRenamePre21(email, migrateSyncSettings, callback);
+    }
+  }
+
+  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+  private void doOptionalProfileRename21Plus(final String newEmail, final Runnable migrateSyncSettingsCallback, final Runnable callback) {
+    accountManager.renameAccount(account, newEmail, new AccountManagerCallback<Account>() {
+      @Override
+      public void run(AccountManagerFuture<Account> future) {
+        if (future.isCancelled()) {
+          Logger.error(LOG_TAG, "Account rename task cancelled.");
+          callback.run();
+          return;
+        }
+
+        if (!future.isDone()) {
+          Logger.error(LOG_TAG, "Account rename callback invoked, by task is not finished.");
+          callback.run();
+          return;
+        }
+
+        try {
+          final Account updatedAccount = future.getResult();
+
+          // We tried, we really did.
+          if (!updatedAccount.name.equals(newEmail)) {
+            Logger.error(LOG_TAG, "Tried to update account name, but it didn't seem to have changed.");
+          } else {
+            account = updatedAccount;
+            migrateSyncSettingsCallback.run();
+
+            invalidateCaches();
+            callback.run();
+          }
+        } catch (OperationCanceledException | IOException | AuthenticatorException e) {
+          Logger.error(LOG_TAG, "Unexpected exception while trying to rename an account", e);
+          callback.run();
+        }
+      }
+      // Request that callbacks are posted to the current thread.
+    }, new Handler());
+  }
+
+  @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+  private void doOptionalProfileRenamePre21(final String email, final Runnable migrateSyncSettingsCallback, final Runnable callback) {
+    // First, manually make a copy of account's current user data.
+    final Bundle currentUserData = new Bundle();
+
+    for (String key : ACCOUNT_KEY_TO_CARRY_OVER_ON_RENAME_SET) {
+      currentUserData.putString(key, accountManager.getUserData(account, key));
+    }
+
+    // Ensure our account deletion side-effects will not run. See comments at this key's definition.
+    // Note that this key is not copied over to the new account. We do need to ensure this field is
+    // reset if we fail to remove the account. Otherwise our regular account deletion logic won't run
+    // in the future.
+    accountManager.setUserData(account, ACCOUNT_KEY_RENAME_IN_PROGRESS, ACCOUNT_VALUE_RENAME_IN_PROGRESS);
+
+    // Then, remove current account.
+    accountManager.removeAccount(account, new AccountManagerCallback<Boolean>() {
+      @Override
+      public void run(AccountManagerFuture<Boolean> future) {
+        boolean accountRemovalSucceeded = false;
+        boolean removeResult = false;
+        try {
+          removeResult = future.getResult();
+          accountRemovalSucceeded = !future.isCancelled() && future.isDone() && removeResult;
+        } catch (OperationCanceledException | IOException | AuthenticatorException e) {
+          Logger.error(LOG_TAG, "Exception while obtaining account remove task results. Moving on.", e);
+        }
+
+        // Did something go wrong? Log specific error, clear ACCOUNT_KEY_RENAME_IN_PROGRESS and move on.
+        // Bug 1398978 tracks sending a telemetry event to monitor these failures in the wild.
+        if (!accountRemovalSucceeded) {
+          if (future.isCancelled()) {
+            Logger.error(LOG_TAG, "Account remove task cancelled. Moving on.");
+          } else if (!future.isDone()) {
+            Logger.error(LOG_TAG, "Account remove callback invoked, but task is not finished. Moving on.");
+          } else if (!removeResult) {
+            Logger.error(LOG_TAG, "Failed to remove current account while renaming accounts. Moving on.");
+          }
+
+          accountManager.setUserData(account, ACCOUNT_KEY_RENAME_IN_PROGRESS, null);
+          callback.run();
+          return;
+        }
+
+        // It appears that we've successfully removed the account. It's now time to re-add it.
+
+        // Purge our internal state.
+        invalidateCaches();
+
+        // Finally, add an Android account with new name and old user data.
+        final Account newAccount = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
+        final boolean didAdd = accountManager.addAccountExplicitly(newAccount, null, currentUserData);
+
+        // Rename succeeded, now let's configure the newly added account.
+        if (didAdd) {
+          account = newAccount;
+
+          migrateSyncSettingsCallback.run();
+
+          callback.run();
+          return;
+        }
+
+        // Oh, this isn't good. This could mean that account already exists, or that something else
+        // happened. Account should not already exist, since supposedly we just removed it.
+        // AccountManager docs are not specific on what "something else" might actually mean.
+        // At this point it's as if we never had an account to begin with, and so we skip calling
+        // our callback.
+        // Bug 1398978 tracks sending a telemetry event to monitor such failures in the wild.
+        Logger.error(LOG_TAG, "Failed to add account with a new name after deleting old account.");
+      }
+    // Request that callbacks are posted to the current thread.
+    }, new Handler());
   }
 
   /**
