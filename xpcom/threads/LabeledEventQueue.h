@@ -30,6 +30,7 @@ class LabeledEventQueue final : public AbstractEventQueue
 {
 public:
   LabeledEventQueue();
+  ~LabeledEventQueue();
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 EventPriority aPriority,
@@ -127,13 +128,20 @@ private:
   };
 
   void PopEpoch();
+  static SchedulerGroup* NextSchedulerGroup(SchedulerGroup* aGroup);
 
   using RunnableEpochQueue = Queue<QueueEntry, 32>;
   using LabeledMap = nsClassHashtable<nsRefPtrHashKey<SchedulerGroup>, RunnableEpochQueue>;
   using EpochQueue = Queue<Epoch, 8>;
 
-  // List of SchedulerGroups that have events in the queue.
-  LinkedList<SchedulerGroup> mSchedulerGroups;
+  // List of SchedulerGroups that might have events. This is static, so it
+  // covers all LabeledEventQueues. If a SchedulerGroup is in this list, it may
+  // not have an event in *this* LabeledEventQueue (although it will have an
+  // event in *some* LabeledEventQueue). sCurrentSchedulerGroup cycles through
+  // the elements of sSchedulerGroups in order.
+  static LinkedList<SchedulerGroup>* sSchedulerGroups;
+  static size_t sLabeledEventQueueCount;
+  static SchedulerGroup* sCurrentSchedulerGroup;
 
   LabeledMap mLabeled;
   RunnableEpochQueue mUnlabeled;

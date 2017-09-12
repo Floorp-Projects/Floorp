@@ -1147,6 +1147,11 @@ reftest-gpu:
     description: "Reftest GPU run"
     suite: reftest/reftest-gpu
     treeherder-symbol: tc-R(Rg)
+    chunks:
+        by-test-platform:
+            # Remove special casing when debug isn't using BBB anymore
+            windows7-32.*/debug: 1
+            default: 8
     run-on-projects:
         by-test-platform:
             windows10.*: []
@@ -1162,7 +1167,11 @@ reftest-gpu:
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
-        chunked: false
+        chunked:
+            # Remove special casing when debug isn't using BBB anymore
+            by-test-platform:
+                windows7-32.*/debug: false
+                default: true
         config:
             by-test-platform:
                 windows.*:

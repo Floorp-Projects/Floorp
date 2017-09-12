@@ -100,10 +100,7 @@ this.EXPORTED_SYMBOLS = ["MessageChannel"];
 
 /* globals MessageChannel */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");

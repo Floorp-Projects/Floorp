@@ -75,6 +75,36 @@ public:
     MOZ_ASSERT(IsSafeToRun());
   }
 
+  enum EnqueueStatus
+  {
+    NewlyQueued,
+    AlreadyQueued,
+  };
+
+  // Records that this SchedulerGroup had an event enqueued in some
+  // queue. Returns whether the SchedulerGroup was already in a queue before
+  // EnqueueEvent() was called.
+  EnqueueStatus EnqueueEvent()
+  {
+    mEventCount++;
+    return mEventCount == 1 ? NewlyQueued : AlreadyQueued;
+  }
+
+  enum DequeueStatus
+  {
+    StillQueued,
+    NoLongerQueued,
+  };
+
+  // Records that this SchedulerGroup had an event dequeued from some
+  // queue. Returns whether the SchedulerGroup is still in a queue after
+  // DequeueEvent() returns.
+  DequeueStatus DequeueEvent()
+  {
+    mEventCount--;
+    return mEventCount == 0 ? NoLongerQueued : StillQueued;
+  }
+
   class Runnable final : public mozilla::Runnable
                        , public nsIRunnablePriority
                        , public nsILabelableRunnable
@@ -166,6 +196,10 @@ protected:
   static MOZ_THREAD_LOCAL(bool) sTlsValidatingAccess;
 
   bool mIsRunning;
+
+  // Number of events that are currently enqueued for this SchedulerGroup
+  // (across all queues).
+  size_t mEventCount = 0;
 
   nsCOMPtr<nsISerialEventTarget> mEventTargets[size_t(TaskCategory::Count)];
   RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
