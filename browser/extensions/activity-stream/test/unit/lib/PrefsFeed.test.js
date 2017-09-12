@@ -57,7 +57,7 @@ describe("PrefsFeed", () => {
     });
     it("should set prerender pref to false if a pref does not match its initial value", () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
-      FAKE_PREFS.set("feeds.section.topstories", false);
+      FAKE_PREFS.set("showSearch", false);
       feed.onAction({type: at.INIT});
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
     });
@@ -70,16 +70,16 @@ describe("PrefsFeed", () => {
     it("should set the prerender pref to false if a pref in invalidatingPrefs is changed from its original value", () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
 
-      feed._prefs.set("feeds.section.topstories", false);
-      feed.onPrefChanged("feeds.section.topstories", false);
+      feed._prefs.set("showSearch", false);
+      feed.onPrefChanged("showSearch", false);
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
     });
     it("should set the prerender pref back to true if the invalidatingPrefs are changed back to their original values", () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
-      FAKE_PREFS.set("feeds.section.topstories", false);
+      FAKE_PREFS.set("showSearch", false);
 
-      feed._prefs.set("feeds.section.topstories", true);
-      feed.onPrefChanged("feeds.section.topstories", true);
+      feed._prefs.set("showSearch", true);
+      feed.onPrefChanged("showSearch", true);
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
     });
   });
