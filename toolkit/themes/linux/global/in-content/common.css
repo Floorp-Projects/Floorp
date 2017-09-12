@@ -12,13 +12,6 @@ xul|tab[visuallyselected] {
   border-bottom-right-radius: 0;
 }
 
-xul|button,
-html|button,
-xul|colorpicker[type="button"],
-xul|menulist {
-  margin: 2px 4px;
-}
-
 xul|button:-moz-focusring {
   outline: 1px dotted;
   outline-offset: -2px;
