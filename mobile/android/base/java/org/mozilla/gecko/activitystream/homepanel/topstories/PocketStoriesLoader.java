@@ -17,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
+import org.mozilla.gecko.activitystream.homepanel.StreamRecyclerAdapter;
 import org.mozilla.gecko.activitystream.homepanel.model.TopStory;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ProxySelector;
@@ -62,7 +63,7 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
     private static final String PARAM_APIKEY = "consumer_key";
     private static final String APIKEY = AppConstants.MOZ_POCKET_API_KEY;
     private static final String PARAM_COUNT = "count";
-    private static final int DEFAULT_COUNT = 3;
+    private static final int DEFAULT_COUNT = StreamRecyclerAdapter.MAX_TOP_STORIES + 1; // We have extra so we can hide malformed items.
     private static final String PARAM_LOCALE = "locale_lang";
 
     private static final long REFRESH_INTERVAL_MILLIS = TimeUnit.HOURS.toMillis(1);
@@ -164,6 +165,15 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
                     final String title = item.getString("title");
                     final String url = item.getString("dedupe_url");
                     final String imageUrl = item.getString("image_src");
+
+                    // Drop malformed items.
+                    if (TextUtils.isEmpty(title) ||
+                            TextUtils.isEmpty(url) ||
+                            TextUtils.isEmpty(imageUrl)) {
+                        Log.d(LOGTAG, "Dropping malformed Pocket top story.");
+                        continue;
+                    }
+
                     topStories.add(new TopStory(title, url, imageUrl));
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Couldn't parse fields in Pocket response", e);
@@ -178,7 +188,7 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
     private static List<TopStory> makePlaceholderStories() {
         final List<TopStory> stories = new LinkedList<>();
         final String TITLE_PREFIX = "Placeholder ";
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < DEFAULT_COUNT; i++) {
             // Urls must be different for bookmark/pinning UI to work properly. Assume this is true for Pocket stories.
             stories.add(new TopStory(TITLE_PREFIX + i, "https://www.mozilla.org/#" + i, null));
         }
