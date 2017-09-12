@@ -106,6 +106,7 @@ this.ShieldPreferences = {
 
     const checkbox = doc.createElementNS(XUL_NS, "checkbox");
     checkbox.setAttribute("id", "optOutStudiesEnabled");
+    checkbox.setAttribute("class", "tail-with-learn-more");
     checkbox.setAttribute("label", "Allow Firefox to install and run studies");
     checkbox.setAttribute("preference", OPT_OUT_STUDIES_ENABLED_PREF);
     checkbox.setAttribute("disabled", !Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF));

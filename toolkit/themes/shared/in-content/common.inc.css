@@ -22,7 +22,7 @@
   --in-content-border-focus: #0a84ff;
   --in-content-border-color: #d7d7db;
   --in-content-category-border-focus: 1px dotted #0a84ff;
-  --in-content-category-text: rgba(12,12,13,0.8);
+  --in-content-category-text: rgba(12,12,13);
   --in-content-category-text-active: #0c0c0d;
   --in-content-category-text-selected: #0a84ff;
   --in-content-category-text-selected-active: #0060df;
@@ -111,7 +111,7 @@ xul|groupbox > xul|caption {
   padding: 4px 0;
 }
 
-xul|groupbox xul|label:not(.menu-accel):not(.menu-text):not(.indent):not(.learnMore),
+xul|groupbox xul|label:not(.menu-accel):not(.menu-text):not(.indent):not(.learnMore):not(.tail-with-learn-more),
 xul|groupbox xul|description {
   /* !important needed to override toolkit !important rule */
   margin-inline-start: 0 !important;
@@ -192,7 +192,14 @@ xul|menulist {
   -moz-border-left-colors: none !important;
   border-radius: 2px;
   background-color: var(--in-content-page-background);
-  margin: 0 8px;
+  margin: 4px 8px;
+}
+
+xul|button,
+html|button {
+  /* use the same margin of other elements for the alignment */
+  margin-left: 4px;
+  margin-right: 4px;
 }
 
 html|select:not([size]):not([multiple]) {
@@ -341,11 +348,12 @@ html|*.help-button:hover {
   fill: white;
   stroke: #808080;
   stroke-opacity: 1;
-  background-color: var(--in-content-category-hover);
+  background-color: var(--in-content-category-background-hover);
 }
 
 html|*.help-button:hover:active {
   stroke: #666;
+  background-color: var(--in-content-category-background-active);
 }
 
 xul|*.spinbuttons-button {
@@ -605,8 +613,8 @@ xul|radio {
 
 xul|*.radio-check {
   -moz-appearance: none;
-  width: 23px;
-  height: 23px;
+  width: 20px;
+  height: 20px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 50%;
   margin-inline-end: 10px;
@@ -700,7 +708,6 @@ xul|*.radio-label-box {
   height: 24px;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: 0.8;
 }
 
 *|*.category[selected] > *|*.category-icon,
