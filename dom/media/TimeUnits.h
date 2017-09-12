@@ -40,9 +40,11 @@ static const int64_t NSECS_PER_S = 1000000000;
 
 // TimeUnit at present uses a CheckedInt64 as storage.
 // INT64_MAX has the special meaning of being +oo.
-class TimeUnit final {
+class TimeUnit final
+{
 public:
-  static TimeUnit FromSeconds(double aValue) {
+  static TimeUnit FromSeconds(double aValue)
+  {
     MOZ_ASSERT(!IsNaN(aValue));
 
     if (mozilla::IsInfinite<double>(aValue)) {
@@ -60,27 +62,27 @@ public:
     }
   }
 
-  static constexpr TimeUnit FromMicroseconds(int64_t aValue) {
+  static constexpr TimeUnit FromMicroseconds(int64_t aValue)
+  {
     return TimeUnit(aValue);
   }
 
-  static constexpr TimeUnit FromNanoseconds(int64_t aValue) {
+  static constexpr TimeUnit FromNanoseconds(int64_t aValue)
+  {
     return TimeUnit(aValue / 1000);
   }
 
-  static constexpr TimeUnit FromInfinity() {
-    return TimeUnit(INT64_MAX);
-  }
+  static constexpr TimeUnit FromInfinity() { return TimeUnit(INT64_MAX); }
 
-  static TimeUnit FromTimeDuration(const TimeDuration& aDuration) {
+  static TimeUnit FromTimeDuration(const TimeDuration& aDuration)
+  {
     return FromSeconds(aDuration.ToSeconds());
   }
 
-  static constexpr TimeUnit Zero() {
-    return TimeUnit(0);
-  }
+  static constexpr TimeUnit Zero() { return TimeUnit(0); }
 
-  static TimeUnit Invalid() {
+  static TimeUnit Invalid()
+  {
     TimeUnit ret;
     ret.mValue = CheckedInt64(INT64_MAX);
     // Force an overflow to render the CheckedInt invalid.
@@ -88,112 +90,110 @@ public:
     return ret;
   }
 
-  int64_t ToMicroseconds() const {
-    return mValue.value();
-  }
+  int64_t ToMicroseconds() const { return mValue.value(); }
 
-  int64_t ToNanoseconds() const {
-    return mValue.value() * 1000;
-  }
+  int64_t ToNanoseconds() const { return mValue.value() * 1000; }
 
-  double ToSeconds() const {
+  double ToSeconds() const
+  {
     if (IsInfinite()) {
       return PositiveInfinity<double>();
     }
     return double(mValue.value()) / USECS_PER_S;
   }
 
-  TimeDuration ToTimeDuration() const {
+  TimeDuration ToTimeDuration() const
+  {
     return TimeDuration::FromMicroseconds(mValue.value());
   }
 
-  bool IsInfinite() const {
-    return mValue.value() == INT64_MAX;
-  }
+  bool IsInfinite() const { return mValue.value() == INT64_MAX; }
 
-  bool IsPositive() const {
-    return mValue.value() > 0;
-  }
+  bool IsPositive() const { return mValue.value() > 0; }
 
-  bool IsNegative() const {
-    return mValue.value() < 0;
-  }
+  bool IsNegative() const { return mValue.value() < 0; }
 
-  bool operator == (const TimeUnit& aOther) const {
+  bool operator==(const TimeUnit& aOther) const
+  {
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() == aOther.mValue.value();
   }
-  bool operator != (const TimeUnit& aOther) const {
+  bool operator!=(const TimeUnit& aOther) const
+  {
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() != aOther.mValue.value();
   }
-  bool operator >= (const TimeUnit& aOther) const {
+  bool operator>=(const TimeUnit& aOther) const
+  {
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() >= aOther.mValue.value();
   }
-  bool operator > (const TimeUnit& aOther) const {
-    return !(*this <= aOther);
-  }
-  bool operator <= (const TimeUnit& aOther) const {
+  bool operator>(const TimeUnit& aOther) const { return !(*this <= aOther); }
+  bool operator<=(const TimeUnit& aOther) const
+  {
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() <= aOther.mValue.value();
   }
-  bool operator < (const TimeUnit& aOther) const {
-    return !(*this >= aOther);
-  }
-  TimeUnit operator + (const TimeUnit& aOther) const {
+  bool operator<(const TimeUnit& aOther) const { return !(*this >= aOther); }
+  TimeUnit operator+(const TimeUnit& aOther) const
+  {
     if (IsInfinite() || aOther.IsInfinite()) {
       return FromInfinity();
     }
     return TimeUnit(mValue + aOther.mValue);
   }
-  TimeUnit operator - (const TimeUnit& aOther) const {
+  TimeUnit operator-(const TimeUnit& aOther) const
+  {
     if (IsInfinite() && !aOther.IsInfinite()) {
       return FromInfinity();
     }
     MOZ_ASSERT(!IsInfinite() && !aOther.IsInfinite());
     return TimeUnit(mValue - aOther.mValue);
   }
-  TimeUnit& operator += (const TimeUnit& aOther) {
+  TimeUnit& operator+=(const TimeUnit& aOther)
+  {
     *this = *this + aOther;
     return *this;
   }
-  TimeUnit& operator -= (const TimeUnit& aOther) {
+  TimeUnit& operator-=(const TimeUnit& aOther)
+  {
     *this = *this - aOther;
     return *this;
   }
 
-  template <typename T>
-  TimeUnit operator*(T aVal) const {
+  template<typename T>
+  TimeUnit operator*(T aVal) const
+  {
     // See bug 853398 for the reason to block double multiplier.
     // If required, use MultDouble below and with caution.
     static_assert(mozilla::IsIntegral<T>::value, "Must be an integral type");
     return TimeUnit(mValue * aVal);
   }
-  TimeUnit MultDouble(double aVal) const {
+  TimeUnit MultDouble(double aVal) const
+  {
     return TimeUnit::FromSeconds(ToSeconds() * aVal);
   }
-  friend TimeUnit operator/ (const TimeUnit& aUnit, int aVal) {
+  friend TimeUnit operator/(const TimeUnit& aUnit, int aVal)
+  {
     return TimeUnit(aUnit.mValue / aVal);
   }
 
-  bool IsValid() const
-  {
-    return mValue.isValid();
-  }
+  bool IsValid() const { return mValue.isValid(); }
 
   constexpr TimeUnit()
     : mValue(CheckedInt64(0))
-  {}
+  {
+  }
 
   TimeUnit(const TimeUnit&) = default;
 
-  TimeUnit& operator = (const TimeUnit&) = default;
+  TimeUnit& operator=(const TimeUnit&) = default;
 
 private:
   explicit constexpr TimeUnit(CheckedInt64 aMicroseconds)
     : mValue(aMicroseconds)
-  {}
+  {
+  }
 
   // Our internal representation is in microseconds.
   CheckedInt64 mValue;
@@ -217,16 +217,20 @@ public:
   // TimeIntervals i = ... like we would do with IntervalSet<T> i = ...
   MOZ_IMPLICIT TimeIntervals(const BaseType& aOther)
     : BaseType(aOther)
-  {}
+  {
+  }
   MOZ_IMPLICIT TimeIntervals(BaseType&& aOther)
     : BaseType(Move(aOther))
-  {}
+  {
+  }
   explicit TimeIntervals(const BaseType::ElemType& aOther)
     : BaseType(aOther)
-  {}
+  {
+  }
   explicit TimeIntervals(BaseType::ElemType&& aOther)
     : BaseType(Move(aOther))
-  {}
+  {
+  }
 
   static TimeIntervals Invalid()
   {
@@ -236,7 +240,7 @@ public:
   bool IsInvalid() const
   {
     return Length() == 1 && Start(0).ToMicroseconds() == INT64_MIN &&
-      End(0).ToMicroseconds() == INT64_MIN;
+           End(0).ToMicroseconds() == INT64_MIN;
   }
 
   TimeIntervals() = default;
