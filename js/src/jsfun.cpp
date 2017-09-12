@@ -545,11 +545,8 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
             v.setString(name);
         }
 
-        if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_RESOLVING))
-        {
+        if (!NativeDefineDataProperty(cx, fun, id, v, JSPROP_READONLY | JSPROP_RESOLVING))
             return false;
-        }
 
         if (isLength)
             fun->setResolvedLength();
@@ -2409,11 +2406,9 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
         return false;
 
     RootedValue funNameVal(cx, StringValue(funNameAtom));
-    if (!NativeDefineProperty(cx, fun, cx->names().name, funNameVal, nullptr, nullptr,
-                              JSPROP_READONLY))
-    {
+    if (!NativeDefineDataProperty(cx, fun, cx->names().name, funNameVal, JSPROP_READONLY))
         return false;
-    }
+
     return true;
 }
 
