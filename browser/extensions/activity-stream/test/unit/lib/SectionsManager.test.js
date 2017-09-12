@@ -5,7 +5,9 @@ const {MAIN_MESSAGE_TYPE, CONTENT_MESSAGE_TYPE} = require("common/Actions.jsm");
 
 const FAKE_ID = "FAKE_ID";
 const FAKE_OPTIONS = {icon: "FAKE_ICON", title: "FAKE_TITLE"};
-const FAKE_ROWS = [{url: "1"}, {url: "2"}, {"url": "3"}];
+const FAKE_ROWS = [{url: "1.example.com"}, {url: "2.example.com"}, {"url": "3.example.com"}];
+const FAKE_URL = "2.example.com";
+const FAKE_CARD_OPTIONS = {title: "Some fake title"};
 
 describe("SectionsManager", () => {
   let globals;
@@ -183,6 +185,24 @@ describe("SectionsManager", () => {
       assert.calledWith(SectionsManager.once, SectionsManager.INIT, callback);
     });
   });
+  describe("#updateSectionCard", () => {
+    it("should emit an UPDATE_SECTION_CARD event with correct arguments", () => {
+      SectionsManager.addSection(FAKE_ID, Object.assign({}, FAKE_OPTIONS, {rows: FAKE_ROWS}));
+      const spy = sinon.spy();
+      SectionsManager.on(SectionsManager.UPDATE_SECTION_CARD, spy);
+      SectionsManager.updateSectionCard(FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS, true);
+      assert.calledOnce(spy);
+      assert.calledWith(spy, SectionsManager.UPDATE_SECTION_CARD, FAKE_ID,
+        FAKE_URL, FAKE_CARD_OPTIONS, true);
+    });
+    it("should do nothing if the section doesn't exist", () => {
+      SectionsManager.removeSection(FAKE_ID);
+      const spy = sinon.spy();
+      SectionsManager.on(SectionsManager.UPDATE_SECTION_CARD, spy);
+      SectionsManager.updateSectionCard(FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS, true);
+      assert.notCalled(spy);
+    });
+  });
 });
 
 describe("SectionsFeed", () => {
@@ -204,11 +224,12 @@ describe("SectionsFeed", () => {
     it("should bind appropriate listeners", () => {
       sinon.spy(SectionsManager, "on");
       feed.init();
-      assert.calledThrice(SectionsManager.on);
+      assert.callCount(SectionsManager.on, 4);
       for (const [event, listener] of [
         [SectionsManager.ADD_SECTION, feed.onAddSection],
         [SectionsManager.REMOVE_SECTION, feed.onRemoveSection],
-        [SectionsManager.UPDATE_SECTION, feed.onUpdateSection]
+        [SectionsManager.UPDATE_SECTION, feed.onUpdateSection],
+        [SectionsManager.UPDATE_SECTION_CARD, feed.onUpdateSectionCard]
       ]) {
         assert.calledWith(SectionsManager.on, event, listener);
       }
@@ -231,11 +252,12 @@ describe("SectionsFeed", () => {
       sinon.spy(SectionsManager, "off");
       feed.init();
       feed.uninit();
-      assert.calledThrice(SectionsManager.off);
+      assert.callCount(SectionsManager.off, 4);
       for (const [event, listener] of [
         [SectionsManager.ADD_SECTION, feed.onAddSection],
         [SectionsManager.REMOVE_SECTION, feed.onRemoveSection],
-        [SectionsManager.UPDATE_SECTION, feed.onUpdateSection]
+        [SectionsManager.UPDATE_SECTION, feed.onUpdateSection],
+        [SectionsManager.UPDATE_SECTION_CARD, feed.onUpdateSectionCard]
       ]) {
         assert.calledWith(SectionsManager.off, event, listener);
       }
@@ -271,7 +293,7 @@ describe("SectionsFeed", () => {
     });
   });
   describe("#onUpdateSection", () => {
-    it("should do nothing if no rows are provided", () => {
+    it("should do nothing if no options are provided", () => {
       feed.onUpdateSection(null, FAKE_ID, null);
       assert.notCalled(feed.store.dispatch);
     });
@@ -285,6 +307,27 @@ describe("SectionsFeed", () => {
     });
     it("should broadcast the action only if shouldBroadcast is true", () => {
       feed.onUpdateSection(null, FAKE_ID, {rows: FAKE_ROWS}, true);
+      const action = feed.store.dispatch.firstCall.args[0];
+      // Should be broadcast
+      assert.equal(action.meta.from, MAIN_MESSAGE_TYPE);
+      assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
+    });
+  });
+  describe("#onUpdateSectionCard", () => {
+    it("should do nothing if no options are provided", () => {
+      feed.onUpdateSectionCard(null, FAKE_ID, FAKE_URL, null);
+      assert.notCalled(feed.store.dispatch);
+    });
+    it("should dispatch a SECTION_UPDATE_CARD action with the correct data", () => {
+      feed.onUpdateSectionCard(null, FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS);
+      const action = feed.store.dispatch.firstCall.args[0];
+      assert.equal(action.type, "SECTION_UPDATE_CARD");
+      assert.deepEqual(action.data, {id: FAKE_ID, url: FAKE_URL, options: FAKE_CARD_OPTIONS});
+      // Should be not broadcast by default, so meta should not exist
+      assert.notOk(action.meta);
+    });
+    it("should broadcast the action only if shouldBroadcast is true", () => {
+      feed.onUpdateSectionCard(null, FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS, true);
       const action = feed.store.dispatch.firstCall.args[0];
       // Should be broadcast
       assert.equal(action.meta.from, MAIN_MESSAGE_TYPE);

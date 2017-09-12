@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "MIMEService",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
+const GREY_10 = "#F9F9FA";
+
 this.Screenshots = {
   /**
    * Convert bytes to a string using extremely fast String.fromCharCode without
@@ -41,7 +43,7 @@ this.Screenshots = {
   async getScreenshotForURL(url) {
     let screenshot = null;
     try {
-      await BackgroundPageThumbs.captureIfMissing(url);
+      await BackgroundPageThumbs.captureIfMissing(url, {backgroundColor: GREY_10});
       const imgPath = PageThumbs.getThumbnailPath(url);
 
       // OS.File object used to easily read off-thread
