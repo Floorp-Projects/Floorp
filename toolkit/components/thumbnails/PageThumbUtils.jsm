@@ -119,18 +119,16 @@ this.PageThumbUtils = {
    * height. Uses an image that exists in the window and is loaded, or falls
    * back to loading the url into a new image element.
    */
-  async createImageThumbnailCanvas(window, url, targetWidth = 448) {
+  async createImageThumbnailCanvas(window, url, targetWidth = 448, backgroundColor = this.THUMBNAIL_BG_COLOR) {
     // 224px is the width of cards in ActivityStream; capture thumbnails at 2x
     const doc = (window || Services.appShell.hiddenDOMWindow).document;
 
     let image = doc.querySelector("img");
-    if (!image || image.src !== url) {
+    if (!image) {
       image = doc.createElementNS(this.HTML_NAMESPACE, "img");
-    }
-    if (!image.complete) {
-      await new Promise(resolve => {
+      await new Promise((resolve, reject) => {
         image.onload = () => resolve();
-        image.onerror = () => { throw new Error("Image failed to load"); }
+        image.onerror = () => reject(new Error("LOAD_FAILED"));
         image.src = url;
       });
     }
@@ -139,7 +137,7 @@ this.PageThumbUtils = {
     const imageWidth = image.naturalWidth || image.width;
     const imageHeight = image.naturalHeight || image.height;
     if (imageWidth === 0 || imageHeight === 0) {
-      throw new Error("Image has zero dimension");
+      throw new Error("IMAGE_ZERO_DIMENSION");
     }
     const width = Math.min(targetWidth, imageWidth);
     const height = imageHeight * width / imageWidth;
@@ -150,8 +148,12 @@ this.PageThumbUtils = {
     // image at the bottom rather than centre it vertically, based on an
     // estimate that the focus of a tall image is most likely to be near the top
     // (e.g., the face of a person).
-    const canvas = this.createCanvas(window, width, Math.min(height, width));
-    canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+    const canvasHeight = Math.min(height, width);
+    const canvas = this.createCanvas(window, width, canvasHeight);
+    const context = canvas.getContext("2d");
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, width, canvasHeight);
+    context.drawImage(image, 0, 0, width, height);
     return canvas;
   },
 
