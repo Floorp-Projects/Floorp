@@ -550,7 +550,6 @@ struct nsCSSRendering {
                                      nscolor       aBGColor,
                                      const nsRect& aBorderRect,
                                      int32_t       aAppUnitsPerDevPixel,
-                                     int32_t       aAppUnitsPerCSSPixel,
                                      mozilla::Side aStartBevelSide = mozilla::eSideTop,
                                      nscoord       aStartBevelOffset = 0,
                                      mozilla::Side aEndBevelSide = mozilla::eSideTop,

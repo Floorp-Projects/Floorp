@@ -1684,10 +1684,10 @@ nsTableRowGroupFrame::GetBCBorderWidth(WritingMode aWM)
     lastRowFrame = rowFrame;
   }
   if (firstRowFrame) {
-    border.BStart(aWM) = nsPresContext::
-      CSSPixelsToAppUnits(firstRowFrame->GetBStartBCBorderWidth());
-    border.BEnd(aWM) = nsPresContext::
-      CSSPixelsToAppUnits(lastRowFrame->GetBEndBCBorderWidth());
+    border.BStart(aWM) = PresContext()->DevPixelsToAppUnits(
+      firstRowFrame->GetBStartBCBorderWidth());
+    border.BEnd(aWM) = PresContext()->DevPixelsToAppUnits(
+      lastRowFrame->GetBEndBCBorderWidth());
   }
   return border;
 }
