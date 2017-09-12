@@ -40,6 +40,8 @@ using namespace xpc;
 using namespace mozilla;
 using namespace mozilla::dom;
 
+#define JSSUB_CACHE_PREFIX(aType) "jssubloader/" aType
+
 class MOZ_STACK_CLASS LoadSubScriptOptions : public OptionsBase {
 public:
     explicit LoadSubScriptOptions(JSContext* cx = xpc_GetSafeJSContext(),
@@ -205,9 +207,11 @@ EvalScript(JSContext* cx,
     }
 
     if (script && (startupCache || preloadCache)) {
-        nsAutoCString cachePath;
+        bool hasNonSyntacticScope = !JS_IsGlobalObject(targetObj);
+        nsAutoCString cachePath(hasNonSyntacticScope ? JSSUB_CACHE_PREFIX("non-syntactic")
+                                                     : JSSUB_CACHE_PREFIX("global"));
         JSVersion version = JS_GetVersion(cx);
-        cachePath.AppendPrintf("jssubloader/%d", version);
+        cachePath.AppendPrintf("/%d", version);
         PathifyURI(uri, cachePath);
 
         nsCString uriStr;
