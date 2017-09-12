@@ -943,6 +943,7 @@ struct JSCompartment
     bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
     void sweepAfterMinorGC(JSTracer* trc);
+    void sweepMapAndSetIteratorsAfterMinorGC();
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
@@ -1219,6 +1220,15 @@ struct JSCompartment
     // Aggregated output used to collect JSScript hit counts when code coverage
     // is enabled.
     js::coverage::LCovCompartment lcovOutput;
+
+    bool addMapOrSetWithNurseryIterator(JS::HandleObject obj);
+
+  private:
+    /*
+     * List of Map and Set objects with nursery-allocated iterators. Such
+     * iterators need to be swept after minor GC.
+     */
+    js::Vector<JSObject*, 0, js::SystemAllocPolicy> mapsAndSetsWithNurseryIterators;
 };
 
 namespace js {

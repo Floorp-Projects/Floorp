@@ -848,6 +848,8 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
         table.sweepAfterMinorGC();
 
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
+
+    sweepMapAndSetIteratorsAfterMinorGC();
 }
 
 void
@@ -941,6 +943,27 @@ JSCompartment::sweepWatchpoints()
 {
     if (watchpointMap)
         watchpointMap->sweep();
+}
+
+bool
+JSCompartment::addMapOrSetWithNurseryIterator(HandleObject obj)
+{
+    MOZ_ASSERT(obj->is<MapObject>() || obj->is<SetObject>());
+    MOZ_ASSERT_IF(!mapsAndSetsWithNurseryIterators.empty(),
+                  mapsAndSetsWithNurseryIterators.back() != obj);
+    return mapsAndSetsWithNurseryIterators.append(obj);
+}
+
+void
+JSCompartment::sweepMapAndSetIteratorsAfterMinorGC()
+{
+    for (auto obj : mapsAndSetsWithNurseryIterators) {
+        if (obj->is<MapObject>())
+            obj->as<MapObject>().sweepNurseryIterators();
+        else
+            obj->as<SetObject>().sweepNurseryIterators();
+    }
+    mapsAndSetsWithNurseryIterators.clearAndFree();
 }
 
 namespace {
