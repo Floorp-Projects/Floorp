@@ -168,10 +168,16 @@ public class SessionTest {
         final Session session = new Session(Source.VIEW, TEST_URL);
         assertFalse(session.isSearch());
 
-        session.setSearch(true);
+        session.setSearchTerms("hello world");
         assertTrue(session.isSearch());
 
-        session.setSearch(false);
+        session.clearSearchTerms();
+        assertFalse(session.isSearch());
+
+        session.setSearchTerms(null);
+        assertFalse(session.isSearch());
+
+        session.setSearchTerms("");
         assertFalse(session.isSearch());
     }
 

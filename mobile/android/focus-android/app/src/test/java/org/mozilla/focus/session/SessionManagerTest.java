@@ -152,6 +152,28 @@ public class SessionManagerTest {
         assertTrue(sessionManager.hasSession());
     }
 
+    public void testShareIntentWithTextViaNewIntent() {
+        final SessionManager sessionManager = SessionManager.getInstance();
+
+        final Intent unsafeIntent = new Intent(Intent.ACTION_SEND);
+        unsafeIntent.putExtra(Intent.EXTRA_TEXT, "Hello World Focus");
+
+        sessionManager.handleNewIntent(RuntimeEnvironment.application, new SafeIntent(unsafeIntent));
+
+        final List<Session> sessions = sessionManager.getSessions().getValue();
+        assertNotNull(sessions);
+        assertEquals(1, sessions.size());
+
+        final Session session = sessions.get(0);
+        assertTrue(session.isSearch());
+        assertEquals("Hello World Focus", session.getSearchTerms());
+        assertEquals(TEST_URL, session.getUrl().getValue());
+        assertFalse(session.isCustomTab());
+        assertNull(session.getCustomTabConfig());
+
+        assertTrue(sessionManager.hasSession());
+    }
+
     @Test(expected = IllegalAccessError.class)
     public void getCurrentSessionThrowsExceptionIfThereIsNoSession() {
         final SessionManager sessionManager = SessionManager.getInstance();

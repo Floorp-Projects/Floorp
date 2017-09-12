@@ -84,11 +84,16 @@ public class SessionManager {
             final String dataString = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (!TextUtils.isEmpty(dataString)) {
                 final boolean isSearch = !UrlUtils.isUrl(dataString);
+
                 final String url = isSearch
                         ? UrlUtils.createSearchUrl(context, dataString)
                         : dataString;
 
-                createSession(Source.SHARE, url, isSearch);
+                if (isSearch) {
+                    createSearchSession(Source.SHARE, url, dataString);
+                } else {
+                    createSession(Source.SHARE, url);
+                }
             }
         }
     }
@@ -164,15 +169,8 @@ public class SessionManager {
         addSession(session);
     }
 
-    private void createSession(@NonNull Source source, @NonNull String url, boolean isSearch) {
+    public void createSearchSession(@NonNull Source source, @NonNull String url, String searchTerms) {
         final Session session = new Session(source, url);
-        session.setSearch(isSearch);
-        addSession(session);
-    }
-
-    public void createSession(@NonNull Source source, @NonNull String url, boolean isSearch, String searchTerms) {
-        final Session session = new Session(source, url);
-        session.setSearch(isSearch);
         session.setSearchTerms(searchTerms);
         addSession(session);
     }

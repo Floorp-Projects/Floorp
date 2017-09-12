@@ -58,6 +58,14 @@ public class SessionCallbackProxy implements IWebView.Callback {
         session.setUrl(url);
     }
 
+    @Override
+    public void onRequest(boolean isTriggeredByUserGesture) {
+        if (isTriggeredByUserGesture && session.isSearch()) {
+            // The user actively navigated away (no redirect) from the search page. Clear the
+            // search terms.
+            session.clearSearchTerms();
+        }
+    }
 
     @Override
     public void countBlockedTracker() {

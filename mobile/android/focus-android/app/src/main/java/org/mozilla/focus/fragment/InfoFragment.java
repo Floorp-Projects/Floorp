@@ -93,6 +93,9 @@ public class InfoFragment extends WebFragment {
             public void onURLChanged(String url) {}
 
             @Override
+            public void onRequest(boolean isTriggeredByUserGesture) {}
+
+            @Override
             public void onEnterFullScreen(@NonNull IWebView.FullscreenCallback callback, @Nullable View view) {}
 
             @Override

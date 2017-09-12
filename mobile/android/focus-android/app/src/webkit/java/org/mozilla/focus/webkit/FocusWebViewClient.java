@@ -5,34 +5,22 @@
 package org.mozilla.focus.webkit;
 
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslCertificate;
 import android.net.http.SslError;
 import android.os.Bundle;
-import android.support.v4.util.ArrayMap;
-import android.support.v4.view.ViewCompat;
 import android.text.TextUtils;
-import android.view.View;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import org.mozilla.focus.R;
 import org.mozilla.focus.browser.LocalizedContent;
-import org.mozilla.focus.locale.Locales;
-import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.IntentUtils;
-import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.IWebView;
-
-import java.util.Map;
 
 /**
  * WebViewClient layer that handles browser specific WebViewClient functionality, such as error pages
@@ -43,15 +31,12 @@ import java.util.Map;
     private static final String STATE_KEY_URL = "client_last_url";
     private static final String STATE_KEY_CERTIFICATE = "client_last_certificate";
 
-    private boolean errorReceived;
-    private Context context;
-
     private String restoredUrl;
     private SslCertificate restoredCertificate;
+    private boolean errorReceived;
 
     /* package */ FocusWebViewClient(Context context) {
         super(context);
-        this.context = context;
     }
 
     /**
@@ -119,7 +104,7 @@ import java.util.Map;
     }
 
     @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+    public WebResourceResponse shouldInterceptRequest(WebView view, final WebResourceRequest request) {
         // Only update the user visible URL if:
         // 1. The purported site URL has actually been requested
         // 2. And it's being loaded for the main frame (and not a fake/hidden/iframe request)
@@ -143,6 +128,10 @@ import java.util.Map;
                         }
                     }
                 });
+            }
+
+            if (callback != null) {
+                callback.onRequest(request.hasGesture());
             }
         }
 

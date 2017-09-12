@@ -6,6 +6,7 @@ package org.mozilla.focus.session;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import org.mozilla.focus.architecture.NonNullLiveData;
 import org.mozilla.focus.architecture.NonNullMutableLiveData;
@@ -29,7 +30,6 @@ public class Session {
     private String searchTerms;
     private String searchUrl;
     private boolean isRecorded;
-    private boolean isSearch;
     private boolean isBlockingEnabled;
 
     /* package */ Session(Source source, String url) {
@@ -96,6 +96,10 @@ public class Session {
         this.trackersBlocked.postValue(trackersBlocked);
     }
 
+    /* package */ void clearSearchTerms() {
+        searchTerms = null;
+    }
+
     public NonNullLiveData<Integer> getBlockedTrackers() {
         return trackersBlocked;
     }
@@ -129,11 +133,7 @@ public class Session {
     }
 
     public boolean isSearch() {
-        return isSearch;
-    }
-
-    public void setSearch(boolean isSearch) {
-        this.isSearch = isSearch;
+        return !TextUtils.isEmpty(searchTerms);
     }
 
     public void setSearchTerms(String searchTerms) {
