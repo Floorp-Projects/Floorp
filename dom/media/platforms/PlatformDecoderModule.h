@@ -59,6 +59,13 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
     bool mUse = false;
   };
 
+  struct VideoFrameRate
+  {
+    VideoFrameRate() = default;
+    explicit VideoFrameRate(float aFramerate) : mValue(aFramerate) { }
+    float mValue = 0.0f;
+  };
+
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
     : mConfig(aConfig)
@@ -97,6 +104,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
   MediaEventProducer<TrackInfo::TrackType>* mOnWaitingForKeyEvent = nullptr;
   OptionSet mOptions = OptionSet(Option::Default);
+  VideoFrameRate mRate;
 
 private:
   void Set(TaskQueue* aTaskQueue) { mTaskQueue = aTaskQueue; }
@@ -112,6 +120,7 @@ private:
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
   void Set(UseNullDecoder aUseNullDecoder) { mUseNullDecoder = aUseNullDecoder; }
   void Set(OptionSet aOptions) { mOptions = aOptions; }
+  void Set(VideoFrameRate aRate) { mRate = aRate; }
   void Set(layers::KnowsCompositor* aKnowsCompositor)
   {
     mKnowsCompositor = aKnowsCompositor;
