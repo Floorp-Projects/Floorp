@@ -489,26 +489,29 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
   RefPtr<ID3D10Multithread> mt;
   device->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
 
-  D3D11MTAutoEnter lock(mt.forget());
-
   RefPtr<ID3D11Texture2D> texture11;
-  HRESULT hr = device->CreateTexture2D(&newDesc, uploadDataPtr, getter_AddRefs(texture11));
 
-  if (FAILED(hr) || !texture11) {
-    gfxCriticalNote << "[D3D11] 2 CreateTexture2D failure Size: " << aSize
-      << "texture11: " << texture11 << " Code: " << gfx::hexa(hr);
-    return nullptr;
-  }
+  {
+    D3D11MTAutoEnter lock(mt.forget());
 
-  if (srcSurf && DeviceManagerDx::Get()->HasCrashyInitData()) {
-    D3D11_BOX box;
-    box.front = box.top = box.left = 0;
-    box.back = 1;
-    box.right = aSize.width;
-    box.bottom = aSize.height;
-    RefPtr<ID3D11DeviceContext> ctx;
-    device->GetImmediateContext(getter_AddRefs(ctx));
-    ctx->UpdateSubresource(texture11, 0, &box, sourceMap.mData, sourceMap.mStride, 0);
+    HRESULT hr = device->CreateTexture2D(&newDesc, uploadDataPtr, getter_AddRefs(texture11));
+
+    if (FAILED(hr) || !texture11) {
+      gfxCriticalNote << "[D3D11] 2 CreateTexture2D failure Size: " << aSize
+        << "texture11: " << texture11 << " Code: " << gfx::hexa(hr);
+      return nullptr;
+    }
+
+    if (srcSurf && DeviceManagerDx::Get()->HasCrashyInitData()) {
+      D3D11_BOX box;
+      box.front = box.top = box.left = 0;
+      box.back = 1;
+      box.right = aSize.width;
+      box.bottom = aSize.height;
+      RefPtr<ID3D11DeviceContext> ctx;
+      device->GetImmediateContext(getter_AddRefs(ctx));
+      ctx->UpdateSubresource(texture11, 0, &box, sourceMap.mData, sourceMap.mStride, 0);
+    }
   }
 
   if (srcSurf) {
