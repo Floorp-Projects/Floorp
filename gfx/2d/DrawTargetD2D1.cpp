@@ -238,7 +238,8 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
     mDC->FillRectangle(D2DRect(aDest), brush);
   }
 
-  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+  Rect destBounds = mTransform.TransformBounds(aDest);
+  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()), &destBounds);
 }
 
 void
@@ -1344,7 +1345,7 @@ DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern)
 }
 
 void
-DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
+DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern, const Rect* aAffectedRect /* = nullptr */)
 {
   bool patternSupported = IsPatternSupportedByD2D(aPattern);
 
@@ -1407,15 +1408,25 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
       return;
     }
 
-    // We don't need to preserve the current content of this layer as the output
+    Point outOffset;
+    // We don't need to preserve the current content of this layer if the output
     // of the blend effect should completely replace it.
-    RefPtr<ID2D1Image> tmpImage = GetImageForLayerContent(false);
+    bool shouldPreserveContent = !!aAffectedRect && !aAffectedRect->Contains(Rect(0, 0, mSize.width, mSize.height));
+    RefPtr<ID2D1Image> tmpImage = GetImageForLayerContent(shouldPreserveContent, aAffectedRect, &outOffset);
     if (!tmpImage) {
       return;
     }
 
     blendEffect->SetInput(0, tmpImage);
     blendEffect->SetInput(1, source);
+
+    if (outOffset != Point()) {
+      RefPtr<ID2D1Effect> transformEffect;
+      mDC->CreateEffect(CLSID_D2D12DAffineTransform, getter_AddRefs(transformEffect));
+      transformEffect->SetInput(0, tmpImage);
+      transformEffect->SetValue(D2D1_2DAFFINETRANSFORM_PROP_TRANSFORM_MATRIX, D2D1::Matrix3x2F::Translation(outOffset.x, outOffset.y));
+      blendEffect->SetInputEffect(0, transformEffect);
+    }
     blendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
 
     mDC->DrawImage(blendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
@@ -1507,9 +1518,13 @@ DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAli
 }
 
 already_AddRefed<ID2D1Image>
-DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent)
+DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent, const Rect* aBounds /* = nullptr */, Point* aOutOffset /* = nullptr */) 
 {
   PopAllClips();
+
+  if (aOutOffset) {
+    *aOutOffset = Point();
+  }
 
   if (!CurrentLayer().mCurrentList) {
     RefPtr<ID2D1Bitmap> tmpBitmap;
@@ -1540,10 +1555,20 @@ DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent)
         D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET,
                                 D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
                                                   D2D1_ALPHA_MODE_PREMULTIPLIED));
-      mDC->CreateBitmap(mBitmap->GetPixelSize(), nullptr, 0, &props, getter_AddRefs(tmpBitmap));
+      D2D1_SIZE_U size = mBitmap->GetPixelSize();
+      D2D1_POINT_2F offset = D2D1::Point2F();
+      if (aBounds) {
+        size.width = aBounds->width;
+        size.height = aBounds->height;
+        offset.x = -aBounds->x;
+        offset.y = -aBounds->y;
+        aOutOffset->x = aBounds->x;
+        aOutOffset->y = aBounds->y;
+      }
+      mDC->CreateBitmap(size, nullptr, 0, &props, getter_AddRefs(tmpBitmap));
       mDC->SetTransform(D2D1::IdentityMatrix());
       mDC->SetTarget(tmpBitmap);
-      mDC->DrawImage(list, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
+      mDC->DrawImage(list, offset, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
       mDC->SetTarget(CurrentTarget());
     }
 
