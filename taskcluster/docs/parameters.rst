@@ -107,12 +107,6 @@ syntax or reading a project-specific configuration file).
 ``include_nightly``
     If true, then nightly tasks are eligible for optimization.
 
-``release_history``
-   History of recent releases by platform and locale, used when generating
-   partial updates for nightly releases.
-   Suitable contents can be generated with ``mach release-history``,
-   which will print to the console by default.
-
 Morphed Set
 -----------
 
