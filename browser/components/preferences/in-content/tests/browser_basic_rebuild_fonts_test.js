@@ -6,6 +6,7 @@ registerCleanupFunction(function() {
 
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
+  await gBrowser.contentWindow.gMainPane._selectDefaultLanguageGroupPromise;
   let doc = gBrowser.contentDocument;
   var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data
   is(doc.getElementById("font.language.group").value, langGroup,
@@ -29,11 +30,11 @@ add_task(async function() {
   win.FontBuilder._enumerator = {
     _list: ["MockedFont1", "MockedFont2", "MockedFont3"],
     _defaultFont: null,
-    EnumerateFonts(lang, type, list) {
-      return this._list;
+    EnumerateFontsAsync(lang, type) {
+      return Promise.resolve(this._list);
     },
-    EnumerateAllFonts() {
-      return this._list;
+    EnumerateAllFontsAsync() {
+      return Promise.resolve(this._list);
     },
     getDefaultFont() { return this._defaultFont; },
     getStandardFamilyName(name) { return name; },
@@ -47,13 +48,23 @@ add_task(async function() {
   let armenian = "x-armn";
   let western = "x-western";
 
+  // Await rebuilding of the font lists, which happens asynchronously in
+  // gFontsDialog._selectLanguageGroup.  Testing code needs to call this
+  // function and await its resolution after changing langGroupElement's value
+  // (or doing anything else that triggers a call to _selectLanguageGroup).
+  function fontListsRebuilt() {
+    return win.gFontsDialog._selectLanguageGroupPromise;
+  }
+
   langGroupElement.value = armenian;
+  await fontListsRebuilt();
   selectLangsField.value = armenian;
   is(serifField.value, "", "Font family should not be set.");
 
   let armenianSerifElement = doc.getElementById("font.name.serif.x-armn");
 
   langGroupElement.value = western;
+  await fontListsRebuilt();
   selectLangsField.value = western;
 
   // Simulate a font backend supporting language-specific enumeration.
@@ -63,16 +74,19 @@ add_task(async function() {
   win.FontBuilder._enumerator._list = ["MockedFont2"];
 
   langGroupElement.value = armenian;
+  await fontListsRebuilt();
   selectLangsField.value = armenian;
   is(serifField.value, "", "Font family should still be empty for indicating using 'default' font.");
 
   langGroupElement.value = western;
+  await fontListsRebuilt();
   selectLangsField.value = western;
 
   // Simulate a system that has no fonts for the specified language.
   win.FontBuilder._enumerator._list = [];
 
   langGroupElement.value = armenian;
+  await fontListsRebuilt();
   selectLangsField.value = armenian;
   is(serifField.value, "", "Font family should not be set.");
 
@@ -82,6 +96,7 @@ add_task(async function() {
   win.FontBuilder._enumerator._list = ["MockedFont1", "MockedFont2", "MockedFont3"];
   win.FontBuilder._enumerator._defaultFont = "MockedFont3";
   langGroupElement.value = armenian;
+  await fontListsRebuilt();
   selectLangsField.value = armenian;
   is(serifField.value, "", "Font family should be empty even if there is a default font.");
 
@@ -90,10 +105,12 @@ add_task(async function() {
   is(serifField.value, "MockedFont2", "Font family should be \"MockedFont2\" for now.");
 
   langGroupElement.value = western;
+  await fontListsRebuilt();
   selectLangsField.value = western;
   is(serifField.value, "", "Font family of other language should not be set.");
 
   langGroupElement.value = armenian;
+  await fontListsRebuilt();
   selectLangsField.value = armenian;
   is(serifField.value, "MockedFont2", "Font family should not be changed even after switching the language.");
 
@@ -103,6 +120,7 @@ add_task(async function() {
   win.FontBuilder._enumerator._allFonts = ["MockedFont1", "MockedFont3"];
   serifField.removeAllItems(); // This will cause rebuilding the font list from available fonts.
   langGroupElement.value = armenian;
+  await fontListsRebuilt();
   selectLangsField.value = armenian;
   is(serifField.value, "", "Font family should become empty due to the font uninstalled.");
 
