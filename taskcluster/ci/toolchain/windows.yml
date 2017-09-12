@@ -94,6 +94,54 @@ win64-clang-tidy:
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
 
+win64-rust-1.19:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(rust)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+        env:
+          UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+          '--channel', '1.19.0',
+          '--host', 'x86_64-pc-windows-msvc',
+          '--target', 'x86_64-pc-windows-msvc',
+        ]
+        toolchain-alias: win64-rust
+        toolchain-artifact: public/build/rustc.tar.bz2
+
+win32-rust-1.19:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW32(rust)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+        env:
+          UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+          '--channel', '1.19.0',
+          '--host', 'i686-pc-windows-msvc',
+          '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-alias: win32-rust
+        toolchain-artifact: public/build/rustc.tar.bz2
+
 win64-sccache:
     description: "sccache toolchain build"
     treeherder:
@@ -112,6 +160,8 @@ win64-sccache:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/sccache2.tar.bz2
+    toolchains:
+        - win64-rust-1.19
 
 win32-gn:
     description: "gn toolchain build"
