@@ -68,26 +68,59 @@ namespace detail {
  * // Get the TLS value
  * int value = tlsKey.get();
  */
-#ifndef XP_WIN
+
+// Integral types narrower than void* must be extended to avoid
+// warnings from valgrind on some platforms.  This helper type
+// achieves that without penalizing the common case of ThreadLocals
+// instantiated using a pointer type.
+template<typename S>
+struct Helper
+{
+  typedef uintptr_t Type;
+};
+
+template<typename S>
+struct Helper<S *>
+{
+  typedef S *Type;
+};
+
+#ifdef XP_WIN
+/* Despite not being used for MOZ_THREAD_LOCAL, we expose an implementation for
+ * Windows for cases where it's not desirable to use thread_local */
 template<typename T>
 class ThreadLocalKeyStorage
 {
-  // Integral types narrower than void* must be extended to avoid
-  // warnings from valgrind on some platforms.  This helper type
-  // achieves that without penalizing the common case of ThreadLocals
-  // instantiated using a pointer type.
-  template<typename S>
-  struct Helper
-  {
-    typedef uintptr_t Type;
-  };
+public:
+  ThreadLocalKeyStorage()
+    : mKey(TLS_OUT_OF_INDEXES)
+  {}
 
-  template<typename S>
-  struct Helper<S *>
-  {
-    typedef S *Type;
-  };
+  inline bool initialized() const {
+    return mKey != TLS_OUT_OF_INDEXES;
+  }
 
+  inline void init() {
+    mKey = TlsAlloc();
+  }
+
+  inline T get() const {
+    void* h = TlsGetValue(mKey);
+    return static_cast<T>(reinterpret_cast<typename Helper<T>::Type>(h));
+  }
+
+  inline bool set(const T aValue) {
+    void* h = reinterpret_cast<void*>(static_cast<typename Helper<T>::Type>(aValue));
+    return TlsSetValue(mKey, h);
+  }
+
+private:
+  unsigned long mKey;
+};
+#else
+template<typename T>
+class ThreadLocalKeyStorage
+{
 public:
   ThreadLocalKeyStorage()
     : mKey(0), mInited(false)
