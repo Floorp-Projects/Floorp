@@ -6,8 +6,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 function GeckoViewStartup() {
 }
@@ -17,59 +19,6 @@ GeckoViewStartup.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  addLazyGetter: function({name, script, service, module,
-                           observers, ppmm, mm, init, once}) {
-    if (script) {
-      XPCOMUtils.defineLazyScriptGetter(this, name, script);
-    } else if (module) {
-      XPCOMUtils.defineLazyGetter(this, name, _ => {
-        let sandbox = {};
-        Cu.import(module, sandbox);
-        if (init) {
-          init.call(this, sandbox[name]);
-        }
-        return sandbox[name];
-      });
-    } else if (service) {
-      XPCOMUtils.defineLazyGetter(this, name, _ =>
-        Cc[service].getService(Ci.nsISupports).wrappedJSObject);
-    }
-
-    if (observers) {
-      let observer = (subject, topic, data) => {
-        Services.obs.removeObserver(observer, topic);
-        if (!once) {
-          Services.obs.addObserver(this[name], topic);
-        }
-        this[name].observe(subject, topic, data); // Explicitly notify new observer
-      };
-      observers.forEach(topic => Services.obs.addObserver(observer, topic));
-    }
-
-    if (ppmm || mm) {
-      let target = ppmm ? Services.ppmm : Services.mm;
-      let listener = msg => {
-        target.removeMessageListener(msg.name, listener);
-        if (!once) {
-          target.addMessageListener(msg.name, this[name]);
-        }
-        this[name].receiveMessage(msg);
-      };
-      (ppmm || mm).forEach(msg => target.addMessageListener(msg, listener));
-    }
-  },
-
-  addLazyEventListener: function({name, target, events, options}) {
-    let listener = event => {
-      if (!options || !options.once) {
-        target.removeEventListener(event.type, listener, options);
-        target.addEventListener(event.type, this[name], options);
-      }
-      this[name].handleEvent(event);
-    };
-    events.forEach(event => target.addEventListener(event, listener, options));
-  },
-
   /* ----------  nsIObserver  ---------- */
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
@@ -78,8 +27,7 @@ GeckoViewStartup.prototype = {
         Services.obs.addObserver(this, "chrome-document-global-created");
         Services.obs.addObserver(this, "content-document-global-created");
 
-        this.addLazyGetter({
-          name: "GeckoViewPermission",
+        GeckoViewUtils.addLazyGetter(this, "GeckoViewPermission", {
           service: "@mozilla.org/content-permission/prompt;1",
           observers: [
             "getUserMedia:ask-device-permission",
@@ -90,8 +38,7 @@ GeckoViewStartup.prototype = {
 
         if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
           // Content process only.
-          this.addLazyGetter({
-            name: "GeckoViewPrompt",
+          GeckoViewUtils.addLazyGetter(this, "GeckoViewPrompt", {
             service: "@mozilla.org/prompter;1",
           });
         }
@@ -101,8 +48,7 @@ GeckoViewStartup.prototype = {
       case "profile-after-change": {
         // Parent process only.
         // ContentPrefServiceParent is needed for e10s file picker.
-        this.addLazyGetter({
-          name: "ContentPrefServiceParent",
+        GeckoViewUtils.addLazyGetter(this, "ContentPrefServiceParent", {
           module: "resource://gre/modules/ContentPrefServiceParent.jsm",
           init: cpsp => cpsp.alwaysInit(),
           ppmm: [
@@ -112,8 +58,7 @@ GeckoViewStartup.prototype = {
           ],
         });
 
-        this.addLazyGetter({
-          name: "GeckoViewPrompt",
+        GeckoViewUtils.addLazyGetter(this, "GeckoViewPrompt", {
           service: "@mozilla.org/prompter;1",
           mm: [
             "GeckoView:Prompt",
@@ -124,22 +69,14 @@ GeckoViewStartup.prototype = {
 
       case "chrome-document-global-created":
       case "content-document-global-created": {
-        let win = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIDocShellTreeItem)
-                          .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindow);
+        let win = GeckoViewUtils.getChromeWindow(aSubject);
         if (win !== aSubject) {
           // Only attach to top-level windows.
           return;
         }
 
-        this.addLazyEventListener({
-          name: "GeckoViewPrompt",
-          target: win,
-          events: [
-            "click",
-            "contextmenu",
-          ],
+        GeckoViewUtils.addLazyEventListener(win, ["click", "contextmenu"], {
+          handler: _ => this.GeckoViewPrompt,
           options: {
             capture: false,
             mozSystemGroup: true,
