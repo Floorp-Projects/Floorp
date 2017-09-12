@@ -30,7 +30,7 @@
   color: currentColor;
 }
 
-groupbox + groupbox {
+prefpane > groupbox + groupbox {
   margin-top: 16px;
 }
 
@@ -62,16 +62,8 @@ label {
   margin-bottom: 0 !important;
 }
 
-description > checkbox {
-  vertical-align: bottom;
-}
-
 .indent {
   margin-inline-start: 28px !important;
-}
-
-separator.thin:not([orient="vertical"]) {
-  height: 8px;
 }
 
 .checkbox-check {
@@ -80,15 +72,20 @@ separator.thin:not([orient="vertical"]) {
   height: 20px;
 }
 
+.tail-with-learn-more {
+  margin-inline-start: 0px;
+  margin-inline-end: 10px;
+}
+
 .learnMore {
-  margin-inline-start: 10px;
+  margin-inline-start: 0px;
   font-weight: normal;
   white-space: nowrap;
 }
 
 .accessory-button {
-  min-width: 145px;
-  margin: 2px 0;
+  min-width: 150px;
+  margin: 4px 0;
 }
 
 #searchInput {
@@ -190,7 +187,7 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #updateBox {
-  margin-top: 8px;
+  margin-top: 4px;
   margin-bottom: 32px;
 }
 
@@ -208,7 +205,8 @@ separator.thin:not([orient="vertical"]) {
   margin-inline-start: 6px !important;
 }
 
-#updateRadioGroup > radio {
+#updateRadioGroup > radio,
+#browserStartupPage > radio {
   height: 30px;
   margin: 2px 0;
 }
@@ -249,11 +247,6 @@ separator.thin:not([orient="vertical"]) {
 }
 
 /* Search Pane */
-
-#defaultEngine {
-  margin-top: 2px;
-  margin-bottom: 6px;
-}
 
 #engineList {
   margin: 2px 0 5px 0;
@@ -487,9 +480,13 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #fxaSyncComputerName {
-  margin-top: 3px;
   margin-inline-start: 0;
-  margin-bottom: 0;
+  margin-bottom: 4px;
+}
+
+#fxaChangeDeviceName {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 #tosPP-small-ToS {
@@ -698,6 +695,11 @@ separator.thin:not([orient="vertical"]) {
 
 .visually-hidden {
   visibility: hidden;
+}
+
+menulist {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left {
