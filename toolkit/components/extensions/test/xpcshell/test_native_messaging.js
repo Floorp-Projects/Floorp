@@ -37,9 +37,9 @@ globalDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
 let dirProvider = {
   getFile(property) {
-    if (property == "XREUserNativeMessaging") {
+    if (property == "XREUserNativeManifests") {
       return userDir.clone();
-    } else if (property == "XRESysNativeMessaging") {
+    } else if (property == "XRESysNativeManifests") {
       return globalDir.clone();
     }
     return null;
