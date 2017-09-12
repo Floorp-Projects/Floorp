@@ -11,3 +11,4 @@ fuzzy-if(skiaContent,1,5) == bug559996.html bug559996-ref.html
 == bug592366-1.xhtml bug592366-ref.xhtml
 == bug592366-2.xhtml bug592366-ref.xhtml
 == bug798068.xhtml bug798068-ref.xhtml
+== bug1389406.xml bug1389406-ref.xml
