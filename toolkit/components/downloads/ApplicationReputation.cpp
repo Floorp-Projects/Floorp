@@ -670,6 +670,9 @@ static const char16_t* const kBinaryFileExtensions[] = {
     u".wsh", // Windows script
     u".xar", // MS Excel
     u".xbap", // XAML Browser Application
+    u".xhtml",
+    u".xhtm",
+    u".xht",
     u".xip", // Mac archive
     //u".xlsm", // MS Excel
     //u".xlsx", // MS Excel
