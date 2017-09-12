@@ -545,10 +545,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   color: inherit;
 }
 
-.search-go-container {
-  padding: 2px 2px;
-}
-
 #urlbar-search-footer {
   border-top: 1px solid var(--panel-separator-color);
   background-color: var(--arrowpanel-dimmed);
