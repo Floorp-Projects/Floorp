@@ -1202,7 +1202,7 @@ AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
     for (size_t i = 0; i < nproperties; i++) {
         propid = properties[i].id;
         value = properties[i].value;
-        if (!NativeDefineProperty(cx, obj, propid, value, nullptr, nullptr, JSPROP_ENUMERATE))
+        if (!NativeDefineDataProperty(cx, obj, propid, value, JSPROP_ENUMERATE))
             return false;
     }
 
