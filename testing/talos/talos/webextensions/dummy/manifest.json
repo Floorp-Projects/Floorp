@@ -15,5 +15,6 @@
     "webRequestBlocking"
   ],
   "background": {"scripts": ["background.js"]},
+  "browser_action": {},
   "page_action": {}
 }
