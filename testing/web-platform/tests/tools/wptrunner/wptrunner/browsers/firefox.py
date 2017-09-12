@@ -152,7 +152,7 @@ class FirefoxBrowser(Browser):
         self.certutil_binary = certutil_binary
         self.e10s = e10s
         self.binary_args = binary_args
-        if self.symbols_path and stackfix_dir:
+        if stackfix_dir:
             self.stack_fixer = get_stack_fixer_function(stackfix_dir,
                                                         self.symbols_path)
         else:
