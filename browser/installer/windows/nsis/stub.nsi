@@ -748,12 +748,12 @@ Function createInstall
 
   ; The header string may need more than half the width of the window, but it's
   ; currently not close to needing multiple lines in any localization.
-  ${NSD_CreateLabelCenter} 0% ${NOW_INSTALLING_TOP_DU} 100% 47u "$(STUB_INSTALLING_LABEL)"
+  ${NSD_CreateLabelCenter} 0% ${NOW_INSTALLING_TOP_DU} 100% 47u "$(STUB_INSTALLING_LABEL2)"
   Pop $0
   SendMessage $0 ${WM_SETFONT} $FontInstalling 0
   SetCtlColors $0 ${INSTALL_BLURB_TEXT_COLOR} transparent
 
-  ${NSD_CreateLabelCenter} 0% ${INSTALL_BLURB_TOP_DU} 100% 60u "$(STUB_BLURB1)"
+  ${NSD_CreateLabelCenter} 0% ${INSTALL_BLURB_TOP_DU} 100% 60u "$(STUB_BLURB_FIRST1)"
   Pop $LabelBlurb
   SendMessage $LabelBlurb ${WM_SETFONT} $FontBlurb 0
   SetCtlColors $LabelBlurb ${INSTALL_BLURB_TEXT_COLOR} transparent
@@ -896,11 +896,11 @@ Function NextBlurb
   IntOp $CurrentBlurbIdx $CurrentBlurbIdx % 3
 
   ${If} $CurrentBlurbIdx == "0"
-    StrCpy $0 "$(STUB_BLURB1)"
+    StrCpy $0 "$(STUB_BLURB_FIRST1)"
   ${ElseIf} $CurrentBlurbIdx == "1"
-    StrCpy $0 "$(STUB_BLURB2)"
+    StrCpy $0 "$(STUB_BLURB_SECOND1)"
   ${ElseIf} $CurrentBlurbIdx == "2"
-    StrCpy $0 "$(STUB_BLURB3)"
+    StrCpy $0 "$(STUB_BLURB_THIRD1)"
   ${EndIf}
 
   SendMessage $LabelBlurb ${WM_SETTEXT} 0 "STR:$0"
