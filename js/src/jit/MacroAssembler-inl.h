@@ -301,18 +301,18 @@ MacroAssembler::enterExitFrame(Register cxreg, Register scratch, const VMFunctio
 }
 
 void
-MacroAssembler::enterFakeExitFrame(Register cxreg, Register scratch, enum ExitFrameTokenValues token)
+MacroAssembler::enterFakeExitFrame(Register cxreg, Register scratch, ExitFrameToken token)
 {
     linkExitFrame(cxreg, scratch);
-    Push(Imm32(token));
+    Push(Imm32(int32_t(token)));
     Push(ImmPtr(nullptr));
 }
 
 void
 MacroAssembler::enterFakeExitFrameForNative(Register cxreg, Register scratch, bool isConstructing)
 {
-    enterFakeExitFrame(cxreg, scratch, isConstructing ? ConstructNativeExitFrameLayoutToken
-                                                      : CallNativeExitFrameLayoutToken);
+    enterFakeExitFrame(cxreg, scratch, isConstructing ? ExitFrameToken::ConstructNative
+                                                      : ExitFrameToken::CallNative);
 }
 
 void

@@ -189,7 +189,7 @@ namespace js {
 namespace jit {
 
 // Defined in JitFrames.h
-enum ExitFrameTokenValues;
+enum class ExitFrameToken : uint8_t;
 
 class AutoSaveLiveRegisters;
 
@@ -699,7 +699,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Push an exit frame token to identify which fake exit frame this footer
     // corresponds to.
-    inline void enterFakeExitFrame(Register cxreg, Register scratch, enum ExitFrameTokenValues token);
+    inline void enterFakeExitFrame(Register cxreg, Register scratch, ExitFrameToken token);
 
     // Push an exit frame token for a native call.
     inline void enterFakeExitFrameForNative(Register cxreg, Register scratch, bool isConstructing);
