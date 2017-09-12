@@ -4,6 +4,7 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.setClipboardPlainTextOnlyPref(false);
 browserElementTestHelpers.addPermission();
+browserElementTestHelpers.allowTopLevelDataURINavigation();
 
 var audioUrl = 'http://mochi.test:8888/tests/dom/browser-element/mochitest/audio.ogg';
 var videoUrl = 'http://mochi.test:8888/tests/dom/browser-element/mochitest/short-video.ogv';
