@@ -29,10 +29,6 @@ namespace detail {
 #  endif
 #endif
 
-#if defined(HAVE_THREAD_TLS_KEYWORD) || defined(XP_WIN) || defined(MACOSX_HAS_THREAD_LOCAL)
-#define MOZ_HAS_THREAD_LOCAL
-#endif
-
 /*
  * Thread Local Storage helpers.
  *
@@ -72,12 +68,10 @@ namespace detail {
  * // Get the TLS value
  * int value = tlsKey.get();
  */
+#ifndef XP_WIN
 template<typename T>
-class ThreadLocal
+class ThreadLocalKeyStorage
 {
-#ifndef MOZ_HAS_THREAD_LOCAL
-  typedef pthread_key_t key_t;
-
   // Integral types narrower than void* must be extended to avoid
   // warnings from valgrind on some platforms.  This helper type
   // achieves that without penalizing the common case of ThreadLocals
@@ -93,26 +87,68 @@ class ThreadLocal
   {
     typedef S *Type;
   };
+
+public:
+  ThreadLocalKeyStorage()
+    : mKey(0), mInited(false)
+  {}
+
+  inline bool initialized() const {
+    return mInited;
+  }
+
+  inline void init() {
+    mInited = !pthread_key_create(&mKey, nullptr);
+  }
+
+  inline T get() const {
+    void* h = pthread_getspecific(mKey);
+    return static_cast<T>(reinterpret_cast<typename Helper<T>::Type>(h));
+  }
+
+  inline bool set(const T aValue) {
+    void* h = reinterpret_cast<void*>(static_cast<typename Helper<T>::Type>(aValue));
+    return !pthread_setspecific(mKey, h);
+  }
+
+private:
+  pthread_key_t mKey;
+  bool mInited;
+};
 #endif
 
+template<typename T>
+class ThreadLocalNativeStorage
+{
 public:
   // __thread does not allow non-trivial constructors, but we can
   // instead rely on zero-initialization.
-#ifndef MOZ_HAS_THREAD_LOCAL
-  ThreadLocal()
-    : mKey(0), mInited(false)
-  {}
-#endif
-
-  bool initialized() const {
-#ifdef MOZ_HAS_THREAD_LOCAL
+  inline bool initialized() const {
     return true;
-#else
-    return mInited;
-#endif
   }
 
+  inline void init() {
+  }
+
+  inline T get() const {
+    return mValue;
+  }
+
+  inline bool set(const T aValue) {
+    mValue = aValue;
+    return true;
+  }
+
+private:
+  T mValue;
+};
+
+template<typename T, template <typename U> class Storage>
+class ThreadLocal: public Storage<T>
+{
+public:
   MOZ_MUST_USE inline bool init();
+
   void infallibleInit() {
     MOZ_RELEASE_ASSERT(init(), "Infallible TLS initialization failed");
   }
@@ -120,19 +156,11 @@ public:
   inline T get() const;
 
   inline void set(const T aValue);
-
-private:
-#ifdef MOZ_HAS_THREAD_LOCAL
-  T mValue;
-#else
-  key_t mKey;
-  bool mInited;
-#endif
 };
 
-template<typename T>
+template<typename T, template <typename U> class Storage>
 inline bool
-ThreadLocal<T>::init()
+ThreadLocal<T, Storage>::init()
 {
   static_assert(mozilla::IsPointer<T>::value || mozilla::IsIntegral<T>::value,
                 "mozilla::ThreadLocal must be used with a pointer or "
@@ -141,54 +169,37 @@ ThreadLocal<T>::init()
                 "mozilla::ThreadLocal can't be used for types larger than "
                 "a pointer");
 
-#ifdef MOZ_HAS_THREAD_LOCAL
-  return true;
-#else
-  if (!initialized()) {
-    mInited = !pthread_key_create(&mKey, nullptr);
+  if (!Storage<T>::initialized()) {
+    Storage<T>::init();
   }
-  return mInited;
-#endif
+  return Storage<T>::initialized();
 }
 
-template<typename T>
+template<typename T, template <typename U> class Storage>
 inline T
-ThreadLocal<T>::get() const
+ThreadLocal<T, Storage>::get() const
 {
-#ifdef MOZ_HAS_THREAD_LOCAL
-  return mValue;
-#else
-  MOZ_ASSERT(initialized());
-  void* h;
-  h = pthread_getspecific(mKey);
-  return static_cast<T>(reinterpret_cast<typename Helper<T>::Type>(h));
-#endif
+  MOZ_ASSERT(Storage<T>::initialized());
+  return Storage<T>::get();
 }
 
-template<typename T>
+template<typename T, template <typename U> class Storage>
 inline void
-ThreadLocal<T>::set(const T aValue)
+ThreadLocal<T, Storage>::set(const T aValue)
 {
-#ifdef MOZ_HAS_THREAD_LOCAL
-  mValue = aValue;
-#else
-  MOZ_ASSERT(initialized());
-  void* h = reinterpret_cast<void*>(static_cast<typename Helper<T>::Type>(aValue));
-  bool succeeded = !pthread_setspecific(mKey, h);
+  MOZ_ASSERT(Storage<T>::initialized());
+  bool succeeded = Storage<T>::set(aValue);
   if (!succeeded) {
     MOZ_CRASH();
   }
-#endif
 }
 
-#ifdef MOZ_HAS_THREAD_LOCAL
 #if defined(XP_WIN) || defined(MACOSX_HAS_THREAD_LOCAL)
-#define MOZ_THREAD_LOCAL(TYPE) thread_local mozilla::detail::ThreadLocal<TYPE>
+#define MOZ_THREAD_LOCAL(TYPE) thread_local mozilla::detail::ThreadLocal<TYPE, mozilla::detail::ThreadLocalNativeStorage>
+#elif defined(HAVE_THREAD_TLS_KEYWORD)
+#define MOZ_THREAD_LOCAL(TYPE) __thread mozilla::detail::ThreadLocal<TYPE, mozilla::detail::ThreadLocalNativeStorage>
 #else
-#define MOZ_THREAD_LOCAL(TYPE) __thread mozilla::detail::ThreadLocal<TYPE>
-#endif
-#else
-#define MOZ_THREAD_LOCAL(TYPE) mozilla::detail::ThreadLocal<TYPE>
+#define MOZ_THREAD_LOCAL(TYPE) mozilla::detail::ThreadLocal<TYPE, mozilla::detail::ThreadLocalKeyStorage>
 #endif
 
 } // namespace detail
