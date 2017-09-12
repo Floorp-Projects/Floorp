@@ -2290,7 +2290,7 @@ CCGraphBuilder::DoneAddingRoots()
 MOZ_NEVER_INLINE bool
 CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
 {
-  const intptr_t kNumNodesBetweenTimeChecks = 1000;
+  const intptr_t kNumNodesBetweenTimeChecks = 500;
   const intptr_t kStep = SliceBudget::CounterReset / kNumNodesBetweenTimeChecks;
 
   MOZ_ASSERT(mCurrNode);

@@ -694,9 +694,8 @@ class WindowBase {
    *        @readonly
    */
   get xulWindow() {
-    return this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDocShell)
-               .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+    return this.window.document.docShell.treeOwner
+               .QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIXULWindow);
   }
 
@@ -1207,8 +1206,6 @@ class WindowTrackerBase extends EventEmitter {
     });
 
     this._windowIds = new DefaultWeakMap(window => {
-      window.QueryInterface(Ci.nsIInterfaceRequestor);
-
       return getWinUtils(window).outerWindowID;
     });
   }

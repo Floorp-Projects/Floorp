@@ -44,6 +44,7 @@ const {
   defineLazyGetter,
   getMessageManager,
   getUniqueId,
+  getWinUtils,
   withHandlingUserInput,
 } = ExtensionUtils;
 
@@ -684,8 +685,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   callAsyncFunction(args, callback, requireUserInput) {
     if (requireUserInput) {
       let context = this.childApiManager.context;
-      let winUtils = context.contentWindow.getInterface(Ci.nsIDOMWindowUtils);
-      if (!winUtils.isHandlingUserInput) {
+      if (!getWinUtils(context.contentWindow).isHandlingUserInput) {
         let err = new context.cloneScope.Error(`${this.path} may only be called from a user input handler`);
         return context.wrapPromise(Promise.reject(err), callback);
       }

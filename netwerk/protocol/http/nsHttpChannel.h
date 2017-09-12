@@ -722,7 +722,8 @@ private:
     // with the cache fetch, and proceeds to do so.
     nsresult MaybeRaceCacheWithNetwork();
 
-    nsresult TriggerNetwork(int32_t aTimeout);
+    nsresult TriggerNetworkWithDelay(uint32_t aDelay);
+    nsresult TriggerNetwork();
     void CancelNetworkRequest(nsresult aStatus);
     // Timer used to delay the network request, or to trigger the network
     // request if retrieving the cache entry takes too long.

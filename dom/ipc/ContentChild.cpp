@@ -2310,6 +2310,8 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
   }
 
 #ifndef NS_FREE_PERMANENT_DATA
+  CompositorManagerChild::Shutdown();
+
   // In release builds, there's no point in the content process
   // going through the full XPCOM shutdown path, because it doesn't
   // keep persistent state.

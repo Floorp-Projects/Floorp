@@ -37,7 +37,6 @@ this.EXPORTED_SYMBOLS = [
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
