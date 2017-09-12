@@ -1119,6 +1119,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (shouldSandboxCurrentProcess) {
     if (mSandboxBroker.LaunchApp(cmdLine.program().c_str(),
                                  cmdLine.command_line_string().c_str(),
+                                 mProcessType,
                                  mEnableSandboxLogging,
                                  &process)) {
       EnvironmentLog("MOZ_PROCESS_LOG").print(
