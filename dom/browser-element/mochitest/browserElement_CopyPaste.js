@@ -9,6 +9,7 @@ SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.setupAccessibleCaretPref();
 browserElementTestHelpers.addPermission();
+browserElementTestHelpers.allowTopLevelDataURINavigation();
 const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.jsm');
 
 var gTextarea = null;
