@@ -11,24 +11,24 @@
      - collects info on any counters while test runs
      - waits for a 'dump' from the browser
 """
+from __future__ import absolute_import, print_function
 
 import os
-import sys
 import platform
-import results
-import subprocess
-import utils
-import mozcrash
-import talosconfig
 import shutil
+import subprocess
+import sys
+
+import mozcrash
 import mozfile
-
+import results
+import talosconfig
+import utils
 from mozlog import get_proxy_logger
-
-from talos.utils import TalosCrash, TalosError, TalosRegression
-from talos.talos_process import run_browser
-from talos.ffsetup import FFSetup
 from talos.cmanager import CounterManagement
+from talos.ffsetup import FFSetup
+from talos.talos_process import run_browser
+from talos.utils import TalosCrash, TalosError, TalosRegression
 
 LOG = get_proxy_logger()
 

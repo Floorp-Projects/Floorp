@@ -1152,7 +1152,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   , mHasPatternAttribute(false)
 {
   // If size is above 512, mozjemalloc allocates 1kB, see
-  // memory/mozjemalloc/jemalloc.c
+  // memory/build/mozjemalloc.cpp
   static_assert(sizeof(HTMLInputElement) <= 512,
                 "Keep the size of HTMLInputElement under 512 to avoid "
                 "performance regression!");

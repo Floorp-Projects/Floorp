@@ -853,9 +853,19 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       dirtyRegion = &tmpDirtyRegion;
     }
 
+    gfxContextMatrixAutoSaveRestore autoSR(target);
+
+    // 'target' is currently scaled such that its user space units are CSS
+    // pixels (SVG user space units). But PaintFilteredFrame expects it to be
+    // scaled in such a way that its user space units are device pixels. So we
+    // have to adjust the scale.
+    gfxMatrix reverseScaleMatrix = nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame);
+    DebugOnly<bool> invertible = reverseScaleMatrix.Invert();
+    target->SetMatrix(reverseScaleMatrix * aTransform *
+                      target->CurrentMatrix());
+
     SVGPaintCallback paintCallback;
-    nsFilterInstance::PaintFilteredFrame(aFrame, target->GetDrawTarget(),
-                                         aTransform, &paintCallback,
+    nsFilterInstance::PaintFilteredFrame(aFrame, target, &paintCallback,
                                          dirtyRegion, aImgParams);
   } else {
      svgFrame->PaintSVG(*target, aTransform, aImgParams, aDirtyRect);

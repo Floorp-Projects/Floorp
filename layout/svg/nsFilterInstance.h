@@ -84,8 +84,7 @@ public:
    *   border box).
    */
   static void PaintFilteredFrame(nsIFrame *aFilteredFrame,
-                                 DrawTarget* aDrawTarget,
-                                 const gfxMatrix& aTransform,
+                                 gfxContext* aCtx,
                                  nsSVGFilterPaintCallback *aPaintCallback,
                                  const nsRegion* aDirtyArea,
                                  imgDrawingParams& aImgParams);
@@ -168,7 +167,7 @@ private:
    * by passing it as the aPostFilterDirtyRegion argument to the
    * nsFilterInstance constructor.
    */
-  void Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams);
+  void Render(gfxContext* aCtx, imgDrawingParams& aImgParams);
 
   const FilterDescription& ExtractDescriptionAndAdditionalImages(nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages)
   {
