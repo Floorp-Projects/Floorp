@@ -76,10 +76,10 @@ add_task(function* () {
  */
 function* checkElementIsInViewport(selector, expected, testActor) {
   let isInViewport = yield testActor.eval(`
-    let node = content.document.querySelector("${selector}");
+    let node = document.querySelector("${selector}");
     let rect = node.getBoundingClientRect();
     rect.bottom >= 0 && rect.right >= 0 &&
-      rect.top <= content.innerHeight && rect.left <= content.innerWidth;
+      rect.top <= window.innerHeight && rect.left <= window.innerWidth;
   `);
 
   is(isInViewport, expected,
