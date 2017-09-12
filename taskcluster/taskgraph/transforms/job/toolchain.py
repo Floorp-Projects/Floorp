@@ -29,7 +29,9 @@ TOOLCHAIN_INDEX = 'gecko.cache.level-{level}.toolchains.v1.{name}.{digest}'
 toolchain_run_schema = Schema({
     Required('using'): 'toolchain-script',
 
-    # the script (in taskcluster/scripts/misc) to run
+    # The script (in taskcluster/scripts/misc) to run.
+    # Python scripts are invoked with `mach python` so vendored libraries
+    # are available.
     Required('script'): basestring,
 
     # If not false, tooltool downloads will be enabled via relengAPIProxy
@@ -120,6 +122,12 @@ def docker_worker_toolchain(config, job, taskdesc):
         internal = run['tooltool-downloads'] == 'internal'
         docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
+    # Use `mach` to invoke python scripts so in-tree libraries are available.
+    if run['script'].endswith('.py'):
+        wrapper = 'workspace/build/src/mach python '
+    else:
+        wrapper = ''
+
     worker['command'] = [
         '/builds/worker/bin/run-task',
         '--vcs-checkout=/builds/worker/workspace/build/src',
@@ -128,8 +136,8 @@ def docker_worker_toolchain(config, job, taskdesc):
         'bash',
         '-c',
         'cd /builds/worker && '
-        './workspace/build/src/taskcluster/scripts/misc/{}'.format(
-            run['script'])
+        '{}workspace/build/src/taskcluster/scripts/misc/{}'.format(
+            wrapper, run['script'])
     ]
 
     attributes = taskdesc.setdefault('attributes', {})
@@ -171,6 +179,10 @@ def windows_toolchain(config, job, taskdesc):
     hg_command.extend(['--revision', '%GECKO_HEAD_REV%'])
     hg_command.append('%GECKO_HEAD_REPOSITORY%')
     hg_command.append('.\\build\\src')
+
+    # Use `mach` to invoke python scripts so in-tree libraries are available.
+    if run['script'].endswith('.py'):
+        raise NotImplementedError("Python scripts don't work on Windows")
 
     bash = r'c:\mozilla-build\msys\bin\bash'
     worker['command'] = [
