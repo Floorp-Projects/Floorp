@@ -41,7 +41,6 @@ contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
 contract @mozilla.org/embedcomp/prompt-service;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
 component {80dae1e9-e0d2-4974-915f-f97050fa8068} PromptService.js
 contract @mozilla.org/network/authprompt-adapter-factory;1 {80dae1e9-e0d2-4974-915f-f97050fa8068}
-category app-startup PromptService service,@mozilla.org/prompter;1
 
 # PresentationDevicePrompt.js
 component {388bd149-c919-4a43-b646-d7ec57877689} PresentationDevicePrompt.js
