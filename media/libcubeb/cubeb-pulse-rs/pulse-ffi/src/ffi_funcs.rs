@@ -2,6 +2,7 @@
 
 use super::*;
 
+#[cfg(feature = "dlopen")]
 macro_rules! cstr {
   ($x:expr) => { concat!($x, "\0").as_bytes().as_ptr() as *const c_char }
 }
