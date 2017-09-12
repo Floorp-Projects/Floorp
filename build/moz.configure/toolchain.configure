@@ -1148,10 +1148,13 @@ imply_option('--enable-linker',
 
 @imports('os')
 @imports('shutil')
-def enable_gnu_linker(enable_gold_option, c_compiler, developer_options, build_env, linker_name):
+def enable_gnu_linker(enable_gold_option, c_compiler, developer_options, build_env,
+                      toolchain_flags, linker_name):
     # Used to check the kind of linker
     version_check = ['-Wl,--version']
     cmd_base = c_compiler.wrapper + [c_compiler.compiler] + c_compiler.flags
+    if toolchain_flags:
+        cmd_base += toolchain_flags
 
     def resolve_gold():
         # Try to force the usage of gold
@@ -1219,12 +1222,14 @@ js_option('--enable-linker', nargs=1,
           help='Select the linker',
           when=build_not_win_mac)
 
-@depends('--enable-linker', c_compiler, developer_options, check_build_environment, when=build_not_win_mac)
+@depends('--enable-linker', c_compiler, developer_options, check_build_environment,
+         extra_toolchain_flags, when=build_not_win_mac)
 @checking('for linker', lambda x: x.KIND)
-def select_linker(linker, c_compiler, developer_options, build_env):
+def select_linker(linker, c_compiler, developer_options, build_env, toolchain_flags):
     linker = linker[0] if linker else 'other'
     if linker in ('gold', 'bfd', 'other'):
-        return enable_gnu_linker(linker == 'gold', c_compiler, developer_options, build_env, linker)
+        return enable_gnu_linker(linker == 'gold', c_compiler, developer_options,
+                                 build_env, toolchain_flags, linker)
     if linker == 'lld':
         version_check = ['-Wl,--version']
         cmd_base = c_compiler.wrapper + [c_compiler.compiler] + c_compiler.flags
