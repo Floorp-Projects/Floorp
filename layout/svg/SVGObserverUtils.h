@@ -120,21 +120,28 @@ public:
   virtual ~nsSVGIDRenderingObserver();
 
 protected:
-  Element* GetTarget() override { return mElement.get(); }
+  Element* GetTarget() override { return mObservedElementTracker.get(); }
 
   // This is called when the referenced resource changes.
   virtual void DoUpdate() override;
 
-  class SourceReference : public IDTracker
+  /**
+   * Helper that provides a reference to the element with the ID that our
+   * observer wants to observe, and that will invalidate our observer if the
+   * element that that ID identifies changes to a different element (or none).
+   */
+  class ElementTracker final : public IDTracker
   {
   public:
-    explicit SourceReference(nsSVGIDRenderingObserver* aContainer) : mContainer(aContainer) {}
+    explicit ElementTracker(nsSVGIDRenderingObserver* aOwningObserver)
+      : mOwningObserver(aOwningObserver)
+    {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
-      mContainer->StopListening();
+      mOwningObserver->StopListening(); // stop observing the old element
       IDTracker::ElementChanged(aFrom, aTo);
-      mContainer->StartListening();
-      mContainer->DoUpdate();
+      mOwningObserver->StartListening(); // start observing the new element
+      mOwningObserver->DoUpdate();
     }
     /**
      * Override IsPersistent because we want to keep tracking the element
@@ -142,10 +149,10 @@ protected:
      */
     virtual bool IsPersistent() override { return true; }
   private:
-    nsSVGIDRenderingObserver* mContainer;
+    nsSVGIDRenderingObserver* mOwningObserver;
   };
 
-  SourceReference mElement;
+  ElementTracker mObservedElementTracker;
 };
 
 struct nsSVGFrameReferenceFromProperty

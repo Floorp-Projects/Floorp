@@ -180,10 +180,10 @@ nsSVGRenderingObserver::ContentRemoved(nsIDocument* aDocument,
 nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI* aURI,
                                                    nsIContent* aObservingContent,
                                                    bool aReferenceImage)
-  : mElement(this)
+  : mObservedElementTracker(this)
 {
   // Start watching the target element
-  mElement.Reset(aObservingContent, aURI, true, aReferenceImage);
+  mObservedElementTracker.Reset(aObservingContent, aURI, true, aReferenceImage);
   StartListening();
 }
 
@@ -195,8 +195,8 @@ nsSVGIDRenderingObserver::~nsSVGIDRenderingObserver()
 void
 nsSVGIDRenderingObserver::DoUpdate()
 {
-  if (mElement.get() && mInObserverList) {
-    SVGObserverUtils::RemoveRenderingObserver(mElement.get(), this);
+  if (mObservedElementTracker.get() && mInObserverList) {
+    SVGObserverUtils::RemoveRenderingObserver(mObservedElementTracker.get(), this);
     mInObserverList = false;
   }
 }
@@ -242,12 +242,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGFilterReference)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGFilterReference)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsSVGFilterReference)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObservedElementTracker)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterReference)
   tmp->StopListening();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservedElementTracker);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGFilterReference)
