@@ -529,6 +529,7 @@
                      secondarybuttonaccesskey="&updateAvailable.cancelButton.accesskey;"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
+                     buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent id="update-available-notification-content" orient="vertical">
       <description id="update-available-description">&updateAvailable.message;
@@ -547,6 +548,7 @@
                      secondarybuttonaccesskey="&updateManual.cancelButton.accesskey;"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
+                     buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent id="update-manual-notification-content" orient="vertical">
       <description id="update-manual-description">&updateManual.message;
@@ -565,6 +567,7 @@
                      secondarybuttonaccesskey="&updateRestart.cancelButton.accesskey;"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
+                     buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent id="update-restart-notification-content" orient="vertical">
       <description id="update-restart-description">&updateRestart.message;</description>
