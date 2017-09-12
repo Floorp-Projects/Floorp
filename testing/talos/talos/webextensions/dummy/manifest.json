@@ -7,6 +7,11 @@
   "manifest_version": 2,
   "name": "Talos Blank Web Extension System Add-on",
   "version": "0.1",
-  "permissions": [],
+  "permissions": [
+    "http://*/",
+    "https://*/",
+    "webRequest",
+    "webRequestBlocking"
+  ],
   "background": {"scripts": ["background.js"]}
 }
