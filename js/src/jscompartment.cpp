@@ -849,7 +849,7 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
 
-    sweepMapAndSetIteratorsAfterMinorGC();
+    sweepMapAndSetObjectsAfterMinorGC();
 }
 
 void
@@ -945,25 +945,18 @@ JSCompartment::sweepWatchpoints()
         watchpointMap->sweep();
 }
 
-bool
-JSCompartment::addMapOrSetWithNurseryIterator(HandleObject obj)
-{
-    MOZ_ASSERT(obj->is<MapObject>() || obj->is<SetObject>());
-    MOZ_ASSERT_IF(!mapsAndSetsWithNurseryIterators.empty(),
-                  mapsAndSetsWithNurseryIterators.back() != obj);
-    return mapsAndSetsWithNurseryIterators.append(obj);
-}
-
 void
-JSCompartment::sweepMapAndSetIteratorsAfterMinorGC()
+JSCompartment::sweepMapAndSetObjectsAfterMinorGC()
 {
-    for (auto obj : mapsAndSetsWithNurseryIterators) {
-        if (obj->is<MapObject>())
-            obj->as<MapObject>().sweepNurseryIterators();
-        else
-            obj->as<SetObject>().sweepNurseryIterators();
-    }
-    mapsAndSetsWithNurseryIterators.clearAndFree();
+    auto fop = runtime_->defaultFreeOp();
+
+    for (auto mapobj : mapsWithNurseryMemory)
+        MapObject::sweepAfterMinorGC(fop, mapobj);
+    mapsWithNurseryMemory.clearAndFree();
+
+    for (auto setobj : setsWithNurseryMemory)
+        SetObject::sweepAfterMinorGC(fop, setobj);
+    setsWithNurseryMemory.clearAndFree();
 }
 
 namespace {
