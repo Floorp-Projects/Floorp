@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
 import copy
 import importlib
 import json
@@ -1070,7 +1068,7 @@ class XPCShellTests(object):
                     searchObj = re.search( r'HTTP2 server listening on port (.*)', msg, 0)
                     if searchObj:
                       self.env["MOZHTTP2_PORT"] = searchObj.group(1)
-            except OSError as e:
+            except OSError, e:
                 # This occurs if the subprocess couldn't be started
                 self.log.error('Could not run %s server: %s' % (name, str(e)))
                 raise

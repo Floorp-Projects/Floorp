@@ -4,8 +4,6 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 #
 
-from __future__ import absolute_import
-
 import mozinfo
 import mozunit
 import os
@@ -1086,7 +1084,7 @@ add_test({
         try:
             # The actual return value is never checked because we raise.
             self.assertTestResult(True)
-        except Exception as ex:
+        except Exception, ex:
             raised = True
             self.assertEquals(ex.message[0:9], "head file")
 
