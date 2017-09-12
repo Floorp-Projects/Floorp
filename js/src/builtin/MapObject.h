@@ -106,7 +106,7 @@ class MapObject : public NativeObject {
     static const Class class_;
     static const Class protoClass_;
 
-    enum { NurseryKeysSlot, HasNurseryRangesSlot, SlotCount };
+    enum { NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
 
     static MOZ_MUST_USE bool getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
                                             JS::MutableHandle<GCVector<JS::Value>> entries);
@@ -133,7 +133,7 @@ class MapObject : public NativeObject {
     using UnbarrieredTable = OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy>;
     friend class OrderedHashTableRef<MapObject>;
 
-    void sweepNurseryIterators();
+    static void sweepAfterMinorGC(FreeOp* fop, MapObject* mapobj);
 
   private:
     static const ClassSpec classSpec_;
@@ -216,7 +216,7 @@ class SetObject : public NativeObject {
     static const Class class_;
     static const Class protoClass_;
 
-    enum { NurseryKeysSlot, HasNurseryRangesSlot, SlotCount };
+    enum { NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
 
     static MOZ_MUST_USE bool keys(JSContext *cx, HandleObject obj,
                                   JS::MutableHandle<GCVector<JS::Value>> keys);
@@ -237,7 +237,7 @@ class SetObject : public NativeObject {
     using UnbarrieredTable = OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy>;
     friend class OrderedHashTableRef<SetObject>;
 
-    void sweepNurseryIterators();
+    static void sweepAfterMinorGC(FreeOp* fop, SetObject* setobj);
 
   private:
     static const ClassSpec classSpec_;

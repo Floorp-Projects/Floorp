@@ -191,16 +191,16 @@ GlobalObject::initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
 
 template <typename TableObject>
 static inline bool
-HasNurseryRanges(TableObject* t)
+HasNurseryMemory(TableObject* t)
 {
-    return t->getReservedSlot(TableObject::HasNurseryRangesSlot).toBoolean();
+    return t->getReservedSlot(TableObject::HasNurseryMemorySlot).toBoolean();
 }
 
 template <typename TableObject>
 static inline void
-SetHasNurseryRanges(TableObject* t, bool b)
+SetHasNurseryMemory(TableObject* t, bool b)
 {
-    t->setReservedSlot(TableObject::HasNurseryRangesSlot, JS::BooleanValue(b));
+    t->setReservedSlot(TableObject::HasNurseryMemorySlot, JS::BooleanValue(b));
 }
 
 MapIteratorObject*
@@ -245,12 +245,12 @@ MapIteratorObject::create(JSContext* cx, HandleObject obj, ValueMap* data,
 
     bool insideNursery = IsInsideNursery(iterobj);
     MOZ_ASSERT(insideNursery == nursery.isInside(buffer));
-    if (insideNursery && !HasNurseryRanges(mapobj.get())) {
-        if (!cx->compartment()->addMapOrSetWithNurseryIterator(mapobj)) {
+    if (insideNursery && !HasNurseryMemory(mapobj.get())) {
+        if (!cx->compartment()->addMapWithNurseryMemory(mapobj)) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
-        SetHasNurseryRanges(mapobj.get(), true);
+        SetHasNurseryMemory(mapobj.get(), true);
     }
 
     auto range = data->createRange(buffer, insideNursery);
@@ -410,7 +410,8 @@ const Class MapObject::class_ = {
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map) |
-    JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_FOREGROUND_FINALIZE |
+    JSCLASS_SKIP_NURSERY_FINALIZE,
     &MapObject::classOps_,
     &MapObject::classSpec_
 };
@@ -527,6 +528,7 @@ class js::OrderedHashTableRef : public gc::BufferableRef
     explicit OrderedHashTableRef(ObjectT* obj) : object(obj) {}
 
     void trace(JSTracer* trc) override {
+        MOZ_ASSERT(!IsInsideNursery(object));
         auto realTable = object->getData();
         auto unbarrieredTable = reinterpret_cast<typename ObjectT::UnbarrieredTable*>(realTable);
         NurseryKeysVector* keys = GetNurseryKeys(object);
@@ -549,6 +551,9 @@ inline static MOZ_MUST_USE bool
 WriteBarrierPostImpl(JSRuntime* rt, ObjectT* obj, const Value& keyValue)
 {
     if (MOZ_LIKELY(!keyValue.isObject()))
+        return true;
+
+    if (IsInsideNursery(obj))
         return true;
 
     JSObject* key = &keyValue.toObject();
@@ -612,9 +617,8 @@ MapObject::set(JSContext* cx, HandleObject obj, HandleValue k, HandleValue v)
     if (!key.setValue(cx, k))
         return false;
 
-    HeapPtr<Value> rval(v);
     if (!WriteBarrierPost(cx->runtime(), &obj->as<MapObject>(), key.value()) ||
-        !map->put(key, rval))
+        !map->put(key, v))
     {
         ReportOutOfMemory(cx);
         return false;
@@ -637,9 +641,15 @@ MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
     if (!mapObj)
         return nullptr;
 
+    bool insideNursery = IsInsideNursery(mapObj);
+    if (insideNursery && !cx->compartment()->addMapWithNurseryMemory(mapObj)) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     mapObj->initPrivate(map.release());
     mapObj->initReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
-    mapObj->initReservedSlot(HasNurseryRangesSlot, JS::FalseValue());
+    mapObj->initReservedSlot(HasNurseryMemorySlot, JS::BooleanValue(insideNursery));
     return mapObj;
 }
 
@@ -651,11 +661,17 @@ MapObject::finalize(FreeOp* fop, JSObject* obj)
         fop->delete_(map);
 }
 
-void
-MapObject::sweepNurseryIterators()
+/* static */ void
+MapObject::sweepAfterMinorGC(FreeOp* fop, MapObject* mapobj)
 {
-    getData()->destroyNurseryRanges();
-    SetHasNurseryRanges(this, false);
+    if (IsInsideNursery(mapobj) && !IsForwarded(mapobj)) {
+        finalize(fop, mapobj);
+        return;
+    }
+
+    mapobj = MaybeForwarded(mapobj);
+    mapobj->getData()->destroyNurseryRanges();
+    SetHasNurseryMemory(mapobj, false);
 }
 
 bool
@@ -814,9 +830,8 @@ MapObject::set_impl(JSContext* cx, const CallArgs& args)
 
     ValueMap& map = extract(args);
     ARG0_KEY(cx, args, key);
-    HeapPtr<Value> rval(args.get(1));
     if (!WriteBarrierPost(cx->runtime(), &args.thisv().toObject().as<MapObject>(), key.value()) ||
-        !map.put(key, rval))
+        !map.put(key, args.get(1)))
     {
         ReportOutOfMemory(cx);
         return false;
@@ -1075,12 +1090,12 @@ SetIteratorObject::create(JSContext* cx, HandleObject obj, ValueSet* data,
 
     bool insideNursery = IsInsideNursery(iterobj);
     MOZ_ASSERT(insideNursery == nursery.isInside(buffer));
-    if (insideNursery && !HasNurseryRanges(setobj.get())) {
-        if (!cx->compartment()->addMapOrSetWithNurseryIterator(setobj)) {
+    if (insideNursery && !HasNurseryMemory(setobj.get())) {
+        if (!cx->compartment()->addSetWithNurseryMemory(setobj)) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
-        SetHasNurseryRanges(setobj.get(), true);
+        SetHasNurseryMemory(setobj.get(), true);
     }
 
     auto range = data->createRange(buffer, insideNursery);
@@ -1216,7 +1231,8 @@ const Class SetObject::class_ = {
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(SetObject::SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Set) |
-    JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_FOREGROUND_FINALIZE |
+    JSCLASS_SKIP_NURSERY_FINALIZE,
     &SetObject::classOps_,
     &SetObject::classSpec_,
 };
@@ -1303,9 +1319,15 @@ SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
     if (!obj)
         return nullptr;
 
+    bool insideNursery = IsInsideNursery(obj);
+    if (insideNursery && !cx->compartment()->addSetWithNurseryMemory(obj)) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     obj->initPrivate(set.release());
     obj->initReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
-    obj->initReservedSlot(HasNurseryRangesSlot, JS::FalseValue());
+    obj->initReservedSlot(HasNurseryMemorySlot, JS::BooleanValue(insideNursery));
     return obj;
 }
 
@@ -1328,11 +1350,17 @@ SetObject::finalize(FreeOp* fop, JSObject* obj)
         fop->delete_(set);
 }
 
-void
-SetObject::sweepNurseryIterators()
+/* static */ void
+SetObject::sweepAfterMinorGC(FreeOp* fop, SetObject* setobj)
 {
-    getData()->destroyNurseryRanges();
-    SetHasNurseryRanges(this, false);
+    if (IsInsideNursery(setobj) && !IsForwarded(setobj)) {
+        finalize(fop, setobj);
+        return;
+    }
+
+    setobj = MaybeForwarded(setobj);
+    setobj->getData()->destroyNurseryRanges();
+    SetHasNurseryMemory(setobj, false);
 }
 
 bool
