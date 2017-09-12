@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * For more information on this interface, please see
- * https://html.spec.whatwg.org/#broadcastchannel
+ * http://www.whatwg.org/specs/web-apps/current-work/multipage/web-messaging.html#broadcasting-to-other-browsing-contexts
  */
 
 [Constructor(DOMString channel),
@@ -17,6 +17,5 @@ interface BroadcastChannel : EventTarget {
 
   void close();
 
-  attribute EventHandler onmessage;
-  attribute EventHandler onmessageerror;
+           attribute EventHandler onmessage;
 };
