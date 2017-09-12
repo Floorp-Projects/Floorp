@@ -37,6 +37,11 @@ browser.webRequest.onErrorOccurred.addListener(
   {urls: ["https://*/*", "http://*/*"]});
 
 
+browser.runtime.onMessage.addListener(msg => {
+  return Promise.resolve({code: "10-4", msg});
+});
+
+
 browser.tabs.onUpdated.addListener((tabId, changed, tab) => {
   if (changed.url) {
     browser.pageAction.show(tabId);
@@ -48,6 +53,10 @@ browser.tabs.onUpdated.addListener((tabId, changed, tab) => {
     browser.browserAction.setTitle({tabId, title: `title: ${tab.title}`});
     browser.browserAction.setIcon({path: {16: "/icon.png"}});
   }
+
+  browser.tabs.sendMessage(tabId, {changed, tab}).catch(() => {
+    // Ignore tabs that don't have a listener yet.
+  });
 });
 
 browser.tabs.onActivated.addListener(({tabId, windowId}) => {
