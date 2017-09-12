@@ -121,9 +121,9 @@ function* testHead(inspector, testActor) {
   yield onReselected;
   yield onUpdated;
 
-  is((yield testActor.eval("content.document.title")), "New Title",
+  is((yield testActor.eval("document.title")), "New Title",
      "New title has been added");
-  is((yield testActor.eval("content.foo")), undefined,
+  is((yield testActor.eval("window.foo")), undefined,
      "Script has not been executed");
   is((yield testActor.getProperty("head", "outerHTML")), headHTML,
      "<head> HTML has been updated");
@@ -133,7 +133,7 @@ function* testHead(inspector, testActor) {
 
 function* testDocumentElement(inspector, testActor) {
   let currentDocElementOuterHMTL = yield testActor.eval(
-    "content.document.documentElement.outerHMTL");
+    "document.documentElement.outerHMTL");
   let docElementHTML = "<html id=\"updated\" foo=\"bar\"><head>" +
                        "<title>Updated from document element</title>" +
                        "<script>window.foo=\"bar\";</script></head><body>" +
@@ -145,9 +145,9 @@ function* testDocumentElement(inspector, testActor) {
     currentDocElementOuterHMTL);
   yield onReselected;
 
-  is((yield testActor.eval("content.document.title")),
+  is((yield testActor.eval("document.title")),
      "Updated from document element", "New title has been added");
-  is((yield testActor.eval("content.foo")),
+  is((yield testActor.eval("window.foo")),
      undefined, "Script has not been executed");
   is((yield testActor.getAttribute("html", "id")),
      "updated", "<html> ID has been updated");
@@ -167,7 +167,7 @@ function* testDocumentElement(inspector, testActor) {
 
 function* testDocumentElement2(inspector, testActor) {
   let currentDocElementOuterHMTL = yield testActor.eval(
-    "content.document.documentElement.outerHMTL");
+    "document.documentElement.outerHMTL");
   let docElementHTML = "<html id=\"somethingelse\" class=\"updated\"><head>" +
                        "<title>Updated again from document element</title>" +
                        "<script>window.foo=\"bar\";</script></head><body>" +
@@ -179,9 +179,9 @@ function* testDocumentElement2(inspector, testActor) {
     currentDocElementOuterHMTL);
   yield onReselected;
 
-  is((yield testActor.eval("content.document.title")),
+  is((yield testActor.eval("document.title")),
      "Updated again from document element", "New title has been added");
-  is((yield testActor.eval("content.foo")),
+  is((yield testActor.eval("window.foo")),
      undefined, "Script has not been executed");
   is((yield testActor.getAttribute("html", "id")),
      "somethingelse", "<html> ID has been updated");
