@@ -89,13 +89,22 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
 ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
                                              wr::DisplayListBuilder& aBuilder,
                                              const StackingContextHelper& aStackingContext,
-                                             WebRenderLayerManager::ClipIdMap& aCache)
+                                             WebRenderLayerManager::ClipIdMap& aCache,
+                                             bool aApzEnabled)
   : mLayer(nullptr)
   , mBuilder(&aBuilder)
   , mPushedLayerLocalClip(false)
   , mPushedClipAndScroll(false)
 {
   int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+
+  if (!aApzEnabled) {
+    // If APZ is not enabled, we can ignore all the stuff with ASRs; we just
+    // need to define the clip chain on the item and that's it.
+    DefineAndPushChain(aItem->GetClipChain(), aBuilder, aStackingContext,
+        auPerDevPixel, aCache);
+    return;
+  }
 
   // There are two ASR chains here that we need to be fully defined. One is the
   // ASR chain pointed to by aItem->GetActiveScrolledRoot(). The other is the

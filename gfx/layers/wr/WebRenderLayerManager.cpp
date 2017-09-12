@@ -328,7 +328,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
     }
 
     { // scope the ScrollingLayersHelper
-      ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache);
+      ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, AsyncPanZoomEnabled());
 
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function if the |item| is a wrapper for a sublist.
