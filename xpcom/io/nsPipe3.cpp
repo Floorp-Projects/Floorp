@@ -668,6 +668,7 @@ nsPipe::GetReadSegment(nsPipeReadState& aReadState, const char*& aSegment,
 
   aSegment = aReadState.mReadCursor;
   aLength = aReadState.mReadLimit - aReadState.mReadCursor;
+  MOZ_DIAGNOSTIC_ASSERT(aLength <= aReadState.mAvailable);
 
   return NS_OK;
 }
@@ -815,8 +816,6 @@ nsPipe::DrainInputStream(nsPipeReadState& aReadState, nsPipeEvents& aEvents)
     return;
   }
 
-  aReadState.mAvailable = 0;
-
   while(mWriteSegment >= aReadState.mSegment) {
 
     // If the last segment to free is still being written to, we're done
@@ -830,6 +829,13 @@ nsPipe::DrainInputStream(nsPipeReadState& aReadState, nsPipeEvents& aEvents)
     // advance buffer segment no matter what.
     AdvanceReadSegment(aReadState, mon);
   }
+
+  // Force the stream into an empty state.  Make sure mAvailable, mCursor, and
+  // mReadLimit are consistent with one another.  This is safe to do because
+  // we are always effectively removed from the mInputList after we are drained.
+  aReadState.mAvailable = 0;
+  aReadState.mReadCursor = nullptr;
+  aReadState.mReadLimit = nullptr;
 
   // If we have read any segments from the advance buffer then we can
   // potentially notify blocked writers.
