@@ -100,6 +100,7 @@ import java.util.concurrent.Future;
         ongoingIconLoad = Icons.with(itemView.getContext())
                 .pageUrl(topSite.getUrl())
                 .skipNetwork()
+                .forActivityStream()
                 .build()
                 .execute(this);
 
