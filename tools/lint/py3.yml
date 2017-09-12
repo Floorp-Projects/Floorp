@@ -3,7 +3,6 @@ py3:
     description: Python 3 compatibility check
     include: ['.']
     exclude:
-        - addon-sdk/source
         - browser/app
         - browser/components
         - browser/extensions

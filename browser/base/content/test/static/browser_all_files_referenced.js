@@ -171,8 +171,8 @@ var whitelist = [
   {file: "resource://gre/modules/Manifest.jsm"},
   // Bug 1351097
   {file: "resource://gre/modules/accessibility/AccessFu.jsm"},
-  // Bug 1351637
-  {file: "resource://gre/modules/sdk/bootstrap.js"},
+  // Bug 1399216
+  {file: "resource://gre/modules/HiddenFrame.jsm"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>

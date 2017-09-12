@@ -489,8 +489,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "mochitest": [("plain.*", "mochitest"),
                           ("browser-chrome.*", "browser-chrome"),
                           ("mochitest-devtools-chrome.*", "devtools-chrome"),
-                          ("chrome", "chrome"),
-                          ("jetpack.*", "jetpack")],
+                          ("chrome", "chrome")],
             "xpcshell": [("xpcshell", "xpcshell")],
             "reftest": [("reftest", "reftest"),
                         ("crashtest", "crashtest")]
