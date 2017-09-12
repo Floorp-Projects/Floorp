@@ -755,7 +755,7 @@ public:
     }
 
     if (NS_WARN_IF(rv.Failed())) {
-      DispatchError(aTarget);
+      xpc::Throw(aCx, rv.StealNSResult());
       return false;
     }
 
@@ -813,21 +813,6 @@ private:
 
     return DispatchDOMEvent(aCx, aWorkerPrivate, aWorkerPrivate->GlobalScope(),
                             false);
-  }
-
-  void
-  DispatchError(DOMEventTargetHelper* aTarget)
-  {
-    MessageEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
-
-    RefPtr<Event> event =
-      MessageEvent::Constructor(aTarget, NS_LITERAL_STRING("messageerror"), init);
-    event->SetTrusted(true);
-
-    bool dummy;
-    aTarget->DispatchEvent(event, &dummy);
   }
 };
 
