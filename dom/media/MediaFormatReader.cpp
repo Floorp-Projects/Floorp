@@ -3168,8 +3168,18 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       mAudio.mWaitingForKey,
       mAudio.mLastStreamSourceID);
   }
+
+  VideoInfo videoInfo = mVideo.mInfo ? *mVideo.mInfo->GetAsVideoInfo()
+                                     : *mVideo.mOriginalInfo->GetAsVideoInfo();
+
   result += nsPrintfCString(
-    "Video Decoder(%s): %s\n", videoType.get(), videoDecoderName.get());
+    "Video Decoder(%s, %dx%d @ %0.2ffps): %s\n",
+    videoType.get(),
+    videoInfo.mDisplay.width < 0 ? 0 : videoInfo.mDisplay.width,
+    videoInfo.mDisplay.height < 0 ? 0 : videoInfo.mDisplay.height,
+    mVideo.mMeanRate.Mean(),
+    videoDecoderName.get());
+
   result +=
     nsPrintfCString("Hardware Video Decoding: %s\n",
                     VideoIsHardwareAccelerated() ? "enabled" : "disabled");
