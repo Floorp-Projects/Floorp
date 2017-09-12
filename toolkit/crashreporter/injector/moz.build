@@ -24,4 +24,4 @@ if CONFIG['GNU_CC']:
 else:
     LDFLAGS += ['-ENTRY:DummyEntryPoint']
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()

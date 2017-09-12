@@ -35,7 +35,7 @@ elif toolkit == 'windows':
 USE_STATIC_LIBS = True
 
 # Don't use STL wrappers; nptest isn't Gecko code
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 NO_PGO = True
 

@@ -330,7 +330,8 @@ add_task(async function check_port_properties() {
     "loaded",
     "portID",
     "removeMessageListener",
-    "sendAsyncMessage"
+    "sendAsyncMessage",
+    "url"
   ];
   function checkProperties(port, description) {
     const expected = [];
@@ -356,18 +357,25 @@ add_task(async function check_port_properties() {
   let portFromInit = await portFrom("RemotePage:Init", () =>
     (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URL)));
   checkProperties(portFromInit, "inited port");
+  ok(["about:blank", TEST_URL].includes(portFromInit.browser.currentURI.spec),
+    `inited port browser is either still blank or already at the target url - got ${portFromInit.browser.currentURI.spec}`);
   is(portFromInit.loaded, false, "inited port has not been loaded yet");
+  is(portFromInit.url, TEST_URL, "got expected url");
 
   let portFromLoad = await portFrom("RemotePage:Load");
   is(portFromLoad, portFromInit, "got the same port from init and load");
   checkProperties(portFromLoad, "loaded port");
+  is(portFromInit.browser.currentURI.spec, TEST_URL, "loaded port has browser with actual url");
   is(portFromInit.loaded, true, "loaded port is now loaded");
+  is(portFromInit.url, TEST_URL, "still got expected url");
 
   let portFromUnload = await portFrom("RemotePage:Unload", () =>
     BrowserTestUtils.removeTab(gBrowser.selectedTab));
   is(portFromUnload, portFromInit, "got the same port from init and unload");
   checkProperties(portFromUnload, "unloaded port");
+  is(portFromInit.browser, null, "unloaded port has no browser");
   is(portFromInit.loaded, false, "unloaded port is now not loaded");
+  is(portFromInit.url, TEST_URL, "still got expected url");
 
   pages.destroy();
 });

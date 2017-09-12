@@ -23,4 +23,4 @@ SOURCES += [
 
 NO_PGO = True
 
-NO_VISIBILITY_FLAGS = True
+NoVisibilityFlags()

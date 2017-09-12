@@ -100,7 +100,7 @@ if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
     LDFLAGS += ['--param lto-partitions=1']
 
 DEFINES['NS_NO_XPCOM'] = True
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 LOCAL_INCLUDES += ['/security/sandbox/linux']
 LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']

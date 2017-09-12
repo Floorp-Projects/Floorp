@@ -8,7 +8,7 @@ function setupChromeSandbox() {
 function checkDefineThrows(sb, obj, prop, desc) {
   var result = Cu.evalInSandbox('(function() { try { Object.defineProperty(' + obj + ', "' + prop + '", ' + desc.toSource() + '); return "nothrow"; } catch (e) { return e.toString(); }})();', sb);
   do_check_neq(result, 'nothrow');
-  do_check_true(!!/denied/.exec(result));
+  do_check_true(!!/denied|prohibited/.exec(result));
   do_check_true(result.indexOf(prop) != -1); // Make sure the prop name is in the error message.
 }
 
@@ -19,7 +19,7 @@ function run_test() {
   contentSB.chromeObj = chromeSB.chromeObj;
   contentSB.chromeArr = chromeSB.chromeArr;
 
-  do_check_eq(Cu.evalInSandbox('chromeObj.a', contentSB), 2);
+  do_check_eq(Cu.evalInSandbox('chromeObj.a', contentSB), undefined);
   try {
     Cu.evalInSandbox('chromeArr[1]', contentSB);
     do_check_true(false);

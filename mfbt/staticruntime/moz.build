@@ -16,7 +16,7 @@ SOURCES += mfbt_nonunified_src_cppsrcs
 
 USE_STATIC_LIBS = True
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 # Suppress warnings in third-party LZ4 code.
 # TODO: Remove these suppressions after bug 993267 is fixed.

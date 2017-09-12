@@ -5,15 +5,15 @@
 """
 module to handle Gecko profilling.
 """
+from __future__ import absolute_import
 
+import json
 import os
 import tempfile
 import zipfile
-import json
+
 import mozfile
-
 from mozlog import get_proxy_logger
-
 from talos.profiler import symbolication, profiling
 
 LOG = get_proxy_logger()

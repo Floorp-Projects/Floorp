@@ -8,8 +8,7 @@
           "type": "string",
           "enum": [
             "downloads",
-            "downloads.open",
-            "downloads.shelf"
+            "downloads.open"
           ]
         }]
       }

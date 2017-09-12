@@ -19,7 +19,7 @@ LOCAL_INCLUDES += [
     '/toolkit/xre',
 ]
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 USE_STATIC_LIBS = True
 
 OS_LIBS += [

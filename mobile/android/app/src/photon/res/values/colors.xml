@@ -45,15 +45,10 @@
     <color name="photon_loading_indicator_light_private">#FF1AD9</color>
     <color name="photon_loading_indicator_dark">#00A2FE</color>
     <color name="photon_loading_indicator_dark_private">#9400FF</color>
-    <color name="photon_menu_bg">#F9F9FA</color>
-    <color name="photon_menu_bg_private">#38383D</color>
     <color name="photon_icon">#272727</color>
     <color name="photon_icon_disabled">#33272727</color>
-    <color name="photon_icon_pressed">@color/photon_icon</color>
     <color name="photon_icon_private">#FFFFFF</color>
     <color name="photon_icon_private_disabled">#33FFFFFF</color>
-    <color name="photon_icon_private_pressed">@color/photon_icon_private</color>
-    <color name="photon_icon_lock">#16DA00</color>
 
     <color name="photon_notification_bg">#0096DD</color>
 
@@ -67,14 +62,8 @@
     <color name="photon_toolbar_bg">#F7FAFC</color>
     <color name="photon_toolbar_bg_private">#38383D</color>
 
-    <color name="photon_two_line_page_row_bg">#FFFFFF</color>
-    <color name="photon_two_line_page_row_bg_private">#414146</color>
-
     <color name="photon_search_item_text">@color/photon_text_main</color>
     <color name="photon_search_item_text_private">@color/photon_text_main_private</color>
-
-    <color name="photon_home_list_divider">@color/photon_two_line_page_row_bg</color>
-    <color name="photon_home_list_divider_private">@color/photon_two_line_page_row_bg_private</color>
 
     <color name="photon_url_bar_blocked">#D70022</color>
     <color name="photon_url_bar_blocked_private">#D70022</color>
@@ -172,19 +161,10 @@
 
     <!-- Non-palette colors -->
 
-    <!-- Synced w/ toolbar_grey -->
-    <color name="background_normal_lwt">#DDEBEBF0</color>
-
     <color name="highlight">#33000000</color>
     <color name="highlight_focused">#1A000000</color>
     <color name="highlight_dark">#33FFFFFF</color>
     <color name="highlight_dark_focused">#1AFFFFFF</color>
-
-    <!-- Synced w/ toolbar_grey_pressed -->
-    <color name="tablet_highlight_lwt">#AAD7D7DC</color>
-
-    <!-- Synced w/ tabs_tray_grey_pressed -->
-    <color name="tablet_highlight_dark_lwt">#AA45494E</color>
 
     <!-- (bug 1077195) Focused state values are temporary. -->
     <color name="tablet_highlight_focused">#C0C9D0</color>
@@ -194,9 +174,6 @@
 
     <!-- highlight-focused on shaped button: 10% white over text_and_tabs_tray_grey -->
     <color name="highlight_shaped_focused">#FF565B60</color>
-
-    <!-- highlight on private nav button: 20% white over private_toolbar_grey -->
-    <color name="highlight_nav_pb">#FF545654</color>
 
     <color name="dark_transparent_overlay">#99000000</color>
 
@@ -283,8 +260,6 @@
     <!-- Top sites thumbnail colors -->
     <color name="top_site_default">#FFECF0F3</color>
     <color name="top_site_border">#FFCFD9E1</color>
-
-    <color name="private_active_text">#FFFFFF</color>
 
     <color name="action_bar_bg_color">@color/toolbar_grey</color>
 

@@ -21,6 +21,7 @@ const UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
 const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100; // 1 visit (skip first-run/one-time pages)
+const MIN_FAVICON_SIZE = 96;
 
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
@@ -95,13 +96,13 @@ this.TopSitesFeed = class TopSitesFeed {
       }
     }
 
-    // Now, get a tippy top icon or screenshot for every item
+    // Now, get a tippy top icon, a rich icon, or screenshot for every item
     for (let link of links) {
       if (!link) { continue; }
 
-      // Check for tippy top icon.
+      // Check for tippy top icon or a rich icon.
       link = this._tippyTopProvider.processSite(link);
-      if (link.tippyTopIcon) { continue; }
+      if (link.tippyTopIcon || link.faviconSize >= MIN_FAVICON_SIZE) { continue; }
 
       // If no tippy top, then we get a screenshot.
       if (currentScreenshots[link.url]) {

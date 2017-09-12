@@ -42,7 +42,7 @@ if CONFIG['_MSC_VER']:
 
 RCINCLUDE = 'maintenanceservice.rc'
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 OS_LIBS += [
     'comctl32',

@@ -68,7 +68,7 @@ if not CONFIG['MOZ_ASAN']:
 # Since we link directly with MFBT object files, define IMPL_MFBT
 DEFINES['IMPL_MFBT'] = True
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 
 if CONFIG['_MSC_VER']:
   CXXFLAGS += [

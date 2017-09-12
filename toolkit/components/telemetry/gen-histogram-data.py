@@ -10,7 +10,6 @@ from shared_telemetry_utils import StringTable, static_assert, ParserError
 
 import sys
 import histogram_tools
-import itertools
 
 banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
 """
@@ -152,80 +151,44 @@ def write_histogram_static_asserts(output, histograms):
         fn(output, histogram)
 
 
-def write_exponential_histogram_ranges(output, histograms):
-    # For now we use this as a special cache only for exponential histograms,
-    # which require exp and log calls that show up in profiles. Initialization
-    # of other histograms also shows up in profiles, but it's unlikely that we
-    # would see much speedup since calculating their buckets is fairly trivial,
-    # and grabbing them from static data would likely incur a CPU cache miss.
-    print("const int gExponentialBucketLowerBounds[] = {", file=output)
-    for histogram in histograms:
-        if histogram.kind() == 'exponential':
-            ranges = histogram.ranges()
-            print(','.join(map(str, ranges)), ',', file=output)
-    print("};", file=output)
+def write_histogram_ranges(output, histograms):
+    # This generates static data to avoid costly initialization of histograms
+    # (especially exponential ones which require log and exp calls) at runtime.
+    # The format must exactly match that required in histogram.cc, which is
+    # 0, buckets..., INT_MAX. Additionally, the list ends in a 0 to aid asserts
+    # that validate that the length of the ranges list is correct.U cache miss.
+    print("const int gHistogramBucketLowerBounds[] = {", file=output)
 
-    print("const int gExponentialBucketLowerBoundIndex[] = {", file=output)
-    offset = 0
+    # Print the dummy buckets for expired histograms, and set the offset to match.
+    print("0,1,2,INT_MAX,", file=output)
+    offset = 4
+    ranges_offsets = {}
+
+    for histogram in histograms:
+        ranges = tuple(histogram.ranges())
+        if ranges not in ranges_offsets:
+            ranges_offsets[ranges] = offset
+            # Suffix each ranges listing with INT_MAX, to match histogram.cc's
+            # expected format.
+            offset += len(ranges) + 1
+            print(','.join(map(str, ranges)), ',INT_MAX,', file=output)
+    print("0};", file=output)
+
+    if offset > 32767:
+        raise Exception('Histogram offsets exceeded maximum value for an int16_t.')
+
+    print("const int16_t gHistogramBucketLowerBoundIndex[] = {", file=output)
     for histogram in histograms:
         cpp_guard = histogram.cpp_guard()
         if cpp_guard:
             print("#if defined(%s)" % cpp_guard, file=output)
 
-        if histogram.kind() == 'exponential':
-            print("%d," % offset, file=output)
-            offset += histogram.n_buckets()
-        else:
-            print("-1,", file=output)
+        our_offset = ranges_offsets[tuple(histogram.ranges())]
+        print("%d," % our_offset, file=output)
 
         if cpp_guard:
             print("#endif", file=output)
     print("};", file=output)
-
-
-def write_debug_histogram_ranges(output, histograms):
-    ranges_lengths = []
-
-    # Collect all the range information from individual histograms.
-    # Write that information out as well.
-    print("#ifdef DEBUG", file=output)
-    print("const int gBucketLowerBounds[] = {", file=output)
-    for histogram in histograms:
-        ranges = []
-        try:
-            ranges = histogram.ranges()
-        except histogram_tools.DefinitionException:
-            pass
-        ranges_lengths.append(len(ranges))
-        # Note that we do not test cpp_guard here.  We do this so we
-        # will have complete information about all the histograms in
-        # this array.  Just having information about the ranges of
-        # histograms is not platform-specific; if there are histograms
-        # that have platform-specific constants in their definitions,
-        # those histograms will fail in the .ranges() call above and
-        # we'll have a zero-length array to deal with here.
-        if len(ranges) > 0:
-            print(','.join(map(str, ranges)), ',', file=output)
-        else:
-            print('/* Skipping %s */' % histogram.name(), file=output)
-    print("};", file=output)
-
-    # Write the offsets into gBucketLowerBounds.
-    print("struct bounds { int offset; int length; };", file=output)
-    print("const struct bounds gBucketLowerBoundIndex[] = {", file=output)
-    offset = 0
-    for (histogram, range_length) in itertools.izip(histograms, ranges_lengths):
-        cpp_guard = histogram.cpp_guard()
-        # We do test cpp_guard here, so that histogram IDs are valid
-        # indexes into this array.
-        if cpp_guard:
-            print("#if defined(%s)" % cpp_guard, file=output)
-        print("{ %d, %d }," % (offset, range_length), file=output)
-        if cpp_guard:
-            print("#endif", file=output)
-        offset += range_length
-    print("};", file=output)
-    print("#endif", file=output)
 
 
 def main(output, *filenames):
@@ -237,9 +200,8 @@ def main(output, *filenames):
 
     print(banner, file=output)
     write_histogram_table(output, histograms)
-    write_exponential_histogram_ranges(output, histograms)
+    write_histogram_ranges(output, histograms)
     write_histogram_static_asserts(output, histograms)
-    write_debug_histogram_ranges(output, histograms)
 
 
 if __name__ == '__main__':

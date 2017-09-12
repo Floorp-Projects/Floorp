@@ -77,6 +77,10 @@ const PREFS_CONFIG = new Map([
     title: "Number of days to show the manual migration message",
     value: 4
   }],
+  ["prerender", {
+    title: "Use the prerendered version of activity-stream.html. This is set automatically by PrefsFeed.jsm.",
+    value: true
+  }],
   ["showSearch", {
     title: "Show the Search bar on the New Tab page",
     value: true

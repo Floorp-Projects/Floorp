@@ -27,9 +27,8 @@
 
 .click-to-play-plugins-notification-button-container {
   background-color: var(--arrowpanel-dimmed);
-  border-top: 1px solid var(--panel-separator-color);
-  padding: 10px;
   margin-top: 5px;
+  display: flex;
 }
 
 .click-to-play-popup-button {
@@ -47,6 +46,10 @@
 .click-to-play-plugins-notification-link,
 .center-item-link {
   margin: 0;
+}
+
+.click-to-play-plugins-notification-main-box {
+  width: 100%;
 }
 
 .messageImage[value="plugin-hidden"] {

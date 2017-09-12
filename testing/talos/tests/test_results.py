@@ -9,8 +9,10 @@ test talos results parsing
 
 http://hg.mozilla.org/build/talos/file/tip/talos/results.py
 """
+from __future__ import absolute_import
 
 import unittest
+
 import talos.filter
 import talos.results
 

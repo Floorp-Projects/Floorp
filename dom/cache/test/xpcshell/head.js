@@ -19,7 +19,7 @@ var hash = Cc['@mozilla.org/security/hash;1']
            .createInstance(Ci.nsICryptoHash);
 
 // Expose Cache and Fetch symbols on the global
-Cu.importGlobalProperties(['caches', 'fetch']);
+Cu.importGlobalProperties(['caches', 'File', 'fetch']);
 
 // Extract a zip file into the profile
 function create_test_profile(zipFileName) {
@@ -75,3 +75,19 @@ function create_test_profile(zipFileName) {
 
   zipReader.close();
 }
+
+function getCacheDir()
+{
+  let dirService = Cc["@mozilla.org/file/directory_service;1"]
+                   .getService(Ci.nsIProperties);
+
+  let profileDir = dirService.get("ProfD", Ci.nsIFile);
+  let cacheDir = profileDir.clone();
+  cacheDir.append("storage");
+  cacheDir.append("default");
+  cacheDir.append("chrome");
+  cacheDir.append("cache");
+
+  return cacheDir;
+}
+

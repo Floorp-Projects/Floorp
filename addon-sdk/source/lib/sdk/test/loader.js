@@ -53,11 +53,6 @@ function HookedPlainTextConsole(hook, print, innerID) {
   this.exception = hook.bind(null, "exception", innerID);
   this.time = hook.bind(null, "time", innerID);
   this.timeEnd = hook.bind(null, "timeEnd", innerID);
-
-  this.__exposedProps__ = {
-    log: "rw", info: "rw", warn: "rw", error: "rw", debug: "rw",
-    exception: "rw", time: "rw", timeEnd: "rw"
-  };
 }
 
 // Creates a custom loader instance whose console module is hooked in order

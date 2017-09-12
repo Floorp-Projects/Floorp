@@ -52,7 +52,7 @@ TEST_DIRS += [
     'gtest',
 ]
 
-DISABLE_STL_WRAPPING = True
+DisableStlWrapping()
 DEFINES['MOZ_NO_MOZALLOC'] = True
 
 USE_LIBS += ['psshparser']

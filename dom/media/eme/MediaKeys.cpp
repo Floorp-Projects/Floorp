@@ -452,8 +452,6 @@ MediaKeys::OnCDMCreated(PromiseId aId, const uint32_t aPluginId)
   MediaKeySystemAccess::NotifyObservers(mParent,
                                         mKeySystem,
                                         MediaKeySystemStatus::Cdm_created);
-
-  Telemetry::Accumulate(Telemetry::VIDEO_CDM_CREATED, ToCDMTypeTelemetryEnum(mKeySystem));
 }
 
 static bool
