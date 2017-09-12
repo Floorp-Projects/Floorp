@@ -160,27 +160,30 @@ element.Store = class {
    *     Element associated with reference.
    *
    * @throws {NoSuchElementError}
-   *     If the provided reference is unknown.
+   *     If the web element reference <var>uuid</var> has not been
+   *     seen before.
    * @throws {StaleElementReferenceError}
-   *     If element has gone stale, indicating it is no longer attached to
-   *     the DOM provided in the container.
+   *     If the element has gone stale, indicating it is no longer
+   *     attached to the DOM, or its node document is no longer the
+   *     active document.
    */
   get(uuid) {
-    let el = this.els[uuid];
-    if (!el) {
-      throw new NoSuchElementError("Element reference not seen before: " + uuid);
+    if (!this.has(uuid)) {
+      throw new NoSuchElementError(
+          "Web element reference not seen before: " + uuid);
     }
 
+    let el;
+    let ref = this.els[uuid];
     try {
-      el = el.get();
+      el = ref.get();
     } catch (e) {
-      el = null;
       delete this.els[uuid];
     }
 
     if (element.isStale(el)) {
       throw new StaleElementReferenceError(
-          pprint`The element reference of ${el} stale; ` +
+          pprint`The element reference of ${el || uuid} stale; ` +
               "either the element is no longer attached to the DOM " +
               "or the document has been refreshed");
     }
@@ -633,12 +636,16 @@ element.generateUUID = function() {
  *     True if <var>el</var> is stale, false otherwise.
  */
 element.isStale = function(el) {
+  if (!el) {
+    return true;
+  }
+
   let doc = el.ownerDocument;
   let win = doc.defaultView;
-
   if (!win || el.ownerDocument !== win.document) {
     return true;
   }
+
   return !el.isConnected;
 };
 
