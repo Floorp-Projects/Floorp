@@ -674,6 +674,7 @@ pref("apz.axis_lock.direct_pan_angle", "1.047197");   // PI / 3 (60 degrees)
 pref("apz.content_response_timeout", 400);
 pref("apz.drag.enabled", true);
 pref("apz.drag.initial.enabled", true);
+pref("apz.drag.touch.enabled", true);
 pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
 pref("apz.disable_for_scroll_linked_effects", false);
