@@ -1417,7 +1417,8 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     // Check if this event starts a scrollbar touch-drag. The conditions
     // checked are similar to the ones we check for MOUSE_INPUT starting
     // a scrollbar mouse-drag.
-    mInScrollbarTouchDrag = gfxPrefs::APZDragEnabled() && hitScrollbarNode &&
+    mInScrollbarTouchDrag = gfxPrefs::APZDragEnabled() &&
+                            gfxPrefs::APZTouchDragEnabled() && hitScrollbarNode &&
                             hitScrollbarNode->IsScrollThumbNode() &&
                             hitScrollbarNode->GetScrollThumbData().mIsAsyncDraggable;
 
