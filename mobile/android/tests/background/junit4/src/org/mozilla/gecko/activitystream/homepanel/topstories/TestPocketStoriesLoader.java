@@ -5,7 +5,6 @@
 package org.mozilla.gecko.activitystream.homepanel.topstories;
 
 import junit.framework.Assert;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -80,6 +79,39 @@ public class TestPocketStoriesLoader {
         final String malformedResponseString = makeBasicPocketResponse(new JSONObject[] { storyItem });
         final List<TopStory> stories = PocketStoriesLoader.jsonStringToTopStories(malformedResponseString);
         Assert.assertEquals(0, stories.size()); // Should skip malformed item.
+    }
+
+    @Test
+    public void testJSONStringToTopStoriesDropsMalformedTitle() throws Exception {
+        final JSONObject malformedStory = makeBasicStoryItem();
+        malformedStory.put(KEY_TITLE, "");
+        assertJSONStringToTopStoriesDropsMalformedStory(malformedStory);
+    }
+
+    @Test
+    public void testJSONStringToTopStoriesDropsMalformedURL() throws Exception {
+        final JSONObject malformedStory = makeBasicStoryItem();
+        malformedStory.put(KEY_DEDUPE_URL, "");
+        assertJSONStringToTopStoriesDropsMalformedStory(malformedStory);
+    }
+
+    @Test
+    public void testJSONStringToTopStoriesDropsMalformedImageURL() throws Exception {
+        final JSONObject malformedStory = makeBasicStoryItem();
+        malformedStory.put(KEY_IMAGE_SRC, "");
+        assertJSONStringToTopStoriesDropsMalformedStory(malformedStory);
+    }
+
+    private void assertJSONStringToTopStoriesDropsMalformedStory(final JSONObject malformedStory) throws JSONException {
+        final JSONObject expectedStory = makeBasicStoryItem();
+        final String expectedStoryTitle = "expectedItem";
+        expectedStory.put(KEY_TITLE, expectedStoryTitle);
+
+        final String jsonResponse = makeBasicPocketResponse(new JSONObject[] { expectedStory, malformedStory });
+        final List<TopStory> actualTopStories = PocketStoriesLoader.jsonStringToTopStories(jsonResponse);
+
+        Assert.assertEquals("Expected one malformed item to be removed, leaving size 1", 1, actualTopStories.size());
+        Assert.assertEquals(expectedStoryTitle, actualTopStories.get(0).getTitle());
     }
 
     // Pulled 8/28 Pocket response, with some trimming for content/brevity.
