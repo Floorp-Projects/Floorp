@@ -6616,7 +6616,7 @@ RangePopFront(MacroAssembler& masm, Register range, Register front, Register dat
 
 template <class OrderedHashTable>
 static inline void
-RangeDestruct(MacroAssembler& masm, Register range, Register temp0, Register temp1)
+RangeDestruct(MacroAssembler& masm, Register iter, Register range, Register temp0, Register temp1)
 {
     Register next = temp0;
     Register prevp = temp1;
@@ -6632,7 +6632,12 @@ RangeDestruct(MacroAssembler& masm, Register range, Register temp0, Register tem
 
     masm.bind(&hasNoNext);
 
+    Label nurseryAllocated;
+    masm.branchPtrInNurseryChunk(Assembler::Equal, iter, temp0, &nurseryAllocated);
+
     masm.callFreeStub(range);
+
+    masm.bind(&nurseryAllocated);
 }
 
 template <>
@@ -6726,7 +6731,7 @@ CodeGenerator::emitGetNextEntryForIterator(LGetNextEntryForIterator* lir)
     {
         masm.bind(&iterDone);
 
-        RangeDestruct<OrderedHashTable>(masm, range, temp, dataLength);
+        RangeDestruct<OrderedHashTable>(masm, iter, range, temp, dataLength);
 
         masm.storeValue(PrivateValue(nullptr),
                         Address(iter, NativeObject::getFixedSlotOffset(IteratorObject::RangeSlot)));
