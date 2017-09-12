@@ -24,7 +24,6 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Basic)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setNoScriptRval(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileForNonSyntacticScope(cx, options, src, sizeof(src)-1, &script));
@@ -83,7 +82,6 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Callback)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setNoScriptRval(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileForNonSyntacticScope(cx, options, src, sizeof(src)-1, &script));
