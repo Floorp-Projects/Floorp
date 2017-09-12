@@ -46,11 +46,7 @@ cert_init()
   fi
   SCRIPTNAME="cert.sh"
   CRL_GRP_DATE=`date -u "+%Y%m%d%H%M%SZ"`
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      html_head "Certutil and Crlutil Tests with ECC"
-  else
-      html_head "Certutil and Crlutil Tests"
-  fi
+  html_head "Certutil and Crlutil Tests"
 
   LIBDIR="${DIST}/${OBJDIR}/lib"
 
@@ -300,14 +296,12 @@ cert_create_cert()
 	fi
 
 
-    if [ -z "$NSS_DISABLE_ECC" ] ; then
 	CU_ACTION="Import EC Root CA for $CERTNAME"
 	certu -A -n "TestCA-ec" -t "TC,TC,TC" -f "${R_PWFILE}" \
 	    -d "${PROFILEDIR}" -i "${R_CADIR}/TestCA-ec.ca.cert" 2>&1
 	if [ "$RET" -ne 0 ]; then
             return $RET
 	fi
-    fi
 
     cert_add_cert "$5"
     return $?
@@ -402,7 +396,6 @@ cert_add_cert()
 #
 #   Generate and add EC cert
 #
-    if [ -z "$NSS_DISABLE_ECC" ] ; then
 	CURVE="secp384r1"
 	CU_ACTION="Generate EC Cert Request for $CERTNAME"
 	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
@@ -454,7 +447,6 @@ cert_add_cert()
             return $RET
 	fi
 	cert_log "SUCCESS: $CERTNAME's mixed EC Cert Created"
-    fi
 
     return 0
 }
@@ -521,7 +513,6 @@ cert_all_CA()
 
 
 
-    if [ -z "$NSS_DISABLE_ECC" ] ; then
 #
 #       Create EC version of TestCA
 	CA_CURVE="secp521r1"
@@ -546,8 +537,6 @@ cert_all_CA()
 	rm $CLIENT_CADIR/ecroot.cert $SERVER_CADIR/ecroot.cert
 #	ecroot.cert in $CLIENT_CADIR and in $SERVER_CADIR is one of the last 
 #	in the chain
-
-    fi
 }
 
 ################################# cert_CA ################################
@@ -832,7 +821,6 @@ cert_smime_client()
   certu -E -t ",," -d ${P_R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_EVEDIR}/Eve.cert 2>&1
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
       echo "$SCRIPTNAME: Importing EC Certificates =============================="
       CU_ACTION="Import Bob's EC cert into Alice's db"
       certu -E -t ",," -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
@@ -856,7 +844,6 @@ cert_smime_client()
 #     CU_ACTION="Import Eve's EC cert into Bob's DB"
 #     certu -E -t ",," -d ${P_R_BOBDIR} -f ${R_PWFILE} \
 #         -i ${R_EVEDIR}/Eve-ec.cert 2>&1
-  fi
 
   if [ "$CERTFAILED" != 0 ] ; then
       cert_log "ERROR: SMIME failed $RET"
@@ -947,7 +934,6 @@ cert_extended_ssl()
 #	  -d "${PROFILEDIR}" -i "${CLIENT_CADIR}/clientCA-dsamixed.ca.cert" \
 #	  2>&1
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
 #
 #     Repeat the above for EC certs
 #
@@ -993,7 +979,6 @@ cert_extended_ssl()
 #      certu -A -n "clientCA-ecmixed" -t "T,," -f "${R_PWFILE}" \
 #	  -d "${PROFILEDIR}" -i "${CLIENT_CADIR}/clientCA-ecmixed.ca.cert" \
 #	  2>&1
-  fi
 
   echo "Importing all the server's own CA chain into the servers DB"
   for CA in `find ${SERVER_CADIR} -name "?*.ca.cert"` ;
@@ -1082,7 +1067,6 @@ cert_extended_ssl()
 # done with mixed DSA certs
 #
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
 #
 #     Repeat the above for EC certs
 #
@@ -1129,7 +1113,6 @@ cert_extended_ssl()
 #
 # done with mixed EC certs
 #
-  fi
 
   echo "Importing all the client's own CA chain into the servers DB"
   for CA in `find ${CLIENT_CADIR} -name "?*.ca.cert"` ;
@@ -1176,10 +1159,8 @@ cert_ssl()
   CU_ACTION="Modify trust attributes of DSA Root CA -t TC,TC,TC"
   certu -M -n "TestCA-dsa" -t "TC,TC,TC" -d ${PROFILEDIR} -f "${R_PWFILE}"
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      CU_ACTION="Modify trust attributes of EC Root CA -t TC,TC,TC"
-      certu -M -n "TestCA-ec" -t "TC,TC,TC" -d ${PROFILEDIR} -f "${R_PWFILE}"
-  fi
+  CU_ACTION="Modify trust attributes of EC Root CA -t TC,TC,TC"
+  certu -M -n "TestCA-ec" -t "TC,TC,TC" -d ${PROFILEDIR} -f "${R_PWFILE}"
 #  cert_init_cert ${SERVERDIR} "${HOSTADDR}" 1 ${D_SERVER}
 #  echo "************* Copying CA files to ${SERVERDIR}"
 #  cp ${CADIR}/*.db .
@@ -1296,7 +1277,6 @@ cert_eccurves()
 {
   ################# Creating Certs for EC curves test ########################
   #
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
     echo "$SCRIPTNAME: Creating Server CA Issued Certificate for "
     echo "             EC Curves Test Certificates ------------------------------------"
 
@@ -1337,8 +1317,6 @@ cert_eccurves()
 		-f "${R_PWFILE}" -i "${CERTNAME}-ec.cert" 2>&1
 	fi
     done
-
-  fi # $NSS_DISABLE_ECC
 }
 
 ########################### cert_extensions_test #############################
@@ -1690,7 +1668,6 @@ EOF_CRLINI
 
 
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
       CU_ACTION="Generating CRL (ECC) for range ${CRL_GRP_1_BEGIN}-${CRL_GRP_END} TestCA-ec authority"
 
 #     Until Bug 292285 is resolved, do not encode x400 Addresses. After
@@ -1705,7 +1682,6 @@ addext issuerAltNames 0 "rfc822Name:ca-ecemail@ca.com|dnsName:ca-ec.com|director
 EOF_CRLINI
       CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
       chmod 600 ${CRL_FILE_GRP_1}_or-ec
-  fi
 
   echo test > file
   ############################# Modification ##################################
@@ -1736,7 +1712,6 @@ EOF_CRLINI
   TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or-dsa"
 
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
       CU_ACTION="Modify CRL (ECC) by adding one more cert"
       crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} \
 	  -o ${CRL_FILE_GRP_1}_or1-ec -i ${CRL_FILE_GRP_1}_or-ec <<EOF_CRLINI
@@ -1746,7 +1721,6 @@ EOF_CRLINI
       CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
       chmod 600 ${CRL_FILE_GRP_1}_or1-ec
       TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or-ec"
-  fi
 
   ########### Removing one cert ${UNREVOKED_CERT_GRP_1} #######################
   echo "$SCRIPTNAME: Modifying CA CRL by removing one cert ==============="
@@ -1775,7 +1749,6 @@ EOF_CRLINI
 
 
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
       CU_ACTION="Modify CRL (ECC) by removing one cert"
       crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}-ec \
 	  -i ${CRL_FILE_GRP_1}_or1-ec <<EOF_CRLINI
@@ -1784,7 +1757,6 @@ rmcert  ${UNREVOKED_CERT_GRP_1}
 EOF_CRLINI
       chmod 600 ${CRL_FILE_GRP_1}-ec
       TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or1-ec"
-  fi
 
   ########### Creating second CRL which includes groups 1 and 2 ##############
   CRL_GRP_END=`expr ${CRL_GRP_2_BEGIN} + ${CRL_GRP_2_RANGE} - 1`
@@ -1804,7 +1776,6 @@ rmcert  ${UNREVOKED_CERT_GRP_2}
 EOF_CRLINI
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
   chmod 600 ${CRL_FILE_GRP_2}
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
       CU_ACTION="Creating CRL (ECC) for groups 1 and 2"
       crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} -o ${CRL_FILE_GRP_2}-ec \
           -i ${CRL_FILE_GRP_1}-ec <<EOF_CRLINI
@@ -1815,7 +1786,6 @@ rmcert  ${UNREVOKED_CERT_GRP_2}
 EOF_CRLINI
       CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
       chmod 600 ${CRL_FILE_GRP_2}-ec
-  fi
 
   ########### Creating second CRL which includes groups 1, 2 and 3 ##############
   CRL_GRP_END=`expr ${CRL_GRP_3_BEGIN} + ${CRL_GRP_3_RANGE} - 1`
@@ -1837,7 +1807,6 @@ addext crlNumber 0 2
 EOF_CRLINI
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
   chmod 600 ${CRL_FILE_GRP_3}
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
       CU_ACTION="Creating CRL (ECC) for groups 1, 2 and 3"
       crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} -o ${CRL_FILE_GRP_3}-ec \
           -i ${CRL_FILE_GRP_2}-ec <<EOF_CRLINI
@@ -1848,7 +1817,6 @@ addext crlNumber 0 2
 EOF_CRLINI
       CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
       chmod 600 ${CRL_FILE_GRP_3}-ec
-  fi
 
   ############ Importing Server CA Issued CRL for certs of first group #######
 
@@ -1857,13 +1825,11 @@ EOF_CRLINI
   crlu -D -n TestCA  -f "${R_PWFILE}" -d "${R_SERVERDIR}"
   crlu -I -i ${CRL_FILE} -n "TestCA" -f "${R_PWFILE}" -d "${R_SERVERDIR}"
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
       CU_ACTION="Importing CRL (ECC) for groups 1"
       crlu -D -n TestCA-ec  -f "${R_PWFILE}" -d "${R_SERVERDIR}"
       crlu -I -i ${CRL_FILE}-ec -n "TestCA-ec" -f "${R_PWFILE}" \
 	  -d "${R_SERVERDIR}"
       CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
-  fi
 
   if [ "$CERTFAILED" != 0 -o "$CRL_GEN_RES" != 0 ] ; then
       cert_log "ERROR: SSL CRL prep failed $CERTFAILED : $CRL_GEN_RES"

@@ -146,10 +146,6 @@ endif
 # [16.0] Global environ ment defines
 #######################################################################
 
-ifdef NSS_DISABLE_ECC
-DEFINES += -DNSS_DISABLE_ECC
-endif
-
 ifdef NSS_ALLOW_UNSUPPORTED_CRITICAL
 DEFINES += -DNSS_ALLOW_UNSUPPORTED_CRITICAL
 endif

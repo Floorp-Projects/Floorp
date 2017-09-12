@@ -355,10 +355,7 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceReuseKey) {
 
 // This test parses the ServerKeyExchange, which isn't in 1.3
 TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceNewKey) {
-  server_->EnsureTlsSetup();
-  SECStatus rv =
-      SSL_OptionSet(server_->ssl_fd(), SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
-  EXPECT_EQ(SECSuccess, rv);
+  server_->SetOption(SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
   auto i1 = std::make_shared<TlsInspectorRecordHandshakeMessage>(
       kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i1);
@@ -369,9 +366,7 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceNewKey) {
 
   // Restart
   Reset();
-  server_->EnsureTlsSetup();
-  rv = SSL_OptionSet(server_->ssl_fd(), SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
-  EXPECT_EQ(SECSuccess, rv);
+  server_->SetOption(SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
   auto i2 = std::make_shared<TlsInspectorRecordHandshakeMessage>(
       kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i2);
