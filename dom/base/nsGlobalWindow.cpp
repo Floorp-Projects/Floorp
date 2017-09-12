@@ -4387,12 +4387,12 @@ nsPIDOMWindowInner::SyncStateFromParentWindow()
 void
 nsGlobalWindow::UpdateTopInnerWindow()
 {
-  if (!IsInnerWindow() || AsInner()->IsTopInnerWindow()) {
+  if (!IsInnerWindow() || AsInner()->IsTopInnerWindow() || !mTopInnerWindow) {
     return;
   }
 
-  AsInner()->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
-  AsInner()->UpdateUserMediaCount(-(int32_t)mNumOfActiveUserMedia);
+  mTopInnerWindow->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
+  mTopInnerWindow->UpdateUserMediaCount(-(int32_t)mNumOfActiveUserMedia);
 }
 
 void
