@@ -334,18 +334,12 @@ static pthread_key_t tlsIndex;
 #else
 #  define SIZEOF_PTR_2POW       2
 #endif
-#define PIC
 
 #define	SIZEOF_PTR		(1U << SIZEOF_PTR_2POW)
 
 /* sizeof(int) == (1U << SIZEOF_INT_2POW). */
 #ifndef SIZEOF_INT_2POW
 #  define SIZEOF_INT_2POW	2
-#endif
-
-/* We can't use TLS in non-PIC programs, since TLS relies on loader magic. */
-#if (!defined(PIC) && !defined(NO_TLS))
-#  define NO_TLS
 #endif
 
 /*
