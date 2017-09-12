@@ -64,8 +64,8 @@ this.HostManifestManager = {
         this._lookup = this._winLookup;
       } else if (platform == "macosx" || platform == "linux") {
         let dirs = [
-          Services.dirsvc.get("XREUserNativeMessaging", Ci.nsIFile).path,
-          Services.dirsvc.get("XRESysNativeMessaging", Ci.nsIFile).path,
+          Services.dirsvc.get("XREUserNativeManifests", Ci.nsIFile).path,
+          Services.dirsvc.get("XRESysNativeManifests", Ci.nsIFile).path,
         ];
         this._lookup = (application, context) => this._tryPaths(application, dirs, context);
       } else {
