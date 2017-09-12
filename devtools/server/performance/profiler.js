@@ -387,7 +387,7 @@ const ProfilerManager = (function () {
       if (this._profilerStatusSubscribers > 0 && nsIProfilerModule.IsActive()) {
         if (!this._poller) {
           this._poller = new DeferredTask(this._emitProfilerStatus.bind(this),
-                                          this._profilerStatusInterval);
+                                          this._profilerStatusInterval, 0);
         }
         this._poller.arm();
       } else if (this._poller) {

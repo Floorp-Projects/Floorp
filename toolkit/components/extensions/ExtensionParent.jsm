@@ -52,7 +52,6 @@ var {
   defineLazyGetter,
   promiseDocumentLoaded,
   promiseEvent,
-  promiseFileContents,
   promiseObserved,
 } = ExtensionUtils;
 
@@ -485,8 +484,7 @@ class ExtensionPageContextParent extends ProxyContextParent {
   // The window that contains this context. This may change due to moving tabs.
   get xulWindow() {
     let win = this.xulBrowser.ownerGlobal;
-    return win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
-              .QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
+    return win.document.docShell.rootTreeItem
               .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
   }
 
@@ -1435,9 +1433,9 @@ StartupCache = {
   async _readData() {
     let result = new Map();
     try {
-      let data = await promiseFileContents(this.file);
+      let {buffer} = await OS.File.read(this.file);
 
-      result = aomStartup.decodeBlob(data);
+      result = aomStartup.decodeBlob(buffer);
     } catch (e) {
       if (!e.becauseNoSuchFile) {
         Cu.reportError(e);

@@ -75,10 +75,6 @@ CookieServiceChild::CookieServiceChild()
 
   NeckoChild::InitNeckoChild();
 
-  gNeckoChild->SetEventTargetForActor(
-    this,
-    SystemGroup::EventTargetFor(TaskCategory::Other));
-
   // Create a child PCookieService actor.
   gNeckoChild->SendPCookieServiceConstructor(this);
 

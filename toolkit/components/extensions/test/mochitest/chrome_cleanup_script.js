@@ -5,6 +5,13 @@
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+let listener = msg => {
+  void (msg instanceof Components.interfaces.nsIConsoleMessage);
+  dump(`Console message: ${msg}\n`);
+};
+
+Services.console.registerListener(listener);
+
 let getBrowserApp, getTabBrowser;
 if (AppConstants.MOZ_BUILD_APP === "mobile/android") {
   getBrowserApp = win => win.BrowserApp;
@@ -30,6 +37,8 @@ for (let win of iterBrowserWindows()) {
 }
 
 addMessageListener("check-cleanup", extensionId => {
+  Services.console.unregisterListener(listener);
+
   let results = {
     extraWindows: [],
     extraTabs: [],

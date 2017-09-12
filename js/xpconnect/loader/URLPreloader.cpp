@@ -202,6 +202,20 @@ URLPreloader::WriteCache()
 {
     MOZ_ASSERT(!NS_IsMainThread());
 
+    // The script preloader might call us a second time, if it has to re-write
+    // its cache after a cache flush. We don't care about cache flushes, since
+    // our cache doesn't store any file data, only paths. And we currently clear
+    // our cached file list after the first write, which means that a second
+    // write would (aside from breaking the invariant that we never touch
+    // mCachedURLs off-main-thread after the first write, and trigger a data
+    // race) mean we get no pre-loading on the next startup.
+    if (mCacheWritten) {
+        return Ok();
+    }
+    mCacheWritten = true;
+
+    LOG(Debug, "Writing cache...");
+
     nsCOMPtr<nsIFile> cacheFile;
     MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING("-new.bin")));
 
@@ -256,6 +270,8 @@ URLPreloader::Cleanup()
 Result<Ok, nsresult>
 URLPreloader::ReadCache(LinkedList<URLEntry>& pendingURLs)
 {
+    LOG(Debug, "Reading cache...");
+
     nsCOMPtr<nsIFile> cacheFile;
     MOZ_TRY_VAR(cacheFile, FindCacheFile());
 
@@ -300,6 +316,8 @@ URLPreloader::ReadCache(LinkedList<URLEntry>& pendingURLs)
         InputBuffer buf(header);
         while (!buf.finished()) {
             CacheKey key(buf);
+
+            LOG(Debug, "Cached file: %s %s", key.TypeString(), key.mPath.get());
 
             auto entry = mCachedURLs.LookupOrAdd(key, key);
             entry->mResultCode = NS_ERROR_NOT_INITIALIZED;
@@ -384,6 +402,8 @@ URLPreloader::BackgroundReadFiles()
         }
 
         nsresult rv = NS_OK;
+
+        LOG(Debug, "Background reading %s file %s", entry->TypeString(), entry->mPath.get());
 
         if (entry->mType == entry->TypeFile) {
             auto result = entry->Read();

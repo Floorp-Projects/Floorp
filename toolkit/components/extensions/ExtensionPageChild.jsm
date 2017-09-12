@@ -363,8 +363,7 @@ ExtensionPageChild = {
       throw new Error("An extension context was already initialized for this frame");
     }
 
-    let mm = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDocShell)
+    let mm = contentWindow.document.docShell
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIContentFrameMessageManager);
 

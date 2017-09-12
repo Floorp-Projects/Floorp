@@ -382,7 +382,7 @@ this.ExtensionData = class {
 
   async readDirectory(path) {
     if (this.rootURI instanceof Ci.nsIFileURL) {
-      let uri = Services.io.newURI(this.rootURI.resolve("./" + path));
+      let uri = Services.io.newURI("./" + path, null, this.rootURI);
       let fullPath = uri.QueryInterface(Ci.nsIFileURL).file.path;
 
       let iter = new OS.File.DirectoryIterator(fullPath);
@@ -1718,7 +1718,6 @@ this.Langpack = class extends ExtensionData {
             chromeEntries.push(["locale", alias, language, path[platform]]);
           }
         }
-
       }
     }
     return chromeEntries;
