@@ -2048,57 +2048,53 @@ MediaFormatReader::HandleDemuxedSamples(
     return;
   }
 
-  if (!decoder.mDecoder) {
-    mDecoderFactory->CreateDecoder(aTrack);
-    return;
-  }
-
-  LOGV("Giving %s input to decoder", TrackTypeToStr(aTrack));
-
   // Decode all our demuxed frames.
   while (decoder.mQueuedSamples.Length()) {
     RefPtr<MediaRawData> sample = decoder.mQueuedSamples[0];
-    RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
+    const RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
 
     if (info && decoder.mLastStreamSourceID != info->GetID()) {
-      bool recyclable = MediaPrefs::MediaDecoderCheckRecycling() &&
-                        decoder.mDecoder->SupportDecoderRecycling();
-      if (!recyclable && decoder.mTimeThreshold.isNothing() &&
-          (decoder.mNextStreamSourceID.isNothing() ||
-           decoder.mNextStreamSourceID.ref() != info->GetID())) {
-        LOG("%s stream id has changed from:%d to:%d, draining decoder.",
-            TrackTypeToStr(aTrack),
-            decoder.mLastStreamSourceID,
-            info->GetID());
-        decoder.RequestDrain();
-        decoder.mNextStreamSourceID = Some(info->GetID());
-        ScheduleUpdate(aTrack);
-        return;
+      nsTArray<RefPtr<MediaRawData>> samples;
+      if (decoder.mDecoder) {
+        bool recyclable = MediaPrefs::MediaDecoderCheckRecycling() &&
+                          decoder.mDecoder->SupportDecoderRecycling();
+        if (!recyclable && decoder.mTimeThreshold.isNothing() &&
+            (decoder.mNextStreamSourceID.isNothing() ||
+             decoder.mNextStreamSourceID.ref() != info->GetID())) {
+          LOG("%s stream id has changed from:%d to:%d, draining decoder.",
+              TrackTypeToStr(aTrack),
+              decoder.mLastStreamSourceID,
+              info->GetID());
+          decoder.RequestDrain();
+          decoder.mNextStreamSourceID = Some(info->GetID());
+          ScheduleUpdate(aTrack);
+          return;
+        }
+
+        // If flushing is required, it will clear our array of queued samples.
+        // So we may need to make a copy.
+        samples = decoder.mQueuedSamples;
+        if (!recyclable) {
+          LOG("Decoder does not support recycling, recreate decoder.");
+          ShutdownDecoder(aTrack);
+        } else if (decoder.HasWaitingPromise()) {
+          decoder.Flush();
+        }
       }
 
       LOG("%s stream id has changed from:%d to:%d.",
-          TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
+          TrackTypeToStr(aTrack),
+          decoder.mLastStreamSourceID,
           info->GetID());
-      decoder.mLastStreamSourceID = info->GetID();
+
       decoder.mNextStreamSourceID.reset();
-
-      if (!recyclable) {
-        LOG("Decoder does not support recycling, recreate decoder.");
-        // If flushing is required, it will clear our array of queued samples.
-        // So make a copy now.
-        nsTArray<RefPtr<MediaRawData>> samples{ Move(decoder.mQueuedSamples) };
-        ShutdownDecoder(aTrack);
-        if (sample->mKeyframe) {
-          decoder.mQueuedSamples.AppendElements(Move(samples));
-        }
-      } else if (decoder.HasWaitingPromise()) {
-        decoder.Flush();
-      }
-
+      decoder.mLastStreamSourceID = info->GetID();
       decoder.mInfo = info;
 
       if (sample->mKeyframe) {
-        ScheduleUpdate(aTrack);
+        if (samples.Length()) {
+          decoder.mQueuedSamples = Move(samples);
+        }
       } else {
         auto time = TimeInterval(sample->mTime, sample->GetEndTime());
         InternalSeekTarget seekTarget =
@@ -2106,7 +2102,12 @@ MediaFormatReader::HandleDemuxedSamples(
         LOG("Stream change occurred on a non-keyframe. Seeking to:%" PRId64,
             sample->mTime.ToMicroseconds());
         InternalSeek(aTrack, seekTarget);
+        return;
       }
+    }
+
+    if (!decoder.mDecoder) {
+      mDecoderFactory->CreateDecoder(aTrack);
       return;
     }
 
