@@ -3,24 +3,24 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, print_function
 
 import copy
-import mozversion
 import os
 import sys
 import time
 import traceback
 import urllib
-import utils
+
 import mozhttpd
-
+import mozversion
+import utils
 from mozlog import get_proxy_logger
-
+from talos.config import get_configs, ConfigurationError
 from talos.mitmproxy import mitmproxy
 from talos.results import TalosResults
 from talos.ttest import TTest
 from talos.utils import TalosError, TalosRegression
-from talos.config import get_configs, ConfigurationError
 
 # directory of this file
 here = os.path.dirname(os.path.realpath(__file__))

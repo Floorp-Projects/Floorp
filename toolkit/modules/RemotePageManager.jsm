@@ -206,6 +206,13 @@ function publicMessagePort(port) {
         return port.browser;
       }
     });
+
+    Object.defineProperty(clean, "url", {
+      enumerable: true,
+      get() {
+        return port.url;
+      }
+    });
   }
 
   return clean;
@@ -303,11 +310,12 @@ MessagePort.prototype = {
 
 
 // The chome side of a message port
-function ChromeMessagePort(browser, portID) {
+function ChromeMessagePort(browser, portID, url) {
   MessagePort.call(this, browser.messageManager, portID);
 
   this._browser = browser;
   this._permanentKey = browser.permanentKey;
+  this._url = url;
 
   Services.obs.addObserver(this, "message-manager-disconnect");
   this.publicPort = publicMessagePort(this);
@@ -321,6 +329,12 @@ ChromeMessagePort.prototype = Object.create(MessagePort.prototype);
 Object.defineProperty(ChromeMessagePort.prototype, "browser", {
   get() {
     return this._browser;
+  }
+});
+
+Object.defineProperty(ChromeMessagePort.prototype, "url", {
+  get() {
+    return this._url;
   }
 });
 
@@ -512,7 +526,7 @@ var RemotePageManagerInternal = {
       return;
     }
 
-    let port = new ChromeMessagePort(browser, portID);
+    let port = new ChromeMessagePort(browser, portID, url);
     callback(port.publicPort);
   }
 };

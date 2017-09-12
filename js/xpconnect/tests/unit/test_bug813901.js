@@ -21,5 +21,5 @@ function run_test() {
   checkThrows('obj.foo = 3;', sb, /denied/);
   Cu.evalInSandbox("var p = {__exposedProps__: {foo: 'rw'}};", sb);
   sb.obj.__proto__ = sb.p;
-  checkThrows('obj.foo = 4;', sb, /__exposedProps__/);
+  checkThrows('obj.foo = 4;', sb, /denied/);
 }

@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804630
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  /** Test to make sure that COWed objects can expose properties from their prototypes. **/
+  /** Test to make sure that COWed objects can't expose properties from their prototypes. **/
   const Cu = Components.utils;
 
   // Set up the sandbox.
@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804630
   sb.ok = ok;
   sb.is = is;
 
-  // Make a chrome object that exposes objects off its prototype.
+  // Make a chrome object that tries to expose objects off its prototype.
   sb.proto = { read: 42, readWrite: 32, __exposedProps__: {} };
   sb.obj = { __exposedProps__: { read: 'r', readWrite: 'rw' } };
   sb.obj.__proto__ = sb.proto;
@@ -36,10 +36,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804630
                    'try { proto.readWrite = 12; wrote = true; } catch(e) {} ' +
                    ' ok(!wrote, "Should not write proto property");', sb);
 
-  // Make sure we can access the exposed properties via the derived object.
-  Cu.evalInSandbox('is(obj.read, 42, "obj.read accessible");', sb);
-  Cu.evalInSandbox('is(obj.readWrite, 32, "obj.readWrite is readable");', sb);
-  Cu.evalInSandbox('obj.readWrite = 8; is(obj.readWrite, 8, "obj.readWrite is writable");', sb);
+  // Make sure we can't access the exposed properties via the derived object.
+  Cu.evalInSandbox('is(obj.read, undefined, "obj.read inaccessible");', sb);
+  Cu.evalInSandbox('is(obj.readWrite, undefined, "obj.readWrite is not readable");', sb);
+  Cu.evalInSandbox('try { obj.readWrite = 8; ok(false, "obj.readWrite is not writable"); } catch (e) {};',
+                   sb);
 
   ]]>
   </script>

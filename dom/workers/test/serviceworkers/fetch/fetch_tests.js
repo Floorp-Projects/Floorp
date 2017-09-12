@@ -412,7 +412,11 @@ fetch('interrupt.sjs')
 ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'].forEach(function(method) {
   fetchXHRWithMethod('xhr-method-test.txt', method, function(xhr) {
     my_ok(xhr.status == 200, method + " load should be successful");
-    my_ok(xhr.responseText == ("intercepted " + method), method + " load should have synthesized response");
+    if (method === "HEAD") {
+      my_ok(xhr.responseText == "", method + "load should not have synthesized response");
+    } else {
+      my_ok(xhr.responseText == ("intercepted " + method), method + " load should have synthesized response");
+    }
     finish();
   });
 });

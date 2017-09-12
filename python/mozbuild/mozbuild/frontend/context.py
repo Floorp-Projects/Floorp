@@ -297,6 +297,35 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
             self.update(value)
 
 
+class CompileFlags(ContextDerivedValue, dict):
+    def __init__(self, context):
+        self.flag_variables = (
+            ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
+            ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
+        )
+        self._known_keys = set(k for k, v, _ in self.flag_variables)
+
+        # Providing defaults here doesn't play well with multiple templates
+        # modifying COMPILE_FLAGS from the same moz.build, because the merge
+        # done after the template runs can't tell which values coming from
+        # a template were set and which were provided as defaults.
+        template_name = getattr(context, 'template', None)
+        if template_name in (None, 'Gyp'):
+            dict.__init__(self, ((k, TypedList(unicode)(v)) for k, v, _ in self.flag_variables))
+        else:
+            dict.__init__(self)
+
+    def __setitem__(self, key, value):
+        if key not in self._known_keys:
+            raise ValueError('Invalid value. `%s` is not a compile flags '
+                             'category.' % key)
+        if not (isinstance(value, list) and all(isinstance(v, unicode) for v in value)):
+            raise ValueError('A list of strings must be provided as a value for a '
+                             'compile flags category.')
+        dict.__setitem__(self, key, value)
+
+
 class FinalTargetValue(ContextDerivedValue, unicode):
     def __new__(cls, context, value=""):
         if not value:
@@ -1106,11 +1135,6 @@ VARIABLES = {
            FINAL_TARGET_FILES.images['do-not-use'] += ['bar.svg']
         """),
 
-    'DISABLE_STL_WRAPPING': (bool, bool,
-        """Disable the wrappers for STL which allow it to work with C++ exceptions
-        disabled.
-        """),
-
     'FINAL_TARGET_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """),
@@ -1238,10 +1262,6 @@ VARIABLES = {
 
     'NO_PGO': (bool, bool,
         """Whether profile-guided optimization is disable in this directory.
-        """),
-
-    'NO_VISIBILITY_FLAGS': (bool, bool,
-        """Build sources listed in this file without VISIBILITY_FLAGS.
         """),
 
     'OS_LIBS': (List, list,
@@ -1686,6 +1706,11 @@ VARIABLES = {
 
     'SPHINX_PYTHON_PACKAGE_DIRS': (StrictOrderingOnAppendList, list,
         """Directories containing Python packages that Sphinx documents.
+        """),
+
+    'COMPILE_FLAGS': (CompileFlags, dict,
+        """Recipe for compile flags for this context. Not to be manipulated
+        directly.
         """),
 
     'CFLAGS': (List, list,
@@ -2147,6 +2172,16 @@ DEPRECATION_HINTS = {
             CPP_UNIT_TESTS += ['foo', 'bar']
         ''',
 
+    'DISABLE_STL_WRAPPING': '''
+        Please use
+
+            DisableStlWrapping()
+
+        instead of
+
+            DISABLE_STL_WRAPPING = True
+        ''',
+
     'HOST_PROGRAM': '''
         Please use
 
@@ -2185,6 +2220,16 @@ DEPRECATION_HINTS = {
         instead of
 
             LIBRARY_NAME = 'foo'
+        ''',
+
+    'NO_VISIBILITY_FLAGS': '''
+        Please use
+
+            NoVisibilityFlags()
+
+        instead of
+
+            NO_VISIBILITY_FLAGS = True
         ''',
 
     'PROGRAM': '''

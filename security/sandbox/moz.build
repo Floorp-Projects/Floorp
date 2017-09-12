@@ -165,7 +165,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += ['/security/sandbox/chromium']
     LOCAL_INCLUDES += ['/nsprpub']
 
-    DISABLE_STL_WRAPPING = True
+    DisableStlWrapping()
 
     # Suppress warnings in third-party code.
     if CONFIG['_MSC_VER']:
