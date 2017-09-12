@@ -164,8 +164,6 @@
   fill: currentColor;
   fill-opacity: 0.6;
   color: inherit;
-  transition-property: background-color;
-  transition-duration: var(--toolbarbutton-hover-transition-duration);
 }
 
 :root[uidensity=compact] .urlbar-icon {
