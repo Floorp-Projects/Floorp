@@ -165,9 +165,7 @@ PrintUsageHeader(const char *progName)
             "         [-V [min-version]:[max-version]] [-a sni_name]\n"
             "         [ T <good|revoked|unknown|badsig|corrupted|none|ocsp>] [-A ca]\n"
             "         [-C SSLCacheEntries] [-S dsa_nickname] -Q [-I groups]"
-#ifndef NSS_DISABLE_ECC
             " [-e ec_nickname]"
-#endif /* NSS_DISABLE_ECC */
             "\n"
             "         -U [0|1] -H [0|1|2] -W [0|1]\n"
             "\n",
@@ -2343,7 +2341,6 @@ main(int argc, char **argv)
                 dir = optstate->value;
                 break;
 
-#ifndef NSS_DISABLE_ECC
             case 'e':
                 if (certNicknameIndex >= MAX_CERT_NICKNAME_ARRAY_INDEX) {
                     Usage(progName);
@@ -2351,7 +2348,6 @@ main(int argc, char **argv)
                 }
                 certNicknameArray[certNicknameIndex++] = PORT_Strdup(optstate->value);
                 break;
-#endif /* NSS_DISABLE_ECC */
 
             case 'f':
                 pwdata.source = PW_FROMFILE;
@@ -2681,9 +2677,7 @@ main(int argc, char **argv)
                     certNicknameArray[i]);
             exit(11);
         }
-#ifdef NSS_DISABLE_ECC
         if (privKey[i]->keyType != ecKey)
-#endif
             setupCertStatus(certStatusArena, ocspStaplingMode, cert[i], i, &pwdata);
     }
 

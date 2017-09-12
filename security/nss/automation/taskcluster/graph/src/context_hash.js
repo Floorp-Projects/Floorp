@@ -27,14 +27,24 @@ function collectFilesInDirectory(dir) {
   });
 }
 
-// Compute a context hash for the given context path.
-export default function (context_path) {
+// A list of hashes for each file in the given path.
+function collectFileHashes(context_path) {
   let root = path.join(__dirname, "../../../..");
   let dir = path.join(root, context_path);
   let files = collectFilesInDirectory(dir).sort();
-  let hashes = files.map(file => {
+
+  return files.map(file => {
     return sha256(file + "|" + fs.readFileSync(file, "utf-8"));
   });
+}
+
+// Compute a context hash for the given context path.
+export default function (context_path) {
+  // Regenerate all images when the image_builder changes.
+  let hashes = collectFileHashes("automation/taskcluster/image_builder");
+
+  // Regenerate images when the image itself changes.
+  hashes = hashes.concat(collectFileHashes(context_path));
 
   // Generate a new prefix every month to ensure the image stays buildable.
   let now = new Date();

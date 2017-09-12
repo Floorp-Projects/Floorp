@@ -559,12 +559,13 @@ async function scheduleFuzzing() {
 
   // Schedule MPI fuzzing runs.
   let mpi_base = merge(run_base, {group: "MPI"});
-  let mpi_names = ["add", "addmod", "div", "expmod", "mod", "mulmod", "sqr",
+  let mpi_names = ["add", "addmod", "div", "mod", "mulmod", "sqr",
                    "sqrmod", "sub", "submod"];
   for (let name of mpi_names) {
     scheduleFuzzingRun(mpi_base, `MPI (${name})`, `mpi-${name}`, 4096, name);
   }
   scheduleFuzzingRun(mpi_base, `MPI (invmod)`, `mpi-invmod`, 256, "invmod");
+  scheduleFuzzingRun(mpi_base, `MPI (expmod)`, `mpi-expmod`, 2048, "expmod");
 
   // Schedule TLS fuzzing runs (non-fuzzing mode).
   let tls_base = merge(run_base, {group: "TLS"});
