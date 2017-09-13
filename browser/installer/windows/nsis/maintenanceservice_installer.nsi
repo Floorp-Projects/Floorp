@@ -51,9 +51,7 @@ Var BrandFullName
 ; We keep defines.nsi defined so that we get other things like 
 ; the version number, but we redefine BrandFullName
 !define MaintFullName "Mozilla Maintenance Service"
-!ifdef BrandFullName
 !undef BrandFullName
-!endif
 !define BrandFullName "${MaintFullName}"
 
 !include common.nsh
