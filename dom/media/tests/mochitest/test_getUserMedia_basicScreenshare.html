@@ -8,32 +8,36 @@
 <script type="application/javascript">
   createHTML({
     title: "getUserMedia Basic Screenshare Test",
-    bug: "1211656"
+    bug: "1211656",
   });
-
-  var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 
   /**
    * Run a test to verify that we can complete a start and stop media playback
-   * cycle for a screenshare LocalMediaStream on a video HTMLMediaElement.
+   * cycle for a screenshare MediaStream on a video HTMLMediaElement.
    */
-  runTest(function () {
+  runTest(async function () {
     const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
     if (IsMacOSX10_6orOlder() || isWinXP) {
         ok(true, "Screensharing disabled for OSX10.6 and WinXP");
         return;
     }
-    var testVideo = createMediaElement('video', 'testVideo');
+    let testVideo = createMediaElement('video', 'testVideo');
 
-    var constraints = {
+    // Screensharing must work even without "mochi.test," in allowed_domains
+    await pushPrefs(["media.getusermedia.screensharing.allowed_domains",
+                     "mozilla.github.io,*.bugzilla.mozilla.org"]);
+
+    info("Testing screenshare without constraints");
+    let stream = await getUserMedia({
+      video: {mediaSource: "screen"},
+      fake: false,
+    });
+    let playback = new LocalMediaStreamPlayback(testVideo, stream);
+    await playback.playMediaWithDeprecatedStreamStop(false);
+
+    info("Testing screenshare with size and framerate constraints");
+    stream = await getUserMedia({
       video: {
-         mozMediaSource: "screen",
-         mediaSource: "screen"
-      },
-      fake: false
-    };
-    var videoConstraints = [
-      {
         mediaSource: 'screen',
         width: {
           min: '10',
@@ -46,9 +50,17 @@
         frameRate: {
           min: '10',
           max: '15'
-        }
+        },
       },
-      {
+      fake: false,
+    });
+    playback = new LocalMediaStreamPlayback(testVideo, stream);
+    playback.startMedia(false);
+    await playback.verifyPlaying();
+
+    info("Testing modifying screenshare with applyConstraints");
+    await Promise.all([
+      () => testVideo.srcObject.getVideoTracks()[0].applyConstraints({
         mediaSource: 'screen',
         width: 200,
         height: 200,
@@ -56,29 +68,12 @@
           min: '5',
           max: '10'
         }
-      }
-    ];
-    return Promise.resolve()
-      // Screensharing must work even without "mochi.test," in allowed_domains
-      .then(() => pushPrefs(["media.getusermedia.screensharing.allowed_domains",
-                             "mozilla.github.io,*.bugzilla.mozilla.org"]))
-      .then(() => getUserMedia(constraints).then(stream => {
-        var playback = new LocalMediaStreamPlayback(testVideo, stream);
-        return playback.playMediaWithDeprecatedStreamStop(false);
-      }))
-      .then(() => getUserMedia({video: videoConstraints[0], fake: false}))
-      .then(stream => {
-        var playback = new LocalMediaStreamPlayback(testVideo, stream);
-        playback.startMedia(false);
-        return playback.verifyPlaying()
-          .then(() => Promise.all([
-            () => testVideo.srcObject.getVideoTracks()[0].applyConstraints(videoConstraints[1]),
-            () => listenUntil(testVideo, "resize", () => true)
-          ]))
-          .then(() => playback.verifyPlaying()) // still playing
-          .then(() => playback.deprecatedStopStreamInMediaPlayback())
-          .then(() => playback.detachFromMediaElement());
-      });
+      }),
+      () => listenUntil(testVideo, "resize", () => true),
+    ]);
+    await playback.verifyPlaying(); // still playing
+    await playback.deprecatedStopStreamInMediaPlayback();
+    playback.detachFromMediaElement();
   });
 
 </script>
