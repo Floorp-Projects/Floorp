@@ -214,6 +214,12 @@ Blob::Slice(const Optional<int64_t>& aStart,
   return blob.forget();
 }
 
+size_t
+Blob::GetAllocationSize() const
+{
+  return mImpl->GetAllocationSize();
+}
+
 NS_IMETHODIMP
 Blob::GetSendInfo(nsIInputStream** aBody,
                   uint64_t* aContentLength,
@@ -284,6 +290,13 @@ void
 Blob::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   mImpl->GetInternalStream(aStream, aRv);
+}
+
+uint64_t
+BindingJSObjectMallocBytes(Blob* aBlob)
+{
+  MOZ_ASSERT(aBlob);
+  return aBlob->GetAllocationSize();
 }
 
 } // namespace dom

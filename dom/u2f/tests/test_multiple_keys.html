@@ -1,39 +1,46 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <head>
-  <title>Test for Multiple Keys for FIDO U2F</title>
+  <title>FIDO U2F: Multiple Keys</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="u2futil.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="frame_utils.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-
-<h1>Test Multiple Keys for FIDO U2F</h1>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1333592">Mozilla Bug 1333592</a>
-
-<script class="testbody" type="text/javascript">
-"use strict";
-
- /** Test for XBL scope behavior. **/
-SimpleTest.waitForExplicitFinish();
-
-// Embed the real test. It will take care of everything else.
-//
-// This is necessary since the U2F object on window is hidden behind a preference
-// and window won't pick up changes by pref without a reload.
-SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
-                                   ["security.webauth.u2f_enable_softtoken", true],
-                                   ["security.webauth.u2f_enable_usbtoken", false]]},
-function() {
-  // listen for messages from the test harness
-  window.addEventListener("message", handleEventMessage);
-  document.getElementById('testing_frame').src = "https://example.com/tests/dom/u2f/tests/frame_multiple_keys.html";
-});
-</script>
+<h1>FIDO U2F: Multiple Keys</h1>
+<ul>
+  <li><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681 (initial implementation)</a></li>
+  <li><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1245527">Mozilla Bug 1245527 (hardware rewrite)</a></li>
+</ul>
 
 <div id="framediv">
   <iframe id="testing_frame"></iframe>
 </div>
+
+<pre id="log"></pre>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+// listen for messages from the test harness
+window.addEventListener("message", handleEventMessage);
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
+                                   ["security.webauth.webauthn_enable_softtoken", true],
+                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
+  function(){
+    document.getElementById('testing_frame').src = "https://test2.example.com/tests/dom/u2f/tests/frame_multiple_keys.html";
+  });
+
+
+</script>
 
 </body>
 </html>

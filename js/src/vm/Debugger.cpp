@@ -1507,7 +1507,7 @@ Debugger::newCompletionValue(JSContext* cx, JSTrapStatus status, const Value& va
     /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj ||
-        !NativeDefineProperty(cx, obj, key, value, nullptr, nullptr, JSPROP_ENUMERATE))
+        !NativeDefineDataProperty(cx, obj, key, value, JSPROP_ENUMERATE))
     {
         return false;
     }
@@ -7963,7 +7963,7 @@ DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
             cx->markId(id);
             MutableHandleValue val = values[i];
             if (!cx->compartment()->wrap(cx, val) ||
-                !NativeDefineProperty(cx, nenv, id, val, nullptr, nullptr, 0))
+                !NativeDefineDataProperty(cx, nenv, id, val, 0))
             {
                 return false;
             }
@@ -8467,8 +8467,8 @@ DebuggerArguments::create(JSContext* cx, HandleObject proto, HandleDebuggerFrame
     MOZ_ASSERT(referent.numActualArgs() <= 0x7fffffff);
     unsigned fargc = referent.numActualArgs();
     RootedValue fargcVal(cx, Int32Value(fargc));
-    if (!NativeDefineProperty(cx, obj, cx->names().length, fargcVal, nullptr, nullptr,
-                              JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!NativeDefineDataProperty(cx, obj, cx->names().length, fargcVal,
+                                  JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return nullptr;
     }
@@ -8482,9 +8482,9 @@ DebuggerArguments::create(JSContext* cx, HandleObject proto, HandleDebuggerFrame
             return nullptr;
         id = INT_TO_JSID(i);
         if (!getobj ||
-            !NativeDefineProperty(cx, obj, id, UndefinedHandleValue,
-                                  JS_DATA_TO_FUNC_PTR(GetterOp, getobj.get()), nullptr,
-                                  JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
+            !NativeDefineAccessorProperty(cx, obj, id,
+                                          JS_DATA_TO_FUNC_PTR(GetterOp, getobj.get()), nullptr,
+                                          JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
         {
             return nullptr;
         }

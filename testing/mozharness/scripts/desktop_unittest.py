@@ -489,8 +489,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "mochitest": [("plain.*", "mochitest"),
                           ("browser-chrome.*", "browser-chrome"),
                           ("mochitest-devtools-chrome.*", "devtools-chrome"),
-                          ("chrome", "chrome"),
-                          ("jetpack.*", "jetpack")],
+                          ("chrome", "chrome")],
             "xpcshell": [("xpcshell", "xpcshell")],
             "reftest": [("reftest", "reftest"),
                         ("crashtest", "crashtest")]
@@ -670,6 +669,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_res_dir = self.query_abs_res_dir()
 
         max_verify_time = timedelta(minutes=60)
+        verify_time_exceeded = False
         start_time = datetime.now()
 
         if suites:
@@ -761,6 +761,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                         # tests so that a task timeout is not triggered, and so that
                         # (partial) results are made available in a timely manner.
                         self.info("TinderboxPrint: Verification too long: Not all tests were verified.<br/>")
+                        # Signal verify time exceeded, to break out of suites loop also.
+                        verify_time_exceeded = True
                         break
                     final_cmd = copy.copy(cmd)
                     final_cmd.extend(verify_args)
@@ -795,6 +797,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     else:
                         self.log("The %s suite: %s ran with return status: %s" %
                                  (suite_category, suite, tbpl_status), level=log_level)
+
+                if verify_time_exceeded:
+                    # Verification ran out of time, detected in inner loop.
+                    break
         else:
             self.debug('There were no suites to run for %s' % suite_category)
 

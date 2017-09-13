@@ -28,7 +28,7 @@ class ShutdownLeaks(object):
     def log(self, message):
         action = message['action']
 
-        # Remove 'log' when jetpack and clipboard are gone and/or structured.
+        # Remove 'log' when clipboard is gone and/or structured.
         if action in ('log', 'process_output'):
             line = message['message'] if action == 'log' else message['data']
 

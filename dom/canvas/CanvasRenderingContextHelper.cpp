@@ -40,19 +40,9 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
     {
       RefPtr<Blob> blob = aBlob;
 
-      ErrorResult rv;
-      uint64_t size = blob->GetSize(rv);
-      if (rv.Failed()) {
-        rv.SuppressException();
-      } else {
-        AutoJSAPI jsapi;
-        if (jsapi.Init(mGlobal)) {
-          JS_updateMallocCounter(jsapi.cx(), size);
-        }
-      }
-
       RefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
 
+      ErrorResult rv;
       mBlobCallback->Call(newBlob, rv);
 
       mGlobal = nullptr;

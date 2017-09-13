@@ -73,12 +73,6 @@ NativeIterator::trace(JSTracer* trc)
 
 typedef HashSet<jsid, DefaultHasher<jsid>> IdSet;
 
-static inline bool
-NewKeyValuePair(JSContext* cx, jsid id, const Value& val, MutableHandleValue rval)
-{
-    return NewValuePair(cx, IdToValue(id), val, rval);
-}
-
 template <bool CheckForDuplicates>
 static inline bool
 Enumerate(JSContext* cx, HandleObject pobj, jsid id,
@@ -542,7 +536,7 @@ js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
                     props);
 }
 
-static bool legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp);
+static bool property_iterator_next(JSContext* cx, unsigned argc, Value* vp);
 
 static inline PropertyIteratorObject*
 NewPropertyIteratorObject(JSContext* cx, unsigned flags)
@@ -583,7 +577,7 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
         // next method on the prototype doesn't break cross-global for .. in.
         // We don't have to do this for JSITER_ENUMERATE because that object always
         // takes an optimized path.
-        RootedFunction next(cx, NewNativeFunction(cx, legacy_iterator_next, 0,
+        RootedFunction next(cx, NewNativeFunction(cx, property_iterator_next, 0,
                                                   HandlePropertyName(cx->names().next)));
         if (!next)
             return nullptr;
@@ -1048,22 +1042,19 @@ NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval, b
     if (!GetProperty(cx, obj, obj, id, rval))
         return false;
 
-    // JS 1.7 only: for each (let [k, v] in obj)
-    if (ni->flags & JSITER_KEYVALUE)
-        return NewKeyValuePair(cx, id, rval, rval);
     return true;
 }
 
 bool
-js::IsLegacyIterator(HandleValue v)
+js::IsPropertyIterator(HandleValue v)
 {
-    return v.isObject() && v.toObject().hasClass(&PropertyIteratorObject::class_);
+    return v.isObject() && v.toObject().is<PropertyIteratorObject>();
 }
 
 MOZ_ALWAYS_INLINE bool
-legacy_iterator_next_impl(JSContext* cx, const CallArgs& args)
+property_iterator_next_impl(JSContext* cx, const CallArgs& args)
 {
-    MOZ_ASSERT(IsLegacyIterator(args.thisv()));
+    MOZ_ASSERT(IsPropertyIterator(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
@@ -1084,10 +1075,10 @@ legacy_iterator_next_impl(JSContext* cx, const CallArgs& args)
 }
 
 static bool
-legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp)
+property_iterator_next(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsLegacyIterator, legacy_iterator_next_impl>(cx, args);
+    return CallNonGenericMethod<IsPropertyIterator, property_iterator_next_impl>(cx, args);
 }
 
 size_t
@@ -1198,9 +1189,6 @@ js::NewStringIteratorObject(JSContext* cx, NewObjectKind newKind)
 JSObject*
 js::ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp)
 {
-    /* JSITER_KEYVALUE must always come with JSITER_FOREACH */
-    MOZ_ASSERT_IF(flags & JSITER_KEYVALUE, flags & JSITER_FOREACH);
-
     RootedObject obj(cx);
     if (vp.isObject()) {
         /* Common case. */

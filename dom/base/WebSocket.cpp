@@ -1707,6 +1707,11 @@ WebSocketImpl::Init(JSContext* aCx,
             break;
           }
 
+          if (parentWindow->GetScriptableTop() ==
+                innerWindow->GetScriptableTop()) {
+            break;
+          }
+
           currentInnerWindow = parentWindow->GetCurrentInnerWindow();
           if (NS_WARN_IF(!currentInnerWindow)) {
             return NS_ERROR_DOM_SECURITY_ERR;

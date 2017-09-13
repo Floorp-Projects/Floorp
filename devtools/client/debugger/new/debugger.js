@@ -43158,6 +43158,11 @@ function removeBreakpoint(state, action) {
 
   var locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
 
+  const pendingBp = state.getIn(["pendingBreakpoints", locationId]);
+  if (!pendingBp) {
+    return state.set("pendingBreakpoints", I.Map());
+  }
+
   return state.deleteIn(["pendingBreakpoints", locationId]);
 }
 

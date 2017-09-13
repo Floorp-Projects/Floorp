@@ -366,7 +366,7 @@ DefLexicalOperation(JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
     MOZ_ASSERT(CheckLexicalNameConflict(cx, lexicalEnv, varObj, name));
     RootedId id(cx, NameToId(name));
     RootedValue uninitialized(cx, MagicValue(JS_UNINITIALIZED_LEXICAL));
-    return NativeDefineProperty(cx, lexicalEnv, id, uninitialized, nullptr, nullptr, attrs);
+    return NativeDefineDataProperty(cx, lexicalEnv, id, uninitialized, attrs);
 }
 
 inline bool
@@ -406,8 +406,7 @@ InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj, HandleId id, Han
 {
     if (obj->is<PlainObject>() || obj->is<JSFunction>()) {
         unsigned propAttrs = GetInitDataPropAttrs(op);
-        return NativeDefineProperty(cx, obj.as<NativeObject>(), id, rhs, nullptr, nullptr,
-                                    propAttrs);
+        return NativeDefineDataProperty(cx, obj.as<NativeObject>(), id, rhs, propAttrs);
     }
 
     MOZ_ASSERT(obj->as<UnboxedPlainObject>().layout().lookup(id));

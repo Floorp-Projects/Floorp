@@ -1,6 +1,0 @@
-{
-  "id": "embedded-webextension@jetpack",
-  "version": "0.1.0",
-  "main": "./main.js",
-  "hasEmbeddedWebExtension": true
-}

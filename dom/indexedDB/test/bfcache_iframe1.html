@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+  var request = indexedDB.open(parent.location, 1);
+  request.onupgradeneeded = function(e) {
+    var db = e.target.result;
+    // This should never be called
+    db.onversionchange = function(e) {
+      db.transaction(["mystore"]).objectStore("mystore").put({ hello: "fail" }, 42);
+    }
+    var trans = e.target.transaction;
+    if (db.objectStoreNames.contains("mystore")) {
+      db.deleteObjectStore("mystore");
+    }
+    var store = db.createObjectStore("mystore");
+    store.add({ hello: "world" }, 42);
+    trans.oncomplete = function() {
+      parent.postMessage("go", "http://mochi.test:8888");
+    }
+  };
+  </script>
+</head>
+<body>
+  This is page one.
+</body>
+</html>

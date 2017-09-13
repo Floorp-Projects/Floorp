@@ -1,8 +1,0 @@
-{
-  "name": "anteater",
-  "author": "Jon Smith",
-  "description": "A package w/ a main module; can be built into an extension.",
-  "keywords": ["potato"],
-  "version": "1.0",
-  "dependencies": ["addon-sdk", "barbeque"]
-}

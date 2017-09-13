@@ -243,7 +243,8 @@ void AudioSendAndReceive::GenerateAndReadSamples()
 
     mSession->SendAudioFrame(audioInput.get(),
                              PLAYOUT_SAMPLE_LENGTH,
-                             PLAYOUT_SAMPLE_FREQUENCY,10);
+                             PLAYOUT_SAMPLE_FREQUENCY,
+                             1, 10);
 
     PR_Sleep(PR_MillisecondsToInterval(10));
     mOtherSession->GetAudioFrame(audioOutput.get(), PLAYOUT_SAMPLE_FREQUENCY,

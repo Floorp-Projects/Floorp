@@ -853,11 +853,8 @@ class MochitestDesktop(object):
             "Mochitest specific tbpl formatter")
         self.log = commandline.setup_logging("mochitest", logger_options, {"tbpl": sys.stdout})
 
-        # Jetpack flavors still don't use the structured logger. We need to process their output
-        # slightly differently.
-        structured = not self.flavor.startswith('jetpack')
         self.message_logger = MessageLogger(
-                logger=self.log, buffering=quiet, structured=structured)
+                logger=self.log, buffering=quiet, structured=True)
 
         # Max time in seconds to wait for server startup before tests will fail -- if
         # this seems big, it's mostly for debug machines where cold startup
@@ -936,7 +933,7 @@ class MochitestDesktop(object):
         if options.logFile:
             options.logFile = self.getLogFilePath(options.logFile)
 
-        if options.flavor in ('a11y', 'browser', 'chrome', 'jetpack-addon', 'jetpack-package'):
+        if options.flavor in ('a11y', 'browser', 'chrome'):
             self.makeTestConfig(options)
         else:
             if options.autorun:
@@ -1028,11 +1025,6 @@ class MochitestDesktop(object):
         if options.flavor == 'browser':
             allow_js_css = True
             testPattern = re.compile(r"browser_.+\.js")
-        elif options.flavor == 'jetpack-package':
-            allow_js_css = True
-            testPattern = re.compile(r"test-.+\.js")
-        elif options.flavor == 'jetpack-addon':
-            testPattern = re.compile(r".+\.xpi")
         elif options.flavor in ('a11y', 'chrome'):
             testPattern = re.compile(r"(browser|test)_.+\.(xul|html|js|xhtml)")
         else:
@@ -1076,7 +1068,7 @@ class MochitestDesktop(object):
 
         if options.flavor in ('a11y', 'chrome'):
             testURL = "/".join([testHost, self.CHROME_PATH])
-        elif options.flavor in ('browser', 'jetpack-addon', 'jetpack-package'):
+        elif options.flavor == 'browser':
             testURL = "about:blank"
         if options.nested_oop:
             testURL = "/".join([testHost, self.NESTED_OOP_TEST_PATH])
@@ -2343,6 +2335,7 @@ toolbar#nav-bar {
             stepOptions = copy.deepcopy(options)
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.keep_open = False
+            stepOptions.runUntilFailure = True
             result = self.runTests(stepOptions)
             self.message_logger.finish()
             return result
@@ -2431,7 +2424,7 @@ toolbar#nav-bar {
         self.logPreamble(tests)
         tests = [t for t in tests if 'disabled' not in t]
 
-        # Until we have all green, this does not run on jetpack*, or a11y (for perf reasons)
+        # Until we have all green, this does not run on a11y (for perf reasons)
         if not options.runByManifest:
             return self.runMochitests(options, [t['path'] for t in tests])
 

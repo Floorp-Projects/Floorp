@@ -92,6 +92,8 @@ public:
 
   virtual bool MayBeClonedToOtherThreads() const override;
 
+  size_t GetAllocationSize() const override;
+
 protected:
   MultipartBlobImpl(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
                     const nsAString& aName,
