@@ -72,6 +72,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
 import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.adjust.AdjustBrowserAppDelegate;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -1459,6 +1460,7 @@ public class BrowserApp extends GeckoApp
                 ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
+                        final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder = ActivityStreamTelemetry.Extras.builder();
                         final BrowserDB db = BrowserDB.from(BrowserApp.this);
                         final ContentResolver cr = getContentResolver();
                         final String url = selectedTab.getURL();
@@ -1467,14 +1469,19 @@ public class BrowserApp extends GeckoApp
                         if (!db.isPinnedForAS(cr, url)) {
                             db.pinSiteForAS(getContentResolver(), url, selectedTab.getTitle());
                             snackbarText = R.string.pinned_page_to_top_sites;
+                            telemetryExtraBuilder.set(ActivityStreamTelemetry.Contract.ITEM, ActivityStreamTelemetry.Contract.ITEM_PIN);
                         } else {
                             db.unpinSiteForAS(getContentResolver(), url);
                             snackbarText = R.string.unpinned_page_from_top_sites;
+                            telemetryExtraBuilder.set(ActivityStreamTelemetry.Contract.ITEM, ActivityStreamTelemetry.Contract.ITEM_UNPIN);
                         }
 
                         SnackbarBuilder.builder(BrowserApp.this)
                                 .message(snackbarText)
                                 .buildAndShow();
+
+                        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, // via browser menu.
+                                telemetryExtraBuilder.build());
                     }
                 });
             }
