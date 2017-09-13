@@ -4437,16 +4437,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry *entry,
     rv = OnCacheEntryAvailableInternal(entry, aNew, aAppCache, status);
     if (NS_FAILED(rv)) {
         CloseCacheEntry(false);
-        if (mNetworkTriggered && mFirstResponseSource != RESPONSE_FROM_CACHE) {
-            // Ignore the error if we're racing cache with network and the cache
-            // didn't win, The network part will handle cancelation or any other
-            // error. Otherwise we could end up calling the listener twice, see
-            // bug 1397593.
-            MOZ_RELEASE_ASSERT(mRaceCacheWithNetwork);
-            LOG(("  not calling AsyncAbort() because we're racing cache with network"));
-        } else {
-            Unused << AsyncAbort(rv);
-        }
+        Unused << AsyncAbort(rv);
     }
 
     return NS_OK;
