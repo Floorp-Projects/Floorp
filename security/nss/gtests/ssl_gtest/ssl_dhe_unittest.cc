@@ -59,8 +59,7 @@ TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
 
 TEST_P(TlsConnectGeneric, ConnectFfdheClient) {
   EnableOnlyDheCiphers();
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+  client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
   auto groups_capture =
       std::make_shared<TlsExtensionCapture>(ssl_supported_groups_xtn);
   auto shares_capture =
@@ -90,8 +89,7 @@ TEST_P(TlsConnectGeneric, ConnectFfdheClient) {
 // because the client automatically sends the supported groups extension.
 TEST_P(TlsConnectGenericPre13, ConnectFfdheServer) {
   EnableOnlyDheCiphers();
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(server_->ssl_fd(),
-                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+  server_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
 
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
     Connect();
@@ -126,8 +124,7 @@ class TlsDheServerKeyExchangeDamager : public TlsHandshakeFilter {
 // the signature until everything else has been checked.
 TEST_P(TlsConnectGenericPre13, DamageServerKeyShare) {
   EnableOnlyDheCiphers();
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+  client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
   server_->SetPacketFilter(std::make_shared<TlsDheServerKeyExchangeDamager>());
 
   ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
@@ -289,8 +286,7 @@ class TlsDamageDHYTest
 TEST_P(TlsDamageDHYTest, DamageServerY) {
   EnableOnlyDheCiphers();
   if (std::get<3>(GetParam())) {
-    EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                        SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+    client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
   }
   TlsDheSkeChangeY::ChangeYTo change = std::get<2>(GetParam());
   server_->SetPacketFilter(
@@ -320,8 +316,7 @@ TEST_P(TlsDamageDHYTest, DamageServerY) {
 TEST_P(TlsDamageDHYTest, DamageClientY) {
   EnableOnlyDheCiphers();
   if (std::get<3>(GetParam())) {
-    EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                        SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+    client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
   }
   // The filter on the server is required to capture the prime.
   auto server_filter =
@@ -445,8 +440,7 @@ TEST_P(TlsConnectGenericPre13, PadDheP) {
 // Note: This test case can take ages to generate the weak DH key.
 TEST_P(TlsConnectGenericPre13, WeakDHGroup) {
   EnableOnlyDheCiphers();
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+  client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
   EXPECT_EQ(SECSuccess,
             SSL_EnableWeakDHEPrimeGroup(server_->ssl_fd(), PR_TRUE));
 
@@ -496,8 +490,7 @@ TEST_P(TlsConnectTls13, NamedGroupMismatch13) {
 // custom group in contrast to the previous test.
 TEST_P(TlsConnectGenericPre13, RequireNamedGroupsMismatchPre13) {
   EnableOnlyDheCiphers();
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+  client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
   static const std::vector<SSLNamedGroup> server_groups = {ssl_grp_ffdhe_3072};
   static const std::vector<SSLNamedGroup> client_groups = {ssl_grp_ec_secp256r1,
                                                            ssl_grp_ffdhe_2048};
@@ -525,8 +518,7 @@ TEST_P(TlsConnectGenericPre13, PreferredFfdhe) {
 
 TEST_P(TlsConnectGenericPre13, MismatchDHE) {
   EnableOnlyDheCiphers();
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
-                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+  client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
   static const SSLDHEGroupType serverGroups[] = {ssl_ff_dhe_3072_group};
   EXPECT_EQ(SECSuccess, SSL_DHEGroupPrefSet(server_->ssl_fd(), serverGroups,
                                             PR_ARRAY_SIZE(serverGroups)));

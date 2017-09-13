@@ -920,6 +920,7 @@ GK_ATOM(onloadingerror, "onloadingerror")
 GK_ATOM(onpopstate, "onpopstate")
 GK_ATOM(only, "only")               // this one is not an event
 GK_ATOM(onmessage, "onmessage")
+GK_ATOM(onmessageerror, "onmessageerror")
 GK_ATOM(onmousedown, "onmousedown")
 GK_ATOM(onmouseenter, "onmouseenter")
 GK_ATOM(onmouseleave, "onmouseleave")

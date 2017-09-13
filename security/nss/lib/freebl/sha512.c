@@ -19,6 +19,7 @@
 #include "secport.h" /* for PORT_XXX */
 #include "blapi.h"
 #include "sha256.h" /* for struct SHA256ContextStr */
+#include "crypto_primitives.h"
 
 /* ============= Common constants and defines ======================= */
 
@@ -648,15 +649,6 @@ SHA224_Clone(SHA224Context *dest, SHA224Context *src)
 
 /* common #defines for SHA512 and SHA384 */
 #if defined(HAVE_LONG_LONG)
-#if defined(_MSC_VER)
-#pragma intrinsic(_rotr64, _rotl64)
-#define ROTR64(x, n) _rotr64(x, n)
-#define ROTL64(x, n) _rotl64(x, n)
-#else
-#define ROTR64(x, n) ((x >> n) | (x << (64 - n)))
-#define ROTL64(x, n) ((x << n) | (x >> (64 - n)))
-#endif
-
 #define S0(x) (ROTR64(x, 28) ^ ROTR64(x, 34) ^ ROTR64(x, 39))
 #define S1(x) (ROTR64(x, 14) ^ ROTR64(x, 18) ^ ROTR64(x, 41))
 #define s0(x) (ROTR64(x, 1) ^ ROTR64(x, 8) ^ SHR(x, 7))
@@ -670,36 +662,7 @@ SHA224_Clone(SHA224Context *dest, SHA224Context *src)
 #define ULLC(hi, lo) 0x##hi##lo##ULL
 #endif
 
-#if defined(IS_LITTLE_ENDIAN)
-#if defined(_MSC_VER)
-#pragma intrinsic(_byteswap_uint64)
-#define SHA_HTONLL(x) _byteswap_uint64(x)
-
-#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__x86_64))
-static __inline__ PRUint64
-swap8b(PRUint64 value)
-{
-    __asm__("bswapq %0"
-            : "+r"(value));
-    return (value);
-}
-#define SHA_HTONLL(x) swap8b(x)
-
-#else
-#define SHA_MASK16 ULLC(0000FFFF, 0000FFFF)
-#define SHA_MASK8 ULLC(00FF00FF, 00FF00FF)
-static PRUint64
-swap8b(PRUint64 x)
-{
-    PRUint64 t1 = x;
-    t1 = ((t1 & SHA_MASK8) << 8) | ((t1 >> 8) & SHA_MASK8);
-    t1 = ((t1 & SHA_MASK16) << 16) | ((t1 >> 16) & SHA_MASK16);
-    return (t1 >> 32) | (t1 << 32);
-}
-#define SHA_HTONLL(x) swap8b(x)
-#endif
-#define BYTESWAP8(x) x = SHA_HTONLL(x)
-#endif /* defined(IS_LITTLE_ENDIAN) */
+#define BYTESWAP8(x) x = FREEBL_HTONLL(x)
 
 #else /* no long long */
 
@@ -708,8 +671,8 @@ swap8b(PRUint64 x)
     {                        \
         0x##lo##U, 0x##hi##U \
     }
-#define SHA_HTONLL(x) (BYTESWAP4(x.lo), BYTESWAP4(x.hi), \
-                       x.hi ^= x.lo ^= x.hi ^= x.lo, x)
+#define FREEBL_HTONLL(x) (BYTESWAP4(x.lo), BYTESWAP4(x.hi), \
+                          x.hi ^= x.lo ^= x.hi ^= x.lo, x)
 #define BYTESWAP8(x)     \
     do {                 \
         PRUint32 tmp;    \

@@ -38,6 +38,11 @@
 #include <blapi.h>
 #include <private/pprio.h>
 
+/* Android API < 21 doesn't define RTLD_NOLOAD */
+#ifndef RTLD_NOLOAD
+#define RTLD_NOLOAD 0
+#endif
+
 #define FREEBL_NO_WEAK 1
 
 #define WEAK __attribute__((weak))

@@ -29,7 +29,6 @@
 #include "nsContentUtils.h"
 #include "nsIClientAuthDialogs.h"
 #include "nsIConsoleService.h"
-#include "nsIHttpProtocolHandler.h"
 #include "nsIPrefService.h"
 #include "nsISocketProvider.h"
 #include "nsIWebProgressListener.h"
@@ -124,7 +123,6 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
     mHandshakePending(true),
     mRememberClientAuthCertificate(false),
     mPreliminaryHandshakeDone(false),
-    mSpeculative(false),
     mNPNCompleted(false),
     mEarlyDataAccepted(false),
     mFalseStartCallbackCalled(false),
@@ -335,20 +333,6 @@ nsNSSSocketInfo::SetHandshakeCompleted()
            ("[%p] nsNSSSocketInfo::SetHandshakeCompleted\n", (void*) mFd));
 
     mIsFullHandshake = false; // reset for next handshake on this connection
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetSpeculative(bool *aSpeculative)
-{
-  *aSpeculative = mSpeculative;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetSpeculative(bool aSpeculative)
-{
-  mSpeculative = aSpeculative;
-  return NS_OK;
 }
 
 void
@@ -2192,22 +2176,6 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   RefPtr<nsNSSSocketInfo> info(
     BitwiseCast<nsNSSSocketInfo*, PRFilePrivate*>(socket->higher->secret));
 
-  if (info->IsSpeculative()) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-      ("[%p] Blocking speculative SSL connections that ask for client cert creds\n", socket->higher));
-
-    nsCOMPtr<nsIHttpProtocolHandler> handler(
-      do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http"));
-
-    if (handler) {
-      handler->DontPreconnect(info->GetHostName(), info->GetPort());
-
-      // Bail, this socket will not be used anyway.
-      PR_SetError(SSL_ERROR_NO_CERTIFICATE, 0);
-      return SECFailure;
-    }
-  }
-
   UniqueCERTCertificate serverCert(SSL_PeerCertificate(socket));
   if (!serverCert) {
     MOZ_ASSERT_UNREACHABLE(
@@ -2222,7 +2190,7 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     // (mHostName) in the client certificate UI.
 
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("[%p] Not returning client cert due to previous join\n", socket->higher));
+           ("[%p] Not returning client cert due to previous join\n", socket));
     *pRetCert = nullptr;
     *pRetKey = nullptr;
     return SECSuccess;

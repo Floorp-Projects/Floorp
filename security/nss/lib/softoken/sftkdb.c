@@ -2311,6 +2311,13 @@ loser:
         crv = (*handle->update->sdb_GetMetaData)(handle->update, "password",
                                                  &item1, &item2);
         if (crv != CKR_OK) {
+            /* if we get here, neither the source, nor the target has been initialized
+             * with a password entry. Create a metadata table now so that we don't
+             * mistake this for a partially updated database */
+            item1.data[0] = 0;
+            item2.data[0] = 0;
+            item1.len = item2.len = 1;
+            crv = (*handle->db->sdb_PutMetaData)(handle->db, "empty", &item1, &item2);
             goto done;
         }
         crv = (*handle->db->sdb_PutMetaData)(handle->db, "password", &item1,

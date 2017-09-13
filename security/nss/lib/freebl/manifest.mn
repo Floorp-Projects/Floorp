@@ -86,6 +86,7 @@ EXPORTS = \
 
 PRIVATE_EXPORTS = \
 	alghmac.h \
+	blake2b.h \
 	blapi.h \
 	chacha20poly1305.h \
 	hmacct.h \
@@ -102,14 +103,10 @@ MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c mp_gf2m.c
 
 
 ECL_HDRS = ecl-exp.h ecl.h ecp.h ecl-priv.h
-ifndef NSS_DISABLE_ECC
 ECL_SRCS = ecl.c ecl_mult.c ecl_gf.c \
 	ecp_aff.c ecp_jac.c ecp_mont.c \
 	ec_naf.c ecp_jm.c ecp_256.c ecp_384.c ecp_521.c \
 	ecp_256_32.c ecp_25519.c
-else
-ECL_SRCS = $(NULL)
-endif
 SHA_SRCS = sha_fast.c
 MPCPU_SRCS = mpcpucache.c
 VERIFIED_SRCS = $(NULL)
@@ -127,6 +124,8 @@ CSRCS = \
 	alg2268.c \
 	arcfour.c \
 	arcfive.c \
+    crypto_primitives.c \
+	blake2b.c \
 	desblapi.c \
 	des.c \
 	drbg.c \
@@ -164,6 +163,7 @@ ALL_CSRCS := $(CSRCS)
 
 ALL_HDRS =  \
 	alghmac.h \
+	blake2b.h \
 	blapi.h \
 	blapit.h \
 	des.h \

@@ -343,19 +343,22 @@ add_task(async function test_discardBigPings() {
   // Submit an oversized ping and check that it gets discarded.
   TelemetryHealthPing.testReset();
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, OVERSIZED_PAYLOAD);
+  await TelemetrySend.testWaitOnOutgoingPings();
   let ping = await PingServer.promiseNextPing();
+
+  Assert.equal(ping.type, TelemetryHealthPing.HEALTH_PING_TYPE, "Should have received a health ping.");
+  Assert.equal(ping.payload.reason, TelemetryHealthPing.Reason.IMMEDIATE, "Health ping should have the right reason.");
+  Assert.deepEqual(ping.payload[TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE],
+    {[TEST_PING_TYPE]: 1}, "Should have recorded correct type of oversized ping.");
+  Assert.deepEqual(ping.payload.os, TelemetryHealthPing.OsInfo, "Should have correct os info.");
 
   Assert.equal(histSizeExceeded.snapshot().sum, 1, "Telemetry must report 1 oversized ping submitted.");
   Assert.equal(histDiscardedSize.snapshot().counts[2], 1, "Telemetry must report a 2MB, oversized, ping submitted.");
+
   Assert.deepEqual(histSuccess.snapshot().counts, [0, 2, 0], "Should have recorded sending success.");
   Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 2, "Should have recorded send success time.");
   Assert.greaterOrEqual(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
-
-  Assert.equal(ping.type, TelemetryHealthPing.HEALTH_PING_TYPE, "Should have received a health ping.");
-  Assert.deepEqual(ping.payload[TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE],
-    {[TEST_PING_TYPE]: 1}, "Should have recorded correct type of oversized ping.");
-  Assert.deepEqual(ping.payload.os, TelemetryHealthPing.OsInfo, "Should have correct os info.")
 });
 
 add_task(async function test_evictedOnServerErrors() {
