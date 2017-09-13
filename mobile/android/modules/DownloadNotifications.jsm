@@ -47,7 +47,7 @@ var DownloadNotifications = {
   _notificationKey: "downloads",
 
   observe: function(subject, topic, data) {
-    if (topic === "chrome-document-loaded") {
+    if (topic === "chrome-document-interactive") {
       this.init();
     }
   },

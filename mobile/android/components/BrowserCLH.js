@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-});
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 
 var Strings = {};
 
@@ -40,20 +40,47 @@ BrowserCLH.prototype = {
     protocolHandler.setSubstitution("android", Services.io.newURI(url));
   },
 
+  addObserverScripts: function(aScripts) {
+    aScripts.forEach(item => {
+      let {name, topics, script} = item;
+      XPCOMUtils.defineLazyGetter(this, name, _ => {
+        let sandbox = {};
+        if (script.endsWith(".jsm")) {
+          Cu.import(script, sandbox);
+        } else {
+          Services.scriptloader.loadSubScript(script, sandbox);
+        }
+        return sandbox[name];
+      });
+      let observer = (subject, topic, data) => {
+        Services.obs.removeObserver(observer, topic);
+        if (!item.once) {
+          Services.obs.addObserver(this[name], topic);
+        }
+        this[name].observe(subject, topic, data); // Explicitly notify new observer
+      };
+      topics.forEach(topic => {
+        Services.obs.addObserver(observer, topic);
+      });
+    });
+  },
+
   observe: function(subject, topic, data) {
     switch (topic) {
-      case "app-startup": {
+      case "app-startup":
         this.setResourceSubstitutions();
 
-        GeckoViewUtils.addLazyGetter(this, "DownloadNotifications", {
-          module: "resource://gre/modules/DownloadNotifications.jsm",
-          observers: ["chrome-document-loaded"],
+        let observerScripts = [{
+          name: "DownloadNotifications",
+          script: "resource://gre/modules/DownloadNotifications.jsm",
+          topics: ["chrome-document-interactive"],
           once: true,
-        });
+        }];
         if (AppConstants.MOZ_WEBRTC) {
-          GeckoViewUtils.addLazyGetter(this, "WebrtcUI", {
+          observerScripts.push({
+            name: "WebrtcUI",
             script: "chrome://browser/content/WebrtcUI.js",
-            observers: [
+            topics: [
               "getUserMedia:ask-device-permission",
               "getUserMedia:request",
               "PeerConnection:request",
@@ -63,8 +90,8 @@ BrowserCLH.prototype = {
             ],
           });
         }
+        this.addObserverScripts(observerScripts);
         break;
-      }
     }
   },
 
