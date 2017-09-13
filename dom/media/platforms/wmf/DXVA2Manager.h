@@ -71,10 +71,6 @@ public:
   virtual bool CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
                                   nsACString& aFailureReason) = 0;
 
-  static bool IsNV12Supported(uint32_t aVendorID,
-                              uint32_t aDeviceID,
-                              const nsAString& aDriverVersionString);
-
 protected:
   Mutex mLock;
   DXVA2Manager();

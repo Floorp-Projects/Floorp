@@ -22,7 +22,6 @@ struct D3D11DeviceStatus
   uint32_t featureLevel;
   DxgiAdapterDesc adapter;
   int32_t sequenceNumber;
-  bool useNV12;
 };
 
 struct DevicePrefs

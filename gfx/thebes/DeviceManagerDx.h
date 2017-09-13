@@ -64,7 +64,6 @@ public:
   unsigned GetCompositorFeatureLevel() const;
   bool TextureSharingWorks();
   bool IsWARP();
-  bool CanUseNV12();
 
   // Returns true if we can create a texture with
   // D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX and also
