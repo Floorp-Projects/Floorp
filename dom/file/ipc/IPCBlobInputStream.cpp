@@ -8,10 +8,11 @@
 #include "IPCBlobInputStreamChild.h"
 #include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/InputStreamParams.h"
+#include "IPCBlobInputStreamThread.h"
 #include "nsIAsyncInputStream.h"
-#include "nsIStreamTransportService.h"
-#include "nsITransport.h"
-#include "nsNetCID.h"
+#include "nsIAsyncOutputStream.h"
+#include "nsIPipe.h"
+#include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "SlicedInputStream.h"
 
@@ -19,8 +20,6 @@ namespace mozilla {
 namespace dom {
 
 namespace {
-
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 class InputStreamCallbackRunnable final : public CancelableRunnable
 {
@@ -511,7 +510,7 @@ IPCBlobInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
 
   nsCOMPtr<nsIEventTarget> callbackEventTarget;
   callbackEventTarget.swap(mInputStreamCallbackEventTarget);
- 
+
   // This must be the last operation because the execution of the callback can
   // be synchronous.
   InputStreamCallbackRunnable::Execute(callback, callbackEventTarget, this);
@@ -651,32 +650,25 @@ IPCBlobInputStream::EnsureAsyncRemoteStream()
 
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mRemoteStream);
   if (!asyncStream || !nonBlocking) {
-    nsCOMPtr<nsIStreamTransportService> sts =
-      do_GetService(kStreamTransportServiceCID, &rv);
+    // Let's make the stream async using the DOMFile thread.
+    nsCOMPtr<nsIAsyncInputStream> pipeIn;
+    nsCOMPtr<nsIAsyncOutputStream> pipeOut;
+    rv = NS_NewPipe2(getter_AddRefs(pipeIn),
+                     getter_AddRefs(pipeOut),
+                     true, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    nsCOMPtr<nsITransport> transport;
-    rv = sts->CreateInputTransport(mRemoteStream,
-                                   /* aStartOffset */ 0,
-                                   /* aReadLimit */ -1,
-                                   /* aCloseWhenDone */ true,
-                                   getter_AddRefs(transport));
+    nsCOMPtr<nsIEventTarget> target =
+      IPCBlobInputStreamThread::GetOrCreate()->EventTarget();
+    rv = NS_AsyncCopy(mRemoteStream, pipeOut, target,
+                      NS_ASYNCCOPY_VIA_WRITESEGMENTS);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    nsCOMPtr<nsIInputStream> wrapper;
-    rv = transport->OpenInputStream(/* aFlags */ 0,
-                                    /* aSegmentSize */ 0,
-                                    /* aSegmentCount */ 0,
-                                    getter_AddRefs(wrapper));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    asyncStream = do_QueryInterface(wrapper);
+    asyncStream = pipeIn;
   }
 
   MOZ_ASSERT(asyncStream);

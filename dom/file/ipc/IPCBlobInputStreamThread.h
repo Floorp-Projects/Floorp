@@ -34,6 +34,9 @@ public:
   void
   Initialize();
 
+  nsIEventTarget*
+  EventTarget() const;
+
 private:
   ~IPCBlobInputStreamThread() = default;
 
