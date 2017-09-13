@@ -16,6 +16,8 @@
 var {Toolbox} = require("devtools/client/framework/toolbox");
 const URL = URL_ROOT + "browser_toolbox_window_title_frame_select_page.html";
 const IFRAME_URL = URL_ROOT + "browser_toolbox_window_title_changes_page.html";
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 add_task(function* () {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
@@ -41,9 +43,12 @@ add_task(function* () {
   // blocks the frame popup menu opened below. See also bug 1276873
   yield waitForTick();
 
+  let btn = toolbox.doc.getElementById("command-button-frames");
+
+  yield testShortcutToOpenFrames(btn, toolbox);
+
   // Open frame menu and wait till it's available on the screen.
   // Also check 'open' attribute on the command button.
-  let btn = toolbox.doc.getElementById("command-button-frames");
   ok(!btn.classList.contains("checked"), "The checked class must not be present");
   let menu = toolbox.showFramesMenu({target: btn});
   yield once(menu, "open");
@@ -91,4 +96,26 @@ add_task(function* () {
 
 function getTitle() {
   return Services.wm.getMostRecentWindow("devtools:toolbox").document.title;
+}
+
+function* testShortcutToOpenFrames(btn, toolbox) {
+  info("Tests if shortcut Alt+Down opens the frames");
+  // focus the button so that keyPress can be performed
+  btn.focus();
+  // perform keyPress - Alt+Down
+  let shortcut = L10N.getStr("toolbox.showFrames.key");
+  synthesizeKeyShortcut(shortcut, toolbox.win);
+
+  // wait for 200 ms for UI to render
+  yield wait(200);
+
+  // btn should now have the checked class set
+  ok(btn.classList.contains("checked"), "The checked class must be set");
+
+  // pressing Esc should hide the menu again
+  synthesizeKeyShortcut("Esc", toolbox.win);
+  yield wait(200);
+
+  // btn shouldn't have the checked class set
+  ok(!btn.classList.contains("checked"), "The checked class must not be set");
 }

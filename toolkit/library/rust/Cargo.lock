@@ -800,6 +800,7 @@ version = "0.8.0"
 dependencies = [
  "bitreader 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mp4parse_fallible 0.0.1",
  "num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -811,6 +812,10 @@ dependencies = [
  "mp4parse 0.8.0",
  "num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "mp4parse_fallible"
+version = "0.0.1"
 
 [[package]]
 name = "net2"

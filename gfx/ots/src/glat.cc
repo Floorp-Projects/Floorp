@@ -200,15 +200,15 @@ bool OpenTypeGLAT_v3::Parse(const uint8_t* data, size_t length,
       if (prevent_decompression) {
         return DropGraphite("Illegal nested compression");
       }
-      std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE, 0);
+      std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE);
       size_t outputSize = 0;
-      if (!mozilla::Compression::LZ4::decompress(
-            reinterpret_cast<const char*>(data + table.offset()),
-            table.remaining(),
-            reinterpret_cast<char*>(decompressed.data()),
-            decompressed.size(),
-            &outputSize) ||
-          outputSize != (this->compHead & FULL_SIZE)) {
+      bool ret = mozilla::Compression::LZ4::decompressPartial(
+          reinterpret_cast<const char*>(data + table.offset()),
+          table.remaining(),  // input buffer size (input size + padding)
+          reinterpret_cast<char*>(decompressed.data()),
+          decompressed.size(),  // target output size
+          &outputSize);  // return output size
+      if (!ret || outputSize != decompressed.size()) {
         return DropGraphite("Decompression failed");
       }
       return this->Parse(decompressed.data(), decompressed.size(), true);
@@ -388,7 +388,7 @@ GlatEntry::ParsePart(Buffer& table) {
   }
 
   //this->attributes.resize(this->num);
-  for (unsigned i = 0; i < this->num; ++i) {
+  for (int i = 0; i < this->num; ++i) {
     this->attributes.emplace_back();
     if (!table.ReadS16(&this->attributes[i])) {
       return parent->Error("GlatEntry: Failed to read attribute %u", i);

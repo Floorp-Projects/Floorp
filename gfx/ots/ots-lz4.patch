@@ -10,25 +10,23 @@ diff --git a/gfx/ots/src/glat.cc b/gfx/ots/src/glat.cc
  #include <list>
  
  namespace ots {
-@@ -201,13 +201,15 @@ bool OpenTypeGLAT_v3::Parse(const uint8_t* data, size_t length,
+@@ -201,14 +201,15 @@ bool OpenTypeGLAT_v3::Parse(const uint8_t* data, size_t length,
          return DropGraphite("Illegal nested compression");
        }
-       std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE, 0);
--      int ret = LZ4_decompress_safe(
--          reinterpret_cast<const char*>(data + table.offset()),
--          reinterpret_cast<char*>(decompressed.data()),
--          table.remaining(),
--          decompressed.size());
--      if (ret < 0) {
--        return DropGraphite("Decompression failed with error code %d", ret);
+       std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE);
+-      int ret = LZ4_decompress_safe_partial(
 +      size_t outputSize = 0;
-+      if (!mozilla::Compression::LZ4::decompress(
-+            reinterpret_cast<const char*>(data + table.offset()),
-+            table.remaining(),
-+            reinterpret_cast<char*>(decompressed.data()),
-+            decompressed.size(),
-+            &outputSize) ||
-+          outputSize != (this->compHead & FULL_SIZE)) {
++      bool ret = mozilla::Compression::LZ4::decompressPartial(
+           reinterpret_cast<const char*>(data + table.offset()),
+-          reinterpret_cast<char*>(decompressed.data()),
+           table.remaining(),  // input buffer size (input size + padding)
++          reinterpret_cast<char*>(decompressed.data()),
+           decompressed.size(),  // target output size
+-          decompressed.size());  // output buffer size
+-      if (ret != decompressed.size()) {
+-        return DropGraphite("Decompression failed with error code %d", ret);
++          &outputSize);  // return output size
++      if (!ret || outputSize != decompressed.size()) {
 +        return DropGraphite("Decompression failed");
        }
        return this->Parse(decompressed.data(), decompressed.size(), true);
@@ -45,25 +43,23 @@ diff --git a/gfx/ots/src/silf.cc b/gfx/ots/src/silf.cc
  #include <cmath>
  
  namespace ots {
-@@ -39,13 +39,15 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
+@@ -39,14 +39,15 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
            return DropGraphite("Illegal nested compression");
          }
-         std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE, 0);
--        int ret = LZ4_decompress_safe(
--            reinterpret_cast<const char*>(data + table.offset()),
--            reinterpret_cast<char*>(decompressed.data()),
--            table.remaining(),
--            decompressed.size());
--        if (ret < 0) {
--          return DropGraphite("Decompression failed with error code %d", ret);
+         std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE);
+-        int ret = LZ4_decompress_safe_partial(
 +        size_t outputSize = 0;
-+        if (!mozilla::Compression::LZ4::decompress(
-+              reinterpret_cast<const char*>(data + table.offset()),
-+              table.remaining(),
-+              reinterpret_cast<char*>(decompressed.data()),
-+              decompressed.size(),
-+              &outputSize) ||
-+            outputSize != (this->compHead & FULL_SIZE)) {
++        bool ret = mozilla::Compression::LZ4::decompressPartial(
+             reinterpret_cast<const char*>(data + table.offset()),
+-            reinterpret_cast<char*>(decompressed.data()),
+             table.remaining(),  // input buffer size (input size + padding)
++            reinterpret_cast<char*>(decompressed.data()),
+             decompressed.size(),  // target output size
+-            decompressed.size());  // output buffer size
+-        if (ret != decompressed.size()) {
+-          return DropGraphite("Decompression failed with error code %d", ret);
++            &outputSize);   // return output size
++        if (!ret || outputSize != decompressed.size()) {
 +          return DropGraphite("Decompression failed");
          }
          return this->Parse(decompressed.data(), decompressed.size(), true);

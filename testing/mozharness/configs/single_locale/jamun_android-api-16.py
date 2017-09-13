@@ -36,7 +36,7 @@ config = {
         "revision": "%(revision)s",
         "dest": MOZILLA_DIR,
     }],
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",
+    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': "/builds/hg-shared",
 

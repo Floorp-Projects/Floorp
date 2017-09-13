@@ -836,6 +836,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY customizeMode.restoreDefaults "Restore Defaults">
 <!ENTITY customizeMode.done "Done">
 <!ENTITY customizeMode.titlebar "Title Bar">
+<!ENTITY customizeMode.extraDragSpace "Drag Space">
 <!ENTITY customizeMode.toolbars2 "Toolbars">
 <!ENTITY customizeMode.lwthemes "Themes">
 <!ENTITY customizeMode.lwthemes.myThemes "My Themes">

@@ -829,13 +829,13 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 }
 
 #appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-label {
-  /* 18px space before the avatar, then 16px for the avatar */
-  padding-inline-start: 34px;
-  margin-inline-start: -34px;
+  /* 12px space before the avatar, then 16px for the avatar */
+  padding-inline-start: 28px;
+  margin-inline-start: -28px;
 }
 
 #appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-avatar {
-  margin-inline-start: 18px;
+  margin-inline-start: 12px;
 }
 
 /* Error states */
@@ -2058,13 +2058,18 @@ photonpanelmultiview #panelMenu_pocket {
 
 .subviewbutton.download > .toolbarbutton-text > .status-text {
   color: GrayText;
-  font-size: .7em;
+  font-size: .9em;
 }
 
 .subviewbutton.download > .action-button {
+  -moz-appearance: none; /* To avoid native Windows hover styling */
   -moz-context-properties: fill;
   fill: currentColor;
+%ifdef XP_MACOSX
   list-style-image: url("chrome://browser/skin/find.svg");
+%else
+  list-style-image: url("chrome://browser/skin/folder.svg");
+%endif
   /* Measurement to vertically center this button: 1 line of text minus half of 4px top margin. */
   margin: calc(1em - 2px) 0 0;
   padding: 4px;

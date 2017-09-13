@@ -91,7 +91,7 @@
  * tabstrip can overlap it.
  */
 #main-window[tabsintitlebar] > #titlebar {
-  min-height: calc(var(--tab-min-height) - var(--tab-toolbar-navbar-overlap));
+  min-height: calc(var(--tab-min-height) + var(--space-above-tabbar) - var(--tab-toolbar-navbar-overlap));
 }
 
 /**
@@ -103,7 +103,12 @@
 
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
-  margin-top: 6px;
+  /*
+   * To vertically center the window controls, we place them at half the
+   * height of the tabstrip ((tab height + drag space) / 2) - half the height
+   * of the window controls (16px / 2).
+   * */
+  margin-top: calc((var(--tab-min-height) + var(--space-above-tabbar)) / 2 - 8px);
 }
 
 #main-window:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
@@ -902,6 +907,7 @@ html|span.ac-emphasize-text-url {
   text-shadow: @loweredShadow@;
 }
 
+#main-window[tabsintitlebar] > #titlebar:not(:-moz-lwtheme),
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
   -moz-appearance: -moz-mac-vibrancy-dark;
   background-color: #232323;
