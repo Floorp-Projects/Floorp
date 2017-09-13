@@ -32,6 +32,10 @@ function isUrl(url) {
   return (/^https?:\/\/[a-z0-9.-]{1,8000}[a-z0-9](:[0-9]{1,8000})?\/?/i).test(url);
 }
 
+function isValidClipImageUrl(url) {
+    return isUrl(url) && !(url.indexOf(')') > -1);
+}
+
 function assertUrl(url) {
   if (!url) {
     throw new Error("Empty value is not URL");
@@ -41,6 +45,10 @@ function assertUrl(url) {
     exc.scheme = url.split(":")[0];
     throw exc;
   }
+}
+
+function isSecureWebUri(url) {
+  return (/^https?:\/\/[a-z0-9.-]{1,8000}[a-z0-9](:[0-9]{1,8000})?\/?/i).test(url);
 }
 
 function assertOrigin(url) {
@@ -209,6 +217,12 @@ class AbstractShot {
     if ((!attrs.fullUrl) && attrs.url) {
       console.warn("Received deprecated attribute .url");
       this.fullUrl = attrs.url;
+    }
+    if (this.origin && !isSecureWebUri(this.origin)) {
+      this.origin = "";
+    }
+    if (this.fullUrl && !isSecureWebUri(this.fullUrl)) {
+      this.fullUrl = "";
     }
     this.docTitle = attrs.docTitle || null;
     this.userTitle = attrs.userTitle || null;
@@ -685,7 +699,7 @@ class _Clip {
       return;
     }
     assert(checkObject(image, ["url"], ["dimensions", "text", "location", "captureType"]), "Bad attrs for Clip Image:", Object.keys(image));
-    assert(isUrl(image.url), "Bad Clip image URL:", image.url);
+    assert(isValidClipImageUrl(image.url), "Bad Clip image URL:", image.url);
     assert(image.captureType == "madeSelection" || image.captureType == "selection" || image.captureType == "visible" || image.captureType == "auto" || image.captureType == "fullPage" || !image.captureType, "Bad image.captureType:", image.captureType);
     assert(typeof image.text == "string" || !image.text, "Bad Clip image text:", image.text);
     if (image.dimensions) {
@@ -733,6 +747,7 @@ AbstractShot.prototype.Clip = _Clip;
 if (typeof exports != "undefined") {
   exports.AbstractShot = AbstractShot;
   exports.originFromUrl = originFromUrl;
+  exports.isValidClipImageUrl = isValidClipImageUrl;
 }
 
 return exports;

@@ -12,7 +12,7 @@
     "message": "Mes captures d’écran"
   },
   "screenshotInstructions": {
-    "message": "Sélectionnez une zone de la page par cliquer-glisser. Appuyez sur Échap pour annuler."
+    "message": "Sélectionnez une zone de la page par cliquer-glisser ou en cliquant sur l’élément à sélectionner. Appuyez sur Échap pour annuler."
   },
   "saveScreenshotSelectedArea": {
     "message": "Enregistrer"
@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Un problème non identifié est survenu. Vous pouvez réessayer ou effectuer une capture d’écran d’une autre page."
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Effectuez des captures d’écran, enregistrez et partagez-les sans quitter Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Une nouvelle façon d’enregistrer ses captures"
+  },
+  "tourBodyPageAction": {
+    "message": "Dès que vous voulez effectuer une capture d’écran, il vous suffit d’ouvrir le menu d’actions de la page, depuis la barre d’adresse."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Capturez ce que vous voulez"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Cliquez et glissez pour capturer seulement une partie de la page. Vous pouvez aussi survoler une zone avec votre curseur pour surligner votre sélection."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Effectuez des captures d’écran de fenêtres ou de pages entières"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Utilisez les boutons en haut à droite pour capturer au choix la zone visible dans la fenêtre ou la page entière."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "À votre guise"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Sauvegardez en ligne vos captures recadrées pour les partager plus facilement, ou téléchargez-les sur votre ordinateur. Vous pouvez aussi cliquer sur « Mes captures d’écran » pour retrouver toutes vos captures."
   },
   "tourSkip": {
