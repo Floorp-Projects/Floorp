@@ -31,8 +31,7 @@ public:
                      const layers::TextureFactoryIdentifier& aIdentifier,
                      TaskQueue* aManagerTaskQueue,
                      TaskQueue* aDecodeTaskQueue,
-                     bool* aSuccess,
-                     nsCString* aErrorDescription);
+                     bool* aSuccess);
 
   void Destroy();
 

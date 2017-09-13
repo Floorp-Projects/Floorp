@@ -180,23 +180,20 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   RefPtr<RemoteVideoDecoder> object = new RemoteVideoDecoder();
 
   SynchronousTask task("InitIPDL");
-  MediaResult result(NS_OK);
+  bool success;
   VideoDecoderManagerChild::GetManagerThread()->Dispatch(
     NS_NewRunnableFunction(
       "dom::RemoteDecoderModule::CreateVideoDecoder",
       [&]() {
         AutoCompleteTask complete(&task);
-        result = object->mActor->InitIPDL(
+        success = object->mActor->InitIPDL(
           aParams.VideoConfig(),
           aParams.mKnowsCompositor->GetTextureFactoryIdentifier());
       }),
     NS_DISPATCH_NORMAL);
   task.Wait();
 
-  if (NS_FAILED(result)) {
-    if (aParams.mError) {
-      *aParams.mError = result;
-    }
+  if (!success) {
     return nullptr;
   }
 

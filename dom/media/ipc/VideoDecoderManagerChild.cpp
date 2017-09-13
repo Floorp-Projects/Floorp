@@ -119,7 +119,6 @@ VideoDecoderManagerChild::AllocPVideoDecoderChild(const VideoInfo& aVideoInfo,
                                                   const layers::TextureFactoryIdentifier& aIdentifier,
                                                   bool* aSuccess,
                                                   nsCString* /* not used */,
-                                                  nsCString* /* not used */,
                                                   nsCString* /* not used */)
 {
   return new VideoDecoderChild();
