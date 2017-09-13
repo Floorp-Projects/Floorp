@@ -52,6 +52,7 @@ class ExtensionSidebar {
       this._provider = createElement(Provider, {
         store: this.store,
         key: this.id,
+        title: this.title,
       }, ExtensionSidebarComponent({
         id: this.id,
       }));

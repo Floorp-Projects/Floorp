@@ -31,6 +31,7 @@ fuzzy-if(webrender,1,27) == compound-1a.html compound-1-ref.html
 == translate-1b.html translate-1-ref.html
 == translate-1c.html translate-1-ref.html
 == translate-1d.html translate-1-ref.html
+pref(gfx.webrender.layers-free,true) skip-if(!webrender) == translate-1d.html translate-1-ref.html
 == translate-1e.html translate-1-ref.html
 == translate-2a.html translate-2-ref.html
 == translate-3.html translate-3-ref.html
@@ -46,6 +47,7 @@ random == rotate-1f.html rotate-1-ref.html
 # rotate: 90deg rotations should be indistinguishable from objects constructed
 # to look the same.
 == rotate-2a.html rotate-2-ref.html
+pref(gfx.webrender.layers-free,true) skip-if(!webrender) == rotate-2a.html rotate-2-ref.html
 == rotate-2b.html rotate-2-ref.html
 # -transform-origin: We should NOT get the same images when using different
 # -transform-origins.

@@ -54,6 +54,14 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
 
 #define NS_RUNTIMEABORT(msg) __coverity_panic__()
 
+// Kills Structurally dead code (UNREACHABLE)
+#define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(_class)                   \
+  NS_IMETHODIMP_(bool)                                                         \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::CanSkipThisReal(void* p)              \
+  {                                                                            \
+    __coverity_panic__();                                                      \
+    _class* tmp = DowncastCCParticipant<_class>(p);
+
 int
 GET_JUMP_OFFSET(jsbytecode* pc)
 {
