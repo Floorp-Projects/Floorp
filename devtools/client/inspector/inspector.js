@@ -631,8 +631,28 @@ Inspector.prototype = {
     // calling inspector.addSidebarTab
     this.gridInspector = new GridInspector(this, this.panelWin);
 
-    const LayoutView = this.browserRequire("devtools/client/inspector/layout/layout");
-    this.layoutview = new LayoutView(this, this.panelWin);
+    // Inject a lazy loaded react tab by exposing a fake React object
+    // with a lazy defined Tab thanks to `panel` being a function
+    let layoutId = "layoutview";
+    let layoutTitle = INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2");
+    this.sidebar.addTab(
+      layoutId,
+      layoutTitle,
+      {
+        props: {
+          id: layoutId,
+          title: layoutTitle
+        },
+        panel: () => {
+          if (!this.layoutview) {
+            const LayoutView =
+              this.browserRequire("devtools/client/inspector/layout/layout");
+            this.layoutview = new LayoutView(this, this.panelWin);
+          }
+          return this.layoutview.provider;
+        }
+      },
+      defaultTab == layoutId);
 
     if (this.target.form.animationsActor) {
       this.sidebar.addFrameTab(
