@@ -773,6 +773,13 @@ add_task(async function test_checkSubsessionHistograms() {
     "TELEMETRY_TEST_KEYED_RELEASE_OPTOUT",
   ]);
 
+  // List of prefixes of histograms that could anomalously be present in
+  // the subsession snapshot but not the session snapshot.
+  // If you add something to this list, please reference a bug#
+  const possibleAnomalyPrefixes = [
+    "CYCLE_COLLECTOR_WORKER", // non-MT CC can happen between payload gathering - bug 1398431
+  ];
+
   // Compare the two sets of histograms.
   // The "subsession" histograms should match the registered
   // "classic" histograms. However, histograms can change
@@ -780,6 +787,9 @@ add_task(async function test_checkSubsessionHistograms() {
   // check for deep equality on known stable histograms.
   let checkHistograms = (classic, subsession, message) => {
     for (let id of Object.keys(subsession)) {
+      if (possibleAnomalyPrefixes.some(prefix => id.startsWith(prefix))) {
+        continue;
+      }
       Assert.ok(id in classic, message + ` (${id})`);
       if (stableHistograms.has(id)) {
         Assert.deepEqual(classic[id],
