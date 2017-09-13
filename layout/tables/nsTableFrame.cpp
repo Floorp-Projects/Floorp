@@ -6502,6 +6502,7 @@ struct BCBorderParameters
   nscoord mStartBevelOffset;
   mozilla::Side mEndBevelSide;
   nscoord mEndBevelOffset;
+  bool mBackfaceIsVisible;
 };
 
 struct BCBlockDirSeg
@@ -7335,6 +7336,7 @@ BCBlockDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter,
   result.mBorderStyle = NS_STYLE_BORDER_STYLE_SOLID;
   result.mBorderColor = 0xFFFFFFFF;
   result.mBGColor = aIter.mTableBgColor;
+  result.mBackfaceIsVisible = true;
 
   // All the tables frames have the same presContext, so we just use any one
   // that exists here:
@@ -7391,6 +7393,7 @@ BCBlockDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter,
   }
   if (owner) {
     ::GetPaintStyleInfo(owner, aIter.mTableWM, side, &result.mBorderStyle, &result.mBorderColor);
+    result.mBackfaceIsVisible = !owner->BackfaceIsHidden();
   }
   BCPixelSize smallHalf, largeHalf;
   DivideBCBorderSize(mWidth, smallHalf, largeHalf);
@@ -7492,6 +7495,7 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
   Range<const wr::BorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
+                      param->mBackfaceIsVisible,
                       borderWidths,
                       wrsides,
                       borderRadii);
@@ -7604,6 +7608,7 @@ BCInlineDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter)
   nsIFrame* cell = mFirstCell;
   nsIFrame* col;
   nsIFrame* owner = nullptr;
+  result.mBackfaceIsVisible = true;
 
   // All the tables frames have the same presContext, so we just use any one
   // that exists here:
@@ -7662,6 +7667,7 @@ BCInlineDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter)
   }
   if (owner) {
     ::GetPaintStyleInfo(owner, aIter.mTableWM, side, &result.mBorderStyle, &result.mBorderColor);
+    result.mBackfaceIsVisible = !owner->BackfaceIsHidden();
   }
   BCPixelSize smallHalf, largeHalf;
   DivideBCBorderSize(mWidth, smallHalf, largeHalf);
@@ -7751,6 +7757,7 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
   Range<const wr::BorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
+                      param->mBackfaceIsVisible,
                       borderWidths,
                       wrsides,
                       borderRadii);
