@@ -130,10 +130,20 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   }
 #endif
 
-  // Configuration dirs in the homedir that we want to allow read
+  // Allow access to XDG_CONFIG_PATH and XDG_CONFIG_DIRS
+  if (const auto xdgConfigPath = PR_GetEnv("XDG_CONFIG_PATH")) {
+    policy->AddDir(rdonly, xdgConfigPath);
+  }
+
+  nsAutoCString xdgConfigDirs(PR_GetEnv("XDG_CONFIG_DIRS"));
+  for (const auto& path : xdgConfigDirs.Split(':')) {
+    policy->AddDir(rdonly, PromiseFlatCString(path).get());
+  }
+
+  // Extra configuration dirs in the homedir that we want to allow read
   // access to.
-  mozilla::Array<const char*, 3> confDirs = {
-    ".config",
+  mozilla::Array<const char*, 3> extraConfDirs = {
+    ".config",   // Fallback if XDG_CONFIG_PATH isn't set
     ".themes",
     ".fonts",
   };
@@ -143,7 +153,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIFile> confDir;
 
-    for (auto dir : confDirs) {
+    for (const auto& dir : extraConfDirs) {
       rv = homeDir->Clone(getter_AddRefs(confDir));
       if (NS_SUCCEEDED(rv)) {
         rv = confDir->AppendNative(nsDependentCString(dir));
