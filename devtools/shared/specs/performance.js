@@ -4,7 +4,6 @@
 "use strict";
 
 const { Arg, RetVal, generateActorSpec } = require("devtools/shared/protocol");
-require("devtools/shared/specs/performance-recording");
 
 const performanceSpec = generateActorSpec({
   typeName: "performance",
