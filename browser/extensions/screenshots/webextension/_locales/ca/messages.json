@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "S'ha produït un error inesperat. Torneu-ho a provar o captureu una altra pàgina."
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Feu, deseu i compartiu captures de pantalla sense sortir del Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Captureu tot allò que vulgueu"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Feu clic i arrossegueu per capturar només una part de la pàgina. També podeu moure el ratolí per sobre per ressaltar la vostra selecció."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Captureu la finestra o la pàgina sencera"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Seleccioneu amb els botons de la part superior dreta si voleu capturar l'àrea visible de la finestra o la pàgina sencera."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Com vulgueu"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Deseu les vostres captures al web per compartir-les fàcilment o baixeu-les a l'ordinador. També podeu fer clic al botó «Les meves captures» per veure totes les captures que heu fet."
   },
   "tourSkip": {

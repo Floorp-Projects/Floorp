@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Wir wissen auch nicht, was gerade passiert ist. Könnten Sie das Bildschirmfoto erneut oder auf einer anderen Seite aufnehmen?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Bildschirmfotos aufnehmen, speichern und teilen, ohne Firefox zu verlassen."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Neue Speichermöglichkeit"
+  },
+  "tourBodyPageAction": {
+    "message": "Erweitern Sie das Menü „Aktionen für Seite“ in der Adressleiste immer dann, wenn Sie ein Bildschirmfoto machen möchten."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Nehmen Sie auf, was Sie möchten"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Klicken und ziehen Sie, um nur einen Teil einer Seite aufzunehmen. Sie können den Mauszeiger auch darüber bewegen, um Ihre Auswahl hervorzuheben."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Fenster oder ganze Seiten speichern"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Nutzen Sie die Schaltflächen rechts oben, um den sichtbaren Bereich im Fenster oder eine ganze Seite zu speichern."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Wie Sie möchten"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Speichern Sie Ihre zugeschnittenen Bildschirmfotos im Internet, sodass sie leicht zu teilen sind, oder laden Sie sie auf Ihren Computer herunter. Sie können auch auf die Schaltfläche „Meine Bildschirmfotos“ klicken, um alle Ihre Bildschirmfotos zu finden."
   },
   "tourSkip": {

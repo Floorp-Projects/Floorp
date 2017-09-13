@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Nid ydym yn gwybod beth sydd wedi ddigwydd. Ceisiwch eto neu dynnu llun o dudalen wahanol?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Cymryd, cadw a rhannu lluniau sgrin heb adael Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Ffordd newydd i gadw"
+  },
+  "tourBodyPageAction": {
+    "message": "Ehangwch y ddewislen gweithredoedd tudalen yn y bar cyfeiriad unrhyw bryd fyddwch am gymryd llun sgrin."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Cipio Dim ond Beth Rydych ei Angen"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Cliciwch a llusgo i gipio rhan o dudalen. Gallwch hofran i amlygu eich dewis."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Cipio Ffenestri neu Dudalennau Cyfan"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Dewiswch y botymau ar y dde uchod i gipio ardal gweladwy mewn ffenestr neu i gipio tudalen gyfan."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Yn Ôl eich Dewis"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Cadwch eich lluniau wedi eu golygu i'r We ar gyfer rhannu haws, neu eu llwytho i lawr i'ch cyfrifiadur. Gallwch hefyd glicio ar Fy Lluniau i weld pob llun sydd gennych."
   },
   "tourSkip": {

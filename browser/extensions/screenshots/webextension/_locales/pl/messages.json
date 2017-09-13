@@ -74,30 +74,36 @@
     "message": "Przepraszamy za utrudnienia. Pracujemy nad dodaniem tej funkcji."
   },
   "genericErrorTitle": {
-    "message": "Firefox Screenshots wymknęło się spod kontroli."
+    "message": "Firefox Screenshots wymknął się spod kontroli."
   },
   "genericErrorDetails": {
     "message": "Nie bardzo wiemy, co się wydarzyło. Spróbujesz ponownie lub wykonasz zrzut innej strony?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Wykonuj, zapisuj i udostępniaj zrzuty ekranu bez wychodzenia z Firefoksa."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Nowy sposób zapisywania"
+  },
+  "tourBodyPageAction": {
+    "message": "Rozwiń menu interakcji na pasku adresu, kiedy chcesz wykonać zrzut ekranu."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Zapisuj tylko to, co potrzebujesz"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Kliknij i przeciągnij, aby zapisać tylko część strony. Możesz także najechać, aby wyróżnić zaznaczony obszar."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Zapisuj zrzuty okien lub całych stron"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Kliknij przycisk w górnym prawym rogu, aby zapisać obszar widoczny w oknie lub całą stronę."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Tak, jak lubisz"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Zapisuj przycięte zrzuty w Internecie, aby łatwiej je udostępniać, albo pobierz je na swój komputer. Możesz też kliknąć przycisk „Moje zrzuty”, aby przeglądać wszystkie wykonane zrzuty."
   },
   "tourSkip": {
