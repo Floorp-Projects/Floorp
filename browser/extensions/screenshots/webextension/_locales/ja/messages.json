@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "何か問題が発生したようです。再度試すか、別のページのショットを撮ってみてください。"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Firefox を離れることなく、スクリーンショットを撮影、保存、共有。"
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "新たな保存方法"
+  },
+  "tourBodyPageAction": {
+    "message": "スクリーンショットを撮りたいときは、いつでもアドレスバー内のページアクションメニューを開いてください。"
+  },
+  "tourHeaderClickAndDrag": {
     "message": "必要な部分だけをキャプチャ"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "クリック＆ドラッグでページの一部だけをキャプチャできます。また、マウスを当てれば選択範囲が強調表示されます。"
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "ウィンドウもしくはページ全体をキャプチャ"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "右上のボタンを選択して、ウィンドウ内の表示範囲もしくはページ全体をキャプチャしましょう。"
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "お好きなように"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "切り取ったショットを簡単に共有できるようウェブ上に保存したり、手元へダウンロードしたり。また「自分のショット」ボタンをクリックすれば、これまでに撮ったすべてのショットを見られます。"
   },
   "tourSkip": {
