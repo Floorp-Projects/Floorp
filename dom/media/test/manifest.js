@@ -107,12 +107,6 @@ var gPlayedTests = [
   { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 },
 ];
 
-if (manifestNavigator().userAgent.includes("Windows") &&
-    manifestVideo().canPlayType('video/mp4; codecs="avc1.42E01E"')) {
-  gPlayedTests = gPlayedTests.concat({name: "red-46x48.mp4", type:"video/mp4", duration:1.00},
-                                     {name: "red-48x46.mp4", type:"video/mp4", duration:1.00});
-}
-
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
 // anything for testing clone-specific bugs.
 var cloneKey = Math.floor(Math.random()*100000000);
@@ -561,6 +555,14 @@ var gErrorTests = [
   { name:"bug604067.webm", type:"video/webm" },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
+
+// Windows' H.264 decoder cannot handle H.264 streams with resolution
+// less than 48x48 pixels. We refuse to play and error on such streams.
+if (manifestNavigator().userAgent.includes("Windows") &&
+    manifestVideo().canPlayType('video/mp4; codecs="avc1.42E01E"')) {
+  gErrorTests = gErrorTests.concat({name: "red-46x48.mp4", type:"video/mp4"},
+                                   {name: "red-48x46.mp4", type:"video/mp4"});
+}
 
 // These files would get error after receiving "loadedmetadata", we would like
 // to check duration in "onerror" and make sure the duration is still available.
