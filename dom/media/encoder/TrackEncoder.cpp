@@ -45,6 +45,61 @@ void TrackEncoder::NotifyEvent(MediaStreamGraph* aGraph,
   }
 }
 
+nsresult
+AudioTrackEncoder::TryInit(const AudioSegment& aSegment, int aSamplingRate)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (mInitialized) {
+    return NS_OK;
+  }
+
+  mInitCounter++;
+  TRACK_LOG(LogLevel::Debug, ("Init the audio encoder %d times", mInitCounter));
+  AudioSegment::ConstChunkIterator iter(aSegment);
+  while (!iter.IsEnded()) {
+    AudioChunk chunk = *iter;
+
+    // The number of channels is determined by the first non-null chunk, and
+    // thus the audio encoder is initialized at this time.
+    if (!chunk.IsNull()) {
+      nsresult rv = Init(chunk.mChannelData.Length(), aSamplingRate);
+      if (NS_FAILED(rv)) {
+        TRACK_LOG(LogLevel::Error,
+                  ("[AudioTrackEncoder]: Fail to initialize the encoder!"));
+        NotifyCancel();
+        return rv;
+      }
+      break;
+    }
+
+    iter.Next();
+  }
+
+  mNotInitDuration += aSegment.GetDuration();
+  if (!mInitialized &&
+      (mNotInitDuration / aSamplingRate >= AUDIO_INIT_FAILED_DURATION) &&
+      mInitCounter > 1) {
+    // Perform a best effort initialization since we haven't gotten any
+    // data yet. Motivated by issues like Bug 1336367
+    TRACK_LOG(LogLevel::Warning,
+              ("[AudioTrackEncoder]: Initialize failed "
+               "for %ds. Attempting to init with %d "
+               "(default) channels!",
+               AUDIO_INIT_FAILED_DURATION,
+               DEFAULT_CHANNELS));
+    nsresult rv = Init(DEFAULT_CHANNELS, aSamplingRate);
+    if (NS_FAILED(rv)) {
+      TRACK_LOG(LogLevel::Error,
+                ("[AudioTrackEncoder]: Fail to initialize the encoder!"));
+      NotifyCancel();
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
 void
 AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             TrackID aID,
@@ -60,49 +115,9 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
   const AudioSegment& audio = static_cast<const AudioSegment&>(aQueuedMedia);
 
-  // Check and initialize parameters for codec encoder.
-  if (!mInitialized) {
-    mInitCounter++;
-    TRACK_LOG(LogLevel::Debug, ("Init the audio encoder %d times", mInitCounter));
-    AudioSegment::ChunkIterator iter(const_cast<AudioSegment&>(audio));
-    while (!iter.IsEnded()) {
-      AudioChunk chunk = *iter;
-
-      // The number of channels is determined by the first non-null chunk, and
-      // thus the audio encoder is initialized at this time.
-      if (!chunk.IsNull()) {
-        nsresult rv = Init(chunk.mChannelData.Length(), aGraph->GraphRate());
-        if (NS_FAILED(rv)) {
-          TRACK_LOG(LogLevel::Error, ("[AudioTrackEncoder]: Fail to initialize the encoder!"));
-          NotifyCancel();
-        }
-        break;
-      }
-
-      iter.Next();
-    }
-
-    mNotInitDuration += aQueuedMedia.GetDuration();
-    if (!mInitialized &&
-        (mNotInitDuration / aGraph->GraphRate() >=
-         AUDIO_INIT_FAILED_DURATION) &&
-        mInitCounter > 1) {
-      // Perform a best effort initialization since we haven't gotten any
-      // data yet. Motivated by issues like Bug 1336367
-      TRACK_LOG(LogLevel::Warning,
-                ("[AudioTrackEncoder]: Initialize failed "
-                 "for %ds. Attempting to init with %d "
-                 "(default) channels!",
-                 AUDIO_INIT_FAILED_DURATION,
-                 DEFAULT_CHANNELS));
-      nsresult rv = Init(DEFAULT_CHANNELS, aGraph->GraphRate());
-      if (NS_FAILED(rv)) {
-        TRACK_LOG(LogLevel::Error,
-                  ("[AudioTrackEncoder]: Fail to initialize the encoder!"));
-        NotifyCancel();
-        return;
-      }
-    }
+  nsresult rv = TryInit(audio, aGraph->GraphRate());
+  if (NS_FAILED(rv)) {
+    return;
   }
 
   // Append and consume this raw segment.
