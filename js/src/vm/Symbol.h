@@ -20,6 +20,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
+#include "vm/Printer.h"
 #include "vm/String.h"
 
 namespace js {
@@ -94,7 +95,8 @@ class Symbol : public js::gc::TenuredCell
     }
 
 #ifdef DEBUG
-    void dump(FILE* fp = stderr);
+    void dump(); // Debugger-friendly stderr dump.
+    void dump(js::GenericPrinter& out);
 #endif
 };
 

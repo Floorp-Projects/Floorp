@@ -168,7 +168,7 @@ StackingContextHelper::ToRelativeLayoutRect(const LayerRect& aRect) const
     aMaybeScaledRect.Scale(mXScale, mYScale);
   }
 
-  return wr::ToLayoutRect(aMaybeScaledRect - mOrigin);
+  return wr::ToLayoutRect(RoundedToInt(aMaybeScaledRect - mOrigin));
 }
 
 wr::LayoutRect
@@ -180,25 +180,14 @@ StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
     aMaybeScaledRect.Scale(mXScale, mYScale);
   }
 
-  return wr::ToLayoutRect(ViewAs<LayerPixel>(aMaybeScaledRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin);
+  return wr::ToLayoutRect(RoundedToInt(ViewAs<LayerPixel>(aMaybeScaledRect,
+                                                          PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
 }
 
 wr::LayoutPoint
 StackingContextHelper::ToRelativeLayoutPoint(const LayerPoint& aPoint) const
 {
   return wr::ToLayoutPoint(aPoint - mOrigin);
-}
-
-wr::LayoutRect
-StackingContextHelper::ToRelativeLayoutRectRounded(const LayoutDeviceRect& aRect) const
-{
-  // Multiply by the scale inherited from ancestors if exits
-  LayoutDeviceRect aMaybeScaledRect = aRect;
-  if (mXScale != 1.0f || mYScale != 1.0f) {
-    aMaybeScaledRect.Scale(mXScale, mYScale);
-  }
-
-  return wr::ToLayoutRect(RoundedToInt(ViewAs<LayerPixel>(aMaybeScaledRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
 }
 
 } // namespace layers

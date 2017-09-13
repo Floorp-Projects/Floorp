@@ -35,7 +35,8 @@ protected:
                                                 const layers::TextureFactoryIdentifier& aIdentifier,
                                                 bool* aSuccess,
                                                 nsCString* aBlacklistedD3D11Driver,
-                                                nsCString* aBlacklistedD3D9Driver) override;
+                                                nsCString* aBlacklistedD3D9Driver,
+                                                nsCString* aErrorDescription) override;
   bool DeallocPVideoDecoderParent(PVideoDecoderParent* actor) override;
 
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult) override;

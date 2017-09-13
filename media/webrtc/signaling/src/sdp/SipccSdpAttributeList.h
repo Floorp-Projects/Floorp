@@ -37,6 +37,7 @@ public:
   virtual void SetAttribute(SdpAttribute* attr) override;
   virtual void RemoveAttribute(AttributeType type) override;
   virtual void Clear() override;
+  virtual uint32_t Count() const override;
 
   virtual const SdpConnectionAttribute& GetConnection() const override;
   virtual const SdpFingerprintAttributeList& GetFingerprint() const

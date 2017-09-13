@@ -1687,7 +1687,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 53;
+    const UI_VERSION = 54;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2075,6 +2075,15 @@ BrowserGlue.prototype = {
           malwareList.replace("goog-malware-shavar", "goog-malware-proto");
           Services.prefs.setCharPref(MALWARE_PREF, malwareList);
         }
+      }
+    }
+
+    if (currentUIVersion < 54) {
+      // Migrate browser.onboarding.hidden to browser.onboarding.state.
+      if (Services.prefs.prefHasUserValue("browser.onboarding.hidden")) {
+        let state = Services.prefs.getBoolPref("browser.onboarding.hidden") ? "watermark" : "default";
+        Services.prefs.setStringPref("browser.onboarding.state", state);
+        Services.prefs.clearUserPref("browser.onboarding.hidden");
       }
     }
 

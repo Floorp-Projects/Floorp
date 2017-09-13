@@ -5,8 +5,9 @@ const {actionTypes: at} = require("common/Actions.jsm");
 const {Dedupe} = require("common/Dedupe.jsm");
 
 const FAKE_LINKS = new Array(9).fill(null).map((v, i) => ({url: `http://www.site${i}.com`}));
+const FAKE_IMAGE = "data123";
 
-describe("Top Sites Feed", () => {
+describe("Highlights Feed", () => {
   let HighlightsFeed;
   let HIGHLIGHTS_UPDATE_TIME;
   let SECTION_ID;
@@ -15,6 +16,7 @@ describe("Top Sites Feed", () => {
   let sandbox;
   let links;
   let clock;
+  let fakeScreenshot;
   let fakeNewTabUtils;
   let sectionsManagerStub;
   let shortURLStub;
@@ -28,13 +30,16 @@ describe("Top Sites Feed", () => {
       enableSection: sinon.spy(),
       disableSection: sinon.spy(),
       updateSection: sinon.spy(),
+      updateSectionCard: sinon.spy(),
       sections: new Map([["highlights", {}]])
     };
+    fakeScreenshot = {getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_IMAGE))};
     shortURLStub = sinon.stub().callsFake(site => site.url.match(/\/([^/]+)/)[1]);
     globals.set("NewTabUtils", fakeNewTabUtils);
     ({HighlightsFeed, HIGHLIGHTS_UPDATE_TIME, SECTION_ID} = injector({
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
       "lib/SectionsManager.jsm": {SectionsManager: sectionsManagerStub},
+      "lib/Screenshots.jsm": {Screenshots: fakeScreenshot},
       "common/Dedupe.jsm": {Dedupe}
     }));
     feed = new HighlightsFeed();
@@ -69,11 +74,24 @@ describe("Top Sites Feed", () => {
     });
   });
   describe("#fetchHighlights", () => {
-    it("should add hostname and image to each link", async () => {
-      links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jog"}];
+    it("should add hostname and hasImage to each link", async () => {
+      links = [{url: "https://mozilla.org"}];
       await feed.fetchHighlights();
       assert.equal(feed.highlights[0].hostname, "mozilla.org");
-      assert.equal(feed.highlights[0].image, links[0].preview_image_url);
+      assert.equal(feed.highlights[0].hasImage, true);
+    });
+    it("should add the image from the imageCache if it exists to the link", async () => {
+      links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jog"}];
+      feed.imageCache = new Map([["https://mozilla.org", FAKE_IMAGE]]);
+      await feed.fetchHighlights();
+      assert.equal(feed.highlights[0].image, FAKE_IMAGE);
+    });
+    it("should call fetchImage with the correct arguments for each link", async () => {
+      links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jog"}];
+      sinon.spy(feed, "fetchImage");
+      await feed.fetchHighlights();
+      assert.calledOnce(feed.fetchImage);
+      assert.calledWith(feed.fetchImage, links[0].url, links[0].preview_image_url);
     });
     it("should not include any links already in Top Sites", async () => {
       links = [
@@ -114,6 +132,38 @@ describe("Top Sites Feed", () => {
       links = [{url: "https://mozilla.org", type: "history", bookmarkGuid: "1234567890"}];
       await feed.fetchHighlights();
       assert.equal(feed.highlights[0].type, "bookmark");
+    });
+    it("should clear the imageCache at the end", async () => {
+      links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jpg"}];
+      feed.imageCache = new Map([["https://mozilla.org", FAKE_IMAGE]]);
+      // Stops fetchImage adding to the cache
+      feed.fetchImage = () => {};
+      await feed.fetchHighlights();
+      assert.equal(feed.imageCache.size, 0);
+    });
+  });
+  describe("#fetchImage", () => {
+    const FAKE_URL = "https://mozilla.org";
+    const FAKE_IMAGE_URL = "https://mozilla.org/preview.jpg";
+    it("should capture the image, if available", async () => {
+      await feed.fetchImage(FAKE_URL, FAKE_IMAGE_URL);
+      assert.calledOnce(fakeScreenshot.getScreenshotForURL);
+      assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_IMAGE_URL);
+    });
+    it("should fall back to capturing a screenshot", async () => {
+      await feed.fetchImage(FAKE_URL, undefined);
+      assert.calledOnce(fakeScreenshot.getScreenshotForURL);
+      assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_URL);
+    });
+    it("should store the image in the imageCache", async () => {
+      feed.imageCache.clear();
+      await feed.fetchImage(FAKE_URL, FAKE_IMAGE_URL);
+      assert.equal(feed.imageCache.get(FAKE_URL), FAKE_IMAGE);
+    });
+    it("should call SectionsManager.updateSectionCard with the right arguments", async () => {
+      await feed.fetchImage(FAKE_URL, FAKE_IMAGE_URL);
+      assert.calledOnce(sectionsManagerStub.updateSectionCard);
+      assert.calledWith(sectionsManagerStub.updateSectionCard, "highlights", FAKE_URL, {image: FAKE_IMAGE}, true);
     });
   });
   describe("#uninit", () => {

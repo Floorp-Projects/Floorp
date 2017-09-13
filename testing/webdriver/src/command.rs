@@ -583,67 +583,102 @@ impl ToJson for TimeoutsParameters {
     }
 }
 
+/// A top-level browsing context’s window rect is a dictionary of the
+/// [`screenX`], [`screenY`], `width`, and `height` attributes of the
+/// `WindowProxy`.
+///
+/// In some user agents the operating system’s window dimensions, including
+/// decorations, are provided by the proprietary `window.outerWidth` and
+/// `window.outerHeight` DOM properties.
+///
+/// [`screenX`]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-screenx
+/// [`screenY`]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-screeny
 #[derive(Debug, PartialEq)]
 pub struct WindowRectParameters {
-    pub x: Nullable<i64>,
-    pub y: Nullable<i64>,
-    pub width: Nullable<u64>,
-    pub height: Nullable<u64>,
+    pub x: Nullable<i32>,
+    pub y: Nullable<i32>,
+    pub width: Nullable<i32>,
+    pub height: Nullable<i32>,
 }
 
 impl Parameters for WindowRectParameters {
     fn from_json(body: &Json) -> WebDriverResult<WindowRectParameters> {
         let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Message body was not an object");
+            ErrorStatus::InvalidArgument, "Message body was not an object");
 
         let x = match data.get("x") {
-            Some(json) => {
-                try!(Nullable::from_json(json, |n| {
-                    Ok((try_opt!(n.as_i64(),
-                                 ErrorStatus::InvalidArgument,
-                                 "'x' is not an integer")))
-                }))
-            }
-            None => Nullable::Null,
-        };
-        let y = match data.get("y") {
-            Some(json) => {
-                try!(Nullable::from_json(json, |n| {
-                    Ok((try_opt!(n.as_i64(),
-                                 ErrorStatus::InvalidArgument,
-                                 "'y' is not an integer")))
-                }))
-            }
-            None => Nullable::Null,
-        };
-        let width = match data.get("width") {
-            Some(json) => {
-                try!(Nullable::from_json(json, |n| {
-                    Ok((try_opt!(n.as_u64(),
-                                 ErrorStatus::InvalidArgument,
-                                 "'width' is not a positive integer")))
-                }))
-            }
-            None => Nullable::Null,
-        };
-        let height = match data.get("height") {
-            Some(json) => {
-                try!(Nullable::from_json(json, |n| {
-                    Ok((try_opt!(n.as_u64(),
-                                 ErrorStatus::InvalidArgument,
-                                 "'height' is not a positive integer")))
-                }))
-            }
+            Some(json) => try!(Nullable::from_json(json, |n| {
+                let x = try_opt!(
+                    n.as_f64(),
+                    ErrorStatus::InvalidArgument,
+                    "'x' is not a number"
+                ) as i64;
+                if x < i32::min_value() as i64 || x > i32::max_value() as i64 {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "'x' is larger than i32",
+                    ));
+                }
+                Ok(x as i32)
+            })),
             None => Nullable::Null,
         };
 
-        Ok(WindowRectParameters {
-               x: x,
-               y: y,
-               width: width,
-               height: height,
-           })
+        let y = match data.get("y") {
+            Some(json) => try!(Nullable::from_json(json, |n| {
+                let y = try_opt!(
+                    n.as_f64(),
+                    ErrorStatus::InvalidArgument,
+                    "'y' is not a number"
+                ) as i64;
+                if y < i32::min_value() as i64 || y > i32::max_value() as i64 {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "'y' is larger than i32",
+                    ));
+                }
+                Ok(y as i32)
+            })),
+            None => Nullable::Null,
+        };
+
+        let width = match data.get("width") {
+            Some(json) => try!(Nullable::from_json(json, |n| {
+                let width = try_opt!(
+                    n.as_f64(),
+                    ErrorStatus::InvalidArgument,
+                    "'width' is not a number"
+                ) as i64;
+                if width < 0 || width > i32::max_value() as i64 {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "'width' is larger than i32",
+                    ));
+                }
+                Ok(width as i32)
+            })),
+            None => Nullable::Null,
+        };
+
+        let height = match data.get("height") {
+            Some(json) => try!(Nullable::from_json(json, |n| {
+                let height = try_opt!(
+                    n.as_f64(),
+                    ErrorStatus::InvalidArgument,
+                    "'height' is not a positive integer"
+                ) as i64;
+                if height < 0 || height > i32::max_value() as i64 {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "'height' is larger than i32",
+                    ));
+                }
+                Ok(height as i32)
+            })),
+            None => Nullable::Null,
+        };
+
+        Ok(WindowRectParameters { x, y, width, height })
     }
 }
 
@@ -1708,10 +1743,10 @@ mod tests {
     #[test]
     fn test_window_rect() {
         let expected = WindowRectParameters {
-            x: Nullable::Value(0i64),
-            y: Nullable::Value(1i64),
-            width: Nullable::Value(2u64),
-            height: Nullable::Value(3u64),
+            x: Nullable::Value(0i32),
+            y: Nullable::Value(1i32),
+            width: Nullable::Value(2i32),
+            height: Nullable::Value(3i32),
         };
         let actual = Json::from_str(r#"{"x": 0, "y": 1, "width": 2, "height": 3}"#).unwrap();
         assert_eq!(expected, Parameters::from_json(&actual).unwrap());
@@ -1720,9 +1755,9 @@ mod tests {
     #[test]
     fn test_window_rect_nullable() {
         let expected = WindowRectParameters {
-            x: Nullable::Value(0i64),
+            x: Nullable::Value(0i32),
             y: Nullable::Null,
-            width: Nullable::Value(2u64),
+            width: Nullable::Value(2i32),
             height: Nullable::Null,
         };
         let actual = Json::from_str(r#"{"x": 0, "y": null, "width": 2, "height": null}"#).unwrap();
@@ -1732,12 +1767,24 @@ mod tests {
     #[test]
     fn test_window_rect_missing_fields() {
         let expected = WindowRectParameters {
-            x: Nullable::Value(0i64),
+            x: Nullable::Value(0i32),
             y: Nullable::Null,
-            width: Nullable::Value(2u64),
+            width: Nullable::Value(2i32),
             height: Nullable::Null,
         };
         let actual = Json::from_str(r#"{"x": 0, "width": 2}"#).unwrap();
+        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
+    }
+
+    #[test]
+    fn test_window_rect_floats() {
+        let expected = WindowRectParameters {
+            x: Nullable::Value(1i32),
+            y: Nullable::Value(2i32),
+            width: Nullable::Value(3i32),
+            height: Nullable::Value(4i32),
+        };
+        let actual = Json::from_str(r#"{"x": 1.1, "y": 2.2, "width": 3.3, "height": 4.4}"#).unwrap();
         assert_eq!(expected, Parameters::from_json(&actual).unwrap());
     }
 }

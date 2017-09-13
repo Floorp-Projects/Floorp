@@ -23,6 +23,8 @@
 #include "js/GCAPI.h"
 #include "js/RootingAPI.h"
 
+#include "vm/Printer.h"
+
 class JSDependentString;
 class JSExtensibleString;
 class JSExternalString;
@@ -526,15 +528,14 @@ class JSString : public js::gc::TenuredCell
     static const JS::TraceKind TraceKind = JS::TraceKind::String;
 
 #ifdef DEBUG
-    void dump(FILE* fp);
-    void dumpCharsNoNewline(FILE* fp);
-    void dump();
-    void dumpCharsNoNewline();
-    void dumpRepresentation(FILE* fp, int indent) const;
-    void dumpRepresentationHeader(FILE* fp, int indent, const char* subclass) const;
+    void dump(); // Debugger-friendly stderr dump.
+    void dump(js::GenericPrinter& out);
+    void dumpCharsNoNewline(js::GenericPrinter& out);
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+    void dumpRepresentationHeader(js::GenericPrinter& out, int indent, const char* subclass) const;
 
     template <typename CharT>
-    static void dumpChars(const CharT* s, size_t len, FILE* fp=stderr);
+    static void dumpChars(const CharT* s, size_t len, js::GenericPrinter& out);
 
     bool equals(const char* s);
 #endif
@@ -618,7 +619,7 @@ class JSRope : public JSString
     }
 
 #ifdef DEBUG
-    void dumpRepresentation(FILE* fp, int indent) const;
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
 
@@ -701,7 +702,7 @@ class JSLinearString : public JSString
     }
 
 #ifdef DEBUG
-    void dumpRepresentationChars(FILE* fp, int indent) const;
+    void dumpRepresentationChars(js::GenericPrinter& out, int indent) const;
 #endif
 };
 
@@ -747,7 +748,7 @@ class JSDependentString : public JSLinearString
     }
 
 #ifdef DEBUG
-    void dumpRepresentation(FILE* fp, int indent) const;
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
 
@@ -832,7 +833,7 @@ class JSFlatString : public JSLinearString
     inline void finalize(js::FreeOp* fop);
 
 #ifdef DEBUG
-    void dumpRepresentation(FILE* fp, int indent) const;
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
 
@@ -853,7 +854,7 @@ class JSExtensibleString : public JSFlatString
     }
 
 #ifdef DEBUG
-    void dumpRepresentation(FILE* fp, int indent) const;
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
 
@@ -885,7 +886,7 @@ class JSInlineString : public JSFlatString
     }
 
 #ifdef DEBUG
-    void dumpRepresentation(FILE* fp, int indent) const;
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
 
@@ -999,7 +1000,7 @@ class JSExternalString : public JSLinearString
     JSFlatString* ensureFlat(JSContext* cx);
 
 #ifdef DEBUG
-    void dumpRepresentation(FILE* fp, int indent) const;
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
 
@@ -1045,7 +1046,7 @@ class JSAtom : public JSFlatString
     inline void initHash(js::HashNumber hash);
 
 #ifdef DEBUG
-    void dump(FILE* fp);
+    void dump(js::GenericPrinter& out);
     void dump();
 #endif
 };

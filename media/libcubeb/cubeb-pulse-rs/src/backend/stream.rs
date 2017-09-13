@@ -6,7 +6,7 @@
 use backend::*;
 use backend::cork_state::CorkState;
 use cubeb;
-use pulse::{self, CVolumeExt, ChannelMapExt, SampleSpecExt, USecExt};
+use pulse::{self, CVolumeExt, ChannelMapExt, SampleSpecExt, StreamLatency, USecExt};
 use pulse_ffi::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_long, c_void};
@@ -415,10 +415,12 @@ impl<'ctx> Stream<'ctx> {
             None => Err(cubeb::ERROR),
             Some(ref stm) => {
                 match stm.get_latency() {
-                    Ok((r_usec, negative)) => {
-                        debug_assert!(negative);
+                    Ok(StreamLatency::Positive(r_usec)) => {
                         let latency = (r_usec * self.output_sample_spec.rate as pa_usec_t / PA_USEC_PER_SEC) as u32;
                         Ok(latency)
+                    },
+                    Ok(_) => {
+                        panic!("Can not handle negative latency values.");
                     },
                     Err(_) => Err(cubeb::ERROR),
                 }
@@ -762,9 +764,9 @@ impl<'ctx> Stream<'ctx> {
 
                         if (got as usize) < size / frame_size {
                             let latency = match stm.get_latency() {
-                                Ok((l, negative)) => {
-                                    assert_ne!(negative, true);
-                                    l
+                                Ok(StreamLatency::Positive(l)) => l,
+                                Ok(_) => {
+                                    panic!("Can not handle negative latency values.");
                                 },
                                 Err(e) => {
                                     debug_assert_eq!(e, pulse::ErrorCode::from_error_code(PA_ERR_NODATA));

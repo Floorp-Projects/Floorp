@@ -99,10 +99,15 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(global.gUUIDGenerator.generateUUID);
       assert.equal(session.session_id, global.gUUIDGenerator.generateUUID.firstCall.returnValue);
     });
-    it("should set the page", () => {
+    it("should set the page if a url parameter is given", () => {
+      const session = instance.addSession("foo", "about:monkeys");
+
+      assert.propertyVal(session, "page", "about:monkeys");
+    });
+    it("should set the page prop to 'unknown' if no URL parameter given", () => {
       const session = instance.addSession("foo");
 
-      assert.equal(session.page, "about:newtab"); // This is hardcoded for now.
+      assert.propertyVal(session, "page", "unknown");
     });
     it("should set the perf type when lacking timestamp", () => {
       const session = instance.addSession("foo");
@@ -178,11 +183,12 @@ describe("TelemetryFeed", () => {
         const ping = await instance.createPing();
         assert.validate(ping, BasePing);
         assert.notProperty(ping, "session_id");
+        assert.notProperty(ping, "page");
       });
       it("should create a valid base ping with session info if a portID is supplied", async () => {
         // Add a session
         const portID = "foo";
-        instance.addSession(portID);
+        instance.addSession(portID, "about:home");
         const sessionID = instance.sessions.get(portID).session_id;
 
         // Create a ping referencing the session
@@ -191,13 +197,13 @@ describe("TelemetryFeed", () => {
 
         // Make sure we added the right session-related stuff to the ping
         assert.propertyVal(ping, "session_id", sessionID);
-        assert.propertyVal(ping, "page", "about:newtab");
+        assert.propertyVal(ping, "page", "about:home");
       });
       it("should create an unexpected base ping if no session yet portID is supplied", async () => {
         const ping = await instance.createPing("foo");
 
         assert.validate(ping, BasePing);
-        assert.propertyVal(ping, "page", "about:newtab");
+        assert.propertyVal(ping, "page", "unknown");
         assert.propertyVal(instance.sessions.get("foo").perf, "load_trigger_type", "unexpected");
       });
       it("should create a base ping with user_prefs", async () => {
@@ -490,11 +496,11 @@ describe("TelemetryFeed", () => {
 
       instance.onAction(ac.SendToMain({
         type: at.NEW_TAB_INIT,
-        data: {}
+        data: {url: "about:monkeys"}
       }, "port123"));
 
       assert.calledOnce(stub);
-      assert.calledWith(stub, "port123");
+      assert.calledWith(stub, "port123", "about:monkeys");
     });
     it("should call .endSession() on a NEW_TAB_UNLOAD action", () => {
       const stub = sandbox.stub(instance, "endSession");

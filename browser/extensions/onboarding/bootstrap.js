@@ -20,6 +20,7 @@ const BROWSER_READY_NOTIFICATION = "browser-delayed-startup-finished";
 const BROWSER_SESSION_STORE_NOTIFICATION = "sessionstore-windows-restored";
 const PREF_WHITELIST = [
   ["browser.onboarding.enabled", PREF_BOOL],
+  ["browser.onboarding.state", PREF_STRING],
   ["browser.onboarding.notification.finished", PREF_BOOL],
   ["browser.onboarding.notification.prompt-count", PREF_INT],
   ["browser.onboarding.notification.last-time-of-changing-tour-sec", PREF_INT],
@@ -47,7 +48,7 @@ let waitingForBrowserReady = true;
  *
  * @param {Array} prefs the array of prefs to set.
  *   The array element carrys info to set pref, should contain
- *   - {String} name the pref name
+ *   - {String} name the pref name, such as `browser.onboarding.state`
  *   - {*} value the value to set
  **/
 function setPrefs(prefs) {

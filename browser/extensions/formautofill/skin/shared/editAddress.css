@@ -18,6 +18,7 @@ select {
 #address-level1-container,
 #postal-code-container,
 #country-container,
+#country-warning-message,
 #family-name-container,
 #organization-container,
 #address-level2-container,
@@ -43,8 +44,8 @@ select {
 }
 
 #country-warning-message {
+  box-sizing: border-box;
   font-size: 1rem;
-  flex: 1 0 auto;
   align-items: center;
   text-align: start;
   color: #737373;

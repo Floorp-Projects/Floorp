@@ -275,12 +275,12 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
             self.marionette.navigate(box)
             content_element = self.marionette.find_element(By.ID, "green")
 
-        self.assertRaisesRegexp(NoSuchElementException, "Element reference not seen before",
+        self.assertRaisesRegexp(NoSuchElementException, "Web element reference not seen before",
                                 self.marionette.screenshot, highlights=[content_element])
 
         chrome_document_element = self.document_element
         with self.marionette.using_context('content'):
-            self.assertRaisesRegexp(NoSuchElementException, "Element reference not seen before",
+            self.assertRaisesRegexp(NoSuchElementException, "Web element reference not seen before",
                                     self.marionette.screenshot,
                                     highlights=[chrome_document_element])
 

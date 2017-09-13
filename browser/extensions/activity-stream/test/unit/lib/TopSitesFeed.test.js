@@ -385,6 +385,17 @@ describe("Top Sites Feed", () => {
         data: [Object.assign({}, site1, {hostname: "foo.com"})]
       }));
     });
+    it("should compare against links if available, instead of getting from store", () => {
+      const frecentSite = {url: "foo.com", faviconSize: 32, favicon: "favicon.png"};
+      const pinnedSite1 = {url: "bar.com"};
+      const pinnedSite2 = {url: "foo.com"};
+      fakeNewTabUtils.pinnedLinks.links = [pinnedSite1, pinnedSite2];
+      feed.store = {getState() { return {TopSites: {rows: sinon.spy()}}; }};
+      let result = feed._getPinnedWithData([frecentSite]);
+      assert.deepEqual(result[0], pinnedSite1);
+      assert.deepEqual(result[1], Object.assign({}, frecentSite, pinnedSite2));
+      assert.notCalled(feed.store.getState().TopSites.rows);
+    });
     it("should call unpin with correct parameters on TOP_SITES_UNPIN", () => {
       fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "foo.com"}, null, null, null, null, null, FAKE_LINKS[0]];
       const unpinAction = {

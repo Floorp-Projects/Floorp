@@ -37,6 +37,7 @@ var OnboardingTourType = {
       Services.prefs.clearUserPref("browser.onboarding.notification.prompt-count");
       Services.prefs.clearUserPref("browser.onboarding.notification.last-time-of-changing-tour-sec");
       Services.prefs.clearUserPref("browser.onboarding.notification.tour-ids-queue");
+      Services.prefs.clearUserPref("browser.onboarding.state");
     }
     Services.prefs.setIntPref(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
   },

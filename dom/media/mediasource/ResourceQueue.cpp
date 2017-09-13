@@ -37,9 +37,9 @@ ResourceItem::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 class ResourceQueueDeallocator : public nsDequeFunctor {
-  void* operator() (void* aObject) override {
+  void operator()(void* aObject) override
+  {
     delete static_cast<ResourceItem*>(aObject);
-    return nullptr;
   }
 };
 
