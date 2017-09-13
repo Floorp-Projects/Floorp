@@ -150,6 +150,9 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
   });
 }
 
-function promiseDisableOnboardingTours() {
-  return SpecialPowers.pushPrefEnv({set: [["browser.onboarding.enabled", false]]});
+function promiseDisableOnboardingToursAndActivityStream() {
+  return SpecialPowers.pushPrefEnv({set: [
+    ["browser.onboarding.enabled", false],
+    ["browser.newtabpage.activity-stream.aboutHome.enabled", false]
+  ]});
 }
