@@ -97,11 +97,18 @@ import java.util.concurrent.Future;
             ongoingIconLoad.cancel(true);
         }
 
-        ongoingIconLoad = Icons.with(itemView.getContext())
-                .pageUrl(topSite.getUrl())
-                .skipNetwork()
-                .build()
-                .execute(this);
+        if (TextUtils.isEmpty(topSite.getUrl())) {
+            // Sometimes we get top sites without or with an empty URL - even though we do not allow
+            // this anywhere in our UI. However with 'sync' we are not in full control of the data.
+            // Whenever the URL is empty or null we just clear a potentially previously set icon.
+            faviconView.clearImage();
+        } else {
+            ongoingIconLoad = Icons.with(itemView.getContext())
+                    .pageUrl(topSite.getUrl())
+                    .skipNetwork()
+                    .build()
+                    .execute(this);
+        }
 
         final Drawable pinDrawable;
         if (topSite.isPinned()) {

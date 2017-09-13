@@ -760,8 +760,8 @@
 </hbox>
 
 <!-- addons, forgery (phishing) UI Security -->
-<groupbox id="addonsPhishingGroup" data-category="panePrivacy" hidden="true">
-  <caption><label>&phishingProtection.label;</label></caption>
+<groupbox id="browsingProtectionGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&browsingProtection.label;</label></caption>
   <checkbox id="enableSafeBrowsing"
             label="&enableSafeBrowsing.label;"
             accesskey="&enableSafeBrowsing.accesskey;" />

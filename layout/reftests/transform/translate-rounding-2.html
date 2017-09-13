@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bug 1392161 - Transform translate rounding (rem)</title>
+    <style>
+      div {
+        height: 100px;
+        width: 100px;
+        background: blue;
+        transform: scale(100000) translate(0.0001rem) scale(0.00001);
+      }
+      html {
+        font-size: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div></div>
+  </body>
+</html>

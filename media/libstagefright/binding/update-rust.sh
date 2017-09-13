@@ -2,7 +2,7 @@
 # Script to update mp4parse-rust sources to latest upstream
 
 # Default version.
-VER=81260ded506dce968716720e10544c510f37d222
+VER=759cf90957b1fd5a01632b1aa90cead16c26d0db
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -38,6 +38,9 @@ cp _upstream/mp4parse/mp4parse_capi/Cargo.toml mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/build.rs mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h include/
 cp _upstream/mp4parse/mp4parse_capi/src/*.rs mp4parse_capi/src/
+rm -rf mp4parse_fallible
+mkdir -p mp4parse_fallible
+cp _upstream/mp4parse/mp4parse_fallible/* mp4parse_fallible/
 
 echo "Applying patches..."
 patch -p4 < mp4parse-cargo.patch
