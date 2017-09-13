@@ -4387,12 +4387,12 @@ nsPIDOMWindowInner::SyncStateFromParentWindow()
 void
 nsGlobalWindow::UpdateTopInnerWindow()
 {
-  if (!IsInnerWindow() || AsInner()->IsTopInnerWindow()) {
+  if (!IsInnerWindow() || AsInner()->IsTopInnerWindow() || !mTopInnerWindow) {
     return;
   }
 
-  AsInner()->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
-  AsInner()->UpdateUserMediaCount(-(int32_t)mNumOfActiveUserMedia);
+  mTopInnerWindow->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
+  mTopInnerWindow->UpdateUserMediaCount(-(int32_t)mNumOfActiveUserMedia);
 }
 
 void
@@ -5402,8 +5402,8 @@ nsGlobalWindow::GetU2f(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mU2F) {
-    RefPtr<U2F> u2f = new U2F();
-    u2f->Init(AsInner(), aError);
+    RefPtr<U2F> u2f = new U2F(AsInner());
+    u2f->Init(aError);
     if (NS_WARN_IF(aError.Failed())) {
       return nullptr;
     }

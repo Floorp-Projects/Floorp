@@ -1,5 +1,0 @@
-{
-  "description": "A foundational package that provides a CommonJS module loader implementation.",
-  "keywords": ["potato", "jetpack-low-level"],
-  "loader": "lib/loader.js"
-}

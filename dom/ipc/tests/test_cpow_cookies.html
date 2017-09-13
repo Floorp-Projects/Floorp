@@ -14,7 +14,8 @@
 
     SimpleTest.waitForExplicitFinish();
 
-    const childFrameURL = "file_cpow_cookies.html";
+    const childFrameURL =
+      "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
 
     function childFrameScript() {
       "use strict";
@@ -80,7 +81,8 @@
           ["dom.ipc.browser_frames.oop_by_default", true],
           ["dom.mozBrowserFramesEnabled", true],
           ["network.disable.ipc.security", true],
-          ["browser.pagethumbnails.capturing_disabled", true]
+          ["browser.pagethumbnails.capturing_disabled", true],
+          ["security.data_uri.block_toplevel_data_uri_navigations", false],
         ]
       }, runTests);
     });

@@ -601,9 +601,10 @@ WebrtcAudioConduit::EnableAudioLevelExtension(bool enabled, uint8_t id)
 
 MediaConduitErrorCode
 WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
-                                    int32_t lengthSamples,
-                                    int32_t samplingFreqHz,
-                                    int32_t capture_delay)
+                                   int32_t lengthSamples, // per channel
+                                   int32_t samplingFreqHz,
+                                   uint32_t channels,
+                                   int32_t capture_delay)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   // Following checks need to be performed
@@ -646,19 +647,11 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
 
   capture_delay = mCaptureDelay;
   //Insert the samples
-  if(mPtrVoEXmedia->ExternalRecordingInsertData(audio_data,
-                                                lengthSamples,
-                                                samplingFreqHz,
-                                                capture_delay) == -1)
-  {
-    int error = mPtrVoEBase->LastError();
-    CSFLogError(logTag,  "%s Inserting audio data Failed %d", __FUNCTION__, error);
-    if(error == VE_RUNTIME_REC_ERROR)
-    {
-      return kMediaConduitRecordingError;
-    }
-    return kMediaConduitUnknownError;
-  }
+  mPtrVoEBase->audio_transport()->PushCaptureData(mChannel, audio_data,
+                                                  sizeof(audio_data[0])*8, // bits
+                                                  samplingFreqHz,
+                                                  channels,
+                                                  lengthSamples);
   // we should be good here
   return kMediaConduitNoError;
 }

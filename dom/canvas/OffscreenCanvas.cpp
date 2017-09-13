@@ -266,17 +266,6 @@ OffscreenCanvas::ToBlob(JSContext* aCx,
     {
       RefPtr<Blob> blob = aBlob;
 
-      ErrorResult rv;
-      uint64_t size = blob->GetSize(rv);
-      if (rv.Failed()) {
-        rv.SuppressException();
-      } else {
-        AutoJSAPI jsapi;
-        if (jsapi.Init(mGlobal)) {
-          JS_updateMallocCounter(jsapi.cx(), size);
-        }
-      }
-
       if (mPromise) {
         RefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
         mPromise->MaybeResolve(newBlob);
@@ -285,7 +274,7 @@ OffscreenCanvas::ToBlob(JSContext* aCx,
       mGlobal = nullptr;
       mPromise = nullptr;
 
-      return rv.StealNSResult();
+      return NS_OK;
     }
 
     nsCOMPtr<nsIGlobalObject> mGlobal;

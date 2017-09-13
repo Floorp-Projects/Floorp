@@ -455,6 +455,14 @@ js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length, Value* vp)
         }
     }
 
+    if (aobj->is<TypedArrayObject>()) {
+        TypedArrayObject* typedArray = &aobj->as<TypedArrayObject>();
+        if (typedArray->length() == length) {
+            typedArray->getElements(vp);
+            return true;
+        }
+    }
+
     if (js::GetElementsOp op = aobj->getOpsGetElements()) {
         ElementAdder adder(cx, vp, length, ElementAdder::GetElement);
         return op(cx, aobj, 0, length, &adder);

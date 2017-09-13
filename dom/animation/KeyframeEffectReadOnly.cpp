@@ -977,6 +977,9 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     effectSet->AddEffect(*this);
     mInEffectSet = true;
     UpdateEffectSet(effectSet);
+    if (mTarget->mElement->GetPrimaryFrame()) {
+      mTarget->mElement->GetPrimaryFrame()->SchedulePaint();
+    }
   } else if (!isRelevant && mInEffectSet) {
     UnregisterTarget();
   }
@@ -1000,6 +1003,9 @@ KeyframeEffectReadOnly::UnregisterTarget()
     if (effectSet->IsEmpty()) {
       EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
     }
+  }
+  if (mTarget->mElement->GetPrimaryFrame()) {
+    mTarget->mElement->GetPrimaryFrame()->SchedulePaint();
   }
 }
 

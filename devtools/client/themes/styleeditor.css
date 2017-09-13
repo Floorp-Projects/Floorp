@@ -71,25 +71,11 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   -moz-box-flex: 1;
 }
 
-.theme-dark .stylesheet-title,
-.theme-dark .stylesheet-name {
-  color: var(--theme-selection-color);
-}
-
-.theme-dark .stylesheet-rule-count,
-.theme-dark .stylesheet-linked-file,
-.theme-dark .stylesheet-saveButton {
-  color: var(--theme-body-color-alt);
-}
-
-.theme-light .stylesheet-title,
-.theme-light .stylesheet-name {
-  color: var(--theme-body-color-alt);
-}
-
-.theme-light .stylesheet-rule-count,
-.theme-light .stylesheet-linked-file,
-.theme-light .stylesheet-saveButton {
+.stylesheet-title,
+.stylesheet-name,
+.stylesheet-rule-count,
+.stylesheet-linked-file,
+.stylesheet-saveButton {
   color: var(--theme-body-color);
 }
 

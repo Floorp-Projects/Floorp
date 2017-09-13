@@ -16,24 +16,24 @@ var FontBuilder = {
 
   _allFonts: null,
   _langGroupSupported: false,
-  buildFontList(aLanguage, aFontType, aMenuList) {
+  async buildFontList(aLanguage, aFontType, aMenuList) {
     // Reset the list
     while (aMenuList.hasChildNodes())
       aMenuList.firstChild.remove();
 
     var defaultFont = null;
     // Load Font Lists
-    var fonts = this.enumerator.EnumerateFonts(aLanguage, aFontType, { } );
+    var fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, aFontType);
     if (fonts.length > 0)
       defaultFont = this.enumerator.getDefaultFont(aLanguage, aFontType);
     else {
-      fonts = this.enumerator.EnumerateFonts(aLanguage, "", { });
+      fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, "");
       if (fonts.length > 0)
         defaultFont = this.enumerator.getDefaultFont(aLanguage, "");
     }
 
     if (!this._allFonts)
-      this._allFonts = this.enumerator.EnumerateAllFonts({});
+      this._allFonts = await this.enumerator.EnumerateAllFontsAsync({});
 
     // Build the UI for the Default Font and Fonts for this CSS type.
     var popup = document.createElement("menupopup");

@@ -476,10 +476,10 @@ public:
    */
   void Accumulate(ContainerState* aState,
                   nsDisplayItem* aItem,
-                  const nsIntRegion& aClippedOpaqueRegion,
                   const nsIntRect& aVisibleRect,
                   const DisplayItemClip& aClip,
-                  LayerState aLayerState);
+                  LayerState aLayerState,
+                  nsDisplayList *aList);
   AnimatedGeometryRoot* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
 
   /**
@@ -3439,10 +3439,10 @@ IsItemAreaInWindowOpaqueRegion(nsDisplayListBuilder* aBuilder,
 void
 PaintedLayerData::Accumulate(ContainerState* aState,
                             nsDisplayItem* aItem,
-                            const nsIntRegion& aClippedOpaqueRegion,
                             const nsIntRect& aVisibleRect,
                             const DisplayItemClip& aClip,
-                            LayerState aLayerState)
+                            LayerState aLayerState,
+                            nsDisplayList* aList)
 {
   FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
 
@@ -3478,11 +3478,16 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     return;
   }
 
+  nsIntRegion opaquePixels = aState->ComputeOpaqueRect(aItem,
+                                                       mAnimatedGeometryRoot, mASR, aClip, aList,
+                                                       &mHideAllLayersBelow, &mOpaqueForAnimatedGeometryRootParent);
+  opaquePixels.AndWith(aVisibleRect);
+
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * it's the only thing visible in this layer.
    */
   if (nsIntRegion(aVisibleRect).Contains(mVisibleRegion) &&
-      aClippedOpaqueRegion.Contains(mVisibleRegion) &&
+      opaquePixels.Contains(mVisibleRegion) &&
       aItem->SupportsOptimizingToImage()) {
     mImage = static_cast<nsDisplayImageContainer*>(aItem);
     FLB_LOG_PAINTED_LAYER_DECISION(this, "  Tracking image: nsDisplayImageContainer covers the layer\n");
@@ -3539,8 +3544,8 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     mVisibleRegion.SimplifyOutward(4);
   }
 
-  if (!aClippedOpaqueRegion.IsEmpty()) {
-    for (auto iter = aClippedOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
+  if (!opaquePixels.IsEmpty()) {
+    for (auto iter = opaquePixels.RectIter(); !iter.Done(); iter.Next()) {
       // We don't use SimplifyInward here since it's not defined exactly
       // what it will discard. For our purposes the most important case
       // is a large opaque background at the bottom of z-order (e.g.,
@@ -4478,14 +4483,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         if (mManager->IsWidgetLayerManager()) {
           paintedLayerData->UpdateCommonClipCount(itemClip);
         }
-        nsIntRegion opaquePixels = ComputeOpaqueRect(item,
-            animatedGeometryRoot, itemASR, itemClip, aList,
-            &paintedLayerData->mHideAllLayersBelow,
-            &paintedLayerData->mOpaqueForAnimatedGeometryRootParent);
-        MOZ_ASSERT(nsIntRegion(itemDrawRect).Contains(opaquePixels));
-        opaquePixels.AndWith(itemVisibleRect);
-        paintedLayerData->Accumulate(this, item, opaquePixels,
-            itemVisibleRect, itemClip, layerState);
+        paintedLayerData->Accumulate(this, item, itemVisibleRect, itemClip, layerState, aList);
 
         if (!paintedLayerData->mLayer) {
           // Try to recycle the old layer of this display item.
@@ -5974,14 +5972,13 @@ void
 FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
                               const nsIntRect& aRect,
                               gfxContext *aContext,
-                              gfxContext *aRC,
                               nsDisplayListBuilder* aBuilder,
                               nsPresContext* aPresContext,
                               const nsIntPoint& aOffset,
                               float aXScale, float aYScale,
                               int32_t aCommonClipCount)
 {
-  DrawTarget& aDrawTarget = *aRC->GetDrawTarget();
+  DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
 
   int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
   nsRect boundRect = ToAppUnits(aRect, appUnitsPerDevPixel);
@@ -6034,7 +6031,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
 
     if (cdi->mInactiveLayerManager) {
       bool saved = aDrawTarget.GetPermitSubpixelAA();
-      PaintInactiveLayer(aBuilder, cdi->mInactiveLayerManager, cdi->mItem, aContext, aRC);
+      PaintInactiveLayer(aBuilder, cdi->mInactiveLayerManager, cdi->mItem, aContext, aContext);
       aDrawTarget.SetPermitSubpixelAA(saved);
     } else {
       nsIFrame* frame = cdi->mItem->Frame();
@@ -6047,7 +6044,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       } else
 #endif
       {
-        cdi->mItem->Paint(aBuilder, aRC);
+        cdi->mItem->Paint(aBuilder, aContext);
       }
     }
 
@@ -6203,7 +6200,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
         aContext->CurrentMatrix().PreTranslate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
                                   PreScale(userData->mXScale, userData->mYScale));
 
-      layerBuilder->PaintItems(entry->mItems, iterRect, aContext, aContext,
+      layerBuilder->PaintItems(entry->mItems, iterRect, aContext,
                                builder, presContext,
                                offset, userData->mXScale, userData->mYScale,
                                entry->mCommonClipCount);
@@ -6219,7 +6216,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       aContext->CurrentMatrix().PreTranslate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
                                 PreScale(userData->mXScale,userData->mYScale));
 
-    layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext, aContext,
+    layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext,
                              builder, presContext,
                              offset, userData->mXScale, userData->mYScale,
                              entry->mCommonClipCount);

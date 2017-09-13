@@ -50,6 +50,7 @@
 #include "gfxUserFontSet.h"
 #include "harfbuzz/hb.h"
 
+#include "MainThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
@@ -502,7 +503,11 @@ gfxMacFontFamily::LocalizedName(nsAString& aLocalizedName)
 {
     nsAutoreleasePool localPool;
 
-    if (!HasOtherFamilyNames()) {
+    // It's unsafe to call HasOtherFamilyNames off the main thread because
+    // it entrains FindStyleVariations, which calls GetWeightOverride, which
+    // retrieves prefs.  And the pref names can change (via user overrides),
+    // so we can't use gfxPrefs to access them.
+    if (NS_IsMainThread() && !HasOtherFamilyNames()) {
         aLocalizedName = mName;
         return;
     }
