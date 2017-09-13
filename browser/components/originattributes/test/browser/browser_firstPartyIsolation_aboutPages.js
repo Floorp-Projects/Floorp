@@ -68,6 +68,11 @@ function frame_script() {
  * Check if data: URI inherits firstPartyDomain from about:blank correctly.
  */
 add_task(async function test_remote_window_open_data_uri() {
+  // allow top level data: URI navigations, otherwise
+  // <a href="data:" would fail.
+  await SpecialPowers.pushPrefEnv({
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+  });
   let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
   let mm = browser.messageManager;

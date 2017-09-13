@@ -1115,3 +1115,11 @@ PK11_GetTokenURI;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.33 { 	# NSS 3.33 release
+;+    global:
+CERT_FindCertByIssuerAndSNCX;
+CERT_FindCertByNicknameOrEmailAddrCX;
+CERT_FindCertByNicknameOrEmailAddrForUsageCX;
+;+    local:
+;+       *;
+;+};

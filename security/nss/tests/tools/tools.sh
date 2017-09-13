@@ -76,11 +76,7 @@ tools_init()
   fi
   SCRIPTNAME=tools.sh
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      html_head "Tools Tests with ECC"
-  else
-      html_head "Tools Tests"
-  fi
+  html_head "Tools Tests"
 
   grep "SUCCESS: SMIME passed" $CERT_LOG_FILE >/dev/null || {
       Exit 15 "Fatal - S/MIME of cert.sh needs to pass first"
@@ -397,30 +393,28 @@ tools_p12_export_list_import_with_default_ciphers()
   
   export_list_import "DEFAULT" "DEFAULT"
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      echo "$SCRIPTNAME: Exporting Alice's email EC cert & key---------------"
-      echo "pk12util -o Alice-ec.p12 -n \"Alice-ec\" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \\"
-      echo "         -w ${R_PWFILE}"
-      ${BINDIR}/pk12util -o Alice-ec.p12 -n "Alice-ec" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \
-           -w ${R_PWFILE} 2>&1 
-      ret=$?
-      html_msg $ret 0 "Exporting Alice's email EC cert & key (pk12util -o)"
-      check_tmpfile
+  echo "$SCRIPTNAME: Exporting Alice's email EC cert & key---------------"
+  echo "pk12util -o Alice-ec.p12 -n \"Alice-ec\" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \\"
+  echo "         -w ${R_PWFILE}"
+  ${BINDIR}/pk12util -o Alice-ec.p12 -n "Alice-ec" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \
+       -w ${R_PWFILE} 2>&1 
+  ret=$?
+  html_msg $ret 0 "Exporting Alice's email EC cert & key (pk12util -o)"
+  check_tmpfile
 
-      echo "$SCRIPTNAME: Importing Alice's email EC cert & key --------------"
-      echo "pk12util -i Alice-ec.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
-      ${BINDIR}/pk12util -i Alice-ec.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
-      ret=$?
-      html_msg $ret 0 "Importing Alice's email EC cert & key (pk12util -i)"
-      check_tmpfile
+  echo "$SCRIPTNAME: Importing Alice's email EC cert & key --------------"
+  echo "pk12util -i Alice-ec.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
+  ${BINDIR}/pk12util -i Alice-ec.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
+  ret=$?
+  html_msg $ret 0 "Importing Alice's email EC cert & key (pk12util -i)"
+  check_tmpfile
 
-      echo "$SCRIPTNAME: Listing Alice's pk12 EC file -----------------"
-      echo "pk12util -l Alice-ec.p12 -w ${R_PWFILE}"
-      ${BINDIR}/pk12util -l Alice-ec.p12 -w ${R_PWFILE} 2>&1
-      ret=$?
-      html_msg $ret 0 "Listing Alice's pk12 EC file (pk12util -l)"
-      check_tmpfile
-  fi
+  echo "$SCRIPTNAME: Listing Alice's pk12 EC file -----------------"
+  echo "pk12util -l Alice-ec.p12 -w ${R_PWFILE}"
+  ${BINDIR}/pk12util -l Alice-ec.p12 -w ${R_PWFILE} 2>&1
+  ret=$?
+  html_msg $ret 0 "Listing Alice's pk12 EC file (pk12util -l)"
+  check_tmpfile
 }
 
 ############################## tools_p12 ###############################

@@ -84,6 +84,11 @@
   color: var(--theme-toolbar-color);
 }
 
+.theme-dark .tabs .tabs-menu-item.is-active,
+.theme-light .tabs .tabs-menu-item.is-active {
+  color: var(--theme-toolbar-selected-color);
+}
+
 .theme-dark .tabs .tabs-menu-item:last-child,
 .theme-light:not(.theme-firebug) .tabs .tabs-menu-item:last-child {
   border-inline-end-width: 1px;

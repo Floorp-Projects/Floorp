@@ -37,8 +37,9 @@ add_task(async function test_load_start() {
  * Ensure that anchor navigation invalidates shistory.
  */
 add_task(async function test_hashchange() {
-  const URL = "data:text/html;charset=utf-8,<a id=a href=%23>clickme</a>";
-
+  const PATH = getRootDirectory(gTestPath)
+              .replace("chrome://mochitests/content/", "http://example.com/");
+  const URL = PATH + "file_sessionHistory_hashchange.html";
   // Create a new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;

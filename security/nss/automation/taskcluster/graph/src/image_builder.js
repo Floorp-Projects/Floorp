@@ -31,13 +31,11 @@ export async function buildTask({name, path}) {
 
   return {
     name: "Image Builder",
-    image: "taskcluster/image_builder:0.1.5",
+    image: "nssdev/image_builder:0.1.5",
     routes: ["index." + ns],
     env: {
-      HEAD_REPOSITORY: process.env.NSS_HEAD_REPOSITORY,
-      BASE_REPOSITORY: process.env.NSS_HEAD_REPOSITORY,
-      HEAD_REV: process.env.NSS_HEAD_REVISION,
-      HEAD_REF: process.env.NSS_HEAD_REVISION,
+      NSS_HEAD_REPOSITORY: process.env.NSS_HEAD_REPOSITORY,
+      NSS_HEAD_REVISION: process.env.NSS_HEAD_REVISION,
       PROJECT: process.env.TC_PROJECT,
       CONTEXT_PATH: path,
       HASH: hash
@@ -52,7 +50,7 @@ export async function buildTask({name, path}) {
     command: [
       "/bin/bash",
       "-c",
-      "/home/worker/bin/build_image.sh"
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_image.sh"
     ],
     platform: "nss-decision",
     features: ["dind"],

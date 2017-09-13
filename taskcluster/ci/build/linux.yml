@@ -69,7 +69,6 @@ linux64/pgo:
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
-    coalesce-name: linux64-pgo
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -221,7 +220,6 @@ linux/opt:
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
-    coalesce-name: opt_linux32
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -250,7 +248,6 @@ linux/debug:
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
-    coalesce-name: dbg_linux32
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -280,7 +277,6 @@ linux/pgo:
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
-    coalesce-name: linux32-pgo
     run:
         using: mozharness
         actions: [get-secrets build check-test update]

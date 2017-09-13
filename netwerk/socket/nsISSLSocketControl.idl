@@ -22,13 +22,6 @@ interface nsISSLSocketControl : nsISupports {
     void proxyStartSSL();
     void StartTLS();
 
-    /**
-     * Whether this socket has been created by a speculative connection
-     * attempt.  This will mainly prevent client certificate dialog to
-     * pop-up.
-     */
-    attribute boolean speculative;
-
     /* NPN (Next Protocol Negotiation) is a mechanism for
        negotiating the protocol to be spoken inside the SSL
        tunnel during the SSL handshake. The NPNList is the list

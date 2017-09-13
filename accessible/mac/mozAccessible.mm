@@ -1106,7 +1106,11 @@ struct RoleDescrComparator
 
 - (BOOL)isFocused
 {
-  return FocusMgr()->IsFocused([self getGeckoAccessible]);
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    return FocusMgr()->IsFocused(accWrap);
+  }
+
+  return false; //XXX: proxy implementation is needed.
 }
 
 - (BOOL)canBeFocused

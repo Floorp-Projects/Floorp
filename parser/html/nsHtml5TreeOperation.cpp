@@ -445,7 +445,9 @@ nsHtml5TreeOperation::CreateHTMLElement(
                             false);
 
         // Custom element setup may be needed if there is an "is" attribute.
-        if (kNameSpaceID_None == nsuri && !prefix && nsGkAtoms::is == localName) {
+        if (nsContentUtils::IsWebComponentsEnabled() &&
+            kNameSpaceID_None == nsuri &&
+            !prefix && nsGkAtoms::is == localName) {
           nsContentUtils::SetupCustomElement(newContent, &value);
         }
       }

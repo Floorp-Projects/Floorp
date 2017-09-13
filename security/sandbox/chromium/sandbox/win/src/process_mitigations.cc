@@ -152,9 +152,6 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
   if (version < base::win::VERSION_WIN10)
     return true;
 
-// We don't currently use the code below and including it means we will need
-// the Windows 10 SDK to build, with which there are currently issues.
-#if !defined(MOZ_SANDBOX)
   // Enable font policies.
   if (flags & MITIGATION_NONSYSTEM_FONT_DISABLE) {
     PROCESS_MITIGATION_FONT_DISABLE_POLICY policy = {};
@@ -185,7 +182,6 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
       return false;
     }
   }
-#endif
 
   return true;
 }

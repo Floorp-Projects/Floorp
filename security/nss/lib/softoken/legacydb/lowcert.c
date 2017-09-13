@@ -823,7 +823,6 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
             if (rv == SECSuccess)
                 return pubk;
             break;
-#ifndef NSS_DISABLE_ECC
         case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
             pubk->keyType = NSSLOWKEYECKey;
             /* Since PKCS#11 directly takes the DER encoding of EC params
@@ -845,7 +844,6 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
             if (rv == SECSuccess)
                 return pubk;
             break;
-#endif /* NSS_DISABLE_ECC */
         default:
             rv = SECFailure;
             break;

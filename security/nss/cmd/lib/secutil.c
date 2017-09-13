@@ -484,48 +484,6 @@ SECU_ConfigDirectory(const char *base)
     return buf;
 }
 
-/*Turn off SSL for now */
-/* This gets called by SSL when server wants our cert & key */
-int
-SECU_GetClientAuthData(void *arg, PRFileDesc *fd,
-                       struct CERTDistNamesStr *caNames,
-                       struct CERTCertificateStr **pRetCert,
-                       struct SECKEYPrivateKeyStr **pRetKey)
-{
-    SECKEYPrivateKey *key;
-    CERTCertificate *cert;
-    int errsave;
-
-    if (arg == NULL) {
-        fprintf(stderr, "no key/cert name specified for client auth\n");
-        return -1;
-    }
-    cert = PK11_FindCertFromNickname(arg, NULL);
-    errsave = PORT_GetError();
-    if (!cert) {
-        if (errsave == SEC_ERROR_BAD_PASSWORD)
-            fprintf(stderr, "Bad password\n");
-        else if (errsave > 0)
-            fprintf(stderr, "Unable to read cert (error %d)\n", errsave);
-        else if (errsave == SEC_ERROR_BAD_DATABASE)
-            fprintf(stderr, "Unable to get cert from database (%d)\n", errsave);
-        else
-            fprintf(stderr, "SECKEY_FindKeyByName: internal error %d\n", errsave);
-        return -1;
-    }
-
-    key = PK11_FindKeyByAnyCert(arg, NULL);
-    if (!key) {
-        fprintf(stderr, "Unable to get key (%d)\n", PORT_GetError());
-        return -1;
-    }
-
-    *pRetCert = cert;
-    *pRetKey = key;
-
-    return 0;
-}
-
 SECStatus
 SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii,
                      PRBool warnOnPrivateKeyInAsciiFile)
@@ -1409,7 +1367,6 @@ secu_PrintAttribute(FILE *out, SEC_PKCS7Attribute *attr, char *m, int level)
     }
 }
 
-#ifndef NSS_DISABLE_ECC
 static void
 secu_PrintECPublicKey(FILE *out, SECKEYPublicKey *pk, char *m, int level)
 {
@@ -1428,7 +1385,6 @@ secu_PrintECPublicKey(FILE *out, SECKEYPublicKey *pk, char *m, int level)
         SECU_PrintObjectID(out, &curveOID, "Curve", level + 1);
     }
 }
-#endif /* NSS_DISABLE_ECC */
 
 void
 SECU_PrintRSAPublicKey(FILE *out, SECKEYPublicKey *pk, char *m, int level)
@@ -1476,11 +1432,9 @@ secu_PrintSubjectPublicKeyInfo(FILE *out, PLArenaPool *arena,
                 SECU_PrintDSAPublicKey(out, pk, "DSA Public Key", level + 1);
                 break;
 
-#ifndef NSS_DISABLE_ECC
             case ecKey:
                 secu_PrintECPublicKey(out, pk, "EC Public Key", level + 1);
                 break;
-#endif
 
             case dhKey:
             case fortezzaKey:
@@ -3633,44 +3587,6 @@ loser:
     return rv;
 }
 
-#if 0
-
-/* we need access to the private function cert_FindExtension for this code to work */
-
-CERTAuthKeyID *
-SECU_FindCRLAuthKeyIDExten (PLArenaPool *arena, CERTSignedCrl *scrl)
-{
-    SECItem encodedExtenValue;
-    SECStatus rv;
-    CERTAuthKeyID *ret;
-    CERTCrl* crl;
-
-    if (!scrl) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
-    }
-
-    crl = &scrl->crl;
-
-    encodedExtenValue.data = NULL;
-    encodedExtenValue.len = 0;
-
-    rv = cert_FindExtension(crl->extensions, SEC_OID_X509_AUTH_KEY_ID,
-                            &encodedExtenValue);
-    if ( rv != SECSuccess ) {
-        return (NULL);
-    }
-
-    ret = CERT_DecodeAuthKeyID (arena, &encodedExtenValue);
-
-    PORT_Free(encodedExtenValue.data);
-    encodedExtenValue.data = NULL;
-
-    return(ret);
-}
-
-#endif
-
 /*
  * Find the issuer of a Crl.  Use the authorityKeyID if it exists.
  */
@@ -3744,7 +3660,7 @@ SECU_FindCertByNicknameOrFilename(CERTCertDBHandle *handle,
                                   void *pwarg)
 {
     CERTCertificate *the_cert;
-    the_cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
+    the_cert = CERT_FindCertByNicknameOrEmailAddrCX(handle, name, pwarg);
     if (the_cert) {
         return the_cert;
     }

@@ -424,21 +424,22 @@ inline void nsTableRowFrame::SetHasUnpaginatedBSize(bool aValue)
 inline mozilla::LogicalMargin
 nsTableRowFrame::GetBCBorderWidth(mozilla::WritingMode aWM)
 {
+  nsPresContext* presContext = PresContext();
   return mozilla::LogicalMargin(
-    aWM, nsPresContext::CSSPixelsToAppUnits(mBStartBorderWidth), 0,
-    nsPresContext::CSSPixelsToAppUnits(mBEndBorderWidth), 0);
+    aWM, presContext->DevPixelsToAppUnits(mBStartBorderWidth), 0,
+    presContext->DevPixelsToAppUnits(mBEndBorderWidth), 0);
 }
 
 inline void
 nsTableRowFrame::GetContinuousBCBorderWidth(mozilla::WritingMode aWM,
                                             mozilla::LogicalMargin& aBorder)
 {
-  int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
+  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
+  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a,
                                                  mIStartContBorderWidth);
-  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
+  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(d2a,
                                                  mBStartContBorderWidth);
-  aBorder.IStart(aWM) = BC_BORDER_END_HALF_COORD(aPixelsToTwips,
+  aBorder.IStart(aWM) = BC_BORDER_END_HALF_COORD(d2a,
                                                  mIEndContBorderWidth);
 }
 

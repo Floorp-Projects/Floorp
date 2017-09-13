@@ -40,11 +40,7 @@ smime_init()
   fi
   SCRIPTNAME=smime.sh
 
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      html_head "S/MIME Tests with ECC"
-  else
-      html_head "S/MIME Tests"
-  fi
+  html_head "S/MIME Tests"
 
   grep "SUCCESS: SMIME passed" $CERT_LOG_FILE >/dev/null || {
       Exit 11 "Fatal - S/MIME of cert.sh needs to pass first"
@@ -85,29 +81,27 @@ smime_sign()
   html_msg $? 0 "Compare Attached Signed Data and Original (${HASH})" "."
 
 # Test ECDSA signing for all hash algorithms.
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      echo "$SCRIPTNAME: Signing Detached Message ECDSA w/ {$HASH} ------------------"
-      echo "cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}"
-      ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}
-      html_msg $? 0 "Create Detached Signature Alice (ECDSA w/ ${HASH})" "."
+  echo "$SCRIPTNAME: Signing Detached Message ECDSA w/ {$HASH} ------------------"
+  echo "cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}
+  html_msg $? 0 "Create Detached Signature Alice (ECDSA w/ ${HASH})" "."
 
-      echo "cmsutil -D -i alice-ec.d${SIG} -c alice.txt -d ${P_R_BOBDIR} "
-      ${PROFTOOL} ${BINDIR}/cmsutil -D -i alice-ec.d${SIG} -c alice.txt -d ${P_R_BOBDIR} 
-      html_msg $? 0 "Verifying Alice's Detached Signature (ECDSA w/ ${HASH})" "."
+  echo "cmsutil -D -i alice-ec.d${SIG} -c alice.txt -d ${P_R_BOBDIR} "
+  ${PROFTOOL} ${BINDIR}/cmsutil -D -i alice-ec.d${SIG} -c alice.txt -d ${P_R_BOBDIR} 
+  html_msg $? 0 "Verifying Alice's Detached Signature (ECDSA w/ ${HASH})" "."
 
-      echo "$SCRIPTNAME: Signing Attached Message (ECDSA w/ ${HASH}) ------------------"
-      echo "cmsutil -S -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.${SIG}"
-      ${PROFTOOL} ${BINDIR}/cmsutil -S -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.${SIG}
-      html_msg $? 0 "Create Attached Signature Alice (ECDSA w/ ${HASH})" "."
+  echo "$SCRIPTNAME: Signing Attached Message (ECDSA w/ ${HASH}) ------------------"
+  echo "cmsutil -S -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.${SIG}"
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.${SIG}
+  html_msg $? 0 "Create Attached Signature Alice (ECDSA w/ ${HASH})" "."
 
-      echo "cmsutil -D -i alice-ec.${SIG} -d ${P_R_BOBDIR} -o alice-ec.data.${HASH}"
-      ${PROFTOOL} ${BINDIR}/cmsutil -D -i alice-ec.${SIG} -d ${P_R_BOBDIR} -o alice-ec.data.${HASH}
-      html_msg $? 0 "Decode Alice's Attached Signature (ECDSA w/ ${HASH})" "."
+  echo "cmsutil -D -i alice-ec.${SIG} -d ${P_R_BOBDIR} -o alice-ec.data.${HASH}"
+  ${PROFTOOL} ${BINDIR}/cmsutil -D -i alice-ec.${SIG} -d ${P_R_BOBDIR} -o alice-ec.data.${HASH}
+  html_msg $? 0 "Decode Alice's Attached Signature (ECDSA w/ ${HASH})" "."
 
-      echo "diff alice.txt alice-ec.data.${HASH}"
-      diff alice.txt alice-ec.data.${HASH}
-      html_msg $? 0 "Compare Attached Signed Data and Original (ECDSA w/ ${HASH})" "."
-  fi
+  echo "diff alice.txt alice-ec.data.${HASH}"
+  diff alice.txt alice-ec.data.${HASH}
+  html_msg $? 0 "Compare Attached Signed Data and Original (ECDSA w/ ${HASH})" "."
 
 }
 

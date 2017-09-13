@@ -878,7 +878,7 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
 
         // Restore the stack, such that resume points are created with the stack
         // as it was before the call.
-        callInfo.pushFormals(current);
+        MOZ_TRY(callInfo.pushFormals(this, current));
     }
 
     MInstruction* ins = nullptr;

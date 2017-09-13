@@ -3731,13 +3731,6 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    // Ensure sufficient space in the slots: needed for inlining from FUNAPPLY.
-    uint32_t depth = current->stackDepth() + callInfo.numFormals();
-    if (depth > current->nslots()) {
-        if (!current->increaseSlots(depth - current->nslots()))
-            return abort(AbortReason::Alloc);
-    }
-
     // Create new |this| on the caller-side for inlined constructors.
     if (callInfo.constructing()) {
         MDefinition* thisDefn = createThis(target, callInfo.fun(), callInfo.getNewTarget());
@@ -3747,7 +3740,7 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     }
 
     // Capture formals in the outer resume point.
-    callInfo.pushFormals(current);
+    MOZ_TRY(callInfo.pushFormals(this, current));
 
     MResumePoint* outerResumePoint =
         MResumePoint::New(alloc(), current, pc, MResumePoint::Outer);
@@ -4410,7 +4403,7 @@ IonBuilder::inlineGenericFallback(JSFunction* target, CallInfo& callInfo, MBasic
     graph().addBlock(fallbackBlock);
 
     // Create a new CallInfo to track modified state within this block.
-    CallInfo fallbackInfo(alloc(), callInfo.constructing(), callInfo.ignoresReturnValue());
+    CallInfo fallbackInfo(alloc(), pc, callInfo.constructing(), callInfo.ignoresReturnValue());
     if (!fallbackInfo.init(callInfo))
         return abort(AbortReason::Alloc);
     fallbackInfo.popFormals(fallbackBlock);
@@ -4447,7 +4440,7 @@ IonBuilder::inlineObjectGroupFallback(CallInfo& callInfo, MBasicBlock* dispatchB
     MOZ_ASSERT(cache->idempotent());
 
     // Create a new CallInfo to track modified state within the fallback path.
-    CallInfo fallbackInfo(alloc(), callInfo.constructing(), callInfo.ignoresReturnValue());
+    CallInfo fallbackInfo(alloc(), pc, callInfo.constructing(), callInfo.ignoresReturnValue());
     if (!fallbackInfo.init(callInfo))
         return abort(AbortReason::Alloc);
 
@@ -4533,7 +4526,7 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const InliningTargets& targets, Bool
 
     MBasicBlock* dispatchBlock = current;
     callInfo.setImplicitlyUsedUnchecked();
-    callInfo.pushFormals(dispatchBlock);
+    MOZ_TRY(callInfo.pushFormals(this, dispatchBlock));
 
     // Patch any InlinePropertyTable to only contain functions that are
     // inlineable. The InlinePropertyTable will also be patched at the end to
@@ -4626,7 +4619,7 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const InliningTargets& targets, Bool
         inlineBlock->rewriteSlot(funIndex, funcDef);
 
         // Create a new CallInfo to track modified state within the inline block.
-        CallInfo inlineInfo(alloc(), callInfo.constructing(), callInfo.ignoresReturnValue());
+        CallInfo inlineInfo(alloc(), pc, callInfo.constructing(), callInfo.ignoresReturnValue());
         if (!inlineInfo.init(callInfo))
             return abort(AbortReason::Alloc);
         inlineInfo.popFormals(inlineBlock);
@@ -5073,7 +5066,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
     TemporaryTypeSet* calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     JSFunction* native = getSingleCallTarget(calleeTypes);
     if (!native || !native->isNative() || native->native() != &fun_call) {
-        CallInfo callInfo(alloc(), /* constructing = */ false,
+        CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                           /* ignoresReturnValue = */ BytecodeIsPopped(pc));
         if (!callInfo.init(current, argc))
             return abort(AbortReason::Alloc);
@@ -5099,7 +5092,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
         argc -= 1;
     }
 
-    CallInfo callInfo(alloc(), /* constructing = */ false,
+    CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                       /* ignoresReturnValue = */ BytecodeIsPopped(pc));
     if (!callInfo.init(current, argc))
         return abort(AbortReason::Alloc);
@@ -5135,7 +5128,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
     TemporaryTypeSet* calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     JSFunction* native = getSingleCallTarget(calleeTypes);
     if (argc != 2 || info().analysisMode() == Analysis_ArgumentsUsage) {
-        CallInfo callInfo(alloc(), /* constructing = */ false,
+        CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                           /* ignoresReturnValue = */ BytecodeIsPopped(pc));
         if (!callInfo.init(current, argc))
             return abort(AbortReason::Alloc);
@@ -5165,7 +5158,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
             return jsop_funapplyarray(argc);
         }
 
-        CallInfo callInfo(alloc(), /* constructing = */ false,
+        CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                           /* ignoresReturnValue = */ BytecodeIsPopped(pc));
         if (!callInfo.init(current, argc))
             return abort(AbortReason::Alloc);
@@ -5312,7 +5305,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
     // can inline the apply() target and don't care about the actual arguments
     // that were passed in.
 
-    CallInfo callInfo(alloc(), /* constructing = */ false,
+    CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                       /* ignoresReturnValue = */ BytecodeIsPopped(pc));
 
     // Vp
@@ -5383,7 +5376,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing, bool ignoresReturnValue)
     if (calleeTypes)
         MOZ_TRY(getPolyCallTargets(calleeTypes, constructing, targets, 4));
 
-    CallInfo callInfo(alloc(), constructing, ignoresReturnValue);
+    CallInfo callInfo(alloc(), pc, constructing, ignoresReturnValue);
     if (!callInfo.init(current, argc))
         return abort(AbortReason::Alloc);
 
@@ -5635,7 +5628,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         if (info().funMaybeLazy()->isArrow())
             return abort(AbortReason::Disable, "Direct eval from arrow function");
 
-        CallInfo callInfo(alloc(), /* constructing = */ false,
+        CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                           /* ignoresReturnValue = */ BytecodeIsPopped(pc));
         if (!callInfo.init(current, argc))
             return abort(AbortReason::Alloc);
@@ -5674,7 +5667,7 @@ IonBuilder::jsop_eval(uint32_t argc)
                 current->push(dynamicName);
                 current->push(constant(UndefinedValue())); // thisv
 
-                CallInfo evalCallInfo(alloc(), /* constructing = */ false,
+                CallInfo evalCallInfo(alloc(), pc, /* constructing = */ false,
                                       /* ignoresReturnValue = */ BytecodeIsPopped(pc));
                 if (!evalCallInfo.init(current, /* argc = */ 0))
                     return abort(AbortReason::Alloc);
@@ -11101,7 +11094,7 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
 
     current->push(obj);
 
-    CallInfo callInfo(alloc(), /* constructing = */ false,
+    CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                       /* ignoresReturnValue = */ BytecodeIsPopped(pc));
     if (!callInfo.init(current, 0))
         return abort(AbortReason::Alloc);
@@ -11642,7 +11635,7 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
 
     // Call the setter. Note that we have to push the original value, not
     // the setter's return value.
-    CallInfo callInfo(alloc(), /* constructing = */ false,
+    CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                       /* ignoresReturnValue = */ BytecodeIsPopped(pc));
     if (!callInfo.init(current, 1))
         return abort(AbortReason::Alloc);

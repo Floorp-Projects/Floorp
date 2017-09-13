@@ -34,6 +34,7 @@
         'ssl_misc_unittest.cc',
         'ssl_record_unittest.cc',
         'ssl_resumption_unittest.cc',
+        'ssl_renegotiation_unittest.cc',
         'ssl_skip_unittest.cc',
         'ssl_staticrsa_unittest.cc',
         'ssl_v2_client_hello_unittest.cc',
