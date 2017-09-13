@@ -583,6 +583,7 @@
                                 &overrideDefaultPageColors.never.label;
                                 &useSystemColors.label;
                                 &underlineLinks.label;
+                                &links;
                                 &linkColor.label;
                                 &visitedLinkColor.label;"/>
       </hbox>
