@@ -1275,7 +1275,7 @@ pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/
 // activates Activity Stream
 pref("browser.newtabpage.activity-stream.enabled", true);
 pref("browser.newtabpage.activity-stream.prerender", true);
-pref("browser.newtabpage.activity-stream.aboutHome.enabled", false);
+pref("browser.newtabpage.activity-stream.aboutHome.enabled", true);
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
