@@ -17,7 +17,7 @@ var flags = require("devtools/shared/flags");
 // Import the GCLI test helper
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
-Services.scriptloader.loadSubScript(testDir + "/mockCommands.js", this);
+Services.scriptloader.loadSubScript(testDir + "/mockCommands.js", this, "UTF-8");
 
 flags.testing = true;
 SimpleTest.registerCleanupFunction(() => {
