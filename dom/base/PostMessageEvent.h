@@ -40,13 +40,6 @@ public:
 private:
   ~PostMessageEvent();
 
-  void
-  Dispatch(nsGlobalWindow* aTargetWindow, Event* aEvent);
-
-  void
-  DispatchError(JSContext* aCx, nsGlobalWindow* aTargetWindow,
-                mozilla::dom::EventTarget* aEventTarget);
-
   RefPtr<nsGlobalWindow> mSource;
   nsString mCallerOrigin;
   RefPtr<nsGlobalWindow> mTargetWindow;
