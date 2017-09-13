@@ -15,7 +15,7 @@ add_task(function* () {
   yield selectNode("#one", inspector);
 
   let willNavigate = inspector.target.once("will-navigate");
-  yield testActor.eval(`window.location = "${URL_2}"`);
+  yield testActor.eval(`content.location = "${URL_2}"`);
 
   info("Waiting for will-navigate");
   yield willNavigate;
