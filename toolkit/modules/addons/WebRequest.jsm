@@ -687,7 +687,7 @@ HttpObserverManager = {
 
   shouldRunListener(policyType, uri, filter) {
     // force the protocol to be ws again.
-    if (policyType == "websocket" && ["http", "https"].includes(uri.scheme)) {
+    if (policyType == Ci.nsIContentPolicy.TYPE_WEBSOCKET && ["http", "https"].includes(uri.scheme)) {
       uri = Services.io.newURI(`ws${uri.spec.substring(4)}`);
     }
     return WebRequestCommon.typeMatches(policyType, filter.types) &&
