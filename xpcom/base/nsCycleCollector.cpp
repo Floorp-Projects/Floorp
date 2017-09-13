@@ -2100,6 +2100,7 @@ private:
   RefPtr<nsCycleCollectorLogger> mLogger;
   bool mMergeZones;
   nsAutoPtr<NodePool::Enumerator> mCurrNode;
+  uint32_t mNoteChildCount;
 
 public:
   CCGraphBuilder(CCGraph& aGraph,
@@ -2213,6 +2214,7 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
   , mJSZoneParticipant(nullptr)
   , mLogger(aLogger)
   , mMergeZones(aMergeZones)
+  , mNoteChildCount(0)
 {
   if (aCCRuntime) {
     mJSParticipant = aCCRuntime->GCThingParticipant();
@@ -2290,12 +2292,14 @@ CCGraphBuilder::DoneAddingRoots()
 MOZ_NEVER_INLINE bool
 CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
 {
-  const intptr_t kNumNodesBetweenTimeChecks = 500;
+  const intptr_t kNumNodesBetweenTimeChecks = 1000;
   const intptr_t kStep = SliceBudget::CounterReset / kNumNodesBetweenTimeChecks;
 
   MOZ_ASSERT(mCurrNode);
 
   while (!aBudget.isOverBudget() && !mCurrNode->IsDone()) {
+    mNoteChildCount = 0;
+
     PtrInfo* pi = mCurrNode->GetNext();
     if (!pi) {
       MOZ_CRASH();
@@ -2316,7 +2320,7 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
       SetLastChild();
     }
 
-    aBudget.step(kStep);
+    aBudget.step(kStep * (mNoteChildCount + 1));
   }
 
   if (!mCurrNode->IsDone()) {
@@ -2407,6 +2411,8 @@ CCGraphBuilder::NoteXPCOMChild(nsISupports* aChild)
     return;
   }
 
+  ++mNoteChildCount;
+
   nsXPCOMCycleCollectionParticipant* cp;
   ToParticipant(aChild, &cp);
   if (cp && (!cp->CanSkipThis(aChild) || WantAllTraces())) {
@@ -2427,6 +2433,8 @@ CCGraphBuilder::NoteNativeChild(void* aChild,
     return;
   }
 
+  ++mNoteChildCount;
+
   MOZ_ASSERT(aParticipant, "Need a nsCycleCollectionParticipant!");
   if (!aParticipant->CanSkipThis(aChild) || WantAllTraces()) {
     NoteChild(aChild, aParticipant, edgeName);
@@ -2439,6 +2447,8 @@ CCGraphBuilder::NoteJSChild(const JS::GCCellPtr& aChild)
   if (!aChild) {
     return;
   }
+
+  ++mNoteChildCount;
 
   nsCString edgeName;
   if (MOZ_UNLIKELY(WantDebugInfo())) {

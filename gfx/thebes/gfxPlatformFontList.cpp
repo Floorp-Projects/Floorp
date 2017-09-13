@@ -21,6 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -176,8 +177,8 @@ gfxPlatformFontList::MemoryReporter::CollectReports(
 }
 
 gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
-    : mFontFamilies(64), mOtherFamilyNames(16),
-      mBadUnderlineFamilyNames(8), mSharedCmaps(8),
+    : mFontFamiliesMutex("gfxPlatformFontList::mFontFamiliesMutex"), mFontFamilies(64),
+      mOtherFamilyNames(16), mBadUnderlineFamilyNames(8), mSharedCmaps(8),
       mStartIndex(0), mIncrement(1), mNumFamilies(0), mFontlistInitCount(0),
       mFontFamilyWhitelistActive(false)
 {
@@ -286,6 +287,7 @@ gfxPlatformFontList::InitFontList()
     gfxPlatform::PurgeSkiaFontCache();
 
     CancelInitOtherFamilyNamesTask();
+    MutexAutoLock lock(mFontFamiliesMutex);
     mFontFamilies.Clear();
     mOtherFamilyNames.Clear();
     mOtherFamilyNamesInitialized = false;
@@ -481,6 +483,7 @@ gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts)
 {
+    MutexAutoLock lock(mFontFamiliesMutex);
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
         RefPtr<gfxFontFamily>& family = iter.Data();
         if (family->FilterForFontList(aLangGroup, aGenericFamily)) {

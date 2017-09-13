@@ -16,7 +16,7 @@ if ("values" in Object) {
     values = Object.values(o),
     assertDeepEq(values, [17, 2]);
 
-    o = { __iterator__: function() { return Iterator({a: 2, b: 3}); } };
+    o = { __iterator__: function() { throw new Error("non-standard __iterator__ called?"); } };
     values = Object.values(o);
     assertDeepEq(values, [o.__iterator__]);
 

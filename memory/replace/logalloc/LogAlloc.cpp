@@ -169,10 +169,6 @@ replace_get_bridge()
 /* Do a simple, text-form, log of all calls to replace-malloc functions.
  * Use locking to guarantee that an allocation that did happen is logged
  * before any other allocation/free happens.
- * TODO: Add a thread id to the log: different allocators, or even different
- * configurations of jemalloc behave differently when allocations are coming
- * from different threads. Reproducing those multi-threaded workloads would be
- * useful to test those differences.
  */
 
 void*

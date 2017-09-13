@@ -4,7 +4,6 @@ py2:
     include: ['.']
     exclude:
         - accessible/xpcom/AccEventGen.py
-        - addon-sdk
         - browser
         - build
         - client.py

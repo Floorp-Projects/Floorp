@@ -106,7 +106,7 @@ class MapObject : public NativeObject {
     static const Class class_;
     static const Class protoClass_;
 
-    enum { NurseryKeysSlot, SlotCount };
+    enum { NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
 
     static MOZ_MUST_USE bool getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
                                             JS::MutableHandle<GCVector<JS::Value>> entries);
@@ -132,6 +132,8 @@ class MapObject : public NativeObject {
 
     using UnbarrieredTable = OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy>;
     friend class OrderedHashTableRef<MapObject>;
+
+    static void sweepAfterMinorGC(FreeOp* fop, MapObject* mapobj);
 
   private:
     static const ClassSpec classSpec_;
@@ -188,6 +190,7 @@ class MapIteratorObject : public NativeObject
     static MapIteratorObject* create(JSContext* cx, HandleObject mapobj, ValueMap* data,
                                      MapObject::IteratorKind kind);
     static void finalize(FreeOp* fop, JSObject* obj);
+    static void objectMoved(JSObject* obj, const JSObject* old);
 
     static MOZ_MUST_USE bool next(Handle<MapIteratorObject*> mapIterator,
                                   HandleArrayObject resultPairObj, JSContext* cx);
@@ -213,7 +216,7 @@ class SetObject : public NativeObject {
     static const Class class_;
     static const Class protoClass_;
 
-    enum { NurseryKeysSlot, SlotCount };
+    enum { NurseryKeysSlot, HasNurseryMemorySlot, SlotCount };
 
     static MOZ_MUST_USE bool keys(JSContext *cx, HandleObject obj,
                                   JS::MutableHandle<GCVector<JS::Value>> keys);
@@ -233,6 +236,8 @@ class SetObject : public NativeObject {
 
     using UnbarrieredTable = OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy>;
     friend class OrderedHashTableRef<SetObject>;
+
+    static void sweepAfterMinorGC(FreeOp* fop, SetObject* setobj);
 
   private:
     static const ClassSpec classSpec_;
@@ -288,6 +293,7 @@ class SetIteratorObject : public NativeObject
     static SetIteratorObject* create(JSContext* cx, HandleObject setobj, ValueSet* data,
                                      SetObject::IteratorKind kind);
     static void finalize(FreeOp* fop, JSObject* obj);
+    static void objectMoved(JSObject* obj, const JSObject* old);
 
     static MOZ_MUST_USE bool next(Handle<SetIteratorObject*> setIterator,
                                   HandleArrayObject resultObj, JSContext* cx);

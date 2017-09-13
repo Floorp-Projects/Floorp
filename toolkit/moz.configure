@@ -618,14 +618,15 @@ def building_stylo_bindgen(stylo_config, bindgen_enabled, compile_environment):
 @imports('os')
 @imports('subprocess')
 def llvm_config_paths(host):
-    llvm_config_progs = [
-        'llvm-config-4.0',
-        'llvm-config-mp-4.0',   # MacPorts' chosen naming scheme.
-        'llvm-config40',
-        'llvm-config-3.9',
-        'llvm-config39',
-        'llvm-config',
-    ]
+    llvm_supported_versions = ['6.0', '5.0', '4.0', '3.9']
+    llvm_config_progs = []
+    for version in llvm_supported_versions:
+        llvm_config_progs += [
+            'llvm-config-%s' % version,
+            'llvm-config-mp-%s' % version,    # MacPorts' chosen naming scheme.
+            'llvm-config%s' % version.replace('.', ''),
+        ]
+    llvm_config_progs.append('llvm-config')
 
     # Homebrew on macOS doesn't make clang available on PATH, so we have to
     # look for it in non-standard places.
@@ -1170,3 +1171,16 @@ def cubeb_remoting(value):
 
 set_config('MOZ_CUBEB_REMOTING', cubeb_remoting)
 set_define('MOZ_CUBEB_REMOTING', cubeb_remoting)
+
+# ASan Reporter Addon
+# ==============================================================
+option('--enable-address-sanitizer-reporter',
+       help='Enable Address Sanitizer Reporter Extension')
+
+@depends('--enable-address-sanitizer-reporter')
+def enable_asan_reporter(value):
+    if value:
+        return True
+
+set_config('MOZ_ASAN_REPORTER', enable_asan_reporter)
+set_define('MOZ_ASAN_REPORTER', enable_asan_reporter)

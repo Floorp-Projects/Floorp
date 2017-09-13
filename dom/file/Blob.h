@@ -130,6 +130,8 @@ public:
                                const nsAString& aContentType,
                                ErrorResult& aRv);
 
+  size_t GetAllocationSize() const;
+
 protected:
   // File constructor should never be used directly. Use Blob::Create instead.
   Blob(nsISupports* aParent, BlobImpl* aImpl);
@@ -146,6 +148,10 @@ protected:
 private:
   nsCOMPtr<nsISupports> mParent;
 };
+
+// Override BindingJSObjectMallocBytes for blobs to tell the JS GC how much
+// memory is held live by the binding object.
+uint64_t BindingJSObjectMallocBytes(Blob* aBlob);
 
 } // namespace dom
 } // namespace mozilla

@@ -1,3 +1,0 @@
-The docs processor should tolerate (by ignoring) random non-.js files in lib
-directories, such as those left around by editors, version-control systems,
-or OS metadata like .DS_Store . This file exercises that tolerance.

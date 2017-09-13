@@ -1849,22 +1849,30 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 }
 
 bool
-js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                         HandleValue value, GetterOp getter, SetterOp setter, unsigned attrs,
-                         ObjectOpResult& result)
+js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                 GetterOp getter, SetterOp setter, unsigned attrs,
+                                 ObjectOpResult& result)
 {
     Rooted<PropertyDescriptor> desc(cx);
-    desc.initFields(nullptr, value, attrs, getter, setter);
+    desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
     return NativeDefineProperty(cx, obj, id, desc, result);
 }
 
 bool
-js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                         HandleValue value, JSGetterOp getter, JSSetterOp setter,
-                         unsigned attrs)
+js::NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                             HandleValue value, unsigned attrs, ObjectOpResult& result)
+{
+    Rooted<PropertyDescriptor> desc(cx);
+    desc.initFields(nullptr, value, attrs, nullptr, nullptr);
+    return NativeDefineProperty(cx, obj, id, desc, result);
+}
+
+bool
+js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                 JSGetterOp getter, JSSetterOp setter, unsigned attrs)
 {
     ObjectOpResult result;
-    if (!NativeDefineProperty(cx, obj, id, value, getter, setter, attrs, result))
+    if (!NativeDefineAccessorProperty(cx, obj, id, getter, setter, attrs, result))
         return false;
     if (!result) {
         // Off-thread callers should not get here: they must call this
@@ -1878,12 +1886,37 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 }
 
 bool
-js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, PropertyName* name,
-                         HandleValue value, JSGetterOp getter, JSSetterOp setter,
-                         unsigned attrs)
+js::NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                             HandleValue value, unsigned attrs)
+{
+    ObjectOpResult result;
+    if (!NativeDefineDataProperty(cx, obj, id, value, attrs, result))
+        return false;
+    if (!result) {
+        // Off-thread callers should not get here: they must call this
+        // function only with known-valid arguments. Populating a new
+        // PlainObject with configurable properties is fine.
+        MOZ_ASSERT(!cx->helperThread());
+        result.reportError(cx, obj, id);
+        return false;
+    }
+    return true;
+}
+
+bool
+js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj, PropertyName* name,
+                                 JSGetterOp getter, JSSetterOp setter, unsigned attrs)
 {
     RootedId id(cx, NameToId(name));
-    return NativeDefineProperty(cx, obj, id, value, getter, setter, attrs);
+    return NativeDefineAccessorProperty(cx, obj, id, getter, setter, attrs);
+}
+
+bool
+js::NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj, PropertyName* name,
+                             HandleValue value, unsigned attrs)
+{
+    RootedId id(cx, NameToId(name));
+    return NativeDefineDataProperty(cx, obj, id, value, attrs);
 }
 
 static bool

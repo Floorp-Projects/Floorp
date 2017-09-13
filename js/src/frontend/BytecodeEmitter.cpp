@@ -3696,16 +3696,10 @@ BytecodeEmitter::iteratorResultShape(unsigned* shape)
 
     Rooted<jsid> value_id(cx, NameToId(cx->names().value));
     Rooted<jsid> done_id(cx, NameToId(cx->names().done));
-    if (!NativeDefineProperty(cx, obj, value_id, UndefinedHandleValue, nullptr, nullptr,
-                              JSPROP_ENUMERATE))
-    {
+    if (!NativeDefineDataProperty(cx, obj, value_id, UndefinedHandleValue, JSPROP_ENUMERATE))
         return false;
-    }
-    if (!NativeDefineProperty(cx, obj, done_id, UndefinedHandleValue, nullptr, nullptr,
-                              JSPROP_ENUMERATE))
-    {
+    if (!NativeDefineDataProperty(cx, obj, done_id, UndefinedHandleValue, JSPROP_ENUMERATE))
         return false;
-    }
 
     ObjectBox* objbox = parser.newObjectBox(obj);
     if (!objbox)
@@ -6071,11 +6065,8 @@ BytecodeEmitter::emitDestructuringObjRestExclusionSet(ParseNode* pattern)
             if (obj) {
                 MOZ_ASSERT(!obj->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(pnatom));
-                if (!NativeDefineProperty(cx, obj, id, UndefinedHandleValue, nullptr, nullptr,
-                                          JSPROP_ENUMERATE))
-                {
+                if (!NativeDefineDataProperty(cx, obj, id, UndefinedHandleValue, JSPROP_ENUMERATE))
                     return false;
-                }
                 if (obj->inDictionaryMode())
                     obj.set(nullptr);
             }
@@ -10002,8 +9993,8 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 MOZ_ASSERT(!IsHiddenInitOp(op));
                 MOZ_ASSERT(!objp->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(key->pn_atom));
-                if (!NativeDefineProperty(cx, objp, id, UndefinedHandleValue, nullptr, nullptr,
-                                          JSPROP_ENUMERATE))
+                if (!NativeDefineDataProperty(cx, objp, id, UndefinedHandleValue,
+                                              JSPROP_ENUMERATE))
                 {
                     return false;
                 }

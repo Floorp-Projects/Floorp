@@ -33,6 +33,27 @@ interface nsIFontEnumerator : nsISupports
     out uint32_t aCount, [retval, array, size_is(aCount)] out wstring aResult);
 
   /**
+   * Return a promise that resolves to a sorted array of the names of all
+   * installed fonts.
+   *
+   * @return Promise that resolves to Array
+   */
+  [implicit_jscontext]
+  jsval EnumerateAllFontsAsync();
+
+  /**
+   * Return a promise that resolves to a sorted array of names of fonts
+   * that support the given language group and are suitable for use as the given
+   * CSS generic font.
+   *
+   * @param  aLangGroup language group
+   * @param  aGeneric   CSS generic font
+   * @return Promise that resolves to Array
+   */
+  [implicit_jscontext]
+  jsval EnumerateFontsAsync(in string aLangGroup, in string aGeneric);
+
+  /**
     @param  aLangGroup language group
     @return bool do we have a font for this language group
    */

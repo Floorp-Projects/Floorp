@@ -755,7 +755,7 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, const V
 
     /* Steps 10-11. */
     RootedId emptyId(cx, NameToId(cx->names().empty));
-    if (!NativeDefineProperty(cx, wrapper, emptyId, vp, nullptr, nullptr, JSPROP_ENUMERATE))
+    if (!NativeDefineDataProperty(cx, wrapper, emptyId, vp, JSPROP_ENUMERATE))
         return false;
 
     /* Step 12. */

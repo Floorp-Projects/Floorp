@@ -32,7 +32,6 @@ common-tests:
     - mochitest-clipboard
     - mochitest-devtools-chrome
     - mochitest-gpu
-    - mochitest-jetpack
     - mochitest-media
     - mochitest-webgl
     - reftest
@@ -166,7 +165,6 @@ windows-tests:
     - mochitest-clipboard
     - mochitest-devtools-chrome
     - mochitest-gpu
-    - mochitest-jetpack
     - mochitest-media
     - mochitest-webgl
     - reftest
@@ -223,7 +221,6 @@ macosx64-tests:
     - mochitest-clipboard
     - mochitest-devtools-chrome
     - mochitest-gpu
-    - mochitest-jetpack
     - mochitest-media
     - mochitest-webgl
     - reftest
@@ -275,7 +272,6 @@ linux32-tests:
     - mochitest-chrome
     - mochitest-clipboard
     - mochitest-gpu
-    - mochitest-jetpack
     - mochitest-media
     - mochitest-webgl
     - reftest

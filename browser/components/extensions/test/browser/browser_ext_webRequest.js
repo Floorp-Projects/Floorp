@@ -6,7 +6,7 @@
 Services.scriptloader.loadSubScript(new URL("head_webrequest.js", gTestPath).href,
                                     this);
 
-Cu.import("resource://gre/modules/HiddenFrame.jsm", this);
+Cu.import("resource://testing-common/HiddenFrame.jsm", this);
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function createHiddenBrowser(url) {

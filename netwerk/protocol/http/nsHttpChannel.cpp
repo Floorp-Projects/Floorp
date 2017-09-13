@@ -6022,6 +6022,8 @@ nsHttpChannel::Cancel(nsresult status)
     if (mRequestContext && mOnTailUnblock) {
         mOnTailUnblock = nullptr;
         mRequestContext->CancelTailedRequest(this);
+        CloseCacheEntry(false);
+        Unused << AsyncAbort(status);
     }
     return NS_OK;
 }

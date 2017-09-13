@@ -1,6 +1,0 @@
-{
-  "id": "test-packaging@jetpack",
-  "description": "Add-on development made easy.",
-  "main": "./main.js",
-  "version": "0.0.1"
-}

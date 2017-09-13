@@ -178,9 +178,6 @@ config = {
         "mochitest-devtools-chrome": ["--flavor=browser", "--subsuite=devtools"],
         "mochitest-devtools-chrome-chunked": ["--flavor=browser", "--subsuite=devtools", "--chunk-by-runtime"],
         "mochitest-metro-chrome": ["--flavor=browser", "--metro-immersive"],
-        "jetpack-package": ["--flavor=jetpack-package"],
-        "jetpack-package-clipboard": ["--flavor=jetpack-package", "--subsuite=clipboard"],
-        "jetpack-addon": ["--flavor=jetpack-addon"],
         "a11y": ["--flavor=a11y"],
     },
     # local reftest suites

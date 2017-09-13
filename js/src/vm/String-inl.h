@@ -348,7 +348,7 @@ js::StaticStrings::getUnitStringForElement(JSContext* cx, JSString* str, size_t 
         return nullptr;
     if (c < UNIT_STATIC_LIMIT)
         return getUnit(c);
-    return NewDependentString(cx, str, index, 1);
+    return js::NewInlineString<CanGC>(cx, mozilla::Range<const char16_t>(&c, 1));
 }
 
 MOZ_ALWAYS_INLINE void

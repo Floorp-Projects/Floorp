@@ -327,7 +327,6 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     // list.
     uint32_t                toStringStart;
     uint32_t                srcStart;
-    uint32_t                srcBodyStart;
     bool                    strict;
     ScriptSourceHolder      scriptSource;
 
@@ -342,7 +341,6 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
       : Metadata(Move(tier), ModuleKind::AsmJS),
         cacheResult(CacheResult::Miss),
         srcStart(0),
-        srcBodyStart(0),
         strict(false)
     {}
     ~AsmJSMetadata() override {}
@@ -1788,7 +1786,6 @@ class MOZ_STACK_CLASS ModuleValidator
 
         asmJSMetadata_->toStringStart = moduleFunctionNode_->pn_funbox->toStringStart;
         asmJSMetadata_->srcStart = moduleFunctionNode_->pn_body->pn_pos.begin;
-        asmJSMetadata_->srcBodyStart = parser_.tokenStream.currentToken().pos.end;
         asmJSMetadata_->strict = parser_.pc->sc()->strict() &&
                                  !parser_.pc->sc()->hasExplicitUseStrict();
         asmJSMetadata_->scriptSource.reset(parser_.ss);
@@ -8554,7 +8551,6 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
     // See AsmJSMetadata comment as well as ModuleValidator::init().
     asmJSMetadata->toStringStart = parser.pc->functionBox()->toStringStart;
     asmJSMetadata->srcStart = parser.pc->functionBox()->functionNode->pn_body->pn_pos.begin;
-    asmJSMetadata->srcBodyStart = parser.tokenStream.currentToken().pos.end;
     asmJSMetadata->strict = parser.pc->sc()->strict() && !parser.pc->sc()->hasExplicitUseStrict();
     asmJSMetadata->scriptSource.reset(parser.ss);
 

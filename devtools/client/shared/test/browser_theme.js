@@ -62,8 +62,8 @@ function testSetTheme() {
 }
 
 function testGetColor() {
-  let BLUE_DARK = "#46afe3";
-  let BLUE_LIGHT = "#0088cc";
+  let BLUE_DARK = "#75BFFF";
+  let BLUE_LIGHT = "#0074e8";
   let BLUE_FIREBUG = "#3455db";
   let originalTheme = getTheme();
 
