@@ -38,22 +38,20 @@ var gSearchResultsPane = {
   },
 
   /**
-   * Check that the passed string matches the filter arguments.
+   * Check that the text content contains the query string.
    *
-   * @param String str
-   *    to search for filter words in.
-   * @param String filter
-   *    is a string containing all of the words to filter on.
+   * @param String content
+   *    the text content to be searched
+   * @param String query
+   *    the query string
    * @returns boolean
-   *    true when match in string else false
+   *    true when the text content contains the query string else false
    */
-  stringMatchesFilters(str, filter) {
-    if (!filter || !str) {
+  queryMatchesContent(content, query) {
+    if (!content || !query) {
       return false;
     }
-    let searchStr = str.toLowerCase();
-    let filterStrings = filter.toLowerCase().split(/\s+/);
-    return !filterStrings.some(f => searchStr.indexOf(f) == -1);
+    return content.toLowerCase().includes(query.toLowerCase());
   },
 
   categoriesInitialized: false,
@@ -309,7 +307,6 @@ var gSearchResultsPane = {
         nodeObject.tagName == "description" ||
         nodeObject.tagName == "menulist") {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
-
       for (let node of simpleTextNodes) {
         let result = this.highlightMatches([node], [node.length], node.textContent.toLowerCase(), searchPhrase);
         matchesFound = matchesFound || result;
@@ -335,15 +332,15 @@ var gSearchResultsPane = {
       let complexTextNodesResult = this.highlightMatches(accessKeyTextNodes, nodeSizes, allNodeText.toLowerCase(), searchPhrase);
 
       // Searching some elements, such as xul:button, have a 'label' attribute that contains the user-visible text.
-      let labelResult = this.stringMatchesFilters(nodeObject.getAttribute("label"), searchPhrase);
+      let labelResult = this.queryMatchesContent(nodeObject.getAttribute("label"), searchPhrase);
 
       // Searching some elements, such as xul:label, store their user-visible text in a "value" attribute.
       // Value will be skipped for menuitem since value in menuitem could represent index number to distinct each item.
       let valueResult = nodeObject.tagName !== "menuitem" ?
-       this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase) : false;
+        this.queryMatchesContent(nodeObject.getAttribute("value"), searchPhrase) : false;
 
       // Searching some elements, such as xul:button, buttons to open subdialogs.
-      let keywordsResult = this.stringMatchesFilters(nodeObject.getAttribute("searchkeywords"), searchPhrase);
+      let keywordsResult = this.queryMatchesContent(nodeObject.getAttribute("searchkeywords"), searchPhrase);
 
       // Creating tooltips for buttons
       if (keywordsResult && (nodeObject.tagName === "button" || nodeObject.tagName == "menulist")) {
