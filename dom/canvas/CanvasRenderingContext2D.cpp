@@ -1789,12 +1789,6 @@ CanvasRenderingContext2D::RegisterAllocation()
     RegisterStrongMemoryReporter(new Canvas2dPixelsReporter());
   }
 
-  gCanvasAzureMemoryUsed += mWidth * mHeight * 4;
-  JSContext* context = nsContentUtils::GetCurrentJSContext();
-  if (context) {
-    JS_updateMallocCounter(context, mWidth * mHeight * 4);
-  }
-
   JSObject* wrapper = GetWrapperPreserveColor();
   if (wrapper) {
     CycleCollectedJSRuntime::Get()->
@@ -6552,6 +6546,12 @@ CanvasPath::EnsurePathBuilder() const
   MOZ_ASSERT(mPath);
   mPathBuilder = mPath->CopyToBuilder();
   mPath = nullptr;
+}
+
+size_t
+BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext)
+{
+  return aContext->GetWidth() * aContext->GetHeight() * 4;
 }
 
 } // namespace dom
