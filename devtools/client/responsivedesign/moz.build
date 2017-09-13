@@ -8,7 +8,7 @@ DevToolsModules(
     'resize-commands.js',
     'responsivedesign-child.js',
     'responsivedesign-old.js',
-    'responsivedesign.jsm',
+    'responsivedesign.js',
 )
 
 with Files('**'):
