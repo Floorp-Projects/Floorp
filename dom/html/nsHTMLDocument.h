@@ -204,7 +204,7 @@ public:
   already_AddRefed<nsIDocument> Open(JSContext* cx,
                                      const nsAString& aType,
                                      const nsAString& aReplace,
-                                     mozilla::ErrorResult& rv);
+                                     mozilla::ErrorResult& aError);
   already_AddRefed<nsPIDOMWindowOuter>
   Open(JSContext* cx,
        const nsAString& aURL,
