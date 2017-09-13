@@ -124,7 +124,7 @@ private:
   RefPtr<VRManagerParent> mSelfRef;
 
   // Keep the compositor thread alive, until we have destroyed ourselves.
-  RefPtr<layers::CompositorThreadHolder> mCompositorThreadHolder;
+  RefPtr<layers::CompositorThreadHolderDebug> mCompositorThreadHolder;
 
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;

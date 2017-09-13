@@ -143,19 +143,18 @@ PostMessageEvent::Run()
     }
   }
 
-  ErrorResult rv;
+  IgnoredErrorResult rv;
   JS::Rooted<JS::Value> messageData(cx);
-  nsCOMPtr<nsPIDOMWindowInner> window = targetWindow->AsInner();
+  nsCOMPtr<mozilla::dom::EventTarget> eventTarget = do_QueryObject(targetWindow);
 
-  Read(window, cx, &messageData, rv);
+  Read(targetWindow->AsInner(), cx, &messageData, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
+    DispatchError(cx, targetWindow, eventTarget);
+    return NS_OK;
   }
 
   // Create the event
-  nsCOMPtr<mozilla::dom::EventTarget> eventTarget = do_QueryObject(targetWindow);
-  RefPtr<MessageEvent> event =
-    new MessageEvent(eventTarget, nullptr, nullptr);
+  RefPtr<MessageEvent> event = new MessageEvent(eventTarget, nullptr, nullptr);
 
 
   Nullable<WindowProxyOrMessagePortOrServiceWorker> source;
@@ -163,7 +162,8 @@ PostMessageEvent::Run()
 
   Sequence<OwningNonNull<MessagePort>> ports;
   if (!TakeTransferredPortsAsSequence(ports)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    DispatchError(cx, targetWindow, eventTarget);
+    return NS_OK;
   }
 
   event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
@@ -171,26 +171,52 @@ PostMessageEvent::Run()
                           messageData, mCallerOrigin,
                           EmptyString(), source, ports);
 
+  Dispatch(targetWindow, event);
+  return NS_OK;
+}
+
+void
+PostMessageEvent::DispatchError(JSContext* aCx, nsGlobalWindow* aTargetWindow,
+                                mozilla::dom::EventTarget* aEventTarget)
+{
+  RootedDictionary<MessageEventInit> init(aCx);
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mOrigin = mCallerOrigin;
+
+  if (mSource) {
+    init.mSource.SetValue().SetAsWindowProxy() = mSource->AsOuter();
+  }
+
+  RefPtr<Event> event =
+    MessageEvent::Constructor(aEventTarget, NS_LITERAL_STRING("messageerror"),
+                              init);
+  Dispatch(aTargetWindow, event);
+}
+
+void
+PostMessageEvent::Dispatch(nsGlobalWindow* aTargetWindow, Event* aEvent)
+{
   // We can't simply call dispatchEvent on the window because doing so ends
   // up flipping the trusted bit on the event, and we don't want that to
   // happen because then untrusted content can call postMessage on a chrome
   // window if it can get a reference to it.
 
-  nsIPresShell *shell = targetWindow->GetExtantDoc()->GetShell();
+  nsIPresShell *shell = aTargetWindow->GetExtantDoc()->GetShell();
   RefPtr<nsPresContext> presContext;
-  if (shell)
+  if (shell) {
     presContext = shell->GetPresContext();
+  }
 
-  event->SetTrusted(mTrustedCaller);
-  WidgetEvent* internalEvent = event->WidgetEventPtr();
+  aEvent->SetTrusted(mTrustedCaller);
+  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(window,
+  EventDispatcher::Dispatch(aTargetWindow->AsInner(),
                             presContext,
                             internalEvent,
-                            static_cast<dom::Event*>(event.get()),
+                            aEvent,
                             &status);
-  return NS_OK;
 }
 
 } // namespace dom

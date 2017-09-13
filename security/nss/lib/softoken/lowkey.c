@@ -8,10 +8,7 @@
 #include "base64.h"
 #include "secasn1.h"
 #include "secerr.h"
-
-#ifndef NSS_DISABLE_ECC
 #include "softoken.h"
-#endif
 
 SEC_ASN1_MKSUB(SEC_AnyTemplate)
 SEC_ASN1_MKSUB(SEC_BitStringTemplate)
@@ -90,8 +87,6 @@ const SEC_ASN1Template nsslowkey_DHPrivateKeyTemplate[] = {
     { 0 }
 };
 
-#ifndef NSS_DISABLE_ECC
-
 /* NOTE: The SECG specification allows the private key structure
  * to contain curve parameters but recommends that they be stored
  * in the PrivateKeyAlgorithmIdentifier field of the PrivateKeyInfo
@@ -117,7 +112,6 @@ const SEC_ASN1Template nsslowkey_ECPrivateKeyTemplate[] = {
       SEC_ASN1_SUB(SEC_BitStringTemplate) },
     { 0 }
 };
-#endif /* NSS_DISABLE_ECC */
 /*
  * See bugzilla bug 125359
  * Since NSS (via PKCS#11) wants to handle big integers as unsigned ints,
@@ -173,7 +167,6 @@ prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
     key->u.dh.privateValue.type = siUnsignedInteger;
 }
 
-#ifndef NSS_DISABLE_ECC
 void
 prepare_low_ecparams_for_asn1(ECParams *params)
 {
@@ -190,7 +183,6 @@ prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
     key->u.ec.privateValue.type = siUnsignedInteger;
     key->u.ec.publicValue.type = siUnsignedInteger;
 }
-#endif /* NSS_DISABLE_ECC */
 
 void
 nsslowkey_DestroyPrivateKey(NSSLOWKEYPrivateKey *privk)
@@ -325,7 +317,6 @@ nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
                     return pubk;
             }
             break;
-#ifndef NSS_DISABLE_ECC
         case NSSLOWKEYECKey:
             pubk = (NSSLOWKEYPublicKey *)PORT_ArenaZAlloc(arena,
                                                           sizeof(NSSLOWKEYPublicKey));
@@ -346,7 +337,6 @@ nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
                     return pubk;
             }
             break;
-#endif /* NSS_DISABLE_ECC */
         /* No Fortezza in Low Key implementations (Fortezza keys aren't
          * stored in our data base */
         default:
@@ -463,7 +453,6 @@ nsslowkey_CopyPrivateKey(NSSLOWKEYPrivateKey *privKey)
             if (rv != SECSuccess)
                 break;
             break;
-#ifndef NSS_DISABLE_ECC
         case NSSLOWKEYECKey:
             rv = SECITEM_CopyItem(poolp, &(returnKey->u.ec.version),
                                   &(privKey->u.ec.version));
@@ -484,7 +473,6 @@ nsslowkey_CopyPrivateKey(NSSLOWKEYPrivateKey *privKey)
             if (rv != SECSuccess)
                 break;
             break;
-#endif /* NSS_DISABLE_ECC */
         default:
             rv = SECFailure;
     }

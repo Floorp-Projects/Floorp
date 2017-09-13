@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
                                   "resource://gre/modules/TelemetrySend.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+                                  "resource://gre/modules/Log.jsm");
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -39,6 +41,7 @@ const PingServer = {
   _started: false,
   _defers: [ PromiseUtils.defer() ],
   _currentDeferred: 0,
+  _logger: null,
 
   get port() {
     return this._httpServer.identity.primaryPort;
@@ -48,6 +51,14 @@ const PingServer = {
     return this._started;
   },
 
+  get _log() {
+    if (!this._logger) {
+      this._logger = Log.repository.getLoggerWithMessagePrefix("Toolkit.Telemetry", "PingServer::");
+    }
+
+    return this._logger;
+  },
+
   registerPingHandler(handler) {
     const wrapped = wrapWithExceptionHandler(handler);
     this._httpServer.registerPrefixHandler("/submit/telemetry/", wrapped);
@@ -55,6 +66,8 @@ const PingServer = {
 
   resetPingHandler() {
     this.registerPingHandler((request, response) => {
+      let r = request;
+      this._log.trace(`defaultPingHandler() - ${r.method} ${r.scheme}://${r.host}:${r.port}${r.path}`);
       let deferred = this._defers[this._defers.length - 1];
       this._defers.push(PromiseUtils.defer());
       deferred.resolve(request);

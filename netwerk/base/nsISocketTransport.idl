@@ -238,11 +238,6 @@ interface nsISocketTransport : nsITransport
     const unsigned long BE_CONSERVATIVE = (1 << 7);
 
     /**
-     * This transport has been created by a speculative connection attempt.
-     */
-    const unsigned long SPECULATIVE = (1 << 8);
-
-    /**
      * An opaque flags for non-standard behavior of the TLS system.
      * It is unlikely this will need to be set outside of telemetry studies
      * relating to the TLS implementation.

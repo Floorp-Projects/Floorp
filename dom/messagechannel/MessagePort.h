@@ -74,6 +74,8 @@ public:
 
   void SetOnmessage(EventHandlerNonNull* aCallback);
 
+  IMPL_EVENT_HANDLER(messageerror)
+
   // Non WebIDL methods
 
   void UnshippedEntangle(MessagePort* aEntangledPort);
@@ -146,6 +148,8 @@ private:
 
   // Dispatch events from the Message Queue using a nsRunnable.
   void Dispatch();
+
+  void DispatchError();
 
   void StartDisentangling();
   void Disentangle();

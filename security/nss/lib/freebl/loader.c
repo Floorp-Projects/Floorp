@@ -2124,3 +2124,114 @@ EC_GetPointSize(const ECParams *params)
         return SECFailure;
     return (vector->p_EC_GetPointSize)(params);
 }
+
+SECStatus
+BLAKE2B_Hash(unsigned char *dest, const char *src)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_Hash)(dest, src);
+}
+
+SECStatus
+BLAKE2B_HashBuf(unsigned char *output, const unsigned char *input, PRUint32 inlen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_HashBuf)(output, input, inlen);
+}
+
+SECStatus
+BLAKE2B_MAC_HashBuf(unsigned char *output, const unsigned char *input,
+                    unsigned int inlen, const unsigned char *key,
+                    unsigned int keylen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_MAC_HashBuf)(output, input, inlen, key, keylen);
+}
+
+BLAKE2BContext *
+BLAKE2B_NewContext(void)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return NULL;
+    }
+    return (vector->p_BLAKE2B_NewContext)();
+}
+
+void
+BLAKE2B_DestroyContext(BLAKE2BContext *BLAKE2BContext, PRBool freeit)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return;
+    }
+    (vector->p_BLAKE2B_DestroyContext)(BLAKE2BContext, freeit);
+}
+
+SECStatus
+BLAKE2B_Begin(BLAKE2BContext *ctx)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_Begin)(ctx);
+}
+
+SECStatus
+BLAKE2B_MAC_Begin(BLAKE2BContext *ctx, const PRUint8 *key, const size_t keylen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_MAC_Begin)(ctx, key, keylen);
+}
+
+SECStatus
+BLAKE2B_Update(BLAKE2BContext *ctx, const unsigned char *in, unsigned int inlen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_Update)(ctx, in, inlen);
+}
+
+SECStatus
+BLAKE2B_End(BLAKE2BContext *ctx, unsigned char *out,
+            unsigned int *digestLen, size_t maxDigestLen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_End)(ctx, out, digestLen, maxDigestLen);
+}
+
+unsigned int
+BLAKE2B_FlattenSize(BLAKE2BContext *ctx)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return 0;
+    }
+    return (vector->p_BLAKE2B_FlattenSize)(ctx);
+}
+
+SECStatus
+BLAKE2B_Flatten(BLAKE2BContext *ctx, unsigned char *space)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_BLAKE2B_Flatten)(ctx, space);
+}
+
+BLAKE2BContext *
+BLAKE2B_Resurrect(unsigned char *space, void *arg)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return NULL;
+    }
+    return (vector->p_BLAKE2B_Resurrect)(space, arg);
+}

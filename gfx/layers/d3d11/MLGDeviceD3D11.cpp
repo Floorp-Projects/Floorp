@@ -1093,6 +1093,17 @@ MLGDeviceD3D11::InitSamplerStates()
                   "Could not create linear clamp to zero sampler (%x)", hr);
     }
   }
+  {
+    CD3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC(CD3D11_DEFAULT());
+    desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    HRESULT hr = mDevice->CreateSamplerState(&desc, getter_AddRefs(mSamplerStates[SamplerMode::LinearRepeat]));
+    if (FAILED(hr)) {
+      return Fail("FEATURE_FAILURE_LINEAR_CLAMP_ZERO_SAMPLER",
+                  "Could not create linear clamp to zero sampler (%x)", hr);
+    }
+  }
 
   {
     CD3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC(CD3D11_DEFAULT());

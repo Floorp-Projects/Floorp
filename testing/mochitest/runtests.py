@@ -2474,6 +2474,7 @@ toolbar#nav-bar {
             print("4 INFO Mode:    %s" % e10s_mode)
             print("5 INFO SimpleTest FINISHED")
 
+        result = result or (-2 if self.countfail > 0 else 0)
         return result
 
     def doTests(self, options, testsToFilter=None):

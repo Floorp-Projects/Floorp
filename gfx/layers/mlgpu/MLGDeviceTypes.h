@@ -7,6 +7,7 @@
 #define mozilla_gfx_layers_mlgpu_MLGDeviceTypes_h
 
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/gfx/Types.h"
 
 namespace mozilla {
 namespace layers {
@@ -47,6 +48,8 @@ enum class SamplerMode
   LinearClamp = 0,
   // Linear filter, clamped to transparent pixels.
   LinearClampToZero,
+  // Linear filter, wrap edges.
+  LinearRepeat,
   // Point filter, clamped to border.
   Point,
   MaxModes
@@ -103,6 +106,21 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MLGRenderTargetFlags);
 // NVIDIA drivers crash when we supply too many rects to ClearView - it
 // seems to cause a stack overflow >= 20 rects. We cap to 12 for now.
 static const size_t kMaxClearViewRects = 12;
+
+static inline SamplerMode
+FilterToSamplerMode(gfx::SamplingFilter aFilter)
+{
+  switch (aFilter) {
+  case gfx::SamplingFilter::POINT:
+    return SamplerMode::Point;
+  case gfx::SamplingFilter::LINEAR:
+  case gfx::SamplingFilter::GOOD:
+    return SamplerMode::LinearClamp;
+  default:
+    MOZ_ASSERT_UNREACHABLE("Unknown sampler mode");
+    return SamplerMode::LinearClamp;
+  }
+}
 
 } // namespace layers
 } // namespace mozilla

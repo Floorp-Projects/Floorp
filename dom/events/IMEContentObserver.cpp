@@ -1376,7 +1376,10 @@ IMEContentObserver::BeginDocumentUpdate()
      "HasAddedNodesDuringDocumentChange()=%s",
      this, ToChar(HasAddedNodesDuringDocumentChange())));
 
-  MOZ_ASSERT(!HasAddedNodesDuringDocumentChange());
+  // If we're not in a nested document update, this will return early,
+  // otherwise, it will handle flusing any changes currently pending before
+  // entering a nested document update.
+  MaybeNotifyIMEOfAddedTextDuringDocumentChange();
 }
 
 void

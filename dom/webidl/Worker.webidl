@@ -22,6 +22,7 @@ interface Worker : EventTarget {
   void postMessage(any message, optional sequence<object> transfer = []);
 
   attribute EventHandler onmessage;
+  attribute EventHandler onmessageerror;
 };
 
 Worker implements AbstractWorker;

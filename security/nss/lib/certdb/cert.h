@@ -504,6 +504,8 @@ extern CERTCertificate *CERT_FindCertByKeyID(CERTCertDBHandle *handle,
 */
 extern CERTCertificate *CERT_FindCertByIssuerAndSN(
     CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndSN);
+extern CERTCertificate *CERT_FindCertByIssuerAndSNCX(
+    CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndSN, void *wincx);
 
 /*
 ** Find a certificate in the database by a subject key ID
@@ -547,6 +549,9 @@ CERTCertificate *CERT_FindCertByEmailAddr(CERTCertDBHandle *handle,
 */
 CERTCertificate *CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle,
                                                     const char *name);
+CERTCertificate *CERT_FindCertByNicknameOrEmailAddrCX(CERTCertDBHandle *handle,
+                                                      const char *name,
+                                                      void *wincx);
 
 /*
 ** Find a certificate in the database by a email address or nickname
@@ -555,6 +560,9 @@ CERTCertificate *CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle,
 */
 CERTCertificate *CERT_FindCertByNicknameOrEmailAddrForUsage(
     CERTCertDBHandle *handle, const char *name, SECCertUsage lookingForUsage);
+CERTCertificate *CERT_FindCertByNicknameOrEmailAddrForUsageCX(
+    CERTCertDBHandle *handle, const char *name, SECCertUsage lookingForUsage,
+    void *wincx);
 
 /*
 ** Find a certificate in the database by a digest of a subject public key

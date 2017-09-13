@@ -81,6 +81,23 @@ enum CustomClipboardTypeId {
   eCustomClipboardTypeId_String
 };
 
+// The dom.events.dataTransfer.protected.enabled preference controls whether or
+// not the `protected` dataTransfer state is enabled. If the `protected`
+// dataTransfer stae is disabled, then the DataTransfer will be read-only
+// whenever it should be protected, and will not be disconnected after a drag
+// event is completed.
+static bool
+PrefProtected()
+{
+  static bool sInitialized = false;
+  static bool sValue = false;
+  if (!sInitialized) {
+    sInitialized = true;
+    Preferences::AddBoolVarCache(&sValue, "dom.events.dataTransfer.protected.enabled");
+  }
+  return sValue;
+}
+
 static DataTransfer::Mode
 ModeForEvent(EventMessage aEventMessage)
 {
@@ -98,7 +115,9 @@ ModeForEvent(EventMessage aEventMessage)
     // the DataTransfer, rather than just the type information.
     return DataTransfer::Mode::ReadOnly;
   default:
-    return DataTransfer::Mode::Protected;
+    return PrefProtected()
+      ? DataTransfer::Mode::Protected
+      : DataTransfer::Mode::ReadOnly;
   }
 }
 
@@ -1277,6 +1296,15 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
 }
 
 void
+DataTransfer::Disconnect()
+{
+  SetMode(Mode::Protected);
+  if (PrefProtected()) {
+    ClearAll();
+  }
+}
+
+void
 DataTransfer::ClearAll()
 {
   mItems->ClearAllItems();
@@ -1606,6 +1634,16 @@ DataTransfer::FillInExternalCustomTypes(nsIVariant* aData, uint32_t aIndex,
       SetDataWithPrincipal(format, variant, aIndex, aPrincipal);
     }
   } while (type != eCustomClipboardTypeId_None);
+}
+
+void
+DataTransfer::SetMode(DataTransfer::Mode aMode)
+{
+  if (!PrefProtected() && aMode == Mode::Protected) {
+    mMode = Mode::ReadOnly;
+  } else {
+    mMode = aMode;
+  }
 }
 
 } // namespace dom
