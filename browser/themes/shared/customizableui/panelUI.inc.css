@@ -2058,7 +2058,7 @@ photonpanelmultiview #panelMenu_pocket {
 
 .subviewbutton.download > .toolbarbutton-text > .status-text {
   color: GrayText;
-  font-size: .7em;
+  font-size: .9em;
 }
 
 .subviewbutton.download > .action-button {
