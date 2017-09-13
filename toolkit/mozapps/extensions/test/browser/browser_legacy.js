@@ -132,7 +132,7 @@ add_task(async function() {
 
   // Follow the link to the legacy extensions page
   let legacyLink = mgrWin.document.getElementById("legacy-extensions-learnmore-link");
-  is_element_visible(legacyLink, "Link to leagcy extension is visible");
+  is_element_visible(legacyLink, "Link to legacy extension is visible");
 
   let loadPromise = new Promise(resolve => wait_for_view_load(mgrWin, resolve, true));
   legacyLink.click();
