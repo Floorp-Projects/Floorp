@@ -558,6 +558,9 @@ var DownloadsPanel = {
         return;
       }
 
+      let onBookmarksToolbar = !!anchor.closest("#PersonalToolbar");
+      this.panel.classList.toggle("bookmarks-toolbar", onBookmarksToolbar);
+
       // When the panel is opened, we check if the target files of visible items
       // still exist, and update the allowed items interactions accordingly.  We
       // do these checks on a background thread, and don't prevent the panel to
