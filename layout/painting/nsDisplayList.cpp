@@ -4739,8 +4739,8 @@ nsDisplayCaret::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   LayoutDeviceRect devHookRect = LayoutDeviceRect::FromAppUnits(
     hookRect + ToReferenceFrame(), appUnitsPerDevPixel);
 
-  wr::LayoutRect caret = aSc.ToRelativeLayoutRectRounded(devCaretRect);
-  wr::LayoutRect hook = aSc.ToRelativeLayoutRectRounded(devHookRect);
+  wr::LayoutRect caret = aSc.ToRelativeLayoutRect(devCaretRect);
+  wr::LayoutRect hook = aSc.ToRelativeLayoutRect(devHookRect);
 
   // Note, WR will pixel snap anything that is layout aligned.
   aBuilder.PushRect(caret,
@@ -5018,13 +5018,13 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
   LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
     mBorderImageRenderer->mArea, appUnitsPerDevPixel);
-  wr::LayoutRect dest = aSc.ToRelativeLayoutRectRounded(destRect);
+  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(destRect);
 
   wr::LayoutRect clip = dest;
   if (!mBorderImageRenderer->mClip.IsEmpty()) {
     LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
       mBorderImageRenderer->mClip, appUnitsPerDevPixel);
-    clip = aSc.ToRelativeLayoutRectRounded(clipRect);
+    clip = aSc.ToRelativeLayoutRect(clipRect);
   }
 
   switch (mBorderImageRenderer->mImageRenderer.GetType()) {
@@ -5399,7 +5399,7 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 
       LayoutDeviceRect deviceBox = LayoutDeviceRect::FromAppUnits(
           shadowRect, appUnitsPerDevPixel);
-      wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRectRounded(deviceBox);
+      wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRect(deviceBox);
       wr::LayoutRect deviceClipRect = aSc.ToRelativeLayoutRect(clipRect);
 
       // TODO: support non-uniform border radius.

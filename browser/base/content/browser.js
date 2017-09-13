@@ -1321,6 +1321,10 @@ var gBrowserInit = {
 
     SidebarUI.init();
 
+    // We do this in onload because we want to ensure the button's state
+    // doesn't flicker as the window is being shown.
+    DownloadsButton.init();
+
     // Certain kinds of automigration rely on this notification to complete
     // their tasks BEFORE the browser window is shown. SessionStore uses it to
     // restore tabs into windows AFTER important parts like gMultiProcessBrowser
@@ -1846,6 +1850,8 @@ var gBrowserInit = {
     CaptivePortalWatcher.uninit();
 
     SidebarUI.uninit();
+
+    DownloadsButton.uninit();
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.

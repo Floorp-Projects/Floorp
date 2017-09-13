@@ -113,7 +113,8 @@
       "showTopSites": true,
       "showSearch": true,
       "topSitesCount": 6,
-      "feeds.section.topstories": true
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
     }
   },
   "Dialog": {
@@ -136,6 +137,17 @@
       "topics": [
         {}
       ],
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
       "initialized": false
     }
   ]

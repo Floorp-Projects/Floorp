@@ -1007,10 +1007,10 @@ protected:
     auto& attrs = msection->GetAttributeList();
     ASSERT_TRUE(attrs.HasAttribute(SdpAttribute::kMidAttribute));
     ASSERT_TRUE(attrs.HasAttribute(SdpAttribute::kDirectionAttribute));
+    ASSERT_FALSE(attrs.HasAttribute(SdpAttribute::kBundleOnlyAttribute));
     ASSERT_EQ(SdpDirectionAttribute::kInactive,
               msection->GetDirectionAttribute().mValue);
-    // attribute list is missing a length function to check if these are
-    // all the attributes in it
+    ASSERT_EQ(3U, attrs.Count());
     if (msection->GetMediaType() == SdpMediaSection::kAudio) {
       ASSERT_EQ("0", msection->GetFormats()[0]);
       const SdpRtpmapAttributeList::Rtpmap* rtpmap(msection->FindRtpmap("0"));

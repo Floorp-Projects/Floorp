@@ -39,7 +39,6 @@ var CustomizationHandler = {
     UpdateUrlbarSearchSplitterState();
 
     PlacesToolbarHelper.customizeStart();
-    DownloadsButton.customizeStart();
   },
 
   _customizationEnding(aDetails) {
@@ -63,7 +62,6 @@ var CustomizationHandler = {
     }
 
     PlacesToolbarHelper.customizeDone();
-    DownloadsButton.customizeDone();
 
     UpdateUrlbarSearchSplitterState();
 

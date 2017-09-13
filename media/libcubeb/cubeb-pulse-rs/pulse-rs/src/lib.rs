@@ -294,6 +294,11 @@ impl Into<ffi::pa_stream_flags_t> for StreamFlags {
     }
 }
 
+pub enum StreamLatency {
+    Positive(u64),
+    Negative(u64),
+}
+
 bitflags!{
     pub flags SubscriptionMask : u32 {
         const SUBSCRIPTION_MASK_SINK = ffi::PA_SUBSCRIPTION_MASK_SINK,

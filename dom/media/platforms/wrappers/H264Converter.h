@@ -59,16 +59,16 @@ public:
     // Default so no conversion is performed.
     return ConversionRequired::kNeedAVCC;
   }
-  nsresult GetLastError() const { return mLastError; }
+  MediaResult GetLastError() const { return mLastError; }
 
 private:
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
   // Returns NS_ERROR_FAILURE if error is permanent and can't be recovered and
   // will set mError accordingly.
-  nsresult CreateDecoder(const VideoInfo& aConfig,
+  MediaResult CreateDecoder(const VideoInfo& aConfig,
                          DecoderDoctorDiagnostics* aDiagnostics);
-  nsresult CreateDecoderAndInit(MediaRawData* aSample);
-  nsresult CheckForSPSChange(MediaRawData* aSample);
+  MediaResult CreateDecoderAndInit(MediaRawData* aSample);
+  MediaResult CheckForSPSChange(MediaRawData* aSample);
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);
 
   bool CanRecycleDecoder() const;
@@ -99,7 +99,7 @@ private:
 
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   Maybe<bool> mNeedAVCC;
-  nsresult mLastError;
+  MediaResult mLastError;
   bool mNeedKeyframe = true;
   const TrackInfo::TrackType mType;
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;

@@ -495,7 +495,17 @@
 <!ENTITY contextmenu_top_sites_edit "Edit">
 <!ENTITY contextmenu_top_sites_pin "Pin Site">
 <!ENTITY contextmenu_top_sites_unpin "Unpin Site">
+<!-- Localization note (contextmenu_pin_to_top_sites, contextmenu_unpin_from_top_sites): These strings are used to
+     pin/unpin items from top sites when the user is not on the top sites screen so they'd be missing context on what
+     just "Pin Site" or "Unpin Site" would mean. -->
+<!ENTITY contextmenu_pin_to_top_sites "Pin to Top Sites">
+<!ENTITY contextmenu_unpin_from_top_sites "Unpin from Top Sites">
 <!ENTITY contextmenu_add_search_engine "Add a Search Engine">
+
+<!-- Localization note (pinned_page_to_top_sites, unpinned_page_from_top_sites): These strings are shown in a snackbar
+     after the user pins/unpins the currently displayed page from top sites. -->
+<!ENTITY pinned_page_to_top_sites "Pinned page to Top Sites">
+<!ENTITY unpinned_page_from_top_sites "Unpinned page from Top Sites">
 
 <!-- Localization note (doorhanger_login_no_username): This string is used in the save-login doorhanger
      where normally a username would be displayed. In this case, no username was found, and this placeholder

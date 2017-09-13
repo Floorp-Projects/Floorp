@@ -6,20 +6,31 @@ package org.mozilla.gecko.fxa.authenticator;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.PeriodicSync;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -31,20 +42,22 @@ import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.fxa.sync.FxAccountProfileService;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Target;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
@@ -59,33 +72,46 @@ import java.util.concurrent.Semaphore;
 public class AndroidFxAccount {
   protected static final String LOG_TAG = AndroidFxAccount.class.getSimpleName();
 
-  public static final int CURRENT_SYNC_PREFS_VERSION = 1;
-  public static final int CURRENT_RL_PREFS_VERSION = 1;
+  private static final int CURRENT_SYNC_PREFS_VERSION = 1;
+  private static final int CURRENT_RL_PREFS_VERSION = 1;
 
   // When updating the account, do not forget to update AccountPickler.
   public static final int CURRENT_ACCOUNT_VERSION = 3;
-  public static final String ACCOUNT_KEY_ACCOUNT_VERSION = "version";
-  public static final String ACCOUNT_KEY_PROFILE = "profile";
-  public static final String ACCOUNT_KEY_IDP_SERVER = "idpServerURI";
+  private static final String ACCOUNT_KEY_ACCOUNT_VERSION = "version";
+  private static final String ACCOUNT_KEY_PROFILE = "profile";
+  private static final String ACCOUNT_KEY_IDP_SERVER = "idpServerURI";
   private static final String ACCOUNT_KEY_PROFILE_SERVER = "profileServerURI";
+  private static final String ACCOUNT_KEY_UID = "uid";
 
-  public static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
-  public static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
+  // Ephemeral field used to support renaming an account on API versions prior to 21.
+  // On these API levels we can't simply rename an account: we need to delete it, and then create it
+  // again. This will cause our "account was just deleted" side-effects to run in
+  // FxAccountAuthenticator@getAccountRemovalAllowed, and we actually need them to not run.
+  // If they run, our account pickle is blown away, our FxA device record is removed, etc.
+  // And so, while renaming the account, we set this flag in userData, and check for it in our cleanup
+  // logic.
+  // It's important that when renaming is complete - or fails - that this flag is reset, otherwise
+  // normal account deletion will not function correctly.
+  /* package-private */ static final String ACCOUNT_KEY_RENAME_IN_PROGRESS = "accountBeingRenamed";
+  /* package-private */ static final String ACCOUNT_VALUE_RENAME_IN_PROGRESS = "true";
 
-  public static final int CURRENT_BUNDLE_VERSION = 2;
-  public static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
-  public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
-  public static final String BUNDLE_KEY_STATE = "state";
-  public static final String BUNDLE_KEY_PROFILE_JSON = "profile";
+  private static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
+  private static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
 
-  public static final String ACCOUNT_KEY_DEVICE_ID = "deviceId";
-  public static final String ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION = "deviceRegistrationVersion";
+  private static final int CURRENT_BUNDLE_VERSION = 2;
+  private static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
+  /* package-private */static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
+  /* package-private */ static final String BUNDLE_KEY_STATE = "state";
+  private static final String BUNDLE_KEY_PROFILE_JSON = "profile";
+
+  private static final String ACCOUNT_KEY_DEVICE_ID = "deviceId";
+  private static final String ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION = "deviceRegistrationVersion";
   private static final String ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP = "deviceRegistrationTimestamp";
   private static final String ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR = "devicePushRegistrationError";
   private static final String ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR_TIME = "devicePushRegistrationErrorTime";
 
   // Account authentication token type for fetching account profile.
-  public static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
+  private static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
 
   // Services may request OAuth tokens from the Firefox Account dynamically.
   // Each such token is prefixed with "oauth::" and a service-dependent scope.
@@ -107,11 +133,27 @@ public class AndroidFxAccount {
     DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP = Collections.unmodifiableMap(m);
   }
 
+  // List of accounts keys which are explicitly carried over when account is renamed on pre-21 devices.
+  private static final List<String> ACCOUNT_KEY_TO_CARRY_OVER_ON_RENAME_SET;
+  static {
+    ArrayList<String> keysToCarryOver = new ArrayList<>(6);
+    keysToCarryOver.add(ACCOUNT_KEY_ACCOUNT_VERSION);
+    keysToCarryOver.add(ACCOUNT_KEY_IDP_SERVER);
+    keysToCarryOver.add(ACCOUNT_KEY_TOKEN_SERVER);
+    keysToCarryOver.add(ACCOUNT_KEY_PROFILE_SERVER);
+    keysToCarryOver.add(ACCOUNT_KEY_PROFILE);
+    keysToCarryOver.add(ACCOUNT_KEY_DESCRIPTOR);
+    ACCOUNT_KEY_TO_CARRY_OVER_ON_RENAME_SET = Collections.unmodifiableList(keysToCarryOver);
+  }
+
   private static final String PREF_KEY_LAST_SYNCED_TIMESTAMP = "lastSyncedTimestamp";
 
   protected final Context context;
-  protected final AccountManager accountManager;
-  protected final Account account;
+  private final AccountManager accountManager;
+
+  // This is really, really meant to be final. Only changed when account name changes.
+  // See Bug 1368147.
+  protected volatile Account account;
 
   /**
    * A cache associating Account name (email address) to a representation of the
@@ -121,7 +163,7 @@ public class AndroidFxAccount {
    * because there is no reliable way to know that an Account has been removed
    * and then re-added.
    */
-  protected static final ConcurrentHashMap<String, ExtendedJSONObject> perAccountBundleCache =
+  private static final ConcurrentHashMap<String, ExtendedJSONObject> perAccountBundleCache =
       new ConcurrentHashMap<>();
 
   public static void invalidateCaches() {
@@ -159,23 +201,11 @@ public class AndroidFxAccount {
     return new AndroidFxAccount(context, account);
   }
 
-  /**
-   * Persist the Firefox account to disk as a JSON object. Note that this is a wrapper around
-   * {@link AccountPickler#pickle}, and is identical to calling it directly.
-   * <p>
-   * Note that pickling is different from bundling, which involves operations on a
-   * {@link android.os.Bundle Bundle} object of miscellaneous data associated with the account.
-   * See {@link #persistBundle} and {@link #unbundle} for more.
-   */
-  public void pickle(final String filename) {
-    AccountPickler.pickle(this, filename);
-  }
-
   public Account getAndroidAccount() {
     return this.account;
   }
 
-  protected int getAccountVersion() {
+  private int getAccountVersion() {
     String v = accountManager.getUserData(account, ACCOUNT_KEY_ACCOUNT_VERSION);
     if (v == null) {
       return 0;         // Implicit.
@@ -188,16 +218,52 @@ public class AndroidFxAccount {
     }
   }
 
+  private String getAccountUID() {
+    // UID isn't going to change for the lifetime of our account.
+    String accountUID = accountManager.getUserData(account, ACCOUNT_KEY_UID);
+    if (accountUID != null) {
+      return accountUID;
+    }
+
+    // And now, let's hear it for some side-effects!
+    // If account was created before Bug 1368147, UID won't be there.
+    // We need to ensure it is preset in the user data for ease of future reference, and so we parse
+    // it out of the persisted profile data.
+    final AccountPickler.UnpickleParams profileParams = AccountPickler.unpickleParams(
+            context, FxAccountConstants.ACCOUNT_PICKLE_FILENAME);
+
+    // Can this actually happen in the wild? The only path to recover seems to be removing the
+    // account entirely and try adding it again (user action).
+    if (profileParams == null) {
+      throw new IllegalStateException("Invalid account profile data");
+    }
+
+    final String unpickledAccountUID = profileParams.getUID();
+    // This should never happen. But it's useful to know if it does, so just crash.
+    if (unpickledAccountUID == null) {
+      throw new IllegalStateException("Unpickled account UID is null");
+    }
+
+    // Persist our UID into userData, so that we never have to do this dance again.
+    accountManager.setUserData(account, ACCOUNT_KEY_UID, unpickledAccountUID);
+
+    // Our internal caches were also keyed by 'email' instead of 'uid', so we blow them away here
+    // so that they're re-populated correctly later on.
+    invalidateCaches();
+
+    return unpickledAccountUID;
+  }
+
   /**
    * Saves the given data as the internal bundle associated with this account.
    * @param bundle to write to account.
    */
-  protected synchronized void persistBundle(ExtendedJSONObject bundle) {
-    perAccountBundleCache.put(account.name, bundle);
+  private synchronized void persistBundle(ExtendedJSONObject bundle) {
+    perAccountBundleCache.put(getAccountUID(), bundle);
     accountManager.setUserData(account, ACCOUNT_KEY_DESCRIPTOR, bundle.toJSONString());
   }
 
-  protected ExtendedJSONObject unbundle() {
+  /* package-private */ ExtendedJSONObject unbundle() {
     return unbundle(true);
   }
 
@@ -205,9 +271,11 @@ public class AndroidFxAccount {
    * Retrieve the internal bundle associated with this account.
    * @return bundle associated with account.
    */
-  protected synchronized ExtendedJSONObject unbundle(boolean allowCachedBundle) {
+  private synchronized ExtendedJSONObject unbundle(boolean allowCachedBundle) {
+    final String accountUID = getAccountUID();
+
     if (allowCachedBundle) {
-      final ExtendedJSONObject cachedBundle = perAccountBundleCache.get(account.name);
+      final ExtendedJSONObject cachedBundle = perAccountBundleCache.get(accountUID);
       if (cachedBundle != null) {
         Logger.debug(LOG_TAG, "Returning cached account bundle.");
         return cachedBundle;
@@ -231,12 +299,12 @@ public class AndroidFxAccount {
       return null;
     }
     final ExtendedJSONObject bundle = unbundleAccountV2(bundleString);
-    perAccountBundleCache.put(account.name, bundle);
+    perAccountBundleCache.put(accountUID, bundle);
     Logger.info(LOG_TAG, "Account bundle persisted to cache.");
     return bundle;
   }
 
-  protected String getBundleData(String key) {
+  private String getBundleData(String key) {
     ExtendedJSONObject o = unbundle();
     if (o == null) {
       return null;
@@ -244,27 +312,7 @@ public class AndroidFxAccount {
     return o.getString(key);
   }
 
-  protected boolean getBundleDataBoolean(String key, boolean def) {
-    ExtendedJSONObject o = unbundle();
-    if (o == null) {
-      return def;
-    }
-    Boolean b = o.getBoolean(key);
-    if (b == null) {
-      return def;
-    }
-    return b;
-  }
-
-  protected byte[] getBundleDataBytes(String key) {
-    ExtendedJSONObject o = unbundle();
-    if (o == null) {
-      return null;
-    }
-    return o.getByteArrayHex(key);
-  }
-
-  protected void updateBundleValues(String key, String value, String... more) {
+  private void updateBundleValues(String key, String value, String... more) {
     if (more.length % 2 != 0) {
       throw new IllegalArgumentException("more must be a list of key, value pairs");
     }
@@ -323,7 +371,7 @@ public class AndroidFxAccount {
     return profileURI;
   }
 
-  public String getOAuthServerURI() {
+  /* package-private */ String getOAuthServerURI() {
     // Allow testing against stage.
     if (isStaging()) {
       return FxAccountConstants.STAGE_OAUTH_SERVER_ENDPOINT;
@@ -336,16 +384,15 @@ public class AndroidFxAccount {
     return FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(getAccountServerURI());
   }
 
-  private String constructPrefsPath(String product, long version, String extra) throws GeneralSecurityException, UnsupportedEncodingException {
+  private String constructPrefsPath(@NonNull String accountKey, String product, long version, String extra) throws GeneralSecurityException, UnsupportedEncodingException {
     String profile = getProfile();
-    String username = account.name;
 
     if (profile == null) {
       throw new IllegalStateException("Missing profile. Cannot fetch prefs.");
     }
 
-    if (username == null) {
-      throw new IllegalStateException("Missing username. Cannot fetch prefs.");
+    if (accountKey == null) {
+      throw new IllegalStateException("Missing accountKey. Cannot fetch prefs.");
     }
 
     final String fxaServerURI = getAccountServerURI();
@@ -355,13 +402,13 @@ public class AndroidFxAccount {
 
     // This is unique for each syncing 'view' of the account.
     final String serverURLThing = fxaServerURI + "!" + extra;
-    return Utils.getPrefsPath(product, username, serverURLThing, profile, version);
+    return Utils.getPrefsPath(product, accountKey, serverURLThing, profile, version);
   }
 
   /**
    * This needs to return a string because of the tortured prefs access in GlobalSession.
    */
-  public String getSyncPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+  private String getSyncPrefsPath(final String accountKey) throws GeneralSecurityException, UnsupportedEncodingException {
     final String tokenServerURI = getTokenServerURI();
     if (tokenServerURI == null) {
       throw new IllegalStateException("No token server URI. Cannot fetch prefs.");
@@ -369,21 +416,93 @@ public class AndroidFxAccount {
 
     final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".fxa";
     final long version = CURRENT_SYNC_PREFS_VERSION;
-    return constructPrefsPath(product, version, tokenServerURI);
+    return constructPrefsPath(accountKey, product, version, tokenServerURI);
   }
 
-  public String getReadingListPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+  private String getReadingListPrefsPath(final String accountKey) throws GeneralSecurityException, UnsupportedEncodingException {
     final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".reading";
     final long version = CURRENT_RL_PREFS_VERSION;
-    return constructPrefsPath(product, version, "");
+    return constructPrefsPath(accountKey, product, version, "");
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void migrateSharedPreferencesValues(SharedPreferences sharedPreferences, Map<String, ?> values) {
+    final SharedPreferences.Editor editor = sharedPreferences.edit();
+    for (String key : values.keySet()) {
+      final Object value = values.get(key);
+      if (value instanceof String) {
+        editor.putString(key, (String) value);
+      } else if (value instanceof Integer) {
+        editor.putInt(key, ((Integer) value));
+      } else if (value instanceof Float) {
+        editor.putFloat(key, ((Float) value));
+      } else if (value instanceof Long) {
+        editor.putLong(key, ((Long) value));
+      } else if (value instanceof Boolean) {
+        editor.putBoolean(key, ((Boolean) value));
+      } else if (value instanceof Set) {
+        // This performs an unchecked cast. Let's hope it won't fail!
+        editor.putStringSet(key, ((Set<String>) value));
+      }
+    }
+    editor.apply();
+  }
+
+  private SharedPreferences maybeMigrateSharedPreferences(SharedPreferences sharedPreferences) throws UnsupportedEncodingException, GeneralSecurityException {
+    // Move everything from the old preference file to the new.
+    final SharedPreferences oldPreferences = context.getSharedPreferences(
+            getSyncPrefsPath(account.name),
+            Utils.SHARED_PREFERENCES_MODE
+    );
+    return doMaybeMigrateSharedPreferences(sharedPreferences, oldPreferences);
+  }
+
+  @VisibleForTesting
+  /* package-private */ static SharedPreferences doMaybeMigrateSharedPreferences(SharedPreferences sharedPreferences, SharedPreferences oldSharedPreferences) throws UnsupportedEncodingException, GeneralSecurityException {
+    // Bug 1368147: we used to store sync preferences with an account email in their file name; but,
+    // that is now an ephemeral entity; the path forward is to store sync preferences with an
+    // account UID in the filename. Logic below performs this migration.
+
+    // It appears that sharedPreferences have been written to before, so we don't need to migrate.
+    // This is bound to be one of the least efficient way of performing this check.
+    if (sharedPreferences.getAll().size() != 0) {
+      return sharedPreferences;
+    }
+
+    // If the old preference file doesn't exist either, or is empty - return the new one.
+    final Map<String, ?> oldPreferenceValues = oldSharedPreferences.getAll();
+    if (oldPreferenceValues.size() == 0) {
+      return sharedPreferences;
+    }
+
+    // Copy over values from existing prefs to the newly created prefs.
+    migrateSharedPreferencesValues(sharedPreferences, oldPreferenceValues);
+    // Clear out old prefs.
+    oldSharedPreferences.edit().clear().apply();
+
+    return sharedPreferences;
   }
 
   public SharedPreferences getSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
-    return context.getSharedPreferences(getSyncPrefsPath(), Utils.SHARED_PREFERENCES_MODE);
+    final SharedPreferences sharedPreferences = context.getSharedPreferences(
+            getSyncPrefsPath(getAccountUID()),
+            Utils.SHARED_PREFERENCES_MODE
+    );
+
+    maybeMigrateSharedPreferences(sharedPreferences);
+
+    return sharedPreferences;
   }
 
-  public SharedPreferences getReadingListPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
-    return context.getSharedPreferences(getReadingListPrefsPath(), Utils.SHARED_PREFERENCES_MODE);
+  private SharedPreferences getReadingListPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
+    final SharedPreferences sharedPreferences = context.getSharedPreferences(
+            getReadingListPrefsPath(getAccountUID()),
+            Utils.SHARED_PREFERENCES_MODE
+    );
+
+    maybeMigrateSharedPreferences(sharedPreferences);
+
+    return sharedPreferences;
   }
 
   /**
@@ -410,33 +529,38 @@ public class AndroidFxAccount {
   }
 
   public static AndroidFxAccount addAndroidAccount(
-      Context context,
-      String email,
-      String profile,
-      String idpServerURI,
-      String tokenServerURI,
-      String profileServerURI,
-      State state,
+      @NonNull Context context,
+      @NonNull String uid,
+      @NonNull String email,
+      @NonNull String profile,
+      @NonNull String idpServerURI,
+      @NonNull String tokenServerURI,
+      @NonNull String profileServerURI,
+      @NonNull State state,
       final Map<String, Boolean> authoritiesToSyncAutomaticallyMap)
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
-    return addAndroidAccount(context, email, profile, idpServerURI, tokenServerURI, profileServerURI, state,
+    return addAndroidAccount(context, uid, email, profile, idpServerURI, tokenServerURI, profileServerURI, state,
         authoritiesToSyncAutomaticallyMap,
         CURRENT_ACCOUNT_VERSION, false, null);
   }
 
-  public static AndroidFxAccount addAndroidAccount(
-      Context context,
-      String email,
-      String profile,
-      String idpServerURI,
-      String tokenServerURI,
-      String profileServerURI,
-      State state,
+  /* package-private */ static AndroidFxAccount addAndroidAccount(
+      @NonNull Context context,
+      @NonNull String uid,
+      @NonNull String email,
+      @NonNull String profile,
+      @NonNull String idpServerURI,
+      @NonNull String tokenServerURI,
+      @NonNull String profileServerURI,
+      @NonNull State state,
       final Map<String, Boolean> authoritiesToSyncAutomaticallyMap,
       final int accountVersion,
       final boolean fromPickle,
       ExtendedJSONObject bundle)
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
+    if (uid == null) {
+      throw new IllegalArgumentException("uid must not be null");
+    }
     if (email == null) {
       throw new IllegalArgumentException("email must not be null");
     }
@@ -470,6 +594,7 @@ public class AndroidFxAccount {
     userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
     userdata.putString(ACCOUNT_KEY_PROFILE_SERVER, profileServerURI);
     userdata.putString(ACCOUNT_KEY_PROFILE, profile);
+    userdata.putString(ACCOUNT_KEY_UID, uid);
 
     if (bundle == null) {
       bundle = new ExtendedJSONObject();
@@ -511,11 +636,11 @@ public class AndroidFxAccount {
     return fxAccount;
   }
 
-  public void clearSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
-    getSyncPrefs().edit().clear().commit();
+  private void clearSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
+    getSyncPrefs().edit().clear().apply();
   }
 
-  public void setAuthoritiesToSyncAutomaticallyMap(Map<String, Boolean> authoritiesToSyncAutomaticallyMap) {
+  private void setAuthoritiesToSyncAutomaticallyMap(Map<String, Boolean> authoritiesToSyncAutomaticallyMap) {
     if (authoritiesToSyncAutomaticallyMap == null) {
       throw new IllegalArgumentException("authoritiesToSyncAutomaticallyMap must not be null");
     }
@@ -533,7 +658,7 @@ public class AndroidFxAccount {
     }
   }
 
-  public Map<String, Boolean> getAuthoritiesToSyncAutomaticallyMap() {
+  /* package-private */ Map<String, Boolean> getAuthoritiesToSyncAutomaticallyMap() {
     final Map<String, Boolean> authoritiesToSync = new HashMap<>();
     for (String authority : DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP.keySet()) {
       final boolean enabled = ContentResolver.getSyncAutomatically(account, authority);
@@ -588,7 +713,7 @@ public class AndroidFxAccount {
     broadcastAccountStateChangedIntent();
   }
 
-  protected void broadcastAccountStateChangedIntent() {
+  private void broadcastAccountStateChangedIntent() {
     final Intent intent = new Intent(FxAccountConstants.ACCOUNT_STATE_CHANGED_ACTION);
     intent.putExtra(Constants.JSON_KEY_ACCOUNT, account.name);
     LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
@@ -656,7 +781,7 @@ public class AndroidFxAccount {
    * @param intent Intent to populate with necessary extras
    * @return <code>Intent</code> with a deleted action and account/OAuth information extras
    */
-  public Intent populateDeletedAccountIntent(final Intent intent) {
+  /* package-private */ Intent populateDeletedAccountIntent(final Intent intent) {
     final List<String> tokens = new ArrayList<>();
 
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_VERSION_KEY,
@@ -736,7 +861,7 @@ public class AndroidFxAccount {
         FxAccountConstants.STAGE_PROFILE_SERVER_ENDPOINT);
   }
 
-  protected void unsafeTransitionToStageEndpoints(String authServerEndpoint, String tokenServerEndpoint, String profileServerEndpoint) {
+  private void unsafeTransitionToStageEndpoints(String authServerEndpoint, String tokenServerEndpoint, String profileServerEndpoint) {
     try {
       getReadingListPrefs().edit().clear().commit();
     } catch (UnsupportedEncodingException | GeneralSecurityException e) {
@@ -852,7 +977,7 @@ public class AndroidFxAccount {
     accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_ID, id);
   }
 
-  public synchronized void setDeviceRegistrationVersion(int deviceRegistrationVersion) {
+  private synchronized void setDeviceRegistrationVersion(int deviceRegistrationVersion) {
     accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION,
         Integer.toString(deviceRegistrationVersion));
   }
@@ -885,7 +1010,7 @@ public class AndroidFxAccount {
 
   @SuppressLint("ParcelCreator") // The CREATOR field is defined in the super class.
   private class ProfileResultReceiver extends ResultReceiver {
-    public ProfileResultReceiver(Handler handler) {
+    /* package-private */ ProfileResultReceiver(Handler handler) {
       super(handler);
     }
 
@@ -894,11 +1019,17 @@ public class AndroidFxAccount {
       super.onReceiveResult(resultCode, bundle);
       switch (resultCode) {
         case Activity.RESULT_OK:
+          Logger.info(LOG_TAG, "Profile JSON fetch succeeded!");
           final String resultData = bundle.getString(FxAccountProfileService.KEY_RESULT_STRING);
-          updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
-          Logger.info(LOG_TAG, "Profile JSON fetch succeeeded!");
           FxAccountUtils.pii(LOG_TAG, "Profile JSON fetch returned: " + resultData);
-          LocalBroadcastManager.getInstance(context).sendBroadcast(makeProfileJSONUpdatedIntent());
+
+          renameAccountIfNecessary(resultData, new Runnable() {
+            @Override
+            public void run() {
+              updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
+              LocalBroadcastManager.getInstance(context).sendBroadcast(makeProfileJSONUpdatedIntent());
+            }
+          });
           break;
         case Activity.RESULT_CANCELED:
           Logger.warn(LOG_TAG, "Failed to fetch profile JSON; ignoring.");
@@ -910,6 +1041,189 @@ public class AndroidFxAccount {
     }
   }
 
+  private void renameAccountIfNecessary(final String profileData, final Runnable callback) {
+    final ExtendedJSONObject profileJSON;
+    try {
+      profileJSON = new ExtendedJSONObject(profileData);
+    } catch (NonObjectJSONException | IOException e) {
+      Logger.error(LOG_TAG, "Error processing fetched account json string", e);
+      callback.run();
+      return;
+    }
+    if (!profileJSON.containsKey("email")) {
+      Logger.error(LOG_TAG, "Profile JSON missing email key");
+      callback.run();
+      return;
+    }
+    final String email = profileJSON.getString("email");
+
+    // If primary email didn't change, there's nothing for us to do.
+    if (account.name.equals(email)) {
+      callback.run();
+      return;
+    }
+
+    Logger.info(LOG_TAG, "Renaming Android Account.");
+    FxAccountUtils.pii(LOG_TAG, "Renaming Android account from " + account.name + " to " + email);
+
+    // Then, get the currently auto-syncing authorities.
+    // We'll toggle these on once we re-add the account.
+    final Map<String, Boolean> currentAuthoritiesToSync = getAuthoritiesToSyncAutomaticallyMap();
+
+    // We also need to manually carry over current sync intervals.
+    final Map<String, List<PeriodicSync>> periodicSyncsForAuthorities = new HashMap<>();
+    for (String authority : currentAuthoritiesToSync.keySet()) {
+      periodicSyncsForAuthorities.put(authority, ContentResolver.getPeriodicSyncs(account, authority));
+    }
+
+    final Runnable migrateSyncSettings = new Runnable() {
+      @Override
+      public void run() {
+        // Set up auto-syncing for the newly added account.
+        setAuthoritiesToSyncAutomaticallyMap(currentAuthoritiesToSync);
+
+        // Set up all of the periodic syncs we had prior.
+        for (String authority : periodicSyncsForAuthorities.keySet()) {
+          final List<PeriodicSync> periodicSyncs = periodicSyncsForAuthorities.get(authority);
+          for (PeriodicSync periodicSync : periodicSyncs) {
+            ContentResolver.addPeriodicSync(
+                    account,
+                    periodicSync.authority,
+                    periodicSync.extras,
+                    periodicSync.period
+            );
+          }
+        }
+      }
+    };
+
+    // On API21+, we can simply "rename" the account, which will recreate it carrying over user data.
+    // Our regular "account was just deleted" side-effects will not run.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      doOptionalProfileRename21Plus(email, migrateSyncSettings, callback);
+
+    // Prior to API21, we have to perform this operation manually: make a copy of the user data,
+    // delete current account, and then re-create it.
+    // We also need to ensure our regular "account was just deleted" side-effects are not invoked.
+    } else {
+      doOptionalProfileRenamePre21(email, migrateSyncSettings, callback);
+    }
+  }
+
+  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+  private void doOptionalProfileRename21Plus(final String newEmail, final Runnable migrateSyncSettingsCallback, final Runnable callback) {
+    accountManager.renameAccount(account, newEmail, new AccountManagerCallback<Account>() {
+      @Override
+      public void run(AccountManagerFuture<Account> future) {
+        if (future.isCancelled()) {
+          Logger.error(LOG_TAG, "Account rename task cancelled.");
+          callback.run();
+          return;
+        }
+
+        if (!future.isDone()) {
+          Logger.error(LOG_TAG, "Account rename callback invoked, by task is not finished.");
+          callback.run();
+          return;
+        }
+
+        try {
+          final Account updatedAccount = future.getResult();
+
+          // We tried, we really did.
+          if (!updatedAccount.name.equals(newEmail)) {
+            Logger.error(LOG_TAG, "Tried to update account name, but it didn't seem to have changed.");
+          } else {
+            account = updatedAccount;
+            migrateSyncSettingsCallback.run();
+
+            invalidateCaches();
+            callback.run();
+          }
+        } catch (OperationCanceledException | IOException | AuthenticatorException e) {
+          Logger.error(LOG_TAG, "Unexpected exception while trying to rename an account", e);
+          callback.run();
+        }
+      }
+      // Request that callbacks are posted to the current thread.
+    }, new Handler());
+  }
+
+  @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+  private void doOptionalProfileRenamePre21(final String email, final Runnable migrateSyncSettingsCallback, final Runnable callback) {
+    // First, manually make a copy of account's current user data.
+    final Bundle currentUserData = new Bundle();
+
+    for (String key : ACCOUNT_KEY_TO_CARRY_OVER_ON_RENAME_SET) {
+      currentUserData.putString(key, accountManager.getUserData(account, key));
+    }
+
+    // Ensure our account deletion side-effects will not run. See comments at this key's definition.
+    // Note that this key is not copied over to the new account. We do need to ensure this field is
+    // reset if we fail to remove the account. Otherwise our regular account deletion logic won't run
+    // in the future.
+    accountManager.setUserData(account, ACCOUNT_KEY_RENAME_IN_PROGRESS, ACCOUNT_VALUE_RENAME_IN_PROGRESS);
+
+    // Then, remove current account.
+    accountManager.removeAccount(account, new AccountManagerCallback<Boolean>() {
+      @Override
+      public void run(AccountManagerFuture<Boolean> future) {
+        boolean accountRemovalSucceeded = false;
+        boolean removeResult = false;
+        try {
+          removeResult = future.getResult();
+          accountRemovalSucceeded = !future.isCancelled() && future.isDone() && removeResult;
+        } catch (OperationCanceledException | IOException | AuthenticatorException e) {
+          Logger.error(LOG_TAG, "Exception while obtaining account remove task results. Moving on.", e);
+        }
+
+        // Did something go wrong? Log specific error, clear ACCOUNT_KEY_RENAME_IN_PROGRESS and move on.
+        // Bug 1398978 tracks sending a telemetry event to monitor these failures in the wild.
+        if (!accountRemovalSucceeded) {
+          if (future.isCancelled()) {
+            Logger.error(LOG_TAG, "Account remove task cancelled. Moving on.");
+          } else if (!future.isDone()) {
+            Logger.error(LOG_TAG, "Account remove callback invoked, but task is not finished. Moving on.");
+          } else if (!removeResult) {
+            Logger.error(LOG_TAG, "Failed to remove current account while renaming accounts. Moving on.");
+          }
+
+          accountManager.setUserData(account, ACCOUNT_KEY_RENAME_IN_PROGRESS, null);
+          callback.run();
+          return;
+        }
+
+        // It appears that we've successfully removed the account. It's now time to re-add it.
+
+        // Purge our internal state.
+        invalidateCaches();
+
+        // Finally, add an Android account with new name and old user data.
+        final Account newAccount = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
+        final boolean didAdd = accountManager.addAccountExplicitly(newAccount, null, currentUserData);
+
+        // Rename succeeded, now let's configure the newly added account.
+        if (didAdd) {
+          account = newAccount;
+
+          migrateSyncSettingsCallback.run();
+
+          callback.run();
+          return;
+        }
+
+        // Oh, this isn't good. This could mean that account already exists, or that something else
+        // happened. Account should not already exist, since supposedly we just removed it.
+        // AccountManager docs are not specific on what "something else" might actually mean.
+        // At this point it's as if we never had an account to begin with, and so we skip calling
+        // our callback.
+        // Bug 1398978 tracks sending a telemetry event to monitor such failures in the wild.
+        Logger.error(LOG_TAG, "Failed to add account with a new name after deleting old account.");
+      }
+    // Request that callbacks are posted to the current thread.
+    }, new Handler());
+  }
+
   /**
    * Take the lock to own updating any Firefox Account's internal state.
    *
@@ -917,11 +1231,11 @@ public class AndroidFxAccount {
    * because the callback that needs to release the lock may not be invoked on
    * the thread that initially acquired the lock. Be aware!
    */
-  protected static final Semaphore sLock = new Semaphore(1, true /* fair */);
+  private static final Semaphore sLock = new Semaphore(1, true /* fair */);
 
   // Which consumer took the lock?
   // Synchronized by this.
-  protected String lockTag = null;
+  private String lockTag = null;
 
   // Are we locked?  (It's not easy to determine who took the lock dynamically,
   // so we maintain this flag internally.)
@@ -952,7 +1266,8 @@ public class AndroidFxAccount {
   }
 
   @Override
-  protected synchronized void finalize() {
+  protected synchronized void finalize() throws Throwable {
+    super.finalize();
     if (locked) {
       // Should never happen, but...
       sLock.release();

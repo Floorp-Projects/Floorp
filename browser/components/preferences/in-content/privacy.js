@@ -259,7 +259,7 @@ var gPrivacyPane = {
     let pkiBundle = document.getElementById("pkiBundle");
     appendSearchKeywords("passwordExceptions", [
       bundlePrefs.getString("savedLoginsExceptions_title"),
-      bundlePrefs.getString("savedLoginsExceptions_desc2"),
+      bundlePrefs.getString("savedLoginsExceptions_desc3"),
     ]);
     appendSearchKeywords("showPasswords", [
       signonBundle.getString("loginsDescriptionAll2"),
@@ -959,7 +959,7 @@ var gPrivacyPane = {
       prefilledHost: "",
       permissionType: "login-saving",
       windowTitle: bundlePrefs.getString("savedLoginsExceptions_title"),
-      introText: bundlePrefs.getString("savedLoginsExceptions_desc2")
+      introText: bundlePrefs.getString("savedLoginsExceptions_desc3")
     };
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
