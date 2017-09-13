@@ -111,14 +111,6 @@ import java.util.concurrent.Future;
                     .execute(this);
         }
 
-        final Drawable pinDrawable;
-        if (topSite.isPinned()) {
-            pinDrawable = DrawableUtil.tintDrawable(itemView.getContext(), R.drawable.as_pin, Color.WHITE);
-        } else {
-            pinDrawable = null;
-        }
-        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(title, pinDrawable, null, null, null);
-
         setTopSiteTitle(topSite);
     }
 
