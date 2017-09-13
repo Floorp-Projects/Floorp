@@ -77,9 +77,16 @@ ImageLayerMLGPU::IsContentOpaque()
 void
 ImageLayerMLGPU::SetRegionToRender(LayerIntRegion&& aRegion)
 {
-  // See bug 1264142.
-  if (mScaleMode == ScaleMode::STRETCH) {
+  switch (mScaleMode) {
+  case ScaleMode::STRETCH:
+    // See bug 1264142.
     aRegion.AndWith(LayerIntRect(0, 0, mScaleToSize.width, mScaleToSize.height));
+    break;
+  default:
+    // Clamp the visible region to the texture size. (see bug 1396507)
+    MOZ_ASSERT(mScaleMode == ScaleMode::SCALE_NONE);
+    aRegion.AndWith(LayerIntRect(0, 0, mPictureRect.width, mPictureRect.height));
+    break;
   }
   LayerMLGPU::SetRegionToRender(Move(aRegion));
 }
