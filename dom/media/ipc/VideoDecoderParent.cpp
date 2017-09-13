@@ -47,7 +47,8 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
                                        const layers::TextureFactoryIdentifier& aIdentifier,
                                        TaskQueue* aManagerTaskQueue,
                                        TaskQueue* aDecodeTaskQueue,
-                                       bool* aSuccess)
+                                       bool* aSuccess,
+                                       nsCString* aErrorDescription)
   : mParent(aParent)
   , mManagerTaskQueue(aManagerTaskQueue)
   , mDecodeTaskQueue(aDecodeTaskQueue)
@@ -75,13 +76,18 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
   params.mTaskQueue = mDecodeTaskQueue;
   params.mKnowsCompositor = mKnowsCompositor;
   params.mImageContainer = new layers::ImageContainer();
+  MediaResult error(NS_OK);
+  params.mError = &error;
 
   mDecoder = pdm->CreateVideoDecoder(params);
 #else
   MOZ_ASSERT(false,
              "Can't use RemoteVideoDecoder on non-Windows platforms yet");
 #endif
-
+  if (NS_FAILED(error)) {
+    MOZ_ASSERT(aErrorDescription);
+    *aErrorDescription = error.Description();
+  }
   *aSuccess = !!mDecoder;
 }
 

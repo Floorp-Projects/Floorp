@@ -6,6 +6,7 @@
 #ifndef include_dom_ipc_VideoDecoderChild_h
 #define include_dom_ipc_VideoDecoderChild_h
 
+#include "MediaResult.h"
 #include "PlatformDecoderModule.h"
 #include "mozilla/dom/PVideoDecoderChild.h"
 
@@ -48,8 +49,8 @@ public:
   MediaDataDecoder::ConversionRequired NeedsConversion() const;
 
   MOZ_IS_CLASS_INIT
-  bool InitIPDL(const VideoInfo& aVideoInfo,
-                const layers::TextureFactoryIdentifier& aIdentifier);
+  MediaResult InitIPDL(const VideoInfo& aVideoInfo,
+                       const layers::TextureFactoryIdentifier& aIdentifier);
   void DestroyIPDL();
 
   // Called from IPDL when our actor has been destroyed
