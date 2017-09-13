@@ -34,6 +34,26 @@ const Types = [
     spec: "devtools/shared/specs/string",
     front: "devtools/shared/fronts/string",
   },
+  {
+    types: ["originalsource", "mediarule", "stylesheet", "stylesheets"],
+    spec: "devtools/shared/specs/stylesheets",
+    front: "devtools/shared/fronts/stylesheets",
+  },
+  {
+    types: ["imageData", "domnode"],
+    spec: "devtools/shared/specs/node",
+    front: "devtools/shared/fronts/inspector",
+  },
+  {
+    types: ["domwalker"],
+    spec: "devtools/shared/specs/inspector",
+    front: "devtools/shared/fronts/inspector",
+  },
+  {
+    types: ["performance-recording"],
+    spec: "devtools/shared/specs/performance-recording",
+    front: "devtools/shared/fronts/performancec-recording",
+  },
 ];
 
 const lazySpecs = new Map();
