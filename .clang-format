@@ -35,3 +35,13 @@ BinPackArguments: false
 BinPackParameters: false
 SpaceAfterTemplateKeyword: false
 ReflowComments: false
+
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: true
+  AfterFunction: true
+  AfterClass: true
+  SplitEmptyFunction: true
+
