@@ -212,6 +212,16 @@ const BackgroundPageThumbs = {
     return false;
   },
 
+  _init() {
+    Services.obs.addObserver(this, "profile-before-change");
+  },
+
+  observe(subject, topic, data) {
+    if (topic == "profile-before-change") {
+      this._destroy();
+    }
+  },
+
   /**
    * Destroys the service.  Queued and pending captures will never complete, and
    * their consumer callbacks will never be called.
