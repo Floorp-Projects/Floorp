@@ -367,7 +367,9 @@ ImageBridgeParent::GetInstance(ProcessId aId)
 void
 ImageBridgeParent::OnChannelConnected(int32_t aPid)
 {
-  mCompositorThreadHolder = GetCompositorThreadHolder();
+  mCompositorThreadHolder =
+    new CompositorThreadHolderDebug(IsSameProcess() ? "ImageBridgeSame"
+                                                    : "ImageBridge");
 }
 
 
