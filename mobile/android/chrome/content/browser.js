@@ -46,6 +46,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
+                                  "resource://gre/modules/LoginManagerContent.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
+                                  "resource://gre/modules/LoginManagerParent.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
@@ -549,6 +555,9 @@ var BrowserApp = {
 
       // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
       InitLater(() => SafeBrowsing.init(), window, "SafeBrowsing");
+
+      InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
+      InitLater(() => LoginManagerParent.init(), window, "LoginManagerParent");
 
     }, {once: true});
 
@@ -3765,6 +3774,7 @@ Tab.prototype = {
 
     this.browser.removeEventListener("DOMContentLoaded", this, true);
     this.browser.removeEventListener("DOMFormHasPassword", this, true);
+    this.browser.removeEventListener("DOMInputPasswordAdded", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMLinkChanged", this, true);
     this.browser.removeEventListener("DOMMetaAdded", this);
@@ -3773,6 +3783,8 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMAudioPlaybackStopped", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
+    this.browser.removeEventListener("DOMAutoComplete", this, true);
+    this.browser.removeEventListener("blur", this, true);
     this.browser.removeEventListener("pageshow", this, true);
     this.browser.removeEventListener("MozApplicationManifest", this, true);
     this.browser.removeEventListener("TabPreZombify", this, true);
@@ -4132,6 +4144,9 @@ Tab.prototype = {
       }
 
       case "DOMFormHasPassword": {
+        LoginManagerContent.onDOMFormHasPassword(aEvent,
+                                                 this.browser.contentWindow);
+
         // Send logins for this hostname to Java.
         let hostname = aEvent.target.baseURIObject.prePath;
         let foundLogins = Services.logins.findLogins({}, hostname, "", "");
@@ -4145,6 +4160,11 @@ Tab.prototype = {
           });
         }
         break;
+      }
+
+      case "DOMInputPasswordAdded": {
+        LoginManagerContent.onDOMInputPasswordAdded(aEvent,
+                                                    this.browser.contentWindow);
       }
 
       case "DOMMetaAdded":
@@ -4276,6 +4296,12 @@ Tab.prototype = {
         break;
       }
 
+      case "DOMAutoComplete":
+      case "blur": {
+        LoginManagerContent.onUsernameInput(aEvent);
+        break;
+      }
+
       case "VideoBindingAttached": {
         CastingApps.handleVideoBindingAttached(this, aEvent);
         break;
@@ -4301,6 +4327,8 @@ Tab.prototype = {
       }
 
       case "pageshow": {
+        LoginManagerContent.onPageShow(aEvent, this.browser.contentWindow);
+
         // The rest of this only handles pageshow for the top-level document.
         if (aEvent.originalTarget.defaultView != this.browser.contentWindow)
           return;
