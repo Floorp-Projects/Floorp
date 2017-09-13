@@ -21,8 +21,6 @@ const PROMOTE_COUNT_PREF = "devtools.promote.layoutview";
 // @remove after release 56 (See Bug 1355747)
 const GRID_LINK = "https://www.mozilla.org/en-US/developer/css-grid/?utm_source=gridtooltip&utm_medium=devtools&utm_campaign=cssgrid_layout";
 
-loader.lazyRequireGetter(this, "GridInspector", "devtools/client/inspector/grids/grid-inspector");
-
 function LayoutView(inspector, window) {
   this.document = window.document;
   this.inspector = inspector;
@@ -52,7 +50,6 @@ LayoutView.prototype = {
       onToggleGeometryEditor,
     } = this.inspector.getPanel("boxmodel").getComponentProps();
 
-    this.gridInspector = new GridInspector(this.inspector, this.inspector.panelWin);
     let {
       getSwatchColorPickerTooltip,
       onSetGridOverlayColor,
@@ -63,7 +60,7 @@ LayoutView.prototype = {
       onToggleShowGridAreas,
       onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines,
-    } = this.gridInspector.getComponentProps();
+    } = this.inspector.gridInspector.getComponentProps();
 
     let {
       onPromoteLearnMoreClick,
@@ -112,8 +109,6 @@ LayoutView.prototype = {
    * Destruction function called when the inspector is destroyed. Cleans up references.
    */
   destroy() {
-    this.gridInspector.destroy();
-
     this.document = null;
     this.inspector = null;
     this.store = null;

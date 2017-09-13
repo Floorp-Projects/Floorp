@@ -136,7 +136,7 @@ function openLayoutView() {
       toolbox: data.toolbox,
       inspector: data.inspector,
       boxmodel: data.inspector.getPanel("boxmodel"),
-      gridInspector: data.inspector.layoutview.gridInspector,
+      gridInspector: data.inspector.gridInspector,
       testActor: data.testActor
     };
   });
