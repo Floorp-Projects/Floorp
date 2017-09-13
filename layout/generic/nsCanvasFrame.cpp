@@ -331,6 +331,7 @@ nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayList
   wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(rect);
   aBuilder.PushRect(transformedRect,
                     transformedRect,
+                    !BackfaceIsHidden(),
                     wr::ToColorF(ToDeviceColor(mColor)));
   return true;
 }

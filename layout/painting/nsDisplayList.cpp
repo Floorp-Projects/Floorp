@@ -2947,6 +2947,7 @@ nsDisplaySolidColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
 
   aBuilder.PushRect(transformedRect,
                     transformedRect,
+                    !BackfaceIsHidden(),
                     wr::ToColorF(ToDeviceColor(mColor)));
 
   return true;
@@ -2999,6 +3000,7 @@ nsDisplaySolidColorRegion::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
     wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(layerRects);
     aBuilder.PushRect(transformedRect,
                       transformedRect,
+                      !BackfaceIsHidden(),
                       wr::ToColorF(ToDeviceColor(mColor)));
   }
 
@@ -4270,6 +4272,7 @@ nsDisplayBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
 
   aBuilder.PushRect(transformedRect,
                     transformedRect,
+                    !BackfaceIsHidden(),
                     wr::ToColorF(ToDeviceColor(mColor)));
 
   return true;
@@ -4791,11 +4794,13 @@ nsDisplayCaret::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   // Note, WR will pixel snap anything that is layout aligned.
   aBuilder.PushRect(caret,
                     caret,
+                    !BackfaceIsHidden(),
                     wr::ToColorF(color));
 
   if (!devHookRect.IsEmpty()) {
     aBuilder.PushRect(hook,
                       hook,
+                      !BackfaceIsHidden(),
                       wr::ToColorF(color));
   }
   return true;
@@ -5095,6 +5100,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
       aBuilder.PushBorderImage(dest,
                                clip,
+                               !BackfaceIsHidden(),
                                wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                key.value(),
                                wr::ToNinePatchDescriptor(
@@ -5128,6 +5134,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
         aBuilder.PushBorderGradient(dest,
                                     clip,
+                                    !BackfaceIsHidden(),
                                     wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                     wr::ToLayoutPoint(startPoint),
                                     wr::ToLayoutPoint(endPoint),
@@ -5137,6 +5144,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       } else {
         aBuilder.PushBorderRadialGradient(dest,
                                           clip,
+                                          !BackfaceIsHidden(),
                                           wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                           wr::ToLayoutPoint(lineStart),
                                           wr::ToLayoutSize(gradientRadius),
@@ -5460,6 +5468,7 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 
       aBuilder.PushBoxShadow(deviceBoxRect,
                              deviceClipRect,
+                             !BackfaceIsHidden(),
                              deviceBoxRect,
                              wr::ToLayoutVector2D(shadowOffset),
                              wr::ToColorF(shadowColor),
@@ -5632,6 +5641,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
 
       aBuilder.PushBoxShadow(wr::ToLayoutRect(deviceBoxRect),
                              deviceClipRect,
+                             !aFrame->BackfaceIsHidden(),
                              wr::ToLayoutRect(deviceBoxRect),
                              wr::ToLayoutVector2D(shadowOffset),
                              wr::ToColorF(shadowColor),
@@ -7958,7 +7968,9 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            nullptr,
                            transformForSC,
                            nullptr,
-                           filters);
+                           filters,
+                           gfx::CompositionOp::OP_OVER,
+                           !BackfaceIsHidden());
 
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc, aParentCommands,
                                              aManager, aDisplayListBuilder);
@@ -8564,7 +8576,9 @@ nsDisplayPerspective::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& a
                            nullptr,
                            &transformForSC,
                            &perspectiveMatrix,
-                           filters);
+                           filters,
+                           gfx::CompositionOp::OP_OVER,
+                           !BackfaceIsHidden());
 
   return mList.CreateWebRenderCommands(aBuilder, aResources, sc, aParentCommands,
                                        aManager, aDisplayListBuilder);

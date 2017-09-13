@@ -788,7 +788,8 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
                              bgRadii,
                              borderColors,
                              compositeColors,
-                             bgColor);
+                             bgColor,
+                             !aForFrame->BackfaceIsHidden());
 }
 
 
@@ -1067,7 +1068,8 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
                          outlineRadii,
                          outlineColors,
                          nullptr,
-                         bgColor);
+                         bgColor,
+                         !aForFrame->BackfaceIsHidden());
 
   return Some(br);
 }
@@ -1129,6 +1131,9 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
   // something that CSS can style, this function will then have access
   // to a style context and can use the same logic that PaintBorder
   // and PaintOutline do.)
+  //
+  // WebRender layers-free mode don't use PaintFocus function. Just assign
+  // the backface-visibility to true for this case.
   nsCSSBorderRenderer br(aPresContext,
                          nullptr,
                          aDrawTarget,
@@ -1139,7 +1144,8 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
                          focusRadii,
                          focusColors,
                          nullptr,
-                         NS_RGB(255, 0, 0));
+                         NS_RGB(255, 0, 0),
+                         true);
   br.DrawBorders();
 
   PrintAsStringNewline();
