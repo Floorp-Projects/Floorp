@@ -99,20 +99,23 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddPath(rdonly, "/dev/urandom");
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
+  policy->AddDir(rdonly, "/sys/devices/cpu");
+  policy->AddDir(rdonly, "/sys/devices/system/cpu");
   policy->AddDir(rdonly, "/lib");
   policy->AddDir(rdonly, "/lib64");
-  policy->AddDir(rdonly, "/etc");
-  policy->AddDir(rdonly, "/usr/share");
-  policy->AddDir(rdonly, "/usr/local/share");
   policy->AddDir(rdonly, "/usr/lib");
   policy->AddDir(rdonly, "/usr/lib32");
   policy->AddDir(rdonly, "/usr/lib64");
-  policy->AddDir(rdonly, "/usr/X11R6/lib/X11/fonts");
+  policy->AddDir(rdonly, "/etc");
+  policy->AddDir(rdonly, "/usr/share");
+  policy->AddDir(rdonly, "/usr/local/share");
   policy->AddDir(rdonly, "/usr/tmp");
   policy->AddDir(rdonly, "/var/tmp");
-  policy->AddDir(rdonly, "/sys/devices/cpu");
-  policy->AddDir(rdonly, "/sys/devices/system/cpu");
+  // Various places where fonts reside
+  policy->AddDir(rdonly, "/usr/X11R6/lib/X11/fonts");
   policy->AddDir(rdonly, "/nix/store");
+  policy->AddDir(rdonly, "/run/host/fonts");
+  policy->AddDir(rdonly, "/run/host/user-fonts");
 
   // Bug 1384178: Mesa driver loader
   policy->AddPrefix(rdonly, "/sys/dev/char/226:");
