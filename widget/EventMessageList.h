@@ -374,7 +374,6 @@ NS_EVENT_MESSAGE(eBeforePrint)
 NS_EVENT_MESSAGE(eAfterPrint)
 
 NS_EVENT_MESSAGE(eMessage)
-NS_EVENT_MESSAGE(eMessageError)
 
 // Menu open event
 NS_EVENT_MESSAGE(eOpen)
