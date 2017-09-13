@@ -144,6 +144,7 @@ enum BCBorderOwner
   eAjaCellOwner      = 10  // cell to the top or to the left
 };
 
+// BCPixelSize is in device pixels.
 typedef uint16_t BCPixelSize;
 
 // These are the max sizes that are stored. If they are exceeded, then the max is stored and

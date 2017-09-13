@@ -8,6 +8,7 @@
 
 #include "LayerManagerMLGPU.h"
 #include "mozilla/layers/ContentHost.h"
+#include "MLGDeviceTypes.h"
 #include "nsRegionFwd.h"
 #include <functional>
 
@@ -48,6 +49,14 @@ public:
   }
   ContentHostTexture* GetContentHost() const {
     return mHost;
+  }
+  SamplerMode GetSamplerMode() {
+    // Note that when resamping, we must break the texture coordinates into
+    // no-repeat rects. When we have simple integer translations we can
+    // simply wrap around the edge of the buffer texture.
+    return MayResample()
+           ? SamplerMode::LinearClamp
+           : SamplerMode::LinearRepeat;
   }
 
   // This can return a different region than GetShadowVisibleRegion or

@@ -8,11 +8,7 @@
 #ifndef _SOFTKVER_H_
 #define _SOFTKVER_H_
 
-#ifndef NSS_DISABLE_ECC
 #define SOFTOKEN_ECC_STRING " Basic ECC"
-#else
-#define SOFTOKEN_ECC_STRING ""
-#endif
 
 /*
  * Softoken's major version, minor version, patch level, build number,

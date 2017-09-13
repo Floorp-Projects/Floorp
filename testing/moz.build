@@ -1,3 +1,21 @@
+with Files("awsy/**"):
+    BUG_COMPONENT = ("Testing", "AWSY")
+
+with Files("config/**"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("*.py"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("moz.build"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("*.mk"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("README.txt"):
+    BUG_COMPONENT = ("Testing", "General")
+
 with Files("talos/**"):
     BUG_COMPONENT = ("Testing", "Talos")
 

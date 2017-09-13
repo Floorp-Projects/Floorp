@@ -146,10 +146,26 @@ task_description_schema = Schema({
     # See the attributes documentation for details.
     Optional('run-on-projects'): [basestring],
 
-    # If the task can be coalesced, this is the name used in the coalesce key
-    # the project, etc. will be added automatically.  Note that try (level 1)
-    # tasks are never coalesced
-    Optional('coalesce-name'): basestring,
+    # Coalescing provides the facility for tasks to be superseded by the same
+    # task in a subsequent commit, if the current task backlog reaches an
+    # explicit threshold. Both age and size thresholds need to be met in order
+    # for coalescing to be triggered.
+    Optional('coalesce'): {
+        # A unique identifier per job (typically a hash of the job label) in
+        # order to partition tasks into appropriate sets for coalescing. This
+        # is combined with the project in order to generate a unique coalescing
+        # key for the coalescing service.
+        'job-identifier': basestring,
+
+        # The minimum amount of time in seconds between two pending tasks with
+        # the same coalescing key, before the coalescing service will return
+        # tasks.
+        'age': int,
+
+        # The minimum number of backlogged tasks with the same coalescing key,
+        # before the coalescing service will return tasks.
+        'size': int,
+    },
 
     # Optimizations to perform on this task during the optimization phase,
     # specified in order.  These optimizations are defined in
@@ -547,7 +563,8 @@ TREEHERDER_ROUTE_ROOTS = {
     'staging': 'tc-treeherder-stage',
 }
 
-COALESCE_KEY = 'builds.{project}.{name}'
+COALESCE_KEY = '{project}.{job-identifier}'
+SUPERSEDER_URL = 'https://coalesce.mozilla-releng.net/v1/list/{age}/{size}/{key}'
 
 DEFAULT_BRANCH_PRIORITY = 'low'
 BRANCH_PRIORITIES = {
@@ -604,6 +621,24 @@ def index_builder(name):
         index_builders[name] = func
         return func
     return wrap
+
+
+def coalesce_key(config, task):
+    return COALESCE_KEY.format(**{
+               'project': config.params['project'],
+               'job-identifier': task['coalesce']['job-identifier'],
+           })
+
+
+def superseder_url(config, task):
+    key = coalesce_key(config, task)
+    age = task['coalesce']['age']
+    size = task['coalesce']['size']
+    return SUPERSEDER_URL.format(
+        age=age,
+        size=size,
+        key=key
+    )
 
 
 @payload_builder('docker-worker')
@@ -782,11 +817,8 @@ def build_docker_worker_payload(config, task, task_def):
         payload['capabilities'] = capabilities
 
     # coalesce / superseding
-    if 'coalesce-name' in task and level > 1:
-        key = COALESCE_KEY.format(
-            project=config.params['project'],
-            name=task['coalesce-name'])
-        payload['supersederUrl'] = "https://coalesce.mozilla-releng.net/v1/list/" + key
+    if 'coalesce' in task:
+        payload['supersederUrl'] = superseder_url(config, task)
 
     check_caches_are_volumes(task)
 
@@ -841,6 +873,10 @@ def build_generic_worker_payload(config, task, task_def):
 
     if features:
         task_def['payload']['features'] = features
+
+    # coalesce / superseding
+    if 'coalesce' in task:
+        task_def['payload']['supersederUrl'] = superseder_url(config, task)
 
 
 @payload_builder('scriptworker-signing')
@@ -1126,10 +1162,8 @@ def build_task(config, tasks):
         if 'deadline-after' not in task:
             task['deadline-after'] = '1 day'
 
-        if 'coalesce-name' in task and int(config.params['level']) > 1:
-            key = COALESCE_KEY.format(
-                project=config.params['project'],
-                name=task['coalesce-name'])
+        if 'coalesce' in task:
+            key = coalesce_key(config, task)
             routes.append('coalesce.v1.' + key)
 
         if 'priority' not in task:

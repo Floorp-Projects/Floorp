@@ -144,16 +144,8 @@
   color: var(--theme-toolbar-color);
 }
 
-.theme-dark .devtools-tab:hover {
-  color: #ced3d9;
-}
-
 .devtools-tab:hover {
   background-color: var(--theme-toolbar-hover);
-}
-
-.theme-dark .devtools-tab:hover:active {
-  color: var(--theme-selection-color);
 }
 
 .devtools-tab:hover:active {
@@ -162,6 +154,10 @@
 
 .devtools-tab:not(.selected).highlighted {
   background-color: var(--theme-toolbar-background-alt);
+}
+
+.devtools-tab.selected {
+  color: var(--theme-toolbar-selected-color);
 }
 
 /* Display execution pointer in the Debugger tab to indicate
@@ -179,7 +175,6 @@
   margin: 0;
   margin-inline-start: 10px;
   margin-inline-end: 5px;
-  opacity: 0.8;
   max-height: 16px;
   width: 16px; /* Prevents collapse during theme switching */
   vertical-align: text-top;
@@ -200,10 +195,9 @@
   margin: 0 4px;
 }
 
-.devtools-tab:hover > img,
-.devtools-tab:active > img,
-.devtools-tab.selected > img {
-  opacity: 1;
+/* Apply selected icon filter to `invertable` icons */
+.devtools-tab.selected.icon-invertable > img {
+  filter: var(--theme-icon-selected-filter) !important;
 }
 
 .devtools-tab:not(.highlighted) > .highlighted-icon,

@@ -1142,12 +1142,12 @@ nsBCTableCellFrame::GetFrameName(nsAString& aResult) const
 LogicalMargin
 nsBCTableCellFrame::GetBorderWidth(WritingMode aWM) const
 {
-  int32_t pixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
+  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
   return LogicalMargin(aWM,
-                       BC_BORDER_END_HALF_COORD(pixelsToTwips, mBStartBorder),
-                       BC_BORDER_START_HALF_COORD(pixelsToTwips, mIEndBorder),
-                       BC_BORDER_START_HALF_COORD(pixelsToTwips, mBEndBorder),
-                       BC_BORDER_END_HALF_COORD(pixelsToTwips, mIStartBorder));
+                       BC_BORDER_END_HALF_COORD(d2a, mBStartBorder),
+                       BC_BORDER_START_HALF_COORD(d2a, mIEndBorder),
+                       BC_BORDER_START_HALF_COORD(d2a, mBEndBorder),
+                       BC_BORDER_END_HALF_COORD(d2a, mIStartBorder));
 }
 
 BCPixelSize
@@ -1187,12 +1187,12 @@ nsBCTableCellFrame::SetBorderWidth(LogicalSide aSide, BCPixelSize aValue)
 nsBCTableCellFrame::GetBorderOverflow()
 {
   WritingMode wm = GetWritingMode();
-  int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
+  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
   LogicalMargin halfBorder(wm,
-                           BC_BORDER_START_HALF_COORD(p2t, mBStartBorder),
-                           BC_BORDER_END_HALF_COORD(p2t, mIEndBorder),
-                           BC_BORDER_END_HALF_COORD(p2t, mBEndBorder),
-                           BC_BORDER_START_HALF_COORD(p2t, mIStartBorder));
+                           BC_BORDER_START_HALF_COORD(d2a, mBStartBorder),
+                           BC_BORDER_END_HALF_COORD(d2a, mIEndBorder),
+                           BC_BORDER_END_HALF_COORD(d2a, mBEndBorder),
+                           BC_BORDER_START_HALF_COORD(d2a, mIStartBorder));
   return halfBorder.GetPhysicalMargin(wm);
 }
 

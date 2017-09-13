@@ -1169,6 +1169,8 @@ protected:
   friend class CanvasDrawObserver;
 };
 
+size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext);
+
 } // namespace dom
 } // namespace mozilla
 

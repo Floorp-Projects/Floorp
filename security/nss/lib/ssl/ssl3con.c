@@ -8539,29 +8539,33 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
             }
         }
     }
+
     /* This is a second check for TLS 1.3 and re-handshake to stop us
      * from re-handshake up to TLS 1.3, so it happens after version
      * negotiation. */
-    if (ss->firstHsDone && ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
-        desc = unexpected_message;
-        errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
-        goto alert_loser;
-    }
-    if (ss->firstHsDone &&
-        (ss->opt.enableRenegotiation == SSL_RENEGOTIATE_REQUIRES_XTN ||
-         ss->opt.enableRenegotiation == SSL_RENEGOTIATE_TRANSITIONAL) &&
-        !ssl3_ExtensionNegotiated(ss, ssl_renegotiation_info_xtn)) {
-        desc = no_renegotiation;
-        level = alert_warning;
-        errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
-        goto alert_loser;
-    }
-    if ((ss->opt.requireSafeNegotiation ||
-         (ss->firstHsDone && ss->peerRequestedProtection)) &&
-        !ssl3_ExtensionNegotiated(ss, ssl_renegotiation_info_xtn)) {
-        desc = handshake_failure;
-        errCode = SSL_ERROR_UNSAFE_NEGOTIATION;
-        goto alert_loser;
+    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        if (ss->firstHsDone) {
+            desc = unexpected_message;
+            errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
+            goto alert_loser;
+        }
+    } else {
+        if (ss->firstHsDone &&
+            (ss->opt.enableRenegotiation == SSL_RENEGOTIATE_REQUIRES_XTN ||
+             ss->opt.enableRenegotiation == SSL_RENEGOTIATE_TRANSITIONAL) &&
+            !ssl3_ExtensionNegotiated(ss, ssl_renegotiation_info_xtn)) {
+            desc = no_renegotiation;
+            level = alert_warning;
+            errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
+            goto alert_loser;
+        }
+        if ((ss->opt.requireSafeNegotiation ||
+             (ss->firstHsDone && ss->peerRequestedProtection)) &&
+            !ssl3_ExtensionNegotiated(ss, ssl_renegotiation_info_xtn)) {
+            desc = handshake_failure;
+            errCode = SSL_ERROR_UNSAFE_NEGOTIATION;
+            goto alert_loser;
+        }
     }
 
     /* We do stateful resumes only if we are in TLS < 1.3 and
