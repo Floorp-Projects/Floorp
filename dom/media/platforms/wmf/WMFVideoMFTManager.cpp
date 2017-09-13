@@ -523,7 +523,7 @@ WMFVideoMFTManager::InitializeDXVA()
   return mDXVA2Manager != nullptr;
 }
 
-MediaResult
+bool
 WMFVideoMFTManager::ValidateVideoInfo()
 {
   // The WMF H.264 decoder is documented to have a minimum resolution
@@ -535,14 +535,12 @@ WMFVideoMFTManager::ValidateVideoInfo()
   if (mStreamType == H264 &&
       (mVideoInfo.mImage.width < MIN_H264_FRAME_DIMENSION ||
        mVideoInfo.mImage.height < MIN_H264_FRAME_DIMENSION)) {
+    LogToBrowserConsole(NS_LITERAL_STRING(
+      "Can't decode H.264 stream with width or height less than 48 pixels."));
     mIsValid = false;
-    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                       RESULT_DETAIL("Can't decode H.264 stream with width or "
-                                     "height less than 48 pixels."));
   }
 
-  return MediaResult(NS_OK);
-
+  return mIsValid;
 }
 
 already_AddRefed<MFTDecoder>
@@ -571,26 +569,25 @@ WMFVideoMFTManager::LoadAMDVP9Decoder()
   return decoder.forget();
 }
 
-MediaResult
+bool
 WMFVideoMFTManager::Init()
 {
-  MediaResult result = ValidateVideoInfo();
-  if (NS_FAILED(result)) {
-    return result;
+  if (!ValidateVideoInfo()) {
+    return false;
   }
 
-  result = InitInternal();
-  if (NS_FAILED(result) && mAMDVP9InUse) {
+  bool success = InitInternal();
+  if (!success && mAMDVP9InUse) {
     // Something failed with the AMD VP9 decoder; attempt again defaulting back
     // to Microsoft MFT.
     mCheckForAMDDecoder = false;
     if (mDXVA2Manager) {
       DeleteOnMainThread(mDXVA2Manager);
     }
-    result = InitInternal();
+    success = InitInternal();
   }
 
-  if (NS_SUCCEEDED(result) && mDXVA2Manager) {
+  if (success && mDXVA2Manager) {
     // If we had some failures but eventually made it work,
     // make sure we preserve the messages.
     if (mDXVA2Manager->IsD3D11()) {
@@ -600,10 +597,10 @@ WMFVideoMFTManager::Init()
     }
   }
 
-  return result;
+  return success;
 }
 
-MediaResult
+bool
 WMFVideoMFTManager::InitInternal()
 {
   // The H264 SanityTest uses a 132x132 videos to determine if DXVA can be used.
@@ -631,9 +628,7 @@ WMFVideoMFTManager::InitInternal()
     mAMDVP9InUse = false;
     decoder = new MFTDecoder();
     hr = decoder->Create(GetMFTGUID());
-    NS_ENSURE_TRUE(SUCCEEDED(hr),
-                   MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                               RESULT_DETAIL("Can't create the MFT decoder.")));
+    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
   }
 
   RefPtr<IMFAttributes> attr(decoder->GetAttributes());
@@ -675,10 +670,9 @@ WMFVideoMFTManager::InitInternal()
   }
 
   if (!mUseHwAccel) {
+    // Use VP8/9 MFT only if HW acceleration is available
     if (mStreamType == VP9 || mStreamType == VP8) {
-      return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                         RESULT_DETAIL("Use VP8/9 MFT only if HW acceleration "
-                                       "is available."));
+      return false;
     }
     Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                           uint32_t(media::MediaDecoderBackend::WMFSoftware));
@@ -686,15 +680,11 @@ WMFVideoMFTManager::InitInternal()
 
   mDecoder = decoder;
   hr = SetDecoderMediaTypes();
-  NS_ENSURE_TRUE(SUCCEEDED(hr),
-                 MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                             RESULT_DETAIL("Fail to set the decoder media types.")));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   RefPtr<IMFMediaType> outputType;
   hr = mDecoder->GetOutputMediaType(outputType);
-  NS_ENSURE_TRUE(SUCCEEDED(hr),
-                 MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                            RESULT_DETAIL("Fail to get the output media type.")));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   if (mUseHwAccel && !CanUseDXVA(outputType)) {
     mDXVAEnabled = false;
@@ -709,10 +699,7 @@ WMFVideoMFTManager::InitInternal()
   if (mDXVA2Manager) {
     hr = mDXVA2Manager->ConfigureForSize(mVideoInfo.ImageRect().width,
                                          mVideoInfo.ImageRect().height);
-    NS_ENSURE_TRUE(SUCCEEDED(hr),
-                   MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                               RESULT_DETAIL("Fail to configure image size for "
-                                             "DXVA2Manager.")));
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   } else {
     GetDefaultStride(outputType, mVideoInfo.ImageRect().width, &mVideoStride);
   }
@@ -742,7 +729,7 @@ WMFVideoMFTManager::InitInternal()
       }
     }
   }
-  return MediaResult(NS_OK);
+  return true;
 }
 
 HRESULT
