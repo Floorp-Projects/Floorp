@@ -8,6 +8,10 @@
  * inserted iframes are ignored.
  */
 add_task(async function() {
+  // allow top level data: URI navigations, otherwise clicking a data: link fails
+  await SpecialPowers.pushPrefEnv({
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+  });
   // This URL has the following frames:
   //  + data:text/html,A (static)
   //  + data:text/html,B (static)
@@ -46,6 +50,10 @@ add_task(async function() {
  * create a second root entry that doesn't contain any dynamic children either.
  */
 add_task(async function() {
+  // allow top level data: URI navigations, otherwise clicking a data: link fails
+  await SpecialPowers.pushPrefEnv({
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+  });
   // This URL has the following frames:
   //  + data:text/html,A (static)
   //  + data:text/html,C (dynamic iframe)
