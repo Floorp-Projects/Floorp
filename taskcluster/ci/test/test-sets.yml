@@ -317,7 +317,6 @@ android-x86-tests:
 
 windows8-tests:
     - mochitest-browser-chrome
-    - mochitest-media
     - reftest-no-accel
     - mochitest-webgl
 
