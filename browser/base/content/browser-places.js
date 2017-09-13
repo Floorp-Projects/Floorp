@@ -1520,6 +1520,7 @@ var LibraryUI = {
         libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
         libraryButton.getAttribute("overflowedItem") == "true" ||
         !libraryButton.closest("#nav-bar") ||
+        !window.toolbar.visible ||
         !this.COSMETIC_ANIMATIONS_ENABLED) {
       return;
     }
