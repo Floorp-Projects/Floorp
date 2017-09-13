@@ -1,0 +1,27 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<script type="application/javascript">
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+window.onload = function() {
+  is(window.performance.getEntries().length, 0, "Should not have any entries");
+  window.opener.finishTests();
+}
+
+</script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content">
+  </div>
+</body>
+</html>
