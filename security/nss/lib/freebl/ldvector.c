@@ -298,9 +298,25 @@ static const struct FREEBLVectorStr vector =
 
       /* End of Version 3.018 */
 
-      EC_GetPointSize
+      EC_GetPointSize,
 
       /* End of Version 3.019 */
+
+      BLAKE2B_Hash,
+      BLAKE2B_HashBuf,
+      BLAKE2B_MAC_HashBuf,
+      BLAKE2B_NewContext,
+      BLAKE2B_DestroyContext,
+      BLAKE2B_Begin,
+      BLAKE2B_MAC_Begin,
+      BLAKE2B_Update,
+      BLAKE2B_End,
+      BLAKE2B_FlattenSize,
+      BLAKE2B_Flatten,
+      BLAKE2B_Resurrect
+
+      /* End of Version 3.020 */
+
     };
 
 const FREEBLVector*

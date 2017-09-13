@@ -680,7 +680,12 @@ private:
     ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-    MOZ_ASSERT(channel == loadInfo.mChannel);
+
+    // Note that importScripts() can redirect.  In theory the main
+    // script could also encounter an internal redirect, but currently
+    // the assert does not allow that.
+    MOZ_ASSERT_IF(mIsMainScript, channel == loadInfo.mChannel);
+    loadInfo.mChannel = channel;
 
     // We synthesize the result code, but its never exposed to content.
     RefPtr<mozilla::dom::InternalResponse> ir =

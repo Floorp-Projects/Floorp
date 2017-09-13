@@ -1,5 +1,6 @@
 function test() {
-  const URI = "data:text/plain,bug562649";
+  const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
+  const URI = TEST_PATH + "file_bug562649.html";
   window.browserDOMWindow.openURI(makeURI(URI),
                                   null,
                                   Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,

@@ -71,7 +71,7 @@ TEST_P(TlsConnectGenericPre13, ConnectStaticRSABogusPMSVersionIgnore) {
   EnableOnlyStaticRsaCiphers();
   client_->SetPacketFilter(
       std::make_shared<TlsInspectorClientHelloVersionChanger>(server_));
-  server_->DisableRollbackDetection();
+  server_->SetOption(SSL_ROLLBACK_DETECTION, PR_FALSE);
   Connect();
 }
 
@@ -102,7 +102,7 @@ TEST_P(TlsConnectStreamPre13,
   EnableExtendedMasterSecret();
   client_->SetPacketFilter(
       std::make_shared<TlsInspectorClientHelloVersionChanger>(server_));
-  server_->DisableRollbackDetection();
+  server_->SetOption(SSL_ROLLBACK_DETECTION, PR_FALSE);
   Connect();
 }
 

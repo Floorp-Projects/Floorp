@@ -380,7 +380,6 @@ CERTUTIL_FileForRNG(const char *noise)
     return SECSuccess;
 }
 
-#ifndef NSS_DISABLE_ECC
 typedef struct curveNameTagPairStr {
     char *curveName;
     SECOidTag curveOidTag;
@@ -495,9 +494,9 @@ getECParams(const char *curve)
 
     ecparams = SECITEM_AllocItem(NULL, NULL, (2 + oidData->oid.len));
 
-    /* 
+    /*
      * ecparams->data needs to contain the ASN encoding of an object ID (OID)
-     * representing the named curve. The actual OID is in 
+     * representing the named curve. The actual OID is in
      * oidData->oid.data so we simply prepend 0x06 and OID length
      */
     ecparams->data[0] = SEC_ASN1_OBJECT_ID;
@@ -506,7 +505,6 @@ getECParams(const char *curve)
 
     return ecparams;
 }
-#endif /* NSS_DISABLE_ECC */
 
 SECKEYPrivateKey *
 CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
@@ -564,14 +562,12 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
                 params = (void *)&default_pqg_params;
             }
             break;
-#ifndef NSS_DISABLE_ECC
         case ecKey:
             mechanism = CKM_EC_KEY_PAIR_GEN;
             /* For EC keys, PQGFile determines EC parameters */
             if ((params = (void *)getECParams(pqgFile)) == NULL)
                 return NULL;
             break;
-#endif /* NSS_DISABLE_ECC */
         default:
             return NULL;
     }
@@ -589,11 +585,9 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
             if (dsaparams)
                 CERTUTIL_DestroyParamsPQG(dsaparams);
             break;
-#ifndef NSS_DISABLE_ECC
         case ecKey:
             SECITEM_FreeItem((SECItem *)params, PR_TRUE);
             break;
-#endif
         default: /* nothing to free */
             break;
     }

@@ -7,6 +7,7 @@
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
+browserElementTestHelpers.allowTopLevelDataURINavigation();
 
 function createHtml(meta) {
   return 'data:text/html,<html xmlns:xml="http://www.w3.org/XML/1998/namespace"><head>' + meta + '<body></body></html>';

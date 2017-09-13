@@ -141,7 +141,7 @@ private:
    */
   static std::map<base::ProcessId, ImageBridgeParent*> sImageBridges;
 
-  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
+  RefPtr<CompositorThreadHolderDebug> mCompositorThreadHolder;
 };
 
 } // namespace layers

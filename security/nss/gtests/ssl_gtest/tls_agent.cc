@@ -259,13 +259,10 @@ void TlsAgent::CheckCipherSuite(uint16_t cipher_suite) {
 }
 
 void TlsAgent::RequestClientAuth(bool requireAuth) {
-  EXPECT_TRUE(EnsureTlsSetup());
   ASSERT_EQ(SERVER, role_);
 
-  EXPECT_EQ(SECSuccess,
-            SSL_OptionSet(ssl_fd(), SSL_REQUEST_CERTIFICATE, PR_TRUE));
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(ssl_fd(), SSL_REQUIRE_CERTIFICATE,
-                                      requireAuth ? PR_TRUE : PR_FALSE));
+  SetOption(SSL_REQUEST_CERTIFICATE, PR_TRUE);
+  SetOption(SSL_REQUIRE_CERTIFICATE, requireAuth ? PR_TRUE : PR_FALSE);
 
   EXPECT_EQ(SECSuccess, SSL_AuthCertificateHook(
                             ssl_fd(), &TlsAgent::ClientAuthenticated, this));
@@ -377,35 +374,8 @@ void TlsAgent::ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups) {
   EXPECT_EQ(SECSuccess, rv);
 }
 
-void TlsAgent::SetSessionTicketsEnabled(bool en) {
-  EXPECT_TRUE(EnsureTlsSetup());
-
-  SECStatus rv = SSL_OptionSet(ssl_fd(), SSL_ENABLE_SESSION_TICKETS,
-                               en ? PR_TRUE : PR_FALSE);
-  EXPECT_EQ(SECSuccess, rv);
-}
-
-void TlsAgent::SetSessionCacheEnabled(bool en) {
-  EXPECT_TRUE(EnsureTlsSetup());
-
-  SECStatus rv = SSL_OptionSet(ssl_fd(), SSL_NO_CACHE, en ? PR_FALSE : PR_TRUE);
-  EXPECT_EQ(SECSuccess, rv);
-}
-
 void TlsAgent::Set0RttEnabled(bool en) {
-  EXPECT_TRUE(EnsureTlsSetup());
-
-  SECStatus rv =
-      SSL_OptionSet(ssl_fd(), SSL_ENABLE_0RTT_DATA, en ? PR_TRUE : PR_FALSE);
-  EXPECT_EQ(SECSuccess, rv);
-}
-
-void TlsAgent::SetFallbackSCSVEnabled(bool en) {
-  EXPECT_TRUE(role_ == CLIENT && EnsureTlsSetup());
-
-  SECStatus rv = SSL_OptionSet(ssl_fd(), SSL_ENABLE_FALLBACK_SCSV,
-                               en ? PR_TRUE : PR_FALSE);
-  EXPECT_EQ(SECSuccess, rv);
+  SetOption(SSL_ENABLE_0RTT_DATA, en ? PR_TRUE : PR_FALSE);
 }
 
 void TlsAgent::SetShortHeadersEnabled() {
@@ -577,8 +547,7 @@ void TlsAgent::EnableFalseStart() {
   falsestart_enabled_ = true;
   EXPECT_EQ(SECSuccess, SSL_SetCanFalseStartCallback(
                             ssl_fd(), CanFalseStartCallback, this));
-  EXPECT_EQ(SECSuccess,
-            SSL_OptionSet(ssl_fd(), SSL_ENABLE_FALSE_START, PR_TRUE));
+  SetOption(SSL_ENABLE_FALSE_START, PR_TRUE);
 }
 
 void TlsAgent::ExpectResumption() { expect_resumption_ = true; }
@@ -586,7 +555,7 @@ void TlsAgent::ExpectResumption() { expect_resumption_ = true; }
 void TlsAgent::EnableAlpn(const uint8_t* val, size_t len) {
   EXPECT_TRUE(EnsureTlsSetup());
 
-  EXPECT_EQ(SECSuccess, SSL_OptionSet(ssl_fd(), SSL_ENABLE_ALPN, PR_TRUE));
+  SetOption(SSL_ENABLE_ALPN, PR_TRUE);
   EXPECT_EQ(SECSuccess, SSL_SetNextProtoNego(ssl_fd(), val, len));
 }
 
@@ -781,12 +750,7 @@ void TlsAgent::Connected() {
 }
 
 void TlsAgent::EnableExtendedMasterSecret() {
-  ASSERT_TRUE(EnsureTlsSetup());
-
-  SECStatus rv =
-      SSL_OptionSet(ssl_fd(), SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_TRUE);
-
-  ASSERT_EQ(SECSuccess, rv);
+  SetOption(SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_TRUE);
 }
 
 void TlsAgent::CheckExtendedMasterSecret(bool expected) {
@@ -807,21 +771,6 @@ void TlsAgent::CheckEarlyDataAccepted(bool expected) {
 
 void TlsAgent::CheckSecretsDestroyed() {
   ASSERT_EQ(PR_TRUE, SSLInt_CheckSecretsDestroyed(ssl_fd()));
-}
-
-void TlsAgent::DisableRollbackDetection() {
-  ASSERT_TRUE(EnsureTlsSetup());
-
-  SECStatus rv = SSL_OptionSet(ssl_fd(), SSL_ROLLBACK_DETECTION, PR_FALSE);
-
-  ASSERT_EQ(SECSuccess, rv);
-}
-
-void TlsAgent::EnableCompression() {
-  ASSERT_TRUE(EnsureTlsSetup());
-
-  SECStatus rv = SSL_OptionSet(ssl_fd(), SSL_ENABLE_DEFLATE, PR_TRUE);
-  ASSERT_EQ(SECSuccess, rv);
 }
 
 void TlsAgent::SetDowngradeCheckVersion(uint16_t version) {
@@ -959,23 +908,20 @@ void TlsAgent::ReadBytes(size_t amount) {
 
 void TlsAgent::ResetSentBytes() { send_ctr_ = 0; }
 
+void TlsAgent::SetOption(int32_t option, int value) {
+  ASSERT_TRUE(EnsureTlsSetup());
+  EXPECT_EQ(SECSuccess, SSL_OptionSet(ssl_fd(), option, value));
+}
+
 void TlsAgent::ConfigureSessionCache(SessionResumptionMode mode) {
-  EXPECT_TRUE(EnsureTlsSetup());
-
-  SECStatus rv = SSL_OptionSet(ssl_fd(), SSL_NO_CACHE,
-                               mode & RESUME_SESSIONID ? PR_FALSE : PR_TRUE);
-  EXPECT_EQ(SECSuccess, rv);
-
-  rv = SSL_OptionSet(ssl_fd(), SSL_ENABLE_SESSION_TICKETS,
-                     mode & RESUME_TICKET ? PR_TRUE : PR_FALSE);
-  EXPECT_EQ(SECSuccess, rv);
+  SetOption(SSL_NO_CACHE, mode & RESUME_SESSIONID ? PR_FALSE : PR_TRUE);
+  SetOption(SSL_ENABLE_SESSION_TICKETS,
+            mode & RESUME_TICKET ? PR_TRUE : PR_FALSE);
 }
 
 void TlsAgent::DisableECDHEServerKeyReuse() {
-  ASSERT_TRUE(EnsureTlsSetup());
   ASSERT_EQ(TlsAgent::SERVER, role_);
-  SECStatus rv = SSL_OptionSet(ssl_fd(), SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
-  EXPECT_EQ(SECSuccess, rv);
+  SetOption(SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
 }
 
 static const std::string kTlsRolesAllArr[] = {"CLIENT", "SERVER"};

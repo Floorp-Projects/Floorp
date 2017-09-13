@@ -57,7 +57,7 @@
 }
 
 .side-menu-widget-item:not(.selected) .checkbox-check {
-  filter: var(--icon-filter);
+  filter: var(--theme-icon-filter);
 }
 
 /* Make sure icon is white when the item is selected */

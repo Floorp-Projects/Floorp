@@ -25,10 +25,8 @@ extern void prepare_low_pqg_params_for_asn1(PQGParams *params);
 extern void prepare_low_dsa_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void prepare_low_dsa_priv_key_export_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
-#ifndef NSS_DISABLE_ECC
 extern void prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key);
 extern void prepare_low_ecparams_for_asn1(ECParams *params);
-#endif /* NSS_DISABLE_ECC */
 
 /*
 ** Destroy a private key object.

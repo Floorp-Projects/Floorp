@@ -49,8 +49,6 @@ public:
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
 
-  bool IsSpeculative() { return mSpeculative; }
-
   bool IsHandshakePending() const { return mHandshakePending; }
   void SetHandshakeNotPending() { mHandshakePending = false; }
 
@@ -186,7 +184,6 @@ private:
   nsresult ActivateSSL();
 
   nsCString mNegotiatedNPN;
-  bool      mSpeculative;
   bool      mNPNCompleted;
   bool      mEarlyDataAccepted;
   bool      mFalseStartCallbackCalled;

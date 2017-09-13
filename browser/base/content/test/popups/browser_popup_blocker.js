@@ -64,8 +64,8 @@ add_task(async function test_opening_blocked_popups() {
 
   gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
 
-  is(popupTabs[0].linkedBrowser.currentURI.spec, "data:text/plain;charset=utf-8,a", "Popup a");
-  is(popupTabs[1].linkedBrowser.currentURI.spec, "data:text/plain;charset=utf-8,b", "Popup b");
+  ok(popupTabs[0].linkedBrowser.currentURI.spec.endsWith("popup_blocker_a.html"), "Popup a");
+  ok(popupTabs[1].linkedBrowser.currentURI.spec.endsWith("popup_blocker_b.html"), "Popup b");
 
   // Clean up.
   gBrowser.removeTab(tab);
