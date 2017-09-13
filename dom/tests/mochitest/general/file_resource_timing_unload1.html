@@ -1,0 +1,42 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<script type="application/javascript">
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+window.onload = function() {
+  var entries = window.performance.getEntries();
+  is(entries.length, 1, "Only one entry should be found");
+  if (entries.length > 0) {
+    is(entries[0].name, "http://mochi.test:8888/tests/image/test/mochitest/over.png", "Entry must have correct name");
+  }
+
+  location.href = "file_resource_timing_unload2.html";
+}
+
+window.onunload = function() {
+  new Image().src = "http://mochi.test:8888/tests/image/test/mochitest/damon.png";
+}
+
+</script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1254688"
+     title="Resource timing during unload handler">
+    Bug #1254688 - Resource timing during unload handler
+  </a>
+  <p id="display"></p>
+  <div id="content">
+    <img src="http://mochi.test:8888/tests/image/test/mochitest/over.png">
+  </div>
+</body>
+</html>
