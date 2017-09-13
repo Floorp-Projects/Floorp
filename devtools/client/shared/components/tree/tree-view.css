@@ -53,7 +53,7 @@
   transition: all 0.2s ease-in-out;
 }
 
-.treeTable .treeLabel {
+.treeTable .treeLabelCell {
   cursor: default;
   overflow: hidden;
   padding-inline-start: 4px;
@@ -61,7 +61,7 @@
   unicode-bidi: plaintext;
 }
 
-/* No paddding if there is actually no label */
+/* No padding if there is actually no label */
 .treeTable .treeLabel:empty {
   padding-inline-start: 0;
 }
@@ -191,12 +191,12 @@
 
 .theme-light .treeTable .treeLabel,
 .theme-dark .treeTable .treeLabel {
-  color: var(--theme-highlight-pink);
+  color: var(--theme-highlight-blue);
 }
 
 .theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover,
 .theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
-  color: var(--theme-highlight-pink);
+  color: var(--theme-highlight-blue);
 }
 
 .theme-firebug .treeTable .treeLabel {
