@@ -644,6 +644,10 @@ if CONFIG['NIGHTLY_BUILD']:
 
 if CONFIG['JS_BUILD_BINAST']:
     # Using SOURCES as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
+    # These parts of BinAST are designed only to test evolutions of the
+    # specification.
+    SOURCES += ['frontend/BinTokenReaderTester.cpp']
+    # These parts of BinAST should eventually move to release.
     SOURCES += ['frontend/BinToken.cpp']
 
 # Wasm code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64
