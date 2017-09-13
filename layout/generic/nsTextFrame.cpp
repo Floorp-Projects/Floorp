@@ -6092,6 +6092,7 @@ nsTextFrame::PaintDecorationLine(const PaintDecorationLineParams& aParams)
  */
 void
 nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
+                                      TextDrawTarget* aTextDrawer,
                                       const LayoutDeviceRect& aDirtyRect,
                                       SelectionType aSelectionType,
                                       nsTextPaintStyle& aTextPaintStyle,
@@ -6108,6 +6109,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
 {
   PaintDecorationLineParams params;
   params.context = aContext;
+  params.textDrawer = aTextDrawer;
   params.dirtyRect = aDirtyRect;
   params.pt = aPt;
   params.lineSize.width = aWidth;
@@ -6123,6 +6125,12 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
                                              aFontMetrics);
 
   float relativeSize;
+
+  // Since this happens after text, all we *should* be allowed to do is strikeThrough.
+  // If this isn't true, we're at least bug-compatible with gecko!
+  if (aTextDrawer) {
+    aTextDrawer->StartDrawing(TextDrawTarget::Phase::eLineThrough);
+  }
 
   switch (aSelectionType) {
     case SelectionType::eIMERawClause:
@@ -6803,7 +6811,7 @@ nsTextFrame::PaintTextSelectionDecorations(
       gfxFloat width = Abs(advance) / app;
       gfxFloat xInFrame = pt.x - (aParams.framePt.x / app);
       DrawSelectionDecorations(
-        aParams.context, aParams.dirtyRect, aSelectionType,
+        aParams.context, aParams.textDrawer, aParams.dirtyRect, aSelectionType,
         *aParams.textPaintStyle, selectedStyle, pt, xInFrame,
         width, mAscent / app, decorationMetrics, aParams.callbacks,
         verticalRun, decorationOffsetDir, kDecoration);
