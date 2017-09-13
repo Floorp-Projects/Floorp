@@ -27,6 +27,7 @@ public:
   virtual DrawTargetType GetType() const override { return mRefDT->GetType(); }
   virtual bool IsCaptureDT() const override { return true; }
   virtual already_AddRefed<SourceSurface> Snapshot() override;
+  virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
   virtual void DetachAllSnapshots() override;
   virtual IntSize GetSize() override { return mSize; }
   virtual void Flush() override {}
