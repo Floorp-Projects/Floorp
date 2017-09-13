@@ -904,15 +904,19 @@ this.ExtensionData = class {
       }
     }
 
+    const haveAccessKeys = (AppConstants.platform !== "android");
+
     result.header = bundle.formatStringFromName("webextPerms.header", [info.addonName], 1);
     result.text = info.unsigned ?
                   bundle.GetStringFromName("webextPerms.unsignedWarning") : "";
     result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
 
     result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
-    result.acceptKey = bundle.GetStringFromName("webextPerms.add.accessKey");
     result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
-    result.cancelKey = bundle.GetStringFromName("webextPerms.cancel.accessKey");
+    if (haveAccessKeys) {
+      result.acceptKey = bundle.GetStringFromName("webextPerms.add.accessKey");
+      result.cancelKey = bundle.GetStringFromName("webextPerms.cancel.accessKey");
+    }
 
     if (info.type == "sideload") {
       result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", [info.addonName], 1);
@@ -920,22 +924,28 @@ this.ExtensionData = class {
                 "webextPerms.sideloadTextNoPerms" : "webextPerms.sideloadText2";
       result.text = bundle.GetStringFromName(key);
       result.acceptText = bundle.GetStringFromName("webextPerms.sideloadEnable.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.sideloadEnable.accessKey");
       result.cancelText = bundle.GetStringFromName("webextPerms.sideloadCancel.label");
-      result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
+      if (haveAccessKeys) {
+        result.acceptKey = bundle.GetStringFromName("webextPerms.sideloadEnable.accessKey");
+        result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
+      }
     } else if (info.type == "update") {
       result.header = "";
       result.text = bundle.formatStringFromName("webextPerms.updateText", [info.addonName], 1);
       result.acceptText = bundle.GetStringFromName("webextPerms.updateAccept.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
+      if (haveAccessKeys) {
+        result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
+      }
     } else if (info.type == "optional") {
       result.header = bundle.formatStringFromName("webextPerms.optionalPermsHeader", [info.addonName], 1);
       result.text = "";
       result.listIntro = bundle.GetStringFromName("webextPerms.optionalPermsListIntro");
       result.acceptText = bundle.GetStringFromName("webextPerms.optionalPermsAllow.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.optionalPermsAllow.accessKey");
       result.cancelText = bundle.GetStringFromName("webextPerms.optionalPermsDeny.label");
-      result.cancelKey = bundle.GetStringFromName("webextPerms.optionalPermsDeny.accessKey");
+      if (haveAccessKeys) {
+        result.acceptKey = bundle.GetStringFromName("webextPerms.optionalPermsAllow.accessKey");
+        result.cancelKey = bundle.GetStringFromName("webextPerms.optionalPermsDeny.accessKey");
+      }
     }
 
     return result;

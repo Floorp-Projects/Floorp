@@ -9,6 +9,15 @@ const BASE_URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/"
  * image, and that the thumbnail maintains the image aspect ratio.
  */
 function* runTests() {
+  // Test that malformed input causes _finishCurrentCapture to be called with
+  // the correct reason.
+  const emptyUrl = "data:text/plain,";
+  yield bgCapture(emptyUrl, {isImage: true, onDone: (url, reason) => {
+    // BackgroundPageThumbs.TEL_CAPTURE_DONE_LOAD_FAILED === 6
+    is(reason, 6, "Should have the right failure reason");
+    next();
+  }});
+
   for (const {url, color, width, height} of [{
     url: BASE_URL + "test/sample_image_red_1920x1080.jpg",
     color: [255, 0, 0],

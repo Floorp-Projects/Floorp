@@ -31,6 +31,7 @@
 #include "js/MemoryMetrics.h"
 #include "vm/HelperThreads.h"
 #include "vm/Opcodes.h"
+#include "vm/Printer.h"
 #include "vm/Shape.h"
 #include "vm/Time.h"
 #include "vm/UnboxedObject.h"
@@ -4637,6 +4638,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
         return;
 
     AutoEnterAnalysis enter(nullptr, script->zone());
+    Fprinter out(stderr);
 
     if (script->functionNonDelazifying())
         fprintf(stderr, "Function");
@@ -4649,7 +4651,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
 
     if (script->functionNonDelazifying()) {
         if (JSAtom* name = script->functionNonDelazifying()->explicitName())
-            name->dumpCharsNoNewline();
+            name->dumpCharsNoNewline(out);
     }
 
     fprintf(stderr, "\n    this:");

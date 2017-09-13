@@ -154,7 +154,9 @@ button.warning {
 /*** category selector ***/
 
 #categories {
-  padding-top: 0;
+  /* With photon this should be 70px but there are some hidden forward/back
+     buttons that are 39px tall above this. */
+  padding-top: 31px;
 }
 
 .category[disabled] {
@@ -167,7 +169,6 @@ button.warning {
 }
 
 .category:not([disabled]) {
-  min-height: 40px;
   transition-property: min-height, opacity;
   transition-duration: 1s, 0.8s;
 }

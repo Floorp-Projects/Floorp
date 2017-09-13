@@ -326,18 +326,17 @@ var TPS = {
           // When adding tabs, we keep track of how many tabs we're adding,
           // and wait until we've received that many onload events from our
           // new tabs before continuing
-          let that = this;
           let taburi = tab.uri;
-          BrowserTabs.Add(tab.uri, function() {
-            that._tabsFinished++;
+          BrowserTabs.Add(tab.uri, () => {
+            this._tabsFinished++;
             Logger.logInfo("tab for " + taburi + " finished loading");
-            if (that._tabsFinished == that._tabsAdded) {
+            if (this._tabsFinished == this._tabsAdded) {
               Logger.logInfo("all tabs loaded, continuing...");
 
               // Wait some time before continuing to be sure tabs can be synced,
               // otherwise we can get 'error locating tab' (bug 1383832).
-              CommonUtils.namedTimer(function() {
-                that.FinishAsyncOperation();
+              CommonUtils.namedTimer(() => {
+                this.FinishAsyncOperation();
               }, 2500, this, "postTabsOpening");
             }
           });

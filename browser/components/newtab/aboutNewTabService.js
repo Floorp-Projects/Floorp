@@ -17,16 +17,20 @@ const LOCAL_NEWTAB_URL = "chrome://browser/content/newtab/newTab.xhtml";
 
 const ACTIVITY_STREAM_URL = "resource://activity-stream/data/content/activity-stream.html";
 
+const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/data/content/activity-stream-prerendered.html";
+
 const ABOUT_URL = "about:newtab";
 
 const IS_MAIN_PROCESS = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
 // Pref that tells if activity stream is enabled
 const PREF_ACTIVITY_STREAM_ENABLED = "browser.newtabpage.activity-stream.enabled";
+const PREF_ACTIVITY_STREAM_PRERENDER_ENABLED = "browser.newtabpage.activity-stream.prerender";
 
 function AboutNewTabService() {
   Services.obs.addObserver(this, "quit-application-granted");
   Services.prefs.addObserver(PREF_ACTIVITY_STREAM_ENABLED, this);
+  Services.prefs.addObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
   this.toggleActivityStream();
   if (IS_MAIN_PROCESS) {
     AboutNewTab.init();
@@ -71,6 +75,7 @@ AboutNewTabService.prototype = {
 
   _newTabURL: ABOUT_URL,
   _activityStreamEnabled: false,
+  _activityStreamPrerender: true,
   _overridden: false,
 
   classID: Components.ID("{dfcd2adc-7867-4d3a-ba70-17501f208142}"),
@@ -85,13 +90,19 @@ AboutNewTabService.prototype = {
   observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
-        if (this.toggleActivityStream()) {
+        if (data === PREF_ACTIVITY_STREAM_ENABLED) {
+          if (this.toggleActivityStream()) {
+            Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
+          }
+        } else if (data === PREF_ACTIVITY_STREAM_PRERENDER_ENABLED) {
+          this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
           Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
         }
         break;
       case "quit-application-granted":
         Services.obs.removeObserver(this, "quit-application-granted");
         Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_ENABLED, this);
+        Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
         if (IS_MAIN_PROCESS) {
           AboutNewTab.uninit();
         }
@@ -139,7 +150,7 @@ AboutNewTabService.prototype = {
    */
   get defaultURL() {
     if (this.activityStreamEnabled) {
-      return this.activityStreamURL;
+      return this.activityStreamPrerender ? this.activityStreamPrerenderURL : this.activityStreamURL;
     }
     return LOCAL_NEWTAB_URL;
   },
@@ -172,8 +183,16 @@ AboutNewTabService.prototype = {
     return this._activityStreamEnabled;
   },
 
+  get activityStreamPrerender() {
+    return this._activityStreamPrerender;
+  },
+
   get activityStreamURL() {
     return ACTIVITY_STREAM_URL;
+  },
+
+  get activityStreamPrerenderURL() {
+    return ACTIVITY_STREAM_PRERENDER_URL;
   },
 
   resetNewTabURL() {

@@ -12,7 +12,7 @@
 
 [package]
 name = "mozrunner"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
 description = "Library for starting Firefox binaries."
 license = "MPL-2.0"

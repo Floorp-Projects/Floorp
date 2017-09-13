@@ -269,6 +269,21 @@ class MozbuildObject(ProcessExecutionMixin):
     def statedir(self):
         return os.path.join(self.topobjdir, '.mozbuild')
 
+    @property
+    def platform(self):
+        """Returns current platform and architecture name"""
+        import mozinfo
+        platform_name = None
+        bits = str(mozinfo.info['bits'])
+        if mozinfo.isLinux:
+            platform_name = "linux" + bits
+        elif mozinfo.isWin:
+            platform_name = "win" + bits
+        elif mozinfo.isMac:
+            platform_name = "macosx" + bits
+
+        return platform_name, bits + 'bit'
+
     @memoized_property
     def extra_environment_variables(self):
         '''Some extra environment variables are stored in .mozconfig.mk.

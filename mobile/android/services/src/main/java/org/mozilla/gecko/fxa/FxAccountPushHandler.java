@@ -3,6 +3,7 @@ package org.mozilla.gecko.fxa;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -17,6 +18,7 @@ public class FxAccountPushHandler {
     private static final String LOG_TAG = "FxAccountPush";
 
     private static final String COMMAND_DEVICE_DISCONNECTED = "fxaccounts:device_disconnected";
+    private static final String COMMAND_PROFILE_UPDATED = "fxaccounts:profile_updated";
     private static final String COMMAND_COLLECTION_CHANGED = "sync:collection_changed";
 
     private static final String CLIENTS_COLLECTION = "clients";
@@ -45,13 +47,15 @@ public class FxAccountPushHandler {
         }
         try {
             String command = message.getString("command");
-            JSONObject data = message.getJSONObject("data");
             switch (command) {
                 case COMMAND_DEVICE_DISCONNECTED:
-                    handleDeviceDisconnection(context, data);
+                    handleDeviceDisconnection(context, message.getJSONObject("data"));
                     break;
                 case COMMAND_COLLECTION_CHANGED:
-                    handleCollectionChanged(context, data);
+                    handleCollectionChanged(context, message.getJSONObject("data"));
+                    break;
+                case COMMAND_PROFILE_UPDATED:
+                    handleProfileUpdated(context);
                     break;
                 default:
                     Log.d(LOG_TAG, "No handler defined for FxA Push command " + command);
@@ -60,6 +64,16 @@ public class FxAccountPushHandler {
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error while handling FxA push notification", e);
         }
+    }
+
+    private static void handleProfileUpdated(Context context) {
+        final Account account = FirefoxAccounts.getFirefoxAccount(context);
+        if (account == null) {
+            Log.w(LOG_TAG, "Can't change profile of non-existent Firefox Account!; push ignored");
+            return;
+        }
+        final AndroidFxAccount androidFxAccount = new AndroidFxAccount(context, account);
+        androidFxAccount.fetchProfileJSON();
     }
 
     private static void handleVerification(Context context) {

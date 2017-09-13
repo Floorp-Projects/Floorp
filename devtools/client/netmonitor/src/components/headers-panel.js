@@ -182,6 +182,10 @@ const HeadersPanel = createClass({
 
       let statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
       let inputWidth = status.toString().length + statusText.length + 1;
+      let toggleRawHeadersClassList = ["devtools-button"];
+      if (this.state.rawHeadersOpened) {
+        toggleRawHeadersClassList.push("checked");
+      }
 
       summaryStatus = (
         div({ className: "tabpanel-summary-container headers-summary" },
@@ -209,7 +213,8 @@ const HeadersPanel = createClass({
             onClick: cloneSelectedRequest,
           }, EDIT_AND_RESEND),
           button({
-            className: "devtools-button raw-headers-button",
+            "aria-pressed": this.state.rawHeadersOpened,
+            className: toggleRawHeadersClassList.join(" "),
             onClick: this.toggleRawHeaders,
           }, RAW_HEADERS),
         )

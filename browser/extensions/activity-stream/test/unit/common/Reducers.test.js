@@ -328,6 +328,30 @@ describe("Reducers", () => {
       const updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.propertyVal(updatedSection, "initialized", true);
     });
+    it("should have no effect on SECTION_UPDATE_CARD if the id or url doesn't exist", () => {
+      const noIdAction = {type: at.SECTION_UPDATE_CARD, data: {id: "non-existent", url: "www.foo.bar", options: {title: "New title"}}};
+      const noIdState = Sections(oldState, noIdAction);
+      const noUrlAction = {type: at.SECTION_UPDATE_CARD, data: {id: "foo_bar_2", url: "www.non-existent.url", options: {title: "New title"}}};
+      const noUrlState = Sections(oldState, noUrlAction);
+      assert.deepEqual(noIdState, oldState);
+      assert.deepEqual(noUrlState, oldState);
+    });
+    it("should update the card with the correct data on SECTION_UPDATE_CARD", () => {
+      const action = {type: at.SECTION_UPDATE_CARD, data: {id: "foo_bar_2", url: "www.other.url", options: {title: "Fake new title"}}};
+      const newState = Sections(oldState, action);
+      const updatedSection = newState.find(section => section.id === "foo_bar_2");
+      const updatedCard = updatedSection.rows.find(card => card.url === "www.other.url");
+      assert.propertyVal(updatedCard, "title", "Fake new title");
+    });
+    it("should only update the cards belonging to the right section on SECTION_UPDATE_CARD", () => {
+      const action = {type: at.SECTION_UPDATE_CARD, data: {id: "foo_bar_2", url: "www.other.url", options: {title: "Fake new title"}}};
+      const newState = Sections(oldState, action);
+      newState.forEach((section, i) => {
+        if (section.id !== "foo_bar_2") {
+          assert.deepEqual(section, oldState[i]);
+        }
+      });
+    });
     it("should allow action.data to set .initialized", () => {
       const data = {rows: [], initialized: false, id: "foo_bar_2"};
       const action = {type: at.SECTION_UPDATE, data};

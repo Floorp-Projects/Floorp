@@ -46,8 +46,8 @@ option:nth-child(even) {
 #credit-cards > option {
   display: flex;
   align-items: center;
-  height: 1.3em;
-  padding-inline-start: 0.7em;
+  height: 1.6em;
+  padding-inline-start: 0.6em;
 }
 
 #controls-container {

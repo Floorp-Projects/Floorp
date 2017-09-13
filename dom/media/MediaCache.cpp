@@ -450,7 +450,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
                                    bool aIsPrivateBrowsing)
   : mMediaCache(nullptr)
   , mClient(aClient)
-  , mClosed(false)
   , mDidNotifyDataEnded(false)
   , mResourceID(0)
   , mIsTransportSeekable(false)
@@ -1878,6 +1877,9 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
     nsIPrincipal* aPrincipal)
 {
   // This might happen off the main thread.
+
+  // It is safe to read mClosed without holding the monitor because this
+  // function is guaranteed to happen before Close().
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   // Update principals before putting the data in the cache. This is important,
@@ -2110,14 +2112,13 @@ MediaCacheStream::Close()
     return;
   }
 
-  mClosed = true;
-
   // Closing a stream will change the return value of
   // MediaCacheStream::AreAllStreamsForResourceSuspended as well as
   // ChannelMediaResource::IsSuspendedByCache. Let's notify it.
   mMediaCache->QueueSuspendedStatusUpdate(mResourceID);
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+  mClosed = true;
   mMediaCache->ReleaseStreamBlocks(this);
   // Wake up any blocked readers
   mon.NotifyAll();

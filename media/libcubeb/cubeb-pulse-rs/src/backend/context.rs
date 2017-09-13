@@ -14,6 +14,7 @@ use std::ffi::{CStr, CString};
 use std::mem;
 use std::os::raw::{c_char, c_void};
 use std::ptr;
+use std::cell::RefCell;
 
 fn pa_channel_to_cubeb_channel(channel: pulse::ChannelPosition) -> cubeb::Channel {
     use pulse::ChannelPosition;
@@ -65,6 +66,7 @@ pub struct Context {
     pub version_0_9_8: bool,
     #[cfg(feature = "pulse-dlopen")]
     pub libpulse: LibLoader,
+    devids: RefCell<Intern>,
 }
 
 impl Drop for Context {
@@ -93,6 +95,7 @@ impl Context {
                                error: true,
                                version_0_9_8: false,
                                version_2_0_0: false,
+                               devids: RefCell::new(Intern::new()),
                            });
 
         Ok(ctx)
@@ -111,6 +114,7 @@ impl Context {
                         error: true,
                         version_0_9_8: false,
                         version_2_0_0: false,
+                        devids: RefCell::new(Intern::new()),
                     }))
     }
 
@@ -248,18 +252,17 @@ impl Context {
                 _ => ptr::null_mut(),
             };
 
-            let info_name = unsafe { CStr::from_ptr(info.name) }.to_owned();
+            let info_name = unsafe { CStr::from_ptr(info.name) };
             let info_description = unsafe { CStr::from_ptr(info.description) }.to_owned();
 
-            let preferred = if info_name == list_data.default_sink_name {
+            let preferred = if *info_name == *list_data.default_sink_name {
                 cubeb::DEVICE_PREF_ALL
             } else {
                 cubeb::DevicePref::empty()
             };
 
             let ctx = &(*list_data.context);
-
-            let device_id = info_name.into_raw();
+            let device_id = ctx.devids.borrow_mut().add(info_name);
             let friendly_name = info_description.into_raw();
             let devinfo = cubeb::DeviceInfo {
                 device_id: device_id,
@@ -305,17 +308,17 @@ impl Context {
                 _ => ptr::null_mut(),
             };
 
-            let info_name = unsafe { CStr::from_ptr(info.name) }.to_owned();
+            let info_name = unsafe { CStr::from_ptr(info.name) };
             let info_description = unsafe { CStr::from_ptr(info.description) }.to_owned();
 
-            let preferred = if info_name == list_data.default_source_name {
+            let preferred = if *info_name == *list_data.default_source_name {
                 cubeb::DEVICE_PREF_ALL
             } else {
                 cubeb::DevicePref::empty()
             };
 
             let ctx = &(*list_data.context);
-            let device_id = info_name.into_raw();
+            let device_id = ctx.devids.borrow_mut().add(info_name);
             let friendly_name = info_description.into_raw();
             let devinfo = cubeb::DeviceInfo {
                 device_id: device_id,
@@ -359,13 +362,13 @@ impl Context {
                 self.operation_wait(None, &o);
             }
 
-            if devtype == cubeb::DEVICE_TYPE_OUTPUT {
+            if devtype.contains(cubeb::DEVICE_TYPE_OUTPUT) {
                 if let Ok(o) = context.get_sink_info_list(add_output_device, &mut user_data as *mut _ as *mut _) {
                     self.operation_wait(None, &o);
                 }
             }
 
-            if devtype == cubeb::DEVICE_TYPE_INPUT {
+            if devtype.contains(cubeb::DEVICE_TYPE_INPUT) {
                 if let Ok(o) = context.get_source_info_list(add_input_device, &mut user_data as *mut _ as *mut _) {
                     self.operation_wait(None, &o);
                 }
@@ -397,9 +400,6 @@ impl Context {
                                                   coll.count,
                                                   coll.count);
             for dev in devices.iter_mut() {
-                if !dev.device_id.is_null() {
-                    let _ = CString::from_raw(dev.device_id as *mut _);
-                }
                 if !dev.group_id.is_null() {
                     let _ = CString::from_raw(dev.group_id as *mut _);
                 }
