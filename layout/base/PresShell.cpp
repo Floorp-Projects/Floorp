@@ -8463,6 +8463,7 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
                               touchEvent->mMessage, touchEvent->mWidget);
     newEvent.AssignTouchEventData(*touchEvent, false);
     newEvent.mTarget = targetPtr;
+    newEvent.mFlags.mHandledByAPZ = touchEvent->mFlags.mHandledByAPZ;
 
     RefPtr<PresShell> contentPresShell;
     if (doc == mDocument) {

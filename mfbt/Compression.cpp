@@ -81,3 +81,24 @@ LZ4::decompress(const char* aSource, size_t aInputSize, char* aDest,
   return false;
 }
 
+bool
+LZ4::decompressPartial(const char* aSource, size_t aInputSize, char* aDest,
+                       size_t aMaxOutputSize, size_t* aOutputSize)
+{
+  CheckedInt<int> maxOutputSizeChecked = aMaxOutputSize;
+  MOZ_ASSERT(maxOutputSizeChecked.isValid());
+  CheckedInt<int> inputSizeChecked = aInputSize;
+  MOZ_ASSERT(inputSizeChecked.isValid());
+
+  int ret = LZ4_decompress_safe_partial(aSource, aDest,
+                                        inputSizeChecked.value(),
+                                        maxOutputSizeChecked.value(),
+                                        maxOutputSizeChecked.value());
+  if (ret >= 0) {
+    *aOutputSize = ret;
+    return true;
+  }
+
+  *aOutputSize = 0;
+  return false;
+}

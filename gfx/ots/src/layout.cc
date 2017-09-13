@@ -311,15 +311,15 @@ bool ParseClassDefFormat2(const ots::Font *font,
 
   // Skip format field.
   if (!subtable.Skip(2)) {
-    return OTS_FAILURE_MSG("Failed to skip format of class defintion header");
+    return OTS_FAILURE_MSG("Failed to read class definition format");
   }
 
   uint16_t range_count = 0;
   if (!subtable.ReadU16(&range_count)) {
-    return OTS_FAILURE_MSG("Failed to read range count in class definition");
+    return OTS_FAILURE_MSG("Failed to read classRangeCount");
   }
   if (range_count > num_glyphs) {
-    return OTS_FAILURE_MSG("bad range count: %u", range_count);
+    return OTS_FAILURE_MSG("classRangeCount > glyph count: %u > %u", range_count, num_glyphs);
   }
 
   uint16_t last_end = 0;
@@ -330,13 +330,16 @@ bool ParseClassDefFormat2(const ots::Font *font,
     if (!subtable.ReadU16(&start) ||
         !subtable.ReadU16(&end) ||
         !subtable.ReadU16(&class_value)) {
-      return OTS_FAILURE_MSG("Failed to read class definition reange %d", i);
+      return OTS_FAILURE_MSG("Failed to read ClassRangeRecord %d", i);
     }
-    if (start > end || (last_end && start <= last_end)) {
-      return OTS_FAILURE_MSG("glyph range is overlapping.in range %d", i);
+    if (start > end) {
+      return OTS_FAILURE_MSG("ClassRangeRecord %d, start > end: %u > %u", i, start, end);
+    }
+    if (last_end && start <= last_end) {
+      return OTS_FAILURE_MSG("ClassRangeRecord %d start overlaps with end of the previous one: %u <= %u", i, start, last_end);
     }
     if (class_value > num_classes) {
-      return OTS_FAILURE_MSG("bad class value: %u", class_value);
+      return OTS_FAILURE_MSG("ClassRangeRecord %d class > number of classes: %u > %u", i, class_value, num_classes);
     }
     last_end = end;
   }

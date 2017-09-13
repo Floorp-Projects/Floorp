@@ -75,6 +75,21 @@ summaryLines = [('Successful', [('pass', 'pass'), ('loadOnly', 'load only')]),
                                     ('skipped', 'skipped'),
                                     ('slow', 'slow')])]
 
+
+def update_mozinfo():
+    """walk up directories to find mozinfo.json update the info"""
+    # TODO: This should go in a more generic place, e.g. mozinfo
+
+    path = SCRIPT_DIRECTORY
+    dirs = set()
+    while path != os.path.expanduser('~'):
+        if path in dirs:
+            break
+        dirs.add(path)
+        path = os.path.split(path)[0]
+    mozinfo.find_and_update_from_json(*dirs)
+
+
 # Python's print is not threadsafe.
 printLock = threading.Lock()
 
@@ -216,7 +231,7 @@ class RefTest(object):
     resolver_cls = ReftestResolver
 
     def __init__(self):
-        self.update_mozinfo()
+        update_mozinfo()
         self.lastTestSeen = self.TEST_SEEN_INITIAL
         self.haveDumpedScreen = False
         self.resolver = self.resolver_cls()
@@ -235,19 +250,6 @@ class RefTest(object):
             options.log_tbpl_level = fmt_options['level'] = 'debug'
         self.log = mozlog.commandline.setup_logging(
             "reftest harness", options, {"tbpl": sys.stdout}, fmt_options)
-
-    def update_mozinfo(self):
-        """walk up directories to find mozinfo.json update the info"""
-        # TODO: This should go in a more generic place, e.g. mozinfo
-
-        path = SCRIPT_DIRECTORY
-        dirs = set()
-        while path != os.path.expanduser('~'):
-            if path in dirs:
-                break
-            dirs.add(path)
-            path = os.path.split(path)[0]
-        mozinfo.find_and_update_from_json(*dirs)
 
     def getFullPath(self, path):
         "Get an absolute path relative to self.oldcwd."

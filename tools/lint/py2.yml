@@ -50,7 +50,6 @@ py2:
         - testing/tools
         - testing/tps
         - testing/web-platform
-        - testing/xpcshell
         - third_party
         - toolkit
         - tools/docs
