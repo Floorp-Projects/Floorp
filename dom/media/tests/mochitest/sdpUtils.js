@@ -172,7 +172,8 @@ verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
   } else {
     ok(desc.sdp.includes("m=video"), "video m-line is present in SDP");
     if (testOptions.h264) {
-      ok(desc.sdp.includes("a=rtpmap:126 H264/90000"), "H.264 codec is present in SDP");
+      ok(desc.sdp.includes("a=rtpmap:126 H264/90000") ||
+         desc.sdp.includes("a=rtpmap:97 H264/90000"), "H.264 codec is present in SDP");
     } else {
 	ok(desc.sdp.includes("a=rtpmap:120 VP8/90000") ||
 	   desc.sdp.includes("a=rtpmap:121 VP9/90000"), "VP8 or VP9 codec is present in SDP");
