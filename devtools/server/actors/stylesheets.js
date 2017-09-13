@@ -88,7 +88,12 @@ var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
       return promise.resolve(content);
     }
     let options = {
-      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
+      // Make sure to use TYPE_OTHER - we are not fetching necessarily
+      // even fetching a style sheet, and anyway we're not planning to
+      // use it as a style sheet per se but rather just for its text;
+      // and this avoids problems with X-Content-Type-Options:
+      // nosniff.  See bug 1330383.
+      policy: Ci.nsIContentPolicy.TYPE_OTHER,
       window: this.window
     };
     return fetch(this.url, options).then(({content: text}) => {
