@@ -29,6 +29,7 @@
           'files': [
             'alghmac.h',
             'blapi.h',
+            'blake2b.h',
             'chacha20poly1305.h',
             'ec.h',
             'ecl/ecl-curve.h',

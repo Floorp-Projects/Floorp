@@ -229,9 +229,7 @@ public:
   Mode GetMode() const {
     return mMode;
   }
-  void SetMode(Mode aMode) {
-    mMode = aMode;
-  }
+  void SetMode(Mode aMode);
 
   // Helper method. Is true if the DataTransfer's mode is ReadOnly or Protected,
   // which means that the DataTransfer cannot be modified.
@@ -271,6 +269,12 @@ public:
   bool ConvertFromVariant(nsIVariant* aVariant,
                           nsISupports** aSupports,
                           uint32_t* aLength) const;
+
+  // Disconnects the DataTransfer from the Drag Data Store. If the
+  // dom.dataTransfer.disconnect pref is enabled, this will clear the
+  // DataTransfer and set it to the `Protected` state, otherwise this method is
+  // a no-op.
+  void Disconnect();
 
   // clears all of the data
   void ClearAll();

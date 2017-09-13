@@ -257,7 +257,7 @@
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 100000,
     "n_buckets": 50,
@@ -267,7 +267,7 @@
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 66355200,
     "n_buckets": 50,
@@ -277,7 +277,7 @@
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 1000000,
     "n_buckets": 50,
@@ -287,7 +287,7 @@
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 1073741824,
     "n_buckets": 50,
@@ -363,7 +363,7 @@
   },
   "COMPOSITOR_ANIMATION_DURATION" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "description": "Duration of animations running on the compositor in milliseconds",
     "kind": "exponential",
     "high": 20000,
@@ -373,7 +373,7 @@
   },
   "COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_APZ" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "60",
+    "expires_in_version": "62",
     "description": "For APZ/scrolling compositor animations, the maximum number of contiguous frame drops encountered",
     "kind": "exponential",
     "high": 7200,
@@ -383,7 +383,7 @@
   },
   "COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_CHROME" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "60",
+    "expires_in_version": "62",
     "description": "For compositor animations of chrome-process layers, the maximum number of contiguous frame drops encountered",
     "kind": "exponential",
     "high": 7200,
@@ -393,7 +393,7 @@
   },
   "COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_CONTENT" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "60",
+    "expires_in_version": "62",
     "description": "For compositor animations of content-process layers, the maximum number of contiguous frame drops encountered",
     "kind": "exponential",
     "high": 7200,
@@ -403,7 +403,7 @@
   },
   "COMPOSITOR_ANIMATION_MAX_LAYER_AREA" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "description": "High-watermark of layer area affected during a compositor animation. Units are layer pixels squared.",
     "kind": "exponential",
     "high": 8294400,
@@ -413,7 +413,7 @@
   },
   "COMPOSITOR_ANIMATION_THROUGHPUT_APZ" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "60",
+    "expires_in_version": "62",
     "description": "Frame throughput ratio (scaled up to 1000) for APZ/scrolling animations in the compositor.",
     "kind": "linear",
     "high": 1500,
@@ -423,7 +423,7 @@
   },
   "COMPOSITOR_ANIMATION_THROUGHPUT_CHROME" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "60",
+    "expires_in_version": "62",
     "description": "Frame throughput ratio (scaled up to 1000) for compositor animations of chrome-process layers.",
     "kind": "linear",
     "high": 1500,
@@ -433,7 +433,7 @@
   },
   "COMPOSITOR_ANIMATION_THROUGHPUT_CONTENT" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "expires_in_version": "60",
+    "expires_in_version": "62",
     "description": "Frame throughput ratio (scaled up to 1000) for compositor animations of content-process layers.",
     "kind": "linear",
     "high": 1500,
@@ -456,7 +456,7 @@
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1261373],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "description": "Main thread response times for APZ notifications about input events (ms)",
     "kind" : "exponential",
     "high": 60000,
@@ -12305,7 +12305,7 @@
   "DOM_SCRIPT_LOADING_SOURCE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "categorical",
     "bug_numbers": [1362114],
     "labels": ["Inline", "SourceFallback", "Source", "AltData"],
@@ -12314,7 +12314,7 @@
   "DOM_SCRIPT_INLINE_SIZE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "low": 64,
     "high": 16000000,
@@ -12325,7 +12325,7 @@
   "DOM_SCRIPT_SOURCE_SIZE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "low": 64,
     "high": 16000000,
@@ -12336,7 +12336,7 @@
   "DOM_SCRIPT_BYTECODE_SIZE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "low": 64,
     "high": 16000000,
@@ -12347,7 +12347,7 @@
   "DOM_SCRIPT_FETCH_COUNT": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "linear",
     "low": 1,
     "high": 100,
@@ -12358,7 +12358,7 @@
   "DOM_SCRIPT_MAIN_THREAD_PARSE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12368,7 +12368,7 @@
   "DOM_SCRIPT_MAIN_THREAD_PARSE_ENCODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12378,7 +12378,7 @@
   "DOM_SCRIPT_MAIN_THREAD_DECODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12388,7 +12388,7 @@
   "DOM_SCRIPT_OFF_THREAD_PARSE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12398,7 +12398,7 @@
   "DOM_SCRIPT_OFF_THREAD_PARSE_ENCODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12408,7 +12408,7 @@
   "DOM_SCRIPT_OFF_THREAD_DECODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12418,7 +12418,7 @@
   "DOM_SCRIPT_ENCODING_MS_PER_DOCUMENT": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "linear",
     "high": 64,
     "n_buckets": 32,
@@ -12428,7 +12428,7 @@
   "DOM_SCRIPT_ENCODING_STATUS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "categorical",
     "bug_numbers": [1362114],
     "labels": ["EncodingFailure", "BufferTooLarge", "OpenFailure", "WriteFailure", "CloseFailure", "EncodingSuccess"],
@@ -12437,7 +12437,7 @@
   "DOM_SCRIPT_EVAL_PER_DOCUMENT": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "linear",
     "low": 1,
     "high": 200,

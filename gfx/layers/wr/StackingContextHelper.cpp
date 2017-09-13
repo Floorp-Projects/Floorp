@@ -96,6 +96,10 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
     mTransform = *aTransformPtr;
   }
 
+  // Apply the inherited scale from parent
+  mTransform.PostScale(aParentSC.mXScale, aParentSC.mYScale, 1.0);
+  mTransform.NudgeToIntegersFixedEpsilon();
+
   if (aPerspectivePtr) {
     mHasPerspectiveTransform = true;
   }
@@ -105,10 +109,6 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
     nsRect itemBounds = aDisplayList->GetClippedBoundsWithRespectToASR(aDisplayListBuilder, aItem->GetActiveScrolledRoot());
     nsRect childrenVisible = aItem->GetVisibleRectForChildren();
     visibleRect = itemBounds.Intersect(childrenVisible);
-
-    // Apply the inherited scale from parent
-    mTransform.PostScale(aParentSC.mXScale, aParentSC.mYScale, 1.0);
-    mTransform.NudgeToIntegersFixedEpsilon();
 
     // Calculate the correct scale for current stacking context
     gfx::Size scale = mTransform.As2D().ScaleFactors(true);

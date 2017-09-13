@@ -91,25 +91,27 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
 /*
  * Number of bytes each hash algorithm produces
  */
-#define MD2_LENGTH 16    /* Bytes */
-#define MD5_LENGTH 16    /* Bytes */
-#define SHA1_LENGTH 20   /* Bytes */
-#define SHA256_LENGTH 32 /* bytes */
-#define SHA384_LENGTH 48 /* bytes */
-#define SHA512_LENGTH 64 /* bytes */
+#define MD2_LENGTH 16        /* Bytes */
+#define MD5_LENGTH 16        /* Bytes */
+#define SHA1_LENGTH 20       /* Bytes */
+#define SHA256_LENGTH 32     /* bytes */
+#define SHA384_LENGTH 48     /* bytes */
+#define SHA512_LENGTH 64     /* bytes */
+#define BLAKE2B512_LENGTH 64 /* Bytes */
 #define HASH_LENGTH_MAX SHA512_LENGTH
 
 /*
  * Input block size for each hash algorithm.
  */
 
-#define MD2_BLOCK_LENGTH 64     /* bytes */
-#define MD5_BLOCK_LENGTH 64     /* bytes */
-#define SHA1_BLOCK_LENGTH 64    /* bytes */
-#define SHA224_BLOCK_LENGTH 64  /* bytes */
-#define SHA256_BLOCK_LENGTH 64  /* bytes */
-#define SHA384_BLOCK_LENGTH 128 /* bytes */
-#define SHA512_BLOCK_LENGTH 128 /* bytes */
+#define MD2_BLOCK_LENGTH 64      /* bytes */
+#define MD5_BLOCK_LENGTH 64      /* bytes */
+#define SHA1_BLOCK_LENGTH 64     /* bytes */
+#define SHA224_BLOCK_LENGTH 64   /* bytes */
+#define SHA256_BLOCK_LENGTH 64   /* bytes */
+#define SHA384_BLOCK_LENGTH 128  /* bytes */
+#define SHA512_BLOCK_LENGTH 128  /* bytes */
+#define BLAKE2B_BLOCK_LENGTH 128 /* Bytes */
 #define HASH_BLOCK_LENGTH_MAX SHA512_BLOCK_LENGTH
 
 #define AES_KEY_WRAP_IV_BYTES 8
@@ -126,6 +128,8 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
 #define SEED_KEY_LENGTH 16 /* bytes */
 
 #define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
+
+#define BLAKE2B_KEY_SIZE 64
 
 /*
  * These values come from the initial key size limits from the PKCS #11
@@ -213,6 +217,7 @@ struct SHA512ContextStr;
 struct AESKeyWrapContextStr;
 struct SEEDContextStr;
 struct ChaCha20Poly1305ContextStr;
+struct Blake2bContextStr;
 
 typedef struct DESContextStr DESContext;
 typedef struct RC2ContextStr RC2Context;
@@ -232,6 +237,7 @@ typedef struct SHA512ContextStr SHA384Context;
 typedef struct AESKeyWrapContextStr AESKeyWrapContext;
 typedef struct SEEDContextStr SEEDContext;
 typedef struct ChaCha20Poly1305ContextStr ChaCha20Poly1305Context;
+typedef struct Blake2bContextStr BLAKE2BContext;
 
 /***************************************************************************
 ** RSA Public and Private Key structures

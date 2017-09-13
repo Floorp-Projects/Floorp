@@ -5,6 +5,11 @@ const TEST_URL = "http://example.com/browser/browser/base/content/test/general/a
 add_task(async function() {
   SimpleTest.requestCompleteLog();
 
+  // allow top level data: URI navigations, otherwise clicking data: link fails
+  await SpecialPowers.pushPrefEnv({
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+  });
+
   // Pinned: Link to the same domain should not open a new tab
   // Tests link to http://example.com/browser/browser/base/content/test/general/dummy_page.html
   await testLink(0, true, false);

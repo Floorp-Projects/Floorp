@@ -101,7 +101,7 @@ function testColorExistence() {
 
   for (let type of vars) {
     ok(getColor(type, "light"), `${type} is a valid color in light theme`);
-    ok(getColor(type, "dark"), `${type} is a valid color in light theme`);
-    ok(getColor(type, "firebug"), `${type} is a valid color in light theme`);
+    ok(getColor(type, "dark"), `${type} is a valid color in dark theme`);
+    ok(getColor(type, "firebug"), `${type} is a valid color in firebug theme`);
   }
 }

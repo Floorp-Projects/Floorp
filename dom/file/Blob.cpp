@@ -292,7 +292,7 @@ Blob::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
   mImpl->GetInternalStream(aStream, aRv);
 }
 
-uint64_t
+size_t
 BindingJSObjectMallocBytes(Blob* aBlob)
 {
   MOZ_ASSERT(aBlob);

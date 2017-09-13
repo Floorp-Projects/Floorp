@@ -53,11 +53,24 @@ TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.crashreporter.test.browser 
     'crashreporter/test/browser/crashreport.sjs',
 ]
 
-with Files('mozapps/installer/windows/*'):
+with Files('moz.*'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+
+with Files('toolkit.mozbuild'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+
+with Files('nss.configure'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+
+with Files('library/**'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+
+with Files('mozapps/installer/windows/**'):
     BUG_COMPONENT = ('Toolkit', 'NSIS Installer')
 
-with Files('pluginproblem/*'):
+with Files('mozapps/preferences/**'):
+    BUG_COMPONENT = ('Toolkit', 'Preferences')
+
+with Files('pluginproblem/**'):
     BUG_COMPONENT = ('Core', 'Plug-ins')
 
-with Files('mozapps/preferences/*'):
-    BUG_COMPONENT = ('Toolkit', 'Preferences')

@@ -1497,12 +1497,12 @@ ssl3_SendRenegotiationInfoXtn(
     PRInt32 len = 0;
     PRInt32 needed;
 
-    /* In draft-ietf-tls-renegotiation-03, it is NOT RECOMMENDED to send
-     * both the SCSV and the empty RI, so when we send SCSV in
-     * the initial handshake, we don't also send RI.
+    /* In RFC 5746, it is NOT RECOMMENDED to send both the SCSV and the empty
+     * RI, so when we send SCSV in the initial handshake, we don't also send RI.
      */
-    if (!ss || ss->ssl3.hs.sendingSCSV)
+    if (ss->ssl3.hs.sendingSCSV) {
         return 0;
+    }
     if (ss->firstHsDone) {
         len = ss->sec.isServer ? ss->ssl3.hs.finishedBytes * 2
                                : ss->ssl3.hs.finishedBytes;
