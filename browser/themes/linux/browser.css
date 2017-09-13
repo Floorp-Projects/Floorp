@@ -296,16 +296,6 @@ menuitem.bookmark-item {
 
 /* identity box */
 
-#identity-box:-moz-locale-dir(ltr) {
-  border-top-left-radius: 1.5px;
-  border-bottom-left-radius: 1.5px;
-}
-
-#identity-box:-moz-locale-dir(rtl) {
-  border-top-right-radius: 1.5px;
-  border-bottom-right-radius: 1.5px;
-}
-
 #identity-box:not(:active):-moz-focusring {
   outline: 1px dotted;
   outline-offset: -3px;

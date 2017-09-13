@@ -593,8 +593,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   outline-offset: -3px;
 }
 
-/* page proxy icon */
-
 %include ../shared/identity-block/identity-block.inc.css
 
 /* autocomplete */
