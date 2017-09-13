@@ -7,22 +7,17 @@ All notable changes to this program is documented in this file.
 ### Added
 - Added crashreporter environment variables to better control the browser in case of crashes.
 - Added preference `dom.file.createInChild` set to true to allow file object creation in content processes.
-- New window `state` field on the window rect response object, returned from [`GetWindowRect`], [`SetWindowRect`], [`MinimizeWindow`], [`MaximizeWindow`], and [`FullscreenWindow`] commands
-
-[`FullscreenWindow`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.FullscreenWindow
-[`GetWindowRect`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.GetWindowRect
-[`MaximizeWindow`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.MaximizeWindow
-[`MinimizeWindow`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.MinimizeWindow
-[`SetWindowRect`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.SetWindowRect
 
 ### Changed
+- Early abort connection attempts to Marionette if the Firefox process closed unexpectetly.
 - Removed deprecated `socksProxyVersion` in favor of `socksVersion`.
 - Removed `ftpProxyPort`, `httpProxyPort`, `sslProxyPort`, and `socksProxyPort` because _ports_ have to be set for `ftpProxy`, `httpProxy`, `sslProxy`, and `socksProxy` using ":<PORT>".
 - To make sure no browser process is left behind when the [`New Session` command](https://docs.rs/webdriver/0.27.0/webdriver/command/enum.WebDriverCommand.html#variant.NewSession) fails, the process is closed immediately now.
 - The `proxyType` `noproxy` has been replaced with `direct` in accordance with recent WebDriver specification changes
 - `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an addon as a Base64 string
+- The [`WindowRectParameters`](https://docs.rs/webdriver/0.30.0/webdriver/command/struct.WindowRectParameters.html have been updated to return signed 32-bit integers in accordance with the CSS and WebDriver specifications, and to be more liberal with the input types
 - [webdriver crate](https://crates.io/crates/webdriver) upgraded to version 0.30.0
-- [mozrunner crate](https://crates.io/crates/mozrunner) upgraded to version 0.4.2
+- [mozrunner crate](https://crates.io/crates/mozrunner) upgraded to version 0.5.0
 
 ## 0.18.0 (2017-07-10)
 

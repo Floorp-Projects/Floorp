@@ -581,6 +581,7 @@
                                 &backgroundColor2.label;
                                 &useSystemColors.label;
                                 &underlineLinks.label;
+                                &links;
                                 &linkColor2.label;
                                 &visitedLinkColor2.label;"/>
       </hbox>

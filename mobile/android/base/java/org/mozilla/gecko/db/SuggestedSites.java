@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -111,16 +112,6 @@ public class SuggestedSites {
             validate();
         }
 
-        public Site(String url, String title, String imageUrl, String bgColor) {
-            this.url = url;
-            this.title = title;
-            this.imageUrl = imageUrl;
-            this.bgColor = bgColor;
-            this.restricted = false;
-
-            validate();
-        }
-
         private void validate() {
             // Site instances must have non-empty values for all properties except IDs.
             if (TextUtils.isEmpty(url) ||
@@ -161,6 +152,7 @@ public class SuggestedSites {
     final Distribution distribution;
     private File cachedFile;
     private Map<String, Site> cachedSites;
+    private Map<String, Site> cachedDistributionSites; // to be kept in sync with cachedSites.
     private Set<String> cachedBlacklist;
 
     public SuggestedSites(Context appContext) {
@@ -389,6 +381,30 @@ public class SuggestedSites {
     private synchronized void setCachedSites(Map<String, Site> sites) {
         cachedSites = Collections.unmodifiableMap(sites);
         updateSuggestedSitesLocale(context);
+        cachedDistributionSites = getDistributionSites(cachedSites, loadFromResource());
+    }
+
+    /**
+     * Gets the list of distribution sites from the list of all suggested sites and those drawn from the resources.
+     *
+     * This isn't the most efficient way to get the distribution sites, especially since we currently call
+     * {@link #loadFromResource()} an additional time to get our list of sites in resources. However, I
+     * found this to be the simplest approach. One alternative was to store the is-from-distribution state in
+     * the saved-site JSON files but the same code that reads these files also reads the distribution files and
+     * the resource file so each of these would also need explicit `isFromDistribution` flags, which is annoying
+     * to write and would create a lot of churn. I found the addition of this method and a cached value to be much
+     * simpler to add (and perhaps later remove).
+     */
+    private static Map<String, Site> getDistributionSites(final Map<String, Site> allSuggestedSites,
+            final Map<String, Site> suggestedSitesFromResources) {
+        final Set<String> allSitesURLsCopy = new HashSet<>(allSuggestedSites.keySet());
+        allSitesURLsCopy.removeAll(suggestedSitesFromResources.keySet());
+
+        final Map<String, Site> distributionSites = new HashMap<>(allSitesURLsCopy.size());
+        for (final String distributionSiteURL : allSitesURLsCopy) {
+            distributionSites.put(distributionSiteURL, allSuggestedSites.get(distributionSiteURL));
+        }
+        return distributionSites;
     }
 
     /**
@@ -523,6 +539,19 @@ public class SuggestedSites {
 
     public boolean contains(String url) {
         return (getSiteForUrl(url) != null);
+    }
+
+    /**
+     * Returns whether or not the url both represents a suggested site
+     * and was added to suggested sites by a distribution.
+     *
+     * We synchronize over our access to {@link #cachedDistributionSites},
+     * like we synchronize over all uses of {@link #cachedSites}.
+     */
+    public synchronized boolean containsSiteAndSiteIsFromDistribution(final String url) {
+        return cachedDistributionSites != null &&
+                contains(url) &&
+                cachedDistributionSites.containsKey(url);
     }
 
     public String getImageUrlForUrl(String url) {

@@ -135,7 +135,7 @@ nsXBLBinding::~nsXBLBinding(void)
     // It is unnecessary to uninstall anonymous content in a shadow tree
     // because the ShadowRoot itself is a DocumentFragment and does not
     // need any additional cleanup.
-    nsXBLBinding::UninstallAnonymousContent(mContent->OwnerDoc(), mContent);
+    nsXBLBinding::UnbindAnonymousContent(mContent->OwnerDoc(), mContent);
   }
   nsXBLDocumentInfo* info = mPrototypeBinding->XBLDocumentInfo();
   NS_RELEASE(info);
@@ -147,8 +147,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.
   if (tmp->mContent && !tmp->mIsShadowRootBinding) {
-    nsXBLBinding::UninstallAnonymousContent(tmp->mContent->OwnerDoc(),
-                                            tmp->mContent);
+    nsXBLBinding::UnbindAnonymousContent(tmp->mContent->OwnerDoc(),
+                                         tmp->mContent);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNextBinding)
@@ -191,8 +191,9 @@ nsXBLBinding::GetBindingWithContent()
 }
 
 void
-nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement,
-                                      bool aChromeOnlyContent)
+nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
+                                   nsIContent* aElement,
+                                   bool aChromeOnlyContent)
 {
   // We need to ensure two things.
   // (1) The anonymous content should be fooled into thinking it's in the bound
@@ -237,8 +238,9 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
 }
 
 void
-nsXBLBinding::UninstallAnonymousContent(nsIDocument* aDocument,
-                                        nsIContent* aAnonParent)
+nsXBLBinding::UnbindAnonymousContent(nsIDocument* aDocument,
+                                     nsIContent* aAnonParent,
+                                     bool aNullParent)
 {
   nsAutoScriptBlocker scriptBlocker;
   // Hold a strong ref while doing this, just in case.
@@ -250,7 +252,7 @@ nsXBLBinding::UninstallAnonymousContent(nsIDocument* aDocument,
   for (nsIContent* child = aAnonParent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    child->UnbindFromTree();
+    child->UnbindFromTree(true, aNullParent);
 #ifdef MOZ_XUL
     if (xuldoc) {
       xuldoc->RemoveSubtreeFromDocument(child);
@@ -340,8 +342,8 @@ nsXBLBinding::GenerateAnonymousContent()
 
     // Do this after looking for <children> as this messes up the parent
     // pointer which would make the GetNextNode call above fail
-    InstallAnonymousContent(mContent, mBoundElement,
-                            mPrototypeBinding->ChromeOnlyContent());
+    BindAnonymousContent(mContent, mBoundElement,
+                         mPrototypeBinding->ChromeOnlyContent());
 
     // Insert explicit children into insertion points
     if (mDefaultInsertionPoint && mInsertionPoints.IsEmpty()) {
@@ -368,8 +370,8 @@ nsXBLBinding::GenerateAnonymousContent()
             // the bound element didn't match any of the <children> in the
             // binding. This became a pseudo-API that we have to maintain.
 
-            // Undo InstallAnonymousContent
-            UninstallAnonymousContent(doc, mContent);
+            // Undo BindAnonymousContent
+            UnbindAnonymousContent(doc, mContent);
 
             // Clear out our children elements to avoid dangling references.
             ClearInsertionPoints();
@@ -822,7 +824,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     // Update the anonymous content.
     // XXXbz why not only for style bindings?
     if (mContent && !mIsShadowRootBinding) {
-      nsXBLBinding::UninstallAnonymousContent(aOldDocument, mContent);
+      nsXBLBinding::UnbindAnonymousContent(aOldDocument, mContent);
     }
 
     // Now that we've unbound our anonymous content from the tree and updated

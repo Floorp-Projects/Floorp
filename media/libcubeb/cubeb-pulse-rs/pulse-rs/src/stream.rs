@@ -329,11 +329,18 @@ impl Stream {
         error_result!(usec, r)
     }
 
-    pub fn get_latency(&self) -> Result<(u64, bool)> {
+    pub fn get_latency(&self) -> Result<StreamLatency> {
         let mut usec: u64 = 0;
         let mut negative: i32 = 0;
         let r = unsafe { ffi::pa_stream_get_latency(self.raw_mut(), &mut usec, &mut negative) };
-        error_result!((usec, negative != 0), r)
+        error_result!(
+            if negative == 0 {
+                StreamLatency::Positive(usec)
+            } else {
+                StreamLatency::Negative(usec)
+            },
+            r
+        )
     }
 
     pub fn get_sample_spec(&self) -> &SampleSpec {

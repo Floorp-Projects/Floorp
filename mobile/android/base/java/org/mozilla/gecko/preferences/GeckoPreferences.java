@@ -901,7 +901,7 @@ public class GeckoPreferences
         int itemId = item.getItemId();
         switch (itemId) {
             case android.R.id.home:
-                finishChoosingTransition();
+                onBackPressed();
                 return true;
         }
 

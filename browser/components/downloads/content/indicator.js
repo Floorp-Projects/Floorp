@@ -55,6 +55,11 @@ const DownloadsButton = {
   },
 
   /**
+   * Indicates whether toolbar customization is in progress.
+   */
+  _customizing: false,
+
+  /**
    * This function is called asynchronously just after window initialization.
    *
    * NOTE: This function should limit the input/output it performs to improve
@@ -62,34 +67,6 @@ const DownloadsButton = {
    */
   initializeIndicator() {
     DownloadsIndicatorView.ensureInitialized();
-  },
-
-  /**
-   * Indicates whether toolbar customization is in progress.
-   */
-  _customizing: false,
-
-  /**
-   * This function is called when toolbar customization starts.
-   *
-   * During customization, we never show the actual download progress indication
-   * or the event notifications, but we show a neutral placeholder.  The neutral
-   * placeholder is an ordinary button defined in the browser window that can be
-   * moved freely between the toolbars and the customization palette.
-   */
-  customizeStart() {
-    // Prevent the indicator from being displayed as a temporary anchor
-    // during customization, even if requested using the getAnchor method.
-    this._customizing = true;
-    this._anchorRequested = false;
-  },
-
-  /**
-   * This function is called when toolbar customization ends.
-   */
-  customizeDone() {
-    this._customizing = false;
-    DownloadsIndicatorView.afterCustomize();
   },
 
   /**
@@ -108,33 +85,14 @@ const DownloadsButton = {
 
     indicator.open = this._anchorRequested;
 
-    let widget = CustomizableUI.getWidget("downloads-button")
-                               .forWindow(window);
+    let widget = CustomizableUI.getWidget("downloads-button");
      // Determine if the indicator is located on an invisible toolbar.
-     if (!isElementVisible(indicator.parentNode) && !widget.overflowed) {
+     if (!isElementVisible(indicator.parentNode) &&
+         widget.areaType == CustomizableUI.TYPE_TOOLBAR) {
        return null;
      }
 
     return DownloadsIndicatorView.indicatorAnchor;
-  },
-
-  /**
-   * Checks whether the indicator is, or will soon be visible in the browser
-   * window.
-   *
-   * @param aCallback
-   *        Called once the indicator overlay has loaded. Gets a boolean
-   *        argument representing the indicator visibility.
-   */
-  checkIsVisible(aCallback) {
-    DownloadsOverlayLoader.ensureOverlayLoaded(this.kIndicatorOverlay, () => {
-      if (!this._placeholder) {
-        aCallback(false);
-      } else {
-        let element = DownloadsIndicatorView.indicator || this._placeholder;
-        aCallback(isElementVisible(element.parentNode));
-      }
-    });
   },
 
   /**
@@ -170,6 +128,91 @@ const DownloadsButton = {
   releaseAnchor() {
     this._anchorRequested = false;
     this._getAnchorInternal();
+  },
+
+  unhide() {
+    let button = this._placeholder;
+    if (button && button.hasAttribute("hidden")) {
+      button.removeAttribute("hidden");
+      if (this._navBar.contains(button)) {
+        this._navBar.setAttribute("downloadsbuttonshown", "true");
+      }
+    }
+  },
+
+  hide() {
+    let button = this._placeholder;
+    if (this.autoHideDownloadsButton && button && button.closest("toolbar")) {
+      DownloadsPanel.hidePanel();
+      button.setAttribute("hidden", "true");
+      this._navBar.removeAttribute("downloadsbuttonshown");
+    }
+  },
+
+  startAutoHide() {
+    if (DownloadsIndicatorView.hasDownloads) {
+      this.unhide();
+    } else {
+      this.hide();
+    }
+  },
+
+  checkForAutoHide() {
+    let button = this._placeholder;
+    if (!this._customizing && this.autoHideDownloadsButton &&
+        button && button.closest("toolbar")) {
+      this.startAutoHide();
+    } else {
+      this.unhide();
+    }
+  },
+
+  // Callback from CustomizableUI when nodes get moved around.
+  // We use this to track whether our node has moved somewhere
+  // where we should (not) autohide it.
+  onWidgetAfterDOMChange(node) {
+    if (node == this._placeholder) {
+      this.checkForAutoHide();
+    }
+  },
+
+  /**
+   * This function is called when toolbar customization starts.
+   *
+   * During customization, we never show the actual download progress indication
+   * or the event notifications, but we show a neutral placeholder.  The neutral
+   * placeholder is an ordinary button defined in the browser window that can be
+   * moved freely between the toolbars and the customization palette.
+   */
+  onCustomizeStart(win) {
+    if (win == window) {
+      // Prevent the indicator from being displayed as a temporary anchor
+      // during customization, even if requested using the getAnchor method.
+      this._customizing = true;
+      this._anchorRequested = false;
+      this.unhide();
+    }
+  },
+
+  onCustomizeEnd(win) {
+    if (win == window) {
+      this._customizing = false;
+      this.checkForAutoHide();
+      DownloadsIndicatorView.afterCustomize();
+    }
+  },
+
+  init() {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this, "autoHideDownloadsButton", "browser.download.autohideButton",
+      true, this.checkForAutoHide.bind(this));
+
+    CustomizableUI.addListener(this);
+    this.checkForAutoHide();
+  },
+
+  uninit() {
+    CustomizableUI.removeListener(this);
   },
 
   get _tabsToolbar() {
@@ -342,7 +385,7 @@ const DownloadsIndicatorView = {
     let anchor = DownloadsButton._placeholder;
     let widgetGroup = CustomizableUI.getWidget("downloads-button");
     let widget = widgetGroup.forWindow(window);
-    if (widget.overflowed || widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+    if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
       if (anchor && this._isAncestorPanelOpen(anchor)) {
         // If the containing panel is open, don't do anything, because the
         // notification would appear under the open panel. See
@@ -423,8 +466,12 @@ const DownloadsIndicatorView = {
       this._hasDownloads = aValue;
 
       // If there is at least one download, ensure that the view elements are
+      // operational
       if (aValue) {
+        DownloadsButton.unhide();
         this._ensureOperational();
+      } else {
+        DownloadsButton.checkForAutoHide();
       }
     }
     return aValue;
@@ -508,14 +555,7 @@ const DownloadsIndicatorView = {
       return;
     }
 
-    // If the downloads button is in the menu panel, open the Library
-    let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      DownloadsPanel.showDownloadsHistory();
-    } else {
-      DownloadsPanel.showPanel();
-    }
-
+    DownloadsPanel.showPanel();
     aEvent.stopPropagation();
   },
 
@@ -567,10 +607,9 @@ const DownloadsIndicatorView = {
   },
 
   get indicatorAnchor() {
-    let widget = CustomizableUI.getWidget("downloads-button")
-                               .forWindow(window);
-    if (widget.overflowed) {
-      return widget.anchor;
+    let widgetGroup = CustomizableUI.getWidget("downloads-button");
+    if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+      return widgetGroup.forWindow(window).anchor;
     }
     return document.getElementById("downloads-indicator-anchor");
   },

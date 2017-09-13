@@ -233,6 +233,19 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
+    case at.SECTION_UPDATE_CARD:
+      return prevState.map(section => {
+        if (section && section.id === action.data.id && section.rows) {
+          const newRows = section.rows.map(card => {
+            if (card.url === action.data.url) {
+              return Object.assign({}, card, action.data.options);
+            }
+            return card;
+          });
+          return Object.assign({}, section, {rows: newRows});
+        }
+        return section;
+      });
     case at.PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;

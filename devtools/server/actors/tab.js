@@ -26,10 +26,12 @@ var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
 const EventEmitter = require("devtools/shared/event-emitter");
 
+const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
+
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
-loader.lazyImporter(this, "ExtensionContent", "resource://gre/modules/ExtensionContent.jsm");
+loader.lazyImporter(this, "ExtensionContent", EXTENSION_CONTENT_JSM);
 
 loader.lazyRequireGetter(this, "StyleSheetActor", "devtools/server/actors/stylesheets", true);
 
@@ -336,8 +338,11 @@ TabActor.prototype = {
    * current tab content's DOM window.
    */
   get webextensionsContentScriptGlobals() {
-    // Ignore xpcshell runtime which spawn TabActors without a window.
-    if (this.window) {
+    // Ignore xpcshell runtime which spawn TabActors without a window
+    // and only retrieve the content scripts globals if the ExtensionContent JSM module
+    // has been already loaded (which is true if the WebExtensions internals have already
+    // been loaded in the same content process).
+    if (this.window && Cu.isModuleLoaded(EXTENSION_CONTENT_JSM)) {
       return ExtensionContent.getContentScriptGlobals(this.window);
     }
 

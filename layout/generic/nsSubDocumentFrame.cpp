@@ -930,7 +930,16 @@ public:
     // Flush frames, to ensure any pending display:none changes are made.
     // Note it can be unsafe to flush if we've destroyed the presentation
     // for some other reason, like if we're shutting down.
-    if (!mPresShell->IsDestroying()) {
+    //
+    // But avoid the flush if we know for sure we're away, like when we're out
+    // of the document already.
+    //
+    // FIXME(emilio): This could still be a perf footgun when removing lots of
+    // siblings where each of them cause the reframe of an ancestor which happen
+    // to contain a subdocument.
+    //
+    // We should find some way to avoid that!
+    if (!mPresShell->IsDestroying() && mFrameElement->IsInComposedDoc()) {
       mPresShell->FlushPendingNotifications(FlushType::Frames);
     }
 

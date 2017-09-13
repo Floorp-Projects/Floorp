@@ -13,9 +13,13 @@ add_task(async function test_finish_tour_notifcations_after_total_max_life_time(
 
   let totalMaxTime = Preferences.get("browser.onboarding.notification.max-life-time-all-tours-ms");
   Preferences.set("browser.onboarding.notification.last-time-of-changing-tour-sec", Math.floor((Date.now() - totalMaxTime) / 1000));
-  let expectedPrefUpdate = promisePrefUpdated("browser.onboarding.notification.finished", true);
+  let expectedPrefUpdates = Promise.all([
+    promisePrefUpdated("browser.onboarding.notification.finished", true),
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+  ]);
   await reloadTab(tab);
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-  await expectedPrefUpdate;
+  await expectedPrefUpdates;
+  await assertWatermarkIconDisplayed(tab.linkedBrowser);
   await BrowserTestUtils.removeTab(tab);
 });

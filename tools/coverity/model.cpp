@@ -65,11 +65,7 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
 int
 GET_JUMP_OFFSET(jsbytecode* pc)
 {
-  __coverity_tainted_data_sanitize__(&pc[1]);
-  __coverity_tainted_data_sanitize__(&pc[2]);
-  __coverity_tainted_data_sanitize__(&pc[3]);
-  __coverity_tainted_data_sanitize__(&pc[4]);
-
+  __coverity_tainted_data_sink__(static_cast<void*>(pc));
   return 0;
 }
 
@@ -81,8 +77,7 @@ GET_JUMP_OFFSET(jsbytecode* pc)
 static unsigned
 GET_UINT24(const jsbytecode* pc)
 {
-  __coverity_tainted_data_sanitize__(static_cast<void*>(pc));
-  // return unsigned((pc[1] << 16) | (pc[2] << 8) | pc[3]);
+  __coverity_tainted_data_sink__(static_cast<void*>(pc));
   return 0;
 }
 
@@ -97,11 +92,7 @@ private:
 
     HeaderParser::ChunkHeader::ChunkSize() const
     {
-      __coverity_tainted_data_sanitize__(static_cast<void*>(&mRaw[4]));
-      __coverity_tainted_data_sanitize__(static_cast<void*>(&mRaw[5]));
-      __coverity_tainted_data_sanitize__(static_cast<void*>(&mRaw[6]));
-      __coverity_tainted_data_sanitize__(static_cast<void*>(&mRaw[7]));
-
+      __coverity_tainted_data_sink__(static_cast<void*>(mRaw));
       return ((mRaw[7] << 24) | (mRaw[6] << 16) | (mRaw[5] << 8) | (mRaw[4]));
     }
   };
@@ -120,7 +111,7 @@ NS_DebugBreak(uint32_t aSeverity,
 static inline void
 Swap(uint32_t* value)
 {
-  __coverity_tainted_data_sanitize__(static_cast<void*>(&value));
+  __coverity_tainted_data_sink__(value);
   *value = (*value >> 24) | ((*value >> 8) & 0x0000ff00) |
            ((*value << 8) & 0x00ff0000) | (*value << 24);
 }
@@ -128,13 +119,9 @@ Swap(uint32_t* value)
 static uint32_t
 xtolong(const uint8_t* ll)
 {
-  __coverity_tainted_data_sanitize__(static_cast<void*>(&ll[0]));
-  __coverity_tainted_data_sanitize__(static_cast<void*>(&ll[1]));
-  __coverity_tainted_data_sanitize__(static_cast<void*>(&ll[2]));
-  __coverity_tainted_data_sanitize__(static_cast<void*>(&ll[3]));
-
-  return (uint32_t)((ll[0] << 0) | (ll[1] << 8) | (ll[2] << 16) |
-                    (ll[3] << 24));
+  uint32_t value = 0;
+  __coverity_tainted_data_sink__(static_cast<void*>(ll));
+  return value;
 }
 
 class ByteReader

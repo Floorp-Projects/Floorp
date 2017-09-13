@@ -35,7 +35,7 @@ impl ParserState {
     pub fn source_location(&self) -> SourceLocation {
         SourceLocation {
             line: self.current_line_number,
-            column: (self.position - self.current_line_start_position) as u32,
+            column: (self.position - self.current_line_start_position + 1) as u32,
         }
     }
 }

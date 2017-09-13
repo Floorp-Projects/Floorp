@@ -394,7 +394,12 @@
   <string name="contextmenu_top_sites_edit">&contextmenu_top_sites_edit;</string>
   <string name="contextmenu_top_sites_pin">&contextmenu_top_sites_pin;</string>
   <string name="contextmenu_top_sites_unpin">&contextmenu_top_sites_unpin;</string>
+  <string name="contextmenu_pin_to_top_sites">&contextmenu_pin_to_top_sites;</string>
+  <string name="contextmenu_unpin_from_top_sites">&contextmenu_unpin_from_top_sites;</string>
   <string name="contextmenu_add_search_engine">&contextmenu_add_search_engine;</string>
+
+  <string name="pinned_page_to_top_sites">&pinned_page_to_top_sites;</string>
+  <string name="unpinned_page_from_top_sites">&unpinned_page_from_top_sites;</string>
 
   <string name="doorhanger_login_no_username">&doorhanger_login_no_username;</string>
   <string name="doorhanger_login_edit_title">&doorhanger_login_edit_title;</string>

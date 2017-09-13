@@ -12,16 +12,12 @@ use std::process;
 use std::process::{Command, Stdio};
 
 pub trait Runner {
-    fn start(&mut self) -> Result<(), RunnerError>;
-
     fn args(&mut self) -> &mut Vec<String>;
-
     fn build_command(&self, &mut Command);
-
     fn envs(&mut self) -> &mut HashMap<String, String>;
-
-    fn is_running(&self) -> bool;
-
+    fn is_running(&mut self) -> bool;
+    fn start(&mut self) -> Result<(), RunnerError>;
+    fn status(&mut self) -> IoResult<Option<process::ExitStatus>>;
     fn stop(&mut self) -> IoResult<Option<process::ExitStatus>>;
 }
 
@@ -70,12 +66,12 @@ impl From<PrefReaderError> for RunnerError {
     }
 }
 
+#[derive(Debug)]
 pub struct FirefoxRunner {
     pub binary: PathBuf,
     args: Vec<String>,
     envs: HashMap<String, String>,
     process: Option<process::Child>,
-    pub ret_code: Option<process::ExitStatus>,
     pub profile: Profile
 }
 
@@ -93,7 +89,6 @@ impl FirefoxRunner {
         Ok(FirefoxRunner {
             binary: binary.to_path_buf(),
             process: None,
-            ret_code: None,
             args: Vec::new(),
             envs: envs,
             profile: prof
@@ -102,20 +97,6 @@ impl FirefoxRunner {
 }
 
 impl Runner for FirefoxRunner {
-    fn start(&mut self) -> Result<(), RunnerError> {
-        let mut cmd = Command::new(&self.binary);
-        self.build_command(&mut cmd);
-
-        debug!("Command {:?}", cmd);
-
-        let prefs = try!(self.profile.user_prefs());
-        try!(prefs.write());
-
-        let process = try!(cmd.spawn());
-        self.process = Some(process);
-        Ok(())
-    }
-
     fn args(&mut self) -> &mut Vec<String> {
         &mut self.args
     }
@@ -136,17 +117,35 @@ impl Runner for FirefoxRunner {
         &mut self.envs
     }
 
-    fn is_running(&self) -> bool {
-        self.process.is_some() && self.ret_code.is_none()
+    fn is_running(&mut self) -> bool {
+        self.process.is_some() && self.status().unwrap().is_none()
+    }
+
+    fn start(&mut self) -> Result<(), RunnerError> {
+        let mut cmd = Command::new(&self.binary);
+        self.build_command(&mut cmd);
+
+        let prefs = try!(self.profile.user_prefs());
+        try!(prefs.write());
+
+        info!("Running command: {:?}", cmd);
+        let process = try!(cmd.spawn());
+        self.process = Some(process);
+        Ok(())
+    }
+
+    fn status(&mut self) -> IoResult<Option<process::ExitStatus>> {
+        self.process.as_mut().map(|p| p.try_wait()).unwrap_or(Ok(None))
     }
 
     fn stop(&mut self) -> IoResult<Option<process::ExitStatus>> {
-        if let Some(p) = self.process.as_mut() {
+        let mut retval = None;
+
+        if let Some(ref mut p) = self.process {
             try!(p.kill());
-            let status = try!(p.wait());
-            self.ret_code = Some(status);
+            retval = Some(try!(p.wait()));
         };
-        Ok(self.ret_code)
+        Ok(retval)
     }
 }
 

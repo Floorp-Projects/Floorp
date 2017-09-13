@@ -74,7 +74,8 @@ protected:
                                               const layers::TextureFactoryIdentifier& aIdentifier,
                                               bool* aSuccess,
                                               nsCString* aBlacklistedD3D11Driver,
-                                              nsCString* aBlacklistedD3D9Driver) override;
+                                              nsCString* aBlacklistedD3D9Driver,
+                                              nsCString* aErrorDescription) override;
   bool DeallocPVideoDecoderChild(PVideoDecoderChild* actor) override;
 
 private:

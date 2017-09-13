@@ -14,8 +14,11 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 
 /**
  * A toggle that controls a SharedPreference preference, and can be added outside of PreferenceScreen.
@@ -57,6 +60,11 @@ public class SwitchPreferenceView extends SwitchCompat {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 sharedPreferences.edit().putBoolean(preferenceKey, b).apply();
+
+                final JSONArray extras = new JSONArray();
+                extras.put(preferenceKey);
+                extras.put(b ? "1" : "0");
+                Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, TelemetryContract.Method.SETTINGS, extras.toString());
             }
         });
 

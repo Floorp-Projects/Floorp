@@ -45,6 +45,7 @@ public:
   void GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo);
 
   void SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
+                   uint64_t aFrameId,
                    const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect);
   RefPtr<gfx::VRControllerHost> GetController(const uint32_t& aControllerID);
