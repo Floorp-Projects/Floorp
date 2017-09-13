@@ -6850,7 +6850,9 @@ nsTextFrame::PaintTextWithSelection(
 }
 
 void
-nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
+nsTextFrame::DrawEmphasisMarks(gfxContext* aContext,
+                               TextDrawTarget* aTextDrawer,
+                               WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
                                const gfxPoint& aFramePt, Range aRange,
                                const nscolor* aDecorationOverrideColor,
@@ -6887,12 +6889,14 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     }
   }
   if (!isTextCombined) {
-    mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
-                                pt, aRange, aProvider);
+    mTextRun->DrawEmphasisMarks(aContext, aTextDrawer, info->textRun.get(),
+                                info->advance, pt, aRange, aProvider);
   } else {
     pt.y += (GetSize().height - info->advance) / 2;
+    gfxTextRun::DrawParams params(aContext);
+    params.textDrawer = aTextDrawer;
     info->textRun->Draw(Range(info->textRun.get()), pt,
-                        gfxTextRun::DrawParams(aContext));
+                        params);
   }
 }
 
@@ -7286,6 +7290,7 @@ DrawTextRun(const gfxTextRun* aTextRun,
             const nsTextFrame::DrawTextRunParams& aParams)
 {
   gfxTextRun::DrawParams params(aParams.context);
+  params.textDrawer = aParams.textDrawer;
   params.provider = aParams.provider;
   params.advanceWidth = aParams.advanceWidth;
   params.contextPaint = aParams.contextPaint;
@@ -7296,13 +7301,13 @@ DrawTextRun(const gfxTextRun* aTextRun,
     aTextRun->Draw(aRange, aTextBaselinePt, params);
     aParams.callbacks->NotifyAfterText();
   } else {
-    if (NS_GET_A(aParams.textColor) != 0) {
+    if (NS_GET_A(aParams.textColor) != 0 || aParams.textDrawer) {
       aParams.context->SetColor(Color::FromABGR(aParams.textColor));
     } else {
       params.drawMode = DrawMode::GLYPH_STROKE;
     }
 
-    if (NS_GET_A(aParams.textStrokeColor) != 0 &&
+    if ((NS_GET_A(aParams.textStrokeColor) != 0 || aParams.textDrawer) &&
         aParams.textStrokeWidth != 0.0f) {
       StrokeOptions strokeOpts;
       params.drawMode |= DrawMode::GLYPH_STROKE;
@@ -7493,7 +7498,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     if (aParams.textDrawer) {
       aParams.textDrawer->StartDrawing(TextDrawTarget::Phase::eEmphasisMarks);
     }
-    DrawEmphasisMarks(aParams.context, wm,
+    DrawEmphasisMarks(aParams.context, aParams.textDrawer, wm,
                       aTextBaselinePt, aParams.framePt, aRange,
                       aParams.decorationOverrideColor, aParams.provider);
 
