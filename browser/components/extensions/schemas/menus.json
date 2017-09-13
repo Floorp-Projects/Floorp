@@ -374,6 +374,13 @@
             "description": "Called when removal is complete."
           }
         ]
+      },
+      {
+        "name": "refresh",
+        "type": "function",
+        "description": "Updates the extension items in the shown menu, including changes that have been made since the menu was shown. Has no effect if the menu is hidden. Rebuilding a shown menu is an expensive operation, only invoke this method when necessary.",
+        "async": true,
+        "parameters": []
       }
     ],
     "events": [
