@@ -4,9 +4,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
-
-const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { Task } = require("devtools/shared/task");
 const Services = require("Services");
@@ -33,8 +30,6 @@ loader.lazyRequireGetter(this, "DebuggerServer",
                          "devtools/server/main", true);
 loader.lazyRequireGetter(this, "system", "devtools/shared/system");
 
-this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
-
 const NEW_RDM_ENABLED = "devtools.responsive.html.enabled";
 
 const MIN_WIDTH = 50;
@@ -56,7 +51,7 @@ function debug(msg) {
 
 var ActiveTabs = new Map();
 
-var Manager = {
+var ResponsiveUIManager = {
   /**
    * Check if the a tab is in a responsive mode.
    * Leave the responsive mode if active,
@@ -137,20 +132,8 @@ var Manager = {
   })
 };
 
-EventEmitter.decorate(Manager);
-
-// If the new HTML RDM UI is enabled and e10s is enabled by default (e10s is required for
-// the new HTML RDM UI to function), delegate the ResponsiveUIManager API over to that
-// tool instead.  Performing this delegation here allows us to contain the pref check to a
-// single place.
-if (Services.prefs.getBoolPref(NEW_RDM_ENABLED) &&
-    Services.appinfo.browserTabsRemoteAutostart) {
-  let { ResponsiveUIManager } =
-    require("devtools/client/responsive.html/manager");
-  this.ResponsiveUIManager = ResponsiveUIManager;
-} else {
-  this.ResponsiveUIManager = Manager;
-}
+EventEmitter.decorate(ResponsiveUIManager);
+exports.ResponsiveUIManager = ResponsiveUIManager;
 
 var defaultPresets = [
   // Phones

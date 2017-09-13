@@ -220,7 +220,7 @@ class TbplFormatter(BaseFormatter):
                                     screenshots[0]["screenshot"],
                                     screenshots[2]["screenshot"])
                 elif len(screenshots) == 1:
-                    message += "\nREFTEST   IMAGE: data:image/png;base64,%(image1)s" \
+                    message += "\nREFTEST   IMAGE: data:image/png;base64,%s" \
                                % screenshots[0]["screenshot"]
 
             failure_line = "TEST-UNEXPECTED-%s | %s | %s\n" % (

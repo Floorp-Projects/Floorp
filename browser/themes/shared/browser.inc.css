@@ -18,6 +18,15 @@
 
 %include downloads/indicator.inc.css
 
+:root {
+  /* Note: Setting this to 0 (without px) breaks CSS calculations for OSX. */
+  --space-above-tabbar: 0px;
+}
+
+:root[extradragspace][tabsintitlebar]:not([inFullscreen]) {
+  --space-above-tabbar: 8px;
+}
+
 /* Toolbar / content area border */
 
 #navigator-toolbox::after {

@@ -185,7 +185,6 @@
   "RemotePageManager.jsm": ["RemotePages", "RemotePageManager", "PageListener"],
   "RemoteWebProgress.jsm": ["RemoteWebProgressManager"],
   "resource.js": ["AsyncResource", "Resource"],
-  "responsivedesign.jsm": ["ResponsiveUIManager"],
   "rest.js": ["RESTRequest", "RESTResponse", "TokenAuthenticatedRESTRequest", "SyncStorageRequest"],
   "rotaryengine.js": ["RotaryEngine", "RotaryRecord", "RotaryStore", "RotaryTracker"],
   "require.js": ["require"],

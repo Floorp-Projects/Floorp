@@ -1889,7 +1889,7 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     /**
-     * Enable Android StrictMode checks (for supported OS versions).
+     * Enable Android StrictMode checks.
      * http://developer.android.com/reference/android/os/StrictMode.html
      */
     private void enableStrictMode() {
@@ -1898,6 +1898,9 @@ public abstract class GeckoApp extends GeckoActivity
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                                   .detectAll()
                                   .penaltyLog()
+                                  // Match Android's default configuration - which we use on
+                                  // automation builds, including release - for network access.
+                                  .penaltyDeathOnNetwork()
                                   .build());
 
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()

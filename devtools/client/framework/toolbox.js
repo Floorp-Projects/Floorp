@@ -117,6 +117,8 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
   this._toggleNoAutohide = this._toggleNoAutohide.bind(this);
   this.showFramesMenu = this.showFramesMenu.bind(this);
+  this.handleKeyDownOnFramesButton = this.handleKeyDownOnFramesButton.bind(this);
+  this.showFramesMenuOnKeyDown = this.showFramesMenuOnKeyDown.bind(this);
   this._updateFrames = this._updateFrames.bind(this);
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
   this.destroy = this.destroy.bind(this);
@@ -499,7 +501,10 @@ Toolbox.prototype = {
 
       // Start rendering the toolbox toolbar before selecting the tool, as the tools
       // can take a few hundred milliseconds seconds to start up.
-      this.component.setCanRender();
+      // But wait for toolbar buttons to be set before updating this react component.
+      buttonsPromise.then(() => {
+        this.component.setCanRender();
+      });
 
       yield this.selectTool(this._defaultToolId);
 
@@ -695,8 +700,18 @@ Toolbox.prototype = {
    */
   _createButtonState: function (options) {
     let isCheckedValue = false;
-    const { id, className, description, onClick, isInStartContainer, setup, teardown,
-            isTargetSupported, isChecked } = options;
+    const {
+      id,
+      className,
+      description,
+      onClick,
+      isInStartContainer,
+      setup,
+      teardown,
+      isTargetSupported,
+      isChecked,
+      onKeyDown
+    } = options;
     const toolbox = this;
     const button = {
       id,
@@ -705,6 +720,11 @@ Toolbox.prototype = {
       onClick(event) {
         if (typeof onClick == "function") {
           onClick(event, toolbox);
+        }
+      },
+      onKeyDown(event) {
+        if (typeof onKeyDown == "function") {
+          onKeyDown(event, toolbox);
         }
       },
       isTargetSupported,
@@ -1213,7 +1233,8 @@ Toolbox.prototype = {
       onClick: this.showFramesMenu,
       isTargetSupported: target => {
         return target.activeTab && target.activeTab.traits.frames;
-      }
+      },
+      onKeyDown: this.handleKeyDownOnFramesButton
     });
 
     return this.frameButton;
@@ -2059,6 +2080,23 @@ Toolbox.prototype = {
     menu.popup(rect.left + screenX, rect.bottom + screenY, this);
 
     return menu;
+  },
+
+  /**
+   * Handle keyDown event on 'frames' button to show available frames
+   */
+  handleKeyDownOnFramesButton: function (event) {
+    this.shortcuts.on(L10N.getStr("toolbox.showFrames.key"),
+      this.showFramesMenuOnKeyDown);
+  },
+
+  /**
+   * Show 'frames' menu on key down
+   */
+  showFramesMenuOnKeyDown: function (name, event) {
+    if (event.target.id == "command-button-frames") {
+      this.showFramesMenu(event);
+    }
   },
 
   /**

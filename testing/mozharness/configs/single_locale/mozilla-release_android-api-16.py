@@ -41,10 +41,10 @@ config = {
         "branch": "default",
         "dest": "tools"
     }],
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/%s" % BRANCH,
+    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': HG_SHARE_BASE_DIR,
-    "l10n_dir": MOZILLA_DIR,
+    "l10n_dir": "l10n-central",
 
     "repack_env": {
         # so ugly, bug 951238
