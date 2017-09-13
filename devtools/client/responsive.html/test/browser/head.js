@@ -63,7 +63,7 @@ registerCleanupFunction(() => {
 });
 
 // This depends on the "devtools.responsive.html.enabled" pref
-const { ResponsiveUIManager } = require("resource://devtools/client/responsivedesign/responsivedesign.jsm");
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsivedesign/responsivedesign");
 
 /**
  * Open responsive design mode for the given tab.

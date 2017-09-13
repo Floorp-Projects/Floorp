@@ -8508,12 +8508,6 @@ var ResponsiveUI = {
   }
 };
 
-XPCOMUtils.defineLazyGetter(ResponsiveUI, "ResponsiveUIManager", function() {
-  let tmp = {};
-  Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", tmp);
-  return tmp.ResponsiveUIManager;
-});
-
 var MousePosTracker = {
   _listeners: new Set(),
   _x: 0,

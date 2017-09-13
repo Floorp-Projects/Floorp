@@ -4,14 +4,9 @@
 
 "use strict";
 
-const Cu = Components.utils;
-
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 
 const NEW_RDM_ENABLED = "devtools.responsive.html.enabled";
-
-this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
 // If the new HTML RDM UI is enabled and e10s is enabled by default (e10s is required for
 // the new HTML RDM UI to function), delegate the ResponsiveUIManager API over to that
@@ -20,8 +15,8 @@ this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 if (Services.prefs.getBoolPref(NEW_RDM_ENABLED) &&
     Services.appinfo.browserTabsRemoteAutostart) {
   let { ResponsiveUIManager } = require("devtools/client/responsive.html/manager");
-  this.ResponsiveUIManager = ResponsiveUIManager;
+  module.exports = ResponsiveUIManager;
 } else {
   let { ResponsiveUIManager } = require("devtools/client/responsivedesign/responsivedesign-old");
-  this.ResponsiveUIManager = ResponsiveUIManager;
+  module.exports = ResponsiveUIManager;
 }
