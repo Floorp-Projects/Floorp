@@ -137,7 +137,6 @@ private:
     }
 
     if (NS_WARN_IF(rv.Failed())) {
-      mPort->DispatchError();
       return rv.StealNSResult();
     }
 
@@ -149,7 +148,6 @@ private:
 
     Sequence<OwningNonNull<MessagePort>> ports;
     if (!mData->TakeTransferredPortsAsSequence(ports)) {
-      mPort->DispatchError();
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -696,7 +694,7 @@ MessagePort::Entangled(nsTArray<ClonedMessageData>& aMessages)
   FallibleTArray<RefPtr<SharedMessagePortMessage>> data;
   if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
                                                                       data))) {
-    DispatchError();
+    // OOM, we cannot continue.
     return;
   }
 
@@ -750,7 +748,7 @@ MessagePort::MessagesReceived(nsTArray<ClonedMessageData>& aMessages)
   FallibleTArray<RefPtr<SharedMessagePortMessage>> data;
   if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
                                                                       data))) {
-    DispatchError();
+    // OOM, We cannot continue.
     return;
   }
 
@@ -1004,29 +1002,6 @@ MessagePort::RemoveDocFromBFCache()
 MessagePort::ForceClose(const MessagePortIdentifier& aIdentifier)
 {
   ForceCloseHelper::ForceClose(aIdentifier);
-}
-
-void
-MessagePort::DispatchError()
-{
-  nsCOMPtr<nsIGlobalObject> globalObject = GetParentObject();
-
-  AutoJSAPI jsapi;
-  if (!globalObject || !jsapi.Init(globalObject)) {
-    NS_WARNING("Failed to initialize AutoJSAPI object.");
-    return;
-  }
-
-  RootedDictionary<MessageEventInit> init(jsapi.cx());
-  init.mBubbles = false;
-  init.mCancelable = false;
-
-  RefPtr<Event> event =
-    MessageEvent::Constructor(this, NS_LITERAL_STRING("messageerror"), init);
-  event->SetTrusted(true);
-
-  bool dummy;
-  DispatchEvent(event, &dummy);
 }
 
 } // namespace dom
