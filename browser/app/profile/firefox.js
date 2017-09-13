@@ -722,15 +722,9 @@ pref("browser.preferences.instantApply", true);
 // Toggling Search bar on and off in about:preferences
 pref("browser.preferences.search", true);
 
-// Once the Storage Management is completed.
-// (The Storage Management-related prefs are browser.storageManager.* )
-// The Offline(Appcache) Group section in about:preferences will be hidden.
-// And the task to clear appcache will be done by Storage Management.
-#if defined(NIGHTLY_BUILD)
+// We prefer the storage manager (see browser.storageManager.enabled)
+// over the old offlineGroup UI. Removing the offline group UI is bug 1399808.
 pref("browser.preferences.offlineGroup.enabled", false);
-#else
-pref("browser.preferences.offlineGroup.enabled", true);
-#endif
 
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
