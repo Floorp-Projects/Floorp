@@ -448,26 +448,45 @@ TexturedRenderPass::TexturedRenderPass(FrameBuilder* aBuilder, const ItemInfo& a
 {
 }
 
+TexturedRenderPass::Info::Info(const ItemInfo& aItem, PaintedLayerMLGPU* aLayer)
+ : item(aItem),
+   textureSize(aLayer->GetTexture()->GetSize()),
+   destOrigin(aLayer->GetContentHost()->GetOriginOffset())
+{
+}
+
+TexturedRenderPass::Info::Info(const ItemInfo& aItem, TexturedLayerMLGPU* aLayer)
+ : item(aItem),
+   textureSize(aLayer->GetTexture()->GetSize()),
+   scale(aLayer->GetPictureScale())
+{
+}
+
+TexturedRenderPass::Info::Info(const ItemInfo& aItem, ContainerLayerMLGPU* aLayer)
+ : item(aItem),
+   textureSize(aLayer->GetTargetSize()),
+   destOrigin(aLayer->GetTargetOffset())
+{
+}
+
 bool
 TexturedRenderPass::AddItem(Txn& aTxn,
-                            const ItemInfo& aInfo,
-                            const Rect& aDrawRect,
-                            const Point& aDestOrigin,
-                            const IntSize& aTextureSize,
-                            const Maybe<Size>& aScale)
+                            const Info& aInfo,
+                            const Rect& aDrawRect)
 {
-
   if (mGeometry == GeometryMode::Polygon) {
     // This path will not clamp the draw rect to the layer clip, so we can pass
     // the draw rect texture rects straight through.
-    return AddClippedItem(aTxn, aInfo, aDrawRect, aDestOrigin, aTextureSize, aScale);
+    return AddClippedItem(aTxn, aInfo, aDrawRect);
   }
 
-  MOZ_ASSERT(!aInfo.geometry);
-  MOZ_ASSERT(aInfo.HasRectTransformAndClip());
+  const ItemInfo& item = aInfo.item;
+
+  MOZ_ASSERT(!item.geometry);
+  MOZ_ASSERT(item.HasRectTransformAndClip());
   MOZ_ASSERT(mHasRectTransformAndClip);
 
-  const Matrix4x4& fullTransform = aInfo.layer->GetLayer()->GetEffectiveTransformForBuffer();
+  const Matrix4x4& fullTransform = item.layer->GetLayer()->GetEffectiveTransformForBuffer();
   Matrix transform = fullTransform.As2D();
   Matrix inverse = transform;
   if (!inverse.Invert()) {
@@ -478,8 +497,8 @@ TexturedRenderPass::AddItem(Txn& aTxn,
   MOZ_ASSERT(inverse.IsRectilinear());
 
   // Transform the clip rect.
-  IntRect clipRect = aInfo.layer->GetComputedClipRect().ToUnknownRect();
-  clipRect += aInfo.view->GetTargetOffset();
+  IntRect clipRect = item.layer->GetComputedClipRect().ToUnknownRect();
+  clipRect += item.view->GetTargetOffset();
 
   // Clip and adjust the texture rect.
   Rect localClip = inverse.TransformBounds(Rect(clipRect));
@@ -488,28 +507,29 @@ TexturedRenderPass::AddItem(Txn& aTxn,
     return true;
   }
 
-  return AddClippedItem(aTxn, aInfo, clippedDrawRect, aDestOrigin, aTextureSize, aScale);
+  return AddClippedItem(aTxn, aInfo, clippedDrawRect);
 }
 
 bool
 TexturedRenderPass::AddClippedItem(Txn& aTxn,
-                                   const ItemInfo& aInfo,
-                                   const gfx::Rect& aDrawRect,
-                                   const gfx::Point& aDestOrigin,
-                                   const gfx::IntSize& aTextureSize,
-                                   const Maybe<gfx::Size>& aScale)
+                                   const Info& aInfo,
+                                   const gfx::Rect& aDrawRect)
 {
-  float xScale = aScale ? aScale->width : 1.0f;
-  float yScale = aScale ? aScale->height : 1.0f;
+  float xScale = 1.0;
+  float yScale = 1.0;
+  if (aInfo.scale) {
+    xScale = aInfo.scale->width;
+    yScale = aInfo.scale->height;
+  }
 
-  Point offset = aDrawRect.TopLeft() - aDestOrigin;
+  Point offset = aDrawRect.TopLeft() - aInfo.destOrigin;
   Rect textureRect(
     offset.x * xScale,
     offset.y * yScale,
     aDrawRect.Width() * xScale,
     aDrawRect.Height() * yScale);
 
-  Rect textureCoords = TextureRectToCoords(textureRect, aTextureSize);
+  Rect textureCoords = TextureRectToCoords(textureRect, aInfo.textureSize);
   if (mTextureFlags & TextureFlags::ORIGIN_BOTTOM_LEFT) {
     textureCoords.y = 1.0 - textureCoords.y;
     textureCoords.SetHeight(-textureCoords.Height());
@@ -521,7 +541,7 @@ TexturedRenderPass::AddClippedItem(Txn& aTxn,
     DecomposeIntoNoRepeatRects(aDrawRect, textureCoords, &layerRects, &textureRects);
 
   for (size_t i = 0; i < numRects; i++) {
-    TexturedTraits traits(aInfo, layerRects[i], textureRects[i]);
+    TexturedTraits traits(aInfo.item, layerRects[i], textureRects[i]);
     if (!aTxn.Add(traits)) {
       return false;
     }
@@ -537,7 +557,7 @@ SingleTexturePass::SingleTexturePass(FrameBuilder* aBuilder, const ItemInfo& aIt
 }
 
 bool
-SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
+SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
 {
   RefPtr<TextureSource> texture;
 
@@ -583,18 +603,14 @@ SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
   Txn txn(this);
 
   if (PaintedLayerMLGPU* layer = aLayer->AsPaintedLayerMLGPU()) {
-    nsIntRegion visible = layer->GetRenderRegion();
-    IntPoint offset = layer->GetContentHost()->GetOriginOffset();
-
-    if (!AddItems(txn, aInfo, visible, offset, mTexture->GetSize())) {
+    Info info(aItem, layer);
+    if (!AddItems(txn, info, layer->GetRenderRegion())) {
       return false;
     }
   } else if (TexturedLayerMLGPU* layer = aLayer->AsTexturedLayerMLGPU()) {
-    IntPoint origin(0, 0);
-    Maybe<Size> pictureScale = layer->GetPictureScale();
+    Info info(aItem, layer);
     nsIntRegion visible = layer->GetShadowVisibleRegion().ToUnknownRegion();
-
-    if (!AddItems(txn, aInfo, visible, origin, mTexture->GetSize(), pictureScale)) {
+    if (!AddItems(txn, info, visible)) {
       return false;
     }
   }
@@ -648,9 +664,9 @@ ComponentAlphaPass::ComponentAlphaPass(FrameBuilder* aBuilder, const ItemInfo& a
 }
 
 bool
-ComponentAlphaPass::AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo)
+ComponentAlphaPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
 {
-  PaintedLayerMLGPU* layer = aItem->AsPaintedLayerMLGPU();
+  PaintedLayerMLGPU* layer = aLayer->AsPaintedLayerMLGPU();
   MOZ_ASSERT(layer);
 
   if (mAssignedLayer && mAssignedLayer != layer) {
@@ -664,10 +680,8 @@ ComponentAlphaPass::AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo)
 
   Txn txn(this);
 
-  nsIntRegion visible = layer->GetRenderRegion();
-  IntPoint offset = layer->GetContentHost()->GetOriginOffset();
-
-  if (!AddItems(txn, aInfo, visible, offset, mTextureOnWhite->GetSize())) {
+  Info info(aItem, layer);
+  if (!AddItems(txn, info, layer->GetRenderRegion())) {
     return false;
   }
   return txn.Commit();
@@ -709,9 +723,9 @@ VideoRenderPass::VideoRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem)
 }
 
 bool
-VideoRenderPass::AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo)
+VideoRenderPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
 {
-  ImageLayerMLGPU* layer = aItem->AsImageLayerMLGPU();
+  ImageLayerMLGPU* layer = aLayer->AsImageLayerMLGPU();
   if (!layer) {
     return false;
   }
@@ -746,11 +760,9 @@ VideoRenderPass::AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo)
 
   Txn txn(this);
 
-  IntPoint origin(0, 0);
-  Maybe<Size> pictureScale = layer->GetPictureScale();
+  Info info(aItem, layer);
   nsIntRegion visible = layer->GetShadowVisibleRegion().ToUnknownRegion();
-
-  if (!AddItems(txn, aInfo, visible, origin, mTexture->GetSize(), pictureScale)) {
+  if (!AddItems(txn, info, visible)) {
     return false;
   }
   return txn.Commit();
@@ -831,7 +843,7 @@ RenderViewPass::RenderViewPass(FrameBuilder* aBuilder, const ItemInfo& aItem)
 }
 
 bool
-RenderViewPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
+RenderViewPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
 {
   // We bake in the layer ahead of time, which also guarantees the blend mode
   // is baked in, as well as the geometry requirement.
@@ -844,7 +856,7 @@ RenderViewPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
     return false;
   }
 
-  mParentView = aInfo.view;
+  mParentView = aItem.view;
 
   Txn txn(this);
 
@@ -855,7 +867,8 @@ RenderViewPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
   nsIntRegion visible = mAssignedLayer->GetShadowVisibleRegion().ToUnknownRegion();
   visible.AndWith(IntRect(offset, size));
 
-  if (!AddItems(txn, aInfo, visible, offset, size)) {
+  Info info(aItem, mAssignedLayer);
+  if (!AddItems(txn, info, visible)) {
     return false;
   }
   return txn.Commit();
