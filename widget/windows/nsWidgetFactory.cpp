@@ -191,7 +191,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor, Module::ALLOW_IN_GPU_PROCESS },
   { &kNS_SCREENMANAGER_CID, false, nullptr, ScreenManagerConstructor,
     Module::MAIN_PROCESS_ONLY },
-  { &kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor },
+  { &kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor, Module::ALLOW_IN_GPU_PROCESS },
   { &kNS_THEMERENDERER_CID, false, nullptr, NS_NewNativeTheme },
   { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceWinConstructor },
   { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor, Module::MAIN_PROCESS_ONLY },
