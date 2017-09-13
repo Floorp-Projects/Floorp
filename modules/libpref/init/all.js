@@ -5431,7 +5431,7 @@ pref("browser.safebrowsing.allowOverride", true);
 // official Firefox releases from Mozilla we use a special identifier.
 pref("browser.safebrowsing.id", "navclient-auto-ffox");
 #else
-pref("browser.safebrowsing.id", "%NAME%");
+pref("browser.safebrowsing.id", "Firefox");
 #endif
 
 // Download protection
