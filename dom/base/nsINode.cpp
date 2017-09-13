@@ -2963,9 +2963,7 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 already_AddRefed<nsINode>
 nsINode::CloneNode(bool aDeep, ErrorResult& aError)
 {
-  nsCOMPtr<nsINode> result;
-  aError = nsNodeUtils::CloneNodeImpl(this, aDeep, getter_AddRefs(result));
-  return result.forget();
+  return nsNodeUtils::CloneNodeImpl(this, aDeep, aError);
 }
 
 nsDOMAttributeMap*

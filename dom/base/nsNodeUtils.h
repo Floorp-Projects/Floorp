@@ -18,6 +18,7 @@ template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
 namespace mozilla {
 struct NonOwningAnimationTarget;
+class ErrorResult;
 namespace dom {
 class Animation;
 } // namespace dom
@@ -183,24 +184,17 @@ public:
    *                             descendants) with properties. Every node will
    *                             be followed by its clone. Null can be passed to
    *                             prevent this from being used.
-   * @param aResult *aResult will contain the cloned node.
+   * @param aError The error, if any.
+   *
+   * @return The newly created node.  Null in error conditions.
    */
-  static nsresult Clone(nsINode *aNode, bool aDeep,
-                        nsNodeInfoManager *aNewNodeInfoManager,
-                        nsCOMArray<nsINode> *aNodesWithProperties,
-                        nsINode **aResult)
+  static already_AddRefed<nsINode> Clone(nsINode *aNode, bool aDeep,
+                                         nsNodeInfoManager *aNewNodeInfoManager,
+                                         nsCOMArray<nsINode> *aNodesWithProperties,
+                                         mozilla::ErrorResult& aError)
   {
     return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager,
-                         nullptr, aNodesWithProperties, nullptr, aResult);
-  }
-
-  /**
-   * Clones aNode, its attributes and, if aDeep is true, its descendant nodes
-   */
-  static nsresult Clone(nsINode *aNode, bool aDeep, nsINode **aResult)
-  {
-    return CloneAndAdopt(aNode, true, aDeep, nullptr, nullptr, nullptr,
-                         aNode->GetParent(), aResult);
+                         nullptr, aNodesWithProperties, nullptr, aError);
   }
 
   /**
@@ -219,19 +213,20 @@ public:
    *                       should be done.
    * @param aNodesWithProperties All nodes (from amongst aNode and its
    *                             descendants) with properties.
+   * @param aError The error, if any.
    */
-  static nsresult Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
-                        JS::Handle<JSObject*> aReparentScope,
-                        nsCOMArray<nsINode> &aNodesWithProperties)
+  static void Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
+                    JS::Handle<JSObject*> aReparentScope,
+                    nsCOMArray<nsINode>& aNodesWithProperties,
+                    mozilla::ErrorResult& aError)
   {
-    nsCOMPtr<nsINode> node;
-    nsresult rv = CloneAndAdopt(aNode, false, true, aNewNodeInfoManager,
-                                aReparentScope, &aNodesWithProperties,
-                                nullptr, getter_AddRefs(node));
+    // Just need to store the return value of CloneAndAdopt in a
+    // temporary nsCOMPtr to make sure we release it.
+    nsCOMPtr<nsINode> node = CloneAndAdopt(aNode, false, true, aNewNodeInfoManager,
+                                           aReparentScope, &aNodesWithProperties,
+                                           nullptr, aError);
 
     nsMutationGuard::DidMutate();
-
-    return rv;
   }
 
   /**
@@ -249,9 +244,12 @@ public:
    *
    * @param aNode the node to clone
    * @param aDeep if true all descendants will be cloned too
-   * @param aResult the clone
+   * @param aError the error, if any.
+   *
+   * @return the clone, or null if an error occurs.
    */
-  static nsresult CloneNodeImpl(nsINode *aNode, bool aDeep, nsINode **aResult);
+  static already_AddRefed<nsINode> CloneNodeImpl(nsINode *aNode, bool aDeep,
+                                                 mozilla::ErrorResult& aError);
 
   /**
    * Release the UserData for aNode.
@@ -287,7 +285,7 @@ private:
    *
    * @param aNode Node to adopt/clone.
    * @param aClone If true the node will be cloned and the cloned node will
-   *               be in aResult.
+   *               be returned.
    * @param aDeep If true the function will be called recursively on
    *              descendants of the node
    * @param aNewNodeInfoManager The nodeinfo manager to use to create new
@@ -304,14 +302,18 @@ private:
    * @param aParent If aClone is true the cloned node will be appended to
    *                aParent's children. May be null. If not null then aNode
    *                must be an nsIContent.
-   * @param aResult If aClone is true then *aResult will contain the cloned
-   *                node.
+   * @param aError The error, if any.
+   *
+   * @return If aClone is true then the cloned node will be returned,
+   *          unless an error occurred.  In error conditions, null
+   *          will be returned.
    */
-  static nsresult CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
-                                nsNodeInfoManager *aNewNodeInfoManager,
-                                JS::Handle<JSObject*> aReparentScope,
-                                nsCOMArray<nsINode> *aNodesWithProperties,
-                                nsINode *aParent, nsINode **aResult);
+  static already_AddRefed<nsINode>
+    CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
+                  nsNodeInfoManager* aNewNodeInfoManager,
+                  JS::Handle<JSObject*> aReparentScope,
+                  nsCOMArray<nsINode>* aNodesWithProperties,
+                  nsINode *aParent, mozilla::ErrorResult& aError);
 
   enum class AnimationMutationType
   {
