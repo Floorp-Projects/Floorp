@@ -563,6 +563,20 @@ XRE_InitChildProcess(int aArgc,
   base::ProcessId parentPID = strtol(parentPIDString, &end, 10);
   MOZ_ASSERT(!*end, "invalid parent PID");
 
+  nsCOMPtr<nsIFile> crashReportTmpDir;
+  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+    aArgc--;
+    if (strlen(aArgv[aArgc])) { // if it's empty, ignore it
+      nsresult rv = XRE_GetFileFromPath(aArgv[aArgc], getter_AddRefs(crashReportTmpDir));
+      if (NS_FAILED(rv)) {
+        // If we don't have a valid tmp dir we can probably still run ok, but
+        // crash report .extra files might not get picked up by the parent
+        // process. Debug-assert because this shouldn't happen in practice.
+        MOZ_ASSERT(false, "GPU process started without valid tmp dir!");
+      }
+    }
+  }
+
 #ifdef XP_MACOSX
   mozilla::ipc::SharedMemoryBasic::SetupMachMemory(parentPID, ports_in_receiver, ports_in_sender,
                                                    ports_out_sender, ports_out_receiver, true);
@@ -662,7 +676,7 @@ XRE_InitChildProcess(int aArgc,
 
 #ifdef MOZ_CRASHREPORTER
 #if defined(XP_WIN) || defined(XP_MACOSX)
-      CrashReporter::InitChildProcessTmpDir();
+      CrashReporter::InitChildProcessTmpDir(crashReportTmpDir);
 #endif
 #endif
 
