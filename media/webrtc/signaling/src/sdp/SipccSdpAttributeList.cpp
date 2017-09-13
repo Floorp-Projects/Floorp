@@ -70,6 +70,18 @@ SipccSdpAttributeList::Clear()
   }
 }
 
+uint32_t
+SipccSdpAttributeList::Count() const
+{
+  uint32_t count = 0;
+  for (size_t i = 0; i < kNumAttributeTypes; ++i) {
+    if (mAttributes[i]) {
+      count++;
+    }
+  }
+  return count;
+}
+
 void
 SipccSdpAttributeList::SetAttribute(SdpAttribute* attr)
 {

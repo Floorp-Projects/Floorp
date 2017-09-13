@@ -15,30 +15,21 @@ registerCleanupFunction(async function() {
  * panel that the downloads panel anchors to the chevron.
  */
 add_task(async function test_overflow_anchor() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.download.autohideButton", false]]});
   // Ensure that state is reset in case previous tests didn't finish.
   await task_resetState();
-
-  // Record the original width of the window so we can put it back when
-  // this test finishes.
-  let oldWidth = window.outerWidth;
 
   // The downloads button should not be overflowed to begin with.
   let button = CustomizableUI.getWidget("downloads-button")
                              .forWindow(window);
   ok(!button.overflowed, "Downloads button should not be overflowed.");
+  is(button.node.getAttribute("cui-areatype"), "toolbar", "Button should know it's in the toolbar");
 
-  // Hack - we lock the size of the default flex-y items in the nav-bar, namely,
-  // the URL input. That way we can resize the window without worrying about it
-  // flexing.
-  const kFlexyItems = ["urlbar-container"];
-  registerCleanupFunction(() => unlockWidth(kFlexyItems));
-  lockWidth(kFlexyItems);
-
-  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForOverflowed(button, true);
+  gCustomizeMode.addToPanel(button.node);
 
   let promise = promisePanelOpened();
   EventUtils.sendMouseEvent({ type: "mousedown", button: 0 }, button.node);
+  info("waiting for panel to open");
   await promise;
 
   let panel = DownloadsPanel.panel;
@@ -47,14 +38,7 @@ add_task(async function test_overflow_anchor() {
 
   DownloadsPanel.hidePanel();
 
-  // Unlock the widths on the flex-y items.
-  unlockWidth(kFlexyItems);
-
-  // Put the window back to its original dimensions.
-  window.resizeTo(oldWidth, window.outerHeight);
-
-  // The downloads button should eventually be un-overflowed.
-  await waitForOverflowed(button, false);
+  gCustomizeMode.addToToolbar(button.node);
 
   // Now try opening the panel again.
   promise = promisePanelOpened();
@@ -66,50 +50,3 @@ add_task(async function test_overflow_anchor() {
   DownloadsPanel.hidePanel();
 });
 
-/**
- * For some node IDs, finds the nodes and sets their min-width's to their
- * current width, preventing them from flex-shrinking.
- *
- * @param aItemIDs an array of item IDs to set min-width on.
- */
-function lockWidth(aItemIDs) {
-  for (let itemID of aItemIDs) {
-    let item = document.getElementById(itemID);
-    let curWidth = item.getBoundingClientRect().width + "px";
-    item.style.minWidth = curWidth;
-  }
-}
-
-/**
- * Clears the min-width's set on a set of IDs by lockWidth.
- *
- * @param aItemIDs an array of ItemIDs to remove min-width on.
- */
-function unlockWidth(aItemIDs) {
-  for (let itemID of aItemIDs) {
-    let item = document.getElementById(itemID);
-    item.style.minWidth = "";
-  }
-}
-
-/**
- * Waits for a node to enter or exit the overflowed state.
- *
- * @param aItem the node to wait for.
- * @param aIsOverflowed if we're waiting for the item to be overflowed.
- */
-function waitForOverflowed(aItem, aIsOverflowed) {
-  if (aItem.overflowed == aIsOverflowed) {
-    return Promise.resolve();
-  }
-
-  return new Promise(resolve => {
-    let observer = new MutationObserver(function(aMutations) {
-      if (aItem.overflowed == aIsOverflowed) {
-        observer.disconnect();
-        resolve();
-      }
-    });
-    observer.observe(aItem.node, {attributes: true});
-  });
-}

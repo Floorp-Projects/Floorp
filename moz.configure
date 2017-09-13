@@ -523,6 +523,8 @@ def nsis_flags(host):
 
 set_config('MAKENSISU_FLAGS', nsis_flags)
 
+check_prog('7Z', ('7z', '7za'), allow_missing=True, when=target_is_windows)
+
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
 

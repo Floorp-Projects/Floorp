@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -583,6 +583,19 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
+    case at.SECTION_UPDATE_CARD:
+      return prevState.map(section => {
+        if (section && section.id === action.data.id && section.rows) {
+          const newRows = section.rows.map(card => {
+            if (card.url === action.data.url) {
+              return Object.assign({}, card, action.data.options);
+            }
+            return card;
+          });
+          return Object.assign({}, section, { rows: newRows });
+        }
+        return section;
+      });
     case at.PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;
@@ -657,8 +670,10 @@ module.exports = {
 
 
 /* istanbul ignore if */
+// Note: normally we would just feature detect Components.utils here, but
+// unfortunately that throws an ugly warning in content if we do.
 
-if (typeof Components !== "undefined" && Components.utils) {
+if (typeof Window === "undefined" && typeof Components !== "undefined" && Components.utils) {
   Components.utils.import("resource://gre/modules/Services.jsm");
 }
 
@@ -1046,10 +1061,10 @@ module.exports._unconnected = LinkMenu;
 const ReactDOM = __webpack_require__(11);
 const Base = __webpack_require__(12);
 const { Provider } = __webpack_require__(3);
-const initStore = __webpack_require__(28);
+const initStore = __webpack_require__(29);
 const { reducers } = __webpack_require__(6);
-const DetectUserSessionStart = __webpack_require__(30);
-const { addSnippetsSubscriber } = __webpack_require__(31);
+const DetectUserSessionStart = __webpack_require__(31);
+const { addSnippetsSubscriber } = __webpack_require__(32);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
 
 new DetectUserSessionStart().sendEventOrAddListener();
@@ -1092,6 +1107,7 @@ const ManualMigration = __webpack_require__(22);
 const PreferencesPane = __webpack_require__(23);
 const Sections = __webpack_require__(24);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
+const { PrerenderData } = __webpack_require__(28);
 
 // Add the locale data for pluralization and relative-time formatting for now,
 // this just uses english locale data. We can make this more sophisticated if
@@ -1103,6 +1119,10 @@ function addLocaleDataForReactIntl({ locale, textDirection }) {
 }
 
 class Base extends React.Component {
+  componentWillMount() {
+    this.sendNewTabRehydrated(this.props.App);
+  }
+
   componentDidMount() {
     // Request state AFTER the first render to ensure we don't cause the
     // prerendered DOM to be unmounted. Otherwise, NEW_TAB_STATE_REQUEST is
@@ -1117,7 +1137,10 @@ class Base extends React.Component {
       document.getElementById("favicon").href += "#";
     }, { once: true });
   }
+
   componentWillUpdate({ App }) {
+    this.sendNewTabRehydrated(App);
+
     // Early loads might not have locale yet, so wait until we do
     if (App.locale && App.locale !== this.props.App.locale) {
       addLocaleDataForReactIntl(App);
@@ -1131,10 +1154,24 @@ class Base extends React.Component {
     }
   }
 
+  // The NEW_TAB_REHYDRATED event is used to inform feeds that their
+  // data has been consumed e.g. for counting the number of tabs that
+  // have rendered that data.
+  sendNewTabRehydrated(App) {
+    if (App && App.initialized && !this.renderNotified) {
+      this.props.dispatch(ac.SendToMain({ type: at.NEW_TAB_REHYDRATED, data: {} }));
+      this.renderNotified = true;
+    }
+  }
+
   render() {
     const props = this.props;
     const { locale, strings, initialized } = props.App;
     const prefs = props.Prefs.values;
+
+    const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
+
+    const outerClassName = `outer-wrapper${shouldBeFixedToTop ? " fixed-to-top" : ""}`;
 
     if (!props.isPrerendered && !initialized) {
       return null;
@@ -1148,7 +1185,7 @@ class Base extends React.Component {
       { key: "STATIC", locale: locale, messages: strings },
       React.createElement(
         "div",
-        { className: "outer-wrapper" },
+        { className: outerClassName },
         React.createElement(
           "main",
           null,
@@ -1165,6 +1202,7 @@ class Base extends React.Component {
 }
 
 module.exports = connect(state => ({ App: state.App, Prefs: state.Prefs }))(Base);
+module.exports._unconnected = Base;
 
 /***/ }),
 /* 13 */
@@ -2642,6 +2680,8 @@ class Card extends React.Component {
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
     // Display "now" as "trending" until we have new strings #3402
     const { icon, intlID } = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
+    const hasImage = link.image || link.hasImage;
+    const imageStyle = { backgroundImage: link.image ? `url(${link.image})` : "none" };
 
     return React.createElement(
       "li",
@@ -2652,10 +2692,14 @@ class Card extends React.Component {
         React.createElement(
           "div",
           { className: "card" },
-          link.image && React.createElement("div", { className: "card-preview-image", style: { backgroundImage: `url(${link.image})` } }),
+          hasImage && React.createElement(
+            "div",
+            { className: "card-preview-image-outer" },
+            React.createElement("div", { className: `card-preview-image${link.image ? " loaded" : ""}`, style: imageStyle })
+          ),
           React.createElement(
             "div",
-            { className: `card-details${link.image ? "" : " no-image"}` },
+            { className: `card-details${hasImage ? "" : " no-image"}` },
             link.hostname && React.createElement(
               "div",
               { className: "card-host-name" },
@@ -2663,7 +2707,7 @@ class Card extends React.Component {
             ),
             React.createElement(
               "div",
-              { className: `card-text${link.image ? "" : " no-image"}${link.hostname ? "" : " no-host-name"}${icon ? "" : " no-context"}` },
+              { className: `card-text${hasImage ? "" : " no-image"}${link.hostname ? "" : " no-host-name"}${icon ? "" : " no-context"}` },
               React.createElement(
                 "h4",
                 { className: "card-title", dir: "auto" },
@@ -2792,11 +2836,102 @@ module.exports.Topic = Topic;
 
 /***/ }),
 /* 28 */
+/***/ (function(module, exports) {
+
+class _PrerenderData {
+  constructor(options) {
+    this.initialPrefs = options.initialPrefs;
+    this.initialSections = options.initialSections;
+    this._setValidation(options.validation);
+  }
+
+  get validation() {
+    return this._validation;
+  }
+
+  set validation(value) {
+    this._setValidation(value);
+  }
+
+  get invalidatingPrefs() {
+    return this._invalidatingPrefs;
+  }
+
+  // This is needed so we can use it in the constructor
+  _setValidation(value = []) {
+    this._validation = value;
+    this._invalidatingPrefs = value.reduce((result, next) => {
+      if (typeof next === "string") {
+        result.push(next);
+        return result;
+      } else if (next && next.oneOf) {
+        return result.concat(next.oneOf);
+      }
+      throw new Error("Your validation configuration is not properly configured");
+    }, []);
+  }
+
+  arePrefsValid(getPref) {
+    for (const prefs of this.validation) {
+      // {oneOf: ["foo", "bar"]}
+      if (prefs && prefs.oneOf && !prefs.oneOf.some(name => getPref(name) === this.initialPrefs[name])) {
+        return false;
+
+        // "foo"
+      } else if (getPref(prefs) !== this.initialPrefs[prefs]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+var PrerenderData = new _PrerenderData({
+  initialPrefs: {
+    "migrationExpired": true,
+    "showTopSites": true,
+    "showSearch": true,
+    "topSitesCount": 6,
+    "feeds.section.topstories": true,
+    "feeds.section.highlights": true
+  },
+  // Prefs listed as invalidating will prevent the prerendered version
+  // of AS from being used if their value is something other than what is listed
+  // here. This is required because some preferences cause the page layout to be
+  // too different for the prerendered version to be used. Unfortunately, this
+  // will result in users who have modified some of their preferences not being
+  // able to get the benefits of prerendering.
+  validation: ["showTopSites", "showSearch",
+  // This means if either of these are set to their default values,
+  // prerendering can be used.
+  { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] }],
+  initialSections: [{
+    enabled: true,
+    icon: "pocket",
+    id: "topstories",
+    order: 1,
+    title: { id: "header_recommended_by", values: { provider: "Pocket" } },
+    topics: [{}]
+  }, {
+    enabled: true,
+    id: "highlights",
+    icon: "highlights",
+    order: 2,
+    title: { id: "header_highlights" }
+  }]
+});
+module.exports = {
+  PrerenderData,
+  _PrerenderData
+};
+
+/***/ }),
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/* eslint-env mozilla/frame-script */
 
-const { createStore, combineReducers, applyMiddleware } = __webpack_require__(29);
+const { createStore, combineReducers, applyMiddleware } = __webpack_require__(30);
 const { actionTypes: at, actionCreators: ac, actionUtils: au } = __webpack_require__(0);
 
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
@@ -2906,13 +3041,13 @@ module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const { actionTypes: at } = __webpack_require__(0);
@@ -2982,7 +3117,7 @@ module.exports = class DetectUserSessionStart {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const DATABASE_NAME = "snippets_db";

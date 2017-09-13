@@ -11,33 +11,13 @@
   },
   {
     "title": "amazon",
-    "url": "https://www.amazon.ca/",
-    "image_url": "amazon-ca@2x.png"
-  },
-  {
-    "title": "amazon",
-    "url": "https://www.amazon.co.uk/",
-    "image_url": "amazon-uk@2x.png"
-  },
-  {
-    "title": "amazon",
-    "url": "https://www.amazon.com/",
-    "image_url": "amazon-com@2x.png"
-  },
-  {
-    "title": "amazon",
-    "url": "https://www.amazon.de/",
-    "image_url": "amazon-de@2x.png"
-  },
-  {
-    "title": "amazon",
-    "url": "https://www.amazon.fr/",
-    "image_url": "amazon-fr@2x.png"
+    "urls": ["https://www.amazon.ca/", "https://www.amazon.co.uk/", "https://www.amazon.com/", "https://www.amazon.de/", "https://www.amazon.fr/"],
+    "image_url": "amazon@2x.png"
   },
   {
     "title": "avito",
     "url": "https://www.avito.ru/",
-    "image_url": "avito@2x.png"
+    "image_url": "avito-ru@2x.png"
   },
   {
     "title": "bbc",
@@ -46,13 +26,8 @@
   },
   {
     "title": "ebay",
-    "urls": ["https://www.ebay.com", "https://www.ebay.co.uk/"],
+    "urls": ["https://www.ebay.com", "https://www.ebay.co.uk/", "https://ebay.de"],
     "image_url": "ebay@2x.png"
-  },
-  {
-    "title": "ebay",
-    "url": "https://ebay.de",
-    "image_url": "ebay-de@2x.png"
   },
   {
     "title": "facebook",
@@ -62,12 +37,12 @@
   {
     "title": "leboncoin",
     "url": "http://www.leboncoin.fr/",
-    "image_url": "leboncoin@2x.png"
+    "image_url": "leboncoin-fr@2x.png"
   },
   {
     "title": "ok",
     "url": "https://www.ok.ru/",
-    "image_url": "ok@2x.png"
+    "image_url": "ok-ru@2x.png"
   },
   {
     "title": "olx",
@@ -92,12 +67,12 @@
   {
     "title": "wikipedia",
     "url": "https://www.wikipedia.org/",
-    "image_url": "wikipedia-com@2x.png"
+    "image_url": "wikipedia-org@2x.png"
   },
   {
     "title": "wykop",
     "url": "https://www.wykop.pl/",
-    "image_url": "wykop@2x.png"
+    "image_url": "wykop-pl@2x.png"
   },
   {
     "title": "youtube",

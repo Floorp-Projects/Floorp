@@ -12,15 +12,14 @@ const SOURCE_MAP_PREF = "devtools.source-map.client-service.enabled";
  * used as a cookie by the devtools-source-map service) and the source
  * map URL.
  *
- * @param {object} target
- *        The object the toolbox is debugging.
- * @param {object} threadClient
- *        The toolbox's thread client
+ * @param {object} toolbox
+ *        The toolbox.
  * @param {SourceMapService} sourceMapService
  *        The devtools-source-map functions
  */
-function SourceMapURLService(target, threadClient, sourceMapService) {
-  this._target = target;
+function SourceMapURLService(toolbox, sourceMapService) {
+  this._toolbox = toolbox;
+  this._target = toolbox.target;
   this._sourceMapService = sourceMapService;
   this._urls = new Map();
   this._subscriptions = new Map();
@@ -29,23 +28,50 @@ function SourceMapURLService(target, threadClient, sourceMapService) {
   this.reset = this.reset.bind(this);
   this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
   this._onPrefChanged = this._onPrefChanged.bind(this);
+  this._onNewStyleSheet = this._onNewStyleSheet.bind(this);
 
-  target.on("source-updated", this._onSourceUpdated);
-  target.on("will-navigate", this.reset);
+  this._target.on("source-updated", this._onSourceUpdated);
+  this._target.on("will-navigate", this.reset);
 
   Services.prefs.addObserver(SOURCE_MAP_PREF, this._onPrefChanged);
 
-  // Start fetching the sources now.
-  this._loadingPromise = threadClient.getSources().then(({sources}) => {
-    // Ignore errors.  Register the sources we got; we can't rely on
-    // an event to arrive if the source actor already existed.
-    for (let source of sources) {
-      this._onSourceUpdated(null, {source});
-    }
-  }, e => {
-    // Also ignore any protocol-based errors.
-  });
+  this._stylesheetsFront = null;
+  this._loadingPromise = null;
 }
+
+/**
+ * Lazy initialization.  Returns a promise that will resolve when all
+ * the relevant URLs have been registered.
+ */
+SourceMapURLService.prototype._getLoadingPromise = function () {
+  if (!this._loadingPromise) {
+    let styleSheetsLoadingPromise = null;
+    this._stylesheetsFront = this._toolbox.initStyleSheetsFront();
+    if (this._stylesheetsFront) {
+      this._stylesheetsFront.on("stylesheet-added", this._onNewStyleSheet);
+      styleSheetsLoadingPromise =
+          this._stylesheetsFront.getStyleSheets().then(sheets => {
+            sheets.forEach(this._onNewStyleSheet);
+          }, () => {
+            // Ignore any protocol-based errors.
+          });
+    }
+
+    // Start fetching the sources now.
+    let loadingPromise = this._toolbox.threadClient.getSources().then(({sources}) => {
+      // Ignore errors.  Register the sources we got; we can't rely on
+      // an event to arrive if the source actor already existed.
+      for (let source of sources) {
+        this._onSourceUpdated(null, {source});
+      }
+    }, e => {
+      // Also ignore any protocol-based errors.
+    });
+
+    this._loadingPromise = Promise.all([styleSheetsLoadingPromise, loadingPromise]);
+  }
+  return this._loadingPromise;
+};
 
 /**
  * Reset the service.  This flushes the internal cache.
@@ -65,6 +91,9 @@ SourceMapURLService.prototype.destroy = function () {
   this.reset();
   this._target.off("source-updated", this._onSourceUpdated);
   this._target.off("will-navigate", this.reset);
+  if (this._stylesheetsFront) {
+    this._stylesheetsFront.off("stylesheet-added", this._onNewStyleSheet);
+  }
   Services.prefs.removeObserver(SOURCE_MAP_PREF, this._onPrefChanged);
   this._target = this._urls = this._subscriptions = null;
 };
@@ -88,6 +117,22 @@ SourceMapURLService.prototype._onSourceUpdated = function (_, sourceEvent) {
 };
 
 /**
+ * A helper function that is called when a new style sheet is
+ * available.
+ * @param {StyleSheetActor} sheet
+ *        The new style sheet's actor.
+ */
+SourceMapURLService.prototype._onNewStyleSheet = function (sheet) {
+  // Maybe we were shut down while waiting.
+  if (!this._urls) {
+    return;
+  }
+
+  let {href: url, sourceMapURL, actor: id} = sheet._form;
+  this._urls.set(url, { id, url, sourceMapURL});
+};
+
+/**
  * Look up the original position for a given location.  This returns a
  * promise resolving to either the original location, or null if the
  * given location is not source-mapped.  If a location is returned, it
@@ -104,7 +149,7 @@ SourceMapURLService.prototype._onSourceUpdated = function (_, sourceEvent) {
  */
 SourceMapURLService.prototype.originalPositionFor = async function (url, line, column) {
   // Ensure the sources are loaded before replying.
-  await this._loadingPromise;
+  await this._getLoadingPromise();
 
   // Maybe we were shut down while waiting.
   if (!this._urls) {

@@ -97,25 +97,32 @@ Symbol::for_(JSContext* cx, HandleString description)
 
 #ifdef DEBUG
 void
-Symbol::dump(FILE* fp)
+Symbol::dump()
+{
+    js::Fprinter out(stderr);
+    dump(out);
+}
+
+void
+Symbol::dump(js::GenericPrinter& out)
 {
     if (isWellKnownSymbol()) {
         // All the well-known symbol names are ASCII.
-        description_->dumpCharsNoNewline(fp);
+        description_->dumpCharsNoNewline(out);
     } else if (code_ == SymbolCode::InSymbolRegistry || code_ == SymbolCode::UniqueSymbol) {
-        fputs(code_ == SymbolCode::InSymbolRegistry ? "Symbol.for(" : "Symbol(", fp);
+        out.printf(code_ == SymbolCode::InSymbolRegistry ? "Symbol.for(" : "Symbol(");
 
         if (description_)
-            description_->dumpCharsNoNewline(fp);
+            description_->dumpCharsNoNewline(out);
         else
-            fputs("undefined", fp);
+            out.printf("undefined");
 
-        fputc(')', fp);
+        out.putChar(')');
 
         if (code_ == SymbolCode::UniqueSymbol)
-            fprintf(fp, "@%p", (void*) this);
+            out.printf("@%p", (void*) this);
     } else {
-        fprintf(fp, "<Invalid Symbol code=%u>", unsigned(code_));
+        out.printf("<Invalid Symbol code=%u>", unsigned(code_));
     }
 }
 #endif  // DEBUG

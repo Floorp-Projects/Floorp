@@ -641,7 +641,8 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
 
   for (size_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
     auto& attrs = sdp->GetMediaSection(i).GetAttributeList();
-    if (attrs.HasAttribute(SdpAttribute::kMidAttribute)) {
+    if ((sdp->GetMediaSection(i).GetPort() != 0) &&
+        attrs.HasAttribute(SdpAttribute::kMidAttribute)) {
       bool useBundleOnly = false;
       switch (mBundlePolicy) {
         case kBundleMaxCompat:

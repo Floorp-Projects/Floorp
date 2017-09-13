@@ -99,6 +99,38 @@ extern const GUID CLSID_WebmMfVpxDec =
 
 namespace mozilla {
 
+static bool
+IsWin7H264Decoder4KCapable()
+{
+  WCHAR systemPath[MAX_PATH + 1];
+  if (!ConstructSystem32Path(L"msmpeg2vdec.dll", systemPath, MAX_PATH + 1)) {
+    // Cannot build path -> Assume it's the old DLL or it's missing.
+    return false;
+  }
+
+  DWORD zero;
+  DWORD infoSize = GetFileVersionInfoSizeW(systemPath, &zero);
+  if (infoSize == 0) {
+    // Can't get file info -> Assume it's the old DLL or it's missing.
+    return false;
+  }
+  auto infoData = MakeUnique<unsigned char[]>(infoSize);
+  VS_FIXEDFILEINFO *vInfo;
+  UINT vInfoLen;
+  if (GetFileVersionInfoW(systemPath, 0, infoSize, infoData.get()) &&
+    VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen))
+  {
+    uint64_t version =
+      uint64_t(vInfo->dwFileVersionMS) << 32 | uint64_t(vInfo->dwFileVersionLS);
+    // 12.0.9200.16426 & later allow for >1920x1088 resolutions.
+    const uint64_t minimum =
+      (uint64_t(12) << 48) | (uint64_t(9200) << 16) | uint64_t(16426);
+    return version >= minimum;
+  }
+  // Can't get file version -> Assume it's the old DLL.
+  return false;
+}
+
 template<class T>
 class DeleteObjectTask: public Runnable {
 public:
@@ -523,24 +555,34 @@ WMFVideoMFTManager::InitializeDXVA()
   return mDXVA2Manager != nullptr;
 }
 
-bool
+MediaResult
 WMFVideoMFTManager::ValidateVideoInfo()
 {
-  // The WMF H.264 decoder is documented to have a minimum resolution
-  // 48x48 pixels. We've observed the decoder working for output smaller than
-  // that, but on some output it hangs in IMFTransform::ProcessOutput(), so
-  // we just reject streams which are less than the documented minimum.
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
-  static const int32_t MIN_H264_FRAME_DIMENSION = 48;
-  if (mStreamType == H264 &&
-      (mVideoInfo.mImage.width < MIN_H264_FRAME_DIMENSION ||
-       mVideoInfo.mImage.height < MIN_H264_FRAME_DIMENSION)) {
-    LogToBrowserConsole(NS_LITERAL_STRING(
-      "Can't decode H.264 stream with width or height less than 48 pixels."));
-    mIsValid = false;
+  if (mStreamType != H264 ||
+      gfxPrefs::PDMWMFAllowUnsupportedResolutions()) {
+    return NS_OK;
   }
 
-  return mIsValid;
+  // The WMF H.264 decoder is documented to have a minimum resolution 48x48 pixels
+  // for resolution, but we won't enable hw decoding for the resolution < 132 pixels.
+  // It's assumed the software decoder doesn't have this limitation, but it still
+  // might have maximum resolution limitation.
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
+  const bool Is4KCapable = IsWin8OrLater() || IsWin7H264Decoder4KCapable();
+  static const int32_t MIN_H264_FRAME_DIMENSION = 48;
+  static const int32_t MAX_H264_FRAME_WIDTH = Is4KCapable ? 4096 : 1920;
+  static const int32_t MAX_H264_FRAME_HEIGHT = Is4KCapable ? 2304 : 1088;
+
+  if (mVideoInfo.mImage.width > MAX_H264_FRAME_WIDTH  ||
+      mVideoInfo.mImage.height > MAX_H264_FRAME_HEIGHT) {
+    mIsValid = false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Can't decode H.264 stream because its "
+                                     "resolution is out of the maximum limitation"));
+  }
+
+  return NS_OK;
+
 }
 
 already_AddRefed<MFTDecoder>
@@ -569,25 +611,26 @@ WMFVideoMFTManager::LoadAMDVP9Decoder()
   return decoder.forget();
 }
 
-bool
+MediaResult
 WMFVideoMFTManager::Init()
 {
-  if (!ValidateVideoInfo()) {
-    return false;
+  MediaResult result = ValidateVideoInfo();
+  if (NS_FAILED(result)) {
+    return result;
   }
 
-  bool success = InitInternal();
-  if (!success && mAMDVP9InUse) {
+  result = InitInternal();
+  if (NS_FAILED(result) && mAMDVP9InUse) {
     // Something failed with the AMD VP9 decoder; attempt again defaulting back
     // to Microsoft MFT.
     mCheckForAMDDecoder = false;
     if (mDXVA2Manager) {
       DeleteOnMainThread(mDXVA2Manager);
     }
-    success = InitInternal();
+    result = InitInternal();
   }
 
-  if (success && mDXVA2Manager) {
+  if (NS_SUCCEEDED(result) && mDXVA2Manager) {
     // If we had some failures but eventually made it work,
     // make sure we preserve the messages.
     if (mDXVA2Manager->IsD3D11()) {
@@ -597,10 +640,10 @@ WMFVideoMFTManager::Init()
     }
   }
 
-  return success;
+  return result;
 }
 
-bool
+MediaResult
 WMFVideoMFTManager::InitInternal()
 {
   // The H264 SanityTest uses a 132x132 videos to determine if DXVA can be used.
@@ -628,7 +671,9 @@ WMFVideoMFTManager::InitInternal()
     mAMDVP9InUse = false;
     decoder = new MFTDecoder();
     hr = decoder->Create(GetMFTGUID());
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+    NS_ENSURE_TRUE(SUCCEEDED(hr),
+                   MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                               RESULT_DETAIL("Can't create the MFT decoder.")));
   }
 
   RefPtr<IMFAttributes> attr(decoder->GetAttributes());
@@ -670,9 +715,10 @@ WMFVideoMFTManager::InitInternal()
   }
 
   if (!mUseHwAccel) {
-    // Use VP8/9 MFT only if HW acceleration is available
     if (mStreamType == VP9 || mStreamType == VP8) {
-      return false;
+      return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                         RESULT_DETAIL("Use VP8/9 MFT only if HW acceleration "
+                                       "is available."));
     }
     Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                           uint32_t(media::MediaDecoderBackend::WMFSoftware));
@@ -680,11 +726,15 @@ WMFVideoMFTManager::InitInternal()
 
   mDecoder = decoder;
   hr = SetDecoderMediaTypes();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  NS_ENSURE_TRUE(SUCCEEDED(hr),
+                 MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                             RESULT_DETAIL("Fail to set the decoder media types.")));
 
   RefPtr<IMFMediaType> outputType;
   hr = mDecoder->GetOutputMediaType(outputType);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  NS_ENSURE_TRUE(SUCCEEDED(hr),
+                 MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                            RESULT_DETAIL("Fail to get the output media type.")));
 
   if (mUseHwAccel && !CanUseDXVA(outputType)) {
     mDXVAEnabled = false;
@@ -699,7 +749,10 @@ WMFVideoMFTManager::InitInternal()
   if (mDXVA2Manager) {
     hr = mDXVA2Manager->ConfigureForSize(mVideoInfo.ImageRect().width,
                                          mVideoInfo.ImageRect().height);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    NS_ENSURE_TRUE(SUCCEEDED(hr),
+                   MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                               RESULT_DETAIL("Fail to configure image size for "
+                                             "DXVA2Manager.")));
   } else {
     GetDefaultStride(outputType, mVideoInfo.ImageRect().width, &mVideoStride);
   }
@@ -729,7 +782,7 @@ WMFVideoMFTManager::InitInternal()
       }
     }
   }
-  return true;
+  return MediaResult(NS_OK);
 }
 
 HRESULT
