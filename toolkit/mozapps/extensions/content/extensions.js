@@ -2802,7 +2802,7 @@ var gLegacyView = {
   },
 
   async show(type, request) {
-    let addons = await AddonManager.getAddonsByTypes(["extension"]);
+    let addons = await AddonManager.getAddonsByTypes(["extension", "theme"]);
     addons = addons.filter(a => !a.hidden &&
                               (isDisabledLegacy(a) || isDisabledUnsigned(a)));
 
@@ -2840,7 +2840,7 @@ var gLegacyView = {
       return;
     }
 
-    let extensions = await AddonManager.getAddonsByTypes(["extension"]);
+    let extensions = await AddonManager.getAddonsByTypes(["extension", "theme"]);
 
     let haveUnsigned = false;
     let haveLegacy = false;
@@ -2979,7 +2979,21 @@ var gListView = {
       }
 
       this.filterDisabledUnsigned(showOnlyDisabledUnsigned);
-      document.getElementById("legacy-extensions-notice").hidden = !showLegacyInfo;
+      let legacyNotice = document.getElementById("legacy-extensions-notice");
+      if (showLegacyInfo) {
+        let el = document.getElementById("legacy-extensions-description");
+        if (el.childNodes[0].nodeName == "#text") {
+          el.removeChild(el.childNodes[0]);
+        }
+
+        let descriptionId = (aType == "theme") ?
+                            "legacyThemeWarning.description" : "legacyWarning.description";
+        let text = gStrings.ext.formatStringFromName(descriptionId, [gStrings.brandShortName], 1) + " ";
+        el.insertBefore(document.createTextNode(text), el.childNodes[0]);
+        legacyNotice.hidden = false;
+      } else {
+        legacyNotice.hidden = true;
+      }
 
       gEventManager.registerInstallListener(this);
       gViewController.updateCommands();
