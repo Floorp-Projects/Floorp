@@ -13,14 +13,14 @@ namespace mozilla {
 
 void
 TelemetryIPC::AccumulateChildHistograms(Telemetry::ProcessID aProcessType,
-                                        const nsTArray<Telemetry::Accumulation>& aAccumulations)
+                                        const nsTArray<Telemetry::HistogramAccumulation>& aAccumulations)
 {
   TelemetryHistogram::AccumulateChild(aProcessType, aAccumulations);
 }
 
 void
 TelemetryIPC::AccumulateChildKeyedHistograms(Telemetry::ProcessID aProcessType,
-                                            const nsTArray<Telemetry::KeyedAccumulation>& aAccumulations)
+                                            const nsTArray<Telemetry::KeyedHistogramAccumulation>& aAccumulations)
 {
   TelemetryHistogram::AccumulateChildKeyed(aProcessType, aAccumulations);
 }
