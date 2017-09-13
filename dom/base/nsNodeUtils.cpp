@@ -587,8 +587,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       if ((wrapper = aNode->GetWrapper())) {
         MOZ_ASSERT(IsDOMObject(wrapper));
         JSAutoCompartment ac(cx, wrapper);
-        nsresult rv = ReparentWrapper(cx, wrapper);
-        if (NS_FAILED(rv)) {
+        ReparentWrapper(cx, wrapper, aError);
+        if (aError.Failed()) {
           if (wasRegistered) {
             aNode->OwnerDoc()->UnregisterActivityObserver(aNode->AsElement());
           }
@@ -596,7 +596,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
           if (wasRegistered) {
             aNode->OwnerDoc()->RegisterActivityObserver(aNode->AsElement());
           }
-          aError.Throw(rv);
           return nullptr;
         }
       }

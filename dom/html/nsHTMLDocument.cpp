@@ -1724,7 +1724,7 @@ nsHTMLDocument::Open(JSContext* cx,
     JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
     if (oldScope && newScope != oldScope && wrapper) {
       JSAutoCompartment ac(cx, wrapper);
-      rv = mozilla::dom::ReparentWrapper(cx, wrapper);
+      mozilla::dom::ReparentWrapper(cx, wrapper, rv);
       if (rv.Failed()) {
         return nullptr;
       }
@@ -1735,7 +1735,7 @@ nsHTMLDocument::Open(JSContext* cx,
         JS::Rooted<JSObject*> contentsOwnerWrapper(cx,
           mTemplateContentsOwner->GetWrapper());
         if (contentsOwnerWrapper) {
-          rv = mozilla::dom::ReparentWrapper(cx, contentsOwnerWrapper);
+          mozilla::dom::ReparentWrapper(cx, contentsOwnerWrapper, rv);
           if (rv.Failed()) {
             return nullptr;
           }
