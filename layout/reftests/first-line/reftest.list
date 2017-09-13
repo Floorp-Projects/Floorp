@@ -13,7 +13,7 @@ fails-if(!stylo) fails-if(styloVsGecko) == out-of-flow-1d.html out-of-flow-1-ref
 == parent-style-3.html parent-style-3-ref.html
 
 # stress-tests
-skip-if(styloVsGecko) load stress-1.html # assertion test
+load stress-1.html # assertion test
 == stress-2.html stress-2-ref.html # assertion + rendering test
 load stress-3.html # assertion test
 load stress-4.html # assertion/crash test.
