@@ -59,22 +59,6 @@ ALL_FLAVORS = {
             'flavor': 'browser',
         }
     },
-    'jetpack-package': {
-        'suite': 'jetpack-package',
-        'aliases': ('jetpack-package', 'mochitest-jetpack-package', 'jpp'),
-        'enabled_apps': ('firefox',),
-        'extra_args': {
-            'flavor': 'jetpack-package',
-        }
-    },
-    'jetpack-addon': {
-        'suite': 'jetpack-addon',
-        'aliases': ('jetpack-addon', 'mochitest-jetpack-addon', 'jpa'),
-        'enabled_apps': ('firefox',),
-        'extra_args': {
-            'flavor': 'jetpack-addon',
-        }
-    },
     'a11y': {
         'suite': 'a11y',
         'aliases': ('a11y', 'mochitest-a11y', 'accessibility'),

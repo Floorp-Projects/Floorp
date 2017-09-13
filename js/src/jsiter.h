@@ -218,7 +218,7 @@ extern JSObject*
 CreateIterResultObject(JSContext* cx, HandleValue value, bool done);
 
 bool
-IsLegacyIterator(HandleValue v);
+IsPropertyIterator(HandleValue v);
 
 extern JSObject*
 InitStopIterationClass(JSContext* cx, HandleObject obj);

@@ -1,63 +1,81 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <head>
-  <script src="u2futil.js"></script>
+  <script type="text/javascript" src="frame_utils.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
 </head>
 <body>
-<p>Test for AppID / FacetID behavior for FIDO Universal Second Factor</p>
+<p>AppID / Facet checks</p>
 <script class="testbody" type="text/javascript">
 "use strict";
 
-local_is(window.location.origin, "https://example.com", "Is loaded correctly");
+async function doTests() {
+  let version = "U2F_V2";
+  let challenge = new Uint8Array(16);
+  window.crypto.getRandomValues(challenge);
 
-var version = "U2F_V2";
-var challenge = new Uint8Array(16);
+  local_is(window.location.origin, "https://example.com", "Is loaded correctly");
 
-local_expectThisManyTests(5);
+  // Ensure the SpecialPowers push worked properly
+  local_isnot(window.u2f, undefined, "U2F API endpoint must exist");
 
-u2f.register(null, [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_is(res.errorCode, 0, "Null AppID should work.");
-  local_completeTest();
-});
+  await promiseU2FRegister(null, [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_is(res.errorCode, 0, "Null AppID should work.");
+  });
 
-u2f.register("", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_is(res.errorCode, 0, "Empty AppID should work.");
-  local_completeTest();
-});
+  await promiseU2FRegister("", [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_is(res.errorCode, 0, "Empty AppID should work.");
+  });
 
-// Test: Correct TLD, but incorrect scheme
-u2f.register("http://example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "HTTP scheme is disallowed");
-  local_completeTest();
-});
+  // Test: Correct TLD, but incorrect scheme
+  await promiseU2FRegister("http://example.com/appId", [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_isnot(res.errorCode, 0, "HTTP scheme is disallowed");
+  });
 
-// Test: Correct TLD, and also HTTPS
-u2f.register("https://example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_is(res.errorCode, 0, "HTTPS origin for example.com should work");
-  local_completeTest();
-});
+  // Test: Correct TLD, and also HTTPS
+  await promiseU2FRegister("https://example.com/appId", [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_is(res.errorCode, 0, "HTTPS origin for example.com should work");
+  });
 
-// Test: Dynamic origin
-u2f.register(window.location.origin + "/otherAppId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_is(res.errorCode, 0, "Direct window origin should work");
-  local_completeTest();
-});
+  // Test: Sub-domain
+  await promiseU2FRegister("https://test2.example.com/appId", [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_is(res.errorCode, 2, "HTTPS origin for test2.example.com shouldn't work");
+  });
 
+  // Test: Sub-sub-domain
+  await promiseU2FRegister("https://sub.test2.example.com/appId", [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_is(res.errorCode, 2, "HTTPS origin for sub.test2.example.com shouldn't work");
+  });
+
+  // Test: Dynamic origin
+  await promiseU2FRegister(window.location.origin + "/otherAppId", [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_is(res.errorCode, 0, "Direct window origin should work");
+  });
+  local_finished();
+};
+
+doTests();
 </script>
 </body>
 </html>

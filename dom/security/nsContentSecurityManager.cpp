@@ -1,4 +1,5 @@
 #include "nsContentSecurityManager.h"
+#include "nsEscape.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIStreamListener.h"
@@ -57,11 +58,13 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
       nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal)) {
     return true;
   }
-  NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
-  if (specUTF16.Length() > 50) {
-    specUTF16.Truncate(50);
-    specUTF16.AppendLiteral("...");
+  nsAutoCString dataSpec;
+  aURI->GetSpec(dataSpec);
+  if (dataSpec.Length() > 50) {
+    dataSpec.Truncate(50);
+    dataSpec.AppendLiteral("...");
   }
+  NS_ConvertUTF8toUTF16 specUTF16(NS_UnescapeURL(dataSpec));
   const char16_t* params[] = { specUTF16.get() };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),

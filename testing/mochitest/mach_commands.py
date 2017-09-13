@@ -116,7 +116,7 @@ class MochitestRunner(MozbuildObject):
         """Runs a mochitest.
 
         suite is the type of mochitest to run. It can be one of ('plain',
-        'chrome', 'browser', 'a11y', 'jetpack-package', 'jetpack-addon').
+        'chrome', 'browser', 'a11y').
         """
         # runtests.py is ambiguous, so we load the file/module manually.
         if 'mochitest' not in sys.modules:
@@ -498,12 +498,4 @@ class DeprecatedCommands(MachCommandBase):
 
     @Command('mochitest-a11y', category='testing', conditions=[REMOVED])
     def mochitest_a11y(self):
-        pass
-
-    @Command('jetpack-addon', category='testing', conditions=[REMOVED])
-    def jetpack_addon(self):
-        pass
-
-    @Command('jetpack-package', category='testing', conditions=[REMOVED])
-    def jetpack_package(self):
         pass

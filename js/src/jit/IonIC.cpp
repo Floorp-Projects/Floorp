@@ -243,8 +243,11 @@ IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonSetProperty
             MOZ_ASSERT(!script->hasNonSyntacticScope());
             InitGlobalLexicalOperation(cx, &cx->global()->lexicalEnvironment(), script, pc, rhs);
         } else if (IsPropertyInitOp(JSOp(*pc))) {
-            RootedId id(cx, AtomToId(&idVal.toString()->asAtom()));
-            if (!InitPropertyOperation(cx, JSOp(*pc), obj, id, rhs))
+            // This might be a JSOP_INITELEM op with a constant string id. We
+            // can't call InitPropertyOperation here as that function is
+            // specialized for JSOP_INIT*PROP (it does not support arbitrary
+            // objects that might show up here).
+            if (!InitElemOperation(cx, pc, obj, idVal, rhs))
                 return false;
         } else {
             MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));

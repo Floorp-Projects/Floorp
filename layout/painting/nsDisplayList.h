@@ -325,15 +325,23 @@ public:
                        bool aBuildCaret);
   ~nsDisplayListBuilder();
 
+  void BeginFrame();
+  void EndFrame();
+
   void SetWillComputePluginGeometry(bool aWillComputePluginGeometry)
   {
     mWillComputePluginGeometry = aWillComputePluginGeometry;
   }
-  void SetForPluginGeometry()
+  void SetForPluginGeometry(bool aForPlugin)
   {
-    NS_ASSERTION(mMode == nsDisplayListBuilderMode::PAINTING, "Can only switch from PAINTING to PLUGIN_GEOMETRY");
-    NS_ASSERTION(mWillComputePluginGeometry, "Should have signalled this in advance");
-    mMode = nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
+    if (aForPlugin) {
+      NS_ASSERTION(mMode == nsDisplayListBuilderMode::PAINTING, "Can only switch from PAINTING to PLUGIN_GEOMETRY");
+      NS_ASSERTION(mWillComputePluginGeometry, "Should have signalled this in advance");
+      mMode = nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
+    } else {
+      NS_ASSERTION(mMode == nsDisplayListBuilderMode::PLUGIN_GEOMETRY, "Can only switch from PAINTING to PLUGIN_GEOMETRY");
+      mMode = nsDisplayListBuilderMode::PAINTING;
+    }
   }
 
   mozilla::layers::LayerManager* GetWidgetLayerManager(nsView** aView = nullptr);
@@ -498,13 +506,13 @@ public:
    * Calling this setter makes us compute accurate visible regions at the cost
    * of performance if regions get very complex.
    */
-  void SetAccurateVisibleRegions() { mAccurateVisibleRegions = true; }
-  bool GetAccurateVisibleRegions() { return mAccurateVisibleRegions; }
+  bool GetAccurateVisibleRegions() { return mMode == nsDisplayListBuilderMode::PLUGIN_GEOMETRY; }
   /**
    * @return Returns true if we should include the caret in any display lists
    * that we make.
    */
   bool IsBuildingCaret() { return mBuildCaret; }
+
   /**
    * Allows callers to selectively override the regular paint suppression checks,
    * so that methods like GetFrameForPoint work when painting is suppressed.

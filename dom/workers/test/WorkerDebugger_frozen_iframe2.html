@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+      var worker = new Worker("WorkerDebugger_frozen_worker2.js");
+      worker.onmessage = function () {
+        parent.postMessage("ready", "*");
+      };
+    </script>
+  </head>
+  <body>
+    This is page 2.
+  </body>
+<html>

@@ -77,6 +77,8 @@ public:
     return mIsDirectory;
   }
 
+  size_t GetAllocationSize() const override;
+
 private:
   StreamBlobImpl(nsIInputStream* aInputStream,
                  const nsAString& aContentType,

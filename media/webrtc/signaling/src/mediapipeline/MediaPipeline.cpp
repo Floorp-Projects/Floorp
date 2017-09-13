@@ -519,10 +519,8 @@ public:
     packetizer_->Input(samples, chunk.mDuration);
 
     while (packetizer_->PacketsAvailable()) {
-      uint32_t samplesPerPacket = packetizer_->PacketSize() *
-                                  packetizer_->Channels();
       packetizer_->Output(packet_);
-      mConduit->SendAudioFrame(packet_, samplesPerPacket, rate, 0);
+      mConduit->SendAudioFrame(packet_, packetizer_->PacketSize(), rate, packetizer_->Channels(), 0);
     }
   }
 

@@ -25,9 +25,9 @@ const TEST_DATA = [{
   desc: "Adding a new node should flash the new node",
   mutate: function* (testActor) {
     yield testActor.eval(`
-      let newLi = content.document.createElement("LI");
+      let newLi = document.createElement("LI");
       newLi.textContent = "new list item";
-      content.document.querySelector(".list").appendChild(newLi);
+      document.querySelector(".list").appendChild(newLi);
     `);
   },
   flashedNode: ".list li:nth-child(3)"
@@ -35,7 +35,7 @@ const TEST_DATA = [{
   desc: "Removing a node should flash its parent",
   mutate: function* (testActor) {
     yield testActor.eval(`
-      let root = content.document.querySelector(".list");
+      let root = document.querySelector(".list");
       root.removeChild(root.lastElementChild);
     `);
   }
@@ -43,7 +43,7 @@ const TEST_DATA = [{
   desc: "Re-appending an existing node should only flash this node",
   mutate: function* (testActor) {
     yield testActor.eval(`
-      let root = content.document.querySelector(".list");
+      let root = document.querySelector(".list");
       root.appendChild(root.firstElementChild);
     `);
   },
@@ -72,7 +72,7 @@ const TEST_DATA = [{
   attribute: "class",
   mutate: function* (testActor) {
     yield testActor.eval(`
-      let root = content.document.querySelector(".list");
+      let root = document.querySelector(".list");
       root.removeAttribute("class");
       root.setAttribute("class", "list value-" + Date.now());
       root.setAttribute("class", "list value-" + Date.now());
@@ -85,7 +85,7 @@ const TEST_DATA = [{
   desc: "Removing an attribute should flash the node",
   mutate: function* (testActor) {
     yield testActor.eval(`
-      let root = content.document.querySelector(".list");
+      let root = document.querySelector(".list");
       root.removeAttribute("class");
     `);
   }

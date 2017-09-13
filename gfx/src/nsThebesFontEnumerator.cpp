@@ -7,6 +7,7 @@
 #include <stdint.h>                     // for uint32_t
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/dom/Promise.h"        // for mozilla::dom::Promise
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsDebug.h"                    // for NS_ENSURE_ARG_POINTER
 #include "nsError.h"                    // for NS_OK, NS_FAILED, nsresult
@@ -72,6 +73,147 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
 
     *aResult = fs;
     *aCount = fontList.Length();
+
+    return NS_OK;
+}
+
+struct EnumerateFontsPromise final
+{
+    explicit EnumerateFontsPromise(mozilla::dom::Promise* aPromise)
+        : mPromise(aPromise)
+    {
+        MOZ_ASSERT(aPromise);
+        MOZ_ASSERT(NS_IsMainThread());
+    }
+
+    RefPtr<mozilla::dom::Promise> mPromise;
+};
+
+class EnumerateFontsResult final : public Runnable
+{
+public:
+    EnumerateFontsResult(nsresult aRv,
+                         UniquePtr<EnumerateFontsPromise> aEnumerateFontsPromise,
+                         nsTArray<nsString> aFontList)
+        : Runnable("EnumerateFontsResult")
+        , mRv(aRv)
+        , mEnumerateFontsPromise(Move(aEnumerateFontsPromise))
+        , mFontList(aFontList)
+        , mWorkerThread(do_GetCurrentThread())
+    {
+        MOZ_ASSERT(!NS_IsMainThread());
+    }
+
+    NS_IMETHOD Run()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+
+        if (NS_FAILED(mRv)) {
+            mEnumerateFontsPromise->mPromise->MaybeReject(mRv);
+        } else {
+            mEnumerateFontsPromise->mPromise->MaybeResolve(mFontList);
+        }
+
+        mWorkerThread->Shutdown();
+
+        return NS_OK;
+    }
+
+private:
+    nsresult mRv;
+    UniquePtr<EnumerateFontsPromise> mEnumerateFontsPromise;
+    nsTArray<nsString> mFontList;
+    nsCOMPtr<nsIThread> mWorkerThread;
+};
+
+class EnumerateFontsTask final : public Runnable
+{
+public:
+    EnumerateFontsTask(nsIAtom* aLangGroupAtom,
+                       const nsAutoCString& aGeneric,
+                       UniquePtr<EnumerateFontsPromise> aEnumerateFontsPromise)
+        : Runnable("EnumerateFontsTask")
+        , mLangGroupAtom(aLangGroupAtom)
+        , mGeneric(aGeneric)
+        , mEnumerateFontsPromise(Move(aEnumerateFontsPromise))
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+    }
+
+    NS_IMETHOD Run()
+    {
+        MOZ_ASSERT(!NS_IsMainThread());
+
+        nsTArray<nsString> fontList;
+
+        nsresult rv = gfxPlatform::GetPlatform()->
+            GetFontList(mLangGroupAtom, mGeneric, fontList);
+        nsCOMPtr<nsIRunnable> runnable = new EnumerateFontsResult(
+            rv, Move(mEnumerateFontsPromise), Move(fontList));
+        NS_DispatchToMainThread(runnable.forget());
+
+        return NS_OK;
+    }
+
+private:
+    nsCOMPtr<nsIAtom> mLangGroupAtom;
+    nsAutoCStringN<16> mGeneric;
+    UniquePtr<EnumerateFontsPromise> mEnumerateFontsPromise;
+};
+
+NS_IMETHODIMP
+nsThebesFontEnumerator::EnumerateAllFontsAsync(JSContext* aCx,
+                                               JS::MutableHandleValue aRval)
+{
+    return EnumerateFontsAsync(nullptr, nullptr, aCx, aRval);
+}
+
+NS_IMETHODIMP
+nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
+                                            const char* aGeneric,
+                                            JSContext* aCx,
+                                            JS::MutableHandleValue aRval)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIGlobalObject> global =
+        xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+
+    ErrorResult errv;
+    RefPtr<mozilla::dom::Promise> promise = dom::Promise::Create(global, errv);
+    if (errv.Failed()) {
+        return errv.StealNSResult();
+    }
+
+    auto enumerateFontsPromise = MakeUnique<EnumerateFontsPromise>(promise);
+
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = NS_NewNamedThread("FontEnumThread", getter_AddRefs(thread));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAtom> langGroupAtom;
+    if (aLangGroup) {
+        nsAutoCStringN<16> lowered;
+        lowered.Assign(aLangGroup);
+        ToLowerCase(lowered);
+        langGroupAtom = NS_Atomize(lowered);
+    }
+
+    nsAutoCString generic;
+    if (aGeneric) {
+        generic.Assign(aGeneric);
+    } else {
+        generic.SetIsVoid(true);
+    }
+
+    nsCOMPtr<nsIRunnable> runnable = new EnumerateFontsTask(
+        langGroupAtom, generic, Move(enumerateFontsPromise));
+    thread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+
+    if (!ToJSValue(aCx, promise, aRval)) {
+        return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
 }

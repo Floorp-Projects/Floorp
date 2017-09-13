@@ -942,11 +942,6 @@ HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
   rv = NS_ReadInputStreamToBuffer(stream, &imgData, (uint32_t)imgSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    JS_updateMallocCounter(cx, imgSize);
-  }
-
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(OwnerDoc()->GetScopeObject());
 
   // The File takes ownership of the buffer
