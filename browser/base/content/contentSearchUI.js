@@ -246,7 +246,8 @@ ContentSearchUIController.prototype = {
     let searchText = this.input;
     let searchTerms;
     if (this._table.hidden ||
-        aEvent.originalTarget.id == "contentSearchDefaultEngineHeader" ||
+        (aEvent.originalTarget &&
+          aEvent.originalTarget.id == "contentSearchDefaultEngineHeader") ||
         aEvent instanceof KeyboardEvent) {
       searchTerms = searchText.value;
     } else {
