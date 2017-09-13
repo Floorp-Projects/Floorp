@@ -45,15 +45,11 @@ BrowserCLH.prototype = {
       case "app-startup": {
         this.setResourceSubstitutions();
 
-        Services.obs.addObserver(this, "chrome-document-global-created");
-        Services.obs.addObserver(this, "content-document-global-created");
-
         GeckoViewUtils.addLazyGetter(this, "DownloadNotifications", {
           module: "resource://gre/modules/DownloadNotifications.jsm",
           observers: ["chrome-document-loaded"],
           once: true,
         });
-
         if (AppConstants.MOZ_WEBRTC) {
           GeckoViewUtils.addLazyGetter(this, "WebrtcUI", {
             script: "chrome://browser/content/WebrtcUI.js",
@@ -67,31 +63,6 @@ BrowserCLH.prototype = {
             ],
           });
         }
-
-        GeckoViewUtils.addLazyGetter(this, "SelectHelper", {
-          script: "chrome://browser/content/SelectHelper.js",
-        });
-        GeckoViewUtils.addLazyGetter(this, "InputWidgetHelper", {
-          script: "chrome://browser/content/InputWidgetHelper.js",
-        });
-        break;
-      }
-
-      case "chrome-document-global-created":
-      case "content-document-global-created": {
-        let win = GeckoViewUtils.getChromeWindow(subject);
-        if (win !== subject) {
-          // Only attach to top-level windows.
-          return;
-        }
-
-        GeckoViewUtils.addLazyEventListener(win, "click", {
-          handler: _ => [this.SelectHelper, this.InputWidgetHelper],
-          options: {
-            capture: true,
-            mozSystemGroup: true,
-          },
-        });
         break;
       }
     }
