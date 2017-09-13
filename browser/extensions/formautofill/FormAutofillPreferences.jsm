@@ -73,7 +73,9 @@ FormAutofillPreferences.prototype = {
   createPreferenceGroup(document) {
     let formAutofillGroup;
     let addressAutofill = document.createElementNS(XUL_NS, "hbox");
+    let addressAutofillCheckboxGroup = document.createElementNS(XUL_NS, "description");
     let addressAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
+    let addressAutofillLearnMore = document.createElementNS(XUL_NS, "label");
     let savedAddressesBtn = document.createElementNS(XUL_NS, "button");
 
     if (this.useOldOrganization) {
@@ -100,18 +102,27 @@ FormAutofillPreferences.prototype = {
 
     formAutofillGroup.id = "formAutofillGroup";
     addressAutofill.id = "addressAutofill";
-    savedAddressesBtn.setAttribute("label", this.bundle.GetStringFromName("savedAddresses"));
+    addressAutofillLearnMore.id = "addressAutofillLearnMore";
+    addressAutofillLearnMore.className = "learnMore text-link";
+
+    addressAutofillLearnMore.setAttribute("value", this.bundle.GetStringFromName("learnMore"));
     addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableAddressAutofill"));
+    savedAddressesBtn.setAttribute("label", this.bundle.GetStringFromName("savedAddresses"));
+
+    let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "autofill-card-address";
+    addressAutofillLearnMore.setAttribute("href", learnMoreURL);
 
     // Manually set the checked state
     if (this.isAutofillEnabled) {
       addressAutofillCheckbox.setAttribute("checked", true);
     }
 
-    addressAutofillCheckbox.flex = 1;
+    addressAutofillCheckboxGroup.flex = 1;
 
     formAutofillGroup.appendChild(addressAutofill);
-    addressAutofill.appendChild(addressAutofillCheckbox);
+    addressAutofill.appendChild(addressAutofillCheckboxGroup);
+    addressAutofillCheckboxGroup.appendChild(addressAutofillCheckbox);
+    addressAutofillCheckboxGroup.appendChild(addressAutofillLearnMore);
     addressAutofill.appendChild(savedAddressesBtn);
   },
 
