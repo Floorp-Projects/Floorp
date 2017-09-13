@@ -65,11 +65,6 @@ TEST_SUITES = {
         'mach_command': 'firefox-ui-update',
         'kwargs': {},
     },
-    'jetpack': {
-        'aliases': ('J',),
-        'mach_command': 'jetpack-test',
-        'kwargs': {},
-    },
     'check-spidermonkey': {
         'aliases': ('Sm', 'sm'),
         'mach_command': 'check-spidermonkey',

@@ -68,8 +68,6 @@ TextEditor.prototype = {
     this.elt.classList.add("editor", type);
 
     if (type === "comment") {
-      this.elt.classList.add("theme-comment");
-
       let openComment = doc.createElement("span");
       openComment.textContent = "<!--";
       this.elt.appendChild(openComment);

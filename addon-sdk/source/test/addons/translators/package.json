@@ -1,8 +1,0 @@
-{
-  "id": "test-translators@jetpack",
-  "translators": [
-    "Erik Vold"
-  ],
-  "main": "./main.js",
-  "version": "0.0.1"
-}

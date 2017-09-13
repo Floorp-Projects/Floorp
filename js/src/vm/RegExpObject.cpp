@@ -1222,16 +1222,13 @@ RegExpCompartment::createMatchResultTemplateObject(JSContext* cx)
 
     /* Set dummy index property */
     RootedValue index(cx, Int32Value(0));
-    if (!NativeDefineProperty(cx, templateObject, cx->names().index, index, nullptr, nullptr,
-                              JSPROP_ENUMERATE))
-    {
+    if (!NativeDefineDataProperty(cx, templateObject, cx->names().index, index, JSPROP_ENUMERATE))
         return matchResultTemplateObject_; // = nullptr
-    }
 
     /* Set dummy input property */
     RootedValue inputVal(cx, StringValue(cx->runtime()->emptyString));
-    if (!NativeDefineProperty(cx, templateObject, cx->names().input, inputVal, nullptr, nullptr,
-                              JSPROP_ENUMERATE))
+    if (!NativeDefineDataProperty(cx, templateObject, cx->names().input, inputVal,
+                                  JSPROP_ENUMERATE))
     {
         return matchResultTemplateObject_; // = nullptr
     }

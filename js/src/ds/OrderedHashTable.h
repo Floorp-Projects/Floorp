@@ -79,13 +79,37 @@ class OrderedHashTable
     uint32_t dataCapacity;      // size of data, in elements
     uint32_t liveCount;         // dataLength less empty (removed) entries
     uint32_t hashShift;         // multiplicative hash shift
-    Range* ranges;              // list of all live Ranges on this table
+    Range* ranges;              // list of all live Ranges on this table in malloc memory
+    Range* nurseryRanges;       // list of all live Ranges on this table in the GC nursery
     AllocPolicy alloc;
     mozilla::HashCodeScrambler hcs;  // don't reveal pointer hash codes
 
+    // TODO: This should be templated on a functor type and receive lambda
+    // arguments but this causes problems for the hazard analysis builds. See
+    // bug 1398213.
+    template <void (*f)(Range* range, uint32_t arg)>
+    void forEachRange(uint32_t arg = 0) {
+        Range* next;
+        for (Range* r = ranges; r; r = next) {
+            next = r->next;
+            f(r, arg);
+        }
+        for (Range* r = nurseryRanges; r; r = next) {
+            next = r->next;
+            f(r, arg);
+        }
+    }
+
   public:
     OrderedHashTable(AllocPolicy& ap, mozilla::HashCodeScrambler hcs)
-        : hashTable(nullptr), data(nullptr), dataLength(0), ranges(nullptr), alloc(ap), hcs(hcs) {}
+      : hashTable(nullptr),
+        data(nullptr),
+        dataLength(0),
+        ranges(nullptr),
+        nurseryRanges(nullptr),
+        alloc(ap),
+        hcs(hcs)
+    {}
 
     MOZ_MUST_USE bool init() {
         MOZ_ASSERT(!hashTable, "init must be called at most once");
@@ -117,11 +141,7 @@ class OrderedHashTable
     }
 
     ~OrderedHashTable() {
-        for (Range* r = ranges; r; ) {
-            Range* next = r->next;
-            r->onTableDestroyed();
-            r = next;
-        }
+        forEachRange<Range::onTableDestroyed>();
         alloc.free_(hashTable);
         freeData(data, dataLength);
     }
@@ -204,8 +224,7 @@ class OrderedHashTable
 
         // Update active Ranges.
         uint32_t pos = e - data;
-        for (Range* r = ranges; r; r = r->next)
-            r->onRemove(pos);
+        forEachRange<&Range::onRemove>(pos);
 
         // If many entries have been removed, try to shrink the table.
         if (hashBuckets() > initialBuckets() && liveCount < dataLength * minDataFill()) {
@@ -240,8 +259,7 @@ class OrderedHashTable
 
             alloc.free_(oldHashTable);
             freeData(oldData, oldDataLength);
-            for (Range* r = ranges; r; r = r->next)
-                r->onClear();
+            forEachRange<&Range::onClear>();
         }
 
         MOZ_ASSERT(hashTable);
@@ -318,7 +336,9 @@ class OrderedHashTable
          * Create a Range over all the entries in ht.
          * (This is private on purpose. End users must use ht->all().)
          */
-        explicit Range(OrderedHashTable* ht) : ht(ht), i(0), count(0), prevp(&ht->ranges), next(ht->ranges) {
+        Range(OrderedHashTable* ht, Range** listp)
+          : ht(ht), i(0), count(0), prevp(listp), next(*listp)
+        {
             *prevp = this;
             if (next)
                 next->prevp = &next;
@@ -479,9 +499,39 @@ class OrderedHashTable
         static size_t offsetOfNext() {
             return offsetof(Range, next);
         }
+
+        static void onTableDestroyed(Range* range, uint32_t arg) {
+            range->onTableDestroyed();
+        }
+        static void onRemove(Range* range, uint32_t arg) {
+            range->onRemove(arg);
+        }
+        static void onClear(Range* range, uint32_t arg) {
+            range->onClear();
+        }
+        static void onCompact(Range* range, uint32_t arg) {
+            range->onCompact();
+        }
     };
 
-    Range all() { return Range(this); }
+    Range all() { return Range(this, &ranges); }
+
+    /*
+     * Allocate a new Range, possibly in nursery memory. The buffer must be
+     * large enough to hold a Range object.
+     *
+     * All nursery-allocated ranges can be freed in one go by calling
+     * destroyNurseryRanges().
+     */
+    Range* createRange(void* buffer, bool inNursery) {
+        auto range = static_cast<Range*>(buffer);
+        new (range) Range(this, inNursery ? &nurseryRanges : &ranges);
+        return range;
+    }
+
+    void destroyNurseryRanges() {
+        nurseryRanges = nullptr;
+    }
 
     /*
      * Change the value of the given key.
@@ -601,8 +651,7 @@ class OrderedHashTable
     void compacted() {
         // If we had any empty entries, compacting may have moved live entries
         // to the left within |data|. Notify all live Ranges of the change.
-        for (Range* r = ranges; r; r = r->next)
-            r->onCompact();
+        forEachRange<&Range::onCompact>();
     }
 
     /* Compact the entries in |data| and rehash them. */
@@ -772,6 +821,14 @@ class OrderedHashMap
         return impl.rekeyOneEntry(current, newKey, Entry(newKey, e->value));
     }
 
+    Range* createRange(void* buffer, bool inNursery) {
+        return impl.createRange(buffer, inNursery);
+    }
+
+    void destroyNurseryRanges() {
+        impl.destroyNurseryRanges();
+    }
+
     static size_t offsetOfEntryKey() {
         return Entry::offsetOfKey();
     }
@@ -819,6 +876,14 @@ class OrderedHashSet
 
     void rekeyOneEntry(const T& current, const T& newKey) {
         return impl.rekeyOneEntry(current, newKey, newKey);
+    }
+
+    Range* createRange(void* buffer, bool inNursery) {
+        return impl.createRange(buffer, inNursery);
+    }
+
+    void destroyNurseryRanges() {
+        impl.destroyNurseryRanges();
     }
 
     static size_t offsetOfEntryKey() {

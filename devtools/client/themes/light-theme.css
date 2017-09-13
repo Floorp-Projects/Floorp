@@ -41,7 +41,7 @@ body {
 .theme-link,
 .cm-s-mozilla .cm-link,
 .CodeMirror-Tern-type {
-  color: var(--theme-highlight-blue);
+  color: var(--theme-highlight-purple);
 }
 
 /*
@@ -72,7 +72,6 @@ body {
   background-color: #fcfffc;
 }
 
-.theme-fg-color1,
 .cm-s-mozilla .cm-number,
 .variable-or-property .token-number,
 .variable-or-property[return] > .title > .name,
@@ -84,16 +83,26 @@ body {
   background-color: hsl(72,100%,27%);
 }
 
+.theme-fg-color1,
 .theme-fg-color2,
 .cm-s-mozilla .cm-attribute,
 .cm-s-mozilla .cm-builtin,
-.cm-s-mozilla .cm-property,
+.cm-s-mozilla .cm-keyword,
 .variables-view-variable > .title > .name {
   color: var(--theme-highlight-red);
 }
 
-.cm-s-mozilla .cm-def {
-  color: var(--theme-body-color);
+.cm-s-mozilla .cm-def,
+.cm-s-mozilla .cm-variable-2 {
+  color: var(--blue-55);
+}
+
+.cm-s-mozilla .cm-variable {
+  color: var(--purple-60);
+}
+
+.cm-s-mozilla .cm-property {
+  color: var(--theme-highlight-green);
 }
 
 .CodeMirror-Tern-completion-object:before {
@@ -101,7 +110,7 @@ body {
 }
 
 .theme-fg-color3,
-.cm-s-mozilla .cm-variable,
+.theme-fg-color5,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
 .cm-s-mozilla .cm-bracket,
@@ -116,11 +125,6 @@ body {
 
 .theme-fg-color4 {
   color: var(--theme-highlight-orange);
-}
-
-.theme-fg-color5,
-.cm-s-mozilla .cm-keyword {
-  color: var(--theme-highlight-red);
 }
 
 .theme-fg-color6,
@@ -184,7 +188,6 @@ body {
 }
 
 .CodeMirror.cm-s-mozilla  pre,
-.cm-s-mozilla .cm-variable-2,
 .cm-s-mozilla .cm-variable-3,
 .cm-s-mozilla .cm-operator,
 .cm-s-mozilla .cm-special {

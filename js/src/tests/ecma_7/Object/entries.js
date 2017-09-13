@@ -16,7 +16,7 @@ if ("entries" in Object) {
     entries = Object.entries(o),
     assertDeepEq(entries, [["a", 17], ["b", 2]]);
 
-    o = { __iterator__: function() { return Iterator({a: 2, b: 3}); } };
+    o = { __iterator__: function() { throw new Error("non-standard __iterator__ called?"); } };
     entries = Object.entries(o);
     assertDeepEq(entries, [["__iterator__", o.__iterator__]]);
 

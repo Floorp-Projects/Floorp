@@ -36,6 +36,7 @@ const SEARCH_PLACE_HOLDER = L10N.getStr("netmonitor.toolbar.filterFreetext.label
 const TOOLBAR_CLEAR = L10N.getStr("netmonitor.toolbar.clear");
 
 const DEVTOOLS_DISABLE_CACHE_PREF = "devtools.cache.disabled";
+const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";
 
 /*
  * Network monitor toolbar component
@@ -51,18 +52,14 @@ const Toolbar = createClass({
     networkDetailsToggleDisabled: PropTypes.bool.isRequired,
     networkDetailsOpen: PropTypes.bool.isRequired,
     toggleNetworkDetails: PropTypes.func.isRequired,
+    enablePersistentLogs: PropTypes.func.isRequired,
+    togglePersistentLogs: PropTypes.func.isRequired,
+    persistentLogsEnabled: PropTypes.bool.isRequired,
     disableBrowserCache: PropTypes.func.isRequired,
     toggleBrowserCache: PropTypes.func.isRequired,
     browserCacheDisabled: PropTypes.bool.isRequired,
     toggleRequestFilterType: PropTypes.func.isRequired,
     filteredRequests: PropTypes.object.isRequired,
-  },
-
-  toggleRequestFilterType(evt) {
-    if (evt.type === "keydown" && (evt.key !== "" || evt.key !== "Enter")) {
-      return;
-    }
-    this.props.toggleRequestFilterType(evt.target.dataset.key);
   },
 
   render() {
@@ -73,6 +70,8 @@ const Toolbar = createClass({
       networkDetailsToggleDisabled,
       networkDetailsOpen,
       toggleNetworkDetails,
+      togglePersistentLogs,
+      persistentLogsEnabled,
       toggleBrowserCache,
       browserCacheDisabled,
       filteredRequests,
@@ -116,6 +115,20 @@ const Toolbar = createClass({
           label(
             {
               className: "devtools-checkbox-label",
+              title: L10N.getStr("netmonitor.toolbar.enablePersistentLogs.tooltip"),
+            },
+            input({
+              id: "devtools-persistlog-checkbox",
+              className: "devtools-checkbox",
+              type: "checkbox",
+              checked: persistentLogsEnabled,
+              onClick: togglePersistentLogs,
+            }),
+            L10N.getStr("netmonitor.toolbar.enablePersistentLogs.label"),
+          ),
+          label(
+            {
+              className: "devtools-checkbox-label",
               title: L10N.getStr("netmonitor.toolbar.disableCache.tooltip"),
             },
             input({
@@ -151,13 +164,29 @@ const Toolbar = createClass({
   },
 
   componentDidMount() {
+    Services.prefs.addObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
+                               this.updatePersistentLogsEnabled);
     Services.prefs.addObserver(DEVTOOLS_DISABLE_CACHE_PREF,
                                this.updateBrowserCacheDisabled);
   },
 
   componentWillUnmount() {
+    Services.prefs.removeObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
+                                  this.updatePersistentLogsEnabled);
     Services.prefs.removeObserver(DEVTOOLS_DISABLE_CACHE_PREF,
                                   this.updateBrowserCacheDisabled);
+  },
+
+  toggleRequestFilterType(evt) {
+    if (evt.type === "keydown" && (evt.key !== "" || evt.key !== "Enter")) {
+      return;
+    }
+    this.props.toggleRequestFilterType(evt.target.dataset.key);
+  },
+
+  updatePersistentLogsEnabled() {
+    this.props.enablePersistentLogs(
+      Services.prefs.getBoolPref(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF));
   },
 
   updateBrowserCacheDisabled() {
@@ -170,6 +199,7 @@ module.exports = connect(
   (state) => ({
     networkDetailsToggleDisabled: isNetworkDetailsToggleButtonDisabled(state),
     networkDetailsOpen: state.ui.networkDetailsOpen,
+    persistentLogsEnabled: state.ui.persistentLogsEnabled,
     browserCacheDisabled: state.ui.browserCacheDisabled,
     requestFilterTypes: getRequestFilterTypes(state),
     filteredRequests: getTypeFilteredRequests(state),
@@ -180,6 +210,8 @@ module.exports = connect(
     setRequestFilterText: (text) => dispatch(Actions.setRequestFilterText(text)),
     toggleRequestFilterType: (type) => dispatch(Actions.toggleRequestFilterType(type)),
     toggleNetworkDetails: () => dispatch(Actions.toggleNetworkDetails()),
+    enablePersistentLogs: (enabled) => dispatch(Actions.enablePersistentLogs(enabled)),
+    togglePersistentLogs: () => dispatch(Actions.togglePersistentLogs()),
     disableBrowserCache: (disabled) => dispatch(Actions.disableBrowserCache(disabled)),
     toggleBrowserCache: () => dispatch(Actions.toggleBrowserCache()),
   }),

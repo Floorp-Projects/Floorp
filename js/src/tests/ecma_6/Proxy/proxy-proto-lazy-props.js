@@ -7,9 +7,7 @@ function makeProxyPrototype(target) {
             return [];
         },
         get(t, pk, r) {
-            // Handle the non-standard __iterator__ hook.
-            if (pk !== "__iterator__")
-                throw new Error("Unexpected [[Get]]: " + String(pk));
+            throw new Error("Unexpected [[Get]]: " + String(pk));
         }
     }, {
         get(t, pk, r) {

@@ -22,7 +22,7 @@ BEGIN_TEST(testForceLexicalInitialization)
     JS::RootedId id(cx, NameToId(name));
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
-    CHECK(NativeDefineProperty(cx, env, id, uninitialized, nullptr, nullptr, attrs));
+    CHECK(NativeDefineDataProperty(cx, env, id, uninitialized, attrs));
 
     // Verify that "foopi" is uninitialized
     const JS::Value v = env->getSlot(env->lookup(cx, id)->slot());

@@ -1507,8 +1507,6 @@ nsDocumentViewer::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   SyncParentSubDocMap();
 
   if (mFocusListener && mDocument) {
-    // The focus listener may have been disconnected.
-    mFocusListener->Init(this);
     mDocument->AddEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
                                 false, false);
     mDocument->AddEventListener(NS_LITERAL_STRING("blur"), mFocusListener,

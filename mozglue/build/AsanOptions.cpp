@@ -32,9 +32,20 @@
 //   allocations the same way we would handle them with a regular allocator and
 //   also uncovers potential bugs that might occur in these situations.
 //
+//   log_path=/tmp/ff_asan_log - When running with the ASan reporter extension
+//   enabled (MOZ_ASAN_REPORTER), then we need to dump our logs to files
+//   instead of stderr so the reporter extension can find it. Unfortunately,
+//   this function is called so early at startup that we can't use the profile
+//   directory or even ask XPCOM for a temporary directory. Since the extension
+//   is only meant to run on Linux and Mac OSX for now, hardcoding /tmp is an
+//   option that should work for most standard environments.
+//
 extern "C" MOZ_ASAN_BLACKLIST
 const char* __asan_default_options() {
     return "allow_user_segv_handler=1:alloc_dealloc_mismatch=0:detect_leaks=0"
+#ifdef MOZ_ASAN_REPORTER
+           ":log_path=/tmp/ff_asan_log"
+#endif
            ":allocator_may_return_null=1";
 }
 

@@ -125,9 +125,11 @@ RequestContext::DOMContentLoaded()
 
   LOG(("RequestContext::DOMContentLoaded %p", this));
 
-  if (IsNeckoChild() && gNeckoChild) {
+  if (IsNeckoChild()) {
     // Tailing is not supported on the child process
-    gNeckoChild->SendRequestContextAfterDOMContentLoaded(mID);
+    if (gNeckoChild) {
+      gNeckoChild->SendRequestContextAfterDOMContentLoaded(mID);
+    }
     return NS_OK;
   }
 
