@@ -210,7 +210,6 @@ function unload(reason) {
   Cu.unload("resource://devtools/shared/Parser.jsm");
   Cu.unload("resource://devtools/client/shared/DOMHelpers.jsm");
   Cu.unload("resource://devtools/client/shared/widgets/VariablesView.jsm");
-  Cu.unload("resource://devtools/client/responsivedesign/responsivedesign.jsm");
   Cu.unload("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
   Cu.unload("resource://devtools/shared/deprecated-sync-thenables.js");
 }
