@@ -101,8 +101,14 @@ LayoutView.prototype = {
       showBadge: () => Services.prefs.getIntPref(PROMOTE_COUNT_PREF) > 0,
     }, app);
 
-    // Expose the provider to let inspector.js use it in setupSidebar.
-    this.provider = provider;
+    let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
+
+    this.inspector.addSidebarTab(
+      "layoutview",
+      INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
+      provider,
+      defaultTab == "layoutview"
+    );
   },
 
   /**
