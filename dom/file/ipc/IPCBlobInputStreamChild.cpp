@@ -277,7 +277,7 @@ IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream,
 
   PendingOperation* opt = mPendingOperations.AppendElement();
   opt->mStream = aStream;
-  opt->mEventTarget = aEventTarget;
+  opt->mEventTarget = aEventTarget ? aEventTarget : NS_GetCurrentThread();
 
   if (mState == eActiveMigrating || mState == eInactiveMigrating) {
     // This operation will be continued when the migration is completed.
@@ -316,16 +316,7 @@ IPCBlobInputStreamChild::RecvStreamReady(const OptionalIPCStream& aStream)
 
   RefPtr<StreamReadyRunnable> runnable =
     new StreamReadyRunnable(pendingStream, stream);
-
-  // If IPCBlobInputStream::AsyncWait() has been executed without passing an
-  // event target, we run the callback synchronous because any thread could be
-  // result to be the wrong one. See more in nsIAsyncInputStream::asyncWait
-  // documentation.
-  if (eventTarget) {
-    eventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  } else {
-    runnable->Run();
-  }
+  eventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
   return IPC_OK();
 }
