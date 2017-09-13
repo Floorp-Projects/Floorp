@@ -224,7 +224,7 @@ protected:
                                  const bool& aIsPrivate) override;
 
   bool
-  GetMessageSchedulerGroups(const Message& aMsg, nsTArray<RefPtr<SchedulerGroup>>& aGroups) override;
+  GetMessageSchedulerGroups(const Message& aMsg, SchedulerGroupSet& aGroups) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final
