@@ -77,15 +77,6 @@ function shouldSkipTest(test) {
       }
     }
   }
-  if (SpecialPowers.DOMWindowUtils.isStyledByServo &&
-      SpecialPowers.isDebugBuild &&
-      navigator.platform.indexOf('Mac') >= 0) {
-    if (test == "file_fullscreen-backdrop.html") {
-      todo(false, `${test} skipped due to bug 1387942`);
-      return true;
-    }
-  }
-
   return false;
 }
 
