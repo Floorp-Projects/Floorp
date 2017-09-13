@@ -49,13 +49,13 @@ template class nsTDefaultStringComparator<char16_t>;
 // =============================
 
 template
-int
+int NS_FASTCALL
 Compare<char>(mozilla::detail::nsTStringRepr<char> const&,
               mozilla::detail::nsTStringRepr<char> const&,
               nsTStringComparator<char> const&);
 
 template
-int
+int NS_FASTCALL
 Compare<char16_t>(mozilla::detail::nsTStringRepr<char16_t> const&,
                   mozilla::detail::nsTStringRepr<char16_t> const&,
                   nsTStringComparator<char16_t> const&);
