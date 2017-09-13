@@ -44,8 +44,6 @@ private:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  void DispatchError(JSContext* aCx);
-
   // This raw pointer is actually the parent object.
   // It's set to null when the parent object is deleted.
   BroadcastChannel* mBC;
