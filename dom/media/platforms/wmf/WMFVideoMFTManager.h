@@ -8,7 +8,6 @@
 #define WMFVideoMFTManager_h_
 
 #include "MFTDecoder.h"
-#include "MediaResult.h"
 #include "WMF.h"
 #include "WMFMediaDataDecoder.h"
 #include "mozilla/Atomics.h"
@@ -29,7 +28,7 @@ public:
                      bool aDXVAEnabled);
   ~WMFVideoMFTManager();
 
-  MediaResult Init();
+  bool Init();
 
   HRESULT Input(MediaRawData* aSample) override;
 
@@ -64,11 +63,11 @@ public:
   }
 
 private:
-  MediaResult ValidateVideoInfo();
+  bool ValidateVideoInfo();
 
   bool InitializeDXVA();
 
-  MediaResult InitInternal();
+  bool InitInternal();
 
   HRESULT CreateBasicVideoFrame(IMFSample* aSample,
                                 int64_t aStreamOffset,

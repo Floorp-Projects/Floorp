@@ -110,11 +110,7 @@ WMFDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
                            aParams.mImageContainer,
                            sDXVAEnabled));
 
-  MediaResult result = manager->Init();
-  if (NS_FAILED(result)) {
-    if (aParams.mError) {
-      *aParams.mError = result;
-    }
+  if (!manager->Init()) {
     return nullptr;
   }
 
