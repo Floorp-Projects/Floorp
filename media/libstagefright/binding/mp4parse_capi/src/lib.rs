@@ -58,7 +58,6 @@ use mp4parse::TrackScaledTime;
 use mp4parse::serialize_opus_header;
 use mp4parse::CodecType;
 use mp4parse::Track;
-use mp4parse::vec_push;
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -71,7 +70,6 @@ pub enum mp4parse_status {
     EOF = 4,
     IO = 5,
     TABLE_TOO_LARGE = 6,
-    OOM = 7,
 }
 
 #[allow(non_camel_case_types)]
@@ -310,11 +308,6 @@ pub unsafe extern fn mp4parse_log(enable: bool) {
     mp4parse::set_debug_mode(enable);
 }
 
-#[no_mangle]
-pub unsafe extern fn mp4parse_fallible_allocation(enable: bool) {
-    mp4parse::set_fallible_allocation_mode(enable);
-}
-
 /// Run the `mp4parse_parser*` allocated by `mp4parse_new()` until EOF or error.
 #[no_mangle]
 pub unsafe extern fn mp4parse_read(parser: *mut mp4parse_parser) -> mp4parse_status {
@@ -323,8 +316,8 @@ pub unsafe extern fn mp4parse_read(parser: *mut mp4parse_parser) -> mp4parse_sta
         return mp4parse_status::BAD_ARG;
     }
 
-    let context = (*parser).context_mut();
-    let io = (*parser).io_mut();
+    let mut context = (*parser).context_mut();
+    let mut io = (*parser).io_mut();
 
     let r = read_mp4(io, context);
     match r {
@@ -345,7 +338,6 @@ pub unsafe extern fn mp4parse_read(parser: *mut mp4parse_parser) -> mp4parse_sta
             mp4parse_status::IO
         },
         Err(Error::TableTooLarge) => mp4parse_status::TABLE_TOO_LARGE,
-        Err(Error::OutOfMemory) => mp4parse_status::OOM,
     }
 }
 
@@ -908,17 +900,16 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
             }
             cur_position = end_offset;
 
-            let res = vec_push(&mut sample_table, mp4parse_indice {
-                start_offset: start_offset,
-                end_offset: end_offset,
-                start_composition: 0,
-                end_composition: 0,
-                start_decode: 0,
-                sync: !has_sync_table,
-            });
-            if res.is_err() {
-                return None;
-            }
+            sample_table.push(
+                mp4parse_indice {
+                    start_offset: start_offset,
+                    end_offset: end_offset,
+                    start_composition: 0,
+                    end_composition: 0,
+                    start_decode: 0,
+                    sync: !has_sync_table,
+                }
+            );
         }
     }
 
@@ -986,13 +977,12 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
     //
     // Composition end time is not in specification. However, gecko needs it, so we need to
     // calculate to correct the composition end time.
-    if sample_table.len() > 0 {
+    if track.ctts.is_some() {
         // Create an index table refers to sample_table and sorted by start_composisiton time.
         let mut sort_table = Vec::new();
+        sort_table.reserve(sample_table.len());
         for i in 0 .. sample_table.len() {
-            if vec_push(&mut sort_table, i).is_err() {
-                return None;
-            }
+            sort_table.push(i);
         }
 
         sort_table.sort_by_key(|i| {
@@ -1126,7 +1116,7 @@ extern fn error_read(_: *mut u8, _: usize, _: *mut std::os::raw::c_void) -> isiz
 
 #[cfg(test)]
 extern fn valid_read(buf: *mut u8, size: usize, userdata: *mut std::os::raw::c_void) -> isize {
-    let input: &mut std::fs::File = unsafe { &mut *(userdata as *mut _) };
+    let mut input: &mut std::fs::File = unsafe { &mut *(userdata as *mut _) };
 
     let mut buf = unsafe { std::slice::from_raw_parts_mut(buf, size) };
     match input.read(&mut buf) {
@@ -1290,8 +1280,6 @@ fn get_track_count_poisoned_parser() {
         let mut count: u32 = 0;
         let rv = mp4parse_get_track_count(parser, &mut count);
         assert_eq!(rv, mp4parse_status::BAD_ARG);
-
-        mp4parse_free(parser);
     }
 }
 
