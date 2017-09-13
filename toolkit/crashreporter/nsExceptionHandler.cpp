@@ -3590,17 +3590,6 @@ OOPDeinit()
 #endif
 }
 
-void
-GetChildProcessTmpDir(nsIFile** aOutTmpDir)
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-#if (defined(XP_MACOSX) || defined(XP_WIN))
-  if (childProcessTmpDir) {
-    CreateFileFromPath(*childProcessTmpDir, aOutTmpDir);
-  }
-#endif
-}
-
 #if defined(XP_WIN) || defined(XP_MACOSX)
 // Parent-side API for children
 const char*
@@ -3755,14 +3744,9 @@ GetLastRunCrashID(nsAString& id)
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
 void
-InitChildProcessTmpDir(nsIFile* aDirOverride)
+InitChildProcessTmpDir()
 {
   MOZ_ASSERT(!XRE_IsParentProcess());
-  if (aDirOverride) {
-    childProcessTmpDir = CreatePathFromFile(aDirOverride);
-    return;
-  }
-
   // When retrieved by the child process, this will always resolve to the
   // correct directory regardless of sandbox level.
   nsCOMPtr<nsIFile> tmpDir;
