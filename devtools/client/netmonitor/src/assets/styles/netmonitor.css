@@ -816,8 +816,14 @@ body,
 /* Empty notices in tab panels */
 
 .empty-notice {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-body-color-inactive);
   padding: 3px 8px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 24px;
 }
 
 /* Text inputs in tab panels */

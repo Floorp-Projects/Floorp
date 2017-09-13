@@ -1,22 +1,23 @@
-# geckodriver [![Build Status](https://travis-ci.org/mozilla/geckodriver.svg?branch=release)](https://travis-ci.org/mozilla/geckodriver)
+geckodriver
+===========
 
-Proxy for using W3C WebDriver-compatible clients
-to interact with Gecko-based browsers.
+Proxy for using W3C WebDriver-compatible clients to interact with
+Gecko-based browsers.
 
 This program provides the HTTP API described by the [WebDriver protocol]
-to communicate with Gecko browsers, such as Firefox.
-It translates calls into the [Firefox remote protocol]
-by acting as a proxy between the local- and remote ends.
+to communicate with Gecko browsers, such as Firefox.  It translates calls
+into the [Firefox remote protocol] by acting as a proxy between the local-
+and remote ends.
 
-You can consult the [change log] for a record of all notable changes to the program.
-[Releases] are made available on GitHub on [supported platforms].
+You can consult the [change log] for a record of all notable changes
+to the program.  [Releases] are made available on GitHub on [supported
+platforms].
 
-The canonical source code repository for geckodriver
-now lives in [mozilla-central] under [testing/geckodriver].
-You can read more about [working with Mozilla source code] on MDN.
-This means we do no longer accept pull requests on GitHub.
-Patches should be uploaded to a bug
-in the [Testing :: GeckoDriver] component.
+The canonical source code repository for geckodriver now lives in
+[mozilla-central] under [testing/geckodriver].  You can read more about
+[working with Mozilla source code] on MDN.  This means we do no longer
+accept pull requests on GitHub.  Patches should be uploaded to a bug in
+the [Testing :: GeckoDriver] component.
 
 [WebDriver protocol]: http://w3c.github.io/webdriver/webdriver-spec.html#protocol
 [Firefox remote protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette
@@ -28,41 +29,50 @@ in the [Testing :: GeckoDriver] component.
 [working with Mozilla source code]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 [Testing :: geckodriver]: https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=geckodriver&resolution=---&list_id=13613952
 
-## Supported clients
 
-[Selenium](http://docs.seleniumhq.org/) users
-must update to [version 3.4](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.4.0)
-or later to use geckodriver.
-Other clients that follow the [W3C WebDriver specification](https://w3c.github.io/webdriver/webdriver-spec.html) are also supported.
+Supported clients
+=================
 
-## Supported Firefoxen
+[Selenium] users must update to [version
+3.5](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.5.0)
+or later to use geckodriver.  Other clients that follow the [W3C WebDriver
+specification] are also supported.
 
-geckodriver is not yet feature complete.
-This means that it does not yet offer full conformance
-with the [WebDriver standard](https://w3c.github.io/webdriver/webdriver-spec.html)
-or complete compatibility with [Selenium](http://www.seleniumhq.org/).
-You can track the [implementation status](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status)
-of the latest [Firefox Nightly](http://whattrainisitnow.com/) on
-[MDN](https://developer.mozilla.org/).
-We also keep track of known
-[Selenium](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aselenium),
-[remote protocol](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette),
-and [specification](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec)
-problems in our
-[issue tracker](https://github.com/mozilla/geckodriver/issues).
+[W3C WebDriver specification]: https://w3c.github.io/webdriver/webdriver-spec.html
 
-Support is best in Firefox 53 and greater,
-although generally the more recent the Firefox version,
-the better the experience as they have more bug fixes and features.
-Some features will only be available in the most recent Firefox versions,
-and we strongly advise using the [latest Firefox Nightly](https://nightly.mozilla.org/) with geckodriver.
-Since Windows XP support in Firefox was dropped with Firefox 53,
-we do not support this platform.
 
-## WebDriver capabilities
+Supported Firefoxen
+===================
 
-geckodriver supports a number of
-[WebDriver capabilities](https://w3c.github.io/webdriver/webdriver-spec.html#capabilities):
+geckodriver is not yet feature complete.  This means that it does not
+yet offer full conformance with the [WebDriver] standard or complete
+compatibility with [Selenium].  You can track the [implementation
+status] of the latest [Firefox Nightly](http://whattrainisitnow.com/)
+on [MDN].  We also keep track of known [Selenium], [remote protocol],
+and [specification] problems in our [issue tracker].
+
+Support is best in Firefox 53 and greater, although generally the more
+recent the Firefox version, the better the experience as they have more
+bug fixes and features.  Some features will only be available in the
+most recent Firefox versions, and we strongly advise using the latest
+[Firefox Nightly] with geckodriver.  Since Windows XP support in Firefox
+was dropped with Firefox 53, we do not support this platform.
+
+[implementation status]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status
+[MDN]: https://developer.mozilla.org/
+[selenium]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aselenium
+[remote protocol]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette
+[specification]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec
+[issue tracker]: https://github.com/mozilla/geckodriver/issues
+[Firefox Nightly]: https://nightly.mozilla.org/
+
+
+WebDriver capabilities
+======================
+
+geckodriver supports a number of [capabilities]:
+
+[capabilities]: https://w3c.github.io/webdriver/webdriver-spec.html#capabilities
 
 <table>
  <thead>
@@ -99,11 +109,14 @@ geckodriver supports a number of
  <tr>
   <td><code>proxy</code>
   <td><a href=#proxy-object><code>proxy</code></a>&nbsp;object
+  <td>
   <td>Sets browser proxy settings.
  </tr>
 </table>
 
-### `proxy` object
+
+`proxy` object
+--------------
 
 <table>
  <thead>
@@ -192,7 +205,9 @@ geckodriver supports a number of
  </tr>
 </table>
 
-## Firefox capabilities
+
+Firefox capabilities
+====================
 
 geckodriver also supports a capability named `moz:firefoxOptions`
 which takes Firefox-specific options.
@@ -271,7 +286,9 @@ and may contain any of the following fields:
  </tr>
 </table>
 
-### `log` object
+
+`log` object
+------------
 
 <table>
  <thead>
@@ -294,7 +311,9 @@ and may contain any of the following fields:
  </tr>
 </table>
 
-### `prefs` object
+
+`prefs` object
+--------------
 
 <table>
  <thead>
@@ -312,100 +331,99 @@ and may contain any of the following fields:
  </tr>
 </table>
 
-## Capabilities example
 
-The following example selects a specific Firefox binary
-to run with a prepared profile from the filesystem
-in headless mode (available on certain systems and recent Firefoxen).
-It also increases the number of IPC processes through a preference
-and enables more verbose logging.
+Capabilities example
+====================
 
-```js
-{
-	"capabilities": {
-		"alwaysMatch": {
-			"moz:firefoxOptions": {
-				"binary": "/usr/local/firefox/bin/firefox",
-				"args": ["-headless", "-profile", "/path/to/my/profile"],
-				"prefs": {
-					"dom.ipc.processCount": 8
-				},
-				"log": {
-					"level": "trace"
+The following example selects a specific Firefox binary to run with
+a prepared profile from the filesystem in headless mode (available on
+certain systems and recent Firefoxen).  It also increases the number of
+IPC processes through a preference and enables more verbose logging.
+
+	{
+		"capabilities": {
+			"alwaysMatch": {
+				"moz:firefoxOptions": {
+					"binary": "/usr/local/firefox/bin/firefox",
+					"args": ["-headless", "-profile", "/path/to/my/profile"],
+					"prefs": {
+						"dom.ipc.processCount": 8
+					},
+					"log": {
+						"level": "trace"
+					}
 				}
 			}
 		}
 	}
-}
-```
 
-## Usage
 
-Usage steps are [documented on MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver),
+Usage
+=====
+
+Usage steps are [documented on
+MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver),
 but how you invoke geckodriver largely depends on your use case.
 
-### Selenium
 
-If you are using geckodriver through [Selenium](http://seleniumhq.org/),
-you must ensure that you have version 3.4 and greater.
-Because geckodriver implements the [W3C WebDriver standard](https://w3c.github.io/webdriver/webdriver-spec.html)
-and not the same Selenium wire protocol older drivers are using,
-you may experience incompatibilities and migration problems
-when making the switch from FirefoxDriver to geckodriver.
+Selenium
+--------
 
-Generally speaking, Selenium 3 enabled geckodriver
-as the default WebDriver implementation for Firefox.
-With the release of Firefox 47, FirefoxDriver had to be discontinued
-for its lack of support for the [new multi-processing architecture in Gecko](https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox).
+If you are using geckodriver through [Selenium], you must ensure that
+you have version 3.4 and greater.  Because geckodriver implements the
+[W3C WebDriver standard][WebDriver] and not the same Selenium wire
+protocol older drivers are using, you may experience incompatibilities
+and migration problems when making the switch from FirefoxDriver to
+geckodriver.
+
+Generally speaking, Selenium 3 enabled geckodriver as the default
+WebDriver implementation for Firefox.  With the release of Firefox 47,
+FirefoxDriver had to be discontinued for its lack of support for the
+[new multi-processing architecture in Gecko][e10s].
 
 Selenium client bindings will pick up the _geckodriver_ binary executable
-from your [system’s `PATH` environmental variable](https://en.wikipedia.org/wiki/PATH_(variable))
-unless you override it by setting the `webdriver.gecko.driver`
-[Java VM system property](http://docs.oracle.com/javase/tutorial/essential/environment/sysprop.html):
+from your [system’s `PATH` environmental variable][PATH] unless you
+override it by setting the `webdriver.gecko.driver` [Java VM system
+property]:
 
-```java
-System.setProperty("webdriver.gecko.driver", "/home/user/bin");
-```
+	System.setProperty("webdriver.gecko.driver", "/home/user/bin");
 
-Or by passing it as a flag to the [java(1)](http://www.manpagez.com/man/1/java/) launcher:
+Or by passing it as a flag to the [java(1)] launcher:
 
 	% java -Dwebdriver.gecko.driver=/home/user/bin YourApplication
 
-Your milage with this approach may vary
-based on which programming language bindings you are using.
-It is in any case generally the case that geckodriver will be picked up
-if it is available on the system path.
-In a bash compatible shell,
-you can make other programs aware of its location
-by exporting or setting the `PATH` variable:
+Your milage with this approach may vary based on which programming
+language bindings you are using.  It is in any case generally the case
+that geckodriver will be picked up if it is available on the system path.
+In a bash compatible shell, you can make other programs aware of its
+location by exporting or setting the `PATH` variable:
 
 	% export PATH=$PATH:/home/user/bin
 	% whereis geckodriver
 	geckodriver: /home/user/bin/geckodriver
 
-On Window systems you can change the system path
-by right-clicking **My Computer** and choosing **Properties**.
-In the dialogue that appears, navigate
-**Advanced** → **Environmental Variables** → **Path**.
+On Window systems you can change the system path by right-clicking **My
+Computer** and choosing **Properties**.  In the dialogue that appears,
+navigate **Advanced** → **Environmental Variables** → **Path**.
 
 Or in the Windows console window:
 
 	$ set PATH=%PATH%;C:\bin\geckodriver
 
-### Standalone
 
-Since geckodriver is a separate HTTP server
-that is a complete remote end implementation
-of [WebDriver](https://w3c.github.io/webdriver/webdriver-spec.html),
-it is possible to avoid using the Selenium remote server
-if you have no requirements
-to distribute processes across a matrix of systems.
+Standalone
+----------
 
-Given a W3C WebDriver conforming client library (or _local end_)
-you may interact with the geckodriver HTTP server
-as if you were speaking to any Selenium server.
+Since geckodriver is a separate HTTP server that is a complete remote end
+implementation of [WebDriver], it is possible to avoid using the Selenium
+remote server if you have no requirements to distribute processes across
+a matrix of systems.
 
-Using [curl(1)](http://www.manpagez.com/man/1/curl/):
+Given a W3C WebDriver conforming client library (or _local end_) you
+may interact with the geckodriver HTTP server as if you were speaking
+to any Selenium server.
+
+Using [curl(1)]:
 
 	% geckodriver &
 	[1] 16010
@@ -423,15 +441,13 @@ Using [curl(1)](http://www.manpagez.com/man/1/curl/):
 	^C
 	%
 
-Using the Python [wdclient](https://github.com/w3c/wpt-tools/tree/master/webdriver) library:
+Using the Python [wdclient] library:
 
-```py
-import webdriver
+	import webdriver
 
-with webdriver.Session("127.0.0.1", 4444) as session:
-    session.url = "https://mozilla.org"
-    print "The current URL is %s" % session.url
-```
+	with webdriver.Session("127.0.0.1", 4444) as session:
+	    session.url = "https://mozilla.org"
+	    print "The current URL is %s" % session.url
 
 And to run:
 
@@ -445,86 +461,99 @@ And to run:
 	^C
 	%
 
-## Flags
+[Selenium]: http://seleniumhq.org/
+[e10s]: https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox
+[PATH]: https://en.wikipedia.org/wiki/PATH_(variable)
+[Java VM system property]: http://docs.oracle.com/javase/tutorial/essential/environment/sysprop.html
+[java(1)]: http://www.manpagez.com/man/1/java/
+[WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
+[curl(1)]: http://www.manpagez.com/man/1/curl/
+[wdclient]: https://github.com/w3c/wpt-tools/tree/master/webdriver
+
+
+Flags
+=====
 
 #### <code>-b <var>BINARY</var></code>/<code>--binary <var>BINARY</var></code>
 
-Path to the Firefox binary to use.
-By default geckodriver tries to find and use
-the system installation of Firefox,
-but that behaviour can be changed by using this option.
-Note that the `binary` capability of the `moz:firefoxOptions` object
-that is passed when [creating a new session](https://w3c.github.io/webdriver/webdriver-spec.html#new-session)
+Path to the Firefox binary to use.  By default geckodriver tries to find
+and use the system installation of Firefox, but that behaviour can be
+changed by using this option.  Note that the `binary` capability of the
+`moz:firefoxOptions` object that is passed when [creating a new session]
 will override this option.
 
-On Linux systems it will use the first _firefox_ binary
-found by searching the `PATH` environmental variable,
-which is roughly equivalent to calling [whereis(1)](http://www.manpagez.com/man/1/whereis/)
-and extracting the second column:
+On Linux systems it will use the first _firefox_ binary found by searching
+the `PATH` environmental variable, which is roughly equivalent to calling
+[whereis(1)] and extracting the second column:
 
 	% whereis firefox
 	firefox: /usr/bin/firefox /usr/local/firefox
 
-On macOS, the binary is found by looking for the first _firefox-bin_ binary
-in the same fashion as on Linux systems.
-This means it is possible to also use `PATH`
-to control where geckodriver should find Firefox on macOS.
-It will then look for _/Applications/Firefox.app_.
+On macOS, the binary is found by looking for the first _firefox-bin_
+binary in the same fashion as on Linux systems.  This means it is
+possible to also use `PATH` to control where geckodriver should find
+Firefox on macOS.  It will then look for _/Applications/Firefox.app_.
 
-On Windows systems, geckodriver looks for the system Firefox
-by scanning the Windows registry.
+On Windows systems, geckodriver looks for the system Firefox by scanning
+the Windows registry.
+
+[creating a new session]: https://w3c.github.io/webdriver/webdriver-spec.html#new-session
+[whereis(1)]: http://www.manpagez.com/man/1/whereis/
+
 
 #### `--connect-existing`
 
-Connecting to an existing Firefox instance.
-The instance must have Marionette enabled.
+Connecting to an existing Firefox instance.  The instance must have
+Marionette enabled.
 
-To enable the Marionette remote protocol
-you can pass the `--marionette` flag to Firefox,
-or (in Firefox 54 or greater)
-flip the `marionette.enabled` preference in _about:config_ at runtime.
+To enable the Marionette remote protocol you can pass the `--marionette`
+flag to Firefox.
+
 
 #### <code>--host <var>HOST</var></code>
 
-Host to use for the WebDriver server.
-Defaults to 127.0.0.1.
+Host to use for the WebDriver server.  Defaults to 127.0.0.1.
+
 
 #### <code>--log <var>LEVEL</var></code>
 
-Set the Gecko and geckodriver log level.
-Possible values are `fatal`, `error`, `warn`, `info`, `config`, `debug`, and `trace`.
+Set the Gecko and geckodriver log level.  Possible values are `fatal`,
+`error`, `warn`, `info`, `config`, `debug`, and `trace`.
+
 
 #### <code>--marionette-port <var>PORT</var></code>
 
-Port to use for connecting to the Marionette remote protocol.
-By default it will pick a free port assigned by the system.
+Port to use for connecting to the Marionette remote protocol.  By default
+it will pick a free port assigned by the system.
+
 
 #### <code>-p <var>PORT</var></code>/<code>--port <var>PORT</var></code>
 
-Port to use for the WebDriver server.
-Defaults to 4444.
+Port to use for the WebDriver server.  Defaults to 4444.
 
-A helpful trick is that it is possible to bind to 0
-to get the system to atomically assign a free port.
+A helpful trick is that it is possible to bind to 0 to get the system
+to atomically assign a free port.
+
 
 #### <code>-v<var>[v]</var></code>
 
-Increases the logging verbosity by to debug level when passing a single `-v`,
-or to trace level if `-vv` is passed.
-This is analogous to passing `--log debug` and `--log trace`, respectively.
+Increases the logging verbosity by to debug level when passing a single
+`-v`, or to trace level if `-vv` is passed.  This is analogous to passing
+`--log debug` and `--log trace`, respectively.
 
-## Building
 
-geckodriver is written in [Rust], a systems programming language from [Mozilla].
-Crucially, it relies on the [webdriver crate] to provide the HTTPD
-and do most of the heavy lifting of marshalling the WebDriver protocol.
-geckodriver translates WebDriver [commands], [responses], and [errors]
-to the [Marionette protocol],
-and acts as a proxy between [WebDriver] and [Marionette].
+Building
+========
 
-geckodriver is built in the [Firefox CI] by default
-but _not_ if you build Firefox locally.
-To enable building of geckodriver locally,
+geckodriver is written in [Rust], a systems programming language from
+[Mozilla].  Crucially, it relies on the [webdriver crate] to provide
+the HTTPD and do most of the heavy lifting of marshalling the WebDriver
+protocol.  geckodriver translates WebDriver [commands], [responses],
+and [errors] to the [Marionette protocol], and acts as a proxy between
+[WebDriver] and [Marionette].
+
+geckodriver is built in the [Firefox CI] by default but _not_ if you
+build Firefox locally.  To enable building of geckodriver locally,
 ensure you put this in your [mozconfig]:
 
 	ac_add_options --enable-geckodriver
@@ -543,3 +572,16 @@ alongside _firefox-bin_.
 [Marionette]: http://searchfox.org/mozilla-central/source/testing/marionette/README
 [Firefox CI]: https://treeherder.mozilla.org/
 [mozconfig]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options
+
+
+Contact
+=======
+
+The mailing list for geckodriver discussion is
+tools-marionette@lists.mozilla.org ([subscribe], [archive]).
+
+There is also an IRC channel to talk about using and developing
+geckodriver in #ateam on irc.mozilla.org.
+
+[subscribe]: https://lists.mozilla.org/listinfo/tools-marionette
+[archive]: http://groups.google.com/group/mozilla.tools.marionette

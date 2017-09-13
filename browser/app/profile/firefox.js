@@ -464,6 +464,10 @@ pref("browser.tabs.drawInTitlebar", false);
 pref("browser.tabs.drawInTitlebar", true);
 #endif
 
+// Offer additional drag space to the user. The drag space
+// will only be shown if browser.tabs.drawInTitlebar is true.
+pref("browser.tabs.extraDragSpace", false);
+
 // 0 - Disable the tabbar session restore button.
 // 1 - Enable the tabbar session restore button.
 // 2 - Control group. The tabbar session restore button is disabled,
