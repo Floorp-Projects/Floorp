@@ -10833,7 +10833,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter)
 }
 
 void
-nsFrame::Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus)
+nsFrame::Trace(const char* aMethod, bool aEnter, const nsReflowStatus& aStatus)
 {
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];
