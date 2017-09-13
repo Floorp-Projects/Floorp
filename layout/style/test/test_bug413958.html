@@ -54,7 +54,7 @@ var results = [
       lineNumber: 0, columnNumber: isStylo ? 1 : 6,
       sourceLine: isStylo ? "" : "width:200;color:black" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
-      lineNumber: 0, columnNumber: 1,
+      lineNumber: 0, columnNumber: isStylo ? 1 : 0,
       sourceLine: isStylo ? "" : "200" } ],
 ];
 var curTest = -1;
