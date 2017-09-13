@@ -178,6 +178,11 @@
         <item name="android:layout_toRightOf">@id/forward</item>
     </style>
 
+    <style name="UrlBar.EditLayout.Title" parent="UrlBar.V15.EditLayout.Title"/>
+    <style name="UrlBar.V15.EditLayout.Title" parent="UrlBar.Title">
+        <item name="android:paddingRight">8dp</item>
+    </style>
+
     <style name="UrlBar.DisplayLayout" parent="UrlBar.V15.DisplayLayout" />
 
     <style name="UrlBar.Base.DisplayLayout" parent="UrlBar.Button.Container" />
