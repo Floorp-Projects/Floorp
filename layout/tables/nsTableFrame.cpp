@@ -173,6 +173,9 @@ nsTableFrame::Init(nsIContent*       aContent,
   const nsStyleTableBorder* tableStyle = StyleTableBorder();
   bool borderCollapse = (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);
   SetBorderCollapse(borderCollapse);
+  if (borderCollapse) {
+    SetNeedToCalcHasBCBorders(true);
+  }
 
   if (!aPrevInFlow) {
     // If we're the first-in-flow, we manage the cell map & layout strategy that
