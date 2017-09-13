@@ -59,7 +59,7 @@ public:
     // Default so no conversion is performed.
     return ConversionRequired::kNeedAVCC;
   }
-  nsresult GetLastError() const { return mLastError; }
+  MediaResult GetLastError() const { return mLastError; }
 
 private:
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
@@ -99,7 +99,7 @@ private:
 
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   Maybe<bool> mNeedAVCC;
-  nsresult mLastError;
+  MediaResult mLastError;
   bool mNeedKeyframe = true;
   const TrackInfo::TrackType mType;
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
