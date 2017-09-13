@@ -426,7 +426,7 @@ function ignoreContents(entry)
         /EffectCompositor::GetServoAnimationRule/,
         /LookAndFeel::GetColor/,
         "Gecko_CopyStyleContentsFrom",
-        "Gecko_CSSValue_SetAbsoluteLength",
+        "Gecko_CSSValue_SetPixelValue",
         "Gecko_UnsetDirtyStyleAttr",
         /nsCSSPropertyIDSet::AddProperty/,
     ];
