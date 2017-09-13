@@ -455,9 +455,12 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-b
   display: -moz-box;
 }
 
+#personal-bookmarks {
+  position: relative;
+}
+
 #PlacesToolbarDropIndicatorHolder {
   position: absolute;
-  top: 25%;
 }
 
 #nav-bar-customization-target > #personal-bookmarks,
