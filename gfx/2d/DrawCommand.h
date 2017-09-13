@@ -37,7 +37,6 @@ enum class CommandType : int8_t {
   POPCLIP,
   POPLAYER,
   SETTRANSFORM,
-  SETPERMITSUBPIXELAA,
   FLUSH
 };
 
@@ -674,25 +673,6 @@ public:
 
 private:
   Matrix mTransform;
-};
-
-class SetPermitSubpixelAACommand : public DrawingCommand
-{
-  friend class DrawTargetCaptureImpl;
-public:
-  explicit SetPermitSubpixelAACommand(bool aPermitSubpixelAA)
-    : DrawingCommand(CommandType::SETPERMITSUBPIXELAA)
-    , mPermitSubpixelAA(aPermitSubpixelAA)
-  {
-  }
-
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
-  {
-    aDT->SetPermitSubpixelAA(mPermitSubpixelAA);
-  }
-
-private:
-  bool mPermitSubpixelAA;
 };
 
 class FlushCommand : public DrawingCommand
