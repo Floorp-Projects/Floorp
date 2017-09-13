@@ -60,6 +60,8 @@ nsScrollbarFrame::Reflow(nsPresContext*          aPresContext,
                          const ReflowInput& aReflowInput,
                          nsReflowStatus&          aStatus)
 {
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   // nsGfxScrollFrame may have told us to shrink to nothing. If so, make sure our

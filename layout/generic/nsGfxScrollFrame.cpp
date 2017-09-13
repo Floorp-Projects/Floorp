@@ -987,6 +987,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsHTMLScrollFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   mHelper.HandleScrollbarStyleSwitching();
 
@@ -1103,7 +1104,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
 
   mHelper.UpdatePrevScrolledRect();
 
-  aStatus.Reset();
+  aStatus.Reset(); // This type of frame can't be split.
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
   mHelper.PostOverflowEvent();
 }

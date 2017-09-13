@@ -824,6 +824,8 @@ nsMathMLmtableWrapperFrame::Reflow(nsPresContext*           aPresContext,
                                    const ReflowInput& aReflowInput,
                                    nsReflowStatus&          aStatus)
 {
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   nsAutoString value;
   // we want to return a table that is anchored according to the align attribute
 

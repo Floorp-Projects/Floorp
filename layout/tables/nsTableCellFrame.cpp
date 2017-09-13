@@ -870,6 +870,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   if (aReflowInput.mFlags.mSpecialBSizeReflow) {
     FirstInFlow()->AddStateBits(NS_TABLE_CELL_HAD_SPECIAL_REFLOW);
@@ -878,7 +879,6 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   // see if a special bsize reflow needs to occur due to having a pct height
   nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowInput);
 
-  aStatus.Reset();
   WritingMode wm = aReflowInput.GetWritingMode();
   LogicalSize availSize(wm, aReflowInput.AvailableISize(),
                             aReflowInput.AvailableBSize());

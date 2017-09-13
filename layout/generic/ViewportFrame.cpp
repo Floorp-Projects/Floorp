@@ -293,10 +293,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("ViewportFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE_REFLOW_IN("ViewportFrame::Reflow");
-
-  // Initialize OUT parameters
-  aStatus.Reset();
 
   // Because |Reflow| sets ComputedBSize() on the child to our
   // ComputedBSize().
