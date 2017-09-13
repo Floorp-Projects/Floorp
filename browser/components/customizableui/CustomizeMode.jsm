@@ -15,6 +15,7 @@ const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
 const kToolbarVisibilityBtn = "customization-toolbar-visibility-button";
 const kDrawInTitlebarPref = "browser.tabs.drawInTitlebar";
+const kExtraDragSpacePref = "browser.tabs.extraDragSpace";
 const kMaxTransitionDurationMs = 2000;
 const kKeepBroadcastAttributes = "keepbroadcastattributeswhencustomizing";
 
@@ -117,7 +118,9 @@ function CustomizeMode(aWindow) {
   }
   if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
     this._updateTitlebarCheckbox();
+    this._updateDragSpaceCheckbox();
     Services.prefs.addObserver(kDrawInTitlebarPref, this);
+    Services.prefs.addObserver(kExtraDragSpacePref, this);
   }
   this.window.addEventListener("unload", this);
 }
@@ -149,6 +152,7 @@ CustomizeMode.prototype = {
   uninit() {
     if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
       Services.prefs.removeObserver(kDrawInTitlebarPref, this);
+      Services.prefs.removeObserver(kExtraDragSpacePref, this);
     }
   },
 
@@ -1537,6 +1541,7 @@ CustomizeMode.prototype = {
         this._updateUndoResetButton();
         if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
           this._updateTitlebarCheckbox();
+          this._updateDragSpaceCheckbox();
         }
         break;
       case "lightweight-theme-window-updated":
@@ -1564,12 +1569,47 @@ CustomizeMode.prototype = {
     }
   },
 
+  _updateDragSpaceCheckbox() {
+    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      return;
+    }
+
+    let extraDragSpace = Services.prefs.getBoolPref(kExtraDragSpacePref);
+    let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
+    let menuBar = this.document.getElementById("toolbar-menubar");
+    let menuBarEnabled = menuBar
+      && AppConstants.platform != "macosx"
+      && menuBar.getAttribute("autohide") != "true";
+
+    let checkbox = this.document.getElementById("customization-extra-drag-space-checkbox");
+    if (extraDragSpace) {
+      checkbox.setAttribute("checked", "true");
+    } else {
+      checkbox.removeAttribute("checked");
+    }
+
+    if (!drawInTitlebar || menuBarEnabled) {
+      checkbox.setAttribute("disabled", "true");
+    } else {
+      checkbox.removeAttribute("disabled");
+    }
+  },
+
   toggleTitlebar(aShouldShowTitlebar) {
     if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
       return;
     }
     // Drawing in the titlebar means not showing the titlebar, hence the negation:
     Services.prefs.setBoolPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
+    this._updateDragSpaceCheckbox();
+  },
+
+  toggleDragSpace(aShouldShowDragSpace) {
+    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      return;
+    }
+
+    Services.prefs.setBoolPref(kExtraDragSpacePref, aShouldShowDragSpace);
   },
 
   get _dwu() {

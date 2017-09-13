@@ -38,15 +38,15 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
         if (prevent_decompression) {
           return DropGraphite("Illegal nested compression");
         }
-        std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE, 0);
+        std::vector<uint8_t> decompressed(this->compHead & FULL_SIZE);
         size_t outputSize = 0;
-        if (!mozilla::Compression::LZ4::decompress(
-              reinterpret_cast<const char*>(data + table.offset()),
-              table.remaining(),
-              reinterpret_cast<char*>(decompressed.data()),
-              decompressed.size(),
-              &outputSize) ||
-            outputSize != (this->compHead & FULL_SIZE)) {
+        bool ret = mozilla::Compression::LZ4::decompressPartial(
+            reinterpret_cast<const char*>(data + table.offset()),
+            table.remaining(),  // input buffer size (input size + padding)
+            reinterpret_cast<char*>(decompressed.data()),
+            decompressed.size(),  // target output size
+            &outputSize);   // return output size
+        if (!ret || outputSize != decompressed.size()) {
           return DropGraphite("Decompression failed");
         }
         return this->Parse(decompressed.data(), decompressed.size(), true);
@@ -255,8 +255,13 @@ bool OpenTypeSILF::SILSub::ParsePart(Buffer& table) {
     }
   }
 
-  if (!table.ReadU16(&this->lbGID) || this->lbGID > this->maxGlyphID) {
-    return parent->Error("SILSub: Failed to read valid lbGID");
+  if (!table.ReadU16(&this->lbGID)) {
+    return parent->Error("SILSub: Failed to read lbGID");
+  }
+  if (this->lbGID > this->maxGlyphID) {
+    parent->Warning("SILSub: lbGID %u outside range 0..%u, replaced with 0",
+                    this->lbGID, this->maxGlyphID);
+    this->lbGID = 0;
   }
 
   if (parent->version >> 16 >= 3 &&
@@ -280,19 +285,27 @@ bool OpenTypeSILF::SILSub::ParsePart(Buffer& table) {
   if (!table.ReadU16(&this->numPseudo)) {
     return parent->Error("SILSub: Failed to read numPseudo");
   }
-  if (!table.ReadU16(&this->searchPseudo) || this->searchPseudo !=
-      (this->numPseudo == 0 ? 0 :  // protect against log2(0)
-       (unsigned)std::pow(2, std::floor(std::log2(this->numPseudo))))) {
-    return parent->Error("SILSub: Failed to read valid searchPseudo");
+
+  // The following three fields are deprecated and ignored. We fix them up here
+  // just for internal consistency, but the Graphite engine doesn't care.
+  if (!table.ReadU16(&this->searchPseudo) ||
+      !table.ReadU16(&this->pseudoSelector) ||
+      !table.ReadU16(&this->pseudoShift)) {
+    return parent->Error("SILSub: Failed to read searchPseudo..pseudoShift");
   }
-  if (!table.ReadU16(&this->pseudoSelector) || this->pseudoSelector !=
-      (this->numPseudo == 0 ? 0 :  // protect against log2(0)
-       (unsigned)std::floor(std::log2(this->numPseudo)))) {
-    return parent->Error("SILSub: Failed to read valid pseudoSelector");
-  }
-  if (!table.ReadU16(&this->pseudoShift) ||
-      this->pseudoShift != this->numPseudo - this->searchPseudo) {
-    return parent->Error("SILSub: Failed to read valid pseudoShift");
+  if (this->numPseudo == 0) {
+    if (this->searchPseudo != 0 || this->pseudoSelector != 0 || this->pseudoShift != 0) {
+      this->searchPseudo = this->pseudoSelector = this->pseudoShift = 0;
+    }
+  } else {
+    unsigned floorLog2 = std::floor(std::log2(this->numPseudo));
+    if (this->searchPseudo != 6 * (unsigned)std::pow(2, floorLog2) ||
+        this->pseudoSelector != floorLog2 ||
+        this->pseudoShift != 6 * this->numPseudo - this->searchPseudo) {
+      this->searchPseudo = 6 * (unsigned)std::pow(2, floorLog2);
+      this->pseudoSelector = floorLog2;
+      this->pseudoShift = 6 * this->numPseudo - this->searchPseudo;
+    }
   }
 
   //this->pMaps.resize(this->numPseudo, parent);
@@ -541,19 +554,26 @@ LookupClass::ParsePart(Buffer& table) {
   if (!table.ReadU16(&this->numIDs)) {
     return parent->Error("LookupClass: Failed to read numIDs");
   }
-  if (!table.ReadU16(&this->searchRange) || this->searchRange !=
-      (this->numIDs == 0 ? 0 :  // protect against log2(0)
-       (unsigned)std::pow(2, std::floor(std::log2(this->numIDs))))) {
-    return parent->Error("LookupClass: Failed to read valid searchRange");
+  if (!table.ReadU16(&this->searchRange) ||
+      !table.ReadU16(&this->entrySelector) ||
+      !table.ReadU16(&this->rangeShift)) {
+    return parent->Error("LookupClass: Failed to read searchRange..rangeShift");
   }
-  if (!table.ReadU16(&this->entrySelector) || this->entrySelector !=
-      (this->numIDs == 0 ? 0 :  // protect against log2(0)
-       (unsigned)std::floor(std::log2(this->numIDs)))) {
-    return parent->Error("LookupClass: Failed to read valid entrySelector");
-  }
-  if (!table.ReadU16(&this->rangeShift) ||
-      this->rangeShift != this->numIDs - this->searchRange) {
-    return parent->Error("LookupClass: Failed to read valid rangeShift");
+  if (this->numIDs == 0) {
+    if (this->searchRange != 0 || this->entrySelector != 0 || this->rangeShift != 0) {
+      parent->Warning("LookupClass: Correcting binary-search header for zero-length LookupPair list");
+      this->searchRange = this->entrySelector = this->rangeShift = 0;
+    }
+  } else {
+    unsigned floorLog2 = std::floor(std::log2(this->numIDs));
+    if (this->searchRange != (unsigned)std::pow(2, floorLog2) ||
+        this->entrySelector != floorLog2 ||
+        this->rangeShift != this->numIDs - this->searchRange) {
+      parent->Warning("LookupClass: Correcting binary-search header for LookupPair list");
+      this->searchRange = (unsigned)std::pow(2, floorLog2);
+      this->entrySelector = floorLog2;
+      this->rangeShift = this->numIDs - this->searchRange;
+    }
   }
 
   //this->lookups.resize(this->numIDs, parent);
@@ -661,19 +681,27 @@ SILPass::ParsePart(Buffer& table, const size_t SILSub_init_offset,
   if (!table.ReadU16(&this->numRange)) {
     return parent->Error("SILPass: Failed to read numRange");
   }
-  if (!table.ReadU16(&this->searchRange) || this->searchRange !=
-      (this->numRange == 0 ? 0 :  // protect against log2(0)
-       (unsigned)std::pow(2, std::floor(std::log2(this->numRange))))) {
-    return parent->Error("SILPass: Failed to read valid searchRange");
+
+  // The following three fields are deprecated and ignored. We fix them up here
+  // just for internal consistency, but the Graphite engine doesn't care.
+  if (!table.ReadU16(&this->searchRange) ||
+      !table.ReadU16(&this->entrySelector) ||
+      !table.ReadU16(&this->rangeShift)) {
+    return parent->Error("SILPass: Failed to read searchRange..rangeShift");
   }
-  if (!table.ReadU16(&this->entrySelector) || this->entrySelector !=
-      (this->numRange == 0 ? 0 :  // protect against log2(0)
-       (unsigned)std::floor(std::log2(this->numRange)))) {
-    return parent->Error("SILPass: Failed to read valid entrySelector");
-  }
-  if (!table.ReadU16(&this->rangeShift) ||
-      this->rangeShift != this->numRange - this->searchRange) {
-    return parent->Error("SILPass: Failed to read valid rangeShift");
+  if (this->numRange == 0) {
+    if (this->searchRange != 0 || this->entrySelector != 0 || this->rangeShift != 0) {
+      this->searchRange = this->entrySelector = this->rangeShift = 0;
+    }
+  } else {
+    unsigned floorLog2 = std::floor(std::log2(this->numRange));
+    if (this->searchRange != 6 * (unsigned)std::pow(2, floorLog2) ||
+        this->entrySelector != floorLog2 ||
+        this->rangeShift != 6 * this->numRange - this->searchRange) {
+      this->searchRange = 6 * (unsigned)std::pow(2, floorLog2);
+      this->entrySelector = floorLog2;
+      this->rangeShift = 6 * this->numRange - this->searchRange;
+    }
   }
 
   //this->ranges.resize(this->numRange, parent);

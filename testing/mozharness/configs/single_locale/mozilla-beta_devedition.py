@@ -5,7 +5,7 @@ config = {
     "update_channel": "aurora",  # devedition uses aurora based branding
 
     # l10n
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",
+    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
 
     # repositories
     "mozilla_dir": "mozilla-beta",

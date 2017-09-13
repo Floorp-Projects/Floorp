@@ -11,10 +11,12 @@ from manifestparser import TestManifest
 
 import mozunit
 import pytest
+from conftest import setup_args
 
 
 @pytest.fixture
-def get_active_tests(setup_harness_root, parser):
+def get_active_tests(setup_test_harness, parser):
+    setup_test_harness(*setup_args)
     runtests = pytest.importorskip('runtests')
     md = runtests.MochitestDesktop('plain', {'log_tbpl': '-'})
 

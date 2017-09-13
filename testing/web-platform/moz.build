@@ -152,10 +152,10 @@ with Files("tests/credential-management/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/css/**"):
-    BUG_COMPONENT = ("Core", "CSS Parsing and Comp")
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("tests/css-cascade/**"):
-    BUG_COMPONENT = ("Core", "CSS Parsing and Comp")
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("tests/css-font-display/**"):
     BUG_COMPONENT = ("Core", "Layout: Text")
