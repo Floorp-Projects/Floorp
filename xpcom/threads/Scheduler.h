@@ -11,6 +11,7 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "nsILabelableRunnable.h"
 
 // Windows silliness. winbase.h defines an empty no-argument Yield macro.
 #undef Yield
@@ -74,6 +75,7 @@ public:
   class MOZ_RAII EventLoopActivation
   {
   public:
+    using EventGroups = nsILabelableRunnable::SchedulerGroupSet;
     EventLoopActivation();
     ~EventLoopActivation();
 
@@ -85,13 +87,13 @@ public:
 
     EventPriority Priority() const { return mPriority; }
     bool IsLabeled() { return mIsLabeled; }
-    const nsTArray<RefPtr<SchedulerGroup>>& EventGroupsAffected() { return mEventGroups; }
+    EventGroups& EventGroupsAffected() { return mEventGroups; }
 
   private:
     EventLoopActivation* mPrev;
     bool mProcessingEvent;
     bool mIsLabeled;
-    nsTArray<RefPtr<SchedulerGroup>> mEventGroups;
+    EventGroups mEventGroups;
     EventPriority mPriority;
 
     static MOZ_THREAD_LOCAL(EventLoopActivation*) sTopActivation;

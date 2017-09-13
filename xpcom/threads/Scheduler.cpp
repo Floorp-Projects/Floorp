@@ -563,11 +563,7 @@ SchedulerImpl::StartEvent(Scheduler::EventLoopActivation& aActivation)
   MOZ_ASSERT(!sUnlabeledEventRunning);
   if (aActivation.IsLabeled()) {
     SchedulerGroup::SetValidatingAccess(SchedulerGroup::StartValidation);
-
-    for (SchedulerGroup* group : aActivation.EventGroupsAffected()) {
-      MOZ_ASSERT(!group->IsRunning());
-      group->SetIsRunning(true);
-    }
+    aActivation.EventGroupsAffected().SetIsRunning(true);
   } else {
     sUnlabeledEventRunning = true;
   }
@@ -578,11 +574,7 @@ SchedulerImpl::StartEvent(Scheduler::EventLoopActivation& aActivation)
 SchedulerImpl::FinishEvent(Scheduler::EventLoopActivation& aActivation)
 {
   if (aActivation.IsLabeled()) {
-    for (SchedulerGroup* group : aActivation.EventGroupsAffected()) {
-      MOZ_ASSERT(group->IsRunning());
-      group->SetIsRunning(false);
-    }
-
+    aActivation.EventGroupsAffected().SetIsRunning(false);
     SchedulerGroup::SetValidatingAccess(SchedulerGroup::EndValidation);
   } else {
     MOZ_ASSERT(sUnlabeledEventRunning);

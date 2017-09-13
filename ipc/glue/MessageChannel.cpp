@@ -2002,7 +2002,7 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority)
 }
 
 bool
-MessageChannel::MessageTask::GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+MessageChannel::MessageTask::GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups)
 {
     if (!mChannel) {
         return false;
