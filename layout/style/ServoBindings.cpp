@@ -2146,28 +2146,6 @@ Gecko_NewNoneTransform()
 }
 
 void
-Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut aCSSValue, nscoord aLen)
-{
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null || aCSSValue->IsLengthUnit());
-  // The call below could trigger refcounting if aCSSValue were a
-  // FontFamilyList, but we just asserted that it's not. So we can
-  // whitelist this for static analysis.
-  aCSSValue->SetIntegerCoordValue(aLen);
-}
-
-nscoord
-Gecko_CSSValue_GetAbsoluteLength(nsCSSValueBorrowed aCSSValue)
-{
-  // SetIntegerCoordValue() which is used in Gecko_CSSValue_SetAbsoluteLength()
-  // converts values by nsPresContext::AppUnitsToFloatCSSPixels() and stores
-  // values in eCSSUnit_Pixel unit. We need to convert the values back to app
-  // units by GetPixelLength().
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Pixel,
-             "The unit should be eCSSUnit_Pixel");
-  return aCSSValue->GetPixelLength();
-}
-
-void
 Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut aCSSValue, float aNumber)
 {
   aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
@@ -2201,6 +2179,14 @@ float
 Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed aCSSValue)
 {
   return aCSSValue->GetPercentValue();
+}
+
+void
+Gecko_CSSValue_SetPixelLength(nsCSSValueBorrowedMut aCSSValue, float aLen)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null ||
+             aCSSValue->GetUnit() == eCSSUnit_Pixel);
+  aCSSValue->SetFloatValue(aLen, eCSSUnit_Pixel);
 }
 
 void
