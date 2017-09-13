@@ -159,6 +159,7 @@ nsRootBoxFrame::Reflow(nsPresContext*           aPresContext,
                        nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame");
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
 #ifdef DEBUG_REFLOW
   gReflows++;

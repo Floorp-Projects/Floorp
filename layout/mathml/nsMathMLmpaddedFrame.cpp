@@ -308,6 +308,8 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
                              const ReflowInput& aReflowInput,
                              nsReflowStatus&          aStatus)
 {
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   mPresentationData.flags &= ~NS_MATHML_ERROR;
   ProcessAttributes();
 

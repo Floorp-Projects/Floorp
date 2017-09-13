@@ -98,6 +98,8 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("BRFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   WritingMode wm = aReflowInput.GetWritingMode();
   LogicalSize finalSize(wm);
   finalSize.BSize(wm) = 0; // BR frames with block size 0 are ignored in quirks
@@ -160,12 +162,8 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       breakType = StyleClear::Line;
     }
 
-    aStatus.Reset();
     aStatus.SetInlineLineBreakAfter(breakType);
     ll->SetLineEndsInBR(true);
-  }
-  else {
-    aStatus.Reset();
   }
 
   aMetrics.SetSize(wm, finalSize);

@@ -361,6 +361,8 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsInlineFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   if (nullptr == aReflowInput.mLineLayout) {
     NS_ERROR("must have non-null aReflowInput.mLineLayout");
     return;
@@ -567,7 +569,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                             ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus)
 {
-  aStatus.Reset();
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   nsLineLayout* lineLayout = aReflowInput.mLineLayout;
   bool inFirstLine = aReflowInput.mLineLayout->GetInFirstLine();
@@ -1145,6 +1147,8 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
                          nsReflowStatus& aStatus)
 {
   MarkInReflow();
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   if (nullptr == aReflowInput.mLineLayout) {
     return;  // XXX does this happen? why?
   }

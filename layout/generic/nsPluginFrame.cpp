@@ -494,6 +494,7 @@ nsPluginFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPluginFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowInput, aMetrics);
@@ -504,13 +505,11 @@ nsPluginFrame::Reflow(nsPresContext*           aPresContext,
   // arrived. Otherwise there may be PARAMs or other stuff that the
   // plugin needs to see that haven't arrived yet.
   if (!GetContent()->IsDoneAddingChildren()) {
-    aStatus.Reset();
     return;
   }
 
   // if we are printing or print previewing, bail for now
   if (aPresContext->Medium() == nsGkAtoms::print) {
-    aStatus.Reset();
     return;
   }
 
@@ -528,8 +527,6 @@ nsPluginFrame::Reflow(nsPresContext*           aPresContext,
     mReflowCallbackPosted = true;
     aPresContext->PresShell()->PostReflowCallback(this);
   }
-
-  aStatus.Reset();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
