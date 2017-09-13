@@ -204,7 +204,8 @@ VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
                                                     const layers::TextureFactoryIdentifier& aIdentifier,
                                                     bool* aSuccess,
                                                     nsCString* aBlacklistedD3D11Driver,
-                                                    nsCString* aBlacklistedD3D9Driver)
+                                                    nsCString* aBlacklistedD3D9Driver,
+                                                    nsCString* aErrorDescription)
 {
   RefPtr<TaskQueue> decodeTaskQueue = new TaskQueue(
     SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4),
@@ -212,7 +213,7 @@ VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
 
   auto* parent = new VideoDecoderParent(
     this, aVideoInfo, aIdentifier,
-    sManagerTaskQueue, decodeTaskQueue, aSuccess);
+    sManagerTaskQueue, decodeTaskQueue, aSuccess, aErrorDescription);
 
 #ifdef XP_WIN
   *aBlacklistedD3D11Driver = GetFoundD3D11BlacklistedDLL();
