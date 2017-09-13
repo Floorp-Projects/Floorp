@@ -17,12 +17,11 @@ struct D3D11Checks
 {
   static bool DoesRenderTargetViewNeedRecreating(ID3D11Device* aDevice);
   static bool DoesDeviceWork();
-  static bool DoesTextureSharingWork(ID3D11Device* device);
-  static bool DoesAlphaTextureSharingWork(ID3D11Device* device);
+  static bool DoesTextureSharingWork(ID3D11Device *device);
+  static bool DoesAlphaTextureSharingWork(ID3D11Device *device);
   static void WarnOnAdapterMismatch(ID3D11Device* device);
   static bool GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out);
   static bool DoesRemotePresentWork(IDXGIAdapter* adapter);
-  static bool DoesNV12Work(ID3D11Device* device);
 };
 
 } // namespace gfx
