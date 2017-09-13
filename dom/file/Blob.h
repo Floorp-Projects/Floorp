@@ -151,7 +151,7 @@ private:
 
 // Override BindingJSObjectMallocBytes for blobs to tell the JS GC how much
 // memory is held live by the binding object.
-uint64_t BindingJSObjectMallocBytes(Blob* aBlob);
+size_t BindingJSObjectMallocBytes(Blob* aBlob);
 
 } // namespace dom
 } // namespace mozilla
