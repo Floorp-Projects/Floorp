@@ -255,6 +255,15 @@ var gPrivacyPane = {
     appendSearchKeywords("showPasswords", [
       signonBundle.getString("loginsDescriptionAll"),
     ]);
+    appendSearchKeywords("cookieExceptions", [
+      bundlePrefs.getString("cookiepermissionstext")
+    ]);
+    appendSearchKeywords("showCookiesButton", [
+      bundlePrefs.getString("cookiesAll"),
+      bundlePrefs.getString("removeAllCookies.label"),
+      bundlePrefs.getString("removeAllShownCookies.label"),
+      bundlePrefs.getString("removeSelectedCookies.label"),
+    ]);
     appendSearchKeywords("trackingProtectionExceptions", [
       bundlePrefs.getString("trackingprotectionpermissionstitle"),
       bundlePrefs.getString("trackingprotectionpermissionstext2"),

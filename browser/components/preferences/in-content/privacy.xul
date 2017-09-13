@@ -212,24 +212,38 @@
                       onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
                       onsynctopreference="return gPrivacyPane.writeAcceptCookies();"/>
             <spacer flex="1" />
-            <button id="cookieExceptions"
-                    label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
-                    preference="pref.privacy.disable_button.cookie_exceptions"/>
+            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+            <hbox>
+              <button id="cookieExceptions"
+                      label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
+                      preference="pref.privacy.disable_button.cookie_exceptions"
+                      searchkeywords="&address2.label;
+                                      &block.label;
+                                      &session.label;
+                                      &allow.label;
+                                      &removepermission2.label;
+                                      &removeallpermissions2.label;
+                                      &button.cancel.label;
+                                      &button.ok.label;"/>
+            </hbox>
           </hbox>
           <hbox id="acceptThirdPartyRow"
                 class="indent"
                 align="center">
             <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
                    accesskey="&acceptThirdParty.pre.accesskey;">&acceptThirdParty.pre.label;</label>
-            <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
-            onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
-            onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
-              <menupopup>
-                <menuitem label="&acceptThirdParty.always.label;" value="always"/>
-                <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
-                <menuitem label="&acceptThirdParty.never.label;" value="never"/>
-              </menupopup>
-            </menulist>
+            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+            <hbox>
+              <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
+              onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
+              onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
+                <menupopup>
+                  <menuitem label="&acceptThirdParty.always.label;" value="always"/>
+                  <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
+                  <menuitem label="&acceptThirdParty.never.label;" value="never"/>
+                </menupopup>
+              </menulist>
+            </hbox>
           </hbox>
           <hbox id="keepRow"
                 class="indent"
@@ -248,9 +262,13 @@
               </menulist>
             </hbox>
             <spacer flex="1"/>
-            <button id="showCookiesButton"
-                    label="&showCookies.label;" accesskey="&showCookies.accesskey;"
-                    preference="pref.privacy.disable_button.view_cookies"/>
+            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+            <hbox>
+              <button id="showCookiesButton"
+                      label="&showCookies.label;"
+                      accesskey="&showCookies.accesskey;"
+                      preference="pref.privacy.disable_button.view_cookies"/>
+            </hbox>
           </hbox>
           <hbox id="clearDataBox"
                 align="center">
@@ -259,8 +277,22 @@
                       label="&clearOnClose.label;"
                       accesskey="&clearOnClose.accesskey;"/>
             <spacer flex="1"/>
-            <button id="clearDataSettings" label="&clearOnCloseSettings.label;"
-                    accesskey="&clearOnCloseSettings.accesskey;"/>
+            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+            <hbox>
+              <button id="clearDataSettings"
+                      label="&clearOnCloseSettings.label;"
+                      accesskey="&clearOnCloseSettings.accesskey;"
+                      searchkeywords="&clearDataSettings2.label;
+                                      &historySection.label;
+                                      &itemHistoryAndDownloads.label;
+                                      &itemCookies.label;
+                                      &itemActiveLogins.label;
+                                      &itemCache.label;
+                                      &itemFormSearchHistory.label;
+                                      &dataSection.label;
+                                      &itemSitePreferences.label;
+                                      &itemOfflineApps.label;"/>
+            </hbox>
           </hbox>
         </vbox>
       </vbox>
