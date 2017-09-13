@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Vi er ikke sikre på hva som hendte. Kan du prøve igjen eller ta et bilde av en annen side?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Ta, lagre og del skjermbilder uten å forlate Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "En ny måte å lagre på"
+  },
+  "tourBodyPageAction": {
+    "message": "Utvid sidehandlingsmenyen i adresselinjen når du vil ta et skjermbilde."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Ta bilde av akkurat hva du vil"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Klikk for å dra og ta skjermbilde av bare en del av siden. Du kan også føre musen over for å framheve merket område."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Ta skjermbilde av vinduer eller hele sider."
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Bruk knappene i det øvre høyre hjørnet for å ta skjermbilde av det synlige området i vinduet eller for å ta skjermbilde av en hel side."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Som du vil ha det"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Lagre de beskjærte skjermbildene dine på nettet for enklere deling, eller last de ned til din datamaskin. Du kan også klikke på knappen Mine skjermbilde for å finne alle skjermbildene du har tatt."
   },
   "tourSkip": {

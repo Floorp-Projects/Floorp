@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Mes nesame tikri, kas ką tik nutiko. Norite pabandyti dar kartą arba nufotografuoti kitą tinklalapį?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Darykite, įrašykite ir dalinkitės ekrano nuotraukomis nepalikdami „Firefox“."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Užfiksuokite būtent tai, ką norite"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Spustelėkite ir tempkite, kad užfiksuotumėte tik dalį tinklalapio. Taip pat galite užvesti pelę, norėdami paryškinti savo pasirinkimą."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Fiksuokite langus arba ištisus tinklalapius"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Pasirinkite mygtukus aukščiau dešinėje, norėdami užfiksuoti matomą lango dalį arba visą tinklalapį."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Kaip jums patogiau"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano kadrai“, matysite visas savo padarytas nuotraukas."
   },
   "tourSkip": {

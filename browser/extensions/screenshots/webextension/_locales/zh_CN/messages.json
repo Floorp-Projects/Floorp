@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "我们不确定发生了什么。您可以再试一次或者试试另一个页面。"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "截取、保存和分享屏幕截图，无需 Firefox 以外的工具。"
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "截取你所需"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "单击并拖动以截取页面某个区域。您也可以把光标移到你要的地方，高亮后单击即可截图。"
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "截取窗口或整个页面"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "选择右上角的按钮可以截取窗口中的可见区域或者整个页面。"
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "做您所想"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您截取的所有截图。"
   },
   "tourSkip": {

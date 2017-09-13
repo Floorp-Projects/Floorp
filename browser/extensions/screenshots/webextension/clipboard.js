@@ -21,7 +21,19 @@ this.clipboard = (function() {
           let el = doc.createElement("textarea");
           doc.body.appendChild(el);
           el.value = text;
+          if (!text) {
+            let exc = new Error("Clipboard copy given empty text");
+            exc.noPopup = true;
+            catcher.unhandled(exc);
+          }
           el.select();
+          if (doc.activeElement !== el) {
+            let unhandledTag = doc.activeElement ? doc.activeElement.tagName : "No active element";
+            let exc = new Error("Clipboard el.select failed");
+            exc.activeElement = unhandledTag;
+            exc.noPopup = true;
+            catcher.unhandled(exc);
+          }
           const copied = doc.execCommand("copy");
           if (!copied) {
             catcher.unhandled(new Error("Clipboard copy failed"));

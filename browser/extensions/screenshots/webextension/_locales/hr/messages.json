@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Nismo sigurno što se upravo dogodilo. Možete li pokušati ponovno ili snimiti drukčiju stranicu?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Snimite, spremite i dijelite snimke bez da napuštate Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Snimite ono što želite"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Kliknite i povucite ako želite snimiti samo dio stranice. Također možete označiti vaš odabir tako da preko njega stavite pokazivač miša."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Baš kako vam se sviđa"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Spremite vaše odrezane snimke na Web kako biste ih jednostavnije dijelili, ili ih jednostavno skinite na vaše računalo. Također možete kliknuti gumb Moje snimke kako biste pronašli sve vaše dosadašnje snimke."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Snimajte prozore ili cijele stranice"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Odaberite gumbove na gornjem desnom kutu kako biste snimili vidljivo područje u prozoru ili cijelu stranicu."
   },
   "tourSkip": {

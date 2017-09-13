@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "काय घडले याची आम्हाला खात्री नाही. पुन्हा प्रयत्न करा किंवा भिन्न पृष्ठाचा शॉट घ्या?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Firefox न सोडता स्क्रीनशॉट घ्या, जतन करा आणि सामायिक करा."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "आपल्याला पाहिजे असलेल्या गोष्टी फक्त कॅप्चर करा"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "पृष्ठाचा फक्त एक भाग कॅप्चर करण्यासाठी क्लिक आणि ड्रॅग करा. आपण आपल्या निवडीवर ठळकपणे होव्हर देखील करू शकता."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Windows किंवा संपूर्ण पृष्ठे कॅप्चर करा"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "पटलामध्ये दृश्यमान क्षेत्र कॅप्चर करण्यासाठी किंवा संपूर्ण पृष्ठ कॅप्चर करण्यासाठी वरील उजवीकडील बटणे निवडा."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "जसे आपल्याला आवडते"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "आपले क्रॉप केलेले शॉट्स वेबवर सुलभ सामायिक करण्यासाठी जतन करा, किंवा त्यांना आपल्या संगणकावर डाउनलोड करा. आपण घेतलेले सर्व शॉट्स शोधण्यासाठी आपण माझे शॉट्स बटणावर क्लिक करू शकता."
   },
   "tourSkip": {

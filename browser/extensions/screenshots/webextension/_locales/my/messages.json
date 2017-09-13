@@ -41,16 +41,16 @@
   "unshootablePageErrorTitle": {
     "message": "ဒီစာမျက်နှာ၏ မျက်နှာပြင်ပုံရိပ်ကို မရိုက်ကူးနိုင်ပါ။"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Firefox ကနေ ထွက်ခွာရန် မလိုဘဲ မျက်နှာပြင်ပုံရိပ်များကို ရိုက်ကူး၊ သိမ်းဆည်း၊ မျှဝေပါ။"
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "ကိုယ်နှစ်သက်ရာ စာမျက်နှာများကို ဖမ်းယူပါ"
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "ဝင်ဒိုးများ သို့မဟုတ် စာမျက်နှာတစ်ခုလုံးကို ဖမ်းယူပါ"
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "နှစ်သက်သလို"
   },
   "tourSkip": {
