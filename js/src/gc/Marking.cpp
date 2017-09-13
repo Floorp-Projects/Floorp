@@ -2993,11 +2993,9 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
             op(dst, src);
     } else if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp()) {
         op(dst, src);
-    } else if (src->getClass()->hasFinalize()) {
-        // Such objects need to be handled specially above to ensure any
-        // additional nursery buffers they hold are moved.
-        MOZ_RELEASE_ASSERT(CanNurseryAllocateFinalizedClass(src->getClass()));
-        MOZ_CRASH("Unhandled JSCLASS_SKIP_NURSERY_FINALIZE Class");
+    } else {
+        MOZ_ASSERT_IF(src->getClass()->hasFinalize(),
+                      CanNurseryAllocateFinalizedClass(src->getClass()));
     }
 
     return tenuredSize;

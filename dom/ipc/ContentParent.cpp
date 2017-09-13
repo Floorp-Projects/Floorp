@@ -132,7 +132,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIMutable.h"
-#include "nsINSSU2FToken.h"
 #include "nsIObserverService.h"
 #include "nsIParentChannel.h"
 #include "nsIPresShell.h"
@@ -3546,105 +3545,6 @@ ContentParent::RecvSetURITitle(const URIParams& uri,
   nsCOMPtr<IHistory> history = services::GetHistoryService();
   if (history) {
     history->SetURITitle(ourURI, title);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvNSSU2FTokenIsCompatibleVersion(const nsString& aVersion,
-                                                  bool* aIsCompatible)
-{
-  MOZ_ASSERT(aIsCompatible);
-
-  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
-  if (NS_WARN_IF(!nssToken)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsresult rv = nssToken->IsCompatibleVersion(aVersion, aIsCompatible);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& aKeyHandle,
-                                           nsTArray<uint8_t>&& aApplication,
-                                           bool* aIsValidKeyHandle)
-{
-  MOZ_ASSERT(aIsValidKeyHandle);
-
-  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
-  if (NS_WARN_IF(!nssToken)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsresult rv = nssToken->IsRegistered(aKeyHandle.Elements(), aKeyHandle.Length(),
-                                       aApplication.Elements(), aApplication.Length(),
-                                       aIsValidKeyHandle);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvNSSU2FTokenRegister(nsTArray<uint8_t>&& aApplication,
-                                       nsTArray<uint8_t>&& aChallenge,
-                                       nsTArray<uint8_t>* aRegistration)
-{
-  MOZ_ASSERT(aRegistration);
-
-  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
-  if (NS_WARN_IF(!nssToken)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  uint8_t* buffer;
-  uint32_t bufferlen;
-  nsresult rv = nssToken->Register(aApplication.Elements(), aApplication.Length(),
-                                   aChallenge.Elements(), aChallenge.Length(),
-                                   &buffer, &bufferlen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  MOZ_ASSERT(buffer);
-  aRegistration->ReplaceElementsAt(0, aRegistration->Length(), buffer, bufferlen);
-  free(buffer);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvNSSU2FTokenSign(nsTArray<uint8_t>&& aApplication,
-                                   nsTArray<uint8_t>&& aChallenge,
-                                   nsTArray<uint8_t>&& aKeyHandle,
-                                   nsTArray<uint8_t>* aSignature)
-{
-  MOZ_ASSERT(aSignature);
-
-  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
-  if (NS_WARN_IF(!nssToken)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  uint8_t* buffer;
-  uint32_t bufferlen;
-  nsresult rv = nssToken->Sign(aApplication.Elements(), aApplication.Length(),
-                               aChallenge.Elements(), aChallenge.Length(),
-                               aKeyHandle.Elements(), aKeyHandle.Length(),
-                               &buffer, &bufferlen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  MOZ_ASSERT(buffer);
-  aSignature->ReplaceElementsAt(0, aSignature->Length(), buffer, bufferlen);
-  free(buffer);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
 }

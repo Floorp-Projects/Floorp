@@ -183,6 +183,12 @@ class TypedArrayObject : public NativeObject
     Value getElement(uint32_t index);
     static void setElement(TypedArrayObject& obj, uint32_t index, double d);
 
+    /*
+     * Copy all elements from this typed array to vp. vp must point to rooted
+     * memory.
+     */
+    void getElements(Value* vp);
+
     void notifyBufferDetached(JSContext* cx, void* newData);
 
     static bool

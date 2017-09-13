@@ -138,7 +138,7 @@ function *testSteps() {
   channel.asyncOpen2(new ChannelListener(checkContent, null));
   do_timeout(50, function() {
     channel.QueryInterface(Components.interfaces.nsIRaceCacheWithNetwork).test_triggerNetwork(0);
-    channel.QueryInterface(Components.interfaces.nsIRaceCacheWithNetwork).test_triggerDelayedOpenCacheEntry();
+    do_execute_soon(() => { channel.QueryInterface(Components.interfaces.nsIRaceCacheWithNetwork).test_triggerDelayedOpenCacheEntry(); });
   });
   yield undefined;
   equal(gResponseCounter, 6);

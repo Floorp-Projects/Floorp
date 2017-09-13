@@ -156,5 +156,17 @@ StreamBlobImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
+size_t
+StreamBlobImpl::GetAllocationSize() const
+{
+  nsCOMPtr<nsIStringInputStream> stringInputStream =
+    do_QueryInterface(mInputStream);
+  if (!stringInputStream) {
+    return 0;
+  }
+
+  return stringInputStream->SizeOfIncludingThis(MallocSizeOf);
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -147,3 +147,22 @@ addAccessibleTask(`
     testChildrenIds(two, ["a", "b"]);
   }
 );
+
+addAccessibleTask(`<div id="a"></div><div id="b"></div>`,
+  async function(browser, accDoc) {
+    testChildrenIds(accDoc, ["a", "b"]);
+
+    let waitFor = {
+      expected: [[ EVENT_REORDER, e => e.accessible == accDoc ]]
+    };
+
+    await contentSpawnMutation(browser, waitFor, function() {
+      document.documentElement.style.display = "none";
+      document.documentElement.getBoundingClientRect();
+      document.body.setAttribute("aria-owns", "b a");
+      document.documentElement.remove();
+    });
+
+    testChildrenIds(accDoc, []);
+  }
+);

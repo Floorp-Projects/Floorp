@@ -130,7 +130,7 @@ RuleEditor.prototype = {
     let header = createChild(code, "div", {});
 
     this.selectorText = createChild(header, "span", {
-      class: "ruleview-selectorcontainer theme-fg-color3",
+      class: "ruleview-selectorcontainer",
       tabindex: this.isSelectorEditable ? "0" : "-1",
     });
 

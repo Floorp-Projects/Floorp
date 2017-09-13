@@ -153,7 +153,9 @@ AliasAnalysis::analyze()
 
         if (block->isLoopHeader()) {
             JitSpew(JitSpew_Alias, "Processing loop header %d", block->id());
-            loop_ = new(alloc()) LoopAliasInfo(alloc(), loop_, *block);
+            loop_ = new(alloc().fallible()) LoopAliasInfo(alloc(), loop_, *block);
+            if (!loop_)
+                return false;
         }
 
         for (MPhiIterator def(block->phisBegin()), end(block->phisEnd()); def != end; ++def)

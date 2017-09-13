@@ -668,6 +668,7 @@ nsPipe::GetReadSegment(nsPipeReadState& aReadState, const char*& aSegment,
 
   aSegment = aReadState.mReadCursor;
   aLength = aReadState.mReadLimit - aReadState.mReadCursor;
+  MOZ_DIAGNOSTIC_ASSERT(aLength <= aReadState.mAvailable);
 
   return NS_OK;
 }
@@ -815,8 +816,6 @@ nsPipe::DrainInputStream(nsPipeReadState& aReadState, nsPipeEvents& aEvents)
     return;
   }
 
-  aReadState.mAvailable = 0;
-
   while(mWriteSegment >= aReadState.mSegment) {
 
     // If the last segment to free is still being written to, we're done
@@ -830,6 +829,23 @@ nsPipe::DrainInputStream(nsPipeReadState& aReadState, nsPipeEvents& aEvents)
     // advance buffer segment no matter what.
     AdvanceReadSegment(aReadState, mon);
   }
+
+  // Force the stream into an empty state.  Make sure mAvailable, mCursor, and
+  // mReadLimit are consistent with one another.
+  aReadState.mAvailable = 0;
+  aReadState.mReadCursor = nullptr;
+  aReadState.mReadLimit = nullptr;
+
+  // Remove the input stream from the pipe's list of streams.  This will
+  // prevent the pipe from holding the stream alive or trying to update
+  // its read state any further.
+  DebugOnly<uint32_t> numRemoved = 0;
+  mInputList.RemoveElementsBy([&](nsPipeInputStream* aEntry) {
+    bool result = &aReadState == &aEntry->ReadState();
+    numRemoved += result ? 1 : 0;
+    return result;
+  });
+  MOZ_ASSERT(numRemoved == 1);
 
   // If we have read any segments from the advance buffer then we can
   // potentially notify blocked writers.
@@ -972,7 +988,6 @@ nsPipe::OnInputStreamException(nsPipeInputStream* aStream, nsresult aReason)
 
       MonitorAction action = mInputList[i]->OnInputException(aReason, events,
                                                              mon);
-      mInputList.RemoveElementAt(i);
 
       // Notify after element is removed in case we re-enter as a result.
       if (action == NotifyMonitor) {
@@ -1003,21 +1018,20 @@ nsPipe::OnPipeException(nsresult aReason, bool aOutputOnly)
 
     bool needNotify = false;
 
-    nsTArray<nsPipeInputStream*> tmpInputList;
-    for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+    // OnInputException() can drain the stream and remove it from
+    // mInputList.  So iterate over a temp list instead.
+    nsTArray<nsPipeInputStream*> list(mInputList);
+    for (uint32_t i = 0; i < list.Length(); ++i) {
       // an output-only exception applies to the input end if the pipe has
       // zero bytes available.
-      if (aOutputOnly && mInputList[i]->Available()) {
-        tmpInputList.AppendElement(mInputList[i]);
+      if (aOutputOnly && list[i]->Available()) {
         continue;
       }
 
-      if (mInputList[i]->OnInputException(aReason, events, mon)
-          == NotifyMonitor) {
+      if (list[i]->OnInputException(aReason, events, mon) == NotifyMonitor) {
         needNotify = true;
       }
     }
-    mInputList = tmpInputList;
 
     if (mOutput.OnOutputException(aReason, events) == NotifyMonitor) {
       needNotify = true;

@@ -1,8 +1,5 @@
 . "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
 
-# Enabled to get some telemetry
-mk_add_options "export JAR_COMPRESSION=brotli"
-
 ac_add_options --enable-profiling
 ac_add_options --enable-verify-mar
 

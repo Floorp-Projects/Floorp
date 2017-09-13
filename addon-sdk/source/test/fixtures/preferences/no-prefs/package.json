@@ -1,6 +1,0 @@
-{
-    "id": "no-prefs@jetpack",
-    "title": "No Prefs Test",
-    "author": "Erik Vold",
-    "loader": "lib/main.js"
-}

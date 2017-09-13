@@ -1528,14 +1528,6 @@ VARIABLES = {
         """List of manifest files defining browser chrome tests.
         """),
 
-    'JETPACK_PACKAGE_MANIFESTS': (ManifestparserManifestList, list,
-        """List of manifest files defining jetpack package tests.
-        """),
-
-    'JETPACK_ADDON_MANIFESTS': (ManifestparserManifestList, list,
-        """List of manifest files defining jetpack addon tests.
-        """),
-
     'ANDROID_INSTRUMENTATION_MANIFESTS': (ManifestparserManifestList, list,
         """List of manifest files defining Android instrumentation tests.
         """),

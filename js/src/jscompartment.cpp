@@ -848,6 +848,8 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
         table.sweepAfterMinorGC();
 
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
+
+    sweepMapAndSetObjectsAfterMinorGC();
 }
 
 void
@@ -941,6 +943,20 @@ JSCompartment::sweepWatchpoints()
 {
     if (watchpointMap)
         watchpointMap->sweep();
+}
+
+void
+JSCompartment::sweepMapAndSetObjectsAfterMinorGC()
+{
+    auto fop = runtime_->defaultFreeOp();
+
+    for (auto mapobj : mapsWithNurseryMemory)
+        MapObject::sweepAfterMinorGC(fop, mapobj);
+    mapsWithNurseryMemory.clearAndFree();
+
+    for (auto setobj : setsWithNurseryMemory)
+        SetObject::sweepAfterMinorGC(fop, setobj);
+    setsWithNurseryMemory.clearAndFree();
 }
 
 namespace {

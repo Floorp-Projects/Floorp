@@ -1237,6 +1237,9 @@ bool
 GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp);
 
 bool
+GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp);
+
+bool
 GetGetterPure(JSContext* cx, JSObject* obj, jsid id, JSFunction** fp);
 
 bool

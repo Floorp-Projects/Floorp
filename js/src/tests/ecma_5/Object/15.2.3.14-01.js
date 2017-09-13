@@ -36,7 +36,7 @@ keys = Object.keys(o),
 assertEq(arraysEqual(keys, ["a", "b"]), true,
          "" + keys);
 
-o = { __iterator__: function() { return Iterator({a: 2, b: 3}); } };
+o = { __iterator__: function() { throw new Error("non-standard __iterator__ called?"); } };
 keys = Object.keys(o);
 assertEq(arraysEqual(keys, ["__iterator__"]), true,
          "" + keys);

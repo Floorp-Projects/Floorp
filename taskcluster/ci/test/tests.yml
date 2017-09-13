@@ -877,34 +877,6 @@ mochitest-gpu:
             windows10-64-asan.*: 3
             default: default
 
-mochitest-jetpack:
-    description: "Mochitest jetpack run"
-    suite: mochitest/jetpack-package
-    treeherder-symbol: tc-M(JP)
-    loopback-video: true
-    e10s: false
-    max-run-time: 5400
-    mozharness:
-        mochitest-flavor: jetpack-package
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        chunked: false
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                linux.*:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=jetpack-package
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
-
 mochitest-media:
     description: "Mochitest media run"
     suite: mochitest/mochitest-media

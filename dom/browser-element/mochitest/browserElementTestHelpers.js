@@ -82,6 +82,10 @@ const browserElementTestHelpers = {
       this.unlockTestReady.bind(this));
   },
 
+  allowTopLevelDataURINavigation: function() {
+    this._setPref("security.data_uri.block_toplevel_data_uri_navigations", false);
+  },
+
   _observers: [],
 
   // This function is a wrapper which lets you register an observer to one of
