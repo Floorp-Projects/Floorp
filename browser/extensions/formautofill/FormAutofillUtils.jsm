@@ -19,6 +19,7 @@ const ALTERNATIVE_COUNTRY_NAMES = {
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
 const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
+const AUTOFILL_CREDITCARDS_AVAILABLE_PREF = "extensions.formautofill.creditCards.available";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -27,6 +28,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 this.FormAutofillUtils = {
   get AUTOFILL_FIELDS_THRESHOLD() { return 3; },
   get isAutofillEnabled() { return this.isAutofillAddressesEnabled || this.isAutofillCreditCardsEnabled; },
+  get isAutofillCreditCardsEnabled() { return this.isAutofillCreditCardsAvailable && this._isAutofillCreditCardsEnabled; },
 
   ADDRESSES_COLLECTION_NAME,
   CREDITCARDS_COLLECTION_NAME,
@@ -526,4 +528,6 @@ XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
 XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
                                       "isAutofillAddressesEnabled", ENABLED_AUTOFILL_ADDRESSES_PREF);
 XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
-                                      "isAutofillCreditCardsEnabled", ENABLED_AUTOFILL_CREDITCARDS_PREF);
+                                      "isAutofillCreditCardsAvailable", AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
+XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
+                                      "_isAutofillCreditCardsEnabled", ENABLED_AUTOFILL_CREDITCARDS_PREF);

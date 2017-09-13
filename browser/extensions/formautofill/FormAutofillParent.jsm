@@ -88,17 +88,21 @@ FormAutofillParent.prototype = {
     Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetRecords", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
-    Services.ppmm.addMessageListener("FormAutofill:SaveCreditCard", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
-    Services.ppmm.addMessageListener("FormAutofill:RemoveCreditCards", this);
     Services.ppmm.addMessageListener("FormAutofill:OpenPreferences", this);
-    Services.ppmm.addMessageListener("FormAutofill:GetDecryptedString", this);
     Services.mm.addMessageListener("FormAutofill:OnFormSubmit", this);
 
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
-    Services.prefs.addObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
+
+    // Only listen to credit card related messages if it is available
+    if (FormAutofillUtils.isAutofillCreditCardsAvailable) {
+      Services.ppmm.addMessageListener("FormAutofill:SaveCreditCard", this);
+      Services.ppmm.addMessageListener("FormAutofill:RemoveCreditCards", this);
+      Services.ppmm.addMessageListener("FormAutofill:GetDecryptedString", this);
+      Services.prefs.addObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
+    }
   },
 
   observe(subject, topic, data) {
@@ -248,12 +252,16 @@ FormAutofillParent.prototype = {
     Services.ppmm.removeMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.removeMessageListener("FormAutofill:GetRecords", this);
     Services.ppmm.removeMessageListener("FormAutofill:SaveAddress", this);
-    Services.ppmm.removeMessageListener("FormAutofill:SaveCreditCard", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
-    Services.ppmm.removeMessageListener("FormAutofill:RemoveCreditCards", this);
     Services.obs.removeObserver(this, "sync-pane-loaded");
     Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
-    Services.prefs.removeObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
+
+    if (FormAutofillUtils.isAutofillCreditCardsAvailable) {
+      Services.ppmm.removeMessageListener("FormAutofill:SaveCreditCard", this);
+      Services.ppmm.removeMessageListener("FormAutofill:RemoveCreditCards", this);
+      Services.ppmm.removeMessageListener("FormAutofill:GetDecryptedString", this);
+      Services.prefs.removeObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
+    }
   },
 
   /**
