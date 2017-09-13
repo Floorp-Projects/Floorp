@@ -259,16 +259,15 @@ H264Converter::CreateDecoder(const VideoInfo& aConfig,
     // WMF H.264 Video Decoder and Apple ATDecoder do not support YUV444 format.
     if (spsdata.profile_idc == 244 /* Hi444PP */ ||
         spsdata.chroma_format_idc == PDMFactory::kYUV444) {
-      mLastError = MediaResult(NS_ERROR_FAILURE,
-                               RESULT_DETAIL("Not support for YUV444 format."));
+      mLastError = NS_ERROR_FAILURE;
       if (aDiagnostics) {
         aDiagnostics->SetVideoNotSupported();
       }
       return NS_ERROR_FAILURE;
     }
   } else {
-    mLastError = MediaResult(NS_ERROR_FAILURE,
-                             RESULT_DETAIL("Invalid SPS NAL."));
+    // SPS was invalid.
+    mLastError = NS_ERROR_FAILURE;
     return NS_ERROR_FAILURE;
   }
 
@@ -281,15 +280,11 @@ H264Converter::CreateDecoder(const VideoInfo& aConfig,
     mGMPCrashHelper,
     mType,
     mOnWaitingForKeyEvent,
-    mDecoderOptions,
-    &mLastError
+    mDecoderOptions
   });
 
   if (!mDecoder) {
-    MOZ_ASSERT(NS_FAILED(mLastError));
-    mLastError = MediaResult(mLastError.Code(),
-                             RESULT_DETAIL("Unable to create H264 decoder, reason = %s.",
-                                           mLastError.Description().get()));
+    mLastError = NS_ERROR_FAILURE;
     return NS_ERROR_FAILURE;
   }
 
