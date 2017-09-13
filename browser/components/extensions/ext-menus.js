@@ -147,6 +147,15 @@ var gMenuBuilder = {
     this.itemsToCleanUp.add(rootElement);
   },
 
+  removeSeparatorIfNoTopLevelItems() {
+    if (this.itemsToCleanUp.size === 1) {
+      // Remove the separator if all extension menu items have disappeared.
+      const separator = this.itemsToCleanUp.values().next().value;
+      separator.remove();
+      this.itemsToCleanUp.clear();
+    }
+  },
+
   removeTopLevelMenuIfNeeded(element) {
     // If there is only one visible top level element we don't need the
     // root menu element for the extension.
@@ -321,8 +330,64 @@ var gMenuBuilder = {
     element.setAttribute("image", resolvedURL);
   },
 
+  rebuildMenu(extension) {
+    let {contextData} = this;
+    if (!contextData) {
+      // This happens if the menu is not visible.
+      // This also happens if there are no visible extension menu items.
+      return;
+    }
+
+    if (!gShownMenuItems.has(extension)) {
+      // The onShown event was not fired for the extension, so the extension
+      // does not know that a menu is being shown, and therefore they should
+      // not care whether the extension menu is updated.
+      return;
+    }
+
+    if (contextData.onBrowserAction || contextData.onPageAction) {
+      // The action menu can only have items from one extension, so remove all
+      // items (including the separator) and rebuild the action menu (if any).
+      for (let item of this.itemsToCleanUp) {
+        item.remove();
+      }
+      this.itemsToCleanUp.clear();
+      this.buildActionContextMenu(contextData);
+      return;
+    }
+
+    // First find the one and only top-level menu item for the extension.
+    let elementIdPrefix = `${makeWidgetId(extension.id)}-menuitem-`;
+    let oldRoot = null;
+    for (let item = this.xulMenu.lastElementChild; item !== null; item = item.previousElementSibling) {
+      if (item.id && item.id.startsWith(elementIdPrefix)) {
+        oldRoot = item;
+        this.itemsToCleanUp.delete(oldRoot);
+        break;
+      }
+    }
+
+    let root = gRootItems.get(extension);
+    let newRoot = root && this.createTopLevelElement(root, contextData);
+    if (newRoot) {
+      this.itemsToCleanUp.add(newRoot);
+      if (oldRoot) {
+        oldRoot.replaceWith(newRoot);
+      } else {
+        this.appendTopLevelElement(newRoot);
+      }
+    } else if (oldRoot) {
+      oldRoot.remove();
+      this.removeSeparatorIfNoTopLevelItems();
+    }
+  },
+
   afterBuildingMenu(contextData) {
-    if (gShownMenuItems.size === 0) {
+    // Left-hand side is an optimization: No need to construct event details if
+    // nobody is subscribing to the event.
+    // Right-hand side is to prevent onShown from being fired when a menu is
+    // updated.
+    if (gShownMenuItems.size === 0 || this.contextData) {
       return;
     }
     let commonMenuInfo = {
@@ -336,6 +401,8 @@ var gMenuBuilder = {
       let info = Object.assign({menuIds}, commonMenuInfo);
       extension.emit("webext-menu-shown", info);
     }
+
+    this.contextData = contextData;
   },
 
   handleEvent(event) {
@@ -344,6 +411,7 @@ var gMenuBuilder = {
     }
 
     delete this.xulMenu;
+    delete this.contextData;
     let target = event.target;
     target.removeEventListener("popuphidden", this);
     for (let item of this.itemsToCleanUp) {
@@ -729,6 +797,10 @@ this.menusInternal = class extends ExtensionAPI {
     let {extension} = context;
 
     const menus = {
+      refresh() {
+        gMenuBuilder.rebuildMenu(extension);
+      },
+
       onShown: new EventManager(context, "menus.onShown", fire => {
         let listener = (event, data) => {
           fire.sync(data);
