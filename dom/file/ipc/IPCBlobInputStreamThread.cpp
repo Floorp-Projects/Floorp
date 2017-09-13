@@ -158,12 +158,6 @@ IPCBlobInputStreamThread::Initialize()
   }
 }
 
-nsIEventTarget*
-IPCBlobInputStreamThread::EventTarget() const
-{
-  return mThread;
-}
-
 NS_IMETHODIMP
 IPCBlobInputStreamThread::Observe(nsISupports* aSubject,
                                   const char* aTopic,
