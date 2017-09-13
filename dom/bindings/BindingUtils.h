@@ -2825,7 +2825,7 @@ ToSupportsIsOnPrimaryInheritanceChain(T* aObject, nsWrapperCache* aCache)
 //
 // This function supplies a default value and is overloaded for specific native
 // object types.
-inline uint64_t
+inline size_t
 BindingJSObjectMallocBytes(void *aNativePtr)
 {
   return 0;
@@ -2874,7 +2874,7 @@ public:
       mReflector = aReflector;
     }
 
-    if (uint64_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
+    if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
       JS_updateMallocCounter(aCx, mallocBytes);
     }
   }
@@ -2891,7 +2891,7 @@ public:
       mReflector = aReflector;
     }
 
-    if (uint64_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
+    if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
       JS_updateMallocCounter(aCx, mallocBytes);
     }
   }
