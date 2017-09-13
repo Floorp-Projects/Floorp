@@ -563,15 +563,24 @@ WMFVideoMFTManager::ValidateVideoInfo()
     return NS_OK;
   }
 
-  // The WMF H.264 decoder is documented to have a minimum resolution 48x48 pixels
-  // for resolution, but we won't enable hw decoding for the resolution < 132 pixels.
-  // It's assumed the software decoder doesn't have this limitation, but it still
-  // might have maximum resolution limitation.
+  // The WMF H.264 decoder is documented to have a minimum resolution
+  // 48x48 pixels. We've observed the decoder working for output smaller than
+  // that, but on some output it hangs in IMFTransform::ProcessOutput(), so
+  // we just reject streams which are less than the documented minimum.
   // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
   const bool Is4KCapable = IsWin8OrLater() || IsWin7H264Decoder4KCapable();
   static const int32_t MIN_H264_FRAME_DIMENSION = 48;
   static const int32_t MAX_H264_FRAME_WIDTH = Is4KCapable ? 4096 : 1920;
   static const int32_t MAX_H264_FRAME_HEIGHT = Is4KCapable ? 2304 : 1088;
+
+  if (mStreamType == H264 &&
+      (mVideoInfo.mImage.width < MIN_H264_FRAME_DIMENSION ||
+       mVideoInfo.mImage.height < MIN_H264_FRAME_DIMENSION)) {
+    mIsValid = false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Can't decode H.264 stream with width or "
+                                     "height less than 48 pixels."));
+  }
 
   if (mVideoInfo.mImage.width > MAX_H264_FRAME_WIDTH  ||
       mVideoInfo.mImage.height > MAX_H264_FRAME_HEIGHT) {
