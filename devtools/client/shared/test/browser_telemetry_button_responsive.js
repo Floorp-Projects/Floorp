@@ -10,7 +10,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsivedesign/responsivedesign");
 
 add_task(function* () {
   yield addTab(TEST_URI);
