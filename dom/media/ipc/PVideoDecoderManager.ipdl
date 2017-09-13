@@ -25,8 +25,7 @@ parent:
   // we have collected enough data, we add these two return values here for convenience.
   sync PVideoDecoder(VideoInfo info, TextureFactoryIdentifier identifier) returns (bool success,
                                                                                    nsCString aBlacklistedD3D11Driver,
-                                                                                   nsCString aBlacklistedD3D9Driver,
-                                                                                   nsCString aErrorDescription);
+                                                                                   nsCString aBlacklistedD3D9Driver);
 
   sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
 
