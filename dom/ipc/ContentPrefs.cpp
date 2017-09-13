@@ -26,6 +26,9 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "browser.dom.window.dump.enabled",
   "browser.sessionhistory.max_entries",
   "browser.sessionhistory.max_total_viewers",
+#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+  "browser.startup.record",
+#endif
   "content.cors.disable",
   "content.cors.no_private_data",
   "content.notify.backoffcount",
