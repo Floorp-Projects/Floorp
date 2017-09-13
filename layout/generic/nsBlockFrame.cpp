@@ -252,7 +252,7 @@ nsBlockFrame::LineReflowStatusToString(LineReflowStatus aLineReflowStatus) const
 
 #ifdef REFLOW_STATUS_COVERAGE
 static void
-RecordReflowStatus(bool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
+RecordReflowStatus(bool aChildIsBlock, const nsReflowStatus& aFrameReflowStatus)
 {
   static uint32_t record[2];
 
@@ -4353,10 +4353,10 @@ nsBlockFrame::CreateContinuationFor(BlockReflowInput& aState,
   return !!newFrame;
 }
 
-nsresult
+void
 nsBlockFrame::SplitFloat(BlockReflowInput& aState,
-                         nsIFrame*           aFloat,
-                         nsReflowStatus      aFloatStatus)
+                         nsIFrame* aFloat,
+                         const nsReflowStatus& aFloatStatus)
 {
   MOZ_ASSERT(!aFloatStatus.IsFullyComplete(),
              "why split the frame if it's fully complete?");
@@ -4392,7 +4392,6 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
 
   aState.AppendPushedFloatChain(nextInFlow);
   aState.mReflowStatus.SetOverflowIncomplete();
-  return NS_OK;
 }
 
 static nsFloatCache*
