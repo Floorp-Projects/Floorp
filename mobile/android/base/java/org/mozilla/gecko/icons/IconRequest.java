@@ -29,7 +29,6 @@ public class IconRequest {
     /* package-private */ boolean skipDisk;
     /* package-private */ boolean skipMemory;
     /* package-private */ int targetSize;
-    /* package-private */ int minimumSizePxAfterScaling;
     /* package-private */ boolean prepareOnly;
     private IconCallback callback;
 
@@ -43,7 +42,6 @@ public class IconRequest {
         this.skipDisk = false;
         this.skipNetwork = false;
         this.targetSize = context.getResources().getDimensionPixelSize(R.dimen.favicon_bg);
-        this.minimumSizePxAfterScaling = 0;
         this.prepareOnly = false;
     }
 
@@ -104,17 +102,6 @@ public class IconRequest {
      */
     public int getTargetSize() {
         return targetSize;
-    }
-
-    /**
-     * Gets the minimum size the icon can be before we substitute a generated icon.
-     *
-     * N.B. the minimum size is compared to the icon *after* scaling: consider using
-     * {@link org.mozilla.gecko.icons.processing.ResizingProcessor#MAX_SCALE_FACTOR}
-     * when setting this value.
-     */
-    public int getMinimumSizePxAfterScaling() {
-        return minimumSizePxAfterScaling;
     }
 
     /**
