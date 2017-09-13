@@ -24,5 +24,4 @@ interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   void close();
 
   attribute EventHandler onmessage;
-  attribute EventHandler onmessageerror;
 };
