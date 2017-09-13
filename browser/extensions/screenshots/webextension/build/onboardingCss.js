@@ -96,7 +96,7 @@ body {
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  background-color: #f6f6f8;
+  background-color: #f9f9fa;
   border-radius: 5px;
   height: 520px;
   overflow: hidden;
@@ -168,7 +168,8 @@ body {
 .active-slide-1 .slide-1,
 .active-slide-2 .slide-2,
 .active-slide-3 .slide-3,
-.active-slide-4 .slide-4 {
+.active-slide-4 .slide-4,
+.active-slide-5 .slide-5 {
   display: flex; }
 
 #slide-status-container {
@@ -179,7 +180,7 @@ body {
 
 .goto-slide {
   background: transparent;
-  background-color: #f6f6f8;
+  background-color: #f9f9fa;
   border-radius: 50%;
   border: 0;
   flex: 0 0 9px;
@@ -195,7 +196,8 @@ body {
 .active-slide-1 .goto-slide-1,
 .active-slide-2 .goto-slide-2,
 .active-slide-3 .goto-slide-3,
-.active-slide-4 .goto-slide-4 {
+.active-slide-4 .goto-slide-4,
+.active-slide-5 .goto-slide-5 {
   opacity: 1;
   transform: scale(1.1); }
 
@@ -216,13 +218,21 @@ body {
 
 #prev {
   background-image: url("MOZ_EXTENSION/icons/back.svg");
-  left: 50%;
-  margin-left: -385px; }
+  left: 50%; }
+  html[dir="ltr"] #prev {
+    margin-left: -385px; }
+  html[dir="rtl"] #prev {
+    margin-left: 315px; }
 
 #next,
 #done {
-  left: 50%;
-  margin-left: 315px; }
+  left: 50%; }
+  html[dir="ltr"] #next, html[dir="ltr"]
+  #done {
+    margin-left: 315px; }
+  html[dir="rtl"] #next, html[dir="rtl"]
+  #done {
+    margin-left: -385px; }
 
 #prev,
 #next,
@@ -265,14 +275,14 @@ body {
   opacity: 1; }
 
 .active-slide-1 #prev,
-.active-slide-4 #next {
+.active-slide-5 #next {
   display: none; }
 
 #done {
   background-image: url("MOZ_EXTENSION/icons/done.svg");
   display: none; }
 
-.active-slide-4 #done {
+.active-slide-5 #done {
   display: inline-block; }
 
 /* for smaller screen sizes */

@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "এই মাত্র কি ঘটেছে আমরা নিশ্চিত নই। আপনি কি অনুগ্রহ করে পুরনায় সট নেবেন কিংবা ভিন্ন একটি পেজে চেষ্টা করবেন?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Firefox ত্যাগ করা ছাড়াই স্ক্রিনশট তোল, সংরক্ষণ কর এবং শেয়ার কর।"
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "ক্যাপচার করুন আপনি যা চান"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "একটি পেজের কিয়দংশ ক্যাপচার করতে ক্লিক করে ড্রাগ করুন। অতঃপর আপনি মাউজ হোভার করে আপনার নির্বাচিত অংশ হাইলাইট করতে পারবেন।"
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "উইন্ডো ক্যাপচার করুন অথবা পুরো পেজ"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "ইউন্ডোতে দৃশ্যমান অংশ অথবা সম্পূর্ণ পেজ ক্যাপচার করতে উপরে ডানদিকের বাটনগুলো থেকে নির্বাচন করুন।"
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "আপনি যেমন পছন্দ করেন"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "আপনার ক্রপ করা সটসমূহ ওয়েবে রাখুন সহজে শেয়ার করার সুবিধার্থে, অথবা আপনার কম্পিউটারে ডাউনলোড করুন। আপনার সকল সটসমূহ খুঁজে পেতে আমার সটসমূহ বাটনে ক্লিক করুন।"
   },
   "tourSkip": {

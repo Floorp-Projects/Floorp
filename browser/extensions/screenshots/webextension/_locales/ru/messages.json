@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Мы не уверены, в чём проблема. Попробуете ещё раз или сделаете снимок другой страницы?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Делайте, сохраняйте и делитесь скриншотами прямо в Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Делайте снимки чего угодно"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Щелкните и потяните мышью для захвата части страницы. Вы также можете навести курсор мыши для подсветки выбранной области."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Захватывайте окна или целые страницы"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "С помощью кнопок в верхнем правом углу выбирайте захват видимой области окна или страницы целиком."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Как вам нравится"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Сохраняйте свои снимки в Интернете, чтобы легко ими делиться, или загружайте их на свой компьютер. Вы также можете просмотреть все сохранённые снимки, нажав на кнопку Мои снимки."
   },
   "tourSkip": {
