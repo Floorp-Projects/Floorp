@@ -213,28 +213,19 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
                                                uint64_t* bytesReceived,
                                                uint32_t* cumulativeLost,
                                                int32_t* rttMs) {
-
-  // We get called on STS thread... the proxy thread-checks to MainThread
-  // I removed the check, since GetRTCPStatistics ends up going down to
-  // methods (rtp_receiver_->SSRC() and rtp_receive_statistics_->GetStatistician()
-  // and GetStatistics that internally lock, so we're ok here without a thread-check.
-  webrtc::CallStatistics call_stats = mChannelProxy->GetRTCPStatistics();
-  *bytesReceived = call_stats.bytesReceived;
-  *packetsReceived = call_stats.packetsReceived;
-  *cumulativeLost = call_stats.cumulativeLost;
-  *rttMs = call_stats.rttMs;
-
-  unsigned int averageJitterMs;
-  unsigned int maxJitterMs;
-  unsigned int discardedPackets;
-  unsigned int cumulative;
-  mChannelProxy->GetRTPStatistics(averageJitterMs, maxJitterMs, discardedPackets, cumulative);
-  *jitterMs = averageJitterMs;
-
-  // XXX Note: timestamp is not correct per the spec... should be time the
-  // rtcp was received (remote) or sent (local)
-  *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-  return true;
+  double fractionLost;
+  int64_t timestampTmp;
+  int64_t rttMsTmp;
+  bool res = mChannelProxy->GetRTCPReceiverStatistics(&timestampTmp,
+                                                      jitterMs,
+                                                      cumulativeLost,
+                                                      packetsReceived,
+                                                      bytesReceived,
+                                                      &fractionLost,
+                                                      &rttMsTmp);
+  *timestamp = static_cast<double>(timestampTmp);
+  *rttMs = static_cast<uint32_t>(rttMsTmp);
+  return res;
 }
 
 bool WebrtcAudioConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
