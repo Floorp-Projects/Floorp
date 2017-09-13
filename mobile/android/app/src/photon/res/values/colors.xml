@@ -102,6 +102,7 @@
     <!-- Status bar background color -->
     <color name="status_bar_bg_color">@color/photon_toolbar_bg</color>
     <color name="status_bar_bg_color_private">@color/photon_toolbar_bg_private</color>
+    <color name="status_bar_bg_color_tabs_tray">@color/photon_tabs_tray_bg</color>
     <color name="status_bar_bg_color_tablet">@color/photon_tabs_tray_bg</color>
 
     <!-- Toolbar menu item tint color -->

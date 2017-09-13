@@ -358,9 +358,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             }
         });
 
-        final Tab tab = Tabs.getInstance().getSelectedTab();
-        final boolean darkTheme = (tab != null && tab.isPrivate());
-        WindowUtil.invalidateStatusBarColor(activity, darkTheme);
+        WindowUtil.setStatusBarColor(activity, isPrivateMode());
     }
 
     @Override
@@ -876,7 +874,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         shadowPaint.setColor(isPrivate ? shadowPrivateColor : shadowColor);
 
         if (modeChanged) {
-            WindowUtil.invalidateStatusBarColor(activity, isPrivate);
+            WindowUtil.setStatusBarColor(activity, isPrivate);
         }
     }
 
