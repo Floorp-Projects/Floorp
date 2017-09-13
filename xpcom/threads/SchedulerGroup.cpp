@@ -359,10 +359,10 @@ SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
 }
 
 bool
-SchedulerGroup::Runnable::GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+SchedulerGroup::Runnable::GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups)
 {
   aGroups.Clear();
-  aGroups.AppendElement(Group());
+  aGroups.Put(Group());
   return true;
 }
 
