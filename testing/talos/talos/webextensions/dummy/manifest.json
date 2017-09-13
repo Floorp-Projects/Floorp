@@ -6,7 +6,7 @@
   },
   "manifest_version": 2,
   "name": "Talos Blank Web Extension System Add-on",
-  "version": "0.2",
+  "version": "0.1",
   "permissions": [
     "http://*/",
     "https://*/",
