@@ -2284,9 +2284,9 @@ MozJemalloc::jemalloc_thread_local_arena(bool aEnabled)
  * Choose an arena based on a per-thread value.
  */
 static inline arena_t *
-choose_arena(void)
+choose_arena(size_t size)
 {
-  arena_t *ret;
+  arena_t *ret = nullptr;
 
   /*
    * We can only use TLS if this is a PIC library, since for the static
@@ -2294,8 +2294,10 @@ choose_arena(void)
    * introduces a bootstrapping issue.
    */
 #ifndef NO_TLS
-
-  ret = thread_arena.get();
+  // Only use a thread local arena for small sizes.
+  if (size <= small_max) {
+    ret = thread_arena.get();
+  }
 
   if (!ret) {
     ret = thread_local_arena(false);
@@ -3308,7 +3310,7 @@ imalloc(size_t size)
 	MOZ_ASSERT(size != 0);
 
 	if (size <= arena_maxclass)
-		return (arena_malloc(choose_arena(), size, false));
+		return (arena_malloc(choose_arena(size), size, false));
 	else
 		return (huge_malloc(size, false));
 }
@@ -3318,7 +3320,7 @@ icalloc(size_t size)
 {
 
 	if (size <= arena_maxclass)
-		return (arena_malloc(choose_arena(), size, true));
+		return (arena_malloc(choose_arena(size), size, true));
 	else
 		return (huge_malloc(size, true));
 }
@@ -3413,7 +3415,7 @@ ipalloc(size_t alignment, size_t size)
 
 	if (ceil_size <= pagesize || (alignment <= pagesize
 	    && ceil_size <= arena_maxclass))
-		ret = arena_malloc(choose_arena(), ceil_size, false);
+		ret = arena_malloc(choose_arena(size), ceil_size, false);
 	else {
 		size_t run_size;
 
@@ -3460,7 +3462,7 @@ ipalloc(size_t alignment, size_t size)
 		}
 
 		if (run_size <= arena_maxclass) {
-			ret = arena_palloc(choose_arena(), alignment, ceil_size,
+			ret = arena_palloc(choose_arena(size), alignment, ceil_size,
 			    run_size);
 		} else if (alignment <= chunksize)
 			ret = huge_malloc(ceil_size, false);
@@ -3972,7 +3974,7 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 	 * need to move the object.  In that case, fall back to allocating new
 	 * space and copying.
 	 */
-	ret = arena_malloc(choose_arena(), size, false);
+	ret = arena_malloc(choose_arena(size), size, false);
 	if (!ret)
 		return nullptr;
 
