@@ -579,7 +579,7 @@
                 icon="select-color"
                 label="&colors.label;"
                 accesskey="&colors.accesskey;"
-                searchkeywords="&overrideDefaultPageColors.label;
+                searchkeywords="&overrideDefaultPageColors2.label;
                                 &overrideDefaultPageColors.always.label;
                                 &overrideDefaultPageColors.auto.label;
                                 &overrideDefaultPageColors.never.label;

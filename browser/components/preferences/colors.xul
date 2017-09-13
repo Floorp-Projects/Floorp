@@ -85,8 +85,8 @@
 #else
     <vbox>
 #endif
-      <label accesskey="&overrideDefaultPageColors.accesskey;"
-             control="useDocumentColors">&overrideDefaultPageColors.label;</label>
+      <label accesskey="&overrideDefaultPageColors2.accesskey;"
+             control="useDocumentColors">&overrideDefaultPageColors2.label;</label>
       <hbox>
         <menulist id="useDocumentColors" preference="browser.display.document_color_use" flex="1">
           <menupopup>
