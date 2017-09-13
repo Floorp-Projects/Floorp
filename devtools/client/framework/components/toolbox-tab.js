@@ -53,7 +53,7 @@ module.exports = createClass({
         type: "button",
         tabIndex: focusedButton === id ? "0" : "-1",
         onFocus: () => focusButton(id),
-        onClick: () => selectTool(id),
+        onMouseDown: () => selectTool(id),
       },
       span(
         {

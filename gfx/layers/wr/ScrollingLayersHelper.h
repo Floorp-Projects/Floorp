@@ -33,7 +33,8 @@ public:
   ScrollingLayersHelper(nsDisplayItem* aItem,
                         wr::DisplayListBuilder& aBuilder,
                         const StackingContextHelper& aStackingContext,
-                        WebRenderLayerManager::ClipIdMap& aCache);
+                        WebRenderLayerManager::ClipIdMap& aCache,
+                        bool aApzEnabled);
   ~ScrollingLayersHelper();
 
 private:

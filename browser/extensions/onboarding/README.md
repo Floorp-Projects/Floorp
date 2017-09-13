@@ -52,3 +52,11 @@ Once the tour set version is updated (ex: `2`), onboarding overlay should show t
 Edit `browser/app/profile/firefox.js` and set `browser.onboarding.tourset-version` as `[tourset version]` (in integer format).
 
 For example, if we update the tourset in v60 and decide to show all update users the tour, we set `browser.onboarding.tourset-version`  as `3`.
+
+## Icon states
+
+Onboarding module has two states for its overlay icon: `default` and `watermark`.
+By default, it shows `default` state.
+When either tours or notifications are all completed, the icon changes to the `watermark` state.
+The icon state is stored in `browser.onboarding.state`.
+When `tourset-version` is updated, or when we detect the `tour-type` is changed to `update`, icon state will be changed back to the `default` state.

@@ -368,6 +368,10 @@ pref("browser.download.animateNotifications", true);
 // This records whether or not the panel has been shown at least once.
 pref("browser.download.panel.shown", false);
 
+// This controls whether the button is automatically shown/hidden depending
+// on whether there are downloads to show.
+pref("browser.download.autohideButton", true);
+
 #ifndef XP_MACOSX
 pref("browser.helperApps.deleteTempFileOnExit", true);
 #endif
@@ -1266,6 +1270,7 @@ pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/
 
 // activates Activity Stream
 pref("browser.newtabpage.activity-stream.enabled", true);
+pref("browser.newtabpage.activity-stream.prerender", true);
 pref("browser.newtabpage.activity-stream.aboutHome.enabled", false);
 
 // Enable the DOM fullscreen API.
@@ -1716,6 +1721,7 @@ pref("browser.suppress_first_window_animation", true);
 pref("browser.onboarding.enabled", true);
 // Mark this as an upgraded profile so we don't offer the initial new user onboarding tour.
 pref("browser.onboarding.tourset-version", 2);
+pref("browser.onboarding.state", "default");
 // On the Activity-Stream page, the snippet's position overlaps with our notification.
 // So use `browser.onboarding.notification.finished` to let the AS page know
 // if our notification is finished and safe to show their snippet.

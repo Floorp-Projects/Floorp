@@ -1,8 +1,10 @@
+# META: timeout=long
+
 import pytest
 
-from support.inline import inline
-from support.fixtures import create_dialog
-from support.asserts import assert_error, assert_dialog_handled, assert_success
+from tests.support.asserts import assert_error, assert_dialog_handled, assert_success
+from tests.support.fixtures import create_dialog
+from tests.support.inline import inline
 
 
 alert_doc = inline("<script>window.alert()</script>")
@@ -19,8 +21,8 @@ def test_current_top_level_browsing_context_no_longer_open(session, create_windo
     """
     1. If the current top-level browsing context is no longer open,
     return error with error code no such window.
-    """
 
+    """
     session.window_handle = create_window()
     session.close()
     response = set_window_rect(session, {})
@@ -51,27 +53,26 @@ def test_handle_prompt_accept(new_session):
            Accept the current user prompt.
 
     """
-
     _, session = new_session(
         {"alwaysMatch": {"unhandledPromptBehavior": "accept"}})
     original = session.window.rect
 
     # step 2
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
-    result = set_window_rect(session, {"x": int(original["x"]),
-                                       "y": int(original["y"])})
+    result = set_window_rect(session, {"x": original["x"],
+                                       "y": original["y"]})
     assert result.status == 200
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
-    result = set_window_rect(session, {"x": int(original["x"]),
-                                       "y": int(original["y"])})
+    result = set_window_rect(session, {"x": original["x"],
+                                       "y": original["y"]})
     assert result.status == 200
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
-    result = set_window_rect(session, {"x": int(original["x"]),
-                                       "y": int(original["y"])})
+    result = set_window_rect(session, {"x": original["x"],
+                                       "y": original["y"]})
     assert_success(result)
     assert_dialog_handled(session, "dismiss #3")
 
@@ -115,22 +116,22 @@ def test_handle_prompt_missing_value(session, create_dialog):
     # step 2
     create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = set_window_rect(session, {"x": int(original["x"]),
-                                       "y": int(original["y"])})
+    result = set_window_rect(session, {"x": original["x"],
+                                       "y": original["y"]})
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = set_window_rect(session, {"x": int(original["x"]),
-                                       "y": int(original["y"])})
+    result = set_window_rect(session, {"x": original["x"],
+                                       "y": original["y"]})
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = set_window_rect(session, {"x": int(original["x"]),
-                                       "y": int(original["y"])})
+    result = set_window_rect(session, {"x": original["x"],
+                                       "y": original["y"]})
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #3")
 
@@ -170,10 +171,10 @@ def test_handle_prompt_missing_value(session, create_dialog):
 ])
 def test_invalid_types(session, rect):
     """
-    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    8. If width or height is neither null nor a Number from 0 to 2^31 -
     1, return error with error code invalid argument.
 
-    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    9. If x or y is neither null nor a Number from -(2^31) to 2^31 - 1,
     return error with error code invalid argument.
     """
     response = set_window_rect(session, rect)
@@ -187,10 +188,10 @@ def test_invalid_types(session, rect):
 ])
 def test_out_of_bounds(session, rect):
     """
-    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    8. If width or height is neither null nor a Number from 0 to 2^31 -
     1, return error with error code invalid argument.
 
-    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    9. If x or y is neither null nor a Number from -(2^31) to 2^31 - 1,
     return error with error code invalid argument.
     """
     response = set_window_rect(session, rect)
@@ -199,36 +200,36 @@ def test_out_of_bounds(session, rect):
 
 def test_width_height_floats(session):
     """
-    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    8. If width or height is neither null nor a Number from 0 to 2^31 -
     1, return error with error code invalid argument.
     """
 
-    response = set_window_rect(session, {"width": 200.5, "height": 400})
+    response = set_window_rect(session, {"width": 500.5, "height": 420})
     value = assert_success(response)
-    assert value["width"] == 200.2
-    assert value["height"] == 400
+    assert value["width"] == 500
+    assert value["height"] == 420
 
-    response = set_window_rect(session, {"width": 300, "height": 450.5})
+    response = set_window_rect(session, {"width": 500, "height": 450.5})
     value = assert_success(response)
-    assert value["width"] == 300
-    assert value["height"] == 450.5
+    assert value["width"] == 500
+    assert value["height"] == 450
 
 
 def test_x_y_floats(session):
     """
-    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    9. If x or y is neither null nor a Number from -(2^31) to 2^31 - 1,
     return error with error code invalid argument.
     """
 
-    response = set_window_rect(session, {"x": 200.5, "y": 400})
+    response = set_window_rect(session, {"x": 0.5, "y": 420})
     value = assert_success(response)
-    assert value["x"] == 200.2
-    assert value["y"] == 400
+    assert value["x"] == 0
+    assert value["y"] == 420
 
-    response = set_window_rect(session, {"x": 300, "y": 450.5})
+    response = set_window_rect(session, {"x": 100, "y": 450.5})
     value = assert_success(response)
-    assert value["x"] == 300
-    assert value["y"] == 450.5
+    assert value["x"] == 100
+    assert value["y"] == 450
 
 
 @pytest.mark.parametrize("rect", [
@@ -394,8 +395,8 @@ def test_height_width_as_current(session):
     original = session.window.rect
 
     # step 12
-    response = set_window_rect(session, {"width": int(original["width"]),
-                                         "height": int(original["height"])})
+    response = set_window_rect(session, {"width": original["width"],
+                                         "height": original["height"]})
 
     # step 14
     assert_success(response, {"x": original["x"],
@@ -408,8 +409,8 @@ def test_x_y(session):
     original = session.window.rect
 
     # step 13
-    response = set_window_rect(session, {"x": int(original["x"]) + 10,
-                                         "y": int(original["y"]) + 10})
+    response = set_window_rect(session, {"x": original["x"] + 10,
+                                         "y": original["y"] + 10})
 
     # step 14
     assert_success(response, {"x": original["x"] + 10,
@@ -454,37 +455,37 @@ def test_negative_x_y(session):
 
 def test_move_to_same_position(session):
     original_position = session.window.position
-    position = session.window.position = (int(original_position[0]), int(original_position[1]))
+    position = session.window.position = original_position
     assert position == original_position
 
 
 def test_move_to_same_x(session):
     original_x = session.window.position[0]
-    position = session.window.position = (int(original_x), 345)
+    position = session.window.position = (original_x, 345)
     assert position == (original_x, 345)
 
 
 def test_move_to_same_y(session):
     original_y = session.window.position[1]
-    position = session.window.position = (456, int(original_y))
+    position = session.window.position = (456, original_y)
     assert position == (456, original_y)
 
 
 def test_resize_to_same_size(session):
     original_size = session.window.size
-    size = session.window.size = (int(original_size[0]), int(original_size[1]))
+    size = session.window.size = original_size
     assert size == original_size
 
 
 def test_resize_to_same_width(session):
     original_width = session.window.size[0]
-    size = session.window.size = (int(original_width), 345)
+    size = session.window.size = (original_width, 345)
     assert size == (original_width, 345)
 
 
 def test_resize_to_same_height(session):
     original_height = session.window.size[1]
-    size = session.window.size = (456, int(original_height))
+    size = session.window.size = (456, original_height)
     assert size == (456, original_height)
 
 
@@ -494,12 +495,12 @@ def test_payload(session):
 
     assert response.status == 200
     assert isinstance(response.body["value"], dict)
-    rect = response.body["value"]
-    assert "width" in rect
-    assert "height" in rect
-    assert "x" in rect
-    assert "y" in rect
-    assert isinstance(rect["width"], (int, float))
-    assert isinstance(rect["height"], (int, float))
-    assert isinstance(rect["x"], (int, float))
-    assert isinstance(rect["y"], (int, float))
+    value = response.body["value"]
+    assert "width" in value
+    assert "height" in value
+    assert "x" in value
+    assert "y" in value
+    assert isinstance(value["width"], int)
+    assert isinstance(value["height"], int)
+    assert isinstance(value["x"], int)
+    assert isinstance(value["y"], int)

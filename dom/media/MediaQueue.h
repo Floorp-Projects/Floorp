@@ -18,9 +18,9 @@ namespace mozilla {
 // Thread and type safe wrapper around nsDeque.
 template <class T>
 class MediaQueueDeallocator : public nsDequeFunctor {
-  virtual void* operator() (void* aObject) {
+  virtual void operator()(void* aObject)
+  {
     RefPtr<T> releaseMe = dont_AddRef(static_cast<T*>(aObject));
-    return nullptr;
   }
 };
 

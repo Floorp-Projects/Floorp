@@ -88,3 +88,28 @@ add_task(async function test_click_action_button_to_set_tour_completed() {
     await BrowserTestUtils.removeTab(tab);
   }
 });
+
+add_task(async function test_set_watermark_after_all_tour_completed() {
+  resetOnboardingDefaultState();
+
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.onboarding.tour-type", "new"]
+  ]});
+
+  let tabs = [];
+  for (let url of URLs) {
+    let tab = await openTab(url);
+    await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
+    await promiseOnboardingOverlayOpened(tab.linkedBrowser);
+    tabs.push(tab);
+  }
+  let expectedPrefUpdate = promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK);
+  TOUR_IDs.forEach(id => Preferences.set(`browser.onboarding.tour.${id}.completed`, true));
+  await expectedPrefUpdate;
+
+  for (let tab of tabs) {
+    await assertWatermarkIconDisplayed(tab.linkedBrowser);
+    await BrowserTestUtils.removeTab(tab);
+  }
+});

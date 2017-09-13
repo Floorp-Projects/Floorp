@@ -110,6 +110,7 @@ public class AccountsHelper implements BundleEventListener {
                 // TODO: handle choose what to Sync.
                 State state = new Engaged(email, uid, verified, unwrapkB, sessionToken, keyFetchToken);
                 fxAccount = AndroidFxAccount.addAndroidAccount(mContext,
+                        uid,
                         email,
                         mProfile.getName(),
                         authServerEndpoint,

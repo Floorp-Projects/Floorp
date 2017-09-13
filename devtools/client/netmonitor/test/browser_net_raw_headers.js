@@ -31,18 +31,42 @@ add_task(function* () {
   yield wait;
 
   wait = waitForDOM(document, ".raw-headers-container textarea", 2);
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelectorAll(".headers-summary .devtools-button")[2]);
+  EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersButton());
   yield wait;
+
+  testRawHeaderButtonStyle(true);
 
   testShowRawHeaders(getSortedRequests(store.getState()).get(0));
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelectorAll(".headers-summary .devtools-button")[1]);
+  EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersButton());
+
+  testRawHeaderButtonStyle(false);
 
   testHideRawHeaders(document);
 
   return teardown(monitor);
+
+  /**
+   * Tests that checked, aria-pressed style is applied correctly
+   *
+   * @param checked
+   *        flag indicating whether button is pressed or not
+   */
+  function testRawHeaderButtonStyle(checked) {
+    let rawHeadersButton = getRawHeadersButton();
+
+    if (checked) {
+      is(rawHeadersButton.classList.contains("checked"), true,
+        "The 'Raw Headers' button should have a 'checked' class.");
+      is(rawHeadersButton.getAttribute("aria-pressed"), "true",
+        "The 'Raw Headers' button should have the 'aria-pressed' attribute set to true");
+    } else {
+      is(rawHeadersButton.classList.contains("checked"), false,
+        "The 'Raw Headers' button should not have a 'checked' class.");
+      is(rawHeadersButton.getAttribute("aria-pressed"), "false",
+        "The 'Raw Headers' button should have the 'aria-pressed' attribute set to false");
+    }
+  }
 
   /*
    * Tests that raw headers were displayed correctly
@@ -68,5 +92,12 @@ add_task(function* () {
   function testHideRawHeaders() {
     ok(!document.querySelector(".raw-headers-container"),
       "raw request headers textarea is empty");
+  }
+
+  /**
+   * Returns the 'Raw Headers' button
+   */
+  function getRawHeadersButton() {
+    return document.querySelectorAll(".headers-summary .devtools-button")[2];
   }
 });

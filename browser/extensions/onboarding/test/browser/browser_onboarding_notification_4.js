@@ -14,10 +14,15 @@ add_task(async function test_remove_all_tour_notifications_through_close_button(
   let targetTourId = null;
   await closeTourNotificationsOneByOne();
 
-  let expectedPrefUpdate = promisePrefUpdated("browser.onboarding.notification.finished", true);
+  let expectedPrefUpdates = [
+    promisePrefUpdated("browser.onboarding.notification.finished", true),
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+  ];
   await reloadTab(tab);
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-  await expectedPrefUpdate;
+  await Promise.all(expectedPrefUpdates);
+  await assertWatermarkIconDisplayed(tab.linkedBrowser);
+
   let tourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   ok(!tourId, "Should not prompt tour notifications any more after closing all notifcations.");
   await BrowserTestUtils.removeTab(tab);
@@ -48,10 +53,15 @@ add_task(async function test_remove_all_tour_notifications_through_action_button
   let targetTourId = null;
   await clickTourNotificationActionButtonsOneByOne();
 
-  let expectedPrefUpdate = promisePrefUpdated("browser.onboarding.notification.finished", true);
+  let expectedPrefUpdates = [
+    promisePrefUpdated("browser.onboarding.notification.finished", true),
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+  ];
   await reloadTab(tab);
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-  await expectedPrefUpdate;
+  await Promise.all(expectedPrefUpdates);
+  await assertWatermarkIconDisplayed(tab.linkedBrowser);
+
   let tourId = await getCurrentNotificationTargetTourId(tab.linkedBrowser);
   ok(!tourId, "Should not prompt tour notifcations any more after taking actions on all notifcations.");
   await BrowserTestUtils.removeTab(tab);

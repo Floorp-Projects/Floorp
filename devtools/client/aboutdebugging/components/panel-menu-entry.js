@@ -22,24 +22,17 @@ module.exports = createClass({
     this.props.selectPanel(this.props.id);
   },
 
-  onKeyDown(event) {
-    if ([" ", "Enter"].includes(event.key)) {
-      this.props.selectPanel(this.props.id);
-    }
-  },
-
   render() {
     let { id, name, icon, selected } = this.props;
 
     // Here .category, .category-icon, .category-name classnames are used to
     // apply common styles defined.
     let className = "category" + (selected ? " selected" : "");
-    return dom.div({
+    return dom.button({
       "aria-selected": selected,
       "aria-controls": id + "-panel",
       className,
       onClick: this.onClick,
-      onKeyDown: this.onKeyDown,
       tabIndex: "0",
       role: "tab" },
     dom.img({ className: "category-icon", src: icon, role: "presentation" }),

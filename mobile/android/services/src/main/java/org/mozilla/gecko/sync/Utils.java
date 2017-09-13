@@ -244,17 +244,11 @@ public class Utils {
     return sha1Base32(account.toLowerCase(Locale.US));
   }
 
-  public static SharedPreferences getSharedPreferences(final Context context, final String product, final String username, final String serverURL, final String profile, final long version)
-      throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    String prefsPath = getPrefsPath(product, username, serverURL, profile, version);
-    return context.getSharedPreferences(prefsPath, SHARED_PREFERENCES_MODE);
-  }
-
   /**
    * Get shared preferences path for a Sync account.
    *
    * @param product the Firefox Sync product package name (like "org.mozilla.firefox").
-   * @param username the Sync account name, optionally encoded with <code>Utils.usernameFromAccount</code>.
+   * @param accountKey local Sync account identifier.
    * @param serverURL the Sync account server URL.
    * @param profile the Firefox profile name.
    * @param version the version of preferences to reference.
@@ -262,9 +256,9 @@ public class Utils {
    * @throws NoSuchAlgorithmException
    * @throws UnsupportedEncodingException
    */
-  public static String getPrefsPath(final String product, final String username, final String serverURL, final String profile, final long version)
+  public static String getPrefsPath(final String product, final String accountKey, final String serverURL, final String profile, final long version)
       throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    final String encodedAccount = sha1Base32(serverURL + ":" + usernameFromAccount(username));
+    final String encodedAccount = sha1Base32(serverURL + ":" + usernameFromAccount(accountKey));
 
     if (version <= 0) {
       return "sync.prefs." + encodedAccount;

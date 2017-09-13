@@ -234,6 +234,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/Printer.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
@@ -8735,24 +8736,35 @@ AutoEmptyNursery::AutoEmptyNursery(JSContext* cx)
 } /* namespace js */
 
 #ifdef DEBUG
+
+namespace js {
+
+// We don't want jsfriendapi.h to depend on GenericPrinter,
+// so these functions are declared directly in the cpp.
+
+extern JS_FRIEND_API(void)
+DumpString(JSString* str, js::GenericPrinter& out);
+
+}
+
 void
-js::gc::Cell::dump(FILE* fp) const
+js::gc::Cell::dump(js::GenericPrinter& out) const
 {
     switch (getTraceKind()) {
       case JS::TraceKind::Object:
-        reinterpret_cast<const JSObject*>(this)->dump(fp);
+        reinterpret_cast<const JSObject*>(this)->dump(out);
         break;
 
       case JS::TraceKind::String:
-          js::DumpString(reinterpret_cast<JSString*>(const_cast<Cell*>(this)), fp);
+          js::DumpString(reinterpret_cast<JSString*>(const_cast<Cell*>(this)), out);
         break;
 
       case JS::TraceKind::Shape:
-        reinterpret_cast<const Shape*>(this)->dump(fp);
+        reinterpret_cast<const Shape*>(this)->dump(out);
         break;
 
       default:
-        fprintf(fp, "%s(%p)\n", JS::GCTraceKindToAscii(getTraceKind()), (void*) this);
+        out.printf("%s(%p)\n", JS::GCTraceKindToAscii(getTraceKind()), (void*) this);
     }
 }
 
@@ -8760,7 +8772,8 @@ js::gc::Cell::dump(FILE* fp) const
 void
 js::gc::Cell::dump() const
 {
-    dump(stderr);
+    js::Fprinter out(stderr);
+    dump(out);
 }
 #endif
 

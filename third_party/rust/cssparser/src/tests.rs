@@ -498,29 +498,29 @@ fn line_numbers() {
         "b\""
     ));
     let mut input = Parser::new(&mut input);
-    assert_eq!(input.current_source_location(), SourceLocation { line: 0, column: 0 });
+    assert_eq!(input.current_source_location(), SourceLocation { line: 0, column: 1 });
     assert_eq!(input.next_including_whitespace(), Ok(&Token::Ident("fo00o".into())));
-    assert_eq!(input.current_source_location(), SourceLocation { line: 1, column: 2 });
-    assert_eq!(input.next_including_whitespace(), Ok(&Token::WhiteSpace(" ")));
     assert_eq!(input.current_source_location(), SourceLocation { line: 1, column: 3 });
+    assert_eq!(input.next_including_whitespace(), Ok(&Token::WhiteSpace(" ")));
+    assert_eq!(input.current_source_location(), SourceLocation { line: 1, column: 4 });
     assert_eq!(input.next_including_whitespace(), Ok(&Token::Ident("bar".into())));
-    assert_eq!(input.current_source_location(), SourceLocation { line: 1, column: 6 });
+    assert_eq!(input.current_source_location(), SourceLocation { line: 1, column: 7 });
     assert_eq!(input.next_including_whitespace_and_comments(), Ok(&Token::Comment("\n")));
-    assert_eq!(input.current_source_location(), SourceLocation { line: 2, column: 2 });
+    assert_eq!(input.current_source_location(), SourceLocation { line: 2, column: 3 });
     assert_eq!(input.next_including_whitespace(), Ok(&Token::Ident("baz".into())));
-    assert_eq!(input.current_source_location(), SourceLocation { line: 2, column: 5 });
+    assert_eq!(input.current_source_location(), SourceLocation { line: 2, column: 6 });
     let state = input.state();
 
     assert_eq!(input.next_including_whitespace(), Ok(&Token::WhiteSpace("\r\n\n")));
-    assert_eq!(input.current_source_location(), SourceLocation { line: 4, column: 0 });
+    assert_eq!(input.current_source_location(), SourceLocation { line: 4, column: 1 });
 
-    assert_eq!(state.source_location(), SourceLocation { line: 2, column: 5 });
+    assert_eq!(state.source_location(), SourceLocation { line: 2, column: 6 });
 
     assert_eq!(input.next_including_whitespace(), Ok(&Token::UnquotedUrl("u".into())));
-    assert_eq!(input.current_source_location(), SourceLocation { line: 6, column: 1 });
+    assert_eq!(input.current_source_location(), SourceLocation { line: 6, column: 2 });
 
     assert_eq!(input.next_including_whitespace(), Ok(&Token::QuotedString("ab".into())));
-    assert_eq!(input.current_source_location(), SourceLocation { line: 7, column: 2 });
+    assert_eq!(input.current_source_location(), SourceLocation { line: 7, column: 3 });
     assert!(input.next_including_whitespace().is_err());
 }
 
@@ -1000,14 +1000,14 @@ fn parser_maintains_current_line() {
 fn parser_with_line_number_offset() {
     let mut input = ParserInput::new_with_line_number_offset("ident\nident", 72);
     let mut parser = Parser::new(&mut input);
-    assert_eq!(parser.current_source_location(), SourceLocation { line: 72, column: 0 });
+    assert_eq!(parser.current_source_location(), SourceLocation { line: 72, column: 1 });
     assert_eq!(parser.next_including_whitespace_and_comments(), Ok(&Token::Ident("ident".into())));
-    assert_eq!(parser.current_source_location(), SourceLocation { line: 72, column: 5 });
+    assert_eq!(parser.current_source_location(), SourceLocation { line: 72, column: 6 });
     assert_eq!(parser.next_including_whitespace_and_comments(),
                Ok(&Token::WhiteSpace("\n".into())));
-    assert_eq!(parser.current_source_location(), SourceLocation { line: 73, column: 0 });
+    assert_eq!(parser.current_source_location(), SourceLocation { line: 73, column: 1 });
     assert_eq!(parser.next_including_whitespace_and_comments(), Ok(&Token::Ident("ident".into())));
-    assert_eq!(parser.current_source_location(), SourceLocation { line: 73, column: 5 });
+    assert_eq!(parser.current_source_location(), SourceLocation { line: 73, column: 6 });
 }
 
 #[test]
@@ -1088,24 +1088,24 @@ fn utf16_columns() {
     // the column is in units of UTF-16, the 4-byte sequence results
     // in two columns.
     let tests = vec![
-        ("", 0),
-        ("ascii", 5),
-        ("/*QΡ✈🆒*/", 9),
-        ("'QΡ✈🆒*'", 8),
-        ("\"\\\"'QΡ✈🆒*'", 11),
-        ("\\Q\\Ρ\\✈\\🆒", 9),
-        ("QΡ✈🆒", 5),
-        ("QΡ✈🆒\\Q\\Ρ\\✈\\🆒", 14),
-        ("newline\r\nQΡ✈🆒", 5),
-        ("url(QΡ✈🆒\\Q\\Ρ\\✈\\🆒)", 19),
-        ("url(QΡ✈🆒)", 10),
-        ("url(\r\nQΡ✈🆒\\Q\\Ρ\\✈\\🆒)", 15),
-        ("url(\r\nQΡ✈🆒\\Q\\Ρ\\✈\\🆒", 14),
-        ("url(\r\nQΡ✈🆒\\Q\\Ρ\\✈\\🆒 x", 16),
-        ("QΡ✈🆒()", 7),
+        ("", 1),
+        ("ascii", 6),
+        ("/*QΡ✈🆒*/", 10),
+        ("'QΡ✈🆒*'", 9),
+        ("\"\\\"'QΡ✈🆒*'", 12),
+        ("\\Q\\Ρ\\✈\\🆒", 10),
+        ("QΡ✈🆒", 6),
+        ("QΡ✈🆒\\Q\\Ρ\\✈\\🆒", 15),
+        ("newline\r\nQΡ✈🆒", 6),
+        ("url(QΡ✈🆒\\Q\\Ρ\\✈\\🆒)", 20),
+        ("url(QΡ✈🆒)", 11),
+        ("url(\r\nQΡ✈🆒\\Q\\Ρ\\✈\\🆒)", 16),
+        ("url(\r\nQΡ✈🆒\\Q\\Ρ\\✈\\🆒", 15),
+        ("url(\r\nQΡ✈🆒\\Q\\Ρ\\✈\\🆒 x", 17),
+        ("QΡ✈🆒()", 8),
         // Test that under/over-flow of current_line_start_position is
         // handled properly; see the special case in consume_4byte_intro.
-        ("🆒", 2),
+        ("🆒", 3),
     ];
 
     for test in tests {

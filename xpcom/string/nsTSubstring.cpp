@@ -9,6 +9,7 @@
 #include "mozilla/double-conversion.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Printf.h"
+#include "mozilla/MathAlgorithms.h"
 
 using double_conversion::DoubleToStringConverter;
 

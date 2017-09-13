@@ -493,11 +493,6 @@ var DebuggerServer = {
       constructor: "StyleSheetsActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/styleeditor", {
-      prefix: "styleEditor",
-      constructor: "StyleEditorActor",
-      type: { tab: true }
-    });
     this.registerModule("devtools/server/actors/storage", {
       prefix: "storage",
       constructor: "StorageActor",

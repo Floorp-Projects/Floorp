@@ -276,7 +276,7 @@ impl<'a> Tokenizer<'a> {
     pub fn current_source_location(&self) -> SourceLocation {
         SourceLocation {
             line: self.current_line_number,
-            column: (self.position - self.current_line_start_position) as u32,
+            column: (self.position - self.current_line_start_position + 1) as u32,
         }
     }
 
@@ -521,8 +521,8 @@ pub struct SourceLocation {
     /// The line number, starting at 0 for the first line, unless `with_first_line_number` was used.
     pub line: u32,
 
-    /// The column number within a line, starting at 0 for first the character of the line.
-    /// Column numbers are in units of UTF-16 characters.
+    /// The column number within a line, starting at 1 for first the character of the line.
+    /// Column numbers are counted in UTF-16 code units.
     pub column: u32,
 }
 

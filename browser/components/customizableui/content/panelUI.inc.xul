@@ -753,3 +753,17 @@
     </panelview>
   </photonpanelmultiview>
 </panel>
+
+<panel id="downloads-button-autohide-panel"
+       role="group"
+       type="arrow"
+       hidden="true"
+       onpopupshown="gCustomizeMode._downloadPanelAutoHideTimeout = setTimeout(() => event.target.hidePopup(), 4000);"
+       onmouseover="clearTimeout(gCustomizeMode._downloadPanelAutoHideTimeout);"
+       onmouseout="gCustomizeMode._downloadPanelAutoHideTimeout = setTimeout(() => event.target.hidePopup(), 2000);"
+       onpopuphidden="clearTimeout(gCustomizeMode._downloadPanelAutoHideTimeout);"
+       >
+  <checkbox id="downloads-button-autohide-checkbox"
+            label="&customizeMode.autoHideDownloadsButton.label;" checked="true"
+            oncommand="gCustomizeMode.onDownloadsAutoHideChange(event)"/>
+</panel>
