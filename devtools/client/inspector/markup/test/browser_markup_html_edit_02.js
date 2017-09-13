@@ -18,10 +18,10 @@ const TEST_DATA = [
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let textNodeName = yield testActor.eval(`
-        document.querySelector("#badMarkup1").nextSibling.nodeName
+        content.document.querySelector("#badMarkup1").nextSibling.nodeName
       `);
       let textNodeData = yield testActor.eval(`
-        document.querySelector("#badMarkup1").nextSibling.data
+        content.document.querySelector("#badMarkup1").nextSibling.data
       `);
       is(textNodeName, "#text", "Sibling is a text element");
       is(textNodeData, " hanging", "New text node has expected text content");
@@ -36,10 +36,10 @@ const TEST_DATA = [
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let textNodeName = yield testActor.eval(`
-        document.querySelector("#badMarkup2").nextSibling.nodeName
+        content.document.querySelector("#badMarkup2").nextSibling.nodeName
       `);
       let textNodeData = yield testActor.eval(`
-        document.querySelector("#badMarkup2").nextSibling.data
+        content.document.querySelector("#badMarkup2").nextSibling.data
       `);
       is(textNodeName, "#text", "Sibling is a text element");
       is(textNodeData, " hanging", "New text node has expected text content");

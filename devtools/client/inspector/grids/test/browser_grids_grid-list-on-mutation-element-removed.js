@@ -51,7 +51,7 @@ add_task(function* () {
   let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   onCheckboxChange = waitUntilState(store, state => state.grids.length == 0);
   testActor.eval(`
-    document.getElementById("grid").remove();
+    content.document.getElementById("grid").remove();
   `);
   yield onHighlighterHidden;
   yield onCheckboxChange;
