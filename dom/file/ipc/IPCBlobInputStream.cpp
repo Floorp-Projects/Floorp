@@ -25,24 +25,20 @@ static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 class InputStreamCallbackRunnable final : public CancelableRunnable
 {
 public:
-  // Note that the execution can be synchronous in case the event target is
-  // null.
   static void
   Execute(nsIInputStreamCallback* aCallback,
           nsIEventTarget* aEventTarget,
           IPCBlobInputStream* aStream)
   {
-    MOZ_ASSERT(aCallback);
-
     RefPtr<InputStreamCallbackRunnable> runnable =
       new InputStreamCallbackRunnable(aCallback, aStream);
 
     nsCOMPtr<nsIEventTarget> target = aEventTarget;
-    if (aEventTarget) {
-      target->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    } else {
-      runnable->Run();
+    if (!target) {
+      target = NS_GetCurrentThread();
     }
+
+    target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   }
 
   NS_IMETHOD
@@ -77,13 +73,14 @@ public:
           nsIEventTarget* aEventTarget,
           IPCBlobInputStream* aStream)
   {
-    MOZ_ASSERT(aCallback);
-    MOZ_ASSERT(aEventTarget);
-
     RefPtr<FileMetadataCallbackRunnable> runnable =
       new FileMetadataCallbackRunnable(aCallback, aStream);
 
     nsCOMPtr<nsIEventTarget> target = aEventTarget;
+    if (!target) {
+      target = NS_GetCurrentThread();
+    }
+
     target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   }
 
@@ -512,8 +509,6 @@ IPCBlobInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
   nsCOMPtr<nsIEventTarget> callbackEventTarget;
   callbackEventTarget.swap(mInputStreamCallbackEventTarget);
  
-  // This must be the last operation because the execution of the callback can
-  // be synchronous.
   InputStreamCallbackRunnable::Execute(callback, callbackEventTarget, this);
   return NS_OK;
 }
@@ -552,13 +547,6 @@ NS_IMETHODIMP
 IPCBlobInputStream::AsyncWait(nsIFileMetadataCallback* aCallback,
                               nsIEventTarget* aEventTarget)
 {
-  MOZ_ASSERT(!!aCallback != !!aEventTarget);
-
-  // If we have the callback, we must have the event target.
-  if (NS_WARN_IF(!!aCallback != !!aEventTarget)) {
-    return NS_ERROR_FAILURE;
-  }
-
   // See IPCBlobInputStream.h for more information about this state machine.
 
   switch (mState) {
