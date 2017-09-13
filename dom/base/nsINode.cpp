@@ -1521,20 +1521,16 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
 
   nsIDocument *doc = aParent->OwnerDoc();
 
-  nsresult rv;
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> adoptedNode;
-  rv = domDoc->AdoptNode(node, getter_AddRefs(adoptedNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult rv;
+  nsINode* adoptedNode = doc->AdoptNode(*aNode, rv);
+  rv.WouldReportJSException();
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
   NS_ASSERTION(aParent->OwnerDoc() == doc,
                "ownerDoc chainged while adopting");
-  NS_ASSERTION(adoptedNode == node, "Uh, adopt node changed nodes?");
+  NS_ASSERTION(adoptedNode == aNode, "Uh, adopt node changed nodes?");
   NS_ASSERTION(aParent->OwnerDoc() == aNode->OwnerDoc(),
                "ownerDocument changed again after adopting!");
 
