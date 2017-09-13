@@ -5989,8 +5989,8 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFrame");
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   aDesiredSize.ClearSize();
-  aStatus.Reset();
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 

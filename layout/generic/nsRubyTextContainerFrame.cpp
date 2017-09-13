@@ -122,12 +122,12 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsRubyTextContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // Although a ruby text container may have continuations, returning
   // complete reflow status is still safe, since its parent, ruby frame,
   // ignores the status, and continuations of the ruby base container
   // will take care of our continuations.
-  aStatus.Reset();
   WritingMode rtcWM = GetWritingMode();
 
   nscoord minBCoord = nscoord_MAX;

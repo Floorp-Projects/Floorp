@@ -114,6 +114,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFormControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsFormControlFrame::Reflow: aMaxSize=%d,%d",
                   aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
@@ -122,7 +123,6 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
     RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
 
-  aStatus.Reset();
   aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
                        aReflowInput.ComputedSizeWithBorderPadding());
 

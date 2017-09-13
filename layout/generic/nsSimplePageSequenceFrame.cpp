@@ -152,9 +152,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
                   "A Page Sequence is only for real pages");
   DO_GLOBAL_REFLOW_COUNT("nsSimplePageSequenceFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
-
-  aStatus.Reset();  // we're always complete
 
   // Don't do incremental reflow until we've taught tables how to do
   // it right in paginated mode.

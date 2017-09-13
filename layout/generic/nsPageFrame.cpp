@@ -58,7 +58,7 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPageFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
-  aStatus.Reset();  // initialize out parameter
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   NS_ASSERTION(mFrames.FirstChild() &&
                mFrames.FirstChild()->IsPageContentFrame(),
@@ -721,6 +721,7 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsPageBreakFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // Override reflow, since we don't want to deal with what our
   // computed values are.
@@ -736,7 +737,6 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
   // Note: not using NS_FRAME_FIRST_REFLOW here, since it's not clear whether
   // DidReflow will always get called before the next Reflow() call.
   mHaveReflowed = true;
-  aStatus.Reset();
 }
 
 #ifdef DEBUG_FRAME_DUMP
