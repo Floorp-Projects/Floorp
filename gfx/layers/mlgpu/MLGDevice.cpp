@@ -238,21 +238,6 @@ MLGDevice::SetPSTexture(uint32_t aSlot, TextureSource* aSource)
   SetPSTextures(aSlot, 1, &aSource);
 }
 
-static inline SamplerMode
-FilterToSamplerMode(gfx::SamplingFilter aFilter)
-{
-  switch (aFilter) {
-  case gfx::SamplingFilter::POINT:
-    return SamplerMode::Point;
-  case gfx::SamplingFilter::LINEAR:
-  case gfx::SamplingFilter::GOOD:
-    return SamplerMode::LinearClamp;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unknown sampler mode");
-    return SamplerMode::LinearClamp;
-  }
-}
-
 void
 MLGDevice::SetSamplerMode(uint32_t aIndex, gfx::SamplingFilter aFilter)
 {

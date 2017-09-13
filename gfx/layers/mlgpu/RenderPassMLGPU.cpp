@@ -451,21 +451,24 @@ TexturedRenderPass::TexturedRenderPass(FrameBuilder* aBuilder, const ItemInfo& a
 TexturedRenderPass::Info::Info(const ItemInfo& aItem, PaintedLayerMLGPU* aLayer)
  : item(aItem),
    textureSize(aLayer->GetTexture()->GetSize()),
-   destOrigin(aLayer->GetContentHost()->GetOriginOffset())
+   destOrigin(aLayer->GetContentHost()->GetOriginOffset()),
+   decomposeIntoNoRepeatRects(aLayer->MayResample())
 {
 }
 
 TexturedRenderPass::Info::Info(const ItemInfo& aItem, TexturedLayerMLGPU* aLayer)
  : item(aItem),
    textureSize(aLayer->GetTexture()->GetSize()),
-   scale(aLayer->GetPictureScale())
+   scale(aLayer->GetPictureScale()),
+   decomposeIntoNoRepeatRects(false)
 {
 }
 
 TexturedRenderPass::Info::Info(const ItemInfo& aItem, ContainerLayerMLGPU* aLayer)
  : item(aItem),
    textureSize(aLayer->GetTargetSize()),
-   destOrigin(aLayer->GetTargetOffset())
+   destOrigin(aLayer->GetTargetOffset()),
+   decomposeIntoNoRepeatRects(false)
 {
 }
 
@@ -535,15 +538,24 @@ TexturedRenderPass::AddClippedItem(Txn& aTxn,
     textureCoords.SetHeight(-textureCoords.Height());
   }
 
-  Rect layerRects[4];
-  Rect textureRects[4];
-  size_t numRects =
-    DecomposeIntoNoRepeatRects(aDrawRect, textureCoords, &layerRects, &textureRects);
-
-  for (size_t i = 0; i < numRects; i++) {
-    TexturedTraits traits(aInfo.item, layerRects[i], textureRects[i]);
+  if (!aInfo.decomposeIntoNoRepeatRects) {
+    // Fast, normal case, we can use the texture coordinates as-s and the caller
+    // will use a repeat sampler if needed.
+    TexturedTraits traits(aInfo.item, aDrawRect, textureCoords);
     if (!aTxn.Add(traits)) {
       return false;
+    }
+  } else {
+    Rect layerRects[4];
+    Rect textureRects[4];
+    size_t numRects =
+      DecomposeIntoNoRepeatRects(aDrawRect, textureCoords, &layerRects, &textureRects);
+
+    for (size_t i = 0; i < numRects; i++) {
+      TexturedTraits traits(aInfo.item, layerRects[i], textureRects[i]);
+      if (!aTxn.Add(traits)) {
+        return false;
+      }
     }
   }
   return true;
@@ -561,17 +573,17 @@ SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
 {
   RefPtr<TextureSource> texture;
 
-  gfx::SamplingFilter filter;
+  SamplerMode sampler;
   TextureFlags flags = TextureFlags::NO_FLAGS;
   if (PaintedLayerMLGPU* paintedLayer = aLayer->AsPaintedLayerMLGPU()) {
     if (paintedLayer->HasComponentAlpha()) {
       return false;
     }
     texture = paintedLayer->GetTexture();
-    filter = SamplingFilter::LINEAR;
+    sampler = paintedLayer->GetSamplerMode();
   } else if (TexturedLayerMLGPU* texLayer = aLayer->AsTexturedLayerMLGPU()) {
     texture = texLayer->GetTexture();
-    filter = texLayer->GetSamplingFilter();
+    sampler = FilterToSamplerMode(texLayer->GetSamplingFilter());
     TextureHost* host = texLayer->GetImageHost()->CurrentTextureHost();
     flags = host->GetFlags();
   } else {
@@ -586,7 +598,7 @@ SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
     if (texture != mTexture) {
       return false;
     }
-    if (mFilter != filter) {
+    if (mSamplerMode != sampler) {
       return false;
     }
     if (mOpacity != opacity) {
@@ -595,7 +607,7 @@ SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
     // Note: premultiplied, origin-bottom-left are already implied by the texture source.
   } else {
     mTexture = texture;
-    mFilter = filter;
+    mSamplerMode = sampler;
     mOpacity = opacity;
     mTextureFlags = flags;
   }
@@ -638,7 +650,7 @@ SingleTexturePass::SetupPipeline()
   }
 
   mDevice->SetPSTexture(0, mTexture);
-  mDevice->SetSamplerMode(kDefaultSamplerSlot, mFilter);
+  mDevice->SetSamplerMode(kDefaultSamplerSlot, mSamplerMode);
   switch (mTexture.get()->GetFormat()) {
     case SurfaceFormat::B8G8R8A8:
     case SurfaceFormat::R8G8B8A8:
@@ -711,7 +723,7 @@ ComponentAlphaPass::SetupPipeline()
     mDevice->SetPixelShader(PixelShaderID::ComponentAlphaVertex);
   }
 
-  mDevice->SetSamplerMode(kDefaultSamplerSlot, SamplerMode::LinearClamp);
+  mDevice->SetSamplerMode(kDefaultSamplerSlot, mAssignedLayer->GetSamplerMode());
   mDevice->SetPSTextures(0, 2, textures);
 }
 
@@ -733,7 +745,7 @@ VideoRenderPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
   RefPtr<TextureHost> host = layer->GetImageHost()->CurrentTextureHost();
   RefPtr<TextureSource> source = layer->GetTexture();
   float opacity = layer->GetComputedOpacity();
-  SamplingFilter filter = layer->GetSamplingFilter();
+  SamplerMode sampler = FilterToSamplerMode(layer->GetSamplingFilter());
 
   if (mHost) {
     if (mHost != host) {
@@ -745,14 +757,14 @@ VideoRenderPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
     if (mOpacity != opacity) {
       return false;
     }
-    if (mFilter != filter) {
+    if (mSamplerMode != sampler) {
       return false;
     }
   } else {
     mHost = host;
     mTexture = source;
     mOpacity = opacity;
-    mFilter = filter;
+    mSamplerMode = sampler;
   }
   MOZ_ASSERT(!mTexture->AsBigImageIterator());
   MOZ_ASSERT(!(mHost->GetFlags() & TextureFlags::NON_PREMULTIPLIED));
@@ -819,7 +831,7 @@ VideoRenderPass::SetupPipeline()
     break;
   }
 
-  mDevice->SetSamplerMode(kDefaultSamplerSlot, mFilter);
+  mDevice->SetSamplerMode(kDefaultSamplerSlot, mSamplerMode);
   mDevice->SetPSConstantBuffer(1, ps1);
 }
 
