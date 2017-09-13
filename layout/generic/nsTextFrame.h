@@ -538,6 +538,7 @@ public:
                                      SelectionType aSelectionType);
 
   void DrawEmphasisMarks(gfxContext* aContext,
+                         TextDrawTarget* aTextDrawer,
                          mozilla::WritingMode aWM,
                          const gfxPoint& aTextBaselinePt,
                          const gfxPoint& aFramePt,
