@@ -92,15 +92,15 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
     mTransform = *aTransformPtr;
   }
 
+  // Apply the inherited scale from parent
+  mTransform.PostScale(aParentSC.mXScale, aParentSC.mYScale, 1.0);
+  mTransform.NudgeToIntegersFixedEpsilon();
+
   bool is2d = !aTransformPtr || (aTransformPtr->Is2D() && !aPerspectivePtr);
   if (is2d) {
     nsRect itemBounds = aDisplayList->GetClippedBoundsWithRespectToASR(aDisplayListBuilder, aItem->GetActiveScrolledRoot());
     nsRect childrenVisible = aItem->GetVisibleRectForChildren();
     visibleRect = itemBounds.Intersect(childrenVisible);
-
-    // Apply the inherited scale from parent
-    mTransform.PostScale(aParentSC.mXScale, aParentSC.mYScale, 1.0);
-    mTransform.NudgeToIntegersFixedEpsilon();
 
     gfx::Size scale = mTransform.As2D().ScaleFactors(true);
 
