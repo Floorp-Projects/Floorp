@@ -1,3 +1,8 @@
+# This config references releases/l10n/mozilla-release instead of l10n-central
+# because 52 predates cross-channel localization, which rides the train
+# with 57.
+# If you copy this config for the ESR following 57, change hg_l10n_base
+# to l10n-central.
 config = {
     "nightly_build": True,
     "branch": "mozilla-esr52",
