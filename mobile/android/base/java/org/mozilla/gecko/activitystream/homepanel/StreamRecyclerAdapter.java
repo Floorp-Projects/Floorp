@@ -240,13 +240,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     }
 
     private boolean onItemClickIsValidRowItem(final int position) {
-        final int viewType = getItemViewType(position);
-        if (viewType != RowItemType.HIGHLIGHT_ITEM.getViewType()
-                && viewType != RowItemType.TOP_STORIES_ITEM.getViewType()) {
-            // Headers (containing topsites and/or the highlights title) do their own click handling as needed
-            return false;
-        }
-
         // The position this method receives is from RecyclerView.ViewHolder.getAdapterPosition, whose docs state:
         // "Note that if you've called notifyDataSetChanged(), until the next layout pass, the return value of this
         // method will be NO_POSITION."
@@ -259,6 +252,13 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         // or adding a hack.
         if (position == RecyclerView.NO_POSITION) {
             Log.w(LOGTAG, "onItemClicked: received NO_POSITION. Returning");
+            return false;
+        }
+
+        final int viewType = getItemViewType(position);
+        if (viewType != RowItemType.HIGHLIGHT_ITEM.getViewType()
+                && viewType != RowItemType.TOP_STORIES_ITEM.getViewType()) {
+            // Headers (containing topsites and/or the highlights title) do their own click handling as needed
             return false;
         }
 
