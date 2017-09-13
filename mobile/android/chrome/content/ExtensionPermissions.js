@@ -10,7 +10,7 @@ var ExtensionPermissions = {
   // Prepare the strings needed for a permission notification.
   _prepareStrings(info) {
     let appName = Strings.brand.GetStringFromName("brandShortName");
-    let info2 = Object.assign({appName, addonName: info.addon.name}, info);
+    let info2 = Object.assign({appName}, info);
     let strings = ExtensionData.formatPermissionStrings(info2, Strings.browser);
 
     // We dump the main body of the dialog into a big android
@@ -43,8 +43,8 @@ var ExtensionPermissions = {
     switch (topic) {
       case "webextension-permission-prompt": {
         let {target, info} = subject.wrappedJSObject;
-
-        let details = this._prepareStrings(info);
+        let stringInfo = Object.assign({addonName: info.addon.name}, info);
+        let details = this._prepareStrings(stringInfo);
         details.icon = this._prepareIcon(info.icon);
         details.type = "Extension:PermissionPrompt";
         let accepted = await EventDispatcher.instance.sendRequestForResult(details);
@@ -62,6 +62,7 @@ var ExtensionPermissions = {
         let {addon, resolve, reject} = info;
         let stringInfo = Object.assign({
           type: "update",
+          addonName: addon.name,
         }, info);
 
         let details = this._prepareStrings(stringInfo);
@@ -87,10 +88,30 @@ var ExtensionPermissions = {
         }
         break;
 
-      case "webextension-optional-permission-prompt":
-        // To be implemented in bug 1392176, just auto-approve until then
-        subject.wrappedJSObject.resolve(true);
-        break;
+      case "webextension-optional-permission-prompt": {
+        let info = subject.wrappedJSObject;
+        let {name, resolve} = info;
+        let stringInfo = Object.assign({
+          type: "optional",
+          addonName: name,
+        }, info);
+
+        let details = this._prepareStrings(stringInfo);
+
+        // If there are no promptable permissions, just apply the update
+        if (details.message.length == 0) {
+          resolve(true);
+          return;
+        }
+
+        // Store all the details about the update until the user chooses to
+        // look at update, at which point we will pick up in this.applyUpdate()
+        details.icon = this._prepareIcon(info.icon || "dummy.svg");
+
+        details.type = "Extension:PermissionPrompt";
+        let accepted = await EventDispatcher.instance.sendRequestForResult(details);
+        resolve(accepted);
+      }
     }
   },
 
