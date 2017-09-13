@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "مطمئن نیستیم چه اتفاقی افتاده است. می‌خواهید دوباره امتحان کنید یا از یک صفحهٔ دیگر عکس بگیرید؟"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "بدون خارج شدن از فایرفاکس، عکس بگیرید، ذخیره کنید و به اشتراک بگذارید."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "ضبط آنچه شما می‌خواهید"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "کلیک کنید و بکشید تا فقط از قسمتی از صفحه عکس بگیرید. می‌توانید برای برجسته کردن روی ناحیه انتخاب شده حرکت کنید."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "ضبط پنجره یا کل صفحه‌ها"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "برای گرفتن عکس از ناحیه قابل مشاهده در پنجره یا تمام صفحه از دکمه‌های بالا سمت راست استفاده کنید."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "همانطور که می‌پسندید"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "عکس‌های بریده شده خود را برای به اشتراک‌گذاری راحت‌تر روی وب ذخیره کنید، یا آن‌ها را روی رایانه خود دریافت کنید. همچنین برای دیدن همهٔ عکس‌هایی که گرفتید می‌توانید روی دکمه «عکس‌های من» کلیک کنید."
   },
   "tourSkip": {

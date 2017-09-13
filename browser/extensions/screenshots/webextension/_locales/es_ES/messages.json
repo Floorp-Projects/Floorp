@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "No estamos seguros de lo que acaba de pasar. ¿Te importa volver a intentarlo o hacer una captura de otra página?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Hacer, guardar y compartir capturas de pantalla sin salir de Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Una nueva forma de guardar"
+  },
+  "tourBodyPageAction": {
+    "message": "Expande el menú de acciones de la página en la barra de direcciones cuando quieras hacer una captura."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Haz capturas solo de lo que tú quieras"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Haz clic y arrastra para capturar solo una parte de la página. También puedes pasar por encima para resaltar tu selección."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Haz capturas de Windows o páginas completas"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Selecciona los botones de la parte superior derecha para capturar el área visible en Windows o la página completa."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Como más te guste"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Guarda las capturas de la Web recortadas para compartirlas mejor o descárgalas en tu ordenador. También puedes hacer clic en Mis capturas para ver todas las capturas que has hecho."
   },
   "tourSkip": {

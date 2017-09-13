@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Nus na savain betg tge ch'è gist capità. Vuls empruvar anc ina giada, forsa cun in'autra pagina?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Far, memorisar e cundivider maletgs da visur senza bandunar Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Far maletgs da visur da tut che vi vuls"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Clicca e tira per far in maletg da be ina part da la pagina. Ti pos posiziunar la mieur sur la selecziun per la relevar."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Far maletgs da fanestras u paginas cumplettas"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Tscherna il buttun sura dretg per far in maletg da la part visibla en la fanestra u per far in maletg da la pagina cumpletta."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Co che ti prefereschas"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Memorisescha ils maletgs da visur en il web per als pudair cundivider u telechargiar sin tes computer. Ti pos era cliccar sin il buttun «Mes maletgs da visur» per vesair tut ils maletgs dal visur che ti has fatg."
   },
   "tourSkip": {

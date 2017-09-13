@@ -70,25 +70,25 @@
   "genericErrorDetails": {
     "message": "Hindi kami sigurado kung ano ang nangyari. Pag-aalaga upang subukang muli o kumuha ng isang shot ng isang iba't ibang mga pahina?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Dumaan, i-save, at ibahagi ang mga screenshot nang hindi umaalis sa Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Kunan Kung Ano Ang Gusto Mo"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "I-click at i-drag upang makuha lamang ang isang bahagi ng isang pahina. Maaari mo ring i-hover upang i-highlight ang iyong pagpili."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "I-capture ang Windows o Buong Pahina"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Piliin ang pindutan sa kanang itaas upang makuha ang nakikitang lugar sa window o upang makuha ang isang buong pahina."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Bilang Nagustuhan Mo ito"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "I-save ang iyong crop shot sa Web para sa madaling pagbabahagi, o i-download ito sa iyong computer. Maaari mo ring i-click sa pindutan ng My Shots upang mahanap ang lahat ng mga pag-shot na kinunan mo."
   },
   "tourSkip": {

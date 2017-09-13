@@ -5,7 +5,7 @@ window.inlineSelectionCss = `
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 1px;
+  border-radius: 3px;
   cursor: pointer;
   font-size: 16px;
   font-weight: 400;
@@ -28,7 +28,7 @@ window.inlineSelectionCss = `
     height: 26px;
     border: 1px solid #c7c7c7; }
     .button.tiny:hover, .tiny.highlight-button-cancel:hover, .tiny.highlight-button-save:hover, .tiny.highlight-button-download:hover, .tiny.preview-button-save:hover, .button.tiny:focus, .tiny.highlight-button-cancel:focus, .tiny.highlight-button-save:focus, .tiny.highlight-button-download:focus, .tiny.preview-button-save:focus {
-      background: #ebebeb;
+      background: #ededf0;
       border-color: #989898; }
     .button.tiny:active, .tiny.highlight-button-cancel:active, .tiny.highlight-button-save:active, .tiny.highlight-button-download:active, .tiny.preview-button-save:active {
       background: #dedede;
@@ -55,48 +55,55 @@ window.inlineSelectionCss = `
         margin-right: 10px;
         padding: 0 5px; } }
     .button.block-button:hover, .block-button.highlight-button-cancel:hover, .block-button.highlight-button-save:hover, .block-button.highlight-button-download:hover, .block-button.preview-button-save:hover {
-      background: #ebebeb; }
+      background: #ededf0; }
     .button.block-button:active, .block-button.highlight-button-cancel:active, .block-button.highlight-button-save:active, .block-button.highlight-button-download:active, .block-button.preview-button-save:active {
       background: #dedede; }
-  .button.download, .download.highlight-button-cancel, .download.highlight-button-save, .download.highlight-button-download, .download.preview-button-save, .button.trash, .trash.highlight-button-cancel, .trash.highlight-button-save, .trash.highlight-button-download, .trash.preview-button-save, .button.share, .share.highlight-button-cancel, .share.highlight-button-save, .share.highlight-button-download, .share.preview-button-save, .button.flag, .flag.highlight-button-cancel, .flag.highlight-button-save, .flag.highlight-button-download, .flag.preview-button-save {
-    background-image: url("../img/icon-sprite.svg");
-    background-size: 480px 40px;
+  .button.download, .download.highlight-button-cancel, .download.highlight-button-save, .download.highlight-button-download, .download.preview-button-save, .button.edit, .edit.highlight-button-cancel, .edit.highlight-button-save, .edit.highlight-button-download, .edit.preview-button-save, .button.trash, .trash.highlight-button-cancel, .trash.highlight-button-save, .trash.highlight-button-download, .trash.preview-button-save, .button.share, .share.highlight-button-cancel, .share.highlight-button-save, .share.highlight-button-download, .share.preview-button-save, .button.flag, .flag.highlight-button-cancel, .flag.highlight-button-save, .flag.highlight-button-download, .flag.preview-button-save {
     background-repeat: no-repeat;
-    background-position: 0 0;
+    background-size: 50%;
+    background-position: center;
     margin-right: 10px;
     transition: background-color 150ms cubic-bezier(0.07, 0.95, 0, 1); }
-  .button.download:hover, .download.highlight-button-cancel:hover, .download.highlight-button-save:hover, .download.highlight-button-download:hover, .download.preview-button-save:hover {
-    background-position: -40px 0; }
-  .button.download:active, .download.highlight-button-cancel:active, .download.highlight-button-save:active, .download.highlight-button-download:active, .download.preview-button-save:active {
-    background-position: -80px 0; }
+  .button.download, .download.highlight-button-cancel, .download.highlight-button-save, .download.highlight-button-download, .download.preview-button-save {
+    background-image: url("../img/icon-download.svg"); }
+    .button.download:hover, .download.highlight-button-cancel:hover, .download.highlight-button-save:hover, .download.highlight-button-download:hover, .download.preview-button-save:hover {
+      background-color: #ededf0; }
+    .button.download:active, .download.highlight-button-cancel:active, .download.highlight-button-save:active, .download.highlight-button-download:active, .download.preview-button-save:active {
+      background-color: #dedede; }
   .button.share, .share.highlight-button-cancel, .share.highlight-button-save, .share.highlight-button-download, .share.preview-button-save {
-    background-position: -120px 0; }
+    background-image: url("../img/icon-share.svg"); }
     .button.share:hover, .share.highlight-button-cancel:hover, .share.highlight-button-save:hover, .share.highlight-button-download:hover, .share.preview-button-save:hover {
-      background-position: -160px 0; }
-    .button.share:active, .share.highlight-button-cancel:active, .share.highlight-button-save:active, .share.highlight-button-download:active, .share.preview-button-save:active, .button.share.active, .share.active.highlight-button-cancel, .share.active.highlight-button-save, .share.active.highlight-button-download, .share.active.preview-button-save {
-      background-position: -200px 0; }
+      background-color: #ededf0; }
+    .button.share.active, .share.active.highlight-button-cancel, .share.active.highlight-button-save, .share.active.highlight-button-download, .share.active.preview-button-save, .button.share:active, .share.highlight-button-cancel:active, .share.highlight-button-save:active, .share.highlight-button-download:active, .share.preview-button-save:active {
+      background-color: #dedede; }
   .button.trash, .trash.highlight-button-cancel, .trash.highlight-button-save, .trash.highlight-button-download, .trash.preview-button-save {
-    background-position: -240px 0; }
+    background-image: url("../img/icon-trash.svg"); }
     .button.trash:hover, .trash.highlight-button-cancel:hover, .trash.highlight-button-save:hover, .trash.highlight-button-download:hover, .trash.preview-button-save:hover {
-      background-position: -280px 0; }
+      background-color: #ededf0; }
     .button.trash:active, .trash.highlight-button-cancel:active, .trash.highlight-button-save:active, .trash.highlight-button-download:active, .trash.preview-button-save:active {
-      background-position: -320px 0; }
+      background-color: #dedede; }
+  .button.edit, .edit.highlight-button-cancel, .edit.highlight-button-save, .edit.highlight-button-download, .edit.preview-button-save {
+    background-image: url("../img/icon-edit.svg"); }
+    .button.edit:hover, .edit.highlight-button-cancel:hover, .edit.highlight-button-save:hover, .edit.highlight-button-download:hover, .edit.preview-button-save:hover {
+      background-color: #ededf0; }
+    .button.edit:active, .edit.highlight-button-cancel:active, .edit.highlight-button-save:active, .edit.highlight-button-download:active, .edit.preview-button-save:active {
+      background-color: #dedede; }
   .button.flag, .flag.highlight-button-cancel, .flag.highlight-button-save, .flag.highlight-button-download, .flag.preview-button-save {
-    background-position: -360px 0; }
+    background-image: url("../img/icon-flag.svg"); }
     .button.flag:hover, .flag.highlight-button-cancel:hover, .flag.highlight-button-save:hover, .flag.highlight-button-download:hover, .flag.preview-button-save:hover {
-      background-position: -400px 0; }
+      background-color: #ededf0; }
     .button.flag:active, .flag.highlight-button-cancel:active, .flag.highlight-button-save:active, .flag.highlight-button-download:active, .flag.preview-button-save:active {
-      background-position: -440px 0; }
+      background-color: #dedede; }
 
 .inverse-color-scheme {
-  background: #3e3d40;
-  color: #f6f6f8; }
+  background: #38383d;
+  color: #f9f9fa; }
   .inverse-color-scheme a {
     color: #e1e1e6; }
 
 .default-color-scheme {
-  background: #f6f6f8;
-  color: #3e3d40; }
+  background: #f9f9fa;
+  color: #38383d; }
   .default-color-scheme a {
     color: #009ec0; }
 
@@ -108,8 +115,8 @@ window.inlineSelectionCss = `
     text-decoration: underline; }
 
 .alt-color-scheme {
-  background: #31365a;
-  color: #f6f6f8; }
+  background: #38383d;
+  color: #f9f9fa; }
   .alt-color-scheme h1 {
     color: #6f7fb6; }
   .alt-color-scheme a {
@@ -125,18 +132,20 @@ window.inlineSelectionCss = `
     background-color: #006c83; }
 
 .button.secondary, .highlight-button-cancel, .secondary.highlight-button-save, .highlight-button-download, .secondary.preview-button-save {
-  background-color: #f6f6f8;
-  color: #3e3d40; }
+  background-color: #f9f9fa;
+  color: #38383d; }
   .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover, .secondary.preview-button-save:hover {
-    background-color: #ebebeb; }
+    background-color: #ededf0; }
   .button.secondary:active, .highlight-button-cancel:active, .secondary.highlight-button-save:active, .highlight-button-download:active, .secondary.preview-button-save:active {
     background-color: #dedede; }
 
 .button.transparent, .transparent.highlight-button-cancel, .transparent.highlight-button-save, .transparent.highlight-button-download, .transparent.preview-button-save {
   background-color: transparent;
-  color: #3e3d40; }
-  .button.transparent:hover, .transparent.highlight-button-cancel:hover, .transparent.highlight-button-save:hover, .transparent.highlight-button-download:hover, .transparent.preview-button-save:hover, .button.transparent:focus, .transparent.highlight-button-cancel:focus, .transparent.highlight-button-save:focus, .transparent.highlight-button-download:focus, .transparent.preview-button-save:focus, .button.transparent:active, .transparent.highlight-button-cancel:active, .transparent.highlight-button-save:active, .transparent.highlight-button-download:active, .transparent.preview-button-save:active {
-    background-color: rgba(0, 0, 0, 0.05); }
+  color: #38383d; }
+  .button.transparent:hover, .transparent.highlight-button-cancel:hover, .transparent.highlight-button-save:hover, .transparent.highlight-button-download:hover, .transparent.preview-button-save:hover {
+    background-color: #ededf0; }
+  .button.transparent:focus, .transparent.highlight-button-cancel:focus, .transparent.highlight-button-save:focus, .transparent.highlight-button-download:focus, .transparent.preview-button-save:focus, .button.transparent:active, .transparent.highlight-button-cancel:active, .transparent.highlight-button-save:active, .transparent.highlight-button-download:active, .transparent.preview-button-save:active {
+    background-color: #dedede; }
 
 .button.warning, .warning.highlight-button-cancel, .warning.highlight-button-save, .warning.highlight-button-download, .warning.preview-button-save {
   color: #fff;
@@ -378,8 +387,11 @@ window.inlineSelectionCss = `
   justify-content: center;
   bottom: -55px;
   position: absolute;
-  right: 5px;
   z-index: 6; }
+  html[dir="rtl"] .highlight-buttons {
+    left: 5px; }
+  html[dir="ltr"] .highlight-buttons {
+    right: 5px; }
   .bottom-selection .highlight-buttons {
     bottom: 5px; }
   .left-selection .highlight-buttons {
@@ -397,13 +409,19 @@ window.inlineSelectionCss = `
 
 .highlight-button-save {
   background-image: url("MOZ_EXTENSION/icons/cloud.svg");
-  background-position: 8px center;
   background-repeat: no-repeat;
   background-size: 20px 18px;
   font-size: 18px;
   margin: 5px;
-  min-width: 80px;
-  padding-left: 34px; }
+  min-width: 80px; }
+  html[dir="ltr"] .highlight-button-save {
+    background-position: 8px center; }
+  html[dir="rtl"] .highlight-button-save {
+    background-position: 65px center; }
+  html[dir="ltr"] .highlight-button-save {
+    padding-left: 34px; }
+  html[dir="rtl"] .highlight-button-save {
+    padding-right: 40px; }
 
 .highlight-button-download {
   background-image: url("MOZ_EXTENSION/icons/download.svg");

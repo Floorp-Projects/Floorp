@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Me pole kindlad, mis just juhtus. Proovid ehk uuesti või teed ekraanipildi mõnest teisest lehest?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Tee, salvesta ja jaga ekraanipilte Firefoxist lahkumata."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Salvesta just seda, mida soovid"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Klõpsa ja lohista lehe osa valimiseks. Samuti võid valiku esile toomiseks kursorit selle kohal hoida."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Salvesta aknaid või terveid lehti"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Kasuta nuppe ülal paremal aknas nähtava ala või terve lehe salvestamiseks."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Nii, kuidas sulle meeldib"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Salvesta kärbitud pilte lihtsamaks jagamiseks veebi või laadi need alla enda arvutisse. Võid ka klõpsata Minu pildid nupul kõigi tehtud piltide vaatamiseks."
   },
   "tourSkip": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "privaatsuspoliitikaga"
+  },
+  "libraryLabel": {
+    "message": "Ekraanipildid"
   }
 }
