@@ -12305,7 +12305,7 @@
   "DOM_SCRIPT_LOADING_SOURCE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "categorical",
     "bug_numbers": [1362114],
     "labels": ["Inline", "SourceFallback", "Source", "AltData"],
@@ -12314,7 +12314,7 @@
   "DOM_SCRIPT_INLINE_SIZE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "low": 64,
     "high": 16000000,
@@ -12325,7 +12325,7 @@
   "DOM_SCRIPT_SOURCE_SIZE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "low": 64,
     "high": 16000000,
@@ -12336,7 +12336,7 @@
   "DOM_SCRIPT_BYTECODE_SIZE": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "low": 64,
     "high": 16000000,
@@ -12347,7 +12347,7 @@
   "DOM_SCRIPT_FETCH_COUNT": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "linear",
     "low": 1,
     "high": 100,
@@ -12358,7 +12358,7 @@
   "DOM_SCRIPT_MAIN_THREAD_PARSE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12368,7 +12368,7 @@
   "DOM_SCRIPT_MAIN_THREAD_PARSE_ENCODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12378,7 +12378,7 @@
   "DOM_SCRIPT_MAIN_THREAD_DECODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12388,7 +12388,7 @@
   "DOM_SCRIPT_OFF_THREAD_PARSE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12398,7 +12398,7 @@
   "DOM_SCRIPT_OFF_THREAD_PARSE_ENCODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12408,7 +12408,7 @@
   "DOM_SCRIPT_OFF_THREAD_DECODE_EXEC_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 100,
@@ -12418,7 +12418,7 @@
   "DOM_SCRIPT_ENCODING_MS_PER_DOCUMENT": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "linear",
     "high": 64,
     "n_buckets": 32,
@@ -12428,7 +12428,7 @@
   "DOM_SCRIPT_ENCODING_STATUS": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "categorical",
     "bug_numbers": [1362114],
     "labels": ["EncodingFailure", "BufferTooLarge", "OpenFailure", "WriteFailure", "CloseFailure", "EncodingSuccess"],
@@ -12437,7 +12437,7 @@
   "DOM_SCRIPT_EVAL_PER_DOCUMENT": {
     "record_in_processes": ["content"],
     "alert_emails": ["nicolas.b.pierron@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "62",
     "kind": "linear",
     "low": 1,
     "high": 200,
