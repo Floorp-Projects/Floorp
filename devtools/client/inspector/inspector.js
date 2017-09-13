@@ -23,6 +23,7 @@ const Store = require("devtools/client/inspector/store");
 loader.lazyRequireGetter(this, "initCssProperties", "devtools/shared/fronts/css-properties", true);
 loader.lazyRequireGetter(this, "HTMLBreadcrumbs", "devtools/client/inspector/breadcrumbs", true);
 loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
+loader.lazyRequireGetter(this, "GridInspector", "devtools/client/inspector/grids/grid-inspector");
 loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
 loader.lazyRequireGetter(this, "MarkupView", "devtools/client/inspector/markup/markup");
@@ -626,6 +627,10 @@ Inspector.prototype = {
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
+    // Grid and layout panels aren't lazy-loaded as their module end up
+    // calling inspector.addSidebarTab
+    this.gridInspector = new GridInspector(this, this.panelWin);
+
     // Inject a lazy loaded react tab by exposing a fake React object
     // with a lazy defined Tab thanks to `panel` being a function
     let layoutId = "layoutview";
@@ -1067,6 +1072,10 @@ Inspector.prototype = {
       panel.destroy();
     }
     this._panels.clear();
+
+    if (this.gridInspector) {
+      this.gridInspector.destroy();
+    }
 
     if (this.layoutview) {
       this.layoutview.destroy();
