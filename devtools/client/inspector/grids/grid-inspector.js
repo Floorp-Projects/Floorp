@@ -117,7 +117,11 @@ GridInspector.prototype = {
 
     this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
 
-    this.swatchColorPickerTooltip.destroy();
+    // The color picker may not be ready as `init` function is async,
+    // and we do not wait for its completion before calling destroy in tests
+    if (this.swatchColorPickerTooltip) {
+      this.swatchColorPickerTooltip.destroy();
+    }
 
     this.document = null;
     this.highlighters = null;
