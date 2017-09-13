@@ -72,17 +72,24 @@ module.exports = createClass({
   setFocusedButton(focusedButton) {
     const {buttonIds} = this.state;
 
-    this.setState({
-      focusedButton: focusedButton && buttonIds.includes(focusedButton)
+    focusedButton = focusedButton && buttonIds.includes(focusedButton)
         ? focusedButton
-        : buttonIds[0]
-    });
+        : buttonIds[0];
+    if (this.state.focusedButton !== focusedButton) {
+      this.setState({
+        focusedButton
+      });
+    }
   },
 
   setCurrentToolId(currentToolId) {
     this.setState({currentToolId});
     // Also set the currently focused button to this tool.
     this.setFocusedButton(currentToolId);
+  },
+
+  shouldComponentUpdate() {
+    return this.state.canRender;
   },
 
   setCanRender() {

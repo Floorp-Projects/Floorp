@@ -16,8 +16,8 @@ registerCleanupFunction(() => {
   asyncStorage.removeItem("devtools.devices.url_cache");
 });
 
-const mgr = "resource://devtools/client/responsivedesign/responsivedesign.jsm";
-const {ResponsiveUIManager} = Cu.import(mgr, {});
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsivedesign/responsivedesign");
+
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const responsiveModeToggleClass = ".media-responsive-mode-toggle";
 

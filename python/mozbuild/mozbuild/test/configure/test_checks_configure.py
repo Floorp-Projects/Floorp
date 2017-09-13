@@ -655,7 +655,7 @@ class TestChecksConfigure(unittest.TestCase):
              checking for keytool... %s
              checking for javac... %s
              checking for javac version... 
-             ERROR: javac 1.8 or higher is required (found 1.6.9)
+             ERROR: javac 1.8 or higher is required (found 1.6.9). Check the JAVA_HOME environment variable.
         ''' % (java, javah, jar, jarsigner, keytool, javac)))
 
         # Any missing tool is fatal when these checks run.

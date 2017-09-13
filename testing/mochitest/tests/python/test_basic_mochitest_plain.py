@@ -2,43 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import os
-import sys
+from functools import partial
 
 import mozunit
 import pytest
+from moztest.selftest.output import get_mozharness_status, filter_action
 
-from conftest import build, filter_action
-
-sys.path.insert(0, os.path.join(build.topsrcdir, 'testing', 'mozharness'))
 from mozharness.base.log import INFO, WARNING, ERROR
-from mozharness.base.errors import BaseErrorList
 from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
-from mozharness.mozilla.structuredlog import StructuredOutputParser
-from mozharness.mozilla.testing.errors import HarnessErrorList
+
 
 here = os.path.abspath(os.path.dirname(__file__))
-
-
-def get_mozharness_status(lines, status):
-    parser = StructuredOutputParser(
-        config={'log_level': INFO},
-        error_list=BaseErrorList+HarnessErrorList,
-        strict=False,
-        suite_category='mochitest',
-    )
-
-    # Processing the log with mozharness will re-print all the output to stdout
-    # Since this exact same output has already been printed by the actual test
-    # run, temporarily redirect stdout to devnull.
-    with open(os.devnull, 'w') as fh:
-        orig = sys.stdout
-        sys.stdout = fh
-        for line in lines:
-            parser.parse_single_line(json.dumps(line))
-        sys.stdout = orig
-    return parser.evaluate_parser(status)
+get_mozharness_status = partial(get_mozharness_status, 'mochitest')
 
 
 def test_output_pass(runtests):
