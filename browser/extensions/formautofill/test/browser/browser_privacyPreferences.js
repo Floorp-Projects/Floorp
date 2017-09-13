@@ -8,6 +8,7 @@ const PREF_AUTOFILL_ENABLED = "extensions.formautofill.addresses.enabled";
 const TEST_SELECTORS = {
   group: GROUP_AUTOFILL,
   checkbox: CHECKBOX_AUTOFILL,
+  addressAutofillLearnMore: "#addressAutofillLearnMore",
 };
 
 // Visibility of form autofill group should be hidden when opening
@@ -30,6 +31,8 @@ add_task(async function test_aboutPreferencesPrivacy() {
         "Form Autofill group should be visible");
       is(content.document.querySelector(args.checkbox).checked, true,
         "Checkbox should be checked");
+      ok(content.document.querySelector(args.addressAutofillLearnMore).href.includes("autofill-card-address"),
+         "Autofill addresses learn more link should contain autofill-card-address");
     });
   });
 });
