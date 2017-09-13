@@ -280,7 +280,7 @@ MOZ_BEGIN_EXTERN_C
 #include "malloc_decls.h"
 
 #define MALLOC_DECL(name, return_type, ...) \
-  return_type name ## _impl(__VA_ARGS__);
+  return_type name(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 
@@ -446,7 +446,7 @@ public:
       die("Malformed input");
     }
     jemalloc_stats_t stats;
-    ::jemalloc_stats_impl(&stats);
+    ::jemalloc_stats(&stats);
     FdPrintf(mStdErr,
              "#%zu mapped: %zu; allocated: %zu; waste: %zu; dirty: %zu; "
              "bookkeep: %zu; binunused: %zu\n", mOps, stats.mapped,
