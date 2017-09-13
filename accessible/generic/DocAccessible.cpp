@@ -1311,9 +1311,9 @@ DocAccessible::BindToDocument(Accessible* aAccessible,
 
   aAccessible->SetRoleMapEntry(aRoleMapEntry);
 
-  AddDependentIDsFor(aAccessible);
-
   if (aAccessible->HasOwnContent()) {
+    AddDependentIDsFor(aAccessible);
+
     nsIContent* el = aAccessible->GetContent();
     if (el->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_owns)) {
       mNotificationController->ScheduleRelocation(aAccessible);
@@ -1607,6 +1607,11 @@ DocAccessible::AddDependentIDsFor(Accessible* aRelProvider, nsIAtom* aRelAttr)
       if (id.IsEmpty())
         break;
 
+      nsIContent* dependentContent = iter.GetElem(id);
+      if (relAttr == nsGkAtoms::aria_owns &&
+          !aRelProvider->IsAcceptableChild(dependentContent))
+        continue;
+
       AttrRelProviderArray* providers = mDependentIDsHash.Get(id);
       if (!providers) {
         providers = new AttrRelProviderArray();
@@ -1625,7 +1630,6 @@ DocAccessible::AddDependentIDsFor(Accessible* aRelProvider, nsIAtom* aRelAttr)
           // content is not accessible then store it to pend its container
           // children invalidation (this happens immediately after the caching
           // is finished).
-          nsIContent* dependentContent = iter.GetElem(id);
           if (dependentContent) {
             if (!HasAccessible(dependentContent)) {
               mInvalidationList.AppendElement(dependentContent);
