@@ -1,0 +1,111 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test cache to create tons of fds</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="driver.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+  function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
+function clearStorage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var request = qms.clearStoragesForPrincipal(principal);
+    var cb = SpecialPowers.wrapCallback(resolve);
+    request.callback = cb;
+  });
+}
+
+async function testCreateTonsOfFD() {
+  const number_of_fd = 5120;
+  const name = 'cacheTonsOfFD';
+  const url = "foo.com"
+  const body = "This is a body";
+
+  info("Stage A: Cached a Request/Response pairs");
+  let cache = await caches.open(name);
+  let request = new Request(url);
+  let response = new Response(body);
+  await cache.put(request, response);
+
+  info("Stage B: Read the cached response mutliple times");
+  let promise_array = [];
+  for (let i = 0; i < number_of_fd; ++i) {
+    let promise = cache.match(request);
+    promise_array.push(promise);
+  }
+  let cached_response_array = [];
+  try {
+    cached_response_array = await Promise.all(promise_array);
+  } catch (e) {
+    throw("Fail to open tons of files with error: " + e);
+  }
+
+  if (cached_response_array.length != number_of_fd) {
+    throw("Fail to cache.match the cached responses");
+  }
+
+  info("Stage C: Consume the cached body")
+  for (let i = 0; i < number_of_fd; ++i) {
+    if (!cached_response_array[i]) {
+      // Reduce the checking message.
+      throw("The cached response doesn't exist");
+    }
+
+    let bodyText = "";
+    try {
+      bodyText = await cached_response_array[i].text();
+    } catch (e) {
+      throw("Fail to consume the cached response's body with error: " + e);
+    }
+
+    if (bodyText != body) {
+      // Reduce the checking message.
+      throw("The cached body doeen't be the same as original one");
+    }
+  }
+
+  ok(true, "Doesn't crash or timeout");
+  return Promise.resolve();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.caches.testing.enabled", true],
+          ["dom.quotaManager.testing", true]]
+}, async function() {
+  await setupTestIframe();
+
+  info("Stage 1: Clean storage.");
+  await clearStorage();
+
+  info("Stage 2: Verify open lots of files at the same time doesn't crash " +
+       "the browser");
+  try {
+    await testCreateTonsOfFD();
+  } catch (e) {
+    ok(false, e);
+  }
+
+  await SimpleTest.finish();
+});
+</script>
+</body>
+</html>
