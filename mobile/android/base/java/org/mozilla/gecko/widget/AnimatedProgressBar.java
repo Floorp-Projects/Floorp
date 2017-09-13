@@ -162,14 +162,14 @@ public class AnimatedProgressBar extends ThemedProgressBar {
         } else {
             canvas.getClipBounds(mRect);
             final float clipWidth = mRect.width() * mClipRatio;
-            canvas.save();
+            final int saveCount = canvas.save();
             if (mIsRtl) {
                 canvas.clipRect(mRect.left, mRect.top, mRect.right - clipWidth, mRect.bottom);
             } else {
                 canvas.clipRect(mRect.left + clipWidth, mRect.top, mRect.right, mRect.bottom);
             }
             super.onDraw(canvas);
-            canvas.restore();
+            canvas.restoreToCount(saveCount);
         }
     }
 
@@ -266,8 +266,11 @@ public class AnimatedProgressBar extends ThemedProgressBar {
         mClosingAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                mClipRatio = (float) valueAnimator.getAnimatedValue();
-                invalidate();
+                final float ratio = (float) valueAnimator.getAnimatedValue();
+                if (mClipRatio != ratio) {
+                    mClipRatio = ratio;
+                    invalidate();
+                }
             }
         });
         mClosingAnimator.addListener(new Animator.AnimatorListener() {
