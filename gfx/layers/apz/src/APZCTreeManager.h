@@ -527,12 +527,65 @@ private:
   AsyncPanZoomController* FindRootContentOrRootApzc() const;
   already_AddRefed<AsyncPanZoomController> GetMultitouchTarget(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
+  /**
+   * Perform hit testing for a touch-start event.
+   *
+   * @param aEvent The touch-start event.
+   *
+   * The remaining parameters are out-parameter used to communicate additional
+   * return values:
+   *
+   * @param aOutTouchBehaviors
+   *     The touch behaviours that should be allowed for this touch block.
+   * @param aOutHitResult The hit test result.
+   * @param aOutHitScrollbarNode
+   *     If the touch event contains a single touch point (so that it may
+   *     potentially start a scrollbar drag), and a scrollbar node was hit,
+   *     that scrollbar node, otherwise nullptr.
+   *
+   * @return The APZC that was hit.
+   */
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
                                                                   nsTArray<TouchBehaviorFlags>* aOutTouchBehaviors,
-                                                                  HitTestResult* aOutHitResult);
+                                                                  HitTestResult* aOutHitResult,
+                                                                  RefPtr<HitTestingTreeNode>* aOutHitScrollbarNode);
   nsEventStatus ProcessTouchInput(MultiTouchInput& aInput,
                                   ScrollableLayerGuid* aOutTargetGuid,
                                   uint64_t* aOutInputBlockId);
+  /**
+   * Given a mouse-down event that hit a scroll thumb node, set up APZ
+   * dragging of the scroll thumb.
+   *
+   * Must be called after the mouse event has been sent to InputQueue.
+   *
+   * @param aMouseInput The mouse-down event.
+   * @param aScrollThumbNode Tthe scroll thumb node that was hit.
+   * @param aApzc
+   *     The APZC for the scroll frame scrolled by the scroll thumb, if that
+   *     scroll frame is layerized. (A thumb can be layerized without its
+   *     target scroll frame being layerized.) Otherwise, an enclosing APZC.
+   */
+  void SetupScrollbarDrag(MouseInput& aMouseInput,
+                          const HitTestingTreeNode* aScrollThumbNode,
+                          AsyncPanZoomController* aApzc);
+  /**
+   * Process a touch event that's part of a scrollbar touch-drag gesture.
+   *
+   * @param aInput The touch event.
+   * @param aScrollThumbNode
+   *     If this is the touch-start event, the node representing the scroll
+   *     thumb we are starting to drag. Otherwise nullptr.
+   * @param aOutTargetGuid
+   *     The guid of the APZC for the scroll frame whose scroll thumb is
+   *     being dragged.
+   * @param aOutInputBlockId
+   *     The ID of the input block for the touch-drag gesture.
+   * @return See ReceiveInputEvent() for what the return value means.
+   */
+  nsEventStatus ProcessTouchInputForScrollbarDrag(MultiTouchInput& aInput,
+                                                  const HitTestingTreeNode* aScrollThumbNode,
+                                                  ScrollableLayerGuid* aOutTargetGuid,
+                                                  uint64_t* aOutInputBlockId);
   void FlushRepaintsToClearScreenToGeckoTransform();
 
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
@@ -598,6 +651,13 @@ private:
    * this is set to -1.
    */
   int32_t mRetainedTouchIdentifier;
+  /* This tracks whether the current input block represents a touch-drag of
+   * a scrollbar. In this state, touch events are forwarded to content as touch
+   * events, but converted to mouse events before going into InputQueue and
+   * being handled by an APZC (to reuse the APZ code for scrollbar dragging
+   * with a mouse).
+   */
+  bool mInScrollbarTouchDrag;
   /* Tracks the number of touch points we are tracking that are currently on
    * the screen. */
   TouchCounter mTouchCounter;

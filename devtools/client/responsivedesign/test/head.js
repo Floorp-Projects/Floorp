@@ -27,7 +27,7 @@ registerCleanupFunction(() => {
 
 SimpleTest.requestCompleteLog();
 
-const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsivedesign/responsivedesign");
 
 /**
  * Open the Responsive Design Mode

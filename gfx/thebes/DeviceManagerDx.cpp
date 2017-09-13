@@ -395,6 +395,7 @@ DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11)
   }
 
   uint32_t featureLevel = device->GetFeatureLevel();
+  bool useNV12 = D3D11Checks::DoesNV12Work(device);
   {
     MutexAutoLock lock(mDeviceLock);
     mCompositorDevice = device;
@@ -405,7 +406,8 @@ DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11)
       textureSharingWorks,
       featureLevel,
       DxgiAdapterDesc::From(desc),
-      sequenceNumber));
+      sequenceNumber,
+      useNV12));
   }
   mCompositorDevice->SetExceptionMode(0);
 }
@@ -501,6 +503,8 @@ DeviceManagerDx::CreateWARPCompositorDevice()
   PodZero(&nullAdapter);
 
   int featureLevel = device->GetFeatureLevel();
+
+  bool useNV12 = D3D11Checks::DoesNV12Work(device);
   {
     MutexAutoLock lock(mDeviceLock);
     mCompositorDevice = device;
@@ -511,7 +515,8 @@ DeviceManagerDx::CreateWARPCompositorDevice()
       textureSharingWorks,
       featureLevel,
       nullAdapter,
-      sequenceNumber));
+      sequenceNumber,
+      useNV12));
   }
   mCompositorDevice->SetExceptionMode(0);
 
@@ -999,6 +1004,16 @@ DeviceManagerDx::IsWARP()
     return false;
   }
   return mDeviceStatus->isWARP();
+}
+
+bool
+DeviceManagerDx::CanUseNV12()
+{
+  MutexAutoLock lock(mDeviceLock);
+  if (!mDeviceStatus) {
+    return false;
+  }
+  return mDeviceStatus->useNV12();
 }
 
 void
