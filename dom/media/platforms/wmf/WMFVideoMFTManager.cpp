@@ -99,6 +99,38 @@ extern const GUID CLSID_WebmMfVpxDec =
 
 namespace mozilla {
 
+static bool
+IsWin7H264Decoder4KCapable()
+{
+  WCHAR systemPath[MAX_PATH + 1];
+  if (!ConstructSystem32Path(L"msmpeg2vdec.dll", systemPath, MAX_PATH + 1)) {
+    // Cannot build path -> Assume it's the old DLL or it's missing.
+    return false;
+  }
+
+  DWORD zero;
+  DWORD infoSize = GetFileVersionInfoSizeW(systemPath, &zero);
+  if (infoSize == 0) {
+    // Can't get file info -> Assume it's the old DLL or it's missing.
+    return false;
+  }
+  auto infoData = MakeUnique<unsigned char[]>(infoSize);
+  VS_FIXEDFILEINFO *vInfo;
+  UINT vInfoLen;
+  if (GetFileVersionInfoW(systemPath, 0, infoSize, infoData.get()) &&
+    VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen))
+  {
+    uint64_t version =
+      uint64_t(vInfo->dwFileVersionMS) << 32 | uint64_t(vInfo->dwFileVersionLS);
+    // 12.0.9200.16426 & later allow for >1920x1088 resolutions.
+    const uint64_t minimum =
+      (uint64_t(12) << 48) | (uint64_t(9200) << 16) | uint64_t(16426);
+    return version >= minimum;
+  }
+  // Can't get file version -> Assume it's the old DLL.
+  return false;
+}
+
 template<class T>
 class DeleteObjectTask: public Runnable {
 public:
@@ -526,12 +558,21 @@ WMFVideoMFTManager::InitializeDXVA()
 MediaResult
 WMFVideoMFTManager::ValidateVideoInfo()
 {
+  if (mStreamType != H264 ||
+      gfxPrefs::PDMWMFAllowUnsupportedResolutions()) {
+    return NS_OK;
+  }
+
   // The WMF H.264 decoder is documented to have a minimum resolution
   // 48x48 pixels. We've observed the decoder working for output smaller than
   // that, but on some output it hangs in IMFTransform::ProcessOutput(), so
   // we just reject streams which are less than the documented minimum.
   // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
+  const bool Is4KCapable = IsWin8OrLater() || IsWin7H264Decoder4KCapable();
   static const int32_t MIN_H264_FRAME_DIMENSION = 48;
+  static const int32_t MAX_H264_FRAME_WIDTH = Is4KCapable ? 4096 : 1920;
+  static const int32_t MAX_H264_FRAME_HEIGHT = Is4KCapable ? 2304 : 1088;
+
   if (mStreamType == H264 &&
       (mVideoInfo.mImage.width < MIN_H264_FRAME_DIMENSION ||
        mVideoInfo.mImage.height < MIN_H264_FRAME_DIMENSION)) {
@@ -541,7 +582,15 @@ WMFVideoMFTManager::ValidateVideoInfo()
                                      "height less than 48 pixels."));
   }
 
-  return MediaResult(NS_OK);
+  if (mVideoInfo.mImage.width > MAX_H264_FRAME_WIDTH  ||
+      mVideoInfo.mImage.height > MAX_H264_FRAME_HEIGHT) {
+    mIsValid = false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Can't decode H.264 stream because its "
+                                     "resolution is out of the maximum limitation"));
+  }
+
+  return NS_OK;
 
 }
 
