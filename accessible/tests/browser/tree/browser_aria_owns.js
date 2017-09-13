@@ -86,7 +86,7 @@ addAccessibleTask(`
   }
 );
 
-// Correctly aria-own children of <select>
+// Don't aria-own children of <select>
 addAccessibleTask(`
   <div id="container" role="group" aria-owns="b"></div>
   <select id="select">
@@ -97,20 +97,64 @@ addAccessibleTask(`
     let containerAcc = findAccessibleChildByID(accDoc, "container");
     let selectAcc = findAccessibleChildByID(accDoc, "select");
 
-    testChildrenIds(containerAcc, ["b"]);
-    testChildrenIds(selectAcc.firstChild, ["a"]);
-
-    let waitfor = { expected: [
-      [EVENT_REORDER, "container"],
-      [EVENT_REORDER,
-        evt => getAccessibleDOMNodeID(evt.accessible.parent) == "select"]] };
-
-    await contentSpawnMutation(browser, waitfor, function() {
-      document.getElementById("container").removeAttribute("aria-owns");
-    });
-
     testChildrenIds(containerAcc, []);
     testChildrenIds(selectAcc.firstChild, ["a", "b"]);
+  }
+);
+
+// Don't allow <select> to aria-own
+addAccessibleTask(`
+  <div id="container" role="group">
+    <div id="a"></div>
+    <div id="b"></div>
+  </div>
+  <select id="select" aria-owns="a">
+    <option id="c"></option>
+  </select>`,
+  async function(browser, accDoc) {
+    let containerAcc = findAccessibleChildByID(accDoc, "container");
+    let selectAcc = findAccessibleChildByID(accDoc, "select");
+
+    testChildrenIds(containerAcc, ["a", "b"]);
+    testChildrenIds(selectAcc.firstChild, ["c"]);
+  }
+);
+
+// Don't allow one <select> to aria-own an <option> from another <select>.
+addAccessibleTask(`
+  <select id="select1" aria-owns="c">
+    <option id="a"></option>
+    <option id="b"></option>
+  </select>
+  <select id="select2">
+    <option id="c"></option>
+  </select>`,
+  async function(browser, accDoc) {
+    let selectAcc1 = findAccessibleChildByID(accDoc, "select1");
+    let selectAcc2 = findAccessibleChildByID(accDoc, "select2");
+
+    testChildrenIds(selectAcc1.firstChild, ["a", "b"]);
+    testChildrenIds(selectAcc2.firstChild, ["c"]);
+  }
+);
+
+// Don't allow a <select> to reorder its children with aria-owns.
+addAccessibleTask(`
+  <select id="container" aria-owns="c b a">
+    <option id="a"></option>
+    <option id="b"></option>
+    <option id="c"></option>
+  </select>`,
+  async function(browser, accDoc) {
+    let containerAcc = findAccessibleChildByID(accDoc, "container");
+
+    testChildrenIds(containerAcc.firstChild, ["a", "b", "c"]);
+
+    await contentSpawnMutation(browser, NO_MOVE, function() {
+      document.getElementById("container").setAttribute("aria-owns", "a c b");
+    });
+
+    testChildrenIds(containerAcc.firstChild, ["a", "b", "c"]);
   }
 );
 
