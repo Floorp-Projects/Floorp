@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 79] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 80] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -146,6 +146,10 @@ lazy_static! {
 
         // Disable intalling any distribution extensions or add-ons
         ("extensions.installDistroAddons", Pref::new(false)),
+
+        // Make sure Shield doesn't hit the network.
+        ("extensions.shield-recipe-client.api_url", Pref::new(""),
+
         ("extensions.showMismatchUI", Pref::new(false)),
 
         // Turn off extension updates so they do not bother tests
