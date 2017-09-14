@@ -583,7 +583,7 @@ pref("browser.gesture.pinch.threshold", 150);
 pref("browser.gesture.pinch.latched", false);
 pref("browser.gesture.pinch.threshold", 25);
 #endif
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 // Enabled for touch input display zoom.
 pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
 pref("browser.gesture.pinch.in", "cmd_fullZoomReduce");
@@ -1275,7 +1275,7 @@ pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/
 // activates Activity Stream
 pref("browser.newtabpage.activity-stream.enabled", true);
 pref("browser.newtabpage.activity-stream.prerender", true);
-pref("browser.newtabpage.activity-stream.aboutHome.enabled", false);
+pref("browser.newtabpage.activity-stream.aboutHome.enabled", true);
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);

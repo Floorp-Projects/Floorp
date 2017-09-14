@@ -1224,8 +1224,10 @@ function extensionNameFromURI(uri) {
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
-  // WeakMap<Extension -> Map<url-string -> object>>
-  iconCache: new DefaultWeakMap(() => new DefaultMap(() => new Map())),
+  // WeakMap<Extension -> Map<url-string -> Map<iconType-string -> object>>>
+  iconCache: new DefaultWeakMap(() => {
+    return new DefaultMap(() => new DefaultMap(() => new Map()));
+  }),
 
   // Normalizes the various acceptable input formats into an object
   // with icon size as key and icon URL as value.
@@ -1246,7 +1248,8 @@ let IconDetails = {
       }
 
       let icons = this.iconCache.get(extension)
-                      .get(context && context.uri.spec);
+                      .get(context && context.uri.spec)
+                      .get(details.iconType);
 
       let icon = icons.get(key);
       if (!icon) {

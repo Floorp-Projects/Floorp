@@ -177,14 +177,15 @@ public:
   }
 #endif
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override {
+                           bool* aSnap) const override
+  {
     *aSnap = false;
     nsRect shadowRect =
       nsLayoutUtils::GetTextShadowRectsUnion(mRect, mFrame);
     return mRect.Union(shadowRect);
   }
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override
   {
     if (gfxPlatform::GetPlatform()->RespectsFontStyleSmoothing()) {
       // On OS X, web authors can turn off subpixel text rendering using the
@@ -201,7 +202,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
 
-  virtual uint32_t GetPerFrameKey() override {
+  virtual uint32_t GetPerFrameKey() const override {
     return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
   }
   void PaintTextToContext(gfxContext* aCtx,

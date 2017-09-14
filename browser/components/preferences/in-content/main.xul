@@ -348,6 +348,13 @@
           hidden="true">
   <caption><label>&homepage2.label;</label></caption>
 
+  <hbox id="browserHomePageExtensionContent" align="center">
+    <description control="disableHomePageExtension" flex="1" />
+    <button id="disableHomePageExtension"
+            class="extension-controlled-button accessory-button"
+            label="&disableExtension.label;" />
+  </hbox>
+
   <vbox>
     <textbox id="browserHomePage"
              class="uri-element"
@@ -572,7 +579,7 @@
                 icon="select-color"
                 label="&colors.label;"
                 accesskey="&colors.accesskey;"
-                searchkeywords="&overrideDefaultPageColors.label;
+                searchkeywords="&overrideDefaultPageColors2.label;
                                 &overrideDefaultPageColors.always.label;
                                 &overrideDefaultPageColors.auto.label;
                                 &overrideDefaultPageColors.never.label;

@@ -108,8 +108,8 @@ function ensureType(type) {
   }
 }
 
-// Return an object with properties for key and value|initialValue, or null
-// if no setting has been stored for that key.
+// Return an object with properties for key, value|initialValue, id|null, or
+// null if no setting has been stored for that key.
 function getTopItem(type, key) {
   ensureType(type);
 
@@ -121,7 +121,7 @@ function getTopItem(type, key) {
   // Find the highest precedence, enabled setting.
   for (let item of keyInfo.precedenceList) {
     if (item.enabled) {
-      return {key, value: item.value};
+      return {key, value: item.value, id: item.id};
     }
   }
 
@@ -291,7 +291,7 @@ this.ExtensionSettingsStore = {
 
     // Check whether this is currently the top item.
     if (keyInfo.precedenceList[0].id == id) {
-      return {key, value};
+      return {id, key, value};
     }
     return null;
   },
@@ -450,6 +450,16 @@ this.ExtensionSettingsStore = {
     return topItem.installDate > addon.installDate.valueOf() ?
       "controlled_by_other_extensions" :
       "controllable_by_this_extension";
+  },
+
+  // Return the id of the controlling extension or null if no extension is
+  // controlling this setting.
+  getTopExtensionId(type, key) {
+    let item = getTopItem(type, key);
+    if (item) {
+      return item.id;
+    }
+    return null;
   },
 
   /**

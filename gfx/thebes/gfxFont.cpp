@@ -2006,6 +2006,7 @@ gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
     gfxFloat& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
     gfxTextRun::Range markRange(aParams.mark);
     gfxTextRun::DrawParams params(aParams.context);
+    params.textDrawer = aParams.textDrawer;
 
     gfxFloat clusterStart = -std::numeric_limits<gfxFloat>::infinity();
     bool shouldDrawEmphasisMark = false;

@@ -5426,9 +5426,9 @@ pref("browser.safebrowsing.debug", false);
 // Allow users to ignore Safe Browsing warnings.
 pref("browser.safebrowsing.allowOverride", true);
 
+// These names are approved by the Google Safe Browsing team.
+// Any changes must be coordinated with them.
 #ifdef MOZILLA_OFFICIAL
-// Normally the "client ID" sent in updates is appinfo.name, but for
-// official Firefox releases from Mozilla we use a special identifier.
 pref("browser.safebrowsing.id", "navclient-auto-ffox");
 #else
 pref("browser.safebrowsing.id", "Firefox");

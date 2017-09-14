@@ -100,7 +100,7 @@ public:
   nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion *aInvalidRegion) override;
+                                 nsRegion *aInvalidRegion) const override;
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override {
     aOutFrames->AppendElement(mFrame);
@@ -117,10 +117,9 @@ nsDisplayXULGroupBorder::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 }
 
 void
-nsDisplayXULGroupBorder::ComputeInvalidationRegion(
-  nsDisplayListBuilder* aBuilder,
-  const nsDisplayItemGeometry* aGeometry,
-  nsRegion* aInvalidRegion)
+nsDisplayXULGroupBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                                   const nsDisplayItemGeometry* aGeometry,
+                                                   nsRegion* aInvalidRegion) const
 {
   auto geometry =
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);

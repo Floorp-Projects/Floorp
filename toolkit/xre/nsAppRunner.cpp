@@ -570,6 +570,50 @@ CheckArg(const char* aArg, bool aCheckOSInt = false, const char **aParam = nullp
   return ar;
 }
 
+/**
+ * Check for a commandline flag. Ignore data that's passed in with the flag.
+ * Flags may be in the form -arg or --arg (or /arg on win32).
+ * Will not remove flag if found.
+ *
+ * @param aArg the parameter to check. Must be lowercase.
+ */
+static ArgResult
+CheckArgExists(const char* aArg)
+{
+  char **curarg = gArgv + 1; // skip argv[0]
+  while (*curarg) {
+    char *arg = curarg[0];
+
+    if (arg[0] == '-'
+#if defined(XP_WIN)
+        || *arg == '/'
+#endif
+        ) {
+      ++arg;
+      if (*arg == '-')
+        ++arg;
+
+      char delimiter = '=';
+#if defined(XP_WIN)
+      delimiter = ':';
+#endif
+      int i;
+      for (i = 0; arg[i] && arg[i] != delimiter; i++) {}
+      char tmp = arg[i];
+      arg[i] = '\0';
+      bool found = strimatch(aArg, arg);
+      arg[i] = tmp;
+      if (found) {
+        return ARG_FOUND;
+      }
+    }
+
+    ++curarg;
+  }
+
+  return ARG_NONE;
+}
+
 #if defined(XP_WIN)
 /**
  * Check for a commandline flag from the windows shell and remove it from the
@@ -3180,7 +3224,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     printf_stderr("*** You are running in chaos test mode. See ChaosMode.h. ***\n");
   }
 
-  if (CheckArg("headless")) {
+  if (CheckArg("headless") || CheckArgExists("screenshot")) {
     PR_SetEnv("MOZ_HEADLESS=1");
   }
 

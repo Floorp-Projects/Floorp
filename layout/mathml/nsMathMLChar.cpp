@@ -1867,7 +1867,9 @@ public:
   }
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override {
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override
+  {
     *aSnap = false;
     nsRect rect;
     mChar->GetRect(rect);
@@ -1889,13 +1891,13 @@ public:
 
   NS_DISPLAY_DECL_NAME("MathMLCharForeground", TYPE_MATHML_CHAR_FOREGROUND)
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override
   {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
 
-  virtual uint32_t GetPerFrameKey() override {
+  virtual uint32_t GetPerFrameKey() const override {
     return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
   }
 
