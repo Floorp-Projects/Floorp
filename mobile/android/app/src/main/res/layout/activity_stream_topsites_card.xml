@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="top|start"
             android:layout_margin="3dp"
-            android:src="@drawable/topsite_pin"
+            android:src="@drawable/as_pin_with_background"
             android:visibility="gone"
             android:importantForAccessibility="no"/>
 
