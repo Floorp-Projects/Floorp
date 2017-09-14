@@ -27,7 +27,10 @@ function waitForCondition(condition, nextTest, errorMsg) {
 function getAnonElementWithinVideoByAttribute(video, aName, aValue) {
   const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
     getService(SpecialPowers.Ci.inIDOMUtils);
-  const videoControl = domUtils.getChildrenForNode(video, true)[1];
+  // <videocontrols> is the second anonymous child node of <video>, but
+  // the first child node of <audio>.
+  const videoControlIndex = video.nodeName == "VIDEO" ? 1 : 0;
+  const videoControl = domUtils.getChildrenForNode(video, true)[videoControlIndex];
 
   return SpecialPowers.wrap(videoControl.ownerDocument)
     .getAnonymousElementByAttribute(videoControl, aName, aValue);
