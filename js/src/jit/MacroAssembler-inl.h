@@ -126,8 +126,22 @@ MacroAssembler::passABIArg(FloatRegister reg, MoveOp::Type type)
     passABIArg(MoveOperand(reg), type);
 }
 
-template <typename T> void
-MacroAssembler::callWithABI(const T& fun, MoveOp::Type result)
+void
+MacroAssembler::callWithABI(void* fun, MoveOp::Type result, CheckUnsafeCallWithABI check)
+{
+    AutoProfilerCallInstrumentation profiler(*this);
+    callWithABINoProfiler(fun, result, check);
+}
+
+void
+MacroAssembler::callWithABI(Register fun, MoveOp::Type result)
+{
+    AutoProfilerCallInstrumentation profiler(*this);
+    callWithABINoProfiler(fun, result);
+}
+
+void
+MacroAssembler::callWithABI(const Address& fun, MoveOp::Type result)
 {
     AutoProfilerCallInstrumentation profiler(*this);
     callWithABINoProfiler(fun, result);
