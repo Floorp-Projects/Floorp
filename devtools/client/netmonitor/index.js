@@ -17,6 +17,7 @@ const EventEmitter = require("devtools-modules/src/utils/event-emitter");
 const { Services: { appinfo, pref }} = require("devtools-modules");
 
 // Initialize preferences as early as possible
+pref("devtools.theme", "light");
 pref("devtools.cache.disabled", false);
 pref("devtools.netmonitor.enabled", true);
 pref("devtools.netmonitor.filters", "[\"all\"]");

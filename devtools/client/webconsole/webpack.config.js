@@ -43,7 +43,7 @@ let webpackConfig = {
   resolveLoader: {
     modules: [
       path.resolve("./node_modules"),
-      path.resolve("./webpack"),
+      path.resolve("../shared/webpack"),
     ]
   },
 
