@@ -10,13 +10,6 @@ var FormAssistant = {
   // Weak-ref used to keep track of the currently focused element.
   _currentFocusedElement: null,
 
-  // Used to keep track of the element that corresponds to the current
-  // autocomplete suggestions.
-  _currentInputElement: null,
-
-  // The value of the currently focused input.
-  _currentInputValue: null,
-
   // Whether we're in the middle of an autocomplete.
   _doingAutocomplete: false,
 
@@ -24,22 +17,10 @@ var FormAssistant = {
     Services.obs.addObserver(this, "PanZoom:StateChange");
   },
 
-  register: function(aWindow) {
-    GeckoViewUtils.getDispatcherForWindow(aWindow).registerListener(this, [
-      "FormAssist:AutoComplete",
-      "FormAssist:Hidden",
-      "FormAssist:Remove",
-    ]);
-  },
-
-  onEvent: function(event, message, callback) {
-    switch (event) {
-      case "FormAssist:AutoComplete": {
-        if (!this._currentInputElement) {
-          break;
-        }
-        let editableElement = this._currentInputElement.QueryInterface(
-            Ci.nsIDOMNSEditableElement);
+  _onPopupResponse: function(currentElement, message) {
+    switch (message.action) {
+      case "autocomplete": {
+        let editableElement = currentElement.QueryInterface(Ci.nsIDOMNSEditableElement);
         this._doingAutocomplete = true;
 
         // If we have an active composition string, commit it before sending
@@ -51,29 +32,19 @@ var FormAssistant = {
         } catch (e) {}
 
         editableElement.setUserInput(message.value);
-        this._currentInputValue = message.value;
 
-        let event = this._currentInputElement.ownerDocument.createEvent("Events");
+        let event = currentElement.ownerDocument.createEvent("Events");
         event.initEvent("DOMAutoComplete", true, true);
-        this._currentInputElement.dispatchEvent(event);
+        currentElement.dispatchEvent(event);
 
         this._doingAutocomplete = false;
         break;
       }
 
-      case "FormAssist:Hidden": {
-        this._currentInputElement = null;
-        break;
-      }
-
-      case "FormAssist:Remove": {
-        if (!this._currentInputElement) {
-          break;
-        }
-
+      case "remove": {
         FormHistory.update({
           op: "remove",
-          fieldname: this._currentInputElement.name,
+          fieldname: currentElement.name,
           value: message.value,
         });
         break;
@@ -136,7 +107,6 @@ var FormAssistant = {
       }
 
       case "blur": {
-        this._currentInputValue = null;
         this._currentFocusedElement = null;
         break;
       }
@@ -168,13 +138,9 @@ var FormAssistant = {
         // If this element isn't focused, we're already in middle of an
         // autocomplete, or its value hasn't changed, don't show the
         // autocomplete popup.
-        if (currentElement !== focused ||
-            this._doingAutocomplete ||
-            currentElement.value === this._currentInputValue) {
+        if (currentElement !== focused || this._doingAutocomplete) {
           break;
         }
-
-        this._currentInputValue = currentElement.value;
 
         // Since we can only show one popup at a time, prioritze autocomplete
         // suggestions over a form validation message
@@ -295,11 +261,11 @@ var FormAssistant = {
         suggestions: suggestions,
         rect: this._getBoundingContentRect(aElement),
         isEmpty: isEmpty,
+      }, {
+        onSuccess: response => this._onPopupResponse(aElement, response),
+        onError: error => Cu.reportError(error),
       });
 
-      // Keep track of input element so we can fill it in if the user
-      // selects an autocomplete suggestion
-      this._currentInputElement = aElement;
       aCallback(true);
     };
 
