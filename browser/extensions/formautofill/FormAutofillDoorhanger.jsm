@@ -112,7 +112,7 @@ const CONTENT = {
       accessKey: "D",
       callbackState: "cancel",
     }, {
-      label: GetStringFromName("disableCreditCardLabel"),
+      label: GetStringFromName("neverSaveCreditCardLabel"),
       accessKey: "N",
       callbackState: "disable",
     }],

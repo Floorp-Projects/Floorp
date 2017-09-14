@@ -61,13 +61,21 @@ class ParentDevToolsPanel {
     this.id = this.panelOptions.id;
 
     this.onToolboxPanelSelect = this.onToolboxPanelSelect.bind(this);
+    this.onToolboxHostWillChange = this.onToolboxHostWillChange.bind(this);
+    this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
 
-    this.panelAdded = false;
-    this.addPanel();
-
+    this.unwatchExtensionProxyContextLoad = null;
     this.waitTopLevelContext = new Promise(resolve => {
       this._resolveTopLevelContext = resolve;
     });
+
+    // References to the panel browser XUL element and the toolbox window global which
+    // contains the devtools panel UI.
+    this.browser = null;
+    this.browserContainerWindow = null;
+
+    this.panelAdded = false;
+    this.addPanel();
   }
 
   addPanel() {
@@ -88,7 +96,7 @@ class ParentDevToolsPanel {
           throw new Error("Unexpected toolbox received on addAdditionalTool build property");
         }
 
-        const destroy = this.buildPanel(window, toolbox);
+        const destroy = this.buildPanel(window);
 
         return {toolbox, destroy};
       },
@@ -97,7 +105,114 @@ class ParentDevToolsPanel {
     this.panelAdded = true;
   }
 
-  buildPanel(window, toolbox) {
+  buildPanel(window) {
+    const {toolbox} = this;
+
+    this.createBrowserElement(window);
+
+    // Store the last panel's container element (used to restore it when the toolbox
+    // host is switched between docked and undocked).
+    this.browserContainerWindow = window;
+
+    toolbox.on("select", this.onToolboxPanelSelect);
+    toolbox.on("host-will-change", this.onToolboxHostWillChange);
+    toolbox.on("host-changed", this.onToolboxHostChanged);
+
+    // Return a cleanup method that is when the panel is destroyed, e.g.
+    // - when addon devtool panel has been disabled by the user from the toolbox preferences,
+    //   its ParentDevToolsPanel instance is still valid, but the built devtools panel is removed from
+    //   the toolbox (and re-built again if the user re-enables it from the toolbox preferences panel)
+    // - when the creator context has been destroyed, the ParentDevToolsPanel close method is called,
+    //   it removes the tool definition from the toolbox, which will call this destroy method.
+    return () => {
+      this.destroyBrowserElement();
+      this.browserContainerWindow = null;
+      toolbox.off("select", this.onToolboxPanelSelect);
+      toolbox.off("host-will-change", this.onToolboxHostWillChange);
+      toolbox.off("host-changed", this.onToolboxHostChanged);
+    };
+  }
+
+  onToolboxHostWillChange() {
+    // NOTE: Using a content iframe here breaks the devtools panel
+    // switching between docked and undocked mode,
+    // because of a swapFrameLoader exception (see bug 1075490),
+    // destroy the browser and recreate it after the toolbox host has been
+    // switched is a reasonable workaround to fix the issue on release and beta
+    // Firefox versions (at least until the underlying bug can be fixed).
+    if (this.browser) {
+      // Fires a panel.onHidden event before destroying the browser element because
+      // the toolbox hosts is changing.
+      if (this.visible) {
+        this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelHidden", {
+          toolboxPanelId: this.id,
+        });
+      }
+
+      this.destroyBrowserElement();
+    }
+  }
+
+  async onToolboxHostChanged() {
+    if (this.browserContainerWindow) {
+      this.createBrowserElement(this.browserContainerWindow);
+
+      // Fires a panel.onShown event once the browser element has been recreated
+      // after the toolbox hosts has been changed (needed to provide the new window
+      // object to the extension page that has created the devtools panel).
+      if (this.visible) {
+        await this.waitTopLevelContext;
+
+        this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelShown", {
+          toolboxPanelId: this.id,
+        });
+      }
+    }
+  }
+
+  async onToolboxPanelSelect(what, id) {
+    if (!this.waitTopLevelContext || !this.panelAdded) {
+      return;
+    }
+
+    // Wait that the panel is fully loaded and emit show.
+    await this.waitTopLevelContext;
+
+    if (!this.visible && id === this.id) {
+      this.visible = true;
+    } else if (this.visible && id !== this.id) {
+      this.visible = false;
+    }
+
+    const extensionMessage = `Extension:DevToolsPanel${this.visible ? "Shown" : "Hidden"}`;
+    this.context.parentMessageManager.sendAsyncMessage(extensionMessage, {
+      toolboxPanelId: this.id,
+    });
+  }
+
+  close() {
+    const {toolbox} = this;
+
+    if (!toolbox) {
+      throw new Error("Unable to destroy a closed devtools panel");
+    }
+
+    // Explicitly remove the panel if it is registered and the toolbox is not
+    // closing itself.
+    if (this.panelAdded && toolbox.isToolRegistered(this.id)) {
+      toolbox.removeAdditionalTool(this.id);
+    }
+
+    this.waitTopLevelContext = null;
+    this._resolveTopLevelContext = null;
+    this.context = null;
+    this.toolbox = null;
+    this.browser = null;
+    this.browserContainerWindow = null;
+  }
+
+  createBrowserElement(window) {
+    const {toolbox} = this;
     const {url} = this.panelOptions;
     const {document} = window;
 
@@ -119,18 +234,12 @@ class ParentDevToolsPanel {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
-    } else if (!AppConstants.RELEASE_OR_BETA) {
-      // NOTE: Using a content iframe here breaks the devtools panel
-      // switching between docked and undocked mode,
-      // because of a swapFrameLoader exception (see bug 1075490).
-      browser.setAttribute("type", "chrome");
-      browser.setAttribute("forcemessagemanager", true);
     }
 
     let hasTopLevelContext = false;
 
     // Listening to new proxy contexts.
-    const unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
+    this.unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
       // Keep track of the toolbox and target associated to the context, which is
       // needed by the API methods implementation.
       context.devToolsToolbox = toolbox;
@@ -154,65 +263,26 @@ class ParentDevToolsPanel {
     });
 
     browser.loadURI(url);
+  }
 
-    toolbox.on("select", this.onToolboxPanelSelect);
-
-    // Return a cleanup method that is when the panel is destroyed, e.g.
-    // - when addon devtool panel has been disabled by the user from the toolbox preferences,
-    //   its ParentDevToolsPanel instance is still valid, but the built devtools panel is removed from
-    //   the toolbox (and re-built again if the user re-enable it from the toolbox preferences panel)
-    // - when the creator context has been destroyed, the ParentDevToolsPanel close method is called,
-    //   it remove the tool definition from the toolbox, which will call this destroy method.
-    return () => {
+  destroyBrowserElement() {
+    const {browser, unwatchExtensionProxyContextLoad} = this;
+    if (unwatchExtensionProxyContextLoad) {
+      this.unwatchExtensionProxyContextLoad = null;
       unwatchExtensionProxyContextLoad();
+    }
+
+    if (browser) {
       browser.remove();
-      toolbox.off("select", this.onToolboxPanelSelect);
-
-      // If the panel has been disabled from the toolbox preferences,
-      // we need to re-initialize the waitTopLevelContext Promise.
-      this.waitTopLevelContext = new Promise(resolve => {
-        this._resolveTopLevelContext = resolve;
-      });
-    };
-  }
-
-  onToolboxPanelSelect(what, id) {
-    if (!this.waitTopLevelContext || !this.panelAdded) {
-      return;
-    }
-    if (!this.visible && id === this.id) {
-      // Wait that the panel is fully loaded and emit show.
-      this.waitTopLevelContext.then(() => {
-        this.visible = true;
-        this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelShown", {
-          toolboxPanelId: this.id,
-        });
-      });
-    } else if (this.visible && id !== this.id) {
-      this.visible = false;
-      this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsPanelHidden", {
-        toolboxPanelId: this.id,
-      });
-    }
-  }
-
-  close() {
-    const {toolbox} = this;
-
-    if (!toolbox) {
-      throw new Error("Unable to destroy a closed devtools panel");
+      this.browser = null;
     }
 
-    // Explicitly remove the panel if it is registered and the toolbox is not
-    // closing itself.
-    if (this.panelAdded && toolbox.isToolRegistered(this.id) && !toolbox._destroyer) {
-      toolbox.removeAdditionalTool(this.id);
-    }
-
-    this.context = null;
-    this.toolbox = null;
-    this.waitTopLevelContext = null;
-    this._resolveTopLevelContext = null;
+    // If the panel has been removed or disabled (e.g. from the toolbox preferences
+    // or during the toolbox switching between docked and undocked),
+    // we need to re-initialize the waitTopLevelContext Promise.
+    this.waitTopLevelContext = new Promise(resolve => {
+      this._resolveTopLevelContext = resolve;
+    });
   }
 }
 

@@ -164,10 +164,6 @@
 #define	SIZE_T_MAX SIZE_MAX
 #define	STDERR_FILENO 2
 
-#ifndef NO_TLS
-static unsigned long tlsIndex = 0xffffffff;
-#endif
-
 /* use MSVC intrinsics */
 #pragma intrinsic(_BitScanForward)
 static __forceinline int
@@ -252,6 +248,7 @@ typedef long ssize_t;
 
 #endif
 
+#include "mozilla/ThreadLocal.h"
 #include "mozjemalloc_types.h"
 
 /* Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
@@ -305,10 +302,6 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 #endif
 
-#ifdef XP_DARWIN
-static pthread_key_t tlsIndex;
-#endif
-
 #ifdef XP_WIN
    /* MSVC++ does not support C99 variable-length arrays. */
 #  define RB_NO_C99_VARARRAYS
@@ -334,18 +327,12 @@ static pthread_key_t tlsIndex;
 #else
 #  define SIZEOF_PTR_2POW       2
 #endif
-#define PIC
 
 #define	SIZEOF_PTR		(1U << SIZEOF_PTR_2POW)
 
 /* sizeof(int) == (1U << SIZEOF_INT_2POW). */
 #ifndef SIZEOF_INT_2POW
 #  define SIZEOF_INT_2POW	2
-#endif
-
-/* We can't use TLS in non-PIC programs, since TLS relies on loader magic. */
-#if (!defined(PIC) && !defined(NO_TLS))
-#  define NO_TLS
 #endif
 
 /*
@@ -746,6 +733,10 @@ struct arena_t {
 	 * memory is mapped for each arena.
 	 */
 	size_t			ndirty;
+	/*
+	 * Maximum value allowed for ndirty.
+	 */
+	size_t			dirty_max;
 
 	/*
 	 * Size/address-ordered tree of this arena's available runs.  This tree
@@ -969,11 +960,17 @@ static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
 
 #ifndef NO_TLS
 /*
- * Map of pthread_self() --> arenas[???], used for selecting an arena to use
- * for allocations.
+ * The arena associated with the current thread (per jemalloc_thread_local_arena)
+ * On OSX, __thread/thread_local circles back calling malloc to allocate storage
+ * on first access on each thread, which leads to an infinite loop, but
+ * pthread-based TLS somehow doesn't have this problem.
+ * On Windows, we use Tls{Get,Set}Value-based TLS for historical reasons.
+ * TODO: we may want to use native TLS instead.
  */
 #if !defined(XP_WIN) && !defined(XP_DARWIN)
-static __thread arena_t	*arenas_map;
+static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
+#else
+static mozilla::detail::ThreadLocal<arena_t*, mozilla::detail::ThreadLocalKeyStorage> thread_arena;
 #endif
 #endif
 
@@ -2257,30 +2254,23 @@ static inline arena_t *
 thread_local_arena(bool enabled)
 {
 #ifndef NO_TLS
-	arena_t *arena;
+  arena_t *arena;
 
-	if (enabled) {
-		/* The arena will essentially be leaked if this function is
-		 * called with `false`, but it doesn't matter at the moment.
-		 * because in practice nothing actually calls this function
-		 * with `false`, except maybe at shutdown. */
-		arena = arenas_extend();
-	} else {
-		malloc_spin_lock(&arenas_lock);
-		arena = arenas[0];
-		malloc_spin_unlock(&arenas_lock);
-	}
-#ifdef XP_WIN
-	TlsSetValue(tlsIndex, arena);
-#elif defined(XP_DARWIN)
-	pthread_setspecific(tlsIndex, arena);
+  if (enabled) {
+    /* The arena will essentially be leaked if this function is
+     * called with `false`, but it doesn't matter at the moment.
+     * because in practice nothing actually calls this function
+     * with `false`, except maybe at shutdown. */
+    arena = arenas_extend();
+  } else {
+    malloc_spin_lock(&arenas_lock);
+    arena = arenas[0];
+    malloc_spin_unlock(&arenas_lock);
+  }
+  thread_arena.set(arena);
+  return arena;
 #else
-	arenas_map = arena;
-#endif
-
-	return arena;
-#else
-	return arenas[0];
+  return arenas[0];
 #endif
 }
 
@@ -2294,33 +2284,29 @@ MozJemalloc::jemalloc_thread_local_arena(bool aEnabled)
  * Choose an arena based on a per-thread value.
  */
 static inline arena_t *
-choose_arena(void)
+choose_arena(size_t size)
 {
-	arena_t *ret;
+  arena_t *ret = nullptr;
 
-	/*
-	 * We can only use TLS if this is a PIC library, since for the static
-	 * library version, libc's malloc is used by TLS allocation, which
-	 * introduces a bootstrapping issue.
-	 */
+  /*
+   * We can only use TLS if this is a PIC library, since for the static
+   * library version, libc's malloc is used by TLS allocation, which
+   * introduces a bootstrapping issue.
+   */
 #ifndef NO_TLS
+  // Only use a thread local arena for small sizes.
+  if (size <= small_max) {
+    ret = thread_arena.get();
+  }
 
-#  ifdef XP_WIN
-	ret = (arena_t*)TlsGetValue(tlsIndex);
-#  elif defined(XP_DARWIN)
-	ret = (arena_t*)pthread_getspecific(tlsIndex);
-#  else
-	ret = arenas_map;
-#  endif
-
-	if (!ret) {
-                ret = thread_local_arena(false);
-	}
+  if (!ret) {
+    ret = thread_local_arena(false);
+  }
 #else
-	ret = arenas[0];
+  ret = arenas[0];
 #endif
-	MOZ_DIAGNOSTIC_ASSERT(ret);
-	return (ret);
+  MOZ_DIAGNOSTIC_ASSERT(ret);
+  return (ret);
 }
 
 static inline int
@@ -2817,7 +2803,7 @@ arena_purge(arena_t *arena, bool all)
 	arena_chunk_t *chunk;
 	size_t i, npages;
 	/* If all is set purge all dirty pages. */
-	size_t dirty_max = all ? 1 : opt_dirty_max;
+	size_t dirty_max = all ? 1 : arena->dirty_max;
 #ifdef MOZ_DEBUG
 	size_t ndirty = 0;
 	rb_foreach_begin(arena_chunk_t, link_dirty, &arena->chunks_dirty,
@@ -2826,7 +2812,7 @@ arena_purge(arena_t *arena, bool all)
 	} rb_foreach_end(arena_chunk_t, link_dirty, &arena->chunks_dirty, chunk)
 	MOZ_ASSERT(ndirty == arena->ndirty);
 #endif
-	MOZ_DIAGNOSTIC_ASSERT(all || (arena->ndirty > opt_dirty_max));
+	MOZ_DIAGNOSTIC_ASSERT(all || (arena->ndirty > arena->dirty_max));
 
 	/*
 	 * Iterate downward through chunks until enough dirty memory has been
@@ -3006,8 +2992,8 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 	    CHUNK_MAP_ALLOCATED)) == arena_maxclass)
 		arena_chunk_dealloc(arena, chunk);
 
-	/* Enforce opt_dirty_max. */
-	if (arena->ndirty > opt_dirty_max)
+	/* Enforce dirty_max. */
+	if (arena->ndirty > arena->dirty_max)
 		arena_purge(arena, false);
 }
 
@@ -3324,7 +3310,7 @@ imalloc(size_t size)
 	MOZ_ASSERT(size != 0);
 
 	if (size <= arena_maxclass)
-		return (arena_malloc(choose_arena(), size, false));
+		return (arena_malloc(choose_arena(size), size, false));
 	else
 		return (huge_malloc(size, false));
 }
@@ -3334,7 +3320,7 @@ icalloc(size_t size)
 {
 
 	if (size <= arena_maxclass)
-		return (arena_malloc(choose_arena(), size, true));
+		return (arena_malloc(choose_arena(size), size, true));
 	else
 		return (huge_malloc(size, true));
 }
@@ -3429,7 +3415,7 @@ ipalloc(size_t alignment, size_t size)
 
 	if (ceil_size <= pagesize || (alignment <= pagesize
 	    && ceil_size <= arena_maxclass))
-		ret = arena_malloc(choose_arena(), ceil_size, false);
+		ret = arena_malloc(choose_arena(size), ceil_size, false);
 	else {
 		size_t run_size;
 
@@ -3476,7 +3462,7 @@ ipalloc(size_t alignment, size_t size)
 		}
 
 		if (run_size <= arena_maxclass) {
-			ret = arena_palloc(choose_arena(), alignment, ceil_size,
+			ret = arena_palloc(choose_arena(size), alignment, ceil_size,
 			    run_size);
 		} else if (alignment <= chunksize)
 			ret = huge_malloc(ceil_size, false);
@@ -3988,7 +3974,7 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 	 * need to move the object.  In that case, fall back to allocating new
 	 * space and copying.
 	 */
-	ret = arena_malloc(choose_arena(), size, false);
+	ret = arena_malloc(choose_arena(size), size, false);
 	if (!ret)
 		return nullptr;
 
@@ -4046,6 +4032,9 @@ arena_new(arena_t *arena)
 	arena->spare = nullptr;
 
 	arena->ndirty = 0;
+	// Reduce the maximum amount of dirty pages we allow to be kept on
+	// thread local arenas. TODO: make this more flexible.
+	arena->dirty_max = opt_dirty_max >> 3;
 
 	arena_avail_tree_new(&arena->runs_avail);
 
@@ -4422,257 +4411,255 @@ static
 bool
 malloc_init_hard(void)
 {
-	unsigned i;
-	const char *opts;
-	long result;
+  unsigned i;
+  const char *opts;
+  long result;
 
 #ifndef XP_WIN
-	malloc_mutex_lock(&init_lock);
+  malloc_mutex_lock(&init_lock);
 #endif
 
-	if (malloc_initialized) {
-		/*
-		 * Another thread initialized the allocator before this one
-		 * acquired init_lock.
-		 */
+  if (malloc_initialized) {
+    /*
+     * Another thread initialized the allocator before this one
+     * acquired init_lock.
+     */
 #ifndef XP_WIN
-		malloc_mutex_unlock(&init_lock);
+    malloc_mutex_unlock(&init_lock);
 #endif
-		return (false);
-	}
+    return false;
+  }
 
-#ifdef XP_WIN
-	/* get a thread local storage index */
-	tlsIndex = TlsAlloc();
-#elif defined(XP_DARWIN)
-	pthread_key_create(&tlsIndex, nullptr);
-#endif
-
-	/* Get page size and number of CPUs */
-	result = GetKernelPageSize();
-	/* We assume that the page size is a power of 2. */
-	MOZ_ASSERT(((result - 1) & result) == 0);
-#ifdef MALLOC_STATIC_SIZES
-	if (pagesize % (size_t) result) {
-		_malloc_message(_getprogname(),
-				"Compile-time page size does not divide the runtime one.\n");
-		MOZ_CRASH();
-	}
-#else
-	pagesize = (size_t) result;
-	pagesize_mask = (size_t) result - 1;
-	pagesize_2pow = ffs((int)result) - 1;
-#endif
-
-	/* Get runtime configuration. */
-	if ((opts = getenv("MALLOC_OPTIONS"))) {
-		for (i = 0; opts[i] != '\0'; i++) {
-			unsigned j, nreps;
-			bool nseen;
-
-			/* Parse repetition count, if any. */
-			for (nreps = 0, nseen = false;; i++, nseen = true) {
-				switch (opts[i]) {
-					case '0': case '1': case '2': case '3':
-					case '4': case '5': case '6': case '7':
-					case '8': case '9':
-						nreps *= 10;
-						nreps += opts[i] - '0';
-						break;
-					default:
-						goto MALLOC_OUT;
-				}
-			}
-MALLOC_OUT:
-			if (nseen == false)
-				nreps = 1;
-
-			for (j = 0; j < nreps; j++) {
-				switch (opts[i]) {
-				case 'f':
-					opt_dirty_max >>= 1;
-					break;
-				case 'F':
-					if (opt_dirty_max == 0)
-						opt_dirty_max = 1;
-					else if ((opt_dirty_max << 1) != 0)
-						opt_dirty_max <<= 1;
-					break;
-#ifdef MOZ_DEBUG
-				case 'j':
-					opt_junk = false;
-					break;
-				case 'J':
-					opt_junk = true;
-					break;
-#endif
-#ifndef MALLOC_STATIC_SIZES
-				case 'k':
-					/*
-					 * Chunks always require at least one
-					 * header page, so chunks can never be
-					 * smaller than two pages.
-					 */
-					if (opt_chunk_2pow > pagesize_2pow + 1)
-						opt_chunk_2pow--;
-					break;
-				case 'K':
-					if (opt_chunk_2pow + 1 <
-					    (sizeof(size_t) << 3))
-						opt_chunk_2pow++;
-					break;
-#endif
-#ifndef MALLOC_STATIC_SIZES
-				case 'q':
-					if (opt_quantum_2pow > QUANTUM_2POW_MIN)
-						opt_quantum_2pow--;
-					break;
-				case 'Q':
-					if (opt_quantum_2pow < pagesize_2pow -
-					    1)
-						opt_quantum_2pow++;
-					break;
-				case 's':
-					if (opt_small_max_2pow >
-					    QUANTUM_2POW_MIN)
-						opt_small_max_2pow--;
-					break;
-				case 'S':
-					if (opt_small_max_2pow < pagesize_2pow
-					    - 1)
-						opt_small_max_2pow++;
-					break;
-#endif
-#ifdef MOZ_DEBUG
-				case 'z':
-					opt_zero = false;
-					break;
-				case 'Z':
-					opt_zero = true;
-					break;
-#endif
-				default: {
-					char cbuf[2];
-
-					cbuf[0] = opts[i];
-					cbuf[1] = '\0';
-					_malloc_message(_getprogname(),
-					    ": (malloc) Unsupported character "
-					    "in malloc options: '", cbuf,
-					    "'\n");
-				}
-				}
-			}
-		}
-	}
-
-#ifndef MALLOC_STATIC_SIZES
-	/* Set variables according to the value of opt_small_max_2pow. */
-	if (opt_small_max_2pow < opt_quantum_2pow)
-		opt_small_max_2pow = opt_quantum_2pow;
-	small_max = (1U << opt_small_max_2pow);
-
-	/* Set bin-related variables. */
-	bin_maxclass = (pagesize >> 1);
-	MOZ_ASSERT(opt_quantum_2pow >= TINY_MIN_2POW);
-	ntbins = opt_quantum_2pow - TINY_MIN_2POW;
-	MOZ_ASSERT(ntbins <= opt_quantum_2pow);
-	nqbins = (small_max >> opt_quantum_2pow);
-	nsbins = pagesize_2pow - opt_small_max_2pow - 1;
-
-	/* Set variables according to the value of opt_quantum_2pow. */
-	quantum = (1U << opt_quantum_2pow);
-	quantum_mask = quantum - 1;
-	if (ntbins > 0)
-		small_min = (quantum >> 1) + 1;
-	else
-		small_min = 1;
-	MOZ_ASSERT(small_min <= quantum);
-
-	/* Set variables according to the value of opt_chunk_2pow. */
-	chunksize = (1LU << opt_chunk_2pow);
-	chunksize_mask = chunksize - 1;
-	chunk_npages = (chunksize >> pagesize_2pow);
-
-	arena_chunk_header_npages = calculate_arena_header_pages();
-	arena_maxclass = calculate_arena_maxclass();
-
-	recycle_limit = CHUNK_RECYCLE_LIMIT * chunksize;
-#endif
-
-	recycled_size = 0;
-
-	/* Various sanity checks that regard configuration. */
-	MOZ_ASSERT(quantum >= sizeof(void *));
-	MOZ_ASSERT(quantum <= pagesize);
-	MOZ_ASSERT(chunksize >= pagesize);
-	MOZ_ASSERT(quantum * 4 <= chunksize);
-
-	/* Initialize chunks data. */
-	malloc_mutex_init(&chunks_mtx);
-	extent_tree_szad_new(&chunks_szad_mmap);
-	extent_tree_ad_new(&chunks_ad_mmap);
-
-	/* Initialize huge allocation data. */
-	malloc_mutex_init(&huge_mtx);
-	extent_tree_ad_new(&huge);
-	huge_nmalloc = 0;
-	huge_ndalloc = 0;
-	huge_allocated = 0;
-	huge_mapped = 0;
-
-	/* Initialize base allocation data structures. */
-	base_mapped = 0;
-	base_committed = 0;
-	base_nodes = nullptr;
-	malloc_mutex_init(&base_mtx);
-
-	malloc_spin_init(&arenas_lock);
-
-	/*
-	 * Initialize one arena here.
-	 */
-	arenas_extend();
-	if (!arenas || !arenas[0]) {
-#ifndef XP_WIN
-		malloc_mutex_unlock(&init_lock);
-#endif
-		return (true);
-	}
 #ifndef NO_TLS
-	/*
-	 * Assign the initial arena to the initial thread, in order to avoid
-	 * spurious creation of an extra arena if the application switches to
-	 * threaded mode.
-	 */
-#ifdef XP_WIN
-	TlsSetValue(tlsIndex, arenas[0]);
-#elif defined(XP_DARWIN)
-	pthread_setspecific(tlsIndex, arenas[0]);
+  if (!thread_arena.init()) {
+    return false;
+  }
+#endif
+
+  /* Get page size and number of CPUs */
+  result = GetKernelPageSize();
+  /* We assume that the page size is a power of 2. */
+  MOZ_ASSERT(((result - 1) & result) == 0);
+#ifdef MALLOC_STATIC_SIZES
+  if (pagesize % (size_t) result) {
+    _malloc_message(_getprogname(),
+        "Compile-time page size does not divide the runtime one.\n");
+    MOZ_CRASH();
+  }
 #else
-	arenas_map = arenas[0];
-#endif
+  pagesize = (size_t) result;
+  pagesize_mask = (size_t) result - 1;
+  pagesize_2pow = ffs((int)result) - 1;
 #endif
 
-	chunk_rtree = malloc_rtree_new((SIZEOF_PTR << 3) - opt_chunk_2pow);
-	if (!chunk_rtree)
-		return (true);
+  /* Get runtime configuration. */
+  if ((opts = getenv("MALLOC_OPTIONS"))) {
+    for (i = 0; opts[i] != '\0'; i++) {
+      unsigned j, nreps;
+      bool nseen;
 
-	malloc_initialized = true;
+      /* Parse repetition count, if any. */
+      for (nreps = 0, nseen = false;; i++, nseen = true) {
+        switch (opts[i]) {
+          case '0': case '1': case '2': case '3':
+          case '4': case '5': case '6': case '7':
+          case '8': case '9':
+            nreps *= 10;
+            nreps += opts[i] - '0';
+            break;
+          default:
+            goto MALLOC_OUT;
+        }
+      }
+MALLOC_OUT:
+      if (nseen == false)
+        nreps = 1;
+
+      for (j = 0; j < nreps; j++) {
+        switch (opts[i]) {
+        case 'f':
+          opt_dirty_max >>= 1;
+          break;
+        case 'F':
+          if (opt_dirty_max == 0)
+            opt_dirty_max = 1;
+          else if ((opt_dirty_max << 1) != 0)
+            opt_dirty_max <<= 1;
+          break;
+#ifdef MOZ_DEBUG
+        case 'j':
+          opt_junk = false;
+          break;
+        case 'J':
+          opt_junk = true;
+          break;
+#endif
+#ifndef MALLOC_STATIC_SIZES
+        case 'k':
+          /*
+           * Chunks always require at least one
+           * header page, so chunks can never be
+           * smaller than two pages.
+           */
+          if (opt_chunk_2pow > pagesize_2pow + 1)
+            opt_chunk_2pow--;
+          break;
+        case 'K':
+          if (opt_chunk_2pow + 1 <
+              (sizeof(size_t) << 3))
+            opt_chunk_2pow++;
+          break;
+#endif
+#ifndef MALLOC_STATIC_SIZES
+        case 'q':
+          if (opt_quantum_2pow > QUANTUM_2POW_MIN)
+            opt_quantum_2pow--;
+          break;
+        case 'Q':
+          if (opt_quantum_2pow < pagesize_2pow -
+              1)
+            opt_quantum_2pow++;
+          break;
+        case 's':
+          if (opt_small_max_2pow >
+              QUANTUM_2POW_MIN)
+            opt_small_max_2pow--;
+          break;
+        case 'S':
+          if (opt_small_max_2pow < pagesize_2pow
+              - 1)
+            opt_small_max_2pow++;
+          break;
+#endif
+#ifdef MOZ_DEBUG
+        case 'z':
+          opt_zero = false;
+          break;
+        case 'Z':
+          opt_zero = true;
+          break;
+#endif
+        default: {
+          char cbuf[2];
+
+          cbuf[0] = opts[i];
+          cbuf[1] = '\0';
+          _malloc_message(_getprogname(),
+              ": (malloc) Unsupported character "
+              "in malloc options: '", cbuf,
+              "'\n");
+        }
+        }
+      }
+    }
+  }
+
+#ifndef MALLOC_STATIC_SIZES
+  /* Set variables according to the value of opt_small_max_2pow. */
+  if (opt_small_max_2pow < opt_quantum_2pow) {
+    opt_small_max_2pow = opt_quantum_2pow;
+  }
+  small_max = (1U << opt_small_max_2pow);
+
+  /* Set bin-related variables. */
+  bin_maxclass = (pagesize >> 1);
+  MOZ_ASSERT(opt_quantum_2pow >= TINY_MIN_2POW);
+  ntbins = opt_quantum_2pow - TINY_MIN_2POW;
+  MOZ_ASSERT(ntbins <= opt_quantum_2pow);
+  nqbins = (small_max >> opt_quantum_2pow);
+  nsbins = pagesize_2pow - opt_small_max_2pow - 1;
+
+  /* Set variables according to the value of opt_quantum_2pow. */
+  quantum = (1U << opt_quantum_2pow);
+  quantum_mask = quantum - 1;
+  if (ntbins > 0) {
+    small_min = (quantum >> 1) + 1;
+  } else {
+    small_min = 1;
+  }
+  MOZ_ASSERT(small_min <= quantum);
+
+  /* Set variables according to the value of opt_chunk_2pow. */
+  chunksize = (1LU << opt_chunk_2pow);
+  chunksize_mask = chunksize - 1;
+  chunk_npages = (chunksize >> pagesize_2pow);
+
+  arena_chunk_header_npages = calculate_arena_header_pages();
+  arena_maxclass = calculate_arena_maxclass();
+
+  recycle_limit = CHUNK_RECYCLE_LIMIT * chunksize;
+#endif
+
+  recycled_size = 0;
+
+  /* Various sanity checks that regard configuration. */
+  MOZ_ASSERT(quantum >= sizeof(void *));
+  MOZ_ASSERT(quantum <= pagesize);
+  MOZ_ASSERT(chunksize >= pagesize);
+  MOZ_ASSERT(quantum * 4 <= chunksize);
+
+  /* Initialize chunks data. */
+  malloc_mutex_init(&chunks_mtx);
+  extent_tree_szad_new(&chunks_szad_mmap);
+  extent_tree_ad_new(&chunks_ad_mmap);
+
+  /* Initialize huge allocation data. */
+  malloc_mutex_init(&huge_mtx);
+  extent_tree_ad_new(&huge);
+  huge_nmalloc = 0;
+  huge_ndalloc = 0;
+  huge_allocated = 0;
+  huge_mapped = 0;
+
+  /* Initialize base allocation data structures. */
+  base_mapped = 0;
+  base_committed = 0;
+  base_nodes = nullptr;
+  malloc_mutex_init(&base_mtx);
+
+  malloc_spin_init(&arenas_lock);
+
+  /*
+   * Initialize one arena here.
+   */
+  arenas_extend();
+  if (!arenas || !arenas[0]) {
+#ifndef XP_WIN
+    malloc_mutex_unlock(&init_lock);
+#endif
+    return true;
+  }
+  /* arena_new() sets this to a lower value for thread local arenas;
+   * reset to the default value for the main arenas */
+  arenas[0]->dirty_max = opt_dirty_max;
+
+#ifndef NO_TLS
+  /*
+   * Assign the initial arena to the initial thread.
+   */
+  thread_arena.set(arenas[0]);
+#endif
+
+  chunk_rtree = malloc_rtree_new((SIZEOF_PTR << 3) - opt_chunk_2pow);
+  if (!chunk_rtree) {
+    return true;
+  }
+
+  malloc_initialized = true;
 
 #if !defined(XP_WIN) && !defined(XP_DARWIN)
-	/* Prevent potential deadlock on malloc locks after fork. */
-	pthread_atfork(_malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
+  /* Prevent potential deadlock on malloc locks after fork. */
+  pthread_atfork(_malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
 #endif
 
 #if defined(XP_DARWIN)
-	register_zone();
+  register_zone();
 #endif
 
 #ifndef XP_WIN
-	malloc_mutex_unlock(&init_lock);
+  malloc_mutex_unlock(&init_lock);
 #endif
-	return (false);
+  return false;
 }
 
 /*

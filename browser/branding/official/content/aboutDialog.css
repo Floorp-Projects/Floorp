@@ -2,15 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#aboutDialogContainer {
+  background-color: #202340;
+  color: #fff;
+}
+
 #clientBox {
-  background-color: #F7F7F7;
-  color: #222222;
+  padding: 10px 0 15px;
 }
 
 #leftBox {
   background-image: url("chrome://branding/content/about-logo.png");
   background-repeat: no-repeat;
   background-size: 192px auto;
+  background-position: center 20%;
   /* min-width and min-height create room for the logo */
   min-width: 210px;
   min-height: 210px;
@@ -25,13 +30,23 @@
   }
 }
 
+.text-link {
+  color: #fff !important;
+  text-decoration: underline;
+}
+
+.text-link:-moz-focusring {
+  border-color: #fff;
+}
+
 #rightBox {
   margin-left: 30px;
   margin-right: 30px;
 }
 
-#updateDeck > hbox > label:not([class="text-link"]) {
-  color: #909090;
+#bottomBox {
+  background-color: hsla(235, 43%, 10%, .5);
+  padding: 15px 10px 15px;
 }
 
 #trademark {

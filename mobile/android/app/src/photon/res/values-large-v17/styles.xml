@@ -63,6 +63,11 @@
         <item name="android:layout_toEndOf">@id/forward</item>
     </style>
 
+    <style name="UrlBar.EditLayout.Title" parent="UrlBar.V17.EditLayout.Title"/>
+    <style name="UrlBar.V17.EditLayout.Title" parent="UrlBar.Title">
+        <item name="android:paddingEnd">8dp</item>
+    </style>
+
     <style name="UrlBar.DisplayLayout" parent="UrlBar.V17.DisplayLayout" />
 
     <style name="UrlBar.V17.DisplayLayout" parent="UrlBar.Base.DisplayLayout">

@@ -309,3 +309,127 @@ add_task(async function test_devtools_page_panels_create() {
 
   await BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_devtools_page_panels_switch_toolbox_host() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+
+  function devtools_panel() {
+    const hasDevToolsAPINamespace = "devtools" in browser;
+
+    browser.test.sendMessage("devtools_panel_loaded", {
+      hasDevToolsAPINamespace,
+      panelLoadedURL: window.location.href,
+    });
+  }
+
+  async function devtools_page() {
+    const panel = await browser.devtools.panels.create(
+      "Test Panel", "fake-icon.png", "devtools_panel.html"
+    );
+
+    panel.onShown.addListener(panelWindow => {
+      browser.test.sendMessage("devtools_panel_shown", panelWindow.location.href);
+    });
+
+    panel.onHidden.addListener(() => {
+      browser.test.sendMessage("devtools_panel_hidden");
+    });
+
+    browser.test.sendMessage("devtools_panel_created");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      devtools_page: "devtools_page.html",
+    },
+    files: {
+      "devtools_page.html": `<!DOCTYPE html>
+      <html>
+       <head>
+         <meta charset="utf-8">
+       </head>
+       <body>
+         <script src="devtools_page.js"></script>
+       </body>
+      </html>`,
+      "devtools_page.js": devtools_page,
+      "devtools_panel.html":  `<!DOCTYPE html>
+      <html>
+       <head>
+         <meta charset="utf-8">
+       </head>
+       <body>
+         DEVTOOLS PANEL
+         <script src="devtools_panel.js"></script>
+       </body>
+      </html>`,
+      "devtools_panel.js": devtools_panel,
+    },
+  });
+
+  await extension.startup();
+
+
+  let target = gDevTools.getTargetForTab(tab);
+
+  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  info("developer toolbox opened");
+
+  await extension.awaitMessage("devtools_panel_created");
+
+  const toolboxAdditionalTools = toolbox.getAdditionalTools();
+
+  is(toolboxAdditionalTools.length, 1,
+     "Got the expected number of toolbox specific panel registered.");
+
+  const panelDef = toolboxAdditionalTools[0];
+  const panelId = panelDef.id;
+
+  info("Selecting the addon devtools panel");
+  await gDevTools.showToolbox(target, panelId);
+
+  info("Wait for the panel to show and load for the first time");
+  const panelShownURL = await extension.awaitMessage("devtools_panel_shown");
+
+  const {
+    panelLoadedURL,
+    hasDevToolsAPINamespace,
+  } = await extension.awaitMessage("devtools_panel_loaded");
+
+  is(panelShownURL, panelLoadedURL, "Got the expected panel URL on the first load");
+  ok(hasDevToolsAPINamespace, "The devtools panel has the devtools API on the first load");
+
+  const originalToolboxHostType = toolbox.hostType;
+
+  info("Switch the toolbox from docked on bottom to docked on side");
+  toolbox.switchHost("side");
+
+  info("Wait for the panel to emit hide, show and load messages once docked on side");
+  await extension.awaitMessage("devtools_panel_hidden");
+  const dockedOnSideShownURL = await extension.awaitMessage("devtools_panel_shown");
+
+  is(dockedOnSideShownURL, panelShownURL,
+     "Got the expected panel url once the panel shown event has been emitted on toolbox host changed");
+
+  const dockedOnSideLoaded = await extension.awaitMessage("devtools_panel_loaded");
+
+  is(dockedOnSideLoaded.panelLoadedURL, panelShownURL,
+     "Got the expected panel url once the panel has been reloaded on toolbox host changed");
+  ok(dockedOnSideLoaded.hasDevToolsAPINamespace,
+     "The devtools panel has the devtools API once the toolbox host has been changed");
+
+  info("Switch the toolbox from docked on bottom to the original dock mode");
+  toolbox.switchHost(originalToolboxHostType);
+
+  info("Wait for the panel test messages once toolbox dock mode has been restored");
+  await extension.awaitMessage("devtools_panel_hidden");
+  await extension.awaitMessage("devtools_panel_shown");
+  await extension.awaitMessage("devtools_panel_loaded");
+
+  await gDevTools.closeToolbox(target);
+  await target.destroy();
+
+  await extension.unload();
+
+  await BrowserTestUtils.removeTab(tab);
+});

@@ -4,6 +4,7 @@ version = "0.18.0"
 authors = [
   "James Graham <james@hoppipolla.co.uk>",
   "Andreas Tolfsen <ato@sny.no>",
+  "Henrik Skupin <mail@hskupin.info"
 ]
 description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
 keywords = ["webdriver", "w3c", "httpd", "mozilla", "firefox"]
