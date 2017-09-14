@@ -7,19 +7,20 @@
 /*
  * Util base class to help test a captured canvas element. Initializes the
  * output canvas (used for testing the color of video elements), and optionally
- * overrides the default element |width| and |height|.
+ * overrides the default `createAndAppendElement` element |width| and |height|.
  */
 function CaptureStreamTestHelper(width, height) {
-  this.cout = document.createElement('canvas');
   if (width) {
     this.elemWidth = width;
   }
   if (height) {
     this.elemHeight = height;
   }
-  this.cout.width = this.elemWidth;
-  this.cout.height = this.elemHeight;
-  document.body.appendChild(this.cout);
+
+  /* cout is used for `getPixel`; only needs to be big enough for one pixel */
+  this.cout = document.createElement('canvas');
+  this.cout.width = 1;
+  this.cout.height = 1;
 }
 
 CaptureStreamTestHelper.prototype = {
@@ -58,21 +59,23 @@ CaptureStreamTestHelper.prototype = {
 
   /*
    * Returns the pixel at (|offsetX|, |offsetY|) (from top left corner) of
-   * |video| as an array of the pixel's color channels: [R,G,B,A].  Allows
-   * optional scaling of the drawImage() call (so that a 1x1 black image
-   * won't just draw 1 pixel in the corner)
+   * |video| as an array of the pixel's color channels: [R,G,B,A].
    */
-  getPixel: function (video, offsetX = 0, offsetY = 0, width = 0, height = 0) {
+  getPixel: function (video, offsetX = 0, offsetY = 0) {
     // Avoids old values in case of a transparent image.
     CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
 
     var ctxout = this.cout.getContext('2d');
-    if (width != 0 || height != 0) {
-      ctxout.drawImage(video, 0, 0, width, height);
-    } else {
-      ctxout.drawImage(video, 0, 0);
-    }
-    return ctxout.getImageData(offsetX, offsetY, 1, 1).data;
+    ctxout.drawImage(video,
+      offsetX, // source x coordinate
+      offsetY, // source y coordinate
+      1,       // source width
+      1,       // source height
+      0,       // destination x coordinate
+      0,       // destination y coordinate
+      1,       // destination width
+      1);      // destination height
+    return ctxout.getImageData(0, 0, 1, 1).data;
   },
 
   /*
