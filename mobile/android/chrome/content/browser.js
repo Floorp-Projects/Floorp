@@ -212,9 +212,6 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
 
 // Lazily-loaded JS subscripts and modules that use global/window EventDispatcher.
 [
-  ["ActionBarHandler", WindowEventDispatcher,
-   ["TextSelection:Get", "TextSelection:Action", "TextSelection:End"],
-   "chrome://browser/content/ActionBarHandler.js"],
   ["EmbedRT", WindowEventDispatcher,
    ["GeckoView:ImportScript"],
    "chrome://browser/content/EmbedRT.js"],
@@ -544,17 +541,11 @@ var BrowserApp = {
 
       InitLater(() => LightWeightThemeWebInstaller.init());
       InitLater(() => CastingApps.init(), window, "CastingApps");
-      InitLater(() => Services.search.init(), Services, "search");
 
       // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
       InitLater(() => SafeBrowsing.init(), window, "SafeBrowsing");
 
     }, {once: true});
-
-    // Pass caret StateChanged events to ActionBarHandler.
-    window.addEventListener("mozcaretstatechanged", e => {
-      ActionBarHandler.caretStateChangedHandler(e);
-    }, /* useCapture = */ true, /* wantsUntrusted = */ false);
   },
 
   get _startupStatus() {

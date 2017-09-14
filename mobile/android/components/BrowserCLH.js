@@ -9,6 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   DelayedInit: "resource://gre/modules/DelayedInit.jsm",
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -46,8 +47,8 @@ BrowserCLH.prototype = {
       case "app-startup": {
         this.setResourceSubstitutions();
 
-        Services.obs.addObserver(this, "chrome-document-global-created");
-        Services.obs.addObserver(this, "content-document-global-created");
+        Services.obs.addObserver(this, "chrome-document-interactive");
+        Services.obs.addObserver(this, "content-document-interactive");
 
         GeckoViewUtils.addLazyGetter(this, "DownloadNotifications", {
           module: "resource://gre/modules/DownloadNotifications.jsm",
@@ -105,22 +106,29 @@ BrowserCLH.prototype = {
           module: "resource://gre/modules/LoginManagerContent.jsm",
         });
 
+        GeckoViewUtils.addLazyGetter(this, "ActionBarHandler", {
+          script: "chrome://browser/content/ActionBarHandler.js",
+        });
+
         // Once the first chrome window is loaded, schedule a list of startup
         // tasks to be performed on idle.
         GeckoViewUtils.addLazyGetter(this, "DelayedStartup", {
           observers: ["chrome-document-loaded"],
           once: true,
           handler: _ => DelayedInit.scheduleList([
+            _ => Services.search.init(),
             _ => Services.logins,
           ], 10000 /* 10 seconds maximum wait. */),
         });
         break;
       }
 
-      case "chrome-document-global-created":
-      case "content-document-global-created": {
-        let win = GeckoViewUtils.getChromeWindow(subject);
-        if (win !== subject) {
+      case "chrome-document-interactive":
+      case "content-document-interactive": {
+        let contentWin = subject.QueryInterface(Ci.nsIDOMDocument).defaultView;
+        let win = GeckoViewUtils.getChromeWindow(contentWin);
+        let dispatcher = GeckoViewUtils.getDispatcherForWindow(win);
+        if (!win || !dispatcher || win !== contentWin) {
           // Only attach to top-level windows.
           return;
         }
@@ -153,6 +161,23 @@ BrowserCLH.prototype = {
         });
 
         this._initLoginManagerEvents(win);
+
+        GeckoViewUtils.registerLazyWindowEventListener(win, [
+          "TextSelection:Get",
+          "TextSelection:Action",
+          "TextSelection:End",
+        ], {
+          scope: this,
+          name: "ActionBarHandler",
+        });
+        GeckoViewUtils.addLazyEventListener(win, ["mozcaretstatechanged"], {
+          scope: this,
+          name: "ActionBarHandler",
+          options: {
+            capture: true,
+            mozSystemGroup: true,
+          },
+        });
         break;
       }
     }
