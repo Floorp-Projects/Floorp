@@ -18,9 +18,11 @@
 enum class DisplayItemType {
   TYPE_ZERO = 0, /** Spacer so that the first item starts at 1 */
 
-#define DECLARE_DISPLAY_ITEM_TYPE(name,flags) TYPE_##name,
+#define DECLARE_DISPLAY_ITEM_TYPE(name) TYPE_##name,
+#define DECLARE_DISPLAY_ITEM_TYPE_FLAGS(name,flags) TYPE_##name,
 #include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
+#undef DECLARE_DISPLAY_ITEM_TYPE_FLAGS
 
   TYPE_MAX
 };
@@ -37,9 +39,11 @@ enum DisplayItemFlags {
 inline const char* DisplayItemTypeName(DisplayItemType aType)
 {
   switch (aType) {
-#define DECLARE_DISPLAY_ITEM_TYPE(name,flags) case DisplayItemType::TYPE_##name: return #name;
+#define DECLARE_DISPLAY_ITEM_TYPE(name) case DisplayItemType::TYPE_##name: return #name;
+#define DECLARE_DISPLAY_ITEM_TYPE_FLAGS(name,flags) case DisplayItemType::TYPE_##name: return #name;
 #include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
+#undef DECLARE_DISPLAY_ITEM_TYPE_FLAGS
 
     default: return "TYPE_UNKNOWN";
   }
@@ -49,9 +53,11 @@ inline uint8_t GetDisplayItemFlagsForType(DisplayItemType aType)
 {
   static const uint8_t flags[static_cast<uint32_t>(DisplayItemType::TYPE_MAX)] = {
     0
-#define DECLARE_DISPLAY_ITEM_TYPE(name,flags) ,flags
+#define DECLARE_DISPLAY_ITEM_TYPE(name) ,0
+#define DECLARE_DISPLAY_ITEM_TYPE_FLAGS(name,flags) ,flags
 #include "nsDisplayItemTypesList.h"
 #undef DECLARE_DISPLAY_ITEM_TYPE
+#undef DECLARE_DISPLAY_ITEM_TYPE_FLAGS
   };
 
   return flags[static_cast<uint32_t>(aType)];

@@ -15,11 +15,11 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsCopySupport.h"
+#include "nsElementTable.h"
 #include "nsFocusManager.h"
 #include "nsFontMetrics.h"
 #include "nsFrameSelection.h"
 #include "nsIContentIterator.h"
-#include "nsIParserService.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsIFrame.h"
@@ -3039,10 +3039,9 @@ ContentEventHandler::GetStartOffset(const RawRange& aRawRange,
   nsINode* startNode = aRawRange.GetStartContainer();
   bool startIsContainer = true;
   if (startNode->IsHTMLElement()) {
-    if (nsIParserService* ps = nsContentUtils::GetParserService()) {
-      nsIAtom* name = startNode->NodeInfo()->NameAtom();
-      ps->IsContainer(ps->HTMLAtomTagToId(name), startIsContainer);
-    }
+    nsIAtom* name = startNode->NodeInfo()->NameAtom();
+    startIsContainer =
+      nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
   }
   const NodePosition& startPos =
     startIsContainer ?

@@ -20,7 +20,7 @@
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIParserService.h"
+#include "nsElementTable.h"
 #include "nsNameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
@@ -995,14 +995,9 @@ ElementNeedsSeparateEndTag(Element* aElement, Element* aOriginalElement)
   // HTML container tags should have a separate end tag even if empty, per spec.
   // See
   // https://w3c.github.io/DOM-Parsing/#dfn-concept-xml-serialization-algorithm
-  bool isHTMLContainer = true; // Default in case we get no parser service.
-  nsIParserService* parserService = nsContentUtils::GetParserService();
-  if (parserService) {
-    nsIAtom* localName = aElement->NodeInfo()->NameAtom();
-    parserService->IsContainer(
-      parserService->HTMLCaseSensitiveAtomTagToId(localName),
-      isHTMLContainer);
-  }
+  nsIAtom* localName = aElement->NodeInfo()->NameAtom();
+  bool isHTMLContainer =
+    nsHTMLElement::IsContainer(nsHTMLTags::CaseSensitiveAtomTagToId(localName));
   return isHTMLContainer;
 }
 

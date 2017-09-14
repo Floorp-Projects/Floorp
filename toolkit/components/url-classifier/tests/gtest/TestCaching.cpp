@@ -18,14 +18,11 @@ SetupCacheEntry(LookupCacheV2* aLookupCache,
   MissPrefixArray misses;
   MissPrefixArray emptyMisses;
 
-  nsCOMPtr<nsICryptoHash> cryptoHash =
-    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-
   AddComplete* add = completes.AppendElement(fallible);
-  add->complete.FromPlaintext(aCompletion, cryptoHash);
+  add->complete.FromPlaintext(aCompletion);
 
   Prefix* prefix = misses.AppendElement(fallible);
-  prefix->FromPlaintext(aCompletion, cryptoHash);
+  prefix->FromPlaintext(aCompletion);
 
   // Setup positive cache first otherwise negative cache expiry will be
   // overwritten.
@@ -45,9 +42,7 @@ SetupCacheEntry(LookupCacheV4* aLookupCache,
   FullHashResponseMap map;
 
   Prefix prefix;
-  nsCOMPtr<nsICryptoHash> cryptoHash =
-    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-  prefix.FromPlaintext(aCompletion, cryptoHash);
+  prefix.FromPlaintext(aCompletion);
 
   CachedFullHashResponse* response = map.LookupOrAdd(prefix.ToUint32());
 
@@ -104,8 +99,7 @@ TestCache(const _Fragment& aFragment,
           T* aCache = nullptr)
 {
   Completion lookupHash;
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-  lookupHash.FromPlaintext(aFragment, cryptoHash);
+  lookupHash.FromPlaintext(aFragment);
 
   TestCache<T>(lookupHash, aExpectedHas, aExpectedConfirmed, aExpectedInCache, aCache);
 }
@@ -148,13 +142,12 @@ TEST(UrlClassifierCaching, InNegativeCacheNotExpired)
 {
   // Create a fullhash whose prefix matches the prefix in negative cache
   // but completion doesn't match any fullhash in positive cache.
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
 
   Completion prefix;
-  prefix.FromPlaintext(_Fragment("cache.notexpired.com/"), cryptoHash);
+  prefix.FromPlaintext(_Fragment("cache.notexpired.com/"));
 
   Completion fullhash;
-  fullhash.FromPlaintext(_Fragment("firefox.com/"), cryptoHash);
+  fullhash.FromPlaintext(_Fragment("firefox.com/"));
 
   // Overwrite the 4-byte prefix of `fullhash` so that it conflicts with `prefix`.
   // Since "cache.notexpired.com" is added to database in TestCache as a
@@ -171,13 +164,12 @@ TEST(UrlClassifierCaching, InNegativeCacheNotExpired)
 TEST(UrlClassifierCaching, InNegativeCacheExpired)
 {
   // Create a fullhash whose prefix is in the cache.
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
 
   Completion prefix;
-  prefix.FromPlaintext(_Fragment("cache.expired.com/"), cryptoHash);
+  prefix.FromPlaintext(_Fragment("cache.expired.com/"));
 
   Completion fullhash;
-  fullhash.FromPlaintext(_Fragment("firefox.com/"), cryptoHash);
+  fullhash.FromPlaintext(_Fragment("firefox.com/"));
 
   memcpy(fullhash.buf, prefix.buf, 10);
 
@@ -255,7 +247,7 @@ TEST(UrlClassifierCaching, NegativeCacheExpireV2)
 
   MissPrefixArray misses;
   Prefix* prefix = misses.AppendElement(fallible);
-  prefix->FromPlaintext(NEG_CACHE_EXPIRED_URL, cryptoHash);
+  prefix->FromPlaintext(NEG_CACHE_EXPIRED_URL);
 
   AddCompleteArray dummy;
   cache->AddGethashResultToCache(dummy, misses, EXPIRED_TIME_SEC);
@@ -275,7 +267,7 @@ TEST(UrlClassifierCaching, NegativeCacheExpireV4)
   FullHashResponseMap map;
   Prefix prefix;
   nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-  prefix.FromPlaintext(NEG_CACHE_EXPIRED_URL, cryptoHash);
+  prefix.FromPlaintext(NEG_CACHE_EXPIRED_URL);
   CachedFullHashResponse* response = map.LookupOrAdd(prefix.ToUint32());
 
   response->negativeCacheExpirySec = EXPIRED_TIME_SEC;

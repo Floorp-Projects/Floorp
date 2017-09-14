@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "xpcpublic.h"
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/HoldDropJSObjects.h"
@@ -123,6 +124,19 @@ StreamFilter::FinishConnect(mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoi
   } else {
     mActor->RecvInitialized(false);
   }
+}
+
+bool
+StreamFilter::CheckAlive()
+{
+  // Check whether the global that owns this StreamFitler is still scriptable
+  // and, if not, disconnect the actor so that it can be cleaned up.
+  JSObject* wrapper = GetWrapperPreserveColor();
+  if (!wrapper || !xpc::Scriptability::Get(wrapper).Allowed()) {
+    ForgetActor();
+    return false;
+  }
+  return true;
 }
 
 /*****************************************************************************
