@@ -57,9 +57,9 @@ add_task(function* () {
   let onGridOutlineChanged = waitForDOM(doc, ".grid-outline-cell", 4);
 
   testActor.eval(`
-    const div = document.createElement("div");
+    const div = content.document.createElement("div");
     div.textContent = "item 3";
-    document.querySelector(".container").appendChild(div);
+    content.document.querySelector(".container").appendChild(div);
   `);
 
   yield onReflow;
