@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WidevineVideoFrame.h"
-
+#include "GMPLog.h"
 #include "WidevineUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -19,7 +19,7 @@ WidevineVideoFrame::WidevineVideoFrame()
   , mBuffer(nullptr)
   , mTimestamp(0)
 {
-  CDM_LOG("WidevineVideoFrame::WidevineVideoFrame() this=%p", this);
+  GMP_LOG("WidevineVideoFrame::WidevineVideoFrame() this=%p", this);
   memset(mPlaneOffsets, 0, sizeof(mPlaneOffsets));
   memset(mPlaneStrides, 0, sizeof(mPlaneStrides));
 }
@@ -30,8 +30,10 @@ WidevineVideoFrame::WidevineVideoFrame(WidevineVideoFrame&& aOther)
   , mBuffer(aOther.mBuffer)
   , mTimestamp(aOther.mTimestamp)
 {
-  CDM_LOG("WidevineVideoFrame::WidevineVideoFrame(WidevineVideoFrame&&) this=%p, other=%p",
-          this, &aOther);
+  GMP_LOG("WidevineVideoFrame::WidevineVideoFrame(WidevineVideoFrame&&) "
+          "this=%p, other=%p",
+          this,
+          &aOther);
   memcpy(mPlaneOffsets, aOther.mPlaneOffsets, sizeof(mPlaneOffsets));
   memcpy(mPlaneStrides, aOther.mPlaneStrides, sizeof(mPlaneStrides));
   aOther.mBuffer = nullptr;
@@ -48,7 +50,7 @@ WidevineVideoFrame::~WidevineVideoFrame()
 void
 WidevineVideoFrame::SetFormat(cdm::VideoFormat aFormat)
 {
-  CDM_LOG("WidevineVideoFrame::SetFormat(%d) this=%p", aFormat, this);
+  GMP_LOG("WidevineVideoFrame::SetFormat(%d) this=%p", aFormat, this);
   mFormat = aFormat;
 }
 
@@ -61,7 +63,10 @@ WidevineVideoFrame::Format() const
 void
 WidevineVideoFrame::SetSize(cdm::Size aSize)
 {
-  CDM_LOG("WidevineVideoFrame::SetSize(%d,%d) this=%p", aSize.width, aSize.height, this);
+  GMP_LOG("WidevineVideoFrame::SetSize(%d,%d) this=%p",
+          aSize.width,
+          aSize.height,
+          this);
   mSize.width = aSize.width;
   mSize.height = aSize.height;
 }
@@ -75,7 +80,7 @@ WidevineVideoFrame::Size() const
 void
 WidevineVideoFrame::SetFrameBuffer(cdm::Buffer* aFrameBuffer)
 {
-  CDM_LOG("WidevineVideoFrame::SetFrameBuffer(%p) this=%p", aFrameBuffer, this);
+  GMP_LOG("WidevineVideoFrame::SetFrameBuffer(%p) this=%p", aFrameBuffer, this);
   MOZ_ASSERT(!mBuffer);
   mBuffer = aFrameBuffer;
 }
@@ -89,7 +94,10 @@ WidevineVideoFrame::FrameBuffer()
 void
 WidevineVideoFrame::SetPlaneOffset(cdm::VideoFrame::VideoPlane aPlane, uint32_t aOffset)
 {
-  CDM_LOG("WidevineVideoFrame::SetPlaneOffset(%d, %d) this=%p", aPlane, aOffset, this);
+  GMP_LOG("WidevineVideoFrame::SetPlaneOffset(%d, %d) this=%p",
+          aPlane,
+          aOffset,
+          this);
   mPlaneOffsets[aPlane] = aOffset;
 }
 
@@ -102,7 +110,8 @@ WidevineVideoFrame::PlaneOffset(cdm::VideoFrame::VideoPlane aPlane)
 void
 WidevineVideoFrame::SetStride(cdm::VideoFrame::VideoPlane aPlane, uint32_t aStride)
 {
-  CDM_LOG("WidevineVideoFrame::SetStride(%d, %d) this=%p", aPlane, aStride, this);
+  GMP_LOG(
+    "WidevineVideoFrame::SetStride(%d, %d) this=%p", aPlane, aStride, this);
   mPlaneStrides[aPlane] = aStride;
 }
 
@@ -115,7 +124,8 @@ WidevineVideoFrame::Stride(cdm::VideoFrame::VideoPlane aPlane)
 void
 WidevineVideoFrame::SetTimestamp(int64_t timestamp)
 {
-  CDM_LOG("WidevineVideoFrame::SetTimestamp(%" PRId64 ") this=%p", timestamp, this);
+  GMP_LOG(
+    "WidevineVideoFrame::SetTimestamp(%" PRId64 ") this=%p", timestamp, this);
   mTimestamp = timestamp;
 }
 
