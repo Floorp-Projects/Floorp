@@ -828,13 +828,13 @@ widgets.css is overwritten. */
 .variables-view-delete:hover,
 .variables-view-edit:hover,
 .variables-view-open-inspector:hover {
-  filter: url(images/filters.svg#checked-icon-state);
+  filter: var(--theme-icon-checked-filter);
 }
 
 .variables-view-delete:active,
 .variables-view-edit:active,
 .variables-view-open-inspector:active {
-  filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
+  filter: var(--theme-icon-checked-filter) brightness(0.9);
 }
 
 .variable-or-property:focus > .title > .variables-view-delete,
