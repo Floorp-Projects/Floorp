@@ -1006,6 +1006,12 @@ public:
       aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
+    if (OwnerDoc()->GetPointerLockElement()) {
+      // Throw an exception 'InvalidStateError' while the page has a locked
+      // element.
+      aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
     if (!activeState) {
       return;
     }
