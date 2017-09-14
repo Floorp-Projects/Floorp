@@ -32,9 +32,18 @@ let webpackConfig = {
          * so the raw-loader declared in devtools-launchpad config can load
          * those files.
          */
-        test: /\.js/,
+        test: /\.js$/,
         loader: "rewrite-raw",
       },
+      {
+        test: /\.js$/,
+        loaders: [
+          // Replace all references to this.browserRequire() by require()
+          "rewrite-browser-require",
+          // Replace all references to loader.lazyRequire() by require()
+          "rewrite-lazy-require",
+        ],
+      }
     ]
   },
 
