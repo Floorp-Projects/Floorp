@@ -170,14 +170,14 @@ CODFILE=$(basename $(@F)).cod
 endif
 
 ifdef DEFFILE
-OS_LDFLAGS += -DEF:$(call normalizepath,$(DEFFILE))
+OS_LDFLAGS += -DEF:$(DEFFILE)
 EXTRA_DEPS += $(DEFFILE)
 endif
 
 else #!GNU_CC
 
 ifdef DEFFILE
-OS_LDFLAGS += $(call normalizepath,$(DEFFILE))
+OS_LDFLAGS += $(DEFFILE)
 EXTRA_DEPS += $(DEFFILE)
 endif
 
