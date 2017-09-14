@@ -135,6 +135,7 @@ union OpUpdateResource {
   OpDeleteFont;
   OpAddFontInstance;
   OpDeleteFontInstance;
+  OpAddExternalImage;
 };
 
 } // namespace
