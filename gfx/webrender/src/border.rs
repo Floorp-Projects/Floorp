@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF, LayerPoint, LayerRect};
-use api::{LayerSize, LocalClip, NormalBorder};
+use api::{LayerPrimitiveInfo, LayerSize, NormalBorder};
 use clip::ClipSource;
 use ellipse::Ellipse;
 use gpu_cache::GpuDataRequest;
@@ -222,11 +222,10 @@ impl NormalBorderHelpers for NormalBorder {
 
 impl FrameBuilder {
     fn add_normal_border_primitive(&mut self,
-                                   rect: &LayerRect,
+                                   info: &LayerPrimitiveInfo,
                                    border: &NormalBorder,
                                    widths: &BorderWidths,
                                    clip_and_scroll: ClipAndScrollInfo,
-                                   local_clip: &LocalClip,
                                    corner_instances: [BorderCornerInstance; 4],
                                    clip_sources: Vec<ClipSource>) {
         let radius = &border.radius;
@@ -272,8 +271,7 @@ impl FrameBuilder {
         };
 
         self.add_primitive(clip_and_scroll,
-                           &rect,
-                           local_clip,
+                           info,
                            clip_sources,
                            PrimitiveContainer::Border(prim_cpu));
     }
@@ -283,11 +281,10 @@ impl FrameBuilder {
     // are converted, this can be removed, along with the complex
     // border code path.
     pub fn add_normal_border(&mut self,
-                             rect: &LayerRect,
+                             info: &LayerPrimitiveInfo,
                              border: &NormalBorder,
                              widths: &BorderWidths,
-                             clip_and_scroll: ClipAndScrollInfo,
-                             local_clip: &LocalClip) {
+                             clip_and_scroll: ClipAndScrollInfo) {
         // The border shader is quite expensive. For simple borders, we can just draw
         // the border with a few rectangles. This generally gives better batching, and
         // a GPU win in fragment shader time.
@@ -310,28 +307,28 @@ impl FrameBuilder {
                               widths.top,
                               &radius.top_left,
                               BorderCorner::TopLeft,
-                              rect),
+                              &info.rect),
             border.get_corner(right,
                               widths.right,
                               top,
                               widths.top,
                               &radius.top_right,
                               BorderCorner::TopRight,
-                              rect),
+                              &info.rect),
             border.get_corner(right,
                               widths.right,
                               bottom,
                               widths.bottom,
                               &radius.bottom_right,
                               BorderCorner::BottomRight,
-                              rect),
+                              &info.rect),
             border.get_corner(left,
                               widths.left,
                               bottom,
                               widths.bottom,
                               &radius.bottom_left,
                               BorderCorner::BottomLeft,
-                              rect),
+                              &info.rect),
         ];
 
         let (left_edge, left_len) = border.get_edge(left, widths.left);
@@ -358,43 +355,47 @@ impl FrameBuilder {
         let has_no_curve = radius.is_zero();
 
         if has_no_curve && all_corners_simple && all_edges_simple {
-            let p0 = rect.origin;
-            let p1 = rect.bottom_right();
-            let rect_width = rect.size.width;
-            let rect_height = rect.size.height;
+            let p0 = info.rect.origin;
+            let p1 = info.rect.bottom_right();
+            let rect_width = info.rect.size.width;
+            let rect_height = info.rect.size.height;
 
             // Add a solid rectangle for each visible edge/corner combination.
             if top_edge == BorderEdgeKind::Solid {
+                let mut info = info.clone();
+                info.rect = LayerRect::new(p0, LayerSize::new(rect_width, top_len));
                 self.add_solid_rectangle(clip_and_scroll,
-                                         &LayerRect::new(p0, LayerSize::new(rect_width, top_len)),
-                                         local_clip,
+                                         &info,
                                          &border.top.color,
                                          PrimitiveFlags::None);
             }
             if left_edge == BorderEdgeKind::Solid {
+                let mut info = info.clone();
+                info.rect = LayerRect::new(LayerPoint::new(p0.x, p0.y + top_len),
+                                           LayerSize::new(left_len,
+                                                          rect_height - top_len - bottom_len));
                 self.add_solid_rectangle(clip_and_scroll,
-                                         &LayerRect::new(LayerPoint::new(p0.x, p0.y + top_len),
-                                                         LayerSize::new(left_len,
-                                                                        rect_height - top_len - bottom_len)),
-                                         local_clip,
+                                         &info,
                                          &border.left.color,
                                          PrimitiveFlags::None);
             }
             if right_edge == BorderEdgeKind::Solid {
+                let mut info = info.clone();
+                info.rect = LayerRect::new(LayerPoint::new(p1.x - right_len,
+                                                           p0.y + top_len),
+                                           LayerSize::new(right_len,
+                                                          rect_height - top_len - bottom_len));
                 self.add_solid_rectangle(clip_and_scroll,
-                                         &LayerRect::new(LayerPoint::new(p1.x - right_len,
-                                                                         p0.y + top_len),
-                                                         LayerSize::new(right_len,
-                                                                        rect_height - top_len - bottom_len)),
-                                         local_clip,
+                                         &info,
                                          &border.right.color,
                                          PrimitiveFlags::None);
             }
             if bottom_edge == BorderEdgeKind::Solid {
+                let mut info = info.clone();
+                info.rect = LayerRect::new(LayerPoint::new(p0.x, p1.y - bottom_len),
+                                           LayerSize::new(rect_width, bottom_len));
                 self.add_solid_rectangle(clip_and_scroll,
-                                         &LayerRect::new(LayerPoint::new(p0.x, p1.y - bottom_len),
-                                                         LayerSize::new(rect_width, bottom_len)),
-                                         local_clip,
+                                         &info,
                                          &border.bottom.color,
                                          PrimitiveFlags::None);
             }
@@ -419,11 +420,10 @@ impl FrameBuilder {
                 }
             }
 
-            self.add_normal_border_primitive(rect,
+            self.add_normal_border_primitive(info,
                                              border,
                                              widths,
                                              clip_and_scroll,
-                                             local_clip,
                                              corner_instances,
                                              extra_clips);
         }

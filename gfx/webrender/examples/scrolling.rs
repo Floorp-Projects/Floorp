@@ -24,9 +24,13 @@ impl Example for App {
               layout_size: LayoutSize,
               _pipeline_id: PipelineId,
               _document_id: DocumentId) {
-        let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
-        builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                      bounds,
+        let info = LayoutPrimitiveInfo {
+            rect: LayoutRect::new(LayoutPoint::zero(), layout_size),
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_stacking_context(&info,
+                                      ScrollPolicy::Scrollable,
                                       None,
                                       TransformStyle::Flat,
                                       None,
@@ -36,9 +40,14 @@ impl Example for App {
         if true {   // scrolling and clips stuff
             // let's make a scrollbox
             let scrollbox = (0, 0).to(300, 400);
-            builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                          LayoutRect::new(LayoutPoint::new(10.0, 10.0),
-                                                          LayoutSize::zero()),
+            let info = LayoutPrimitiveInfo {
+                rect: LayoutRect::new(LayoutPoint::new(10.0, 10.0),
+                                      LayoutSize::zero()),
+                local_clip: None,
+                is_backface_visible: true,
+            };
+            builder.push_stacking_context(&info,
+                                          ScrollPolicy::Scrollable,
                                           None,
                                           TransformStyle::Flat,
                                           None,
@@ -55,15 +64,29 @@ impl Example for App {
 
             // now put some content into it.
             // start with a white background
-            builder.push_rect((0, 0).to(1000, 1000), None, ColorF::new(1.0, 1.0, 1.0, 1.0));
+            let info = LayoutPrimitiveInfo {
+                rect: (0, 0).to(1000, 1000),
+                local_clip: None,
+                is_backface_visible: true,
+            };
+            builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
             // let's make a 50x50 blue square as a visual reference
-            builder.push_rect((0, 0).to(50, 50), None, ColorF::new(0.0, 0.0, 1.0, 1.0));
+            let info = LayoutPrimitiveInfo {
+                rect: (0, 0).to(50, 50),
+                local_clip: None,
+                is_backface_visible: true,
+            };
+            builder.push_rect(&info, ColorF::new(0.0, 0.0, 1.0, 1.0));
 
             // and a 50x50 green square next to it with an offset clip
             // to see what that looks like
-            builder.push_rect((50, 0).to(100, 50),
-                              Some(LocalClip::from((60, 10).to(110, 60))),
+            let info = LayoutPrimitiveInfo {
+                rect: (50, 0).to(100, 50),
+                local_clip: Some(LocalClip::from((60, 10).to(110, 60))),
+                is_backface_visible: true,
+            };
+            builder.push_rect(&info,
                               ColorF::new(0.0, 1.0, 0.0, 1.0));
 
             // Below the above rectangles, set up a nested scrollbox. It's still in
@@ -79,11 +102,21 @@ impl Example for App {
 
             // give it a giant gray background just to distinguish it and to easily
             // visually identify the nested scrollbox
-            builder.push_rect((-1000, -1000).to(5000, 5000), None, ColorF::new(0.5, 0.5, 0.5, 1.0));
+            let info = LayoutPrimitiveInfo {
+                rect: (-1000, -1000).to(5000, 5000),
+                local_clip: None,
+                is_backface_visible: true,
+            };
+            builder.push_rect(&info, ColorF::new(0.5, 0.5, 0.5, 1.0));
 
             // add a teal square to visualize the scrolling/clipping behaviour
             // as you scroll the nested scrollbox
-            builder.push_rect((0, 200).to(50, 250), None, ColorF::new(0.0, 1.0, 1.0, 1.0));
+            let info = LayoutPrimitiveInfo {
+                rect: (0, 200).to(50, 250),
+                local_clip: None,
+                is_backface_visible: true,
+            };
+            builder.push_rect(&info, ColorF::new(0.0, 1.0, 1.0, 1.0));
 
             // Add a sticky frame. It will "stick" at a margin of 10px from the top, until
             // the scrollframe scrolls another 60px, at which point it will "unstick". This lines
@@ -95,13 +128,23 @@ impl Example for App {
                 StickyFrameInfo::new(Some(StickySideConstraint{ margin: 10.0, max_offset: 60.0 }),
                                      None, None, None));
             builder.push_clip_id(sticky_id);
-            builder.push_rect((50, 140).to(100, 190), None, ColorF::new(0.5, 0.5, 1.0, 1.0));
+            let info = LayoutPrimitiveInfo {
+                rect: (50, 140).to(100, 190),
+                local_clip: None,
+                is_backface_visible: true,
+            };
+            builder.push_rect(&info, ColorF::new(0.5, 0.5, 1.0, 1.0));
             builder.pop_clip_id(); // sticky_id
 
             // just for good measure add another teal square in the bottom-right
             // corner of the nested scrollframe content, which can be scrolled into
             // view by the user
-            builder.push_rect((250, 350).to(300, 400), None, ColorF::new(0.0, 1.0, 1.0, 1.0));
+            let info = LayoutPrimitiveInfo {
+                rect: (250, 350).to(300, 400),
+                local_clip: None,
+                is_backface_visible: true,
+            };
+            builder.push_rect(&info, ColorF::new(0.0, 1.0, 1.0, 1.0));
 
             builder.pop_clip_id(); // nested_clip_id
 

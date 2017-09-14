@@ -165,8 +165,13 @@ impl Example for App {
               _pipeline_id: PipelineId,
               _document_id: DocumentId) {
         let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
-        builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                      bounds,
+        let info = LayoutPrimitiveInfo {
+            rect: bounds,
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_stacking_context(&info,
+                                      ScrollPolicy::Scrollable,
                                       None,
                                       TransformStyle::Flat,
                                       None,
@@ -202,17 +207,25 @@ impl Example for App {
             None,
         );
 
+        let info = LayoutPrimitiveInfo {
+            rect: LayoutRect::new(LayoutPoint::new(100.0, 0.0), LayoutSize::new(100.0, 100.0)),
+            local_clip: Some(LocalClip::from(bounds)),
+            is_backface_visible: true,
+        };
         builder.push_yuv_image(
-            LayoutRect::new(LayoutPoint::new(100.0, 0.0), LayoutSize::new(100.0, 100.0)),
-            Some(LocalClip::from(bounds)),
+            &info,
             YuvData::NV12(yuv_chanel1, yuv_chanel2),
             YuvColorSpace::Rec601,
             ImageRendering::Auto,
         );
 
+        let info = LayoutPrimitiveInfo {
+            rect: LayoutRect::new(LayoutPoint::new(300.0, 0.0), LayoutSize::new(100.0, 100.0)),
+            local_clip: Some(LocalClip::from(bounds)),
+            is_backface_visible: true,
+        };
         builder.push_yuv_image(
-            LayoutRect::new(LayoutPoint::new(300.0, 0.0), LayoutSize::new(100.0, 100.0)),
-            Some(LocalClip::from(bounds)),
+            &info,
             YuvData::PlanarYCbCr(yuv_chanel1, yuv_chanel2_1, yuv_chanel3),
             YuvColorSpace::Rec601,
             ImageRendering::Auto,
