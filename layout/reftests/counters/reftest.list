@@ -68,7 +68,7 @@ fails-if(xulRuntime.XPCOMABI.match(/arm/)) == counter-ua-limits-02.html counter-
 == counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
 == counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html
 == multiple-thai-counters.html multiple-thai-counters-ref.html
-fails-if(webrender) == counter-suffix.html counter-suffix-ref.html
+== counter-suffix.html counter-suffix-ref.html
 == counter-cjk-decimal.html counter-cjk-decimal-ref.html
 == counter-japanese-informal.html counter-japanese-informal-ref.html
 == counter-japanese-formal.html counter-japanese-formal-ref.html
