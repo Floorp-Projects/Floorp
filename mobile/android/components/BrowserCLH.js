@@ -76,6 +76,18 @@ BrowserCLH.prototype = {
           script: "chrome://browser/content/InputWidgetHelper.js",
         });
 
+        GeckoViewUtils.addLazyGetter(this, "FormAssistant", {
+          script: "chrome://browser/content/FormAssistant.js",
+        });
+        Services.obs.addObserver({
+          QueryInterface: XPCOMUtils.generateQI([
+            Ci.nsIObserver, Ci.nsIFormSubmitObserver,
+          ]),
+          notifyInvalidSubmit: (form, element) => {
+            this.FormAssistant.notifyInvalidSubmit(form, element);
+          },
+        }, "invalidformsubmit");
+
         GeckoViewUtils.addLazyGetter(this, "LoginManagerParent", {
           module: "resource://gre/modules/LoginManagerParent.jsm",
           mm: [
@@ -115,6 +127,26 @@ BrowserCLH.prototype = {
 
         GeckoViewUtils.addLazyEventListener(win, "click", {
           handler: _ => [this.SelectHelper, this.InputWidgetHelper],
+          options: {
+            capture: true,
+            mozSystemGroup: true,
+          },
+        });
+
+        GeckoViewUtils.addLazyEventListener(win, [
+          "focus", "blur", "click", "input",
+        ], {
+          handler: event => {
+            if (event.target instanceof Ci.nsIDOMHTMLInputElement ||
+                event.target instanceof Ci.nsIDOMHTMLTextAreaElement ||
+                event.target instanceof Ci.nsIDOMHTMLSelectElement ||
+                event.target instanceof Ci.nsIDOMHTMLButtonElement) {
+              // Only load FormAssistant when the event target is what we care about.
+              this.FormAssistant.register(win);
+              return this.FormAssistant;
+            }
+            return null;
+          },
           options: {
             capture: true,
             mozSystemGroup: true,
