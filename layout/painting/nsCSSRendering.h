@@ -504,7 +504,6 @@ struct nsCSSRendering {
                                                                  mozilla::wr::DisplayListBuilder& aBuilder,
                                                                  mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                                  const mozilla::layers::StackingContextHelper& aSc,
-                                                                 nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                  mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                                                  mozilla::layers::WebRenderLayerManager* aManager,
                                                                  nsDisplayItem* aItem);
@@ -513,7 +512,6 @@ struct nsCSSRendering {
                                                                        mozilla::wr::DisplayListBuilder& aBuilder,
                                                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                                        const mozilla::layers::StackingContextHelper& aSc,
-                                                                       nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                                                        mozilla::layers::WebRenderLayerManager* aManager,
                                                                        nsDisplayItem* aItem,

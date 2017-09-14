@@ -338,7 +338,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
 
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function if the |item| is a wrapper for a sublist.
-      if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mParentCommands, this,
+      if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, this,
                                          aDisplayListBuilder)) {
         PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
       }

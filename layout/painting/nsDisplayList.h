@@ -63,7 +63,6 @@ class ImageLayer;
 class ImageContainer;
 class StackingContextHelper;
 class WebRenderCommand;
-class WebRenderParentCommand;
 class WebRenderDisplayItemLayer;
 class WebRenderScrollData;
 class WebRenderLayerScrollData;
@@ -2057,7 +2056,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) { return false; }
 
@@ -3026,7 +3024,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -3061,7 +3058,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -3086,7 +3082,6 @@ protected:
   void CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                           mozilla::wr::IpcResourceUpdateQueue& aResources,
                                           const StackingContextHelper& aSc,
-                                          nsTArray<WebRenderParentCommand>& aParentCommands,
                                           mozilla::layers::WebRenderLayerManager* aManager,
                                           nsDisplayListBuilder* aDisplayListBuilder);
   nsRegion CalculateBounds(const nsStyleBorder& aStyleBorder) const;
@@ -3191,7 +3186,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -3244,7 +3238,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -3329,7 +3322,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -3566,7 +3558,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -3737,7 +3728,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   nsRect GetBoundsInternal();
@@ -3803,7 +3793,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -3835,7 +3824,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool IsInvisibleInRect(const nsRect& aRect) const override;
@@ -4152,7 +4140,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -4272,7 +4259,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -4318,7 +4304,6 @@ public:
   bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::wr::IpcResourceUpdateQueue& aResources,
                                const StackingContextHelper& aSc,
-                               nsTArray<WebRenderParentCommand>& aParentCommands,
                                mozilla::layers::WebRenderLayerManager* aManager,
                                nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -4369,7 +4354,6 @@ public:
     bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                  mozilla::wr::IpcResourceUpdateQueue& aResources,
                                  const StackingContextHelper& aSc,
-                                 nsTArray<WebRenderParentCommand>& aParentCommands,
                                  mozilla::layers::WebRenderLayerManager* aManager,
                                  nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -4457,7 +4441,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
@@ -4898,7 +4881,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 private:
@@ -4977,7 +4959,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -5114,7 +5095,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
-                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
@@ -5449,7 +5429,6 @@ public:
   bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::wr::IpcResourceUpdateQueue& aResources,
                                const StackingContextHelper& aSc,
-                               nsTArray<WebRenderParentCommand>& aParentCommands,
                                mozilla::layers::WebRenderLayerManager* aManager,
                                nsDisplayListBuilder* aDisplayListBuilder) override;
 
