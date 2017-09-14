@@ -10,6 +10,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsXULAppAPI.h"
 #include "LabeledEventQueue.h"
 #include "MainThreadQueue.h"
 #include "mozilla/AbstractThread.h"
