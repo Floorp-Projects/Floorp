@@ -269,8 +269,12 @@ private:
                 return size;
             }
 
-            size += (mURL.SizeOfExcludingThisEvenIfShared(mallocSizeOf) +
+            // Note: mURL and mCachePath use the same string for scripts loaded
+            // by the message manager. The following statement avoids
+            // double-measuring in that case.
+            size += (mURL.SizeOfExcludingThisIfUnshared(mallocSizeOf) +
                      mCachePath.SizeOfExcludingThisEvenIfShared(mallocSizeOf));
+
             return size;
         }
 
