@@ -529,7 +529,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                        aResourceUpdates);
 
   ScheduleComposition();
-  DeleteOldImages();
 
   if (ShouldParentObserveEpoch()) {
     mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
@@ -704,7 +703,6 @@ WebRenderBridgeParent::RecvClearCachedResources()
   mApi->ClearDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
-  DeleteOldImages();
   // Remove animations.
   for (std::unordered_set<uint64_t>::iterator iter = mActiveAnimations.begin(); iter != mActiveAnimations.end(); iter++) {
     mAnimStorage->ClearById(*iter);
@@ -1070,17 +1068,6 @@ WebRenderBridgeParent::GetLayersId() const
 }
 
 void
-WebRenderBridgeParent::DeleteOldImages()
-{
-  wr::ResourceUpdateQueue resources;
-  for (wr::ImageKey key : mKeysToDelete) {
-    resources.DeleteImage(key);
-  }
-  mApi->UpdateResources(resources);
-  mKeysToDelete.clear();
-}
-
-void
 WebRenderBridgeParent::ScheduleComposition()
 {
   if (mCompositorScheduler) {
@@ -1150,7 +1137,6 @@ WebRenderBridgeParent::ClearResources()
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
-  mKeysToDelete.clear();
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->ClearWrBridge();
   }
