@@ -304,7 +304,9 @@ protected:
   // Find a free or reusable block and return its index. If there are no
   // free blocks and no reusable blocks, add a new block to the cache
   // and return it. Can return -1 on OOM.
-  int32_t FindBlockForIncomingData(TimeStamp aNow, MediaCacheStream* aStream);
+  int32_t FindBlockForIncomingData(TimeStamp aNow,
+                                   MediaCacheStream* aStream,
+                                   int32_t aStreamBlockIndex);
   // Find a reusable block --- a free block, if there is one, otherwise
   // the reusable block with the latest predicted-next-use, or -1 if
   // there aren't any freeable blocks. Only block indices less than
@@ -779,15 +781,13 @@ OffsetInBlock(int64_t aOffset)
 
 int32_t
 MediaCache::FindBlockForIncomingData(TimeStamp aNow,
-                                       MediaCacheStream* aStream)
+                                     MediaCacheStream* aStream,
+                                     int32_t aStreamBlockIndex)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
   int32_t blockIndex =
-    FindReusableBlock(aNow,
-                      aStream,
-                      OffsetToBlockIndexUnchecked(aStream->mChannelOffset),
-                      INT32_MAX);
+    FindReusableBlock(aNow, aStream, aStreamBlockIndex, INT32_MAX);
 
   if (blockIndex < 0 || !IsBlockFree(blockIndex)) {
     // The block returned is already allocated.
@@ -1608,7 +1608,8 @@ MediaCache::AllocateAndWriteBlock(MediaCacheStream* aStream,
   // Extend the mBlocks array as necessary
 
   TimeStamp now = TimeStamp::Now();
-  int32_t blockIndex = FindBlockForIncomingData(now, aStream);
+  int32_t blockIndex =
+    FindBlockForIncomingData(now, aStream, aStreamBlockIndex);
   if (blockIndex >= 0) {
     FreeBlock(blockIndex);
 
