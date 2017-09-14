@@ -38,12 +38,12 @@
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
-    <color name="download_dialog_text">#FF00A4DC</color>
+    <color name="download_dialog_text">@color/photonBlue50</color>
 
     <color name="colorSession">#272727</color>
-    <color name="colorAction">#FF0A84FF</color>
+    <color name="colorAction">@color/photonBlue50</color>
 
-    <color name="add_to_homescreen_button_text">#FF00A4DC</color>
+    <color name="add_to_homescreen_button_text">@color/photonBlue50</color>
     <color name="add_to_homescreen_text">#FFFFFF</color>
 
 
