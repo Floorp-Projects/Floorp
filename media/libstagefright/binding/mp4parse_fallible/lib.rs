@@ -55,7 +55,7 @@ fn try_extend_vec<T>(vec: &mut Vec<T>, new_cap: usize) -> Result<(), ()> {
 
     let old_cap: usize = vec.capacity();
 
-    if old_cap > new_cap {
+    if old_cap >= new_cap {
         return Ok(());
     }
 
