@@ -1449,7 +1449,7 @@ nsPluginFrame::CreateWebRenderCommands(nsDisplayItem* aItem,
   lm->AddDidCompositeObserver(mDidCompositeObserver.get());
 
   LayerRect dest(r.x, r.y, size.width, size.height);
-  return aManager->PushImage(aItem, container, aBuilder, aSc, dest);
+  return aManager->PushImage(aItem, container, aBuilder, aResources, aSc, dest);
 }
 
 
