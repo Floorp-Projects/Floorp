@@ -10483,6 +10483,15 @@ nsIFrame::DestroyContentArray(ContentArray* aArray)
   delete aArray;
 }
 
+/*static*/ void
+nsIFrame::DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable)
+{
+  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+    iter.UserData()->RemoveFromTable();
+  }
+  delete aTable;
+}
+
 bool
 nsIFrame::IsPseudoStackingContextFromStyle() {
   // If you change this, also change the computation of pseudoStackingContext
