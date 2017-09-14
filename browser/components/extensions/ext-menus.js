@@ -32,6 +32,9 @@ var gRootItems = new Map();
 // Menu IDs that were eligible for being shown in the current menu.
 var gShownMenuItems = new DefaultMap(() => []);
 
+// Set of extensions that are listening to onShown.
+var gOnShownSubscribers = new Set();
+
 // If id is not specified for an item we use an integer.
 var gNextMenuItemID = 0;
 
@@ -71,10 +74,10 @@ var gMenuBuilder = {
     const children = this.buildChildren(root, contextData);
     const visible = children.slice(0, ACTION_MENU_TOP_LEVEL_LIMIT);
 
-    if (visible.length) {
-      this.xulMenu = menu;
-      menu.addEventListener("popuphidden", this);
+    this.xulMenu = menu;
+    menu.addEventListener("popuphidden", this);
 
+    if (visible.length) {
       const separator = menu.ownerDocument.createElement("menuseparator");
       menu.insertBefore(separator, menu.firstChild);
       this.itemsToCleanUp.add(separator);
@@ -331,7 +334,6 @@ var gMenuBuilder = {
     let {contextData} = this;
     if (!contextData) {
       // This happens if the menu is not visible.
-      // This also happens if there are no visible extension menu items.
       return;
     }
 
@@ -380,16 +382,25 @@ var gMenuBuilder = {
   },
 
   afterBuildingMenu(contextData) {
-    // Left-hand side is an optimization: No need to construct event details if
-    // nobody is subscribing to the event.
-    // Right-hand side is to prevent onShown from being fired when a menu is
-    // updated.
-    if (gShownMenuItems.size === 0 || this.contextData) {
+    if (this.contextData) {
+      // rebuildMenu can trigger us again, but the logic below should run only
+      // once per open menu.
       return;
     }
 
-    for (let [extension, menuIds] of gShownMenuItems.entries()) {
+    function dispatchOnShownEvent(extension) {
+      // Note: gShownMenuItems is a DefaultMap, so .get(extension) causes the
+      // extension to be stored in the map even if there are currently no
+      // shown menu items. This ensures that the onHidden event can be fired
+      // when the menu is closed.
+      let menuIds = gShownMenuItems.get(extension);
       extension.emit("webext-menu-shown", menuIds, contextData);
+    }
+
+    if (contextData.onBrowserAction || contextData.onPageAction) {
+      dispatchOnShownEvent(contextData.extension);
+    } else {
+      gOnShownSubscribers.forEach(dispatchOnShownEvent);
     }
 
     this.contextData = contextData;
@@ -402,6 +413,7 @@ var gMenuBuilder = {
 
     delete this.xulMenu;
     delete this.contextData;
+
     let target = event.target;
     target.removeEventListener("popuphidden", this);
     for (let item of this.itemsToCleanUp) {
@@ -788,6 +800,7 @@ this.menusInternal = class extends ExtensionAPI {
       gMenuMap.delete(extension);
       gRootItems.delete(extension);
       gShownMenuItems.delete(extension);
+      gOnShownSubscribers.delete(extension);
       if (!gMenuMap.size) {
         menuTracker.unregister();
       }
@@ -821,8 +834,10 @@ this.menusInternal = class extends ExtensionAPI {
           let tab = extension.tabManager.convert(contextData.tab);
           fire.sync(info, tab);
         };
+        gOnShownSubscribers.add(extension);
         extension.on("webext-menu-shown", listener);
         return () => {
+          gOnShownSubscribers.delete(extension);
           extension.off("webext-menu-shown", listener);
         };
       }).api(),

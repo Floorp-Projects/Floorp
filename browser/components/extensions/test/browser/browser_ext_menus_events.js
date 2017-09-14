@@ -117,7 +117,8 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
   await BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function test_no_show_hide_without_menu_item() {
+// Make sure that we won't trigger onShown when extensions cannot add menus.
+add_task(async function test_no_show_hide_for_unsupported_menu() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       let events = [];
@@ -125,8 +126,34 @@ add_task(async function test_no_show_hide_without_menu_item() {
       browser.menus.onHidden.addListener(() => events.push("onHidden"));
       browser.test.onMessage.addListener(() => {
         browser.test.assertEq("[]", JSON.stringify(events),
-          "Should not have any events when the context menu does not match");
+          "Should not have any events when the context is unsupported.");
         browser.test.notifyPass("done listening to menu events");
+      });
+    },
+    manifest: {
+      permissions: ["menus"],
+    },
+  });
+
+  await extension.startup();
+  // Open and close a menu for which the extension cannot add menu items.
+  await openChromeContextMenu("toolbar-context-menu", "#stop-reload-button");
+  await closeChromeContextMenu("toolbar-context-menu");
+
+  extension.sendMessage("check menu events");
+  await extension.awaitFinish("done listening to menu events");
+
+  await extension.unload();
+});
+
+add_task(async function test_show_hide_without_menu_item() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      let events = [];
+      browser.menus.onShown.addListener(data => events.push(data));
+      browser.menus.onHidden.addListener(() => events.push("onHidden"));
+      browser.test.onMessage.addListener(() => {
+        browser.test.sendMessage("events from menuless extension", events);
       });
 
       browser.menus.create({
@@ -136,7 +163,7 @@ add_task(async function test_no_show_hide_without_menu_item() {
       });
     },
     manifest: {
-      permissions: ["menus"],
+      permissions: ["menus", PAGE_HOST_PATTERN],
     },
   });
 
@@ -163,10 +190,17 @@ add_task(async function test_no_show_hide_without_menu_item() {
 
   // Now the menu has been shown and hidden, and in another extension the
   // onShown/onHidden events have been dispatched.
-  // If the the first extension has not received any events by now, we can be
-  // confident that the onShown/onHidden events are not unexpectedly triggered.
   extension.sendMessage("check menu events");
-  await extension.awaitFinish("done listening to menu events");
+  let events = await extension.awaitMessage("events from menuless extension");
+  is(events.length, 2, "expect two events");
+  is(events[1], "onHidden", "last event should be onHidden");
+  Assert.deepEqual(events[0], {
+    menuIds: [],
+    contexts: ["page", "all"],
+    editable: false,
+    pageUrl: PAGE,
+    frameId: 0,
+  }, "expected onShown info from menuless extension");
   await extension.unload();
 });
 
