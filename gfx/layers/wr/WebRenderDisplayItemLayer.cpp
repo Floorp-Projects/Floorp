@@ -38,8 +38,9 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     wr::LayoutSize contentSize; // this won't actually be used by anything
     wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
     // We might have recycled this layer. Throw away the old commands.
+    mParentCommands.Clear();
 
-    mItem->CreateWebRenderCommands(builder, aResources, aSc, WrManager(),
+    mItem->CreateWebRenderCommands(builder, aResources, aSc, mParentCommands, WrManager(),
                                    GetDisplayListBuilder());
     builder.Finalize(contentSize, mBuiltDisplayList);
   } else {
@@ -57,6 +58,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   }
 
   aBuilder.PushBuiltDisplayList(mBuiltDisplayList);
+  WrBridge()->AddWebRenderParentCommands(mParentCommands);
 }
 
 } // namespace layers
