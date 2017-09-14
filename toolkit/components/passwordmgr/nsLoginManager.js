@@ -362,7 +362,7 @@ LoginManager.prototype = {
     while (enumerator.hasMoreElements()) {
       let perm = enumerator.getNext();
       if (perm.type == PERMISSION_SAVE_LOGINS && perm.capability == Services.perms.DENY_ACTION) {
-        disabledHosts.push(perm.principal.URI.prePath);
+        disabledHosts.push(perm.principal.URI.displayPrePath);
       }
     }
 
