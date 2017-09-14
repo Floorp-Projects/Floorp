@@ -13,6 +13,8 @@ const {SectionsManager} = Cu.import("resource://activity-stream/lib/SectionsMana
 const {TOP_SITES_SHOWMORE_LENGTH} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 const {Dedupe} = Cu.import("resource://activity-stream/common/Dedupe.jsm", {});
 
+XPCOMUtils.defineLazyModuleGetter(this, "filterAdult",
+  "resource://activity-stream/lib/FilterAdult.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
@@ -41,6 +43,7 @@ this.HighlightsFeed = class HighlightsFeed {
 
   postInit() {
     SectionsManager.enableSection(SECTION_ID);
+    this.fetchHighlights(true);
   }
 
   uninit() {
@@ -48,12 +51,28 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 
   async fetchHighlights(broadcast = false) {
+    // We need TopSites to have been initialised for deduping
+    if (!this.store.getState().TopSites.initialized) {
+      await new Promise(resolve => {
+        const unsubscribe = this.store.subscribe(() => {
+          if (this.store.getState().TopSites.initialized) {
+            unsubscribe();
+            resolve();
+          }
+        });
+      });
+    }
+
     // Request more than the expected length to allow for items being removed by
     // deduping against Top Sites or multiple history from the same domain, etc.
     const manyPages = await NewTabUtils.activityStreamLinks.getHighlights({numItems: MANY_EXTRA_LENGTH});
 
+    // Remove adult highlights if we need to
+    const checkedAdult = this.store.getState().Prefs.values.filterAdult ?
+      filterAdult(manyPages) : manyPages;
+
     // Remove any Highlights that are in Top Sites already
-    const deduped = this.dedupe.group(this.store.getState().TopSites.rows, manyPages)[1];
+    const [, deduped] = this.dedupe.group(this.store.getState().TopSites.rows, checkedAdult);
 
     // Keep all "bookmark"s and at most one (most recent) "history" per host
     this.highlights = [];

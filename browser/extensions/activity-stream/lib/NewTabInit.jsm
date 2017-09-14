@@ -37,6 +37,11 @@ this.NewTabInit = class NewTabInit {
           this._queue.clear();
         }
         break;
+      case at.SEARCH_BOX_FOCUSED:
+        if (action._target.url === "about:home" && this.store.getState().Prefs.values["aboutHome.autoFocus"]) {
+          action._target.browser.focus();
+        }
+        break;
     }
   }
 };
