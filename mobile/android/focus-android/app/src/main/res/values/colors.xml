@@ -7,6 +7,8 @@
     <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorAccent">@color/photonMagenta70</color>
 
+    <color name="colorAccentSettings">@color/photonBlue50</color>
+
     <color name="colorGradientStart">#ffa01142</color>
     <color name="colorGradientCenter">#ff90116D</color>
     <color name="colorGradientEnd">#ff5c1166</color>

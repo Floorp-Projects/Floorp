@@ -29,7 +29,7 @@
     </style>
 
     <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="colorAccent">#FF00A4DC</item>
+        <item name="colorAccent">@color/colorAccentSettings</item>
     </style>
 
     <style name="InfoTheme" parent="SettingsTheme">
