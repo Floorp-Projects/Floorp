@@ -41,4 +41,8 @@ public class ResizableKeyboardLinearLayout extends LinearLayout {
 
         delegate.onDetachedFromWindow();
     }
+
+    public void reset() {
+        delegate.reset();
+    }
 }
