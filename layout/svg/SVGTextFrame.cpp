@@ -3067,10 +3067,8 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
 
 class nsDisplaySVGText : public nsDisplayItem {
 public:
-  nsDisplaySVGText(nsDisplayListBuilder* aBuilder,
-                   SVGTextFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame),
-      mDisableSubpixelAA(false)
+  nsDisplaySVGText(nsDisplayListBuilder* aBuilder, SVGTextFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplaySVGText);
     MOZ_ASSERT(aFrame, "Must have a frame!");
@@ -3083,9 +3081,6 @@ public:
 
   NS_DISPLAY_DECL_NAME("nsDisplaySVGText", TYPE_SVG_TEXT)
 
-  virtual void DisableComponentAlpha() override {
-    mDisableSubpixelAA = true;
-  }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override;
@@ -3095,12 +3090,12 @@ public:
   {
     return new nsDisplayItemGenericImageGeometry(this, aBuilder);
   }
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override {
+
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override
+  {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
-private:
-  bool mDisableSubpixelAA;
 };
 
 void

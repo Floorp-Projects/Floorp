@@ -13,7 +13,6 @@ import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
@@ -22,6 +21,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.mma.MmaDelegate;
+import org.mozilla.gecko.widget.TouchDelegateWithReset;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
@@ -80,7 +80,7 @@ public class TabStrip extends ThemedLinearLayout
 
                     // Redirect touch events between the 'new tab' button and the edge
                     // of the screen to the 'new tab' button.
-                    setTouchDelegate(new TouchDelegate(r, addTabButton));
+                    setTouchDelegate(new TouchDelegateWithReset(r, addTabButton));
 
                     return true;
                 }

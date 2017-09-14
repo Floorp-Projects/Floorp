@@ -229,16 +229,22 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
 
     // Peek ahead to the next item and try merging with it or swapping with it
     // if necessary.
-    nsDisplayItem* aboveItem;
-    while ((aboveItem = aDisplayList->GetBottom()) != nullptr) {
-      if (aboveItem->TryMerge(item)) {
-        aDisplayList->RemoveBottom();
-        item->Destroy(aDisplayListBuilder);
-        item = aboveItem;
-        itemType = item->GetType();
-      } else {
+    AutoTArray<nsDisplayItem*, 1> mergedItems;
+    mergedItems.AppendElement(item);
+    for (nsDisplayItem* peek = item->GetAbove(); peek; peek = peek->GetAbove()) {
+      if (!item->CanMerge(peek)) {
         break;
       }
+
+      mergedItems.AppendElement(peek);
+
+      // Move the iterator forward since we will merge this item.
+      item = peek;
+    }
+
+    if (mergedItems.Length() > 1) {
+      item = aDisplayListBuilder->MergeItems(mergedItems);
+      MOZ_ASSERT(item && itemType == item->GetType());
     }
 
     nsDisplayList* itemSameCoordinateSystemChildren

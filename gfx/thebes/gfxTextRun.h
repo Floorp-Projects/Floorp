@@ -42,6 +42,9 @@ class gfxMissingFontRecorder;
 namespace mozilla {
 class SVGContextPaint;
 enum class StyleHyphens : uint8_t;
+namespace layout {
+class TextDrawTarget;
+};
 };
 
 /**
@@ -244,6 +247,7 @@ public:
     struct MOZ_STACK_CLASS DrawParams
     {
         gfxContext* context;
+        mozilla::layout::TextDrawTarget* textDrawer = nullptr;
         DrawMode drawMode = DrawMode::GLYPH_FILL;
         nscolor textStrokeColor = 0;
         gfxPattern* textStrokePattern = nullptr;
@@ -284,7 +288,9 @@ public:
      * from aProvider. The provided point is the baseline origin of the
      * line of emphasis marks.
      */
-    void DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
+    void DrawEmphasisMarks(gfxContext* aContext,
+                           mozilla::layout::TextDrawTarget* aTextDrawer,
+                           gfxTextRun* aMark,
                            gfxFloat aMarkAdvance, gfxPoint aPt,
                            Range aRange, PropertyProvider* aProvider) const;
 

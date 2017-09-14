@@ -89,6 +89,7 @@ add_task(async function testIdentityIndicationNewTab() {
   let url = await extension.awaitMessage("url");
   await BrowserTestUtils.withNewTab({gBrowser, url}, async function() {
     confirmExtensionPage();
+    is(gURLBar.value, "", "The URL bar is blank");
   });
 
   await extension.unload();

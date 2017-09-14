@@ -428,7 +428,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override;
+                           bool* aSnap) const override;
   NS_DISPLAY_DECL_NAME("TableCellBackground", TYPE_TABLE_CELL_BACKGROUND)
 };
 
@@ -444,7 +444,7 @@ void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRect
 nsDisplayTableCellBackground::GetBounds(nsDisplayListBuilder* aBuilder,
-                                        bool* aSnap)
+                                        bool* aSnap) const
 {
   // revert from nsDisplayTableItem's implementation ... cell backgrounds
   // don't overflow the cell

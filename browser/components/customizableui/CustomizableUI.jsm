@@ -4339,7 +4339,7 @@ OverflowableToolbar.prototype = {
     if (this._chevron.open) {
       this._panel.hidePopup();
       this._chevron.open = false;
-    } else if (this._panel.state != "hiding") {
+    } else if (this._panel.state != "hiding" && !this._chevron.disabled) {
       this.show();
     }
   },

@@ -338,8 +338,6 @@ partial interface Window {
 
   [Replaceable, Throws, NeedsCallerType] readonly attribute object? content;
 
-  [ChromeOnly, Throws, NeedsCallerType] readonly attribute object? __content;
-
   [Throws, ChromeOnly] any getInterface(IID iid);
 
   /**

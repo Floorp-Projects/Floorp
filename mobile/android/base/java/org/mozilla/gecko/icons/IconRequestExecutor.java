@@ -28,6 +28,7 @@ import org.mozilla.gecko.icons.preparation.SuggestedSitePreparer;
 import org.mozilla.gecko.icons.processing.ColorProcessor;
 import org.mozilla.gecko.icons.processing.DiskProcessor;
 import org.mozilla.gecko.icons.processing.MemoryProcessor;
+import org.mozilla.gecko.icons.processing.MinimumSizeProcessor;
 import org.mozilla.gecko.icons.processing.Processor;
 import org.mozilla.gecko.icons.processing.ResizingProcessor;
 
@@ -126,7 +127,11 @@ import java.util.concurrent.TimeUnit;
             new ColorProcessor(),
 
             // Store the icon in the memory cache
-            new MemoryProcessor()
+            new MemoryProcessor(),
+
+            // Substitute a generated icon if the final result is not large enough.
+            // Expected to be called after ResizingProcessor.
+            new MinimumSizeProcessor()
     );
 
     private static final ExecutorService EXECUTOR;
