@@ -163,6 +163,7 @@
 }
 
 .ruleview-propertyvaluecontainer a {
+  color: var(--theme-highlight-purple);
   cursor: pointer;
 }
 
