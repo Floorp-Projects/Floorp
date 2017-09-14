@@ -3979,6 +3979,10 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
                 mRaceCacheWithNetwork = sRCWNEnabled;
             }
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
+            if (NS_FAILED(rv)) {
+                // Drop the flag since the cache open failed
+                mCacheAsyncOpenCalled = false;
+            }
         } else {
             // We pass `this` explicitly as a parameter due to the raw pointer
             // to refcounted object in lambda analysis.
@@ -3988,7 +3992,10 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
                 if (self->mNetworkTriggered) {
                     self->mRaceCacheWithNetwork = true;
                 }
-                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
+                nsresult rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
+                if (NS_FAILED(rv)) {
+                    self->mCacheAsyncOpenCalled = false;
+                }
             };
 
             mCacheOpenTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
