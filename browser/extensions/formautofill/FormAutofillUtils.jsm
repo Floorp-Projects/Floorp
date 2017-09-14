@@ -26,6 +26,8 @@ const EDIT_ADDRESS_KEYWORDS = [
   "givenName", "additionalName", "familyName", "organization", "streetAddress",
   "state", "province", "city", "country", "zip", "postalCode", "email", "tel",
 ];
+const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle", "showCreditCards"];
+const EDIT_CREDITCARD_KEYWORDS = ["cardNumber", "nameOnCard", "cardExpires"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -41,6 +43,8 @@ this.FormAutofillUtils = {
   ENABLED_AUTOFILL_CREDITCARDS_PREF,
   MANAGE_ADDRESSES_KEYWORDS,
   EDIT_ADDRESS_KEYWORDS,
+  MANAGE_CREDITCARDS_KEYWORDS,
+  EDIT_CREDITCARD_KEYWORDS,
 
   _fieldNameInfo: {
     "name": "name",
