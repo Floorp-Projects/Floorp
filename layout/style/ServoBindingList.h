@@ -68,6 +68,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_SizeOfIncludingThis, size_t,
                    RawServoStyleSheetContentsBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetSourceMapURL, void,
                    RawServoStyleSheetContentsBorrowed sheet, nsAString* result)
+SERVO_BINDING_FUNC(Servo_StyleSheet_GetSourceURL, void,
+                   RawServoStyleSheetContentsBorrowed sheet, nsAString* result)
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
