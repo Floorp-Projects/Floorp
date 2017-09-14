@@ -379,6 +379,12 @@ struct JSContext : public JS::RootingContext,
         return offsetof(JSContext, profilingActivation_);
      }
 
+#ifdef DEBUG
+    static size_t offsetOfInUnsafeCallWithABI() {
+        return offsetof(JSContext, inUnsafeCallWithABI);
+    }
+#endif
+
   private:
     /* Space for interpreter frames. */
     js::ThreadLocalData<js::InterpreterStack> interpreterStack_;
@@ -419,6 +425,8 @@ struct JSContext : public JS::RootingContext,
 
 #ifdef DEBUG
     js::ThreadLocalData<unsigned> checkRequestDepth;
+    js::ThreadLocalData<uint32_t> inUnsafeCallWithABI;
+    js::ThreadLocalData<bool> hasAutoUnsafeCallWithABI;
 #endif
 
 #ifdef JS_SIMULATOR
@@ -1284,6 +1292,23 @@ class MOZ_RAII AutoEnterIonCompilation
     }
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+// Should be used in functions called directly from JIT code (with
+// masm.callWithABI) to assert invariants in debug builds.
+class MOZ_RAII AutoUnsafeCallWithABI
+{
+#ifdef DEBUG
+    JSContext* cx_;
+    bool nested_;
+#endif
+    JS::AutoCheckCannotGC nogc;
+
+  public:
+#ifdef DEBUG
+    AutoUnsafeCallWithABI();
+    ~AutoUnsafeCallWithABI();
+#endif
 };
 
 namespace gc {
