@@ -21,6 +21,11 @@ const CREDITCARDS_COLLECTION_NAME = "creditCards";
 const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
 const AUTOFILL_CREDITCARDS_AVAILABLE_PREF = "extensions.formautofill.creditCards.available";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
+const MANAGE_ADDRESSES_KEYWORDS = ["manageAddressesTitle", "addNewAddressTitle"];
+const EDIT_ADDRESS_KEYWORDS = [
+  "givenName", "additionalName", "familyName", "organization", "streetAddress",
+  "state", "province", "city", "country", "zip", "postalCode", "email", "tel",
+];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -34,6 +39,8 @@ this.FormAutofillUtils = {
   CREDITCARDS_COLLECTION_NAME,
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_CREDITCARDS_PREF,
+  MANAGE_ADDRESSES_KEYWORDS,
+  EDIT_ADDRESS_KEYWORDS,
 
   _fieldNameInfo: {
     "name": "name",
