@@ -483,11 +483,6 @@ var FormAutofillContent = {
       Services.cpmm.sendAsyncMessage("FormAutofill:InitStorage");
     }
 
-    if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
-      this.log.debug("Not an eligible field.");
-      return;
-    }
-
     let formHandler = this.getFormHandler(element);
     if (!formHandler) {
       let formLike = FormLikeFactory.createFromField(element);
@@ -507,17 +502,7 @@ var FormAutofillContent = {
     );
   },
 
-  _markAsAutofillField(field) {
-    // Since Form Autofill popup is only for input element, any non-Input
-    // element should be excluded here.
-    if (!field || !(field instanceof Ci.nsIDOMHTMLInputElement)) {
-      return;
-    }
-
-    formFillController.markAsAutofillField(field);
-  },
-
-  _previewProfile(doc) {
+  previewProfile(doc) {
     let docWin = doc.ownerGlobal;
     let selectedIndex = ProfileAutocomplete._getSelectedIndex(docWin);
     let lastAutoCompleteResult = ProfileAutocomplete.getProfileAutoCompleteResult();
@@ -546,6 +531,16 @@ var FormAutofillContent = {
 
       ProfileAutocomplete._previewSelectedProfile(selectedIndex);
     }
+  },
+
+  _markAsAutofillField(field) {
+    // Since Form Autofill popup is only for input element, any non-Input
+    // element should be excluded here.
+    if (!field || !(field instanceof Ci.nsIDOMHTMLInputElement)) {
+      return;
+    }
+
+    formFillController.markAsAutofillField(field);
   },
 
   _messageManagerFromWindow(win) {
