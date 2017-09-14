@@ -2093,3 +2093,7 @@ photonpanelmultiview #panelMenu_pocket {
 }
 
 /* END photon adjustments */
+
+panel {
+  -moz-window-shadow: sheet;
+}
