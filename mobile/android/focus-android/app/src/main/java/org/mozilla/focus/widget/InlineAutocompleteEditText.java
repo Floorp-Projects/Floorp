@@ -179,7 +179,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
                 AUTOCOMPLETE_SPAN,
                 // Span to change the autocomplete text color
                 new BackgroundColorSpan(
-                        ContextCompat.getColor(getContext(), R.color.colorAutocompleteHighlight))
+                        ContextCompat.getColor(getContext(), R.color.colorAccent))
         };
 
         mAutoCompleteResult = "";

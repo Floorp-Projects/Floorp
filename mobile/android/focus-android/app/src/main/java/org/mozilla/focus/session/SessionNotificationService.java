@@ -97,7 +97,7 @@ public class SessionNotificationService extends Service {
                 .setVisibility(Notification.VISIBILITY_SECRET)
                 .setShowWhen(false)
                 .setLocalOnly(true)
-                .setColor(ContextCompat.getColor(this, R.color.colorFloatingActionButtonTint))
+                .setColor(ContextCompat.getColor(this, R.color.colorErase))
                 .addAction(new NotificationCompat.Action(
                         R.drawable.ic_notification,
                         getString(R.string.notification_action_open),

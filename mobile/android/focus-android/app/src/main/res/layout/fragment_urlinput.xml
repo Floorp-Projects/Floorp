@@ -89,7 +89,7 @@
                     android:requiresFadingEdge="horizontal"
                     android:selectAllOnFocus="true"
                     android:textColor="#ffffff"
-                    android:textColorHighlight="@color/colorAutocompleteHighlight"
+                    android:textColorHighlight="@color/colorAccent"
                     android:textColorHint="@color/inactive_text"
                     android:textSize="15sp" />
 

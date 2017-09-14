@@ -5,7 +5,7 @@
 <resources>
     <color name="colorPrimary">#ff272727</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
-    <color name="colorAccent">#FFCF68FF</color>
+    <color name="colorAccent">@color/photonMagenta70</color>
 
     <color name="colorGradientStart">#ffa01142</color>
     <color name="colorGradientCenter">#ff90116D</color>
@@ -18,11 +18,11 @@
     <color name="colorInactiveGradientCenter">#ff433446</color>
     <color name="colorInactiveGradientEnd">#ff3b3445</color>
 
-    <color name="colorAutocompleteHighlight">#FFCF68FF</color>
+    <color name="colorErase">@color/photonMagenta70</color>
+    <color name="colorErasePressed">@color/photonMagenta80</color>
 
-    <color name="colorErase">#96368D</color>
-    <color name="colorFloatingActionButtonTint">#96368D</color>
-    <color name="colorTabsButtonTint">@color/colorAction</color>
+    <color name="colorMultitasking">@color/photonBlue50</color>
+    <color name="colorMultitaskingPressed">@color/photonBlue60</color>
 
     <color name="colorUrlInputBackground">#B2000000</color>
 

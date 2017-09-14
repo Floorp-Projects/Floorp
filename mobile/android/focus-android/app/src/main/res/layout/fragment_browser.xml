@@ -46,8 +46,8 @@
                 android:layout_marginEnd="@dimen/floating_action_button_margin"
                 android:elevation="4dp"
                 android:visibility="gone"
-                app:backgroundTint="@color/colorTabsButtonTint"
-                app:rippleColor="#7FFFFFFF"
+                app:backgroundTint="@color/colorMultitasking"
+                app:rippleColor="@color/colorMultitaskingPressed"
                 app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
                 app:fabSize="normal" />
 
@@ -60,8 +60,8 @@
                 android:layout_marginEnd="@dimen/floating_action_button_margin"
                 android:elevation="4dp"
                 android:src="@drawable/ic_delete"
-                app:backgroundTint="@color/colorFloatingActionButtonTint"
-                app:rippleColor="#7FFFFFFF"
+                app:backgroundTint="@color/colorErase"
+                app:rippleColor="@color/colorErasePressed"
                 app:fabSize="normal"
                 app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
                 android:contentDescription="@string/content_description_erase" />
