@@ -349,7 +349,7 @@ LocaleService::OnLocalesChanged()
  * This is the raw algorithm for language negotiation based roughly
  * on RFC4647 language filtering, with changes from LDML language matching.
  *
- * The exact algorithm is custom, and consist of 5 level strategy:
+ * The exact algorithm is custom, and consists of a 6 level strategy:
  *
  * 1) Attempt to find an exact match for each requested locale in available
  *    locales.
@@ -372,7 +372,14 @@ LocaleService::OnLocalesChanged()
  *               ^^^^^^^^^
  *               |----------- replace variant with range: 'ja-JP-*'
  *
- * 5) Attempt to look up for a different region of the same locale.
+ * 5) Attempt to look up for a maximized version of the requested locale,
+ *    stripped of the region code.
+ *    Example: ['en-CA'] * ['en-ZA', 'en-US'] = ['en-US', 'en-ZA']
+ *               ^^^^^
+ *               |----------- look for likelySubtag of 'en': 'en-Latn-US'
+ *
+ *
+ * 6) Attempt to look up for a different region of the same locale.
  *    Example: ['en-GB'] * ['en-AU'] = ['en-AU']
  *               ^^^^^
  *               |----- replace region with range: 'en-*'
@@ -458,7 +465,15 @@ LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
       HANDLE_STRATEGY;
     }
 
-    // 5) Try to match against a region as a range
+    // 5) Try to match against the likely subtag without region
+    if (requestedLocale.AddLikelySubtagsWithoutRegion()) {
+      if (findRangeMatches(requestedLocale)) {
+        HANDLE_STRATEGY;
+      }
+    }
+
+
+    // 6) Try to match against a region as a range
     requestedLocale.SetRegionRange();
     if (findRangeMatches(requestedLocale)) {
       HANDLE_STRATEGY;
@@ -821,12 +836,34 @@ LocaleService::Locale::SetRegionRange()
 bool
 LocaleService::Locale::AddLikelySubtags()
 {
+  return AddLikelySubtagsForLocale(mLocaleStr);
+}
+
+bool
+LocaleService::Locale::AddLikelySubtagsWithoutRegion()
+{
+  nsAutoCString locale(mLanguage);
+
+  if (!mScript.IsEmpty()) {
+    locale.Append("-");
+    locale.Append(mScript);
+  }
+
+  // We don't add variant here because likelySubtag doesn't care about it.
+
+  return AddLikelySubtagsForLocale(locale);
+}
+
+bool
+LocaleService::Locale::AddLikelySubtagsForLocale(const nsACString& aLocale)
+{
 #ifdef ENABLE_INTL_API
   const int32_t kLocaleMax = 160;
   char maxLocale[kLocaleMax];
+  nsAutoCString locale(aLocale);
 
   UErrorCode status = U_ZERO_ERROR;
-  uloc_addLikelySubtags(mLocaleStr.get(), maxLocale, kLocaleMax, &status);
+  uloc_addLikelySubtags(locale.get(), maxLocale, kLocaleMax, &status);
 
   if (U_FAILURE(status)) {
     return false;
@@ -842,7 +879,10 @@ LocaleService::Locale::AddLikelySubtags()
   mLanguage = loc.mLanguage;
   mScript = loc.mScript;
   mRegion = loc.mRegion;
-  mVariant = loc.mVariant;
+
+  // We don't update variant from likelySubtag since it's not going to
+  // provide it and we want to preserve the range
+
   return true;
 #else
   return false;
