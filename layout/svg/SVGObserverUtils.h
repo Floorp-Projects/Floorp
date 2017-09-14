@@ -40,8 +40,8 @@ class nsSVGFilterChainObserver;
  * "GetTarget()" to specify the piece of SVG content that they'd like to
  * monitor, and they need to implement "DoUpdate" to specify how we'll react
  * when that content gets re-rendered. They also need to implement a
- * constructor and destructor, which should call StartListening and
- * StopListening, respectively.
+ * constructor and destructor, which should call StartObserving and
+ * StopObserving, respectively.
  */
 class nsSVGRenderingObserver : public nsStubMutationObserver
 {
@@ -84,8 +84,8 @@ public:
 
 protected:
   // Non-virtual protected methods
-  void StartListening();
-  void StopListening();
+  void StartObserving();
+  void StopObserving();
 
   // Virtual protected methods
   virtual void DoUpdate() = 0; // called when the referenced resource changes.
@@ -138,9 +138,9 @@ protected:
     {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
-      mOwningObserver->StopListening(); // stop observing the old element
+      mOwningObserver->StopObserving(); // stop observing the old element
       IDTracker::ElementChanged(aFrom, aTo);
-      mOwningObserver->StartListening(); // start observing the new element
+      mOwningObserver->StartObserving(); // start observing the new element
       mOwningObserver->DoUpdate();
     }
     /**
