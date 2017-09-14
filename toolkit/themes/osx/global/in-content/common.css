@@ -15,6 +15,13 @@ xul|tab[visuallyselected] {
 }
 
 xul|button,
+html|button,
+xul|colorpicker[type="button"],
+xul|menulist {
+  margin-top: 3px;
+}
+
+xul|button,
 html|button {
   /* use the same margin of other elements for the alignment */
   margin-left: 4px;
@@ -70,7 +77,6 @@ xul|*.numberbox-input-box {
 }
 
 xul|description {
-  font-size: 1.25rem;
   line-height: 22px;
 }
 
@@ -123,10 +129,25 @@ xul|textbox[type="search"]:not([searchbutton]) > .textbox-input-box > .textbox-s
   margin-inline-end: 5px;
 }
 
+html|html *,
+xul|page *,
+xul|window * {
+  font-size: 1.36rem;
+}
+
 *|*.header-name {
   font-size: 2rem;
 }
 
 *|*.category-name {
   font-size: 1.45rem;
+}
+
+xul|caption > xul|label:not(.dialogTitle) {
+  font-size: 1.55rem;
+}
+
+.tip-caption,
+.help-button {
+  font-size: 1.18rem;
 }

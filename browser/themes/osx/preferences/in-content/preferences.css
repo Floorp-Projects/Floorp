@@ -4,24 +4,6 @@
 
 %include ../../../shared/incontentprefs/preferences.inc.css
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
-
-html|html *,
-page *,
-window * {
-  font-size: 1.36rem;
-}
-
-caption > label:not(.dialogTitle) {
-  font-size: 1.55rem;
-}
-
-.tip-caption,
-.help-button {
-  font-size: 1.18rem;
-}
-
 .actionsMenu > .menulist-label-box > .menulist-icon {
   margin-top: 2px;
   margin-inline-start: 2px;
