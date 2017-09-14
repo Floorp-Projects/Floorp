@@ -13,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -42,6 +43,7 @@ import java.util.concurrent.Future;
     private final FaviconView faviconView;
 
     private final TextView title;
+    private final ImageView pinIconView;
     private Future<IconResponse> ongoingIconLoad;
 
     private TopSite topSite;
@@ -54,8 +56,8 @@ import java.util.concurrent.Future;
         super(card);
 
         faviconView = (FaviconView) card.findViewById(R.id.favicon);
-
         title = (TextView) card.findViewById(R.id.title);
+        pinIconView = (ImageView) card.findViewById(R.id.pin_icon);
 
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
@@ -110,6 +112,8 @@ import java.util.concurrent.Future;
                     .build()
                     .execute(this);
         }
+
+        pinIconView.setVisibility(topSite.isPinned() ? View.VISIBLE : View.GONE);
 
         setTopSiteTitle(topSite);
     }
