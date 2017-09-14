@@ -4370,7 +4370,7 @@ huge_dalloc(void *ptr)
  * implementation has to take pains to avoid infinite recursion during
  * initialization.
  */
-#if (defined(XP_WIN) || defined(XP_DARWIN))
+#if defined(XP_WIN)
 #define	malloc_init() false
 #else
 static inline bool
@@ -4382,10 +4382,6 @@ malloc_init(void)
 
 	return (false);
 }
-#endif
-
-#if defined(XP_DARWIN)
-extern "C" void register_zone(void);
 #endif
 
 static size_t
@@ -4650,10 +4646,6 @@ MALLOC_OUT:
 #if !defined(XP_WIN) && !defined(XP_DARWIN)
   /* Prevent potential deadlock on malloc locks after fork. */
   pthread_atfork(_malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
-#endif
-
-#if defined(XP_DARWIN)
-  register_zone();
 #endif
 
 #ifndef XP_WIN
@@ -5443,18 +5435,6 @@ replace_malloc_init_funcs()
 
 #ifdef HAVE_DLOPEN
 #  include <dlfcn.h>
-#endif
-
-#if defined(XP_DARWIN)
-
-__attribute__((constructor))
-void
-jemalloc_darwin_init(void)
-{
-	if (malloc_init_hard())
-		MOZ_CRASH();
-}
-
 #endif
 
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
