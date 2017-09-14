@@ -11,8 +11,6 @@ const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
-                                      "extensions.webextensions.remote", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "useSeparateFileUriProcess",
                                       "browser.tabs.remote.separateFileUriProcess", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "allowLinkedWebInFileUriProcess",
@@ -185,7 +183,7 @@ this.E10SUtils = {
         return NOT_REMOTE;
 
       case "moz-extension":
-        return useRemoteWebExtensions ? EXTENSION_REMOTE_TYPE : NOT_REMOTE;
+        return WebExtensionPolicy.useRemoteWebExtensions ? EXTENSION_REMOTE_TYPE : NOT_REMOTE;
 
       default:
         // For any other nested URIs, we use the innerURI to determine the
