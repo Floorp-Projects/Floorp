@@ -271,7 +271,6 @@
 <!ENTITY pref_show_web_fonts_summary2 "Download remote fonts when loading a page">
 
 <!ENTITY pref_tracking_protection_title2 "Tracking Protection">
-<!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">
 <!ENTITY pref_donottrack_title "Do not track">
 <!ENTITY pref_donottrack_summary "&brandShortName; will tell sites that you do not want to be tracked">
 
