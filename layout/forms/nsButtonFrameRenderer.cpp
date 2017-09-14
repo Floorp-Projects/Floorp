@@ -92,6 +92,7 @@ public:
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
+    nsTArray<WebRenderParentCommand>& aParentCommands,
     mozilla::layers::WebRenderLayerManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) override;
 
@@ -198,6 +199,7 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   mozilla::wr::DisplayListBuilder& aBuilder,
   mozilla::wr::IpcResourceUpdateQueue& aResources,
   const StackingContextHelper& aSc,
+  nsTArray<WebRenderParentCommand>& aParentCommands,
   mozilla::layers::WebRenderLayerManager* aManager,
   nsDisplayListBuilder* aDisplayListBuilder)
 {
@@ -298,6 +300,7 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   NS_DISPLAY_DECL_NAME("ButtonBorderBackground", TYPE_BUTTON_BORDER_BACKGROUND)
@@ -365,6 +368,7 @@ bool
 nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                const StackingContextHelper& aSc,
+                                               nsTArray<WebRenderParentCommand>& aParentCommands,
                                                mozilla::layers::WebRenderLayerManager* aManager,
                                                nsDisplayListBuilder* aDisplayListBuilder)
 {
@@ -461,6 +465,7 @@ public:
    virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const StackingContextHelper& aSc,
+                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                         mozilla::layers::WebRenderLayerManager* aManager,
                                         nsDisplayListBuilder* aDisplayListBuilder) override;
   NS_DISPLAY_DECL_NAME("ButtonForeground", TYPE_BUTTON_FOREGROUND)
@@ -547,6 +552,7 @@ bool
 nsDisplayButtonForeground::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                    mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                    const StackingContextHelper& aSc,
+                                                   nsTArray<WebRenderParentCommand>& aParentCommands,
                                                    mozilla::layers::WebRenderLayerManager* aManager,
                                                    nsDisplayListBuilder* aDisplayListBuilder)
 {
