@@ -27,6 +27,7 @@ class CompositorManagerParent final : public PCompositorManagerParent
 public:
   static already_AddRefed<CompositorManagerParent> CreateSameProcess();
   static void Create(Endpoint<PCompositorManagerParent>&& aEndpoint);
+  static void Shutdown();
 
   static already_AddRefed<CompositorBridgeParent>
   CreateSameProcessWidgetCompositorBridge(CSSToLayoutDeviceScale aScale,
@@ -41,7 +42,10 @@ public:
 
 private:
   static StaticRefPtr<CompositorManagerParent> sInstance;
+  static StaticAutoPtr<nsTArray<CompositorManagerParent*>> sActiveActors;
   static StaticMutex sMutex;
+
+  static void ShutdownInternal();
 
   CompositorManagerParent();
   ~CompositorManagerParent() override;
