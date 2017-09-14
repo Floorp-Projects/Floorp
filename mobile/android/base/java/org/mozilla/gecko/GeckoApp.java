@@ -1241,11 +1241,7 @@ public abstract class GeckoApp extends GeckoActivity
         // Use global layout state change to kick off additional initialization
         mMainLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
-        if (Versions.preMarshmallow) {
-            mTextSelection = new ActionBarTextSelection(this, getTextSelectPresenter());
-        } else {
-            mTextSelection = new FloatingToolbarTextSelection(this, mLayerView);
-        }
+        mTextSelection = TextSelection.Factory.create(mLayerView, getTextSelectPresenter());
         mTextSelection.create();
 
         final Bundle finalSavedInstanceState = savedInstanceState;
