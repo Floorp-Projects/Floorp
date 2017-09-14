@@ -4806,10 +4806,15 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
           }
           surfaceRect.UnionRect(surfaceRect, textRect);
 
+          const ActiveScrolledRoot* asr = i->GetActiveScrolledRoot();
+
           DisplayItemClip newClip;
           newClip.SetTo(textRect);
-          DisplayItemClipChain newClipChain = { newClip, i->GetActiveScrolledRoot(), nullptr };
-          i->IntersectClip(aBuilder, &newClipChain);
+
+          const DisplayItemClipChain* newClipChain =
+            aBuilder->AllocateDisplayItemClipChain(newClip, asr, nullptr);
+
+          i->IntersectClip(aBuilder, newClipChain);
           itemToInsert = i;
         }
       }
