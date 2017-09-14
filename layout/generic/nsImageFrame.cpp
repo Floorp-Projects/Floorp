@@ -1314,7 +1314,7 @@ public:
 
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion) override
+                                         nsRegion* aInvalidRegion) const override
   {
     auto geometry =
       static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
@@ -1329,7 +1329,7 @@ public:
   }
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override
+                           bool* aSnap) const override
   {
     *aSnap = false;
     return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
@@ -1566,7 +1566,7 @@ nsDisplayImage::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 void
 nsDisplayImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayItemGeometry* aGeometry,
-                                          nsRegion* aInvalidRegion)
+                                          nsRegion* aInvalidRegion) const
 {
   auto geometry =
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
@@ -1588,7 +1588,7 @@ nsDisplayImage::GetImage()
 }
 
 nsRect
-nsDisplayImage::GetDestRect()
+nsDisplayImage::GetDestRect() const
 {
   bool snap = true;
   const nsRect frameContentBox = GetBounds(&snap);
@@ -1661,7 +1661,7 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 
 /* virtual */ nsRegion
 nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                bool* aSnap)
+                                bool* aSnap) const
 {
   *aSnap = false;
   if (mImage && mImage->WillDrawOpaqueNow()) {

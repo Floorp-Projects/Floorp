@@ -982,6 +982,16 @@ EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
              "Traversal root, if provided, should be bound to a display "
              "document");
 
+  // Convert the root element to the parent element if the root element is
+  // pseudo since we check each element in mElementsToRestyle is in the subtree
+  // of the root element later in this function, but for pseudo elements the
+  // element in mElementsToRestyle is the parent of the pseudo.
+  if (aRoot &&
+      (aRoot->IsGeneratedContentContainerForBefore() ||
+       aRoot->IsGeneratedContentContainerForAfter())) {
+    aRoot = aRoot->GetParentElement();
+  }
+
   AutoRestore<bool> guard(mIsInPreTraverse);
   mIsInPreTraverse = true;
 

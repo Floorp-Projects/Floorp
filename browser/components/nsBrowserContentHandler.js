@@ -6,6 +6,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "HeadlessShell",
+                                  "resource:///modules/HeadlessShell.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LaterRun",
                                   "resource:///modules/LaterRun.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
@@ -466,6 +468,10 @@ nsBrowserContentHandler.prototype = {
     } else {
       info += "  --preferences      Open Preferences dialog.\n";
     }
+    if (AppConstants.platform == "win" || AppConstants.MOZ_WIDGET_GTK) {
+      info += "  --screenshot [<path>] Save screenshot to <path> or in working directory.\n";
+      info += "  --window-size width[,height] Width and optionally height of screenshot.\n";
+    }
     info += "  --search <term>    Search <term> with your default search engine.\n";
     return info;
   },
@@ -739,6 +745,11 @@ nsDefaultCommandLineHandler.prototype = {
       }
     } catch (e) {
       Components.utils.reportError(e);
+    }
+
+    if (cmdLine.findFlag("screenshot", true) != -1) {
+      HeadlessShell.handleCmdLineArgs(cmdLine, urilist.filter(shouldLoadURI).map(u => u.spec));
+      return;
     }
 
     for (let i = 0; i < cmdLine.length; ++i) {

@@ -60,12 +60,6 @@ class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
   }
 
   receiveMessage({name, data}) {
-    // Filter out any message received while the panel context do not yet
-    // exist.
-    if (!this.panelContext || !this.panelContext.contentWindow) {
-      return;
-    }
-
     // Filter out any message that is not related to the id of this
     // toolbox panel.
     if (!data || data.toolboxPanelId !== this.id) {
@@ -74,6 +68,11 @@ class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
 
     switch (name) {
       case "Extension:DevToolsPanelShown":
+        // Filter out *Shown message received while the panel context do not yet
+        // exist.
+        if (!this.panelContext || !this.panelContext.contentWindow) {
+          return;
+        }
         this.onParentPanelShown();
         break;
       case "Extension:DevToolsPanelHidden":

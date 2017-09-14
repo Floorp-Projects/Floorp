@@ -1201,7 +1201,9 @@ nsTableFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 }
 
 nsRect
-nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder,
+                              bool* aSnap) const
+{
   *aSnap = false;
   return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
@@ -1228,7 +1230,7 @@ nsDisplayTableItem::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 void
 nsDisplayTableItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                               const nsDisplayItemGeometry* aGeometry,
-                                              nsRegion *aInvalidRegion)
+                                              nsRegion *aInvalidRegion) const
 {
   auto geometry =
     static_cast<const nsDisplayTableItemGeometry*>(aGeometry);

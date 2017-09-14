@@ -53,6 +53,7 @@ var openInspectorSidebarTab = Task.async(function* (id) {
 
   info("Selecting the " + id + " sidebar");
 
+  let onSidebarSelect = inspector.sidebar.once("select");
   if (id === "computedview" || id === "layoutview") {
     // The layout and computed views should wait until the box-model widget is ready.
     let onBoxModelViewReady = inspector.once("boxmodel-view-updated");
@@ -61,6 +62,7 @@ var openInspectorSidebarTab = Task.async(function* (id) {
   } else {
     inspector.sidebar.select(id);
   }
+  yield onSidebarSelect;
 
   return {
     toolbox,
@@ -134,7 +136,7 @@ function openLayoutView() {
       toolbox: data.toolbox,
       inspector: data.inspector,
       boxmodel: data.inspector.getPanel("boxmodel"),
-      gridInspector: data.inspector.gridInspector,
+      gridInspector: data.inspector.layoutview.gridInspector,
       testActor: data.testActor
     };
   });

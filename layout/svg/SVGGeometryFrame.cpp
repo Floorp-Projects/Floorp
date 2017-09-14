@@ -87,7 +87,7 @@ public:
 
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion *aInvalidRegion) override;
+                                 nsRegion *aInvalidRegion) const override;
 };
 
 void
@@ -134,10 +134,9 @@ nsDisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplaySVGGeometry::ComputeInvalidationRegion(
-  nsDisplayListBuilder* aBuilder,
-  const nsDisplayItemGeometry* aGeometry,
-  nsRegion* aInvalidRegion)
+nsDisplaySVGGeometry::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                                const nsDisplayItemGeometry* aGeometry,
+                                                nsRegion* aInvalidRegion) const
 {
   auto geometry =
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);

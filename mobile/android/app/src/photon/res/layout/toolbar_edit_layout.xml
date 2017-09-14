@@ -27,7 +27,7 @@
 
     <org.mozilla.gecko.toolbar.ToolbarEditText
         android:id="@+id/url_edit_text"
-        style="@style/UrlBar.Title"
+        style="@style/UrlBar.EditLayout.Title"
         android:layout_width="match_parent"
         android:layout_gravity="center_vertical"
         android:layout_weight="1.0"
@@ -35,8 +35,6 @@
         android:contentDescription="@string/url_bar_default_text"
         android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
         android:inputType="textUri"
-        android:paddingEnd="8dp"
-        android:paddingRight="8dp"
         android:selectAllOnFocus="true"/>
 
     <org.mozilla.gecko.toolbar.ToolbarRoundButton

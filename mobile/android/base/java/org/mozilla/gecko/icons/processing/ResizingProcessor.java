@@ -15,6 +15,13 @@ import org.mozilla.gecko.icons.IconResponse;
  * Processor implementation for resizing the loaded icon based on the target size.
  */
 public class ResizingProcessor implements Processor {
+    // This is the largest factor we'll scale up an image by: the goal is an image
+    // that both fills the top site space well but does not have extreme resizing
+    // artifacts. This number was chosen anecdotally by comparing variously-sized
+    // favicons across devices to see which factor(s) looked the best. bug 1398970
+    // is filed to take a more comprehensive approach to favicons.
+    public static final int MAX_SCALE_FACTOR = 3;
+
     @Override
     public void process(IconRequest request, IconResponse response) {
         if (response.isFromMemory()) {
@@ -38,9 +45,9 @@ public class ResizingProcessor implements Processor {
         if (size > targetSize) {
             resizedBitmap = resize(originalBitmap, targetSize);
         } else {
-            // Our largest primary is smaller than the desired size. Upscale by a maximum of 2x.
+            // Our largest primary is smaller than the desired size. Upscale it (to a limit)!
             // 'largestSize' now reflects the maximum size we can upscale to.
-            final int largestSize = size * 2;
+            final int largestSize = size * MAX_SCALE_FACTOR;
 
             if (largestSize > targetSize) {
                 // Perfect! We can upscale by less than 2x and reach the needed size. Do it.

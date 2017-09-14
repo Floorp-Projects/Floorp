@@ -4955,7 +4955,8 @@ public:
 #endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override {
+                           bool* aSnap) const override
+  {
     *aSnap = false;
     return mBounds;
   }
@@ -4981,7 +4982,7 @@ public:
                      gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override
   {
     if (gfxPlatform::GetPlatform()->RespectsFontStyleSmoothing()) {
       // On OS X, web authors can turn off subpixel text rendering using the
@@ -4999,11 +5000,7 @@ public:
 
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion *aInvalidRegion) override;
-
-  virtual void DisableComponentAlpha() override {
-    mDisableSubpixelAA = true;
-  }
+                                         nsRegion *aInvalidRegion) const override;
 
   void RenderToContext(gfxContext* aCtx, TextDrawTarget* aTextDrawer, nsDisplayListBuilder* aBuilder, bool aIsRecording = false);
 
@@ -5052,11 +5049,8 @@ public:
   }
 
   RefPtr<TextDrawTarget> mTextDrawer;
-
   nsRect mBounds;
-
   float mOpacity;
-  bool mDisableSubpixelAA;
 };
 
 class nsDisplayTextGeometry : public nsCharClipGeometry
@@ -5088,7 +5082,7 @@ nsDisplayText::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 void
 nsDisplayText::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion *aInvalidRegion)
+                                         nsRegion *aInvalidRegion) const
 {
   const nsDisplayTextGeometry* geometry = static_cast<const nsDisplayTextGeometry*>(aGeometry);
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
@@ -5122,7 +5116,6 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
                              const Maybe<bool>& aIsSelected)
   : nsCharClipDisplayItem(aBuilder, aFrame)
   , mOpacity(1.0f)
-  , mDisableSubpixelAA(false)
 {
   MOZ_COUNT_CTOR(nsDisplayText);
   mIsFrameSelected = aIsSelected;
@@ -5161,29 +5154,7 @@ nsDisplayText::GetLayerState(nsDisplayListBuilder* aBuilder,
 
   // If we're using the TextLayer backend, then we need to make sure
   // the input is plain enough for it to handle
-
-  // Can't handle shadows, selections, or decorations
-  if (mTextDrawer->GetShadows().Length() > 0 ||
-      mTextDrawer->GetSelections().Length() > 0 ||
-      mTextDrawer->GetBeforeDecorations().Length() > 0 ||
-      mTextDrawer->GetAfterDecorations().Length() > 0) {
-    return mozilla::LAYER_NONE;
-  }
-
-  // Must only have one font (multiple colors is fine)
-  ScaledFont* font = nullptr;
-
-  for (const mozilla::layout::TextRunFragment& text : mTextDrawer->GetText()) {
-    if (!font) {
-      font = text.font;
-    }
-    if (font != text.font) {
-      return mozilla::LAYER_NONE;
-    }
-  }
-
-  // Must have an actual font (i.e. actual text)
-  if (!font) {
+  if (!mTextDrawer->ContentsAreSimple()) {
     return mozilla::LAYER_NONE;
   }
 
@@ -5237,38 +5208,42 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   //                text, emphasisText,  [grouped in one array]
   //                lineThrough
 
-  for (const mozilla::layout::SelectionFragment& selection:
-       mTextDrawer->GetSelections()) {
-    aBuilder.PushRect(selection.rect, wrClipRect, selection.color);
+  for (auto& part : mTextDrawer->GetParts()) {
+    if (part.selection) {
+      auto selection = part.selection.value();
+      aBuilder.PushRect(selection.rect, wrClipRect, selection.color);
+    }
   }
 
-  // WR takes the shadows in CSS-order (reverse of rendering order),
-  // because the drawing of a shadow actually occurs when it's popped.
-  for (const wr::TextShadow& shadow : mTextDrawer->GetShadows()) {
-    aBuilder.PushTextShadow(wrBoundsRect, wrClipRect, shadow);
-  }
+  for (auto& part : mTextDrawer->GetParts()) {
+    // WR takes the shadows in CSS-order (reverse of rendering order),
+    // because the drawing of a shadow actually occurs when it's popped.
+    for (const wr::TextShadow& shadow : part.shadows) {
+      aBuilder.PushTextShadow(wrBoundsRect, wrClipRect, shadow);
+    }
 
-  for (const wr::Line& decoration: mTextDrawer->GetBeforeDecorations()) {
-    aBuilder.PushLine(wrClipRect, decoration);
-  }
+    for (const wr::Line& decoration : part.beforeDecorations) {
+      aBuilder.PushLine(wrClipRect, decoration);
+    }
 
-  for (const mozilla::layout::TextRunFragment& text: mTextDrawer->GetText()) {
-    // mOpacity is set after we do our analysis, so we need to apply it here.
-    // mOpacity is only non-trivial when we have "pure" text, so we don't
-    // ever need to apply it to shadows or decorations.
-    auto color = text.color;
-    color.a *= mOpacity;
+    for (const mozilla::layout::TextRunFragment& text : part.text) {
+      // mOpacity is set after we do our analysis, so we need to apply it here.
+      // mOpacity is only non-trivial when we have "pure" text, so we don't
+      // ever need to apply it to shadows or decorations.
+      auto color = text.color;
+      color.a *= mOpacity;
 
-    aManager->WrBridge()->PushGlyphs(aBuilder, text.glyphs, text.font,
-                                     color, aSc, boundsRect, clipRect);
-  }
+      aManager->WrBridge()->PushGlyphs(aBuilder, text.glyphs, text.font,
+                                       color, aSc, boundsRect, clipRect);
+    }
 
-  for (const wr::Line& decoration: mTextDrawer->GetAfterDecorations()) {
-    aBuilder.PushLine(wrClipRect, decoration);
-  }
+    for (const wr::Line& decoration : part.afterDecorations) {
+      aBuilder.PushLine(wrClipRect, decoration);
+    }
 
-  for (size_t i = 0; i < mTextDrawer->GetShadows().Length(); ++i) {
-    aBuilder.PopTextShadow();
+    for (size_t i = 0; i < part.shadows.Length(); ++i) {
+      aBuilder.PopTextShadow();
+    }
   }
 
   return true;
@@ -5298,19 +5273,26 @@ nsDisplayText::BuildLayer(nsDisplayListBuilder* aBuilder,
   ScaledFont* font = nullptr;
 
   nsTArray<GlyphArray> allGlyphs;
-  allGlyphs.SetCapacity(mTextDrawer->GetText().Length());
-  for (const mozilla::layout::TextRunFragment& text : mTextDrawer->GetText()) {
-    if (!font) {
-      font = text.font;
+  size_t totalLength = 0;
+  for (auto& part : mTextDrawer->GetParts()) {
+    totalLength += part.text.Length();
+  }
+  allGlyphs.SetCapacity(totalLength);
+
+  for (auto& part : mTextDrawer->GetParts()) {
+    for (const mozilla::layout::TextRunFragment& text : part.text) {
+      if (!font) {
+        font = text.font;
+      }
+
+      GlyphArray* glyphs = allGlyphs.AppendElement();
+      glyphs->glyphs() = text.glyphs;
+
+      // Apply folded alpha (only applies to glyphs)
+      auto color = text.color;
+      color.a *= mOpacity;
+      glyphs->color() = color;
     }
-
-    GlyphArray* glyphs = allGlyphs.AppendElement();
-    glyphs->glyphs() = text.glyphs;
-
-    // Apply folded alpha (only applies to glyphs)
-    auto color = text.color;
-    color.a *= mOpacity;
-    glyphs->color() = color;
   }
 
   MOZ_ASSERT(font);
@@ -6613,8 +6595,13 @@ nsTextFrame::PaintTextWithSelectionColors(
     SelectionIterator iterator(prevailingSelections, contentRange,
                                *aParams.provider, mTextRun, startIOffset);
     SelectionType selectionType;
+    size_t selectionIndex = 0;
     while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                    &selectionType, &rangeStyle)) {
+      if (aParams.textDrawer) {
+        aParams.textDrawer->SetSelectionIndex(selectionIndex);
+      }
+
       nscolor foreground, background;
       GetSelectionTextColors(selectionType, *aParams.textPaintStyle,
                              rangeStyle, &foreground, &background);
@@ -6636,8 +6623,8 @@ nsTextFrame::PaintTextWithSelectionColors(
           LayoutDeviceRect::FromAppUnits(bgRect, appUnitsPerDevPixel);
 
         if (aParams.textDrawer) {
-          aParams.textDrawer->AppendSelection(selectionRect,
-                                              ToDeviceColor(background));
+          aParams.textDrawer->SetSelectionRect(selectionRect,
+                                               ToDeviceColor(background));
         } else {
           PaintSelectionBackground(
             *aParams.context->GetDrawTarget(), background, aParams.dirtyRect,
@@ -6645,6 +6632,7 @@ nsTextFrame::PaintTextWithSelectionColors(
         }
       }
       iterator.UpdateWithAdvance(advance);
+      ++selectionIndex;
     }
   }
 
@@ -6672,8 +6660,14 @@ nsTextFrame::PaintTextWithSelectionColors(
   SelectionIterator iterator(prevailingSelections, contentRange,
                              *aParams.provider, mTextRun, startIOffset);
   SelectionType selectionType;
+
+  size_t selectionIndex = 0;
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                  &selectionType, &rangeStyle)) {
+    if (aParams.textDrawer) {
+      aParams.textDrawer->SetSelectionIndex(selectionIndex);
+    }
+
     nscolor foreground, background;
     if (aParams.IsGenerateTextMask()) {
       foreground = NS_RGBA(0, 0, 0, 255);
@@ -6712,6 +6706,7 @@ nsTextFrame::PaintTextWithSelectionColors(
     DrawText(range, textBaselinePt, params);
     advance += hyphenWidth;
     iterator.UpdateWithAdvance(advance);
+    ++selectionIndex;
   }
   return true;
 }
@@ -6787,8 +6782,12 @@ nsTextFrame::PaintTextSelectionDecorations(
   gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
   SelectionType nextSelectionType;
   TextRangeStyle selectedStyle;
+  size_t selectionIndex = 0;
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                  &nextSelectionType, &selectedStyle)) {
+    if (aParams.textDrawer) {
+      aParams.textDrawer->SetSelectionIndex(selectionIndex);
+    }
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(range, aParams.provider);
     if (nextSelectionType == aSelectionType) {
@@ -6808,6 +6807,7 @@ nsTextFrame::PaintTextSelectionDecorations(
         verticalRun, decorationOffsetDir, kDecoration);
     }
     iterator.UpdateWithAdvance(advance);
+    ++selectionIndex;
   }
 }
 
@@ -6850,7 +6850,9 @@ nsTextFrame::PaintTextWithSelection(
 }
 
 void
-nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
+nsTextFrame::DrawEmphasisMarks(gfxContext* aContext,
+                               TextDrawTarget* aTextDrawer,
+                               WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
                                const gfxPoint& aFramePt, Range aRange,
                                const nscolor* aDecorationOverrideColor,
@@ -6887,12 +6889,14 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     }
   }
   if (!isTextCombined) {
-    mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
-                                pt, aRange, aProvider);
+    mTextRun->DrawEmphasisMarks(aContext, aTextDrawer, info->textRun.get(),
+                                info->advance, pt, aRange, aProvider);
   } else {
     pt.y += (GetSize().height - info->advance) / 2;
+    gfxTextRun::DrawParams params(aContext);
+    params.textDrawer = aTextDrawer;
     info->textRun->Draw(Range(info->textRun.get()), pt,
-                        gfxTextRun::DrawParams(aContext));
+                        params);
   }
 }
 
@@ -7286,6 +7290,7 @@ DrawTextRun(const gfxTextRun* aTextRun,
             const nsTextFrame::DrawTextRunParams& aParams)
 {
   gfxTextRun::DrawParams params(aParams.context);
+  params.textDrawer = aParams.textDrawer;
   params.provider = aParams.provider;
   params.advanceWidth = aParams.advanceWidth;
   params.contextPaint = aParams.contextPaint;
@@ -7296,13 +7301,13 @@ DrawTextRun(const gfxTextRun* aTextRun,
     aTextRun->Draw(aRange, aTextBaselinePt, params);
     aParams.callbacks->NotifyAfterText();
   } else {
-    if (NS_GET_A(aParams.textColor) != 0) {
+    if (NS_GET_A(aParams.textColor) != 0 || aParams.textDrawer) {
       aParams.context->SetColor(Color::FromABGR(aParams.textColor));
     } else {
       params.drawMode = DrawMode::GLYPH_STROKE;
     }
 
-    if (NS_GET_A(aParams.textStrokeColor) != 0 &&
+    if ((NS_GET_A(aParams.textStrokeColor) != 0 || aParams.textDrawer) &&
         aParams.textStrokeWidth != 0.0f) {
       StrokeOptions strokeOpts;
       params.drawMode |= DrawMode::GLYPH_STROKE;
@@ -7493,7 +7498,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     if (aParams.textDrawer) {
       aParams.textDrawer->StartDrawing(TextDrawTarget::Phase::eEmphasisMarks);
     }
-    DrawEmphasisMarks(aParams.context, wm,
+    DrawEmphasisMarks(aParams.context, aParams.textDrawer, wm,
                       aTextBaselinePt, aParams.framePt, aRange,
                       aParams.decorationOverrideColor, aParams.provider);
 

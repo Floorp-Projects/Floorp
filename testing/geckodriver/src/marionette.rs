@@ -466,7 +466,6 @@ impl MarionetteHandler {
                                     format!("Failed to set preferences: {}", e))
             }));
 
-        info!("Starting browser {} with args {:?}", binary.display(), runner.args());
         try!(runner.start()
             .map_err(|e| {
                 WebDriverError::new(ErrorStatus::SessionNotCreated,
