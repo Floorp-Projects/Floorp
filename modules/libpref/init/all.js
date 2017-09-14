@@ -1318,12 +1318,8 @@ pref("dom.forms.number", true);
 // platforms which don't have a color picker implemented yet.
 pref("dom.forms.color", true);
 
-// Support for input type=date and type=time. Enabled by default on Nightly.
-#ifdef NIGHTLY_BUILD
+// Support for input type=date and type=time.
 pref("dom.forms.datetime", true);
-#else
-pref("dom.forms.datetime", false);
-#endif
 
 // Support for input type=month, type=week and type=datetime-local. By default,
 // disabled.
