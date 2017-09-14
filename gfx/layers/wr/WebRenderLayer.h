@@ -11,9 +11,6 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
-namespace wr {
-class IpcResourceUpdateQueue;
-}
 namespace layers {
 
 class ImageClientSingle;

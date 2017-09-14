@@ -13,10 +13,6 @@
 class nsDisplayItemGeometry;
 
 namespace mozilla {
-namespace wr {
-class IpcResourceUpdateQueue;
-}
-
 namespace layers {
 class CanvasLayer;
 class ImageClient;
@@ -71,9 +67,7 @@ public:
   void SetKey(const wr::ImageKey& aKey) { mKey = Some(aKey); }
   already_AddRefed<ImageClient> GetImageClient();
 
-  Maybe<wr::ImageKey> UpdateImageKey(ImageContainer* aContainer,
-                                     wr::IpcResourceUpdateQueue& aResources,
-                                     bool aForceUpdate = false);
+  Maybe<wr::ImageKey> UpdateImageKey(ImageContainer* aContainer, bool aForceUpdate = false);
 
   void CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                          ImageContainer* aContainer,

@@ -585,21 +585,20 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 }
 
 DrawResult
-nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
-                                            mozilla::wr::DisplayListBuilder& aBuilder,
-                                            mozilla::wr::IpcResourceUpdateQueue& aResources,
+nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
+                                            mozilla::wr::DisplayListBuilder&            aBuilder,
                                             const mozilla::layers::StackingContextHelper& aSc,
-                                            nsTArray<WebRenderParentCommand>& aParentCommands,
+                                            nsTArray<WebRenderParentCommand>&           aParentCommands,
                                             mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                             mozilla::layers::WebRenderLayerManager* aManager,
-                                            nsDisplayItem* aItem,
-                                            const nsRect& aDirtyRect,
-                                            const nsRect& aDest,
-                                            const nsRect& aFill,
-                                            const nsPoint& aAnchor,
-                                            const nsSize& aRepeatSize,
-                                            const CSSIntRect& aSrc,
-                                            float aOpacity)
+                                            nsDisplayItem*       aItem,
+                                            const nsRect&        aDirtyRect,
+                                            const nsRect&        aDest,
+                                            const nsRect&        aFill,
+                                            const nsPoint&       aAnchor,
+                                            const nsSize&        aRepeatSize,
+                                            const CSSIntRect&    aSrc,
+                                            float                aOpacity)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -635,7 +634,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
       }
 
       gfx::IntSize size;
-      Maybe<wr::ImageKey> key = aManager->CreateImageKey(aItem, container, aBuilder, aResources, aSc, size);
+      Maybe<wr::ImageKey> key = aManager->CreateImageKey(aItem, container, aBuilder, aSc, size);
 
       if (key.isNothing()) {
         return DrawResult::BAD_IMAGE;
@@ -735,7 +734,6 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
 DrawResult
 nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                     mozilla::wr::DisplayListBuilder& aBuilder,
-                                                    mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                     const mozilla::layers::StackingContextHelper& aSc,
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
                                                     WebRenderDisplayItemLayer*       aLayer,
@@ -756,7 +754,7 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
       mSize.width <= 0 || mSize.height <= 0) {
     return DrawResult::SUCCESS;
   }
-  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aResources, aSc, aParentCommands,
+  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aSc, aParentCommands,
                                     aLayer, aManager, aItem,
                                     aDirty, aDest, aFill, aAnchor, aRepeatSize,
                                     CSSIntRect(0, 0,

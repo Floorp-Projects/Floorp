@@ -9,7 +9,6 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
-#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "nsDisplayListInvalidation.h"
 #include "WebRenderCanvasRenderer.h"
 
@@ -58,9 +57,7 @@ WebRenderImageData::~WebRenderImageData()
 }
 
 Maybe<wr::ImageKey>
-WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
-                                   wr::IpcResourceUpdateQueue& aResources,
-                                   bool aForceUpdate)
+WebRenderImageData::UpdateImageKey(ImageContainer* aContainer, bool aForceUpdate)
 {
   CreateImageClientIfNeeded();
   CreateExternalImageIfNeeded();
@@ -95,13 +92,12 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   }
 
   // Delete old key, we are generating a new key.
-  // TODO(nical): noooo... we need to reuse image keys.
   if (mKey) {
     mWRManager->AddImageKeyForDiscard(mKey.value());
   }
 
   wr::WrImageKey key = WrBridge()->GetNextImageKey();
-  aResources.AddExternalImage(mExternalImageId.value(), key);
+  mWRManager->WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   mKey = Some(key);
 
   return mKey;
