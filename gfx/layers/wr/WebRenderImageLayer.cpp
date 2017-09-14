@@ -10,7 +10,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageClient.h"
-#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
@@ -25,7 +24,6 @@ using namespace gfx;
 
 WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
   : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-  , mKey(Nothing())
   , mImageClientContainerType(CompositableType::UNKNOWN)
 {
   MOZ_COUNT_CTOR(WebRenderImageLayer);
@@ -110,35 +108,6 @@ WebRenderImageLayer::SupportsAsyncUpdate()
   return false;
 }
 
-Maybe<wr::ImageKey>
-WebRenderImageLayer::UpdateImageKey(ImageClientSingle* aImageClient,
-                                    ImageContainer* aContainer,
-                                    Maybe<wr::ImageKey>& aOldKey,
-                                    wr::ExternalImageId& aExternalImageId,
-                                    wr::IpcResourceUpdateQueue& aResources)
-{
-  MOZ_ASSERT(aImageClient);
-  MOZ_ASSERT(aContainer);
-
-  bool ret = aImageClient->UpdateImage(aContainer, /* unused */0);
-  if (!ret || aImageClient->IsEmpty()) {
-    // Something failed and/or there is no image to show.
-    if (aOldKey.isSome()) {
-      aResources.DeleteImage(aOldKey.value());
-    }
-    return Nothing();
-  }
-
-  if (aOldKey.isSome()) {
-    return aOldKey;
-  }
-
-  wr::WrImageKey key = GenerateImageKey();
-
-  aResources.AddExternalImage(aExternalImageId, key);
-  return Some(key);
-}
-
 void
 WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                  wr::IpcResourceUpdateQueue& aResources,
@@ -184,7 +153,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     // Push IFrame for async image pipeline.
     // XXX Remove this once partial display list update is supported.
 
-    ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
+    ScrollingLayersHelper scroller(this, aBuilder, aSc);
 
     ParentLayerRect bounds = GetLocalTransformTyped().TransformBounds(Bounds());
 
@@ -240,13 +209,12 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
                         mContainer,
                         mKey,
-                        mExternalImageId.ref(),
-                        aResources);
+                        mExternalImageId.ref());
   if (mKey.isNothing()) {
     return;
   }
 
-  ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect(0, 0, size.width, size.height);
@@ -270,8 +238,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
 Maybe<wr::WrImageMask>
 WebRenderImageLayer::RenderMaskLayer(const StackingContextHelper& aSc,
-                                     const gfx::Matrix4x4& aTransform,
-                                     wr::IpcResourceUpdateQueue& aResources)
+                                     const gfx::Matrix4x4& aTransform)
 {
   if (!mContainer) {
      return Nothing();
@@ -311,8 +278,7 @@ WebRenderImageLayer::RenderMaskLayer(const StackingContextHelper& aSc,
   mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
                         mContainer,
                         mKey,
-                        mExternalImageId.ref(),
-                        aResources);
+                        mExternalImageId.ref());
   if (mKey.isNothing()) {
     return Nothing();
   }
