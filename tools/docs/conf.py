@@ -43,7 +43,7 @@ extensions = [
 
 # JSDoc must run successfully for dirs specified, so running
 # tree-wide (the default) will not work currently.
-js_source_path = []
+js_source_path = ['toolkit/mozapps/extensions']
 root_for_relative_js_paths = '.'
 jsdoc_config_path = 'tools/docs/jsdoc.json'
 

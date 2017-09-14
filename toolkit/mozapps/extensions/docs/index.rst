@@ -11,4 +11,5 @@ https://developer.mozilla.org/en-US/Add-ons/Add-on_Manager
 .. toctree::
    :maxdepth: 1
 
+   AddonManager
    SystemAddons
