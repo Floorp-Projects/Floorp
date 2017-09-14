@@ -22,6 +22,16 @@ public:
     return false;
   }
 
+  bool TestOpusTryCreation(const AudioSegment& aSegment, int aSamplingRate)
+  {
+    if (TryInit(aSegment, aSamplingRate) == NS_OK) {
+      if (GetPacketDuration()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Return the sample rate of data to be fed to the Opus encoder, could be
   // re-sampled if it was not one of the Opus supported sampling rates.
   // Init() is expected to be called first.
@@ -30,6 +40,20 @@ public:
     return mInitialized ? GetOutputSampleRate() : 0;
   }
 };
+
+static AudioSegment
+CreateTestSegment()
+{
+  RefPtr<SharedBuffer> dummyBuffer = SharedBuffer::Create(2);
+  AutoTArray<const int16_t*, 1> channels;
+  const int16_t* channelData = static_cast<const int16_t*>(dummyBuffer->Data());
+  channels.AppendElement(channelData);
+
+  AudioSegment testSegment;
+  testSegment.AppendFrames(
+    dummyBuffer.forget(), channels, 1 /* #samples */, PRINCIPAL_HANDLE_NONE);
+  return testSegment;
+}
 
 static bool
 TestOpusInit(int aChannels, int aSamplingRate)
@@ -75,6 +99,69 @@ TEST(Media, OpusEncoder_Init)
   EXPECT_TRUE(TestOpusInit(2, 192000));
   EXPECT_FALSE(TestOpusInit(2, 192001));
   EXPECT_FALSE(TestOpusInit(2, 200000));
+}
+
+TEST(Media, OpusEncoder_TryInit)
+{
+  {
+    // The encoder does not normally recieve enough info from null data to
+    // init. However, multiple attempts to do so, with sufficiently long
+    // duration segments, should result in a best effort attempt. The first
+    // attempt should never do this though, even if the duration is long:
+    TestOpusTrackEncoder encoder;
+    AudioSegment testSegment;
+    testSegment.AppendNullData(48000 * 100);
+    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 48000));
+
+    // Multiple init attempts should result in best effort init:
+    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 48000));
+  }
+
+  {
+    // If the duration of the segments given to the encoder is not long then
+    // we shouldn't try a best effort init:
+    TestOpusTrackEncoder encoder;
+    AudioSegment testSegment;
+    testSegment.AppendNullData(1);
+    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 48000));
+    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 48000));
+  }
+
+  {
+    // For non-null segments we should init immediately
+    TestOpusTrackEncoder encoder;
+    AudioSegment testSegment = CreateTestSegment();
+    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 48000));
+  }
+
+  {
+    // Test low sample rate bound
+    TestOpusTrackEncoder encoder;
+    AudioSegment testSegment = CreateTestSegment();
+    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 7999));
+  }
+
+  {
+    // Test low sample rate bound
+    TestOpusTrackEncoder encoder;
+    AudioSegment testSegment = CreateTestSegment();
+    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 7999));
+    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 8000));
+  }
+
+  {
+    // Test high sample rate bound
+    TestOpusTrackEncoder encoder;
+    AudioSegment testSegment = CreateTestSegment();
+    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 192001));
+  }
+
+  {
+    // Test high sample rate bound
+    TestOpusTrackEncoder encoder;
+    AudioSegment testSegment = CreateTestSegment();
+    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 192000));
+  }
 }
 
 TEST(Media, OpusEncoder_Resample)
