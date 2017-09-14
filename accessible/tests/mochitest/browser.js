@@ -99,7 +99,7 @@ var gBrowserContext =
 };
 
 function openBrowserWindowIntl() {
-  var params = "chrome,all,dialog=no";
+  var params = "chrome,all,dialog=no,non-remote";
   var rect = gBrowserContext.browserRect;
   if (rect) {
     if ("left" in rect)

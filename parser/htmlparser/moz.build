@@ -18,6 +18,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'htmlparser'
 
 EXPORTS += [
+    'nsElementTable.h',
     'nsHTMLTagList.h',
     'nsHTMLTags.h',
     'nsIContentSink.h',
@@ -25,7 +26,6 @@ EXPORTS += [
     'nsIFragmentContentSink.h',
     'nsIHTMLContentSink.h',
     'nsIParser.h',
-    'nsIParserService.h',
     'nsITokenizer.h',
     'nsParserBase.h',
     'nsParserCIID.h',
@@ -43,7 +43,6 @@ UNIFIED_SOURCES += [
     'nsParser.cpp',
     'nsParserModule.cpp',
     'nsParserMsgUtils.cpp',
-    'nsParserService.cpp',
     'nsScanner.cpp',
     'nsScannerString.cpp',
 ]
