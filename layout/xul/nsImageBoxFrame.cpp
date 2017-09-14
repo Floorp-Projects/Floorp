@@ -447,9 +447,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
   }
 
   gfx::IntSize size;
-  Maybe<wr::ImageKey> key = aManager->CreateImageKey(aItem, container,
-                                                     aBuilder, aResources,
-                                                     aSc, size);
+  Maybe<wr::ImageKey> key = aManager->CreateImageKey(aItem, container, aBuilder, aSc, size);
   if (key.isNothing()) {
     return DrawResult::BAD_IMAGE;
   }
