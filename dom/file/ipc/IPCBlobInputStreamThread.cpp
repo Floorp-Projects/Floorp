@@ -36,7 +36,7 @@ public:
   {
      mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
      MOZ_ASSERT(gIPCBlobThread);
-     gIPCBlobThread->Initialize();
+     gIPCBlobThread->InitializeOnMainThread();
      return NS_OK;
   }
 };
@@ -93,7 +93,7 @@ NS_IMPL_ISUPPORTS_INHERITED(MigrateActorRunnable, Runnable,
 
 } // anonymous
 
-NS_IMPL_ISUPPORTS(IPCBlobInputStreamThread, nsIObserver)
+NS_IMPL_ISUPPORTS(IPCBlobInputStreamThread, nsIObserver, nsIEventTarget)
 
 /* static */ bool
 IPCBlobInputStreamThread::IsOnFileEventTarget(nsIEventTarget* aEventTarget)
@@ -115,36 +115,21 @@ IPCBlobInputStreamThread::GetOrCreate()
 
   if (!gIPCBlobThread) {
     gIPCBlobThread = new IPCBlobInputStreamThread();
-    gIPCBlobThread->Initialize();
+    if (!gIPCBlobThread->Initialize()) {
+      return nullptr;
+    }
   }
 
   return gIPCBlobThread;
 }
 
-void
+bool
 IPCBlobInputStreamThread::Initialize()
 {
-  if (!NS_IsMainThread()) {
-    RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
-    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return;
-  }
-
-  nsresult rv =
-    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
   nsCOMPtr<nsIThread> thread;
-  rv = NS_NewNamedThread("DOM File", getter_AddRefs(thread));
+  nsresult rv = NS_NewNamedThread("DOM File", getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+    return false;
   }
 
   mThread = thread;
@@ -155,6 +140,32 @@ IPCBlobInputStreamThread::Initialize()
     }
 
     mPendingActors.Clear();
+  }
+
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
+    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    return true;
+  }
+
+  InitializeOnMainThread();
+  return true;
+}
+
+void
+IPCBlobInputStreamThread::InitializeOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return;
+  }
+
+  nsresult rv =
+    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
 }
 
@@ -203,6 +214,49 @@ IPCBlobInputStreamThread::MigrateActorInternal(IPCBlobInputStreamChild* aActor)
 {
   RefPtr<Runnable> runnable = new MigrateActorRunnable(aActor);
   mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+}
+
+// nsIEventTarget
+
+NS_IMETHODIMP_(bool)
+IPCBlobInputStreamThread::IsOnCurrentThreadInfallible()
+{
+  return mThread->IsOnCurrentThread();
+}
+
+NS_IMETHODIMP
+IPCBlobInputStreamThread::IsOnCurrentThread(bool* aRetval)
+{
+  return mThread->IsOnCurrentThread(aRetval);
+}
+
+NS_IMETHODIMP
+IPCBlobInputStreamThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                                   uint32_t aFlags)
+{
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
+  mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
+
+  if (gShutdownHasStarted) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  return mThread->Dispatch(runnable.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+IPCBlobInputStreamThread::DispatchFromScript(nsIRunnable* aRunnable,
+                                             uint32_t aFlags)
+{
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  return Dispatch(runnable.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+IPCBlobInputStreamThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 } // dom namespace
