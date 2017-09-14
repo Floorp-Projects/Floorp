@@ -145,11 +145,11 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:26.0.1'
-    compile 'com.android.support:customtabs:26.0.1'
-    compile 'com.android.support:design:26.0.1'
-    compile 'com.android.support:cardview-v7:26.0.1'
-    compile 'com.android.support:recyclerview-v7:26.0.1'
+    compile "com.android.support:appcompat-v7:$support_libraries_version"
+    compile "com.android.support:customtabs:$support_libraries_version"
+    compile "com.android.support:design:$support_libraries_version"
+    compile "com.android.support:cardview-v7:$support_libraries_version"
+    compile "com.android.support:recyclerview-v7:$support_libraries_version"
 
     compile "android.arch.lifecycle:runtime:1.0.0-alpha9"
     compile "android.arch.lifecycle:extensions:1.0.0-alpha9"
