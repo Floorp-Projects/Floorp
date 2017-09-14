@@ -54,7 +54,8 @@ StaticRefPtr<ServiceWorkerRegistrar> gServiceWorkerRegistrar;
 } // namespace
 
 NS_IMPL_ISUPPORTS(ServiceWorkerRegistrar,
-                  nsIObserver)
+                  nsIObserver,
+                  nsIAsyncShutdownBlocker)
 
 void
 ServiceWorkerRegistrar::Initialize()
@@ -73,10 +74,6 @@ ServiceWorkerRegistrar::Initialize()
     DebugOnly<nsresult> rv = obs->AddObserver(gServiceWorkerRegistrar,
                                               "profile-after-change", false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    rv = obs->AddObserver(gServiceWorkerRegistrar, "profile-before-change",
-                          false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 }
 
@@ -94,7 +91,6 @@ ServiceWorkerRegistrar::ServiceWorkerRegistrar()
   : mMonitor("ServiceWorkerRegistrar.mMonitor")
   , mDataLoaded(false)
   , mShuttingDown(false)
-  , mShutdownCompleteFlag(nullptr)
   , mRunnableCounter(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -829,8 +825,8 @@ ServiceWorkerRegistrar::ShutdownCompleted()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(mShutdownCompleteFlag && !*mShutdownCompleteFlag);
-  *mShutdownCompleteFlag = true;
+  DebugOnly<nsresult> rv = GetShutdownPhase()->RemoveBlocker(this);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void
@@ -1027,6 +1023,13 @@ ServiceWorkerRegistrar::ProfileStarted()
     return;
   }
 
+  rv = GetShutdownPhase()->AddBlocker(
+    this, NS_LITERAL_STRING(__FILE__), __LINE__,
+    NS_LITERAL_STRING("ServiceWorkerRegistrar: Flushing data"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
   nsCOMPtr<nsIEventTarget> target =
     do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(target, "Must have stream transport service");
@@ -1061,12 +1064,41 @@ ServiceWorkerRegistrar::ProfileStopped()
     return;
   }
 
-  bool completed = false;
-  mShutdownCompleteFlag = &completed;
-
   child->SendShutdownServiceWorkerRegistrar();
+}
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return completed; }));
+// Async shutdown blocker methods
+
+NS_IMETHODIMP
+ServiceWorkerRegistrar::BlockShutdown(nsIAsyncShutdownClient* aClient)
+{
+  ProfileStopped();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerRegistrar::GetName(nsAString& aName)
+{
+  aName = NS_LITERAL_STRING("ServiceWorkerRegistrar: Flushing data");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerRegistrar::GetState(nsIPropertyBag**)
+{
+  return NS_OK;
+}
+
+nsCOMPtr<nsIAsyncShutdownClient>
+ServiceWorkerRegistrar::GetShutdownPhase() const
+{
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+  MOZ_RELEASE_ASSERT(svc);
+
+  nsCOMPtr<nsIAsyncShutdownClient> client;
+  Unused << svc->GetProfileBeforeChange(getter_AddRefs(client));
+  MOZ_RELEASE_ASSERT(client);
+  return Move(client);
 }
 
 void
@@ -1093,17 +1125,6 @@ ServiceWorkerRegistrar::Observe(nsISupports* aSubject, const char* aTopic,
     // The profile is fully loaded, now we can proceed with the loading of data
     // from disk.
     ProfileStarted();
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "profile-before-change")) {
-    nsCOMPtr<nsIObserverService> observerService =
-      services::GetObserverService();
-    observerService->RemoveObserver(this, "profile-before-change");
-
-    // Shutting down, let's sync the data.
-    ProfileStopped();
 
     return NS_OK;
   }
