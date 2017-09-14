@@ -1352,7 +1352,7 @@ var BrowserApp = {
     for (let i = 0; i < this._tabs.length; ++i) {
       let tab = this._tabs[i];
       if (aOptions.startsWith) {
-        if (tab.currentURI.spec.startsWith(aURL)) {
+        if (tab.currentURI.spec.startsWith(uri.spec)) {
           return tab;
         }
       } else {
@@ -2209,8 +2209,8 @@ var BrowserApp = {
     for (let i = toIndex; i >= fromIndex; i--) {
       let entry = hist.getEntryAtIndex(i, false);
       let item = {
-        title: entry.title || entry.URI.spec,
-        url: entry.URI.spec,
+        title: entry.title || entry.URI.displaySpec,
+        url: entry.URI.displaySpec,
         selected: (i == selIndex)
       };
       listitems.push(item);
@@ -3582,7 +3582,7 @@ Tab.prototype = {
     let uri = null;
     let title = aParams.title || aURL;
     try {
-      uri = Services.io.newURI(aURL).spec;
+      uri = Services.io.newURI(aURL).displaySpec;
     } catch (e) {}
 
     // When the tab is stubbed from Java, there's a window between the stub
@@ -4362,7 +4362,7 @@ Tab.prototype = {
         this.originalURI = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI;
 
         if (this.originalURI != null)
-          uri = this.originalURI.spec;
+          uri = this.originalURI.displaySpec;
       } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
@@ -4442,10 +4442,10 @@ Tab.prototype = {
     let baseDomain = "";
     // For recognized scheme, get base domain from host.
     let principalURI = contentWin.document.nodePrincipal.URI;
-    if (principalURI && ["http", "https", "ftp"].includes(principalURI.scheme) && principalURI.host) {
+    if (principalURI && ["http", "https", "ftp"].includes(principalURI.scheme) && principalURI.displayHost) {
       try {
-        baseDomain = Services.eTLD.getBaseDomainFromHost(principalURI.host);
-        if (!principalURI.host.endsWith(baseDomain)) {
+        baseDomain = Services.eTLD.getBaseDomainFromHost(principalURI.displayHost);
+        if (!principalURI.displayHost.endsWith(baseDomain)) {
           // getBaseDomainFromHost converts its resultant to ACE.
           let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
           baseDomain = IDNService.convertACEtoUTF8(baseDomain);
@@ -4479,7 +4479,7 @@ Tab.prototype = {
     let message = {
       type: "Content:LocationChange",
       tabID: this.id,
-      uri: truncate(fixedURI.spec, MAX_URI_LENGTH),
+      uri: truncate(fixedURI.displaySpec, MAX_URI_LENGTH),
       userRequested: this.userRequested || "",
       baseDomain: baseDomain,
       contentType: (contentType ? contentType : ""),
@@ -5976,7 +5976,7 @@ var SearchEngines = {
 
     // prompt user for name of search engine
     let promptTitle = Strings.browser.GetStringFromName("contextmenu.addSearchEngine3");
-    let title = { value: (aElement.ownerDocument.title || docURI.host) };
+    let title = { value: (aElement.ownerDocument.title || docURI.displayHost) };
     if (!Services.prompt.prompt(null, promptTitle, null, title, null, {})) {
       if (resultCallback) {
         resultCallback(false);

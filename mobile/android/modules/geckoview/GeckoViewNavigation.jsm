@@ -84,7 +84,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     let message = {
       type: "GeckoView:OnLoadUri",
-      uri: aUri.spec,
+      uri: aUri.displaySpec,
       where: aWhere,
       flags: aFlags
     };
@@ -196,7 +196,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     let message = {
       type: "GeckoView:LocationChange",
-      uri: fixedURI.spec,
+      uri: fixedURI.displaySpec,
       canGoBack: this.browser.canGoBack,
       canGoForward: this.browser.canGoForward,
     };

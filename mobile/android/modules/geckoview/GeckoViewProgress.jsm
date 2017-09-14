@@ -271,7 +271,7 @@ class GeckoViewProgress extends GeckoViewModule {
       let uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
       let message = {
         type: "GeckoView:PageStart",
-        uri: uri.spec,
+        uri: uri.displaySpec,
       };
 
       this.eventDispatcher.sendRequest(message);
