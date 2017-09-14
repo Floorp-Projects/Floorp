@@ -211,9 +211,11 @@ EvalScript(JSContext* cx,
             // NOTE: If loadScope is already a shared-global JSM, we can't
             // determine which JSM the target belongs to and have to assume it
             // is in our JSM.
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
             JSObject* targetGlobal = js::GetGlobalForObjectCrossCompartment(targetObj);
             MOZ_DIAGNOSTIC_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(targetGlobal),
                                   "Don't load subscript into target in a shared-global JSM");
+#endif
             if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
                 return false;
             }
