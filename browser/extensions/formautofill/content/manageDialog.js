@@ -271,6 +271,9 @@ class ManageRecords {
 class ManageAddresses extends ManageRecords {
   constructor(elements) {
     super("addresses", elements);
+    elements.add.setAttribute("searchkeywords", FormAutofillUtils.EDIT_ADDRESS_KEYWORDS
+                                                  .map(key => FormAutofillUtils.stringBundle.GetStringFromName(key))
+                                                  .join("\n"));
   }
 
   /**

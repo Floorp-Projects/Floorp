@@ -22,7 +22,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-const {ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF} = FormAutofillUtils;
+const {
+  ENABLED_AUTOFILL_ADDRESSES_PREF,
+  ENABLED_AUTOFILL_CREDITCARDS_PREF,
+  MANAGE_ADDRESSES_KEYWORDS,
+  EDIT_ADDRESS_KEYWORDS,
+} = FormAutofillUtils;
 // Add credit card enabled flag in telemetry environment for recording the number of
 // users who disable/enable the credit card autofill feature.
 
@@ -68,6 +73,9 @@ FormAutofillPreferences.prototype = {
     let addressAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
     let addressAutofillLearnMore = document.createElementNS(XUL_NS, "label");
     let savedAddressesBtn = document.createElementNS(XUL_NS, "button");
+    // Wrappers are used to properly compute the search tooltip positions
+    let savedAddressesBtnWrapper = document.createElementNS(XUL_NS, "hbox");
+
     savedAddressesBtn.className = "accessory-button";
     addressAutofillLearnMore.className = "learnMore text-link";
 
@@ -81,6 +89,10 @@ FormAutofillPreferences.prototype = {
 
     addressAutofillLearnMore.setAttribute("href", learnMoreURL);
 
+    // Add preferences search support
+    savedAddressesBtn.setAttribute("searchkeywords", MANAGE_ADDRESSES_KEYWORDS.concat(EDIT_ADDRESS_KEYWORDS)
+                                                       .map(key => this.bundle.GetStringFromName(key)).join("\n"));
+
     // Manually set the checked state
     if (FormAutofillUtils.isAutofillAddressesEnabled) {
       addressAutofillCheckbox.setAttribute("checked", true);
@@ -92,7 +104,8 @@ FormAutofillPreferences.prototype = {
     addressAutofill.appendChild(addressAutofillCheckboxGroup);
     addressAutofillCheckboxGroup.appendChild(addressAutofillCheckbox);
     addressAutofillCheckboxGroup.appendChild(addressAutofillLearnMore);
-    addressAutofill.appendChild(savedAddressesBtn);
+    addressAutofill.appendChild(savedAddressesBtnWrapper);
+    savedAddressesBtnWrapper.appendChild(savedAddressesBtn);
 
     this.refs = {
       formAutofillGroup,
