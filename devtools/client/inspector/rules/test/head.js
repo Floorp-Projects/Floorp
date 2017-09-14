@@ -536,3 +536,25 @@ function checkClassPanelContent(view, classes) {
        `Checkbox ${i} has the right state`);
   }
 }
+
+/**
+ * Opens the eyedropper from the colorpicker tooltip
+ * by selecting the colorpicker and then selecting the eyedropper icon
+ * @param {view} ruleView
+ * @param {swatch} color swatch of a particular property
+ */
+function* openEyedropper(view, swatch) {
+  let tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
+
+  info("Click on the swatch");
+  let onColorPickerReady = view.tooltips.getTooltip("colorPicker").once("ready");
+  swatch.click();
+  yield onColorPickerReady;
+
+  let dropperButton = tooltip.container.querySelector("#eyedropper-button");
+
+  info("Click on the eyedropper icon");
+  let onOpened = tooltip.once("eyedropper-opened");
+  dropperButton.click();
+  yield onOpened;
+}
