@@ -41,6 +41,7 @@ public class GeckoMenuInflater extends MenuInflater {
         public boolean enabled;
         public int showAsAction;
         public boolean hasSubMenu;
+        public int itemType;
     }
 
     public GeckoMenuInflater(Context context) {
@@ -131,6 +132,7 @@ public class GeckoMenuInflater extends MenuInflater {
         item.hasSubMenu = false;
         item.iconRes = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
         item.showAsAction = a.getInt(R.styleable.MenuItem_android_showAsAction, 0);
+        item.itemType = a.getInt(R.styleable.MenuItem_itemType, GeckoMenuItem.ITEM_TYPE_DEFAULT);
 
         a.recycle();
     }
@@ -144,6 +146,7 @@ public class GeckoMenuInflater extends MenuInflater {
 
         if (geckoItem != null) {
             geckoItem.stopDispatchingChanges();
+            geckoItem.setItemType(item.itemType);
         }
 
         menuItem.setChecked(item.checked)

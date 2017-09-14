@@ -235,7 +235,7 @@
 }
 #identity-popup[connection^=secure] #identity-popup-securityView,
 #identity-popup[connection^=secure] #identity-popup-security-content {
-  background-image: url(chrome://browser/skin/controlcenter/connection.svg#connection-secure);
+  background-image: url(chrome://browser/skin/controlcenter/connection.svg);
   -moz-context-properties: fill;
   fill: #12BC00;
 }
@@ -244,7 +244,8 @@
 #identity-popup[ciphers=weak] #identity-popup-security-content,
 #identity-popup[mixedcontent~=passive-loaded][isbroken] #identity-popup-securityView,
 #identity-popup[mixedcontent~=passive-loaded][isbroken] #identity-popup-security-content {
-  background-image: url(chrome://browser/skin/controlcenter/connection.svg#connection-degraded);
+  background-image: url(chrome://browser/skin/controlcenter/connection.svg);
+  -moz-context-properties: fill, fill-opacity;
 }
 
 #identity-popup[connection=secure-cert-user-overridden] #identity-popup-securityView,
@@ -258,6 +259,7 @@
 #identity-popup[mixedcontent~=active-loaded][isbroken] #identity-popup-securityView,
 #identity-popup[mixedcontent~=active-loaded][isbroken] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
+  -moz-context-properties: fill, fill-opacity;
 }
 
 #identity-popup[connection=extension] #identity-popup-securityView,

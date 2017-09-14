@@ -52,7 +52,7 @@ use gecko::values::round_border_to_device_pixels;
 use logical_geometry::WritingMode;
 use media_queries::Device;
 use properties::animated_properties::TransitionProperty;
-use properties::computed_value_flags::ComputedValueFlags;
+use properties::computed_value_flags::*;
 use properties::{default_font_size_keyword, longhands, FontComputationData, Importance, LonghandId};
 use properties::{PropertyDeclaration, PropertyDeclarationBlock, PropertyDeclarationId};
 use rule_tree::StrongRuleNode;
@@ -259,6 +259,11 @@ impl ops::DerefMut for ComputedValues {
 }
 
 impl ComputedValuesInner {
+    /// Whether we're a visited style.
+    pub fn is_style_if_visited(&self) -> bool {
+        self.flags.contains(IS_STYLE_IF_VISITED)
+    }
+
     #[inline]
     pub fn is_display_contents(&self) -> bool {
         self.get_box().clone_display() == longhands::display::computed_value::T::contents
@@ -467,6 +472,7 @@ def set_gecko_property(ffi_name, expr):
         // as signed type when we have both signed/unsigned integer in order to use them
         // as match's arms.
         // Also, to use same implementation here we use casted constant if we have only singed values.
+        % if keyword.gecko_enum_prefix is None:
         % for value in keyword.values_for('gecko'):
         const ${keyword.casted_constant_name(value, cast_type)} : ${cast_type} =
             structs::${keyword.gecko_constant(value)} as ${cast_type};
@@ -480,6 +486,16 @@ def set_gecko_property(ffi_name, expr):
             x => panic!("Found unexpected value in style struct for ${ident} property: {:?}", x),
             % endif
         }
+        % else:
+        match ${get_gecko_property(gecko_ffi_name)} {
+            % for value in keyword.values_for('gecko'):
+            structs::${keyword.gecko_constant(value)} => Keyword::${to_rust_ident(value)},
+            % endfor
+            % if keyword.gecko_inexhaustive:
+            x => panic!("Found unexpected value in style struct for ${ident} property: {:?}", x),
+            % endif
+        }
+        % endif
     }
 </%def>
 
@@ -2818,7 +2834,6 @@ fn static_assert() {
                                             "-moz-grid-group -moz-grid-line -moz-stack -moz-inline-stack -moz-deck " +
                                             "-moz-popup -moz-groupbox",
                                             gecko_enum_prefix="StyleDisplay",
-                                            gecko_inexhaustive="True",
                                             gecko_strip_moz_prefix=False) %>
 
     pub fn set_display(&mut self, v: longhands::display::computed_value::T) {

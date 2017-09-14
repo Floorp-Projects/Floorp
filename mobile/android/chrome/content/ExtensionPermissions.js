@@ -4,6 +4,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
                                   "resource://gre/modules/Extension.jsm");
 
 var ExtensionPermissions = {
+  // id -> object containing update details (see applyUpdate() )
+  updates: new Map(),
+
   // Prepare the strings needed for a permission notification.
   _prepareStrings(info) {
     let appName = Strings.brand.GetStringFromName("brandShortName");
@@ -55,14 +58,64 @@ var ExtensionPermissions = {
       }
 
       case "webextension-update-permissions":
-        // To be implemented in bug 1391579, just auto-approve until then
-        subject.wrappedJSObject.resolve();
+        let info = subject.wrappedJSObject;
+        let {addon, resolve, reject} = info;
+        let stringInfo = Object.assign({
+          type: "update",
+        }, info);
+
+        let details = this._prepareStrings(stringInfo);
+
+        // If there are no promptable permissions, just apply the update
+        if (details.message.length == 0) {
+          resolve();
+          return;
+        }
+
+        // Store all the details about the update until the user chooses to
+        // look at update, at which point we will pick up in this.applyUpdate()
+        details.icon = this._prepareIcon(addon.iconURL || "dummy.svg");
+
+        let first = (this.updates.size == 0);
+        this.updates.set(addon.id, {details, resolve, reject});
+
+        if (first) {
+          EventDispatcher.instance.sendRequest({
+            type: "Extension:ShowUpdateIcon",
+            value: true,
+          });
+        }
         break;
 
       case "webextension-optional-permission-prompt":
         // To be implemented in bug 1392176, just auto-approve until then
         subject.wrappedJSObject.resolve(true);
         break;
+    }
+  },
+
+  async applyUpdate(id) {
+    if (!this.updates.has(id)) {
+      return;
+    }
+
+    let update = this.updates.get(id);
+    this.updates.delete(id);
+    if (this.updates.size == 0) {
+      EventDispatcher.instance.sendRequest({
+        type: "Extension:ShowUpdateIcon",
+        value: false,
+      });
+    }
+
+    let {details} = update;
+    details.type = "Extension:PermissionPrompt";
+
+    let accepted = await EventDispatcher.instance.sendRequestForResult(details);
+    if (accepted) {
+      update.resolve();
+    } else {
+      update.reject();
     }
   },
 };

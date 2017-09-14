@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const AMO_ICON = "chrome://browser/skin/images/amo-logo.png";
+const UPDATE_INDICATOR = "chrome://browser/skin/images/extension-update.svg";
 
 var gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutAddons.properties");
 
@@ -235,6 +236,12 @@ var Addons = {
     }
 
     outer.appendChild(inner);
+
+    let update = document.createElement("img");
+    update.className = "update-indicator";
+    update.setAttribute("src", UPDATE_INDICATOR);
+    outer.appendChild(update);
+
     return outer;
   },
 
@@ -270,10 +277,8 @@ var Addons = {
   },
 
   _createItemForAddon: function _createItemForAddon(aAddon) {
-    let appManaged = (aAddon.scope == AddonManager.SCOPE_APPLICATION);
     let opType = this._getOpTypeForOperations(aAddon.pendingOperations);
-    let updateable = (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE) > 0;
-    let uninstallable = (aAddon.permissions & AddonManager.PERM_CAN_UNINSTALL) > 0;
+    let hasUpdate = this._addonHasUpdate(aAddon);
 
     let optionsURL = aAddon.optionsURL || "";
 
@@ -294,10 +299,10 @@ var Addons = {
     item.setAttribute("isDisabled", !aAddon.isActive);
     item.setAttribute("isUnsigned", aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING);
     item.setAttribute("opType", opType);
-    item.setAttribute("updateable", updateable);
     if (blocked)
       item.setAttribute("blockedStatus", blocked);
     item.setAttribute("optionsURL", optionsURL);
+    item.setAttribute("hasUpdate", hasUpdate);
     item.addon = aAddon;
 
     return item;
@@ -307,6 +312,10 @@ var Addons = {
     let list = document.getElementById("addons-list");
     let element = list.querySelector("div[addonID=\"" + CSS.escape(aKey) + "\"]");
     return element;
+  },
+
+  _addonHasUpdate(addon) {
+    return gChromeWin.ExtensionPermissions.updates.has(addon.id);
   },
 
   init: async function init() {
@@ -333,6 +342,7 @@ var Addons = {
     let browseItem = this._createBrowseItem();
     list.appendChild(browseItem);
 
+    document.getElementById("update-btn").addEventListener("click", Addons.updateCurrent.bind(this));
     document.getElementById("uninstall-btn").addEventListener("click", Addons.uninstallCurrent.bind(this));
     document.getElementById("cancel-btn").addEventListener("click", Addons.cancelUninstall.bind(this));
     document.getElementById("disable-btn").addEventListener("click", Addons.disable.bind(this));
@@ -369,6 +379,13 @@ var Addons = {
     detailItem.querySelector(".description-full").textContent = addon.description;
     detailItem.querySelector(".status-uninstalled").textContent =
       gStringBundle.formatStringFromName("addonStatus.uninstalled", [addon.name], 1);
+
+    let updateBtn = document.getElementById("update-btn");
+    if (this._addonHasUpdate(addon)) {
+      updateBtn.removeAttribute("hidden");
+    } else {
+      updateBtn.setAttribute("hidden", true);
+    }
 
     let enableBtn = document.getElementById("enable-btn");
     if (addon.appDisabled) {
@@ -631,6 +648,16 @@ var Addons = {
     this.setEnabled(false);
   },
 
+  updateCurrent() {
+    let detailItem = document.querySelector("#addons-details > .addon-item");
+
+    let addon = detailItem.addon;
+    if (!addon)
+      return;
+
+    gChromeWin.ExtensionPermissions.applyUpdate(addon.id);
+  },
+
   uninstallCurrent: function uninstallCurrent() {
     let detailItem = document.querySelector("#addons-details > .addon-item");
 
@@ -723,7 +750,25 @@ var Addons = {
   onInstalled: function(aAddon) {
     let list = document.getElementById("addons-list");
     let element = this._getElementForAddon(aAddon.id);
-    if (!element) {
+    if (element) {
+      // Upgrade of an existing addon, update version and description in
+      // list item and detail view, plus indicators about a pending update.
+      element.querySelector(".version").textContent = aAddon.version;
+
+      let desc = element.querySelector(".description");
+      if (desc) {
+        desc.textContent = aAddon.description;
+      }
+
+      element.setAttribute("hasUpdate", false);
+      document.getElementById("update-btn").setAttribute("hidden", true);
+
+      element = document.querySelector("#addons-details > .addon-item");
+      if (element.addon && element.addon.id == aAddon.id) {
+        element.querySelector(".version").textContent = aAddon.version;
+        element.querySelector(".description-full").textContent = aAddon.description;
+      }
+    } else {
       element = this._createItemForAddon(aAddon);
 
       // Themes aren't considered active on install, so set existing as disabled, and new one enabled.

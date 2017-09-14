@@ -6,7 +6,7 @@ use app_units::Au;
 use device::TextureFilter;
 use frame::FrameId;
 use glyph_cache::GlyphCache;
-use gpu_cache::{GpuCache, GpuCacheHandle};
+use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
@@ -29,6 +29,11 @@ use rayon::ThreadPool;
 use glyph_rasterizer::{GlyphRasterizer, GlyphRequest};
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
+
+pub struct GlyphFetchResult {
+    pub index_in_text_run: i32,
+    pub uv_rect_address: GpuCacheAddress,
+}
 
 // These coordinates are always in texels.
 // They are converted to normalized ST
@@ -536,27 +541,40 @@ impl ResourceCache {
         self.texture_cache.pending_updates()
     }
 
-    pub fn get_glyphs<F>(&self,
-                         font: FontInstance,
-                         glyph_keys: &[GlyphKey],
-                         mut f: F) -> SourceTexture where F: FnMut(usize, &GpuCacheHandle) {
+    pub fn fetch_glyphs<F>(&self,
+                           font: FontInstance,
+                           glyph_keys: &[GlyphKey],
+                           fetch_buffer: &mut Vec<GlyphFetchResult>,
+                           gpu_cache: &GpuCache,
+                           mut f: F) where F: FnMut(SourceTexture, &[GlyphFetchResult]) {
         debug_assert_eq!(self.state, State::QueryResources);
-        let mut texture_id = None;
-
         let glyph_key_cache = self.cached_glyphs.get_glyph_key_cache_for_font(&font);
+
+        let mut current_texture_id = SourceTexture::Invalid;
+        debug_assert!(fetch_buffer.is_empty());
 
         for (loop_index, key) in glyph_keys.iter().enumerate() {
             let glyph = glyph_key_cache.get(key);
             let cache_item = glyph.as_ref().map(|info| self.texture_cache.get(&info.texture_cache_handle));
             if let Some(cache_item) = cache_item {
-                f(loop_index, &cache_item.uv_rect_handle);
-                debug_assert!(texture_id == None ||
-                              texture_id == Some(cache_item.texture_id));
-                texture_id = Some(cache_item.texture_id);
+                if current_texture_id != cache_item.texture_id {
+                    if !fetch_buffer.is_empty() {
+                        f(current_texture_id, fetch_buffer);
+                        fetch_buffer.clear();
+                    }
+                    current_texture_id = cache_item.texture_id;
+                }
+                fetch_buffer.push(GlyphFetchResult {
+                    index_in_text_run: loop_index as i32,
+                    uv_rect_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+                });
             }
         }
 
-        texture_id.unwrap_or(SourceTexture::Invalid)
+        if !fetch_buffer.is_empty() {
+            f(current_texture_id, fetch_buffer);
+            fetch_buffer.clear();
+        }
     }
 
     pub fn get_glyph_dimensions(&mut self,

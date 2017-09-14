@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-require("devtools/shared/fronts/styles");
-require("devtools/shared/fronts/highlighters");
-require("devtools/shared/fronts/layout");
 const { SimpleStringFront } = require("devtools/shared/fronts/string");
 const {
   Front,

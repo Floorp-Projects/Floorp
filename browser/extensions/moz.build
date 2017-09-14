@@ -10,6 +10,7 @@ DIRS += [
     'clicktoplay-rollout',
     'e10srollout',
     'followonsearch',
+    'formautofill',
     'onboarding',
     'pdfjs',
     'pocket',
@@ -23,12 +24,6 @@ if not CONFIG['RELEASE_OR_BETA']:
     DIRS += [
         'flyweb',
         'presentation',
-    ]
-
-# formautofill will be rolled out via balrog in release
-if CONFIG['MOZ_UPDATE_CHANNEL'] != 'release':
-    DIRS += [
-        'formautofill',
     ]
 
 # Only include the following system add-ons if building DevEdition or Nightly

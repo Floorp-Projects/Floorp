@@ -21,6 +21,18 @@
 #define TEX_SAMPLE(sampler, tex_coord) textureLod(sampler, tex_coord, 0.0)
 #endif
 
+// texelFetchOffset is buggy on some Android GPUs (see issue #1694).
+// Fallback to texelFetch on mobile GPUs.
+#if defined(GL_ES) 
+    #if GL_ES == 1
+        #define TEXEL_FETCH(sampler, position, lod, offset) texelFetch(sampler, position + offset, lod)
+    #else
+        #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
+    #endif
+#else
+    #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
+#endif
+
 //======================================================================================
 // Vertex shader attributes and uniforms
 //======================================================================================

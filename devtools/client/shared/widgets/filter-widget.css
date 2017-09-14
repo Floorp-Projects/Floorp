@@ -235,5 +235,5 @@
 }
 
 .show-presets #toggle-presets {
-  filter: url(chrome://devtools/skin/images/filters.svg#checked-icon-state);
+  filter: var(--theme-icon-checked-filter);
 }

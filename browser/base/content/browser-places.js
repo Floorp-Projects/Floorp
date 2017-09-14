@@ -893,6 +893,22 @@ var BookmarksEventHandler = {
    * @param aView
    *        The places view which aEvent should be associated with.
    */
+
+  onMouseUp(aEvent) {
+    // Handles left-click with modifier if not browser.bookmarks.openInTabClosesMenu.
+    if (aEvent.button != 0 || PlacesUIUtils.openInTabClosesMenu)
+      return;
+    let target = aEvent.originalTarget;
+    if (target.tagName != "menuitem")
+      return;
+    let modifKey = AppConstants.platform === "macosx" ? aEvent.metaKey
+                                                      : aEvent.ctrlKey;
+    // Don't keep menu open for 'Open all in Tabs'.
+    if (modifKey && !target.classList.contains("openintabs-menuitem")) {
+      target.setAttribute("closemenu", "none");
+    }
+  },
+
   onClick: function BEH_onClick(aEvent, aView) {
     // Only handle middle-click or left-click with modifiers.
     let modifKey;
@@ -906,17 +922,22 @@ var BookmarksEventHandler = {
       return;
 
     var target = aEvent.originalTarget;
-    // If this event bubbled up from a menu or menuitem, close the menus.
-    // Do this before opening tabs, to avoid hiding the open tabs confirm-dialog.
-    if (target.localName == "menu" || target.localName == "menuitem") {
-      for (let node = target.parentNode; node; node = node.parentNode) {
-        if (node.localName == "menupopup")
-          node.hidePopup();
-        else if (node.localName != "menu" &&
-                 node.localName != "hbox" &&
-                 node.localName != "vbox" )
-          break;
-      }
+    // If this event bubbled up from a menu or menuitem,
+    // close the menus if browser.bookmarks.openInTabClosesMenu.
+    if ((PlacesUIUtils.openInTabClosesMenu && target.tagName == "menuitem") ||
+        target.tagName == "menu" ||
+        target.classList.contains("openintabs-menuitem")) {
+      closeMenus(aEvent.target);
+    }
+    // Command already precesssed so remove any closemenu attr set in onMouseUp.
+    if (aEvent.button == 0 &&
+        target.tagName == "menuitem" &&
+        target.getAttribute("closemenu") == "none") {
+      // On Mac we need to extend when we remove the flag, to avoid any pre-close
+      // animations.
+      setTimeout(() => {
+        target.removeAttribute("closemenu");
+      }, 500);
     }
 
     if (target._placesNode && PlacesUtils.nodeIsContainer(target._placesNode)) {
@@ -1520,6 +1541,7 @@ var LibraryUI = {
         libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
         libraryButton.getAttribute("overflowedItem") == "true" ||
         !libraryButton.closest("#nav-bar") ||
+        !window.toolbar.visible ||
         !this.COSMETIC_ANIMATIONS_ENABLED) {
       return;
     }

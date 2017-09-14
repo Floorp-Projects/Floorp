@@ -12,6 +12,10 @@
                   name="browser.search.hiddenOneOffs"
                   type="unichar"/>
 
+      <preference id="browser.search.widget.inNavBar"
+                  name="browser.search.widget.inNavBar"
+                  type="bool"/>
+
     </preferences>
 
     <script type="application/javascript"
@@ -25,6 +29,16 @@
           data-category="paneSearch">
       <label class="header-name" flex="1">&paneSearch.title;</label>
     </hbox>
+
+    <groupbox id="searchbarGroup" data-category="paneSearch">
+      <caption><label id="searchbarLabel">&searchBar.label;</label></caption>
+      <radiogroup id="searchBarVisibleGroup" aria-labelledby="searchbarLabel" preference="browser.search.widget.inNavBar">
+        <radio id="searchBarHiddenRadio" value="false" label="&searchBar.hidden.label;"/>
+        <image class="searchBarImage searchBarHiddenImage" role="presentation"/>
+        <radio id="searchBarShownRadio" value="true" label="&searchBar.shown.label;"/>
+        <image class="searchBarImage searchBarShownImage" role="presentation"/>
+      </radiogroup>
+    </groupbox>
 
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch">
