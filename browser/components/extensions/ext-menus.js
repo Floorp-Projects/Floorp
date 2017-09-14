@@ -473,6 +473,9 @@ function addMenuEventInfo(info, contextData, includeSensitiveData) {
   if (contextData.frameId !== undefined) {
     info.frameId = contextData.frameId;
   }
+  if (contextData.onBookmark) {
+    info.bookmarkId = contextData.bookmarkId;
+  }
   info.editable = contextData.onEditableArea || contextData.onPassword || false;
   if (includeSensitiveData) {
     if (contextData.onLink) {
@@ -652,38 +655,14 @@ MenuItem.prototype = {
   },
 
   getClickInfo(contextData, wasChecked) {
-    let mediaType;
-    if (contextData.onVideo) {
-      mediaType = "video";
-    }
-    if (contextData.onAudio) {
-      mediaType = "audio";
-    }
-    if (contextData.onImage) {
-      mediaType = "image";
-    }
-
     let info = {
       menuItemId: this.id,
-      editable: contextData.onEditableArea || contextData.onPassword,
     };
-
-    function setIfDefined(argName, value) {
-      if (value !== undefined) {
-        info[argName] = value;
-      }
+    if (this.parent) {
+      info.parentMenuItemId = this.parentId;
     }
 
-    setIfDefined("parentMenuItemId", this.parentId);
-    setIfDefined("mediaType", mediaType);
-    setIfDefined("linkText", contextData.linkText);
-    setIfDefined("linkUrl", contextData.linkUrl);
-    setIfDefined("srcUrl", contextData.srcUrl);
-    setIfDefined("pageUrl", contextData.pageUrl);
-    setIfDefined("frameUrl", contextData.frameUrl);
-    setIfDefined("frameId", contextData.frameId);
-    setIfDefined("selectionText", contextData.selectionText);
-    setIfDefined("bookmarkId", contextData.bookmarkId);
+    addMenuEventInfo(info, contextData, true);
 
     if ((this.type === "checkbox") || (this.type === "radio")) {
       info.checked = this.checked;
