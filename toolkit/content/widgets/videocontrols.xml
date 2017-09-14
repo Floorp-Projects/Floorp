@@ -1670,9 +1670,10 @@
 
         let givenHeight = this.video.clientHeight;
         let videoWidth = (this.isAudioOnly ?
-                          this.controlBar.clientWidth :
+                          this.videocontrols.clientWidth :
                           this.video.clientWidth) || minRequiredWidth;
         let videoHeight = this.isAudioOnly ? this.controlBarMinHeight : givenHeight;
+        let videocontrolsWidth = this.videocontrols.clientWidth;
 
         let widthUsed = minControlBarPaddingWidth;
         let preventAppendControl = false;
@@ -1707,7 +1708,14 @@
             let controlBarHeight = Math.max(Math.min(givenHeight, this.controlBarMinHeight), this.controlBarMinVisibleHeight);
             this.controlBar.style.height = `${controlBarHeight}px`;
           }
-          this.controlBar.style.width = `${videoWidth}px`;
+          // Bug 1367875: Set minimum required width to controlBar if the given size is smaller than padding.
+          // This can help us expand the control and restore to the default size the next time we need
+          // to adjust the sizing.
+          if (videocontrolsWidth <= minControlBarPaddingWidth) {
+            this.controlBar.style.width = `${minRequiredWidth}px`;
+          } else {
+            this.controlBar.style.width = `${videoWidth}px`;
+          }
           return;
         }
 
