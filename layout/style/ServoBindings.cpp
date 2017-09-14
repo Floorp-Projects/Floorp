@@ -1527,6 +1527,14 @@ Gecko_ImageValue_Create(ServoBundledURI aURI)
   return value.forget().take();
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(GeckoImageValueMallocSizeOf)
+
+size_t
+Gecko_ImageValue_SizeOfIncludingThis(mozilla::css::ImageValue* aImageValue)
+{
+  return aImageValue->SizeOfIncludingThis(GeckoImageValueMallocSizeOf);
+}
+
 void
 Gecko_SetLayerImageImageValue(nsStyleImage* aImage,
                               mozilla::css::ImageValue* aImageValue)
