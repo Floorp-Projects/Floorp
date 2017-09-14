@@ -288,3 +288,62 @@ add_task(async function refresh_menus_with_browser_action() {
   await extension.unload();
   await other_extension.unload();
 });
+
+add_task(async function refresh_menus_during_navigation() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE + "?1");
+  let extension = loadExtensionWithMenusApi();
+  await extension.startup();
+
+  await extension.callMenuApi("create", {
+    id: "item1",
+    title: "item1",
+    contexts: ["browser_action"],
+    documentUrlPatterns: ["*://*/*?1*"],
+  });
+
+  await extension.callMenuApi("create", {
+    id: "item2",
+    title: "item2",
+    contexts: ["browser_action"],
+    documentUrlPatterns: ["*://*/*?2*"],
+  });
+
+  await openActionContextMenu(extension, "browser");
+  await extension.awaitMessage("onShown fired");
+
+  let elem = extension.getXULElementByMenuId("item1");
+  is(elem.getAttribute("label"), "item1", "menu item 1 should be shown");
+  elem = extension.getXULElementByMenuId("item2");
+  is(elem, null, "menu item 2 should be hidden");
+
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE + "?2");
+  await BrowserTestUtils.browserStopped(tab.linkedBrowser);
+
+  await extension.callMenuApi("refresh");
+
+  // The menu items in a context menu are based on the context at the time of
+  // opening the menu. Menus are not updated if the context changes, e.g. as a
+  // result of navigation events after the menu was shown.
+  // So when refresh() is called during the onShown event, then the original
+  // URL (before navigation) should be used to determine whether to show a
+  // URL-specific menu item, and NOT the current URL (after navigation).
+  elem = extension.getXULElementByMenuId("item1");
+  is(elem.getAttribute("label"), "item1", "menu item 1 should still be shown");
+  elem = extension.getXULElementByMenuId("item2");
+  is(elem, null, "menu item 2 should still be hidden");
+
+  await closeActionContextMenu();
+  await openActionContextMenu(extension, "browser");
+  await extension.awaitMessage("onShown fired");
+
+  // Now after closing and re-opening the menu, the latest contextual info
+  // should be used.
+  elem = extension.getXULElementByMenuId("item1");
+  is(elem, null, "menu item 1 should be hidden");
+  elem = extension.getXULElementByMenuId("item2");
+  is(elem.getAttribute("label"), "item2", "menu item 2 should be shown");
+
+  await closeActionContextMenu();
+  await extension.unload();
+  await BrowserTestUtils.removeTab(tab);
+});
