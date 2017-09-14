@@ -476,10 +476,10 @@ public:
    */
   void Accumulate(ContainerState* aState,
                   nsDisplayItem* aItem,
+                  const nsIntRegion& aClippedOpaqueRegion,
                   const nsIntRect& aVisibleRect,
                   const DisplayItemClip& aClip,
-                  LayerState aLayerState,
-                  nsDisplayList *aList);
+                  LayerState aLayerState);
   AnimatedGeometryRoot* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
 
   /**
@@ -3446,10 +3446,10 @@ IsItemAreaInWindowOpaqueRegion(nsDisplayListBuilder* aBuilder,
 void
 PaintedLayerData::Accumulate(ContainerState* aState,
                             nsDisplayItem* aItem,
+                            const nsIntRegion& aClippedOpaqueRegion,
                             const nsIntRect& aVisibleRect,
                             const DisplayItemClip& aClip,
-                            LayerState aLayerState,
-                            nsDisplayList* aList)
+                            LayerState aLayerState)
 {
   FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
 
@@ -3485,16 +3485,11 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     return;
   }
 
-  nsIntRegion opaquePixels = aState->ComputeOpaqueRect(aItem,
-                                                       mAnimatedGeometryRoot, mASR, aClip, aList,
-                                                       &mHideAllLayersBelow, &mOpaqueForAnimatedGeometryRootParent);
-  opaquePixels.AndWith(aVisibleRect);
-
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * it's the only thing visible in this layer.
    */
   if (nsIntRegion(aVisibleRect).Contains(mVisibleRegion) &&
-      opaquePixels.Contains(mVisibleRegion) &&
+      aClippedOpaqueRegion.Contains(mVisibleRegion) &&
       aItem->SupportsOptimizingToImage()) {
     mImage = static_cast<nsDisplayImageContainer*>(aItem);
     FLB_LOG_PAINTED_LAYER_DECISION(this, "  Tracking image: nsDisplayImageContainer covers the layer\n");
@@ -3551,8 +3546,8 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     mVisibleRegion.SimplifyOutward(4);
   }
 
-  if (!opaquePixels.IsEmpty()) {
-    for (auto iter = opaquePixels.RectIter(); !iter.Done(); iter.Next()) {
+  if (!aClippedOpaqueRegion.IsEmpty()) {
+    for (auto iter = aClippedOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
       // We don't use SimplifyInward here since it's not defined exactly
       // what it will discard. For our purposes the most important case
       // is a large opaque background at the bottom of z-order (e.g.,
@@ -4512,7 +4507,14 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
         if (mManager->IsWidgetLayerManager()) {
           paintedLayerData->UpdateCommonClipCount(itemClip);
         }
-        paintedLayerData->Accumulate(this, item, itemVisibleRect, itemClip, layerState, aList);
+        nsIntRegion opaquePixels = ComputeOpaqueRect(item,
+            animatedGeometryRoot, itemASR, itemClip, aList,
+            &paintedLayerData->mHideAllLayersBelow,
+            &paintedLayerData->mOpaqueForAnimatedGeometryRootParent);
+        MOZ_ASSERT(nsIntRegion(itemDrawRect).Contains(opaquePixels));
+        opaquePixels.AndWith(itemVisibleRect);
+        paintedLayerData->Accumulate(this, item, opaquePixels,
+            itemVisibleRect, itemClip, layerState);
 
         if (!paintedLayerData->mLayer) {
           // Try to recycle the old layer of this display item.
