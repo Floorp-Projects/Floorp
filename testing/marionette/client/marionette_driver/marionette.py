@@ -619,8 +619,7 @@ class Marionette(object):
 
             self.instance = GeckoInstance.create(
                 app, host=self.host, port=self.port, bin=self.bin, **instance_args)
-            self.instance.start()
-            self.raise_for_port(timeout=self.startup_timeout)
+            self.start_binary(self.startup_timeout)
 
         self.timeout = Timeouts(self)
 
@@ -628,6 +627,20 @@ class Marionette(object):
     def profile_path(self):
         if self.instance and self.instance.profile:
             return self.instance.profile.profile
+
+    def start_binary(self, timeout):
+        try:
+            self.instance.start()
+            self.raise_for_port(timeout=timeout)
+        except socket.timeout:
+            # Something went wrong with starting up Marionette server. Given
+            # that the process will not quit itself, force a shutdown immediately.
+            self.cleanup()
+
+            msg = "Process killed after {}s because no connection to Marionette "\
+                  "server could be established. Check gecko.log for errors"
+            _, _, tb = sys.exc_info()
+            raise IOError, msg.format(timeout), tb
 
     def cleanup(self):
         if self.session is not None:
@@ -697,7 +710,6 @@ class Marionette(object):
 
         return False
 
-    @do_process_check
     def raise_for_port(self, timeout=None):
         """Raise socket.timeout if no connection can be established.
 
@@ -1178,7 +1190,7 @@ class Marionette(object):
         return "{0}{1}".format(self.baseurl, relative_url)
 
     @do_process_check
-    def start_session(self, capabilities=None, timeout=60):
+    def start_session(self, capabilities=None, timeout=None):
         """Create a new WebDriver session.
         This method must be called before performing any other action.
 
@@ -1188,27 +1200,32 @@ class Marionette(object):
             (including alwaysMatch, firstMatch, desiredCapabilities,
             or requriedCapabilities), and only recognises extension
             capabilities that are specific to Marionette.
-        :param timeout: Timeout in seconds for the server to be ready.
+        :param timeout: Optional timeout in seconds for the server to be ready.
         :returns: A dictionary of the capabilities offered.
         """
+        if timeout is None:
+            timeout = self.startup_timeout
+
         self.crashed = 0
 
         if self.instance:
             returncode = self.instance.runner.returncode
+            # We're managing a binary which has terminated. Start it again
+            # and implicitely wait for the Marionette server to be ready.
             if returncode is not None:
-                # We're managing a binary which has terminated, so start it again.
-                self.instance.start()
+                self.start_binary(timeout)
+
+        else:
+            # In the case when Marionette doesn't manage the binary wait until
+            # its server component has been started.
+            self.wait_for_port(timeout=timeout)
 
         self.client = transport.TcpTransport(
             self.host,
             self.port,
             self.socket_timeout)
-
-        # Call wait_for_port() before attempting to connect in
-        # the event gecko hasn't started yet.
-        timeout = timeout or self.startup_timeout
-        self.wait_for_port(timeout=timeout)
         self.protocol, _ = self.client.connect()
+
         body = capabilities
         if body is None:
             body = {}
