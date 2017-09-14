@@ -2214,7 +2214,7 @@ var AddonManagerInternal = {
 
    this.getAddonByInstanceID(aInstanceID).then(wrapper => {
      if (!wrapper) {
-       throw Error("No addon matching instanceID:", aInstanceID.toString());
+       throw Error(`No addon matching instanceID: ${aInstanceID}`);
      }
      let addonId = wrapper.id;
      logger.debug(`Registering upgrade listener for ${addonId}`);
@@ -2235,12 +2235,12 @@ var AddonManagerInternal = {
 
     return this.getAddonByInstanceID(aInstanceID).then(addon => {
       if (!addon) {
-        throw Error("No addon for instanceID:", aInstanceID.toString());
+        throw Error(`No addon for instanceID: ${aInstanceID}`);
       }
       if (this.upgradeListeners.has(addon.id)) {
         this.upgradeListeners.delete(addon.id);
       } else {
-        throw Error("No upgrade listener registered for addon ID:", addon.id);
+        throw Error(`No upgrade listener registered for addon ID: ${addon.id}`);
       }
     });
   },
