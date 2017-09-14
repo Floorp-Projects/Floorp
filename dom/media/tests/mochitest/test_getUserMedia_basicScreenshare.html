@@ -154,7 +154,7 @@
 
     info("Testing modifying screenshare with applyConstraints");
     await Promise.all([
-      () => testVideo.srcObject.getVideoTracks()[0].applyConstraints({
+      testVideo.srcObject.getVideoTracks()[0].applyConstraints({
         mediaSource: 'screen',
         width: 200,
         height: 200,
@@ -163,7 +163,7 @@
           max: '10'
         }
       }),
-      () => listenUntil(testVideo, "resize", () => true),
+      haveEvent(testVideo, "resize", wait(5000, new Error("Timeout"))),
     ]);
     draw(helper.grey, helper.green,
          helper.blue, helper.red);
