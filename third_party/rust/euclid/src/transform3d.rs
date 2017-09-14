@@ -177,6 +177,18 @@ where T: Copy + Clone +
         )
     }
 
+    /// Check whether shapes on the XY plane with Z pointing towards the
+    /// screen transformed by this matrix would be facing back.
+    pub fn is_backface_visible(&self) -> bool {
+        // inverse().m33 < 0;
+        let det = self.determinant();
+        let m33 = self.m12 * self.m24 * self.m41 - self.m14 * self.m22 * self.m41 +
+                  self.m14 * self.m21 * self.m42 - self.m11 * self.m24 * self.m42 -
+                  self.m12 * self.m21 * self.m44 + self.m11 * self.m22 * self.m44;
+        let _0: T = Zero::zero();
+        (m33 * det) < _0
+    }
+
     pub fn approx_eq(&self, other: &Self) -> bool {
         self.m11.approx_eq(&other.m11) && self.m12.approx_eq(&other.m12) &&
         self.m13.approx_eq(&other.m13) && self.m14.approx_eq(&other.m14) &&
@@ -661,7 +673,7 @@ mod tests {
     use Radians;
     use super::*;
 
-    use std::f32::consts::FRAC_PI_2;
+    use std::f32::consts::{FRAC_PI_2, PI};
 
     type Mf32 = Transform3D<f32>;
 
@@ -884,5 +896,24 @@ mod tests {
         let v2 = vec2(10.0, -5.0);
         assert_eq!(v2, m.transform_vector2d(&v2));
         assert!(v2.to_point() != m.transform_point2d(&v2.to_point()));
+    }
+
+    #[test]
+    pub fn test_is_backface_visible() {
+        // backface is not visible for rotate-x 0 degree.
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(0.0));
+        assert!(!r1.is_backface_visible());
+        // backface is not visible for rotate-x 45 degree.
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(PI * 0.25));
+        assert!(!r1.is_backface_visible());
+        // backface is visible for rotate-x 180 degree.
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(PI));
+        assert!(r1.is_backface_visible());
+        // backface is visible for rotate-x 225 degree.
+        let r1 = Mf32::create_rotation(1.0, 0.0, 0.0, rad(PI * 1.25));
+        assert!(r1.is_backface_visible());
+        // backface is not visible for non-inverseable matrix
+        let r1 = Mf32::create_scale(2.0, 0.0, 2.0);
+        assert!(!r1.is_backface_visible());
     }
 }
