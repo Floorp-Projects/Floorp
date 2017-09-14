@@ -18,8 +18,8 @@ import android.webkit.WebView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.utils.Settings;
-import org.mozilla.focus.webkit.SystemWebView;
-import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
+import org.mozilla.focus.webview.SystemWebView;
+import org.mozilla.focus.webview.TrackingProtectionWebViewClient;
 
 /**
  * WebViewProvider for creating a WebKit based IWebVIew implementation.

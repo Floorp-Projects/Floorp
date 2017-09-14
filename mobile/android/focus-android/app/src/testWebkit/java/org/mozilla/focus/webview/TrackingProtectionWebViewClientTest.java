@@ -1,4 +1,4 @@
-package org.mozilla.focus.webkit;
+package org.mozilla.focus.webview;
 
 import android.net.Uri;
 import android.os.StrictMode;

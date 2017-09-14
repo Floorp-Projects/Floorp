@@ -2,15 +2,15 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.focus.webkit.matcher;
+package org.mozilla.focus.webview.matcher;
 
 
 import android.net.Uri;
 import android.text.TextUtils;
 
 import org.mozilla.focus.utils.UrlUtils;
-import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
-import org.mozilla.focus.webkit.matcher.util.FocusString;
+import org.mozilla.focus.webview.matcher.Trie.WhiteListTrie;
+import org.mozilla.focus.webview.matcher.util.FocusString;
 
 /* package-private */ class EntityList {
 

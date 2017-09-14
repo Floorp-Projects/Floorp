@@ -2,12 +2,12 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.focus.webkit.matcher;
+package org.mozilla.focus.webview.matcher;
 
 import android.util.JsonReader;
 import android.util.JsonToken;
 
-import org.mozilla.focus.webkit.matcher.util.FocusString;
+import org.mozilla.focus.webview.matcher.util.FocusString;
 
 import java.io.IOException;
 import java.util.Collections;
