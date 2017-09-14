@@ -82,8 +82,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
-XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
-                                      "extensions.webextensions.remote", false);
 
 var {
   GlobalManager,
@@ -1026,7 +1024,7 @@ this.Extension = class extends ExtensionData {
       StartupCache.clearAddonData(addonData.id);
     }
 
-    this.remote = useRemoteWebExtensions;
+    this.remote = !WebExtensionPolicy.isExtensionProcess;
 
     if (this.remote && processCount !== 1) {
       throw new Error("Out-of-process WebExtensions are not supported with multiple child processes");
