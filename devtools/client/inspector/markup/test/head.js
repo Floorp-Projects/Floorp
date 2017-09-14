@@ -112,7 +112,7 @@ Task.async(function* (selector, inspector, expectFailure = false) {
  */
 function* getFirstChildNodeValue(selector, testActor) {
   let nodeValue = yield testActor.eval(`
-    document.querySelector("${selector}").firstChild.nodeValue;
+    content.document.querySelector("${selector}").firstChild.nodeValue;
   `);
   return nodeValue;
 }
