@@ -12,7 +12,7 @@ The helper — described below — reports predefined update status, which event
 
 .. notes::
 
-   Examples of update sources: *remote settings, addons update, addons, gfx, and plugins blocklists, certificate revocation, certificate pinning, system addons delivery…*
+   Examples of update sources: *remote settings, add-ons update, add-ons, gfx, and plugins blocklists, certificate revocation, certificate pinning, system add-ons delivery…*
 
    Examples of update status: *up-to-date, success, network error, server error, signature error, server backoff, unknown error…*
 
