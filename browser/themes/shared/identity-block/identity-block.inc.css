@@ -17,13 +17,13 @@
 }
 
 #identity-box:hover:not(.no-hover):not([open=true]) {
-  background-color: hsla(240,5%,5%,.05);
+  background-color: hsla(0,0%,70%,.2);
   fill-opacity: .8;
 }
 
 #identity-box:hover:active:not(.no-hover),
 #identity-box[open=true] {
-  background-color: hsla(240,5%,5%,.1);
+  background-color: hsla(0,0%,70%,.3);
   fill-opacity: .8;
 }
 

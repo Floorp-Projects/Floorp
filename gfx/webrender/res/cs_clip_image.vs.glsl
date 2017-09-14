@@ -12,17 +12,17 @@ ImageMaskData fetch_mask_data(ivec2 address) {
 }
 
 void main(void) {
-    CacheClipInstance cci = fetch_clip_item(gl_InstanceID);
-    ClipArea area = fetch_clip_area(cci.render_task_index);
-    Layer layer = fetch_layer(cci.layer_index);
-    ImageMaskData mask = fetch_mask_data(cci.clip_data_address);
+    ClipMaskInstance cmi = fetch_clip_item();
+    ClipArea area = fetch_clip_area(cmi.render_task_address);
+    Layer layer = fetch_layer(cmi.layer_address);
+    ImageMaskData mask = fetch_mask_data(cmi.clip_data_address);
     RectWithSize local_rect = mask.local_rect;
-    ImageResource res = fetch_image_resource_direct(cci.resource_address);
+    ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(local_rect,
                                                layer,
                                                area,
-                                               cci.segment);
+                                               cmi.segment);
 
     vPos = vi.local_pos;
     vLayer = res.layer;

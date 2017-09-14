@@ -1,34 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="16" height="16" viewBox="0 0 16 16">
-
-  <defs>
-    <rect id="shape-lock-clasp-outer" x="2" y="1" width="8" height="10" rx="4" ry="4" />
-    <rect id="shape-lock-clasp-inner" x="4" y="3" width="4" height="6" rx="2" ry="2" />
-    <rect id="shape-lock-base" x="1" y="6" width="10" height="7" rx="1" ry="1" />
-
-    <mask id="mask-clasp-cutout">
-      <rect width="16" height="16" fill="#000" />
-      <use href="#shape-lock-clasp-outer" fill="#fff"/>
-      <use href="#shape-lock-clasp-inner" fill="#000"/>
-    </mask>
-
-    <mask id="mask-lock">
-      <use href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)" fill="#fff"/>
-      <use href="#shape-lock-base" fill="#fff"/>
-    </mask>
-
-    <g id="warning-triangle">
-      <path fill="#fff" d="M10.5,5C9.8,5,9.1,5.4,8.8,6.2l-3.5,6.8c-0.4,0.7-0.4,1.4,0,2c0.4,0.6,1,1,1.8,1H14c0.8,0,1.4-0.4,1.8-1 c0.3-0.6,0.3-1.4,0-2l-3.5-6.8C11.9,5.4,11.2,5,10.5,5L10.5,5z"/>
-      <path fill="#ffbf00" d="M14.8,13.4l-3.5-6.8C11.2,6.2,10.9,6,10.5,6c-0.3,0-0.7,0.2-0.9,0.6l-3.5,6.8c-0.2,0.4-0.2,0.8,0,1.1C6.3,14.8,6.6,15,7,15 H14c0.4,0,0.7-0.2,0.9-0.5C15.1,14.2,15,13.8,14.8,13.4z"/>
-      <path fill="#fff" d="M10,8.5C10,8.2,10.2,8,10.5,8S11,8.2,11,8.5L10.8,11h-0.6L10,8.5z"/>
-      <circle fill="#fff" cx="10.5" cy="12.5" r=".75"/>
-    </g>
-  </defs>
-
-  <rect fill="context-fill" fill-opacity="context-fill-opacity" width="16" height="16" mask="url(#mask-lock)"/>
-  <use href="#warning-triangle"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path d="M8 1a4 4 0 0 0-4 4v1.984h-.5a1.5 1.5 0 0 0-1.5 1.5V13.5A1.5 1.5 0 0 0 3.5 15h2.535a2.274 2.274 0 0 1 .207-1.318L9.43 7.27a2.266 2.266 0 0 1 .2-.286H6V5a2 2 0 0 1 4 0v1.568A2.255 2.255 0 0 1 11.478 6a2.283 2.283 0 0 1 .522.073V5a4 4 0 0 0-4-4z" fill="context-fill" fill-opacity="context-fill-opacity"/>
+  <path d="M15.818 14.127l-3.189-6.411a1.285 1.285 0 0 0-2.3 0l-3.192 6.411A1.294 1.294 0 0 0 8.289 16h6.377a1.294 1.294 0 0 0 1.152-1.873z" fill="#ffbf00"/>
+  <path d="M11.478 8a.272.272 0 0 1 .256.161l3.188 6.412a.291.291 0 0 1-.013.291.275.275 0 0 1-.243.137H8.289a.275.275 0 0 1-.243-.137.29.29 0 0 1-.013-.291l3.188-6.412A.272.272 0 0 1 11.478 8m0-1a1.272 1.272 0 0 0-1.152.716l-3.189 6.411A1.294 1.294 0 0 0 8.289 16h6.377a1.294 1.294 0 0 0 1.152-1.873l-3.189-6.411A1.272 1.272 0 0 0 11.478 7z" fill="#d76e00" opacity=".35"/>
+  <path d="M11.5 12a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-1 0v2a.5.5 0 0 0 .5.5zm0 .809a.691.691 0 1 0 .691.691.691.691 0 0 0-.691-.691z" fill="#fff"/>
 </svg>

@@ -74,6 +74,14 @@ impl BatchTextures {
             ]
         }
     }
+
+    pub fn color(texture: SourceTexture) -> Self {
+        BatchTextures {
+            colors: [ texture,
+                      SourceTexture::Invalid,
+                      SourceTexture::Invalid ]
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

@@ -10,7 +10,7 @@ nightly = ["euclid/unstable", "serde/unstable"]
 ipc = ["ipc-channel"]
 
 [dependencies]
-app_units = "0.5"
+app_units = "0.5.6"
 bincode = "0.8"
 byteorder = "1.0"
 euclid = "0.15"

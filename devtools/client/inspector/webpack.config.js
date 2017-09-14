@@ -43,39 +43,39 @@ module.exports = envConfig => {
         {
           test: /event-emitter/,
           exclude: /node_modules/,
-          loaders: [path.join(__dirname, "./webpack/rewrite-event-emitter")],
+          loaders: ["rewrite-event-emitter"],
         }, {
           test: /client(\/|\\)inspector(\/|\\).*\.js$/,
           loaders: [
             // Replace all references to this.browserRequire() by require()
-            path.join(__dirname, "./webpack/rewrite-browser-require"),
+            "rewrite-browser-require",
             // Replace all references to loader.lazyRequire() by require()
-            path.join(__dirname, "./webpack/rewrite-lazy-require"),
+            "rewrite-lazy-require",
           ],
         }, {
           test: /shared(\/|\\)inspector(\/|\\)css-logic\.js$/,
           loaders: [
             // Replace a very specific lazy importer, which should really be moved to
             // /server ...
-            path.join(__dirname, "./webpack/rewrite-css-logic-importer"),
+            "rewrite-css-logic-importer",
           ],
         }, {
           test: /react-redux\.js$/,
           loaders: [
             // Replace dynamic paths in react-redux file
-            path.join(__dirname, "./webpack/rewrite-react-redux"),
+            "rewrite-react-redux",
           ],
         }, {
           // Replace all references sdk's lazyRequire by require()
           test: /sdk(\/|\\).*\.js$/,
-          loaders: [path.join(__dirname, "./webpack/rewrite-sdk-lazy-require")],
+          loaders: ["rewrite-sdk-lazy-require"],
         }
       ]
     },
     resolveLoader: {
       root: [
         path.resolve("./node_modules"),
-        path.resolve("./webpack"),
+        path.resolve("../shared/webpack"),
       ]
     },
     resolve: {

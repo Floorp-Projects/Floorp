@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use clip::ClipStore;
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState};
 use internal_types::{FastHashSet, FastHashMap};
 use print_tree::{PrintTree, PrintTreePrinter};
@@ -370,7 +371,10 @@ impl ClipScrollTree {
         }
     }
 
-    fn print_node<T: PrintTreePrinter>(&self, id: &ClipId, pt: &mut T) {
+    fn print_node<T: PrintTreePrinter>(&self,
+                                       id: &ClipId,
+                                       pt: &mut T,
+                                       clip_store: &ClipStore) {
         let node = self.nodes.get(id).unwrap();
 
         match node.node_type {
@@ -378,7 +382,7 @@ impl ClipScrollTree {
                 pt.new_level("Clip".to_owned());
                 pt.add_item(format!("screen_bounding_rect: {:?}", info.screen_bounding_rect));
 
-                let clips = info.clip_sources.clips();
+                let clips = clip_store.get(&info.clip_sources).clips();
                 pt.new_level(format!("Clip Sources [{}]", clips.len()));
                 for source in clips {
                     pt.add_item(format!("{:?}", source));
@@ -406,23 +410,23 @@ impl ClipScrollTree {
         pt.add_item(format!("world_content_transform: {:?}", node.world_content_transform));
 
         for child_id in &node.children {
-            self.print_node(child_id, pt);
+            self.print_node(child_id, pt, clip_store);
         }
 
         pt.end_level();
     }
 
     #[allow(dead_code)]
-    pub fn print(&self) {
+    pub fn print(&self, clip_store: &ClipStore) {
         if !self.nodes.is_empty() {
             let mut pt = PrintTree::new("clip_scroll tree");
-            self.print_with(&mut pt);
+            self.print_with(clip_store, &mut pt,);
         }
     }
 
-    pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T) {
+    pub fn print_with<T: PrintTreePrinter>(&self, clip_store: &ClipStore, pt: &mut T) {
         if !self.nodes.is_empty() {
-            self.print_node(&self.root_reference_frame_id, pt);
+            self.print_node(&self.root_reference_frame_id, pt, clip_store);
         }
     }
 }

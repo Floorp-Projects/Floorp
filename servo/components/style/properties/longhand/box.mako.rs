@@ -137,6 +137,7 @@
 
     #[allow(non_camel_case_types)]
     #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, ToComputedValue)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf, Deserialize, Serialize))]
     pub enum SpecifiedValue {
         % for value in values:
@@ -225,10 +226,24 @@ ${helpers.single_keyword("position", "static absolute relative fixed sticky",
             let ltr = context.style().writing_mode.is_bidi_ltr();
             // https://drafts.csswg.org/css-logical-props/#float-clear
             match *self {
-                SpecifiedValue::inline_start if ltr => computed_value::T::left,
-                SpecifiedValue::inline_start => computed_value::T::right,
-                SpecifiedValue::inline_end if ltr => computed_value::T::right,
-                SpecifiedValue::inline_end => computed_value::T::left,
+                SpecifiedValue::inline_start => {
+                    context.rule_cache_conditions.borrow_mut()
+                        .set_writing_mode_dependency(context.builder.writing_mode);
+                    if ltr {
+                        computed_value::T::left
+                    } else {
+                        computed_value::T::right
+                    }
+                }
+                SpecifiedValue::inline_end => {
+                    context.rule_cache_conditions.borrow_mut()
+                        .set_writing_mode_dependency(context.builder.writing_mode);
+                    if ltr {
+                        computed_value::T::right
+                    } else {
+                        computed_value::T::left
+                    }
+                }
                 % for value in "none left right".split():
                     SpecifiedValue::${value} => computed_value::T::${value},
                 % endfor
@@ -263,10 +278,24 @@ ${helpers.single_keyword("position", "static absolute relative fixed sticky",
             let ltr = context.style().writing_mode.is_bidi_ltr();
             // https://drafts.csswg.org/css-logical-props/#float-clear
             match *self {
-                SpecifiedValue::inline_start if ltr => computed_value::T::left,
-                SpecifiedValue::inline_start => computed_value::T::right,
-                SpecifiedValue::inline_end if ltr => computed_value::T::right,
-                SpecifiedValue::inline_end => computed_value::T::left,
+                SpecifiedValue::inline_start => {
+                    context.rule_cache_conditions.borrow_mut()
+                        .set_writing_mode_dependency(context.builder.writing_mode);
+                    if ltr {
+                        computed_value::T::left
+                    } else {
+                        computed_value::T::right
+                    }
+                }
+                SpecifiedValue::inline_end => {
+                    context.rule_cache_conditions.borrow_mut()
+                        .set_writing_mode_dependency(context.builder.writing_mode);
+                    if ltr {
+                        computed_value::T::right
+                    } else {
+                        computed_value::T::left
+                    }
+                }
                 % for value in "none left right both".split():
                     SpecifiedValue::${value} => computed_value::T::${value},
                 % endfor
@@ -407,6 +436,7 @@ ${helpers.predefined_type("transition-delay",
     }
 
     #[derive(Clone, Debug, Eq, Hash, PartialEq, ToComputedValue)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub struct SpecifiedValue(pub Option<KeyframesName>);
 
@@ -500,6 +530,7 @@ ${helpers.predefined_type("animation-timing-function",
     }
 
     // https://drafts.csswg.org/css-animations/#animation-iteration-count
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     #[derive(Clone, Debug, PartialEq, ToCss, ToComputedValue)]
     pub enum SpecifiedValue {
@@ -635,6 +666,7 @@ ${helpers.predefined_type(
         use values::computed::{Length, LengthOrPercentage};
 
         #[derive(Clone, Copy, Debug, PartialEq)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct ComputedMatrix {
             pub m11: CSSFloat, pub m12: CSSFloat, pub m13: CSSFloat, pub m14: CSSFloat,
@@ -644,6 +676,7 @@ ${helpers.predefined_type(
         }
 
         #[derive(Clone, Copy, Debug, PartialEq)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct ComputedMatrixWithPercents {
             pub m11: CSSFloat, pub m12: CSSFloat, pub m13: CSSFloat, pub m14: CSSFloat,
@@ -677,6 +710,7 @@ ${helpers.predefined_type(
         }
 
         #[derive(Clone, Debug, PartialEq)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub enum ComputedOperation {
             Matrix(ComputedMatrix),
@@ -710,6 +744,7 @@ ${helpers.predefined_type(
         }
 
         #[derive(Clone, Debug, PartialEq)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct T(pub Option<Vec<ComputedOperation>>);
     }
@@ -721,6 +756,7 @@ ${helpers.predefined_type(
     ///
     /// Some transformations can be expressed by other more general functions.
     #[derive(Clone, Debug, PartialEq)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub enum SpecifiedOperation {
         /// Represents a 2D 2x3 matrix.
@@ -911,6 +947,7 @@ ${helpers.predefined_type(
     }
 
     #[derive(Clone, Debug, PartialEq)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub struct SpecifiedValue(Vec<SpecifiedOperation>);
 
@@ -1628,6 +1665,7 @@ ${helpers.predefined_type("transform-origin",
 
     bitflags! {
         #[derive(ToComputedValue)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub flags SpecifiedValue: u8 {
             const LAYOUT = 0x01,
@@ -1755,7 +1793,6 @@ ${helpers.single_keyword("-moz-orient",
                           gecko_ffi_name="mOrient",
                           gecko_enum_prefix="StyleOrient",
                           spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-orient)",
-                          gecko_inexhaustive="True",
                           animation_value_type="discrete")}
 
 <%helpers:longhand name="will-change" products="gecko" animation_value_type="discrete"
@@ -1769,6 +1806,7 @@ ${helpers.single_keyword("-moz-orient",
     }
 
     #[derive(Clone, Debug, PartialEq, ToComputedValue)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub enum SpecifiedValue {
         Auto,
@@ -1840,6 +1878,7 @@ ${helpers.predefined_type(
 
     bitflags! {
         /// These constants match Gecko's `NS_STYLE_TOUCH_ACTION_*` constants.
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[derive(ToComputedValue)]
         pub flags SpecifiedValue: u8 {
             const TOUCH_ACTION_NONE = structs::NS_STYLE_TOUCH_ACTION_NONE as u8,

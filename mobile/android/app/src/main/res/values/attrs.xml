@@ -55,6 +55,10 @@
         <attr name="android:visible"/>
         <attr name="android:enabled"/>
         <attr name="android:showAsAction"/>
+        <attr name="itemType" type="enum">
+            <enum name="default_menu_item" value="0x00" />
+            <enum name="icon_menu_item" value="0x01" />
+        </attr>
     </declare-styleable>
 
     <declare-styleable name="MenuItemDefault">

@@ -102,8 +102,8 @@ impl<T: Copy + Sub<T, Output=T>, U> Sub for TypedSize2D<T, U> {
     }
 }
 
-impl<T: Copy + Clone + Mul<T, Output=U>, U> TypedSize2D<T, U> {
-    pub fn area(&self) -> U { self.width * self.height }
+impl<T: Copy + Clone + Mul<T>, U> TypedSize2D<T, U> {
+    pub fn area(&self) -> T::Output { self.width * self.height }
 }
 
 impl<T, U> TypedSize2D<T, U>
@@ -290,5 +290,11 @@ mod size2d {
         let p1 = Size2D::new(0.0, 0.0);
         let p2 = Size2D::new(0.0, 0.0);
         assert_eq!(p1 - p2, Size2D::new(0.0, 0.0));
+    }
+
+    #[test]
+    pub fn test_area() {
+        let p = Size2D::new(1.5, 2.0);
+        assert_eq!(p.area(), 3.0);
     }
 }
