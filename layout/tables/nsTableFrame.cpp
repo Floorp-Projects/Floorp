@@ -1277,6 +1277,7 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -1316,6 +1317,7 @@ bool
 nsDisplayTableBorderCollapse::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                       wr::IpcResourceUpdateQueue& aResources,
                                                       const StackingContextHelper& aSc,
+                                                      nsTArray<WebRenderParentCommand>& aParentCommands,
                                                       mozilla::layers::WebRenderLayerManager* aManager,
                                                       nsDisplayListBuilder* aDisplayListBuilder)
 {
@@ -1328,6 +1330,7 @@ nsDisplayTableBorderCollapse::CreateWebRenderCommands(mozilla::wr::DisplayListBu
 
   static_cast<nsTableFrame *>(mFrame)->CreateWebRenderCommandsForBCBorders(aBuilder,
                                                                           aSc,
+                                                                          aParentCommands,
                                                                           ToReferenceFrame());
   return true;
 }
@@ -6521,6 +6524,7 @@ struct BCBlockDirSeg
                                BCPixelSize aInlineSegBSize,
                                wr::DisplayListBuilder& aBuilder,
                                const layers::StackingContextHelper& aSc,
+                               nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                const nsPoint& aPt);
   void AdvanceOffsetB();
   void IncludeCurrentBorder(BCPaintBorderIterator& aIter);
@@ -6575,6 +6579,7 @@ struct BCInlineDirSeg
   void CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                wr::DisplayListBuilder& aBuilder,
                                const layers::StackingContextHelper& aSc,
+                               nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                const nsPoint& aPt);
 
   nscoord            mOffsetI;       // i-offset with respect to the table edge
@@ -6612,15 +6617,18 @@ struct BCCreateWebRenderCommandsData
 {
   BCCreateWebRenderCommandsData(wr::DisplayListBuilder& aBuilder,
                                 const layers::StackingContextHelper& aSc,
+                                nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                 const nsPoint& aOffsetToReferenceFrame)
     : mBuilder(aBuilder)
     , mSc(aSc)
+    , mParentCommands(aParentCommands)
     , mOffsetToReferenceFrame(aOffsetToReferenceFrame)
   {
   }
 
   wr::DisplayListBuilder& mBuilder;
   const layers::StackingContextHelper& mSc;
+  nsTArray<layers::WebRenderParentCommand>& mParentCommands;
   const nsPoint& mOffsetToReferenceFrame;
 };
 
@@ -6634,9 +6642,10 @@ struct BCPaintBorderAction
 
   BCPaintBorderAction(wr::DisplayListBuilder& aBuilder,
                       const layers::StackingContextHelper& aSc,
+                      nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                       const nsPoint& aOffsetToReferenceFrame)
     : mMode(Mode::CREATE_WEBRENDER_COMMANDS)
-    , mCreateWebRenderCommandsData(aBuilder, aSc, aOffsetToReferenceFrame)
+    , mCreateWebRenderCommandsData(aBuilder, aSc, aParentCommands, aOffsetToReferenceFrame)
   {
     mMode = Mode::CREATE_WEBRENDER_COMMANDS;
   }
@@ -7451,6 +7460,7 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                        BCPixelSize aInlineSegBSize,
                                        wr::DisplayListBuilder& aBuilder,
                                        const layers::StackingContextHelper& aSc,
+                                       nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                        const nsPoint& aOffset)
 {
   Maybe<BCBorderParameters> param = BuildBorderParameters(aIter, aInlineSegBSize);
@@ -7709,6 +7719,7 @@ void
 BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                         wr::DisplayListBuilder& aBuilder,
                                         const layers::StackingContextHelper& aSc,
+                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         const nsPoint& aPt)
 {
   Maybe<BCBorderParameters> param = BuildBorderParameters(aIter);
@@ -7837,6 +7848,7 @@ BCPaintBorderIterator::AccumulateOrDoActionInlineDirSegment(BCPaintBorderAction&
           mInlineSeg.CreateWebRenderCommands(*this,
                                              aAction.mCreateWebRenderCommandsData.mBuilder,
                                              aAction.mCreateWebRenderCommandsData.mSc,
+                                             aAction.mCreateWebRenderCommandsData.mParentCommands,
                                              aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame);
         }
       }
@@ -7889,6 +7901,7 @@ BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(BCPaintBorderAction& 
                                               inlineSegBSize,
                                               aAction.mCreateWebRenderCommandsData.mBuilder,
                                               aAction.mCreateWebRenderCommandsData.mSc,
+                                              aAction.mCreateWebRenderCommandsData.mParentCommands,
                                               aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame);
         }
       }
@@ -7963,9 +7976,10 @@ nsTableFrame::PaintBCBorders(DrawTarget& aDrawTarget, const nsRect& aDirtyRect)
 void
 nsTableFrame::CreateWebRenderCommandsForBCBorders(wr::DisplayListBuilder& aBuilder,
                                                   const mozilla::layers::StackingContextHelper& aSc,
+                                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                   const nsPoint& aOffsetToReferenceFrame)
 {
-  BCPaintBorderAction action(aBuilder, aSc, aOffsetToReferenceFrame);
+  BCPaintBorderAction action(aBuilder, aSc, aParentCommands, aOffsetToReferenceFrame);
   // We always draw whole table border for webrender. Passing the table rect as
   // dirty rect.
   IterateBCBorders(action, GetRect());
