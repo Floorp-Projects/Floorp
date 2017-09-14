@@ -28,8 +28,7 @@ public:
                            wr::IpcResourceUpdateQueue& aResources,
                            const StackingContextHelper& aSc) = 0;
   virtual Maybe<wr::WrImageMask> RenderMaskLayer(const StackingContextHelper& aSc,
-                                                 const gfx::Matrix4x4& aTransform,
-                                                 wr::IpcResourceUpdateQueue& aResources)
+                                             const gfx::Matrix4x4& aTransform)
   {
     MOZ_ASSERT(false);
     return Nothing();
@@ -41,6 +40,11 @@ public:
   {
     return static_cast<WebRenderLayer*>(aLayer->ImplData());
   }
+
+  Maybe<wr::ImageKey> UpdateImageKey(ImageClientSingle* aImageClient,
+                                     ImageContainer* aContainer,
+                                     Maybe<wr::ImageKey>& aOldKey,
+                                     wr::ExternalImageId& aExternalImageId);
 
   WebRenderLayerManager* WrManager();
   WebRenderBridgeChild* WrBridge();
@@ -54,8 +58,7 @@ public:
   // that we want this mask to be relative to. This is usually the stacking
   // context of the *parent* layer of |this|, because that is what the mask
   // is relative to in the layer tree.
-  Maybe<wr::WrImageMask> BuildWrMaskLayer(const StackingContextHelper& aRelativeTo,
-                                          wr::IpcResourceUpdateQueue& aResources);
+  Maybe<wr::WrImageMask> BuildWrMaskLayer(const StackingContextHelper& aRelativeTo);
 
 protected:
   BoundsTransformMatrix BoundsTransform();

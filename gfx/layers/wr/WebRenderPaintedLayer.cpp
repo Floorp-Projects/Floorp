@@ -91,18 +91,16 @@ WebRenderPaintedLayer::UpdateImageClient()
 
 void
 WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder,
-                                                  wr::IpcResourceUpdateQueue& aResources,
                                                   const StackingContextHelper& aSc)
 {
-  ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
 
   wr::WrImageKey key = GenerateImageKey();
-  aResources.AddExternalImage(mExternalImageId.value(), key);
-  // TODO: reuse image keys!
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   WrManager()->AddImageKeyForDiscard(key);
 
   wr::LayoutRect r = sc.ToRelativeLayoutRect(rect);
@@ -163,7 +161,7 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     MOZ_ASSERT(mImageContainer->HasCurrentImage());
   }
 
-  CreateWebRenderDisplayList(aBuilder, aResources, aSc);
+  CreateWebRenderDisplayList(aBuilder, aSc);
 }
 
 void
