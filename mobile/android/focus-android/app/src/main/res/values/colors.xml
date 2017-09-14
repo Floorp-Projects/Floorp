@@ -7,13 +7,9 @@
     <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorAccent">#FFCF68FF</color>
 
-    <color name="colorGradientStart">#FFA23B3F</color>
-    <color name="colorGradientCenter">#FF83377B</color>
-    <color name="colorGradientEnd">#FF29528C</color>
-
-    <color name="colorActiveGradientStart">#FF9B3A4D</color>
-    <color name="colorActiveGradientCenter">#FF82377D</color>
-    <color name="colorActiveGradientEnd">#FF3E4C8A</color>
+    <color name="colorGradientStart">#ffa01142</color>
+    <color name="colorGradientCenter">#ff90116D</color>
+    <color name="colorGradientEnd">#ff5c1166</color>
 
     <color name="colorProgressGradientStart">#FF9400FF</color>
     <color name="colorProgressGradientEnd">#FFFF1AD9</color>

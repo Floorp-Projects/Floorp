@@ -4,5 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <transition xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/background_inactive" />
-    <item android:drawable="@drawable/background_active" />
+    <item android:drawable="@drawable/background_gradient" />
 </transition>
