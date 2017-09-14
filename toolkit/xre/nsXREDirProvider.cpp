@@ -38,6 +38,7 @@
 
 #include "mozilla/dom/ScriptSettings.h"
 
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
@@ -988,6 +989,22 @@ nsXREDirProvider::GetDirectory(nsIFile* *aResult)
   return mProfileDir->Clone(aResult);
 }
 
+void
+nsXREDirProvider::InitializeUserPrefs()
+{
+  if (!mPrefsInitialized) {
+    // Temporarily set mProfileNotified to true so that the preference service
+    // can access the profile directory during initialization. Afterwards, clear
+    // it so that no other code can inadvertently access it until we get to
+    // profile-do-change.
+    AutoRestore<bool> ar(mProfileNotified);
+    mProfileNotified = true;
+
+    mozilla::Preferences::InitializeUserPrefs();
+    mPrefsInitialized = true;
+  }
+}
+
 NS_IMETHODIMP
 nsXREDirProvider::DoStartup()
 {
@@ -1001,11 +1018,11 @@ nsXREDirProvider::DoStartup()
     mProfileNotified = true;
 
     /*
-       Setup prefs before profile-do-change to be able to use them to track
-       crashes and because we want to begin crash tracking before other code run
-       from this notification since they may cause crashes.
+       Make sure we've setup prefs before profile-do-change to be able to use
+       them to track crashes and because we want to begin crash tracking before
+       other code run from this notification since they may cause crashes.
     */
-    mozilla::Preferences::InitializeUserPrefs();
+    MOZ_ASSERT(mPrefsInitialized);
 
     bool safeModeNecessary = false;
     nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
