@@ -1483,6 +1483,7 @@ public abstract class GeckoApp extends GeckoActivity
         mDoorHangerPopup = new DoorHangerPopup(this, getAppEventDispatcher());
         mDoorHangerPopup.setOnVisibilityChangeListener(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
+        mFormAssistPopup.create(mLayerView);
     }
 
     @Override
@@ -2184,6 +2185,21 @@ public abstract class GeckoApp extends GeckoActivity
             // We did not initialize anything, so skip cleaning up.
             super.onDestroy();
             return;
+        }
+
+        if (mFormAssistPopup != null) {
+            mFormAssistPopup.destroy();
+            mFormAssistPopup = null;
+        }
+
+        if (mDoorHangerPopup != null) {
+            mDoorHangerPopup.destroy();
+            mDoorHangerPopup = null;
+        }
+
+        if (mTextSelection != null) {
+            mTextSelection.destroy();
+            mTextSelection = null;
         }
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,

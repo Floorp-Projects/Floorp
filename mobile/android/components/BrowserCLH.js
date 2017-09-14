@@ -142,7 +142,6 @@ BrowserCLH.prototype = {
                 event.target instanceof Ci.nsIDOMHTMLSelectElement ||
                 event.target instanceof Ci.nsIDOMHTMLButtonElement) {
               // Only load FormAssistant when the event target is what we care about.
-              this.FormAssistant.register(win);
               return this.FormAssistant;
             }
             return null;
