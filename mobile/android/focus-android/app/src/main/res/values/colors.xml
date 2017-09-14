@@ -14,9 +14,9 @@
     <color name="colorProgressGradientStart">#FF9400FF</color>
     <color name="colorProgressGradientEnd">#FFFF1AD9</color>
 
-    <color name="coloInactiveGradientStart">#FF503B44</color>
-    <color name="colorInactiveGradientCenter">#FF493A50</color>
-    <color name="colorInactiveGradientEnd">#FF383F53</color>
+    <color name="coloInactiveGradientStart">#ff453440</color>
+    <color name="colorInactiveGradientCenter">#ff433446</color>
+    <color name="colorInactiveGradientEnd">#ff3b3445</color>
 
     <color name="colorAutocompleteHighlight">#FFCF68FF</color>
 
