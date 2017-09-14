@@ -3986,7 +3986,6 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
             mCacheAsyncOpenCalled = true;
             if (mNetworkTriggered) {
                 mRaceCacheWithNetwork = true;
-                MOZ_RELEASE_ASSERT(sRCWNEnabled, "Racing should be enabled");
             }
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
         } else {
@@ -3997,9 +3996,6 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
                 self->mCacheAsyncOpenCalled = true;
                 if (self->mNetworkTriggered) {
                     self->mRaceCacheWithNetwork = true;
-                    // This is only done in xpcshell-test to simulate a slow
-                    // opening of the cache, so we don't need to assert that
-                    // sRCWNEnabled == true
                 }
                 cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
             };
@@ -9401,7 +9397,6 @@ nsHttpChannel::TriggerNetwork()
 
     if (mCacheAsyncOpenCalled && !mOnCacheAvailableCalled) {
         mRaceCacheWithNetwork = true;
-        MOZ_RELEASE_ASSERT(sRCWNEnabled, "Racing should be enabled");
     }
 
     LOG(("  triggering network\n"));
