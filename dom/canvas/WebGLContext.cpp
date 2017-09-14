@@ -2458,6 +2458,7 @@ WebGLContext::ValidateArrayBufferView(const char* funcName,
 void
 WebGLContext::UpdateMaxDrawBuffers()
 {
+    gl->MakeCurrent();
     mGLMaxColorAttachments = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_COLOR_ATTACHMENTS);
     mGLMaxDrawBuffers = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_DRAW_BUFFERS);
 

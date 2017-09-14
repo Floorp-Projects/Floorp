@@ -2484,10 +2484,17 @@ public:
   // to disable it dynamically in stylo-enabled builds via a pref.
   static bool StyloEnabled() {
 #ifdef MOZ_STYLO
-    return sStyloEnabled;
+    return sStyloEnabled && StyloSupportedInCurrentProcess();
 #else
     return false;
 #endif
+  }
+
+  // Whether Stylo should be allowed to be enabled in this process.  This
+  // returns true for content processes and the non-e10s parent process.
+  static bool StyloSupportedInCurrentProcess() {
+     return XRE_IsContentProcess() ||
+            (XRE_IsParentProcess() && !XRE_IsE10sParentProcess());
   }
 
   static bool StyleAttrWithXMLBaseDisabled() {

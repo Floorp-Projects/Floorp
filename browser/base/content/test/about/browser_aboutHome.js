@@ -27,8 +27,9 @@ add_task(async function() {
   // The onboarding tour's notification would affect tests
   // and it isn't out test target so make sure disabling it
   // before any tests start.
-  await promiseDisableOnboardingTours();
+  await promiseDisableOnboardingToursAndActivityStream();
   is(false, Services.prefs.getBoolPref("browser.onboarding.enabled"), "Should disable the onboarding tours");
+  is(false, Services.prefs.getBoolPref("browser.newtabpage.activity-stream.aboutHome.enabled"), "Should disable activity stream on about:home");
 });
 
 add_task(async function() {

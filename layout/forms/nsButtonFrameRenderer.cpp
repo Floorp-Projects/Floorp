@@ -110,12 +110,14 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override;
+                           bool* aSnap) const override;
   NS_DISPLAY_DECL_NAME("ButtonBoxShadowOuter", TYPE_BUTTON_BOX_SHADOW_OUTER)
 };
 
 nsRect
-nsDisplayButtonBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+nsDisplayButtonBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder,
+                                         bool* aSnap) const
+{
   *aSnap = false;
   return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
@@ -282,11 +284,11 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override;
+                           bool* aSnap) const override;
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion *aInvalidRegion) override;
+                                         nsRegion *aInvalidRegion) const override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
@@ -391,10 +393,9 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
 }
 
 void
-nsDisplayButtonBorder::ComputeInvalidationRegion(
-  nsDisplayListBuilder* aBuilder,
-  const nsDisplayItemGeometry* aGeometry,
-  nsRegion *aInvalidRegion)
+nsDisplayButtonBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                                 const nsDisplayItemGeometry* aGeometry,
+                                                 nsRegion *aInvalidRegion) const
 {
   auto geometry =
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
@@ -424,7 +425,9 @@ nsDisplayButtonBorder::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 nsRect
-nsDisplayButtonBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+nsDisplayButtonBorder::GetBounds(nsDisplayListBuilder* aBuilder,
+                                 bool* aSnap) const
+{
   *aSnap = false;
   return aBuilder->IsForEventDelivery() ? nsRect(ToReferenceFrame(), mFrame->GetSize())
           : mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
@@ -446,7 +449,7 @@ public:
   nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion *aInvalidRegion) override;
+                                 nsRegion *aInvalidRegion) const override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -473,10 +476,9 @@ nsDisplayButtonForeground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 }
 
 void
-nsDisplayButtonForeground::ComputeInvalidationRegion(
-  nsDisplayListBuilder* aBuilder,
-  const nsDisplayItemGeometry* aGeometry,
-  nsRegion* aInvalidRegion)
+nsDisplayButtonForeground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                                     const nsDisplayItemGeometry* aGeometry,
+                                                     nsRegion* aInvalidRegion) const
 {
   auto geometry =
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);

@@ -2774,9 +2774,9 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
 
 class nsDisplayTreeBody final : public nsDisplayItem {
 public:
-  nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame),
-    mDisableSubpixelAA(false) {
+  nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+  {
     MOZ_COUNT_CTOR(nsDisplayTreeBody);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -2792,7 +2792,7 @@ public:
 
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion *aInvalidRegion) override
+                                 nsRegion *aInvalidRegion) const override
   {
     auto geometry =
       static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
@@ -2821,16 +2821,11 @@ public:
 
   NS_DISPLAY_DECL_NAME("XULTreeBody", TYPE_XUL_TREE_BODY)
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override
   {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
-  virtual void DisableComponentAlpha() override {
-    mDisableSubpixelAA = true;
-  }
-
-  bool mDisableSubpixelAA;
 };
 
 // Painting routines

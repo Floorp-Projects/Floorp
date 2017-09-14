@@ -78,6 +78,7 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
             ongoingFaviconLoad = Icons.with(getContext())
                     .pageUrl(pageURL)
                     .skipNetwork()
+                    .forActivityStream()
                     .build()
                     .execute(this);
         }

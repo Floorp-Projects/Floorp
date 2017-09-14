@@ -763,6 +763,8 @@ MP4MetadataRust::Init()
     mp4parse_log(true);
   }
 
+  mp4parse_fallible_allocation(true);
+
   mp4parse_status rv = mp4parse_read(mRustParser.get());
   MOZ_LOG(sLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,

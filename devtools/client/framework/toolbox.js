@@ -1547,6 +1547,11 @@ Toolbox.prototype = {
    *        the id of the additional tool to unregister and remove.
    */
   removeAdditionalTool(toolId) {
+    // Early exit if the toolbox is already destroying itself.
+    if (this._destroyer) {
+      return;
+    }
+
     if (!this.hasAdditionalTool(toolId)) {
       throw new Error("Tool definition not registered to this toolbox: " +
                       toolId);
