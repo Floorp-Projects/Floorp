@@ -10,7 +10,7 @@ SOURCES += [
 
 SharedLibrary('crashinjectdll')
 
-DEFFILE = SRCDIR + '/crashinjectdll.def'
+DEFFILE = 'crashinjectdll.def'
 
 USE_STATIC_LIBS = True
 NO_PGO = True
