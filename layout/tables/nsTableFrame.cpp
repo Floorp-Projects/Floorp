@@ -3388,6 +3388,7 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         reorder = true;
 
       LogicalPoint kidPosition(wm, aReflowInput.iCoord, aReflowInput.bCoord);
+      aStatus.Reset();
       ReflowChild(kidFrame, presContext, desiredSize, kidReflowInput,
                   wm, kidPosition, containerSize, 0, aStatus);
       kidReflowInput.ApplyRelativePositioning(&kidPosition, containerSize);
