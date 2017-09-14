@@ -699,7 +699,7 @@ class RefTest(object):
                 marionette_args['port'] = int(port)
 
             marionette = Marionette(**marionette_args)
-            marionette.start_session(timeout=options.marionette_port_timeout)
+            marionette.start_session()
 
             addons = Addons(marionette)
             if options.specialPowersExtensionPath:
