@@ -36,7 +36,7 @@ add_task(function* () {
   let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
   info("Remove the #shapes container in the content page");
   testActor.eval(`
-    document.querySelector("#shape").remove();
+    content.document.querySelector("#shape").remove();
   `);
   yield onHighlighterHidden;
   ok(!highlighters.shapesHighlighterShown, "CSS shapes highlighter is hidden.");

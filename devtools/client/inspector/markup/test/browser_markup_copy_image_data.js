@@ -22,7 +22,7 @@ add_task(function* () {
   yield selectNode("canvas", inspector);
   yield assertCopyImageDataAvailable(inspector);
   let expectedURL = yield testActor.eval(`
-    document.querySelector(".canvas").toDataURL();`);
+    content.document.querySelector(".canvas").toDataURL();`);
   yield triggerCopyImageUrlAndWaitForClipboard(expectedURL, inspector);
 
   // Check again that the menu isn't available on the DIV (to make sure our
