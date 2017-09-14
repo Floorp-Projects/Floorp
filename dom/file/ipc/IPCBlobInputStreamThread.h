@@ -31,8 +31,14 @@ public:
   void
   MigrateActor(IPCBlobInputStreamChild* aActor);
 
-  void
+  bool
   Initialize();
+
+  void
+  InitializeOnMainThread();
+
+  nsIEventTarget*
+  EventTarget() const;
 
 private:
   ~IPCBlobInputStreamThread() = default;
