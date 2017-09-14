@@ -3858,6 +3858,8 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
     uint32_t cacheEntryOpenFlags;
     bool offline = gIOService->IsOffline();
 
+    bool maybeRCWN = false;
+
     nsAutoCString cacheControlRequestHeader;
     Unused << mRequestHead.GetHeader(nsHttp::Cache_Control, cacheControlRequestHeader);
     CacheControlParser cacheControlRequest(cacheControlRequestHeader);
@@ -3906,9 +3908,13 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
             getter_AddRefs(cacheStorage));
     }
     else {
-        rv = cacheStorageService->DiskCacheStorage(info,
-            !mPostID && (mChooseApplicationCache || (mLoadFlags & LOAD_CHECK_OFFLINE_CACHE)),
-            getter_AddRefs(cacheStorage));
+        bool lookupAppCache = !mPostID && (mChooseApplicationCache ||
+                              (mLoadFlags & LOAD_CHECK_OFFLINE_CACHE));
+        // Try to race only if we use disk cache storage and we don't lookup
+        // app cache first
+        maybeRCWN = !lookupAppCache;
+        rv = cacheStorageService->DiskCacheStorage(
+            info, lookupAppCache, getter_AddRefs(cacheStorage));
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3959,17 +3965,20 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
         mCacheQueueSizeWhenOpen = CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
 
-        bool hasAltData = false;
-        uint32_t sizeInKb = 0;
-        rv = cacheStorage->GetCacheIndexEntryAttrs(openURI, extension,
-                                                   &hasAltData, &sizeInKb);
+        if (sRCWNEnabled && maybeRCWN && !mApplicationCacheForWrite &&
+            mInterceptCache != INTERCEPTED) {
+            bool hasAltData = false;
+            uint32_t sizeInKb = 0;
+            rv = cacheStorage->GetCacheIndexEntryAttrs(openURI, extension,
+                                                       &hasAltData, &sizeInKb);
 
-        // We will attempt to race the network vs the cache if we've found this
-        // entry in the cache index, and it has appropriate
-        // attributes (doesn't have alt-data, and has a small size)
-        if (sRCWNEnabled && mInterceptCache != INTERCEPTED &&
-            NS_SUCCEEDED(rv) && !hasAltData && sizeInKb < sRCWNSmallResourceSizeKB) {
-            MaybeRaceCacheWithNetwork();
+            // We will attempt to race the network vs the cache if we've found
+            // this entry in the cache index, and it has appropriate attributes
+            // (doesn't have alt-data, and has a small size)
+            if (NS_SUCCEEDED(rv) && !hasAltData &&
+                sizeInKb < sRCWNSmallResourceSizeKB) {
+                MaybeRaceCacheWithNetwork();
+            }
         }
 
         if (!mCacheOpenDelay) {
