@@ -90,6 +90,7 @@ public:
 
   virtual bool CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
     nsTArray<WebRenderParentCommand>& aParentCommands,
     mozilla::layers::WebRenderLayerManager* aManager,
@@ -196,6 +197,7 @@ nsDisplayButtonBoxShadowOuter::BuildLayer(
 bool
 nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   mozilla::wr::DisplayListBuilder& aBuilder,
+  mozilla::wr::IpcResourceUpdateQueue& aResources,
   const StackingContextHelper& aSc,
   nsTArray<WebRenderParentCommand>& aParentCommands,
   mozilla::layers::WebRenderLayerManager* aManager,
@@ -296,6 +298,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
@@ -363,6 +366,7 @@ nsDisplayButtonBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                               mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                const StackingContextHelper& aSc,
                                                nsTArray<WebRenderParentCommand>& aParentCommands,
                                                mozilla::layers::WebRenderLayerManager* aManager,
@@ -387,7 +391,7 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                                                  visible,
                                                                  mFrame,
                                                                  buttonRect);
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aSc);
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aResources, aSc);
 
   return true;
 }
@@ -459,6 +463,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
    virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const StackingContextHelper& aSc,
                                         nsTArray<WebRenderParentCommand>& aParentCommands,
                                         mozilla::layers::WebRenderLayerManager* aManager,
@@ -545,6 +550,7 @@ nsDisplayButtonForeground::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayButtonForeground::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                   mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                    const StackingContextHelper& aSc,
                                                    nsTArray<WebRenderParentCommand>& aParentCommands,
                                                    mozilla::layers::WebRenderLayerManager* aManager,
@@ -557,7 +563,7 @@ nsDisplayButtonForeground::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
     }
   }
 
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aSc);
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aResources, aSc);
   return true;
 }
 

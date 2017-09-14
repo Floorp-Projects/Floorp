@@ -73,7 +73,8 @@ public:
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvShutdownSync() override;
   mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>&& aIds) override;
-  mozilla::ipc::IPCResult RecvUpdateResources(const ByteBuffer& aUpdates) override;
+  mozilla::ipc::IPCResult RecvUpdateResources(nsTArray<OpUpdateResource>&& aUpdates,
+                                              nsTArray<ipc::Shmem>&& aResourceData) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(const gfx::IntSize& aSize,
                                              InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                              InfallibleTArray<OpDestroy>&& aToDestroy,
@@ -83,7 +84,8 @@ public:
                                              const wr::ByteBuffer& dl,
                                              const wr::BuiltDisplayListDescriptor& dlDesc,
                                              const WebRenderScrollData& aScrollData,
-                                             const wr::ByteBuffer& aResourceUpdates,
+                                             nsTArray<OpUpdateResource>&& aResourceUpdates,
+                                             nsTArray<ipc::Shmem>&& aResourceData,
                                              const wr::IdNamespace& aIdNamespace,
                                              const TimeStamp& aTxnStartTime,
                                              const TimeStamp& aFwdTime) override;
@@ -96,7 +98,8 @@ public:
                                                  const wr::ByteBuffer& dl,
                                                  const wr::BuiltDisplayListDescriptor& dlDesc,
                                                  const WebRenderScrollData& aScrollData,
-                                                 const wr::ByteBuffer& aResourceUpdates,
+                                                 nsTArray<OpUpdateResource>&& aResourceUpdates,
+                                                 nsTArray<ipc::Shmem>&& aResourceData,
                                                  const wr::IdNamespace& aIdNamespace,
                                                  const TimeStamp& aTxnStartTime,
                                                  const TimeStamp& aFwdTime) override;
@@ -181,8 +184,14 @@ public:
                        CompositorAnimationStorage* aAnimStorage);
 
 private:
+  void DeallocShmems(nsTArray<ipc::Shmem>& aShmems);
+
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
+
+  bool UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
+                       const nsTArray<ipc::Shmem>& aResourceData,
+                       wr::ResourceUpdateQueue& aUpdates);
 
   uint64_t GetLayersId() const;
   void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
