@@ -433,6 +433,12 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
         return nullptr;
     }
 
+#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+    if (Preferences::GetBool("browser.startup.record", false)) {
+        entry->importStack = xpc_PrintJSStack(cx, false, false, false).get();
+    }
+#endif
+
     // Cache this module for later
     mModules.Put(spec, entry);
 
@@ -1005,6 +1011,52 @@ NS_IMETHODIMP mozJSComponentLoader::LoadedComponents(uint32_t* length,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
+                                           nsACString& retval)
+{
+#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+    MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+    MOZ_ASSERT(mInitialized);
+
+    ComponentLoaderInfo info(aLocation);
+    nsresult rv = info.EnsureKey();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ModuleEntry* mod;
+    if (!mImports.Get(info.Key(), &mod))
+        return NS_ERROR_FAILURE;
+
+    retval = mod->importStack;
+    return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP
+mozJSComponentLoader::GetComponentLoadStack(const nsACString& aLocation,
+                                            nsACString& retval)
+{
+#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+    MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+    MOZ_ASSERT(mInitialized);
+
+    ComponentLoaderInfo info(aLocation);
+    nsresult rv = info.EnsureURI();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ModuleEntry* mod;
+    if (!mModules.Get(info.Key(), &mod))
+        return NS_ERROR_FAILURE;
+
+    retval = mod->importStack;
+    return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 static JSObject*
 ResolveModuleObjectPropertyById(JSContext* aCx, HandleObject aModObj, HandleId id)
 {
@@ -1104,6 +1156,13 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
             // Something failed, but we don't know what it is, guess.
             return NS_ERROR_FILE_NOT_FOUND;
         }
+
+#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+        if (Preferences::GetBool("browser.startup.record", false)) {
+            newEntry->importStack =
+                xpc_PrintJSStack(callercx, false, false, false).get();
+        }
+#endif
 
         mod = newEntry;
     }

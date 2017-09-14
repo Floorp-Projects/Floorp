@@ -10,7 +10,7 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/DocGroup.h"
-#include "nsIParserService.h"
+#include "nsHTMLTags.h"
 #include "jsapi.h"
 
 namespace mozilla {
@@ -666,14 +666,8 @@ CustomElementRegistry::Define(const nsAString& aName,
       return;
     }
 
-    nsIParserService* ps = nsContentUtils::GetParserService();
-    if (!ps) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
     // bgsound and multicol are unknown html element.
-    int32_t tag = ps->HTMLCaseSensitiveAtomTagToId(extendsAtom);
+    int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(extendsAtom);
     if (tag == eHTMLTag_userdefined ||
         tag == eHTMLTag_bgsound ||
         tag == eHTMLTag_multicol) {

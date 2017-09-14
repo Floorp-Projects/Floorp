@@ -109,6 +109,7 @@
 #include "nsHtml5Module.h"
 #include "nsHtml5StringParser.h"
 #include "nsHTMLDocument.h"
+#include "nsHTMLTags.h"
 #include "nsIAddonPolicyService.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -161,7 +162,6 @@
 #include "nsIObserverService.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIParser.h"
-#include "nsIParserService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPluginHost.h"
 #include "nsIRequest.h"
@@ -252,7 +252,6 @@ nsIXPConnect *nsContentUtils::sXPConnect;
 nsIScriptSecurityManager *nsContentUtils::sSecurityManager;
 nsIPrincipal *nsContentUtils::sSystemPrincipal;
 nsIPrincipal *nsContentUtils::sNullSubjectPrincipal;
-nsIParserService *nsContentUtils::sParserService = nullptr;
 nsNameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
 nsIUUIDGenerator *nsContentUtils::sUUIDGenerator;
@@ -444,7 +443,6 @@ static const nsAttrValue::EnumTable kAutocompleteContactFieldHintTable[] = {
 
 namespace {
 
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable* sEventListenerManagersHash;
@@ -616,6 +614,8 @@ nsContentUtils::Init()
 
     return NS_OK;
   }
+
+  nsHTMLTags::AddRefTable();
 
   sNameSpaceManager = nsNameSpaceManager::GetInstance();
   NS_ENSURE_TRUE(sNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
@@ -1570,27 +1570,6 @@ nsContentUtils::IsUserIdle(uint32_t aRequestedIdleTimeInMS, bool* aUserIsIdle)
 }
 
 /**
- * Access a cached parser service. Don't addref. We need only one
- * reference to it and this class has that one.
- */
-/* static */
-nsIParserService*
-nsContentUtils::GetParserService()
-{
-  // XXX: This isn't accessed from several threads, is it?
-  if (!sParserService) {
-    // Lock, recheck sCachedParserService and aquire if this should be
-    // safe for multiple threads.
-    nsresult rv = CallGetService(kParserServiceCID, &sParserService);
-    if (NS_FAILED(rv)) {
-      sParserService = nullptr;
-    }
-  }
-
-  return sParserService;
-}
-
-/**
 * A helper function that parses a sandbox attribute (of an <iframe> or a CSP
 * directive) and converts it to the set of flags used internally.
 *
@@ -2156,6 +2135,8 @@ nsContentUtils::Shutdown()
 {
   sInitialized = false;
 
+  nsHTMLTags::ReleaseTable();
+
   NS_IF_RELEASE(sContentPolicyService);
   sTriedToGetContentPolicy = false;
   uint32_t i;
@@ -2168,7 +2149,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sSecurityManager);
   NS_IF_RELEASE(sSystemPrincipal);
   NS_IF_RELEASE(sNullSubjectPrincipal);
-  NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sUUIDGenerator);
   NS_IF_RELEASE(sLineBreaker);
@@ -2510,20 +2490,23 @@ nsContentUtils::ThreadsafeIsCallerChrome()
 bool
 nsContentUtils::IsCallerContentXBL()
 {
-    JSContext *cx = GetCurrentJSContext();
-    if (!cx)
-        return false;
+  JSContext *cx = GetCurrentJSContext();
+  if (!cx)
+    return false;
 
-    JSCompartment *c = js::GetContextCompartment(cx);
+  JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
+  if (!realm)
+    return false;
 
-    // For remote XUL, we run XBL in the XUL scope. Given that we care about
-    // compat and not security for remote XUL, just always claim to be XBL.
-    if (!xpc::AllowContentXBLScope(c)) {
-      MOZ_ASSERT(nsContentUtils::AllowXULXBLForPrincipal(xpc::GetCompartmentPrincipal(c)));
-      return true;
-    }
+  // For remote XUL, we run XBL in the XUL scope. Given that we care about
+  // compat and not security for remote XUL, just always claim to be XBL.
+  if (!xpc::AllowContentXBLScope(realm)) {
+    DebugOnly<JSCompartment*> c = JS::GetCompartmentForRealm(realm);
+    MOZ_ASSERT(nsContentUtils::AllowXULXBLForPrincipal(xpc::GetCompartmentPrincipal(c)));
+    return true;
+  }
 
-    return xpc::IsContentXBLCompartment(c);
+  return xpc::IsContentXBLScope(realm);
 }
 
 bool

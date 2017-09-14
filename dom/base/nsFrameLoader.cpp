@@ -2363,8 +2363,9 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
   JS::RootedObject wrapper(jsapi.cx(), GetWrapper());
   if (wrapper) {
     JSAutoCompartment ac(jsapi.cx(), wrapper);
-    nsresult rv = ReparentWrapper(jsapi.cx(), wrapper);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    IgnoredErrorResult rv;
+    ReparentWrapper(jsapi.cx(), wrapper, rv);
+    Unused << NS_WARN_IF(rv.Failed());
   }
 
   if (RenderFrameParent* rfp = GetCurrentRenderFrame()) {

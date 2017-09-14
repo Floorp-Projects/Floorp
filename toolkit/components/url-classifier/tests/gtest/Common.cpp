@@ -152,8 +152,7 @@ nsCString
 GeneratePrefix(const nsCString& aFragment, uint8_t aLength)
 {
   Completion complete;
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-  complete.FromPlaintext(aFragment, cryptoHash);
+  complete.FromPlaintext(aFragment);
 
   nsCString hash;
   hash.Assign((const char *)complete.buf, aLength);

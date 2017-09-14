@@ -213,6 +213,11 @@ public class ActionBarPresenter {
             } else {
                 icon = SecurityModeUtil.IconType.LOCK_SECURE;
             }
+
+            if ("loaded".equals(security.mixedModePassive)) {
+                icon = SecurityModeUtil.IconType.WARNING;
+            }
+
             mIconView.setVisibility(View.VISIBLE);
             mIconView.setImageLevel(SecurityModeUtil.getImageLevel(icon));
             mIdentityPopup.setSecurityInformation(security);

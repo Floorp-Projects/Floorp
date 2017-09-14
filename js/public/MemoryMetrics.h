@@ -499,8 +499,8 @@ struct NotableScriptSourceInfo : public ScriptSourceInfo
 };
 
 /**
- * These measurements relate directly to the JSRuntime, and not to zones and
- * compartments within it.
+ * These measurements relate directly to the JSRuntime, and not to zones,
+ * compartments, and realms within it.
  */
 struct RuntimeSizes
 {

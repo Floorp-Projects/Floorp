@@ -80,13 +80,6 @@ ProtocolParser::~ProtocolParser()
   CleanupUpdates();
 }
 
-nsresult
-ProtocolParser::Init(nsICryptoHash* aHasher)
-{
-  mCryptoHash = aHasher;
-  return NS_OK;
-}
-
 void
 ProtocolParser::CleanupUpdates()
 {
@@ -404,7 +397,7 @@ ProtocolParserV2::ProcessPlaintextChunk(const nsACString& aChunk)
     if (mChunkState.type == CHUNK_ADD) {
       if (mChunkState.hashSize == COMPLETE_SIZE) {
         Completion hash;
-        hash.FromPlaintext(line, mCryptoHash);
+        hash.FromPlaintext(line);
         nsresult rv = mTableUpdate->NewAddComplete(mChunkState.num, hash);
         if (NS_FAILED(rv)) {
           return rv;
@@ -412,7 +405,7 @@ ProtocolParserV2::ProcessPlaintextChunk(const nsACString& aChunk)
       } else {
         NS_ASSERTION(mChunkState.hashSize == 4, "Only 32- or 4-byte hashes can be used for add chunks.");
         Prefix hash;
-        hash.FromPlaintext(line, mCryptoHash);
+        hash.FromPlaintext(line);
         nsresult rv = mTableUpdate->NewAddPrefix(mChunkState.num, hash);
         if (NS_FAILED(rv)) {
           return rv;
@@ -433,7 +426,7 @@ ProtocolParserV2::ProcessPlaintextChunk(const nsACString& aChunk)
 
       if (mChunkState.hashSize == COMPLETE_SIZE) {
         Completion hash;
-        hash.FromPlaintext(Substring(iter, end), mCryptoHash);
+        hash.FromPlaintext(Substring(iter, end));
         nsresult rv = mTableUpdate->NewSubComplete(addChunk, hash, mChunkState.num);
         if (NS_FAILED(rv)) {
           return rv;
@@ -441,7 +434,7 @@ ProtocolParserV2::ProcessPlaintextChunk(const nsACString& aChunk)
       } else {
         NS_ASSERTION(mChunkState.hashSize == 4, "Only 32- or 4-byte hashes can be used for add chunks.");
         Prefix hash;
-        hash.FromPlaintext(Substring(iter, end), mCryptoHash);
+        hash.FromPlaintext(Substring(iter, end));
         nsresult rv = mTableUpdate->NewSubPrefix(addChunk, hash, mChunkState.num);
         if (NS_FAILED(rv)) {
           return rv;

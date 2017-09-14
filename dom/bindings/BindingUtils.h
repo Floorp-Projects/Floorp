@@ -2697,8 +2697,8 @@ const nsAString& NonNullHelper(const binding_detail::FakeString& aArg)
 
 // Reparent the wrapper of aObj to whatever its native now thinks its
 // parent should be.
-nsresult
-ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObj);
+void
+ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObj, ErrorResult& aError);
 
 /**
  * Used to implement the Symbol.hasInstance property of an interface object.

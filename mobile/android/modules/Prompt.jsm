@@ -266,7 +266,7 @@ var DoorHanger = {
 
   show: function(aWindow, aMessage, aValue, aButtons, aOptions, aCategory) {
     let chromeWin = getRootWindow(aWindow);
-    if (chromeWin.BrowserApp) {
+    if (chromeWin.NativeWindow && chromeWin.NativeWindow.doorhanger) {
       // We're dealing with browser.js.
       return chromeWin.NativeWindow.doorhanger.show(
           aMessage, aValue, aButtons, this._getTabId(aWindow, chromeWin.BrowserApp),
@@ -299,7 +299,7 @@ var DoorHanger = {
 
   hide: function(aWindow, aValue) {
     let chromeWin = getRootWindow(aWindow);
-    if (chromeWin.BrowserApp) {
+    if (chromeWin.NativeWindow && chromeWin.NativeWindow.doorhanger) {
       // We're dealing with browser.js.
       return chromeWin.NativeWindow.doorhanger.hide(
           aValue, this._getTabId(aWindow, chromeWin.BrowserApp));

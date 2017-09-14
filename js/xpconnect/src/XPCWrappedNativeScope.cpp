@@ -122,8 +122,11 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
     CompartmentPrivate* priv = new CompartmentPrivate(c);
     JS_SetCompartmentPrivate(c, priv);
 
-    // Attach ourselves to the compartment private.
-    priv->scope = this;
+    // Attach ourselves to the realm private.
+    Realm* realm = JS::GetObjectRealmOrNull(aGlobal);
+    RealmPrivate* realmPriv = new RealmPrivate(realm);
+    realmPriv->scope = this;
+    JS::SetRealmPrivate(realm, realmPriv);
 
     // Determine whether we would allow an XBL scope in this situation.
     // In addition to being pref-controlled, we also disable XBL scopes for
@@ -333,8 +336,10 @@ GetXBLScope(JSContext* cx, JSObject* contentScopeArg)
     MOZ_ASSERT(!IsInAddonScope(contentScopeArg));
 
     JS::RootedObject contentScope(cx, contentScopeArg);
+    JSCompartment* addonComp = js::GetObjectCompartment(contentScope);
+    JS::Rooted<JS::Realm*> addonRealm(cx, JS::GetRealmForCompartment(addonComp));
     JSAutoCompartment ac(cx, contentScope);
-    JSObject* scope = CompartmentPrivate::Get(contentScope)->scope->EnsureContentXBLScope(cx);
+    JSObject* scope = RealmPrivate::Get(addonRealm)->scope->EnsureContentXBLScope(cx);
     NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
     scope = js::UncheckedUnwrap(scope);
     JS::ExposeObjectToActiveJS(scope);
@@ -351,7 +356,7 @@ GetScopeForXBLExecution(JSContext* cx, HandleObject contentScope, JSAddonId* add
         return global;
 
     JSAutoCompartment ac(cx, contentScope);
-    XPCWrappedNativeScope* nativeScope = CompartmentPrivate::Get(contentScope)->scope;
+    XPCWrappedNativeScope* nativeScope = RealmPrivate::Get(contentScope)->scope;
     bool isSystem = nsContentUtils::IsSystemPrincipal(nativeScope->GetPrincipal());
 
     RootedObject scope(cx);
@@ -369,23 +374,23 @@ GetScopeForXBLExecution(JSContext* cx, HandleObject contentScope, JSAddonId* add
 }
 
 bool
-AllowContentXBLScope(JSCompartment* c)
+AllowContentXBLScope(JS::Realm* realm)
 {
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(c)->scope;
-  return scope && scope->AllowContentXBLScope();
+    XPCWrappedNativeScope* scope = RealmPrivate::Get(realm)->scope;
+    return scope && scope->AllowContentXBLScope();
 }
 
 bool
-UseContentXBLScope(JSCompartment* c)
+UseContentXBLScope(JS::Realm* realm)
 {
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(c)->scope;
-  return scope && scope->UseContentXBLScope();
+    XPCWrappedNativeScope* scope = RealmPrivate::Get(realm)->scope;
+    return scope && scope->UseContentXBLScope();
 }
 
 void
 ClearContentXBLScope(JSObject* global)
 {
-    CompartmentPrivate::Get(global)->scope->ClearContentXBLScope();
+    RealmPrivate::Get(global)->scope->ClearContentXBLScope();
 }
 
 } /* namespace xpc */
@@ -442,7 +447,7 @@ xpc::GetAddonScope(JSContext* cx, JS::HandleObject contentScope, JSAddonId* addo
     }
 
     JSAutoCompartment ac(cx, contentScope);
-    XPCWrappedNativeScope* nativeScope = CompartmentPrivate::Get(contentScope)->scope;
+    XPCWrappedNativeScope* nativeScope = RealmPrivate::Get(contentScope)->scope;
     if (nativeScope->GetPrincipal() != nsXPConnect::SystemPrincipal()) {
         // This can happen if, for example, Jetpack loads an unprivileged HTML
         // page from the add-on. It's not clear what to do there, so we just use
@@ -639,7 +644,7 @@ XPCWrappedNativeScope::KillDyingScopes()
     while (cur) {
         XPCWrappedNativeScope* next = cur->mNext;
         if (cur->mGlobalJSObject)
-            CompartmentPrivate::Get(cur->mGlobalJSObject)->scope = nullptr;
+            RealmPrivate::Get(cur->mGlobalJSObject)->scope = nullptr;
         delete cur;
         cur = next;
     }

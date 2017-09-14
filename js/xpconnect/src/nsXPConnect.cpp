@@ -454,9 +454,9 @@ xpc::TraceXPCGlobal(JSTracer* trc, JSObject* obj)
     // We might be called from a GC during the creation of a global, before we've
     // been able to set up the compartment private or the XPCWrappedNativeScope,
     // so we need to null-check those.
-    xpc::CompartmentPrivate* compartmentPrivate = xpc::CompartmentPrivate::Get(obj);
-    if (compartmentPrivate && compartmentPrivate->scope)
-        compartmentPrivate->scope->TraceInside(trc);
+    xpc::RealmPrivate* realmPrivate = xpc::RealmPrivate::Get(obj);
+    if (realmPrivate && realmPrivate->scope)
+        realmPrivate->scope->TraceInside(trc);
 }
 
 
@@ -548,7 +548,7 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
 
     if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
-        if (!CompartmentPrivate::Get(aGlobal)->scope->AttachComponentsObject(aJSContext) ||
+        if (!RealmPrivate::Get(aGlobal)->scope->AttachComponentsObject(aJSContext) ||
             !XPCNativeWrapper::AttachNewConstructorObject(aJSContext, aGlobal)) {
             return UnexpectedFailure(false);
         }
@@ -1369,7 +1369,9 @@ bool
 IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
 {
     MOZ_ASSERT(NS_IsMainThread());
-    JSCompartment* c = js::GetContextCompartment(cx);
+    JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
+    MOZ_ASSERT(realm);
+    JSCompartment* c = JS::GetCompartmentForRealm(realm);
 
     // For remote XUL, we run XBL in the XUL scope. Given that we care about
     // compat and not security for remote XUL, we just always claim to be XBL.
@@ -1377,7 +1379,7 @@ IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
     // Note that, for performance, we don't check AllowXULXBLForPrincipal here,
     // and instead rely on the fact that AllowContentXBLScope() only returns false in
     // remote XUL situations.
-    return AccessCheck::isChrome(c) || IsContentXBLCompartment(c) || !AllowContentXBLScope(c);
+    return AccessCheck::isChrome(c) || IsContentXBLCompartment(c) || !AllowContentXBLScope(realm);
 }
 
 namespace workers {

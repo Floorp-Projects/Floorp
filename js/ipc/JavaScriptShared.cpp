@@ -356,8 +356,7 @@ JavaScriptShared::fromVariant(JSContext* cx, const JSVariant& from, MutableHandl
           const JSIID& id = from.get_JSIID();
           ConvertID(id, &iid);
 
-          JSCompartment* compartment = GetContextCompartment(cx);
-          RootedObject global(cx, JS_GetGlobalForCompartmentOrNull(cx, compartment));
+          RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
           JSObject* obj = xpc_NewIDObject(cx, global, iid);
           if (!obj)
               return false;
