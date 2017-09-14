@@ -36,7 +36,7 @@ public:
   {
      mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
      MOZ_ASSERT(gIPCBlobThread);
-     gIPCBlobThread->Initialize();
+     gIPCBlobThread->InitializeOnMainThread();
      return NS_OK;
   }
 };
@@ -115,36 +115,21 @@ IPCBlobInputStreamThread::GetOrCreate()
 
   if (!gIPCBlobThread) {
     gIPCBlobThread = new IPCBlobInputStreamThread();
-    gIPCBlobThread->Initialize();
+    if (!gIPCBlobThread->Initialize()) {
+      return nullptr;
+    }
   }
 
   return gIPCBlobThread;
 }
 
-void
+bool
 IPCBlobInputStreamThread::Initialize()
 {
-  if (!NS_IsMainThread()) {
-    RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
-    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return;
-  }
-
-  nsresult rv =
-    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
   nsCOMPtr<nsIThread> thread;
-  rv = NS_NewNamedThread("DOM File", getter_AddRefs(thread));
+  nsresult rv = NS_NewNamedThread("DOM File", getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+    return false;
   }
 
   mThread = thread;
@@ -156,6 +141,38 @@ IPCBlobInputStreamThread::Initialize()
 
     mPendingActors.Clear();
   }
+
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
+    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    return true;
+  }
+
+  InitializeOnMainThread();
+  return true;
+}
+
+void
+IPCBlobInputStreamThread::InitializeOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return;
+  }
+
+  nsresult rv =
+    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+}
+
+nsIEventTarget*
+IPCBlobInputStreamThread::EventTarget() const
+{
+  return mThread;
 }
 
 NS_IMETHODIMP

@@ -673,12 +673,33 @@ audiounit_reinit_stream(cubeb_stream * stm, device_flags_value flags)
   return CUBEB_OK;
 }
 
+static char const *
+event_addr_to_string(AudioObjectPropertySelector selector)
+{
+  switch(selector) {
+    case kAudioHardwarePropertyDefaultOutputDevice:
+      return "kAudioHardwarePropertyDefaultOutputDevice";
+    case kAudioHardwarePropertyDefaultInputDevice:
+      return "kAudioHardwarePropertyDefaultInputDevice";
+    case kAudioDevicePropertyDeviceIsAlive:
+      return "kAudioDevicePropertyDeviceIsAlive";
+    case kAudioDevicePropertyDataSource:
+      return "kAudioDevicePropertyDataSource";
+    default:
+      return "Unknown";
+  }
+}
+
 static OSStatus
-audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_count,
+audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
                                      const AudioObjectPropertyAddress * addresses,
                                      void * user)
 {
   cubeb_stream * stm = (cubeb_stream*) user;
+  if (stm->switching_device) {
+    LOG("Switching is already taking place. Skip Event %s for id=%d", event_addr_to_string(addresses[0].mSelector), id);
+    return noErr;
+  }
   stm->switching_device = true;
   device_flags_value switch_side = DEV_UKNOWN;
 
@@ -686,23 +707,24 @@ audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_coun
   for (UInt32 i = 0; i < address_count; i++) {
     switch(addresses[i].mSelector) {
       case kAudioHardwarePropertyDefaultOutputDevice: {
-          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDefaultOutputDevice", (unsigned int) i);
+          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDefaultOutputDevice for id=%d", (unsigned int) i, id);
           // Allow restart to choose the new default
           switch_side |= DEV_OUTPUT;
         }
         break;
       case kAudioHardwarePropertyDefaultInputDevice: {
-          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDefaultInputDevice", (unsigned int) i);
+          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDefaultInputDevice for id=%d", (unsigned int) i, id);
           // Allow restart to choose the new default
           switch_side |= DEV_INPUT;
         }
       break;
       case kAudioDevicePropertyDeviceIsAlive: {
-          LOG("Event[%u] - mSelector == kAudioDevicePropertyDeviceIsAlive", (unsigned int) i);
+          LOG("Event[%u] - mSelector == kAudioDevicePropertyDeviceIsAlive for id=%d", (unsigned int) i, id);
           // If this is the default input device ignore the event,
           // kAudioHardwarePropertyDefaultInputDevice will take care of the switch
           if (stm->input_device.flags & DEV_SYSTEM_DEFAULT) {
             LOG("It's the default input device, ignore the event");
+            stm->switching_device = false;
             return noErr;
           }
           // Allow restart to choose the new default. Event register only for input.
@@ -710,11 +732,13 @@ audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_coun
         }
         break;
       case kAudioDevicePropertyDataSource: {
-          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource", (unsigned int) i);
-          return noErr;
+          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource for id=%d", (unsigned int) i, id);
+          switch_side |= DEV_INPUT;
         }
+        break;
       default:
         LOG("Event[%u] - mSelector == Unexpected Event id %d, return", (unsigned int) i, addresses[i].mSelector);
+        stm->switching_device = false;
         return noErr;
     }
   }

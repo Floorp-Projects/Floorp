@@ -354,8 +354,7 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(atom);
         MOZ_ASSERT(!hasGuessedAtom());
         MOZ_ASSERT(!isClassConstructor());
-        MOZ_ASSERT(js::AtomIsMarked(zone(), atom));
-        atom_ = atom;
+        setAtom(atom);
         flags_ |= HAS_COMPILE_TIME_NAME;
     }
     JSAtom* compileTimeName() const {
@@ -370,15 +369,14 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(!hasCompileTimeName());
         MOZ_ASSERT(!hasGuessedAtom());
         MOZ_ASSERT(!isBoundFunction());
-        MOZ_ASSERT(js::AtomIsMarked(zone(), atom));
-        atom_ = atom;
+        setAtom(atom);
         flags_ |= HAS_GUESSED_ATOM;
     }
     void clearGuessedAtom() {
         MOZ_ASSERT(hasGuessedAtom());
         MOZ_ASSERT(!isBoundFunction());
         MOZ_ASSERT(atom_);
-        atom_ = nullptr;
+        setAtom(nullptr);
         flags_ &= ~HAS_GUESSED_ATOM;
     }
 
@@ -386,7 +384,7 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(!hasBoundFunctionNamePrefix());
         MOZ_ASSERT(atom);
         flags_ |= HAS_BOUND_FUNCTION_NAME_PREFIX;
-        atom_ = atom;
+        setAtom(atom);
     }
 
     /* uint16_t representation bounds number of call object dynamic slots. */
