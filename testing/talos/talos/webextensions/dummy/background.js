@@ -2,8 +2,17 @@
 
 /* eslint-env webextensions */
 
+let skipFilters = false;
+
 browser.webRequest.onBeforeRequest.addListener(
   details => {
+    if (details.url.endsWith("/startup_test/tspaint_test.html")) {
+      skipFilters = true;
+    }
+    if (skipFilters) {
+      return;
+    }
+
     let filter = browser.webRequest.filterResponseData(details.requestId);
 
     filter.onstop = event => {
