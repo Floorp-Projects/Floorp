@@ -2,6 +2,7 @@
 
 buildscript {
     ext.support_libraries_version = '26.0.2'
+    ext.espresso_version = '3.0.1'
 
     repositories {
         jcenter()
