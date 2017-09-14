@@ -185,7 +185,6 @@ private:
   virtual ~WebRenderBridgeParent();
 
   uint64_t GetLayersId() const;
-  void DeleteOldImages();
   void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
                                       wr::ResourceUpdateQueue& aResources);
   void ProcessWebRenderCommands(const gfx::IntSize &aSize,
@@ -240,7 +239,6 @@ private:
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   RefPtr<CompositorAnimationStorage> mAnimStorage;
-  std::vector<wr::ImageKey> mKeysToDelete;
   // mActiveAnimations is used to avoid leaking animations when WebRenderBridgeParent is
   // destroyed abnormally and Tab move between different windows.
   std::unordered_set<uint64_t> mActiveAnimations;
