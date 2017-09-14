@@ -4,13 +4,23 @@
 "use strict";
 
 const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+const PAGE_BASE = PAGE.replace("context.html", "");
+const PAGE_HOST_PATTERN = "http://mochi.test/*";
+
+async function grantOptionalPermission(extension, permissions) {
+  const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {ExtensionPermissions} = Cu.import("resource://gre/modules/ExtensionPermissions.jsm", {});
+  let ext = GlobalManager.extensionMap.get(extension.id);
+  return ExtensionPermissions.add(ext, permissions);
+}
 
 // Registers a context menu using menus.create(menuCreateParams) and checks
 // whether the menus.onShown and menus.onHidden events are fired as expected.
 // doOpenMenu must open the menu and its returned promise must resolve after the
 // menu is shown. Similarly, doCloseMenu must hide the menu.
 async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
-                                  expectedShownEvent}) {
+                                  expectedShownEvent,
+                                  expectedShownEventWithPermissions = null}) {
   async function background() {
     function awaitMessage(expectedId) {
       return new Promise(resolve => {
@@ -24,14 +34,18 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     }
 
     let menuCreateParams = await awaitMessage("create-params");
+    const [tab] = await browser.tabs.query({active: true, currentWindow: true});
 
     let shownEvents = [];
     let hiddenEvents = [];
 
-    browser.menus.onShown.addListener(event => shownEvents.push(event));
+    browser.menus.onShown.addListener((...args) => {
+      shownEvents.push(args[0]);
+      browser.test.assertEq(tab.id, args[1].id, "expected tab");
+      browser.test.assertEq(2, args.length, "expected number of onShown args");
+    });
     browser.menus.onHidden.addListener(event => hiddenEvents.push(event));
 
-    const [tab] = await browser.tabs.query({active: true});
     await browser.pageAction.show(tab.id);
 
     let menuId;
@@ -51,6 +65,10 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     browser.test.assertEq(1, shownEvents.length, "expected no more onShown");
     browser.test.assertEq(1, hiddenEvents.length, "expected onHidden");
     browser.test.sendMessage("onHidden-event-data", hiddenEvents[0]);
+
+    await awaitMessage("optional-menu-shown-with-permissions");
+    browser.test.assertEq(2, shownEvents.length, "expected second onShown");
+    browser.test.sendMessage("onShown-event-data2", shownEvents[1]);
   }
 
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
@@ -61,6 +79,7 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
       page_action: {},
       browser_action: {},
       permissions: ["menus"],
+      optional_permissions: [PAGE_HOST_PATTERN],
     },
   });
   await extension.startup();
@@ -79,6 +98,20 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
   extension.sendMessage("assert-menu-hidden");
   let hiddenEvent = await extension.awaitMessage("onHidden-event-data");
   is(hiddenEvent, undefined, "expected no event data for onHidden event");
+
+  if (expectedShownEventWithPermissions) {
+    expectedShownEventWithPermissions.menuIds = [menuId];
+    await grantOptionalPermission(extension, {
+      permissions: [],
+      origins: [PAGE_HOST_PATTERN],
+    });
+    await doOpenMenu(extension);
+    extension.sendMessage("optional-menu-shown-with-permissions");
+    let shownEvent2 = await extension.awaitMessage("onShown-event-data2");
+    Assert.deepEqual(shownEvent2, expectedShownEventWithPermissions,
+      "expected onShown info when host permissions are enabled");
+    await doCloseMenu();
+  }
 
   await extension.unload();
   await BrowserTestUtils.removeTab(tab);
@@ -117,6 +150,8 @@ add_task(async function test_no_show_hide_without_menu_item() {
     },
     expectedShownEvent: {
       contexts: ["page", "all"],
+      editable: false,
+      frameId: 0,
     },
     async doOpenMenu() {
       await openContextMenu("body");
@@ -143,6 +178,12 @@ add_task(async function test_show_hide_pageAction() {
     },
     expectedShownEvent: {
       contexts: ["page_action", "all"],
+      editable: false,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["page_action", "all"],
+      editable: false,
+      pageUrl: PAGE,
     },
     async doOpenMenu(extension) {
       await openActionContextMenu(extension, "page");
@@ -161,6 +202,12 @@ add_task(async function test_show_hide_browserAction() {
     },
     expectedShownEvent: {
       contexts: ["browser_action", "all"],
+      editable: false,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["browser_action", "all"],
+      editable: false,
+      pageUrl: PAGE,
     },
     async doOpenMenu(extension) {
       await openActionContextMenu(extension, "browser");
@@ -179,6 +226,12 @@ add_task(async function test_show_hide_tab() {
     },
     expectedShownEvent: {
       contexts: ["tab"],
+      editable: false,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["tab"],
+      editable: false,
+      pageUrl: PAGE,
     },
     async doOpenMenu() {
       await openTabContextMenu();
@@ -197,6 +250,12 @@ add_task(async function test_show_hide_tools_menu() {
     },
     expectedShownEvent: {
       contexts: ["tools_menu"],
+      editable: false,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["tools_menu"],
+      editable: false,
+      pageUrl: PAGE,
     },
     async doOpenMenu() {
       await openToolsMenu();
@@ -215,6 +274,14 @@ add_task(async function test_show_hide_page() {
     },
     expectedShownEvent: {
       contexts: ["page", "all"],
+      editable: false,
+      frameId: 0,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["page", "all"],
+      editable: false,
+      pageUrl: PAGE,
+      frameId: 0,
     },
     async doOpenMenu() {
       await openContextMenu("body");
@@ -226,6 +293,8 @@ add_task(async function test_show_hide_page() {
 });
 
 add_task(async function test_show_hide_frame() {
+  // frame info will be determined before opening the menu.
+  let frameId;
   await testShowHideEvent({
     menuCreateParams: {
       title: "subframe menu item",
@@ -233,8 +302,21 @@ add_task(async function test_show_hide_frame() {
     },
     expectedShownEvent: {
       contexts: ["frame", "all"],
+      editable: false,
+      get frameId() { return frameId; },
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["frame", "all"],
+      editable: false,
+      get frameId() { return frameId; },
+      pageUrl: PAGE,
+      frameUrl: PAGE_BASE + "context_frame.html",
     },
     async doOpenMenu() {
+      frameId = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+        let {contentWindow} = content.document.getElementById("frame");
+        return WebNavigationFrames.getFrameId(contentWindow);
+      });
       await openContextMenuInFrame("frame");
     },
     async doCloseMenu() {
@@ -251,9 +333,45 @@ add_task(async function test_show_hide_password() {
     },
     expectedShownEvent: {
       contexts: ["password", "all"],
+      editable: true,
+      frameId: 0,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["password", "all"],
+      editable: true,
+      frameId: 0,
+      pageUrl: PAGE,
     },
     async doOpenMenu() {
       await openContextMenu("#password");
+    },
+    async doCloseMenu() {
+      await closeExtensionContextMenu();
+    },
+  });
+});
+
+add_task(async function test_show_hide_link() {
+  await testShowHideEvent({
+    menuCreateParams: {
+      title: "link item",
+      contexts: ["link"],
+    },
+    expectedShownEvent: {
+      contexts: ["link", "all"],
+      editable: false,
+      frameId: 0,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["link", "all"],
+      editable: false,
+      frameId: 0,
+      linkText: "Some link",
+      linkUrl: PAGE_BASE + "some-link",
+      pageUrl: PAGE,
+    },
+    async doOpenMenu() {
+      await openContextMenu("#link1");
     },
     async doCloseMenu() {
       await closeExtensionContextMenu();
@@ -269,6 +387,20 @@ add_task(async function test_show_hide_image_link() {
     },
     expectedShownEvent: {
       contexts: ["image", "link", "all"],
+      mediaType: "image",
+      editable: false,
+      frameId: 0,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["image", "link", "all"],
+      mediaType: "image",
+      editable: false,
+      frameId: 0,
+      // Apparently, when a link has no content, its href is used as linkText.
+      linkText: PAGE_BASE + "image-around-some-link",
+      linkUrl: PAGE_BASE + "image-around-some-link",
+      srcUrl: PAGE_BASE + "ctxmenu-image.png",
+      pageUrl: PAGE,
     },
     async doOpenMenu() {
       await openContextMenu("#img-wrapped-in-link");
@@ -280,6 +412,7 @@ add_task(async function test_show_hide_image_link() {
 });
 
 add_task(async function test_show_hide_editable_selection() {
+  let selectionText;
   await testShowHideEvent({
     menuCreateParams: {
       title: "editable item",
@@ -287,13 +420,23 @@ add_task(async function test_show_hide_editable_selection() {
     },
     expectedShownEvent: {
       contexts: ["editable", "selection", "all"],
+      editable: true,
+      frameId: 0,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["editable", "selection", "all"],
+      editable: true,
+      frameId: 0,
+      pageUrl: PAGE,
+      get selectionText() { return selectionText; },
     },
     async doOpenMenu() {
       // Select lots of text in the test page before opening the menu.
-      await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+      selectionText = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
         let node = content.document.getElementById("editabletext");
         node.select();
         node.focus();
+        return node.value;
       });
 
       await openContextMenu("#editabletext");
