@@ -229,7 +229,7 @@
   /* Icon filters */
   --theme-icon-filter: none;
   --theme-icon-selected-filter: none;
-  --theme-icon-checked-filter: none;
+  --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-light);
 
   /* Font size */
   --theme-toolbar-font-size: 12px;
