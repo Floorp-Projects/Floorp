@@ -231,6 +231,13 @@ JsepSessionImpl::AddRtpExtension(std::vector<SdpExtmapAttributeList::Extmap>& ex
     return NS_ERROR_FAILURE;
   }
 
+  // Avoid adding duplicate entries
+  for (auto ext = extensions.begin(); ext != extensions.end(); ++ext) {
+    if (ext->direction == direction && ext->extensionname == extensionName) {
+      return NS_OK;
+    }
+  }
+
   SdpExtmapAttributeList::Extmap extmap =
       { static_cast<uint16_t>(extensions.size() + 1),
         direction,
