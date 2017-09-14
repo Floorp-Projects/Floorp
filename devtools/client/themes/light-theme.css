@@ -41,7 +41,7 @@ body {
 .theme-link,
 .cm-s-mozilla .cm-link,
 .CodeMirror-Tern-type {
-  color: var(--theme-highlight-purple);
+  color: var(--theme-comment);
 }
 
 /*

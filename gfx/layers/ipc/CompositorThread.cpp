@@ -159,6 +159,7 @@ CompositorThreadHolder::Shutdown()
   ReleaseImageBridgeParentSingleton();
   gfx::ReleaseVRManagerParentSingleton();
   MediaSystemResourceService::Shutdown();
+  CompositorManagerParent::Shutdown();
 
   sCompositorThreadHolder = nullptr;
 

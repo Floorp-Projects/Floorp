@@ -2160,6 +2160,7 @@ BorderLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
 
 CanvasLayer::CanvasLayer(LayerManager* aManager, void* aImplData)
   : Layer(aManager, aImplData)
+  , mSamplingFilter(SamplingFilter::GOOD)
 {
 }
 
