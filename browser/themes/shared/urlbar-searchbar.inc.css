@@ -181,12 +181,6 @@
   padding: 7px;
 }
 
-.urlbar-icon,
-.urlbar-icon-wrapper {
-  transition-property: background-color;
-  transition-duration: var(--toolbarbutton-hover-transition-duration);
-}
-
 .urlbar-icon:hover,
 .urlbar-icon-wrapper:hover {
   background-color: hsla(0,0%,80%,.4);
@@ -195,7 +189,6 @@
 .urlbar-icon:hover:active,
 .urlbar-icon-wrapper:hover:active {
   background-color: hsla(0,0%,80%,.45);
-  transition-duration: var(--toolbarbutton-active-transition-duration);
 }
 
 .urlbar-icon-wrapper > .urlbar-icon:hover,
