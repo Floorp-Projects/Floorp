@@ -287,19 +287,16 @@ describe("Top Sites Feed", () => {
       assert.propertyVal(feed.store.dispatch.firstCall.args[0], "type", at.TOP_SITES_UPDATED);
       assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, reference);
     });
-    it("should reuse screenshots for existing links, and call feed.getScreenshot for others", async () => {
-      sandbox.stub(feed, "getScreenshot");
+    it("should call _fetchIcon for each link and pass in existing screenshots", async () => {
       feed.store.state.TopSites.rows = [{url: FAKE_LINKS[0].url, screenshot: "foo.jpg"}];
+      const expectedScreenshotCache = {};
+      expectedScreenshotCache[FAKE_LINKS[0].url] = "foo.jpg";
+      sinon.spy(feed, "_fetchIcon");
       await feed.refresh(action);
-
       const results = feed.store.dispatch.firstCall.args[0].data;
-
+      assert.callCount(feed._fetchIcon, results.length);
       results.forEach(link => {
-        if (link.url === FAKE_LINKS[0].url) {
-          assert.equal(link.screenshot, "foo.jpg");
-        } else {
-          assert.calledWith(feed.getScreenshot, link.url);
-        }
+        assert.calledWith(feed._fetchIcon, link, expectedScreenshotCache);
       });
     });
     it("should handle empty slots in the resulting top sites array", async () => {
@@ -309,31 +306,49 @@ describe("Top Sites Feed", () => {
       await feed.refresh(action);
       assert.calledOnce(feed.store.dispatch);
     });
-    it("should skip getting screenshot if there is a tippy top icon", async () => {
+  });
+  describe("#_fetchIcon", () => {
+    it("should reuse screenshots for existing links, and call feed.getScreenshot for others", () => {
+      sandbox.stub(feed, "getScreenshot");
+      const screenshotCache = {};
+      screenshotCache[FAKE_LINKS[0].url] = "foo.jpg";
+      screenshotCache[FAKE_LINKS[1].url] = "bar.png";
+
+      feed._fetchIcon(FAKE_LINKS[0], screenshotCache);
+      assert.notCalled(feed.getScreenshot);
+      assert.propertyVal(FAKE_LINKS[0], "screenshot", "foo.jpg");
+
+      feed._fetchIcon(FAKE_LINKS[1], screenshotCache);
+      assert.notCalled(feed.getScreenshot);
+      assert.propertyVal(FAKE_LINKS[1], "screenshot", "bar.png");
+
+      feed._fetchIcon(FAKE_LINKS[2], screenshotCache);
+      assert.calledOnce(feed.getScreenshot);
+      assert.calledWith(feed.getScreenshot, FAKE_LINKS[2].url);
+    });
+    it("should skip getting a screenshot if there is a tippy top icon", () => {
       sandbox.stub(feed, "getScreenshot");
       feed._tippyTopProvider.processSite = site => {
         site.tippyTopIcon = "icon.png";
         site.backgroundColor = "#fff";
         return site;
       };
-      await feed.refresh(action);
-      assert.calledOnce(feed.store.dispatch);
+      const link = {url: "example.com"};
+      feed._fetchIcon(link);
+      assert.propertyVal(link, "tippyTopIcon", "icon.png");
+      assert.notProperty(link, "screenshot");
       assert.notCalled(feed.getScreenshot);
     });
-    it("should skip getting screenshot if there is an icon of size greater than 96x96 and no tippy top", async () => {
+    it("should skip getting a screenshot if there is an icon of size greater than 96x96 and no tippy top", () => {
       sandbox.stub(feed, "getScreenshot");
-      feed.getLinksWithDefaults = () => [{
+      const link = {
         url: "foo.com",
         favicon: "data:foo",
         faviconSize: 196
-      }];
-      feed._tippyTopProvider.processSite = site => {
-        site.tippyTopIcon = null;
-        site.backgroundColor = null;
-        return site;
       };
-      await feed.refresh(action);
-      assert.calledOnce(feed.store.dispatch);
+      feed._fetchIcon(link);
+      assert.notProperty(link, "tippyTopIcon");
+      assert.notProperty(link, "screenshot");
       assert.notCalled(feed.getScreenshot);
     });
   });
@@ -417,9 +432,31 @@ describe("Top Sites Feed", () => {
       fakeNewTabUtils.pinnedLinks.links = [pinnedSite1, pinnedSite2];
       feed.store = {getState() { return {TopSites: {rows: sinon.spy()}}; }};
       let result = feed._getPinnedWithData([frecentSite]);
-      assert.deepEqual(result[0], pinnedSite1);
-      assert.deepEqual(result[1], Object.assign({}, frecentSite, pinnedSite2));
+      assert.include(result[0], pinnedSite1);
+      assert.include(result[1], Object.assign({}, frecentSite, pinnedSite2));
       assert.notCalled(feed.store.getState().TopSites.rows);
+    });
+    it("should fetch an icon on TOP_SITES_PIN and TOP_SITES_ADD for new urls", () => {
+      feed.store.getState = () => ({TopSites: {rows: FAKE_LINKS}});
+      fakeNewTabUtils.pinnedLinks = {
+        links: new Array(6).fill(null),
+        pin(site, index) {
+          this.links[index] = site;
+        }
+      };
+      sinon.spy(feed, "_fetchIcon");
+
+      const pinExistingAction = {type: at.TOP_SITES_PIN, data: {site: FAKE_LINKS[4], index: 4}};
+      const addAction = {type: at.TOP_SITES_ADD, data: {site: {url: "foo.com"}}};
+      const pinNewAction = {type: at.TOP_SITES_PIN, data: {site: {url: "bar.net"}, index: 0}};
+      feed.onAction(pinExistingAction);
+      feed.onAction(addAction);
+      feed.onAction(pinNewAction);
+
+      assert.calledTwice(feed._fetchIcon);
+      assert.neverCalledWithMatch(feed._fetchIcon, {url: FAKE_LINKS[4].url});
+      assert.calledWithMatch(feed._fetchIcon, {url: "foo.com"});
+      assert.calledWithMatch(feed._fetchIcon, {url: "bar.net"});
     });
     it("should call unpin with correct parameters on TOP_SITES_UNPIN", () => {
       fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "foo.com"}, null, null, null, null, null, FAKE_LINKS[0]];
