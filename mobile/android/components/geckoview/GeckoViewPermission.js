@@ -108,7 +108,7 @@ GeckoViewPermission.prototype = {
       let uri = win.document.documentURIObject;
       return dispatcher.sendRequestForResult({
         type: "GeckoView:MediaPermission",
-        uri: uri.spec,
+        uri: uri.displaySpec,
         video: constraints.video ? sources.filter(source => source.type === "video") : null,
         audio: constraints.audio ? sources.filter(source => source.type === "audio") : null,
       }).then(response => {
@@ -185,7 +185,7 @@ GeckoViewPermission.prototype = {
         aRequest.window ? aRequest.window : aRequest.element.ownerGlobal);
     let promise = dispatcher.sendRequestForResult({
         type: "GeckoView:ContentPermission",
-        uri: aRequest.principal.URI.spec,
+        uri: aRequest.principal.URI.displaySpec,
         perm: perm.type,
         access: perm.access !== "unused" ? perm.access : null,
     }).then(granted => {
