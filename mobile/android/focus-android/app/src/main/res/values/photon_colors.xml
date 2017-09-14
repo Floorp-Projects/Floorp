@@ -3,7 +3,26 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <!-- http://design.firefox.com/photon/visual/color.html -->
+    <!--
+        Firefox colors are bold, vibrant and attractive. They enhance the experience by providing
+        visual clues and by bringing attention to primary actions.
+
+         The color palette includes primary and secondary colors that can be used for interfaces and illustrations.
+
+        http://design.firefox.com/photon/visual/color.html
+    -->
+
+    <!--
+        Blue
+        Firefox Blue is one of our primary colors. We use blue as accent color for highlighting
+        buttons, links and active states like the current tab in Firefox for desktop.
+    -->
+    <color name="photonBlue40">#ff45a1ff</color>
+    <color name="photonBlue50">#ff0a84ff</color>
+    <color name="photonBlue60">#ff0060df</color>
+    <color name="photonBlue70">#ff003eaa</color>
+    <color name="photonBlue80">#ff002275</color>
+    <color name="photonBlue90">#ff000f40</color>
 
     <!--
         Magenta
@@ -14,4 +33,6 @@
     <color name="photonMagenta70">#ffb5007f</color>
     <color name="photonMagenta80">#ff7d004f</color>
     <color name="photonMagenta90">#ff440027</color>
+
+
 </resources>
