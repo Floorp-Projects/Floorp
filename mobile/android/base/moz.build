@@ -772,6 +772,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'menu/GeckoSubMenu.java',
     'menu/MenuItemActionBar.java',
     'menu/MenuItemDefault.java',
+    'menu/MenuItemIcon.java',
     'menu/MenuItemSwitcherLayout.java',
     'menu/MenuPanel.java',
     'menu/MenuPopup.java',

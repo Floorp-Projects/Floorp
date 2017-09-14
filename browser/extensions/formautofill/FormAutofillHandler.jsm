@@ -589,6 +589,12 @@ FormAutofillHandler.prototype = {
       delete data.creditCard;
     }
 
+    // If both address and credit card exists, skip this metrics because it not a
+    // general case and each specific histogram might contains insufficient data set.
+    if (data.address && data.creditCard) {
+      this.timeStartedFillingMS = null;
+    }
+
     return data;
   },
 

@@ -59,4 +59,40 @@ describe("NewTabInit", () => {
     instance.onAction({type: at.LOCALE_UPDATED});
     assert.notCalled(store.dispatch);
   });
+  it("should focus the content browser when SEARCH_BOX_FOCUSED", () => {
+    STATE.Prefs = {values: {"aboutHome.autoFocus": true}};
+    const action = {
+      type: at.SEARCH_BOX_FOCUSED,
+      _target: {
+        url: "about:home",
+        browser: {focus: sinon.spy()}
+      }
+    };
+    instance.onAction(action);
+    assert.calledOnce(action._target.browser.focus);
+  });
+  it("should NOT focus the content browser when SEARCH_BOX_FOCUSED for about:newtab", () => {
+    STATE.Prefs = {values: {"aboutHome.autoFocus": true}};
+    const action = {
+      type: at.SEARCH_BOX_FOCUSED,
+      _target: {
+        url: "about:newtab",
+        browser: {focus: sinon.spy()}
+      }
+    };
+    instance.onAction(action);
+    assert.notCalled(action._target.browser.focus);
+  });
+  it("should NOT focus the content browser when SEARCH_BOX_FOCUSED when autoFocus pref is off", () => {
+    STATE.Prefs = {values: {"aboutHome.autoFocus": false}};
+    const action = {
+      type: at.SEARCH_BOX_FOCUSED,
+      _target: {
+        url: "about:newtab",
+        browser: {focus: sinon.spy()}
+      }
+    };
+    instance.onAction(action);
+    assert.notCalled(action._target.browser.focus);
+  });
 });

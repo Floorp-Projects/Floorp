@@ -101,7 +101,7 @@ reftest-stylo:
 qr-talos:
     - talos-chrome
     - talos-dromaeojs
-    - talos-g1
+    # - talos-g1 # failing with the WR update in bug 1398241
     # - talos-g2 # doesn't work with QR yet
     - talos-g3
     - talos-g4

@@ -4,7 +4,7 @@
 
 <!ENTITY window.width                       "36em">
 
-<!ENTITY     cookiesonsystem.label          "The following cookies are stored on your computer:">
+<!ENTITY     cookiesonsystem2.label         "The following cookies are stored on your computer">
 <!ENTITY     cookiename.label               "Cookie Name">
 <!ENTITY     cookiedomain.label             "Site">
 

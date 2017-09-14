@@ -44,7 +44,7 @@
     <separator />
 
     <vbox flex="1">
-      <label>&siteTree.label;</label>
+      <label>&siteTree2.label;</label>
       <separator class="thin"/>
       <tree id="sitesTree" flex="1" seltype="single" hidecolumnpicker="true">
         <treecols>

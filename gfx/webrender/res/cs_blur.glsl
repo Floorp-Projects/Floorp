@@ -17,30 +17,13 @@ flat varying int vBlurRadius;
 #define DIR_HORIZONTAL  0
 #define DIR_VERTICAL    1
 
-in int aBlurRenderTaskIndex;
-in int aBlurSourceTaskIndex;
+in int aBlurRenderTaskAddress;
+in int aBlurSourceTaskAddress;
 in int aBlurDirection;
 
-struct BlurCommand {
-    int task_id;
-    int src_task_id;
-    int dir;
-};
-
-BlurCommand fetch_blur() {
-    BlurCommand blur;
-
-    blur.task_id = aBlurRenderTaskIndex;
-    blur.src_task_id = aBlurSourceTaskIndex;
-    blur.dir = aBlurDirection;
-
-    return blur;
-}
-
 void main(void) {
-    BlurCommand cmd = fetch_blur();
-    RenderTaskData task = fetch_render_task(cmd.task_id);
-    RenderTaskData src_task = fetch_render_task(cmd.src_task_id);
+    RenderTaskData task = fetch_render_task(aBlurRenderTaskAddress);
+    RenderTaskData src_task = fetch_render_task(aBlurSourceTaskAddress);
 
     vec4 local_rect = task.data0;
 
@@ -53,7 +36,7 @@ void main(void) {
     vBlurRadius = int(task.data1.y);
     vSigma = task.data1.y * 0.5;
 
-    switch (cmd.dir) {
+    switch (aBlurDirection) {
         case DIR_HORIZONTAL:
             vOffsetScale = vec2(1.0 / texture_size.x, 0.0);
             break;

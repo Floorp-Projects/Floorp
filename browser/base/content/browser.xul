@@ -1017,6 +1017,7 @@
         <hbox flex="1"
               id="PlacesToolbar"
               context="placesContext"
+              onmouseup="BookmarksEventHandler.onMouseUp(event);"
               onclick="BookmarksEventHandler.onClick(event, this._placesView);"
               oncommand="BookmarksEventHandler.onCommand(event);"
               tooltip="bhTooltip"
@@ -1094,6 +1095,7 @@
                    placespopup="true"
                    context="placesContext"
                    openInTabs="children"
+                   onmouseup="BookmarksEventHandler.onMouseUp(event);"
                    oncommand="BookmarksEventHandler.onCommand(event);"
                    onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                    onpopupshowing="BookmarkingUI.onPopupShowing(event);

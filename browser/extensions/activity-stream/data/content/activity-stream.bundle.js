@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SEARCH_BOX_FOCUSED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -1242,7 +1242,7 @@ const TopSites = props => {
           intl: props.intl })),
         placeholderCount > 0 && [...Array(placeholderCount)].map((_, i) => React.createElement(TopSitePlaceholder, { key: i }))
       ),
-      realTopSites.length > 0 && React.createElement(TopSitesEdit, props)
+      React.createElement(TopSitesEdit, props)
     )
   );
 };
@@ -1948,7 +1948,7 @@ module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports
 const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { FormattedMessage, injectIntl } = __webpack_require__(2);
-const { actionCreators: ac } = __webpack_require__(0);
+const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 const { IS_NEWTAB } = __webpack_require__(20);
 
 class Search extends React.Component {
@@ -1991,6 +1991,14 @@ class Search extends React.Component {
       // In the future, when activity stream is default about:home, this can be renamed
       window.gContentSearchController = new ContentSearchUIController(input, input.parentNode, healthReportKey, searchSource);
       addEventListener("ContentSearchClient", this);
+
+      // Focus the search box if we are on about:home
+      if (!IS_NEWTAB) {
+        input.focus();
+        // Tell the addon side that search box is focused in case the browser
+        // needs to be focused too.
+        this.props.dispatch(ac.SendToMain({ type: at.SEARCH_BOX_FOCUSED }));
+      }
     } else {
       window.gContentSearchController = null;
       removeEventListener("ContentSearchClient", this);
@@ -2719,14 +2727,20 @@ class Card extends React.Component {
                 link.description
               )
             ),
-            icon && React.createElement(
+            React.createElement(
               "div",
               { className: "card-context" },
-              React.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
-              React.createElement(
+              icon && !link.context && React.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
+              link.icon && link.context && React.createElement("span", { className: "card-context-icon icon", style: { backgroundImage: `url('${link.icon}')` } }),
+              intlID && !link.context && React.createElement(
                 "div",
                 { className: "card-context-label" },
                 React.createElement(FormattedMessage, { id: intlID, defaultMessage: "Visited" })
+              ),
+              link.context && React.createElement(
+                "div",
+                { className: "card-context-label" },
+                link.context
               )
             )
           )
@@ -3349,6 +3363,10 @@ class SnippetsProvider {
     // This could happen if fetching failed
     if (!payload) {
       throw new Error("No remote snippets were found in gSnippetsMap.");
+    }
+
+    if (typeof payload !== "string") {
+      throw new Error("Snippet payload was incorrectly formatted");
     }
 
     // Note that injecting snippets can throw if they're invalid XML.

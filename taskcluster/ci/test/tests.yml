@@ -1185,7 +1185,7 @@ reftest-no-accel:
         no-read-buildbot-config: true
         chunked:
             by-test-platform:
-                windows8-64.*/opt: true
+                windows8-64.*/opt: false
                 macosx.*: false
                 default: true
         config:

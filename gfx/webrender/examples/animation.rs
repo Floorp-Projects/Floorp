@@ -31,8 +31,14 @@ impl Example for App {
         // Note the magic "42" we use as the animation key. That is used to update
         // the transform in the keyboard event handler code.
         let bounds = (0,0).to(100, 100);
-        builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                      bounds,
+        let info = LayoutPrimitiveInfo {
+            rect: bounds,
+            local_clip: None,
+            is_backface_visible: true,
+        };
+
+        builder.push_stacking_context(&info,
+                                      ScrollPolicy::Scrollable,
                                       Some(PropertyBinding::Binding(PropertyBindingKey::new(42))),
                                       TransformStyle::Flat,
                                       None,
@@ -40,7 +46,7 @@ impl Example for App {
                                       Vec::new());
 
         // Fill it with a white rect
-        builder.push_rect(bounds, None, ColorF::new(1.0, 1.0, 1.0, 1.0));
+        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
         builder.pop_stacking_context();
     }

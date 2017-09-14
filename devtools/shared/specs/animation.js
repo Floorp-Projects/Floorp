@@ -9,7 +9,6 @@ const {
   generateActorSpec,
   types
 } = require("devtools/shared/protocol");
-require("devtools/shared/specs/inspector");
 
 /**
  * Sent with the 'mutations' event as part of an array of changes, used to

@@ -30,7 +30,7 @@
 
   <vbox class="largeDialogContainer">
     <vbox class="contentPane" flex="1">
-      <label id="languagesLabel" control="permissionsTree">&noTranslationForLanguages.label;</label>
+      <label id="languagesLabel" control="permissionsTree">&noTranslationForLanguages2.label;</label>
       <separator class="thin"/>
       <tree id="languagesTree" flex="1" style="height: 12em;"
             hidecolumnpicker="true"
@@ -57,7 +57,7 @@
     </hbox>
     <separator/>
     <vbox class="contentPane" flex="1">
-      <label id="languagesLabel" control="permissionsTree">&noTranslationForSites.label;</label>
+      <label id="languagesLabel" control="permissionsTree">&noTranslationForSites2.label;</label>
       <separator class="thin"/>
       <tree id="sitesTree" flex="1" style="height: 12em;"
             hidecolumnpicker="true"

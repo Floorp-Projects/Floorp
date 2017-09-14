@@ -969,14 +969,14 @@ main {
       transition: box-shadow 150ms; }
     .card-outer > a.active .card-title, .card-outer > a:focus .card-title {
       color: #0060DF; }
-  .card-outer:hover, .card-outer:focus, .card-outer.active {
+  .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) {
     outline: none;
     box-shadow: 0 0 0 5px #D7D7DB;
     transition: box-shadow 150ms; }
-    .card-outer:hover .context-menu-button, .card-outer:focus .context-menu-button, .card-outer.active .context-menu-button {
+    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .context-menu-button {
       transform: scale(1);
       opacity: 1; }
-    .card-outer:hover .card-title, .card-outer:focus .card-title, .card-outer.active .card-title {
+    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-title {
       color: #0060DF; }
   .card-outer .card-preview-image-outer {
     position: relative;

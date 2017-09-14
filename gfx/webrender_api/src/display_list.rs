@@ -10,9 +10,9 @@ use {BorderDetails, BorderDisplayItem, BorderWidths, BoxShadowClipMode, BoxShado
 use {ClipAndScrollInfo, ClipDisplayItem, ClipId, ColorF, ComplexClipRegion, DisplayItem};
 use {ExtendMode, FastHashMap, FastHashSet, FilterOp, FontInstanceKey, GlyphIndex, GlyphInstance};
 use {GlyphOptions, Gradient, GradientDisplayItem, GradientStop, IframeDisplayItem};
-use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayoutPoint, LayoutRect, LayoutSize};
-use {LayoutTransform, LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, LocalClip};
-use {MixBlendMode, PipelineId, PropertyBinding, PushStackingContextDisplayItem, RadialGradient};
+use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayerPrimitiveInfo, LayoutPoint, LayoutRect, LayoutSize};
+use {LayoutTransform, LayoutVector2D, LayoutPrimitiveInfo, LineDisplayItem, LineOrientation, LineStyle, LocalClip};
+use {MixBlendMode, PipelineId, PropertyBinding, PushStackingContextDisplayItem, PrimitiveInfo, RadialGradient};
 use {RadialGradientDisplayItem, RectangleDisplayItem, ScrollFrameDisplayItem, ScrollPolicy};
 use {ScrollSensitivity, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem};
 use {StickyFrameInfo, TextDisplayItem, TextShadow, TransformStyle};
@@ -188,9 +188,12 @@ impl<'a> BuiltDisplayListIter<'a> {
             data: &data,
             cur_item: DisplayItem { // Dummy data, will be overwritten by `next`
                 item: SpecificDisplayItem::PopStackingContext,
-                rect: LayoutRect::zero(),
-                local_clip: LocalClip::from(LayoutRect::zero()),
                 clip_and_scroll: ClipAndScrollInfo::simple(ClipId::new(0, PipelineId::dummy())),
+                info: PrimitiveInfo {
+                    rect: LayoutRect::zero(),
+                    local_clip: Some(LocalClip::from(LayoutRect::zero())),
+                    is_backface_visible: true,
+                },
             },
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
@@ -319,15 +322,20 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
     }
 
     pub fn rect(&self) -> LayoutRect {
-        self.iter.cur_item.rect
+        self.iter.cur_item.info.rect
+    }
+
+    pub fn get_layer_primitive_info(&self, offset: &LayoutVector2D) -> LayerPrimitiveInfo {
+        let info = self.iter.cur_item.info;
+        LayerPrimitiveInfo {
+            rect: info.rect.translate(&offset),
+            local_clip: info.local_clip.map(|clip| clip.create_with_offset(offset)),
+            is_backface_visible: info.is_backface_visible,
+        }
     }
 
     pub fn local_clip(&self) -> &LocalClip {
-        &self.iter.cur_item.local_clip
-    }
-
-    pub fn local_clip_with_offset(&self, offset: &LayoutVector2D) -> LocalClip {
-        self.iter.cur_item.local_clip.create_with_offset(offset)
+        self.iter.cur_item.info.local_clip.as_ref().unwrap()
     }
 
     pub fn clip_and_scroll(&self) -> ClipAndScrollInfo {
@@ -356,6 +364,10 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
 
     pub fn display_list(&self) -> &BuiltDisplayList {
         self.iter.display_list()
+    }
+
+    pub fn is_backface_visible(&self) -> bool {
+        self.iter.cur_item.info.is_backface_visible
     }
 
     // Creates a new iterator where this element's iterator is, to hack around borrowck.
@@ -505,23 +517,22 @@ impl DisplayListBuilder {
 
     fn push_item(&mut self,
                  item: SpecificDisplayItem,
-                 rect: LayoutRect,
-                 local_clip: Option<LocalClip>) {
-        let local_clip = local_clip.unwrap_or_else(|| LocalClip::from(rect));
+                 info: &LayoutPrimitiveInfo) {
+        let mut new_info = info.clone();
+        new_info.local_clip = info.local_clip.or(Some(LocalClip::from(info.rect)));
         bincode::serialize_into(&mut self.data, &DisplayItem {
             item,
-            rect,
-            local_clip: local_clip,
             clip_and_scroll: *self.clip_stack.last().unwrap(),
+            info: new_info,
         }, bincode::Infinite).unwrap();
     }
 
     fn push_new_empty_item(&mut self, item: SpecificDisplayItem) {
+        let info = LayoutPrimitiveInfo::new(LayoutRect::zero());
         bincode::serialize_into(&mut self.data, &DisplayItem {
             item,
-            rect: LayoutRect::zero(),
-            local_clip: LocalClip::from(LayoutRect::zero()),
             clip_and_scroll: *self.clip_stack.last().unwrap(),
+            info,
         }, bincode::Infinite).unwrap();
     }
 
@@ -543,16 +554,18 @@ impl DisplayListBuilder {
         debug_assert_eq!(len, count);
     }
 
-    pub fn push_rect(&mut self, rect: LayoutRect, local_clip: Option<LocalClip>, color: ColorF) {
+    pub fn push_rect(&mut self,
+                     info: &LayoutPrimitiveInfo,
+                     color: ColorF) {
         let item = SpecificDisplayItem::Rectangle(RectangleDisplayItem {
             color,
         });
 
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     pub fn push_line(&mut self,
-                     local_clip: Option<LocalClip>,
+                     info: &LayoutPrimitiveInfo,
                      baseline: f32,
                      start: f32,
                      end: f32,
@@ -565,12 +578,11 @@ impl DisplayListBuilder {
             width, color, style,
         });
 
-        self.push_item(item, LayoutRect::zero(), local_clip);
+        self.push_item(item, info);
     }
 
     pub fn push_image(&mut self,
-                      rect: LayoutRect,
-                      local_clip: Option<LocalClip>,
+                      info: &LayoutPrimitiveInfo,
                       stretch_size: LayoutSize,
                       tile_spacing: LayoutSize,
                       image_rendering: ImageRendering,
@@ -582,13 +594,12 @@ impl DisplayListBuilder {
             image_rendering,
         });
 
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     /// Push a yuv image. All planar data in yuv image should use the same buffer type.
     pub fn push_yuv_image(&mut self,
-                          rect: LayoutRect,
-                          local_clip: Option<LocalClip>,
+                          info: &LayoutPrimitiveInfo,
                           yuv_data: YuvData,
                           color_space: YuvColorSpace,
                           image_rendering: ImageRendering) {
@@ -597,12 +608,11 @@ impl DisplayListBuilder {
             color_space,
             image_rendering,
         });
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     pub fn push_text(&mut self,
-                     rect: LayoutRect,
-                     local_clip: Option<LocalClip>,
+                     info: &LayoutPrimitiveInfo,
                      glyphs: &[GlyphInstance],
                      font_key: FontInstanceKey,
                      color: ColorF,
@@ -614,7 +624,7 @@ impl DisplayListBuilder {
         });
 
         for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
-            self.push_item(item, rect, local_clip);
+            self.push_item(item, info);
             self.push_iter(split_glyphs);
 
             // Remember that we've seen these glyphs
@@ -804,8 +814,7 @@ impl DisplayListBuilder {
     }
 
     pub fn push_border(&mut self,
-                       rect: LayoutRect,
-                       local_clip: Option<LocalClip>,
+                       info: &LayoutPrimitiveInfo,
                        widths: BorderWidths,
                        details: BorderDetails) {
         let item = SpecificDisplayItem::Border(BorderDisplayItem {
@@ -813,12 +822,11 @@ impl DisplayListBuilder {
             widths,
         });
 
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     pub fn push_box_shadow(&mut self,
-                           rect: LayoutRect,
-                           local_clip: Option<LocalClip>,
+                           info: &LayoutPrimitiveInfo,
                            box_bounds: LayoutRect,
                            offset: LayoutVector2D,
                            color: ColorF,
@@ -836,12 +844,11 @@ impl DisplayListBuilder {
             clip_mode,
         });
 
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     pub fn push_gradient(&mut self,
-                         rect: LayoutRect,
-                         local_clip: Option<LocalClip>,
+                         info: &LayoutPrimitiveInfo,
                          gradient: Gradient,
                          tile_size: LayoutSize,
                          tile_spacing: LayoutSize) {
@@ -851,12 +858,11 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     pub fn push_radial_gradient(&mut self,
-                                rect: LayoutRect,
-                                local_clip: Option<LocalClip>,
+                                info: &LayoutPrimitiveInfo,
                                 gradient: RadialGradient,
                                 tile_size: LayoutSize,
                                 tile_spacing: LayoutSize) {
@@ -866,12 +872,12 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     pub fn push_stacking_context(&mut self,
+                                 info: &LayoutPrimitiveInfo,
                                  scroll_policy: ScrollPolicy,
-                                 bounds: LayoutRect,
                                  transform: Option<PropertyBinding<LayoutTransform>>,
                                  transform_style: TransformStyle,
                                  perspective: Option<LayoutTransform>,
@@ -887,7 +893,7 @@ impl DisplayListBuilder {
             }
         });
 
-        self.push_item(item, bounds, None);
+        self.push_item(item, info);
         self.push_iter(&filters);
     }
 
@@ -928,7 +934,13 @@ impl DisplayListBuilder {
             scroll_sensitivity,
         });
 
-        self.push_item(item, content_rect, Some(LocalClip::from(clip_rect)));
+        let info = LayoutPrimitiveInfo {
+            rect: content_rect,
+            local_clip: Some(LocalClip::from(clip_rect)),
+            is_backface_visible: true,
+        };
+
+        self.push_item(item, &info);
         self.push_iter(complex_clips);
         id
     }
@@ -948,7 +960,9 @@ impl DisplayListBuilder {
             image_mask: image_mask,
         });
 
-        self.push_item(item, clip_rect, Some(LocalClip::from(clip_rect)));
+        let info = LayoutPrimitiveInfo::new(clip_rect);
+
+        self.push_item(item, &info);
         self.push_iter(complex_clips);
         id
     }
@@ -964,7 +978,13 @@ impl DisplayListBuilder {
             sticky_frame_info,
         });
 
-        self.push_item(item, frame_rect, None);
+        let info = LayoutPrimitiveInfo {
+            rect: frame_rect,
+            local_clip: None,
+            is_backface_visible: true,
+        };
+
+        self.push_item(item, &info);
         id
     }
 
@@ -982,11 +1002,10 @@ impl DisplayListBuilder {
     }
 
     pub fn push_iframe(&mut self,
-                       rect: LayoutRect,
-                       local_clip: Option<LocalClip>,
+                       info: &LayoutPrimitiveInfo,
                        pipeline_id: PipelineId) {
         let item = SpecificDisplayItem::Iframe(IframeDisplayItem { pipeline_id: pipeline_id });
-        self.push_item(item, rect, local_clip);
+        self.push_item(item, info);
     }
 
     // Don't use this function. It will go away.
@@ -1009,12 +1028,9 @@ impl DisplayListBuilder {
     }
 
     pub fn push_text_shadow(&mut self,
-                            rect: LayoutRect,
-                            local_clip: Option<LocalClip>,
+                            info: &LayoutPrimitiveInfo,
                             shadow: TextShadow) {
-        self.push_item(SpecificDisplayItem::PushTextShadow(shadow),
-                       rect,
-                       local_clip);
+        self.push_item(SpecificDisplayItem::PushTextShadow(shadow), info);
     }
 
     pub fn pop_text_shadow(&mut self) {

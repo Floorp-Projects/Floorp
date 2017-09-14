@@ -251,6 +251,41 @@ add_task(async function checkStateForDownloads() {
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should still not be hidden in the panel " +
      "when downloads count reaches 0 after being non-0.");
+
+  CustomizableUI.reset();
+});
+
+/**
+ * Check that if the button is moved to the palette, we unhide it
+ * in customize mode even if it was always hidden. We use a new
+ * window to test this.
+ */
+add_task(async function checkStateWhenHiddenInPalette() {
+  ok(Services.prefs.getBoolPref(kDownloadAutoHidePref),
+     "Pref should be causing us to autohide");
+  gCustomizeMode.removeFromArea(document.getElementById("downloads-button"));
+  // In a new window, the button will have been hidden
+  let otherWin = await BrowserTestUtils.openNewBrowserWindow();
+  ok(!otherWin.document.getElementById("downloads-button"),
+     "Button shouldn't be visible in the window");
+
+  let paletteButton = otherWin.gNavToolbox.palette.querySelector("#downloads-button");
+  ok(paletteButton, "Button should exist in the palette");
+  if (paletteButton) {
+    ok(paletteButton.hidden, "Button will still have the hidden attribute");
+    await promiseCustomizeStart(otherWin);
+    ok(!paletteButton.hidden,
+       "Button should no longer be hidden in customize mode");
+    ok(otherWin.document.getElementById("downloads-button"),
+       "Button should be in the document now.");
+    await promiseCustomizeEnd(otherWin);
+    // We purposefully don't assert anything about what happens next.
+    // It doesn't really matter if the button remains unhidden in
+    // the palette, and if we move it we'll unhide it then (the other
+    // tests check this).
+  }
+  await BrowserTestUtils.closeWindow(otherWin);
+  CustomizableUI.reset();
 });
 
 function promiseCustomizeStart(aWindow = window) {

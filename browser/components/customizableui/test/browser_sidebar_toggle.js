@@ -13,19 +13,19 @@ registerCleanupFunction(async function() {
   }
 });
 
-var showSidebar = async function() {
-  let button = document.getElementById("sidebar-button");
-  let sidebarFocusedPromise = BrowserTestUtils.waitForEvent(document, "SidebarFocused");
-  EventUtils.synthesizeMouseAtCenter(button, {});
+var showSidebar = async function(win = window) {
+  let button = win.document.getElementById("sidebar-button");
+  let sidebarFocusedPromise = BrowserTestUtils.waitForEvent(win.document, "SidebarFocused");
+  EventUtils.synthesizeMouseAtCenter(button, {}, win);
   await sidebarFocusedPromise;
-  ok(SidebarUI.isOpen, "Sidebar is opened");
+  ok(win.SidebarUI.isOpen, "Sidebar is opened");
   ok(button.hasAttribute("checked"), "Toolbar button is checked");
 };
 
-var hideSidebar = async function() {
-  let button = document.getElementById("sidebar-button");
-  EventUtils.synthesizeMouseAtCenter(button, {});
-  ok(!SidebarUI.isOpen, "Sidebar is closed");
+var hideSidebar = async function(win = window) {
+  let button = win.document.getElementById("sidebar-button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, win);
+  ok(!win.SidebarUI.isOpen, "Sidebar is closed");
   ok(!button.hasAttribute("checked"), "Toolbar button isn't checked");
 };
 
@@ -40,4 +40,12 @@ add_task(async function() {
   await hideSidebar();
   await showSidebar();
   is(SidebarUI.currentID, "viewHistorySidebar", "Selected sidebar remembered");
+
+  await hideSidebar();
+  let otherWin = await BrowserTestUtils.openNewBrowserWindow({opener: window});
+  await showSidebar(otherWin);
+  is(otherWin.SidebarUI.currentID, "viewHistorySidebar", "Selected sidebar remembered across windows");
+  await hideSidebar(otherWin);
+
+  await BrowserTestUtils.closeWindow(otherWin);
 });

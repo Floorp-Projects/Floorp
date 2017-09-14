@@ -3788,11 +3788,6 @@ js::DumpBacktrace(JSContext* cx, FILE* fp)
 JS_FRIEND_API(void)
 js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out)
 {
-    Sprinter sprinter(cx, false);
-    if (!sprinter.init()) {
-        out.put("js::DumpBacktrace: OOM\n");
-        return;
-    }
     size_t depth = 0;
     for (AllFramesIter i(cx); !i.done(); ++i, ++depth) {
         const char* filename;
@@ -3811,21 +3806,17 @@ js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out)
             i.isWasm() ? 'W' :
             '?';
 
-        sprinter.printf("#%zu %14p %c   %s:%d",
+        out.printf("#%zu %14p %c   %s:%d",
                         depth, i.rawFramePtr(), frameType, filename, line);
 
         if (i.hasScript()) {
-            sprinter.printf(" (%p @ %zu)\n",
+            out.printf(" (%p @ %zu)\n",
                             i.script(), i.script()->pcToOffset(i.pc()));
         } else {
-            sprinter.printf(" (%p)\n", i.pc());
+            out.printf(" (%p)\n", i.pc());
         }
     }
-    out.printf("%s", sprinter.string());
-#ifdef XP_WIN32
-    if (IsDebuggerPresent())
-        OutputDebugStringA(sprinter.string());
-#endif
+
 }
 
 JS_FRIEND_API(void)
