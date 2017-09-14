@@ -16,11 +16,14 @@ const ALTERNATIVE_COUNTRY_NAMES = {
   "US": ["US", "United States of America", "United States", "America", "U.S.", "USA", "U.S.A.", "U.S.A"],
 };
 
+const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.FormAutofillUtils = {
   get AUTOFILL_FIELDS_THRESHOLD() { return 3; },
+  get isAutofillEnabled() { return this.isAutofillAddressesEnabled; },
 
   _fieldNameInfo: {
     "name": "name",
@@ -142,12 +145,13 @@ this.FormAutofillUtils = {
       return false;
     }
 
-    if (element instanceof Ci.nsIDOMHTMLInputElement) {
+    let tagName = element.tagName;
+    if (tagName == "INPUT") {
       // `element.type` can be recognized as `text`, if it's missing or invalid.
       if (!this.ALLOWED_TYPES.includes(element.type)) {
         return false;
       }
-    } else if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+    } else if (tagName != "SELECT") {
       return false;
     }
 
@@ -426,3 +430,6 @@ this.FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
   return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
+                                      "isAutofillAddressesEnabled", ENABLED_AUTOFILL_ADDRESSES_PREF);
