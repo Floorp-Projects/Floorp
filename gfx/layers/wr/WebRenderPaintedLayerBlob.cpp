@@ -86,7 +86,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
     mImageBounds = visibleRegion.GetBounds();
   }
 
-  ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);

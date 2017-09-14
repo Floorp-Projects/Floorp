@@ -57,7 +57,6 @@ private:
   bool SetupExternalImages();
   bool UpdateImageClient();
   void CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuilder,
-                                  wr::IpcResourceUpdateQueue& aResources,
                                   const StackingContextHelper& aSc);
   void ClearWrResources();
 };
