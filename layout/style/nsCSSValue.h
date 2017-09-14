@@ -262,7 +262,7 @@ struct ImageValue final : public URLValueData
 
   void Initialize(nsIDocument* aDocument);
 
-  // XXXheycam We should have our own SizeOfIncludingThis method.
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
   ~ImageValue();
