@@ -589,7 +589,6 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
                                             mozilla::wr::DisplayListBuilder& aBuilder,
                                             mozilla::wr::IpcResourceUpdateQueue& aResources,
                                             const mozilla::layers::StackingContextHelper& aSc,
-                                            nsTArray<WebRenderParentCommand>& aParentCommands,
                                             mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                             mozilla::layers::WebRenderLayerManager* aManager,
                                             nsDisplayItem* aItem,
@@ -737,7 +736,6 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
                                                     mozilla::wr::DisplayListBuilder& aBuilder,
                                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                     const mozilla::layers::StackingContextHelper& aSc,
-                                                    nsTArray<WebRenderParentCommand>& aParentCommands,
                                                     WebRenderDisplayItemLayer*       aLayer,
                                                     mozilla::layers::WebRenderLayerManager* aManager,
                                                     nsDisplayItem*       aItem,
@@ -756,7 +754,7 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
       mSize.width <= 0 || mSize.height <= 0) {
     return DrawResult::SUCCESS;
   }
-  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aResources, aSc, aParentCommands,
+  return BuildWebRenderDisplayItems(aPresContext, aBuilder, aResources, aSc,
                                     aLayer, aManager, aItem,
                                     aDirty, aDest, aFill, aAnchor, aRepeatSize,
                                     CSSIntRect(0, 0,
