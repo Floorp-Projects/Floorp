@@ -240,26 +240,39 @@ impl Example for App {
         );
 
         let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), layout_size);
-        builder.push_stacking_context(api::ScrollPolicy::Scrollable,
-                                      bounds,
+        let info = api::LayoutPrimitiveInfo {
+            rect: bounds,
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_stacking_context(&info,
+                                      api::ScrollPolicy::Scrollable,
                                       None,
                                       api::TransformStyle::Flat,
                                       None,
                                       api::MixBlendMode::Normal,
                                       Vec::new());
 
+        let info = api::LayoutPrimitiveInfo {
+            rect: (30, 30).by(500, 500),
+            local_clip: Some(api::LocalClip::from(bounds)),
+            is_backface_visible: true,
+        };
         builder.push_image(
-            (30, 30).by(500, 500),
-            Some(api::LocalClip::from(bounds)),
+            &info,
             api::LayoutSize::new(500.0, 500.0),
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
             blob_img1,
         );
 
+        let info = api::LayoutPrimitiveInfo {
+            rect: (600, 600).by(200, 200),
+            local_clip: Some(api::LocalClip::from(bounds)),
+            is_backface_visible: true,
+        };
         builder.push_image(
-            (600, 600).by(200, 200),
-            Some(api::LocalClip::from(bounds)),
+            &info,
             api::LayoutSize::new(200.0, 200.0),
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,

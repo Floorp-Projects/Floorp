@@ -232,9 +232,9 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
   }
 
   if (stateSecure) {
-    is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-secure\")",
+    is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
       "CC using secure icon");
-    is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-secure\")",
+    is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
       "CC using secure icon");
   }
 
@@ -245,15 +245,15 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
       is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/mcb-disabled.svg\")",
         "CC using active loaded icon");
     } else if (activeBlocked || passiveLoaded) {
-      is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-degraded\")",
+      is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
         "CC using degraded icon");
-      is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-degraded\")",
+      is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
         "CC using degraded icon");
     } else {
       // There is a case here with weak ciphers, but no bc tests are handling this yet.
-      is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-degraded\")",
+      is(securityViewBG, "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
         "CC using degraded icon");
-      is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-degraded\")",
+      is(securityContentBG, "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
         "CC using degraded icon");
     }
   }

@@ -66,6 +66,7 @@ impl ToComputedValue for specified::Length {
 }
 
 #[allow(missing_docs)]
+#[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[derive(Clone, Copy, Debug, PartialEq, ToAnimatedZero)]
 pub struct CalcLengthOrPercentage {
@@ -293,6 +294,7 @@ impl ToComputedValue for specified::CalcLengthOrPercentage {
 
 #[allow(missing_docs)]
 #[animate(fallback = "Self::animate_fallback")]
+#[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[css(derive_debug)]
 #[derive(Animate, Clone, ComputeSquaredDistance, Copy, PartialEq)]
@@ -450,6 +452,7 @@ impl ToComputedValue for specified::LengthOrPercentage {
 
 #[allow(missing_docs)]
 #[animate(fallback = "Self::animate_fallback")]
+#[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[css(derive_debug)]
 #[derive(Animate, Clone, ComputeSquaredDistance, Copy, PartialEq, ToCss)]
@@ -681,6 +684,7 @@ impl NonNegativeLengthOrPercentage {
 }
 
 /// The computed `<length>` value.
+#[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
 #[cfg_attr(feature = "servo", derive(Deserialize, HeapSizeOf, Serialize))]
 #[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, PartialEq, PartialOrd)]
 #[derive(ToAnimatedValue, ToAnimatedZero)]
@@ -862,6 +866,10 @@ impl ToComputedValue for specified::MozLength {
                 MozLength::LengthOrPercentageOrAuto(lopoa.to_computed_value(context))
             }
             specified::MozLength::ExtremumLength(ref ext) => {
+                debug_assert!(context.for_non_inherited_property.is_some(),
+                              "should check whether we're a non-inherited property");
+                context.rule_cache_conditions.borrow_mut()
+                    .set_writing_mode_dependency(context.builder.writing_mode);
                 MozLength::ExtremumLength(ext.clone())
             }
         }

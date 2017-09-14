@@ -54,16 +54,16 @@ ClipData fetch_clip(ivec2 address) {
 }
 
 void main(void) {
-    CacheClipInstance cci = fetch_clip_item(gl_InstanceID);
-    ClipArea area = fetch_clip_area(cci.render_task_index);
-    Layer layer = fetch_layer(cci.layer_index);
-    ClipData clip = fetch_clip(cci.clip_data_address);
+    ClipMaskInstance cmi = fetch_clip_item();
+    ClipArea area = fetch_clip_area(cmi.render_task_address);
+    Layer layer = fetch_layer(cmi.layer_address);
+    ClipData clip = fetch_clip(cmi.clip_data_address);
     RectWithSize local_rect = clip.rect.rect;
 
     ClipVertexInfo vi = write_clip_tile_vertex(local_rect,
                                                layer,
                                                area,
-                                               cci.segment);
+                                               cmi.segment);
     vPos = vi.local_pos;
 
     vClipMode = clip.rect.mode.x;

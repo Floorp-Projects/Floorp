@@ -20,6 +20,7 @@ use parallel::{STACK_SAFETY_MARGIN_KB, STYLE_THREAD_STACK_SIZE_KB};
 #[cfg(feature = "servo")] use parking_lot::RwLock;
 use properties::ComputedValues;
 #[cfg(feature = "servo")] use properties::PropertyId;
+use rule_cache::RuleCache;
 use rule_tree::StrongRuleNode;
 use selector_parser::{EAGER_PSEUDO_COUNT, SnapshotMap};
 use selectors::matching::ElementSelectorFlags;
@@ -313,6 +314,9 @@ pub struct TraversalStatistics {
     pub elements_matched: u32,
     /// The number of cache hits from the StyleSharingCache.
     pub styles_shared: u32,
+    /// The number of styles reused via rule node comparison from the
+    /// StyleSharingCache.
+    pub styles_reused: u32,
     /// The number of selectors in the stylist.
     pub selectors: u32,
     /// The number of revalidation selectors.
@@ -347,6 +351,7 @@ impl<'a> ops::Add for &'a TraversalStatistics {
             elements_styled: self.elements_styled + other.elements_styled,
             elements_matched: self.elements_matched + other.elements_matched,
             styles_shared: self.styles_shared + other.styles_shared,
+            styles_reused: self.styles_reused + other.styles_reused,
             selectors: 0,
             revalidation_selectors: 0,
             dependency_selectors: 0,
@@ -374,6 +379,7 @@ impl fmt::Display for TraversalStatistics {
         writeln!(f, "[PERF],elements_styled,{}", self.elements_styled)?;
         writeln!(f, "[PERF],elements_matched,{}", self.elements_matched)?;
         writeln!(f, "[PERF],styles_shared,{}", self.styles_shared)?;
+        writeln!(f, "[PERF],styles_reused,{}", self.styles_reused)?;
         writeln!(f, "[PERF],selectors,{}", self.selectors)?;
         writeln!(f, "[PERF],revalidation_selectors,{}", self.revalidation_selectors)?;
         writeln!(f, "[PERF],dependency_selectors,{}", self.dependency_selectors)?;
@@ -680,6 +686,8 @@ impl StackLimitChecker {
 pub struct ThreadLocalStyleContext<E: TElement> {
     /// A cache to share style among siblings.
     pub sharing_cache: StyleSharingCache<E>,
+    /// A cache from matched properties to elements that match those.
+    pub rule_cache: RuleCache,
     /// The bloom filter used to fast-reject selector-matching.
     pub bloom_filter: StyleBloom<E>,
     /// A channel on which new animations that have been triggered by style
@@ -717,6 +725,7 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
     pub fn new(shared: &SharedStyleContext) -> Self {
         ThreadLocalStyleContext {
             sharing_cache: StyleSharingCache::new(),
+            rule_cache: RuleCache::new(),
             bloom_filter: StyleBloom::new(),
             new_animations_sender: shared.local_context_creation_data.lock().unwrap().new_animations_sender.clone(),
             tasks: SequentialTaskList(Vec::new()),
@@ -734,6 +743,7 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
     pub fn new(shared: &SharedStyleContext) -> Self {
         ThreadLocalStyleContext {
             sharing_cache: StyleSharingCache::new(),
+            rule_cache: RuleCache::new(),
             bloom_filter: StyleBloom::new(),
             tasks: SequentialTaskList(Vec::new()),
             selector_flags: SelectorFlagsMap::new(),

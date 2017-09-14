@@ -6,15 +6,15 @@ use api::{BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode, Cli
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExtendMode, FontInstance, FontRenderMode};
 use api::{GlyphInstance, GlyphOptions, GradientStop};
-use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize};
+use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize};
 use api::{LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation, LineStyle};
 use api::{LocalClip, PipelineId, RepeatMode, ScrollSensitivity, SubpixelDirection, TextShadow};
 use api::{TileOffset, TransformStyle, WorldPixel, YuvColorSpace, YuvData};
 use app_units::Au;
-use clip::{ClipMode, ClipRegion, ClipSource, ClipSources};
+use clip::{ClipMode, ClipRegion, ClipSource, ClipSources, ClipStore};
 use frame::FrameId;
 use gpu_cache::GpuCache;
-use internal_types::{FastHashMap, HardwareCompositeOp};
+use internal_types::{FastHashMap, FastHashSet, HardwareCompositeOp};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
 use prim_store::{PrimitiveContainer, PrimitiveIndex};
@@ -110,6 +110,7 @@ pub struct FrameBuilder {
     screen_size: DeviceUintSize,
     background_color: Option<ColorF>,
     prim_store: PrimitiveStore,
+    pub clip_store: ClipStore,
     cmds: Vec<PrimitiveRunCmd>,
     config: FrameBuilderConfig,
 
@@ -134,7 +135,6 @@ pub struct FrameBuilder {
 
     /// Whether or not we've pushed a root stacking context for the current pipeline.
     has_root_stacking_context: bool,
-
 }
 
 impl FrameBuilder {
@@ -155,6 +155,7 @@ impl FrameBuilder {
                     reference_frame_stack: recycle_vec(prev.reference_frame_stack),
                     stacking_context_stack: recycle_vec(prev.stacking_context_stack),
                     prim_store: prev.prim_store.recycle(),
+                    clip_store: prev.clip_store.recycle(),
                     screen_size,
                     background_color,
                     config,
@@ -173,6 +174,7 @@ impl FrameBuilder {
                     reference_frame_stack: Vec::new(),
                     stacking_context_stack: Vec::new(),
                     prim_store: PrimitiveStore::new(),
+                    clip_store: ClipStore::new(),
                     screen_size,
                     background_color,
                     config,
@@ -196,21 +198,22 @@ impl FrameBuilder {
     /// sub-primitives.
     fn create_primitive(&mut self,
                         clip_and_scroll: ClipAndScrollInfo,
-                        rect: &LayerRect,
-                        local_clip: &LocalClip,
+                        info: &LayerPrimitiveInfo,
                         mut clip_sources: Vec<ClipSource>,
                         container: PrimitiveContainer) -> PrimitiveIndex {
         self.create_clip_scroll_group_if_necessary(clip_and_scroll);
 
-        if let &LocalClip::RoundedRect(main, region) = local_clip {
+        let local_clip = info.local_clip.unwrap();
+        if let &LocalClip::RoundedRect(main, region) = &local_clip {
             clip_sources.push(ClipSource::Rectangle(main));
             clip_sources.push(ClipSource::RoundedRectangle(region.rect, region.radii, ClipMode::Clip));
         }
 
-        let clip_sources = ClipSources::new(clip_sources);
+        let clip_sources = self.clip_store.insert(ClipSources::new(clip_sources));
 
-        let prim_index = self.prim_store.add_primitive(rect,
+        let prim_index = self.prim_store.add_primitive(&info.rect,
                                                        &local_clip.clip_rect(),
+                                                       info.is_backface_visible,
                                                        clip_sources,
                                                        container);
 
@@ -240,13 +243,11 @@ impl FrameBuilder {
     /// to the draw list.
     pub fn add_primitive(&mut self,
                          clip_and_scroll: ClipAndScrollInfo,
-                         rect: &LayerRect,
-                         local_clip: &LocalClip,
+                         info: &LayerPrimitiveInfo,
                          clip_sources: Vec<ClipSource>,
                          container: PrimitiveContainer) -> PrimitiveIndex {
         let prim_index = self.create_primitive(clip_and_scroll,
-                                               rect,
-                                               local_clip,
+                                               info,
                                                clip_sources,
                                                container);
 
@@ -277,7 +278,9 @@ impl FrameBuilder {
                                  reference_frame_offset: &LayerVector2D,
                                  pipeline_id: PipelineId,
                                  composite_ops: CompositeOps,
-                                 transform_style: TransformStyle) {
+                                 transform_style: TransformStyle,
+                                 is_backface_visible: bool,
+                                 is_pipeline_root: bool) {
         if let Some(parent_index) = self.stacking_context_stack.last() {
             let parent_is_root = self.stacking_context_store[parent_index.0].is_page_root;
 
@@ -298,9 +301,11 @@ impl FrameBuilder {
         self.stacking_context_store.push(StackingContext::new(pipeline_id,
                                                               *reference_frame_offset,
                                                               !self.has_root_stacking_context,
+                                                              is_pipeline_root,
                                                               reference_frame_id,
                                                               transform_style,
-                                                              composite_ops));
+                                                              composite_ops,
+                                                              is_backface_visible));
         self.has_root_stacking_context = true;
         self.cmds.push(PrimitiveRunCmd::PushStackingContext(stacking_context_index));
         self.stacking_context_stack.push(stacking_context_index);
@@ -402,7 +407,9 @@ impl FrameBuilder {
                          pipeline_id: PipelineId,
                          clip_region: ClipRegion,
                          clip_scroll_tree: &mut ClipScrollTree) {
-        let clip_info = ClipInfo::new(clip_region, PackedLayerIndex(self.packed_layers.len()));
+        let clip_info = ClipInfo::new(clip_region,
+                                      PackedLayerIndex(self.packed_layers.len()),
+                                      &mut self.clip_store);
         let node = ClipScrollNode::new(pipeline_id, parent_id, clip_info);
         clip_scroll_tree.add_node(node, new_node_id);
         self.packed_layers.push(PackedLayer::empty());
@@ -432,10 +439,11 @@ impl FrameBuilder {
     pub fn push_text_shadow(&mut self,
                             shadow: TextShadow,
                             clip_and_scroll: ClipAndScrollInfo,
-                            local_clip: &LocalClip) {
+                            info: &LayerPrimitiveInfo) {
         let prim = TextShadowPrimitiveCpu {
             shadow,
             primitives: Vec::new(),
+            render_task_id: None,
         };
 
         // Create an empty text-shadow primitive. Insert it into
@@ -443,8 +451,7 @@ impl FrameBuilder {
         // before any visual text elements that are added as
         // part of this text-shadow context.
         let prim_index = self.add_primitive(clip_and_scroll,
-                                            &LayerRect::zero(),
-                                            local_clip,
+                                            info,
                                             Vec::new(),
                                             PrimitiveContainer::TextShadow(prim));
 
@@ -468,8 +475,7 @@ impl FrameBuilder {
 
     pub fn add_solid_rectangle(&mut self,
                                clip_and_scroll: ClipAndScrollInfo,
-                               rect: &LayerRect,
-                               local_clip: &LocalClip,
+                               info: &LayerPrimitiveInfo,
                                color: &ColorF,
                                flags: PrimitiveFlags) {
         let prim = RectanglePrimitive {
@@ -477,8 +483,7 @@ impl FrameBuilder {
         };
 
         let prim_index = self.add_primitive(clip_and_scroll,
-                                            rect,
-                                            local_clip,
+                                            info,
                                             Vec::new(),
                                             PrimitiveContainer::Rectangle(prim));
 
@@ -496,7 +501,7 @@ impl FrameBuilder {
 
     pub fn add_line(&mut self,
                     clip_and_scroll: ClipAndScrollInfo,
-                    local_clip: &LocalClip,
+                    info: &LayerPrimitiveInfo,
                     baseline: f32,
                     start: f32,
                     end: f32,
@@ -532,16 +537,18 @@ impl FrameBuilder {
         for shadow in fast_text_shadow_prims {
             let mut line = line.clone();
             line.color = shadow.color;
+            let mut info = info.clone();
+            info.rect = new_rect.translate(&shadow.offset);
             self.add_primitive(clip_and_scroll,
-                               &new_rect.translate(&shadow.offset),
-                               local_clip,
+                               &info,
                                Vec::new(),
                                PrimitiveContainer::Line(line));
         }
 
+        let mut info = info.clone();
+        info.rect = new_rect;
         let prim_index = self.create_primitive(clip_and_scroll,
-                                               &new_rect,
-                                               local_clip,
+                                               &info,
                                                Vec::new(),
                                                PrimitiveContainer::Line(line));
 
@@ -566,11 +573,11 @@ impl FrameBuilder {
 
     pub fn add_border(&mut self,
                       clip_and_scroll: ClipAndScrollInfo,
-                      rect: LayerRect,
-                      local_clip: &LocalClip,
+                      info: &LayerPrimitiveInfo,
                       border_item: &BorderDisplayItem,
                       gradient_stops: ItemRange<GradientStop>,
                       gradient_stops_count: usize) {
+        let rect = info.rect;
         let create_segments = |outset: SideOffsets2D<f32>| {
             // Calculate the modified rect as specific by border-image-outset
             let origin = LayerPoint::new(rect.origin.x - outset.left,
@@ -712,9 +719,10 @@ impl FrameBuilder {
                 }
 
                 for segment in segments {
+                    let mut info = info.clone();
+                    info.rect = segment.geom_rect;
                     self.add_image(clip_and_scroll,
-                                   segment.geom_rect,
-                                   local_clip,
+                                   &info,
                                    &segment.stretch_size,
                                    &segment.tile_spacing,
                                    Some(segment.sub_rect),
@@ -724,19 +732,19 @@ impl FrameBuilder {
                 }
             }
             BorderDetails::Normal(ref border) => {
-                self.add_normal_border(&rect,
+                self.add_normal_border(info,
                                        border,
                                        &border_item.widths,
-                                       clip_and_scroll,
-                                       local_clip);
+                                       clip_and_scroll);
             }
             BorderDetails::Gradient(ref border) => {
                 for segment in create_segments(border.outset) {
                     let segment_rel = segment.origin - rect.origin;
+                    let mut info = info.clone();
+                    info.rect = segment;
 
                     self.add_gradient(clip_and_scroll,
-                                      segment,
-                                      local_clip,
+                                      &info,
                                       border.gradient.start_point - segment_rel,
                                       border.gradient.end_point - segment_rel,
                                       gradient_stops,
@@ -749,10 +757,11 @@ impl FrameBuilder {
             BorderDetails::RadialGradient(ref border) => {
                 for segment in create_segments(border.outset) {
                     let segment_rel = segment.origin - rect.origin;
+                    let mut info = info.clone();
+                    info.rect = segment;
 
                     self.add_radial_gradient(clip_and_scroll,
-                                             segment,
-                                             local_clip,
+                                             &info,
                                              border.gradient.start_center - segment_rel,
                                              border.gradient.start_radius,
                                              border.gradient.end_center - segment_rel,
@@ -769,8 +778,7 @@ impl FrameBuilder {
 
     pub fn add_gradient(&mut self,
                         clip_and_scroll: ClipAndScrollInfo,
-                        rect: LayerRect,
-                        local_clip: &LocalClip,
+                        info: &LayerPrimitiveInfo,
                         start_point: LayerPoint,
                         end_point: LayerPoint,
                         stops: ItemRange<GradientStop>,
@@ -779,15 +787,15 @@ impl FrameBuilder {
                         tile_size: LayerSize,
                         tile_spacing: LayerSize) {
         let tile_repeat = tile_size + tile_spacing;
-        let is_not_tiled = tile_repeat.width >= rect.size.width &&
-                           tile_repeat.height >= rect.size.height;
+        let is_not_tiled = tile_repeat.width >= info.rect.size.width &&
+                           tile_repeat.height >= info.rect.size.height;
 
         let aligned_and_fills_rect = (start_point.x == end_point.x &&
                                       start_point.y.min(end_point.y) <= 0.0 &&
-                                      start_point.y.max(end_point.y) >= rect.size.height) ||
+                                      start_point.y.max(end_point.y) >= info.rect.size.height) ||
                                      (start_point.y == end_point.y &&
                                       start_point.x.min(end_point.x) <= 0.0 &&
-                                      start_point.x.max(end_point.x) >= rect.size.width);
+                                      start_point.x.max(end_point.x) >= info.rect.size.width);
 
         // Fast path for clamped, axis-aligned gradients, with gradient lines intersecting all of rect:
         let aligned = extend_mode == ExtendMode::Clamp && is_not_tiled && aligned_and_fills_rect;
@@ -830,13 +838,12 @@ impl FrameBuilder {
             PrimitiveContainer::AngleGradient(gradient_cpu)
         };
 
-        self.add_primitive(clip_and_scroll, &rect, local_clip, Vec::new(), prim);
+        self.add_primitive(clip_and_scroll, info, Vec::new(), prim);
     }
 
     pub fn add_radial_gradient(&mut self,
                                clip_and_scroll: ClipAndScrollInfo,
-                               rect: LayerRect,
-                               local_clip: &LocalClip,
+                               info: &LayerPrimitiveInfo,
                                start_center: LayerPoint,
                                start_radius: f32,
                                end_center: LayerPoint,
@@ -860,8 +867,7 @@ impl FrameBuilder {
         };
 
         self.add_primitive(clip_and_scroll,
-                           &rect,
-                           local_clip,
+                           info,
                            Vec::new(),
                            PrimitiveContainer::RadialGradient(radial_gradient_cpu));
     }
@@ -869,13 +875,13 @@ impl FrameBuilder {
     pub fn add_text(&mut self,
                     clip_and_scroll: ClipAndScrollInfo,
                     run_offset: LayoutVector2D,
-                    rect: LayerRect,
-                    local_clip: &LocalClip,
+                    info: &LayerPrimitiveInfo,
                     font: &FontInstance,
                     color: &ColorF,
                     glyph_range: ItemRange<GlyphInstance>,
                     glyph_count: usize,
                     glyph_options: Option<GlyphOptions>) {
+        let rect = info.rect;
         // Trivial early out checks
         if font.size.0 <= 0 {
             return
@@ -971,9 +977,11 @@ impl FrameBuilder {
             }
         }
         for text_prim in fast_text_shadow_prims {
+            let rect = info.rect;
+            let mut info = info.clone();
+            info.rect = rect.translate(&text_prim.offset);
             self.add_primitive(clip_and_scroll,
-                               &rect.translate(&text_prim.offset),
-                               local_clip,
+                               &info,
                                Vec::new(),
                                PrimitiveContainer::TextRun(text_prim));
         }
@@ -981,8 +989,7 @@ impl FrameBuilder {
         // Create (and add to primitive store) the primitive that will be
         // used for both the visual element and also the shadow(s).
         let prim_index = self.create_primitive(clip_and_scroll,
-                                               &rect,
-                                               local_clip,
+                                               info,
                                                Vec::new(),
                                                PrimitiveContainer::TextRun(prim));
 
@@ -1015,9 +1022,8 @@ impl FrameBuilder {
 
     pub fn fill_box_shadow_rect(&mut self,
                                 clip_and_scroll: ClipAndScrollInfo,
-                                box_bounds: &LayerRect,
+                                info: &LayerPrimitiveInfo,
                                 bs_rect: LayerRect,
-                                local_clip: &LocalClip,
                                 color: &ColorF,
                                 border_radius: f32,
                                 clip_mode: BoxShadowClipMode) {
@@ -1025,7 +1031,7 @@ impl FrameBuilder {
         let (bs_clip_mode, rect_to_draw) = match clip_mode {
             BoxShadowClipMode::Outset |
             BoxShadowClipMode::None => (ClipMode::Clip, bs_rect),
-            BoxShadowClipMode::Inset => (ClipMode::ClipOut, *box_bounds),
+            BoxShadowClipMode::Inset => (ClipMode::ClipOut, info.rect),
         };
 
         let box_clip_mode = !bs_clip_mode;
@@ -1033,23 +1039,24 @@ impl FrameBuilder {
         // Clip the inside and then the outside of the box.
         let border_radius = BorderRadius::uniform(border_radius);
         let extra_clips = vec![ClipSource::RoundedRectangle(bs_rect, border_radius, bs_clip_mode),
-                               ClipSource::RoundedRectangle(*box_bounds, border_radius, box_clip_mode)];
+                               ClipSource::RoundedRectangle(info.rect, border_radius, box_clip_mode)];
 
         let prim = RectanglePrimitive {
             color: *color,
         };
 
+        let mut info = info.clone();
+        info.rect = rect_to_draw;
+
         self.add_primitive(clip_and_scroll,
-                           &rect_to_draw,
-                           local_clip,
+                           &info,
                            extra_clips,
                            PrimitiveContainer::Rectangle(prim));
     }
 
     pub fn add_box_shadow(&mut self,
                           clip_and_scroll: ClipAndScrollInfo,
-                          box_bounds: &LayerRect,
-                          local_clip: &LocalClip,
+                          info: &LayerPrimitiveInfo,
                           box_offset: &LayerVector2D,
                           color: &ColorF,
                           blur_radius: f32,
@@ -1068,8 +1075,8 @@ impl FrameBuilder {
             BoxShadowClipMode::Inset => -spread_radius,
         };
 
-        let bs_rect = box_bounds.translate(box_offset)
-                                .inflate(inflate_amount, inflate_amount);
+        let bs_rect = info.rect.translate(box_offset)
+                               .inflate(inflate_amount, inflate_amount);
         // If we have negative inflate amounts.
         // Have to explicitly check this since euclid::TypedRect relies on negative rects
         let bs_rect_empty = bs_rect.size.width <= 0.0 || bs_rect.size.height <= 0.0;
@@ -1078,8 +1085,7 @@ impl FrameBuilder {
         if (blur_radius == 0.0 && spread_radius == 0.0 && clip_mode == BoxShadowClipMode::None)
            || bs_rect_empty {
             self.add_solid_rectangle(clip_and_scroll,
-                                     box_bounds,
-                                     local_clip,
+                                     info,
                                      color,
                                      PrimitiveFlags::None);
             return;
@@ -1087,9 +1093,8 @@ impl FrameBuilder {
 
         if blur_radius == 0.0 && border_radius != 0.0 {
             self.fill_box_shadow_rect(clip_and_scroll,
-                                      box_bounds,
+                                      info,
                                       bs_rect,
-                                      local_clip,
                                       color,
                                       border_radius,
                                       clip_mode);
@@ -1117,8 +1122,8 @@ impl FrameBuilder {
                 // the original box in order to draw where the border
                 // corners are. A clip-out mask applied below will
                 // ensure that we don't draw on the box itself.
-                let inner_box_bounds = box_bounds.inflate(-border_radius,
-                                                          -border_radius);
+                let inner_box_bounds = info.rect.inflate(-border_radius,
+                                                         -border_radius);
                 // For outset shadows, subtracting the element rectangle
                 // from the outer rectangle gives the rectangles we need
                 // to draw. In the simple case (no blur radius), we can
@@ -1148,10 +1153,10 @@ impl FrameBuilder {
                 //           the element rect?
                 let mut rects = Vec::new();
                 if edge_size == 0.0 {
-                    subtract_rect(box_bounds, &bs_rect, &mut rects);
+                    subtract_rect(&info.rect, &bs_rect, &mut rects);
                     BoxShadowKind::Simple(rects)
                 } else {
-                    rects.push(*box_bounds);
+                    rects.push(info.rect);
                     BoxShadowKind::Shadow(rects)
                 }
             }
@@ -1160,9 +1165,10 @@ impl FrameBuilder {
         match shadow_kind {
             BoxShadowKind::Simple(rects) => {
                 for rect in &rects {
+                    let mut info = info.clone();
+                    info.rect = *rect;
                     self.add_solid_rectangle(clip_and_scroll,
-                                             rect,
-                                             local_clip,
+                                             &info,
                                              color,
                                              PrimitiveFlags::None)
                 }
@@ -1171,9 +1177,8 @@ impl FrameBuilder {
                 assert!(blur_radius > 0.0);
                 if clip_mode == BoxShadowClipMode::Inset {
                     self.fill_box_shadow_rect(clip_and_scroll,
-                                              box_bounds,
+                                              info,
                                               bs_rect,
-                                              local_clip,
                                               color,
                                               border_radius,
                                               clip_mode);
@@ -1193,13 +1198,13 @@ impl FrameBuilder {
 
                 let mut extra_clips = Vec::new();
                 if border_radius >= 0.0 {
-                    extra_clips.push(ClipSource::RoundedRectangle(*box_bounds,
+                    extra_clips.push(ClipSource::RoundedRectangle(info.rect,
                                                                   BorderRadius::uniform(border_radius),
                                                                   extra_clip_mode));
                 }
 
                 let prim_cpu = BoxShadowPrimitiveCpu {
-                    src_rect: *box_bounds,
+                    src_rect: info.rect,
                     bs_rect,
                     color: *color,
                     blur_radius,
@@ -1207,11 +1212,13 @@ impl FrameBuilder {
                     edge_size,
                     inverted,
                     rects,
+                    render_task_id: None,
                 };
 
+                let mut info = info.clone();
+                info.rect = outer_rect;
                 self.add_primitive(clip_and_scroll,
-                                   &outer_rect,
-                                   local_clip,
+                                   &info,
                                    extra_clips,
                                    PrimitiveContainer::BoxShadow(prim_cpu));
             }
@@ -1220,8 +1227,7 @@ impl FrameBuilder {
 
     pub fn add_image(&mut self,
                      clip_and_scroll: ClipAndScrollInfo,
-                     rect: LayerRect,
-                     local_clip: &LocalClip,
+                     info: &LayerPrimitiveInfo,
                      stretch_size: &LayerSize,
                      tile_spacing: &LayerSize,
                      sub_rect: Option<TexelRect>,
@@ -1244,16 +1250,14 @@ impl FrameBuilder {
         };
 
         self.add_primitive(clip_and_scroll,
-                           &rect,
-                           local_clip,
+                           info,
                            Vec::new(),
                            PrimitiveContainer::Image(prim_cpu));
     }
 
     pub fn add_yuv_image(&mut self,
                          clip_and_scroll: ClipAndScrollInfo,
-                         rect: LayerRect,
-                         clip_rect: &LocalClip,
+                         info: &LayerPrimitiveInfo,
                          yuv_data: YuvData,
                          color_space: YuvColorSpace,
                          image_rendering: ImageRendering) {
@@ -1271,12 +1275,11 @@ impl FrameBuilder {
             format,
             color_space,
             image_rendering,
-            gpu_block: [rect.size.width, rect.size.height, 0.0, 0.0].into(),
+            gpu_block: [info.rect.size.width, info.rect.size.height, 0.0, 0.0].into(),
         };
 
         self.add_primitive(clip_and_scroll,
-                           &rect,
-                           clip_rect,
+                           info,
                            Vec::new(),
                            PrimitiveContainer::YuvImage(prim_cpu));
     }
@@ -1354,14 +1357,16 @@ impl FrameBuilder {
     fn build_render_task(&mut self,
                          clip_scroll_tree: &ClipScrollTree,
                          gpu_cache: &mut GpuCache,
-                         render_tasks: &mut RenderTaskTree)
+                         render_tasks: &mut RenderTaskTree,
+                         output_pipelines: &FastHashSet<PipelineId>)
                          -> RenderTaskId {
         profile_scope!("build_render_task");
 
         let mut next_z = 0;
         let mut sc_stack: Vec<StackingContextIndex> = Vec::new();
         let mut current_task = RenderTask::new_alpha_batch(DeviceIntPoint::zero(),
-                                                           RenderTaskLocation::Fixed);
+                                                           RenderTaskLocation::Fixed,
+                                                           None);
         // A stack of the alpha batcher tasks. We create them on the way down,
         // and then actually populate with items and dependencies on the way up.
         let mut alpha_task_stack = Vec::new();
@@ -1393,9 +1398,17 @@ impl FrameBuilder {
                     let stacking_context_rect = &stacking_context.screen_bounds;
                     let composite_count = stacking_context.composite_ops.count();
 
+                    // If this stacking context if the root of a pipeline, and the caller
+                    // has requested it as an output frame, create a render task to isolate it.
+                    if stacking_context.is_pipeline_root && output_pipelines.contains(&stacking_context.pipeline_id) {
+                        alpha_task_stack.push(current_task);
+                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect,
+                                                                           Some(stacking_context.pipeline_id));
+                    }
+
                     if stacking_context.isolation == ContextIsolation::Full && composite_count == 0 {
                         alpha_task_stack.push(current_task);
-                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect);
+                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect, None);
                     }
 
                     if parent_isolation == Some(ContextIsolation::Items) ||
@@ -1405,7 +1418,7 @@ impl FrameBuilder {
                             preserve_3d_map_stack.push(FastHashMap::default());
                         }
                         alpha_task_stack.push(current_task);
-                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect);
+                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect, None);
                         //Note: technically, we shouldn't make a new alpha task for "preserve-3d" contexts
                         // that have no child items (only other stacking contexts). However, we don't know if
                         // there are any items at this time (in `PushStackingContext`).
@@ -1420,7 +1433,7 @@ impl FrameBuilder {
 
                     for _ in 0..composite_count {
                         alpha_task_stack.push(current_task);
-                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect);
+                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect, None);
                     }
                 }
                 PrimitiveRunCmd::PopStackingContext => {
@@ -1516,6 +1529,19 @@ impl FrameBuilder {
                         preserve_3d_map_stack.pop();
                         next_z += 1;
                     }
+
+                    if stacking_context.is_pipeline_root && output_pipelines.contains(&stacking_context.pipeline_id) {
+                        let mut prev_task = alpha_task_stack.pop().unwrap();
+                        let current_task_id = render_tasks.add(current_task);
+                        let item = AlphaRenderItem::HardwareComposite(stacking_context_index,
+                                                                      current_task_id,
+                                                                      HardwareCompositeOp::PremultipliedAlpha,
+                                                                      next_z);
+                        next_z += 1;
+                        prev_task.as_alpha_batch_mut().items.push(item);
+                        prev_task.children.push(current_task_id);
+                        current_task = prev_task;
+                    }
                 }
                 PrimitiveRunCmd::PrimitiveRun(first_prim_index, prim_count, clip_and_scroll) => {
                     let stacking_context_index = *sc_stack.last().unwrap();
@@ -1535,16 +1561,7 @@ impl FrameBuilder {
                         let prim_index = PrimitiveIndex(first_prim_index.0 + i);
 
                         if self.prim_store.cpu_bounding_rects[prim_index.0].is_some() {
-                            let prim_metadata = self.prim_store.get_metadata(prim_index);
-
-                            // Add any dynamic render tasks needed to render this primitive
-                            if let Some(render_task_id) = prim_metadata.render_task_id {
-                                current_task.children.push(render_task_id);
-                            }
-                            if let Some(clip_task_id) = prim_metadata.clip_task_id {
-                                current_task.children.push(clip_task_id);
-                            }
-
+                            self.prim_store.add_render_tasks_for_prim(prim_index, &mut current_task);
                             let item = AlphaRenderItem::Primitive(Some(group_index), prim_index, next_z);
                             current_task.as_alpha_batch_mut().items.push(item);
                             next_z += 1;
@@ -1566,6 +1583,7 @@ impl FrameBuilder {
                  clip_scroll_tree: &mut ClipScrollTree,
                  display_lists: &DisplayListMap,
                  device_pixel_ratio: f32,
+                 output_pipelines: &FastHashSet<PipelineId>,
                  texture_cache_profile: &mut TextureCacheProfileCounters,
                  gpu_cache_profile: &mut GpuCacheProfileCounters)
                  -> Frame {
@@ -1602,7 +1620,10 @@ impl FrameBuilder {
                                                       &mut profile_counters,
                                                       device_pixel_ratio);
 
-        let main_render_task_id = self.build_render_task(clip_scroll_tree, gpu_cache, &mut render_tasks);
+        let main_render_task_id = self.build_render_task(clip_scroll_tree,
+                                                         gpu_cache,
+                                                         &mut render_tasks,
+                                                         output_pipelines);
 
         let mut required_pass_count = 0;
         render_tasks.max_depth(main_render_task_id, 0, &mut required_pass_count);
@@ -1631,7 +1652,7 @@ impl FrameBuilder {
                 resource_cache,
             };
 
-            pass.build(&ctx, gpu_cache, &mut render_tasks, &mut deferred_resolves);
+            pass.build(&ctx, gpu_cache, &mut render_tasks, &mut deferred_resolves, &self.clip_store);
 
             profile_counters.passes.inc();
             profile_counters.color_targets.add(pass.color_targets.target_count());
@@ -1764,10 +1785,11 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 None
             };
 
-            node_clip_info.clip_sources.update(&transform,
-                                               self.gpu_cache,
-                                               self.resource_cache,
-                                               self.device_pixel_ratio);
+            let clip_sources = self.frame_builder.clip_store.get_mut(&node_clip_info.clip_sources);
+            clip_sources.update(&transform,
+                                self.gpu_cache,
+                                self.resource_cache,
+                                self.device_pixel_ratio);
         }
     }
 
@@ -1876,9 +1898,18 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                     next_node_needs_region_mask |= !info.transform.preserves_2d_axis_alignment();
                     continue
                 },
-                NodeType::Clip(ref clip) if clip.clip_sources.is_masking() => clip,
-                _ => continue,
+                NodeType::Clip(ref clip) => {
+                    clip
+                }
+                NodeType::StickyFrame(..) | NodeType::ScrollFrame(..) => {
+                    continue;
+                }
             };
+
+            let clip_sources = self.frame_builder.clip_store.get(&clip.clip_sources);
+            if !clip_sources.is_masking() {
+                continue;
+            }
 
             // apply the screen bounds of the clip node
             //Note: these are based on the local combined viewport, so can be tighter
@@ -1889,10 +1920,8 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 }
             }
 
-            let clip_info = clip.clip_sources.clone_mask_cache_info(next_node_needs_region_mask);
-
             // apply the outer device bounds of the clip stack
-            if let Some(ref outer) = clip_info.bounds.outer {
+            if let Some(ref outer) = clip_sources.bounds.outer {
                 bounding_rect = match bounding_rect.intersection(&outer.device_rect) {
                     Some(rect) => rect,
                     None => return None,
@@ -1900,7 +1929,11 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             }
 
             //TODO-LCCR: bake a single LCCR instead of all aligned rects?
-            self.current_clip_stack.push((clip.packed_layer_index, clip_info));
+            self.current_clip_stack.push(ClipWorkItem {
+                layer_index: clip.packed_layer_index,
+                clip_sources: self.frame_builder.clip_store.create_weak_handle(&clip.clip_sources),
+                apply_rectangles: next_node_needs_region_mask,
+            });
             next_node_needs_region_mask = false;
         }
 
@@ -1950,6 +1983,10 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                                              .expect("No display list?");
         debug!("\tclip_bounds {:?}, layer_local_clip {:?}", clip_bounds, packed_layer.local_clip_rect);
 
+        if !stacking_context.is_backface_visible && packed_layer.transform.is_backface_visible() {
+            return;
+        }
+
         for i in 0..prim_count {
             let prim_index = PrimitiveIndex(base_prim_index.0 + i);
             let prim_store = &mut self.frame_builder.prim_store;
@@ -1972,18 +2009,18 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                                                                    self.device_pixel_ratio,
                                                                    display_list,
                                                                    TextRunMode::Normal,
-                                                                   &mut self.render_tasks);
+                                                                   &mut self.render_tasks,
+                                                                   &mut self.frame_builder.clip_store);
 
             stacking_context.screen_bounds = stacking_context.screen_bounds.union(&prim_screen_rect);
             stacking_context.isolated_items_bounds = stacking_context.isolated_items_bounds.union(&prim_local_rect);
 
             // Try to create a mask if we may need to.
-            let clip_task = if prim_metadata.clips.is_masking() {
-                let info = prim_metadata.clips.clone_mask_cache_info(false);
-
+            let prim_clips = self.frame_builder.clip_store.get(&prim_metadata.clip_sources);
+            let clip_task = if prim_clips.is_masking() {
                 // Take into account the actual clip info of the primitive, and
                 // mutate the current bounds accordingly.
-                let mask_rect = match info.bounds.outer {
+                let mask_rect = match prim_clips.bounds.outer {
                     Some(ref outer) => {
                         match prim_screen_rect.intersection(&outer.device_rect) {
                             Some(rect) => rect,
@@ -1993,13 +2030,18 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                     _ => prim_screen_rect,
                 };
 
-                let extra = (packed_layer_index, info);
+                let extra = ClipWorkItem {
+                    layer_index: packed_layer_index,
+                    clip_sources: self.frame_builder.clip_store.create_weak_handle(&prim_metadata.clip_sources),
+                    apply_rectangles: false,
+                };
 
                 RenderTask::new_mask(None,
                                      mask_rect,
                                      &self.current_clip_stack,
                                      Some(extra),
-                                     prim_screen_rect)
+                                     prim_screen_rect,
+                                     &self.frame_builder.clip_store)
             } else if !self.current_clip_stack.is_empty() {
                 // If the primitive doesn't have a specific clip, key the task ID off the
                 // stacking context. This means that two primitives which are only clipped
@@ -2009,7 +2051,8 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                                      clip_bounds,
                                      &self.current_clip_stack,
                                      None,
-                                     prim_screen_rect)
+                                     prim_screen_rect,
+                                     &self.frame_builder.clip_store)
             } else {
                 None
             };

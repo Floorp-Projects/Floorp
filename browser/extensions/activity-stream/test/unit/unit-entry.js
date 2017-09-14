@@ -62,8 +62,11 @@ overrider.set({
       }
     },
     tm: {dispatchToMainThread: cb => cb()},
-    eTLD: {getPublicSuffix() {}},
-    io: {newURI() {}},
+    eTLD: {
+      getBaseDomain({spec}) { return spec.match(/\/([^/]+)/)[1]; },
+      getPublicSuffix() {}
+    },
+    io: {newURI(url) { return {spec: url}; }},
     search: {
       init(cb) { cb(); },
       getVisibleEngines: () => [{identifier: "google"}, {identifier: "bing"}],

@@ -78,25 +78,10 @@ html|input[type="checkbox"]:-moz-focusring + html|label:before {
   }
 }
 
-html|html *,
-xul|page *,
-xul|window * {
-  font-size: 1.25rem;
-}
-
 *|*.header-name {
   font-size: 1.83rem;
 }
 
 *|*.category-name {
   font-size: 1.33rem;
-}
-
-xul|caption > xul|label:not(.dialogTitle) {
-  font-size: 1.42rem;
-}
-
-.tip-caption,
-.help-button {
-  font-size: 1.08rem;
 }

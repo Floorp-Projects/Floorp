@@ -2060,6 +2060,9 @@ void MediaManager::OnDeviceChange() {
   RefPtr<MediaManager> self(this);
   NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
     MOZ_ASSERT(NS_IsMainThread());
+    if (sInShutdown) {
+      return NS_OK;
+    }
     self->DeviceChangeCallback::OnDeviceChange();
 
     // On some Windows machine, if we call EnumertaeRawDevices immediately after receiving

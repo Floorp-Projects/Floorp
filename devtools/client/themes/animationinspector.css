@@ -536,12 +536,12 @@ body {
 }
 
 .animation-target .node-highlighter:hover {
-  filter: url(images/filters.svg#checked-icon-state);
+  filter: var(--theme-icon-checked-filter);
 }
 
 .animation-target .node-highlighter:active,
 .animation-target .node-highlighter.selected {
-  filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
+  filter: var(--theme-icon-checked-filter) brightness(0.9);
 }
 
 /* Inline keyframes info in the timeline */

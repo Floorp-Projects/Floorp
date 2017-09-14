@@ -27,6 +27,9 @@ public class GeckoMenuItem implements MenuItem {
     public static final int SHOW_AS_ACTION_WITH_TEXT = 4;
     public static final int SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW = 8;
 
+    public static final int ITEM_TYPE_DEFAULT = 0x00;
+    public static final int ITEM_TYPE_ICON = 0x01;
+
     // A View that can show a MenuItem should be able to initialize from
     // the properties of the MenuItem.
     public static interface Layout {
@@ -43,6 +46,7 @@ public class GeckoMenuItem implements MenuItem {
 
     private final int mId;
     private final int mOrder;
+    private int mItemType;
     private View mActionView;
     private int mActionEnum;
     private CharSequence mTitle;
@@ -448,6 +452,14 @@ public class GeckoMenuItem implements MenuItem {
             }
         }
         return this;
+    }
+
+    public int getItemType() {
+        return mItemType;
+    }
+
+    public void setItemType(int itemType) {
+        mItemType = itemType;
     }
 
     public boolean invoke() {

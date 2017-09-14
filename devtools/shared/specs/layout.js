@@ -5,7 +5,6 @@
 "use strict";
 
 const { Arg, generateActorSpec, RetVal } = require("devtools/shared/protocol");
-require("devtools/shared/specs/node");
 
 const gridSpec = generateActorSpec({
   typeName: "grid",

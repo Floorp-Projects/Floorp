@@ -29,6 +29,7 @@ describe("Top Sites Feed", () => {
   let clock;
   let fakeNewTabUtils;
   let fakeScreenshot;
+  let filterAdultStub;
   let shortURLStub;
 
   beforeEach(() => {
@@ -48,6 +49,7 @@ describe("Top Sites Feed", () => {
       }
     };
     fakeScreenshot = {getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_SCREENSHOT))};
+    filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url);
     const fakeDedupe = function() {};
     globals.set("NewTabUtils", fakeNewTabUtils);
@@ -56,12 +58,20 @@ describe("Top Sites Feed", () => {
       "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
       "common/Dedupe.jsm": {Dedupe: fakeDedupe},
       "common/Reducers.jsm": {insertPinned, TOP_SITES_SHOWMORE_LENGTH},
+      "lib/FilterAdult.jsm": {filterAdult: filterAdultStub},
       "lib/Screenshots.jsm": {Screenshots: fakeScreenshot},
       "lib/TippyTopProvider.jsm": {TippyTopProvider: FakeTippyTopProvider},
       "lib/ShortURL.jsm": {shortURL: shortURLStub}
     }));
     feed = new TopSitesFeed();
-    feed.store = {dispatch: sinon.spy(), getState() { return {TopSites: {rows: Array(12).fill("site")}}; }};
+    feed.store = {
+      dispatch: sinon.spy(),
+      getState() { return this.state; },
+      state: {
+        Prefs: {values: {filterAdult: false}},
+        TopSites: {rows: Array(12).fill("site")}
+      }
+    };
     feed.dedupe.group = (...sites) => sites;
     links = FAKE_LINKS;
     clock = sinon.useFakeTimers();
@@ -130,6 +140,22 @@ describe("Top Sites Feed", () => {
       assert.notEqual(result[1].url, links[1].url);
       assert.notEqual(result[1].url, links[2].url);
     });
+    it("should not filter out adult sites when pref is false", async() => {
+      await feed.getLinksWithDefaults();
+
+      assert.notCalled(filterAdultStub);
+    });
+    it("should filter out non-pinned adult sites when pref is true", async() => {
+      feed.store.state.Prefs.values.filterAdult = true;
+      fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/"}];
+
+      const result = await feed.getLinksWithDefaults();
+
+      // The stub filters out everything
+      assert.calledOnce(filterAdultStub);
+      assert.equal(result.length, 1);
+      assert.equal(result[0].url, fakeNewTabUtils.pinnedLinks.links[0].url);
+    });
     it("should filter out the defaults that have been blocked", async () => {
       // make sure we only have one top site, and we block the only default site we have to show
       const url = "www.myonlytopsite.com";
@@ -194,7 +220,7 @@ describe("Top Sites Feed", () => {
           "lib/Screenshots.jsm": {Screenshots: fakeScreenshot}
         }));
         sandbox.stub(global.Services.eTLD, "getPublicSuffix").returns("com");
-        feed = new TopSitesFeed();
+        feed = Object.assign(new TopSitesFeed(), {store: feed.store});
       });
       it("should not dedupe pinned sites", async () => {
         fakeNewTabUtils.pinnedLinks.links = [
@@ -263,8 +289,7 @@ describe("Top Sites Feed", () => {
     });
     it("should reuse screenshots for existing links, and call feed.getScreenshot for others", async () => {
       sandbox.stub(feed, "getScreenshot");
-      const rows = [{url: FAKE_LINKS[0].url, screenshot: "foo.jpg"}];
-      feed.store.getState = () => ({TopSites: {rows}});
+      feed.store.state.TopSites.rows = [{url: FAKE_LINKS[0].url, screenshot: "foo.jpg"}];
       await feed.refresh(action);
 
       const results = feed.store.dispatch.firstCall.args[0].data;

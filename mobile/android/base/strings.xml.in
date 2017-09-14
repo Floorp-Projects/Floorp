@@ -216,7 +216,6 @@
   <string name="pref_show_web_fonts_summary">&pref_show_web_fonts_summary2;</string>
 
   <string name="pref_tracking_protection_title">&pref_tracking_protection_title2;</string>
-  <string name="pref_tracking_protection_summary">&pref_tracking_protection_summary3;</string>
   <string name="pref_donottrack_title">&pref_donottrack_title;</string>
   <string name="pref_donottrack_summary">&pref_donottrack_summary;</string>
 

@@ -61,7 +61,6 @@ py2:
         - tools/power/mach_commands.py
         - tools/profiler
         - tools/rb
-        - tools/tryselect
         - tools/update-packaging
         - xpcom
     extensions: ['py']
