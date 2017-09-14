@@ -794,6 +794,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   nsLineLayout* lineLayout = aReflowInput.mLineLayout;
   bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
   bool pushedFrame;
+  aStatus.Reset();
   lineLayout->ReflowFrame(aFrame, aStatus, nullptr, pushedFrame);
 
   if (aStatus.IsInlineBreakBefore()) {
