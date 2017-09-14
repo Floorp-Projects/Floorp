@@ -105,7 +105,8 @@ protected:
     bool mNeedsBold;
     bool mUseSubpixelPositions;
     bool mAllowManualShowGlyphs;
-    static bool mUseClearType;
+
+    static bool sUseClearType;
 };
 
 #endif
