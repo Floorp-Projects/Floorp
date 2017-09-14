@@ -410,7 +410,7 @@
           {
             "name": "info",
             "type": "object",
-            "description": "Information about the context of the menu action and the created menu items",
+            "description": "Information about the context of the menu action and the created menu items. For more information about each property, see contextMenusInternal.OnClickData. The following properties are only set if the extension has host permissions for the given context: linkUrl, linkText, srcUrl, pageUrl, frameUrl, selectionText.",
             "properties": {
               "menuIds": {
                 "description": "A list of IDs of the menu items that were shown.",
@@ -426,8 +426,44 @@
                 "description": "A list of all contexts that apply to the menu.",
                 "type": "array",
                 "items": {"$ref": "ContextType"}
+              },
+              "editable": {
+                "type": "boolean"
+              },
+              "mediaType": {
+                "type": "string",
+                "optional": true
+              },
+              "linkUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "linkText": {
+                "type": "string",
+                "optional": true
+              },
+              "srcUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "pageUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "frameUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "selectionText": {
+                "type": "string",
+                "optional": true
               }
             }
+          },
+          {
+            "name": "tab",
+            "$ref": "tabs.Tab",
+            "description": "The details of the tab where the menu was opened."
           }
         ]
       },

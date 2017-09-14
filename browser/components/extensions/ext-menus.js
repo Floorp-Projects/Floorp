@@ -387,16 +387,9 @@ var gMenuBuilder = {
     if (gShownMenuItems.size === 0 || this.contextData) {
       return;
     }
-    let commonMenuInfo = {
-      contexts: Array.from(getMenuContexts(contextData)),
-    };
-    // TODO(robwu): Add more contextual information.
-    // The menus.onShown event is fired before the user has consciously
-    // interacted with an extension, so beware of privacy implications of
-    // sharing event data without permission checks.
+
     for (let [extension, menuIds] of gShownMenuItems.entries()) {
-      let info = Object.assign({menuIds}, commonMenuInfo);
-      extension.emit("webext-menu-shown", info);
+      extension.emit("webext-menu-shown", menuIds, contextData);
     }
 
     this.contextData = contextData;
@@ -468,6 +461,36 @@ const getMenuContexts = contextData => {
 
   return contexts;
 };
+
+function addMenuEventInfo(info, contextData, includeSensitiveData) {
+  if (contextData.onVideo) {
+    info.mediaType = "video";
+  } else if (contextData.onAudio) {
+    info.mediaType = "audio";
+  } else if (contextData.onImage) {
+    info.mediaType = "image";
+  }
+  if (contextData.frameId !== undefined) {
+    info.frameId = contextData.frameId;
+  }
+  info.editable = contextData.onEditableArea || contextData.onPassword || false;
+  if (includeSensitiveData) {
+    if (contextData.onLink) {
+      info.linkText = contextData.linkText;
+      info.linkUrl = contextData.linkUrl;
+    }
+    if (contextData.onAudio || contextData.onImage || contextData.onVideo) {
+      info.srcUrl = contextData.srcUrl;
+    }
+    info.pageUrl = contextData.pageUrl;
+    if (contextData.inFrame) {
+      info.frameUrl = contextData.frameUrl;
+    }
+    if (contextData.isTextSelected) {
+      info.selectionText = contextData.selectionText;
+    }
+  }
+}
 
 function MenuItem(extension, createProperties, isRoot = false) {
   this.extension = extension;
@@ -801,8 +824,23 @@ this.menusInternal = class extends ExtensionAPI {
       },
 
       onShown: new EventManager(context, "menus.onShown", fire => {
-        let listener = (event, data) => {
-          fire.sync(data);
+        let listener = (event, menuIds, contextData) => {
+          let info = {
+            menuIds,
+            contexts: Array.from(getMenuContexts(contextData)),
+          };
+
+          // The menus.onShown event is fired before the user has consciously
+          // interacted with an extension, so we require permissions before
+          // exposing sensitive contextual data.
+          let includeSensitiveData =
+            extension.tabManager.hasActiveTabPermission(contextData.tab) ||
+            extension.whiteListedHosts.matches(contextData.inFrame ? contextData.frameUrl : contextData.pageUrl);
+
+          addMenuEventInfo(info, contextData, includeSensitiveData);
+
+          let tab = extension.tabManager.convert(contextData.tab);
+          fire.sync(info, tab);
         };
         extension.on("webext-menu-shown", listener);
         return () => {
