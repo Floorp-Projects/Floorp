@@ -1573,7 +1573,7 @@ js::RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto)
 {
-    JS::AutoCheckCannotGC nogc;
+    AutoUnsafeCallWithABI unsafe;
     AutoAssertNoPendingException aanpe(cx);
     if (!proto->isNative())
         return false;
@@ -1666,7 +1666,7 @@ js::RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto)
 {
-    JS::AutoCheckCannotGC nogc;
+    AutoUnsafeCallWithABI unsafe;
     AutoAssertNoPendingException aanpe(cx);
 
     RegExpObject* rx = &obj->as<RegExpObject>();

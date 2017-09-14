@@ -222,6 +222,13 @@ interface nsIAsyncFileMetadata : nsIFileMetadata
 {
     /**
      * Asynchronously wait for the object to be ready.
+     *
+     * @param aCallback The callback will be used when the stream is ready to
+     *                  return File metadata. Use a nullptr to cancel a
+     *                  previous operation.
+     *
+     * @param aEventTarget The event target where aCallback will be executed.
+     *                     If aCallback is passed, aEventTarget cannot be null.
      */
     void asyncWait(in nsIFileMetadataCallback aCallback,
                    in nsIEventTarget aEventTarget);

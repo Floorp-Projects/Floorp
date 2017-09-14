@@ -54,6 +54,10 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
       !StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/svg+xml"))) {
     return true;
   }
+  // Whitelist data: PDFs
+  if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("application/pdf"))) {
+    return true;
+  }
   if (!aLoadFromExternal &&
       nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal)) {
     return true;
