@@ -2227,7 +2227,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     }
   }
   // This is only implemented (returns a non-empty list) by MacOSX at present.
-  gfxPlatform::GetPlatform()->GetSystemFontFamilyList(&xpcomInit.fontFamilies());
+  nsTArray<FontFamilyListEntry> fontFamilies;
+  gfxPlatform::GetPlatform()->GetSystemFontFamilyList(&fontFamilies);
   nsTArray<LookAndFeelInt> lnfCache = LookAndFeel::GetIntCache();
 
   // Content processes have no permission to access profile directory, so we
@@ -2266,7 +2267,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.CopyScreensToRemote(this);
 
-  Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache);
+  Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache,
+                                          fontFamilies);
 
   if (aSendRegisteredChrome) {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();

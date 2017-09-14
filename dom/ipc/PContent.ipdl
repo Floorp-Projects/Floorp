@@ -256,8 +256,6 @@ struct XPCOMInitData
     nsString[] dictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-    /* used on MacOSX only */
-    FontFamilyListEntry[] fontFamilies;
     OptionalURIParams userContentSheetURL;
     PrefSetting[] prefs;
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
@@ -471,7 +469,11 @@ child:
      */
     async InitBlobURLs(BlobURLRegistrationData[] registrations);
 
-    async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit, StructuredCloneData initialData, LookAndFeelInt[] lookAndFeelIntCache);
+    async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
+                                    StructuredCloneData initialData,
+                                    LookAndFeelInt[] lookAndFeelIntCache,
+                                    /* used on MacOSX only: */
+                                    FontFamilyListEntry[] fontFamilyList);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
