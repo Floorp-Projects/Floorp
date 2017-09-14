@@ -25,7 +25,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 void
-nsSVGRenderingObserver::StartListening()
+nsSVGRenderingObserver::StartObserving()
 {
   Element* target = GetTarget();
   if (target) {
@@ -34,7 +34,7 @@ nsSVGRenderingObserver::StartListening()
 }
 
 void
-nsSVGRenderingObserver::StopListening()
+nsSVGRenderingObserver::StopObserving()
 {
   Element* target = GetTarget();
 
@@ -108,7 +108,7 @@ void
 nsSVGRenderingObserver::NotifyEvictedFromRenderingObserverList()
 {
   mInObserverList = false; // We've been removed from rendering-obs. list.
-  StopListening();            // Remove ourselves from mutation-obs. list.
+  StopObserving();            // Remove ourselves from mutation-obs. list.
 }
 
 void
@@ -184,12 +184,12 @@ nsSVGIDRenderingObserver::nsSVGIDRenderingObserver(nsIURI* aURI,
 {
   // Start watching the target element
   mObservedElementTracker.Reset(aObservingContent, aURI, true, aReferenceImage);
-  StartListening();
+  StartObserving();
 }
 
 nsSVGIDRenderingObserver::~nsSVGIDRenderingObserver()
 {
-  StopListening();
+  StopObserving();
 }
 
 void
@@ -246,7 +246,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsSVGFilterReference)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsSVGFilterReference)
-  tmp->StopListening();
+  tmp->StopObserving();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservedElementTracker);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
