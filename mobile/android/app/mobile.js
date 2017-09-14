@@ -145,6 +145,10 @@ pref("browser.sessionstore.max_resumed_crashes", 2);
 pref("browser.sessionstore.privacy_level", 0); // saving data: 0 = all, 1 = unencrypted sites, 2 = never
 pref("browser.sessionstore.debug_logging", false);
 
+// Download protection lists are not available on Fennec.
+pref("urlclassifier.downloadAllowTable", "");
+pref("urlclassifier.downloadBlockTable", "");
+
 /* these should help performance */
 pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
