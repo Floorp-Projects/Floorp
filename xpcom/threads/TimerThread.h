@@ -129,36 +129,4 @@ private:
   uint32_t mAllowedEarlyFiringMicroseconds;
 };
 
-struct TimerAdditionComparator
-{
-  TimerAdditionComparator(const mozilla::TimeStamp& aNow,
-                          nsTimerImpl* aTimerToInsert) :
-    now(aNow)
-#ifdef DEBUG
-    , timerToInsert(aTimerToInsert)
-#endif
-  {
-  }
-
-  bool LessThan(nsTimerImpl* aFromArray, nsTimerImpl* aNewTimer) const
-  {
-    MOZ_ASSERT(aNewTimer == timerToInsert, "Unexpected timer ordering");
-
-    // Skip any overdue timers.
-    return aFromArray->mTimeout <= now ||
-           aFromArray->mTimeout <= aNewTimer->mTimeout;
-  }
-
-  bool Equals(nsTimerImpl* aFromArray, nsTimerImpl* aNewTimer) const
-  {
-    return false;
-  }
-
-private:
-  const mozilla::TimeStamp& now;
-#ifdef DEBUG
-  const nsTimerImpl* const timerToInsert;
-#endif
-};
-
 #endif /* TimerThread_h___ */
