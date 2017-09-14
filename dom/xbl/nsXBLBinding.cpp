@@ -280,7 +280,7 @@ nsXBLBinding::SetBoundElement(nsIContent* aElement)
   // is not given in the handler declaration.
   nsCOMPtr<nsIGlobalObject> go = mBoundElement->OwnerDoc()->GetScopeObject();
   NS_ENSURE_TRUE_VOID(go && go->GetGlobalJSObject());
-  mUsingContentXBLScope = xpc::UseContentXBLScope(js::GetObjectCompartment(go->GetGlobalJSObject()));
+  mUsingContentXBLScope = xpc::UseContentXBLScope(JS::GetObjectRealmOrNull(go->GetGlobalJSObject()));
 }
 
 bool
@@ -321,9 +321,11 @@ nsXBLBinding::GenerateAnonymousContent()
   if (hasContent) {
     nsIDocument* doc = mBoundElement->OwnerDoc();
 
-    nsCOMPtr<nsINode> clonedNode;
-    nsNodeUtils::Clone(content, true, doc->NodeInfoManager(), nullptr,
-                       getter_AddRefs(clonedNode));
+    IgnoredErrorResult rv;
+    nsCOMPtr<nsINode> clonedNode =
+      nsNodeUtils::Clone(content, true, doc->NodeInfoManager(), nullptr, rv);
+    // FIXME: Bug 1399558, Why is this code OK assuming that nsNodeUtils::Clone
+    // never fails?
     mContent = clonedNode->AsElement();
 
     // Search for <xbl:children> elements in the XBL content. In the presence

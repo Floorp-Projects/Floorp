@@ -106,15 +106,11 @@
 #include "prtime.h"                     // for PR_Now
 
 class nsIOutputStream;
-class nsIParserService;
 class nsITransferable;
 
 #ifdef DEBUG
 #include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
 #endif
-
-// Defined in nsEditorRegistration.cpp
-extern nsIParserService *sParserService;
 
 namespace mozilla {
 

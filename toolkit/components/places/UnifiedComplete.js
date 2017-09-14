@@ -1730,9 +1730,6 @@ Search.prototype = {
   },
 
   _onResultRow(row, cancel) {
-    if (this._counts[MATCHTYPE.GENERAL] == 0) {
-      TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
-    }
     let queryType = row.getResultByIndex(QUERYINDEX_QUERYTYPE);
     let match;
     switch (queryType) {
@@ -1852,6 +1849,8 @@ Search.prototype = {
                                match.finalCompleteValue);
     this._counts[match.type]++;
 
+    if (this._result.matchCount == 1)
+      TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
     if (this._result.matchCount == 6)
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
 

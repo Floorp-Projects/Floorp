@@ -17,6 +17,9 @@ do_get_profile();
 
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
+// Ensure PSM is initialized before the test
+Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
+
 var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
