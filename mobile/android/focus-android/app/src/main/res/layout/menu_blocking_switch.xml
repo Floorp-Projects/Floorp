@@ -26,7 +26,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="@string/menu_trackers_blocked_title"
-            android:textColor="@color/inactive_text"
+            android:textColor="@color/colorTextInactive"
             android:textSize="16sp" />
 
         <LinearLayout

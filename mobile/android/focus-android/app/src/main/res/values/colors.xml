@@ -26,7 +26,9 @@
     <color name="colorMultitasking">@color/photonBlue50</color>
     <color name="colorMultitaskingPressed">@color/photonBlue60</color>
 
-    <color name="colorUrlInputBackground">#B2000000</color>
+    <color name="colorOverlay">#cc000000</color>
+
+    <color name="colorTextInactive">#80FFFFFF</color>
 
     <color name="snackbarBackground">#33FFFFFF</color>
     <color name="snackbarTextColor">#ffffffff</color>
@@ -44,7 +46,6 @@
     <color name="add_to_homescreen_button_text">#FF00A4DC</color>
     <color name="add_to_homescreen_text">#FFFFFF</color>
 
-    <color name="inactive_text">#7FFFFFFF</color>
 
     <color name="firefoxInstallHint">@color/photonMagenta70</color>
 </resources>

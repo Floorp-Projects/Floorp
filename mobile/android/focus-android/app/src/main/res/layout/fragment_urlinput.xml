@@ -90,7 +90,7 @@
                     android:selectAllOnFocus="true"
                     android:textColor="#ffffff"
                     android:textColorHighlight="@color/colorAccent"
-                    android:textColorHint="@color/inactive_text"
+                    android:textColorHint="@color/colorTextInactive"
                     android:textSize="15sp" />
 
                 <ImageButton
@@ -135,7 +135,7 @@
         android:id="@+id/dismiss"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorUrlInputBackground"
+        android:background="@color/colorOverlay"
         android:contentDescription="@string/content_description_dismiss_input" />
 
     <FrameLayout
