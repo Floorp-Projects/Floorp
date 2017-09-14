@@ -162,6 +162,10 @@
   opacity: 1;
 }
 
+#TabsToolbar[brighttext] .tabbrowser-tab:not([visuallyselected=true]) {
+  --tab-loading-fill: #fff;
+}
+
 .tab-sharing-icon-overlay,
 .tab-icon-image {
   height: 16px;

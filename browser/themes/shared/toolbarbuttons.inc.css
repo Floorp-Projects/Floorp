@@ -124,8 +124,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-text,
 toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
   padding: var(--toolbarbutton-inner-padding);
   border-radius: var(--toolbarbutton-border-radius);
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: var(--toolbarbutton-hover-transition-duration);
 }
 
 toolbar .toolbarbutton-1 > .toolbarbutton-icon {
@@ -228,6 +226,8 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   border-radius: 10000px;
   width: 32px;
   padding: 7px;
+  transition-property: box-shadow;
+  transition-duration: var(--toolbarbutton-hover-transition-duration);
 }
 
 :root[uidensity=touch] #back-button {

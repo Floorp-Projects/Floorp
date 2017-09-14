@@ -25,7 +25,6 @@ ${helpers.single_keyword("text-transform",
 
 ${helpers.single_keyword("hyphens", "manual none auto",
                          gecko_enum_prefix="StyleHyphens",
-                         gecko_inexhaustive=True,
                          products="gecko", animation_value_type="discrete", extra_prefixes="moz",
                          spec="https://drafts.csswg.org/css-text/#propdef-hyphens")}
 
@@ -66,7 +65,6 @@ ${helpers.single_keyword("word-break",
                                   extra_gecko_values="inter-character"
                                   extra_specified="${'distribute' if product == 'gecko' else ''}"
                                   gecko_enum_prefix="StyleTextJustify"
-                                  gecko_inexhaustive="True"
                                   animation_value_type="discrete"
                                   flags="APPLIES_TO_PLACEHOLDER",
                                   spec="https://drafts.csswg.org/css-text/#propdef-text-justify">
@@ -175,6 +173,7 @@ ${helpers.single_keyword("text-align-last",
         use std::fmt;
         use style_traits::ToCss;
 
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub enum SpecifiedValue {
             Keyword(computed_value::T),
@@ -288,6 +287,7 @@ ${helpers.predefined_type("word-spacing",
     use style_traits::ToCss;
 
     #[derive(Clone, Copy, Debug, PartialEq)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub struct SpecifiedValue {
         pub underline: Option<RGBA>,
@@ -366,7 +366,6 @@ ${helpers.predefined_type("word-spacing",
                                   extra_gecko_values="-moz-pre-space"
                                   gecko_enum_prefix="StyleWhiteSpace"
                                   needs_conversion="True"
-                                  gecko_inexhaustive="True"
                                   animation_value_type="discrete"
                                   // Only allowed for UA sheets, which set it
                                   // !important.
@@ -430,6 +429,7 @@ ${helpers.predefined_type(
 
     pub mod computed_value {
         #[derive(Clone, Debug, PartialEq, ToCss)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf, ToComputedValue))]
         pub enum T {
             Keyword(KeywordValue),
@@ -438,6 +438,7 @@ ${helpers.predefined_type(
         }
 
         #[derive(Clone, Debug, PartialEq)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct KeywordValue {
             pub fill: bool,
@@ -446,6 +447,7 @@ ${helpers.predefined_type(
     }
 
     #[derive(Clone, Debug, PartialEq, ToCss)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub enum SpecifiedValue {
         Keyword(KeywordValue),
@@ -454,6 +456,7 @@ ${helpers.predefined_type(
     }
 
     #[derive(Clone, Debug, PartialEq)]
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub enum KeywordValue {
         Fill(bool),
@@ -621,6 +624,7 @@ ${helpers.predefined_type(
                              "left" => Left);
     add_impls_for_keyword_enum!(HorizontalWritingModeValue);
 
+    #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     #[derive(Clone, Debug, PartialEq, ToComputedValue, ToCss)]
     pub struct SpecifiedValue(pub HorizontalWritingModeValue, pub VerticalWritingModeValue);

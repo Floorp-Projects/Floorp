@@ -155,10 +155,10 @@ add_task(async function test_ignoring_window_opener() {
        "url(\"chrome://browser/skin/connection-secure.svg\")",
        "Using expected icon image in the identity block");
     is(securityViewBG,
-       "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-secure\")",
+       "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
        "Using expected icon image in the Control Center main view");
     is(securityContentBG,
-       "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-secure\")",
+       "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
        "Using expected icon image in the Control Center subview");
 
     ok(Array.every(document.querySelectorAll("[when-loginforms=insecure]"),

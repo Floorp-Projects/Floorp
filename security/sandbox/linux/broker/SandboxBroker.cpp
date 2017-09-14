@@ -38,7 +38,7 @@ SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
   : mChildPid(aChildPid), mPolicy(Move(aPolicy))
 {
   int fds[2];
-  if (0 != socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds)) {
+  if (0 != socketpair(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0, fds)) {
     SANDBOX_LOG_ERROR("SandboxBroker: socketpair failed: %s", strerror(errno));
     mFileDesc = -1;
     aClientFd = -1;

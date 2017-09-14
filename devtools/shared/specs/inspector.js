@@ -11,9 +11,6 @@ const {
   types
 } = require("devtools/shared/protocol");
 const { nodeSpec } = require("devtools/shared/specs/node");
-require("devtools/shared/specs/styles");
-require("devtools/shared/specs/highlighters");
-require("devtools/shared/specs/layout");
 
 exports.nodeSpec = nodeSpec;
 

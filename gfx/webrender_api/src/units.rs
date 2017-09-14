@@ -46,7 +46,7 @@ pub type LayoutVector3D = LayerVector3D;
 pub type LayoutSize = LayerSize;
 
 /// Geometry in a layer's local coordinate space (logical pixels).
-#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Deserialize, Serialize)]
 pub struct LayerPixel;
 
 pub type LayerRect = TypedRect<f32, LayerPixel>;

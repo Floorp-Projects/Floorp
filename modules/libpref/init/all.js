@@ -5841,11 +5841,7 @@ pref("dom.storageManager.prompt.testing.allow", false);
 
 // Enable the Storage management in about:preferences and persistent-storage permission request
 // To enable the DOM implementation, turn on "dom.storageManager.enabled"
-#ifdef NIGHTLY_BUILD
 pref("browser.storageManager.enabled", true);
-#else
-pref("browser.storageManager.enabled", false);
-#endif
 pref("browser.storageManager.pressureNotification.minIntervalMS", 1200000);
 pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
 

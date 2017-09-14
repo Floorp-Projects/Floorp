@@ -3,12 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ComplexClipRegion, ImageMask, ImageRendering};
-use api::{LayerPoint, LayerRect, LayerToWorldTransform, LocalClip};
+use api::{DeviceIntRect, LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LocalClip};
 use border::BorderCornerClipSource;
-use gpu_cache::GpuCache;
-use mask_cache::MaskCacheInfo;
+use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
+use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
+use prim_store::{ClipData, ImageMaskData};
 use resource_cache::ResourceCache;
 use std::ops::Not;
+use util::{extract_inner_rect_safe, TransformedRect};
+
+const MAX_CLIP: f32 = 1000000.0;
+
+pub type ClipStore = FreeList<ClipSources>;
+pub type ClipSourcesHandle = FreeListHandle<ClipSources>;
+pub type ClipSourcesWeakHandle = WeakFreeListHandle<ClipSources>;
 
 #[derive(Clone, Debug)]
 pub struct ClipRegion {
@@ -101,21 +109,26 @@ impl From<ClipRegion> for ClipSources {
 
 #[derive(Debug)]
 pub struct ClipSources {
-    clips: Vec<ClipSource>,
-    mask_cache_info: MaskCacheInfo,
+    pub clips: Vec<(ClipSource, GpuCacheHandle)>,
+    pub bounds: MaskBounds,
 }
 
 impl ClipSources {
     pub fn new(clips: Vec<ClipSource>) -> ClipSources {
-        let mask_cache_info = MaskCacheInfo::new(&clips);
+        let clips = clips.into_iter()
+                         .map(|clip| (clip, GpuCacheHandle::new()))
+                         .collect();
 
         ClipSources {
             clips,
-            mask_cache_info,
+            bounds: MaskBounds {
+                inner: None,
+                outer: None,
+            },
         }
     }
 
-    pub fn clips(&self) -> &[ClipSource] {
+    pub fn clips(&self) -> &[(ClipSource, GpuCacheHandle)] {
         &self.clips
     }
 
@@ -128,13 +141,88 @@ impl ClipSources {
             return;
         }
 
-        self.mask_cache_info
-            .update(&self.clips,
-                    layer_transform,
-                    gpu_cache,
-                    device_pixel_ratio);
+        // compute the local bounds
+        if self.bounds.inner.is_none() {
+            let mut local_rect = Some(LayerRect::new(LayerPoint::new(-MAX_CLIP, -MAX_CLIP),
+                                                     LayerSize::new(2.0 * MAX_CLIP, 2.0 * MAX_CLIP)));
+            let mut local_inner = local_rect;
+            let mut has_clip_out = false;
+            let mut has_border_clip = false;
 
-        for clip in &self.clips {
+            for &(ref source, _) in &self.clips {
+                match *source {
+                    ClipSource::Image(ref mask) => {
+                        if !mask.repeat {
+                            local_rect = local_rect.and_then(|r| r.intersection(&mask.rect));
+                        }
+                        local_inner = None;
+                    }
+                    ClipSource::Rectangle(rect) => {
+                        local_rect = local_rect.and_then(|r| r.intersection(&rect));
+                        local_inner = local_inner.and_then(|r| r.intersection(&rect));
+                    }
+                    ClipSource::RoundedRectangle(ref rect, ref radius, mode) => {
+                        // Once we encounter a clip-out, we just assume the worst
+                        // case clip mask size, for now.
+                        if mode == ClipMode::ClipOut {
+                            has_clip_out = true;
+                        }
+
+                        local_rect = local_rect.and_then(|r| r.intersection(rect));
+
+                        let inner_rect = extract_inner_rect_safe(rect, radius);
+                        local_inner = local_inner.and_then(|r| inner_rect.and_then(|ref inner| r.intersection(inner)));
+                    }
+                    ClipSource::BorderCorner{..} => {
+                        has_border_clip = true;
+                    }
+                }
+            }
+
+            // Work out the type of mask geometry we have, based on the
+            // list of clip sources above.
+            self.bounds = if has_clip_out || has_border_clip {
+                // For clip-out, the mask rect is not known.
+                MaskBounds {
+                    outer: None,
+                    inner: Some(LayerRect::zero().into()),
+                }
+            } else {
+                MaskBounds {
+                    outer: Some(local_rect.unwrap_or(LayerRect::zero()).into()),
+                    inner: Some(local_inner.unwrap_or(LayerRect::zero()).into()),
+                }
+            };
+        }
+
+        // update the screen bounds
+        self.bounds.update(layer_transform, device_pixel_ratio);
+
+        for &mut (ref mut source, ref mut handle) in &mut self.clips {
+            if let Some(mut request) = gpu_cache.request(handle) {
+                match *source {
+                    ClipSource::Image(ref mask) => {
+                        let data = ImageMaskData {
+                            local_rect: mask.rect,
+                        };
+                        data.write_gpu_blocks(request);
+                    }
+                    ClipSource::Rectangle(rect) => {
+                        let data = ClipData::uniform(rect, 0.0, ClipMode::Clip);
+                        data.write(&mut request);
+                    }
+                    ClipSource::RoundedRectangle(ref rect, ref radius, mode) => {
+                        let data = ClipData::rounded_rect(rect, radius, mode);
+                        data.write(&mut request);
+                    }
+                    ClipSource::BorderCorner(ref mut source) => {
+                        source.write(request);
+                    }
+                }
+            }
+        }
+
+        for &(ref clip, _) in &self.clips {
             if let ClipSource::Image(ref mask) = *clip {
                 resource_cache.request_image(mask.image,
                                              ImageRendering::Auto,
@@ -145,14 +233,52 @@ impl ClipSources {
     }
 
     pub fn is_masking(&self) -> bool {
-        self.mask_cache_info.is_masking()
+        !self.clips.is_empty()
     }
+}
 
-    pub fn clone_mask_cache_info(&self, keep_aligned: bool) -> MaskCacheInfo {
-        if keep_aligned {
-            self.mask_cache_info.clone()
-        } else {
-            self.mask_cache_info.strip_aligned()
+/// Represents a local rect and a device space
+/// rectangles that are either outside or inside bounds.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Geometry {
+    pub local_rect: LayerRect,
+    pub device_rect: DeviceIntRect,
+}
+
+impl From<LayerRect> for Geometry {
+    fn from(local_rect: LayerRect) -> Self {
+        Geometry {
+            local_rect,
+            device_rect: DeviceIntRect::zero(),
+        }
+    }
+}
+
+/// Depending on the complexity of the clip, we may either
+/// know the outer and/or inner rect, or neither or these.
+/// In the case of a clip-out, we currently set the mask
+/// bounds to be unknown. This is conservative, but ensures
+/// correctness. In the future we can make this a lot
+/// more clever with some proper region handling.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MaskBounds {
+    pub outer: Option<Geometry>,
+    pub inner: Option<Geometry>,
+}
+
+impl MaskBounds {
+    pub fn update(&mut self, transform: &LayerToWorldTransform, device_pixel_ratio: f32) {
+        if let Some(ref mut outer) = self.outer {
+            let transformed = TransformedRect::new(&outer.local_rect,
+                                                   transform,
+                                                   device_pixel_ratio);
+            outer.device_rect = transformed.bounding_rect;
+        }
+        if let Some(ref mut inner) = self.inner {
+            let transformed = TransformedRect::new(&inner.local_rect,
+                                                   transform,
+                                                   device_pixel_ratio);
+            inner.device_rect = transformed.inner_rect;
         }
     }
 }

@@ -11,7 +11,7 @@
 
 const Services = require("Services");
 
-const variableFileContents = require("raw!devtools/client/themes/variables.css");
+const variableFileContents = require("theme-loader!devtools/client/themes/variables.css");
 
 const THEME_SELECTOR_STRINGS = {
   light: ":root.theme-light {",

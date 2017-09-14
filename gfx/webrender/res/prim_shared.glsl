@@ -85,16 +85,16 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sResourceCache;
 
 vec4[2] fetch_from_resource_cache_2_direct(ivec2 address) {
     return vec4[2](
-        texelFetchOffset(sResourceCache, address, 0, ivec2(0, 0)),
-        texelFetchOffset(sResourceCache, address, 0, ivec2(1, 0))
+        TEXEL_FETCH(sResourceCache, address, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sResourceCache, address, 0, ivec2(1, 0))
     );
 }
 
 vec4[2] fetch_from_resource_cache_2(int address) {
     ivec2 uv = get_resource_cache_uv(address);
     return vec4[2](
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(0, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(1, 0))
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(1, 0))
     );
 }
 
@@ -124,42 +124,42 @@ in ivec4 aData1;
 vec4[8] fetch_from_resource_cache_8(int address) {
     ivec2 uv = get_resource_cache_uv(address);
     return vec4[8](
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(0, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(1, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(2, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(3, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(4, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(5, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(6, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(7, 0))
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(1, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(2, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(3, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(4, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(5, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(6, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(7, 0))
     );
 }
 
 vec4[3] fetch_from_resource_cache_3(int address) {
     ivec2 uv = get_resource_cache_uv(address);
     return vec4[3](
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(0, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(1, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(2, 0))
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(1, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(2, 0))
     );
 }
 
 vec4[4] fetch_from_resource_cache_4_direct(ivec2 address) {
     return vec4[4](
-        texelFetchOffset(sResourceCache, address, 0, ivec2(0, 0)),
-        texelFetchOffset(sResourceCache, address, 0, ivec2(1, 0)),
-        texelFetchOffset(sResourceCache, address, 0, ivec2(2, 0)),
-        texelFetchOffset(sResourceCache, address, 0, ivec2(3, 0))
+        TEXEL_FETCH(sResourceCache, address, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sResourceCache, address, 0, ivec2(1, 0)),
+        TEXEL_FETCH(sResourceCache, address, 0, ivec2(2, 0)),
+        TEXEL_FETCH(sResourceCache, address, 0, ivec2(3, 0))
     );
 }
 
 vec4[4] fetch_from_resource_cache_4(int address) {
     ivec2 uv = get_resource_cache_uv(address);
     return vec4[4](
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(0, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(1, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(2, 0)),
-        texelFetchOffset(sResourceCache, uv, 0, ivec2(3, 0))
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(1, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(2, 0)),
+        TEXEL_FETCH(sResourceCache, uv, 0, ivec2(3, 0))
     );
 }
 
@@ -189,17 +189,17 @@ Layer fetch_layer(int index) {
     ivec2 uv0 = ivec2(uv.x + 0, uv.y);
     ivec2 uv1 = ivec2(uv.x + 8, uv.y);
 
-    layer.transform[0] = texelFetchOffset(sLayers, uv0, 0, ivec2(0, 0));
-    layer.transform[1] = texelFetchOffset(sLayers, uv0, 0, ivec2(1, 0));
-    layer.transform[2] = texelFetchOffset(sLayers, uv0, 0, ivec2(2, 0));
-    layer.transform[3] = texelFetchOffset(sLayers, uv0, 0, ivec2(3, 0));
+    layer.transform[0] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(0, 0));
+    layer.transform[1] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(1, 0));
+    layer.transform[2] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(2, 0));
+    layer.transform[3] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(3, 0));
 
-    layer.inv_transform[0] = texelFetchOffset(sLayers, uv0, 0, ivec2(4, 0));
-    layer.inv_transform[1] = texelFetchOffset(sLayers, uv0, 0, ivec2(5, 0));
-    layer.inv_transform[2] = texelFetchOffset(sLayers, uv0, 0, ivec2(6, 0));
-    layer.inv_transform[3] = texelFetchOffset(sLayers, uv0, 0, ivec2(7, 0));
+    layer.inv_transform[0] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(4, 0));
+    layer.inv_transform[1] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(5, 0));
+    layer.inv_transform[2] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(6, 0));
+    layer.inv_transform[3] = TEXEL_FETCH(sLayers, uv0, 0, ivec2(7, 0));
 
-    vec4 clip_rect = texelFetchOffset(sLayers, uv1, 0, ivec2(0, 0));
+    vec4 clip_rect = TEXEL_FETCH(sLayers, uv1, 0, ivec2(0, 0));
     layer.local_clip_rect = RectWithSize(clip_rect.xy, clip_rect.zw);
 
     return layer;
@@ -216,9 +216,9 @@ RenderTaskData fetch_render_task(int index) {
 
     ivec2 uv = get_fetch_uv(index, VECS_PER_RENDER_TASK);
 
-    task.data0 = texelFetchOffset(sRenderTasks, uv, 0, ivec2(0, 0));
-    task.data1 = texelFetchOffset(sRenderTasks, uv, 0, ivec2(1, 0));
-    task.data2 = texelFetchOffset(sRenderTasks, uv, 0, ivec2(2, 0));
+    task.data0 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(0, 0));
+    task.data1 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(1, 0));
+    task.data2 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(2, 0));
 
     return task;
 }

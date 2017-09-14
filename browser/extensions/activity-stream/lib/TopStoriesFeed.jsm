@@ -9,13 +9,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.importGlobalProperties(["fetch"]);
 
-const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-
+const {actionTypes: at, actionCreators: ac} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {shortURL} = Cu.import("resource://activity-stream/lib/ShortURL.jsm", {});
 const {SectionsManager} = Cu.import("resource://activity-stream/lib/SectionsManager.jsm", {});
-
 const {UserDomainAffinityProvider} = Cu.import("resource://activity-stream/lib/UserDomainAffinityProvider.jsm", {});
+
+XPCOMUtils.defineLazyModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
 
 const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
@@ -24,32 +24,36 @@ const STORIES_NOW_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
 const SECTION_ID = "topstories";
 
 this.TopStoriesFeed = class TopStoriesFeed {
-
-  init() {
+  constructor() {
     this.storiesLastUpdated = 0;
     this.topicsLastUpdated = 0;
     this.affinityLastUpdated = 0;
-
-    SectionsManager.onceInitialized(this.parseOptions.bind(this));
+    this.spocsPerNewTabs = 0;
+    this.newTabsSinceSpoc = 0;
+    this.contentUpdateQueue = [];
   }
 
-  parseOptions() {
-    SectionsManager.enableSection(SECTION_ID);
-    const options = SectionsManager.sections.get(SECTION_ID).options;
-    try {
-      const apiKey = this._getApiKeyFromPref(options.api_key_pref);
-      this.stories_endpoint = this._produceFinalEndpointUrl(options.stories_endpoint, apiKey);
-      this.topics_endpoint = this._produceFinalEndpointUrl(options.topics_endpoint, apiKey);
-      this.read_more_endpoint = options.read_more_endpoint;
-      this.stories_referrer = options.stories_referrer;
-      this.personalized = options.personalized;
-      this.maxHistoryQueryResults = options.maxHistoryQueryResults;
+  init() {
+    const initFeed = () => {
+      SectionsManager.enableSection(SECTION_ID);
+      try {
+        const options = SectionsManager.sections.get(SECTION_ID).options;
+        const apiKey = this.getApiKeyFromPref(options.api_key_pref);
+        this.stories_endpoint = this.produceFinalEndpointUrl(options.stories_endpoint, apiKey);
+        this.topics_endpoint = this.produceFinalEndpointUrl(options.topics_endpoint, apiKey);
+        this.read_more_endpoint = options.read_more_endpoint;
+        this.stories_referrer = options.stories_referrer;
+        this.personalized = options.personalized;
+        this.show_spocs = options.show_spocs;
+        this.maxHistoryQueryResults = options.maxHistoryQueryResults;
 
-      this.fetchStories();
-      this.fetchTopics();
-    } catch (e) {
-      Cu.reportError(`Problem initializing top stories feed: ${e.message}`);
-    }
+        this.fetchStories();
+        this.fetchTopics();
+      } catch (e) {
+        Cu.reportError(`Problem initializing top stories feed: ${e.message}`);
+      }
+    };
+    SectionsManager.onceInitialized(initFeed);
   }
 
   uninit() {
@@ -62,36 +66,46 @@ this.TopStoriesFeed = class TopStoriesFeed {
     }
     try {
       const response = await fetch(this.stories_endpoint);
-
       if (!response.ok) {
         throw new Error(`Stories endpoint returned unexpected status: ${response.status}`);
       }
 
       const body = await response.json();
-      this.updateDomainAffinities(body.settings);
+      this.updateSettings(body.settings);
+      this.stories = this.rotate(this.transform(body.recommendations));
+      this.spocs = this.show_spocs && this.transform(body.spocs).filter(s => s.score >= s.min_score);
 
-      const recommendations = body.recommendations
-        .filter(s => !NewTabUtils.blockedLinks.isBlocked({"url": s.url}))
-        .map(s => ({
-          "guid": s.id,
-          "hostname": shortURL(Object.assign({}, s, {url: s.url})),
-          "type": (Date.now() - (s.published_timestamp * 1000)) <= STORIES_NOW_THRESHOLD ? "now" : "trending",
-          "title": s.title,
-          "description": s.excerpt,
-          "image": this._normalizeUrl(s.image_src),
-          "referrer": this.stories_referrer,
-          "url": s.url,
-          "score": this.personalized ? this.affinityProvider.calculateItemRelevanceScore(s) : 1
-        }))
-        .sort(this.personalized ? this.compareScore : (a, b) => 0);
-
-      const rows = this.rotate(recommendations);
-
-      this.dispatchUpdateEvent(this.storiesLastUpdated, {rows});
+      this.dispatchUpdateEvent(this.storiesLastUpdated, {rows: this.stories});
       this.storiesLastUpdated = Date.now();
+      // This is filtered so an update function can return true to retry on the next run
+      this.contentUpdateQueue = this.contentUpdateQueue.filter(update => update());
     } catch (error) {
       Cu.reportError(`Failed to fetch content: ${error.message}`);
     }
+  }
+
+  transform(items) {
+    if (!items) {
+      return [];
+    }
+
+    return items
+      .filter(s => !NewTabUtils.blockedLinks.isBlocked({"url": s.url}))
+      .map(s => ({
+        "guid": s.id,
+        "hostname": shortURL(Object.assign({}, s, {url: s.url})),
+        "type": (Date.now() - (s.published_timestamp * 1000)) <= STORIES_NOW_THRESHOLD ? "now" : "trending",
+        "context": s.context,
+        "icon": s.icon,
+        "title": s.title,
+        "description": s.excerpt,
+        "image": this.normalizeUrl(s.image_src),
+        "referrer": this.stories_referrer,
+        "url": s.url,
+        "min_score": s.min_score || 0,
+        "score": this.personalized ? this.affinityProvider.calculateItemRelevanceScore(s) : 1
+      }))
+      .sort(this.personalized ? this.compareScore : (a, b) => 0);
   }
 
   async fetchTopics() {
@@ -121,16 +135,24 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return b.score - a.score;
   }
 
-  updateDomainAffinities(settings) {
+  updateSettings(settings) {
     if (!this.personalized) {
       return;
     }
 
+    this.spocsPerNewTabs = settings.spocsPerNewTabs;
+
     if (!this.affinityProvider || (Date.now() - this.affinityLastUpdated >= DOMAIN_AFFINITY_UPDATE_TIME)) {
+      const start = perfService.absNow();
       this.affinityProvider = new UserDomainAffinityProvider(
         settings.timeSegments,
         settings.domainAffinityParameterSets,
         this.maxHistoryQueryResults);
+
+      this.store.dispatch(ac.PerfEvent({
+        event: "topstories.domain.affinity.calculation.ms",
+        value: Math.round(perfService.absNow() - start)
+      }));
       this.affinityLastUpdated = Date.now();
     }
   }
@@ -153,7 +175,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return items;
   }
 
-  _getApiKeyFromPref(apiKeyPref) {
+  getApiKeyFromPref(apiKeyPref) {
     if (!apiKeyPref) {
       return apiKeyPref;
     }
@@ -161,7 +183,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return new Prefs().get(apiKeyPref) || Services.prefs.getCharPref(apiKeyPref);
   }
 
-  _produceFinalEndpointUrl(url, apiKey) {
+  produceFinalEndpointUrl(url, apiKey) {
     if (!url) {
       return url;
     }
@@ -173,11 +195,47 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
   // Need to remove parenthesis from image URLs as React will otherwise
   // fail to render them properly as part of the card template.
-  _normalizeUrl(url) {
+  normalizeUrl(url) {
     if (url) {
       return url.replace(/\(/g, "%28").replace(/\)/g, "%29");
     }
     return url;
+  }
+
+  maybeAddSpoc(target) {
+    if (!this.show_spocs) {
+      return;
+    }
+
+    if (this.newTabsSinceSpoc === 0 || this.newTabsSinceSpoc === this.spocsPerNewTabs) {
+      const updateContent = () => {
+        if (!this.spocs || !this.spocs.length) {
+          // We have stories but no spocs so there's nothing to do and this update can be
+          // removed from the queue.
+          return false;
+        }
+
+        // Create a new array with a spoc inserted at index 2
+        // For now we're using the top scored spoc until we can support viewability based rotation
+        let rows = this.stories.slice(0, this.stories.length);
+        rows.splice(2, 0, this.spocs[0]);
+
+        // Send a content update to the target tab
+        const action = {type: at.SECTION_UPDATE, meta: {skipMain: true}, data: Object.assign({rows}, {id: SECTION_ID})};
+        this.store.dispatch(ac.SendToContent(action, target));
+        return false;
+      };
+
+      if (this.stories) {
+        updateContent();
+      } else {
+        // Delay updating tab content until initial data has been fetched
+        this.contentUpdateQueue.push(updateContent);
+      }
+
+      this.newTabsSinceSpoc = 0;
+    }
+    this.newTabsSinceSpoc++;
   }
 
   onAction(action) {
@@ -195,6 +253,9 @@ this.TopStoriesFeed = class TopStoriesFeed {
         break;
       case at.UNINIT:
         this.uninit();
+        break;
+      case at.NEW_TAB_REHYDRATED:
+        this.maybeAddSpoc(action.meta.fromTarget);
         break;
     }
   }
