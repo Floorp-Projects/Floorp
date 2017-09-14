@@ -344,6 +344,7 @@ void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient)
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
 mozilla::css::ImageValue* Gecko_ImageValue_Create(ServoBundledURI aURI,
                                                   mozilla::ServoRawOffsetArc<RustString> aURIString);
+size_t Gecko_ImageValue_SizeOfIncludingThis(mozilla::css::ImageValue* aImageValue);
 void Gecko_SetLayerImageImageValue(nsStyleImage* image,
                                    mozilla::css::ImageValue* aImageValue);
 
