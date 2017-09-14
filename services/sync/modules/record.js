@@ -791,35 +791,39 @@ Collection.prototype = {
       return Resource.prototype.post.call(this, data);
     }
     let getConfig = (name, defaultVal) => {
+      // serverConfiguration is allowed to be missing during tests.
       if (this._service.serverConfiguration && this._service.serverConfiguration.hasOwnProperty(name)) {
         return this._service.serverConfiguration[name];
       }
       return defaultVal;
-    }
+    };
 
+    // On a server that does not support the batch API, we expect the /info/configuration
+    // endpoint to provide "max_record_payload_bytes" and "max_request_bytes" and limits.
+    // On a server that supports the batching API, we expect "max_record_payload_bytes"
+    // (as before), as well as "max_post_bytes", "max_post_records", "max_total_bytes" and
+    // "max_total_records". Much of the complexity here and in enqueue is attempting to
+    // handle both these cases simultaneously.
     let config = {
-      max_post_bytes: getConfig("max_post_bytes", MAX_UPLOAD_BYTES),
-      max_post_records: getConfig("max_post_records", MAX_UPLOAD_RECORDS),
+      // Note that from the server's POV, max_post_bytes is the sum of payload
+      // lengths, but we treat it equivalently to max_request_bytes (which is
+      // payload + metadata lengths).
+      max_post_bytes: getConfig("max_post_bytes",
+        getConfig("max_request_bytes", 260 * 1024)),
+
+      max_post_records: getConfig("max_post_records", Infinity),
 
       max_batch_bytes: getConfig("max_total_bytes", Infinity),
       max_batch_records: getConfig("max_total_records", Infinity),
-    }
+      max_record_payload_bytes: getConfig("max_record_payload_bytes", 256 * 1024),
+    };
 
-    // Handle config edge cases
-    if (config.max_post_records <= 0) { config.max_post_records = MAX_UPLOAD_RECORDS; }
-    if (config.max_batch_records <= 0) { config.max_batch_records = Infinity; }
-    if (config.max_post_bytes <= 0) { config.max_post_bytes = MAX_UPLOAD_BYTES; }
-    if (config.max_batch_bytes <= 0) { config.max_batch_bytes = Infinity; }
-
-    // Max size of BSO payload is 256k. This assumes at most 4k of overhead,
-    // which sounds like plenty. If the server says it can't handle this, we
-    // might have valid records we can't sync, so we give up on syncing.
-    let requiredMax = 260 * 1024;
-    if (config.max_post_bytes < requiredMax) {
+    if (config.max_post_bytes <= config.max_record_payload_bytes) {
       this._log.error("Server configuration max_post_bytes is too low", config);
       throw new Error("Server configuration max_post_bytes is too low");
     }
 
+    this._log.trace("new PostQueue created with config", config);
     return new PostQueue(poster, timestamp, config, log, postCallback);
   },
 };
@@ -889,38 +893,42 @@ PostQueue.prototype = {
     if (!jsonRepr) {
       throw new Error("You must only call this with objects that explicitly support JSON");
     }
+
     let bytes = JSON.stringify(jsonRepr);
 
-    // Do a flush if we can't add this record without exceeding our single-request
-    // limits, or without exceeding the total limit for a single batch.
-    let newLength = this.queued.length + bytes.length + 2; // extras for leading "[" / "," and trailing "]"
+    // Tests sometimes return objects without payloads, and we just use the
+    // byte length for those cases.
+    let payloadLength = jsonRepr.payload ? jsonRepr.payload.length : bytes.length;
+    if (payloadLength > this.config.max_record_payload_bytes) {
+      return { enqueued: false, error: new Error("Single record too large to submit to server") };
+    }
 
-    let maxAllowedBytes = Math.min(256 * 1024, this.config.max_post_bytes);
+    // The `+ 2` is to account for the 2-byte (maximum) overhead (one byte for
+    // the leading comma or "[", which all records will have, and the other for
+    // the final trailing "]", only present for the last record).
+    let newLength = this.queued.length + bytes.length + 2;
+    let newRecordCount = this.numQueued + 1;
 
-    let postSizeExceeded = this.numQueued >= this.config.max_post_records ||
-                           newLength >= maxAllowedBytes;
+    // Note that the max_post_records and max_batch_records server limits are
+    // inclusive (e.g. if the max_post_records == 100, it will allow a post with
+    // 100 records), but the byte limits are not. (See
+    // https://github.com/mozilla-services/server-syncstorage/issues/73)
 
-    let batchSizeExceeded = (this.numQueued + this.numAlreadyBatched) >= this.config.max_batch_records ||
+    // Have we exceeeded the maximum size or record count for a single POST?
+    let postSizeExceeded = newRecordCount > this.config.max_post_records ||
+                           newLength >= this.config.max_post_bytes;
+
+    // Have we exceeded the maximum size or record count for the entire batch?
+    let batchSizeExceeded = (newRecordCount + this.numAlreadyBatched) > this.config.max_batch_records ||
                             (newLength + this.bytesAlreadyBatched) >= this.config.max_batch_bytes;
 
-    let singleRecordTooBig = bytes.length + 2 > maxAllowedBytes;
-
     if (postSizeExceeded || batchSizeExceeded) {
-      this.log.trace(`PostQueue flushing due to postSizeExceeded=${postSizeExceeded}, batchSizeExceeded=${batchSizeExceeded}` +
-                     `, max_batch_bytes: ${this.config.max_batch_bytes}, max_post_bytes: ${this.config.max_post_bytes}`);
-
-      if (singleRecordTooBig) {
-        return { enqueued: false, error: new Error("Single record too large to submit to server") };
-      }
-
+      this.log.trace("PostQueue flushing due to ", { postSizeExceeded, batchSizeExceeded });
       // We need to write the queue out before handling this one, but we only
       // commit the batch (and thus start a new one) if the batch is full.
-      // Note that if a single record is too big for the batch or post, then
-      // the batch may be empty, and so we don't flush in that case.
-      if (this.numQueued) {
-        await this.flush(batchSizeExceeded || singleRecordTooBig);
-      }
+      await this.flush(batchSizeExceeded);
     }
+
     // Either a ',' or a '[' depending on whether this is the first record.
     this.queued += this.numQueued ? "," : "[";
     this.queued += bytes;
