@@ -28,6 +28,7 @@
   justify-content: center;
   padding: 4px 8px;
   border: 1px solid transparent;
+  font-size: 12px;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -96,7 +97,7 @@
 
 .theme-dark .tabs .tabs-menu-item a,
 .theme-light .tabs .tabs-menu-item a {
-  padding: 3px 15px;
+  padding: 3px 10px;
 }
 
 .theme-dark .tabs .tabs-menu-item:hover,
@@ -107,20 +108,6 @@
 .theme-dark .tabs .tabs-menu-item:hover:active:not(.is-active),
 .theme-light .tabs .tabs-menu-item:hover:active:not(.is-active) {
   background-color: var(--theme-toolbar-hover-active);
-}
-
-/* Dark Theme */
-
-.theme-dark .tabs .tabs-menu-item {
-  color: var(--theme-body-color-alt);
-}
-
-.theme-dark .tabs .tabs-menu-item:hover:not(.is-active) {
-  color: var(--theme-focus-outline-color);
-}
-
-.theme-dark .tabs .tabs-menu-item:hover:active {
-  color: var(--theme-selection-color);
 }
 
 /* Firebug Theme */

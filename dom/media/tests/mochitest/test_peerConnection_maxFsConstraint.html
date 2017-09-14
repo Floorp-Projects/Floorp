@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1393687",
+    title: "Enforce max-fs constraint on a PeerConnection",
+    visible: true
+  });
+
+  const pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+
+  var mustRejectWith = (msg, reason, f) =>
+    f().then(() => ok(false, msg),
+             e => is(e.name, reason, msg));
+
+  var removeAllButCodec = (d, codec) =>
+    (d.sdp = d.sdp.replace(/m=video (\w) UDP\/TLS\/RTP\/SAVPF \w.*\r\n/,
+                           "m=video $1 UDP/TLS/RTP/SAVPF " + codec + "\r\n"), d);
+
+  var mungeSDP = (d, forceH264) => {
+    if (forceH264) {
+      removeAllButCodec(d, 126);
+      d.sdp = d.sdp.replace(/a=fmtp:126 (.*);packetization-mode=1/, "a=fmtp:126 $1;packetization-mode=1;max-fs=100");
+    } else {
+      d.sdp = d.sdp.replace(/max-fs=\d+/, "max-fs=100");
+    }
+    return d;
+  };
+
+  function testScale(codec) {
+    var v1 = createMediaElement('video', 'v1');
+    var v2 = createMediaElement('video', 'v2');
+
+    var pc1 = new RTCPeerConnection();
+    var pc2 = new RTCPeerConnection();
+
+    var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
+    pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+
+    info("testing max-fs with" + codec);
+
+    pc1.onnegotiationneeded = e =>
+      pc1.createOffer()
+      .then(d => pc1.setLocalDescription(mungeSDP(d, codec == "H264")))
+      .then(() => pc2.setRemoteDescription(pc1.localDescription))
+      .then(() => pc2.createAnswer()).then(d => pc2.setLocalDescription(mungeSDP(d, codec =="H264")))
+      .then(() => pc1.setRemoteDescription(pc2.localDescription))
+      .catch(generateErrorCallback());
+
+    pc2.ontrack = e => {
+      v2.srcObject = e.streams[0];
+    };
+
+    var stream;
+
+    return navigator.mediaDevices.getUserMedia({ video: true })
+      .then(s => {
+        stream = s;
+        v1.srcObject = stream;
+        let track = stream.getVideoTracks()[0];
+        let sender = pc1.addTrack(track, stream);
+        is(v2.currentTime, 0, "v2.currentTime is zero at outset");
+      })
+      .then(() => wait(5000))
+      .then(() => {
+        if (v2.videoWidth == 0 && v2.videoHeight == 0) {
+          info("Skipping test, insufficient time for video to start.");
+        } else {
+          is(v2.videoWidth, 160, "sink width should be 160 for " + codec);
+          is(v2.videoHeight, 120, "sink height should be 120 for " + codec);
+        }})
+      .then(() => {
+        stream.getTracks().forEach(track => track.stop());
+        v1.srcObject = v2.srcObject = null;
+      }).catch(generateErrorCallback());
+  }
+
+  pushPrefs(['media.peerconnection.video.lock_scaling', true]).then(() => {
+    if (!navigator.appVersion.includes("Android")) {
+      runNetworkTest(() => testScale("VP8").then(() => testScale("H264"))
+                    .then(networkTestFinished));
+    } else {
+      // No support for H.264 on Android in automation, see Bug 1355786
+      runNetworkTest(() => testScale("VP8").then(networkTestFinished));
+    }
+  });
+</script>
+</pre>
+</body>
+</html>
