@@ -19,6 +19,9 @@
 #include "nsPrintfCString.h"
 #include "gfxPrefs.h"
 #include "AudioConverter.h"
+#if defined(XP_WIN)
+#include "nsXULAppAPI.h"
+#endif
 
 namespace mozilla {
 

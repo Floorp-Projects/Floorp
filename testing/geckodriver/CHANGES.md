@@ -17,6 +17,8 @@ Unreleased
 
 ### Changed
 
+- Log all used application arguments and not only `-marionette`
+
 - Early abort connection attempts to Marionette if the Firefox process
   closed unexpectetly
 
@@ -41,7 +43,7 @@ Unreleased
 
 - [webdriver crate] upgraded to version 0.30.0
 
-- [mozrunner crate] upgraded to version 0.4.2
+- [mozrunner crate] upgraded to version 0.5.0
 
 
 0.18.0 (2017-07-10)
