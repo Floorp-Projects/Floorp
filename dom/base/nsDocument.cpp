@@ -124,7 +124,6 @@
 
 #include "nsBidiUtils.h"
 
-#include "nsIParserService.h"
 #include "nsContentCreatorFunctions.h"
 
 #include "nsIScriptContext.h"
@@ -6830,31 +6829,6 @@ nsIDocument::GetCharacterSet(nsAString& aCharacterSet) const
   CopyASCIItoUTF16(charset, aCharacterSet);
 }
 
-NS_IMETHODIMP
-nsDocument::ImportNode(nsIDOMNode* aImportedNode,
-                       bool aDeep,
-                       uint8_t aArgc,
-                       nsIDOMNode** aResult)
-{
-  if (aArgc == 0) {
-    aDeep = true;
-  }
-
-  *aResult = nullptr;
-
-  nsCOMPtr<nsINode> imported = do_QueryInterface(aImportedNode);
-  NS_ENSURE_TRUE(imported, NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  nsCOMPtr<nsINode> result = nsIDocument::ImportNode(*imported, aDeep, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  NS_ADDREF(*aResult = result->AsDOMNode());
-  return NS_OK;
-}
-
 already_AddRefed<nsINode>
 nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
 {
@@ -6880,13 +6854,7 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
     case nsIDOMNode::COMMENT_NODE:
     case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
-      nsCOMPtr<nsINode> newNode;
-      rv = nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager, nullptr,
-                              getter_AddRefs(newNode));
-      if (rv.Failed()) {
-        return nullptr;
-      }
-      return newNode.forget();
+      return nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager, nullptr, rv);
     }
     default:
     {
@@ -7845,24 +7813,6 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
   }
 }
 
-NS_IMETHODIMP
-nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
-{
-  *aResult = nullptr;
-
-  nsCOMPtr<nsINode> adoptedNode = do_QueryInterface(aAdoptedNode);
-  NS_ENSURE_TRUE(adoptedNode, NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  nsINode* result = nsIDocument::AdoptNode(*adoptedNode, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  NS_ADDREF(*aResult = result->AsDOMNode());
-  return NS_OK;
-}
-
 nsINode*
 nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 {
@@ -7995,8 +7945,8 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
   }
 
   nsCOMArray<nsINode> nodesWithProperties;
-  rv = nsNodeUtils::Adopt(adoptedNode, sameDocument ? nullptr : mNodeInfoManager,
-                          newScope, nodesWithProperties);
+  nsNodeUtils::Adopt(adoptedNode, sameDocument ? nullptr : mNodeInfoManager,
+                     newScope, nodesWithProperties, rv);
   if (rv.Failed()) {
     // Disconnect all nodes from their parents, since some have the old document
     // as their ownerDocument and some have this as their ownerDocument.

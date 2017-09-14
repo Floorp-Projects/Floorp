@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ErrorResult.h"
 
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/SVGUseElementBinding.h"
@@ -256,13 +257,12 @@ SVGUseElement::CreateAnonymousContent()
     }
   }
 
-  nsCOMPtr<nsINode> newnode;
   nsNodeInfoManager* nodeInfoManager =
     targetContent->OwnerDoc() == OwnerDoc() ?
       nullptr : OwnerDoc()->NodeInfoManager();
-  nsNodeUtils::Clone(targetContent, true, nodeInfoManager, nullptr,
-                     getter_AddRefs(newnode));
-
+  IgnoredErrorResult rv;
+  nsCOMPtr<nsINode> newnode =
+    nsNodeUtils::Clone(targetContent, true, nodeInfoManager, nullptr, rv);
   nsCOMPtr<nsIContent> newcontent = do_QueryInterface(newnode);
 
   if (!newcontent)

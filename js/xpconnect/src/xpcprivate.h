@@ -3016,6 +3016,10 @@ enum WrapperDenialType {
 };
 bool ReportWrapperDenial(JSContext* cx, JS::HandleId id, WrapperDenialType type, const char* reason);
 
+// The CompartmentPrivate contains XPConnect-specific stuff related to each JS
+// compartment. Since compartments are trust domains, this means mostly
+// information needed to select the right security policy for cross-compartment
+// wrappers.
 class CompartmentPrivate
 {
     CompartmentPrivate() = delete;
@@ -3125,13 +3129,6 @@ public:
     // by a security wrapper. See XrayWrapper.cpp.
     bool wrapperDenialWarnings[WrapperDenialTypeCount];
 
-    // The scriptability of this compartment.
-    Scriptability scriptability;
-
-    // Our XPCWrappedNativeScope. This is non-null if and only if this is an
-    // XPConnect compartment.
-    XPCWrappedNativeScope* scope;
-
     const nsACString& GetLocation() {
         if (location.IsEmpty() && locationURI) {
 
@@ -3199,10 +3196,60 @@ CrashIfNotInAutomation()
     MOZ_RELEASE_ASSERT(IsInAutomation());
 }
 
+// XPConnect-specific data associated with each JavaScript realm. Per-Window
+// settings live here; security-wrapper-related settings live in the
+// CompartmentPrivate.
+//
+// Following the ECMAScript spec, a realm contains a global (e.g. an inner
+// Window) and its associated scripts and objects; a compartment may contain
+// several same-origin, same-principal realms.
+class RealmPrivate
+{
+    RealmPrivate() = delete;
+    RealmPrivate(const RealmPrivate&) = delete;
+
+public:
+    explicit RealmPrivate(JS::Realm* realm);
+
+    static RealmPrivate* Get(JS::Realm* realm)
+    {
+        MOZ_ASSERT(realm);
+        void* priv = JS::GetRealmPrivate(realm);
+        return static_cast<RealmPrivate*>(priv);
+    }
+
+    // Get the RealmPrivate for a given object.  `object` must not be a
+    // cross-compartment wrapper, as CCWs aren't dedicated to a particular
+    // realm.
+    static RealmPrivate* Get(JSObject* object)
+    {
+        JS::Realm* realm = JS::GetObjectRealmOrNull(object);
+        return Get(realm);
+    }
+
+    // This flag is intended for a very specific use, internal to Gecko. It may
+    // go away or change behavior at any time. It should not be added to any
+    // documentation and it should not be used without consulting the XPConnect
+    // module owner.
+    bool writeToGlobalPrototype;
+
+    // When writeToGlobalPrototype is true, we use this flag to temporarily
+    // disable the writeToGlobalPrototype behavior (when resolving standard
+    // classes, for example).
+    bool skipWriteToGlobalPrototype;
+
+    // The scriptability of this realm.
+    Scriptability scriptability;
+
+    // Our XPCWrappedNativeScope. This is non-null if and only if this is an
+    // XPConnect realm.
+    XPCWrappedNativeScope* scope;
+};
+
 inline XPCWrappedNativeScope*
 ObjectScope(JSObject* obj)
 {
-    return CompartmentPrivate::Get(obj)->scope;
+    return RealmPrivate::Get(obj)->scope;
 }
 
 JSObject* NewOutObject(JSContext* cx);

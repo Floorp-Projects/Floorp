@@ -50,7 +50,7 @@ class MOZ_HEAP_CLASS TextOverflow final {
    * the content edges.  Add display items for text-overflow markers as needed
    * and remove or clip items that would overlap a marker.
    */
-  void ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine);
+  void ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine, uint32_t aLineNumber);
 
   /**
    * Get the resulting text-overflow markers (the list may be empty).
@@ -215,7 +215,8 @@ class MOZ_HEAP_CLASS TextOverflow final {
   void CreateMarkers(const nsLineBox* aLine,
                      bool aCreateIStart, bool aCreateIEnd,
                      const LogicalRect& aInsideMarkersArea,
-                     const LogicalRect& aContentArea);
+                     const LogicalRect& aContentArea,
+                     uint32_t aLineNumber);
 
   LogicalRect            mContentArea;
   nsDisplayListBuilder*  mBuilder;

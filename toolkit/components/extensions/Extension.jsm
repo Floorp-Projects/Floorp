@@ -102,7 +102,7 @@ XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
 XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData);
 
 // The maximum time to wait for extension shutdown blockers to complete.
-const SHUTDOWN_BLOCKER_MAX_MS = 1000;
+const SHUTDOWN_BLOCKER_MAX_MS = 8000;
 
 // The list of properties that themes are allowed to contain.
 XPCOMUtils.defineLazyGetter(this, "allowedThemeProperties", () => {
