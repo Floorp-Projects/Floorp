@@ -1344,73 +1344,6 @@ add_task(async function test_uploadOutgoing_failed() {
   }
 });
 
-/* A couple of "functional" tests to ensure we split records into appropriate
-   POST requests. More comprehensive unit-tests for this "batching" are in
-   test_postqueue.js.
-*/
-add_task(async function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
-  _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_RECORDS");
-
-  let collection = new ServerCollection();
-
-  // Let's count how many times the client posts to the server
-  var noOfUploads = 0;
-  collection.post = (function(orig) {
-    return function(data, request) {
-      // This test doesn't arrange for batch semantics - so we expect the
-      // first request to come in with batch=true and the others to have no
-      // batch related headers at all (as the first response did not provide
-      // a batch ID)
-      if (noOfUploads == 0) {
-        do_check_eq(request.queryString, "batch=true");
-      } else {
-        do_check_eq(request.queryString, "");
-      }
-      noOfUploads++;
-      return orig.call(this, data, request);
-    };
-  }(collection.post));
-
-  // Create a bunch of records (and server side handlers)
-  let engine = makeRotaryEngine();
-  for (var i = 0; i < 234; i++) {
-    let id = "record-no-" + i;
-    engine._store.items[id] = "Record No. " + i;
-    engine._tracker.addChangedID(id, 0);
-    collection.insert(id);
-  }
-
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
-
-  let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
-  });
-
-  await SyncTestingInfrastructure(server);
-  try {
-
-    // Confirm initial environment.
-    do_check_eq(noOfUploads, 0);
-
-    await engine._syncStartup();
-    await engine._uploadOutgoing();
-
-    // Ensure all records have been uploaded.
-    for (i = 0; i < 234; i++) {
-      do_check_true(!!collection.payload("record-no-" + i));
-    }
-
-    // Ensure that the uploads were performed in batches of MAX_UPLOAD_RECORDS.
-    do_check_eq(noOfUploads, Math.ceil(234 / MAX_UPLOAD_RECORDS));
-
-  } finally {
-    await cleanAndGo(engine, server);
-  }
-});
-
 async function createRecordFailTelemetry(allowSkippedRecord) {
   Service.identity.username = "foo";
   let collection = new ServerCollection();
@@ -1502,13 +1435,13 @@ add_task(async function test_uploadOutgoing_createRecord_throws_dontAllowSkipRec
 });
 
 add_task(async function test_uploadOutgoing_largeRecords() {
-  _("SyncEngine._uploadOutgoing throws on records larger than MAX_UPLOAD_BYTES");
+  _("SyncEngine._uploadOutgoing throws on records larger than the max record payload size");
 
   let collection = new ServerCollection();
 
   let engine = makeRotaryEngine();
   engine.allowSkippedRecord = false;
-  engine._store.items["large-item"] = "Y".repeat(MAX_UPLOAD_BYTES * 2);
+  engine._store.items["large-item"] = "Y".repeat(Service.getMaxRecordPayloadSize() * 2);
   engine._tracker.addChangedID("large-item", 0);
   collection.insert("large-item");
 
@@ -1655,6 +1588,10 @@ add_task(async function test_sync_partialUpload() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
+  let oldServerConfiguration = Service.serverConfiguration;
+  Service.serverConfiguration = {
+    max_post_records: 100
+  };
   await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
@@ -1708,8 +1645,8 @@ add_task(async function test_sync_partialUpload() {
       let id = "record-no-" + i;
       // Ensure failed records are back in the tracker:
       // * records no. 23 and 42 were rejected by the server,
-      // * records no. 200 and higher couldn't be uploaded because we failed
-      //   hard on the 3rd upload.
+      // * records after the third batch and higher couldn't be uploaded because
+      //   we failed hard on the 3rd upload.
       if ((i == 23) || (i == 42) || (i >= 200))
         do_check_eq(engine._tracker.changedIDs[id], i);
       else
@@ -1717,6 +1654,7 @@ add_task(async function test_sync_partialUpload() {
     }
 
   } finally {
+    Service.serverConfiguration = oldServerConfiguration;
     await promiseClean(engine, server);
   }
 });

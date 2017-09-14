@@ -64,10 +64,6 @@ PASSWORDS_STORE_BATCH_SIZE:            50,
 // (how many records are fetched at a time from the server when batching is used).
 DEFAULT_DOWNLOAD_BATCH_SIZE:           1000,
 
-
-// Default maximum size for a record payload
-DEFAULT_MAX_RECORD_PAYLOAD_BYTES:      262144,  // 256KB
-
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
 MULTI_DEVICE_THRESHOLD:                300,
@@ -86,10 +82,10 @@ SCORE_UPDATE_DELAY:                    100,
 // observed spurious idle/back events and short enough to pre-empt user activity.
 IDLE_OBSERVER_BACK_DELAY:              100,
 
-// Max number of records or bytes to upload in a single POST - we'll do multiple POSTS if either
-// MAX_UPLOAD_RECORDS or MAX_UPLOAD_BYTES is hit)
-MAX_UPLOAD_RECORDS:                    100,
-MAX_UPLOAD_BYTES:                      1024 * 1023, // just under 1MB
+// Duplicate URI_LENGTH_MAX from Places (from nsNavHistory.h), used to discard
+// tabs with huge uris during tab sync.
+URI_LENGTH_MAX:                        65536,
+
 MAX_HISTORY_UPLOAD:                    5000,
 MAX_HISTORY_DOWNLOAD:                  5000,
 
