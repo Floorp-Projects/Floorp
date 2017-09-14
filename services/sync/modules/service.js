@@ -618,6 +618,16 @@ Sync11Service.prototype = {
     }
   },
 
+  getMaxRecordPayloadSize() {
+    let config = this.serverConfiguration;
+    if (!config || !config.max_record_payload_bytes) {
+      this._log.warn("No config or incomplete config in getMaxRecordPayloadSize."
+                     + " Are we running tests?");
+      return 256 * 1024;
+    }
+    return config.max_record_payload_bytes;
+  },
+
   async verifyLogin(allow40XRecovery = true) {
     if (!this.identity.username) {
       this._log.warn("No username in verifyLogin.");
