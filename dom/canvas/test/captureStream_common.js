@@ -219,7 +219,12 @@ CaptureStreamTestHelper2D.prototype.clear = function(canvas) {
 };
 
 /* Draw the color |color| to the source canvas |canvas|. Format [R,G,B,A]. */
-CaptureStreamTestHelper2D.prototype.drawColor = function(canvas, color) {
+CaptureStreamTestHelper2D.prototype.drawColor = function(canvas, color,
+    { offsetX = 0,
+      offsetY = 0,
+      width = canvas.width / 2,
+      height = canvas.height / 2,
+    } = {}) {
   var ctx = canvas.getContext('2d');
   var rgba = color.data.slice(); // Copy to not overwrite the original array
   rgba[3] = rgba[3] / 255.0; // Convert opacity to double in range [0,1]
@@ -227,7 +232,7 @@ CaptureStreamTestHelper2D.prototype.drawColor = function(canvas, color) {
   ctx.fillStyle = "rgba(" + rgba.join(',') + ")";
 
   // Only fill top left corner to test that output is not flipped or rotated.
-  ctx.fillRect(0, 0, canvas.width / 2, canvas.height / 2);
+  ctx.fillRect(offsetX, offsetY, width, height);
 };
 
 /* Test that the given 2d canvas is NOT origin-clean. */
