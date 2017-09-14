@@ -60,6 +60,12 @@ impl ws::Handler for Server {
                     "disable_render_target_debug" => {
                         DebugCommand::EnableRenderTargetDebug(false)
                     }
+                    "enable_alpha_rects_debug" => {
+                        DebugCommand::EnableAlphaRectsDebug(true)
+                    }
+                    "disable_alpha_rects_debug" => {
+                        DebugCommand::EnableAlphaRectsDebug(false)
+                    }
                     "fetch_passes" => {
                         DebugCommand::FetchPasses
                     }
@@ -109,7 +115,9 @@ impl DebugServer {
         let broadcaster = socket.broadcaster();
 
         let join_handle = Some(thread::spawn(move || {
-            if let Err(..) = socket.listen("127.0.0.1:3583") {
+            let address = "127.0.0.1:3583";
+            println!("WebRender debug server started: {}", address);
+            if let Err(..) = socket.listen(address) {
                 println!("ERROR: Unable to bind debugger websocket (port may be in use).");
             }
         }));

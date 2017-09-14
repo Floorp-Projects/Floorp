@@ -9,7 +9,7 @@ use euclid::{Transform3D, Point2D, Size2D, Rect};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE};
 use internal_types::RenderTargetMode;
 use std::f32;
-use api::{ColorU, ImageFormat, DeviceUintSize};
+use api::{ColorU, ImageFormat, DeviceUintSize, DeviceIntRect};
 
 #[derive(Debug, Copy, Clone)]
 enum DebugSampler {
@@ -237,6 +237,16 @@ impl DebugRenderer {
                     color1: ColorU) {
         self.line_vertices.push(DebugColorVertex::new(x0 as f32, y0 as f32, color0));
         self.line_vertices.push(DebugColorVertex::new(x1 as f32, y1 as f32, color1));
+    }
+
+
+    pub fn add_rect(&mut self, rect: &DeviceIntRect, color: ColorU) {
+        let p0 = rect.origin;
+        let p1 = p0 + rect.size;
+        self.add_line(p0.x, p0.y, color, p1.x, p0.y, color);
+        self.add_line(p1.x, p0.y, color, p1.x, p1.y, color);
+        self.add_line(p1.x, p1.y, color, p0.x, p1.y, color);
+        self.add_line(p0.x, p1.y, color, p0.x, p0.y, color);
     }
 
     pub fn render(&mut self,

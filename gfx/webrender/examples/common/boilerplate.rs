@@ -66,6 +66,11 @@ pub trait Example {
     fn get_external_image_handler(&self) -> Option<Box<webrender::ExternalImageHandler>> {
         None
     }
+    fn get_output_image_handler(&mut self, _gl: &gl::Gl) -> Option<Box<webrender::OutputImageHandler>> {
+        None
+    }
+    fn draw_custom(&self, _gl: &gl::Gl) {
+    }
 }
 
 pub fn main_wrapper(example: &mut Example,
@@ -111,7 +116,7 @@ pub fn main_wrapper(example: &mut Example,
     };
 
     let size = DeviceUintSize::new(width, height);
-    let (mut renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
+    let (mut renderer, sender) = webrender::Renderer::new(gl.clone(), opts).unwrap();
     let api = sender.create_api();
     let document_id = api.add_document(size);
 
@@ -120,6 +125,9 @@ pub fn main_wrapper(example: &mut Example,
 
     if let Some(external_image_handler) = example.get_external_image_handler() {
         renderer.set_external_image_handler(external_image_handler);
+    }
+    if let Some(output_image_handler) = example.get_output_image_handler(&*gl) {
+        renderer.set_output_image_handler(output_image_handler);
     }
 
     let epoch = Epoch(0);
@@ -176,6 +184,12 @@ pub fn main_wrapper(example: &mut Example,
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
+                                             _, Some(glutin::VirtualKeyCode::B)) => {
+                    let mut flags = renderer.get_debug_flags();
+                    flags.toggle(webrender::ALPHA_PRIM_DBG);
+                    renderer.set_debug_flags(flags);
+                }
+                glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
                                              _, Some(glutin::VirtualKeyCode::M)) => {
                     api.notify_memory_pressure();
                 }
@@ -202,6 +216,7 @@ pub fn main_wrapper(example: &mut Example,
 
         renderer.update();
         renderer.render(DeviceUintSize::new(width, height)).unwrap();
+        example.draw_custom(&*gl);
         window.swap_buffers().ok();
     }
 

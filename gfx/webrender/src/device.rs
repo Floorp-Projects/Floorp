@@ -16,7 +16,7 @@ use std::ptr;
 use std::rc::Rc;
 use std::thread;
 use api::{ColorF, ImageFormat};
-use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintSize};
+use api::{DeviceIntRect, DeviceUintSize};
 
 #[derive(Debug, Copy, Clone, PartialEq, Ord, Eq, PartialOrd)]
 pub struct FrameId(usize);
@@ -978,6 +978,31 @@ impl Device {
         }
     }
 
+    pub fn create_fbo_for_external_texture(&mut self, texture_id: u32) -> FBOId {
+        let fbo = FBOId(self.gl.gen_framebuffers(1)[0]);
+        self.bind_external_draw_target(fbo);
+        self.gl.bind_framebuffer(gl::FRAMEBUFFER, fbo.0);
+        self.gl.framebuffer_texture_2d(gl::FRAMEBUFFER,
+                                       gl::COLOR_ATTACHMENT0,
+                                       gl::TEXTURE_2D,
+                                       texture_id,
+                                       0);
+        fbo
+    }
+
+    pub fn delete_fbo(&mut self, fbo: FBOId) {
+        self.gl.delete_framebuffers(&[fbo.0]);
+    }
+
+    pub fn bind_external_draw_target(&mut self, fbo_id: FBOId) {
+        debug_assert!(self.inside_frame);
+
+        if self.bound_draw_fbo != fbo_id {
+            self.bound_draw_fbo = fbo_id;
+            fbo_id.bind(self.gl(), FBOTarget::Draw);
+        }
+    }
+
     pub fn bind_program(&mut self, program: &Program) {
         debug_assert!(self.inside_frame);
 
@@ -1166,19 +1191,9 @@ impl Device {
     }
 
     pub fn blit_render_target(&mut self,
-                              src_texture: Option<(&Texture, i32)>,
-                              src_rect: Option<DeviceIntRect>,
+                              src_rect: DeviceIntRect,
                               dest_rect: DeviceIntRect) {
         debug_assert!(self.inside_frame);
-
-        let src_rect = src_rect.unwrap_or_else(|| {
-            let texture = src_texture.unwrap().0;
-            DeviceIntRect::new(DeviceIntPoint::zero(),
-                               DeviceIntSize::new(texture.width as gl::GLint,
-                                                  texture.height as gl::GLint))
-        });
-
-        self.bind_read_target(src_texture);
 
         self.gl.blit_framebuffer(src_rect.origin.x,
                                   src_rect.origin.y,

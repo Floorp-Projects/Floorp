@@ -10,7 +10,7 @@ bincode = "0.8"
 rayon = "0.8"
 thread_profiler = "0.1.1"
 euclid = "0.15"
-app_units = "0.5"
+app_units = "0.5.6"
 gleam = "0.4"
 
 [dependencies.webrender]

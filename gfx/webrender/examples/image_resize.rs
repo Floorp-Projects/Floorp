@@ -39,9 +39,14 @@ impl Example for App {
             None,
         );
 
-        let bounds = (0,0).to(512, 512);
-        builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                      bounds,
+        let bounds = (0, 0).to(512, 512);
+        let info = LayoutPrimitiveInfo {
+            rect: bounds,
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_stacking_context(&info,
+                                      ScrollPolicy::Scrollable,
                                       None,
                                       TransformStyle::Flat,
                                       None,
@@ -50,18 +55,26 @@ impl Example for App {
 
         let image_size = LayoutSize::new(100.0, 100.0);
 
+        let info = LayoutPrimitiveInfo {
+            rect: LayoutRect::new(LayoutPoint::new(100.0, 100.0), image_size),
+            local_clip: Some(LocalClip::from(bounds)),
+            is_backface_visible: true,
+        };
         builder.push_image(
-            LayoutRect::new(LayoutPoint::new(100.0, 100.0), image_size),
-            Some(LocalClip::from(bounds)),
+            &info,
             image_size,
             LayoutSize::zero(),
             ImageRendering::Auto,
             self.image_key
         );
 
+        let info = LayoutPrimitiveInfo {
+            rect: LayoutRect::new(LayoutPoint::new(250.0, 100.0), image_size),
+            local_clip: Some(LocalClip::from(bounds)),
+            is_backface_visible: true,
+        };
         builder.push_image(
-            LayoutRect::new(LayoutPoint::new(250.0, 100.0), image_size),
-            Some(LocalClip::from(bounds)),
+            &info,
             image_size,
             LayoutSize::zero(),
             ImageRendering::Pixelated,
