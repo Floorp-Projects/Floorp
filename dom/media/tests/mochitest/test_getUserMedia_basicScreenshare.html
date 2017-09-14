@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -9,7 +10,57 @@
   createHTML({
     title: "getUserMedia Basic Screenshare Test",
     bug: "1211656",
+    visible: true,
   });
+
+  let verifyScreenshare = async (video, helper, upleft, upright, downleft, downright) => {
+    if (video.readyState < video.HAVE_CURRENT_DATA) {
+      info("Waiting for data");
+      await new Promise(r => video.addEventListener("loadeddata", r, {once: true}));
+    }
+
+    // We assume video size will not change. Offsets help to account for a
+    // square fullscreen-canvas, while the screen is rectangular.
+    let offsetX = Math.max(0, video.videoWidth - video.videoHeight) / 2;
+    let offsetY = Math.max(0, video.videoHeight - video.videoWidth) / 2;
+
+    let verifyAround = async (internalX, internalY, color) => {
+      // Pick a couple of samples around a coordinate to check for a color.
+      // We check multiple rows and columns, to avoid most artifact issues.
+      let areaSamples = [
+        {dx: 0, dy: 0},
+        {dx: 1, dy: 3},
+        {dx: 8, dy: 5},
+      ];
+      for (let {dx, dy} of areaSamples) {
+        let x = offsetX + dx + internalX;
+        let y = offsetY + dy + internalY;
+        info("Checking screen coordinate (" + [x,y] + ") of total resolution "
+          + video.videoWidth + "x" + video.videoHeight
+          + " against " + color.name + ".");
+        await helper.waitForPixel(video, px => {
+          let result = helper.isPixel(px, color, 16);
+          info("Checking pixel against " + color.name + ". Got ["
+            + Array.slice(px) + "] (" + (result ? "YES" : "NO") + ")");
+          return result;
+        }, {offsetX: x, offsetY: y});
+      }
+    };
+
+    let screenSizeSq = Math.min(video.videoWidth, video.videoHeight);
+
+    info("Waiting for upper left quadrant to become " + upleft.name);
+    await verifyAround(screenSizeSq / 4, screenSizeSq / 4, upleft);
+
+    info("Waiting for upper right quadrant to become " + upright.name);
+    await verifyAround(screenSizeSq * 3 / 4, screenSizeSq / 4, upright);
+
+    info("Waiting for lower left quadrant to become " + downleft.name);
+    await verifyAround(screenSizeSq / 4, screenSizeSq * 3 / 4, downleft);
+
+    info("Waiting for lower right quadrant to become " + downright.name);
+    await verifyAround(screenSizeSq * 3 / 4, screenSizeSq * 3 / 4, downright);
+  };
 
   /**
    * Run a test to verify that we can complete a start and stop media playback
@@ -21,19 +72,57 @@
         ok(true, "Screensharing disabled for OSX10.6 and WinXP");
         return;
     }
-    let testVideo = createMediaElement('video', 'testVideo');
 
     // Screensharing must work even without "mochi.test," in allowed_domains
-    await pushPrefs(["media.getusermedia.screensharing.allowed_domains",
-                     "mozilla.github.io,*.bugzilla.mozilla.org"]);
+    await pushPrefs(
+      ["media.getusermedia.screensharing.allowed_domains",
+        "mozilla.github.io,*.bugzilla.mozilla.org"],
+      ["full-screen-api.enabled", true],
+      ["full-screen-api.unprefix.enabled", true],
+      ["full-screen-api.allow-trusted-requests-only", false],
+      ["full-screen-api.transition-duration.enter", "0 0"],
+      ["full-screen-api.transition-duration.leave", "0 0"],
+    );
+
+    let testVideo = createMediaElement('video', 'testVideo');
+
+    let canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 20;
+    document.getElementById("content").appendChild(canvas);
+    let draw = (upleft, upright, downleft, downright) => {
+      helper.drawColor(canvas, upleft, {offsetX: 0, offsetY: 0});
+      helper.drawColor(canvas, upright, {offsetX: 10, offsetY: 0});
+      helper.drawColor(canvas, downleft, {offsetX: 0, offsetY: 10});
+      helper.drawColor(canvas, downright, {offsetX: 10, offsetY: 10});
+    };
+    let helper = new CaptureStreamTestHelper2D(1, 1);
+
+    await new Promise((resolve, reject) => {
+      document.onfullscreenchange = resolve;
+      document.onfullscreenerror = () => reject(new Error("fullscreenerror"));
+
+      // Note that going fullscreen requires the tab (and window) to be in the
+      // foreground and having focus.
+      canvas.requestFullscreen();
+    });
 
     info("Testing screenshare without constraints");
     let stream = await getUserMedia({
       video: {mediaSource: "screen"},
       fake: false,
     });
+    draw(helper.red, helper.blue,
+         helper.green, helper.grey);
     let playback = new LocalMediaStreamPlayback(testVideo, stream);
-    await playback.playMediaWithDeprecatedStreamStop(false);
+    playback.startMedia();
+    await playback.verifyPlaying();
+    await verifyScreenshare(testVideo, helper,
+                            helper.red, helper.blue,
+                            helper.green, helper.grey);
+    for (let track of stream.getTracks()) {
+      track.stop();
+    }
+    playback.detachFromMediaElement();
 
     info("Testing screenshare with size and framerate constraints");
     stream = await getUserMedia({
@@ -54,9 +143,14 @@
       },
       fake: false,
     });
+    draw(helper.green, helper.red,
+         helper.grey, helper.blue);
     playback = new LocalMediaStreamPlayback(testVideo, stream);
-    playback.startMedia(false);
+    playback.startMedia();
     await playback.verifyPlaying();
+    await verifyScreenshare(testVideo, helper,
+                            helper.green, helper.red,
+                            helper.grey, helper.blue);
 
     info("Testing modifying screenshare with applyConstraints");
     await Promise.all([
@@ -71,11 +165,17 @@
       }),
       () => listenUntil(testVideo, "resize", () => true),
     ]);
+    draw(helper.grey, helper.green,
+         helper.blue, helper.red);
     await playback.verifyPlaying(); // still playing
+    await verifyScreenshare(testVideo, helper,
+                            helper.grey, helper.green,
+                            helper.blue, helper.red);
     await playback.deprecatedStopStreamInMediaPlayback();
     playback.detachFromMediaElement();
-  });
 
+    document.exitFullscreen();
+  });
 </script>
 </pre>
 </body>
