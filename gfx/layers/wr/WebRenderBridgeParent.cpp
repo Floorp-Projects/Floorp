@@ -23,6 +23,7 @@
 #include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/WebRenderImageHost.h"
@@ -221,15 +222,119 @@ WebRenderBridgeParent::Destroy()
   ClearResources();
 }
 
+void
+WebRenderBridgeParent::DeallocShmems(nsTArray<ipc::Shmem>& aShmems)
+{
+  if (IPCOpen()) {
+    for (auto& shm : aShmems) {
+      DeallocShmem(shm);
+    }
+  }
+  aShmems.Clear();
+}
+
+bool
+WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
+                                       const nsTArray<ipc::Shmem>& aResourceData,
+                                       wr::ResourceUpdateQueue& aUpdates)
+{
+  wr::ShmSegmentsReader reader(aResourceData);
+
+  for (const auto& cmd : aResourceUpdates) {
+    switch (cmd.type()) {
+      case OpUpdateResource::TOpAddImage: {
+        const auto& op = cmd.get_OpAddImage();
+        wr::Vec_u8 bytes;
+        if (!reader.Read(op.bytes(), bytes)) {
+          return false;
+        }
+        aUpdates.AddImage(op.key(), op.descriptor(), bytes);
+        break;
+      }
+      case OpUpdateResource::TOpUpdateImage: {
+        const auto& op = cmd.get_OpUpdateImage();
+        wr::Vec_u8 bytes;
+        if (!reader.Read(op.bytes(), bytes)) {
+          return false;
+        }
+        aUpdates.UpdateImageBuffer(op.key(), op.descriptor(), bytes);
+        break;
+      }
+      case OpUpdateResource::TOpAddBlobImage: {
+        const auto& op = cmd.get_OpAddBlobImage();
+        wr::Vec_u8 bytes;
+        if (!reader.Read(op.bytes(), bytes)) {
+          return false;
+        }
+        aUpdates.AddBlobImage(op.key(), op.descriptor(), bytes);
+        break;
+      }
+      case OpUpdateResource::TOpUpdateBlobImage: {
+        const auto& op = cmd.get_OpUpdateBlobImage();
+        wr::Vec_u8 bytes;
+        if (!reader.Read(op.bytes(), bytes)) {
+          return false;
+        }
+        aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes);
+        break;
+      }
+      case OpUpdateResource::TOpAddRawFont: {
+        const auto& op = cmd.get_OpAddRawFont();
+        wr::Vec_u8 bytes;
+        if (!reader.Read(op.bytes(), bytes)) {
+          return false;
+        }
+        aUpdates.AddRawFont(op.key(), bytes, op.fontIndex());
+        break;
+      }
+      case OpUpdateResource::TOpAddFontInstance: {
+        const auto& op = cmd.get_OpAddFontInstance();
+        aUpdates.AddFontInstance(op.instanceKey(), op.fontKey(),
+                                 op.glyphSize(),
+                                 op.options().ptrOr(nullptr),
+                                 op.platformOptions().ptrOr(nullptr));
+        break;
+      }
+      case OpUpdateResource::TOpDeleteImage: {
+        const auto& op = cmd.get_OpDeleteImage();
+        aUpdates.DeleteImage(op.key());
+        break;
+      }
+      case OpUpdateResource::TOpDeleteFont: {
+        const auto& op = cmd.get_OpDeleteFont();
+        aUpdates.DeleteFont(op.key());
+        break;
+      }
+      case OpUpdateResource::TOpDeleteFontInstance: {
+        const auto& op = cmd.get_OpDeleteFontInstance();
+        aUpdates.DeleteFontInstance(op.key());
+        break;
+      }
+      case OpUpdateResource::T__None: break;
+    }
+  }
+
+  return true;
+}
+
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvUpdateResources(const wr::ByteBuffer& aUpdates)
+WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourceUpdates,
+                                           nsTArray<ipc::Shmem>&& aResourceData)
 {
   if (mDestroyed) {
+    DeallocShmems(aResourceData);
     return IPC_OK();
   }
 
-  wr::ResourceUpdateQueue updates = wr::ResourceUpdateQueue::Deserialize(aUpdates.AsSlice());
+  wr::ResourceUpdateQueue updates;
+
+  if (!UpdateResources(aResourceUpdates, aResourceData, updates)) {
+    DeallocShmems(aResourceData);
+    IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
+  }
+
   mApi->UpdateResources(updates);
+  DeallocShmems(aResourceData);
   return IPC_OK();
 }
 
@@ -334,7 +439,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           const wr::ByteBuffer& dl,
                                           const wr::BuiltDisplayListDescriptor& dlDesc,
                                           const WebRenderScrollData& aScrollData,
-                                          const wr::ByteBuffer& aResourceUpdates,
+                                          nsTArray<OpUpdateResource>&& aResourceUpdates,
+                                          nsTArray<ipc::Shmem>&& aResourceData,
                                           const wr::IdNamespace& aIdNamespace,
                                           const TimeStamp& aTxnStartTime,
                                           const TimeStamp& aFwdTime)
@@ -343,6 +449,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
     }
+    DeallocShmems(aResourceData);
     return IPC_OK();
   }
 
@@ -354,7 +461,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  wr::ResourceUpdateQueue resources = wr::ResourceUpdateQueue::Deserialize(aResourceUpdates.AsSlice());
+  wr::ResourceUpdateQueue resources;
+  UpdateResources(aResourceUpdates, aResourceData, resources);
 
   uint32_t wrEpoch = GetNextWrEpoch();
   ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(wrEpoch),
@@ -371,6 +479,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
   }
 
+  DeallocShmems(aResourceData);
   return IPC_OK();
 }
 
@@ -384,13 +493,16 @@ WebRenderBridgeParent::RecvSetDisplayListSync(const gfx::IntSize &aSize,
                                               const wr::ByteBuffer& dl,
                                               const wr::BuiltDisplayListDescriptor& dlDesc,
                                               const WebRenderScrollData& aScrollData,
-                                              const wr::ByteBuffer& aResourceUpdates,
+                                              nsTArray<OpUpdateResource>&& aResourceUpdates,
+                                              nsTArray<ipc::Shmem>&& aResourceData,
                                               const wr::IdNamespace& aIdNamespace,
                                               const TimeStamp& aTxnStartTime,
                                               const TimeStamp& aFwdTime)
 {
-  return RecvSetDisplayList(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-                            aContentSize, dl, dlDesc, aScrollData, aResourceUpdates,
+  return RecvSetDisplayList(aSize, Move(aCommands), Move(aToDestroy),
+                            aFwdTransactionId, aTransactionId,
+                            aContentSize, dl, dlDesc, aScrollData,
+                            Move(aResourceUpdates), Move(aResourceData),
                             aIdNamespace, aTxnStartTime, aFwdTime);
 }
 
@@ -453,8 +565,9 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
 
         IntSize size = dSurf->GetSize();
         wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
-        auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-        aResources.AddImage(keys[0], descriptor, slice);
+        wr::Vec_u8 data;
+        data.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
+        aResources.AddImage(keys[0], descriptor, data);
 
         dSurf->Unmap();
         break;
