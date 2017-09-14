@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -29,19 +30,22 @@ import android.widget.TextView;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.prompts.PromptService;
-import org.mozilla.gecko.R;
+import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ColorUtil;
+import org.mozilla.gecko.widget.ActionModePresenter;
 
 public class WebAppActivity extends AppCompatActivity
-                            implements GeckoView.NavigationListener {
+                            implements ActionModePresenter,
+                                       GeckoView.NavigationListener {
     private static final String LOGTAG = "WebAppActivity";
 
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
@@ -51,6 +55,9 @@ public class WebAppActivity extends AppCompatActivity
     private GeckoView mGeckoView;
     private PromptService mPromptService;
     private DoorHangerPopup mDoorHangerPopup;
+
+    private ActionMode mActionMode;
+    private TextSelection mTextSelection;
 
     private boolean mIsFullScreenMode;
     private boolean mIsFullScreenContent;
@@ -93,6 +100,9 @@ public class WebAppActivity extends AppCompatActivity
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
 
+        mTextSelection = TextSelection.Factory.create(mGeckoView, this);
+        mTextSelection.create();
+
         final GeckoViewSettings settings = mGeckoView.getSettings();
         settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
 
@@ -108,6 +118,7 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
+        mTextSelection.destroy();
         mDoorHangerPopup.destroy();
         mPromptService.destroy();
 
@@ -283,5 +294,19 @@ public class WebAppActivity extends AppCompatActivity
     private void updateFullScreenMode(boolean fullScreen) {
         mIsFullScreenMode = fullScreen;
         updateFullScreen();
+    }
+
+    @Override // ActionModePresenter
+    public void startActionMode(final ActionMode.Callback callback) {
+        endActionMode();
+        mActionMode = startSupportActionMode(callback);
+    }
+
+    @Override // ActionModePresenter
+    public void endActionMode() {
+        if (mActionMode != null) {
+            mActionMode.finish();
+            mActionMode = null;
+        }
     }
 }
