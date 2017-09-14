@@ -131,6 +131,7 @@ public:
   GetByURI(dom::GlobalObject& aGlobal, nsIURI* aURI);
 
 
+  static bool UseRemoteWebExtensions(dom::GlobalObject& aGlobal);
   static bool IsExtensionProcess(dom::GlobalObject& aGlobal);
 
 

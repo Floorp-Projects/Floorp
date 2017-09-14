@@ -97,9 +97,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
-                                      "extensions.webextensions.remote", false);
-
 var {
   GlobalManager,
   ParentAPIManager,
@@ -785,7 +782,7 @@ this.Extension = class extends ExtensionData {
       StartupCache.clearAddonData(addonData.id);
     }
 
-    this.remote = useRemoteWebExtensions;
+    this.remote = !WebExtensionPolicy.isExtensionProcess;
 
     if (this.remote && processCount !== 1) {
       throw new Error("Out-of-process WebExtensions are not supported with multiple child processes");
