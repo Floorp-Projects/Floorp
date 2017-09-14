@@ -13,6 +13,17 @@
         android:layout_height="match_parent"
         tools:background="@drawable/favicon_globe"/>
 
+    <!-- Visibility is dynamically set based on pinned state. -->
+    <ImageView
+            android:id="@+id/pin_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="3dp"
+            android:src="@drawable/topsite_pin"
+            android:visibility="gone"
+            android:importantForAccessibility="no"/>
+
     <!-- scrollHorizontally=false allows drags on the TextView to scroll the ViewPager.
          See https://stackoverflow.com/a/18171834/2219998 -->
     <TextView
