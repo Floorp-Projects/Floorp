@@ -9,11 +9,17 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
+using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::LayoutSize from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::ImageDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::ImageRendering from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::MixBlendMode from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::MaybeFontInstanceOptions from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::MaybeFontInstancePlatformOptions from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::FontInstanceKey from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::MaybeIntSize from "mozilla/gfx/Point.h";
@@ -60,6 +66,75 @@ union WebRenderParentCommand {
   OpUpdateAsyncImagePipeline;
   CompositableOperation;
   OpAddCompositorAnimations;
+};
+
+struct OffsetRange {
+  uint32_t start;
+  uint32_t length;
+};
+
+struct OpAddImage {
+  ImageDescriptor descriptor;
+  OffsetRange bytes;
+  uint16_t tiling;
+  ImageKey key;
+};
+
+struct OpAddBlobImage {
+  ImageDescriptor descriptor;
+  OffsetRange bytes;
+  uint16_t tiling;
+  ImageKey key;
+};
+
+struct OpUpdateImage {
+  ImageDescriptor descriptor;
+  OffsetRange bytes;
+  ImageKey key;
+};
+
+struct OpUpdateBlobImage {
+  ImageDescriptor descriptor;
+  OffsetRange bytes;
+  ImageKey key;
+};
+
+struct OpDeleteImage {
+  ImageKey key;
+};
+
+struct OpAddRawFont {
+  OffsetRange bytes;
+  uint32_t fontIndex;
+  FontKey key;
+};
+
+struct OpDeleteFont {
+  FontKey key;
+};
+
+struct OpAddFontInstance {
+  MaybeFontInstanceOptions options;
+  MaybeFontInstancePlatformOptions platformOptions ;
+  FontInstanceKey instanceKey;
+  FontKey fontKey;
+  float glyphSize;
+};
+
+struct OpDeleteFontInstance {
+  FontInstanceKey key;
+};
+
+union OpUpdateResource {
+  OpAddImage;
+  OpAddBlobImage;
+  OpUpdateImage;
+  OpUpdateBlobImage;
+  OpDeleteImage;
+  OpAddRawFont;
+  OpDeleteFont;
+  OpAddFontInstance;
+  OpDeleteFontInstance;
 };
 
 } // namespace

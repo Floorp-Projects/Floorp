@@ -1,6 +1,7 @@
 use std::ffi::CString;
 use std::{mem, slice};
 use std::path::PathBuf;
+use std::ptr;
 use std::sync::Arc;
 use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
@@ -85,6 +86,16 @@ impl WrVecU8 {
     fn to_vec(self) -> Vec<u8> {
         unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) }
     }
+
+    // Equivalent to `to_vec` but clears self instead of consuming the value.
+    fn flush_into_vec(&mut self) -> Vec<u8> {
+        let vec = unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) };
+        self.data = ptr::null_mut();
+        self.length = 0;
+        self.capacity = 0;
+        return vec;
+    }
+
     fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
         let w = WrVecU8 {
             data: v.as_mut_ptr(),
@@ -94,6 +105,18 @@ impl WrVecU8 {
         mem::forget(v);
         w
     }
+
+    fn push_bytes(&mut self, bytes: &[u8]) {
+        let mut vec = self.flush_into_vec();
+        vec.extend_from_slice(bytes);
+        *self = Self::from_vec(vec);
+    }
+}
+
+
+#[no_mangle]
+pub extern "C" fn wr_vec_u8_push_bytes(v: &mut WrVecU8, bytes: ByteSlice) {
+    v.push_bytes(bytes.as_slice());
 }
 
 #[no_mangle]
@@ -666,13 +689,12 @@ pub extern "C" fn wr_resource_updates_add_image(
     resources: &mut ResourceUpdates,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
-    bytes: ByteSlice
+    bytes: &mut WrVecU8,
 ) {
-    let copied_bytes = bytes.as_slice().to_owned();
     resources.add_image(
         image_key,
         descriptor.into(),
-        ImageData::new(copied_bytes),
+        ImageData::new(bytes.flush_into_vec()),
         None
     );
 }
@@ -682,13 +704,12 @@ pub extern "C" fn wr_resource_updates_add_blob_image(
     resources: &mut ResourceUpdates,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
-    bytes: ByteSlice
+    bytes: &mut WrVecU8,
 ) {
-    let copied_bytes = bytes.as_slice().to_owned();
     resources.add_image(
         image_key,
         descriptor.into(),
-        ImageData::new_blob_image(copied_bytes),
+        ImageData::new_blob_image(bytes.flush_into_vec()),
         None
     );
 }
@@ -721,10 +742,14 @@ pub extern "C" fn wr_resource_updates_update_image(
     resources: &mut ResourceUpdates,
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
-    bytes: ByteSlice
+    bytes: &mut WrVecU8,
 ) {
-    let copied_bytes = bytes.as_slice().to_owned();
-    resources.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
+    resources.update_image(
+        key,
+        descriptor.into(),
+        ImageData::new(bytes.flush_into_vec()),
+        None
+    );
 }
 
 #[no_mangle]
@@ -755,13 +780,12 @@ pub extern "C" fn wr_resource_updates_update_blob_image(
     resources: &mut ResourceUpdates,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
-    bytes: ByteSlice
+    bytes: &mut WrVecU8,
 ) {
-    let copied_bytes = bytes.as_slice().to_owned();
     resources.update_image(
         image_key,
         descriptor.into(),
-        ImageData::new_blob_image(copied_bytes),
+        ImageData::new_blob_image(bytes.flush_into_vec()),
         None
     );
 }
@@ -917,15 +941,10 @@ pub extern "C" fn wr_api_send_external_event(dh: &mut DocumentHandle,
 pub extern "C" fn wr_resource_updates_add_raw_font(
     resources: &mut ResourceUpdates,
     key: WrFontKey,
-    font_buffer: *mut u8,
-    buffer_size: usize,
+    bytes: &mut WrVecU8,
     index: u32
 ) {
-    let font_slice = make_slice(font_buffer, buffer_size);
-    let mut font_vector = Vec::new();
-    font_vector.extend_from_slice(font_slice);
-
-    resources.add_raw_font(key, font_vector, index);
+    resources.add_raw_font(key, bytes.flush_into_vec(), index);
 }
 
 #[no_mangle]
