@@ -130,7 +130,8 @@ impl Format for GeckoFormat {
         // TODO(ato): Quite sure this is the wrong way to filter records with slog,
         // but I do not comprehend how slog works.
         let module = record.module();
-        if module.starts_with("geckodriver") || module.starts_with("webdriver") {
+        if module.starts_with("geckodriver") || module.starts_with("webdriver") ||
+           module.starts_with("mozrunner") {
             let ts = format_ts(Local::now());
             let level = record.level().to_gecko();
             let _ = try!(write!(io, "{}\t{}\t{}\t{}\n", ts, module, level, record.msg()));
