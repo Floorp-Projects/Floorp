@@ -39,4 +39,10 @@ interface StyleSheet {
   // then this is an empty string.
   [ChromeOnly, Pure]
   readonly attribute DOMString sourceMapURL;
+  // The source URL for this style sheet.  If the style sheet has the
+  // special "# sourceURL=" comment, then this is the URL specified
+  // there.  If no such comment is found, then this is the empty
+  // string.
+  [ChromeOnly, Pure]
+  readonly attribute DOMString sourceURL;
 };
