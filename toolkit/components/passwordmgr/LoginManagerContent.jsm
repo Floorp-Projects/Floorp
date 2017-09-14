@@ -84,7 +84,7 @@ var observer = {
       return;
     }
 
-    log("onLocationChange handled:", aLocation.spec, aWebProgress.DOMWindow.document);
+    log("onLocationChange handled:", aLocation.displaySpec, aWebProgress.DOMWindow.document);
 
     LoginManagerContent._onNavigation(aWebProgress.DOMWindow.document);
   },
@@ -1387,7 +1387,7 @@ var LoginUtils = {
         return "javascript:";
 
       // Build this manually instead of using prePath to avoid including the userPass portion.
-      realm = uri.scheme + "://" + uri.hostPort;
+      realm = uri.scheme + "://" + uri.displayHostPort;
     } catch (e) {
       // bug 159484 - disallow url types that don't support a hostPort.
       // (although we handle "javascript:..." as a special case above.)
