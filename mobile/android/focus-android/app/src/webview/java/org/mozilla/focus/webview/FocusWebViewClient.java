@@ -143,7 +143,7 @@ import org.mozilla.focus.web.IWebView;
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         if (errorReceived) {
-            // When dealing with error pages, webkit sometimes sends onPageStarted()
+            // When dealing with error pages, WebView sometimes sends onPageStarted()
             // without a matching onPageFinished(). We hack around that by using
             // a flag to ignore the first onPageStarted() after onReceivedError() has
             // been called. (The usual chain is: onPageStarted(url), onReceivedError(url),
@@ -253,8 +253,8 @@ import org.mozilla.focus.web.IWebView;
     public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
         handler.cancel();
 
-        // Webkit can try to load the favicon for a bad page when you set a new URL. If we then
-        // loadErrorPage() again, webkit tries to load the favicon again. We end up in onReceivedSSlError()
+        // WebView can try to load the favicon for a bad page when you set a new URL. If we then
+        // loadErrorPage() again, WebView tries to load the favicon again. We end up in onReceivedSSlError()
         // again, and we get an infinite loop of reloads (we also erroneously show the favicon URL
         // in the toolbar, but that's less noticeable). Hence we check whether this error is from
         // the desired page, or a page resource:

@@ -41,10 +41,10 @@ Build instructions
 2. Import the project into Android Studio or build on the command line:
 
   ```shell
-  ./gradlew clean app:assembleFocusWebkitDebug
+  ./gradlew clean app:assembleFocusWebviewDebug
   ```
 
-3. Make sure to select the right build variant in Android Studio: **focusWebkitDebug**
+3. Make sure to select the right build variant in Android Studio: **focusWebviewDebug**
 
 License
 -------

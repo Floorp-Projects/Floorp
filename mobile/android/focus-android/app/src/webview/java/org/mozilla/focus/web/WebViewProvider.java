@@ -22,7 +22,7 @@ import org.mozilla.focus.webview.SystemWebView;
 import org.mozilla.focus.webview.TrackingProtectionWebViewClient;
 
 /**
- * WebViewProvider for creating a WebKit based IWebVIew implementation.
+ * WebViewProvider for creating a WebView based IWebView implementation.
  */
 public class WebViewProvider {
     /**

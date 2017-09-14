@@ -27,7 +27,7 @@ android {
     }
 
     // We have a three dimensional build configuration:
-    // BUILD TYPE (debug, beta, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webkit, gecko)
+    // BUILD TYPE (debug, beta, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webview, gecko)
 
     buildTypes {
         release {
@@ -78,8 +78,8 @@ android {
             applicationIdSuffix ".klar"
         }
 
-        // We can build with two engines: webkit or gecko
-        webkit {
+        // We can build with two engines: webview or gecko
+        webview {
             dimension "engine"
         }
 
@@ -108,25 +108,25 @@ android {
             }
         }
 
-        focusWebkitRelease {
+        focusWebviewRelease {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
             res.srcDir 'src/focusRelease/res'
         }
-        klarWebkitRelease {
+        klarWebviewRelease {
             java.srcDir 'src/klarRelease/java'
             res.srcDir 'src/klarRelease/res'
         }
-        focusWebkitBeta {
+        focusWebviewBeta {
             res.srcDir 'src/focusBeta/res'
         }
-        klarWebkitBeta {
+        klarWebviewBeta {
             res.srcDir 'src/klarBeta/res'
         }
-        focusWebkitDebug {
+        focusWebviewDebug {
             res.srcDir 'src/focusDebug/res'
         }
-        klarWebkitDebug {
+        klarWebviewDebug {
             res.srcDir 'src/klarDebug/res'
         }
     }
@@ -204,7 +204,7 @@ android.applicationVariants.all { variant ->
 // Generate blocklists
 // -------------------------------------------------------------------------------------------------
 
-def blockListOutputDir = 'src/webkit/res/raw'
+def blockListOutputDir = 'src/webview/res/raw'
 
 task buildBlocklists(type:Copy) {
     from('../shavar-prod-lists') {
@@ -224,7 +224,7 @@ clean.doLast {
 
 tasks.whenTaskAdded { task ->
     def name = task.name
-    if (name.contains("generate") && name.contains("Config") && name.contains("Webkit")) {
+    if (name.contains("generate") && name.contains("Config") && name.contains("Webview")) {
         task.dependsOn buildBlocklists
     }
 }

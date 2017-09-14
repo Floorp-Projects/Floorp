@@ -1,7 +1,7 @@
 /build
 
-src/webkit/res/raw/blocklist.json
-src/webkit/res/raw/entitylist.json
-src/webkit/res/raw/google_mapping.json
+src/webview/res/raw/blocklist.json
+src/webview/res/raw/entitylist.json
+src/webview/res/raw/google_mapping.json
 
 src/main/java/org/mozilla/focus/generated/
