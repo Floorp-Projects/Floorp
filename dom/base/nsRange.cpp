@@ -212,7 +212,8 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
     for (nsRange* range : *ranges) {
       MOZ_ASSERT(range->IsInSelection(),
                  "Why is this range registeed with a node?");
-      if (!range->Collapsed()) {
+      // Looks like that IsInSelection() assert fails sometimes...
+      if (!range->Collapsed() && range->IsInSelection()) {
         ancestorSelectionRanges.PutEntry(range);
         Selection* selection = range->mSelection;
         ancestorSelections.PutEntry(selection);
@@ -349,6 +350,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsRange)
 
   // This needs to be unlinked after Reset() is called, as it controls
   // the result of IsInSelection() which is used by tmp->Reset().
+  MOZ_DIAGNOSTIC_ASSERT(!tmp->isInList(),
+                        "Shouldn't be registered now that we're unlinking");
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -412,7 +415,8 @@ void
 nsRange::RegisterCommonAncestor(nsINode* aNode)
 {
   NS_PRECONDITION(aNode, "bad arg");
-  NS_ASSERTION(IsInSelection(), "registering range not in selection");
+
+  MOZ_DIAGNOSTIC_ASSERT(IsInSelection(), "registering range not in selection");
 
   mRegisteredCommonAncestor = aNode;
 
@@ -1000,6 +1004,12 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
       } else {
         NS_ASSERTION(!mIsPositioned, "unexpected disconnected nodes");
         mSelection = nullptr;
+        MOZ_DIAGNOSTIC_ASSERT(!mRegisteredCommonAncestor,
+                              "How can we have a registered common ancestor when we "
+                              "didn't register ourselves?");
+        MOZ_DIAGNOSTIC_ASSERT(!isInList(),
+                              "Shouldn't be registered if we have no "
+                              "mRegisteredCommonAncestor");
       }
     }
   }
@@ -1051,6 +1061,12 @@ nsRange::SetSelection(mozilla::dom::Selection* aSelection)
     RegisterCommonAncestor(commonAncestor);
   } else {
     UnregisterCommonAncestor(mRegisteredCommonAncestor, false);
+    MOZ_DIAGNOSTIC_ASSERT(!mRegisteredCommonAncestor,
+                          "How can we have a registered common ancestor when we "
+                          "just unregistered?");
+    MOZ_DIAGNOSTIC_ASSERT(!isInList(),
+                          "Shouldn't be registered if we have no "
+                          "mRegisteredCommonAncestor after unregistering");
   }
 }
 

@@ -79,6 +79,8 @@ protected:
 
   void FireErrorEvent(const nsAString& aError);
 
+  bool CheckAlive();
+
 private:
   void
   Connect();
