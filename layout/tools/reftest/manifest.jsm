@@ -463,6 +463,8 @@ function BuildConditionSandbox(aURL) {
     sandbox.qtWidget = xr.widgetToolkit == "qt";
     sandbox.winWidget = xr.widgetToolkit == "windows";
 
+    sandbox.is64Bit = xr.is64Bit;
+
     // Scrollbars that are semi-transparent. See bug 1169666.
     sandbox.transparentScrollbars = xr.widgetToolkit == "gtk3";
 
