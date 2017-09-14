@@ -278,6 +278,13 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes);
         break;
       }
+      case OpUpdateResource::TOpAddExternalImage: {
+        const auto& op = cmd.get_OpAddExternalImage();
+        if (!AddExternalImage(op.externalImageId(), op.key(), aUpdates)) {
+          return false;
+        }
+        break;
+      }
       case OpUpdateResource::TOpAddRawFont: {
         const auto& op = cmd.get_OpAddRawFont();
         wr::Vec_u8 bytes;
@@ -313,6 +320,56 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
       case OpUpdateResource::T__None: break;
     }
   }
+
+  return true;
+}
+
+bool
+WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
+                                        wr::ResourceUpdateQueue& aResources)
+{
+  Range<const wr::ImageKey> keys(&aKey, 1);
+  // Check if key is obsoleted.
+  if (keys[0].mNamespace != mIdNamespace) {
+    return true;
+  }
+  MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aExtId)).get());
+
+  RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(aExtId));
+  if (!host) {
+    NS_ERROR("CompositableHost does not exist");
+    return false;
+  }
+  if (!gfxEnv::EnableWebRenderRecording()) {
+    TextureHost* texture = host->GetAsTextureHostForComposite();
+    if (!texture) {
+      NS_ERROR("TextureHost does not exist");
+      return false;
+    }
+    WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
+    if (wrTexture) {
+      wrTexture->AddWRImage(aResources, keys, wrTexture->GetExternalImageKey());
+      return true;
+    }
+  }
+  RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
+  if (!dSurf) {
+    NS_ERROR("TextureHost does not return DataSourceSurface");
+    return false;
+  }
+
+  DataSourceSurface::MappedSurface map;
+  if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
+    NS_ERROR("DataSourceSurface failed to map");
+    return false;
+  }
+
+  IntSize size = dSurf->GetSize();
+  wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
+  wr::Vec_u8 data;
+  data.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
+  aResources.AddImage(keys[0], descriptor, data);
+  dSurf->Unmap();
 
   return true;
 }
@@ -461,12 +518,37 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
+  uint32_t wrEpoch = GetNextWrEpoch();
+
+
   wr::ResourceUpdateQueue resources;
+
+  mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
+  ProcessWebRenderParentCommands(aCommands, resources);
+
   UpdateResources(aResourceUpdates, aResourceData, resources);
 
-  uint32_t wrEpoch = GetNextWrEpoch();
-  ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(wrEpoch),
-                           aContentSize, dl, dlDesc, resources, aIdNamespace);
+  // If id namespaces do not match, it means the command is obsolete, probably
+  // because the tab just moved to a new window.
+  // In that case do not send the commands to webrender.
+  if (mIdNamespace == aIdNamespace) {
+    if (mWidget) {
+      LayoutDeviceIntSize size = mWidget->GetClientSize();
+      mApi->SetWindowParameters(size);
+    }
+    gfx::Color color = mWidget ? gfx::Color(0.3f, 0.f, 0.f, 1.f) : gfx::Color(0.f, 0.f, 0.f, 0.f);
+    mApi->SetDisplayList(color, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
+                        mPipelineId, aContentSize,
+                        dlDesc, dl.mData, dl.mLength,
+                        resources);
+
+    ScheduleComposition();
+
+    if (ShouldParentObserveEpoch()) {
+      mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
+    }
+  }
+
   HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
 
   mScrollData = aScrollData;
@@ -527,49 +609,9 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
     switch (cmd.type()) {
       case WebRenderParentCommand::TOpAddExternalImage: {
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
-        Range<const wr::ImageKey> keys(&op.key(), 1);
-        // Check if key is obsoleted.
-        if (keys[0].mNamespace != mIdNamespace) {
-          break;
+        if (!AddExternalImage(op.externalImageId(), op.key(), aResources)) {
+          NS_ERROR("AddExternalImage failed");
         }
-        MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());
-
-        RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
-        if (!host) {
-          NS_ERROR("CompositableHost does not exist");
-          break;
-        }
-        if (!gfxEnv::EnableWebRenderRecording()) {
-          TextureHost* texture = host->GetAsTextureHostForComposite();
-          if (!texture) {
-            NS_ERROR("TextureHost does not exist");
-            break;
-          }
-          WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
-          if (wrTexture) {
-            wrTexture->AddWRImage(aResources, keys, wrTexture->GetExternalImageKey());
-            break;
-          }
-        }
-        RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
-        if (!dSurf) {
-          NS_ERROR("TextureHost does not return DataSourceSurface");
-          break;
-        }
-
-        DataSourceSurface::MappedSurface map;
-        if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
-          NS_ERROR("DataSourceSurface failed to map");
-          break;
-        }
-
-        IntSize size = dSurf->GetSize();
-        wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
-        wr::Vec_u8 data;
-        data.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
-        aResources.AddImage(keys[0], descriptor, data);
-
-        dSurf->Unmap();
         break;
       }
       case WebRenderParentCommand::TOpUpdateAsyncImagePipeline: {
@@ -611,40 +653,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
         break;
       }
     }
-  }
-}
-
-void
-WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
-                                                InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
-                                                const wr::LayoutSize& aContentSize, const wr::ByteBuffer& dl,
-                                                const wr::BuiltDisplayListDescriptor& dlDesc,
-                                                wr::ResourceUpdateQueue& aResourceUpdates,
-                                                const wr::IdNamespace& aIdNamespace)
-{
-  mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-  ProcessWebRenderParentCommands(aCommands, aResourceUpdates);
-
-  // The command is obsoleted.
-  // Do not set the command to webrender since it causes crash in webrender.
-  if (mIdNamespace != aIdNamespace) {
-    return;
-  }
-
-  if (mWidget) {
-    LayoutDeviceIntSize size = mWidget->GetClientSize();
-    mApi->SetWindowParameters(size);
-  }
-  gfx::Color color = mWidget ? gfx::Color(0.3f, 0.f, 0.f, 1.f) : gfx::Color(0.f, 0.f, 0.f, 0.f);
-  mApi->SetDisplayList(color, aEpoch, LayerSize(aSize.width, aSize.height),
-                       mPipelineId, aContentSize,
-                       dlDesc, dl.mData, dl.mLength,
-                       aResourceUpdates);
-
-  ScheduleComposition();
-
-  if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
   }
 }
 

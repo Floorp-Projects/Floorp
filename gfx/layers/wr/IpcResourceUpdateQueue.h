@@ -63,6 +63,8 @@ public:
                     const ImageDescriptor& aDescriptor,
                     Range<uint8_t> aBytes);
 
+  void AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey);
+
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
                          Range<uint8_t> aBytes);
