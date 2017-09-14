@@ -173,8 +173,11 @@ public:
   // Free all blocks belonging to aStream.
   void ReleaseStreamBlocks(MediaCacheStream* aStream);
   // Find a cache entry for this data, and write the data into it
-  void AllocateAndWriteBlock(MediaCacheStream* aStream,
-    MediaCacheStream::ReadMode aMode, Span<const uint8_t> aData1,
+  void AllocateAndWriteBlock(
+    MediaCacheStream* aStream,
+    int32_t aStreamBlockIndex,
+    MediaCacheStream::ReadMode aMode,
+    Span<const uint8_t> aData1,
     Span<const uint8_t> aData2 = Span<const uint8_t>());
 
   // mReentrantMonitor must be held; can be called on any thread
@@ -1576,27 +1579,28 @@ MediaCache::InsertReadaheadBlock(BlockOwner* aBlockOwner,
 }
 
 void
-MediaCache::AllocateAndWriteBlock(
-  MediaCacheStream* aStream, MediaCacheStream::ReadMode aMode,
-  Span<const uint8_t> aData1, Span<const uint8_t> aData2)
+MediaCache::AllocateAndWriteBlock(MediaCacheStream* aStream,
+                                  int32_t aStreamBlockIndex,
+                                  MediaCacheStream::ReadMode aMode,
+                                  Span<const uint8_t> aData1,
+                                  Span<const uint8_t> aData2)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
-
-  int32_t streamBlockIndex =
-    OffsetToBlockIndexUnchecked(aStream->mChannelOffset);
 
   // Remove all cached copies of this block
   ResourceStreamIterator iter(this, aStream->mResourceID);
   while (MediaCacheStream* stream = iter.Next()) {
-    while (streamBlockIndex >= int32_t(stream->mBlocks.Length())) {
+    while (aStreamBlockIndex >= int32_t(stream->mBlocks.Length())) {
       stream->mBlocks.AppendElement(-1);
     }
-    if (stream->mBlocks[streamBlockIndex] >= 0) {
+    if (stream->mBlocks[aStreamBlockIndex] >= 0) {
       // We no longer want to own this block
-      int32_t globalBlockIndex = stream->mBlocks[streamBlockIndex];
+      int32_t globalBlockIndex = stream->mBlocks[aStreamBlockIndex];
       LOG("Released block %d from stream %p block %d(%" PRId64 ")",
-          globalBlockIndex, stream, streamBlockIndex,
-          streamBlockIndex*BLOCK_SIZE);
+          globalBlockIndex,
+          stream,
+          aStreamBlockIndex,
+          aStreamBlockIndex * BLOCK_SIZE);
       RemoveBlockOwner(globalBlockIndex, stream);
     }
   }
@@ -1610,7 +1614,10 @@ MediaCache::AllocateAndWriteBlock(
 
     Block* block = &mIndex[blockIndex];
     LOG("Allocated block %d to stream %p block %d(%" PRId64 ")",
-        blockIndex, aStream, streamBlockIndex, streamBlockIndex*BLOCK_SIZE);
+        blockIndex,
+        aStream,
+        aStreamBlockIndex,
+        aStreamBlockIndex * BLOCK_SIZE);
 
     ResourceStreamIterator iter(this, aStream->mResourceID);
     while (MediaCacheStream* stream = iter.Next()) {
@@ -1633,10 +1640,10 @@ MediaCache::AllocateAndWriteBlock(
 
     // Tell each stream using this resource about the new block.
     for (auto& bo : block->mOwners) {
-      bo.mStreamBlock = streamBlockIndex;
+      bo.mStreamBlock = aStreamBlockIndex;
       bo.mLastUseTime = now;
-      bo.mStream->mBlocks[streamBlockIndex] = blockIndex;
-      if (streamBlockIndex*BLOCK_SIZE < bo.mStream->mStreamOffset) {
+      bo.mStream->mBlocks[aStreamBlockIndex] = blockIndex;
+      if (aStreamBlockIndex * BLOCK_SIZE < bo.mStream->mStreamOffset) {
         bo.mClass = aMode == MediaCacheStream::MODE_PLAYBACK ? PLAYED_BLOCK
                                                              : METADATA_BLOCK;
         // This must be the most-recently-used block, since we
@@ -1661,7 +1668,10 @@ MediaCache::AllocateAndWriteBlock(
     nsresult rv = mBlockCache->WriteBlock(blockIndex, aData1, aData2);
     if (NS_FAILED(rv)) {
       LOG("Released block %d from stream %p block %d(%" PRId64 ")",
-          blockIndex, aStream, streamBlockIndex, streamBlockIndex*BLOCK_SIZE);
+          blockIndex,
+          aStream,
+          aStreamBlockIndex,
+          aStreamBlockIndex * BLOCK_SIZE);
       FreeBlock(blockIndex);
     }
   }
@@ -1916,7 +1926,7 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData)
         mPartialBlockBuffer.get(), blockOffset);
       auto data2 = MakeSpan<const uint8_t>(
         reinterpret_cast<const uint8_t*>(data), chunkSize);
-      mMediaCache->AllocateAndWriteBlock(this, mode, data1, data2);
+      mMediaCache->AllocateAndWriteBlock(this, blockIndex, mode, data1, data2);
     } else {
       memcpy(mPartialBlockBuffer.get() + blockOffset, data, chunkSize);
     }
@@ -1947,6 +1957,7 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
+  int32_t blockIndex = OffsetToBlockIndexUnchecked(mChannelOffset);
   int32_t blockOffset = OffsetInBlock(mChannelOffset);
   if (blockOffset > 0) {
     LOG("Stream %p writing partial block: [%d] bytes; "
@@ -1960,6 +1971,7 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
     auto data = MakeSpan<const uint8_t>(mPartialBlockBuffer.get(), BLOCK_SIZE);
     mMediaCache->AllocateAndWriteBlock(
       this,
+      blockIndex,
       mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK,
       data);
   }
