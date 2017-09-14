@@ -4131,6 +4131,36 @@ TEST_F(JsepSessionTest, TestExtmap)
   ASSERT_EQ(3U, answerExtmap[0].entry);
 }
 
+TEST_F(JsepSessionTest, TestExtmapWithDuplicates)
+{
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+  // ssrc-audio-level will be extmap 1 for both
+  mSessionOff->AddAudioRtpExtension("foo"); // Default mapping of 2
+  mSessionOff->AddAudioRtpExtension("bar"); // Default mapping of 3
+  mSessionOff->AddAudioRtpExtension("bar"); // Should be ignored
+  mSessionOff->AddAudioRtpExtension("bar"); // Should be ignored
+  mSessionOff->AddAudioRtpExtension("baz"); // Default mapping of 4
+  mSessionOff->AddAudioRtpExtension("bar"); // Should be ignored
+
+  std::string offer = CreateOffer();
+  UniquePtr<Sdp> parsedOffer(Parse(offer));
+  ASSERT_EQ(1U, parsedOffer->GetMediaSectionCount());
+
+  auto& offerMediaAttrs = parsedOffer->GetMediaSection(0).GetAttributeList();
+  ASSERT_TRUE(offerMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
+  auto& offerExtmap = offerMediaAttrs.GetExtmap().mExtmaps;
+  ASSERT_EQ(4U, offerExtmap.size());
+  ASSERT_EQ("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+      offerExtmap[0].extensionname);
+  ASSERT_EQ(1U, offerExtmap[0].entry);
+  ASSERT_EQ("foo", offerExtmap[1].extensionname);
+  ASSERT_EQ(2U, offerExtmap[1].entry);
+  ASSERT_EQ("bar", offerExtmap[2].extensionname);
+  ASSERT_EQ(3U, offerExtmap[2].entry);
+}
+
+
 TEST_F(JsepSessionTest, TestRtcpFbStar)
 {
   AddTracks(*mSessionOff, "video");
