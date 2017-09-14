@@ -28,7 +28,11 @@ require.config({
     "devtools/client/shared/vendor/react":
       JSONView.debug
       ? "resource://devtools-client-shared/vendor/react-dev"
-      : "resource://devtools-client-shared/vendor/react"
+      : "resource://devtools-client-shared/vendor/react",
+    "devtools/client/shared/vendor/react-dom":
+      JSONView.debug
+      ? "resource://devtools-client-shared/vendor/react-dom-dev"
+      : "resource://devtools-client-shared/vendor/react-dom",
   }
 });
 
