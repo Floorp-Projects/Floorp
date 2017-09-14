@@ -69,7 +69,6 @@ mod glyph_rasterizer;
 mod gpu_cache;
 mod gpu_types;
 mod internal_types;
-mod mask_cache;
 mod prim_store;
 mod print_tree;
 mod profiler;
@@ -149,8 +148,9 @@ extern crate gamma_lut;
 
 pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 pub use renderer::{GraphicsApi, GraphicsApiInfo, ReadPixelsFormat, Renderer, RendererOptions};
-pub use renderer::{CpuProfile, GpuProfile, DebugFlags, RendererKind};
-pub use renderer::{MAX_VERTEX_TEXTURE_WIDTH, PROFILER_DBG, RENDER_TARGET_DBG, TEXTURE_CACHE_DBG};
+pub use renderer::{CpuProfile, GpuProfile, DebugFlags, OutputImageHandler, RendererKind};
+pub use renderer::{PROFILER_DBG, RENDER_TARGET_DBG, TEXTURE_CACHE_DBG, ALPHA_PRIM_DBG};
+pub use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 
 pub use webrender_api as api;
 

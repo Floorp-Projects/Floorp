@@ -16,9 +16,9 @@ struct SplitGeometry {
 SplitGeometry fetch_split_geometry(int address) {
     ivec2 uv = get_resource_cache_uv(address);
 
-    vec4 data0 = texelFetchOffset(sResourceCache, uv, 0, ivec2(0, 0));
-    vec4 data1 = texelFetchOffset(sResourceCache, uv, 0, ivec2(1, 0));
-    vec4 data2 = texelFetchOffset(sResourceCache, uv, 0, ivec2(2, 0));
+    vec4 data0 = TEXEL_FETCH(sResourceCache, uv, 0, ivec2(0, 0));
+    vec4 data1 = TEXEL_FETCH(sResourceCache, uv, 0, ivec2(1, 0));
+    vec4 data2 = TEXEL_FETCH(sResourceCache, uv, 0, ivec2(2, 0));
 
     SplitGeometry geo;
     geo.points = vec3[4](

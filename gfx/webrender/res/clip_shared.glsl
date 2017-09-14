@@ -10,29 +10,29 @@
 #define SEGMENT_CORNER_BL   3
 #define SEGMENT_CORNER_BR   4
 
-in int aClipRenderTaskIndex;
-in int aClipLayerIndex;
+in int aClipRenderTaskAddress;
+in int aClipLayerAddress;
 in int aClipSegment;
 in ivec4 aClipDataResourceAddress;
 
-struct CacheClipInstance {
-    int render_task_index;
-    int layer_index;
+struct ClipMaskInstance {
+    int render_task_address;
+    int layer_address;
     int segment;
     ivec2 clip_data_address;
     ivec2 resource_address;
 };
 
-CacheClipInstance fetch_clip_item(int index) {
-    CacheClipInstance cci;
+ClipMaskInstance fetch_clip_item() {
+    ClipMaskInstance cmi;
 
-    cci.render_task_index = aClipRenderTaskIndex;
-    cci.layer_index = aClipLayerIndex;
-    cci.segment = aClipSegment;
-    cci.clip_data_address = aClipDataResourceAddress.xy;
-    cci.resource_address = aClipDataResourceAddress.zw;
+    cmi.render_task_address = aClipRenderTaskAddress;
+    cmi.layer_address = aClipLayerAddress;
+    cmi.segment = aClipSegment;
+    cmi.clip_data_address = aClipDataResourceAddress.xy;
+    cmi.resource_address = aClipDataResourceAddress.zw;
 
-    return cci;
+    return cmi;
 }
 
 struct ClipVertexInfo {

@@ -7,7 +7,7 @@ use debug_server;
 use frame::Frame;
 use frame_builder::FrameBuilderConfig;
 use gpu_cache::GpuCache;
-use internal_types::{DebugOutput, FastHashMap, ResultMsg, RendererFrame};
+use internal_types::{DebugOutput, FastHashMap, FastHashSet, ResultMsg, RendererFrame};
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
@@ -25,7 +25,7 @@ use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 use api::{ApiMsg, DebugCommand, BlobImageRenderer, BuiltDisplayList, DeviceIntPoint};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, DocumentMsg};
-use api::{IdNamespace, LayerPoint, RenderNotifier};
+use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
 
@@ -37,6 +37,9 @@ struct Document {
     pan: DeviceIntPoint,
     page_zoom_factor: f32,
     pinch_zoom_factor: f32,
+    // A set of pipelines that the caller has requested be
+    // made available as output textures.
+    output_pipelines: FastHashSet<PipelineId>,
     // A helper switch to prevent any frames rendering triggered by scrolling
     // messages between `SetDisplayList` and `GenerateFrame`.
     // If we allow them, then a reftest that scrolls a few layers before generating
@@ -65,6 +68,7 @@ impl Document {
             page_zoom_factor: 1.0,
             pinch_zoom_factor: 1.0,
             render_on_scroll,
+            output_pipelines: FastHashSet::default(),
         }
     }
 
@@ -95,6 +99,7 @@ impl Document {
                          &self.scene.display_lists,
                          accumulated_scale_factor,
                          pan,
+                         &self.output_pipelines,
                          &mut resource_profile.texture_cache,
                          &mut resource_profile.gpu_cache)
     }
@@ -184,6 +189,14 @@ impl RenderBackend {
         match message {
             DocumentMsg::SetPageZoom(factor) => {
                 doc.page_zoom_factor = factor.get();
+                DocumentOp::Nop
+            }
+            DocumentMsg::EnableFrameOutput(pipeline_id, enable) => {
+                if enable {
+                    doc.output_pipelines.insert(pipeline_id);
+                } else {
+                    doc.output_pipelines.remove(&pipeline_id);
+                }
                 DocumentOp::Nop
             }
             DocumentMsg::SetPinchZoom(factor) => {
@@ -613,9 +626,12 @@ impl RenderBackend {
         for (_, doc) in &self.documents {
             let debug_node = debug_server::TreeNode::new("document clip_scroll tree");
             let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
-            doc.frame.clip_scroll_tree.print_with(&mut builder);
+            // TODO(gw): Restructure the storage of clip-scroll tree, clip store
+            //           etc so this isn't so untidy.
+            let clip_store = &doc.frame.frame_builder.as_ref().unwrap().clip_store;
+            doc.frame.clip_scroll_tree.print_with(clip_store, &mut builder);
 
-            debug_root.add(builder.build());            
+            debug_root.add(builder.build());
         }
 
         serde_json::to_string(&debug_root).unwrap()

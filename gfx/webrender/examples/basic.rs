@@ -185,8 +185,13 @@ impl Example for App {
               _pipeline_id: PipelineId,
               _document_id: DocumentId) {
         let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
-        builder.push_stacking_context(ScrollPolicy::Scrollable,
-                                      bounds,
+        let info = LayoutPrimitiveInfo {
+            rect: bounds,
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_stacking_context(&info,
+                                      ScrollPolicy::Scrollable,
                                       None,
                                       TransformStyle::Flat,
                                       None,
@@ -209,11 +214,19 @@ impl Example for App {
         let id = builder.define_clip(None, bounds, vec![complex], Some(mask));
         builder.push_clip_id(id);
 
-        let bounds = (100, 100).to(200, 200);
-        builder.push_rect(bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        let info = LayoutPrimitiveInfo {
+            rect: (100, 100).to(200, 200),
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
-        let bounds = (250, 100).to(350, 200);
-        builder.push_rect(bounds, None, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        let info = LayoutPrimitiveInfo {
+            rect: (250, 100).to(350, 200),
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
         let border_side = BorderSide {
             color: ColorF::new(0.0, 0.0, 1.0, 1.0),
             style: BorderStyle::Groove,
@@ -232,8 +245,12 @@ impl Example for App {
             radius: BorderRadius::uniform(20.0),
         });
 
-        let bounds = (100, 100).to(200, 200);
-        builder.push_border(bounds, None, border_widths, border_details);
+        let info = LayoutPrimitiveInfo {
+            rect: (100, 100).to(200, 200),
+            local_clip: None,
+            is_backface_visible: true,
+        };
+        builder.push_border(&info, border_widths, border_details);
 
 
         if false { // draw text?
@@ -295,9 +312,13 @@ impl Example for App {
                     point: LayoutPoint::new(650.0, 100.0),
                 },
             ];
+            let info = LayoutPrimitiveInfo {
+                rect: text_bounds,
+                local_clip: None,
+                is_backface_visible: true,
+            };
 
-            builder.push_text(text_bounds,
-                              None,
+            builder.push_text(&info,
                               &glyphs,
                               font_instance_key,
                               ColorF::new(1.0, 1.0, 0.0, 1.0),
@@ -313,9 +334,13 @@ impl Example for App {
             let spread_radius = 0.0;
             let simple_border_radius = 8.0;
             let box_shadow_type = BoxShadowClipMode::Inset;
+            let info = LayoutPrimitiveInfo {
+                rect: rect,
+                local_clip: Some(LocalClip::from(bounds)),
+                is_backface_visible: true,
+            };
 
-            builder.push_box_shadow(rect,
-                                    Some(LocalClip::from(bounds)),
+            builder.push_box_shadow(&info,
                                     simple_box_bounds,
                                     offset,
                                     color,

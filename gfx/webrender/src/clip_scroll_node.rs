@@ -6,7 +6,7 @@ use api::{ClipId, DeviceIntRect, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use api::{LayerToScrollTransform, LayerToWorldTransform, LayerVector2D, PipelineId};
 use api::{ScrollClamping, ScrollEventPhase, ScrollLocation, ScrollSensitivity, StickyFrameInfo};
 use api::WorldPoint;
-use clip::{ClipRegion, ClipSources};
+use clip::{ClipRegion, ClipSources, ClipSourcesHandle, ClipStore};
 use clip_scroll_tree::TransformUpdateState;
 use geometry::ray_intersects_rect;
 use spring::{DAMPING, STIFFNESS, Spring};
@@ -22,7 +22,7 @@ const CAN_OVERSCROLL: bool = false;
 #[derive(Debug)]
 pub struct ClipInfo {
     /// The clips for this node.
-    pub clip_sources: ClipSources,
+    pub clip_sources: ClipSourcesHandle,
 
     /// The packed layer index for this node, which is used to render a clip mask
     /// for it, if necessary.
@@ -39,10 +39,12 @@ pub struct ClipInfo {
 }
 
 impl ClipInfo {
-    pub fn new(clip_region: ClipRegion, packed_layer_index: PackedLayerIndex) -> ClipInfo {
+    pub fn new(clip_region: ClipRegion,
+               packed_layer_index: PackedLayerIndex,
+               clip_store: &mut ClipStore) -> ClipInfo {
         let clip_rect = LayerRect::new(clip_region.origin, clip_region.main.size);
         ClipInfo {
-            clip_sources: ClipSources::from(clip_region),
+            clip_sources: clip_store.insert(ClipSources::from(clip_region)),
             packed_layer_index,
             screen_bounding_rect: None,
             clip_rect: clip_rect,
