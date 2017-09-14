@@ -192,18 +192,13 @@ private:
   bool UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
                        const nsTArray<ipc::Shmem>& aResourceData,
                        wr::ResourceUpdateQueue& aUpdates);
+  bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
+                        wr::ResourceUpdateQueue& aResources);
 
   uint64_t GetLayersId() const;
   void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
                                       wr::ResourceUpdateQueue& aResources);
-  void ProcessWebRenderCommands(const gfx::IntSize &aSize,
-                                InfallibleTArray<WebRenderParentCommand>& commands,
-                                const wr::Epoch& aEpoch,
-                                const wr::LayoutSize& aContentSize,
-                                const wr::ByteBuffer& dl,
-                                const wr::BuiltDisplayListDescriptor& dlDesc,
-                                wr::ResourceUpdateQueue& aResourceUpdates,
-                                const wr::IdNamespace& aIdNamespace);
+
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
