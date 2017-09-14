@@ -117,10 +117,25 @@ xul|treechildren::-moz-tree-row(selected) {
   background-color: var(--in-content-item-selected);
 }
 
+html|html *,
+xul|page *,
+xul|window * {
+  font-size: 1.11rem;
+}
+
 *|*.header-name {
   font-size: 1.64rem;
 }
 
 *|*.category-name {
   font-size: 1.19rem;
+}
+
+xul|caption > xul|label:not(.dialogTitle) {
+  font-size: 1.27rem;
+}
+
+.tip-caption,
+.help-button {
+  font-size: 1rem;
 }
