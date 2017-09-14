@@ -607,13 +607,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
-      case WebRenderParentCommand::TOpAddExternalImage: {
-        const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
-        if (!AddExternalImage(op.externalImageId(), op.key(), aResources)) {
-          NS_ERROR("AddExternalImage failed");
-        }
-        break;
-      }
       case WebRenderParentCommand::TOpUpdateAsyncImagePipeline: {
         const OpUpdateAsyncImagePipeline& op = cmd.get_OpUpdateAsyncImagePipeline();
         mAsyncImageManager->UpdateAsyncImagePipeline(op.pipelineId(),
