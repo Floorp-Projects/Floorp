@@ -739,18 +739,6 @@ public abstract class GeckoApp extends GeckoActivity
         } else if ("PrivateBrowsing:Data".equals(event)) {
             mPrivateBrowsingSession = message.getString("session");
 
-        } else if ("Share:Text".equals(event)) {
-            final String text = message.getString("text");
-            final Tab tab = Tabs.getInstance().getSelectedTab();
-            String title = "";
-            if (tab != null) {
-                title = tab.getDisplayTitle();
-            }
-            IntentHelper.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title, false);
-
-            // Context: Sharing via chrome list (no explicit session is active)
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "text");
-
         } else if ("SystemUI:Visibility".equals(event)) {
             if (message.getBoolean("visible", true)) {
                 mMainLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
@@ -1228,7 +1216,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_media",
             "Permissions:Data",
             "PrivateBrowsing:Data",
-            "Share:Text",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
@@ -2229,7 +2216,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_media",
             "Permissions:Data",
             "PrivateBrowsing:Data",
-            "Share:Text",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
