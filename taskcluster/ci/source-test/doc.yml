@@ -25,6 +25,8 @@ generate:
             - '**/*.rst'
             - '**/*.md'
             - 'tools/docs/**'
+            - '**/*.js'
+            - '**/*.jsm'
 
 upload:
     description: Generate and upload the Sphinx documentation
