@@ -2424,6 +2424,7 @@ DefineBoxedOrUnboxedFunctor1(ShiftMoveBoxedOrUnboxedDenseElements, JSObject*);
 void
 js::ArrayShiftMoveElements(JSObject* obj)
 {
+    AutoUnsafeCallWithABI unsafe;
     MOZ_ASSERT_IF(obj->is<ArrayObject>(), obj->as<ArrayObject>().lengthIsWritable());
 
     ShiftMoveBoxedOrUnboxedDenseElementsFunctor functor(obj);
