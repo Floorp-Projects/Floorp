@@ -151,25 +151,38 @@
       <!-- category list -->
       <richlistbox id="categories" flex="1">
         <richlistitem id="category-search" value="addons://search/"
-                      class="category"
+                      class="category" align="center"
                       name="&view.search.label;" priority="0"
-                      tooltiptext="&view.search.label;" disabled="true"/>
+                      disabled="true">
+          <image class="category-icon" />
+          <label class="category-name" flex="1">&view.search.label;</label>
+        </richlistitem>
         <richlistitem id="category-discover" value="addons://discover/"
-                      class="category"
-                      name="&view.discover.label;" priority="1000"
-                      tooltiptext="&view.discover.label;"/>
+                      class="category" align="center"
+                      name="&view.discover.label;" priority="1000">
+          <image class="category-icon" />
+          <label class="category-name" flex="1">&view.discover.label;</label>
+        </richlistitem>
         <richlistitem id="category-legacy" value="addons://legacy/"
-                      class="category" priority="20000"
-                      disabled="true"/>
+                      class="category" align="center" priority="20000"
+                      disabled="true">
+          <image class="category-icon" />
+          <label class="category-name" flex="1"></label>
+        </richlistitem>
         <richlistitem id="category-availableUpdates" value="addons://updates/available"
-                      class="category"
+                      class="category" align="center"
                       name="&view.availableUpdates.label;" priority="100000"
-                      tooltiptext="&view.availableUpdates.label;"
-                      disabled="true"/>
+                      disabled="true">
+          <image class="category-icon" />
+          <label class="category-name" flex="1">&view.availableUpdates.label;</label>
+        </richlistitem>
         <richlistitem id="category-recentUpdates" value="addons://updates/recent"
                       class="category"
                       name="&view.recentUpdates.label;" priority="101000"
-                      tooltiptext="&view.recentUpdates.label;" disabled="true"/>
+                      disabled="true">
+          <image class="category-icon" />
+          <label class="category-name" flex="1">&view.recentUpdates.label;</label>
+        </richlistitem>
       </richlistbox>
     </vbox>
     <vbox class="main-content" flex="1">
