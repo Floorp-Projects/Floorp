@@ -405,7 +405,7 @@
       {
         "name": "onShown",
         "type": "function",
-        "description": "Fired when a menu is shown that contains a menu item that was created by the extension.",
+        "description": "Fired when a menu is shown. The extension can add, modify or remove menu items and call menus.refresh() to update the menu.",
         "parameters": [
           {
             "name": "info",
@@ -470,7 +470,7 @@
       {
         "name": "onHidden",
         "type": "function",
-        "description": "Fired when a menu is hidden. This event is only fired if the menu contained a menu item that was created by the extension.",
+        "description": "Fired when a menu is hidden. This event is only fired if onShown has fired before.",
         "parameters": []
       }
     ]

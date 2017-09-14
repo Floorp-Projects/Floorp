@@ -209,9 +209,6 @@ add_task(async function refresh_menus_with_page() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-// refresh() only works for extensions with at least one visible menu item.
-// This test will fail if we ever add support for adding new menu items even if
-// the extension has no existing menu item in the shown menu.
 add_task(async function refresh_without_menus_at_onShown() {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   let extension = loadExtensionWithMenusApi();
@@ -221,18 +218,20 @@ add_task(async function refresh_without_menus_at_onShown() {
   const doCloseMenu = () => closeExtensionContextMenu();
 
   await doOpenMenu();
+  await extension.awaitMessage("onShown fired");
   await extension.callMenuApi("create", {
     id: "too late",
     title: "created after shown",
   });
   await extension.callMenuApi("refresh");
   let elem = extension.getXULElementByMenuId("too late");
-  is(elem, null, "extension without visible menu items cannot add new items");
+  is(elem.getAttribute("label"), "created after shown",
+    "extension without visible menu items can add new items");
 
   await extension.callMenuApi("update", "too late", {title: "the menu item"});
   await extension.callMenuApi("refresh");
   elem = extension.getXULElementByMenuId("too late");
-  is(elem, null, "updated menu item should still be invisible");
+  is(elem.getAttribute("label"), "the menu item", "label should change");
 
   // The previously created menu item should be visible if the menu is closed
   // and re-opened.
