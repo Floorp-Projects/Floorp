@@ -498,7 +498,8 @@ public:
   // away completely (e.g. because of a decoder error). The problem would
   // be especially acute if we have off-main-thread rendering.
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override
   {
     *aSnap = true;
     nsIFrame* f = Frame();

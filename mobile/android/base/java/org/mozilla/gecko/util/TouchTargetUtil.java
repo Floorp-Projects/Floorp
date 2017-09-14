@@ -10,6 +10,7 @@ import android.view.TouchDelegate;
 import android.view.View;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.widget.TouchDelegateWithReset;
 
 public class TouchTargetUtil {
     /**
@@ -40,7 +41,7 @@ public class TouchTargetUtil {
                     return;
                 }
 
-                TouchDelegate touchDelegate = new TouchDelegate(delegateArea, targetView);
+                TouchDelegate touchDelegate = new TouchDelegateWithReset(delegateArea, targetView);
                 enclosingView.setTouchDelegate(touchDelegate);
             }
         });

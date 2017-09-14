@@ -1017,10 +1017,7 @@ TabBrowserElementInterposition.methods.removeTabsProgressListener = function(add
 var ChromeWindowInterposition = new Interposition("ChromeWindowInterposition",
                                                   EventTargetInterposition);
 
-// _content is for older add-ons like pinboard and all-in-one gestures
-// that should be using content instead.
-ChromeWindowInterposition.getters.content =
-ChromeWindowInterposition.getters._content = function(addon, target) {
+ChromeWindowInterposition.getters.content = function(addon, target) {
   CompatWarning.warn("Direct access to chromeWindow.content will no longer work in the chrome process.",
                      addon, CompatWarning.warnings.content);
 

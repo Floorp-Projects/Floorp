@@ -156,8 +156,9 @@ public:
   virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
                                        nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<imgIContainer> GetImage() override;
-  virtual nsRect GetDestRect() override;
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
+  virtual nsRect GetDestRect() const override;
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override
   {
     *aSnap = true;
     return nsRect(ToReferenceFrame(), Frame()->GetSize());
@@ -165,7 +166,7 @@ public:
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion) override;
+                                         nsRegion* aInvalidRegion) const override;
   // Doesn't handle HitTest because nsLeafBoxFrame already creates an
   // event receiver for us
   virtual void Paint(nsDisplayListBuilder* aBuilder,

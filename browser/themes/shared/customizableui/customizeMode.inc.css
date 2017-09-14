@@ -30,7 +30,7 @@
 }
 
 #customization-header {
-  font-weight: 600;
+  font-weight: 500;
   font-size: 1.2em;
   margin: 20px 20px 15px;
 }
@@ -419,11 +419,16 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   color: var(--arrowpanel-color);
   background: var(--arrowpanel-background);
   background-clip: padding-box;
-  border: 1px solid var(--arrowpanel-border-color);
-  box-shadow: 0 0 10px hsla(0,0%,0%,.2);
 %ifdef XP_MACOSX
+  /* Native styling adds more 'oompf' to the popup box-shadow, so simulate that
+   * as best as we can here: */
+  border: 1px solid var(--arrowpanel-dimmed-even-further);
+  box-shadow: 0 4px 10px hsla(0,0%,0%,.3);
   -moz-appearance: none;
   border-radius: var(--arrowpanel-border-radius);
+%else
+  border: 1px solid var(--arrowpanel-border-color);
+  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
 %endif
 }
 
@@ -431,6 +436,17 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   position: relative;
   height: 10px;
   margin-bottom: -1px;
+}
+
+/* The overflow button icon _looks_ disabled, but is also shown as [open]. */
+#nav-bar[customizing] > .overflow-button {
+  /* This color is the hard-coded #4c4c4c at 40% opacity as found in toolbarbutton-icons.inc.css */
+  fill: hsla(0,0%,30%,.4);
+}
+
+#nav-bar[customizing] > .overflow-button > .toolbarbutton-icon {
+  background-color: var(--toolbarbutton-active-background);
+  opacity: 1;
 }
 
 #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
@@ -454,14 +470,14 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
    * + 2 * toolbarbutton-inner-padding)
    * hamburger button border + margin: 1px + 2px
    * The total desired offset from the right edge of the window is thus:
-   * 10px + toolbarbutton-inner-padding (center of overflow button) +
+   * 10px + 1 * toolbarbutton-inner-padding (center of overflow button) +
    * 29px + 2 * toolbarbutton-inner-padding
-   * The #customization-panel-container has a 25px margin, so that leaves:
-   * 14px + 3 * toolbarbutton-inner-padding
+   * The #customization-panel-container has a 20px margin, so that leaves:
+   * 19px + 3 * toolbarbutton-inner-padding
    * Finally, we need to center the arrow, which is 20px wide, so subtract
    * 10px.
    */
-  margin-inline-end: calc(4px + 3 * var(--toolbarbutton-inner-padding));
+  margin-inline-end: calc(9px + 3 * var(--toolbarbutton-inner-padding));
   vertical-align: top;
 }
 

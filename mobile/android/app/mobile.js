@@ -236,6 +236,8 @@ pref("extensions.webextPermissionPrompts", true);
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
 
+pref("extensions.legacy.enabled", false);
+
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
@@ -643,8 +645,6 @@ pref("media.suspend-bkgnd-video.enabled", true);
 pref("image.downscale-during-decode.enabled", true);
 
 pref("browser.safebrowsing.downloads.enabled", false);
-
-pref("browser.safebrowsing.id", @MOZ_APP_UA_NAME@);
 
 // True if this is the first time we are showing about:firstrun
 pref("browser.firstrun.show.uidiscovery", true);

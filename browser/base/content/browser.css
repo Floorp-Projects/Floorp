@@ -184,6 +184,7 @@ tabbrowser {
   transition: transform 200ms var(--animation-easing-function);
 }
 
+#TabsToolbar[movingtab] > .chromeclass-toolbar-additional,
 #TabsToolbar[movingtab] > .tabbrowser-tabs {
   padding-bottom: 15px;
 }
@@ -455,9 +456,12 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-b
   display: -moz-box;
 }
 
+#personal-bookmarks {
+  position: relative;
+}
+
 #PlacesToolbarDropIndicatorHolder {
   position: absolute;
-  top: 25%;
 }
 
 #nav-bar-customization-target > #personal-bookmarks,

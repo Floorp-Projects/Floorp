@@ -280,7 +280,7 @@ public:
 
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion* aInvalidRegion) override
+                                 nsRegion* aInvalidRegion) const override
   {
     auto geometry =
       static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
@@ -294,7 +294,8 @@ public:
     nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
   }
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override
   {
     *aSnap = true;
     nsStyleBorder styleBorder = *mFrame->StyleBorder();
