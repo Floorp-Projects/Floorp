@@ -72,7 +72,7 @@ BuiltinProvider.prototype = {
       sharedGlobal: true,
       sandboxName: "DevTools (Module loader)",
       requireHook: (id, require) => {
-        if (id.startsWith("raw!")) {
+        if (id.startsWith("raw!") || id.startsWith("theme-loader!")) {
           return requireRawId(id, require);
         }
         return require(id);

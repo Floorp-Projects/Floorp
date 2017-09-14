@@ -38,7 +38,7 @@
                accesskey="&searchFilter.accesskey;"/>
     </hbox>
     <separator class="thin"/>
-    <label control="cookiesList" id="cookiesIntro">&cookiesonsystem.label;</label>
+    <label control="cookiesList" id="cookiesIntro">&cookiesonsystem2.label;</label>
     <separator class="thin"/>
     <tree id="cookiesList" flex="1" style="height: 10em;"
           onkeypress="gCookiesWindow.onCookieKeyPress(event)"

@@ -499,18 +499,7 @@ class TabTracker extends TabTrackerBase {
     let windowId = windowTracker.getId(nativeTab.ownerGlobal);
     let tabId = this.getId(nativeTab);
 
-    // When addons run in-process, `window.close()` is synchronous. Most other
-    // addon-invoked calls are asynchronous since they go through a proxy
-    // context via the message manager. This includes event registrations such
-    // as `tabs.onRemoved.addListener`.
-    //
-    // So, even if `window.close()` were to be called (in-process) after calling
-    // `tabs.onRemoved.addListener`, then the tab would be closed before the
-    // event listener is registered. To make sure that the event listener is
-    // notified, we dispatch `tabs.onRemoved` asynchronously.
-    Services.tm.dispatchToMainThread(() => {
-      this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
-    });
+    this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
   }
 
   getBrowserData(browser) {

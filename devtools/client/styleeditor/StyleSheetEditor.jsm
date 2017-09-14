@@ -358,6 +358,7 @@ StyleSheetEditor.prototype = {
       // We just applied an edit in the editor, so we can drop this
       // notification.
       this._isUpdating = false;
+      this.emit("style-applied");
     } else if (this.sourceEditor) {
       this._getSourceTextAndPrettify().then((newText) => {
         this._justSetText = true;
@@ -742,6 +743,9 @@ StyleSheetEditor.prototype = {
       let decoder = new TextDecoder();
       let text = decoder.decode(array);
 
+      // Ensure we don't re-fetch the text from the original source
+      // actor when we're notified that the style sheet changed.
+      this._isUpdating = true;
       let relatedSheet = this.styleSheet.relatedStyleSheet;
       relatedSheet.update(text, this.transitionsEnabled);
     }, this.markLinkedFileBroken);

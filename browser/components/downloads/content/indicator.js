@@ -130,8 +130,23 @@ const DownloadsButton = {
     this._getAnchorInternal();
   },
 
-  unhide() {
+  /**
+   * Unhide the button. Generally, this only needs to use the placeholder.
+   * However, when starting customize mode, if the button is in the palette,
+   * we need to unhide it before customize mode is entered, otherwise it
+   * gets ignored by customize mode. To do this, we pass true for
+   * `includePalette`. We don't always look in the palette because it's
+   * inefficient (compared to getElementById), shouldn't be necessary, and
+   * if _placeholder returned the node even if in the palette, other checks
+   * would break.
+   *
+   * @param includePalette  whether to search the palette, too. Defaults to false.
+   */
+  unhide(includePalette = false) {
     let button = this._placeholder;
+    if (!button && includePalette) {
+      button = gNavToolbox.palette.querySelector("#downloads-button");
+    }
     if (button && button.hasAttribute("hidden")) {
       button.removeAttribute("hidden");
       if (this._navBar.contains(button)) {
@@ -190,7 +205,7 @@ const DownloadsButton = {
       // during customization, even if requested using the getAnchor method.
       this._customizing = true;
       this._anchorRequested = false;
-      this.unhide();
+      this.unhide(true);
     }
   },
 
@@ -308,7 +323,9 @@ const DownloadsIndicatorView = {
 
         // If the view is initialized, we need to update the elements now that
         // they are finally available in the document.
-        if (this._initialized) {
+        // We need to re-check for the placeholder because it might have
+        // disappeared since then.
+        if (this._initialized && DownloadsButton._placeholder) {
           DownloadsCommon.getIndicatorData(window).refreshView(this);
         }
 

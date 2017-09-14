@@ -71,7 +71,7 @@ const DATABASE_TO_MEMORY_PERC = 4;
 const DATABASE_TO_DISK_PERC = 2;
 // Maximum size of the optimal database.  High-end hardware has plenty of
 // memory and disk space, but performances don't grow linearly.
-const DATABASE_MAX_SIZE = 62914560; // 60MiB
+const DATABASE_MAX_SIZE = 73400320; // 70MiB
 // If the physical memory size is bogus, fallback to this.
 const MEMSIZE_FALLBACK_BYTES = 268435456; // 256 MiB
 // If the disk available space is bogus, fallback to this.
@@ -100,7 +100,7 @@ const EXPIRE_AGGRESSIVITY_MULTIPLIER = 3;
 // Magic numbers are determined through analysis of the distribution of a ratio
 // between number of unique URIs and database size among our users.
 // Used as a fall back value when it's not possible to calculate the real value.
-const URIENTRY_AVG_SIZE = 600;
+const URIENTRY_AVG_SIZE = 700;
 
 // Seconds of idle time before starting a larger expiration step.
 // Notice during idle we stop the expiration timer since we don't want to hurt

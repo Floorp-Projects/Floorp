@@ -10,8 +10,6 @@ const {
   generateActorSpec,
   types
 } = require("devtools/shared/protocol");
-require("devtools/shared/specs/node");
-require("devtools/shared/specs/stylesheets");
 
 // Predeclare the domstylerule actor type
 types.addActorType("domstylerule");

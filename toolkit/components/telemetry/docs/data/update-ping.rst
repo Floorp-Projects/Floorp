@@ -29,7 +29,7 @@ payload.reason
 This field supports the following values:
 
 - ``ready`` meaning that the ping was generated after an update was downloaded and marked as ready to be processed. For *non-staged* updates this happens as soon as the download finishes and is verified while for *staged* updates this happens before the staging step is started.
-- ``ready`` the ping was generated after the browser was restarted and the update correctly applied.
+- ``success`` the ping was generated after the browser was restarted and the update correctly applied.
 
 payload.targetChannel
 -----------------------
@@ -69,3 +69,6 @@ The following is a list of conditions and expected behaviours for the ``update``
 - **If automatic updates are disabled**: when the user forces a manual update, no ``update`` ping will be generated.
 - **If updates fail to apply**: in some cases the client will download the same update blob and generate a new ``update`` ping for the same target version and build id, with a different document id.
 - **If the build update channel contains the CCK keyword**, the update ping will not report it but rather report a vanilla channel name (e.g. ``mozilla-cck-test-beta`` gets reported as ``beta``).
+- **If a profile refresh occurs before the update is applied**, the update ping with ``reason = success`` will not be generated.
+- **If the update is applied on a new profile, different then the one it was downloaded in**, the update ping with ``reason = success`` will not be generated.
+- **If a newer browser version is installed over an older**, the update ping with ``reason = success`` will not be generated.

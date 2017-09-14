@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use euclid::{SideOffsets2D, TypedSideOffsets2D};
-use {ColorF, FontInstanceKey, ImageKey, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
+use euclid::{SideOffsets2D, TypedRect, TypedSideOffsets2D};
+use {ColorF, FontInstanceKey, ImageKey, LayerPixel, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use {GlyphOptions, LayoutVector2D, PipelineId, PropertyBinding};
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
@@ -40,10 +40,29 @@ impl ClipAndScrollInfo {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct DisplayItem {
     pub item: SpecificDisplayItem,
-    pub rect: LayoutRect,
-    pub local_clip: LocalClip,
     pub clip_and_scroll: ClipAndScrollInfo,
+    pub info: LayoutPrimitiveInfo,
 }
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct PrimitiveInfo<T> {
+    pub rect: TypedRect<f32, T>,
+    pub local_clip: Option<LocalClip>,
+    pub is_backface_visible: bool,
+}
+
+impl LayerPrimitiveInfo {
+    pub fn new(rect: TypedRect<f32, LayerPixel>) -> Self {
+        PrimitiveInfo {
+            rect: rect,
+            local_clip: Some(LocalClip::from(rect)),
+            is_backface_visible: true,
+        }
+    }
+}
+
+pub type LayoutPrimitiveInfo = PrimitiveInfo<LayoutPixel>;
+pub type LayerPrimitiveInfo = PrimitiveInfo<LayerPixel>;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum SpecificDisplayItem {

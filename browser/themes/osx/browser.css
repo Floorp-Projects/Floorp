@@ -358,16 +358,6 @@
 
 %include ../shared/identity-block/identity-block.inc.css
 
-#identity-box:-moz-locale-dir(ltr) {
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-}
-
-#identity-box:-moz-locale-dir(rtl) {
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-}
-
 #identity-box:not(:active):-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
   border-inline-end-style: none;

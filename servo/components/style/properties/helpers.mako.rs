@@ -117,6 +117,7 @@
             use values::computed::ComputedVecIter;
 
             /// The computed value, effectively a list of single values.
+            #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
             #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
             #[derive(Clone, Debug, PartialEq)]
             % if need_animatable or animation_value_type == "ComputedValue":
@@ -178,6 +179,7 @@
 
         /// The specified value of ${name}.
         #[derive(Clone, Debug, PartialEq)]
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct SpecifiedValue(pub Vec<single_value::SpecifiedValue>);
 
@@ -314,6 +316,13 @@
                 _ => panic!("entered the wrong cascade_property() implementation"),
             };
 
+            context.for_non_inherited_property =
+                % if property.style_struct.inherited:
+                    None;
+                % else:
+                    Some(LonghandId::${property.camel_case});
+                % endif
+
             % if not property.derived_from:
                 match value {
                     DeclaredValue::Value(specified_value) => {
@@ -321,6 +330,10 @@
                             if let Some(sf) = specified_value.get_system() {
                                 longhands::system_font::resolve_system_font(sf, context);
                             }
+                        % endif
+                        % if not property.style_struct.inherited and property.logical:
+                            context.rule_cache_conditions.borrow_mut()
+                                .set_writing_mode_dependency(context.builder.writing_mode);
                         % endif
                         % if property.is_vector:
                             // In the case of a vector property we want to pass
@@ -373,6 +386,9 @@
                         CSSWideKeyword::Unset |
                         % endif
                         CSSWideKeyword::Inherit => {
+                            % if not property.style_struct.inherited:
+                                context.rule_cache_conditions.borrow_mut().set_uncacheable();
+                            % endif
                             % if property.ident == "font_size":
                                 longhands::font_size::cascade_inherit_font_size(context);
                             % else:
@@ -443,6 +459,7 @@
             ${gecko_keyword_conversion(keyword, keyword.values_for(product), type="T", cast_to="i32")}
         }
 
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[derive(Clone, Copy, Debug, Eq, PartialEq, ToCss)]
         pub enum SpecifiedValue {
             Keyword(computed_value::T),
@@ -941,6 +958,7 @@
             pub type T = ::values::computed::${length_type};
         }
 
+        #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         #[derive(Clone, Debug, PartialEq, ToCss)]
         pub struct SpecifiedValue(pub ${length_type});

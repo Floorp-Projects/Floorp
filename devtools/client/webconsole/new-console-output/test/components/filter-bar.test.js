@@ -32,21 +32,24 @@ describe("FilterBar component:", () => {
     );
 
     // Clear button
-    expect(toolbar.children().eq(0).attr("class"))
-      .toBe("devtools-button devtools-clear-icon");
-    expect(toolbar.children().eq(0).attr("title")).toBe("Clear the Web Console output");
+    const clearButton = toolbar.children().eq(0);
+    expect(clearButton.attr("class")).toBe("devtools-button devtools-clear-icon");
+    expect(clearButton.attr("title")).toBe("Clear the Web Console output");
+
+    // Separator
+    expect(toolbar.children().eq(1).attr("class")).toBe("devtools-separator");
 
     // Filter bar toggle
-    expect(toolbar.children().eq(1).attr("class"))
-      .toBe("devtools-button devtools-filter-icon");
-    expect(toolbar.children().eq(1).attr("title")).toBe("Toggle filter bar");
+    const filterBarButton = toolbar.children().eq(2);
+    expect(filterBarButton.attr("class")).toBe("devtools-button devtools-filter-icon");
+    expect(filterBarButton.attr("title")).toBe("Toggle filter bar");
 
     // Text filter
-    expect(toolbar.children().eq(2).attr("class"))
-      .toBe("devtools-plaininput text-filter");
-    expect(toolbar.children().eq(2).attr("placeholder")).toBe("Filter output");
-    expect(toolbar.children().eq(2).attr("type")).toBe("search");
-    expect(toolbar.children().eq(2).attr("value")).toBe("");
+    const textFilter = toolbar.children().eq(3);
+    expect(textFilter.attr("class")).toBe("devtools-plaininput text-filter");
+    expect(textFilter.attr("placeholder")).toBe("Filter output");
+    expect(textFilter.attr("type")).toBe("search");
+    expect(textFilter.attr("value")).toBe("");
   });
 
   it("displays the number of hidden messages when there are one hidden message", () => {

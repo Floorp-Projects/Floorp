@@ -108,7 +108,7 @@ add_task(async function test_extension_page_window_open_reload_and_close() {
     chrome.tabs.create({url: "window.open.html"});
   }
 
-  function windowOpenScript() {
+  function windowOpenScript(remote) {
     let win;
     browser.test.onMessage.addListener(msg => {
       if (msg === "open extension page") {
@@ -121,6 +121,11 @@ add_task(async function test_extension_page_window_open_reload_and_close() {
           browser.test.sendMessage("closed extension page");
         });
         win.close();
+        // In in-process mode, the tabs.onRemoved above won't fire, so we need
+        // to send the message after the window closes.
+        if (!remote) {
+          browser.test.sendMessage("closed extension page");
+        }
       }
     });
     browser.test.sendMessage("setup-intermediate-tab");
@@ -136,7 +141,7 @@ add_task(async function test_extension_page_window_open_reload_and_close() {
       "page.html": `<!DOCTYPE html><meta charset="utf-8"><script src="page.js"><\/script>`,
       "page.js": pageScript,
       "window.open.html": `<!DOCTYPE html><meta charset="utf-8"><script src="window.open.js"><\/script>`,
-      "window.open.js": windowOpenScript,
+      "window.open.js": `(${windowOpenScript})(${remote})`,
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);

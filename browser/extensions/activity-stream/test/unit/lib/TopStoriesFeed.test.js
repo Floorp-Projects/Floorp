@@ -141,18 +141,23 @@ describe("Top Stories Feed", () => {
           "excerpt": "description",
           "image_src": "image-url",
           "url": "rec-url",
-          "published_timestamp": "123"
+          "published_timestamp": "123",
+          "context": "trending",
+          "icon": "icon"
         }]
       };
       const stories = [{
         "guid": "1",
         "type": "now",
         "title": "title",
+        "context": "trending",
+        "icon": "icon",
         "description": "description",
         "image": "image-url",
         "referrer": "referrer",
         "url": "rec-url",
         "hostname": "rec-url",
+        "min_score": 0,
         "score": 1
       }];
 
@@ -356,6 +361,108 @@ describe("Top Stories Feed", () => {
       const rotated = instance.rotate(items);
       assert.deepEqual(items, rotated);
     });
+    it("should insert spoc at provided interval", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
+        "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
+      };
+
+      instance.personalized = true;
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.calledOnce(instance.store.dispatch);
+      let action = instance.store.dispatch.firstCall.args[0];
+      assert.equal(at.SECTION_UPDATE, action.type);
+      assert.equal(true, action.meta.skipMain);
+      assert.equal(action.data.rows[0].guid, "rec1");
+      assert.equal(action.data.rows[1].guid, "rec2");
+      assert.equal(action.data.rows[2].guid, "spoc1");
+
+      // Second new tab shouldn't trigger a section update event (spocsPerNewTab === 2)
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.calledOnce(instance.store.dispatch);
+
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.calledTwice(instance.store.dispatch);
+      action = instance.store.dispatch.secondCall.args[0];
+      assert.equal(at.SECTION_UPDATE, action.type);
+      assert.equal(true, action.meta.skipMain);
+      assert.equal(action.data.rows[0].guid, "rec1");
+      assert.equal(action.data.rows[1].guid, "rec2");
+      assert.equal(action.data.rows[2].guid, "spoc1");
+    });
+    it("should delay inserting spoc if stories haven't been fetched", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
+        "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
+      };
+
+      instance.personalized = true;
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.notCalled(instance.store.dispatch);
+      assert.equal(instance.contentUpdateQueue.length, 1);
+
+      await instance.fetchStories();
+      assert.equal(instance.contentUpdateQueue.length, 0);
+      assert.calledOnce(instance.store.dispatch);
+      let action = instance.store.dispatch.firstCall.args[0];
+      assert.equal(action.type, at.SECTION_UPDATE);
+    });
+    it("should not insert spoc if preffed off", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
+        "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
+      };
+
+      instance.show_spocs = false;
+      instance.stories_endpoint = "stories-endpoint";
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.notCalled(instance.store.dispatch);
+    });
+    it("should not fail if there is no spoc", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}]
+      };
+
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.notCalled(instance.store.dispatch);
+    });
   });
   describe("#update", () => {
     it("should fetch stories after update interval", () => {
@@ -384,12 +491,24 @@ describe("Top Stories Feed", () => {
       const fakeSettings = {timeSegments: {}, parameterSets: {}};
       instance.affinityProvider = {status: "not_changed"};
 
-      instance.updateDomainAffinities(fakeSettings);
+      instance.updateSettings(fakeSettings);
       assert.equal("not_changed", instance.affinityProvider.status);
 
       clock.tick(DOMAIN_AFFINITY_UPDATE_TIME);
-      instance.updateDomainAffinities(fakeSettings);
+      instance.updateSettings(fakeSettings);
       assert.isUndefined(instance.affinityProvider.status);
+    });
+    it("should send performance telemetry when updating domain affinities", () => {
+      instance.init();
+      instance.personalized = true;
+      const fakeSettings = {timeSegments: {}, parameterSets: {}};
+
+      clock.tick(DOMAIN_AFFINITY_UPDATE_TIME);
+      instance.updateSettings(fakeSettings);
+      assert.calledOnce(instance.store.dispatch);
+      let action = instance.store.dispatch.firstCall.args[0];
+      assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
+      assert.equal(action.data.event, "topstories.domain.affinity.calculation.ms");
     });
   });
 });

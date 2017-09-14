@@ -13,27 +13,35 @@ import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.R;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class ExtensionPermissionsHelper implements BundleEventListener {
     private final Context mContext;
+    private boolean mShowUpdateIcon;
 
     public ExtensionPermissionsHelper(Context context) {
         mContext = context;
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
-            "Extension:PermissionPrompt");
+            "Extension:PermissionPrompt",
+            "Extension:ShowUpdateIcon",
+            null);
     }
 
     public void uninit() {
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
-            "Extension:PermissionPrompt");
+            "Extension:PermissionPrompt",
+            "Extension:ShowUpdateIcon",
+            null);
+    }
+
+    public boolean getShowUpdateIcon() {
+        return mShowUpdateIcon;
     }
 
     @Override // BundleEventListener
@@ -82,6 +90,8 @@ public class ExtensionPermissionsHelper implements BundleEventListener {
 
             final AlertDialog dialog = builder.create();
             dialog.show();
+        } else if ("Extension:ShowUpdateIcon".equals(event)) {
+            mShowUpdateIcon = message.getBoolean("value");
         }
     }
 }

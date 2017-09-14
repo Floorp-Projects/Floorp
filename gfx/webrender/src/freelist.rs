@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::marker::PhantomData;
+use util::recycle_vec;
 
 // TODO(gw): Add an occupied list head, for fast
 //           iteration of the occupied list to implement
@@ -15,6 +16,16 @@ struct Epoch(u32);
 pub struct FreeListHandle<T> {
     index: u32,
     _marker: PhantomData<T>,
+}
+
+impl<T> Clone for WeakFreeListHandle<T> {
+    fn clone(&self) -> WeakFreeListHandle<T> {
+        WeakFreeListHandle {
+            index: self.index,
+            epoch: self.epoch,
+            _marker: PhantomData,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -44,6 +55,13 @@ impl<T> FreeList<T> {
     pub fn new() -> FreeList<T> {
         FreeList {
             slots: Vec::new(),
+            free_list_head: None,
+        }
+    }
+
+    pub fn recycle(self) -> FreeList<T> {
+        FreeList {
+            slots: recycle_vec(self.slots),
             free_list_head: None,
         }
     }

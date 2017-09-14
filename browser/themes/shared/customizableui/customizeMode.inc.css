@@ -63,9 +63,13 @@
 
 .customizationmode-checkbox,
 .customizationmode-button {
-  color: rgb(71, 71, 71);
   margin: 6px 10px;
   padding: 2px 5px;
+}
+
+.customizationmode-checkbox:not(:-moz-lwtheme),
+.customizationmode-button {
+  color: rgb(71, 71, 71);
 }
 
 #customization-reset-button,

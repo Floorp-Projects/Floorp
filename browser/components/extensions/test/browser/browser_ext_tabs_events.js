@@ -248,6 +248,8 @@ add_task(async function testTabEventsSize() {
 
 add_task(async function testTabRemovalEvent() {
   async function background() {
+    let events = [];
+
     function awaitLoad(tabId) {
       return new Promise(resolve => {
         browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
@@ -260,12 +262,13 @@ add_task(async function testTabRemovalEvent() {
     }
 
     chrome.tabs.onRemoved.addListener((tabId, info) => {
+      browser.test.assertEq(0, events.length, "No events recorded before onRemoved.");
+      events.push("onRemoved");
       browser.test.log("Make sure the removed tab is not available in the tabs.query callback.");
       chrome.tabs.query({}, tabs => {
         for (let tab of tabs) {
           browser.test.assertTrue(tab.id != tabId, "Tab query should not include removed tabId");
         }
-        browser.test.notifyPass("tabs-events");
       });
     });
 
@@ -273,6 +276,13 @@ add_task(async function testTabRemovalEvent() {
       let url = "http://example.com/browser/browser/components/extensions/test/browser/context.html";
       let tab = await browser.tabs.create({url: url});
       await awaitLoad(tab.id);
+
+      chrome.tabs.onActivated.addListener(info => {
+        browser.test.assertEq(1, events.length, "One event recorded before onActivated.");
+        events.push("onActivated");
+        browser.test.assertEq("onRemoved", events[0], "onRemoved fired before onActivated.");
+        browser.test.notifyPass("tabs-events");
+      });
 
       await browser.tabs.remove(tab.id);
     } catch (e) {
