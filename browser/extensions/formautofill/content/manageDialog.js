@@ -330,6 +330,9 @@ class ManageAddresses extends ManageRecords {
 class ManageCreditCards extends ManageRecords {
   constructor(elements) {
     super("creditCards", elements);
+    elements.add.setAttribute("searchkeywords", FormAutofillUtils.EDIT_CREDITCARD_KEYWORDS
+                                                  .map(key => FormAutofillUtils.stringBundle.GetStringFromName(key))
+                                                  .join("\n"));
     this._hasMasterPassword = MasterPassword.isEnabled;
     this._isDecrypted = false;
     if (this._hasMasterPassword) {
