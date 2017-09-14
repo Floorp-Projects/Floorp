@@ -46,8 +46,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             kwargs["certutil_binary"] = self.get_binary_path('certutil')
 
         if kwargs["stackfix_dir"] is None:
-            kwargs["stackfix_dir"] = os.path.split(
-                self.get_binary_path(validate_exists=False))[0]
+            kwargs["stackfix_dir"] = self.bindir
 
         here = os.path.split(__file__)[0]
 
