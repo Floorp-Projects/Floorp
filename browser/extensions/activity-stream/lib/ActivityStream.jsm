@@ -62,8 +62,13 @@ const PREFS_CONFIG = new Map([
       stories_referrer: "https://getpocket.com/recommendations",
       info_link: "https://www.mozilla.org/privacy/firefox/#pocketstories",
       topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
+      show_spocs: false,
       personalized: false
     })
+  }],
+  ["filterAdult", {
+    title: "Remove adult pages from sites, highlights, etc.",
+    value: true
   }],
   ["migrationExpired", {
     title: "Boolean flag that decides whether to show the migration message or not.",
@@ -113,6 +118,10 @@ const PREFS_CONFIG = new Map([
   ["telemetry.ping.endpoint", {
     title: "Telemetry server endpoint",
     value: "https://tiles.services.mozilla.com/v4/links/activity-stream"
+  }],
+  ["aboutHome.autoFocus", {
+    title: "Focus the about:home search box on load",
+    value: true
   }]
 ]);
 

@@ -201,9 +201,6 @@ this.TelemetryFeed = class TelemetryFeed {
       perf: {load_trigger_type: "unexpected"}
     };
 
-    if (url) {
-      session.page = url;
-    }
     this.sessions.set(id, session);
     return session;
   }
