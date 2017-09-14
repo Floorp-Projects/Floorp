@@ -515,22 +515,18 @@ AnimationHelper::SetAnimations(AnimationArray& aAnimations,
     AnimData* data = aAnimData.AppendElement();
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
-    const InfallibleTArray<AnimationSegment>& segments = animation.segments();
-    for (uint32_t j = 0; j < segments.Length(); j++) {
-      TimingFunction tf = segments.ElementAt(j).sampleFn();
-
-      Maybe<ComputedTimingFunction> ctf =
-        AnimationUtils::TimingFunctionToComputedTimingFunction(tf);
-      functions.AppendElement(ctf);
-    }
-
-    // Precompute the StyleAnimationValues that we need if this is a transform
-    // animation.
     InfallibleTArray<StyleAnimationValue>& startValues = data->mStartValues;
     InfallibleTArray<StyleAnimationValue>& endValues = data->mEndValues;
+
+    const InfallibleTArray<AnimationSegment>& segments = animation.segments();
     for (const AnimationSegment& segment : segments) {
       startValues.AppendElement(ToStyleAnimationValue(segment.startState()));
       endValues.AppendElement(ToStyleAnimationValue(segment.endState()));
+
+      TimingFunction tf = segment.sampleFn();
+      Maybe<ComputedTimingFunction> ctf =
+        AnimationUtils::TimingFunctionToComputedTimingFunction(tf);
+      functions.AppendElement(ctf);
     }
   }
 }
