@@ -1,5 +1,8 @@
 #include "HangStack.h"
+
+#ifdef MOZ_GECKO_PROFILER
 #include "shared-libraries.h"
+#endif
 
 namespace mozilla {
 
@@ -99,6 +102,7 @@ HangStack::ReadModuleInformation()
   // mModules should be empty when we start filling it.
   mModules.Clear();
 
+#ifdef MOZ_GECKO_PROFILER
   // Create a sorted list of the PCs in the current stack.
   AutoTArray<Frame*, 100> frames;
   for (auto& frame : *this) {
@@ -155,6 +159,7 @@ HangStack::ReadModuleInformation()
       mModules.AppendElement(module);
     }
   }
+#endif
 }
 
 } // namespace mozilla

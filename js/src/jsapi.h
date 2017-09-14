@@ -1157,7 +1157,11 @@ class JS_PUBLIC_API(ContextOptions) {
         werror_(false),
         strictMode_(false),
         extraWarnings_(false),
-        forEachStatement_(false)
+        forEachStatement_(false),
+        streams_(false)
+#ifdef FUZZING
+        , fuzzing_(false)
+#endif
     {
     }
 

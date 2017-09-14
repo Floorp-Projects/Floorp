@@ -40,6 +40,8 @@ int
 irregexp::CaseInsensitiveCompareStrings(const CharT* substring1, const CharT* substring2,
 					size_t byteLength)
 {
+    AutoUnsafeCallWithABI unsafe;
+
     MOZ_ASSERT(byteLength % sizeof(CharT) == 0);
     size_t length = byteLength / sizeof(CharT);
 
@@ -70,6 +72,8 @@ int
 irregexp::CaseInsensitiveCompareUCStrings(const CharT* substring1, const CharT* substring2,
                                           size_t byteLength)
 {
+    AutoUnsafeCallWithABI unsafe;
+
     MOZ_ASSERT(byteLength % sizeof(CharT) == 0);
     size_t length = byteLength / sizeof(CharT);
 

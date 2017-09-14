@@ -67,6 +67,7 @@ let onClick = evt => {
 };
 
 let overlay = document.getElementById("onboarding-overlay");
+overlay.addEventListener("submit", e => e.preventDefault());
 overlay.addEventListener("click", onClick);
 overlay.addEventListener("keypress", e => {
   let { target, key } = e;
