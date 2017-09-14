@@ -64,11 +64,13 @@ public:
   Maybe<wr::ImageKey> CreateImageKey(nsDisplayItem* aItem,
                                      ImageContainer* aContainer,
                                      mozilla::wr::DisplayListBuilder& aBuilder,
+                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
                                      const StackingContextHelper& aSc,
                                      gfx::IntSize& aSize);
   bool PushImage(nsDisplayItem* aItem,
                  ImageContainer* aContainer,
                  mozilla::wr::DisplayListBuilder& aBuilder,
+                 mozilla::wr::IpcResourceUpdateQueue& aResources,
                  const StackingContextHelper& aSc,
                  const LayerRect& aRect);
 

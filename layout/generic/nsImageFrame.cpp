@@ -1727,7 +1727,7 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   const LayoutDeviceRect destRect(
     LayoutDeviceIntRect::FromAppUnits(GetDestRect(), factor));
   const LayerRect dest = ViewAs<LayerPixel>(destRect, PixelCastJustification::WebRenderHasUnitResolution);
-  return aManager->PushImage(this, container, aBuilder, aSc, dest);
+  return aManager->PushImage(this, container, aBuilder, aResources, aSc, dest);
 }
 
 DrawResult
