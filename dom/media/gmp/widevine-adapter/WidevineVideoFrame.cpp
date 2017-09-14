@@ -94,7 +94,7 @@ WidevineVideoFrame::FrameBuffer()
 void
 WidevineVideoFrame::SetPlaneOffset(cdm::VideoFrame::VideoPlane aPlane, uint32_t aOffset)
 {
-  GMP_LOG("WidevineVideoFrame::SetPlaneOffset(%d, %d) this=%p",
+  GMP_LOG("WidevineVideoFrame::SetPlaneOffset(%d, %" PRIu32 ") this=%p",
           aPlane,
           aOffset,
           this);
@@ -111,7 +111,7 @@ void
 WidevineVideoFrame::SetStride(cdm::VideoFrame::VideoPlane aPlane, uint32_t aStride)
 {
   GMP_LOG(
-    "WidevineVideoFrame::SetStride(%d, %d) this=%p", aPlane, aStride, this);
+    "WidevineVideoFrame::SetStride(%d, %" PRIu32 ") this=%p", aPlane, aStride, this);
   mPlaneStrides[aPlane] = aStride;
 }
 
