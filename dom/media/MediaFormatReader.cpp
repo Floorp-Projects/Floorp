@@ -2047,89 +2047,85 @@ MediaFormatReader::HandleDemuxedSamples(
     return;
   }
 
-  // Decode all our demuxed frames.
-  while (decoder.mQueuedSamples.Length()) {
-    RefPtr<MediaRawData> sample = decoder.mQueuedSamples[0];
-    const RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
+  RefPtr<MediaRawData> sample = decoder.mQueuedSamples[0];
+  const RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
 
-    if (info && decoder.mLastStreamSourceID != info->GetID()) {
-      nsTArray<RefPtr<MediaRawData>> samples;
-      if (decoder.mDecoder) {
-        bool recyclable = MediaPrefs::MediaDecoderCheckRecycling() &&
-                          decoder.mDecoder->SupportDecoderRecycling();
-        if (!recyclable && decoder.mTimeThreshold.isNothing() &&
-            (decoder.mNextStreamSourceID.isNothing() ||
-             decoder.mNextStreamSourceID.ref() != info->GetID())) {
-          LOG("%s stream id has changed from:%d to:%d, draining decoder.",
-              TrackTypeToStr(aTrack),
-              decoder.mLastStreamSourceID,
-              info->GetID());
-          decoder.RequestDrain();
-          decoder.mNextStreamSourceID = Some(info->GetID());
-          ScheduleUpdate(aTrack);
-          return;
-        }
-
-        // If flushing is required, it will clear our array of queued samples.
-        // So we may need to make a copy.
-        samples = decoder.mQueuedSamples;
-        if (!recyclable) {
-          LOG("Decoder does not support recycling, recreate decoder.");
-          ShutdownDecoder(aTrack);
-        } else if (decoder.HasWaitingPromise()) {
-          decoder.Flush();
-        }
-      }
-
-      LOG("%s stream id has changed from:%d to:%d.",
-          TrackTypeToStr(aTrack),
-          decoder.mLastStreamSourceID,
-          info->GetID());
-
-      decoder.mNextStreamSourceID.reset();
-      decoder.mLastStreamSourceID = info->GetID();
-      decoder.mInfo = info;
-
-      decoder.mMeanRate.Reset();
-
-      if (sample->mKeyframe) {
-        if (samples.Length()) {
-          decoder.mQueuedSamples = Move(samples);
-        }
-      } else {
-        auto time = TimeInterval(sample->mTime, sample->GetEndTime());
-        InternalSeekTarget seekTarget =
-          decoder.mTimeThreshold.refOr(InternalSeekTarget(time, false));
-        LOG("Stream change occurred on a non-keyframe. Seeking to:%" PRId64,
-            sample->mTime.ToMicroseconds());
-        InternalSeek(aTrack, seekTarget);
+  if (info && decoder.mLastStreamSourceID != info->GetID()) {
+    nsTArray<RefPtr<MediaRawData>> samples;
+    if (decoder.mDecoder) {
+      bool recyclable = MediaPrefs::MediaDecoderCheckRecycling() &&
+                        decoder.mDecoder->SupportDecoderRecycling();
+      if (!recyclable && decoder.mTimeThreshold.isNothing() &&
+          (decoder.mNextStreamSourceID.isNothing() ||
+            decoder.mNextStreamSourceID.ref() != info->GetID())) {
+        LOG("%s stream id has changed from:%d to:%d, draining decoder.",
+            TrackTypeToStr(aTrack),
+            decoder.mLastStreamSourceID,
+            info->GetID());
+        decoder.RequestDrain();
+        decoder.mNextStreamSourceID = Some(info->GetID());
+        ScheduleUpdate(aTrack);
         return;
       }
+
+      // If flushing is required, it will clear our array of queued samples.
+      // So we may need to make a copy.
+      samples = decoder.mQueuedSamples;
+      if (!recyclable) {
+        LOG("Decoder does not support recycling, recreate decoder.");
+        ShutdownDecoder(aTrack);
+      } else if (decoder.HasWaitingPromise()) {
+        decoder.Flush();
+      }
     }
 
-    // Calculate the average frame rate. The first frame will be accounted
-    // for twice.
-    decoder.mMeanRate.Update(sample->mDuration);
+    LOG("%s stream id has changed from:%d to:%d.",
+        TrackTypeToStr(aTrack),
+        decoder.mLastStreamSourceID,
+        info->GetID());
 
-    if (!decoder.mDecoder) {
-      mDecoderFactory->CreateDecoder(aTrack);
+    decoder.mNextStreamSourceID.reset();
+    decoder.mLastStreamSourceID = info->GetID();
+    decoder.mInfo = info;
+
+    decoder.mMeanRate.Reset();
+
+    if (sample->mKeyframe) {
+      if (samples.Length()) {
+        decoder.mQueuedSamples = Move(samples);
+      }
+    } else {
+      auto time = TimeInterval(sample->mTime, sample->GetEndTime());
+      InternalSeekTarget seekTarget =
+        decoder.mTimeThreshold.refOr(InternalSeekTarget(time, false));
+      LOG("Stream change occurred on a non-keyframe. Seeking to:%" PRId64,
+          sample->mTime.ToMicroseconds());
+      InternalSeek(aTrack, seekTarget);
       return;
     }
-
-    LOGV("Input:%" PRId64 " (dts:%" PRId64 " kf:%d)",
-         sample->mTime.ToMicroseconds(), sample->mTimecode.ToMicroseconds(),
-         sample->mKeyframe);
-    decoder.mNumSamplesInput++;
-    decoder.mSizeOfQueue++;
-    if (aTrack == TrackInfo::kVideoTrack) {
-      aA.mStats.mParsedFrames++;
-    }
-
-    DecodeDemuxedSamples(aTrack, sample);
-
-    decoder.mQueuedSamples.RemoveElementAt(0);
-    break;
   }
+
+  // Calculate the average frame rate. The first frame will be accounted
+  // for twice.
+  decoder.mMeanRate.Update(sample->mDuration);
+
+  if (!decoder.mDecoder) {
+    mDecoderFactory->CreateDecoder(aTrack);
+    return;
+  }
+
+  LOGV("Input:%" PRId64 " (dts:%" PRId64 " kf:%d)",
+        sample->mTime.ToMicroseconds(), sample->mTimecode.ToMicroseconds(),
+        sample->mKeyframe);
+  decoder.mNumSamplesInput++;
+  decoder.mSizeOfQueue++;
+  if (aTrack == TrackInfo::kVideoTrack) {
+    aA.mStats.mParsedFrames++;
+  }
+
+  DecodeDemuxedSamples(aTrack, sample);
+
+  decoder.mQueuedSamples.RemoveElementAt(0);
 }
 
 void
