@@ -24,6 +24,8 @@ const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
 const PREF_ALLOW_NON_MPC              = "extensions.allow-non-mpc-extensions";
+const PREF_DISABLE_SECURITY = ("security.turn_off_all_security_so_that_" +
+                               "viruses_can_take_over_this_computer");
 
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
@@ -74,6 +76,7 @@ const {
   createUpdateRDF,
   getFileForAddon,
   manuallyUninstall,
+  overrideBuiltIns,
   promiseAddonEvent,
   promiseCompleteAllInstalls,
   promiseCompleteInstall,
@@ -159,6 +162,7 @@ const promiseAddonByID = AddonManager.getAddonByID;
 const promiseAddonsByIDs = AddonManager.getAddonsByIDs;
 const promiseAddonsWithOperationsByTypes = AddonManager.getAddonsWithOperationsByTypes;
 
+let gStartup = null;
 var gPort = null;
 var gUrlToFileMap = {};
 
@@ -1529,12 +1533,14 @@ async function setupSystemAddonConditions(setup, distroDir) {
   do_print("Clearing existing database.");
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
   distroDir.leafName = "empty";
+  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system4@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
   await promiseShutdownManager();
 
   do_print("Setting up conditions.");
   await setup.setup();
 
+  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system4@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   // Make sure the initial state is correct
@@ -1580,7 +1586,9 @@ async function verifySystemAddonState(initialState, finalState = undefined, alre
   await checkInstalledSystemAddons(...finalState, distroDir);
 
   // Check that the new state is active after a restart
-  await promiseRestartManager();
+  shutdownManager();
+  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system4@tests.mozilla.org", "system5@tests.mozilla.org"] });
+  await promiseStartupManager();
   await checkInstalledSystemAddons(finalState, distroDir);
 }
 
