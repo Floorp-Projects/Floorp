@@ -63,9 +63,6 @@ var gMenuBuilder = {
   buildActionContextMenu(contextData) {
     const {menu} = contextData;
 
-    contextData.tab = tabTracker.activeTab;
-    contextData.pageUrl = contextData.tab.linkedBrowser.currentURI.spec;
-
     const root = gRootItems.get(contextData.extension);
     if (!root) {
       return;
@@ -429,6 +426,8 @@ var gMenuBuilder = {
 
 // Called from pageAction or browserAction popup.
 global.actionContextMenu = function(contextData) {
+  contextData.tab = tabTracker.activeTab;
+  contextData.pageUrl = contextData.tab.linkedBrowser.currentURI.spec;
   gMenuBuilder.buildActionContextMenu(contextData);
 };
 
