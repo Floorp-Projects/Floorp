@@ -23,7 +23,9 @@ XPCOMUtils.defineLazyGetter(Strings, "browser", _ =>
 XPCOMUtils.defineLazyGetter(Strings, "reader", _ =>
         Services.strings.createBundle("chrome://global/locale/aboutReader.properties"));
 
-function BrowserCLH() {}
+function BrowserCLH() {
+  this.wrappedJSObject = this;
+}
 
 BrowserCLH.prototype = {
   /**
