@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.icons.IconCallback;
@@ -22,6 +23,7 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.NetworkUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
 /**
@@ -71,17 +73,20 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
                     .load(Uri.parse(overrideImageURL))
                     .fit()
                     .centerCrop()
-                    .into(imageView);
+                    .into(imageView, new OnErrorUsePageURLCallback(this, pageURL));
         } else {
-            setUIMode(UIMode.FAVICON_IMAGE);
-
-            ongoingFaviconLoad = Icons.with(getContext())
-                    .pageUrl(pageURL)
-                    .skipNetwork()
-                    .forActivityStream()
-                    .build()
-                    .execute(this);
+            setFaviconImage(pageURL);
         }
+    }
+
+    private void setFaviconImage(@NonNull final String pageURL) {
+        setUIMode(UIMode.FAVICON_IMAGE);
+        ongoingFaviconLoad = Icons.with(getContext())
+                .pageUrl(pageURL)
+                .skipNetwork()
+                .forActivityStream()
+                .build()
+                .execute(this);
     }
 
     @Override
@@ -119,5 +124,30 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
         faviconView = (FaviconView) findViewById(R.id.favicon_view);
         imageView = (ImageView) findViewById(R.id.image_view);
         setUIMode(UIMode.FAVICON_IMAGE); // set in code to ensure state is consistent.
+    }
+
+    private static class OnErrorUsePageURLCallback implements Callback {
+        private final WeakReference<StreamOverridablePageIconLayout> layoutWeakReference;
+        private final String pageURL;
+
+        private OnErrorUsePageURLCallback(final StreamOverridablePageIconLayout layoutWeakReference,
+                @NonNull final String pageURL) {
+            this.layoutWeakReference = new WeakReference<>(layoutWeakReference);
+            this.pageURL = pageURL;
+        }
+
+        @Override
+        public void onSuccess() { /* Picasso sets the image, nothing to do. */ }
+
+        @Override
+        public void onError() {
+            // I'm slightly concerned that cancelPendingRequests could get called during
+            // this Picasso -> Icons request chain and we'll get bugs where favicons don't
+            // appear correctly. However, we're already in an unexpected error case so it's
+            // probably not worth worrying about.
+            final StreamOverridablePageIconLayout layout = layoutWeakReference.get();
+            if (layout == null) { return; }
+            layout.setFaviconImage(pageURL);
+        }
     }
 }
