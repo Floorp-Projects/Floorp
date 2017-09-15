@@ -12,7 +12,6 @@
 
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://testing-common/services/common/utils.js");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -239,14 +238,14 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
     elements.push(win);
 
     for (let t = 0; t < numTabs; ++t) {
-      tabs.push(TestingUtils.deepCopy({
+      tabs.push(Cu.cloneInto({
         index: indexes ? indexes() : 1,
         entries: (moreURLs ? [url].concat(moreURLs()) : [url]).map(url2entry),
         attributes: {
           image: "image"
         },
         lastAccessed: 1499
-      }));
+      }, {}));
     }
   }
 
