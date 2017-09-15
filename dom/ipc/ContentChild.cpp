@@ -3629,16 +3629,27 @@ already_AddRefed<nsIEventTarget>
 ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
   switch(aMsg.type()) {
+    // Javascript
     case PJavaScript::Msg_DropTemporaryStrongReferences__ID:
     case PJavaScript::Msg_DropObject__ID:
+
+    // Navigation
     case PContent::Msg_NotifyVisited__ID:
+
+    // Storage API
     case PContent::Msg_DataStoragePut__ID:
     case PContent::Msg_DataStorageRemove__ID:
     case PContent::Msg_DataStorageClear__ID:
-    case PContent::Msg_PIPCBlobInputStreamConstructor__ID:
+
+    // Blob and BlobURL
     case PContent::Msg_BlobURLRegistration__ID:
     case PContent::Msg_BlobURLUnregistration__ID:
+    case PContent::Msg_InitBlobURLs__ID:
+    case PContent::Msg_PIPCBlobInputStreamConstructor__ID:
+    case PContent::Msg_StoreAndBroadcastBlobURLRegistration__ID:
+
       return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
+
     default:
       return nullptr;
   }
