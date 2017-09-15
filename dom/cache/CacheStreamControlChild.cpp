@@ -100,6 +100,7 @@ CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
+  MOZ_DIAGNOSTIC_ASSERT(aStream);
   UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
   autoStream->Serialize(aStream, Manager());
   aStreamCleanupList.AppendElement(Move(autoStream));
