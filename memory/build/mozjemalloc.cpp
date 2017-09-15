@@ -771,6 +771,8 @@ struct arena_t {
 
   bool Init();
 
+  void InitChunk(arena_chunk_t* aChunk, bool aZeroed);
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -2652,11 +2654,11 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 		arena_chunk_tree_dirty_remove(&arena->mChunksDirty, chunk);
 }
 
-static void
-arena_chunk_init(arena_t *arena, arena_chunk_t *chunk, bool zeroed)
+void
+arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed)
 {
-	size_t i;
-	/* WARNING: The following relies on !zeroed meaning "used to be an arena
+  size_t i;
+  /* WARNING: The following relies on !aZeroed meaning "used to be an arena
          * chunk".
          * When the chunk we're initializating as an arena chunk is zeroed, we
          * mark all runs are decommitted and zeroed.
@@ -2666,47 +2668,48 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk, bool zeroed)
          * have been emptied before being recycled). In that case, we can get
          * away with reusing the chunk as-is, marking all runs as madvised.
          */
-	size_t flags = zeroed ? CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED
-	                      : CHUNK_MAP_MADVISED;
+  size_t flags = aZeroed ? CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED
+                         : CHUNK_MAP_MADVISED;
 
-	arena->mStats.mapped += chunksize;
+  mStats.mapped += chunksize;
 
-	chunk->arena = arena;
+  aChunk->arena = this;
 
-	/*
-	 * Claim that no pages are in use, since the header is merely overhead.
-	 */
-	chunk->ndirty = 0;
+  /*
+   * Claim that no pages are in use, since the header is merely overhead.
+   */
+  aChunk->ndirty = 0;
 
-	/* Initialize the map to contain one maximal free untouched run. */
+  /* Initialize the map to contain one maximal free untouched run. */
 #ifdef MALLOC_DECOMMIT
-	arena_run_t *run = (arena_run_t *)((uintptr_t)chunk +
-	                   (arena_chunk_header_npages << pagesize_2pow));
+  arena_run_t* run = (arena_run_t*)(uintptr_t(aChunk) +
+                     (arena_chunk_header_npages << pagesize_2pow));
 #endif
 
-	for (i = 0; i < arena_chunk_header_npages; i++)
-		chunk->map[i].bits = 0;
-	chunk->map[i].bits = arena_maxclass | flags;
-	for (i++; i < chunk_npages-1; i++) {
-		chunk->map[i].bits = flags;
-	}
-	chunk->map[chunk_npages-1].bits = arena_maxclass | flags;
+  for (i = 0; i < arena_chunk_header_npages; i++) {
+    aChunk->map[i].bits = 0;
+  }
+  aChunk->map[i].bits = arena_maxclass | flags;
+  for (i++; i < chunk_npages-1; i++) {
+    aChunk->map[i].bits = flags;
+  }
+  aChunk->map[chunk_npages-1].bits = arena_maxclass | flags;
 
 #ifdef MALLOC_DECOMMIT
-	/*
-	 * Start out decommitted, in order to force a closer correspondence
-	 * between dirty pages and committed untouched pages.
-	 */
-	pages_decommit(run, arena_maxclass);
+  /*
+   * Start out decommitted, in order to force a closer correspondence
+   * between dirty pages and committed untouched pages.
+   */
+  pages_decommit(run, arena_maxclass);
 #endif
-	arena->mStats.committed += arena_chunk_header_npages;
+  mStats.committed += arena_chunk_header_npages;
 
-	/* Insert the run into the tree of available runs. */
-	arena_avail_tree_insert(&arena->mRunsAvail,
-	    &chunk->map[arena_chunk_header_npages]);
+  /* Insert the run into the tree of available runs. */
+  arena_avail_tree_insert(&mRunsAvail,
+      &aChunk->map[arena_chunk_header_npages]);
 
 #ifdef MALLOC_DOUBLE_PURGE
-	new (&chunk->chunks_madvised_elem) mozilla::DoublyLinkedListElement<arena_chunk_t>();
+  new (&aChunk->chunks_madvised_elem) mozilla::DoublyLinkedListElement<arena_chunk_t>();
 #endif
 }
 
@@ -2794,7 +2797,7 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 		if (!chunk)
 			return nullptr;
 
-		arena_chunk_init(arena, chunk, zeroed);
+		arena->InitChunk(chunk, zeroed);
 		run = (arena_run_t *)((uintptr_t)chunk +
 		    (arena_chunk_header_npages << pagesize_2pow));
 	}
