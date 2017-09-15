@@ -26,7 +26,9 @@ using mozilla::IsConvertible;
 using mozilla::IsDefaultConstructible;
 using mozilla::IsDestructible;
 using mozilla::IsEmpty;
+using mozilla::IsIntegral;
 using mozilla::IsLvalueReference;
+using mozilla::IsPod;
 using mozilla::IsPointer;
 using mozilla::IsReference;
 using mozilla::IsRvalueReference;
@@ -51,6 +53,39 @@ static_assert(IsArray<bool[]>::value,
               "bool[] is an array");
 static_assert(IsArray<bool[5]>::value,
               "bool[5] is an array");
+
+static_assert(IsIntegral<char16_t>::value,
+              "char16_t is integral");
+static_assert(IsIntegral<char32_t>::value,
+              "char32_t is integral");
+static_assert(!IsIntegral<char&>::value,
+              "char& is not integral");
+static_assert(!IsIntegral<double>::value,
+              "double is not integral");
+
+static_assert(IsPod<bool>::value,
+              "bool is pod");
+static_assert(IsPod<char16_t>::value,
+              "char16_t is pod");
+static_assert(IsPod<char32_t>::value,
+              "char32_t is pod");
+struct YepItsAPod { int x; };
+static_assert(!IsPod<YepItsAPod>::value,
+              "pod struct is pod");
+struct NopeItsNotAPod {
+  int x;
+ protected:
+  int y;
+};
+static_assert(!IsPod<NopeItsNotAPod>::value,
+              "non-standard-layout struct is not pod");
+struct NopeStillNotAPod {
+  NopeStillNotAPod() : x(7) { }
+  int x;
+};
+static_assert(!IsPod<NopeStillNotAPod>::value,
+              "struct with constructor is not pod");
+
 
 static_assert(!IsPointer<bool>::value,
               "bool not a pointer");
