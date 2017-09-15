@@ -20,6 +20,7 @@ encoding_c = "0.8.0"
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
 audioipc-server = { path = "../../../../media/audioipc/server", optional = true }
+u2fhid = { path = "../../../../dom/webauthn/u2f-hid-rs" }
 
 [features]
 default = []

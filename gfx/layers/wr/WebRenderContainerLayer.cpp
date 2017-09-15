@@ -33,6 +33,7 @@ WebRenderContainerLayer::UpdateTransformDataForAnimation()
 
 void
 WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                     wr::IpcResourceUpdateQueue& aResources,
                                      const StackingContextHelper& aSc)
 {
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
@@ -116,12 +117,13 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
-    ToWebRenderLayer(child.layer)->RenderLayer(aBuilder, sc);
+    ToWebRenderLayer(child.layer)->RenderLayer(aBuilder, aResources, sc);
   }
 }
 
 void
 WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                               wr::IpcResourceUpdateQueue& aResources,
                                const StackingContextHelper& aSc)
 {
   ScrollingLayersHelper scroller(this, aBuilder, aSc);

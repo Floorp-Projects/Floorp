@@ -301,6 +301,10 @@ TabSources.prototype = {
     } else if (source.introductionType === "wasm") {
       // Wasm sources are not JavaScript. Give them their own content-type.
       spec.contentType = "text/wasm";
+    } else if (source.introductionType === "debugger eval") {
+      // All debugger eval code should have a text/javascript content-type.
+      // See Bug 1399064
+      spec.contentType = "text/javascript";
     } else if (url) {
       // There are a few special URLs that we know are JavaScript:
       // inline `javascript:` and code coming from the console

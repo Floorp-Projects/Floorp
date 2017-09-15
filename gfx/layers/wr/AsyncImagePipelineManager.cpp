@@ -190,12 +190,13 @@ AsyncImagePipelineManager::GenerateImageKeyForTextureHost(wr::ResourceUpdateQueu
       return false;
     }
     gfx::IntSize size = dSurf->GetSize();
+    wr::Vec_u8 imgBytes;
+    imgBytes.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
     wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
-    auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
 
     wr::ImageKey key = GenerateImageKey();
     aKeys.AppendElement(key);
-    aResources.AddImage(key, descriptor, slice);
+    aResources.AddImage(key, descriptor, imgBytes);
     dSurf->Unmap();
   }
   return false;

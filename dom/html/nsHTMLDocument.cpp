@@ -174,6 +174,7 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
 
 nsHTMLDocument::nsHTMLDocument()
   : nsDocument("text/html")
+  , mContentListHolder(nullptr)
   , mNumForms(0)
   , mWriteLevel(0)
   , mLoadFlags(0)
@@ -3753,4 +3754,51 @@ nsHTMLDocument::WillIgnoreCharsetOverride()
     }
   }
   return false;
+}
+
+void
+nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
+                                        nsContentList** aFormControlList)
+{
+  RefPtr<ContentListHolder> holder = mContentListHolder;
+  if (!holder) {
+    // Flush our content model so it'll be up to date
+    // If this becomes unnecessary and the following line is removed,
+    // please also remove the corresponding flush operation from
+    // nsHtml5TreeBuilderCppSupplement.h. (Look for "See bug 497861." there.)
+    //XXXsmaug nsHtml5TreeBuilderCppSupplement doesn't seem to have such flush
+    //         anymore.
+    FlushPendingNotifications(FlushType::Content);
+
+    RefPtr<nsContentList> htmlForms = GetExistingForms();
+    if (!htmlForms) {
+      // If the document doesn't have an existing forms content list, create a
+      // new one which will be released soon by ContentListHolder.
+      // Please keep this in sync with nsHTMLDocument::GetForms().
+      htmlForms = new nsContentList(this, kNameSpaceID_XHTML,
+                                    nsGkAtoms::form, nsGkAtoms::form,
+                                    /* aDeep = */ true,
+                                    /* aLiveList = */ true);
+    }
+
+    RefPtr<nsContentList> htmlFormControls =
+      new nsContentList(this,
+                        nsHTMLDocument::MatchFormControls,
+                        nullptr, nullptr,
+                        /* aDeep = */ true,
+                        /* aMatchAtom = */ nullptr,
+                        /* aMatchNameSpaceId = */ kNameSpaceID_None,
+                        /* aFuncMayDependOnAttr = */ true,
+                        /* aLiveList = */ true);
+
+    holder = new ContentListHolder(this, htmlForms, htmlFormControls);
+    RefPtr<ContentListHolder> runnable = holder;
+    if (NS_SUCCEEDED(Dispatch(TaskCategory::GarbageCollection,
+                              runnable.forget()))) {
+      mContentListHolder = holder;
+    }
+  }
+
+  NS_ADDREF(*aFormList = holder->mFormList);
+  NS_ADDREF(*aFormControlList = holder->mFormControlList);
 }

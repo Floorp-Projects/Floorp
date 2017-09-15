@@ -49,9 +49,6 @@ const startupPhases = {
 
   // We are at this phase after creating the first browser window (ie. after final-ui-startup).
   "before opening first browser window": {blacklist: {
-    components: new Set([
-      "nsAsyncShutdown.js",
-    ]),
     modules: new Set([
       "resource://gre/modules/PlacesBackups.jsm",
       "resource://gre/modules/PlacesUtils.jsm",

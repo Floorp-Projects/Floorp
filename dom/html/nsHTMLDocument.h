@@ -17,7 +17,7 @@
 #include "PLDHashTable.h"
 #include "nsIHttpChannel.h"
 #include "nsHTMLStyleSheet.h"
-
+#include "nsThreadUtils.h"
 #include "nsICommandManager.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -266,6 +266,8 @@ public:
   static bool MatchFormControls(Element* aElement, int32_t aNamespaceID,
                                 nsIAtom* aAtom, void* aData);
 
+  void GetFormsAndFormControls(nsContentList** aFormList,
+                               nsContentList** aFormControlList);
 protected:
   ~nsHTMLDocument();
 
@@ -311,6 +313,37 @@ protected:
   bool IsEditingOnAfterFlush();
 
   void *GenerateParserKey(void);
+
+  // A helper class to keep nsContentList objects alive for a short period of
+  // time. Note, when the final Release is called on an nsContentList object, it
+  // removes itself from MutationObserver list.
+  class ContentListHolder : public mozilla::Runnable
+  {
+  public:
+    ContentListHolder(nsHTMLDocument* aDocument,
+                      nsContentList* aFormList,
+                      nsContentList* aFormControlList)
+      : mozilla::Runnable("ContentListHolder")
+      , mDocument(aDocument)
+      , mFormList(aFormList)
+      , mFormControlList(aFormControlList)
+    {
+    }
+
+    ~ContentListHolder()
+    {
+      MOZ_ASSERT(!mDocument->mContentListHolder ||
+                 mDocument->mContentListHolder == this);
+      mDocument->mContentListHolder = nullptr;
+    }
+
+    RefPtr<nsHTMLDocument> mDocument;
+    RefPtr<nsContentList> mFormList;
+    RefPtr<nsContentList> mFormControlList;
+  };
+
+  friend class ContentListHolder;
+  ContentListHolder* mContentListHolder;
 
   RefPtr<nsContentList> mImages;
   RefPtr<nsEmptyContentList> mApplets;

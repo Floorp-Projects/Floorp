@@ -456,24 +456,6 @@ ResourceUpdateQueue::~ResourceUpdateQueue()
   }
 }
 
-ByteBuffer
-ResourceUpdateQueue::Serialize()
-{
-  VecU8 data;
-  wr_resource_updates_serialize(mUpdates, &data);
-  ByteBuffer result(Move(data));
-  return result;
-}
-
-//static
-ResourceUpdateQueue
-ResourceUpdateQueue::Deserialize(Range<uint8_t> aData)
-{
-  auto slice = wr::RangeToByteSlice(aData);
-  ResourceUpdateQueue result(wr_resource_updates_deserialize(slice));
-  return result;
-}
-
 void
 ResourceUpdateQueue::Clear()
 {
@@ -482,22 +464,22 @@ ResourceUpdateQueue::Clear()
 
 void
 ResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                              Range<uint8_t> aBytes)
+                              wr::Vec_u8& aBytes)
 {
   wr_resource_updates_add_image(mUpdates,
                                 key,
                                 &aDescriptor,
-                                RangeToByteSlice(aBytes));
+                                &aBytes.inner);
 }
 
 void
 ResourceUpdateQueue::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                                  Range<uint8_t> aBytes)
+                                  wr::Vec_u8& aBytes)
 {
   wr_resource_updates_add_blob_image(mUpdates,
                                      key,
                                      &aDescriptor,
-                                     RangeToByteSlice(aBytes));
+                                     &aBytes.inner);
 }
 
 void
@@ -529,23 +511,23 @@ ResourceUpdateQueue::AddExternalImageBuffer(ImageKey aKey,
 void
 ResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
                                        const ImageDescriptor& aDescriptor,
-                                       Range<uint8_t> aBytes)
+                                       wr::Vec_u8& aBytes)
 {
   wr_resource_updates_update_image(mUpdates,
                                    aKey,
                                    &aDescriptor,
-                                   RangeToByteSlice(aBytes));
+                                   &aBytes.inner);
 }
 
 void
 ResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
                                      const ImageDescriptor& aDescriptor,
-                                     Range<uint8_t> aBytes)
+                                     wr::Vec_u8& aBytes)
 {
   wr_resource_updates_update_blob_image(mUpdates,
                                         aKey,
                                         &aDescriptor,
-                                        RangeToByteSlice(aBytes));
+                                        &aBytes.inner);
 }
 
 void
@@ -570,9 +552,9 @@ ResourceUpdateQueue::DeleteImage(ImageKey aKey)
 }
 
 void
-ResourceUpdateQueue::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
+ResourceUpdateQueue::AddRawFont(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex)
 {
-  wr_resource_updates_add_raw_font(mUpdates, aKey, &aBytes[0], aBytes.length(), aIndex);
+  wr_resource_updates_add_raw_font(mUpdates, aKey, &aBytes.inner, aIndex);
 }
 
 void
