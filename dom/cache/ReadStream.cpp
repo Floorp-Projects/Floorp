@@ -23,7 +23,6 @@ namespace cache {
 using mozilla::Unused;
 using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::IPCStream;
-using mozilla::ipc::OptionalIPCStream;
 
 // ----------------------------------------------------------------------------
 
@@ -221,8 +220,9 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
   , mMutex("dom::cache::ReadStream")
   , mCondVar(mMutex, "dom::cache::ReadStream")
   , mStream(aStream)
-  , mSnappyStream(aStream ? new SnappyUncompressInputStream(aStream) : nullptr)
+  , mSnappyStream(new SnappyUncompressInputStream(aStream))
 {
+  MOZ_DIAGNOSTIC_ASSERT(mStream);
   MOZ_DIAGNOSTIC_ASSERT(mControl);
   mControl->AddReadStream(this);
 }
@@ -261,8 +261,7 @@ ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut,
     mControl->SerializeStream(aReadStreamOut, mStream, aStreamCleanupList);
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut->stream().type() == OptionalIPCStream::Tvoid_t ||
-                        aReadStreamOut->stream().get_IPCStream().type() ==
+  MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut->stream().get_IPCStream().type() ==
                         IPCStream::TInputStreamParamsWithFds);
 
   // We're passing ownership across the IPC barrier with the control, so
@@ -592,8 +591,7 @@ ReadStream::Create(const CacheReadStream& aReadStream)
     return nullptr;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(aReadStream.stream().type() == OptionalIPCStream::Tvoid_t ||
-                        aReadStream.stream().get_IPCStream().type() ==
+  MOZ_DIAGNOSTIC_ASSERT(aReadStream.stream().get_IPCStream().type() ==
                         IPCStream::TInputStreamParamsWithFds);
 
   // Control is guaranteed to survive this method as ActorDestroy() cannot
@@ -609,13 +607,12 @@ ReadStream::Create(const CacheReadStream& aReadStream)
   MOZ_DIAGNOSTIC_ASSERT(control);
 
   nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aReadStream.stream());
+  MOZ_DIAGNOSTIC_ASSERT(stream);
 
   // Currently we expect all cache read streams to be blocking file streams.
 #if !defined(RELEASE_OR_BETA)
-  if (stream) {
-    nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(stream);
-    MOZ_DIAGNOSTIC_ASSERT(!asyncStream);
-  }
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(stream);
+  MOZ_DIAGNOSTIC_ASSERT(!asyncStream);
 #endif
 
   RefPtr<Inner> inner = new Inner(control, aReadStream.id(), stream);
