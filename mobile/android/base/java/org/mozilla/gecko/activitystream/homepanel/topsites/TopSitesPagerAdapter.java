@@ -29,8 +29,6 @@ public class TopSitesPagerAdapter extends PagerAdapter {
     public static final int PAGES = 2;
     public static final int SUGGESTED_SITES_MAX_PAGES = 2;
 
-    private int tilesSize;
-
     private final List<TopSitesPage> pages;
 
     private final Context context;
@@ -47,10 +45,6 @@ public class TopSitesPagerAdapter extends PagerAdapter {
         this.context = context;
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
-    }
-
-    public void setTilesSize(int tilesSize) {
-        this.tilesSize = tilesSize;
     }
 
     @Override
@@ -93,7 +87,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
         container.removeView((View) object);
     }
 
-    public void swapCursor(Cursor cursor) {
+    public void swapCursor(final Cursor cursor, final int tilesSize) {
         // Divide while rounding up: 0 items = 0 pages, 1-ITEMS_PER_PAGE items = 1 page, etc.
         if (cursor != null) {
             count = (cursor.getCount() - 1) / TopSitesPage.NUM_TILES + 1;
