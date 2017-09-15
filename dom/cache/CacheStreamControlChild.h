@@ -40,9 +40,6 @@ public:
   SerializeStream(CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
                   nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList) override;
 
-  virtual void
-  OpenStream(const nsID& aId, InputStreamResolver&& aResolver) override;
-
 private:
   virtual void
   NoteClosedAfterForget(const nsID& aId) override;

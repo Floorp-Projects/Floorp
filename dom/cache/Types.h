@@ -7,11 +7,9 @@
 #ifndef mozilla_dom_cache_Types_h
 #define mozilla_dom_cache_Types_h
 
-#include <functional>
 #include <stdint.h>
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
-#include "nsIInputStream.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -36,8 +34,6 @@ struct QuotaInfo
   nsCString mGroup;
   nsCString mOrigin;
 };
-
-typedef std::function<void(nsCOMPtr<nsIInputStream>&&)> InputStreamResolver;
 
 } // namespace cache
 } // namespace dom

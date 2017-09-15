@@ -107,25 +107,6 @@ CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
 }
 
 void
-CacheStreamControlChild::OpenStream(const nsID& aId, InputStreamResolver&& aResolver)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
-
-  if (mDestroyStarted) {
-    aResolver(nullptr);
-    return;
-  }
-
-  SendOpenStream(aId)->Then(GetCurrentThreadSerialEventTarget(), __func__,
-  [aResolver](const OptionalIPCStream& aOptionalStream) {
-    nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aOptionalStream);
-    aResolver(Move(stream));
-  }, [aResolver](PromiseRejectReason aReason) {
-    aResolver(nullptr);
-  });
-}
-
-void
 CacheStreamControlChild::NoteClosedAfterForget(const nsID& aId)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);

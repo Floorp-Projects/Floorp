@@ -24,10 +24,7 @@ class Manager;
 class StreamList final : public Context::Activity
 {
 public:
-  StreamList(cache::Manager* aManager, Context* aContext);
-
-  Manager* Manager() const;
-  bool ShouldOpenStreamFor(const nsID& aId) const;
+  StreamList(Manager* aManager, Context* aContext);
 
   void SetStreamControl(CacheStreamControlParent* aStreamControl);
   void RemoveStreamControl(CacheStreamControlParent* aStreamControl);
@@ -58,7 +55,7 @@ private:
     nsID mId;
     nsCOMPtr<nsIInputStream> mStream;
   };
-  RefPtr<cache::Manager> mManager;
+  RefPtr<Manager> mManager;
   RefPtr<Context> mContext;
   CacheId mCacheId;
   CacheStreamControlParent* mStreamControl;

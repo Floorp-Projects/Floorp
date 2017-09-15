@@ -177,7 +177,8 @@ public:
   void ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
                         const CacheOpArgs& aOpArgs);
 
-  void ExecuteOpenStream(Listener* aListener, InputStreamResolver&& aResolver,
+  typedef std::function<void(nsCOMPtr<nsIInputStream>&&)> OpenStreamResolver;
+  void ExecuteOpenStream(Listener* aListener, OpenStreamResolver&& aResolver,
                          const nsID& aBodyId);
 
   void
