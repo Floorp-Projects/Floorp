@@ -9,7 +9,7 @@ browser.webRequest.onBeforeRequest.addListener(
     if (details.url.endsWith("/startup_test/tspaint_test.html")) {
       skipFilters = true;
     }
-    if (skipFilters) {
+    if (skipFilters || details.url.endsWith("/favicon.ico")) {
       return;
     }
 
