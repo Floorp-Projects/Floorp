@@ -29,19 +29,17 @@ import java.util.List;
 /* package-local */ class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> implements RecyclerViewClickSupport.OnItemClickListener {
     private List<TopSite> topSites;
     private final int pageNumber;
-    private int tiles;
     private int tilesSize;
 
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
     private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
-    /* package-local */ TopSitesPageAdapter(Context context, int pageNumber, int tiles, int tilesSize,
+    /* package-local */ TopSitesPageAdapter(Context context, int pageNumber, int tilesSize,
                                HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         setHasStableIds(true);
 
         this.topSites = new ArrayList<>();
         this.pageNumber = pageNumber;
-        this.tiles = tiles;
         this.tilesSize = tilesSize;
 
         this.onUrlOpenListener = onUrlOpenListener;
@@ -59,7 +57,7 @@ import java.util.List;
             return;
         }
 
-        for (int i = 0; i < tiles && startIndex + i < cursor.getCount(); i++) {
+        for (int i = 0; i < TopSitesPage.NUM_TILES && startIndex + i < cursor.getCount(); i++) {
             cursor.moveToPosition(startIndex + i);
 
             topSites.add(TopSite.fromCursor(cursor));
@@ -123,9 +121,9 @@ import java.util.List;
      * relativePosition must range from 0 to {number of tiles on the current page}.
      */
     private int getTopSiteAbsolutePosition(int relativePosition) {
-        if (relativePosition < 0 || relativePosition > tiles) {
+        if (relativePosition < 0 || relativePosition > TopSitesPage.NUM_TILES) {
             throw new IllegalArgumentException("Illegal relative top site position encountered");
         }
-        return relativePosition + pageNumber * tiles;
+        return relativePosition + pageNumber * TopSitesPage.NUM_TILES;
     }
 }
