@@ -29,7 +29,7 @@
         android:paddingLeft="0dp"
         android:paddingEnd="@dimen/activity_stream_base_margin"
         android:paddingRight="@dimen/activity_stream_base_margin"
-        android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
+        android:textAppearance="@style/TextAppearance.Link"
         android:textAllCaps="true"
         android:visibility="gone"/>
 
