@@ -1,5 +1,5 @@
 DOCKERIO_USERNAME =$(error DOCKERIO_USERNAME should be set)
-IMAGE_NAME = funsize-update-generator
+IMAGE_NAME = partial-update-generator
 FULL_IMAGE_NAME = $(DOCKERIO_USERNAME)/$(IMAGE_NAME)
 
 build:

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, print_function
 
 import ConfigParser
 import argparse
@@ -27,6 +26,7 @@ ALLOWED_URL_PREFIXES = [
     "http://ftp.mozilla.org/",
     "http://download.mozilla.org/",
     "https://archive.mozilla.org/",
+    "https://queue.taskcluster.net/v1/task/",
 ]
 
 DEFAULT_FILENAME_TEMPLATE = "{appName}-{branch}-{version}-{platform}-" \
@@ -286,7 +286,11 @@ def main():
         # if branch not set explicitly use repo-name
         mar_data["branch"] = e.get("branch",
                                    mar_data["repo"].rstrip("/").split("/")[-1])
-        mar_name = args.filename_template.format(**mar_data)
+        if 'dest_mar' in e:
+            mar_name = e['dest_mar']
+        else:
+            # default to formatted name if not specified
+            mar_name = args.filename_template.format(**mar_data)
         mar_data["mar"] = mar_name
         dest_mar = os.path.join(work_env.workdir, mar_name)
         # TODO: download these once
