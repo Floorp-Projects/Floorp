@@ -705,10 +705,10 @@ struct arena_t {
 
   arena_stats_t mStats;
 
+private:
   /* Tree of dirty-page-containing chunks this arena manages. */
   arena_chunk_tree_t mChunksDirty;
 
-private:
 #ifdef MALLOC_DOUBLE_PURGE
   /* Head of a linked list of MADV_FREE'd-page-containing chunks this
    * arena manages. */
@@ -740,12 +740,14 @@ public:
    */
   size_t mMaxDirty;
 
+private:
   /*
    * Size/address-ordered tree of this arena's available runs.  This tree
    * is used for first-best-fit run allocation.
    */
   arena_avail_tree_t mRunsAvail;
 
+public:
   /*
    * mBins is used to store rings of free regions of the following sizes,
    * assuming a 16-byte quantum, 4kB pagesize, and default MALLOC_OPTIONS.
@@ -782,6 +784,8 @@ public:
   arena_run_t* AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero);
 
   void DallocRun(arena_run_t* aRun, bool aDirty);
+
+  void SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero);
 
   void Purge(bool aAll);
 
@@ -2554,114 +2558,108 @@ arena_run_reg_dalloc(arena_run_t *run, arena_bin_t *bin, void *ptr, size_t size)
 #undef SIZE_INV_SHIFT
 }
 
-static void
-arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
-    bool zero)
+void
+arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
 {
-	arena_chunk_t *chunk;
-	size_t old_ndirty, run_ind, total_pages, need_pages, rem_pages, i;
+  arena_chunk_t* chunk;
+  size_t old_ndirty, run_ind, total_pages, need_pages, rem_pages, i;
 
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(run);
-	old_ndirty = chunk->ndirty;
-	run_ind = (unsigned)(((uintptr_t)run - (uintptr_t)chunk)
-	    >> pagesize_2pow);
-	total_pages = (chunk->map[run_ind].bits & ~pagesize_mask) >>
-	    pagesize_2pow;
-	need_pages = (size >> pagesize_2pow);
-	MOZ_ASSERT(need_pages > 0);
-	MOZ_ASSERT(need_pages <= total_pages);
-	rem_pages = total_pages - need_pages;
+  chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aRun);
+  old_ndirty = chunk->ndirty;
+  run_ind = (unsigned)((uintptr_t(aRun) - uintptr_t(chunk)) >> pagesize_2pow);
+  total_pages = (chunk->map[run_ind].bits & ~pagesize_mask) >> pagesize_2pow;
+  need_pages = (aSize >> pagesize_2pow);
+  MOZ_ASSERT(need_pages > 0);
+  MOZ_ASSERT(need_pages <= total_pages);
+  rem_pages = total_pages - need_pages;
 
-	arena_avail_tree_remove(&arena->mRunsAvail, &chunk->map[run_ind]);
+  arena_avail_tree_remove(&mRunsAvail, &chunk->map[run_ind]);
 
-	/* Keep track of trailing unused pages for later use. */
-	if (rem_pages > 0) {
-		chunk->map[run_ind+need_pages].bits = (rem_pages <<
-		    pagesize_2pow) | (chunk->map[run_ind+need_pages].bits &
-		    pagesize_mask);
-		chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
-		    pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
-		    pagesize_mask);
-		arena_avail_tree_insert(&arena->mRunsAvail,
-		    &chunk->map[run_ind+need_pages]);
-	}
+  /* Keep track of trailing unused pages for later use. */
+  if (rem_pages > 0) {
+    chunk->map[run_ind+need_pages].bits = (rem_pages <<
+        pagesize_2pow) | (chunk->map[run_ind+need_pages].bits &
+        pagesize_mask);
+    chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
+        pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
+        pagesize_mask);
+    arena_avail_tree_insert(&mRunsAvail, &chunk->map[run_ind+need_pages]);
+  }
 
-	for (i = 0; i < need_pages; i++) {
-		/*
-		 * Commit decommitted pages if necessary.  If a decommitted
-		 * page is encountered, commit all needed adjacent decommitted
-		 * pages in one operation, in order to reduce system call
-		 * overhead.
-		 */
-		if (chunk->map[run_ind + i].bits & CHUNK_MAP_MADVISED_OR_DECOMMITTED) {
-			size_t j;
+  for (i = 0; i < need_pages; i++) {
+    /*
+     * Commit decommitted pages if necessary.  If a decommitted
+     * page is encountered, commit all needed adjacent decommitted
+     * pages in one operation, in order to reduce system call
+     * overhead.
+     */
+    if (chunk->map[run_ind + i].bits & CHUNK_MAP_MADVISED_OR_DECOMMITTED) {
+      size_t j;
 
-			/*
-			 * Advance i+j to just past the index of the last page
-			 * to commit.  Clear CHUNK_MAP_DECOMMITTED and
-			 * CHUNK_MAP_MADVISED along the way.
-			 */
-			for (j = 0; i + j < need_pages && (chunk->map[run_ind +
-			    i + j].bits & CHUNK_MAP_MADVISED_OR_DECOMMITTED); j++) {
-				/* DECOMMITTED and MADVISED are mutually exclusive. */
-				MOZ_ASSERT(!(chunk->map[run_ind + i + j].bits & CHUNK_MAP_DECOMMITTED &&
-					     chunk->map[run_ind + i + j].bits & CHUNK_MAP_MADVISED));
+      /*
+       * Advance i+j to just past the index of the last page
+       * to commit.  Clear CHUNK_MAP_DECOMMITTED and
+       * CHUNK_MAP_MADVISED along the way.
+       */
+      for (j = 0; i + j < need_pages && (chunk->map[run_ind +
+          i + j].bits & CHUNK_MAP_MADVISED_OR_DECOMMITTED); j++) {
+        /* DECOMMITTED and MADVISED are mutually exclusive. */
+        MOZ_ASSERT(!(chunk->map[run_ind + i + j].bits & CHUNK_MAP_DECOMMITTED &&
+               chunk->map[run_ind + i + j].bits & CHUNK_MAP_MADVISED));
 
-				chunk->map[run_ind + i + j].bits &=
-				    ~CHUNK_MAP_MADVISED_OR_DECOMMITTED;
-			}
+        chunk->map[run_ind + i + j].bits &=
+            ~CHUNK_MAP_MADVISED_OR_DECOMMITTED;
+      }
 
 #  ifdef MALLOC_DECOMMIT
-			pages_commit((void *)((uintptr_t)chunk + ((run_ind + i)
-			    << pagesize_2pow)), (j << pagesize_2pow));
+      pages_commit((void*)(uintptr_t(chunk) + ((run_ind + i) << pagesize_2pow)),
+                   j << pagesize_2pow);
 #  endif
 
-			arena->mStats.committed += j;
+      mStats.committed += j;
 
-#  ifndef MALLOC_DECOMMIT
-                }
-#  else
-		} else /* No need to zero since commit zeros. */
+    }
+#  ifdef MALLOC_DECOMMIT
+    else /* No need to zero since commit zeroes. */
 #  endif
 
-		/* Zero if necessary. */
-		if (zero) {
-			if ((chunk->map[run_ind + i].bits & CHUNK_MAP_ZEROED)
-			    == 0) {
-				memset((void *)((uintptr_t)chunk + ((run_ind
-				    + i) << pagesize_2pow)), 0, pagesize);
-				/* CHUNK_MAP_ZEROED is cleared below. */
-			}
-		}
+    /* Zero if necessary. */
+    if (aZero) {
+      if ((chunk->map[run_ind + i].bits & CHUNK_MAP_ZEROED) == 0) {
+        memset((void*)(uintptr_t(chunk) + ((run_ind + i) << pagesize_2pow)),
+               0, pagesize);
+        /* CHUNK_MAP_ZEROED is cleared below. */
+      }
+    }
 
-		/* Update dirty page accounting. */
-		if (chunk->map[run_ind + i].bits & CHUNK_MAP_DIRTY) {
-			chunk->ndirty--;
-			arena->mNumDirty--;
-			/* CHUNK_MAP_DIRTY is cleared below. */
-		}
+    /* Update dirty page accounting. */
+    if (chunk->map[run_ind + i].bits & CHUNK_MAP_DIRTY) {
+      chunk->ndirty--;
+      mNumDirty--;
+      /* CHUNK_MAP_DIRTY is cleared below. */
+    }
 
-		/* Initialize the chunk map. */
-		if (large) {
-			chunk->map[run_ind + i].bits = CHUNK_MAP_LARGE
-			    | CHUNK_MAP_ALLOCATED;
-		} else {
-			chunk->map[run_ind + i].bits = (size_t)run
-			    | CHUNK_MAP_ALLOCATED;
-		}
-	}
+    /* Initialize the chunk map. */
+    if (aLarge) {
+      chunk->map[run_ind + i].bits = CHUNK_MAP_LARGE | CHUNK_MAP_ALLOCATED;
+    } else {
+      chunk->map[run_ind + i].bits = size_t(aRun) | CHUNK_MAP_ALLOCATED;
+    }
+  }
 
-	/*
-	 * Set the run size only in the first element for large runs.  This is
-	 * primarily a debugging aid, since the lack of size info for trailing
-	 * pages only matters if the application tries to operate on an
-	 * interior pointer.
-	 */
-	if (large)
-		chunk->map[run_ind].bits |= size;
+  /*
+   * Set the run size only in the first element for large runs.  This is
+   * primarily a debugging aid, since the lack of size info for trailing
+   * pages only matters if the application tries to operate on an
+   * interior pointer.
+   */
+  if (aLarge) {
+    chunk->map[run_ind].bits |= aSize;
+  }
 
-	if (chunk->ndirty == 0 && old_ndirty > 0)
-		arena_chunk_tree_dirty_remove(&arena->mChunksDirty, chunk);
+  if (chunk->ndirty == 0 && old_ndirty > 0) {
+    arena_chunk_tree_dirty_remove(&mChunksDirty, chunk);
+  }
 }
 
 void
@@ -2774,7 +2772,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
         sizeof(arena_chunk_map_t);
 
     run = (arena_run_t*)(uintptr_t(chunk) + (pageind << pagesize_2pow));
-    arena_run_split(this, run, aSize, aLarge, aZero);
+    SplitRun(run, aSize, aLarge, aZero);
     return run;
   }
 
@@ -2785,7 +2783,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
     run = (arena_run_t*)(uintptr_t(chunk) + (arena_chunk_header_npages << pagesize_2pow));
     /* Insert the run into the tree of available runs. */
     arena_avail_tree_insert(&mRunsAvail, &chunk->map[arena_chunk_header_npages]);
-    arena_run_split(this, run, aSize, aLarge, aZero);
+    SplitRun(run, aSize, aLarge, aZero);
     return run;
   }
 
@@ -2805,7 +2803,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
     run = (arena_run_t*)(uintptr_t(chunk) + (arena_chunk_header_npages << pagesize_2pow));
   }
   /* Update page map. */
-  arena_run_split(this, run, aSize, aLarge, aZero);
+  SplitRun(run, aSize, aLarge, aZero);
   return run;
 }
 
@@ -3893,7 +3891,7 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 		 * following run, then merge the first part with the existing
 		 * allocation.
 		 */
-		arena_run_split(arena, (arena_run_t *)((uintptr_t)chunk +
+		arena->SplitRun((arena_run_t *)(uintptr_t(chunk) +
 		    ((pageind+npages) << pagesize_2pow)), size - oldsize, true,
 		    false);
 
