@@ -60,6 +60,9 @@ public class Experiments {
     // Enable Leanplum SDK
     public static final String LEANPLUM = "leanplum-start";
 
+    // Enable to use testing user id for Leanplum
+    public static final String LEANPLUM_DEBUG = "leanplum-debug";
+
     // Enable processing of background telemetry.
     public static final String ENABLE_PROCESSING_BACKGROUND_TELEMETRY = "process-background-telemetry";
 
