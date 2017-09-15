@@ -1452,43 +1452,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-class Manager::OpenStreamAction final : public Manager::BaseAction
-{
-public:
-  OpenStreamAction(Manager* aManager, ListenerId aListenerId,
-                   OpenStreamResolver&& aResolver, const nsID& aBodyId)
-    : BaseAction(aManager, aListenerId)
-    , mResolver(Move(aResolver))
-    , mBodyId(aBodyId)
-  { }
-
-  virtual nsresult
-  RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
-                        mozIStorageConnection* aConn) override
-  {
-    nsresult rv = BodyOpen(aQuotaInfo, aDBDir, mBodyId,
-                           getter_AddRefs(mBodyStream));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-    if (NS_WARN_IF(!mBodyStream)) { return NS_ERROR_FILE_NOT_FOUND; }
-
-    return rv;
-  }
-
-  virtual void
-  Complete(Listener* aListener, ErrorResult&& aRv) override
-  {
-    mResolver(Move(mBodyStream));
-    mResolver = nullptr;
-  }
-
-private:
-  OpenStreamResolver mResolver;
-  const nsID mBodyId;
-  nsCOMPtr<nsIInputStream> mBodyStream;
-};
-
-// ----------------------------------------------------------------------------
-
 //static
 Manager::ListenerId Manager::sNextListenerId = 0;
 
@@ -1851,34 +1814,6 @@ Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
     default:
       MOZ_CRASH("Unknown CacheStorage operation!");
   }
-
-  context->Dispatch(action);
-}
-
-void
-Manager::ExecuteOpenStream(Listener* aListener, OpenStreamResolver&& aResolver,
-                           const nsID& aBodyId)
-{
-  NS_ASSERT_OWNINGTHREAD(Manager);
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
-  MOZ_DIAGNOSTIC_ASSERT(aResolver);
-
-  if (NS_WARN_IF(mState == Closing)) {
-    aResolver(nullptr);
-    return;
-  }
-
-  RefPtr<Context> context = mContext;
-  MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
-
-  // We save the listener simply to track the existence of the caller here.
-  // Our returned value will really be passed to the resolver when the
-  // operation completes.  In the future we should remove the Listener
-  // mechanism in favor of std::function or MozPromise.
-  ListenerId listenerId = SaveListener(aListener);
-
-  RefPtr<Action> action =
-    new OpenStreamAction(this, listenerId, Move(aResolver), aBodyId);
 
   context->Dispatch(action);
 }
