@@ -3200,7 +3200,9 @@ var LightWeightThemeWebInstaller = {
     }
 
     let allowButtonText = Strings.browser.GetStringFromName("lwthemeInstallRequest.allowButton");
-    let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [node.ownerDocument.location.hostname], 1);
+    let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+    let hostname = IDNService.convertToDisplayIDN(node.ownerDocument.location.hostname);
+    let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [hostname], 1);
     let buttons = [{
       label: allowButtonText,
       callback: function () {
@@ -4912,7 +4914,7 @@ var XPInstallObserver = {
       installInfo = aSubject.wrappedJSObject;
       tab = BrowserApp.getTabForBrowser(installInfo.browser);
       if (installInfo.originatingURI) {
-        host = installInfo.originatingURI.host;
+        host = installInfo.originatingURI.displayHost;
       }
     }
 
@@ -5095,9 +5097,9 @@ var XPInstallObserver = {
       return;
     }
 
-    let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.host;
+    let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.displayHost;
     if (!host) {
-      host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.host;
+      host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.displayHost;
     }
 
     let error = (host || aInstall.error == 0) ? "addonError" : "addonLocalError";
