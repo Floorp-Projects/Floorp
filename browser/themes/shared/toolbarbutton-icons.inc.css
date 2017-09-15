@@ -2,20 +2,20 @@
   --toolbarbutton-icon-fill-attention: #0a84ff;
 }
 
+:root:-moz-lwtheme {
+  --toolbarbutton-icon-fill-opacity: 1;
+}
+
 toolbar[brighttext] {
   --toolbarbutton-icon-fill-attention: #45a1ff;
 }
 
 .toolbarbutton-animatable-box,
 .toolbarbutton-1 {
-  -moz-context-properties: fill;
-  fill: #4c4c4c;
-}
-
-.toolbarbutton-animatable-box[brighttext],
-toolbar[brighttext] .toolbarbutton-animatable-box,
-toolbar[brighttext] .toolbarbutton-1 {
-  fill: #fff;
+  color: inherit;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
@@ -310,10 +310,12 @@ toolbar[brighttext] .toolbarbutton-1 {
   }
   50% {
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
   to {
     transform: translateX(-1260px);
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
 }
 
@@ -323,10 +325,12 @@ toolbar[brighttext] .toolbarbutton-1 {
   }
   50% {
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
   to {
     transform: scaleX(-1) translateX(-1260px);
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
 }
 
@@ -336,9 +340,11 @@ toolbar[brighttext] .toolbarbutton-1 {
 @keyframes overflow-fade {
   from {
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
   71% {
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
   to {
     fill: inherit;
@@ -425,10 +431,12 @@ toolbar[brighttext] .toolbarbutton-1 {
   }
   50% {
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
   to {
     transform: translateX(-1056px);
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
 }
 
@@ -442,16 +450,19 @@ toolbar[brighttext] .toolbarbutton-1 {
   }
   50% {
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
   to {
     transform: translateX(0);
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
 }
 
 @keyframes library-bookmark-fade {
   from {
     fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
   }
   to {
     fill: inherit;
@@ -494,7 +505,7 @@ toolbar[brighttext] .toolbarbutton-1 {
   animation-name: library-bookmark-animation;
   animation-duration: 800ms;
   animation-timing-function: steps(48);
-  -moz-context-properties: fill, stroke;
+  -moz-context-properties: fill, fill-opacity, stroke;
   stroke: var(--toolbarbutton-icon-fill-attention);
 }
 
