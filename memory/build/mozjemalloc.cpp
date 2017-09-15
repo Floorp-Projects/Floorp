@@ -521,7 +521,7 @@ struct arena_chunk_map_t {
 	/*
 	 * Linkage for run trees.  There are two disjoint uses:
 	 *
-	 * 1) arena_t's runs_avail tree.
+	 * 1) arena_t's tree or available runs.
 	 * 2) arena_run_t conceptually uses this linkage for in-use non-full
 	 *    runs, rather than directly embedding linkage.
 	 */
@@ -604,7 +604,7 @@ struct arena_chunk_t {
 	/* Arena that owns the chunk. */
 	arena_t		*arena;
 
-	/* Linkage for the arena's chunks_dirty tree. */
+	/* Linkage for the arena's tree of dirty chunks. */
 	rb_node(arena_chunk_t) link_dirty;
 
 #ifdef MALLOC_DOUBLE_PURGE
@@ -696,78 +696,78 @@ struct arena_bin_t {
 
 struct arena_t {
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-	uint32_t		magic;
+  uint32_t mMagic;
 #  define ARENA_MAGIC 0x947d3d24
 #endif
 
-	/* All operations on this arena require that lock be locked. */
-	malloc_spinlock_t	lock;
+  /* All operations on this arena require that lock be locked. */
+  malloc_spinlock_t mLock;
 
-	arena_stats_t		stats;
+  arena_stats_t mStats;
 
-	/* Tree of dirty-page-containing chunks this arena manages. */
-	arena_chunk_tree_t	chunks_dirty;
+  /* Tree of dirty-page-containing chunks this arena manages. */
+  arena_chunk_tree_t mChunksDirty;
 
 #ifdef MALLOC_DOUBLE_PURGE
-	/* Head of a linked list of MADV_FREE'd-page-containing chunks this
-	 * arena manages. */
-	mozilla::DoublyLinkedList<arena_chunk_t> chunks_madvised;
+  /* Head of a linked list of MADV_FREE'd-page-containing chunks this
+   * arena manages. */
+  mozilla::DoublyLinkedList<arena_chunk_t> mChunksMAdvised;
 #endif
 
-	/*
-	 * In order to avoid rapid chunk allocation/deallocation when an arena
-	 * oscillates right on the cusp of needing a new chunk, cache the most
-	 * recently freed chunk.  The spare is left in the arena's chunk trees
-	 * until it is deleted.
-	 *
-	 * There is one spare chunk per arena, rather than one spare total, in
-	 * order to avoid interactions between multiple threads that could make
-	 * a single spare inadequate.
-	 */
-	arena_chunk_t		*spare;
+  /*
+   * In order to avoid rapid chunk allocation/deallocation when an arena
+   * oscillates right on the cusp of needing a new chunk, cache the most
+   * recently freed chunk.  The spare is left in the arena's chunk trees
+   * until it is deleted.
+   *
+   * There is one spare chunk per arena, rather than one spare total, in
+   * order to avoid interactions between multiple threads that could make
+   * a single spare inadequate.
+   */
+  arena_chunk_t* mSpare;
 
-	/*
-	 * Current count of pages within unused runs that are potentially
-	 * dirty, and for which madvise(... MADV_FREE) has not been called.  By
-	 * tracking this, we can institute a limit on how much dirty unused
-	 * memory is mapped for each arena.
-	 */
-	size_t			ndirty;
-	/*
-	 * Maximum value allowed for ndirty.
-	 */
-	size_t			dirty_max;
+  /*
+   * Current count of pages within unused runs that are potentially
+   * dirty, and for which madvise(... MADV_FREE) has not been called.  By
+   * tracking this, we can institute a limit on how much dirty unused
+   * memory is mapped for each arena.
+   */
+  size_t mNumDirty;
+  /*
+   * Maximum value allowed for mNumDirty.
+   */
+  size_t mMaxDirty;
 
-	/*
-	 * Size/address-ordered tree of this arena's available runs.  This tree
-	 * is used for first-best-fit run allocation.
-	 */
-	arena_avail_tree_t	runs_avail;
+  /*
+   * Size/address-ordered tree of this arena's available runs.  This tree
+   * is used for first-best-fit run allocation.
+   */
+  arena_avail_tree_t mRunsAvail;
 
-	/*
-	 * bins is used to store rings of free regions of the following sizes,
-	 * assuming a 16-byte quantum, 4kB pagesize, and default MALLOC_OPTIONS.
-	 *
-	 *   bins[i] | size |
-	 *   --------+------+
-	 *        0  |    2 |
-	 *        1  |    4 |
-	 *        2  |    8 |
-	 *   --------+------+
-	 *        3  |   16 |
-	 *        4  |   32 |
-	 *        5  |   48 |
-	 *        6  |   64 |
-	 *           :      :
-	 *           :      :
-	 *       33  |  496 |
-	 *       34  |  512 |
-	 *   --------+------+
-	 *       35  | 1024 |
-	 *       36  | 2048 |
-	 *   --------+------+
-	 */
-	arena_bin_t		bins[1]; /* Dynamically sized. */
+  /*
+   * mBins is used to store rings of free regions of the following sizes,
+   * assuming a 16-byte quantum, 4kB pagesize, and default MALLOC_OPTIONS.
+   *
+   *   mBins[i] | size |
+   *   --------+------+
+   *        0  |    2 |
+   *        1  |    4 |
+   *        2  |    8 |
+   *   --------+------+
+   *        3  |   16 |
+   *        4  |   32 |
+   *        5  |   48 |
+   *        6  |   64 |
+   *           :      :
+   *           :      :
+   *       33  |  496 |
+   *       34  |  512 |
+   *   --------+------+
+   *       35  | 1024 |
+   *       36  | 2048 |
+   *   --------+------+
+   */
+  arena_bin_t mBins[1]; /* Dynamically sized. */
 };
 
 /******************************************************************************/
@@ -2554,7 +2554,7 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 	MOZ_ASSERT(need_pages <= total_pages);
 	rem_pages = total_pages - need_pages;
 
-	arena_avail_tree_remove(&arena->runs_avail, &chunk->map[run_ind]);
+	arena_avail_tree_remove(&arena->mRunsAvail, &chunk->map[run_ind]);
 
 	/* Keep track of trailing unused pages for later use. */
 	if (rem_pages > 0) {
@@ -2564,7 +2564,7 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 		chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
 		    pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
 		    pagesize_mask);
-		arena_avail_tree_insert(&arena->runs_avail,
+		arena_avail_tree_insert(&arena->mRunsAvail,
 		    &chunk->map[run_ind+need_pages]);
 	}
 
@@ -2598,7 +2598,7 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 			    << pagesize_2pow)), (j << pagesize_2pow));
 #  endif
 
-			arena->stats.committed += j;
+			arena->mStats.committed += j;
 
 #  ifndef MALLOC_DECOMMIT
                 }
@@ -2619,7 +2619,7 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 		/* Update dirty page accounting. */
 		if (chunk->map[run_ind + i].bits & CHUNK_MAP_DIRTY) {
 			chunk->ndirty--;
-			arena->ndirty--;
+			arena->mNumDirty--;
 			/* CHUNK_MAP_DIRTY is cleared below. */
 		}
 
@@ -2643,7 +2643,7 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 		chunk->map[run_ind].bits |= size;
 
 	if (chunk->ndirty == 0 && old_ndirty > 0)
-		arena_chunk_tree_dirty_remove(&arena->chunks_dirty, chunk);
+		arena_chunk_tree_dirty_remove(&arena->mChunksDirty, chunk);
 }
 
 static void
@@ -2663,7 +2663,7 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk, bool zeroed)
 	size_t flags = zeroed ? CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED
 	                      : CHUNK_MAP_MADVISED;
 
-	arena->stats.mapped += chunksize;
+	arena->mStats.mapped += chunksize;
 
 	chunk->arena = arena;
 
@@ -2693,10 +2693,10 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk, bool zeroed)
 	 */
 	pages_decommit(run, arena_maxclass);
 #endif
-	arena->stats.committed += arena_chunk_header_npages;
+	arena->mStats.committed += arena_chunk_header_npages;
 
-	/* Insert the run into the runs_avail tree. */
-	arena_avail_tree_insert(&arena->runs_avail,
+	/* Insert the run into the tree of available runs. */
+	arena_avail_tree_insert(&arena->mRunsAvail,
 	    &chunk->map[arena_chunk_header_npages]);
 
 #ifdef MALLOC_DOUBLE_PURGE
@@ -2708,34 +2708,34 @@ static void
 arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 {
 
-	if (arena->spare) {
-		if (arena->spare->ndirty > 0) {
+	if (arena->mSpare) {
+		if (arena->mSpare->ndirty > 0) {
 			arena_chunk_tree_dirty_remove(
-			    &chunk->arena->chunks_dirty, arena->spare);
-			arena->ndirty -= arena->spare->ndirty;
-			arena->stats.committed -= arena->spare->ndirty;
+			    &chunk->arena->mChunksDirty, arena->mSpare);
+			arena->mNumDirty -= arena->mSpare->ndirty;
+			arena->mStats.committed -= arena->mSpare->ndirty;
 		}
 
 #ifdef MALLOC_DOUBLE_PURGE
-		if (arena->chunks_madvised.ElementProbablyInList(arena->spare)) {
-			arena->chunks_madvised.remove(arena->spare);
+		if (arena->mChunksMAdvised.ElementProbablyInList(arena->mSpare)) {
+			arena->mChunksMAdvised.remove(arena->mSpare);
 		}
 #endif
 
-		chunk_dealloc((void *)arena->spare, chunksize, ARENA_CHUNK);
-		arena->stats.mapped -= chunksize;
-		arena->stats.committed -= arena_chunk_header_npages;
+		chunk_dealloc((void *)arena->mSpare, chunksize, ARENA_CHUNK);
+		arena->mStats.mapped -= chunksize;
+		arena->mStats.committed -= arena_chunk_header_npages;
 	}
 
 	/*
-	 * Remove run from runs_avail, so that the arena does not use it.
-	 * Dirty page flushing only uses the chunks_dirty tree, so leaving this
+	 * Remove run from the tree of available runs, so that the arena does not use it.
+	 * Dirty page flushing only uses the tree of dirty chunks, so leaving this
 	 * chunk in the chunks_* trees is sufficient for that purpose.
 	 */
-	arena_avail_tree_remove(&arena->runs_avail,
+	arena_avail_tree_remove(&arena->mRunsAvail,
 	    &chunk->map[arena_chunk_header_npages]);
 
-	arena->spare = chunk;
+	arena->mSpare = chunk;
 }
 
 static arena_run_t *
@@ -2750,7 +2750,7 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 
 	/* Search the arena's chunks for the lowest best fit. */
 	key.bits = size | CHUNK_MAP_KEY;
-	mapelm = arena_avail_tree_nsearch(&arena->runs_avail, &key);
+	mapelm = arena_avail_tree_nsearch(&arena->mRunsAvail, &key);
 	if (mapelm) {
 		arena_chunk_t *chunk =
 		    (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
@@ -2764,14 +2764,14 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 		return (run);
 	}
 
-	if (arena->spare) {
+	if (arena->mSpare) {
 		/* Use the spare. */
-		arena_chunk_t *chunk = arena->spare;
-		arena->spare = nullptr;
+		arena_chunk_t *chunk = arena->mSpare;
+		arena->mSpare = nullptr;
 		run = (arena_run_t *)((uintptr_t)chunk +
 		    (arena_chunk_header_npages << pagesize_2pow));
-		/* Insert the run into the runs_avail tree. */
-		arena_avail_tree_insert(&arena->runs_avail,
+		/* Insert the run into the tree of available runs. */
+		arena_avail_tree_insert(&arena->mRunsAvail,
 		    &chunk->map[arena_chunk_header_npages]);
 		arena_run_split(arena, run, size, large, zero);
 		return (run);
@@ -2803,16 +2803,16 @@ arena_purge(arena_t *arena, bool all)
 	arena_chunk_t *chunk;
 	size_t i, npages;
 	/* If all is set purge all dirty pages. */
-	size_t dirty_max = all ? 1 : arena->dirty_max;
+	size_t dirty_max = all ? 1 : arena->mMaxDirty;
 #ifdef MOZ_DEBUG
 	size_t ndirty = 0;
-	rb_foreach_begin(arena_chunk_t, link_dirty, &arena->chunks_dirty,
+	rb_foreach_begin(arena_chunk_t, link_dirty, &arena->mChunksDirty,
 	    chunk) {
 		ndirty += chunk->ndirty;
-	} rb_foreach_end(arena_chunk_t, link_dirty, &arena->chunks_dirty, chunk)
-	MOZ_ASSERT(ndirty == arena->ndirty);
+	} rb_foreach_end(arena_chunk_t, link_dirty, &arena->mChunksDirty, chunk)
+	MOZ_ASSERT(ndirty == arena->mNumDirty);
 #endif
-	MOZ_DIAGNOSTIC_ASSERT(all || (arena->ndirty > arena->dirty_max));
+	MOZ_DIAGNOSTIC_ASSERT(all || (arena->mNumDirty > arena->mMaxDirty));
 
 	/*
 	 * Iterate downward through chunks until enough dirty memory has been
@@ -2820,11 +2820,11 @@ arena_purge(arena_t *arena, bool all)
 	 * number of system calls, even if a chunk has only been partially
 	 * purged.
 	 */
-	while (arena->ndirty > (dirty_max >> 1)) {
+	while (arena->mNumDirty > (dirty_max >> 1)) {
 #ifdef MALLOC_DOUBLE_PURGE
 		bool madvised = false;
 #endif
-		chunk = arena_chunk_tree_dirty_last(&arena->chunks_dirty);
+		chunk = arena_chunk_tree_dirty_last(&arena->mChunksDirty);
 		MOZ_DIAGNOSTIC_ASSERT(chunk);
 
 		for (i = chunk_npages - 1; chunk->ndirty > 0; i--) {
@@ -2850,14 +2850,14 @@ arena_purge(arena_t *arena, bool all)
 					chunk->map[i].bits ^= free_operation | CHUNK_MAP_DIRTY;
 				}
 				chunk->ndirty -= npages;
-				arena->ndirty -= npages;
+				arena->mNumDirty -= npages;
 
 #ifdef MALLOC_DECOMMIT
 				pages_decommit((void *)((uintptr_t)
 				    chunk + (i << pagesize_2pow)),
 				    (npages << pagesize_2pow));
 #endif
-				arena->stats.committed -= npages;
+				arena->mStats.committed -= npages;
 
 #ifndef MALLOC_DECOMMIT
 				madvise((void *)((uintptr_t)chunk + (i <<
@@ -2867,23 +2867,23 @@ arena_purge(arena_t *arena, bool all)
 				madvised = true;
 #  endif
 #endif
-				if (arena->ndirty <= (dirty_max >> 1))
+				if (arena->mNumDirty <= (dirty_max >> 1))
 					break;
 			}
 		}
 
 		if (chunk->ndirty == 0) {
-			arena_chunk_tree_dirty_remove(&arena->chunks_dirty,
+			arena_chunk_tree_dirty_remove(&arena->mChunksDirty,
 			    chunk);
 		}
 #ifdef MALLOC_DOUBLE_PURGE
 		if (madvised) {
 			/* The chunk might already be in the list, but this
 			 * makes sure it's at the front. */
-			if (arena->chunks_madvised.ElementProbablyInList(chunk)) {
-				arena->chunks_madvised.remove(chunk);
+			if (arena->mChunksMAdvised.ElementProbablyInList(chunk)) {
+				arena->mChunksMAdvised.remove(chunk);
 			}
-			arena->chunks_madvised.pushFront(chunk);
+			arena->mChunksMAdvised.pushFront(chunk);
 		}
 #endif
 	}
@@ -2917,11 +2917,11 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		}
 
 		if (chunk->ndirty == 0) {
-			arena_chunk_tree_dirty_insert(&arena->chunks_dirty,
+			arena_chunk_tree_dirty_insert(&arena->mChunksDirty,
 			    chunk);
 		}
 		chunk->ndirty += run_pages;
-		arena->ndirty += run_pages;
+		arena->mNumDirty += run_pages;
 	} else {
 		size_t i;
 
@@ -2942,10 +2942,10 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		    ~pagesize_mask;
 
 		/*
-		 * Remove successor from runs_avail; the coalesced run is
+		 * Remove successor from tree of available runs; the coalesced run is
 		 * inserted later.
 		 */
-		arena_avail_tree_remove(&arena->runs_avail,
+		arena_avail_tree_remove(&arena->mRunsAvail,
 		    &chunk->map[run_ind+run_pages]);
 
 		size += nrun_size;
@@ -2967,10 +2967,10 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		run_ind -= prun_size >> pagesize_2pow;
 
 		/*
-		 * Remove predecessor from runs_avail; the coalesced run is
+		 * Remove predecessor from tree of available runs; the coalesced run is
 		 * inserted later.
 		 */
-		arena_avail_tree_remove(&arena->runs_avail,
+		arena_avail_tree_remove(&arena->mRunsAvail,
 		    &chunk->map[run_ind]);
 
 		size += prun_size;
@@ -2984,16 +2984,16 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		    (chunk->map[run_ind+run_pages-1].bits & pagesize_mask);
 	}
 
-	/* Insert into runs_avail, now that coalescing is complete. */
-	arena_avail_tree_insert(&arena->runs_avail, &chunk->map[run_ind]);
+	/* Insert into tree of available runs, now that coalescing is complete. */
+	arena_avail_tree_insert(&arena->mRunsAvail, &chunk->map[run_ind]);
 
 	/* Deallocate chunk if it is now completely unused. */
 	if ((chunk->map[arena_chunk_header_npages].bits & (~pagesize_mask |
 	    CHUNK_MAP_ALLOCATED)) == arena_maxclass)
 		arena_chunk_dealloc(arena, chunk);
 
-	/* Enforce dirty_max. */
-	if (arena->ndirty > arena->dirty_max)
+	/* Enforce mMaxDirty. */
+	if (arena->mNumDirty > arena->mMaxDirty)
 		arena_purge(arena, false);
 }
 
@@ -3215,7 +3215,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 	if (size < small_min) {
 		/* Tiny. */
 		size = pow2_ceil(size);
-		bin = &arena->bins[ffs((int)(size >> (TINY_MIN_2POW +
+		bin = &arena->mBins[ffs((int)(size >> (TINY_MIN_2POW +
 		    1)))];
 		/*
 		 * Bin calculation is always correct, but we may need
@@ -3227,29 +3227,29 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 	} else if (size <= small_max) {
 		/* Quantum-spaced. */
 		size = QUANTUM_CEILING(size);
-		bin = &arena->bins[ntbins + (size >> opt_quantum_2pow)
+		bin = &arena->mBins[ntbins + (size >> opt_quantum_2pow)
 		    - 1];
 	} else {
 		/* Sub-page. */
 		size = pow2_ceil(size);
-		bin = &arena->bins[ntbins + nqbins
+		bin = &arena->mBins[ntbins + nqbins
 		    + (ffs((int)(size >> opt_small_max_2pow)) - 2)];
 	}
 	MOZ_DIAGNOSTIC_ASSERT(size == bin->reg_size);
 
-	malloc_spin_lock(&arena->lock);
+	malloc_spin_lock(&arena->mLock);
 	if ((run = bin->runcur) && run->nfree > 0)
 		ret = arena_bin_malloc_easy(arena, bin, run);
 	else
 		ret = arena_bin_malloc_hard(arena, bin);
 
 	if (!ret) {
-		malloc_spin_unlock(&arena->lock);
+		malloc_spin_unlock(&arena->mLock);
 		return nullptr;
 	}
 
-	arena->stats.allocated_small += size;
-	malloc_spin_unlock(&arena->lock);
+	arena->mStats.allocated_small += size;
+	malloc_spin_unlock(&arena->mLock);
 
 	if (zero == false) {
 		if (opt_junk)
@@ -3269,14 +3269,14 @@ arena_malloc_large(arena_t *arena, size_t size, bool zero)
 
 	/* Large allocation. */
 	size = PAGE_CEILING(size);
-	malloc_spin_lock(&arena->lock);
+	malloc_spin_lock(&arena->mLock);
 	ret = (void *)arena_run_alloc(arena, nullptr, size, true, zero);
 	if (!ret) {
-		malloc_spin_unlock(&arena->lock);
+		malloc_spin_unlock(&arena->mLock);
 		return nullptr;
 	}
-	arena->stats.allocated_large += size;
-	malloc_spin_unlock(&arena->lock);
+	arena->mStats.allocated_large += size;
+	malloc_spin_unlock(&arena->mLock);
 
 	if (zero == false) {
 		if (opt_junk)
@@ -3293,7 +3293,7 @@ arena_malloc(arena_t *arena, size_t size, bool zero)
 {
 
 	MOZ_ASSERT(arena);
-	MOZ_DIAGNOSTIC_ASSERT(arena->magic == ARENA_MAGIC);
+	MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
 	MOZ_ASSERT(size != 0);
 	MOZ_ASSERT(QUANTUM_CEILING(size) <= arena_maxclass);
 
@@ -3336,10 +3336,10 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 	MOZ_ASSERT((size & pagesize_mask) == 0);
 	MOZ_ASSERT((alignment & pagesize_mask) == 0);
 
-	malloc_spin_lock(&arena->lock);
+	malloc_spin_lock(&arena->mLock);
 	ret = (void *)arena_run_alloc(arena, nullptr, alloc_size, true, false);
 	if (!ret) {
-		malloc_spin_unlock(&arena->lock);
+		malloc_spin_unlock(&arena->mLock);
 		return nullptr;
 	}
 
@@ -3369,8 +3369,8 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 		}
 	}
 
-	arena->stats.allocated_large += size;
-	malloc_spin_unlock(&arena->lock);
+	arena->mStats.allocated_large += size;
+	malloc_spin_unlock(&arena->mLock);
 
 	if (opt_junk)
 		memset(ret, kAllocJunk, size);
@@ -3527,7 +3527,7 @@ isalloc_validate(const void* ptr)
   }
 
   if (chunk != ptr) {
-    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->magic == ARENA_MAGIC);
+    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
     return arena_salloc(ptr);
   } else {
     size_t ret;
@@ -3558,7 +3558,7 @@ isalloc(const void *ptr)
 	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
 	if (chunk != ptr) {
 		/* Region. */
-		MOZ_ASSERT(chunk->arena->magic == ARENA_MAGIC);
+		MOZ_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
 
 		ret = arena_salloc(ptr);
 	} else {
@@ -3614,7 +3614,7 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
     return;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(chunk->arena->magic == ARENA_MAGIC);
+  MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
 
   // Get the page number within the chunk.
   size_t pageind = (((uintptr_t)aPtr - (uintptr_t)chunk) >> pagesize_2pow);
@@ -3786,7 +3786,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 			arena_run_tree_insert(&bin->runs, run_mapelm);
 		}
 	}
-	arena->stats.allocated_small -= size;
+	arena->mStats.allocated_small -= size;
 }
 
 static void
@@ -3797,7 +3797,7 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 	size_t size = chunk->map[pageind].bits & ~pagesize_mask;
 
 	memset(ptr, kAllocPoison, size);
-	arena->stats.allocated_large -= size;
+	arena->mStats.allocated_large -= size;
 
 	arena_run_dalloc(arena, (arena_run_t *)ptr, true);
 }
@@ -3817,9 +3817,9 @@ arena_dalloc(void *ptr, size_t offset)
 	chunk = (arena_chunk_t *) ((uintptr_t)ptr - offset);
 	arena = chunk->arena;
 	MOZ_ASSERT(arena);
-	MOZ_DIAGNOSTIC_ASSERT(arena->magic == ARENA_MAGIC);
+	MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
 
-	malloc_spin_lock(&arena->lock);
+	malloc_spin_lock(&arena->mLock);
 	pageind = offset >> pagesize_2pow;
 	mapelm = &chunk->map[pageind];
 	MOZ_DIAGNOSTIC_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0);
@@ -3830,7 +3830,7 @@ arena_dalloc(void *ptr, size_t offset)
 		/* Large allocation. */
 		arena_dalloc_large(arena, chunk, ptr);
 	}
-	malloc_spin_unlock(&arena->lock);
+	malloc_spin_unlock(&arena->mLock);
 }
 
 static inline void
@@ -3858,11 +3858,11 @@ arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	 * Shrink the run, and make trailing pages available for other
 	 * allocations.
 	 */
-	malloc_spin_lock(&arena->lock);
+	malloc_spin_lock(&arena->mLock);
 	arena_run_trim_tail(arena, chunk, (arena_run_t *)ptr, oldsize, size,
 	    true);
-	arena->stats.allocated_large -= oldsize - size;
-	malloc_spin_unlock(&arena->lock);
+	arena->mStats.allocated_large -= oldsize - size;
+	malloc_spin_unlock(&arena->mLock);
 }
 
 static bool
@@ -3872,7 +3872,7 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >> pagesize_2pow;
 	size_t npages = oldsize >> pagesize_2pow;
 
-	malloc_spin_lock(&arena->lock);
+	malloc_spin_lock(&arena->mLock);
 	MOZ_DIAGNOSTIC_ASSERT(oldsize == (chunk->map[pageind].bits & ~pagesize_mask));
 
 	/* Try to extend the run. */
@@ -3894,11 +3894,11 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 		chunk->map[pageind+npages].bits = CHUNK_MAP_LARGE |
 		    CHUNK_MAP_ALLOCATED;
 
-		arena->stats.allocated_large += size - oldsize;
-		malloc_spin_unlock(&arena->lock);
+		arena->mStats.allocated_large += size - oldsize;
+		malloc_spin_unlock(&arena->mLock);
 		return (false);
 	}
-	malloc_spin_unlock(&arena->lock);
+	malloc_spin_unlock(&arena->mLock);
 
 	return (true);
 }
@@ -3926,7 +3926,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 
 		chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
 		arena = chunk->arena;
-		MOZ_DIAGNOSTIC_ASSERT(arena->magic == ARENA_MAGIC);
+		MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
 
 		if (psize < oldsize) {
 			/* Fill before shrinking in order avoid a race. */
@@ -4024,31 +4024,31 @@ arena_new(arena_t *arena)
 	arena_bin_t *bin;
 	size_t prev_run_size;
 
-	if (malloc_spin_init(&arena->lock))
+	if (malloc_spin_init(&arena->mLock))
 		return (true);
 
-	memset(&arena->stats, 0, sizeof(arena_stats_t));
+	memset(&arena->mStats, 0, sizeof(arena_stats_t));
 
 	/* Initialize chunks. */
-	arena_chunk_tree_dirty_new(&arena->chunks_dirty);
+	arena_chunk_tree_dirty_new(&arena->mChunksDirty);
 #ifdef MALLOC_DOUBLE_PURGE
-	new (&arena->chunks_madvised) mozilla::DoublyLinkedList<arena_chunk_t>();
+	new (&arena->mChunksMAdvised) mozilla::DoublyLinkedList<arena_chunk_t>();
 #endif
-	arena->spare = nullptr;
+	arena->mSpare = nullptr;
 
-	arena->ndirty = 0;
+	arena->mNumDirty = 0;
 	// Reduce the maximum amount of dirty pages we allow to be kept on
 	// thread local arenas. TODO: make this more flexible.
-	arena->dirty_max = opt_dirty_max >> 3;
+	arena->mMaxDirty = opt_dirty_max >> 3;
 
-	arena_avail_tree_new(&arena->runs_avail);
+	arena_avail_tree_new(&arena->mRunsAvail);
 
 	/* Initialize bins. */
 	prev_run_size = pagesize;
 
 	/* (2^n)-spaced tiny bins. */
 	for (i = 0; i < ntbins; i++) {
-		bin = &arena->bins[i];
+		bin = &arena->mBins[i];
 		bin->runcur = nullptr;
 		arena_run_tree_new(&bin->runs);
 
@@ -4061,7 +4061,7 @@ arena_new(arena_t *arena)
 
 	/* Quantum-spaced bins. */
 	for (; i < ntbins + nqbins; i++) {
-		bin = &arena->bins[i];
+		bin = &arena->mBins[i];
 		bin->runcur = nullptr;
 		arena_run_tree_new(&bin->runs);
 
@@ -4074,7 +4074,7 @@ arena_new(arena_t *arena)
 
 	/* (2^n)-spaced sub-page bins. */
 	for (; i < ntbins + nqbins + nsbins; i++) {
-		bin = &arena->bins[i];
+		bin = &arena->mBins[i];
 		bin->runcur = nullptr;
 		arena_run_tree_new(&bin->runs);
 
@@ -4086,7 +4086,7 @@ arena_new(arena_t *arena)
 	}
 
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-	arena->magic = ARENA_MAGIC;
+	arena->mMagic = ARENA_MAGIC;
 #endif
 
 	return (false);
@@ -4632,7 +4632,7 @@ MALLOC_OUT:
   }
   /* arena_new() sets this to a lower value for thread local arenas;
    * reset to the default value for the main arenas */
-  arenas[0]->dirty_max = opt_dirty_max;
+  arenas[0]->mMaxDirty = opt_dirty_max;
 
 #ifndef NO_TLS
   /*
@@ -4973,20 +4973,20 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
     arena_headers = 0;
     arena_unused = 0;
 
-    malloc_spin_lock(&arena->lock);
+    malloc_spin_lock(&arena->mLock);
 
-    arena_mapped = arena->stats.mapped;
+    arena_mapped = arena->mStats.mapped;
 
     /* "committed" counts dirty and allocated memory. */
-    arena_committed = arena->stats.committed << pagesize_2pow;
+    arena_committed = arena->mStats.committed << pagesize_2pow;
 
-    arena_allocated = arena->stats.allocated_small +
-                      arena->stats.allocated_large;
+    arena_allocated = arena->mStats.allocated_small +
+                      arena->mStats.allocated_large;
 
-    arena_dirty = arena->ndirty << pagesize_2pow;
+    arena_dirty = arena->mNumDirty << pagesize_2pow;
 
     for (j = 0; j < ntbins + nqbins + nsbins; j++) {
-      arena_bin_t* bin = &arena->bins[j];
+      arena_bin_t* bin = &arena->mBins[j];
       size_t bin_unused = 0;
 
       rb_foreach_begin(arena_chunk_map_t, link, &bin->runs, mapelm) {
@@ -5002,7 +5002,7 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
       arena_headers += bin->stats.curruns * bin->reg0_offset;
     }
 
-    malloc_spin_unlock(&arena->lock);
+    malloc_spin_unlock(&arena->mLock);
 
     MOZ_ASSERT(arena_mapped >= arena_committed);
     MOZ_ASSERT(arena_committed >= arena_allocated + arena_dirty);
@@ -5067,14 +5067,14 @@ hard_purge_chunk(arena_chunk_t *chunk)
 static void
 hard_purge_arena(arena_t *arena)
 {
-	malloc_spin_lock(&arena->lock);
+	malloc_spin_lock(&arena->mLock);
 
-	while (!arena->chunks_madvised.isEmpty()) {
-		arena_chunk_t *chunk = arena->chunks_madvised.popFront();
+	while (!arena->mChunksMAdvised.isEmpty()) {
+		arena_chunk_t *chunk = arena->mChunksMAdvised.popFront();
 		hard_purge_chunk(chunk);
 	}
 
-	malloc_spin_unlock(&arena->lock);
+	malloc_spin_unlock(&arena->mLock);
 }
 
 template<> inline void
@@ -5111,9 +5111,9 @@ MozJemalloc::jemalloc_free_dirty_pages(void)
     arena_t* arena = arenas[i];
 
     if (arena) {
-      malloc_spin_lock(&arena->lock);
+      malloc_spin_lock(&arena->mLock);
       arena_purge(arena, true);
-      malloc_spin_unlock(&arena->lock);
+      malloc_spin_unlock(&arena->mLock);
     }
   }
   malloc_spin_unlock(&arenas_lock);
@@ -5143,7 +5143,7 @@ _malloc_prefork(void)
 	malloc_spin_lock(&arenas_lock);
 	for (i = 0; i < narenas; i++) {
 		if (arenas[i])
-			malloc_spin_lock(&arenas[i]->lock);
+			malloc_spin_lock(&arenas[i]->mLock);
 	}
 
 	malloc_mutex_lock(&base_mtx);
@@ -5167,7 +5167,7 @@ _malloc_postfork_parent(void)
 
 	for (i = 0; i < narenas; i++) {
 		if (arenas[i])
-			malloc_spin_unlock(&arenas[i]->lock);
+			malloc_spin_unlock(&arenas[i]->mLock);
 	}
 	malloc_spin_unlock(&arenas_lock);
 }
@@ -5188,7 +5188,7 @@ _malloc_postfork_child(void)
 
 	for (i = 0; i < narenas; i++) {
 		if (arenas[i])
-			malloc_spin_init(&arenas[i]->lock);
+			malloc_spin_init(&arenas[i]->mLock);
 	}
 	malloc_spin_init(&arenas_lock);
 }
