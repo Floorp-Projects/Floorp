@@ -6,22 +6,15 @@
 
 #include "base/process_util.h"
 
-#include <ctype.h>
-#include <fcntl.h>
-#include <memory>
-#include <unistd.h>
 #include <string>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "base/eintr_wrapper.h"
-#include "base/file_util.h"
 #include "base/logging.h"
-#include "base/string_util.h"
-#include "nsLiteralString.h"
+#include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
-
-#include "prenv.h"
 
 /*
  * We fall back to an arbitrary UID. This is generally the UID for user
@@ -37,87 +30,6 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 }  // namespace
 
 namespace base {
-
-class EnvironmentEnvp
-{
-public:
-  EnvironmentEnvp()
-    : mEnvp(PR_DuplicateEnvironment()) {}
-
-  explicit EnvironmentEnvp(const environment_map &em)
-  {
-    mEnvp = (char**) malloc(sizeof(char *) * (em.size() + 1));
-    if (!mEnvp) {
-      return;
-    }
-    char **e = mEnvp;
-    for (environment_map::const_iterator it = em.begin();
-         it != em.end(); ++it, ++e) {
-      std::string str = it->first;
-      str += "=";
-      str += it->second;
-      size_t len = str.length() + 1;
-      *e = static_cast<char*>(malloc(len));
-      memcpy(*e, str.c_str(), len);
-    }
-    *e = NULL;
-  }
-
-  ~EnvironmentEnvp()
-  {
-    if (!mEnvp) {
-      return;
-    }
-    for (char **e = mEnvp; *e; ++e) {
-      free(*e);
-    }
-    free(mEnvp);
-  }
-
-  char * const *AsEnvp() { return mEnvp; }
-
-  void ToMap(environment_map &em)
-  {
-    if (!mEnvp) {
-      return;
-    }
-    em.clear();
-    for (char **e = mEnvp; *e; ++e) {
-      const char *eq;
-      if ((eq = strchr(*e, '=')) != NULL) {
-        std::string varname(*e, eq - *e);
-        em[varname.c_str()] = &eq[1];
-      }
-    }
-  }
-
-private:
-  char **mEnvp;
-};
-
-class Environment : public environment_map
-{
-public:
-  Environment()
-  {
-    EnvironmentEnvp envp;
-    envp.ToMap(*this);
-  }
-
-  char * const *AsEnvp() {
-    mEnvp.reset(new EnvironmentEnvp(*this));
-    return mEnvp->AsEnvp();
-  }
-
-  void Merge(const environment_map &em)
-  {
-    for (const_iterator it = em.begin(); it != em.end(); ++it) {
-      (*this)[it->first] = it->second;
-    }
-  }
-private:
-  std::auto_ptr<EnvironmentEnvp> mEnvp;
-};
 
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
@@ -148,13 +60,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   fd_shuffle1.reserve(fds_to_remap.size());
   fd_shuffle2.reserve(fds_to_remap.size());
 
-  Environment env;
-  env.Merge(env_vars_to_set);
-  char * const *envp = env.AsEnvp();
-  if (!envp) {
-    DLOG(ERROR) << "FAILED to duplicate environment for: " << argv_cstr[0];
-    return false;
-  }
+  EnvironmentArray envp = BuildEnvironmentArray(env_vars_to_set);
 
   pid_t pid = fork();
   if (pid < 0)
@@ -178,7 +84,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
     SetCurrentProcessPrivileges(privs);
 
-    execve(argv_cstr[0], argv_cstr.get(), envp);
+    execve(argv_cstr[0], argv_cstr.get(), envp.get());
     // if we get here, we're in serious trouble and should complain loudly
     // NOTE: This is async signal unsafe; it could deadlock instead.  (But
     // only on debug builds; otherwise it's a signal-safe no-op.)
