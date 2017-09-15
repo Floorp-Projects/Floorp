@@ -57,6 +57,130 @@ class Message : public Pickle {
     COMPRESSION_ALL
   };
 
+  enum Sync {
+    SYNC = 0,
+    ASYNC = 1,
+  };
+
+  enum Interrupt {
+    NOT_INTERRUPT = 0,
+    INTERRUPT = 1,
+  };
+
+  enum Constructor {
+    NOT_CONSTRUCTOR = 0,
+    CONSTRUCTOR = 1,
+  };
+
+  enum Reply {
+    NOT_REPLY = 0,
+    REPLY = 1,
+  };
+
+  class HeaderFlags {
+    friend class Message;
+
+    enum {
+      NESTED_MASK     = 0x0003,
+      PRIO_MASK       = 0x000C,
+      SYNC_BIT        = 0x0010,
+      REPLY_BIT       = 0x0020,
+      REPLY_ERROR_BIT = 0x0040,
+      INTERRUPT_BIT   = 0x0080,
+      COMPRESS_BIT    = 0x0100,
+      COMPRESSALL_BIT = 0x0200,
+      COMPRESS_MASK   = 0x0300,
+      CONSTRUCTOR_BIT = 0x0400,
+#ifdef MOZ_TASK_TRACER
+      TASKTRACER_BIT  = 0x0800,
+#endif
+    };
+
+  public:
+    constexpr HeaderFlags()
+      : mFlags(NOT_NESTED)
+    {
+    }
+
+    explicit constexpr HeaderFlags(NestedLevel level)
+      : mFlags(level)
+    {
+    }
+
+    constexpr HeaderFlags(NestedLevel level, PriorityValue priority,
+                          MessageCompression compression,
+                          Constructor constructor,
+                          Sync sync, Interrupt interrupt, Reply reply)
+      : mFlags(level |
+               (priority << 2) |
+               (compression == COMPRESSION_ENABLED ? COMPRESS_BIT :
+                compression == COMPRESSION_ALL ? COMPRESSALL_BIT : 0) |
+               (constructor == CONSTRUCTOR ? CONSTRUCTOR_BIT : 0) |
+               (sync == SYNC ? SYNC_BIT : 0) |
+               (interrupt == INTERRUPT ? INTERRUPT_BIT : 0) |
+               (reply == REPLY ? REPLY_BIT : 0))
+    {
+    }
+
+    NestedLevel Level() const {
+      return static_cast<NestedLevel>(mFlags & NESTED_MASK);
+    }
+
+    PriorityValue Priority() const {
+      return static_cast<PriorityValue>((mFlags & PRIO_MASK) >> 2);
+    }
+
+    MessageCompression Compression() const {
+      return ((mFlags & COMPRESS_BIT) ? COMPRESSION_ENABLED :
+              (mFlags & COMPRESSALL_BIT) ? COMPRESSION_ALL : COMPRESSION_NONE);
+    }
+
+    bool IsConstructor() const {
+      return (mFlags & CONSTRUCTOR_BIT) != 0;
+    }
+    bool IsSync() const {
+      return (mFlags & SYNC_BIT) != 0;
+    }
+    bool IsInterrupt() const {
+      return (mFlags & INTERRUPT_BIT) != 0;
+    }
+    bool IsReply() const {
+      return (mFlags & REPLY_BIT) != 0;
+    }
+
+    bool IsReplyError() const {
+      return (mFlags & REPLY_ERROR_BIT) != 0;
+    }
+
+#ifdef MOZ_TASK_TRACER
+    bool IsTaskTracer() const {
+      return (mFlags & TASKTRACER_BIT) != 0;
+    }
+#endif
+
+  private:
+    void SetSync() {
+      mFlags |= SYNC_BIT;
+    }
+    void SetInterrupt() {
+      mFlags |= INTERRUPT_BIT;
+    }
+    void SetReply() {
+      mFlags |= REPLY_BIT;
+    }
+    void SetReplyError() {
+      mFlags |= REPLY_ERROR_BIT;
+    }
+
+#ifdef MOZ_TASK_TRACER
+    void SetTaskTracer() {
+      mFlags |= TASKTRACER_BIT;
+    }
+#endif
+
+    uint32_t mFlags;
+  };
+
   virtual ~Message();
 
   Message();
@@ -69,9 +193,7 @@ class Message : public Pickle {
   Message(int32_t routing_id,
           msgid_t type,
           uint32_t segmentCapacity = 0, // 0 for the default capacity.
-          NestedLevel nestedLevel = NOT_NESTED,
-          PriorityValue priority = NORMAL_PRIORITY,
-          MessageCompression compression = COMPRESSION_NONE,
+          HeaderFlags flags = HeaderFlags(),
           const char* const name="???",
           bool recordWriteLatency=false);
 
@@ -82,68 +204,42 @@ class Message : public Pickle {
   Message& operator=(const Message& other) = delete;
   Message& operator=(Message&& other);
 
-  NestedLevel nested_level() const {
-    return static_cast<NestedLevel>(header()->flags & NESTED_MASK);
-  }
+  // One-off constructors for special error-handling messages.
+  static Message* ForSyncDispatchError(NestedLevel level);
+  static Message* ForInterruptDispatchError();
 
-  void set_nested_level(NestedLevel nestedLevel) {
-    DCHECK((nestedLevel & ~NESTED_MASK) == 0);
-    header()->flags = (header()->flags & ~NESTED_MASK) | nestedLevel;
+  NestedLevel nested_level() const {
+    return header()->flags.Level();
   }
 
   PriorityValue priority() const {
-    return static_cast<PriorityValue>((header()->flags & PRIO_MASK) >> 2);
-  }
-
-  void set_priority(PriorityValue prio) {
-    DCHECK(((prio << 2) & ~PRIO_MASK) == 0);
-    header()->flags = (header()->flags & ~PRIO_MASK) | (prio << 2);
+    return header()->flags.Priority();
   }
 
   bool is_constructor() const {
-    return (header()->flags & CONSTRUCTOR_BIT) != 0;
-  }
-
-  void set_constructor() {
-    header()->flags |= CONSTRUCTOR_BIT;
+    return header()->flags.IsConstructor();
   }
 
   // True if this is a synchronous message.
   bool is_sync() const {
-    return (header()->flags & SYNC_BIT) != 0;
+    return header()->flags.IsSync();
   }
 
   // True if this is a synchronous message.
   bool is_interrupt() const {
-    return (header()->flags & INTERRUPT_BIT) != 0;
+    return header()->flags.IsInterrupt();
   }
 
-  // True if compression is enabled for this message.
   MessageCompression compress_type() const {
-    return (header()->flags & COMPRESS_BIT) ?
-               COMPRESSION_ENABLED :
-               (header()->flags & COMPRESSALL_BIT) ?
-                   COMPRESSION_ALL :
-                   COMPRESSION_NONE;
-  }
-
-  // Set this on a reply to a synchronous message.
-  void set_reply() {
-    header()->flags |= REPLY_BIT;
+    return header()->flags.Compression();
   }
 
   bool is_reply() const {
-    return (header()->flags & REPLY_BIT) != 0;
-  }
-
-  // Set this on a reply to a synchronous message to indicate that no receiver
-  // was found.
-  void set_reply_error() {
-    header()->flags |= REPLY_ERROR_BIT;
+    return header()->flags.IsReply();
   }
 
   bool is_reply_error() const {
-    return (header()->flags & REPLY_ERROR_BIT) != 0;
+    return header()->flags.IsReplyError();
   }
 
   msgid_t type() const {
@@ -283,14 +379,6 @@ class Message : public Pickle {
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
 
-  void set_sync() {
-    header()->flags |= SYNC_BIT;
-  }
-
-  void set_interrupt() {
-    header()->flags |= INTERRUPT_BIT;
-  }
-
 #ifdef MOZ_TASK_TRACER
   void TaskTracerDispatch();
   class AutoTaskTracerRun
@@ -308,26 +396,10 @@ class Message : public Pickle {
  protected:
 #endif
 
-  // flags
-  enum {
-    NESTED_MASK     = 0x0003,
-    PRIO_MASK       = 0x000C,
-    SYNC_BIT        = 0x0010,
-    REPLY_BIT       = 0x0020,
-    REPLY_ERROR_BIT = 0x0040,
-    INTERRUPT_BIT   = 0x0080,
-    COMPRESS_BIT    = 0x0100,
-    COMPRESSALL_BIT = 0x0200,
-    CONSTRUCTOR_BIT = 0x0400,
-#ifdef MOZ_TASK_TRACER
-    TASKTRACER_BIT  = 0x0800,
-#endif
-  };
-
   struct Header : Pickle::Header {
     int32_t routing;  // ID of the view that this message is destined for
     msgid_t type;   // specifies the user-defined message type
-    uint32_t flags;   // specifies control flags for the message
+    HeaderFlags flags;   // specifies control flags for the message
 #if defined(OS_POSIX)
     uint32_t num_fds; // the number of descriptors included with this message
 # if defined(OS_MACOSX)
