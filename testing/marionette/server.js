@@ -206,13 +206,9 @@ const RECOMMENDED_PREFS = new Map([
   // Disable metadata caching for installed add-ons by default
   ["extensions.getAddons.cache.enabled", false],
 
-  // Disable installing any distribution extensions or add-ons.
+  // Disable intalling any distribution extensions or add-ons.
   // Should be set in profile.
   ["extensions.installDistroAddons", false],
-
-  // Make sure Shield doesn't hit the network.
-  ["extensions.shield-recipe-client.api_url", ""],
-
   ["extensions.showMismatchUI", false],
 
   // Turn off extension updates so they do not bother tests
