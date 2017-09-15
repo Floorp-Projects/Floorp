@@ -1,8 +1,6 @@
 # These tests verify that CSS clip-path behaves properly.
 # e.g. clip-path: polygon(nonzero, 3px 3px, 20% 20%)
 
-default-preferences pref(layout.css.clip-path-shapes.enabled,true)
-
 # Following tests adapted from W3C csswg-test repo
 == clip-path-polygon-001.html clip-path-rectangle-ref.html
 == clip-path-polygon-002.html clip-path-rectangle-ref.html

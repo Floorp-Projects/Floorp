@@ -77,12 +77,10 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == clipPath-basic-07.svg pass.svg
 == clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
-default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 fuzzy(1,32400) == clipPath-on-outflowElement-02a.html clipPath-on-outflowElement-02-ref.html
 fuzzy(1,32400) == clipPath-on-outflowElement-02b.html clipPath-on-outflowElement-02-ref.html
 == clipPath-polygon-01.svg pass.svg
 == clipPath-polygon-elementFromPoint-01.svg pass.svg
-default-preferences
 != clipPath-on-thin-object.svg about:blank
 == clipPath-winding-01.svg pass.svg
 
@@ -334,7 +332,7 @@ fuzzy-if(skiaContent,7,175) fuzzy-if(skiaContent&&webrender,7-7,154-154) == outl
 
 == paint-on-maskLayer-1a.html paint-on-maskLayer-1-ref.html
 == paint-on-maskLayer-1b.html paint-on-maskLayer-1-ref.html
-pref(layout.css.clip-path-shapes.enabled,true) == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
+== paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
 pref(svg.paint-order.enabled,true) fuzzy-if(webrender,1-1,112-112) == paint-order-02.svg paint-order-02-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
