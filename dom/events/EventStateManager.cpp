@@ -4277,7 +4277,8 @@ EventStateManager::GeneratePointerEnterExit(EventMessage aMessage,
 /* static */ void
 EventStateManager::UpdateLastRefPointOfMouseEvent(WidgetMouseEvent* aMouseEvent)
 {
-  if (aMouseEvent->mMessage != eMouseMove) {
+  if (aMouseEvent->mMessage != eMouseMove &&
+      aMouseEvent->mMessage != ePointerMove) {
     return;
   }
 
@@ -4310,9 +4311,14 @@ EventStateManager::ResetPointerToWindowCenterWhilePointerLocked(
                      WidgetMouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(sIsPointerLocked);
-  if (aMouseEvent->mMessage != eMouseMove || !aMouseEvent->mWidget) {
+  if ((aMouseEvent->mMessage != eMouseMove &&
+       aMouseEvent->mMessage != ePointerMove) || !aMouseEvent->mWidget) {
     return;
   }
+
+  // We generate pointermove from mousemove event, so only synthesize native
+  // mouse move and update sSynthCenteringPoint by mousemove event.
+  bool updateSynthCenteringPoint = aMouseEvent->mMessage == eMouseMove;
 
   // The pointer is locked. If the pointer is not located at the center of
   // the window, dispatch a synthetic mousemove to return the pointer there.
@@ -4323,7 +4329,7 @@ EventStateManager::ResetPointerToWindowCenterWhilePointerLocked(
   LayoutDeviceIntPoint center =
     GetWindowClientRectCenter(aMouseEvent->mWidget);
 
-  if (aMouseEvent->mRefPoint != center) {
+  if (aMouseEvent->mRefPoint != center && updateSynthCenteringPoint) {
     // Mouse move doesn't finish at the center of the window. Dispatch a
     // synthetic native mouse event to move the pointer back to the center
     // of the window, to faciliate more movement. But first, record that
@@ -4338,7 +4344,9 @@ EventStateManager::ResetPointerToWindowCenterWhilePointerLocked(
     aMouseEvent->StopPropagation();
     // Clear sSynthCenteringPoint so we don't cancel other events
     // targeted at the center.
-    sSynthCenteringPoint = kInvalidRefPoint;
+    if (updateSynthCenteringPoint) {
+      sSynthCenteringPoint = kInvalidRefPoint;
+    }
   }
 }
 
