@@ -548,7 +548,7 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
-    mStreamList->Add(mResponse.mBodyId, stream);
+    mStreamList->Add(mResponse.mBodyId, Move(stream));
 
     return rv;
   }
@@ -614,7 +614,7 @@ public:
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
       if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
-      mStreamList->Add(mSavedResponses[i].mBodyId, stream);
+      mStreamList->Add(mSavedResponses[i].mBodyId, Move(stream));
     }
 
     return rv;
@@ -1162,7 +1162,7 @@ public:
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
       if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
-      mStreamList->Add(mSavedRequests[i].mBodyId, stream);
+      mStreamList->Add(mSavedRequests[i].mBodyId, Move(stream));
     }
 
     return rv;
@@ -1226,7 +1226,7 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
-    mStreamList->Add(mSavedResponse.mBodyId, stream);
+    mStreamList->Add(mSavedResponse.mBodyId, Move(stream));
 
     return rv;
   }
