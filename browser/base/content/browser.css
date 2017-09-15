@@ -546,6 +546,19 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
+/* Display URLs left-to-right but right aligned in RTL mode. */
+html|input.urlbar-input:-moz-locale-dir(rtl) {
+  direction: ltr !important;
+  text-align: right !important;
+}
+
+/* Make sure that the location bar's alignment in RTL mode changes according
+   to the input box direction if the user switches the text direction using
+   cmd_switchTextDirection (which applies a dir attribute to the <input>). */
+html|input.urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
+  text-align: left !important;
+}
+
 /*
  * Display visual cue that browser is under remote control by Marionette.
  * This is to help users visually distinguish a user agent session that
