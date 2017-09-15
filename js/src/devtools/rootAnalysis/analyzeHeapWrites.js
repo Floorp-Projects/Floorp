@@ -1206,6 +1206,7 @@ function isSafeLocalVariable(entry, name)
             // References to the contents of an array are threadsafe if the array
             // itself is threadsafe.
             if ((isDirectCall(edge, /operator\[\]/) ||
+                 isDirectCall(edge, /nsTArray.*?::InsertElementAt\b/) ||
                  isDirectCall(edge, /nsStyleContent::ContentAt/)) &&
                 isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
             {
