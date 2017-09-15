@@ -801,6 +801,8 @@ private:
 public:
   inline void* MallocSmall(size_t aSize, bool aZero);
 
+  void* MallocLarge(size_t aSize, bool aZero);
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -3285,30 +3287,31 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
   return ret;
 }
 
-static void *
-arena_malloc_large(arena_t *arena, size_t size, bool zero)
+void*
+arena_t::MallocLarge(size_t aSize, bool aZero)
 {
-	void *ret;
+  void* ret;
 
-	/* Large allocation. */
-	size = PAGE_CEILING(size);
-	malloc_spin_lock(&arena->mLock);
-	ret = arena->AllocRun(nullptr, size, true, zero);
-	if (!ret) {
-		malloc_spin_unlock(&arena->mLock);
-		return nullptr;
-	}
-	arena->mStats.allocated_large += size;
-	malloc_spin_unlock(&arena->mLock);
+  /* Large allocation. */
+  aSize = PAGE_CEILING(aSize);
+  malloc_spin_lock(&mLock);
+  ret = AllocRun(nullptr, aSize, true, aZero);
+  if (!ret) {
+    malloc_spin_unlock(&mLock);
+    return nullptr;
+  }
+  mStats.allocated_large += aSize;
+  malloc_spin_unlock(&mLock);
 
-	if (zero == false) {
-		if (opt_junk)
-			memset(ret, kAllocJunk, size);
-		else if (opt_zero)
-			memset(ret, 0, size);
-	}
+  if (aZero == false) {
+    if (opt_junk) {
+      memset(ret, kAllocJunk, aSize);
+    } else if (opt_zero) {
+      memset(ret, 0, aSize);
+    }
+  }
 
-	return (ret);
+  return (ret);
 }
 
 static inline void *
@@ -3323,7 +3326,7 @@ arena_malloc(arena_t *arena, size_t size, bool zero)
 	if (size <= bin_maxclass) {
 		return arena->MallocSmall(size, zero);
 	} else
-		return (arena_malloc_large(arena, size, zero));
+		return arena->MallocLarge(size, zero);
 }
 
 static inline void *
