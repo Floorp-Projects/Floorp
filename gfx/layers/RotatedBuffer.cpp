@@ -434,7 +434,8 @@ RotatedContentBuffer::FlushBuffers()
 
 RotatedContentBuffer::PaintState
 RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
-                                 uint32_t aFlags)
+                                 uint32_t aFlags,
+                                 bool aCopyToBackBuffer)
 {
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
@@ -555,7 +556,7 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
     return result;
 
   if (HaveBuffer()) {
-    if (LockBuffers()) {
+    if (aCopyToBackBuffer && LockBuffers()) {
       // Do not modify result.mRegionToDraw or result.mContentType after this call.
       // Do not modify mBufferRect, mBufferRotation, or mDidSelfCopy,
       // or call CreateBuffer before this call.
@@ -662,6 +663,7 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
             destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
             CreateBuffer(result.mContentType, destBufferRect, bufferFlags,
                          &destDTBuffer, &destDTBufferOnWhite);
+            result.mFinalizeOnPaintThread = false;
             if (!destDTBuffer ||
                 (!destDTBufferOnWhite && (bufferFlags & BUFFER_COMPONENT_ALPHA))) {
               if (Factory::ReasonableSurfaceSize(IntSize(destBufferRect.Width(), destBufferRect.Height()))) {
@@ -686,6 +688,7 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
     // The buffer's not big enough, so allocate a new one
     CreateBuffer(result.mContentType, destBufferRect, bufferFlags,
                  &destDTBuffer, &destDTBufferOnWhite);
+    result.mFinalizeOnPaintThread = false;
     if (!destDTBuffer ||
         (!destDTBufferOnWhite && (bufferFlags & BUFFER_COMPONENT_ALPHA))) {
       if (Factory::ReasonableSurfaceSize(IntSize(destBufferRect.Width(), destBufferRect.Height()))) {

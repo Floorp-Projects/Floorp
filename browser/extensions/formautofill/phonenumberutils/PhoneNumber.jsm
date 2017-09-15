@@ -21,7 +21,6 @@ this.PhoneNumber = (function(dataBase) {
   const NON_ALPHA_CHARS = /[^a-zA-Z]/g;
   const NON_DIALABLE_CHARS = /[^,#+\*\d]/g;
   const NON_DIALABLE_CHARS_ONCE = new RegExp(NON_DIALABLE_CHARS.source);
-  const BACKSLASH = /\\/g;
   const SPLIT_FIRST_GROUP = /^(\d+)(.*)$/;
   const LEADING_PLUS_CHARS_PATTERN = /^[+\uFF0B]+/g;
 
@@ -71,8 +70,7 @@ this.PhoneNumber = (function(dataBase) {
   // Parse string encoded meta data into a convenient object
   // representation.
   function ParseMetaData(countryCode, md) {
-    /* eslint-disable no-eval */
-    let array = eval(md.replace(BACKSLASH, "\\\\"));
+    let array = JSON.parse(md);
     md = ParseArray(array,
                     META_DATA_ENCODING,
                     {countryCode});

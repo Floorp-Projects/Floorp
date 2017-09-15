@@ -1,0 +1,14 @@
+language: rust
+rust:
+  - 1.4.0
+  - stable
+  - beta
+  - nightly
+
+before_install:
+  - sudo rm /etc/apt/sources.list.d/*.list
+  - sudo apt-get update -q
+  - sudo apt-get install -y build-essential libudev-dev
+  - pkg-config --list-all
+  - pkg-config --libs libudev
+  - pkg-config --modversion libudev

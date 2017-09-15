@@ -1,0 +1,19 @@
+[package]
+name = "libudev-sys"
+version = "0.1.3"
+authors = ["David Cuddeback <david.cuddeback@gmail.com>"]
+description = "FFI bindings to libudev"
+license = "MIT"
+homepage = "https://github.com/dcuddeback/libudev-sys"
+repository = "https://github.com/dcuddeback/libudev-sys"
+readme = "README.md"
+keywords = ["udev", "hardware", "bindings", "sysfs", "systemd"]
+
+build = "build.rs"
+links = "libudev"
+
+[dependencies]
+libc = "0.2"
+
+[build-dependencies]
+pkg-config = "0.3.2"

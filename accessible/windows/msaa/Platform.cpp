@@ -20,6 +20,8 @@
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "ProxyWrappers.h"
 
 using namespace mozilla;
@@ -209,7 +211,32 @@ a11y::IsHandlerRegistered()
     return false;
   }
 
-  return true;
+  nsAutoString handlerPath;
+  rv = regKey->ReadStringValue(nsAutoString(), handlerPath);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIFile> actualHandler;
+  rv = NS_NewLocalFile(handlerPath, false, getter_AddRefs(actualHandler));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIFile> expectedHandler;
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(expectedHandler));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  rv = expectedHandler->Append(NS_LITERAL_STRING("AccessibleHandler.dll"));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  bool equal;
+  rv = expectedHandler->Equals(actualHandler, &equal);
+  return NS_SUCCEEDED(rv) && equal;
 }
 
 void

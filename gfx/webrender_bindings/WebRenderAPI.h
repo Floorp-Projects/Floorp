@@ -59,18 +59,13 @@ public:
   ResourceUpdateQueue& operator=(ResourceUpdateQueue&&);
   ResourceUpdateQueue& operator=(const ResourceUpdateQueue&) = delete;
 
-  /// Serializes into a buffer of bytes and clears the queue.
-  ByteBuffer Serialize();
-
-  static ResourceUpdateQueue Deserialize(Range<uint8_t> aData);
-
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
-                Range<uint8_t> aBytes);
+                wr::Vec_u8& aBytes);
 
   void AddBlobImage(wr::ImageKey aKey,
                     const ImageDescriptor& aDescriptor,
-                    Range<uint8_t> aBytes);
+                    wr::Vec_u8& aBytes);
 
   void AddExternalImageBuffer(ImageKey key,
                               const ImageDescriptor& aDescriptor,
@@ -84,11 +79,11 @@ public:
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
-                         Range<uint8_t> aBytes);
+                         wr::Vec_u8& aBytes);
 
   void UpdateBlobImage(wr::ImageKey aKey,
                        const ImageDescriptor& aDescriptor,
-                       Range<uint8_t> aBytes);
+                       wr::Vec_u8& aBytes);
 
   void UpdateExternalImage(ImageKey aKey,
                            const ImageDescriptor& aDescriptor,
@@ -98,7 +93,7 @@ public:
 
   void DeleteImage(wr::ImageKey aKey);
 
-  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
+  void AddRawFont(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex);
 
   void DeleteFont(wr::FontKey aKey);
 
@@ -367,8 +362,6 @@ public:
                      const float& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
-  ResourceUpdateQueue& Resources() { return mResourceUpdates; }
-
   // Returns the clip id that was most recently pushed with PushClip and that
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
   // is empty.
@@ -384,8 +377,6 @@ public:
   wr::WrState* Raw() { return mWrState; }
 protected:
   wr::WrState* mWrState;
-
-  ResourceUpdateQueue mResourceUpdates;
 
   // Track the stack of clip ids and scroll layer ids that have been pushed
   // (by PushClip and PushScrollLayer, respectively) and are still active.

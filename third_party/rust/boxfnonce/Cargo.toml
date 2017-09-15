@@ -1,0 +1,13 @@
+[package]
+name = "boxfnonce"
+version = "0.0.3"
+authors = ["Stefan Bühler <stbuehler@web.de>"]
+description = "safe FnOnce boxing for rust stable"
+documentation = "https://stbuehler.github.io/rustdocs/boxfnonce/boxfnonce/"
+homepage = "https://github.com/stbuehler/rust-boxfnonce"
+repository = "https://github.com/stbuehler/rust-boxfnonce"
+readme = "README.md"
+keywords = ["Box", "FnOnce"]
+license = "MIT"
+
+[dependencies]

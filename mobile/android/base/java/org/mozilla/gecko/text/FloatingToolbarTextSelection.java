@@ -13,11 +13,10 @@ import android.util.TypedValue;
 import android.view.ActionMode;
 
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -36,8 +35,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     // floating toolbar overlays the bottom handle(s).
     private static final int HANDLES_OFFSET_DP = 20;
 
-    /* package */ final GeckoApp geckoApp;
-    private final LayerView layerView;
+    /* package */ final GeckoView geckoView;
     private final int[] locationInWindow;
     private final float handlesOffset;
 
@@ -46,13 +44,12 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     private int selectionID;
     /* package-private */ Rect contentRect;
 
-    public FloatingToolbarTextSelection(GeckoApp geckoApp, LayerView layerView) {
-        this.geckoApp = geckoApp;
-        this.layerView = layerView;
+    public FloatingToolbarTextSelection(final GeckoView geckoView) {
+        this.geckoView = geckoView;
         this.locationInWindow = new int[2];
 
         this.handlesOffset = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                HANDLES_OFFSET_DP, geckoApp.getResources().getDisplayMetrics());
+                HANDLES_OFFSET_DP, geckoView.getContext().getResources().getDisplayMetrics());
     }
 
     @Override
@@ -72,7 +69,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
 
         final GeckoBundle data = new GeckoBundle(1);
         data.putInt("selectionID", selectionID);
-        geckoApp.getAppEventDispatcher().dispatch("TextSelection:End", data);
+        geckoView.getEventDispatcher().dispatch("TextSelection:End", data);
     }
 
     @Override
@@ -86,7 +83,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     }
 
     private void registerForEvents() {
-        geckoApp.getAppEventDispatcher().registerUiThreadListener(this,
+        geckoView.getEventDispatcher().registerUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
@@ -94,7 +91,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     }
 
     private void unregisterFromEvents() {
-        geckoApp.getAppEventDispatcher().unregisterUiThreadListener(this,
+        geckoView.getEventDispatcher().unregisterUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
@@ -139,8 +136,13 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
             return;
         }
 
+        final Activity activity =
+                ActivityUtils.getActivityFromContext(geckoView.getContext());
+        if (activity == null) {
+            return;
+        }
         actionModeCallback = new FloatingActionModeCallback(this, actions);
-        actionMode = geckoApp.startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
+        actionMode = activity.startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
     }
 
     private boolean finishActionMode() {
@@ -171,9 +173,9 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
         final double width = (int) message.getDouble("width");
         final double height = (int) message.getDouble("height");
 
-        final float toolbarOffset = layerView.getCurrentToolbarHeight();
-        final float zoomFactor = layerView.getZoomFactor();
-        layerView.getLocationInWindow(locationInWindow);
+        final float toolbarOffset = geckoView.getCurrentToolbarHeight();
+        final float zoomFactor = geckoView.getZoomFactor();
+        geckoView.getLocationInWindow(locationInWindow);
 
         contentRect = new Rect(
                 (int) (x * zoomFactor + locationInWindow[0]),
