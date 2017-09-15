@@ -19,6 +19,8 @@ Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillHeuristics",
                                   "resource://formautofill/FormAutofillHeuristics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
+                                  "resource://gre/modules/FormLikeFactory.jsm");
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
@@ -28,8 +30,7 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
  * @param {FormLike} form Form that need to be auto filled
  */
 function FormAutofillHandler(form) {
-  this.form = form;
-  this.fieldDetails = [];
+  this._updateForm(form);
   this.winUtils = this.form.rootElement.ownerGlobal.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
 
@@ -67,8 +68,6 @@ FormAutofillHandler.prototype = {
    * DOM Form element to which this object is attached.
    */
   form: null,
-
-  _formFieldCount: 0,
 
   /**
    * Array of collected data about relevant form fields.  Each item is an object
@@ -112,18 +111,70 @@ FormAutofillHandler.prototype = {
     PREVIEW: "-moz-autofill-preview",
   },
 
-  get isFormChangedSinceLastCollection() {
-    // When the number of form controls is the same with last collection, it
-    // can be recognized as there is no element changed. However, we should
-    // improve the function to detect the element changes. e.g. a tel field
-    // is changed from type="hidden" to type="tel".
-    return this._formFieldCount != this.form.elements.length;
-  },
-
   /**
    * Time in milliseconds since epoch when a user started filling in the form.
    */
   timeStartedFillingMS: null,
+
+  /**
+  * Check the form is necessary to be updated. This function should be able to
+  * detect any changes including all control elements in the form.
+  * @param {HTMLElement} element The element supposed to be in the form.
+  * @returns {boolean} FormAutofillHandler.form is updated or not.
+  */
+  updateFormIfNeeded(element) {
+    // When the following condition happens, FormAutofillHandler.form should be
+    // updated:
+    // * The count of form controls is changed.
+    // * When the element can not be found in the current form.
+    //
+    // However, we should improve the function to detect the element changes.
+    // e.g. a tel field is changed from type="hidden" to type="tel".
+
+    let _formLike;
+    let getFormLike = () => {
+      if (!_formLike) {
+        _formLike = FormLikeFactory.createFromField(element);
+      }
+      return _formLike;
+    };
+
+    let currentForm = element.form;
+    if (!currentForm) {
+      currentForm = getFormLike();
+    }
+
+    if (currentForm.elements.length != this.form.elements.length) {
+      log.debug("The count of form elements is changed.");
+      this._updateForm(getFormLike());
+      return true;
+    }
+
+    if (this.form.elements.indexOf(element) === -1) {
+      log.debug("The element can not be found in the current form.");
+      this._updateForm(getFormLike());
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
+  * Update the form with a new FormLike, and the related fields should be
+  * updated or clear to ensure the data consistency.
+  * @param {FormLike} form a new FormLike to replace the original one.
+  */
+  _updateForm(form) {
+    this.form = form;
+    this.fieldDetails = [];
+
+    if (this.address) {
+      this.address.fieldDetails = [];
+    }
+    if (this.creditCard) {
+      this.creditCard.fieldDetails = [];
+    }
+  },
 
   /**
    * Set fieldDetails from the form about fields that can be autofilled.
@@ -135,7 +186,6 @@ FormAutofillHandler.prototype = {
    */
   collectFormFields(allowDuplicates = false) {
     this._cacheValue.allFieldNames = null;
-    this._formFieldCount = this.form.elements.length;
     let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form, allowDuplicates);
     this.fieldDetails = fieldDetails ? fieldDetails : [];
     log.debug("Collected details on", this.fieldDetails.length, "fields");
@@ -403,14 +453,15 @@ FormAutofillHandler.prototype = {
    *
    * @param {Object} profile
    *        A profile to be filled in.
-   * @param {Object} focusedInput
+   * @param {HTMLElement} focusedInput
    *        A focused input element needed to determine the address or credit
    *        card field.
    */
   async autofillFormFields(profile, focusedInput) {
-    let focusedDetail = this.fieldDetails.find(
-      detail => detail.elementWeakRef.get() == focusedInput
-    );
+    let focusedDetail = this.getFieldDetailByElement(focusedInput);
+    if (!focusedDetail) {
+      throw new Error("No fieldDetail for the focused input.");
+    }
     let targetSet;
     if (FormAutofillUtils.isCreditCardField(focusedDetail.fieldName)) {
       // When Master Password is enabled by users, the decryption process
@@ -522,7 +573,7 @@ FormAutofillHandler.prototype = {
    *
    * @param {Object} profile
    *        A profile to be previewed with
-   * @param {Object} focusedInput
+   * @param {HTMLElement} focusedInput
    *        A focused input element for determining credit card or address fields.
    */
   previewFormFields(profile, focusedInput) {
@@ -568,7 +619,7 @@ FormAutofillHandler.prototype = {
   /**
    * Clear preview text and background highlight of all fields.
    *
-   * @param {Object} focusedInput
+   * @param {HTMLElement} focusedInput
    *        A focused input element for determining credit card or address fields.
    */
   clearPreviewedFormFields(focusedInput) {
