@@ -345,8 +345,7 @@ static malloc_zone_t *get_default_zone()
 }
 
 
- __attribute__((constructor))
-static void
+void
 register_zone(void)
 {
   malloc_zone_t *default_zone = get_default_zone();
