@@ -396,6 +396,10 @@
   color: inherit;
 }
 
+.tabbrowser-tab[visuallyselected=true]:-moz-lwtheme {
+  color: var(--toolbar-color, inherit);
+}
+
 .tab-line {
   height: 2px;
 }
@@ -550,8 +554,9 @@
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url(chrome://browser/skin/arrow-left.svg);
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
+  fill-opacity: .8;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),

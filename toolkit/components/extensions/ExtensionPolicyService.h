@@ -75,6 +75,7 @@ public:
   void BaseCSP(nsAString& aDefaultCSP) const;
   void DefaultCSP(nsAString& aDefaultCSP) const;
 
+  bool UseRemoteExtensions() const;
   bool IsExtensionProcess() const;
 
 protected:

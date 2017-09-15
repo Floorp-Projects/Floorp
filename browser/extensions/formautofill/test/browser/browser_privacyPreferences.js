@@ -83,3 +83,17 @@ add_task(async function test_autofillDisabledCheckbox() {
     });
   });
 });
+
+add_task(async function test_creditCardNotAvailable() {
+  SpecialPowers.pushPrefEnv({set: [[AUTOFILL_CREDITCARDS_AVAILABLE_PREF, false]]});
+  let finalPrefPaneLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
+  await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
+    await finalPrefPaneLoaded;
+    await ContentTask.spawn(browser, SELECTORS, (selectors) => {
+      is(content.document.querySelector(selectors.group).hidden, false,
+        "Form Autofill group should be visible");
+      ok(!content.document.querySelector(selectors.creditCardAutofillCheckbox),
+        "Autofill credit cards checkbox should not exist");
+    });
+  });
+});

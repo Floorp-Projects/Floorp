@@ -20,9 +20,9 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
         'replace_malloc_bridge.h',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mozjemalloc.cpp',
-    'mozmemory_wrap.c',
+    'mozmemory_wrap.cpp',
 ]
 
 if CONFIG['OS_TARGET'] == 'Darwin' and (CONFIG['MOZ_REPLACE_MALLOC'] or

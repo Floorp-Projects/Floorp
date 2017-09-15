@@ -7,11 +7,8 @@
 from __future__ import absolute_import, print_function
 
 import copy
-import importlib
 import json
-import math
 import mozdebug
-import mozinfo
 import os
 import random
 import re
@@ -22,7 +19,7 @@ import tempfile
 import time
 import traceback
 
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from collections import defaultdict, deque, namedtuple
 from datetime import datetime, timedelta
 from distutils import dir_util
@@ -89,9 +86,13 @@ from mozrunner.utils import get_stack_fixer_function
 # except TAB (U+0009), CR (U+000D), LF (U+000A) and backslash (U+005C).
 # A raw string is deliberately not used.
 _cleanup_encoding_re = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\\\\]')
+
+
 def _cleanup_encoding_repl(m):
     c = m.group(0)
     return '\\\\' if c == '\\' else '\\x{0:02X}'.format(ord(c))
+
+
 def cleanup_encoding(s):
     """S is either a byte or unicode string.  Either way it may
        contain control characters, unpaired surrogates, reserved code
@@ -105,15 +106,19 @@ def cleanup_encoding(s):
     # Replace all C0 and C1 control characters with \xNN escapes.
     return _cleanup_encoding_re.sub(_cleanup_encoding_repl, s)
 
+
 """ Control-C handling """
 gotSIGINT = False
+
+
 def markGotSIGINT(signum, stackFrame):
     global gotSIGINT
     gotSIGINT = True
 
+
 class XPCShellTestThread(Thread):
     def __init__(self, test_object, retry=True, verbose=False, usingTSan=False,
-            **kwargs):
+                 **kwargs):
         Thread.__init__(self)
         self.daemon = True
 
@@ -169,7 +174,7 @@ class XPCShellTestThread(Thread):
 
         # event from main thread to signal work done
         self.event = kwargs.get('event')
-        self.done = False # explicitly set flag so we don't rely on thread.isAlive
+        self.done = False  # explicitly set flag so we don't rely on thread.isAlive
 
     def run(self):
         try:
@@ -254,7 +259,7 @@ class XPCShellTestThread(Thread):
         else:
             popen_func = Popen
         proc = popen_func(cmd, stdout=stdout, stderr=stderr,
-                    env=env, cwd=cwd)
+                          env=env, cwd=cwd)
         return proc
 
     def checkForCrashes(self,
@@ -331,7 +336,7 @@ class XPCShellTestThread(Thread):
           On a remote system, this may be overloaded to use a remote path structure.
         """
         return ['-e', 'const _TEST_FILE = ["%s"];' %
-                  name.replace('\\', '/')]
+                name.replace('\\', '/')]
 
     def setupTempDir(self):
         tempDir = mkdtemp(prefix='xpc-other-', dir=self._rootTempDir)
@@ -387,18 +392,19 @@ class XPCShellTestThread(Thread):
           Build the command line arguments for the head files,
           along with the address of the webserver which some tests require.
 
-          On a remote system, this is overloaded to resolve quoting issues over a secondary command line.
+          On a remote system, this is overloaded to resolve quoting issues over a
+          secondary command line.
         """
         cmdH = ", ".join(['"' + f.replace('\\', '/') + '"'
-                       for f in headfiles])
+                         for f in headfiles])
 
         dbgport = 0 if self.jsDebuggerInfo is None else self.jsDebuggerInfo.port
 
-        return xpcscmd + \
-                ['-e', 'const _SERVER_ADDR = "localhost"',
-                 '-e', 'const _HEAD_FILES = [%s];' % cmdH,
-                 '-e', 'const _JSDEBUGGER_PORT = %d;' % dbgport,
-                ]
+        return xpcscmd + [
+            '-e', 'const _SERVER_ADDR = "localhost"',
+            '-e', 'const _HEAD_FILES = [%s];' % cmdH,
+            '-e', 'const _JSDEBUGGER_PORT = %d;' % dbgport,
+        ]
 
     def getHeadFiles(self, test):
         """Obtain lists of head- files.  Returns a list of head files.
@@ -423,8 +429,9 @@ class XPCShellTestThread(Thread):
 
     def buildXpcsCmd(self):
         """
-          Load the root head.js file as the first file in our test path, before other head, and test files.
-          On a remote system, we overload this to add additional command line arguments, so this gets overloaded.
+          Load the root head.js file as the first file in our test path, before other head,
+          and test files. On a remote system, we overload this to add additional command
+          line arguments, so this gets overloaded.
         """
         # - NOTE: if you rename/add any of the constants set here, update
         #   do_load_child_test_harness() in head.js
@@ -469,8 +476,9 @@ class XPCShellTestThread(Thread):
         if not os.path.exists(directory):
             return
 
-        TRY_LIMIT = 25 # up to TRY_LIMIT attempts (one every second), because
-                       # the Windows filesystem is slow to react to the changes
+        # up to TRY_LIMIT attempts (one every second), because
+        # the Windows filesystem is slow to react to the changes
+        TRY_LIMIT = 25
         try_count = 0
         while try_count < TRY_LIMIT:
             try:
@@ -526,7 +534,7 @@ class XPCShellTestThread(Thread):
             if 'message' in line:
                 line['message'] = self.fix_text_output(line['message'])
             if 'xpcshell_process' in line:
-                line['thread'] =  ' '.join([current_thread().name, line['xpcshell_process']])
+                line['thread'] = ' '.join([current_thread().name, line['xpcshell_process']])
             else:
                 line['thread'] = current_thread().name
             self.log.log_raw(line)
@@ -579,7 +587,7 @@ class XPCShellTestThread(Thread):
         self.report_message(line_object)
 
         if action == 'log' and line_object['message'] == 'CHILD-TEST-STARTED':
-             self.saw_proc_start = True
+            self.saw_proc_start = True
         elif action == 'log' and line_object['message'] == 'CHILD-TEST-COMPLETED':
             self.saw_proc_end = True
 
@@ -668,7 +676,7 @@ class XPCShellTestThread(Thread):
 
         if self.test_object.get('headless', False):
             self.env["MOZ_HEADLESS"] = '1'
-            self.env["DISPLAY"] = '77' # Set a fake display.
+            self.env["DISPLAY"] = '77'  # Set a fake display.
 
         testTimeoutInterval = self.harness_timeout
         # Allow a test to request a multiple of the timeout if it is expected to take long
@@ -689,7 +697,9 @@ class XPCShellTestThread(Thread):
                 self.logCommand(name, self.complete_command, test_dir)
 
             proc = self.launchProcess(self.complete_command,
-                stdout=self.pStdout, stderr=self.pStderr, env=self.env, cwd=test_dir, timeout=testTimeoutInterval)
+                                      stdout=self.pStdout, stderr=self.pStderr,
+                                      env=self.env, cwd=test_dir,
+                                      timeout=testTimeoutInterval)
 
             if hasattr(proc, "pid"):
                 self.proc_ident = proc.pid
@@ -806,6 +816,7 @@ class XPCShellTestThread(Thread):
 
         self.keep_going = True
 
+
 class XPCShellTests(object):
 
     def __init__(self, log=None):
@@ -836,7 +847,8 @@ class XPCShellTests(object):
     def normalizeTest(self, root, test_object):
         path = test_object.get('file_relpath', test_object['relpath'])
         if 'dupe-manifest' in test_object and 'ancestor-manifest' in test_object:
-            test_object['id'] = '%s:%s' % (os.path.basename(test_object['ancestor-manifest']), path)
+            test_object['id'] = '%s:%s' % (os.path.basename
+                                           (test_object['ancestor-manifest']), path)
         else:
             test_object['id'] = path
 
@@ -903,8 +915,8 @@ class XPCShellTests(object):
 
     def setAbsPath(self):
         """
-          Set the absolute path for xpcshell, httpdjspath and xrepath.
-          These 3 variables depend on input from the command line and we need to allow for absolute paths.
+          Set the absolute path for xpcshell, httpdjspath and xrepath. These 3 variables
+          depend on input from the command line and we need to allow for absolute paths.
           This function is overloaded for a remote solution as os.path* won't work remotely.
         """
         self.testharnessdir = os.path.dirname(os.path.abspath(__file__))
@@ -916,7 +928,8 @@ class XPCShellTests(object):
             if mozinfo.isMac:
                 # Check if we're run from an OSX app bundle and override
                 # self.xrePath if we are.
-                appBundlePath = os.path.join(os.path.dirname(os.path.dirname(self.xpcshell)), 'Resources')
+                appBundlePath = os.path.join(os.path.dirname(os.path.dirname(self.xpcshell)),
+                                             'Resources')
                 if os.path.exists(os.path.join(appBundlePath, 'application.ini')):
                     self.xrePath = appBundlePath
         else:
@@ -934,7 +947,8 @@ class XPCShellTests(object):
 
     def buildCoreEnvironment(self):
         """
-          Add environment variables likely to be used across all platforms, including remote systems.
+          Add environment variables likely to be used across all platforms, including
+          remote systems.
         """
         # Make assertions fatal
         self.env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
@@ -960,8 +974,9 @@ class XPCShellTests(object):
 
     def buildEnvironment(self):
         """
-          Create and returns a dictionary of self.env to include all the appropriate env variables and values.
-          On a remote system, we overload this to set different values and are missing things like os.environ and PATH.
+          Create and returns a dictionary of self.env to include all the appropriate env
+          variables and values. On a remote system, we overload this to set different
+          values and are missing things like os.environ and PATH.
         """
         self.env = dict(os.environ)
         self.buildCoreEnvironment()
@@ -972,8 +987,8 @@ class XPCShellTests(object):
             os.environ["LIBPATHSTRICT"] = "T"
         elif sys.platform == 'osx' or sys.platform == "darwin":
             self.env["DYLD_LIBRARY_PATH"] = os.path.join(os.path.dirname(self.xrePath), 'MacOS')
-        else: # unix or linux?
-            if not "LD_LIBRARY_PATH" in self.env or self.env["LD_LIBRARY_PATH"] is None:
+        else:  # unix or linux?
+            if "LD_LIBRARY_PATH" not in self.env or self.env["LD_LIBRARY_PATH"] is None:
                 self.env["LD_LIBRARY_PATH"] = self.xrePath
             else:
                 self.env["LD_LIBRARY_PATH"] = ":".join([self.xrePath, self.env["LD_LIBRARY_PATH"]])
@@ -990,10 +1005,12 @@ class XPCShellTests(object):
                     self.env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 else:
                     oldTSanOptions = self.env.get("TSAN_OPTIONS", "")
-                    self.env["TSAN_OPTIONS"] = "external_symbolizer_path={} {}".format(llvmsym, oldTSanOptions)
+                    self.env["TSAN_OPTIONS"] = ("external_symbolizer_path={} {}".format(llvmsym,
+                                                oldTSanOptions))
                 self.log.info("runxpcshelltests.py | using symbolizer at %s" % llvmsym)
             else:
-                self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | Failed to find symbolizer at %s" % llvmsym)
+                self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | "
+                               "Failed to find symbolizer at %s" % llvmsym)
 
         return self.env
 
@@ -1031,14 +1048,16 @@ class XPCShellTests(object):
         if os.getenv('MOZ_ASSUME_NODE_RUNNING', None):
             self.log.info('Assuming required node servers are already running')
             if not os.getenv('MOZHTTP2_PORT', None):
-                self.log.warning('MOZHTTP2_PORT environment variable not set. Tests requiring http/2 will fail.')
+                self.log.warning('MOZHTTP2_PORT environment variable not set. '
+                                 'Tests requiring http/2 will fail.')
             return
 
         # We try to find the node executable in the path given to us by the user in
         # the MOZ_NODE_PATH environment variable
         nodeBin = os.getenv('MOZ_NODE_PATH', None)
         if not nodeBin:
-            self.log.warning('MOZ_NODE_PATH environment variable not set. Tests requiring http/2 will fail.')
+            self.log.warning('MOZ_NODE_PATH environment variable not set. '
+                             'Tests requiring http/2 will fail.')
             return
 
         if not os.path.exists(nodeBin) or not os.path.isfile(nodeBin):
@@ -1060,16 +1079,16 @@ class XPCShellTests(object):
                 # We pipe stdin to node because the server will exit when its
                 # stdin reaches EOF
                 process = Popen([nodeBin, serverJs], stdin=PIPE, stdout=PIPE,
-                        stderr=PIPE, env=self.env, cwd=os.getcwd())
+                                stderr=PIPE, env=self.env, cwd=os.getcwd())
                 self.nodeProc[name] = process
 
                 # Check to make sure the server starts properly by waiting for it to
                 # tell us it's started
                 msg = process.stdout.readline()
                 if 'server listening' in msg:
-                    searchObj = re.search( r'HTTP2 server listening on port (.*)', msg, 0)
+                    searchObj = re.search(r'HTTP2 server listening on port (.*)', msg, 0)
                     if searchObj:
-                      self.env["MOZHTTP2_PORT"] = searchObj.group(1)
+                        self.env["MOZHTTP2_PORT"] = searchObj.group(1)
             except OSError as e:
                 # This occurs if the subprocess couldn't be started
                 self.log.error('Could not run %s server: %s' % (name, str(e)))
@@ -1088,11 +1107,12 @@ class XPCShellTests(object):
                 self.log.info('Node server %s already dead %s' % (name, proc.poll()))
             else:
                 proc.terminate()
+
             def dumpOutput(fd, label):
                 firstTime = True
                 for msg in fd:
                     if firstTime:
-                        firstTime = False;
+                        firstTime = False
                         self.log.info('Process %s' % label)
                     self.log.info(msg)
             dumpOutput(proc.stdout, "stdout")
@@ -1104,8 +1124,9 @@ class XPCShellTests(object):
         """
         if self.interactive:
             self.xpcsRunArgs = [
-            '-e', 'print("To start the test, type |_execute_test();|.");',
-            '-i']
+                '-e', 'print("To start the test, type |_execute_test();|.");',
+                '-i'
+            ]
         else:
             self.xpcsRunArgs = ['-e', '_execute_test(); quit(0);']
 
@@ -1119,7 +1140,8 @@ class XPCShellTests(object):
         if not isinstance(self.mozInfo, dict):
             mozInfoFile = self.mozInfo
             if not os.path.isfile(mozInfoFile):
-                self.log.error("Error: couldn't find mozinfo.json at '%s'. Perhaps you need to use --build-info-json?" % mozInfoFile)
+                self.log.error("Error: couldn't find mozinfo.json at '%s'. Perhaps you "
+                               "need to use --build-info-json?" % mozInfoFile)
                 return False
             self.mozInfo = json.load(open(mozInfoFile))
 
@@ -1167,10 +1189,10 @@ class XPCShellTests(object):
 
         if options.get('rerun_failures'):
             if os.path.exists(options.get('failure_manifest')):
-                rerun_manifest = os.path.join(os.path.dirname(options['failure_manifest']), "rerun.ini")
+                rerun_manifest = os.path.join(os.path.dirname
+                                              (options['failure_manifest']), "rerun.ini")
                 shutil.copyfile(options['failure_manifest'], rerun_manifest)
                 os.remove(options['failure_manifest'])
-                manifest = rerun_manifest
             else:
                 print >> sys.stderr, "No failures were found to re-run."
                 sys.exit(1)
@@ -1191,7 +1213,8 @@ class XPCShellTests(object):
 
         if options.get('debugger'):
             self.debuggerInfo = mozdebug.get_debugger_info(options.get('debugger'),
-                options.get('debuggerArgs'), options.get('debuggerInteractive'))
+                                                           options.get('debuggerArgs'),
+                                                           options.get('debuggerInteractive'))
 
         self.jsDebuggerInfo = None
         if options.get('jsDebugger'):
@@ -1237,7 +1260,8 @@ class XPCShellTests(object):
 
         self.stack_fixer_function = None
         if self.utility_path and os.path.exists(self.utility_path):
-            self.stack_fixer_function = get_stack_fixer_function(self.utility_path, self.symbolsPath)
+            self.stack_fixer_function = get_stack_fixer_function(self.utility_path,
+                                                                 self.symbolsPath)
 
         # buildEnvironment() needs mozInfo, so we call it after mozInfo is initialized.
         self.buildEnvironment()
@@ -1256,7 +1280,8 @@ class XPCShellTests(object):
 
         pStdout, pStderr = self.getPipes()
 
-        self.buildTestList(options.get('test_tags'), options.get('testPaths'), options.get('verify'))
+        self.buildTestList(options.get('test_tags'), options.get('testPaths'),
+                           options.get('verify'))
         if self.singleFile:
             self.sequential = True
 
@@ -1280,7 +1305,7 @@ class XPCShellTests(object):
             'testharnessdir': self.testharnessdir,
             'profileName': self.profileName,
             'singleFile': self.singleFile,
-            'env': self.env, # making a copy of this in the testthreads
+            'env': self.env,  # making a copy of this in the testthreads
             'symbolsPath': self.symbolsPath,
             'logfiles': self.logfiles,
             'xpcshell': self.xpcshell,
@@ -1315,7 +1340,8 @@ class XPCShellTests(object):
             if "lldb" in self.debuggerInfo.path:
                 # Ask people to start debugging using 'process launch', see bug 952211.
                 self.log.info("It appears that you're using LLDB to debug this test.  " +
-                              "Please use the 'process launch' command instead of the 'run' command to start xpcshell.")
+                              "Please use the 'process launch' command instead of "
+                              "the 'run' command to start xpcshell.")
 
         if self.jsDebuggerInfo:
             # The js debugger magic needs more work to do the right thing
@@ -1346,17 +1372,17 @@ class XPCShellTests(object):
 
                 self.testCount += 1
 
-                test = testClass(test_object,
-                        verbose=self.verbose or test_object.get("verbose") == "true",
-                        usingTSan=usingTSan,
-                        mobileArgs=mobileArgs, **kwargs)
+                test = testClass(
+                    test_object,
+                    verbose=self.verbose or test_object.get("verbose") == "true",
+                    usingTSan=usingTSan, mobileArgs=mobileArgs, **kwargs)
                 if 'run-sequentially' in test_object or self.sequential:
                     sequential_tests.append(test)
                 else:
                     tests_queue.append(test)
 
             status = self.runTestList(tests_queue, sequential_tests, testClass,
-                mobileArgs, **kwargs)
+                                      mobileArgs, **kwargs)
         else:
             #
             # Test verification: Run each test many times, in various configurations,
@@ -1371,10 +1397,10 @@ class XPCShellTests(object):
                 for i in xrange(VERIFY_REPEAT):
                     self.testCount += 1
                     test = testClass(test_object, retry=False,
-                        mobileArgs=mobileArgs, **kwargs)
+                                     mobileArgs=mobileArgs, **kwargs)
                     sequential_tests.append(test)
                 status = self.runTestList(tests_queue, sequential_tests,
-                    testClass, mobileArgs, **kwargs)
+                                          testClass, mobileArgs, **kwargs)
                 return status
 
             steps = [
@@ -1391,13 +1417,14 @@ class XPCShellTests(object):
                 for (descr, step) in steps:
                     if (datetime.now() - startTime) > maxTime:
                         self.log.info("::: Test verification is taking too long: Giving up!")
-                        self.log.info("::: So far, all checks passed, but not all checks were run.")
+                        self.log.info("::: So far, all checks passed, but not "
+                                      "all checks were run.")
                         break
                     self.log.info(':::')
                     self.log.info('::: Running test verification step "%s"...' % descr)
                     self.log.info(':::')
                     status = step()
-                    if status != True:
+                    if status is not True:
                         stepResults[descr] = "FAIL"
                         finalResult = "FAILED!"
                         break
@@ -1414,7 +1441,7 @@ class XPCShellTests(object):
         return status
 
     def runTestList(self, tests_queue, sequential_tests, testClass,
-            mobileArgs, **kwargs):
+                    mobileArgs, **kwargs):
 
         if self.sequential:
             self.log.info("Running tests sequentially.")
@@ -1458,7 +1485,7 @@ class XPCShellTests(object):
             for test in running_tests:
                 if test.done:
                     done_tests.add(test)
-                    test.join(1) # join with timeout so we don't hang on blocked threads
+                    test.join(1)  # join with timeout so we don't hang on blocked threads
                     # if the test had trouble, we will try running it again
                     # at the end of the run
                     if test.retry or test.is_alive():
@@ -1482,8 +1509,9 @@ class XPCShellTests(object):
             # run the other tests sequentially
             for test in sequential_tests:
                 if not keep_going:
-                    self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
-                                   "(Use --keep-going to keep running tests after killing one with SIGINT)")
+                    self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so "
+                                   "stopped run. (Use --keep-going to keep running tests "
+                                   "after killing one with SIGINT)")
                     break
                 # we don't want to retry these tests
                 test.retry = False
@@ -1502,10 +1530,10 @@ class XPCShellTests(object):
             self.log.info("Retrying tests that failed when run in parallel.")
         for test_object in self.try_again_list:
             test = testClass(test_object,
-                    retry=False,
-                    verbose=self.verbose,
-                    mobileArgs=mobileArgs,
-                    **kwargs)
+                             retry=False,
+                             verbose=self.verbose,
+                             mobileArgs=mobileArgs,
+                             **kwargs)
             test.start()
             test.join()
             self.addTestResults(test)
@@ -1546,9 +1574,10 @@ class XPCShellTests(object):
         self.log.info("INFO | Todo: %d" % self.todoCount)
         self.log.info("INFO | Retried: %d" % len(self.try_again_list))
 
-        if gotSIGINT and not keepGoing:
-            self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
-                           "(Use --keep-going to keep running tests after killing one with SIGINT)")
+        if gotSIGINT and not keep_going:
+            self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. "
+                           "(Use --keep-going to keep running tests after "
+                           "killing one with SIGINT)")
             return False
 
         self.log.suite_end()
@@ -1572,6 +1601,7 @@ def main():
 
     if not xpcsh.runTests(options):
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

@@ -17,13 +17,13 @@ namespace Telemetry {
 // Histogram accumulation types.
 enum HistogramID : uint32_t;
 
-struct Accumulation
+struct HistogramAccumulation
 {
   mozilla::Telemetry::HistogramID mId;
   uint32_t mSample;
 };
 
-struct KeyedAccumulation
+struct KeyedHistogramAccumulation
 {
   mozilla::Telemetry::HistogramID mId;
   uint32_t mSample;
@@ -89,9 +89,9 @@ namespace IPC {
 
 template<>
 struct
-ParamTraits<mozilla::Telemetry::Accumulation>
+ParamTraits<mozilla::Telemetry::HistogramAccumulation>
 {
-  typedef mozilla::Telemetry::Accumulation paramType;
+  typedef mozilla::Telemetry::HistogramAccumulation paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -112,9 +112,9 @@ ParamTraits<mozilla::Telemetry::Accumulation>
 
 template<>
 struct
-ParamTraits<mozilla::Telemetry::KeyedAccumulation>
+ParamTraits<mozilla::Telemetry::KeyedHistogramAccumulation>
 {
-  typedef mozilla::Telemetry::KeyedAccumulation paramType;
+  typedef mozilla::Telemetry::KeyedHistogramAccumulation paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

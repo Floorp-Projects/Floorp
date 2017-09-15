@@ -236,7 +236,7 @@ var onboardingTourset = {
       div.innerHTML = `
         <section class="onboarding-tour-description">
           <h1 data-l10n-id="onboarding.tour-library.title"></h1>
-          <p data-l10n-id="onboarding.tour-library.description"></p>
+          <p data-l10n-id="onboarding.tour-library.description2"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_library.svg" role="presentation"/>

@@ -49,7 +49,7 @@ def test_no_filter(lint, lintdir, files):
 
     lint.lintargs['use_filters'] = False
     result = lint.roll(files)
-    assert len(result) == 2
+    assert len(result) == 3
 
 
 if __name__ == '__main__':
