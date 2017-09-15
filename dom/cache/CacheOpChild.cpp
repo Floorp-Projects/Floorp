@@ -158,8 +158,8 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
     }
     case CacheOpResult::TStorageOpenResult:
     {
-      auto result = aResult.get_StorageOpenResult();
-      auto actor = static_cast<CacheChild*>(result.actorChild());
+      auto actor = static_cast<CacheChild*>(
+        aResult.get_StorageOpenResult().actorChild());
 
       // If we have a success status then we should have an actor.  Gracefully
       // reject instead of crashing, though, if we get a nullptr here.
@@ -176,7 +176,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
                                           CacheWorkerHolder::AllowIdleShutdownStart);
 
       actor->SetWorkerHolder(workerHolder);
-      RefPtr<Cache> cache = new Cache(mGlobal, actor, result.ns());
+      RefPtr<Cache> cache = new Cache(mGlobal, actor);
       mPromise->MaybeResolve(cache);
       break;
     }
