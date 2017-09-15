@@ -1723,36 +1723,39 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         ret=Type('IPC::Message', ptr=1)))
 
     if compress == 'compress':
-        compression = ExprVar('IPC::Message::COMPRESSION_ENABLED')
+        compression = 'COMPRESSION_ENABLED'
     elif compress:
         assert compress == 'compressall'
-        compression = ExprVar('IPC::Message::COMPRESSION_ALL')
+        compression = 'COMPRESSION_ALL'
     else:
-        compression = ExprVar('IPC::Message::COMPRESSION_NONE')
+        compression = 'COMPRESSION_NONE'
 
     if nested == ipdl.ast.NOT_NESTED:
-        nestedEnum = 'IPC::Message::NOT_NESTED'
+        nestedEnum = 'NOT_NESTED'
     elif nested == ipdl.ast.INSIDE_SYNC_NESTED:
-        nestedEnum = 'IPC::Message::NESTED_INSIDE_SYNC'
+        nestedEnum = 'NESTED_INSIDE_SYNC'
     else:
         assert nested == ipdl.ast.INSIDE_CPOW_NESTED
-        nestedEnum = 'IPC::Message::NESTED_INSIDE_CPOW'
+        nestedEnum = 'NESTED_INSIDE_CPOW'
 
     if prio == ipdl.ast.NORMAL_PRIORITY:
-        prioEnum = 'IPC::Message::NORMAL_PRIORITY'
+        prioEnum = 'NORMAL_PRIORITY'
     elif prio == ipdl.ast.INPUT_PRIORITY:
-        prioEnum = 'IPC::Message::INPUT_PRIORITY'
+        prioEnum = 'INPUT_PRIORITY'
     else:
-        prioEnum = 'IPC::Message::HIGH_PRIORITY'
+        prioEnum = 'HIGH_PRIORITY'
+
+    def messageEnum(valname):
+        return ExprVar('IPC::Message::' + valname)
 
     func.addstmt(
         StmtReturn(ExprNew(Type('IPC::Message'),
                            args=[ routingId,
                                   ExprVar(msgid),
                                   ExprLiteral.Int(int(segmentSize)),
-                                  ExprVar(nestedEnum),
-                                  ExprVar(prioEnum),
-                                  compression,
+                                  messageEnum(nestedEnum),
+                                  messageEnum(prioEnum),
+                                  messageEnum(compression),
                                   ExprLiteral.String(prettyName),
                                   # Pass `true` to recordWriteLatency to collect telemetry
                                   ExprLiteral.TRUE ])))
