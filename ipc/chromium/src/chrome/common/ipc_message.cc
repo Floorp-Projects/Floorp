@@ -113,6 +113,15 @@ Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
 }
 
 /*static*/ Message*
+Message::IPDLMessage(int32_t routing_id,
+                     msgid_t type,
+                     HeaderFlags flags,
+                     const char* const name)
+{
+  return new Message(routing_id, type, 0, flags, name, true);
+}
+
+/*static*/ Message*
 Message::ForSyncDispatchError(NestedLevel level)
 {
   auto* m = new Message(0, 0, 0, HeaderFlags(level));
