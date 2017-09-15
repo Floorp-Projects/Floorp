@@ -1342,7 +1342,9 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     MOZ_DIAGNOSTIC_ASSERT(aRv.Failed() || mCacheId != INVALID_CACHE_ID);
-    aListener->OnOpComplete(Move(aRv), StorageOpenResult(), mCacheId);
+    aListener->OnOpComplete(Move(aRv),
+                            StorageOpenResult(nullptr, nullptr, mNamespace),
+                            mCacheId);
   }
 
 private:
