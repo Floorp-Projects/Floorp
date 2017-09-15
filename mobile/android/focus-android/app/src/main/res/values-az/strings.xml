@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
   <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
   <string name="preference_performance_block_images">Şəkilləri əngəllə</string>
+  <string name="preference_default_browser2">%1$s səyyahını əsas et</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">İstifadə məlumatlarını göndər</string>
   <string name="preference_mozilla_telemetry_summary">Ətraflı öyrən</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla ancaq %1$s səyyahını hamı üçün yaxşılaşdırmağa lazım olan məlumatları yığır.</string>
   <string name="preference_privacy_notice">Məxfilik Bildirişi</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Məxfi səyahət sessiyası</string>
   <string name="notification_browsing_session_channel_description">Bildirişlər tək toxunuşla %1$s sessiyanınızı pozmağa imkan verəcək. Tətbiqi açmağa və ya səyyahınızda nəyin işlədiyinə baxmağa ehtiyyacınız yoxdur.</string>
   <string name="tabs_tray_action_erase">Səyahət keçmişini poz</string>
+  <string name="download_firefox">Firefox Endir</string>
+  <string name="your_rights_content1">%1$s Mozilla və digər töhfəverənlər tərəfindən yaradılmış azad və açıq qaynaqlı proqramdır.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" və digər açıq qaynaq lisenziyalarının şərtləri ilə təqdim edilir."]]></string>
+  <string name="your_rights_content3"><![CDATA["Sizə Mozilla Fondunun və digər tərəflərin ticari markası olan Mozilla, Firefox və ya %1$s adları və loqoları üçün heç bir hüquq və ya lisenziya verilmir. Ətraflı məlumatı "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">buradan</a>" tapa bilərsiz."]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s üçün əlavə qaynaq kodu digər bir neçə azad və açıq qaynaq "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisenziyalar&#305;</a>" ilə mövcuddur."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s həmçinin Disconnect Inc. tərəfindən təchiz edilən qara siyahını işlədir, hansı ki, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" ilə müstəqil tərtib edilir və "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">burada</a>" mövcuddur."]]></string>
 </resources>

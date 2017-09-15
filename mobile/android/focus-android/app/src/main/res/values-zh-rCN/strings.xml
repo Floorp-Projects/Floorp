@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
   <string name="preference_performance_block_webfonts_summary">可能造成图标或图像缺失</string>
   <string name="preference_performance_block_images">拦截图像</string>
+  <string name="preference_default_browser2">使 %1$s 成为默认浏览器</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">发送使用统计</string>
   <string name="preference_mozilla_telemetry_summary">详细了解</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla 仅收集必要的信息用以改进 %1$s 以适合大众。</string>
   <string name="preference_privacy_notice">隐私声明</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">隐私浏览会话</string>
   <string name="notification_browsing_session_channel_description">通知您可以一键清除您的 %1$s 浏览记录。清除无需打开应用或查看浏览器中的内容。</string>
   <string name="tabs_tray_action_erase">清除浏览记录</string>
+  <string name="download_firefox">下载 Firefox</string>
+  <string name="your_rights_content1">%1$s 是由 Mozilla 及贡献者制作的一款自由的开源软件。</string>
+  <string name="your_rights_content2"><![CDATA["%1$s 依照 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla &#20844;&#20849;&#35768;&#21487;&#35777;</a>及其他一些开源许可证向您授权。]]></string>
+  <string name="your_rights_content3"><![CDATA[您没有取得 Mozilla 基金会或任何一方的商标的任何权利或许可，包括 Mozilla、Firefox 和 %1$s 名称或徽标的许可。有关信息请查阅<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#27492;&#22788;</a>。]]></string>
+  <string name="your_rights_content4"><![CDATA[%1$s 其他源代码以各类自由和开源<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#35768;&#21487;&#35777;</a>开放。]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s 还使用 Disconnect 公司提供的阻止列表，它是以 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU &#36890;&#29992;&#20844;&#20849;&#35768;&#21487;&#35777; v3</a>" 提供的一个独立的作品，可在"<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#36825;&#37324;</a>找到。]]></string>
 </resources>

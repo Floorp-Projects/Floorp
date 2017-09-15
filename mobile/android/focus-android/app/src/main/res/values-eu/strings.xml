@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blokeatu webeko letra-tipoak</string>
   <string name="preference_performance_block_webfonts_summary">Ikonoak edo irudiak ez bistaratzea eragin lezake</string>
   <string name="preference_performance_block_images">Blokeatu irudiak</string>
+  <string name="preference_default_browser2">Egin %1$s nabigatzaile lehenetsia</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Bidali erabilera-datuak</string>
   <string name="preference_mozilla_telemetry_summary">Argibide gehiago</string>
   <string name="preference_mozilla_telemetry_summary2">%1$s denontzat eskaini eta hobetzeko beharrezkoa dena soilik biltzen ahalegintzen da Mozilla.</string>
   <string name="preference_privacy_notice">Pribatutasun-oharra</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Nabigatze pribatuko saioa</string>
   <string name="notification_browsing_session_channel_description">Jakinarazpenetatik zure %1$s saioa ezaba dezakezu sakatzearekin soilik. Horretarako ez daukazu aplikazioa ireki edo nabigatzailean dagoena ikusi beharrik.</string>
   <string name="tabs_tray_action_erase">Ezabatu nabigatze-historia</string>
+  <string name="download_firefox">Deskargatu Firefox</string>
+  <string name="your_rights_content1">Mozillak eta beste hainbat laguntzailek egindako software libre eta kode irekikoa da %1$s.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s zure eskura dago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" eta kode irekiko beste lizentzien baldintzapean."]]></string>
+  <string name="your_rights_content3"><![CDATA["Ez zaizu inolako eskubiderik edo lizentziarik aitortzen Mozilla Fundazioaren edo bestelakoen marka erregistratuetan, Mozilla, Firefox eta %1$s izen edo logoetan barne. Argibide gehiago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hemen</a>" aurki daitezke."]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s aplikazioaren iturburu-kode gehigarria erabilgarri dago kode irekikoak eta libreak diren bestelako "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lizentzietan</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s aplikazioak Diskonnect, Inc.-ek emandako blokeo-zerrendak ere erabiltzen ditu, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" lizentziapeko aparteko lan independente gisa eta eskuragarri dago "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hemen</a>.]]></string>
 </resources>

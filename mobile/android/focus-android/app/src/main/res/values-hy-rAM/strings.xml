@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Արգելափակել վեբ տառատեսակները</string>
   <string name="preference_performance_block_webfonts_summary">Կարող է հանգեցնել պատկերակների և պատկերների բացակայության</string>
   <string name="preference_performance_block_images">Արգելափակել պատկերները</string>
+  <string name="preference_default_browser2">Դարձնել %1$s-ը հիմնական դիտարկիչ</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Ուղարկել օգտագործման տվյալները</string>
   <string name="preference_mozilla_telemetry_summary">Իմանալ ավելին</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla-ն ձգտում է հավաքել միայն այն, ինչ պետք է՝ %1$s-ը լավարկելու համար:</string>
   <string name="preference_privacy_notice">Գաղտնիության ծանուցում</string>
@@ -120,4 +122,7 @@
   <string name="notification_browsing_session_channel_name">Գանղտնի դիտարկման աշխատաշրջան</string>
   <string name="notification_browsing_session_channel_description">Ծանուցումները հնարավորություն են տալիս ջնջել ձեր %1$s աշխատարջանը մեկ հպումով: Կարիք չկա բացել հավելվածը կամ տեսնել, թե ինչ է աշխատեցվում դիտարկիչում:</string>
   <string name="tabs_tray_action_erase">Ջնջել դիտարկման պատմությունը</string>
+  <string name="download_firefox">Ներբեռնել Firefox-ը</string>
+  <string name="your_rights_content1">%1$s-ը անվճար և բաց կոդով ծրագիր է Mozilla-ի և այլ մասնակիցների կողմից:</string>
+  <string name="your_rights_content2"><![CDATA["%1$s-ը հասանելի է "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>-ի պայմաններով և բաց կոդով այլ ծրագրերի արտոնագրերի համաձայն:]]></string>
 </resources>

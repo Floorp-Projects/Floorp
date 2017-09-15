@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
   <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neγ tugniwin yettwattun</string>
   <string name="preference_performance_block_images">Sewḥel tugniwin</string>
+  <string name="preference_default_browser2">Err %1$s d iminig amezwer</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Azen isefka n useqdec</string>
   <string name="preference_mozilla_telemetry_summary">Issin ugar</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla tettennaɣ akken ad telqeḍ kan ayen tesra i usnulfu d usnernu n %1$s i yal uiwen.</string>
   <string name="preference_privacy_notice">Tasertit n tbaḍnit</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Tiɣimit n tunigin tusligt</string>
   <string name="notification_browsing_session_channel_description">Ilɣa ad k-ǧǧen ad tsefḍeḍ tiɣimit n %1$s-ik s unali. Ur tesrid ara ad teldiḍ asnas neɣ ad twaliḍ ayen yettwaselkamen deg iminig-ik.</string>
   <string name="tabs_tray_action_erase">Sfeḍ amazray n tunigin</string>
+  <string name="download_firefox">Sider Firefox</string>
+  <string name="your_rights_content1">"%1$s baṭṭel s waɣbalu yeldin ixeddem-it Mozilla d imettekiyen nniḍen. "</string>
+  <string name="your_rights_content2"><![CDATA[%1$s yella ddaw tiwtilin n<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Turagt tazayezt n Mozilla</a>akked turagt yeldin nniḍen.]]></string>
+  <string name="your_rights_content3"><![CDATA["UR k-netmudu ara ula d azref neγ  turagt ɣef ticṛaḍ yersen n Mozilla neɣ n wis kraḍ, am Mozilla neγ Firefox neγ ismawen %1$s akked iluguten. ugar n talγut ad t-tafeḍ di "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">dagi</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Tangalt taγbalut nniḍen i %1$s tella deg waṭas n tiγbula tilleliyen nniḍen  "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">akked turagt nni&#7693;en</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s iseqdac daγen tiggayen d tebdarin sγur Disconnect, Inc am leqdic illeli daw turagt tazirazt "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU v3</a>", aya "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">yella dagi</a>.]]></string>
 </resources>

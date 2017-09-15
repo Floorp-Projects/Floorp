@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
   <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>
   <string name="preference_performance_block_images">مسدود کردن تصاویر</string>
+  <string name="preference_default_browser2">تبدیل %1$s به مرورگر پیش‌فرض</string>
   <string name="preference_category_mozilla">موزیلا</string>
+  <string name="preference_mozilla_telemetry2">ارسال اطلاعات استفاده</string>
   <string name="preference_mozilla_telemetry_summary">اطلاعات بیشتر</string>
   <string name="preference_mozilla_telemetry_summary2">موزیلا تلاش می‌کند تنها اطلاعاتی که برای بهینه‌سازی %1$s برای همه به آنها نیاز دارد را جمع‌آوری کند.</string>
   <string name="preference_privacy_notice">نکات حریم‌خصوصی</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">نشستِ مرور ناشناس</string>
   <string name="notification_browsing_session_channel_description">اعلان‌ها امکان پاک کردن اطلاعات نشستِ %1$s را با یک ضربه به شما می‌دهند. لازم نیست که برنامه را باز کنید یا ببینید که چه چیزی در مرورگر در حال اجراست.</string>
   <string name="tabs_tray_action_erase">پاک کردن تاریخچهٔ مرور</string>
+  <string name="download_firefox">دریافت فایرفاکس</string>
+  <string name="your_rights_content1">%1$s نرم‌افزاری آزاد و متن‌باز است که توسط موزیلا و سایر مشارکت کنندگان ساخته شده است.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s اکنون تحت شرایط "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" &#1711;&#1608;&#1575;&#1607;&#1740;&#1606;&#1575;&#1605;&#1607; &#1593;&#1605;&#1608;&#1605;&#1740; &#1605;&#1608;&#1586;&#1740;&#1604;&#1575;"</a>" و گواهینامه‌‌ی دیگر متن باز در دسترس است."]]></string>
+  <string name="your_rights_content3"><![CDATA["به شما هیچ گونه گواهی یا اجازه مبتنی بر علائم تجاری از بنیاد موزیلا یا هرگونه شخص ثالثی اعطا نشده است. شامل موزیلا، یا فایرفاکس یا %1$s نام یا نشانی. اطلاعات بیشتر در "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1575;&#1740;&#1606;&#1580;&#1575;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["متن کد بیشتری برای %1$s تحت تعداد از "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" &#1711;&#1608;&#1575;&#1607;&#1740;&#1606;&#1575;&#1605;&#1607;&#8204;&#1607;&#1575;&#1740; "</a>" آزاد و متن باز در دسترس است."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s همچنین از فهرست های مسدودی استفاده میکند که توسط Disconnect فراهم شده است. یک کار جدا و مستقل تحت "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU &#1711;&#1608;&#1575;&#1607;&#1740;&#1606;&#1575;&#1605;&#1607; &#1593;&#1605;&#1608;&#1605;&#1740; GNU &#1606;&#1587;&#1582;&#1607;3</a>"،‌ و "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1575;&#1740;&#1606;&#1580;&#1575;</a>" در دسترس است."]]></string>
 </resources>

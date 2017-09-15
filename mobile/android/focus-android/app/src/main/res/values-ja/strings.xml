@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
   <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>
   <string name="preference_performance_block_images">画像をブロック</string>
+  <string name="preference_default_browser2">%1$s を既定のブラウザーに設定</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">使用状況データを送信</string>
   <string name="preference_mozilla_telemetry_summary">詳細情報</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla は %1$s を皆さんに提供し改善するために必要な情報だけを収集するよう努めています。</string>
   <string name="preference_privacy_notice">プライバシー通知</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">プライベートブラウジングセッション</string>
   <string name="notification_browsing_session_channel_description">%1$s のセッションは通知をワンタップするだけで消去できます。アプリを開いたり、ブラウザー内でどのページが表示されているか確認したりする必要はありません。</string>
   <string name="tabs_tray_action_erase">閲覧履歴を消去</string>
+  <string name="download_firefox">Firefox をダウンロード</string>
+  <string name="your_rights_content1">%1$s は Mozilla や他の貢献者によって開発されているフリーでオープンソースのソフトウェアです。</string>
+  <string name="your_rights_content2"><![CDATA["%1$s は "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" やその他オープンソースライセンスの条件に基づいて使用可能となっています。"]]></string>
+  <string name="your_rights_content3"><![CDATA["Mozilla、Firefox、%1$s の名称やロゴを含む、Mozilla Foundation や第三者の商標に関するいかなる権利やライセンスもあなたには与えられていません。詳しい情報は "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#12371;&#12385;&#12425;</a>" をご覧ください。"]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s の追加ソースコードは様々な他のフリーでオープンソースの "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#12521;&#12452;&#12475;&#12531;&#12473;</a>" に基いて公開されています。"]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s は Disconnect, Inc. によって提供されているブロックリストも "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" の下で単独のリソースとして使用しており、それらは "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#12371;&#12385;&#12425;</a>" から入手可能です。"]]></string>
 </resources>

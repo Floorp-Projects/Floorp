@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
   <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
   <string name="preference_performance_block_images">Bloki bildojn</string>
+  <string name="preference_default_browser2">Igi %1$s via norma retumilo</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Sendi datumojn pri uzo</string>
   <string name="preference_mozilla_telemetry_summary">Pli da informo</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla penas kolekti nur la datumojn nepre bezonatajn por provizi kaj plibonigi %1$s por ĉiuj.</string>
   <string name="preference_privacy_notice">Rimarko pri privateco</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Privata retuma seanco</string>
   <string name="notification_browsing_session_channel_description">Sciigoj permesas al vi viŝi vian seancon de %1$s per tuŝeto. Vi ne bezonas malfermi la programon aŭ vidi kio estas en via retumilo.</string>
   <string name="tabs_tray_action_erase">Viŝi retuman historion</string>
+  <string name="download_firefox">Elŝuti Firefox</string>
+  <string name="your_rights_content1">"%1$s estas libera kaj malfermitkoda programaro, farita de Mozilla kaj aliaj kontribuintoj. "</string>
+  <string name="your_rights_content2"><![CDATA["%1$s estas liverita al vi sub la kondiĉoj de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Publika permesilo de Mozilla</a>" aŭ aliaj malfermitkodaj permesiloj."]]></string>
+  <string name="your_rights_content3"><![CDATA["Neniu rajto por la registritaj markoj de Mozilla Foundation aŭ de iu alia estas ceditaj al vi. Tio inkluzivas, sed ne nur tion, la nomon aŭ emblemon de Mozilla, Firefox aŭ %1$s.  Pli da informo pri registritaj markoj troveblas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#265;i tie</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Aldona fonta kodo por %1$s estas havebla sub pluraj aliaj libera kaj malfermitkodaj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">permesiloj</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s uzas ankaŭ listojn de blokado provizitaj de Disconnect, Inc. kiel apartajn kaj sendependajn verkojn sub la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#284;enerala publika permesilo de GNU v3</a>" kiu haveblas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#265;i tie</a>.]]></string>
 </resources>

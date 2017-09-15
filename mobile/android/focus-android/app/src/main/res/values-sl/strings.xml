@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Zavračaj spletne pisave</string>
   <string name="preference_performance_block_webfonts_summary">Lahko povzroči izginotje ikon ali slik</string>
   <string name="preference_performance_block_images">Zavračaj slike</string>
+  <string name="preference_default_browser2">Nastavi %1$s kot privzeti brskalnik</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Pošiljaj podatke o uporabi</string>
   <string name="preference_mozilla_telemetry_summary">Več o tem</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla se trudi, da zbira samo podatke, ki jih potrebuje za razvoj in izboljševanje %1$sa.</string>
   <string name="preference_privacy_notice">Obvestilo o zasebnosti</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Seja zasebnega brskanja</string>
   <string name="notification_browsing_session_channel_description">Obvestila vam omogočajo izbrisati %1$sovo sejo z enim dotikom. Aplikacije vam ni potrebno niti odpreti niti videti, kaj je v brskalniku odprto.</string>
   <string name="tabs_tray_action_erase">Počisti zgodovino brskanja</string>
+  <string name="download_firefox">Prenesite Firefox</string>
+  <string name="your_rights_content1">%1$s je brezplačna in odprtokodna programska oprema, ki jo razvija Mozilla in ostali sodelavci.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s vam je na voljo pod pogoji "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" in drugih odprtokodnih licenc."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nikakršne pravice niti licence nimate za uporabo blagovnih znamk Fundacije Mozilla ali kateregakoli od izdelkov, vključno z imeni in logotipi Mozille, Firefoxa ali %1$sa. Dodatne informacije lahko najdete "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tukaj</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Dodatna izvorna koda za %1$s je na voljo pod raznimi drugimi prostimi in odprtokodnimi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencami</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s uporablja tudi sezname za zavračanje podjetja Disconnect Inc. kot ločena in neodvisna dela, ki so na voljo pod licenco "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tukaj</a>.]]></string>
 </resources>

@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Блокировать веб-шрифты</string>
   <string name="preference_performance_block_webfonts_summary">Может привести к отсутствию значков или изображений</string>
   <string name="preference_performance_block_images">Блокировать изображения</string>
+  <string name="preference_default_browser2">Сделать %1$s браузером по умолчанию</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Отправлять данные об использовании</string>
   <string name="preference_mozilla_telemetry_summary">Подробнее</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla обязуется собирать только ту информацию, которая необходима для работы %1$s и его улучшения в будущем.</string>
   <string name="preference_privacy_notice">Политика приватности</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Приватная сессия</string>
   <string name="notification_browsing_session_channel_description">Уведомления позволяют стереть вашу сессию в %1$s одним касанием. Вам не нужно открывать приложение или видеть, что запущено в вашем браузере.</string>
   <string name="tabs_tray_action_erase">Удалить историю веб-сёрфинга</string>
+  <string name="download_firefox">Загрузить Firefox</string>
+  <string name="your_rights_content1">%1$s является бесплатной программой с открытым исходным кодом, созданной Mozilla и другими участниками.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s предоставляется вам на условиях "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" и других лицензий для открытого исходного кода."]]></string>
+  <string name="your_rights_content3"><![CDATA["Вы не получаете никаких прав или лицензий на товарные знаки Mozilla Foundation или любой из сторон, включая имена или логотипы Mozilla, Firefox или %1$s. Дополнительную информацию можно найти "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1079;&#1076;&#1077;&#1089;&#1100;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Дополнительный исходный код для %1$s доступен на условиях различных других "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;&#1081;</a>" для бесплатного и открытого исходного кода."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s также использует списки блокировки, предоставленные Disconnect, Inc. как отдельные и независимые произведения на условиях "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" и доступные "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1079;&#1076;&#1077;&#1089;&#1100;</a>.]]></string>
 </resources>

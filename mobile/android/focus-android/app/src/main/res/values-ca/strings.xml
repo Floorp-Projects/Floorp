@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
   <string name="preference_performance_block_webfonts_summary">Pot fer que no es vegin algunes icones o imatges</string>
   <string name="preference_performance_block_images">Bloca les imatges</string>
+  <string name="preference_default_browser2">Fes que el %1$s sigui el navegador per defecte</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Envia dades d\'ús</string>
   <string name="preference_mozilla_telemetry_summary">Més informació</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla s\'esforça per recollir només les dades necessàries per oferir i millorar el %1$s per a tothom.</string>
   <string name="preference_privacy_notice">Avís de privadesa</string>
@@ -120,4 +122,5 @@
   <string name="notification_browsing_session_channel_name">Sessió de navegació privada</string>
   <string name="notification_browsing_session_channel_description">Les notificacions permeten esborrar la sessió del %1$s amb un sol toc. No cal ni obrir l\'aplicació ni mostrar el contingut del navegador.</string>
   <string name="tabs_tray_action_erase">Esborra l\'historial de navegació</string>
+  <string name="download_firefox">Baixa el Firefox</string>
 </resources>

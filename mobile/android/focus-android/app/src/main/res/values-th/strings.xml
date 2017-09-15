@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
   <string name="preference_performance_block_webfonts_summary">อาจส่งผลให้ไอคอนหรือภาพขาดหายไป</string>
   <string name="preference_performance_block_images">ปิดกั้นภาพ</string>
+  <string name="preference_default_browser2">ทำให้ %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">ส่งข้อมูลการใช้งาน</string>
   <string name="preference_mozilla_telemetry_summary">เรียนรู้เพิ่มเติม</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla มุ่งมั่นที่จะเก็บรวบรวมเฉพาะสิ่งที่เราจำเป็นต้องจัดหาและปรับปรุง %1$s สำหรับทุกคน</string>
   <string name="preference_privacy_notice">ประกาศความเป็นส่วนตัว</string>
@@ -120,4 +122,6 @@
   <string name="notification_browsing_session_channel_name">วาระการท่องเว็บแบบส่วนตัว</string>
   <string name="notification_browsing_session_channel_description">การแจ้งเตือนช่วยให้คุณล้างวาระ %1$s ของคุณด้วยการแตะ คุณไม่จำเป็นต้องเปิดแอปหรือดูสิ่งที่กำลังทำงานในเบราว์เซอร์ของคุณ</string>
   <string name="tabs_tray_action_erase">ล้างประวัติการท่องเว็บ</string>
+  <string name="download_firefox">ดาวน์โหลด Firefox</string>
+  <string name="your_rights_content1">%1$s เป็นซอฟต์แวร์ฟรีและเปิดต้นฉบับที่สร้างขึ้นโดย Mozilla และผู้มีส่วนร่วมอื่น ๆ</string>
 </resources>

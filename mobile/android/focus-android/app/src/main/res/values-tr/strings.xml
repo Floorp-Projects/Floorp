@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
   <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>
   <string name="preference_performance_block_images">Resimleri engelle</string>
+  <string name="preference_default_browser2">%1$s’u varsayılan tarayıcım yap</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Kullanım verilerini gönder</string>
   <string name="preference_mozilla_telemetry_summary">Daha fazla bilgi al</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla, yalnızca %1$s’u daha da geliştirmek için ihtiyaç duyduğumuz verileri toplar.</string>
   <string name="preference_privacy_notice">Gizlilik bildirimi</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Gizli gezinti oturumu</string>
   <string name="notification_browsing_session_channel_description">Bildirimler sayesinde %1$s oturumunuzu tek dokunuşla silebilirsiniz. Uygulamayı açmanıza ve tarayıcınızdaki açık sayfaları görmenize gerek kalmaz.</string>
   <string name="tabs_tray_action_erase">Gezinti geçmişini sil</string>
+  <string name="download_firefox">Firefox’u indir</string>
+  <string name="your_rights_content1">Mozilla ve gönüllüler tarafından geliştirilen %1$s, özgür ve açık kaynaklı bir yazılımdır.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Kamu Lisans&#305;</a>" ve diğer açık kaynak lisanslarının koşullarıyla sunulmaktadır."]]></string>
+  <string name="your_rights_content3"><![CDATA["Mozilla Foundation’ın tescilli markaları olan Mozilla, Firefox, %1$s adları ve logoları da dahil olmak üzere, tescilli markalarımızın hakları ve lisansları sizinle paylaşılmamaktadır. Daha fazla bilgi almak isterseniz "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">buraya</a>" bakabilirsiniz."]]></string>
+  <string name="your_rights_content4"><![CDATA["Bazı ek %1$s kaynak kodları çeşitli özgür lisanslar ve açık kaynak "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisanslar&#305;</a>" ile sunulmaktadır."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s ayrıca Disconnect, Inc. tarafından sağlanan engelleme listelerini kullanır. %1$s’tan ayrı ve bağımsız olan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">bu &#231;al&#305;&#351;malar</a>" "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU Kamu Lisans&#305; v3</a>" ile sunulmaktadır."]]></string>
 </resources>

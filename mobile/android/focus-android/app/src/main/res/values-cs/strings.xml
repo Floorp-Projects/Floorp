@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
   <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>
   <string name="preference_performance_block_images">Blokovat obrázky</string>
+  <string name="preference_default_browser2">Nastavit %1$s jako výchozí prohlížeč</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Odesílat údaje o používání</string>
   <string name="preference_mozilla_telemetry_summary">Zjistit více</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla sbírá jenom ty informace, které potřebuje pro další vylepšování aplikace %1$s.</string>
   <string name="preference_privacy_notice">Zásady ochrany soukromí</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Relace anonymního prohlížení</string>
   <string name="notification_browsing_session_channel_description">Oznámení aplikace %1$s vám umožní smazat historii jedním klepnutím. Nemusíte ani otevírat aplikaci nebo se dívat, co máte zrovna otevřeno.</string>
   <string name="tabs_tray_action_erase">Vymazat historii prohlížení</string>
+  <string name="download_firefox">Stáhnout Firefox</string>
+  <string name="your_rights_content1">%1$s je otevřený software zdarma od Mozilly a jiných přispěvatelů.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s vám je zpřístupněn pod podmínkami "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" a jiných open source licencí."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nejsou vám však podstoupena žádná práva ani licence k ochranným známkám Mozilla Foundation či dalších stran, a to zejména k logům a jménům Mozilla, Firefox nebo %1$s. Podrobnější informace o ochranných známkách jsou dostupné "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">zde</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Další zdrojové kódy pro %1$s jsou dostupné pod dalšími různými "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencemi</a>" svobodného softwaru."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s také používá seznamy společnosti Disconnect, Inc. poskytnuté jako samostatná a nezávislá díla pod licencí "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" a dostupné "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">zde</a>.]]></string>
 </resources>

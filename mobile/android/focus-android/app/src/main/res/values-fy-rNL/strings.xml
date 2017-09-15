@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
   <string name="preference_performance_block_webfonts_summary">Kin ta ûntbrekkende piktogrammen of ôfbyldingen liede</string>
   <string name="preference_performance_block_images">Ofbyldingen blokkearje</string>
+  <string name="preference_default_browser2">%1$s standertbrowser meitsje</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Brûksgegevens ferstjoere</string>
   <string name="preference_mozilla_telemetry_summary">Mear ynfo</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla stribbet dernei allinnich te sammeljen wat nedich is om %1$s foar elkenien oan te bieden en te ferbetterjen.</string>
   <string name="preference_privacy_notice">Privacyferklearring</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Priveenavigaasjesesje</string>
   <string name="notification_browsing_session_channel_description">Mei notifikaasjes kinne jo fia ien tik jo %1$s-sesje wiskje. Jo hoege de app net te iepenjen of te sjen wat der yn jo browser aktyf is.</string>
   <string name="tabs_tray_action_erase">Navigaasjeskiednis wiskje</string>
+  <string name="download_firefox">Firefox downloade</string>
+  <string name="your_rights_content1">%1$s is fergese en iepenboarnesoftware makke troch Mozilla en oare meiwurkers.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s wurdt beskikber steld ûnder de betingsten fan de "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" en oare iepenboarnelisinsjes."]]></string>
+  <string name="your_rights_content3"><![CDATA["Der wurde jo gjin rjochten of lisinsjes ferliend op de hannelsmerken fan de Mozilla Foundation of iennige oare partij, mei ynbegryp fan de nammen of logo’s fan Mozilla, Firefox of %1$s. Oanfoljende ynformaasje is "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hjir</a>" te finen."]]></string>
+  <string name="your_rights_content4"><![CDATA[Oanfoljende boarnekoade foar %1$s is beskikber ûnder ferskate oare frije en iepenboarne-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisinsjes</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s brûkt ek blokkearlisten dy\'t troch Disconnect, Inc. beskikber steld wurde as ôfsûnderlike en ûnôfhinklike wurken ûnder de "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", en dy "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hjir</a>" beskikber binne."]]></string>
 </resources>

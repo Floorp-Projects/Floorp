@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>
   <string name="preference_performance_block_images">Blokker bilder</string>
+  <string name="preference_default_browser2">Bruk %1$s som standard nettleser</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Send bruksdata</string>
   <string name="preference_mozilla_telemetry_summary">Les mer</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla strever etter å bare samle inn det vi trenger for å tilby og forbedre %1$s for alle.</string>
   <string name="preference_privacy_notice">Personvernbestemmelser</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Privat nettlesingsøkt</string>
   <string name="notification_browsing_session_channel_description">Med varsel kan du slette økten din i %1$s med ett klikk. Du trenger ikke å åpne appen, eller å se hva som kjører i nettleseren din.</string>
   <string name="tabs_tray_action_erase">Slett nettleserhistorikk</string>
+  <string name="download_firefox">Last ned Firefox</string>
+  <string name="your_rights_content1">%1$s er fri og åpen kildekode-programvare laget av Mozilla og andre bidragsytere.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s er gjort tilgjengelig for deg under vilkårene i "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" og andre lisenser for åpen kildekode."]]></string>
+  <string name="your_rights_content3"><![CDATA["Du får ikke noen rettigheter eller lisenser til varemerkene til Mozilla Foundation eller noen part, inkludert Mozilla, Firefox eller %1$s navn eller logoer. Ytterligere informasjon kan bli funnet "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">her</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Ytterligere kildekode for %1$s er tilgjengelig under ulike andre frie og åpne kildekode "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisenser</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s bruker også blokklister fra Disconnect, Inc. som separate og uavhengige verk under "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", og er tilgjengelig "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">her</a>.]]></string>
 </resources>

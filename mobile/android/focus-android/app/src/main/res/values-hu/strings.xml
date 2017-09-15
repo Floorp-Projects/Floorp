@@ -14,7 +14,7 @@
   <string name="menu_about">Névjegy</string>
   <string name="menu_help">Súgó</string>
   <string name="menu_rights">Az Ön jogai</string>
-  <string name="menu_trackers_blocked_title">Blokkolt nyomkövetők</string>
+  <string name="menu_trackers_blocked_title">Blokkolt követők</string>
   <string name="share_dialog_title">Megosztás ezzel</string>
   <string name="notification_erase_text">Előzmények törlése</string>
   <string name="notification_action_open">Megnyitás</string>
@@ -29,8 +29,8 @@
   <string name="preference_language_systemdefault">Rendszer alapbeállítása</string>
   <string name="preference_dialog_title_search_engine">Alapértelmezett kereső</string>
   <string name="preference_category_privacy">Adatvédelem</string>
-  <string name="preference_privacy_block_ads">Reklámkövetők blokkolása</string>
-  <string name="preference_privacy_block_analytics">Elemző követők blokkolása</string>
+  <string name="preference_privacy_block_ads">Hirdetéskövetők blokkolása</string>
+  <string name="preference_privacy_block_analytics">Analitikai követők blokkolása</string>
   <string name="preference_privacy_block_social">Közösségi oldalak követőinek blokkolása</string>
   <string name="preference_privacy_block_content">Más tartalomkövetők blokkolása</string>
   <string name="preference_privacy_block_content_summary">Néhány videó és weblap eltörhet</string>
@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
   <string name="preference_performance_block_webfonts_summary">Hiányzó ikonokat és képeket eredményezhet</string>
   <string name="preference_performance_block_images">Képek blokkolása</string>
+  <string name="preference_default_browser2">A %1$s legyen az alapértelmezett böngésző</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Használati adatok elküldése</string>
   <string name="preference_mozilla_telemetry_summary">Tudjon meg többet</string>
   <string name="preference_mozilla_telemetry_summary2">A Mozilla arra törekszik, hogy csak azt gyűjtse, ami a %1$s fejlesztéséhez és támogatásához szükséges.</string>
   <string name="preference_privacy_notice">Adatvédelmi nyilatkozat</string>
@@ -114,10 +116,16 @@
   <string name="dialog_addtohomescreen_title">Kezdőképernyőhöz adás</string>
   <string name="dialog_addtohomescreen_action_add">Hozzáadás</string>
   <string name="dialog_addtohomescreen_action_cancel">Mégse</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Az ikon követésvédelem nélkül fogja megnyitni az alkalmazást</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Az ikon követés elleni védelem nélkül fogja megnyitni az alkalmazást</string>
   <string name="dialog_opentab_title">Hivatkozás megnyitása a kiválasztott lapon</string>
   <string name="dialog_opentab_action_open">Megnyitás</string>
   <string name="notification_browsing_session_channel_name">Privát böngészés</string>
   <string name="notification_browsing_session_channel_description">Az értesítésekkel egy érintéssel törölheti a %1$s munkamenetét. Nem kell megnyitnia az alkalmazást, sem megnéznie, hogy mi fut benne.</string>
   <string name="tabs_tray_action_erase">Böngészési előzmények törlése</string>
+  <string name="download_firefox">Firefox letöltése</string>
+  <string name="your_rights_content1">A %1$s szabad és nyílt forráskódú szoftver, amelyet a Mozilla és más közreműködők készítenek.</string>
+  <string name="your_rights_content2"><![CDATA["A %1$s a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>, és más nyílt forráskódú licencek feltételei szerint érhető el.]]></string>
+  <string name="your_rights_content3"><![CDATA["Nem kap semmiféle jogot vagy licencet a Mozilla Foundation vagy bármely más fél védjegyeihez, köztük a Mozilla, Firefox vagy %1$s nevekhez vagy logókhoz. További információkat "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">itt</a>" találhat."]]></string>
+  <string name="your_rights_content4"><![CDATA["További %1$s forráskód érhető el különféle szabad szoftver vagy nyílt forráskódú "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencek</a>" alatt."]]></string>
+  <string name="your_rights_content5"><![CDATA["A %1$s a Disconnect, Inc. által biztosított blokkolási listákat használ, különálló munkaként, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public Licence v3</a>" alatt, ez "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">itt</a>" érhető el."]]></string>
 </resources>

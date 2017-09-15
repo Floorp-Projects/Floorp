@@ -30,7 +30,7 @@
   <string name="preference_dialog_title_search_engine">Motore di ricerca predefinito</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Blocca pubblicità traccianti</string>
-  <string name="preference_privacy_block_analytics">Blocca analytics traccianti</string>
+  <string name="preference_privacy_block_analytics">Blocca traccianti analitici</string>
   <string name="preference_privacy_block_social">Blocca traccianti social</string>
   <string name="preference_privacy_block_content">Blocca altri contenuti traccianti</string>
   <string name="preference_privacy_block_content_summary">Alcuni video e pagine web potrebbero non funzionare</string>
@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blocca web font</string>
   <string name="preference_performance_block_webfonts_summary">Alcune immagini e icone potrebbero non essere visualizzate</string>
   <string name="preference_performance_block_images">Blocca immagini</string>
+  <string name="preference_default_browser2">Imposta %1$s come browser predefinito</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Invia dati sull’uso</string>
   <string name="preference_mozilla_telemetry_summary">Ulteriori informazioni</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla cerca di raccogliere solo i dati necessari per fornire e migliorare %1$s per tutti gli utenti.</string>
   <string name="preference_privacy_notice">Informativa sulla privacy</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Sessione di navigazione anonima</string>
   <string name="notification_browsing_session_channel_description">Le notifiche permettono di eliminare i dati della sessione di %1$s con un tocco. Non serve aprire l’app o controllare il contenuto del browser.</string>
   <string name="tabs_tray_action_erase">Elimina cronologia di navigazione</string>
+  <string name="download_firefox">Scarica Firefox</string>
+  <string name="your_rights_content1">%1$s è un software libero e Open Source realizzato da Mozilla e altri collaboratori.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s è disponibile nei termini della "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" e di altre licenze Open Source."]]></string>
+  <string name="your_rights_content3"><![CDATA["Mozilla non attribuisce all’utente alcun diritto o licenza relativamente all’utilizzo dei marchi registrati da Mozilla Foundation o da altri soggetti, inclusi i nomi Mozilla, Firefox, %1$s e i logo associati. Ulteriori informazioni sono disponibili in "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">questa pagina</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Codice sorgente aggiuntivo per %1$s è disponibile nei termini di altre "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenze</a>" libere e Open Source."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s utilizza un servizio di "<em xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">blocklist</em>" fornito da Disconnect, Inc. in qualità di opera aggiuntiva e separata, distribuita nei termini della "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" e disponibile "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">qui</a>.]]></string>
 </resources>

@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
   <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>
   <string name="preference_performance_block_images">Rhwystro delweddau</string>
+  <string name="preference_default_browser2">Gwneud %1$s yn borwr rhagosodedig</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Anfon data defnydd</string>
   <string name="preference_mozilla_telemetry_summary">Dysgu rhagor</string>
   <string name="preference_mozilla_telemetry_summary2">Mae Mozilla\'n ceisio casglu dim ond yr hyn sydd ei angen arnom i ddarparu a gwella %1$s ar gyfer pawb.</string>
   <string name="preference_privacy_notice">Hysbysiad Preifatrwydd</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Sesiwn pori preifat</string>
   <string name="notification_browsing_session_channel_description">Mae hysbysiadau\'n caniatáu i chi ddileu eich sesiwn %1$s gyda thap. Does dim angen agor yr ap na gweld beth sy\'n rhedeg yn eich porwr.</string>
   <string name="tabs_tray_action_erase">Dileu hanes pori</string>
+  <string name="download_firefox">Llwytho Firefox i Lawr</string>
+  <string name="your_rights_content1">Mae %1$s yn feddalwedd cod agored a rhydd gan Mozilla a chyfranwyr eraill.</string>
+  <string name="your_rights_content2"><![CDATA["Mae %1$s ar gael i chi o dan delerau "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Trwydded Cyhoeddus Mozilla</a>" a thrwyddedau cod agored eraill."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nid oes gennych unrhyw hawliau na thrwyddedau i nodau masnach y Mozilla Foudation nag o unrhyw barti, gan gynnwys enwau na logos Mozilla, Firefox na %1$s. Mae manylion pellach i\'w cael "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">yma</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Mae cod ffynhonnell ychwanegol ar gyfer %1$s ar gael o dan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">drwyddedau</a>" cod agored a rhydd eraill."]]></string>
+  <string name="your_rights_content5"><![CDATA["Mae %1$s hefyd yn defnyddio rhestrau rhwystro sy\'n cael eu darparu gan Disconnect, Inc. fel gwaith annibynnol ac ar wahân o dan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", ac ar gael "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">yma</a>.]]></string>
 </resources>

@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Sekat fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>
   <string name="preference_performance_block_images">Sekat imej</string>
+  <string name="preference_default_browser2">Jadikan %1$s pelayar piawai</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Hantar data penggunaan</string>
   <string name="preference_mozilla_telemetry_summary">Ketahui selanjutnya</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla mengumpulkan hanya yang diperlukan untuk menyedia dan meningkatkan %1$s.</string>
   <string name="preference_privacy_notice">Notis Privasi</string>
@@ -71,7 +73,7 @@
   <string name="external_multiple_apps_matched_exit">Tamatkan Pelayaran Peribadi?</string>
   <string name="download_snackbar_finished">%1$s sudah siap</string>
   <string name="download_snackbar_open">Buka</string>
-  <string name="download_dialog_warning"><![CDATA["Fail yang dimuat turun "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapuskan</b>" apabila anda padam sejarah %1$s."]]></string>
+  <string name="download_dialog_warning"><![CDATA["Fail yang dimuat turun "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapuskan</b>" apabila anda buang sejarah %1$s."]]></string>
   <string name="download_dialog_title">Muat Turun Fail</string>
   <string name="download_dialog_action_cancel">Batal</string>
   <string name="download_dialog_action_download">Muat turun</string>
@@ -98,7 +100,7 @@
   <string name="contextmenu_image_copy">Salin alamat imej</string>
   <string name="contextmenu_image_save">Simpan imej</string>
   <string name="contextmenu_open_in_new_tab">Buka pautan dalam tab baru</string>
-  <string name="contextmenu_image_warning"><![CDATA["Imej yang disimpan dan dikongsi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapuskan</b>" apabila anda padam sejarah %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Imej yang disimpan dan dikongsi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapuskan</b>" apabila anda buang sejarah %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Tingkatkan privasi anda</string>
   <string name="firstrun_defaultbrowser_text2">Membawa pelayaran peribadi ke tahap seterusnya, Sekat iklan dan kandungan lain yang menjejaki anda di serata laman dan melambatkan tempoh memuatkan halaman.</string>
   <string name="firstrun_search_title">Carian anda, cara anda</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Sesi pelayaran peribadi</string>
   <string name="notification_browsing_session_channel_description">Anda boleh buang sesi %1$s dengan menekan notifikasi. Tidak perlu buka aplikasi atau lihat kandungan dalam pelayar.</string>
   <string name="tabs_tray_action_erase">Buang sejarah pelayaran</string>
+  <string name="download_firefox">Muat turun Firefox</string>
+  <string name="your_rights_content1">%1$s adalah perisian percuma dan sumber terbuka yang dihasilkan oleh Mozilla dan para penyumbang lain.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s disediakan untuk anda di bawah terma "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lesen Umum Mozilla</a>" dan lesen sumber terbuka lain."]]></string>
+  <string name="your_rights_content3"><![CDATA["Anda tidak diberikan sebarang hak atau lesen untuk tanda dagangan Yayasan Mozilla atau mana-mana pihak, termasuk menggunakan nama atau logo Mozilla, Firefox atau %1$s. Maklumat tambahan boleh didapati "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">di sini</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Kod sumber tambahan untuk %1$s tersedia di bawah pelbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lesen</a>" sumber percuma dan sumber terbuka lain."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s uga menggunakan senarai sekatan yang disediakan oleh Disconnect, Inc sebagai hasil kerja yang berasingan dan bebas di bawah "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dan tersedia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di sini</a>.]]></string>
 </resources>

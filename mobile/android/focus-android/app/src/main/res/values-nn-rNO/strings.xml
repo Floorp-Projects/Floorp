@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blokker nettfontar</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilde manglar</string>
   <string name="preference_performance_block_images">Blokker bilde</string>
+  <string name="preference_default_browser2">Bruk %1$s som standard nettlesar</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Send brukardata</string>
   <string name="preference_mozilla_telemetry_summary">Les meir</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla strevar etter å berre samle inn det vi treng for å tilby og forbetre %1$s for alle.</string>
   <string name="preference_privacy_notice">Personvernerklæring</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Privat nettlesingsøkt</string>
   <string name="notification_browsing_session_channel_description">Med varsel kan du slette økta di i %1$s med eitt klikk. Du treng ikkje å opne appen, eller å sjå kva som køyrer i nettlesaren din.</string>
   <string name="tabs_tray_action_erase">Slett nettlesarhistorikk</string>
+  <string name="download_firefox">Last ned Firefox</string>
+  <string name="your_rights_content1">%1$s er fri og open kjeldekode-programvare laga av Mozilla og andre bidragsytarar.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s er gjort tilgjengeleg for deg under vilkåra i "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" og andre lisensar for open kjeldekode."]]></string>
+  <string name="your_rights_content3"><![CDATA["Du får ingen rettar eller lisensar til varemerka som høyrer til Mozilla Foundation eller nokon part, inkludert Mozilla, Firefox eller %1$s namn eller logoar. Ytterlegare informasjon finn du "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">her</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA[Ytterlegare kjeldekode for %1$s er tilgjengeleg under ulike andre frie og opne kjeldekode-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensar</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s brukar òg blokklister frå Disconnect, Inc. som separate og uavhengige verk under "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", og er tilgjengelege "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">her</a>.]]></string>
 </resources>

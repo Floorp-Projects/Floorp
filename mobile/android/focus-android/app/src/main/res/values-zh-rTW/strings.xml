@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">封鎖網路字型</string>
   <string name="preference_performance_block_webfonts_summary">可能會造成網頁當中的圖示或圖片消失</string>
   <string name="preference_performance_block_images">封鎖圖片</string>
+  <string name="preference_default_browser2">將 %1$s 設為預設瀏覽器</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">傳送使用資料</string>
   <string name="preference_mozilla_telemetry_summary">了解更多</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla 致力於只收集用來為眾人改善 %1$s 所需的必要資料。</string>
   <string name="preference_privacy_notice">隱私權公告</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">隱私瀏覽階段</string>
   <string name="notification_browsing_session_channel_description">不需要開啟程式或確認瀏覽器中有哪些資料，只要輕鬆一點，就能清除 %1$s 瀏覽階段的通知項目。</string>
   <string name="tabs_tray_action_erase">抹除瀏覽紀錄</string>
+  <string name="download_firefox">下載 Firefox</string>
+  <string name="your_rights_content1">%1$s 是由 Mozilla 及貢獻者所打造，自由且開放原始碼的軟體。</string>
+  <string name="your_rights_content2"><![CDATA["%1$s 依照 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" 以及其他開放原始碼授權條款提供給您。"]]></string>
+  <string name="your_rights_content3"><![CDATA["您並未被授權使用 Mozilla 基金會或任何相關部門的商標，包含但不限於 Mozilla、Firefox、%1$s 的商標。您可以在 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#36889;&#35041;</a>找到更多資訊。]]></string>
+  <string name="your_rights_content4"><![CDATA[%1$s 其他的原始碼則使用其他自由與開放原始碼的<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#25480;&#27402;&#26781;&#27454;</a>提供。]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s 還使用由 Disconnect, Inc. 提供的封鎖清單，該清單是一份依照 "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" 提供的獨立作品，可在"<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#27492;&#34389;</a>取得。]]></string>
 </resources>

@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Webpisma blokěrowaś</string>
   <string name="preference_performance_block_webfonts_summary">Móžo k tomu wjasć, až symbole abo wobraze feluju</string>
   <string name="preference_performance_block_images">Wobraze blokěrowaś</string>
+  <string name="preference_default_browser2">%1$s ako standardny wobglědowak nastajiś</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Wužywańske daty pósłaś</string>
   <string name="preference_mozilla_telemetry_summary">Dalšne informacije</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla se procujo, jano informacije gromaźiś, z kótarymiž móžomy %1$s za kuždego póbitowaś a pólěpšyś.</string>
   <string name="preference_privacy_notice">Powěźeńka priwatnosći</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Priwatne pósejźenje</string>
   <string name="notification_browsing_session_channel_description">Powěźeńki wam zmóžnjaju, waše pósejźenje %1$s z dotyknjenim wulašowaś. Njetrjebaśo nałoženje wócyniś abo glědaś, což we wašom wobglědowaku běžy.</string>
   <string name="tabs_tray_action_erase">Pśeglědowańsku historiju wulašowaś</string>
+  <string name="download_firefox">Firefox ześěgnuś</string>
+  <string name="your_rights_content1">%1$s jo dermotna software wótwórjonego žrědła wót Mozilla a drugich sobustatkujucych.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s so pód wuměnjenjami licence "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" a drugimi licencami wótwórjonego žrědła k dispoziciji staja."]]></string>
+  <string name="your_rights_content3"><![CDATA["Njedaju wam žedne pšawa abo licence na wikowych markow załožby Mozilla Foundation abo tśeśich, inkluziwnje mjenja abo loga Mozilla, Firefox abo %1$s. Dalšne informacije namakajośo "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">how</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Pśidatny žrědłowy kod za %1$s jo pód wšakich drugich lichych "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencach</a>" wótwórjonego žrědła k dispoziciji."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s teke blokěrowańske lisćiny póbitowane wót Disconnect, Inc. ako separatne a njewótwisne źěła pód licencu "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">General Public Licence v3</a>" wužywa, kótarež su "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">how</a>" k dispoziciji."]]></string>
 </resources>

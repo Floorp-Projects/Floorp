@@ -42,6 +42,7 @@
   <string name="preference_performance_block_images">బొమ్మలను నిరోధించు</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
+  <string name="preference_privacy_notice">గోప్యతా విధానం</string>
   <string name="preference_about">%1$s గురించి</string>
   <string name="content_description_clear_input">ఇన్‌పుట్‌ను తుడిచివేయి</string>
   <string name="content_description_dismiss_input">విస్మరించు</string>
@@ -97,6 +98,7 @@
   <string name="contextmenu_open_in_new_tab">లంకెను కొత్త ట్యాబులో తెరువు</string>
   <string name="contextmenu_image_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు సేవ్ చేయబడిన మరియు పంచిన చిత్రాలు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
+  <string name="firstrun_search_title">మీ శోధన, మీ మార్గం</string>
   <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
   <string name="firstrun_skip_button">దాటు</string>
   <string name="firstrun_next_button">తరువాత</string>
@@ -105,4 +107,6 @@
   <string name="dialog_addtohomescreen_action_add">చేర్చు</string>
   <string name="dialog_addtohomescreen_action_cancel">రద్దుచేయి</string>
   <string name="dialog_opentab_action_open">తెరువు</string>
+  <string name="tabs_tray_action_erase">విహరణ చరిత్రను తుడిచివేయి</string>
+  <string name="download_firefox">Firefoxను దింపుకోండి</string>
 </resources>

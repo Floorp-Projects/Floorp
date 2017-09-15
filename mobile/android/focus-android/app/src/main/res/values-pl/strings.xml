@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
   <string name="preference_performance_block_webfonts_summary">Może spowodować, że niektóre ikony lub obrazy będą niewidoczne</string>
   <string name="preference_performance_block_images">Blokowanie obrazów</string>
+  <string name="preference_default_browser2">Ustaw przeglądarkę %1$s jako domyślną</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Przesyłanie danych o użyciu</string>
   <string name="preference_mozilla_telemetry_summary">Więcej informacji</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla zbiera wyłącznie informacje niezbędne do udostępniania i ulepszania programu %1$s.</string>
   <string name="preference_privacy_notice">Zasady ochrony prywatności</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Sesja przeglądania prywatnego</string>
   <string name="notification_browsing_session_channel_description">Powiadomienia umożliwiają usunięcie sesji programu %1$s jednym dotknięciem. Nie trzeba otwierać aplikacji ani widzieć, co jest otwarte w przeglądarce.</string>
   <string name="tabs_tray_action_erase">Usuń historię przeglądania</string>
+  <string name="download_firefox">Pobierz Firefoksa</string>
+  <string name="your_rights_content1">%1$s to wolne oprogramowanie o otwartym kodzie źródłowym tworzone przez Mozillę i innych współtwórców.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s jest dostępny na warunkach licencji "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">MPL (Mozilla Public License)</a>" i innych licencji open source."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nie otrzymujesz żadnych licencji ani praw do znaków towarowych Mozilla Foundation i innych podmiotów, w tym do nazw i logotypów Mozilla, Firefox i %1$s. "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Tutaj</a>" znajduje się więcej informacji na ten temat."]]></string>
+  <string name="your_rights_content4"><![CDATA["Dodatkowy kod źródłowy programu %1$s jest dostępny na warunkach innych "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencji</a>" wolnego oprogramowania i open source."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s używa także list blokowania dostarczanych przez Disconnect, Inc. jako oddzielny i niezależny produkt dostępny na warunkach licencji "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GPLv3 (GNU General Public License v3)</a>", opisany "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tutaj</a>.]]></string>
 </resources>

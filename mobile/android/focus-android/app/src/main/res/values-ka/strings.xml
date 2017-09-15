@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">საიტის შრიფტების შეზღუდვა</string>
   <string name="preference_performance_block_webfonts_summary">შესაძლოა ხატულების და სურათების ნაწილი გაქრეს</string>
   <string name="preference_performance_block_images">სურათების შეზღუდვა</string>
+  <string name="preference_default_browser2">%1$s-ის ნაგულისხმევ ბრაუზერად მითითება</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">მონაცემების გაგზავნა</string>
   <string name="preference_mozilla_telemetry_summary">შეიტყვეთ მეტი</string>
   <string name="preference_mozilla_telemetry_summary2">Mozill აღრიცხავს მხოლოდ იმ მონაცემებს, რაც საჭიროა %1$s-ის გასაუმჯობესებლად.</string>
   <string name="preference_privacy_notice">პირადი მონაცემების დაცვა</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">პირადი დათვალიერების რეჟიმი</string>
   <string name="notification_browsing_session_channel_description">შეტყობინებები საშუალებას გაძლევთ, ერთი შეხებით გაასუფთავოთ მონაცემები %1$s-ში. პროგრამის გახსნა, აღარ დაგჭირდებათ.</string>
   <string name="tabs_tray_action_erase">ისტორიის გაუსფთავება</string>
+  <string name="download_firefox">ჩამოტვირთეთ Firefox</string>
+  <string name="your_rights_content1">%1$s არის უფასო და ღია წყაროს მქონე პროგრამა, შექმნილი Mozilla-სა და სხვა მოხალისეების მიერ.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s ვრცელდება "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" ლიცენზიით და სხვა ღია წყაროს ლიცენზიებით."]]></string>
+  <string name="your_rights_content3"><![CDATA["თქვენ არ გეძლევათ რამე სახის უფლება ან ლიცენზია, Mozilla ფონდის სავაჭრო ნიშნებსა და სხვა საკუთრებაზე, მათ შორის დასახელებებზე Mozilla, Firefox, ან %1$s-ის სხვა სახელებსა და ლოგოებზე. დამატებითი ინფორმაცია შეგიძლიათ იხილოთ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#4304;&#4325;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s-ის დამატებითი პირველწყარო კოდი ვრცელდება სხვადასხვა უფასო და ღია წყაროს მქონე "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#4314;&#4312;&#4330;&#4308;&#4316;&#4310;&#4312;&#4308;&#4305;&#4312;&#4311;</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s ასევე იყენებს შეზღუდვის სიებს, რომლის მომწოდებელია Disconnect Inc. როგორც ცალკეული და დამოუკიდებელი ნამუშევრები, ვრცელდება "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" ლიცენზიით და ხელმისაწვდომია "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#4304;&#4315; &#4305;&#4315;&#4323;&#4314;&#4310;&#4308;</a>.]]></string>
 </resources>

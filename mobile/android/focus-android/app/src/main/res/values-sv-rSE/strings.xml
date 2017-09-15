@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blockera webbtypsnitt</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultera i att ikoner eller bilder saknas</string>
   <string name="preference_performance_block_images">Blockera bilder</string>
+  <string name="preference_default_browser2">Gör %1$s till standardwebbläsare</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Skicka användningsdata</string>
   <string name="preference_mozilla_telemetry_summary">Läs mer</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla strävar efter att endast samla in det vi behöver för att tillhandahålla och förbättra %1$s för alla.</string>
   <string name="preference_privacy_notice">Sekretesspolicy</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Privat surfsession</string>
   <string name="notification_browsing_session_channel_description">Med aviseringar kan du radera din session i %1$s med ett klick. Du behöver inte öppna appen eller se vad som körs i din webbläsare.</string>
   <string name="tabs_tray_action_erase">Radera webbhistorik</string>
+  <string name="download_firefox">Hämta Firefox</string>
+  <string name="your_rights_content1">%1$s är gratis och öppen källkodsprogramvara utvecklad av Mozilla och andra bidragsgivare.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s är tillgänglig för dig enligt villkoren i "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" och andra open source-licenser."]]></string>
+  <string name="your_rights_content3"><![CDATA["Du är inte beviljad några rättigheter eller licenser till varumärken som tillhör Mozilla Foundation eller någon part, däribland Mozilla, Firefox eller %1$s namn eller logotyper. Ytterligare information kan hittas "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">h&#228;r</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA[Ytterligare källkod för %1$s finns tillgänglig under flera andra gratis och open source-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenser</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s använder också blocklistor som tillhandahålls av Disconnect, Inc. som separata och oberoende verk under "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" och tillgänglig "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">h&#228;r</a>.]]></string>
 </resources>

@@ -8,6 +8,7 @@
   <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
   <string name="menu_share">শেয়ার…</string>
   <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খোলা হবে</string>
+  <string name="menu_open_with_a_browser">এটির সাহায্যে খুলুন…</string>
   <string name="menu_add_to_home_screen">হোমস্ক্রিনে যোগ</string>
   <string name="menu_settings">সেটিং</string>
   <string name="menu_about">পরিচিতি</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">শেয়ারের মাধ্যম</string>
   <string name="notification_erase_text">ব্রাউজিং ইতিহাস মুছে দিন</string>
   <string name="notification_action_open">খুলুন</string>
+  <string name="notification_action_erase_and_open">মুছুন এবং খুলুন</string>
   <string name="shortcut_erase_short_label">মুছুন</string>
   <string name="shortcut_erase_long_label">ব্রাউজিং ইতিহাস মুছুন</string>
   <string name="text_selection_search_action">ব্যক্তিগতভাবে অনুসন্ধান</string>
@@ -43,6 +45,9 @@
   <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
   <string name="content_description_dismiss_input">খারিজ</string>
   <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
+  <string name="content_description_fab_expand">প্রসারণ</string>
+  <string name="content_description_open_tab">ট্যাব খুলুন</string>
+  <string name="content_description_close_tab">ট্যাব বন্ধ করুন</string>
   <string name="content_description_lock">সুরক্ষিত কানেকশন</string>
   <string name="accessibility_announcement_loading">লোড হচ্ছে</string>
   <string name="accessibility_announcement_loading_finished">ওয়েবসাইট লোড হয়েছে</string>
@@ -60,6 +65,7 @@
   <string name="external_app_prompt_no_app_title">একটি অ্যাপ অনুসন্ধান করো যা লিংখটি খুলতে পারবে</string>
   <string name="external_app_prompt_no_app">আপনার ডিভাইসের কোন অ্যাপই এই লিঙ্কটি খুলতে সক্ষম হয়নি। %2$s অনুসন্ধান করে একটি অ্যাপ বের করার জন্যে আপনি %1$s কে দ্বায়িত্ব দিতে পারেন।</string>
   <string name="external_multiple_apps_matched_exit">আপনি কি ব্যক্তিগত ব্রাউজিং বন্ধ করবেন?</string>
+  <string name="download_snackbar_finished">%1$s সম্পন্ন হয়েছে</string>
   <string name="download_snackbar_open">খুলুন</string>
   <string name="download_dialog_title">ফাইল ডাউনলোড করুন</string>
   <string name="download_dialog_action_cancel">বাতিল</string>
@@ -86,6 +92,7 @@
   <string name="contextmenu_image_share">ছবি শেয়ার</string>
   <string name="contextmenu_image_copy">ছবির ঠিকানা অনুলিপি করুন</string>
   <string name="contextmenu_image_save">ছবি সংরক্ষণ</string>
+  <string name="contextmenu_open_in_new_tab">নতুন ট্যাবে লিঙ্ক খুলুন</string>
   <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা কঠোর করুন</string>
   <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
   <string name="firstrun_skip_button">উপেক্ষা</string>
@@ -94,4 +101,6 @@
   <string name="dialog_addtohomescreen_title">হোমস্ক্রিনে যোগ</string>
   <string name="dialog_addtohomescreen_action_add">যোগ</string>
   <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
+  <string name="dialog_opentab_action_open">খুলুন</string>
+  <string name="download_firefox">Firefox ডাউনলোড করুন</string>
 </resources>

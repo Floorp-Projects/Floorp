@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
   <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>
   <string name="preference_performance_block_images">Суреттерді блоктау</string>
+  <string name="preference_default_browser2">%1$s-ты негізгі браузер қылу</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Қолдану деректерін жіберу</string>
   <string name="preference_mozilla_telemetry_summary">Көбірек білу</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla тек %1$s әркім үшін ұсыну және жақсарту мақсатында керек деректерді жинауға тырысады.</string>
   <string name="preference_privacy_notice">Жекелік ескертуі</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Жекелік шолу сессиясы</string>
   <string name="notification_browsing_session_channel_description">Хабарламалар сізге %1$s сессиясын бір шертумен өшіруді мүмкін етеді. Сізге браузерді ашуды немесе браузерде не орындалғанын көру керек емес.</string>
   <string name="tabs_tray_action_erase">Шолу тарихын өшіру</string>
+  <string name="download_firefox">Firefox-ты жүктеп алу</string>
+  <string name="your_rights_content1">%1$s - Mozilla және басқа үлес қосушылары жасаған еркін және бастапқы кодтары ашық бағдарламалық қамтама.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s сізге "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla &#1087;&#1091;&#1073;&#1083;&#1080;&#1082;&#1072;&#1083;&#1099;&#1179; &#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;&#1103;&#1089;&#1099;</a>" және басқа кодтары ашық лицензиялар аясында қолжетерлік етілген."]]></string>
+  <string name="your_rights_content3"><![CDATA["Сізге Mozilla Foundation-ның немесе басқа да жақтардың ешбір тіркелген сауда белгілеріне, соның ішінде Mozilla, Firefox немесе %1$s аттары немесе логотиптеріне ешбір құқықтар немесе лицензиялар берілмейді. Қосымша ақпаратты "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">here</a>" жерінен табуға болады."]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s үшін қосымша бастапқы кодтары әр түрлі басқа тегін және бастапқы кодтары ашық "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;&#1103;&#1083;&#1072;&#1088;</a>" аясында қолжетерлік."]]></string>
+  <string name="your_rights_content5"><![CDATA["Сонымен қатар, %1$s Disconnect, Inc. ұсынған блоктізімдерін қолданады, олар "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" аясында, "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1086;&#1089;&#1099;&#1085;&#1076;&#1072;</a>" бөлек және тәуелсіз жұмыстар ретінде қолжетерлік."]]></string>
 </resources>

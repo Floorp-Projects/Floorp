@@ -40,12 +40,20 @@
   <string name="preference_performance_block_webfonts">Спиране на уебшрифтовете</string>
   <string name="preference_performance_block_webfonts_summary">Може да доведе до липсващи икони или изображения</string>
   <string name="preference_performance_block_images">Спиране на изображенията</string>
+  <string name="preference_default_browser2">Избиране на %1$s като стандартен четец</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Изпращане данни за използването</string>
   <string name="preference_mozilla_telemetry_summary">Научете повече</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla се старае да събира само нужните данни за подобряване на %1$s.</string>
+  <string name="preference_privacy_notice">Политика на поверителност</string>
   <string name="preference_about">Относно %1$s</string>
   <string name="content_description_clear_input">Изчистване на полето</string>
   <string name="content_description_dismiss_input">Затваряне</string>
   <string name="content_description_erase">Изчистване историята на разглеждането</string>
+  <string name="content_description_fab_expand">Разгъване</string>
+  <string name="content_description_tab_counter">Отворени раздели: %1$s</string>
+  <string name="content_description_open_tab">Отваряне на раздел</string>
+  <string name="content_description_close_tab">Затваряне на раздела</string>
   <string name="content_description_lock">Защитена връзка</string>
   <string name="accessibility_announcement_loading">Зареждане</string>
   <string name="accessibility_announcement_loading_finished">Страницата е заредена</string>
@@ -91,8 +99,16 @@
   <string name="contextmenu_image_share">Споделяне на изображението</string>
   <string name="contextmenu_image_copy">Копиране адреса на изображението</string>
   <string name="contextmenu_image_save">Запазване на изображението</string>
+  <string name="contextmenu_open_in_new_tab">Отваряне в раздел</string>
   <string name="contextmenu_image_warning"><![CDATA["Запазените и споделените изображения "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1103;&#1084;&#1072; &#1076;&#1072; &#1073;&#1098;&#1076;&#1072;&#1090; &#1080;&#1079;&#1090;&#1088;&#1080;&#1090;&#1080;</b>при изтриване на историята на %1$s.]]></string>
   <string name="firstrun_defaultbrowser_title">Усилете вашата поверителност</string>
+  <string name="firstrun_defaultbrowser_text2">Преминете към следващото ниво на поверителността. Спирайте рекламите и друго съдържание, което следи движенията ви през много сайтове и забавя зареждането на страници.</string>
+  <string name="firstrun_search_title">Вашето търсене, по вашия начин</string>
+  <string name="firstrun_search_text">Търсите нещо различно? Изберете друга търсеща машина в Настройки.</string>
+  <string name="firstrun_shortcut_title">Добавяне на преки пътища към началния екран</string>
+  <string name="firstrun_shortcut_text">С %1$s можете бързо да се връщате към най-използваните от вас сайтове. Просто изберете „Добавяне към началния екран“ от менюто на %1$s.</string>
+  <string name="firstrun_privacy_title">Изградете навик за поверителност</string>
+  <string name="firstrun_privacy_text">Задайте %1$s като ваш браузър по подразбиране и използвайте предимствата от поверителното четене, когато други приложения ви препращат към Мрежата.</string>
   <string name="firstrun_close_button">Разбрано!</string>
   <string name="firstrun_skip_button">Пропускане</string>
   <string name="firstrun_next_button">Напред</string>
@@ -100,4 +116,16 @@
   <string name="dialog_addtohomescreen_title">Добавяне към началния екран</string>
   <string name="dialog_addtohomescreen_action_add">Добавяне</string>
   <string name="dialog_addtohomescreen_action_cancel">Отказ</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Преките пътища ще се отварят с изключена защита от проследяване</string>
+  <string name="dialog_opentab_title">Отваряне в избрания раздел</string>
+  <string name="dialog_opentab_action_open">Отваряне</string>
+  <string name="notification_browsing_session_channel_name">Сесия на поверително разглеждане</string>
+  <string name="notification_browsing_session_channel_description">Уведомленията ви позволяват с едно натискане да изтриете сесията на %1$s. Няма нужда да отваряте приложението или да виждате какво разглеждате в момента.</string>
+  <string name="tabs_tray_action_erase">Изчистване историята на разглеждането</string>
+  <string name="download_firefox">Изтегляне на Firefox</string>
+  <string name="your_rights_content1">%1$s е свободен софтуер с отворен код, направен от Mozilla и други участници.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s е достъпен за вас при условията на "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" и други лицензи за отворен код."]]></string>
+  <string name="your_rights_content3"><![CDATA["Не ви се предоставят права или лицензи за търговските марки на Mozilla Foundation или друга страна, включително Mozilla, Firefox или имената и емблемите на %1$s. Допълнителна информация може да бъде намерена "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1090;&#1091;&#1082;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Достъпен е програмният код на %1$s под различни "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;</a>" – безплатни и с отворен код."]]></string>
+  <string name="your_rights_content5"><![CDATA["Също така %1$s използва блокиращ списък, осигуряван от Disconnect, Inc., като отделна и независима разработка  под условията на "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", също достъпен "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1090;&#1091;&#1082;</a>.]]></string>
 </resources>

@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
   <string name="preference_performance_block_images">Blokir gambar</string>
+  <string name="preference_default_browser2">Jadikan %1$s peramban baku</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Kirim data penggunaan</string>
   <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla berusaha untuk mengumpulkan hanya apa yang kami perlu untuk sediakan dan meningkatkan %1$s untuk setiap orang.</string>
   <string name="preference_privacy_notice">Kebijakan Privasi</string>
@@ -120,4 +122,6 @@
   <string name="notification_browsing_session_channel_name">Sesi penjelajahan privat</string>
   <string name="notification_browsing_session_channel_description">Notifikasi memungkinkan Anda menghapus sesi %1$s Anda dengan sekali sentuh. Anda tak perlu membuka aplikasi atau melihat apa yang berjalan di peramban Anda.</string>
   <string name="tabs_tray_action_erase">Hapus riwayat penjelajahan</string>
+  <string name="download_firefox">Unduh Firefox</string>
+  <string name="your_rights_content1">%1$s adalah perangkat lunak bebas dan sumber terbuka yang dibuat oleh Mozilla dan kontributor lainnya.</string>
 </resources>

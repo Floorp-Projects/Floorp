@@ -40,7 +40,9 @@
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
   <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>
   <string name="preference_performance_block_images">Φραγή εικόνων</string>
+  <string name="preference_default_browser2">Ορισμός του %1$s ως προεπιλεγμένο πρόγραμμα περιήγησης</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Αποστολή δεδομένων χρήσης</string>
   <string name="preference_mozilla_telemetry_summary">Μάθετε περισσότερα</string>
   <string name="preference_mozilla_telemetry_summary2">Η Mozilla αγωνίζεται για να συλλέγει μόνο ό,τι χρειάζεται για να παρέχει και να βελτιώνει το %1$s για όλους.</string>
   <string name="preference_privacy_notice">Σημείωση απορρήτου</string>
@@ -103,6 +105,7 @@
   <string name="firstrun_search_title">Η αναζήτησή σας, με τον τρόπο σας</string>
   <string name="firstrun_search_text">Ψάχνετε κάτι διαφορετικό; Επιλέξτε μια άλλη προεπιλεγμένη μηχανή αναζήτησης στις ρυθμίσεις.</string>
   <string name="firstrun_shortcut_title">Προσθήκη συντομεύσεων στην αρχική οθόνη</string>
+  <string name="firstrun_shortcut_text">Επιστρέψτε γρήγορα στις αγαπημένες σας ιστοσελίδες στο %1$s. Απλά επιλέξτε \"Προσθήκη στην αρχική οθόνη\" από το μενού του %1$s.</string>
   <string name="firstrun_privacy_title">Κάντε το απόρρητο συνήθεια</string>
   <string name="firstrun_close_button">OK, το \'πιασα!</string>
   <string name="firstrun_skip_button">Παράκαμψη</string>
@@ -115,5 +118,10 @@
   <string name="dialog_opentab_title">Άνοιγμα συνδέσμου σε επιλεγμένη καρτέλα</string>
   <string name="dialog_opentab_action_open">Άνοιγμα</string>
   <string name="notification_browsing_session_channel_name">Συνεδρία ιδιωτικής περιήγησης</string>
+  <string name="notification_browsing_session_channel_description">Οι ειδοποιήσεις σάς επιτρέπουν να διαγράψετε τη συνεδρία σας στο %1$s με ένα πάτημα. Δεν χρειάζεται να ανοίξετε την εφαρμογή ή να δείτε τι συμβαίνει στο πρόγραμμα περιήγησής σας.</string>
   <string name="tabs_tray_action_erase">Διαγραφή ιστορικού περιήγησης</string>
+  <string name="download_firefox">Λήψη του Firefox</string>
+  <string name="your_rights_content1">Το %1$s είναι δωρεάν και ανοικτού κώδικα λογισμικό, που αναπτύσσεται από τη Mozilla και άλλους συνεισφέροντες.</string>
+  <string name="your_rights_content2"><![CDATA["Το %1$s καθίσταται διαθέσιμο σε εσάς υπό τους όρους της "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#916;&#951;&#956;&#972;&#963;&#953;&#945;&#962; &#902;&#948;&#949;&#953;&#945;&#962; Mozilla</a>" και άλλων αδειών ανοικτού κώδικα."]]></string>
+  <string name="your_rights_content4"><![CDATA["Επιπρόσθετος πηγαίος κώδικας για το %1$s είναι διαθέσιμος υπό διάφορες άλλες ελεύθερες και ανοικτού κώδικα "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#940;&#948;&#949;&#953;&#949;&#962;</a>.]]></string>
 </resources>

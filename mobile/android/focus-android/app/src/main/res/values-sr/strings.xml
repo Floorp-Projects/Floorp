@@ -11,10 +11,10 @@
   <string name="menu_open_with_a_browser">Отвори у…</string>
   <string name="menu_add_to_home_screen">Додај на почетни екран</string>
   <string name="menu_settings">Поставке</string>
-  <string name="menu_about">О Focus за Android</string>
+  <string name="menu_about">О Focus-у за Android</string>
   <string name="menu_help">Помоћ</string>
   <string name="menu_rights">Ваша права</string>
-  <string name="menu_trackers_blocked_title">Блокирани трагачи</string>
+  <string name="menu_trackers_blocked_title">Блокирани пратиоци</string>
   <string name="share_dialog_title">Подели преко</string>
   <string name="notification_erase_text">Обришите историју прегледања</string>
   <string name="notification_action_open">Отвори</string>
@@ -23,24 +23,26 @@
   <string name="shortcut_erase_long_label">Обриши историју прегледања</string>
   <string name="text_selection_search_action">Претражујте приватно</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1074;&#1072;&#1084; &#1076;&#1072;&#1112;&#1077; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1091;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1050;&#1086;&#1088;&#1080;&#1089;&#1090;&#1080;&#1090;&#1077; &#1075;&#1072; &#1082;&#1072;&#1086; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1080; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1095;:\n  "<ul>"\n    "<li>&#1055;&#1088;&#1077;&#1090;&#1088;&#1072;&#1078;&#1091;&#1112;&#1090;&#1077; &#1080; &#1089;&#1091;&#1088;&#1092;&#1091;&#1112;&#1090;&#1077; &#1076;&#1080;&#1088;&#1077;&#1082;&#1090;&#1085;&#1086; &#1091; &#1072;&#1087;&#1083;&#1080;&#1082;&#1072;&#1094;&#1080;&#1112;&#1080;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1080;&#1088;&#1072;&#1112;&#1090;&#1077; &#1087;&#1088;&#1072;&#1090;&#1080;&#1086;&#1094;&#1077; (&#1080;&#1083;&#1080; &#1080;&#1093; &#1086;&#1084;&#1086;&#1075;&#1091;&#1115;&#1080;&#1090;&#1077; &#1091; &#1087;&#1086;&#1089;&#1090;&#1072;&#1074;&#1082;&#1072;&#1084;&#1072;)</li>"\n    "<li>&#1048;&#1079;&#1073;&#1088;&#1080;&#1096;&#1080;&#1090;&#1077; &#1089;&#1074;&#1077; &#1082;&#1086;&#1083;&#1072;&#1095;&#1080;&#1115;&#1077; &#1082;&#1072;&#1086; &#1080; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1112;&#1072;&#1090; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1114;&#1072; &#1080; &#1087;&#1088;&#1077;&#1090;&#1088;&#1072;&#1075;&#1077;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1112;&#1077; &#1089;&#1090;&#1074;&#1086;&#1088;&#1080;&#1083;&#1072; Mozilla. &#1053;&#1072;&#1096;&#1072; &#1084;&#1080;&#1089;&#1080;&#1112;&#1072; &#1112;&#1077; &#1085;&#1077;&#1075;&#1086;&#1074;&#1072;&#1114;&#1077; &#1079;&#1076;&#1088;&#1072;&#1074;&#1086;&#1075; &#1080; &#1086;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085;&#1086;&#1075; &#1080;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1072;.<br/>\n<a href="%2$s">&#1057;&#1072;&#1079;&#1085;&#1072;&#1112;&#1090;&#1077; &#1074;&#1080;&#1096;&#1077;</a></p>]]></string>
-  <string name="preference_category_search">Претражи</string>
+  <string name="preference_category_search">Претраживач</string>
   <string name="preference_search_engine_default">Подразумевано</string>
   <string name="preference_language">Језик</string>
   <string name="preference_language_systemdefault">Системски подразумеван</string>
   <string name="preference_dialog_title_search_engine">Подразумевани претраживач</string>
   <string name="preference_category_privacy">Приватност</string>
   <string name="preference_privacy_block_ads">Блокирај оглашиваче</string>
-  <string name="preference_privacy_block_analytics">Блокирај аналитичке трагаче</string>
-  <string name="preference_privacy_block_social">Блокирај друштвене трагаче</string>
-  <string name="preference_privacy_block_content">Блокирај трагаче осталог садржаја</string>
+  <string name="preference_privacy_block_analytics">Блокирај аналитичке пратиоце</string>
+  <string name="preference_privacy_block_social">Блокирај друштвене пратиоце</string>
+  <string name="preference_privacy_block_content">Блокирај пратиоце осталог садржаја</string>
   <string name="preference_privacy_block_content_summary">Може пореметити неке видео клипове и веб странице</string>
-  <string name="preference_privacy_secure_mode">Потајни</string>
+  <string name="preference_privacy_secure_mode">Потајни режим</string>
   <string name="preference_privacy_stealth_summary">Сакриј веб странице приликом мењања између апликација</string>
   <string name="preference_category_performance">Перформансе</string>
   <string name="preference_performance_block_webfonts">Блокирај веб фонтове</string>
   <string name="preference_performance_block_webfonts_summary">Иконице и слике се можда неће приказивати</string>
   <string name="preference_performance_block_images">Блокирај слике</string>
+  <string name="preference_default_browser2">Постави %1$s као подразумевани прегледач</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Шаљи податке о употреби</string>
   <string name="preference_mozilla_telemetry_summary">Сазнајте више</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla тежи ка прикупљању само оних података који су потребни да бисмо пружали и побољшали %1$s за све.</string>
   <string name="preference_privacy_notice">Обавештење о приватности</string>
@@ -61,7 +63,7 @@
   <string name="content_description_back">Иди назад</string>
   <string name="content_description_stop">Престани са учитавањем веб сајта</string>
   <string name="content_description_customtab_exit">Повратак на претходну</string>
-  <string name="content_description_blocking_switch">Блокирај трагаче</string>
+  <string name="content_description_blocking_switch">Блокирај пратиоце</string>
   <string name="context_menu_paste_go">Налепи и иди</string>
   <string name="your_rights">Ваша права</string>
   <string name="external_app_prompt_title">Отворите везу у другој апликацији</string>
@@ -120,4 +122,10 @@
   <string name="notification_browsing_session_channel_name">Сесија за приватно прегледање</string>
   <string name="notification_browsing_session_channel_description">Обавештења вам омогућавају да обришете вашу %1$s сесију једним притиском. Не морате да отворите апликацију или да проверите шта се извршава у вашем прегледачу.</string>
   <string name="tabs_tray_action_erase">Обриши историјат прегледања</string>
+  <string name="download_firefox">Преузмите Firefox</string>
+  <string name="your_rights_content1">%1$s је бесплатан софтвер и отвореног кода направљен од стране Mozilla-е и других доприносиоца.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s вам је омогућен под условима "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla &#1112;&#1072;&#1074;&#1085;&#1077; &#1083;&#1080;&#1094;&#1077;&#1085;&#1094;&#1077;</a>" и других лиценци отвореног кода."]]></string>
+  <string name="your_rights_content3"><![CDATA["Немате никаква права нити лиценцу на заштитне знакове Mozilla фондације нити било шта слично, укључујући и Mozilla, Firefox или %1$s имена или логотипе. Додатне информације можете пронаћи "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1086;&#1074;&#1076;&#1077;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Додатни изворни код за %1$s је доступан под различитим бесплатним и "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1094;&#1072;&#1084;&#1072;</a>" отвореног кода."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s такође користи блок-листе пружане од стране Disconnect инкорпорације као одвојени и независни радови под "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" и доступним "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1086;&#1074;&#1076;&#1077;</a>.]]></string>
 </resources>
