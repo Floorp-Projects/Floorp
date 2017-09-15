@@ -13,6 +13,7 @@
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
+#include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
@@ -772,6 +773,9 @@ private:
   nsString mProcessName;
 
   static ContentChild* sSingleton;
+
+  class ShutdownCanary;
+  static StaticAutoPtr<ShutdownCanary> sShutdownCanary;
 
   nsCOMPtr<nsIDomainPolicy> mPolicy;
   nsCOMPtr<nsITimer> mForceKillTimer;
