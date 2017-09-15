@@ -232,7 +232,7 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
   mHashShift = Move(aOther.mHashShift);
   mEntryCount = Move(aOther.mEntryCount);
   mRemovedCount = Move(aOther.mRemovedCount);
-  mEntryStore = Move(aOther.mEntryStore);
+  mEntryStore.Set(aOther.mEntryStore);
 #ifdef DEBUG
   mChecker = Move(aOther.mChecker);
 #endif
