@@ -1043,7 +1043,7 @@ FindStartOfUninitializedAndUndefinedSlots(NativeObject* templateObj, uint32_t ns
 static void
 AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj, int32_t count)
 {
-    AutoUnsafeCallWithABI unsafe;
+    JS::AutoCheckCannotGC nogc(cx);
 
     obj->initPrivate(nullptr);
 
@@ -1550,8 +1550,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         loadJSContext(ReturnReg);
         setupUnalignedABICall(scratch);
         passABIArg(ReturnReg);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void*, BailoutReportOverRecursed), MoveOp::GENERAL,
-                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void*, BailoutReportOverRecursed));
         jump(exceptionLabel());
     }
 
@@ -1616,8 +1615,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             // Call a stub to free allocated memory and create arguments objects.
             setupUnalignedABICall(temp);
             passABIArg(bailoutInfo);
-            callWithABI(JS_FUNC_TO_DATA_PTR(void*, FinishBailoutToBaseline),
-                        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+            callWithABI(JS_FUNC_TO_DATA_PTR(void*, FinishBailoutToBaseline));
             branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
@@ -1655,8 +1653,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             // Call a stub to free allocated memory and create arguments objects.
             setupUnalignedABICall(temp);
             passABIArg(bailoutInfo);
-            callWithABI(JS_FUNC_TO_DATA_PTR(void*, FinishBailoutToBaseline),
-                        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+            callWithABI(JS_FUNC_TO_DATA_PTR(void*, FinishBailoutToBaseline));
             branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
@@ -1732,9 +1729,7 @@ MacroAssembler::assumeUnreachable(const char* output)
         setupUnalignedABICall(temp);
         movePtr(ImmPtr(output), temp);
         passABIArg(temp);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void*, AssumeUnreachable_),
-                    MoveOp::GENERAL,
-                    CheckUnsafeCallWithABI::DontCheckOther);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void*, AssumeUnreachable_));
 
         PopRegsInMask(save);
     }
@@ -1758,10 +1753,7 @@ MacroAssembler::assertTestInt32(Condition cond, const T& value, const char* outp
 template void MacroAssembler::assertTestInt32(Condition, const Address&, const char*);
 
 static void
-Printf0_(const char* output)
-{
-    AutoUnsafeCallWithABI unsafe;
-
+Printf0_(const char* output) {
     // Use stderr instead of stdout because this is only used for debug
     // output. stderr is less likely to interfere with the program's normal
     // output, and it's always unbuffered.
@@ -1786,9 +1778,7 @@ MacroAssembler::printf(const char* output)
 }
 
 static void
-Printf1_(const char* output, uintptr_t value)
-{
-    AutoUnsafeCallWithABI unsafe;
+Printf1_(const char* output, uintptr_t value) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     js::UniqueChars line = JS_sprintf_append(nullptr, output, value);
     if (!line)
@@ -1834,8 +1824,7 @@ MacroAssembler::tracelogStartId(Register logger, uint32_t textId, bool force)
     passABIArg(logger);
     move32(Imm32(textId), temp);
     passABIArg(temp);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate), MoveOp::GENERAL,
-                CheckUnsafeCallWithABI::DontCheckOther);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate));
 
     PopRegsInMask(save);
 }
@@ -1854,8 +1843,7 @@ MacroAssembler::tracelogStartId(Register logger, Register textId)
     setupUnalignedABICall(temp);
     passABIArg(logger);
     passABIArg(textId);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate), MoveOp::GENERAL,
-                CheckUnsafeCallWithABI::DontCheckOther);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate));
 
     PopRegsInMask(save);
 }
@@ -1876,8 +1864,7 @@ MacroAssembler::tracelogStartEvent(Register logger, Register event)
     setupUnalignedABICall(temp);
     passABIArg(logger);
     passABIArg(event);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogFunc), MoveOp::GENERAL,
-                CheckUnsafeCallWithABI::DontCheckOther);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogFunc));
 
     PopRegsInMask(save);
 }
@@ -1900,8 +1887,7 @@ MacroAssembler::tracelogStopId(Register logger, uint32_t textId, bool force)
     move32(Imm32(textId), temp);
     passABIArg(temp);
 
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate), MoveOp::GENERAL,
-                CheckUnsafeCallWithABI::DontCheckOther);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate));
 
     PopRegsInMask(save);
 }
@@ -1920,8 +1906,7 @@ MacroAssembler::tracelogStopId(Register logger, Register textId)
     setupUnalignedABICall(temp);
     passABIArg(logger);
     passABIArg(textId);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate), MoveOp::GENERAL,
-                CheckUnsafeCallWithABI::DontCheckOther);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate));
 
     PopRegsInMask(save);
 }
@@ -2122,8 +2107,7 @@ MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest, bool wid
     } else {
         setupUnalignedABICall(dest);
         passABIArg(src, MoveOp::DOUBLE);
-        callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32),
-                    MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+        callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
     }
     storeCallWordResult(dest);
 
@@ -2817,7 +2801,7 @@ MacroAssembler::passABIArg(const MoveOperand& from, MoveOp::Type type)
 }
 
 void
-MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result, CheckUnsafeCallWithABI check)
+MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result)
 {
     appendSignatureType(result);
 #ifdef JS_SIMULATOR
@@ -2826,33 +2810,8 @@ MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result, CheckUnsaf
 
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-
-#ifdef DEBUG
-    if (check == CheckUnsafeCallWithABI::Check) {
-        push(ReturnReg);
-        loadJSContext(ReturnReg);
-        Address flagAddr(ReturnReg, JSContext::offsetOfInUnsafeCallWithABI());
-        store32(Imm32(1), flagAddr);
-        pop(ReturnReg);
-    }
-#endif
-
     call(ImmPtr(fun));
-
     callWithABIPost(stackAdjust, result);
-
-#ifdef DEBUG
-    if (check == CheckUnsafeCallWithABI::Check) {
-        Label ok;
-        push(ReturnReg);
-        loadJSContext(ReturnReg);
-        Address flagAddr(ReturnReg, JSContext::offsetOfInUnsafeCallWithABI());
-        branch32(Assembler::Equal, flagAddr, Imm32(0), &ok);
-        assumeUnreachable("callWithABI: callee did not use AutoInUnsafeCallWithABI");
-        bind(&ok);
-        pop(ReturnReg);
-    }
-#endif
 }
 
 void
