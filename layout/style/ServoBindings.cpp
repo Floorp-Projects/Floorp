@@ -850,6 +850,13 @@ Gecko_GetBody(RawGeckoPresContextBorrowed aPresContext)
   return aPresContext->Document()->GetBodyElement();
 }
 
+bool
+Gecko_IsDocumentBody(RawGeckoElementBorrowed aElement)
+{
+  nsIDocument* doc = aElement->GetUncomposedDoc();
+  return doc && doc->GetBodyElement() == aElement;
+}
+
 nscolor
 Gecko_GetLookAndFeelSystemColor(int32_t aId,
                                 RawGeckoPresContextBorrowed aPresContext)

@@ -632,6 +632,7 @@ void Gecko_CSSCounterStyle_GetCssText(const nsCSSCounterStyleRule* rule, nsAStri
 NS_DECL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
 RawGeckoElementBorrowedOrNull Gecko_GetBody(RawGeckoPresContextBorrowed pres_context);
+bool Gecko_IsDocumentBody(RawGeckoElementBorrowed element);
 
 // We use an int32_t here instead of a LookAndFeel::ColorID
 // because forward-declaring a nested enum/struct is impossible
