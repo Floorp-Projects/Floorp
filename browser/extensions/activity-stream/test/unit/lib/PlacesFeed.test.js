@@ -98,8 +98,14 @@ describe("PlacesFeed", () => {
       assert.calledWith(global.NewTabUtils.activityStreamLinks.deleteBookmark, "g123kd");
     });
     it("should delete a history entry on DELETE_HISTORY_URL", () => {
-      feed.onAction({type: at.DELETE_HISTORY_URL, data: "guava.com"});
+      feed.onAction({type: at.DELETE_HISTORY_URL, data: {url: "guava.com", forceBlock: null}});
       assert.calledWith(global.NewTabUtils.activityStreamLinks.deleteHistoryEntry, "guava.com");
+      assert.notCalled(global.NewTabUtils.activityStreamLinks.blockURL);
+    });
+    it("should delete a history entry on DELETE_HISTORY_URL and force a site to be blocked if specified", () => {
+      feed.onAction({type: at.DELETE_HISTORY_URL, data: {url: "guava.com", forceBlock: "g123kd"}});
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.deleteHistoryEntry, "guava.com");
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.blockURL, {url: "guava.com"});
     });
     it("should call openNewWindow with the correct url on OPEN_NEW_WINDOW", () => {
       sinon.stub(feed, "openNewWindow");

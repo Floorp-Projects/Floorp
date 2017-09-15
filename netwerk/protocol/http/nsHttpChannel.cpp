@@ -3985,9 +3985,13 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
             MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread");
             mCacheAsyncOpenCalled = true;
             if (mNetworkTriggered) {
-                mRaceCacheWithNetwork = true;
+                mRaceCacheWithNetwork = sRCWNEnabled;
             }
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
+            if (NS_FAILED(rv)) {
+                // Drop the flag since the cache open failed
+                mCacheAsyncOpenCalled = false;
+            }
         } else {
             // We pass `this` explicitly as a parameter due to the raw pointer
             // to refcounted object in lambda analysis.
@@ -3997,7 +4001,10 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
                 if (self->mNetworkTriggered) {
                     self->mRaceCacheWithNetwork = true;
                 }
-                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
+                nsresult rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
+                if (NS_FAILED(rv)) {
+                    self->mCacheAsyncOpenCalled = false;
+                }
             };
 
             mCacheOpenTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
@@ -5872,7 +5879,9 @@ NS_IMETHODIMP nsHttpChannel::OnAuthAvailable()
     mAuthRetryPending = true;
     mProxyAuthPending = false;
     LOG(("Resuming the transaction, we got credentials from user"));
-    mTransactionPump->Resume();
+    if (mTransactionPump) {
+        mTransactionPump->Resume();
+    }
 
     return NS_OK;
 }
@@ -9396,7 +9405,7 @@ nsHttpChannel::TriggerNetwork()
     }
 
     if (mCacheAsyncOpenCalled && !mOnCacheAvailableCalled) {
-        mRaceCacheWithNetwork = true;
+        mRaceCacheWithNetwork = sRCWNEnabled;
     }
 
     LOG(("  triggering network\n"));

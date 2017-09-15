@@ -68,8 +68,9 @@ where it fails to use new volumes for tasks.
 
 
 def print_line(prefix, m):
-    now = datetime.datetime.utcnow()
-    print(b'[%s %sZ] %s' % (prefix, now.isoformat(), m), end=b'')
+    now = datetime.datetime.utcnow().isoformat()
+    now = now[:-3] if now[-7] == '.' else now  # slice microseconds to 3 decimals
+    print(b'[%s %sZ] %s' % (prefix, now, m), end=b'')
 
 
 def run_and_prefix_output(prefix, args, extra_env=None):
@@ -108,7 +109,6 @@ def run_and_prefix_output(prefix, args, extra_env=None):
         print_line(prefix, data)
 
     return p.wait()
-
 
 WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
 

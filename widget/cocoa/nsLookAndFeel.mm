@@ -306,13 +306,41 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       // There appears to be no available system defined color. HARDCODING to the appropriate color.
       aColor = NS_RGB(0x14,0x4F,0xAE);
       break;
+    // The following colors are supposed to be used as font-smoothing background
+    // colors, in the chrome-only -moz-font-smoothing-background-color property.
+    // This property is used for text on "vibrant" -moz-appearances.
+    // The colors have been obtained from the system on 10.12.6 using the
+    // program at https://bugzilla.mozilla.org/attachment.cgi?id=8907533 .
+    // We could obtain them at runtime, but doing so may be expensive and
+    // requires the use of the private API
+    // -[NSVisualEffectView fontSmoothingBackgroundColor].
+    case eColorID__moz_mac_vibrancy_light:
+    case eColorID__moz_mac_source_list:
+    case eColorID__moz_mac_tooltip:
+      aColor = NS_RGB(0xf7,0xf7,0xf7);
+      break;
+    case eColorID__moz_mac_vibrancy_dark:
+      aColor = NS_RGB(0x28,0x28,0x28);
+      break;
+    case eColorID__moz_mac_menupopup:
+    case eColorID__moz_mac_menuitem:
+      aColor = NS_RGB(0xe6,0xe6,0xe6);
+      break;
+    case eColorID__moz_mac_source_list_selection:
+      aColor = NS_RGB(0xc8,0xc8,0xc8);
+      break;
+    case eColorID__moz_mac_active_menuitem:
+    case eColorID__moz_mac_active_source_list_selection:
+      aColor = [NSColor currentControlTint] == NSGraphiteControlTint
+        ? NS_RGB(0xa0,0xa0,0xa0) : NS_RGB(0x0a,0x64,0xdc);
+      break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
       aColor = NS_RGB(0xff,0xff,0xff);
       res = NS_ERROR_FAILURE;
       break;
     }
-  
+
   return res;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

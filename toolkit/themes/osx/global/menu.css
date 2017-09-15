@@ -106,6 +106,7 @@ menubar > menu[_moz-menuactive="true"] {
 
 menubar > menu[_moz-menuactive="true"][open="true"] {
   -moz-appearance: menuitem;
+  -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
   color: -moz-mac-menutextselect;
 }
 
@@ -131,6 +132,7 @@ menupopup > menucaption {
 
 menu[_moz-menuactive="true"],
 menuitem[_moz-menuactive="true"] {
+  -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
   color: -moz-mac-menutextselect;
   background-color: Highlight;
 }
