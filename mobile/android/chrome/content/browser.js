@@ -5592,12 +5592,12 @@ var IdentityHandler = {
     }
     this._lastLocation = locationObj;
 
-    let uri = aBrowser.currentURI;
+    this._uri = aBrowser.currentURI;
     try {
-      uri = Services.uriFixup.createExposableURI(uri);
+      this._uri = Services.uriFixup.createExposableURI(this._uri);
     } catch (e) {}
 
-    let identityMode = this.getIdentityMode(aState, uri);
+    let identityMode = this.getIdentityMode(aState, this._uri);
     let mixedDisplay = this.getMixedDisplayMode(aState);
     let mixedActive = this.getMixedActiveMode(aState);
     let trackingMode = this.getTrackingMode(aState, aBrowser);
