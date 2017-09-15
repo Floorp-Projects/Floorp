@@ -787,6 +787,8 @@ public:
 
   void SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero);
 
+  void TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize);
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -3004,25 +3006,25 @@ arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
   }
 }
 
-static void
-arena_run_trim_head(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
-    size_t oldsize, size_t newsize)
+void
+arena_t::TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize,
+                     size_t aNewSize)
 {
-	size_t pageind = ((uintptr_t)run - (uintptr_t)chunk) >> pagesize_2pow;
-	size_t head_npages = (oldsize - newsize) >> pagesize_2pow;
+  size_t pageind = (uintptr_t(aRun) - uintptr_t(aChunk)) >> pagesize_2pow;
+  size_t head_npages = (aOldSize - aNewSize) >> pagesize_2pow;
 
-	MOZ_ASSERT(oldsize > newsize);
+  MOZ_ASSERT(aOldSize > aNewSize);
 
-	/*
-	 * Update the chunk map so that arena_t::DallocRun() can treat the
-	 * leading run as separately allocated.
-	 */
-	chunk->map[pageind].bits = (oldsize - newsize) | CHUNK_MAP_LARGE |
-	    CHUNK_MAP_ALLOCATED;
-	chunk->map[pageind+head_npages].bits = newsize | CHUNK_MAP_LARGE |
-	    CHUNK_MAP_ALLOCATED;
+  /*
+   * Update the chunk map so that arena_t::RunDalloc() can treat the
+   * leading run as separately allocated.
+   */
+  aChunk->map[pageind].bits = (aOldSize - aNewSize) | CHUNK_MAP_LARGE |
+      CHUNK_MAP_ALLOCATED;
+  aChunk->map[pageind+head_npages].bits = aNewSize | CHUNK_MAP_LARGE |
+      CHUNK_MAP_ALLOCATED;
 
-	arena->DallocRun(run, false);
+  DallocRun(aRun, false);
 }
 
 static void
@@ -3361,7 +3363,7 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 
 		leadsize = alignment - offset;
 		if (leadsize > 0) {
-			arena_run_trim_head(arena, chunk, (arena_run_t*)ret, alloc_size,
+			arena->TrimRunHead(chunk, (arena_run_t*)ret, alloc_size,
 			    alloc_size - leadsize);
 			ret = (void *)((uintptr_t)ret + leadsize);
 		}
