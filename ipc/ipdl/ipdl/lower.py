@@ -1597,24 +1597,14 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             segmentcapacity = self.segmentcapacitydict.get(name, 0)
 
             mfDecl, mfDefn = _splitFuncDeclDefn(
-                _generateMessageConstructor(md.msgCtorFunc(), md.msgId(),
-                                            segmentcapacity,
-                                            md.decl.type.nested,
-                                            md.decl.type.prio,
-                                            md.prettyMsgName(p.name+'::'),
-                                            md.decl.type.compress))
+                _generateMessageConstructor(md, segmentcapacity, p,
+                                            forReply=False))
             decls.append(mfDecl)
             self.funcDefns.append(mfDefn)
 
             if md.hasReply():
                 rfDecl, rfDefn = _splitFuncDeclDefn(
-                    _generateMessageConstructor(
-                        md.replyCtorFunc(), md.replyId(),
-                        0,
-                        md.decl.type.nested,
-                        md.decl.type.prio,
-                        md.prettyReplyName(p.name+'::'),
-                        md.decl.type.compress))
+                    _generateMessageConstructor(md, 0, p, forReply=True))
                 decls.append(rfDecl)
                 self.funcDefns.append(rfDefn)
 
@@ -1711,7 +1701,20 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageConstructor(clsname, msgid, segmentSize, nested, prio, prettyName, compress):
+def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
+    if forReply:
+        clsname = md.replyCtorFunc()
+        msgid = md.replyId()
+        prettyName = md.prettyReplyName(protocol.name+'::')
+    else:
+        clsname = md.msgCtorFunc()
+        msgid = md.msgId()
+        prettyName = md.prettyMsgName(protocol.name+'::')
+
+    nested = md.decl.type.nested
+    prio = md.decl.type.prio
+    compress = md.decl.type.compress
+
     routingId = ExprVar('routingId')
 
     func = FunctionDefn(FunctionDecl(
