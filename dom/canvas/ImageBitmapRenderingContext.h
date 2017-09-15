@@ -71,8 +71,7 @@ public:
   NS_IMETHOD Reset() override;
   virtual already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                  Layer* aOldLayer,
-                                                 LayerManager* aManager,
-                                                 bool aMirror = false) override;
+                                                 LayerManager* aManager) override;
   virtual void MarkContextClean() override;
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override;

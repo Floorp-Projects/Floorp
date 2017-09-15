@@ -466,11 +466,9 @@ public:
   NS_IMETHOD Reset() override;
   already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          Layer* aOldLayer,
-                                         LayerManager* aManager,
-                                         bool aMirror = false) override;
+                                         LayerManager* aManager) override;
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
-                                CanvasRenderer* aRenderer,
-                                bool aMirror = false) override;
+                                CanvasRenderer* aRenderer) override;
   virtual bool ShouldForceInactiveLayer(LayerManager* aManager) override;
   void MarkContextClean() override;
   void MarkContextCleanForFrameCapture() override;
