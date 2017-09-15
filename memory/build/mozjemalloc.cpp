@@ -793,6 +793,8 @@ public:
 
   inline void* MallocBinEasy(arena_bin_t* aBin, arena_run_t* aRun);
 
+  void* MallocBinHard(arena_bin_t* aBin);
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -3121,18 +3123,18 @@ arena_t::MallocBinEasy(arena_bin_t* aBin, arena_run_t* aRun)
   return ret;
 }
 
-/* Re-fill bin->runcur, then call arena_t::MallocBinEasy(). */
-static void *
-arena_bin_malloc_hard(arena_t *arena, arena_bin_t *bin)
+/* Re-fill aBin->runcur, then call arena_t::MallocBinEasy(). */
+void*
+arena_t::MallocBinHard(arena_bin_t* aBin)
 {
+  aBin->runcur = arena_bin_nonfull_run_get(this, aBin);
+  if (!aBin->runcur) {
+    return nullptr;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(aBin->runcur->magic == ARENA_RUN_MAGIC);
+  MOZ_DIAGNOSTIC_ASSERT(aBin->runcur->nfree > 0);
 
-	bin->runcur = arena_bin_nonfull_run_get(arena, bin);
-	if (!bin->runcur)
-		return nullptr;
-	MOZ_DIAGNOSTIC_ASSERT(bin->runcur->magic == ARENA_RUN_MAGIC);
-	MOZ_DIAGNOSTIC_ASSERT(bin->runcur->nfree > 0);
-
-	return arena->MallocBinEasy(bin, bin->runcur);
+  return MallocBinEasy(aBin, aBin->runcur);
 }
 
 /*
@@ -3253,7 +3255,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 	if ((run = bin->runcur) && run->nfree > 0)
 		ret = arena->MallocBinEasy(bin, run);
 	else
-		ret = arena_bin_malloc_hard(arena, bin);
+		ret = arena->MallocBinHard(bin);
 
 	if (!ret) {
 		malloc_spin_unlock(&arena->mLock);
