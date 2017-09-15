@@ -24,6 +24,7 @@ BROWSER_CHROME_MANIFESTS += ['browser.ini']
 #    'has-o.pem',
 #    'has-ou.pem',
 #    'invalid.pem',
+#    'longOID.pem',
 #    'md5-ee.pem',
 #    'revoked.pem',
 #    'ssl-ee.pem',
