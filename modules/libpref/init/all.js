@@ -5820,11 +5820,14 @@ pref("security.mixed_content.hsts_priming_request_timeout", 2000);
 // behavior of Firefox.
 pref("security.data_uri.unique_opaque_origin", true);
 
-// TODO: Bug 1380959: Block toplevel data: URI navigations
+#ifdef EARLY_BETA_OR_EARLIER
 // If true, all toplevel data: URI navigations will be blocked.
 // Please note that manually entering a data: URI in the
 // URL-Bar will not be blocked when flipping this pref.
+pref("security.data_uri.block_toplevel_data_uri_navigations", true);
+#else
 pref("security.data_uri.block_toplevel_data_uri_navigations", false);
+#endif
 
 // Enable Storage API for all platforms except Android.
 #if !defined(MOZ_WIDGET_ANDROID)
