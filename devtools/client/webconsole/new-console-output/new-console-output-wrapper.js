@@ -9,7 +9,6 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
-const { batchActions } = require("devtools/client/shared/redux/middleware/debounce");
 const { createContextMenu } = require("devtools/client/webconsole/new-console-output/utils/context-menu");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
@@ -18,7 +17,9 @@ const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/ne
 const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 
 let store = null;
-let queuedActions = [];
+let queuedMessageAdds = [];
+let queuedMessageUpdates = [];
+let queuedRequestUpdates = [];
 let throttledDispatchTimeout = false;
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
@@ -181,19 +182,18 @@ NewConsoleOutputWrapper.prototype = {
     this.jsterm.focus();
   },
   dispatchMessageAdd: function (message, waitForResponse) {
-    let action = actions.messageAdd(message);
-    batchedMessageAdd(action);
+    batchedMessagesAdd(message);
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
     // be removed once it's not needed anymore.
     // Can only wait for response if the action contains a valid message.
-    if (waitForResponse && action.message) {
-      let messageId = action.message.id;
+    if (waitForResponse) {
+      let {timeStamp} = message;
       return new Promise(resolve => {
         let jsterm = this.jsterm;
         jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
           for (let m of messages) {
-            if (m.messageId === messageId) {
+            if (m.timeStamp === timeStamp) {
               resolve(m.node);
               jsterm.hud.off("new-messages", onThisMessage);
               return;
@@ -207,8 +207,7 @@ NewConsoleOutputWrapper.prototype = {
   },
 
   dispatchMessagesAdd: function (messages) {
-    const batchedActions = messages.map(message => actions.messageAdd(message));
-    store.dispatch(batchActions(batchedActions));
+    store.dispatch(actions.messagesAdd(messages));
   },
 
   dispatchMessagesClear: function () {
@@ -225,13 +224,13 @@ NewConsoleOutputWrapper.prototype = {
     // that networkInfo.updates has all we need.
     const NUMBER_OF_NETWORK_UPDATE = 8;
     if (res.networkInfo.updates.length === NUMBER_OF_NETWORK_UPDATE) {
-      batchedMessageAdd(actions.networkMessageUpdate(message));
+      batchedMessageUpdates(message);
       this.jsterm.hud.emit("network-message-updated", res);
     }
   },
 
   dispatchRequestUpdate: function (id, data) {
-    batchedMessageAdd(actions.networkUpdateRequest(id, data));
+    batchedRequestUpdates({ id, data });
 
     // Fire an event indicating that all data fetched from
     // the backend has been received. This is based on
@@ -249,15 +248,37 @@ NewConsoleOutputWrapper.prototype = {
   }
 };
 
-function batchedMessageAdd(action) {
-  queuedActions.push(action);
+function setTimeoutIfNeeded() {
   if (!throttledDispatchTimeout) {
     throttledDispatchTimeout = setTimeout(() => {
-      store.dispatch(batchActions(queuedActions));
-      queuedActions = [];
+      store.dispatch(actions.messagesAdd(queuedMessageAdds));
+      queuedMessageUpdates.forEach(message => {
+        actions.networkMessageUpdate(message);
+      });
+      queuedRequestUpdates.forEach(({ id, data}) => {
+        actions.networkUpdateRequest(id, data);
+      });
+      queuedMessageAdds = [];
+      queuedMessageUpdates = [];
+      queuedRequestUpdates = [];
       throttledDispatchTimeout = null;
     }, 50);
   }
+}
+
+function batchedMessageUpdates(message) {
+  queuedMessageUpdates.push(message);
+  setTimeoutIfNeeded();
+}
+
+function batchedRequestUpdates(message) {
+  queuedRequestUpdates.push(message);
+  setTimeoutIfNeeded();
+}
+
+function batchedMessagesAdd(message) {
+  queuedMessageAdds.push(message);
+  setTimeoutIfNeeded();
 }
 
 // Exports from this module
