@@ -374,7 +374,7 @@ public:
 // Base types
 ////////////////////////////////////////////////////////////////////////
 
-struct PtrInfo;
+class PtrInfo;
 
 class EdgePool
 {
@@ -579,13 +579,15 @@ enum NodeColor { black, white, grey };
 // hundreds of thousands of them to be allocated and touched
 // repeatedly during each cycle collection.
 
-struct PtrInfo
+class PtrInfo final
 {
+public:
   void* mPointer;
   nsCycleCollectionParticipant* mParticipant;
   uint32_t mColor : 2;
   uint32_t mInternalRefs : 30;
   uint32_t mRefCount;
+
 private:
   EdgePool::Iterator mFirstChild;
 
