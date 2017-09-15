@@ -34,13 +34,12 @@ import java.util.List;
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
     private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
-    /* package-local */ TopSitesPageAdapter(Context context, int pageNumber, int tilesSize,
+    /* package-local */ TopSitesPageAdapter(Context context, int pageNumber,
                                HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         setHasStableIds(true);
 
         this.topSites = new ArrayList<>();
         this.pageNumber = pageNumber;
-        this.tilesSize = tilesSize;
 
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
@@ -50,7 +49,8 @@ import java.util.List;
      * @param startIndex The first item that this topsites group should show. This item, and the following
      * 3 items will be displayed by this adapter.
      */
-    public void swapCursor(Cursor cursor, int startIndex) {
+    public void swapCursor(final Cursor cursor, final int startIndex, final int tilesSize) {
+        this.tilesSize = tilesSize;
         topSites.clear();
 
         if (cursor == null) {

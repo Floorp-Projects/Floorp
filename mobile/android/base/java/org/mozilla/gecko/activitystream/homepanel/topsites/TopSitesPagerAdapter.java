@@ -105,7 +105,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
                 final TopSitesPage page = (TopSitesPage) inflater.inflate(R.layout.activity_stream_topsites_page, null, false);
 
                 final TopSitesPageAdapter adapter = new TopSitesPageAdapter(
-                        context, i, tilesSize, onUrlOpenListener, onUrlOpenInBackgroundListener);
+                        context, i, onUrlOpenListener, onUrlOpenInBackgroundListener);
                 page.setAdapter(adapter);
                 RecyclerViewClickSupport.addTo(page).setOnItemClickListener(adapter);
                 pages.add(page);
@@ -115,7 +115,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
                 final TopSitesPage page = pages.get(pages.size() - 1);
 
                 // Ensure the page doesn't use the old/invalid cursor anymore
-                page.getAdapter().swapCursor(null, 0);
+                page.getAdapter().swapCursor(null, 0, 0);
 
                 pages.remove(pages.size() - 1);
             }
@@ -125,7 +125,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
 
         int startIndex = 0;
         for (TopSitesPage page : pages) {
-            page.getAdapter().swapCursor(cursor, startIndex);
+            page.getAdapter().swapCursor(cursor, startIndex, tilesSize);
             startIndex += NUM_TILES;
         }
 
