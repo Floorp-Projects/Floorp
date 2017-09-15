@@ -14,51 +14,52 @@
 #include "malloc_decls.h"
 
 #ifdef MOZ_WRAP_NEW_DELETE
-/* operator new(unsigned int) */
-MOZ_MEMORY_API void*
-_Znwj(unsigned int size)
+#include <new>
+
+MFBT_API void*
+operator new(size_t size)
 {
   return malloc_impl(size);
 }
-/* operator new[](unsigned int) */
-MOZ_MEMORY_API void*
-_Znaj(unsigned int size)
+
+MFBT_API void*
+operator new[](size_t size)
 {
   return malloc_impl(size);
 }
-/* operator delete(void*) */
-MOZ_MEMORY_API void
-_ZdlPv(void* ptr)
+
+MFBT_API void
+operator delete(void* ptr)
 {
   free_impl(ptr);
 }
-/* operator delete[](void*) */
-MOZ_MEMORY_API void
-_ZdaPv(void* ptr)
+
+MFBT_API void
+operator delete[](void* ptr)
 {
   free_impl(ptr);
 }
-/*operator new(unsigned int, std::nothrow_t const&)*/
-MOZ_MEMORY_API void*
-_ZnwjRKSt9nothrow_t(unsigned int size)
+
+MFBT_API void*
+operator new(size_t size, std::nothrow_t const&)
 {
   return malloc_impl(size);
 }
-/*operator new[](unsigned int, std::nothrow_t const&)*/
-MOZ_MEMORY_API void*
-_ZnajRKSt9nothrow_t(unsigned int size)
+
+MFBT_API void*
+operator new[](size_t size, std::nothrow_t const&)
 {
   return malloc_impl(size);
 }
-/* operator delete(void*, std::nothrow_t const&) */
-MOZ_MEMORY_API void
-_ZdlPvRKSt9nothrow_t(void* ptr)
+
+MFBT_API void
+operator delete(void* ptr, std::nothrow_t const&)
 {
   free_impl(ptr);
 }
-/* operator delete[](void*, std::nothrow_t const&) */
-MOZ_MEMORY_API void
-_ZdaPvRKSt9nothrow_t(void* ptr)
+
+MFBT_API void
+operator delete[](void* ptr, std::nothrow_t const&)
 {
   free_impl(ptr);
 }
