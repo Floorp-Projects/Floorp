@@ -91,7 +91,8 @@
                     android:textColor="#ffffff"
                     android:textColorHighlight="@color/colorAccent"
                     android:textColorHint="@color/colorTextInactive"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:textCursorDrawable="@drawable/cursor" />
 
                 <ImageButton
                     android:id="@+id/clear"

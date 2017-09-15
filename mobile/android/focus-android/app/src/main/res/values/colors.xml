@@ -29,6 +29,8 @@
     <color name="colorSheetSessionBackground">#fff9f9fa</color>
     <color name="colorSheetSessionBackgroundPressed">#ffededf0</color>
 
+    <color name="colorCursor">#ccffffff</color>
+
     <color name="colorOverlay">#cc000000</color>
 
     <color name="colorTextInactive">#80FFFFFF</color>
