@@ -706,7 +706,7 @@ nsSystemInfo::Init()
   }
 
   nsAutoCString secondaryLibrary;
-  if (gtkver_len > 0) {
+  if (gtkver_len > 0 && gtkver_len < int(sizeof(gtkver))) {
     secondaryLibrary.Append(nsDependentCSubstring(gtkver, gtkver_len));
   }
 
