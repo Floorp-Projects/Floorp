@@ -95,7 +95,7 @@
 }
 
 #onboarding-overlay-button-watermark-icon,
-#onboarding-overlay-button.onboarding-watermark:not(:hover)::after,
+#onboarding-overlay-button.onboarding-watermark::after,
 #onboarding-overlay-button.onboarding-watermark:not(:hover) > #onboarding-overlay-button-icon {
   display: none;
 }
