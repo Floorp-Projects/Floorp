@@ -709,9 +709,12 @@ struct arena_t {
   arena_chunk_tree_t mChunksDirty;
 
 #ifdef MALLOC_DOUBLE_PURGE
+private:
   /* Head of a linked list of MADV_FREE'd-page-containing chunks this
    * arena manages. */
   mozilla::DoublyLinkedList<arena_chunk_t> mChunksMAdvised;
+
+public:
 #endif
 
   /*
@@ -772,6 +775,8 @@ struct arena_t {
   bool Init();
 
   void InitChunk(arena_chunk_t* aChunk, bool aZeroed);
+
+  void DeallocChunk(arena_chunk_t* aChunk);
 
   void Purge(bool aAll);
 
@@ -2713,38 +2718,35 @@ arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed)
 #endif
 }
 
-static void
-arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
+void
+arena_t::DeallocChunk(arena_chunk_t* aChunk)
 {
-
-	if (arena->mSpare) {
-		if (arena->mSpare->ndirty > 0) {
-			arena_chunk_tree_dirty_remove(
-			    &chunk->arena->mChunksDirty, arena->mSpare);
-			arena->mNumDirty -= arena->mSpare->ndirty;
-			arena->mStats.committed -= arena->mSpare->ndirty;
-		}
+  if (mSpare) {
+    if (mSpare->ndirty > 0) {
+      arena_chunk_tree_dirty_remove(&aChunk->arena->mChunksDirty, mSpare);
+      mNumDirty -= mSpare->ndirty;
+      mStats.committed -= mSpare->ndirty;
+    }
 
 #ifdef MALLOC_DOUBLE_PURGE
-		if (arena->mChunksMAdvised.ElementProbablyInList(arena->mSpare)) {
-			arena->mChunksMAdvised.remove(arena->mSpare);
-		}
+    if (mChunksMAdvised.ElementProbablyInList(mSpare)) {
+      mChunksMAdvised.remove(mSpare);
+    }
 #endif
 
-		chunk_dealloc((void *)arena->mSpare, chunksize, ARENA_CHUNK);
-		arena->mStats.mapped -= chunksize;
-		arena->mStats.committed -= arena_chunk_header_npages;
-	}
+    chunk_dealloc((void*)mSpare, chunksize, ARENA_CHUNK);
+    mStats.mapped -= chunksize;
+    mStats.committed -= arena_chunk_header_npages;
+  }
 
-	/*
-	 * Remove run from the tree of available runs, so that the arena does not use it.
-	 * Dirty page flushing only uses the tree of dirty chunks, so leaving this
-	 * chunk in the chunks_* trees is sufficient for that purpose.
-	 */
-	arena_avail_tree_remove(&arena->mRunsAvail,
-	    &chunk->map[arena_chunk_header_npages]);
+  /*
+   * Remove run from the tree of available runs, so that the arena does not use it.
+   * Dirty page flushing only uses the tree of dirty chunks, so leaving this
+   * chunk in the chunks_* trees is sufficient for that purpose.
+   */
+  arena_avail_tree_remove(&mRunsAvail, &aChunk->map[arena_chunk_header_npages]);
 
-	arena->mSpare = chunk;
+  mSpare = aChunk;
 }
 
 static arena_run_t *
@@ -2995,8 +2997,9 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 
 	/* Deallocate chunk if it is now completely unused. */
 	if ((chunk->map[arena_chunk_header_npages].bits & (~pagesize_mask |
-	    CHUNK_MAP_ALLOCATED)) == arena_maxclass)
-		arena_chunk_dealloc(arena, chunk);
+	    CHUNK_MAP_ALLOCATED)) == arena_maxclass) {
+		arena->DeallocChunk(chunk);
+	}
 
 	/* Enforce mMaxDirty. */
 	if (arena->mNumDirty > arena->mMaxDirty) {
