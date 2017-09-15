@@ -1456,7 +1456,7 @@ class Manager::OpenStreamAction final : public Manager::BaseAction
 {
 public:
   OpenStreamAction(Manager* aManager, ListenerId aListenerId,
-                   InputStreamResolver&& aResolver, const nsID& aBodyId)
+                   OpenStreamResolver&& aResolver, const nsID& aBodyId)
     : BaseAction(aManager, aListenerId)
     , mResolver(Move(aResolver))
     , mBodyId(aBodyId)
@@ -1482,7 +1482,7 @@ public:
   }
 
 private:
-  InputStreamResolver mResolver;
+  OpenStreamResolver mResolver;
   const nsID mBodyId;
   nsCOMPtr<nsIInputStream> mBodyStream;
 };
@@ -1856,7 +1856,7 @@ Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
 }
 
 void
-Manager::ExecuteOpenStream(Listener* aListener, InputStreamResolver&& aResolver,
+Manager::ExecuteOpenStream(Listener* aListener, OpenStreamResolver&& aResolver,
                            const nsID& aBodyId)
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
