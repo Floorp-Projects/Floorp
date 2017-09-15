@@ -1287,7 +1287,7 @@ VARIABLES = {
         This variable can only be used on Windows.
         """),
 
-    'DEFFILE': (Path, unicode,
+    'DEFFILE': (unicode, unicode,
         """The program .def (module definition) file.
 
         This variable can only be used on Windows.

@@ -32,7 +32,7 @@ GENERATED_FILES += [
     'HandlerData_p.c',
 ]
 
-DEFFILE = 'AccessibleHandler.def'
+DEFFILE = SRCDIR + '/AccessibleHandler.def'
 
 USE_LIBS += [
     'mscom_oop',

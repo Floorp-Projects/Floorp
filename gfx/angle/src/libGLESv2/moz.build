@@ -84,7 +84,7 @@ else:
 GeckoSharedLibrary('libGLESv2', linkage=None)
 
 RCFILE = SRCDIR + '/libGLESv2.rc'
-DEFFILE = 'libGLESv2.def'
+DEFFILE = SRCDIR + '/libGLESv2.def'
 
 USE_LIBS += ['libANGLE']
 

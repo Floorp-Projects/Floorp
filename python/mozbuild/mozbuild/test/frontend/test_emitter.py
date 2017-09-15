@@ -182,17 +182,13 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 1)
         self.assertIsInstance(objs[0], VariablePassthru)
 
-        deffile_path = mozpath.relpath(mozpath.join(reader.config.topsrcdir,
-                                                    'baz.def'),
-                                       reader.config.topobjdir)
-
         wanted = {
             'ALLOW_COMPILER_WARNINGS': True,
             'NO_DIST_INSTALL': True,
             'RCFILE': 'foo.rc',
             'RESFILE': 'bar.res',
             'RCINCLUDE': 'bar.rc',
-            'DEFFILE': deffile_path,
+            'DEFFILE': 'baz.def',
             'MOZBUILD_CFLAGS': ['-fno-exceptions', '-w'],
             'MOZBUILD_CXXFLAGS': ['-fcxx-exceptions', '-include foo.h'],
             'MOZBUILD_LDFLAGS': ['-framework Foo', '-x', '-DELAYLOAD:foo.dll',
