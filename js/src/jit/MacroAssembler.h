@@ -193,20 +193,6 @@ enum class ExitFrameToken : uint8_t;
 
 class AutoSaveLiveRegisters;
 
-enum class CheckUnsafeCallWithABI {
-    // Require the callee to use AutoUnsafeCallWithABI.
-    Check,
-
-    // We pushed an exit frame so this callWithABI can safely GC and walk the
-    // stack.
-    DontCheckHasExitFrame,
-
-    // Don't check this callWithABI uses AutoUnsafeCallWithABI, for instance
-    // because we're calling a simple helper function (like malloc or js_free)
-    // that we can't change and/or that we know won't GC.
-    DontCheckOther,
-};
-
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
@@ -579,10 +565,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void passABIArg(Register reg);
     inline void passABIArg(FloatRegister reg, MoveOp::Type type);
 
-    inline void callWithABI(void* fun, MoveOp::Type result = MoveOp::GENERAL,
-                            CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
-    inline void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
-    inline void callWithABI(const Address& fun, MoveOp::Type result = MoveOp::GENERAL);
+    template <typename T>
+    inline void callWithABI(const T& fun, MoveOp::Type result = MoveOp::GENERAL);
 
     void callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
                      MoveOp::Type result = MoveOp::GENERAL);
@@ -596,7 +580,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void callWithABIPre(uint32_t* stackAdjust, bool callFromWasm = false) PER_ARCH;
 
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABINoProfiler(void* fun, MoveOp::Type result, CheckUnsafeCallWithABI check);
+    void callWithABINoProfiler(void* fun, MoveOp::Type result);
     void callWithABINoProfiler(Register fun, MoveOp::Type result) PER_ARCH;
     void callWithABINoProfiler(const Address& fun, MoveOp::Type result) PER_ARCH;
 
