@@ -769,6 +769,8 @@ struct arena_t {
    */
   arena_bin_t mBins[1]; /* Dynamically sized. */
 
+  bool Init();
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -4019,79 +4021,79 @@ iralloc(void *ptr, size_t size)
 		return (huge_ralloc(ptr, size, oldsize));
 }
 
-static bool
-arena_new(arena_t *arena)
+bool
+arena_t::Init()
 {
-	unsigned i;
-	arena_bin_t *bin;
-	size_t prev_run_size;
+  unsigned i;
+  arena_bin_t* bin;
+  size_t prev_run_size;
 
-	if (malloc_spin_init(&arena->mLock))
-		return (true);
+  if (malloc_spin_init(&mLock))
+    return true;
 
-	memset(&arena->mStats, 0, sizeof(arena_stats_t));
+  memset(&mStats, 0, sizeof(arena_stats_t));
 
-	/* Initialize chunks. */
-	arena_chunk_tree_dirty_new(&arena->mChunksDirty);
+  /* Initialize chunks. */
+  arena_chunk_tree_dirty_new(&mChunksDirty);
 #ifdef MALLOC_DOUBLE_PURGE
-	new (&arena->mChunksMAdvised) mozilla::DoublyLinkedList<arena_chunk_t>();
+  new (&mChunksMAdvised) mozilla::DoublyLinkedList<arena_chunk_t>();
 #endif
-	arena->mSpare = nullptr;
+  mSpare = nullptr;
 
-	arena->mNumDirty = 0;
-	// Reduce the maximum amount of dirty pages we allow to be kept on
-	// thread local arenas. TODO: make this more flexible.
-	arena->mMaxDirty = opt_dirty_max >> 3;
+  mNumDirty = 0;
+  // Reduce the maximum amount of dirty pages we allow to be kept on
+  // thread local arenas. TODO: make this more flexible.
+  mMaxDirty = opt_dirty_max >> 3;
 
-	arena_avail_tree_new(&arena->mRunsAvail);
+  arena_avail_tree_new(&mRunsAvail);
 
-	/* Initialize bins. */
-	prev_run_size = pagesize;
+  /* Initialize bins. */
+  prev_run_size = pagesize;
 
-	/* (2^n)-spaced tiny bins. */
-	for (i = 0; i < ntbins; i++) {
-		bin = &arena->mBins[i];
-		bin->runcur = nullptr;
-		arena_run_tree_new(&bin->runs);
+  /* (2^n)-spaced tiny bins. */
+  for (i = 0; i < ntbins; i++) {
+    bin = &mBins[i];
+    bin->runcur = nullptr;
+    arena_run_tree_new(&bin->runs);
 
-		bin->reg_size = (1ULL << (TINY_MIN_2POW + i));
+    bin->reg_size = (1ULL << (TINY_MIN_2POW + i));
 
-		prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
+    prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
-		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
-	}
+    memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
+  }
 
-	/* Quantum-spaced bins. */
-	for (; i < ntbins + nqbins; i++) {
-		bin = &arena->mBins[i];
-		bin->runcur = nullptr;
-		arena_run_tree_new(&bin->runs);
+  /* Quantum-spaced bins. */
+  for (; i < ntbins + nqbins; i++) {
+    bin = &mBins[i];
+    bin->runcur = nullptr;
+    arena_run_tree_new(&bin->runs);
 
-		bin->reg_size = quantum * (i - ntbins + 1);
+    bin->reg_size = quantum * (i - ntbins + 1);
 
-		prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
+    prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
-		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
-	}
+    memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
+  }
 
-	/* (2^n)-spaced sub-page bins. */
-	for (; i < ntbins + nqbins + nsbins; i++) {
-		bin = &arena->mBins[i];
-		bin->runcur = nullptr;
-		arena_run_tree_new(&bin->runs);
+  /* (2^n)-spaced sub-page bins. */
+  for (; i < ntbins + nqbins + nsbins; i++) {
+    bin = &mBins[i];
+    bin->runcur = nullptr;
+    arena_run_tree_new(&bin->runs);
 
-		bin->reg_size = (small_max << (i - (ntbins + nqbins) + 1));
+    bin->reg_size = (small_max << (i - (ntbins + nqbins) + 1));
 
-		prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
+    prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
-		memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
-	}
+    memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
+  }
 
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-	arena->mMagic = ARENA_MAGIC;
+  mMagic = ARENA_MAGIC;
 #endif
 
-	return (false);
+  return false;
 }
 
 static inline arena_t *
@@ -4127,7 +4129,7 @@ arenas_extend()
 	/* Allocate enough space for trailing bins. */
 	ret = (arena_t *)base_alloc(sizeof(arena_t)
 	    + (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
-	if (!ret || arena_new(ret)) {
+	if (!ret || ret->Init()) {
 		return arenas_fallback();
         }
 
@@ -4632,7 +4634,7 @@ MALLOC_OUT:
 #endif
     return true;
   }
-  /* arena_new() sets this to a lower value for thread local arenas;
+  /* arena_t::Init() sets this to a lower value for thread local arenas;
    * reset to the default value for the main arenas */
   arenas[0]->mMaxDirty = opt_dirty_max;
 
