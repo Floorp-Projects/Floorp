@@ -381,7 +381,7 @@
               </vbox>
               <vbox id="legacy-extensions-notice" class="alert-container" hidden="true">
                 <vbox class="alert">
-                  <description>&legacyWarning.description;
+                  <description id="legacy-extensions-description">
                     <label class="text-link plain" id="legacy-extensions-learnmore-link">&legacyWarning.showLegacy;</label>
                   </description>
                 </vbox>

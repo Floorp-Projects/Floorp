@@ -382,7 +382,7 @@ private:
   RefPtr<TextTrack> mTrack;
   RefPtr<HTMLTrackElement> mTrackElement;
   nsString mId;
-  MOZ_INIT_OUTSIDE_CTOR double mPosition;
+  double mPosition;
   bool mPositionIsAutoKeyword;
   PositionAlignSetting mPositionAlign;
   double mSize;
@@ -391,7 +391,7 @@ private:
   RefPtr<TextTrackRegion> mRegion;
   DirectionSetting mVertical;
   bool mLineIsAutoKeyword;
-  MOZ_INIT_OUTSIDE_CTOR double mLine;
+  double mLine;
   AlignSetting mAlign;
   LineAlignSetting mLineAlign;
 

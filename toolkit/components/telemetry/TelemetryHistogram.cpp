@@ -38,8 +38,8 @@ using base::FlagHistogram;
 using base::LinearHistogram;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
-using mozilla::Telemetry::Accumulation;
-using mozilla::Telemetry::KeyedAccumulation;
+using mozilla::Telemetry::HistogramAccumulation;
+using mozilla::Telemetry::KeyedHistogramAccumulation;
 using mozilla::Telemetry::HistogramID;
 using mozilla::Telemetry::ProcessID;
 using mozilla::Telemetry::HistogramCount;
@@ -1970,7 +1970,7 @@ TelemetryHistogram::AccumulateCategorical(HistogramID aId,
 
 void
 TelemetryHistogram::AccumulateChild(ProcessID aProcessType,
-                                    const nsTArray<Accumulation>& aAccumulations)
+                                    const nsTArray<HistogramAccumulation>& aAccumulations)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -1989,7 +1989,7 @@ TelemetryHistogram::AccumulateChild(ProcessID aProcessType,
 
 void
 TelemetryHistogram::AccumulateChildKeyed(ProcessID aProcessType,
-                                         const nsTArray<KeyedAccumulation>& aAccumulations)
+                                         const nsTArray<KeyedHistogramAccumulation>& aAccumulations)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);

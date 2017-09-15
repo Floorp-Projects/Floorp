@@ -50,6 +50,7 @@ public:
 
   MOZ_IS_CLASS_INIT
   MediaResult InitIPDL(const VideoInfo& aVideoInfo,
+                       float aFramerate,
                        const layers::TextureFactoryIdentifier& aIdentifier);
   void DestroyIPDL();
 

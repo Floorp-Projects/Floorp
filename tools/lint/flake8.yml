@@ -16,6 +16,7 @@ flake8:
         - testing/mozbase
         - testing/mochitest
         - testing/talos/
+        - testing/xpcshell
         - tools/git
         - tools/lint
         - tools/mercurial

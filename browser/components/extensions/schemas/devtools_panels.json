@@ -180,7 +180,6 @@
           },
           {
             "name": "setExpression",
-            "unsupported": true,
             "async": "callback",
             "type": "function",
             "description": "Sets an expression that is evaluated within the inspected page. The result is displayed in the sidebar pane.",

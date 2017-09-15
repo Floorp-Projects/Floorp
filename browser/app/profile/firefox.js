@@ -1700,6 +1700,11 @@ pref("extensions.formautofill.available", "staged-rollout");
 pref("extensions.formautofill.available", "detect");
 #endif
 pref("extensions.formautofill.addresses.enabled", true);
+#ifdef NIGHTLY_BUILD
+pref("extensions.formautofill.creditCards.available", true);
+#else
+pref("extensions.formautofill.creditCards.available", false);
+#endif
 pref("extensions.formautofill.creditCards.enabled", true);
 pref("extensions.formautofill.firstTimeUse", true);
 pref("extensions.formautofill.heuristics.enabled", true);
