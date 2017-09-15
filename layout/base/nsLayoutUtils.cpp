@@ -695,22 +695,6 @@ nsLayoutUtils::CSSFiltersEnabled()
 }
 
 bool
-nsLayoutUtils::CSSClipPathShapesEnabled()
-{
-  static bool sCSSClipPathShapesEnabled;
-  static bool sCSSClipPathShapesPrefCached = false;
-
-  if (!sCSSClipPathShapesPrefCached) {
-   sCSSClipPathShapesPrefCached = true;
-   Preferences::AddBoolVarCache(&sCSSClipPathShapesEnabled,
-                                "layout.css.clip-path-shapes.enabled",
-                                false);
-  }
-
-  return sCSSClipPathShapesEnabled;
-}
-
-bool
 nsLayoutUtils::UnsetValueEnabled()
 {
   static bool sUnsetValueEnabled;

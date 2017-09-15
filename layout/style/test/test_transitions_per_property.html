@@ -1563,9 +1563,6 @@ function filter_function_list_equals(computedValStr, expectedList)
 }
 
 function test_clip_path_transition(prop) {
-  if (!SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
-    return;
-  }
   for (var i in clipPathTests) {
     var test = clipPathTests[i];
     div.style.setProperty("transition-property", "none", "");
