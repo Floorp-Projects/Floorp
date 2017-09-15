@@ -39,6 +39,13 @@ struct QuotaInfo
 
 typedef std::function<void(nsCOMPtr<nsIInputStream>&&)> InputStreamResolver;
 
+enum class OpenMode : uint8_t
+{
+  Eager,
+  Lazy,
+  NumTypes
+};
+
 } // namespace cache
 } // namespace dom
 } // namespace mozilla
