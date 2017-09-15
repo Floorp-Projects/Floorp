@@ -103,7 +103,7 @@ public:
   VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState);
   explicit VRPose(nsISupports* aParent);
 
-  uint32_t FrameID() const { return mFrameId; }
+  uint64_t FrameID() const { return mFrameId; }
 
   virtual void GetPosition(JSContext* aCx,
                            JS::MutableHandle<JSObject*> aRetval,
@@ -129,7 +129,7 @@ public:
 protected:
   ~VRPose();
 
-  uint32_t mFrameId;
+  uint64_t mFrameId;
   gfx::VRHMDSensorState mVRState;
 };
 
@@ -281,7 +281,7 @@ public:
   static already_AddRefed<VRSubmitFrameResult> Constructor(const GlobalObject& aGlobal,
                                                            ErrorResult& aRv);
 
-  void Update(uint32_t aFrameNum, const nsACString& aBase64Image);
+  void Update(uint64_t aFrameNum, const nsACString& aBase64Image);
   // WebIDL Members
   double FrameNum() const;
   void GetBase64Image(nsAString& aImage) const;
@@ -295,7 +295,7 @@ protected:
 
   nsCOMPtr<nsISupports> mParent;
   nsString mBase64Image;
-  uint32_t mFrameNum;
+  uint64_t mFrameNum;
 };
 
 class VRDisplay final : public DOMEventTargetHelper
