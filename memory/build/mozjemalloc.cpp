@@ -780,15 +780,17 @@ private:
 
   void DeallocChunk(arena_chunk_t* aChunk);
 
-public:
   arena_run_t* AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero);
 
+public:
   void DallocRun(arena_run_t* aRun, bool aDirty);
 
   void SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero);
 
+private:
   void TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize);
 
+public:
   void TrimRunTail(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize, bool dirty);
 
 private:
@@ -804,6 +806,8 @@ private:
 
 public:
   inline void* Malloc(size_t aSize, bool aZero);
+
+  void* Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize);
 
   void Purge(bool aAll);
 
@@ -3350,57 +3354,56 @@ icalloc(size_t size)
 }
 
 /* Only handles large allocations that require more than page alignment. */
-static void *
-arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
+void*
+arena_t::Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize)
 {
-	void *ret;
-	size_t offset;
-	arena_chunk_t *chunk;
+  void* ret;
+  size_t offset;
+  arena_chunk_t* chunk;
 
-	MOZ_ASSERT((size & pagesize_mask) == 0);
-	MOZ_ASSERT((alignment & pagesize_mask) == 0);
+  MOZ_ASSERT((aSize & pagesize_mask) == 0);
+  MOZ_ASSERT((aAlignment & pagesize_mask) == 0);
 
-	malloc_spin_lock(&arena->mLock);
-	ret = arena->AllocRun(nullptr, alloc_size, true, false);
-	if (!ret) {
-		malloc_spin_unlock(&arena->mLock);
-		return nullptr;
-	}
+  malloc_spin_lock(&mLock);
+  ret = AllocRun(nullptr, aAllocSize, true, false);
+  if (!ret) {
+    malloc_spin_unlock(&mLock);
+    return nullptr;
+  }
 
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ret);
+  chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(ret);
 
-	offset = (uintptr_t)ret & (alignment - 1);
-	MOZ_ASSERT((offset & pagesize_mask) == 0);
-	MOZ_ASSERT(offset < alloc_size);
-	if (offset == 0)
-		arena->TrimRunTail(chunk, (arena_run_t*)ret, alloc_size, size, false);
-	else {
-		size_t leadsize, trailsize;
+  offset = uintptr_t(ret) & (aAlignment - 1);
+  MOZ_ASSERT((offset & pagesize_mask) == 0);
+  MOZ_ASSERT(offset < aAllocSize);
+  if (offset == 0) {
+    TrimRunTail(chunk, (arena_run_t*)ret, aAllocSize, aSize, false);
+  } else {
+    size_t leadsize, trailsize;
 
-		leadsize = alignment - offset;
-		if (leadsize > 0) {
-			arena->TrimRunHead(chunk, (arena_run_t*)ret, alloc_size,
-			    alloc_size - leadsize);
-			ret = (void *)((uintptr_t)ret + leadsize);
-		}
+    leadsize = aAlignment - offset;
+    if (leadsize > 0) {
+      TrimRunHead(chunk, (arena_run_t*)ret, aAllocSize, aAllocSize - leadsize);
+      ret = (void*)(uintptr_t(ret) + leadsize);
+    }
 
-		trailsize = alloc_size - leadsize - size;
-		if (trailsize != 0) {
-			/* Trim trailing space. */
-			MOZ_ASSERT(trailsize < alloc_size);
-			arena->TrimRunTail(chunk, (arena_run_t*)ret, size + trailsize,
-			    size, false);
-		}
-	}
+    trailsize = aAllocSize - leadsize - aSize;
+    if (trailsize != 0) {
+      /* Trim trailing space. */
+      MOZ_ASSERT(trailsize < aAllocSize);
+      TrimRunTail(chunk, (arena_run_t*)ret, aSize + trailsize, aSize, false);
+    }
+  }
 
-	arena->mStats.allocated_large += size;
-	malloc_spin_unlock(&arena->mLock);
+  mStats.allocated_large += aSize;
+  malloc_spin_unlock(&mLock);
 
-	if (opt_junk)
-		memset(ret, kAllocJunk, size);
-	else if (opt_zero)
-		memset(ret, 0, size);
-	return (ret);
+  if (opt_junk) {
+    memset(ret, kAllocJunk, aSize);
+  } else if (opt_zero) {
+    memset(ret, 0, aSize);
+  }
+  return ret;
 }
 
 static inline void *
@@ -3486,7 +3489,7 @@ ipalloc(size_t alignment, size_t size)
 		}
 
 		if (run_size <= arena_maxclass) {
-			ret = arena_palloc(choose_arena(size), alignment, ceil_size,
+			ret = choose_arena(size)->Palloc(alignment, ceil_size,
 			    run_size);
 		} else if (alignment <= chunksize)
 			ret = huge_malloc(ceil_size, false);
