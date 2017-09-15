@@ -79,31 +79,25 @@
   "genericErrorDetails": {
     "message": "Nie sme si istí, čo sa práve stalo. Chcete tú skúsiť znova alebo chcete vytvoriť snímku inej stránky?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Tvorte, ukladajte a zdieľajte snímky obrazovky bez toho, aby ste museli opustiť Firefox."
   },
-  "tourHeaderPageAction": {
-    "message": "Nový spôsob ukladania"
-  },
-  "tourBodyPageAction": {
-    "message": "Kedykoľvek chcete urobiť snímku, otvorte ponuku akcii stránky v paneli s adresou."
-  },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "Zachyťte to, čo chcete"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "Ak chcete zachytiť časť stránky, urobíte to kliknutím a potiahnutím. Váš výber zvýrazníte tak, že sa naň presuniete myšou."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Zachyťte okná alebo celé webové stránky"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "Kliknutím na tlačidlo v pravom hornom rohu môžete zachytiť viditeľnú časť stránky. Pomocou ďalšieho tlačidla zachytíte celú stránku."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "Urobte to, čo chcete"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "Uložte si orezanú snímku na web, aby ste ju mohli ľahšie zdieľať alebo si ju prevziať do počítača. Môžete si taktiež pozrieť všetky vaše snímky - stačí, ak kliknete na tlačidlo Moje snímky."
   },
   "tourSkip": {

@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "เราไม่แน่ใจว่าเกิดอะไรขึ้น ต้องการลองอีกครั้งหรือจับภาพของหน้าอื่น?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "จับ บันทึก และแบ่งปันภาพหน้าจอโดยไม่ต้องออกจาก Firefox"
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "จับภาพแค่สิ่งที่คุณต้องการ"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "คลิกแล้วลากเพื่อจับภาพแค่บางส่วนของหน้า คุณยังสามารถวางเมาส์เพื่อเน้นการเลือกของคุณ"
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "จับภาพหน้าต่างหรือทั้งหน้า"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "คลิกที่ปุ่มด้านบนขวาเพื่อจับภาพพื้นที่ที่มองเห็นในหน้าต่างหรือเพื่อจับภาพทั้งหน้า"
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "ตามใจชอบ"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "บันทึกภาพที่ครอบตัดของคุณไปยังเว็บเพื่อการแบ่งปันที่ง่ายขึ้น หรือดาวน์โหลดไปยังคอมพิวเตอร์ของคุณ คุณยังสามารถคลิกที่ปุ่ม ภาพของฉัน เพื่อค้นหาภาพทั้งหมดที่คุณจับไว้"
   },
   "tourSkip": {

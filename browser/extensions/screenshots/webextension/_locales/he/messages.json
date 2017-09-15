@@ -73,25 +73,25 @@
   "genericErrorDetails": {
     "message": "אנחנו לא בטוחים מה קרה פה הרגע. אכפת לך לנסות שוב או לצלם דף אחר?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "צילום, שמירה ושיתוף של צילומי מסך מבלי לעזוב את Firefox."
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "לצלם רק את מה שנחוץ לך"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "ניתן ללחוץ ולגרור כדי לצלם רק מקטע מהעמוד. ניתן גם לרחף מעל כדי לסמן את הבחירה שלך."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "לצלם חלונות או דפים שלמים"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "בחרו בכפתורים שבחלק העליון כדי לצלם את האזור הגלוי בחלון או כדי לצלם את הדף כולו."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "לפי טעמך"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "שמירת הצילומים החתוכים שלך לאחסון מקוון לצורך שיתוף פשוט יותר, או להוריד אותם למחשב שלך. ניתן גם ללחוץ על כפתור הצילומים שלי כדי למצוא את כל הצילומים שצילמת."
   },
   "tourSkip": {

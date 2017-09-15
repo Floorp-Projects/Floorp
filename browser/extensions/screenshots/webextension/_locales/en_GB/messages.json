@@ -70,25 +70,25 @@
   "genericErrorDetails": {
     "message": "We’re not sure what just happened. Care to try again or take a shot of a different page?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Take, save, and share screenshots without leaving Firefox."
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "Capture Just What You Want"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "Click and drag to capture just a portion of a page. You can also hover to highlight your selection."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Capture Windows or Entire Pages"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "Select the buttons in the upper right to capture the visible area in the window or to capture an entire page."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "As You Like It"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "Save your cropped shots to the web for easier sharing, or download them to your computer. You also can click on the My Shots button to find all the shots you’ve taken."
   },
   "tourSkip": {

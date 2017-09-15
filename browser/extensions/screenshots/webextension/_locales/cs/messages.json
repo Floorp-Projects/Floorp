@@ -79,31 +79,25 @@
   "genericErrorDetails": {
     "message": "Nejsme si jistí, co se právě stalo. Chcete to zkusit znovu, nebo zkusíte pořídit snímek na jiné stránce?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Pořizujte, ukládejte a sdílejte snímky webových stránek bez opuštění Firefoxu."
   },
-  "tourHeaderPageAction": {
-    "message": "Nový způsob ukládání"
-  },
-  "tourBodyPageAction": {
-    "message": "Kdykoliv chcete pořídit snímek, otevřete nabídku akcí stránky v adresním řádku."
-  },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "Zachyťte, cokoliv chcete"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "Stiskem tlačítka myši a tahem můžete vybrat oblast stránky. Výběr můžete provést také najetím myši na prvek stránky."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Pořizujte snímky jen částí nebo i celých stránek"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "Pomocí tlačítek vpravo nahoře můžete pořídit snímek jen viditelné části nebo úplně celé stránky."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "Jak sami chcete"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "Uložte si oříznutý snímek stránky na web pro rychlejší sdílení, nebo si ho stáhněte do počítače. Pro zobrazení všech snímků stačí klepnout na tlačítko Mé snímky."
   },
   "tourSkip": {
@@ -136,6 +130,6 @@
     "message": "zásadami ochrany osobních údajů"
   },
   "libraryLabel": {
-    "message": "Snímky stránek"
+    "message": "Screenshots"
   }
 }
