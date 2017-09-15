@@ -768,6 +768,8 @@ struct arena_t {
    *   --------+------+
    */
   arena_bin_t mBins[1]; /* Dynamically sized. */
+
+  void Purge(bool aAll);
 };
 
 /******************************************************************************/
@@ -2797,96 +2799,93 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 	return (run);
 }
 
-static void
-arena_purge(arena_t *arena, bool all)
+void
+arena_t::Purge(bool aAll)
 {
-	arena_chunk_t *chunk;
-	size_t i, npages;
-	/* If all is set purge all dirty pages. */
-	size_t dirty_max = all ? 1 : arena->mMaxDirty;
+  arena_chunk_t* chunk;
+  size_t i, npages;
+  /* If all is set purge all dirty pages. */
+  size_t dirty_max = aAll ? 1 : mMaxDirty;
 #ifdef MOZ_DEBUG
-	size_t ndirty = 0;
-	rb_foreach_begin(arena_chunk_t, link_dirty, &arena->mChunksDirty,
-	    chunk) {
-		ndirty += chunk->ndirty;
-	} rb_foreach_end(arena_chunk_t, link_dirty, &arena->mChunksDirty, chunk)
-	MOZ_ASSERT(ndirty == arena->mNumDirty);
+  size_t ndirty = 0;
+  rb_foreach_begin(arena_chunk_t, link_dirty, &mChunksDirty, chunk) {
+    ndirty += chunk->ndirty;
+  } rb_foreach_end(arena_chunk_t, link_dirty, &mChunksDirty, chunk)
+  MOZ_ASSERT(ndirty == mNumDirty);
 #endif
-	MOZ_DIAGNOSTIC_ASSERT(all || (arena->mNumDirty > arena->mMaxDirty));
+  MOZ_DIAGNOSTIC_ASSERT(aAll || (mNumDirty > mMaxDirty));
 
-	/*
-	 * Iterate downward through chunks until enough dirty memory has been
-	 * purged.  Terminate as soon as possible in order to minimize the
-	 * number of system calls, even if a chunk has only been partially
-	 * purged.
-	 */
-	while (arena->mNumDirty > (dirty_max >> 1)) {
+  /*
+   * Iterate downward through chunks until enough dirty memory has been
+   * purged.  Terminate as soon as possible in order to minimize the
+   * number of system calls, even if a chunk has only been partially
+   * purged.
+   */
+  while (mNumDirty > (dirty_max >> 1)) {
 #ifdef MALLOC_DOUBLE_PURGE
-		bool madvised = false;
+    bool madvised = false;
 #endif
-		chunk = arena_chunk_tree_dirty_last(&arena->mChunksDirty);
-		MOZ_DIAGNOSTIC_ASSERT(chunk);
+    chunk = arena_chunk_tree_dirty_last(&mChunksDirty);
+    MOZ_DIAGNOSTIC_ASSERT(chunk);
 
-		for (i = chunk_npages - 1; chunk->ndirty > 0; i--) {
-			MOZ_DIAGNOSTIC_ASSERT(i >= arena_chunk_header_npages);
+    for (i = chunk_npages - 1; chunk->ndirty > 0; i--) {
+      MOZ_DIAGNOSTIC_ASSERT(i >= arena_chunk_header_npages);
 
-			if (chunk->map[i].bits & CHUNK_MAP_DIRTY) {
+      if (chunk->map[i].bits & CHUNK_MAP_DIRTY) {
 #ifdef MALLOC_DECOMMIT
-				const size_t free_operation = CHUNK_MAP_DECOMMITTED;
+        const size_t free_operation = CHUNK_MAP_DECOMMITTED;
 #else
-				const size_t free_operation = CHUNK_MAP_MADVISED;
+        const size_t free_operation = CHUNK_MAP_MADVISED;
 #endif
-				MOZ_ASSERT((chunk->map[i].bits &
-				            CHUNK_MAP_MADVISED_OR_DECOMMITTED) == 0);
-				chunk->map[i].bits ^= free_operation | CHUNK_MAP_DIRTY;
-				/* Find adjacent dirty run(s). */
-				for (npages = 1;
-				     i > arena_chunk_header_npages &&
-				       (chunk->map[i - 1].bits & CHUNK_MAP_DIRTY);
-				     npages++) {
-					i--;
-					MOZ_ASSERT((chunk->map[i].bits &
-					            CHUNK_MAP_MADVISED_OR_DECOMMITTED) == 0);
-					chunk->map[i].bits ^= free_operation | CHUNK_MAP_DIRTY;
-				}
-				chunk->ndirty -= npages;
-				arena->mNumDirty -= npages;
+        MOZ_ASSERT((chunk->map[i].bits &
+                    CHUNK_MAP_MADVISED_OR_DECOMMITTED) == 0);
+        chunk->map[i].bits ^= free_operation | CHUNK_MAP_DIRTY;
+        /* Find adjacent dirty run(s). */
+        for (npages = 1;
+             i > arena_chunk_header_npages &&
+               (chunk->map[i - 1].bits & CHUNK_MAP_DIRTY);
+             npages++) {
+          i--;
+          MOZ_ASSERT((chunk->map[i].bits &
+                      CHUNK_MAP_MADVISED_OR_DECOMMITTED) == 0);
+          chunk->map[i].bits ^= free_operation | CHUNK_MAP_DIRTY;
+        }
+        chunk->ndirty -= npages;
+        mNumDirty -= npages;
 
 #ifdef MALLOC_DECOMMIT
-				pages_decommit((void *)((uintptr_t)
-				    chunk + (i << pagesize_2pow)),
-				    (npages << pagesize_2pow));
+        pages_decommit((void*)(uintptr_t(chunk) + (i << pagesize_2pow)),
+                       (npages << pagesize_2pow));
 #endif
-				arena->mStats.committed -= npages;
+        mStats.committed -= npages;
 
 #ifndef MALLOC_DECOMMIT
-				madvise((void *)((uintptr_t)chunk + (i <<
-				    pagesize_2pow)), (npages << pagesize_2pow),
-				    MADV_FREE);
+        madvise((void*)(uintptr_t(chunk) + (i << pagesize_2pow)),
+                (npages << pagesize_2pow), MADV_FREE);
 #  ifdef MALLOC_DOUBLE_PURGE
-				madvised = true;
+        madvised = true;
 #  endif
 #endif
-				if (arena->mNumDirty <= (dirty_max >> 1))
-					break;
-			}
-		}
+        if (mNumDirty <= (dirty_max >> 1)) {
+          break;
+        }
+      }
+    }
 
-		if (chunk->ndirty == 0) {
-			arena_chunk_tree_dirty_remove(&arena->mChunksDirty,
-			    chunk);
-		}
+    if (chunk->ndirty == 0) {
+      arena_chunk_tree_dirty_remove(&mChunksDirty, chunk);
+    }
 #ifdef MALLOC_DOUBLE_PURGE
-		if (madvised) {
-			/* The chunk might already be in the list, but this
-			 * makes sure it's at the front. */
-			if (arena->mChunksMAdvised.ElementProbablyInList(chunk)) {
-				arena->mChunksMAdvised.remove(chunk);
-			}
-			arena->mChunksMAdvised.pushFront(chunk);
-		}
+    if (madvised) {
+      /* The chunk might already be in the list, but this
+       * makes sure it's at the front. */
+      if (mChunksMAdvised.ElementProbablyInList(chunk)) {
+        mChunksMAdvised.remove(chunk);
+      }
+      mChunksMAdvised.pushFront(chunk);
+    }
 #endif
-	}
+  }
 }
 
 static void
@@ -2993,8 +2992,9 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		arena_chunk_dealloc(arena, chunk);
 
 	/* Enforce mMaxDirty. */
-	if (arena->mNumDirty > arena->mMaxDirty)
-		arena_purge(arena, false);
+	if (arena->mNumDirty > arena->mMaxDirty) {
+		arena->Purge(false);
+	}
 }
 
 static void
@@ -5038,7 +5038,7 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
 static void
 hard_purge_chunk(arena_chunk_t *chunk)
 {
-	/* See similar logic in arena_purge(). */
+	/* See similar logic in arena_t::Purge(). */
 
 	size_t i;
 	for (i = arena_chunk_header_npages; i < chunk_npages; i++) {
@@ -5112,7 +5112,7 @@ MozJemalloc::jemalloc_free_dirty_pages(void)
 
     if (arena) {
       malloc_spin_lock(&arena->mLock);
-      arena_purge(arena, true);
+      arena->Purge(true);
       malloc_spin_unlock(&arena->mLock);
     }
   }
