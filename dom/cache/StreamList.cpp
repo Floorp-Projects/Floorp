@@ -70,15 +70,12 @@ StreamList::Activate(CacheId aCacheId)
 }
 
 void
-StreamList::Add(const nsID& aId, nsIInputStream* aStream)
+StreamList::Add(const nsID& aId, nsCOMPtr<nsIInputStream>&& aStream)
 {
   // All streams should be added on IO thread before we set the stream
   // control on the owning IPC thread.
   MOZ_DIAGNOSTIC_ASSERT(!mStreamControl);
-  MOZ_DIAGNOSTIC_ASSERT(aStream);
-  Entry* entry = mList.AppendElement();
-  entry->mId = aId;
-  entry->mStream = aStream;
+  mList.AppendElement(Entry(aId, Move(aStream)));
 }
 
 already_AddRefed<nsIInputStream>
