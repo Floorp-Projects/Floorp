@@ -1517,13 +1517,10 @@ CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
 }
 
 mozilla::css::ImageValue*
-Gecko_ImageValue_Create(ServoBundledURI aURI)
+Gecko_ImageValue_Create(ServoBundledURI aURI, ServoRawOffsetArc<RustString> aURIString)
 {
-  NS_ConvertUTF8toUTF16 url(reinterpret_cast<const char*>(aURI.mURLString),
-                            aURI.mURLStringLength);
-
   RefPtr<css::ImageValue> value(
-    new css::ImageValue(url, do_AddRef(aURI.mExtraData)));
+    new css::ImageValue(aURIString, do_AddRef(aURI.mExtraData)));
   return value.forget().take();
 }
 
