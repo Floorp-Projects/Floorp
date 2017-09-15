@@ -100,7 +100,7 @@ protected:
 };
 
 
-class nsPageBreakFrame : public nsLeafFrame
+class nsPageBreakFrame final : public nsLeafFrame
 {
   NS_DECL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
