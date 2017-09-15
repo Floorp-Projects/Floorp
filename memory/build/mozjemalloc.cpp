@@ -798,10 +798,12 @@ private:
 
   arena_run_t* GetNonFullBinRun(arena_bin_t* aBin);
 
-public:
   inline void* MallocSmall(size_t aSize, bool aZero);
 
   void* MallocLarge(size_t aSize, bool aZero);
+
+public:
+  inline void* Malloc(size_t aSize, bool aZero);
 
   void Purge(bool aAll);
 
@@ -3314,19 +3316,15 @@ arena_t::MallocLarge(size_t aSize, bool aZero)
   return (ret);
 }
 
-static inline void *
-arena_malloc(arena_t *arena, size_t size, bool zero)
+void*
+arena_t::Malloc(size_t aSize, bool aZero)
 {
+  MOZ_DIAGNOSTIC_ASSERT(mMagic == ARENA_MAGIC);
+  MOZ_ASSERT(aSize != 0);
+  MOZ_ASSERT(QUANTUM_CEILING(aSize) <= arena_maxclass);
 
-	MOZ_ASSERT(arena);
-	MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
-	MOZ_ASSERT(size != 0);
-	MOZ_ASSERT(QUANTUM_CEILING(size) <= arena_maxclass);
-
-	if (size <= bin_maxclass) {
-		return arena->MallocSmall(size, zero);
-	} else
-		return arena->MallocLarge(size, zero);
+  return (aSize <= bin_maxclass) ? MallocSmall(aSize, aZero)
+                                 : MallocLarge(aSize, aZero);
 }
 
 static inline void *
@@ -3336,7 +3334,7 @@ imalloc(size_t size)
 	MOZ_ASSERT(size != 0);
 
 	if (size <= arena_maxclass)
-		return (arena_malloc(choose_arena(size), size, false));
+		return choose_arena(size)->Malloc(size, false);
 	else
 		return (huge_malloc(size, false));
 }
@@ -3346,7 +3344,7 @@ icalloc(size_t size)
 {
 
 	if (size <= arena_maxclass)
-		return (arena_malloc(choose_arena(size), size, true));
+		return choose_arena(size)->Malloc(size, true);
 	else
 		return (huge_malloc(size, true));
 }
@@ -3441,7 +3439,7 @@ ipalloc(size_t alignment, size_t size)
 
 	if (ceil_size <= pagesize || (alignment <= pagesize
 	    && ceil_size <= arena_maxclass))
-		ret = arena_malloc(choose_arena(size), ceil_size, false);
+		ret = choose_arena(size)->Malloc(ceil_size, false);
 	else {
 		size_t run_size;
 
@@ -4004,11 +4002,11 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 	 * need to move the object.  In that case, fall back to allocating new
 	 * space and copying.
 	 */
-	ret = arena_malloc(choose_arena(size), size, false);
+	ret = choose_arena(size)->Malloc(size, false);
 	if (!ret)
 		return nullptr;
 
-	/* Junk/zero-filling were already done by arena_malloc(). */
+	/* Junk/zero-filling were already done by arena_t::Malloc(). */
 	copysize = (size < oldsize) ? size : oldsize;
 #ifdef VM_COPY_MIN
 	if (copysize >= VM_COPY_MIN)
