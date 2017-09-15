@@ -25,6 +25,16 @@
   --tab-line-color: var(--lwt-accent-color);
 }
 
+tabbrowser {
+  /* Value for --in-content-page-background in in-content/common.inc.css */
+  background-color: #f9f9fa;
+}
+
+:root[privatebrowsingmode=temporary] tabbrowser {
+  /* Value for --in-content-page-background in aboutPrivateBrowsing.css */
+  background-color: #25003e;
+}
+
 #tabbrowser-tabs,
 #tabbrowser-tabs > .tabbrowser-arrowscrollbox,
 .tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
