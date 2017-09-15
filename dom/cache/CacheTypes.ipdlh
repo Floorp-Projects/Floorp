@@ -10,7 +10,6 @@ include ChannelInfo;
 include PBackgroundSharedTypes;
 
 using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
-using Namespace from "mozilla/dom/cache/IPCUtils.h";
 using OpenMode from "mozilla/dom/cache/IPCUtils.h";
 using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
 using RequestCredentials from "mozilla/dom/FetchIPCTypes.h";
@@ -213,7 +212,6 @@ struct StorageHasResult
 struct StorageOpenResult
 {
   nullable PCache actor;
-  Namespace ns;
 };
 
 struct StorageDeleteResult

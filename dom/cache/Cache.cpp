@@ -256,14 +256,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Cache)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Cache::Cache(nsIGlobalObject* aGlobal, CacheChild* aActor, Namespace aNamespace)
+Cache::Cache(nsIGlobalObject* aGlobal, CacheChild* aActor)
   : mGlobal(aGlobal)
   , mActor(aActor)
-  , mNamespace(aNamespace)
 {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mActor);
-  MOZ_DIAGNOSTIC_ASSERT(mNamespace != INVALID_NAMESPACE);
   mActor->SetListener(this);
 }
 
