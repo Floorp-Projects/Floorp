@@ -913,6 +913,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'RCFILE',
             'RESFILE',
             'RCINCLUDE',
+            'DEFFILE',
             'WIN32_EXE_LDFLAGS',
             'LD_VERSION_SCRIPT',
             'USE_EXTENSION_MANIFEST',
@@ -922,19 +923,6 @@ class TreeMetadataEmitter(LoggingMixin):
         for v in varlist:
             if v in context and context[v]:
                 passthru.variables[v] = context[v]
-
-        deffile = context.get('DEFFILE')
-        if deffile:
-            if isinstance(deffile, SourcePath):
-                if not os.path.exists(deffile.full_path):
-                    raise SandboxValidationError(
-                        'Path specified in DEFFILE does not exist: %s '
-                        '(resolved to %s)' % (deffile,
-                        deffile.full_path), context)
-                path = mozpath.relpath(deffile.full_path, context.objdir)
-            else:
-                path = deffile.target_basename
-            passthru.variables['DEFFILE'] = path
 
         if context.config.substs.get('OS_TARGET') == 'WINNT' and \
                 context['DELAYLOAD_DLLS']:
