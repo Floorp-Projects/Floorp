@@ -135,34 +135,6 @@ struct ServoWritingMode {
   uint8_t mBits;
 };
 
-// Don't attempt to read from this
-// (see comment on ServoFontComputationData
-enum ServoKeywordSize {
-  Empty, // when the Option is None
-  XXSmall,
-  XSmall,
-  Small,
-  Medium,
-  Large,
-  XLarge,
-  XXLarge,
-  XXXLarge,
-};
-
-// Don't attempt to read from this. We can't
-// always guarantee that the interior representation
-// of this is correct (the mKeyword field may have a different padding),
-// but the entire struct should
-// have the same size and alignment as the Rust version.
-// Ensure layout tests get run if touching either side.
-struct ServoFontComputationData {
-  ServoKeywordSize mKeyword;
-  float/*32_t*/ mRatio;
-  int32_t mAbsolute;
-
-  static_assert(sizeof(float) == 4, "float should be 32 bit");
-};
-
 struct ServoCustomPropertiesMap {
   uintptr_t mPtr;
 };
@@ -269,14 +241,6 @@ private:
   /// relevant link for this element. A element's "relevant link" is the
   /// element being matched if it is a link or the nearest ancestor link.
   mozilla::ServoVisitedStyle visited_style;
-
-  // this is the last member because most of the other members
-  // are pointer sized. This makes it easier to deal with the
-  // alignment of the fields when replacing things via bindgen
-  //
-  // This is opaque, please don't read from it from C++
-  // (see comment on ServoFontComputationData)
-  mozilla::ServoFontComputationData font_computation_data;
 
   // C++ just sees this struct as a bucket of bits, and will
   // do the wrong thing if we let it use the default copy ctor/assignment
