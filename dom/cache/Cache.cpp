@@ -288,7 +288,7 @@ Cache::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
   ToCacheQueryParams(params, aOptions);
 
   AutoChildOpArgs args(this,
-                       CacheMatchArgs(CacheRequest(), params, OpenMode::Eager),
+                       CacheMatchArgs(CacheRequest(), params, GetOpenMode()),
                        1);
 
   args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
@@ -314,7 +314,7 @@ Cache::MatchAll(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
   ToCacheQueryParams(params, aOptions);
 
   AutoChildOpArgs args(this,
-                       CacheMatchAllArgs(void_t(), params, OpenMode::Eager),
+                       CacheMatchAllArgs(void_t(), params, GetOpenMode()),
                        1);
 
   if (aRequest.WasPassed()) {
@@ -498,7 +498,7 @@ Cache::Keys(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
   ToCacheQueryParams(params, aOptions);
 
   AutoChildOpArgs args(this,
-                       CacheKeysArgs(void_t(), params, OpenMode::Eager),
+                       CacheKeysArgs(void_t(), params, GetOpenMode()),
                        1);
 
   if (aRequest.WasPassed()) {
@@ -689,6 +689,12 @@ Cache::PutAll(JSContext* aCx, const nsTArray<RefPtr<Request>>& aRequestList,
   }
 
   return ExecuteOp(args, aRv);
+}
+
+OpenMode
+Cache::GetOpenMode() const
+{
+  return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager : OpenMode::Lazy;
 }
 
 } // namespace cache
