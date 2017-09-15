@@ -790,10 +790,8 @@ public:
 private:
   void TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize);
 
-public:
   void TrimRunTail(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize, bool dirty);
 
-private:
   inline void* MallocBinEasy(arena_bin_t* aBin, arena_run_t* aRun);
 
   void* MallocBinHard(arena_bin_t* aBin);
@@ -812,6 +810,8 @@ public:
   inline void DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t *aMapElm);
 
   void DallocLarge(arena_chunk_t* aChunk, void* aPtr);
+
+  void RallocShrinkLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize, size_t aOldSize);
 
   void Purge(bool aAll);
 
@@ -3864,21 +3864,20 @@ idalloc(void *ptr)
 		huge_dalloc(ptr);
 }
 
-static void
-arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
-    size_t size, size_t oldsize)
+void
+arena_t::RallocShrinkLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
+                           size_t aOldSize)
 {
+  MOZ_ASSERT(aSize < aOldSize);
 
-	MOZ_ASSERT(size < oldsize);
-
-	/*
-	 * Shrink the run, and make trailing pages available for other
-	 * allocations.
-	 */
-	malloc_spin_lock(&arena->mLock);
-	arena->TrimRunTail(chunk, (arena_run_t *)ptr, oldsize, size, true);
-	arena->mStats.allocated_large -= oldsize - size;
-	malloc_spin_unlock(&arena->mLock);
+  /*
+   * Shrink the run, and make trailing pages available for other
+   * allocations.
+   */
+  malloc_spin_lock(&mLock);
+  TrimRunTail(aChunk, (arena_run_t*)aPtr, aOldSize, aSize, true);
+  mStats.allocated_large -= aOldSize - aSize;
+  malloc_spin_unlock(&mLock);
 }
 
 static bool
@@ -3948,8 +3947,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 			/* Fill before shrinking in order avoid a race. */
 			memset((void *)((uintptr_t)ptr + size), kAllocPoison,
 			    oldsize - size);
-			arena_ralloc_large_shrink(arena, chunk, ptr, psize,
-			    oldsize);
+			arena->RallocShrinkLarge(chunk, ptr, psize, oldsize);
 			return (false);
 		} else {
 			bool ret = arena_ralloc_large_grow(arena, chunk, ptr,
