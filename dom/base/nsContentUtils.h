@@ -3039,6 +3039,19 @@ public:
                                             uint32_t aFlags);
 
   /**
+   * Query loadingPrincipal if it is specified as 'loadingprincipal' attribute on
+   * aLoadingNode, otherwise the NodePrincipal of aLoadingNode is returned
+   * (which is System Principal).
+   *
+   * Return true if aLoadingPrincipal has 'loadingprincipal' attributes, and
+   * the value 'loadingprincipal' is also successfully deserialized, otherwise
+   * return false.
+   */
+  static bool
+  GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
+                                nsIPrincipal** aLoadingPrincipal);
+
+  /**
    * Returns the content policy type that should be used for loading images
    * for displaying in the UI.  The sources of such images can be <xul:image>,
    * <xul:menuitem> on OSX where we load the image through nsMenuItemIconX, etc.
