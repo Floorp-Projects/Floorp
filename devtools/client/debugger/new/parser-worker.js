@@ -28731,6 +28731,10 @@ WorkerDispatcher.prototype = {
             return;
           }
 
+          if (!this.worker) {
+            reject("Oops, The worker has shutdown!");
+            return;
+          }
           this.worker.removeEventListener("message", listener);
           if (result.error) {
             reject(result.error);
@@ -28899,6 +28903,8 @@ var _getSymbols2 = _interopRequireDefault(_getSymbols);
 
 var _ast = __webpack_require__(1051);
 
+var _sources = __webpack_require__(1171);
+
 var _getOutOfScopeLocations = __webpack_require__(1072);
 
 var _getOutOfScopeLocations2 = _interopRequireDefault(_getOutOfScopeLocations);
@@ -28922,6 +28928,9 @@ self.onmessage = workerHandler({
   getSymbols: _getSymbols2.default,
   clearSymbols: _getSymbols.clearSymbols,
   clearASTs: _ast.clearASTs,
+  hasSource: _sources.hasSource,
+  setSource: _sources.setSource,
+  clearSources: _sources.clearSources,
   getVariablesInScope: _scopes.getVariablesInScope,
   getNextStep: _steps.getNextStep,
   getEmptyLines: _getEmptyLines2.default
@@ -32994,6 +33003,58 @@ function isArrayLikeObject(value) {
 
 module.exports = isArrayLikeObject;
 
+
+/***/ }),
+/* 1156 */,
+/* 1157 */,
+/* 1158 */,
+/* 1159 */,
+/* 1160 */,
+/* 1161 */,
+/* 1162 */,
+/* 1163 */,
+/* 1164 */,
+/* 1165 */,
+/* 1166 */,
+/* 1167 */,
+/* 1168 */,
+/* 1169 */,
+/* 1170 */,
+/* 1171 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.hasSource = hasSource;
+exports.setSource = setSource;
+exports.getSource = getSource;
+exports.clearSources = clearSources;
+
+
+var cachedSources = new Map();
+
+function hasSource(sourceId) {
+  return cachedSources.has(sourceId);
+}
+
+function setSource(source) {
+  cachedSources.set(source.id, source);
+}
+
+function getSource(sourceId) {
+  if (!cachedSources.has(sourceId)) {
+    throw new Error(`${sourceId} was not provided.`);
+  }
+  return cachedSources.get(sourceId);
+}
+
+function clearSources() {
+  cachedSources = new Map();
+}
 
 /***/ })
 /******/ ]);
