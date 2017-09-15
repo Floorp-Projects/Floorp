@@ -54,7 +54,7 @@ protected:
   bool bLastEventWasPresenting;
 
   int mPresentationCount;
-  uint32_t mLastEventFrameId;
+  uint64_t mLastEventFrameId;
 private:
   VRSubmitFrameResultInfo mSubmitFrameResult;
 };
