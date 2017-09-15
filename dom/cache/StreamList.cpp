@@ -26,6 +26,27 @@ StreamList::StreamList(Manager* aManager, Context* aContext)
   mContext->AddActivity(this);
 }
 
+Manager*
+StreamList::GetManager() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mManager);
+  return mManager;
+}
+
+bool
+StreamList::ShouldOpenStreamFor(const nsID& aId) const
+{
+  NS_ASSERT_OWNINGTHREAD(StreamList);
+
+  for (auto entry : mList) {
+    if (entry.mId == aId) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 StreamList::SetStreamControl(CacheStreamControlParent* aStreamControl)
 {
