@@ -376,7 +376,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
 {
   MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
   mEndTransactionWithoutLayers = true;
-  DiscardImages();
   WrBridge()->RemoveExpiredFontKeys();
   EndTransactionInternal(nullptr,
                          nullptr,
@@ -686,7 +685,6 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       EndTransactionFlags aFlags)
 {
   mEndTransactionWithoutLayers = false;
-  DiscardImages();
   WrBridge()->RemoveExpiredFontKeys();
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
 }
@@ -816,6 +814,11 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
   TimeStamp transactionStart = mTransactionIdAllocator->GetTransactionStart();
+
+  for (const auto& key : mImageKeysToDelete) {
+    resourceUpdates.DeleteImage(key);
+  }
+  mImageKeysToDelete.Clear();
 
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.

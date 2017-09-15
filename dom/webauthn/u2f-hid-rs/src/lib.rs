@@ -23,8 +23,8 @@ pub mod platform;
 #[path = "windows/mod.rs"]
 pub mod platform;
 
-#[cfg(any(target_os = "android"))]
-#[path = "android/mod.rs"]
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+#[path = "stub/mod.rs"]
 pub mod platform;
 
 #[macro_use]
