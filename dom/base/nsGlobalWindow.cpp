@@ -7547,7 +7547,7 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString& aOutTitle,
           // generic string
 
           nsAutoCString prepath;
-          fixedURI->GetPrePath(prepath);
+          fixedURI->GetDisplayPrePath(prepath);
 
           NS_ConvertUTF8toUTF16 ucsPrePath(prepath);
           const char16_t *formatStrings[] = { ucsPrePath.get() };
