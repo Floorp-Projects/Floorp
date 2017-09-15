@@ -82,7 +82,7 @@ add_task(async function test_loopback() {
     validateHistogramEntryCount("WEBAUTHN_GET_ASSERTION_MS", 1);
   }
 
-  {
+  /*{
     cleanupTelemetry();
     // Same as test_successful_loopback, but we will swap to using a (non-existent)
     // usb token. This will cause U2FRegisterAbort to fire, but will not execute the
@@ -102,7 +102,7 @@ add_task(async function test_loopback() {
 
     validateHistogramEntryCount("WEBAUTHN_CREATE_CREDENTIAL_MS", 0);
     validateHistogramEntryCount("WEBAUTHN_GET_ASSERTION_MS", 0);
-  }
+  }*/
 
   // There aren't tests for register succeeding and sign failing, as I don't see an easy way to prompt
   // the soft token to fail that way _and_ trigger the Abort telemetry.

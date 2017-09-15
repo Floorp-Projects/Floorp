@@ -69,6 +69,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/InputAPZContext.h"
+#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -2079,7 +2080,8 @@ nsChildView::CleanupWindowEffects()
 
 void
 nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWrBridge,
-                                               wr::DisplayListBuilder& aBuilder)
+                                               wr::DisplayListBuilder& aBuilder,
+                                               wr::IpcResourceUpdateQueue& aResources)
 {
   PrepareWindowEffects();
 
@@ -2100,21 +2102,22 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
     if (mTitlebarImageKey &&
         mTitlebarImageSize != size) {
       // Delete wr::ImageKey. wr::ImageKey does not support size change.
-      CleanupWebRenderWindowOverlay(aWrBridge);
+      // TODO: that's not true anymore! (size change is now supported).
+      CleanupWebRenderWindowOverlay(aWrBridge, aResources);
       MOZ_ASSERT(mTitlebarImageKey.isNothing());
     }
 
     if (!mTitlebarImageKey) {
       mTitlebarImageKey = Some(aWrBridge->GetNextImageKey());
       wr::ImageDescriptor descriptor(size, stride, format);
-      aBuilder.Resources().AddImage(*mTitlebarImageKey, descriptor, buffer);
+      aResources.AddImage(*mTitlebarImageKey, descriptor, buffer);
       mTitlebarImageSize = size;
       needUpdate = false;
     }
 
     if (needUpdate) {
       wr::ImageDescriptor descriptor(size, stride, format);
-      aBuilder.Resources().UpdateImageBuffer(*mTitlebarImageKey, descriptor, buffer);
+      aResources.UpdateImageBuffer(*mTitlebarImageKey, descriptor, buffer);
     }
 
     wr::LayoutRect rect = wr::ToLayoutRect(mTitlebarRect);
@@ -2124,12 +2127,11 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 }
 
 void
-nsChildView::CleanupWebRenderWindowOverlay(layers::WebRenderBridgeChild* aWrBridge)
+nsChildView::CleanupWebRenderWindowOverlay(layers::WebRenderBridgeChild* aWrBridge,
+                                           wr::IpcResourceUpdateQueue& aResources)
 {
   if (mTitlebarImageKey) {
-    wr::ResourceUpdateQueue resources;
-    resources.DeleteImage(*mTitlebarImageKey);
-    aWrBridge->UpdateResources(resources);
+    aResources.DeleteImage(*mTitlebarImageKey);
     mTitlebarImageKey = Nothing();
   }
 }

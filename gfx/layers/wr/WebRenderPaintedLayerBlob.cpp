@@ -13,6 +13,7 @@
 #include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/UpdateImageHelper.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
@@ -23,6 +24,7 @@ using namespace mozilla::gfx;
 
 void
 WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                       wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc)
 {
   LayerIntRegion visibleRegion = GetVisibleRegion();
@@ -75,12 +77,12 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
     if (mImageKey.isSome()) {
       //XXX: We should switch to updating the blob image instead of adding a new one
-      aBuilder.Resources().DeleteImage(mImageKey.value());
+      aResources.DeleteImage(mImageKey.value());
     }
     mImageKey = Some(GenerateImageKey());
 
     wr::ImageDescriptor descriptor(imageSize, 0, dt->GetFormat());
-    aBuilder.Resources().AddBlobImage(mImageKey.value(), descriptor, bytes.AsSlice());
+    aResources.AddBlobImage(mImageKey.value(), descriptor, bytes.AsSlice());
     mImageBounds = visibleRegion.GetBounds();
   }
 

@@ -558,9 +558,11 @@ NS_INTERFACE_MAP_END
 mozilla::ipc::IPCResult
 ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                             const StructuredCloneData& aInitialData,
-                                            nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
+                                            nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
+                                            nsTArray<FontFamilyListEntry>&& aFontFamilyList)
 {
-  mLookAndFeelCache = aLookAndFeelIntCache;
+  mLookAndFeelCache = Move(aLookAndFeelIntCache);
+  mFontFamilies = Move(aFontFamilyList);
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitXPCOM(aXPCOMInit, aInitialData);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());

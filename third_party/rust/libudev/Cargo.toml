@@ -1,0 +1,15 @@
+[package]
+name = "libudev"
+version = "0.2.0"
+authors = ["David Cuddeback <david.cuddeback@gmail.com>"]
+description = "Rust wrapper for libudev"
+license = "MIT"
+homepage = "https://github.com/dcuddeback/libudev-rs"
+repository = "https://github.com/dcuddeback/libudev-rs"
+documentation = "http://dcuddeback.github.io/libudev-rs/libudev/"
+keywords = ["udev", "hardware", "bindings", "sysfs", "systemd"]
+readme = "README.md"
+
+[dependencies]
+libudev-sys = "0.1.3"
+libc = "0.2"
