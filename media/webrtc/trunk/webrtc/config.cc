@@ -88,7 +88,8 @@ bool RtpExtension::IsSupportedForAudio(const std::string& uri) {
   return uri == webrtc::RtpExtension::kAudioLevelUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
          uri == webrtc::RtpExtension::kRtpStreamIdUri ||
-         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri;
+         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kMIdUri;
 }
 
 bool RtpExtension::IsSupportedForVideo(const std::string& uri) {

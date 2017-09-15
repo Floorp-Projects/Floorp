@@ -166,8 +166,10 @@ bool WebrtcAudioConduit::SetLocalCNAME(const char* cname)
 
 bool WebrtcAudioConduit::SetLocalMID(const std::string& mid)
 {
-  // !mjf! stubbed out for now
-  return false;
+  if (mPtrRTP->SetLocalMID(mChannel, mid.c_str())) {
+    return false;
+  }
+  return true;
 }
 
 bool WebrtcAudioConduit::GetSendPacketTypeStats(
@@ -582,6 +584,7 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   DumpCodecDB();
   return kMediaConduitNoError;
 }
+
 MediaConduitErrorCode
 WebrtcAudioConduit::EnableAudioLevelExtension(bool enabled, uint8_t id)
 {
@@ -590,6 +593,20 @@ WebrtcAudioConduit::EnableAudioLevelExtension(bool enabled, uint8_t id)
   if (mPtrVoERTP_RTCP->SetSendAudioLevelIndicationStatus(mChannel, enabled, id) == -1)
   {
     CSFLogError(logTag, "%s SetSendAudioLevelIndicationStatus Failed", __FUNCTION__);
+    return kMediaConduitUnknownError;
+  }
+
+  return kMediaConduitNoError;
+}
+
+MediaConduitErrorCode
+WebrtcAudioConduit::EnableMIDExtension(bool enabled, uint8_t id)
+{
+  CSFLogDebug(logTag,  "%s %d %d ", __FUNCTION__, enabled, id);
+
+  if (mPtrVoERTP_RTCP->SetSendMIDStatus(mChannel, enabled, id) == -1)
+  {
+    CSFLogError(logTag, "%s SetSendMIDStatus Failed", __FUNCTION__);
     return kMediaConduitUnknownError;
   }
 

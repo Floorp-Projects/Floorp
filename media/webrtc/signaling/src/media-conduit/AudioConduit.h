@@ -97,6 +97,7 @@ public:
    * @param enabled: enable extension
    */
   virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled, uint8_t id) override;
+  virtual MediaConduitErrorCode EnableMIDExtension(bool enabled, uint8_t id) override;
 
   /**
    * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine
