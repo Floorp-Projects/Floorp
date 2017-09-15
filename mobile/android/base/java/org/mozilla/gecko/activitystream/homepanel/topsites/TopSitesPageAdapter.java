@@ -95,7 +95,6 @@ import java.util.List;
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         final FrameLayout card = (FrameLayout) inflater.inflate(R.layout.activity_stream_topsites_card, parent, false);
-        final int tilesMargin = parent.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
         ViewGroup.LayoutParams layoutParams = card.getLayoutParams();
         layoutParams.width = tilesSize;
