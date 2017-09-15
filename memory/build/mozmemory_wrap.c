@@ -148,8 +148,8 @@ asprintf_impl(char **str, const char *fmt, ...)
  *  We also need to provide our own impl of wcsdup so that we don't ask
  *  the CRT for memory from its heap (which will then be unfreeable).
  */
-wchar_t *
-wcsdup_impl(const wchar_t *src)
+MOZ_MEMORY_API wchar_t*
+wcsdup_impl(const wchar_t* src)
 {
   size_t len = wcslen(src);
   wchar_t *dst = (wchar_t*) malloc_impl((len + 1) * sizeof(wchar_t));
@@ -158,7 +158,7 @@ wcsdup_impl(const wchar_t *src)
   return dst;
 }
 
-void *
+MOZ_MEMORY_API void*
 _aligned_malloc(size_t size, size_t alignment)
 {
   return memalign_impl(alignment, size);
