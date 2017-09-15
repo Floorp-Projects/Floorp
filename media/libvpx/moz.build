@@ -21,7 +21,7 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
         LOCAL_INCLUDES += [ '/media/libvpx/config/win/x64/' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
-        LOCAL_includes += [ '/media/libvpx/config/mac/x64/' ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/mac/x64/' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libvpx/config/linux/x64/' ]
