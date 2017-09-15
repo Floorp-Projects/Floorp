@@ -146,10 +146,6 @@ public:
                                                  uint8_t aWidgetType)
   { return false; }
 
-  virtual bool WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
-                                      uint8_t aWidgetType, nscolor* aColor)
-  { return false; }
-
   /**
    * ThemeGeometryType values are used for describing themed nsIFrames in
    * calls to nsIWidget::UpdateThemeGeometries. We don't simply pass the

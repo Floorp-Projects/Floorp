@@ -5,6 +5,7 @@
 package org.mozilla.gecko.fxa.authenticator;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -160,28 +161,11 @@ public class AccountPickler {
     }
   }
 
-  @Nullable
-  public synchronized static UnpickleParams unpickleParams(final Context context, final String filename) {
+  /* package-private */ synchronized static UnpickleParams unpickleParams(final Context context, final String filename)
+          throws IOException, InvalidKeySpecException, SecurityException, NoSuchAlgorithmException, NonObjectJSONException {
     final String jsonString = Utils.readFile(context, filename);
-    if (jsonString == null) {
-      Logger.info(LOG_TAG, "Pickle file '" + filename + "' not found; aborting.");
-      return null;
-    }
-
-    ExtendedJSONObject json = null;
-    try {
-      json = new ExtendedJSONObject(jsonString);
-    } catch (Exception e) {
-      Logger.warn(LOG_TAG, "Got exception reading pickle file '" + filename + "'; aborting.", e);
-      return null;
-    }
-
-    try {
-      return UnpickleParams.fromJSON(json);
-    } catch (Exception e) {
-      Logger.warn(LOG_TAG, "Got exception extracting unpickle json; aborting.", e);
-      return null;
-    }
+    final ExtendedJSONObject json = new ExtendedJSONObject(jsonString);
+    return UnpickleParams.fromJSON(json);
   }
 
   /**
@@ -196,7 +180,14 @@ public class AccountPickler {
    */
   @Nullable
   public synchronized static AndroidFxAccount unpickle(final Context context, final String filename) {
-    final UnpickleParams params = unpickleParams(context, filename);
+    final UnpickleParams params;
+
+    try {
+      params = unpickleParams(context, filename);
+    } catch (Exception e) {
+      Logger.error(LOG_TAG, "Exception unpickling " + filename, e);
+      return null;
+    }
 
     if (params == null) {
       return null;

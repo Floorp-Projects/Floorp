@@ -1,3 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 add_task(async function() {
   // When about:home is set to Activity Stream, there are no 'narrow' attributes
   // therefore for this test, we want to ensure we're using the original about:home
