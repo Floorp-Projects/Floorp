@@ -66,21 +66,21 @@ BEGIN_TEST(testGCStoreBufferRemoval)
         new (relocValue) HeapPtr<Value>;
         *relocValue = ObjectValue(*NurseryObject());
         relocValue->~HeapPtr<Value>();
-        punnedValue = ObjectValueCrashOnTouch();
+        punnedValue = js::PoisonedObjectValue(0x48);
         JS_GC(cx);
 
         new (relocValue) HeapPtr<Value>;
         *relocValue = ObjectValue(*NurseryObject());
         *relocValue = ObjectValue(*tenuredObject);
         relocValue->~HeapPtr<Value>();
-        punnedValue = ObjectValueCrashOnTouch();
+        punnedValue = js::PoisonedObjectValue(0x48);
         JS_GC(cx);
 
         new (relocValue) HeapPtr<Value>;
         *relocValue = ObjectValue(*NurseryObject());
         *relocValue = NullValue();
         relocValue->~HeapPtr<Value>();
-        punnedValue = ObjectValueCrashOnTouch();
+        punnedValue = js::PoisonedObjectValue(0x48);
         JS_GC(cx);
     }
 
