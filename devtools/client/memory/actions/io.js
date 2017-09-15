@@ -6,7 +6,6 @@
 const { immutableUpdate, reportException, assert } = require("devtools/shared/DevToolsUtils");
 const { snapshotState: states, actions} = require("../constants");
 const { L10N, openFilePicker, createSnapshot } = require("../utils");
-const telemetry = require("../telemetry");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const {
   selectSnapshot,
@@ -34,8 +33,6 @@ exports.pickFileAndExportSnapshot = function (snapshot) {
 
 const exportSnapshot = exports.exportSnapshot = function (snapshot, dest) {
   return function* (dispatch, getState) {
-    telemetry.countExportSnapshot();
-
     dispatch({ type: actions.EXPORT_SNAPSHOT_START, snapshot });
 
     assert(VALID_EXPORT_STATES.includes(snapshot.state),
@@ -70,8 +67,6 @@ exports.pickFileAndImportSnapshotAndCensus = function (heapWorker) {
 
 const importSnapshotAndCensus = function (heapWorker, path) {
   return function* (dispatch, getState) {
-    telemetry.countImportSnapshot();
-
     const snapshot = immutableUpdate(createSnapshot(getState()), {
       path,
       state: states.IMPORTING,
