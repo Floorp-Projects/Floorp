@@ -1012,7 +1012,7 @@ PuppetWidget::SetCursor(imgIContainer* aCursor,
     return NS_ERROR_FAILURE;
   }
 
-  mCursor = nsCursor(-1);
+  mCursor = eCursorInvalid;
   mCustomCursor = aCursor;
   mCursorHotspotX = aHotspotX;
   mCursorHotspotY = aHotspotY;
