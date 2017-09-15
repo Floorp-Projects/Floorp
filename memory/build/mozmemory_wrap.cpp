@@ -114,7 +114,7 @@ vasprintf_impl(char **str, const char *fmt, va_list ap)
     return -1;
   }
 
-  _ptr = realloc_impl(ptr, ret + 1);
+  _ptr = reinterpret_cast<char*>(realloc_impl(ptr, ret + 1));
   if (_ptr == NULL) {
     free_impl(ptr);
     *str = NULL;
