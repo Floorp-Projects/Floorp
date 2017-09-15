@@ -1096,7 +1096,7 @@ class Onboarding {
     let watermarkImg = this._window.document.createElement("img");
     watermarkImg.id = "onboarding-overlay-button-watermark-icon";
     watermarkImg.setAttribute("role", "presentation");
-    watermarkImg.src = "resource://onboarding/img/watermark64.png";
+    watermarkImg.src = "resource://onboarding/img/watermark.svg";
     button.appendChild(watermarkImg);
     return button;
   }
