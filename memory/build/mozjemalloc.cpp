@@ -776,10 +776,12 @@ public:
 private:
   void InitChunk(arena_chunk_t* aChunk, bool aZeroed);
 
-public:
   void DeallocChunk(arena_chunk_t* aChunk);
 
+public:
   arena_run_t* AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero);
+
+  void DallocRun(arena_run_t* aRun, bool aDirty);
 
   void Purge(bool aAll);
 
@@ -2896,114 +2898,112 @@ arena_t::Purge(bool aAll)
   }
 }
 
-static void
-arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
+void
+arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
 {
-	arena_chunk_t *chunk;
-	size_t size, run_ind, run_pages;
+  arena_chunk_t* chunk;
+  size_t size, run_ind, run_pages;
 
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(run);
-	run_ind = (size_t)(((uintptr_t)run - (uintptr_t)chunk)
-	    >> pagesize_2pow);
-	MOZ_DIAGNOSTIC_ASSERT(run_ind >= arena_chunk_header_npages);
-	MOZ_DIAGNOSTIC_ASSERT(run_ind < chunk_npages);
-	if ((chunk->map[run_ind].bits & CHUNK_MAP_LARGE) != 0)
-		size = chunk->map[run_ind].bits & ~pagesize_mask;
-	else
-		size = run->bin->run_size;
-	run_pages = (size >> pagesize_2pow);
+  chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aRun);
+  run_ind = (size_t)((uintptr_t(aRun) - uintptr_t(chunk)) >> pagesize_2pow);
+  MOZ_DIAGNOSTIC_ASSERT(run_ind >= arena_chunk_header_npages);
+  MOZ_DIAGNOSTIC_ASSERT(run_ind < chunk_npages);
+  if ((chunk->map[run_ind].bits & CHUNK_MAP_LARGE) != 0)
+    size = chunk->map[run_ind].bits & ~pagesize_mask;
+  else
+    size = aRun->bin->run_size;
+  run_pages = (size >> pagesize_2pow);
 
-	/* Mark pages as unallocated in the chunk map. */
-	if (dirty) {
-		size_t i;
+  /* Mark pages as unallocated in the chunk map. */
+  if (aDirty) {
+    size_t i;
 
-		for (i = 0; i < run_pages; i++) {
-			MOZ_DIAGNOSTIC_ASSERT((chunk->map[run_ind + i].bits & CHUNK_MAP_DIRTY)
-			    == 0);
-			chunk->map[run_ind + i].bits = CHUNK_MAP_DIRTY;
-		}
+    for (i = 0; i < run_pages; i++) {
+      MOZ_DIAGNOSTIC_ASSERT((chunk->map[run_ind + i].bits & CHUNK_MAP_DIRTY)
+          == 0);
+      chunk->map[run_ind + i].bits = CHUNK_MAP_DIRTY;
+    }
 
-		if (chunk->ndirty == 0) {
-			arena_chunk_tree_dirty_insert(&arena->mChunksDirty,
-			    chunk);
-		}
-		chunk->ndirty += run_pages;
-		arena->mNumDirty += run_pages;
-	} else {
-		size_t i;
+    if (chunk->ndirty == 0) {
+      arena_chunk_tree_dirty_insert(&mChunksDirty,
+          chunk);
+    }
+    chunk->ndirty += run_pages;
+    mNumDirty += run_pages;
+  } else {
+    size_t i;
 
-		for (i = 0; i < run_pages; i++) {
-			chunk->map[run_ind + i].bits &= ~(CHUNK_MAP_LARGE |
-			    CHUNK_MAP_ALLOCATED);
-		}
-	}
-	chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
-	    pagesize_mask);
-	chunk->map[run_ind+run_pages-1].bits = size |
-	    (chunk->map[run_ind+run_pages-1].bits & pagesize_mask);
+    for (i = 0; i < run_pages; i++) {
+      chunk->map[run_ind + i].bits &= ~(CHUNK_MAP_LARGE |
+          CHUNK_MAP_ALLOCATED);
+    }
+  }
+  chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
+      pagesize_mask);
+  chunk->map[run_ind+run_pages-1].bits = size |
+      (chunk->map[run_ind+run_pages-1].bits & pagesize_mask);
 
-	/* Try to coalesce forward. */
-	if (run_ind + run_pages < chunk_npages &&
-	    (chunk->map[run_ind+run_pages].bits & CHUNK_MAP_ALLOCATED) == 0) {
-		size_t nrun_size = chunk->map[run_ind+run_pages].bits &
-		    ~pagesize_mask;
+  /* Try to coalesce forward. */
+  if (run_ind + run_pages < chunk_npages &&
+      (chunk->map[run_ind+run_pages].bits & CHUNK_MAP_ALLOCATED) == 0) {
+    size_t nrun_size = chunk->map[run_ind+run_pages].bits &
+        ~pagesize_mask;
 
-		/*
-		 * Remove successor from tree of available runs; the coalesced run is
-		 * inserted later.
-		 */
-		arena_avail_tree_remove(&arena->mRunsAvail,
-		    &chunk->map[run_ind+run_pages]);
+    /*
+     * Remove successor from tree of available runs; the coalesced run is
+     * inserted later.
+     */
+    arena_avail_tree_remove(&mRunsAvail,
+        &chunk->map[run_ind+run_pages]);
 
-		size += nrun_size;
-		run_pages = size >> pagesize_2pow;
+    size += nrun_size;
+    run_pages = size >> pagesize_2pow;
 
-		MOZ_DIAGNOSTIC_ASSERT((chunk->map[run_ind+run_pages-1].bits & ~pagesize_mask)
-		    == nrun_size);
-		chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
-		    pagesize_mask);
-		chunk->map[run_ind+run_pages-1].bits = size |
-		    (chunk->map[run_ind+run_pages-1].bits & pagesize_mask);
-	}
+    MOZ_DIAGNOSTIC_ASSERT((chunk->map[run_ind+run_pages-1].bits & ~pagesize_mask)
+        == nrun_size);
+    chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
+        pagesize_mask);
+    chunk->map[run_ind+run_pages-1].bits = size |
+        (chunk->map[run_ind+run_pages-1].bits & pagesize_mask);
+  }
 
-	/* Try to coalesce backward. */
-	if (run_ind > arena_chunk_header_npages && (chunk->map[run_ind-1].bits &
-	    CHUNK_MAP_ALLOCATED) == 0) {
-		size_t prun_size = chunk->map[run_ind-1].bits & ~pagesize_mask;
+  /* Try to coalesce backward. */
+  if (run_ind > arena_chunk_header_npages && (chunk->map[run_ind-1].bits &
+      CHUNK_MAP_ALLOCATED) == 0) {
+    size_t prun_size = chunk->map[run_ind-1].bits & ~pagesize_mask;
 
-		run_ind -= prun_size >> pagesize_2pow;
+    run_ind -= prun_size >> pagesize_2pow;
 
-		/*
-		 * Remove predecessor from tree of available runs; the coalesced run is
-		 * inserted later.
-		 */
-		arena_avail_tree_remove(&arena->mRunsAvail,
-		    &chunk->map[run_ind]);
+    /*
+     * Remove predecessor from tree of available runs; the coalesced run is
+     * inserted later.
+     */
+    arena_avail_tree_remove(&mRunsAvail, &chunk->map[run_ind]);
 
-		size += prun_size;
-		run_pages = size >> pagesize_2pow;
+    size += prun_size;
+    run_pages = size >> pagesize_2pow;
 
-		MOZ_DIAGNOSTIC_ASSERT((chunk->map[run_ind].bits & ~pagesize_mask) ==
-		    prun_size);
-		chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
-		    pagesize_mask);
-		chunk->map[run_ind+run_pages-1].bits = size |
-		    (chunk->map[run_ind+run_pages-1].bits & pagesize_mask);
-	}
+    MOZ_DIAGNOSTIC_ASSERT((chunk->map[run_ind].bits & ~pagesize_mask) ==
+        prun_size);
+    chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
+        pagesize_mask);
+    chunk->map[run_ind+run_pages-1].bits = size |
+        (chunk->map[run_ind+run_pages-1].bits & pagesize_mask);
+  }
 
-	/* Insert into tree of available runs, now that coalescing is complete. */
-	arena_avail_tree_insert(&arena->mRunsAvail, &chunk->map[run_ind]);
+  /* Insert into tree of available runs, now that coalescing is complete. */
+  arena_avail_tree_insert(&mRunsAvail, &chunk->map[run_ind]);
 
-	/* Deallocate chunk if it is now completely unused. */
-	if ((chunk->map[arena_chunk_header_npages].bits & (~pagesize_mask |
-	    CHUNK_MAP_ALLOCATED)) == arena_maxclass) {
-		arena->DeallocChunk(chunk);
-	}
+  /* Deallocate chunk if it is now completely unused. */
+  if ((chunk->map[arena_chunk_header_npages].bits & (~pagesize_mask |
+      CHUNK_MAP_ALLOCATED)) == arena_maxclass) {
+    DeallocChunk(chunk);
+  }
 
-	/* Enforce mMaxDirty. */
-	if (arena->mNumDirty > arena->mMaxDirty) {
-		arena->Purge(false);
-	}
+  /* Enforce mMaxDirty. */
+  if (mNumDirty > mMaxDirty) {
+    Purge(false);
+  }
 }
 
 static void
@@ -3016,7 +3016,7 @@ arena_run_trim_head(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
 	MOZ_ASSERT(oldsize > newsize);
 
 	/*
-	 * Update the chunk map so that arena_run_dalloc() can treat the
+	 * Update the chunk map so that arena_t::DallocRun() can treat the
 	 * leading run as separately allocated.
 	 */
 	chunk->map[pageind].bits = (oldsize - newsize) | CHUNK_MAP_LARGE |
@@ -3024,7 +3024,7 @@ arena_run_trim_head(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
 	chunk->map[pageind+head_npages].bits = newsize | CHUNK_MAP_LARGE |
 	    CHUNK_MAP_ALLOCATED;
 
-	arena_run_dalloc(arena, run, false);
+	arena->DallocRun(run, false);
 }
 
 static void
@@ -3037,7 +3037,7 @@ arena_run_trim_tail(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
 	MOZ_ASSERT(oldsize > newsize);
 
 	/*
-	 * Update the chunk map so that arena_run_dalloc() can treat the
+	 * Update the chunk map so that arena_t::DallocRun() can treat the
 	 * trailing run as separately allocated.
 	 */
 	chunk->map[pageind].bits = newsize | CHUNK_MAP_LARGE |
@@ -3045,8 +3045,7 @@ arena_run_trim_tail(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
 	chunk->map[pageind+npages].bits = (oldsize - newsize) | CHUNK_MAP_LARGE
 	    | CHUNK_MAP_ALLOCATED;
 
-	arena_run_dalloc(arena, (arena_run_t *)((uintptr_t)run + newsize),
-	    dirty);
+	arena->DallocRun((arena_run_t*)(uintptr_t(run) + newsize), dirty);
 }
 
 static arena_run_t *
@@ -3757,7 +3756,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 		run->magic = 0;
 #endif
-		arena_run_dalloc(arena, run, true);
+		arena->DallocRun(run, true);
 		bin->stats.curruns--;
 	} else if (run->nfree == 1 && run != bin->runcur) {
 		/*
@@ -3808,7 +3807,7 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 	memset(ptr, kAllocPoison, size);
 	arena->mStats.allocated_large -= size;
 
-	arena_run_dalloc(arena, (arena_run_t *)ptr, true);
+	arena->DallocRun((arena_run_t*)ptr, true);
 }
 
 static inline void
