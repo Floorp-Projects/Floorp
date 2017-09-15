@@ -26,8 +26,6 @@ ConsoleApiCall.propTypes = {
   open: PropTypes.bool,
   serviceContainer: PropTypes.object.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
-  loadedObjectProperties: PropTypes.object,
-  loadedObjectEntries: PropTypes.object,
 };
 
 ConsoleApiCall.defaultProps = {
@@ -43,8 +41,6 @@ function ConsoleApiCall(props) {
     serviceContainer,
     timestampsVisible,
     repeat,
-    loadedObjectProperties,
-    loadedObjectEntries,
   } = props;
   const {
     id: messageId,
@@ -63,8 +59,6 @@ function ConsoleApiCall(props) {
   let messageBody;
   const messageBodyConfig = {
     dispatch,
-    loadedObjectProperties,
-    loadedObjectEntries,
     messageId,
     parameters,
     userProvidedStyles,

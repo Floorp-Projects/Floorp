@@ -5193,7 +5193,7 @@ ContentParent::NeedsPermissionsUpdate(const nsACString& aPermissionKey) const
 
 mozilla::ipc::IPCResult
 ContentParent::RecvAccumulateChildHistograms(
-                InfallibleTArray<Accumulation>&& aAccumulations)
+                InfallibleTArray<HistogramAccumulation>&& aAccumulations)
 {
   TelemetryIPC::AccumulateChildHistograms(GetTelemetryProcessID(mRemoteType), aAccumulations);
   return IPC_OK();
@@ -5201,7 +5201,7 @@ ContentParent::RecvAccumulateChildHistograms(
 
 mozilla::ipc::IPCResult
 ContentParent::RecvAccumulateChildKeyedHistograms(
-                InfallibleTArray<KeyedAccumulation>&& aAccumulations)
+                InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations)
 {
   TelemetryIPC::AccumulateChildKeyedHistograms(GetTelemetryProcessID(mRemoteType), aAccumulations);
   return IPC_OK();

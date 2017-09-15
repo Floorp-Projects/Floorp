@@ -26,7 +26,7 @@ const ConsoleTable = createClass({
     dispatch: PropTypes.func.isRequired,
     parameters: PropTypes.array.isRequired,
     serviceContainer: PropTypes.shape({
-      hudProxyClient: PropTypes.object.isRequired,
+      hudProxy: PropTypes.object.isRequired,
     }),
     id: PropTypes.string.isRequired,
     tableData: PropTypes.object,
@@ -39,7 +39,7 @@ const ConsoleTable = createClass({
       return;
     }
 
-    const client = new ObjectClient(serviceContainer.hudProxyClient, parameters[0]);
+    const client = new ObjectClient(serviceContainer.hudProxy.client, parameters[0]);
     let dataType = getParametersDataType(parameters);
 
     // Get all the object properties.

@@ -90,8 +90,8 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using struct mozilla::dom::FlyWebPublishOptions from "mozilla/dom/FlyWebPublishOptionsIPCSerializer.h";
-using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
-using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedHistogramAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
@@ -1059,8 +1059,8 @@ parent:
     /**
      * Messages for communicating child Telemetry to the parent process
      */
-    async AccumulateChildHistograms(Accumulation[] accumulations);
-    async AccumulateChildKeyedHistograms(KeyedAccumulation[] accumulations);
+    async AccumulateChildHistograms(HistogramAccumulation[] accumulations);
+    async AccumulateChildKeyedHistograms(KeyedHistogramAccumulation[] accumulations);
     async UpdateChildScalars(ScalarAction[] updates);
     async UpdateChildKeyedScalars(KeyedScalarAction[] updates);
     async RecordChildEvents(ChildEventData[] events);

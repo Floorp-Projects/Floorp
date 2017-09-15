@@ -6,7 +6,10 @@
 module.exports = {
   attachRefToHud: () => {},
   emitNewMessage: () => {},
-  hudProxyClient: {},
+  hudProxy: {
+    client: {},
+    releaseActor: actor => console.log("Release actor", actor),
+  },
   onViewSourceInDebugger: () => {},
   onViewSourceInStyleEditor: () => {},
   onViewSourceInScratchpad: () => {},

@@ -14,51 +14,52 @@
 #include "malloc_decls.h"
 
 #ifdef MOZ_WRAP_NEW_DELETE
-/* operator new(unsigned int) */
-MOZ_MEMORY_API void *
-mozmem_malloc_impl(_Znwj)(unsigned int size)
+#include <new>
+
+MFBT_API void*
+operator new(size_t size)
 {
   return malloc_impl(size);
 }
-/* operator new[](unsigned int) */
-MOZ_MEMORY_API void *
-mozmem_malloc_impl(_Znaj)(unsigned int size)
+
+MFBT_API void*
+operator new[](size_t size)
 {
   return malloc_impl(size);
 }
-/* operator delete(void*) */
-MOZ_MEMORY_API void
-mozmem_malloc_impl(_ZdlPv)(void *ptr)
+
+MFBT_API void
+operator delete(void* ptr)
 {
   free_impl(ptr);
 }
-/* operator delete[](void*) */
-MOZ_MEMORY_API void
-mozmem_malloc_impl(_ZdaPv)(void *ptr)
+
+MFBT_API void
+operator delete[](void* ptr)
 {
   free_impl(ptr);
 }
-/*operator new(unsigned int, std::nothrow_t const&)*/
-MOZ_MEMORY_API void *
-mozmem_malloc_impl(_ZnwjRKSt9nothrow_t)(unsigned int size)
+
+MFBT_API void*
+operator new(size_t size, std::nothrow_t const&)
 {
   return malloc_impl(size);
 }
-/*operator new[](unsigned int, std::nothrow_t const&)*/
-MOZ_MEMORY_API void *
-mozmem_malloc_impl(_ZnajRKSt9nothrow_t)(unsigned int size)
+
+MFBT_API void*
+operator new[](size_t size, std::nothrow_t const&)
 {
   return malloc_impl(size);
 }
-/* operator delete(void*, std::nothrow_t const&) */
-MOZ_MEMORY_API void
-mozmem_malloc_impl(_ZdlPvRKSt9nothrow_t)(void *ptr)
+
+MFBT_API void
+operator delete(void* ptr, std::nothrow_t const&)
 {
   free_impl(ptr);
 }
-/* operator delete[](void*, std::nothrow_t const&) */
-MOZ_MEMORY_API void
-mozmem_malloc_impl(_ZdaPvRKSt9nothrow_t)(void *ptr)
+
+MFBT_API void
+operator delete[](void* ptr, std::nothrow_t const&)
 {
   free_impl(ptr);
 }
@@ -114,7 +115,7 @@ vasprintf_impl(char **str, const char *fmt, va_list ap)
     return -1;
   }
 
-  _ptr = realloc_impl(ptr, ret + 1);
+  _ptr = reinterpret_cast<char*>(realloc_impl(ptr, ret + 1));
   if (_ptr == NULL) {
     free_impl(ptr);
     *str = NULL;
@@ -148,8 +149,8 @@ asprintf_impl(char **str, const char *fmt, ...)
  *  We also need to provide our own impl of wcsdup so that we don't ask
  *  the CRT for memory from its heap (which will then be unfreeable).
  */
-wchar_t *
-wcsdup_impl(const wchar_t *src)
+MOZ_MEMORY_API wchar_t*
+wcsdup_impl(const wchar_t* src)
 {
   size_t len = wcslen(src);
   wchar_t *dst = (wchar_t*) malloc_impl((len + 1) * sizeof(wchar_t));
@@ -158,7 +159,7 @@ wcsdup_impl(const wchar_t *src)
   return dst;
 }
 
-void *
+MOZ_MEMORY_API void*
 _aligned_malloc(size_t size, size_t alignment)
 {
   return memalign_impl(alignment, size);
