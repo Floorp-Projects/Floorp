@@ -58,7 +58,7 @@ android-test/opt:
         symbol: tc(test)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-test
@@ -101,7 +101,7 @@ android-lint/opt:
         symbol: tc(lint)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-lint
@@ -165,7 +165,7 @@ android-checkstyle/opt:
         symbol: tc(checkstyle)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-checkstyle
@@ -213,7 +213,7 @@ android-findbugs/opt:
         symbol: tc(findbugs)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
