@@ -23,7 +23,7 @@ We encourage you to participate in this open source project. We love Pull Reques
 
 * IRC: [#focus (irc.mozilla.org)](https://wiki.mozilla.org/IRC)
 
-* Mailing list: [mobile-firefox-dev](https://mail.mozilla.org/listinfo/mobile-firefox-dev)
+* Mailing list: [firefox-focus-public@](https://mail.mozilla.org/listinfo/firefox-focus-public)
 
 * Wiki: [https://github.com/mozilla-mobile/focus-android/wiki](https://github.com/mozilla-mobile/focus-android/wiki)
 
