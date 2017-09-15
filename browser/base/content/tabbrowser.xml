@@ -5842,10 +5842,8 @@
           this._tabFilters.set(this.mCurrentTab, filter);
           this.webProgress.addProgressListener(filter, nsIWebProgress.NOTIFY_ALL);
 
-          this.style.backgroundColor =
-            Services.prefs.getBoolPref("browser.display.use_system_colors") ?
-              "-moz-default-background-color" :
-              Services.prefs.getCharPref("browser.display.background_color");
+          if (Services.prefs.getBoolPref("browser.display.use_system_colors"))
+            this.style.backgroundColor = "-moz-default-background-color";
 
           let messageManager = window.getGroupMessageManager("browsers");
 

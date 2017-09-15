@@ -1235,6 +1235,13 @@ public class GeckoView extends LayerView {
          * Class representing security information for a site.
          */
         public class SecurityInformation {
+            public static final int SECURITY_MODE_UNKNOWN = 0;
+            public static final int SECURITY_MODE_IDENTIFIED = 1;
+            public static final int SECURITY_MODE_VERIFIED = 2;
+
+            public static final int CONTENT_UNKNOWN = 0;
+            public static final int CONTENT_BLOCKED = 1;
+            public static final int CONTENT_LOADED = 2;
             /**
              * Indicates whether or not the site is secure.
              */
@@ -1268,35 +1275,35 @@ public class GeckoView extends LayerView {
              */
             public final String issuerOrganization;
             /**
-             * Indicates the security level of the site; possible values are "unknown",
-             * "identified", and "verified". "identified" indicates domain validation only,
-             * while "verified" indicates extended validation.
+             * Indicates the security level of the site; possible values are SECURITY_MODE_UNKNOWN,
+             * SECURITY_MODE_IDENTIFIED, and SECURITY_MODE_VERIFIED. SECURITY_MODE_IDENTIFIED 
+             * indicates domain validation only, while SECURITY_MODE_VERIFIED indicates extended validation.
              */
-            public final String securityMode;
+            public final int securityMode;
             /**
              * Indicates the presence of passive mixed content; possible values are
-             * "unknown", "blocked", and "loaded".
+             * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
              */
-            public final String mixedModePassive;
+            public final int mixedModePassive;
             /**
              * Indicates the presence of active mixed content; possible values are
-             * "unknown", "blocked", and "loaded".
+             * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
              */
-            public final String mixedModeActive;
+            public final int mixedModeActive;
             /**
              * Indicates the status of tracking protection; possible values are
-             * "unknown", "blocked", and "loaded".
+             * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
              */
-            public final String trackingMode;
+            public final int trackingMode;
 
             /* package */ SecurityInformation(GeckoBundle identityData) {
                 final GeckoBundle mode = identityData.getBundle("mode");
 
-                mixedModePassive = mode.getString("mixed_display");
-                mixedModeActive = mode.getString("mixed_active");
-                trackingMode = mode.getString("tracking");
+                mixedModePassive = mode.getInt("mixed_display");
+                mixedModeActive = mode.getInt("mixed_active");
+                trackingMode = mode.getInt("tracking");
 
-                securityMode = mode.getString("identity");
+                securityMode = mode.getInt("identity");
 
                 isSecure = identityData.getBoolean("secure");
                 isException = identityData.getBoolean("securityException");
