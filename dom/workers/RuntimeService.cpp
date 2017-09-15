@@ -885,9 +885,9 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSContext* aWorkerCx)
   // This is the real place where we set the max memory for the runtime.
   for (uint32_t index = 0; index < ArrayLength(gcSettings); index++) {
     const JSSettings::JSGCSetting& setting = gcSettings[index];
-    if (setting.IsSet()) {
+    if (setting.key.isSome()) {
       NS_ASSERTION(setting.value, "Can't handle 0 values!");
-      JS_SetGCParameter(aWorkerCx, setting.key, setting.value);
+      JS_SetGCParameter(aWorkerCx, *setting.key, setting.value);
     }
   }
 
@@ -1935,7 +1935,7 @@ RuntimeService::Init()
   }
 
   // Initialize JSSettings.
-  if (!sDefaultJSSettings.gcSettings[0].IsSet()) {
+  if (sDefaultJSSettings.gcSettings[0].key.isNothing()) {
     sDefaultJSSettings.contextOptions = JS::ContextOptions();
     sDefaultJSSettings.chrome.maxScriptRuntime = -1;
     sDefaultJSSettings.chrome.compartmentOptions.behaviors().setVersion(JSVERSION_DEFAULT);
