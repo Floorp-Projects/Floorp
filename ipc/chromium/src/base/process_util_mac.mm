@@ -5,8 +5,7 @@
 
 #include "base/process_util.h"
 
-#import <Cocoa/Cocoa.h>
-#include <crt_externs.h>
+#include <fcntl.h>
 #include <spawn.h>
 #include <sys/wait.h>
 
@@ -14,9 +13,6 @@
 
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
-#include "base/rand_util.h"
-#include "base/string_util.h"
-#include "base/time.h"
 
 namespace {
 
@@ -25,14 +21,6 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 }  // namespace
 
 namespace base {
-
-void FreeEnvVarsArray(char* array[], int length)
-{
-  for (int i = 0; i < length; i++) {
-    free(array[i]);
-  }
-  delete[] array;
-}
 
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
@@ -69,37 +57,10 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // as close-on-exec.
   SetAllFDsToCloseOnExec();
 
-  // Copy _NSGetEnviron() to a new char array and add the variables
-  // in env_vars_to_set.
-  // Existing variables are overwritten by env_vars_to_set.
-  int pos = 0;
-  environment_map combined_env_vars = env_vars_to_set;
-  while((*_NSGetEnviron())[pos] != NULL) {
-    std::string varString = (*_NSGetEnviron())[pos];
-    std::string varName = varString.substr(0, varString.find_first_of('='));
-    std::string varValue = varString.substr(varString.find_first_of('=') + 1);
-    if (combined_env_vars.find(varName) == combined_env_vars.end()) {
-      combined_env_vars[varName] = varValue;
-    }
-    pos++;
-  }
-  int varsLen = combined_env_vars.size() + 1;
-
-  char** vars = new char*[varsLen];
-  int i = 0;
-  for (environment_map::const_iterator it = combined_env_vars.begin();
-       it != combined_env_vars.end(); ++it) {
-    std::string entry(it->first);
-    entry += "=";
-    entry += it->second;
-    vars[i] = strdup(entry.c_str());
-    i++;
-  }
-  vars[i] = NULL;
+  EnvironmentArray vars = BuildEnvironmentArray(env_vars_to_set);
 
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
-    FreeEnvVarsArray(vars, varsLen);
     return false;
   }
 
@@ -118,7 +79,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
     } else {
       if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
         posix_spawn_file_actions_destroy(&file_actions);
-        FreeEnvVarsArray(vars, varsLen);
         return false;
       }
     }
@@ -144,7 +104,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // Initialize spawn attributes.
   posix_spawnattr_t spawnattr;
   if (posix_spawnattr_init(&spawnattr) != 0) {
-    FreeEnvVarsArray(vars, varsLen);
     return false;
   }
 
@@ -153,7 +112,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
   size_t attr_ocount = 0;
   if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, cpu_types, &attr_ocount) != 0 ||
       attr_ocount != attr_count) {
-    FreeEnvVarsArray(vars, varsLen);
     posix_spawnattr_destroy(&spawnattr);
     return false;
   }
@@ -164,9 +122,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
                                       &file_actions,
                                       &spawnattr,
                                       argv_copy,
-                                      vars) == 0);
-
-  FreeEnvVarsArray(vars, varsLen);
+                                      vars.get()) == 0);
 
   posix_spawn_file_actions_destroy(&file_actions);
 
