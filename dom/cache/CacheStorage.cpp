@@ -333,7 +333,7 @@ CacheStorage::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
 
   nsAutoPtr<Entry> entry(new Entry());
   entry->mPromise = promise;
-  entry->mArgs = StorageMatchArgs(CacheRequest(), params, OpenMode());
+  entry->mArgs = StorageMatchArgs(CacheRequest(), params, OpenMode::Eager);
   entry->mRequest = request;
 
   mPendingRequests.AppendElement(entry.forget());
@@ -615,12 +615,6 @@ CacheStorage::MaybeRunPendingRequests()
     mActor->ExecuteOp(mGlobal, entry->mPromise, this, args.SendAsOpArgs());
   }
   mPendingRequests.Clear();
-}
-
-OpenMode
-CacheStorage::OpenMode() const
-{
-  return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager : OpenMode::Lazy;
 }
 
 } // namespace cache
