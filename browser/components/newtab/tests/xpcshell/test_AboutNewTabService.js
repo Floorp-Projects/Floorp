@@ -27,6 +27,14 @@ function cleanup() {
 
 do_register_cleanup(cleanup);
 
+add_task(async function test_as_and_prerender_initialized() {
+  Assert.equal(aboutNewTabService.activityStreamEnabled, Services.prefs.getBoolPref(ACTIVITY_STREAM_PREF),
+    ".activityStreamEnabled should be set to the correct initial value");
+  Assert.equal(aboutNewTabService.activityStreamPrerender, Services.prefs.getBoolPref(ACTIVITY_STREAM_PRERENDER_PREF),
+    ".activityStreamPrerender should be set to the correct initial value");
+  Services.prefs.getBoolPref(ACTIVITY_STREAM_PREF);
+});
+
 /**
  * Test the overriding of the default URL
  */
