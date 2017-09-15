@@ -10,7 +10,6 @@ include ChannelInfo;
 include PBackgroundSharedTypes;
 
 using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
-using OpenMode from "mozilla/dom/cache/IPCUtils.h";
 using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
 using RequestCredentials from "mozilla/dom/FetchIPCTypes.h";
 using RequestMode from "mozilla/dom/FetchIPCTypes.h";
@@ -107,14 +106,12 @@ struct CacheMatchArgs
 {
   CacheRequest request;
   CacheQueryParams params;
-  OpenMode openMode;
 };
 
 struct CacheMatchAllArgs
 {
   CacheRequestOrVoid requestOrVoid;
   CacheQueryParams params;
-  OpenMode openMode;
 };
 
 struct CachePutAllArgs
@@ -132,14 +129,12 @@ struct CacheKeysArgs
 {
   CacheRequestOrVoid requestOrVoid;
   CacheQueryParams params;
-  OpenMode openMode;
 };
 
 struct StorageMatchArgs
 {
   CacheRequest request;
   CacheQueryParams params;
-  OpenMode openMode;
 };
 
 struct StorageHasArgs

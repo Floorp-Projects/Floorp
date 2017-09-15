@@ -333,7 +333,7 @@ CacheStorage::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
 
   nsAutoPtr<Entry> entry(new Entry());
   entry->mPromise = promise;
-  entry->mArgs = StorageMatchArgs(CacheRequest(), params, OpenMode::Eager);
+  entry->mArgs = StorageMatchArgs(CacheRequest(), params);
   entry->mRequest = request;
 
   mPendingRequests.AppendElement(entry.forget());

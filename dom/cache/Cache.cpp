@@ -285,9 +285,7 @@ Cache::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this,
-                       CacheMatchArgs(CacheRequest(), params, OpenMode::Eager),
-                       1);
+  AutoChildOpArgs args(this, CacheMatchArgs(CacheRequest(), params), 1);
 
   args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -311,9 +309,7 @@ Cache::MatchAll(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this,
-                       CacheMatchAllArgs(void_t(), params, OpenMode::Eager),
-                       1);
+  AutoChildOpArgs args(this, CacheMatchAllArgs(void_t(), params), 1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir = ToInternalRequest(aCx, aRequest.Value(),
@@ -495,9 +491,7 @@ Cache::Keys(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this,
-                       CacheKeysArgs(void_t(), params, OpenMode::Eager),
-                       1);
+  AutoChildOpArgs args(this, CacheKeysArgs(void_t(), params), 1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir =
