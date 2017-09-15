@@ -13490,7 +13490,8 @@ nsIDocument::UpdateStyleBackendType()
       // Enable stylo for SVG-as-image.
       mStyleBackendType = StyleBackendType::Servo;
     } else if (!mDocumentContainer) {
-      NS_WARNING("stylo: No docshell yet, assuming Gecko style system");
+      // Not docshell, assume Gecko. Various callers can end up setting this
+      // explicitly afterwards to inherit it in various situations.
     } else if (!IsXULDocument() && IsContentDocument()) {
       // Disable stylo for about: pages other than about:blank, since
       // they tend to use unsupported selectors like XUL tree pseudos.
