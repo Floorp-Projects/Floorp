@@ -50,13 +50,13 @@
   "genericErrorTitle": {
     "message": "అయ్యో! Firefox స్క్రీన్షాట్లు haywire వెళ్ళింది."
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Firefox ను వదలకుండా స్క్రీన్షాట్లను తీసుకోండి, సేవ్ చేయండి మరియు పంచండి."
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": ""
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "మీకు నచ్చినట్టుగా"
   },
   "tourSkip": {

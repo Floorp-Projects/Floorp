@@ -70,25 +70,25 @@
   "genericErrorDetails": {
     "message": "Niatri no emmo ben acapio cöse l'é sucesso. Ti peu miga preuvâ co-ina pagina dispægia?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Fanni, sarva e condividdi föto do schermo sensa sciortî da Firefox."
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "Catua solo quello che t'eu"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "Sciacca e rebela pe catuâ solo 'na porçion de 'na pagina. Ti peu anche anâ co-o ratto sorvia l'area seleçionâ pe evidençiala."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Catua 'n barcon ò 'na pagina intrega"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "Seleçionn-a i pomelli de d'ato a drita pe catuâ l'area vixibile into barcon ò a pagina intrega."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "Comme te piaxe"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "Sarva 'n ritaggio de 'na pagina Web pe condividila in mòddo ciù façile ò scaregala into teu computer. Ti peu anche sciacâ into pomello  “E mæ föto do schermo pe atrovâ” quello che t'æ za pigiou."
   },
   "tourSkip": {
