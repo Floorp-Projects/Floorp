@@ -544,11 +544,9 @@ public:
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    if (mArgs.openMode() == OpenMode::Eager) {
-      rv = BodyOpen(aQuotaInfo, aDBDir, mResponse.mBodyId, getter_AddRefs(stream));
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
-    }
+    rv = BodyOpen(aQuotaInfo, aDBDir, mResponse.mBodyId, getter_AddRefs(stream));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
     mStreamList->Add(mResponse.mBodyId, Move(stream));
 
@@ -611,12 +609,10 @@ public:
       }
 
       nsCOMPtr<nsIInputStream> stream;
-      if (mArgs.openMode() == OpenMode::Eager) {
-        rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponses[i].mBodyId,
-                      getter_AddRefs(stream));
-        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-        if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
-      }
+      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponses[i].mBodyId,
+                    getter_AddRefs(stream));
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
       mStreamList->Add(mSavedResponses[i].mBodyId, Move(stream));
     }
@@ -1161,12 +1157,10 @@ public:
       }
 
       nsCOMPtr<nsIInputStream> stream;
-      if (mArgs.openMode() == OpenMode::Eager) {
-        rv = BodyOpen(aQuotaInfo, aDBDir, mSavedRequests[i].mBodyId,
-                      getter_AddRefs(stream));
-        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-        if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
-      }
+      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedRequests[i].mBodyId,
+                    getter_AddRefs(stream));
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
       mStreamList->Add(mSavedRequests[i].mBodyId, Move(stream));
     }
@@ -1227,12 +1221,10 @@ public:
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    if (mArgs.openMode() == OpenMode::Eager) {
-      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponse.mBodyId,
-                    getter_AddRefs(stream));
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
-    }
+    rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponse.mBodyId,
+                  getter_AddRefs(stream));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
     mStreamList->Add(mSavedResponse.mBodyId, Move(stream));
 
