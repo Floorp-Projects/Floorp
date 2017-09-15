@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_cache_CacheStreamControlParent_h
 #define mozilla_dom_cache_CacheStreamControlParent_h
 
+#include "mozilla/dom/cache/Manager.h"
 #include "mozilla/dom/cache/PCacheStreamControlParent.h"
 #include "mozilla/dom/cache/StreamControl.h"
 #include "nsTObserverArray.h"
@@ -23,6 +24,7 @@ class StreamList;
 
 class CacheStreamControlParent final : public PCacheStreamControlParent
                                      , public StreamControl
+                                     , Manager::Listener
 {
 public:
   CacheStreamControlParent();
@@ -41,6 +43,9 @@ public:
   SerializeStream(CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
                   nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList) override;
 
+  virtual void
+  OpenStream(const nsID& aId, InputStreamResolver&& aResolver) override;
+
 private:
   virtual void
   NoteClosedAfterForget(const nsID& aId) override;
@@ -52,6 +57,10 @@ private:
 
   // PCacheStreamControlParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvOpenStream(const nsID& aStreamId, OpenStreamResolver&& aResolve) override;
+
   virtual mozilla::ipc::IPCResult RecvNoteClosed(const nsID& aId) override;
 
   void NotifyClose(const nsID& aId);

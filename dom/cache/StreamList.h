@@ -26,6 +26,9 @@ class StreamList final : public Context::Activity
 public:
   StreamList(Manager* aManager, Context* aContext);
 
+  Manager* GetManager() const;
+  bool ShouldOpenStreamFor(const nsID& aId) const;
+
   void SetStreamControl(CacheStreamControlParent* aStreamControl);
   void RemoveStreamControl(CacheStreamControlParent* aStreamControl);
 
