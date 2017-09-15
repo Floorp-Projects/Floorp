@@ -315,6 +315,9 @@ class TestRecursiveMakeBackend(BackendTester):
         backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
+        deffile_path = mozpath.relpath(mozpath.join(env.topsrcdir, 'baz.def'),
+                                       env.topobjdir)
+
         expected = {
             'ALLOW_COMPILER_WARNINGS': [
                 'ALLOW_COMPILER_WARNINGS := 1',
@@ -329,7 +332,7 @@ class TestRecursiveMakeBackend(BackendTester):
                 'RCINCLUDE := bar.rc',
             ],
             'DEFFILE': [
-                'DEFFILE := baz.def',
+                'DEFFILE := %s' % deffile_path,
             ],
             'MOZBUILD_CFLAGS': [
                 'MOZBUILD_CFLAGS += -fno-exceptions',
