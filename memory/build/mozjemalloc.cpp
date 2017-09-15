@@ -784,10 +784,8 @@ private:
 
   void DallocRun(arena_run_t* aRun, bool aDirty);
 
-public:
   void SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero);
 
-private:
   void TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize);
 
   void TrimRunTail(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize, bool dirty);
@@ -812,6 +810,8 @@ public:
   void DallocLarge(arena_chunk_t* aChunk, void* aPtr);
 
   void RallocShrinkLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize, size_t aOldSize);
+
+  bool RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize, size_t aOldSize);
 
   void Purge(bool aAll);
 
@@ -3880,42 +3880,42 @@ arena_t::RallocShrinkLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
   malloc_spin_unlock(&mLock);
 }
 
-static bool
-arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
-    size_t size, size_t oldsize)
+bool
+arena_t::RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
+                         size_t aOldSize)
 {
-	size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >> pagesize_2pow;
-	size_t npages = oldsize >> pagesize_2pow;
+  size_t pageind = (uintptr_t(aPtr) - uintptr_t(aChunk)) >> pagesize_2pow;
+  size_t npages = aOldSize >> pagesize_2pow;
 
-	malloc_spin_lock(&arena->mLock);
-	MOZ_DIAGNOSTIC_ASSERT(oldsize == (chunk->map[pageind].bits & ~pagesize_mask));
+  malloc_spin_lock(&mLock);
+  MOZ_DIAGNOSTIC_ASSERT(aOldSize == (aChunk->map[pageind].bits & ~pagesize_mask));
 
-	/* Try to extend the run. */
-	MOZ_ASSERT(size > oldsize);
-	if (pageind + npages < chunk_npages && (chunk->map[pageind+npages].bits
-	    & CHUNK_MAP_ALLOCATED) == 0 && (chunk->map[pageind+npages].bits &
-	    ~pagesize_mask) >= size - oldsize) {
-		/*
-		 * The next run is available and sufficiently large.  Split the
-		 * following run, then merge the first part with the existing
-		 * allocation.
-		 */
-		arena->SplitRun((arena_run_t *)(uintptr_t(chunk) +
-		    ((pageind+npages) << pagesize_2pow)), size - oldsize, true,
-		    false);
+  /* Try to extend the run. */
+  MOZ_ASSERT(aSize > aOldSize);
+  if (pageind + npages < chunk_npages && (aChunk->map[pageind+npages].bits
+      & CHUNK_MAP_ALLOCATED) == 0 && (aChunk->map[pageind+npages].bits &
+      ~pagesize_mask) >= aSize - aOldSize) {
+    /*
+     * The next run is available and sufficiently large.  Split the
+     * following run, then merge the first part with the existing
+     * allocation.
+     */
+    SplitRun((arena_run_t *)(uintptr_t(aChunk) +
+        ((pageind+npages) << pagesize_2pow)), aSize - aOldSize, true,
+        false);
 
-		chunk->map[pageind].bits = size | CHUNK_MAP_LARGE |
-		    CHUNK_MAP_ALLOCATED;
-		chunk->map[pageind+npages].bits = CHUNK_MAP_LARGE |
-		    CHUNK_MAP_ALLOCATED;
+    aChunk->map[pageind].bits = aSize | CHUNK_MAP_LARGE |
+        CHUNK_MAP_ALLOCATED;
+    aChunk->map[pageind+npages].bits = CHUNK_MAP_LARGE |
+        CHUNK_MAP_ALLOCATED;
 
-		arena->mStats.allocated_large += size - oldsize;
-		malloc_spin_unlock(&arena->mLock);
-		return (false);
-	}
-	malloc_spin_unlock(&arena->mLock);
+    mStats.allocated_large += aSize - aOldSize;
+    malloc_spin_unlock(&mLock);
+    return false;
+  }
+  malloc_spin_unlock(&mLock);
 
-	return (true);
+  return true;
 }
 
 /*
@@ -3950,8 +3950,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 			arena->RallocShrinkLarge(chunk, ptr, psize, oldsize);
 			return (false);
 		} else {
-			bool ret = arena_ralloc_large_grow(arena, chunk, ptr,
-			    psize, oldsize);
+			bool ret = arena->RallocGrowLarge(chunk, ptr, psize, oldsize);
 			if (ret == false && opt_zero) {
 				memset((void *)((uintptr_t)ptr + oldsize), 0,
 				    size - oldsize);
