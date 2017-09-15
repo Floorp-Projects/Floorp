@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include LayersSurfaces;
-include protocol PTexture;
 include protocol PVRLayer;
 include LayersMessages;
 include GamepadEventTypes;
@@ -33,13 +32,9 @@ namespace gfx {
  */
 sync protocol PVRManager
 {
-  manages PTexture;
   manages PVRLayer;
 
 parent:
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend,
-                 TextureFlags aTextureFlags, uint64_t aSerial);
-
   async PVRLayer(uint32_t aDisplayID, uint32_t aGroup);
 
   // (Re)Enumerate VR Displays.  An updated list of VR displays will be returned

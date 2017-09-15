@@ -21,8 +21,7 @@ using namespace layers;
 namespace gfx {
 
 VRManagerParent::VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild)
-  : HostIPCAllocator()
-  , mDisplayTestID(0)
+  : mDisplayTestID(0)
   , mControllerTestID(0)
   , mHaveEventListener(false)
   , mHaveControllerListener(false)
@@ -39,21 +38,6 @@ VRManagerParent::~VRManagerParent()
   MOZ_ASSERT(!mVRManagerHolder);
 
   MOZ_COUNT_DTOR(VRManagerParent);
-}
-
-PTextureParent*
-VRManagerParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
-                                     const LayersBackend& aLayersBackend,
-                                     const TextureFlags& aFlags,
-                                     const uint64_t& aSerial)
-{
-  return layers::TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial, Nothing());
-}
-
-bool
-VRManagerParent::DeallocPTextureParent(PTextureParent* actor)
-{
-  return layers::TextureHost::DestroyIPDLActor(actor);
 }
 
 PVRLayerParent*
@@ -79,49 +63,9 @@ VRManagerParent::DeallocPVRLayerParent(PVRLayerParent* actor)
 }
 
 bool
-VRManagerParent::AllocShmem(size_t aSize,
-  ipc::SharedMemory::SharedMemoryType aType,
-  ipc::Shmem* aShmem)
-{
-  return PVRManagerParent::AllocShmem(aSize, aType, aShmem);
-}
-
-bool
-VRManagerParent::AllocUnsafeShmem(size_t aSize,
-  ipc::SharedMemory::SharedMemoryType aType,
-  ipc::Shmem* aShmem)
-{
-  return PVRManagerParent::AllocUnsafeShmem(aSize, aType, aShmem);
-}
-
-void
-VRManagerParent::DeallocShmem(ipc::Shmem& aShmem)
-{
-  PVRManagerParent::DeallocShmem(aShmem);
-}
-
-bool
 VRManagerParent::IsSameProcess() const
 {
   return OtherPid() == base::GetCurrentProcId();
-}
-
-void
-VRManagerParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId)
-{
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-}
-
-void
-VRManagerParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
-{
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-}
-
-base::ProcessId
-VRManagerParent::GetChildProcessId()
-{
-  return OtherPid();
 }
 
 void
