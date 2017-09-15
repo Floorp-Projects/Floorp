@@ -3013,6 +3013,7 @@ exports.CSS_PROPERTIES = {
       "font-language-override",
       "font-size",
       "font-size-adjust",
+      "-moz-font-smoothing-background-color",
       "font-stretch",
       "font-style",
       "font-synthesis",

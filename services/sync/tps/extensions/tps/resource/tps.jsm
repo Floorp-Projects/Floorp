@@ -315,30 +315,14 @@ var TPS = {
     Logger.logPass("executing action " + action.toUpperCase() + " on windows");
   },
 
-  HandleTabs(tabs, action) {
-    this._tabsAdded = tabs.length;
-    this._tabsFinished = 0;
+  async HandleTabs(tabs, action) {
     for (let tab of tabs) {
       Logger.logInfo("executing action " + action.toUpperCase() +
                      " on tab " + JSON.stringify(tab));
       switch (action) {
         case ACTION_ADD:
-          // When adding tabs, we keep track of how many tabs we're adding,
-          // and wait until we've received that many onload events from our
-          // new tabs before continuing
-          let taburi = tab.uri;
-          BrowserTabs.Add(tab.uri, () => {
-            this._tabsFinished++;
-            Logger.logInfo("tab for " + taburi + " finished loading");
-            if (this._tabsFinished == this._tabsAdded) {
-              Logger.logInfo("all tabs loaded, continuing...");
-
-              // Wait some time before continuing to be sure tabs can be synced,
-              // otherwise we can get 'error locating tab' (bug 1383832).
-              CommonUtils.namedTimer(() => {
-                this.FinishAsyncOperation();
-              }, 2500, this, "postTabsOpening");
-            }
+          await new Promise(resolve => {
+            BrowserTabs.Add(tab.uri, resolve);
           });
           break;
         case ACTION_VERIFY:
@@ -357,6 +341,14 @@ var TPS = {
         default:
           Logger.AssertTrue(false, "invalid action: " + action);
       }
+    }
+    if (action === ACTION_ADD) {
+      // Ideally we'd do the right thing (probably resolving bug 1383832, or
+      // waiting for sessionstore events in TPS), but waiting enough time to
+      // be reasonably confident the sessionstore time has fired is simpler.
+      // Without this timeout, we are likely to see "error locating tab"
+      // on subsequent syncs.
+      await new Promise(resolve => setTimeout(resolve, 2500));
     }
     Logger.logPass("executing action " + action.toUpperCase() + " on tabs");
   },
@@ -1312,15 +1304,14 @@ var Prefs = {
 };
 
 var Tabs = {
-  add: function Tabs__add(tabs) {
-    TPS.StartAsyncOperation();
-    TPS.HandleTabs(tabs, ACTION_ADD);
+  async add(tabs) {
+    await TPS.HandleTabs(tabs, ACTION_ADD);
   },
-  verify: function Tabs__verify(tabs) {
-    TPS.HandleTabs(tabs, ACTION_VERIFY);
+  async verify(tabs) {
+    await TPS.HandleTabs(tabs, ACTION_VERIFY);
   },
-  verifyNot: function Tabs__verifyNot(tabs) {
-    TPS.HandleTabs(tabs, ACTION_VERIFY_NOT);
+  async verifyNot(tabs) {
+    await TPS.HandleTabs(tabs, ACTION_VERIFY_NOT);
   }
 };
 

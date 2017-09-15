@@ -337,7 +337,7 @@ module.exports = {
   // minimum size necessary to show a rich icon instead of a screenshot
   MIN_RICH_FAVICON_SIZE: 96,
   // minimum size necessary to show any icon in the top left corner with a screenshot
-  MIN_CORNER_FAVICON_SIZE: 32
+  MIN_CORNER_FAVICON_SIZE: 16
 };
 
 /***/ }),
@@ -809,6 +809,7 @@ const TopSiteLink = props => {
   let imageStyle;
   let showSmallFavicon = false;
   let smallFaviconStyle;
+  let smallFaviconFallback;
   if (tippyTopIcon || faviconSize >= MIN_RICH_FAVICON_SIZE) {
     // styles and class names for top sites with rich icons
     imageClassName = "top-site-icon rich-icon";
@@ -821,10 +822,15 @@ const TopSiteLink = props => {
     imageClassName = `screenshot${link.screenshot ? " active" : ""}`;
     imageStyle = { backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none" };
 
-    // only show a favicon in top left if it's greater than 32x32
+    // only show a favicon in top left if it's greater than 16x16
     if (faviconSize >= MIN_CORNER_FAVICON_SIZE) {
       showSmallFavicon = true;
       smallFaviconStyle = { backgroundImage: `url(${link.favicon})` };
+    } else if (link.screenshot) {
+      // Don't show a small favicon if there is no screenshot, because that
+      // would result in two fallback icons
+      showSmallFavicon = true;
+      smallFaviconFallback = true;
     }
   }
   return React.createElement(
@@ -842,7 +848,11 @@ const TopSiteLink = props => {
           props.title[0]
         ),
         React.createElement("div", { className: imageClassName, style: imageStyle }),
-        showSmallFavicon && React.createElement("div", { className: "top-site-icon default-icon", style: smallFaviconStyle })
+        showSmallFavicon && React.createElement(
+          "div",
+          { className: "top-site-icon default-icon", style: smallFaviconStyle },
+          smallFaviconFallback && props.title[0]
+        )
       ),
       React.createElement(
         "div",
@@ -863,7 +873,7 @@ TopSiteLink.defaultProps = {
   link: {}
 };
 
-class TopSite extends React.Component {
+class TopSite extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = { showContextMenu: false, activeTile: null };
@@ -1006,7 +1016,7 @@ const { actionCreators: ac } = __webpack_require__(0);
 const linkMenuOptions = __webpack_require__(18);
 const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
 
-class LinkMenu extends React.Component {
+class LinkMenu extends React.PureComponent {
   getOptions() {
     const props = this.props;
     const { site, index, source } = props;
@@ -1118,7 +1128,7 @@ function addLocaleDataForReactIntl({ locale, textDirection }) {
   document.documentElement.dir = textDirection;
 }
 
-class Base extends React.Component {
+class Base extends React.PureComponent {
   componentWillMount() {
     this.sendNewTabRehydrated(this.props.App);
   }
@@ -1275,9 +1285,9 @@ const { perfService: perfSvc } = __webpack_require__(7);
  * even split out into a higher-order component to wrap whatever.
  *
  * @class TopSitesPerfTimer
- * @extends {React.Component}
+ * @extends {React.PureComponent}
  */
-class TopSitesPerfTimer extends React.Component {
+class TopSitesPerfTimer extends React.PureComponent {
   constructor(props) {
     super(props);
     // Just for test dependency injection:
@@ -1383,7 +1393,7 @@ const { TopSite, TopSitePlaceholder } = __webpack_require__(8);
 const { TOP_SITES_DEFAULT_LENGTH, TOP_SITES_SHOWMORE_LENGTH } = __webpack_require__(6);
 const { TOP_SITES_SOURCE } = __webpack_require__(5);
 
-class TopSitesEdit extends React.Component {
+class TopSitesEdit extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -1556,7 +1566,7 @@ const { FormattedMessage } = __webpack_require__(2);
 
 const { TOP_SITES_SOURCE } = __webpack_require__(5);
 
-class TopSiteForm extends React.Component {
+class TopSiteForm extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -1739,7 +1749,7 @@ module.exports = TopSiteForm;
 
 const React = __webpack_require__(1);
 
-class ContextMenu extends React.Component {
+class ContextMenu extends React.PureComponent {
   constructor(props) {
     super(props);
     this.hideContext = this.hideContext.bind(this);
@@ -1776,7 +1786,7 @@ class ContextMenu extends React.Component {
   }
 }
 
-class ContextMenuItem extends React.Component {
+class ContextMenuItem extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onClick = this.onClick.bind(this);
@@ -1892,7 +1902,7 @@ module.exports = {
     action: {
       type: at.DIALOG_OPEN,
       data: {
-        onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: site.url }), ac.UserEvent({ event: "DELETE" })],
+        onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: { url: site.url, forceBlock: site.bookmarkGuid } }), ac.UserEvent({ event: "DELETE" })],
         body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
         confirm_button_string_id: "menu_action_delete"
       }
@@ -1951,7 +1961,7 @@ const { FormattedMessage, injectIntl } = __webpack_require__(2);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 const { IS_NEWTAB } = __webpack_require__(20);
 
-class Search extends React.Component {
+class Search extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onClick = this.onClick.bind(this);
@@ -2183,7 +2193,7 @@ const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
  * 3.  After 3 active days
  * 4.  User clicks "Cancel" on the import wizard (currently not implemented).
  */
-class ManualMigration extends React.Component {
+class ManualMigration extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onLaunchTour = this.onLaunchTour.bind(this);
@@ -2262,7 +2272,7 @@ const PreferencesInput = props => React.createElement(
   )
 );
 
-class PreferencesPane extends React.Component {
+class PreferencesPane extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = { visible: false };
@@ -2399,7 +2409,7 @@ const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const CARDS_PER_ROW = 3;
 
-class Section extends React.Component {
+class Section extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onInfoEnter = this.onInfoEnter.bind(this);
@@ -2609,7 +2619,7 @@ Section.defaultProps = {
 
 const SectionIntl = injectIntl(Section);
 
-class Sections extends React.Component {
+class Sections extends React.PureComponent {
   render() {
     const sections = this.props.Sections;
     return React.createElement(
@@ -2645,7 +2655,7 @@ const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
  * this class. Each card will then get a context menu which reflects the actions that
  * can be done on this Card.
  */
-class Card extends React.Component {
+class Card extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = { showContextMenu: false, activeCard: null };
@@ -2715,7 +2725,7 @@ class Card extends React.Component {
             ),
             React.createElement(
               "div",
-              { className: `card-text${hasImage ? "" : " no-image"}${link.hostname ? "" : " no-host-name"}${icon ? "" : " no-context"}` },
+              { className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name", hasImage ? "" : "no-image"].join(" ") },
               React.createElement(
                 "h4",
                 { className: "card-title", dir: "auto" },
@@ -2804,7 +2814,7 @@ module.exports = {
 const React = __webpack_require__(1);
 const { FormattedMessage } = __webpack_require__(2);
 
-class Topic extends React.Component {
+class Topic extends React.PureComponent {
   render() {
     const { url, name } = this.props;
     return React.createElement(
@@ -2819,7 +2829,7 @@ class Topic extends React.Component {
   }
 }
 
-class Topics extends React.Component {
+class Topics extends React.PureComponent {
   render() {
     const { topics, read_more_endpoint } = this.props;
     return React.createElement(

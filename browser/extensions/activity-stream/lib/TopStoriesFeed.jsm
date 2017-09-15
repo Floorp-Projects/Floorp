@@ -165,12 +165,27 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return items;
     }
 
+    if (!this.topItems) {
+      this.topItems = new Map();
+    }
+
+    // This avoids an infinite recursion if for some reason the feed stops
+    // changing. Otherwise, there's a chance we'd be rotating forever to
+    // find an item we haven't displayed on top yet.
+    if (this.topItems.size >= items.length) {
+      this.topItems.clear();
+    }
+
     const guid = items[0].guid;
-    if (!this.topItem || !(guid in this.topItem)) {
-      this.topItem = {[guid]: 0};
-    } else if (++this.topItem[guid] === 2) {
-      items.push(items.shift());
-      this.topItem = {[items[0].guid]: 0};
+    if (!this.topItems.has(guid)) {
+      this.topItems.set(guid, 0);
+    } else {
+      const val = this.topItems.get(guid) + 1;
+      this.topItems.set(guid, val);
+      if (val >= 2) {
+        items.push(items.shift());
+        this.rotate(items);
+      }
     }
     return items;
   }
