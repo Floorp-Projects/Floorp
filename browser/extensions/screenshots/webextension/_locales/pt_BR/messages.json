@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Não temos certeza do que acabou de acontecer. Tentar novamente ou fazer uma captura de uma página diferente?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Capture, salve e compartilhe telas sem sair do Firefox."
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "Capture apenas o que você quer"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "Clique e arraste para capturar apenas uma parte de uma página. Você também pode passar o mouse para realçar sua seleção."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Capture janelas ou páginas inteiras"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou capturar uma página inteira."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "Como você quiser"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "Salve as suas capturas na Web para compartilhar mais facilmente ou baixe-as no seu computador. Você também pode clicar no botão Minhas capturas para encontras todas as capturas que tirou."
   },
   "tourSkip": {

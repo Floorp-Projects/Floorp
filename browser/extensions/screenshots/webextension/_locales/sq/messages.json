@@ -58,13 +58,13 @@
   "unshootablePageErrorTitle": {
     "message": "S’bëjmë dot foto të kësaj faqeje."
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "Fiksoni Në Foto Aq Sa Doni"
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Fiksoni Dritare ose Krejt Faqet"
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "Si T’ju Pëlqejë"
   },
   "tourDone": {

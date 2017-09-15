@@ -79,31 +79,25 @@
   "genericErrorDetails": {
     "message": "Njejsmy se wěste, což jo se stało. Cośo hyšći raz wopytaś abo cośo drugi bok fotografěrowaś?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Gótujśo, składujśo a źělśo fota wobrazowki mimo až Firefox spušćaśo."
   },
-  "tourHeaderPageAction": {
-    "message": "Nowa wašnja składowanja"
-  },
-  "tourBodyPageAction": {
-    "message": "Wócyńśo meni akcijow boka w adresowem pólu kuždy raz, gaž cośo foto worazowki gótowaś."
-  },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "Fotografěrujśo jadnorje, což cośo"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "Klikniśo a ześěgniśo, aby źěl boka fotografěrował. Móžośo teke špěrku myški nad nim gibaś, aby swój wuběr wuzwignuł."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Wokna abo cełe boki składowaś"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "Wubjeŕśo tłocašk górjejce napšawo, aby widobny wobcerk we woknje abo ceły bok fotografěrowaś."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "Tak, kaž se wam spódoba"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "Składujśo swóje pśirězane fota wobrazowki w interneśe, aby je lažcej źělił, abo ześěgniśo je na swójo licadło. Móžośo teke na tłocašk „Móje fota wobrazowki“ kliknuś, abye wšě fota wobrazowki namakał, kótarež sćo gótował."
   },
   "tourSkip": {

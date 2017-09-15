@@ -1,5 +1,6 @@
 /* globals browser, main, communication */
 /* This file handles:
+     browser.browserAction.onClicked
      clicks on the Photon page action
      browser.contextMenus.onClicked
      browser.runtime.onMessage
@@ -29,6 +30,14 @@ this.startBackground = (function() {
   // Maximum milliseconds to wait before checking for migration possibility
   const CHECK_MIGRATION_DELAY = 2000;
 
+  browser.browserAction.onClicked.addListener((tab) => {
+    loadIfNecessary().then(() => {
+      main.onClicked(tab);
+    }).catch((error) => {
+      console.error("Error loading Screenshots:", error);
+    });
+  });
+
   browser.contextMenus.create({
     id: "create-screenshot",
     title: browser.i18n.getMessage("contextMenuLabel"),
@@ -50,12 +59,17 @@ this.startBackground = (function() {
   browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {
     let hasSeenOnboarding = !!result.hasSeenOnboarding;
     if (!hasSeenOnboarding) {
-      iconPath = "icons/icon-starred-32-v2.svg";
-      if (photonPageActionPort) {
-        photonPageActionPort.postMessage({
-          type: "setProperties",
-          iconPath
-        });
+      let path = "icons/icon-starred-32-v2.svg";
+      if (!usePhotonPageAction) {
+        browser.browserAction.setIcon({path});
+      } else {
+        iconPath = path;
+        if (photonPageActionPort) {
+          photonPageActionPort.postMessage({
+            type: "setProperties",
+            iconPath
+          });
+        }
       }
     }
   }).catch((error) => {
@@ -71,6 +85,7 @@ this.startBackground = (function() {
     return true;
   });
 
+  let usePhotonPageAction = false;
   let photonPageActionPort = null;
   initPhotonPageAction();
 
@@ -132,6 +147,9 @@ this.startBackground = (function() {
     photonPageActionPort = browser.runtime.connect({ name: "photonPageActionPort" });
     photonPageActionPort.onMessage.addListener((message) => {
       switch (message.type) {
+      case "setUsePhotonPageAction":
+        usePhotonPageAction = message.value;
+        break;
       case "click":
         loadIfNecessary().then(() => {
           main.onClicked(message.tab);
@@ -156,6 +174,12 @@ this.startBackground = (function() {
         enumerable: true,
         get() {
           return photonPageActionPort;
+        }
+      },
+      "usePhotonPageAction": {
+        enumerable: true,
+        get() {
+          return usePhotonPageAction;
         }
       }
     });

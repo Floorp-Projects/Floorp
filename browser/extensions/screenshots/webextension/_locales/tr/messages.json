@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Ne olduğunu biz de anlamadık. Bir daha denemeye veya başka bir sayfanın ekran görüntüsünü almaya ne dersiniz?"
   },
-  "tourBodyIntro": {
+  "tourBodyOne": {
     "message": "Firefox'tan çıkmadan ekran görüntüleri alın, kaydedin ve paylaşın."
   },
-  "tourHeaderClickAndDrag": {
+  "tourHeaderTwo": {
     "message": "İstediğini yakala"
   },
-  "tourBodyClickAndDrag": {
+  "tourBodyTwo": {
     "message": "Sayfanın belli bir kısmını yakalamak için işaretçiyi tıklayıp sürükleyin. Seçiminizi vurgulamak için fareyle üzerine gelebilirsiniz."
   },
-  "tourHeaderFullPage": {
+  "tourHeaderThree": {
     "message": "Pencereleri veya sayfaların tamamını yakala"
   },
-  "tourBodyFullPage": {
+  "tourBodyThree": {
     "message": "Yalnızca pencerede gördüğünüz alanı veya sayfanın tamamını yakalamak için sağ üstteki düğmelerden uygun olanı seçin."
   },
-  "tourHeaderDownloadUpload": {
+  "tourHeaderFour": {
     "message": "İstediğin gibi yakala"
   },
-  "tourBodyDownloadUpload": {
+  "tourBodyFour": {
     "message": "Ekran görüntülerinizi daha kolay paylaşmak veya bilgisayarınıza indirmek için web’e kaydedin. Kaydettiğiniz tüm görüntüleri bulmak için \"Ekran görüntülerim\" düğmesine tıklayabilirsiniz."
   },
   "tourSkip": {
