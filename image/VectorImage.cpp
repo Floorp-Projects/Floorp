@@ -87,7 +87,7 @@ protected:
     return mDocWrapper->GetRootSVGElem();
   }
 
-  virtual void DoUpdate() override
+  virtual void OnRenderingChange() override
   {
     Element* elem = GetTarget();
     MOZ_ASSERT(elem, "missing root SVG node");
