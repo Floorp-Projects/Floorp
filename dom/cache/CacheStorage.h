@@ -104,6 +104,9 @@ private:
 
   void MaybeRunPendingRequests();
 
+  OpenMode
+  OpenMode() const;
+
   const Namespace mNamespace;
   nsCOMPtr<nsIGlobalObject> mGlobal;
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
