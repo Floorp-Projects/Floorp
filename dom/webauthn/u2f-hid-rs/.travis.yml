@@ -1,0 +1,30 @@
+sudo: false
+language: rust
+cache: cargo
+rust:
+  - stable
+  - beta
+  - nightly
+
+addons:
+  apt:
+    packages:
+      - build-essential
+      - libudev-dev
+
+before_install:
+  - pkg-config --list-all
+  - pkg-config --libs libudev
+  - pkg-config --modversion libudev
+  - cargo install rustfmt || true
+
+script:
+- |
+  if [ "$TRAVIS_RUST_VERSION" == "nightly" ] ; then
+    export ASAN_OPTIONS="detect_odr_violation=1:leak_check_at_exit=0:detect_leaks=0"
+    export RUSTFLAGS="-Z sanitizer=address"
+  fi
+- |
+  cargo fmt -- --write-mode=diff &&
+  cargo build &&
+  cargo test

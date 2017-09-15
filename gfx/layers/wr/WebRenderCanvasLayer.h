@@ -37,6 +37,7 @@ protected:
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   wr::IpcResourceUpdateQueue& aResources,
                    const StackingContextHelper& aSc) override;
 };
 

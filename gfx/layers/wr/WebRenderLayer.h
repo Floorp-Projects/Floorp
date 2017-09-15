@@ -25,6 +25,7 @@ class WebRenderLayer
 public:
   virtual Layer* GetLayer() = 0;
   virtual void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                           wr::IpcResourceUpdateQueue& aResources,
                            const StackingContextHelper& aSc) = 0;
   virtual Maybe<wr::WrImageMask> RenderMaskLayer(const StackingContextHelper& aSc,
                                              const gfx::Matrix4x4& aTransform)

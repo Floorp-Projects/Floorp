@@ -601,7 +601,8 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                 const StructuredCloneData& aInitialData,
-                                nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
+                                nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
+                                nsTArray<FontFamilyListEntry>&& aFontFamilyList) override;
 
   virtual mozilla::ipc::IPCResult
   RecvProvideAnonymousTemporaryFile(const uint64_t& aID, const FileDescOrError& aFD) override;
