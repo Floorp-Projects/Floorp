@@ -431,7 +431,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   Element* oldScopeElement = nullptr;
   if (mStyleSheet) {
     if (mStyleSheet->IsServo()) {
-      // XXXheycam ServoStyleSheets don't support <style scoped>.
+      NS_WARNING("stylo: ServoStyleSheets don't support <style scoped>");
     } else {
       oldScopeElement = mStyleSheet->AsGecko()->GetScopeElement();
     }
@@ -596,6 +596,7 @@ nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
 
   if (mStyleSheet->IsServo()) {
     // XXXheycam ServoStyleSheets don't support <style scoped>.
+    NS_ERROR("stylo: ServoStyleSheets don't support <style scoped>");
     return;
   }
 
