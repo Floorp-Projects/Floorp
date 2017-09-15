@@ -770,6 +770,8 @@ struct arena_t {
   arena_bin_t mBins[1]; /* Dynamically sized. */
 
   void Purge(bool aAll);
+
+  void HardPurge();
 };
 
 /******************************************************************************/
@@ -5064,17 +5066,17 @@ hard_purge_chunk(arena_chunk_t *chunk)
 }
 
 /* Explicitly remove all of this arena's MADV_FREE'd pages from memory. */
-static void
-hard_purge_arena(arena_t *arena)
+void
+arena_t::HardPurge()
 {
-	malloc_spin_lock(&arena->mLock);
+  malloc_spin_lock(&mLock);
 
-	while (!arena->mChunksMAdvised.isEmpty()) {
-		arena_chunk_t *chunk = arena->mChunksMAdvised.popFront();
-		hard_purge_chunk(chunk);
-	}
+  while (!mChunksMAdvised.isEmpty()) {
+    arena_chunk_t* chunk = mChunksMAdvised.popFront();
+    hard_purge_chunk(chunk);
+  }
 
-	malloc_spin_unlock(&arena->mLock);
+  malloc_spin_unlock(&mLock);
 }
 
 template<> inline void
@@ -5085,7 +5087,7 @@ MozJemalloc::jemalloc_purge_freed_pages()
   for (i = 0; i < narenas; i++) {
     arena_t* arena = arenas[i];
     if (arena) {
-      hard_purge_arena(arena);
+      arena->HardPurge();
     }
   }
   malloc_spin_unlock(&arenas_lock);
