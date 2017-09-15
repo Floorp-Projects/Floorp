@@ -88,19 +88,18 @@ import java.util.List;
     @Override
     public void onBindViewHolder(TopSitesCard holder, int position) {
         holder.bind(topSites.get(position), getTopSiteAbsolutePosition(position));
+
+        final View card = holder.itemView;
+        final ViewGroup.LayoutParams layoutParams = card.getLayoutParams();
+        layoutParams.width = tilesSize;
+        layoutParams.height = tilesSize;
+        card.setLayoutParams(layoutParams);
     }
 
     @Override
     public TopSitesCard onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-
         final FrameLayout card = (FrameLayout) inflater.inflate(R.layout.activity_stream_topsites_card, parent, false);
-
-        ViewGroup.LayoutParams layoutParams = card.getLayoutParams();
-        layoutParams.width = tilesSize;
-        layoutParams.height = tilesSize;
-        card.setLayoutParams(layoutParams);
-
         return new TopSitesCard(card, onUrlOpenListener, onUrlOpenInBackgroundListener);
     }
 
