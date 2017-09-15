@@ -13,6 +13,8 @@
   --toolbar-non-lwt-textcolor: var(--chrome-color);
   --toolbar-non-lwt-bgimage: none;
 
+  --toolbarbutton-icon-fill-opacity: .7;
+
   --tab-line-color: highlight;
 }
 
@@ -53,7 +55,7 @@
 .toolbarbutton-animatable-box[brighttext],
 toolbar[brighttext] .toolbarbutton-animatable-box,
 toolbar[brighttext] .toolbarbutton-1 {
-  fill: rgba(249, 249, 250, .7);
+  fill: rgb(249, 249, 250);
 }
 
 #urlbar ::-moz-selection,

@@ -1303,6 +1303,7 @@
               this._warningLink.hidden = true;
               this._warningBtn.hidden = true;
             } else if (!isUpgrade && this.mAddon.appDisabled &&
+                       this.mAddon.type == "extension" &&
                        !this.mAddon.multiprocessCompatible &&
                        !Services.prefs.getBoolPref("extensions.allow-non-mpc-extensions", true)) {
               this.setAttribute("notification", "error");
@@ -1647,7 +1648,10 @@
 
       <method name="findReplacement">
         <body><![CDATA[
-          openURL(`https://addons.mozilla.org/find-replacement/?guid=${this.mAddon.id}`);
+          let url = (this.mAddon.type == "theme") ?
+            SUPPORT_URL + "complete-themes" :
+            `https://addons.mozilla.org/find-replacement/?guid=${this.mAddon.id}`;
+            openURL(url);
         ]]></body>
       </method>
 

@@ -8,7 +8,8 @@ from __future__ import absolute_import, print_function
 
 import logging
 import posixpath
-import sys, os
+import os
+import sys
 import subprocess
 import runxpcshelltests as xpcshell
 import tempfile
@@ -25,8 +26,10 @@ from xpcshellcommandline import parser_remote
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 def remoteJoin(path1, path2):
     return posixpath.join(path1, path2)
+
 
 class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
     def __init__(self, *args, **kwargs):
@@ -45,7 +48,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         else:
             remoteName = remoteJoin(remoteDir, os.path.basename(name))
         return ['-e', 'const _TEST_FILE = ["%s"];' %
-                 remoteName.replace('\\', '/')]
+                remoteName.replace('\\', '/')]
 
     def remoteForLocal(self, local):
         for mapping in self.pathMapping:
@@ -170,12 +173,14 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             # The minidumps directory is automatically created when Fennec
             # (first) starts, so its lack of presence is a hint that
             # something went wrong.
-            print("Automation Error: No crash directory (%s) found on remote device" % self.remoteMinidumpDir)
+            print("Automation Error: No crash directory (%s) found on remote device" %
+                  self.remoteMinidumpDir)
             # Whilst no crash was found, the run should still display as a failure
             return True
         with mozfile.TemporaryDirectory() as dumpDir:
             self.device.getDirectory(self.remoteMinidumpDir, dumpDir)
-            crashed = xpcshell.XPCShellTestThread.checkForCrashes(self, dumpDir, symbols_path, test_name)
+            crashed = xpcshell.XPCShellTestThread.checkForCrashes(
+                  self, dumpDir, symbols_path, test_name)
             self.clearRemoteDir(self.remoteMinidumpDir)
         return crashed
 
@@ -217,8 +222,8 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             except mozdevice.DMError:
                 self.log.error("failed to delete %s: '%s'" % (remoteDir, str(out)))
 
-    #TODO: consider creating a separate log dir.  We don't have the test file structure,
-    #      so we use filename.log.  Would rather see ./logs/filename.log
+    # TODO: consider creating a separate log dir.  We don't have the test file structure,
+    # so we use filename.log.  Would rather see ./logs/filename.log
     def createLogFile(self, test, stdout):
         try:
             f = None
@@ -385,11 +390,11 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if (not self.device.dirExists(self.remoteBinDir)):
             # device.mkDir may fail here where shellCheckOutput may succeed -- see bug 817235
             try:
-                self.device.shellCheckOutput(["mkdir", self.remoteBinDir]);
+                self.device.shellCheckOutput(["mkdir", self.remoteBinDir])
             except mozdevice.DMError:
                 # Might get a permission error; try again as root, if available
-                self.device.shellCheckOutput(["mkdir", self.remoteBinDir], root=True);
-                self.device.shellCheckOutput(["chmod", "777", self.remoteBinDir], root=True);
+                self.device.shellCheckOutput(["mkdir", self.remoteBinDir], root=True)
+                self.device.shellCheckOutput(["chmod", "777", self.remoteBinDir], root=True)
 
         remotePrefDir = remoteJoin(self.remoteBinDir, "defaults/pref")
         if (self.device.dirExists(self.remoteTmpDir)):
@@ -423,7 +428,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 remoteFile = remoteJoin(self.remoteBinDir, fname)
                 self.device.pushFile(local, remoteFile)
             else:
-                print("*** Expected binary %s not found in %s!" % (fname, self.localBin), file=sys.stderr)
+                print("*** Expected binary %s not found in %s!" %
+                      (fname, self.localBin), file=sys.stderr)
 
         local = os.path.join(self.localBin, "components/httpd.js")
         remoteFile = remoteJoin(self.remoteComponentsDir, "httpd.js")
@@ -512,7 +518,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.mkDir(self.remoteMinidumpDir)
 
     def buildTestList(self, test_tags=None, test_paths=None, verify=False):
-        xpcshell.XPCShellTests.buildTestList(self, test_tags=test_tags, test_paths=test_paths, verify=verify)
+        xpcshell.XPCShellTests.buildTestList(
+            self, test_tags=test_tags, test_paths=test_paths, verify=verify)
         uniqueTestPaths = set([])
         for test in self.alltests:
             uniqueTestPaths.add(test['here'])
@@ -520,6 +527,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             abbrevTestDir = os.path.relpath(testdir, self.xpcDir)
             remoteScriptDir = remoteJoin(self.remoteScriptsDir, abbrevTestDir)
             self.pathMapping.append(PathMapping(testdir, remoteScriptDir))
+
 
 def verifyRemoteOptions(parser, options):
     if isinstance(options, Namespace):
@@ -556,14 +564,16 @@ def verifyRemoteOptions(parser, options):
             parser.error("Couldn't find local binary dir, specify --local-bin-dir")
     return options
 
+
 class PathMapping:
 
     def __init__(self, localDir, remoteDir):
         self.local = localDir
         self.remote = remoteDir
 
+
 def main():
-    if sys.version_info < (2,7):
+    if sys.version_info < (2, 7):
         print("Error: You must use python version 2.7 or newer but less than 3.0", file=sys.stderr)
         sys.exit(1)
 

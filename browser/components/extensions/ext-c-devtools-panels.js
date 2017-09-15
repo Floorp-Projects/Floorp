@@ -222,6 +222,15 @@ class ChildDevToolsInspectorSidebar extends ExtensionUtils.EventEmitter {
           );
         });
       },
+
+      setExpression(evalExpression, rootTitle) {
+        return context.cloneScope.Promise.resolve().then(() => {
+          return context.childManager.callParentAsyncFunction(
+            "devtools.panels.elements.Sidebar.setExpression",
+            [id, evalExpression, rootTitle]
+          );
+        });
+      },
     };
   }
 }

@@ -785,6 +785,11 @@ body,
   overflow-y: auto;
 }
 
+.panel-container .tree-container .objectBox {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
 .properties-view {
   flex-grow: 1;
 }
