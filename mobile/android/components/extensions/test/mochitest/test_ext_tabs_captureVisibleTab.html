@@ -16,10 +16,24 @@
 function* runTest(options) {
   options.neutral = [0xaa, 0xaa, 0xaa];
 
-  const BASE = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/";
-  const URL = BASE + "file_ext_tabs_captureVisibleTab.html";
+  let html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="UTF-8"></head>
+    <body style="background-color: rgb(${options.color})">
+      <!-- Fill most of the image with a neutral color to test edge-to-edge scaling. -->
+      <div style="position: absolute;
+                  left: 2px;
+                  right: 2px;
+                  top: 2px;
+                  bottom: 2px;
+                  background: rgb(${options.neutral});"></div>
+    </body>
+    </html>
+  `;
 
-  let win = window.open(URL);
+  let url = `data:text/html,${encodeURIComponent(html)}`;
+  let win = window.open(url);
 
   async function background(options) {
     browser.test.log(`Test color ${options.color} at fullZoom=${options.fullZoom}`);
