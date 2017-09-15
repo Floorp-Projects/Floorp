@@ -14,6 +14,7 @@ public class TopSitesPage extends RecyclerView {
 
     public static final int NUM_COLUMNS = 4;
     public static final int NUM_ROWS = 2;
+    public static final int NUM_TILES = NUM_COLUMNS * NUM_ROWS;
 
     public TopSitesPage(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);

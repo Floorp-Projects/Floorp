@@ -53,9 +53,9 @@ public class TopPanelRow extends StreamViewHolder {
         topSitesPager.addOnPageChangeListener(swipeListener);
     }
 
-    public void bind(Cursor cursor, int tiles, int tilesSize) {
+    public void bind(Cursor cursor, int tilesSize) {
         final TopSitesPagerAdapter adapter = (TopSitesPagerAdapter) topSitesPager.getAdapter();
-        adapter.setTilesSize(tiles, tilesSize);
+        adapter.setTilesSize(tilesSize);
         adapter.swapCursor(cursor);
 
         final Resources resources = itemView.getResources();
