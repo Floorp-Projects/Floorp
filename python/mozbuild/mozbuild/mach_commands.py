@@ -1882,6 +1882,11 @@ class PackageFrontend(MachCommandBase):
                     setup=record.setup)
 
         if from_build:
+            if 'TASK_ID' in os.environ:
+                self.log(logging.ERROR, 'artifact', {},
+                         'Do not use --from-build in automation; all dependencies '
+                         'should be determined in the decision task.')
+                return 1
             from taskgraph.optimize import IndexSearch
             params = {
                 'message': '',
