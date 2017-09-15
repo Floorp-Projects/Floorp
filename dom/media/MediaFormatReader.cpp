@@ -736,7 +736,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
         : *ownerData.mOriginalInfo->GetAsAudioInfo(),
         ownerData.mTaskQueue,
         mOwner->mCrashHelper,
-        ownerData.mIsNullDecode,
+        CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
         &result,
         TrackInfo::kAudioTrack,
         &mOwner->OnTrackWaitingForKeyProducer()
@@ -747,19 +747,18 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
     case TrackType::kVideoTrack: {
       // Decoders use the layers backend to decide if they can use hardware decoding,
       // so specify LAYERS_NONE if we want to forcibly disable it.
-      aData.mDecoder = mOwner->mPlatform->CreateDecoder({
-        ownerData.mInfo
-        ? *ownerData.mInfo->GetAsVideoInfo()
-        : *ownerData.mOriginalInfo->GetAsVideoInfo(),
-        ownerData.mTaskQueue,
-        mOwner->mKnowsCompositor,
-        mOwner->GetImageContainer(),
-        mOwner->mCrashHelper,
-        ownerData.mIsNullDecode,
-        &result,
-        TrackType::kVideoTrack,
-        &mOwner->OnTrackWaitingForKeyProducer()
-      });
+      aData.mDecoder = mOwner->mPlatform->CreateDecoder(
+        { ownerData.mInfo ? *ownerData.mInfo->GetAsVideoInfo()
+                          : *ownerData.mOriginalInfo->GetAsVideoInfo(),
+          ownerData.mTaskQueue,
+          mOwner->mKnowsCompositor,
+          mOwner->GetImageContainer(),
+          mOwner->mCrashHelper,
+          CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
+          &result,
+          TrackType::kVideoTrack,
+          &mOwner->OnTrackWaitingForKeyProducer(),
+          CreateDecoderParams::VideoFrameRate(ownerData.mMeanRate.Mean()) });
       break;
     }
 
@@ -2048,24 +2047,17 @@ MediaFormatReader::HandleDemuxedSamples(
     return;
   }
 
-  if (!decoder.mDecoder) {
-    mDecoderFactory->CreateDecoder(aTrack);
-    return;
-  }
+  RefPtr<MediaRawData> sample = decoder.mQueuedSamples[0];
+  const RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
 
-  LOGV("Giving %s input to decoder", TrackTypeToStr(aTrack));
-
-  // Decode all our demuxed frames.
-  while (decoder.mQueuedSamples.Length()) {
-    RefPtr<MediaRawData> sample = decoder.mQueuedSamples[0];
-    RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
-
-    if (info && decoder.mLastStreamSourceID != info->GetID()) {
+  if (info && decoder.mLastStreamSourceID != info->GetID()) {
+    nsTArray<RefPtr<MediaRawData>> samples;
+    if (decoder.mDecoder) {
       bool recyclable = MediaPrefs::MediaDecoderCheckRecycling() &&
                         decoder.mDecoder->SupportDecoderRecycling();
       if (!recyclable && decoder.mTimeThreshold.isNothing() &&
           (decoder.mNextStreamSourceID.isNothing() ||
-           decoder.mNextStreamSourceID.ref() != info->GetID())) {
+            decoder.mNextStreamSourceID.ref() != info->GetID())) {
         LOG("%s stream id has changed from:%d to:%d, draining decoder.",
             TrackTypeToStr(aTrack),
             decoder.mLastStreamSourceID,
@@ -2076,54 +2068,64 @@ MediaFormatReader::HandleDemuxedSamples(
         return;
       }
 
-      LOG("%s stream id has changed from:%d to:%d.",
-          TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
-          info->GetID());
-      decoder.mLastStreamSourceID = info->GetID();
-      decoder.mNextStreamSourceID.reset();
-
+      // If flushing is required, it will clear our array of queued samples.
+      // So we may need to make a copy.
+      samples = decoder.mQueuedSamples;
       if (!recyclable) {
         LOG("Decoder does not support recycling, recreate decoder.");
-        // If flushing is required, it will clear our array of queued samples.
-        // So make a copy now.
-        nsTArray<RefPtr<MediaRawData>> samples{ Move(decoder.mQueuedSamples) };
         ShutdownDecoder(aTrack);
-        if (sample->mKeyframe) {
-          decoder.mQueuedSamples.AppendElements(Move(samples));
-        }
       } else if (decoder.HasWaitingPromise()) {
         decoder.Flush();
       }
+    }
 
-      decoder.mInfo = info;
+    LOG("%s stream id has changed from:%d to:%d.",
+        TrackTypeToStr(aTrack),
+        decoder.mLastStreamSourceID,
+        info->GetID());
 
-      if (sample->mKeyframe) {
-        ScheduleUpdate(aTrack);
-      } else {
-        auto time = TimeInterval(sample->mTime, sample->GetEndTime());
-        InternalSeekTarget seekTarget =
-          decoder.mTimeThreshold.refOr(InternalSeekTarget(time, false));
-        LOG("Stream change occurred on a non-keyframe. Seeking to:%" PRId64,
-            sample->mTime.ToMicroseconds());
-        InternalSeek(aTrack, seekTarget);
+    decoder.mNextStreamSourceID.reset();
+    decoder.mLastStreamSourceID = info->GetID();
+    decoder.mInfo = info;
+
+    decoder.mMeanRate.Reset();
+
+    if (sample->mKeyframe) {
+      if (samples.Length()) {
+        decoder.mQueuedSamples = Move(samples);
       }
+    } else {
+      auto time = TimeInterval(sample->mTime, sample->GetEndTime());
+      InternalSeekTarget seekTarget =
+        decoder.mTimeThreshold.refOr(InternalSeekTarget(time, false));
+      LOG("Stream change occurred on a non-keyframe. Seeking to:%" PRId64,
+          sample->mTime.ToMicroseconds());
+      InternalSeek(aTrack, seekTarget);
       return;
     }
-
-    LOGV("Input:%" PRId64 " (dts:%" PRId64 " kf:%d)",
-         sample->mTime.ToMicroseconds(), sample->mTimecode.ToMicroseconds(),
-         sample->mKeyframe);
-    decoder.mNumSamplesInput++;
-    decoder.mSizeOfQueue++;
-    if (aTrack == TrackInfo::kVideoTrack) {
-      aA.mStats.mParsedFrames++;
-    }
-
-    DecodeDemuxedSamples(aTrack, sample);
-
-    decoder.mQueuedSamples.RemoveElementAt(0);
-    break;
   }
+
+  // Calculate the average frame rate. The first frame will be accounted
+  // for twice.
+  decoder.mMeanRate.Update(sample->mDuration);
+
+  if (!decoder.mDecoder) {
+    mDecoderFactory->CreateDecoder(aTrack);
+    return;
+  }
+
+  LOGV("Input:%" PRId64 " (dts:%" PRId64 " kf:%d)",
+        sample->mTime.ToMicroseconds(), sample->mTimecode.ToMicroseconds(),
+        sample->mKeyframe);
+  decoder.mNumSamplesInput++;
+  decoder.mSizeOfQueue++;
+  if (aTrack == TrackInfo::kVideoTrack) {
+    aA.mStats.mParsedFrames++;
+  }
+
+  DecodeDemuxedSamples(aTrack, sample);
+
+  decoder.mQueuedSamples.RemoveElementAt(0);
 }
 
 void
@@ -3162,8 +3164,18 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       mAudio.mWaitingForKey,
       mAudio.mLastStreamSourceID);
   }
+
+  VideoInfo videoInfo = mVideo.mInfo ? *mVideo.mInfo->GetAsVideoInfo()
+                                     : *mVideo.mOriginalInfo->GetAsVideoInfo();
+
   result += nsPrintfCString(
-    "Video Decoder(%s): %s\n", videoType.get(), videoDecoderName.get());
+    "Video Decoder(%s, %dx%d @ %0.2ffps): %s\n",
+    videoType.get(),
+    videoInfo.mDisplay.width < 0 ? 0 : videoInfo.mDisplay.width,
+    videoInfo.mDisplay.height < 0 ? 0 : videoInfo.mDisplay.height,
+    mVideo.mMeanRate.Mean(),
+    videoDecoderName.get());
+
   result +=
     nsPrintfCString("Hardware Video Decoding: %s\n",
                     VideoIsHardwareAccelerated() ? "enabled" : "disabled");
