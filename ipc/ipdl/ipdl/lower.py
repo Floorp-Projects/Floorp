@@ -1773,15 +1773,25 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
                             messageEnum(syncEnum),
                             messageEnum(interruptEnum),
                             messageEnum(replyEnum) ])
-    func.addstmt(
-        StmtReturn(ExprNew(Type('IPC::Message'),
-                           args=[ routingId,
-                                  ExprVar(msgid),
-                                  ExprLiteral.Int(int(segmentSize)),
-                                  flags,
-                                  ExprLiteral.String(prettyName),
-                                  # Pass `true` to recordWriteLatency to collect telemetry
-                                  ExprLiteral.TRUE ])))
+
+    segmentSize = int(segmentSize)
+    if segmentSize:
+        func.addstmt(
+            StmtReturn(ExprNew(Type('IPC::Message'),
+                               args=[ routingId,
+                                      ExprVar(msgid),
+                                      ExprLiteral.Int(int(segmentSize)),
+                                      flags,
+                                      ExprLiteral.String(prettyName),
+                                      # Pass `true` to recordWriteLatency to collect telemetry
+                                      ExprLiteral.TRUE ])))
+    else:
+        func.addstmt(
+            StmtReturn(ExprCall(ExprVar('IPC::Message::IPDLMessage'),
+                               args=[ routingId,
+                                      ExprVar(msgid),
+                                      flags,
+                                      ExprLiteral.String(prettyName) ])))
 
     return func
 
