@@ -37,7 +37,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
           <children/>
           <html:input anonid="input"
-                      class="autocomplete-textbox urlbar-input textbox-input uri-element-right-align"
+                      class="autocomplete-textbox urlbar-input textbox-input"
                       allowevents="true"
                       inputmode="url"
                       xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>

@@ -188,6 +188,7 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
         AutoCompleteTask complete(&task);
         result = object->mActor->InitIPDL(
           aParams.VideoConfig(),
+          aParams.mRate.mValue,
           aParams.mKnowsCompositor->GetTextureFactoryIdentifier());
       }),
     NS_DISPATCH_NORMAL);

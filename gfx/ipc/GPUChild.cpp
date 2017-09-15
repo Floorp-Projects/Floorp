@@ -166,14 +166,14 @@ GPUChild::RecvNotifyUiObservers(const nsCString& aTopic)
 }
 
 mozilla::ipc::IPCResult
-GPUChild::RecvAccumulateChildHistograms(InfallibleTArray<Accumulation>&& aAccumulations)
+GPUChild::RecvAccumulateChildHistograms(InfallibleTArray<HistogramAccumulation>&& aAccumulations)
 {
   TelemetryIPC::AccumulateChildHistograms(Telemetry::ProcessID::Gpu, aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-GPUChild::RecvAccumulateChildKeyedHistograms(InfallibleTArray<KeyedAccumulation>&& aAccumulations)
+GPUChild::RecvAccumulateChildKeyedHistograms(InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations)
 {
   TelemetryIPC::AccumulateChildKeyedHistograms(Telemetry::ProcessID::Gpu, aAccumulations);
   return IPC_OK();

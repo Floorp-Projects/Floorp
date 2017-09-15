@@ -103,6 +103,7 @@ pub struct StickyFrameDisplayItem {
 
 pub type StickyFrameInfo = TypedSideOffsets2D<Option<StickySideConstraint>, LayoutPoint>;
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StickySideConstraint {
     pub margin: f32,
