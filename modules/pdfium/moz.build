@@ -562,4 +562,4 @@ ALLOW_COMPILER_WARNINGS = True
 GeckoSharedLibrary('pdfium', linkage=None)
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    DEFFILE = 'pdfium.def'
+    DEFFILE = SRCDIR + '/pdfium.def'

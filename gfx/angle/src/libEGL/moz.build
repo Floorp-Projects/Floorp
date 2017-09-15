@@ -79,6 +79,6 @@ else:
 GeckoSharedLibrary('libEGL', linkage=None)
 
 RCFILE = SRCDIR + '/libEGL.rc'
-DEFFILE = 'libEGL.def'
+DEFFILE = SRCDIR + '/libEGL.def'
 
 USE_LIBS += ['libANGLE']
