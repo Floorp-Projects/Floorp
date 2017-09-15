@@ -245,7 +245,7 @@ ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut,
     mControl->SerializeStream(aReadStreamOut, mStream, aStreamCleanupList);
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut->stream().type() ==
+  MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut->stream().get_IPCStream().type() ==
                         IPCStream::TInputStreamParamsWithFds);
 
   // We're passing ownership across the IPC barrier with the control, so
@@ -474,7 +474,7 @@ ReadStream::Create(const CacheReadStream& aReadStream)
     return nullptr;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(aReadStream.stream().type() ==
+  MOZ_DIAGNOSTIC_ASSERT(aReadStream.stream().get_IPCStream().type() ==
                         IPCStream::TInputStreamParamsWithFds);
 
   // Control is guaranteed to survive this method as ActorDestroy() cannot
