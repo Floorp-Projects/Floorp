@@ -1,0 +1,23 @@
+Bug 1387937 - Import changeset 40324.
+
+diff --git a/intl/icu/source/i18n/zonemeta.cpp b/intl/icu/source/i18n/zonemeta.cpp
+--- a/intl/icu/source/i18n/zonemeta.cpp
++++ b/intl/icu/source/i18n/zonemeta.cpp
+@@ -685,17 +685,16 @@ ZoneMeta::createMetazoneMappings(const U
+                 entry->mzid = mz_name;
+                 entry->from = from;
+                 entry->to = to;
+ 
+                 if (mzMappings == NULL) {
+                     mzMappings = new UVector(deleteOlsonToMetaMappingEntry, NULL, status);
+                     if (U_FAILURE(status)) {
+                         delete mzMappings;
+-                        deleteOlsonToMetaMappingEntry(entry);
+                         uprv_free(entry);
+                         break;
+                     }
+                 }
+ 
+                 mzMappings->addElement(entry, status);
+                 if (U_FAILURE(status)) {
+                     break;
