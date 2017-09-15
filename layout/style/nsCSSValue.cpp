@@ -2150,7 +2150,8 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
     // Image
     case eCSSUnit_Image:
-      n += mValue.mImage->SizeOfIncludingThis(aMallocSizeOf);
+      // Not yet measured.  Measurement may be added later if DMD finds it
+      // worthwhile.
       break;
 
     // Gradient
@@ -3073,15 +3074,6 @@ css::ImageValue::~ImageValue()
 
     iter.Remove();
   }
-}
-
-size_t
-css::ImageValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-  n += css::URLValueData::SizeOfExcludingThis(aMallocSizeOf);
-  n += mRequests.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  return n;
 }
 
 size_t
