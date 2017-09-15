@@ -791,6 +791,8 @@ public:
 
   void TrimRunTail(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize, bool dirty);
 
+  inline void* MallocBinEasy(arena_bin_t* aBin, arena_run_t* aRun);
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -3104,22 +3106,22 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 }
 
 /* bin->runcur must have space available before this function is called. */
-static inline void *
-arena_bin_malloc_easy(arena_t *arena, arena_bin_t *bin, arena_run_t *run)
+void*
+arena_t::MallocBinEasy(arena_bin_t* aBin, arena_run_t* aRun)
 {
-	void *ret;
+  void* ret;
 
-	MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
-	MOZ_DIAGNOSTIC_ASSERT(run->nfree > 0);
+  MOZ_DIAGNOSTIC_ASSERT(aRun->magic == ARENA_RUN_MAGIC);
+  MOZ_DIAGNOSTIC_ASSERT(aRun->nfree > 0);
 
-	ret = arena_run_reg_alloc(run, bin);
-	MOZ_DIAGNOSTIC_ASSERT(ret);
-	run->nfree--;
+  ret = arena_run_reg_alloc(aRun, aBin);
+  MOZ_DIAGNOSTIC_ASSERT(ret);
+  aRun->nfree--;
 
-	return (ret);
+  return ret;
 }
 
-/* Re-fill bin->runcur, then call arena_bin_malloc_easy(). */
+/* Re-fill bin->runcur, then call arena_t::MallocBinEasy(). */
 static void *
 arena_bin_malloc_hard(arena_t *arena, arena_bin_t *bin)
 {
@@ -3130,7 +3132,7 @@ arena_bin_malloc_hard(arena_t *arena, arena_bin_t *bin)
 	MOZ_DIAGNOSTIC_ASSERT(bin->runcur->magic == ARENA_RUN_MAGIC);
 	MOZ_DIAGNOSTIC_ASSERT(bin->runcur->nfree > 0);
 
-	return (arena_bin_malloc_easy(arena, bin, bin->runcur));
+	return arena->MallocBinEasy(bin, bin->runcur);
 }
 
 /*
@@ -3249,7 +3251,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 
 	malloc_spin_lock(&arena->mLock);
 	if ((run = bin->runcur) && run->nfree > 0)
-		ret = arena_bin_malloc_easy(arena, bin, run);
+		ret = arena->MallocBinEasy(bin, run);
 	else
 		ret = arena_bin_malloc_hard(arena, bin);
 
