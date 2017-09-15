@@ -8,6 +8,7 @@
 #define mozilla_dom_U2FHIDTokenManager_h
 
 #include "mozilla/dom/U2FTokenTransport.h"
+#include "u2f-hid-rs/src/u2fhid-capi.h"
 
 /*
  * U2FHIDTokenManager is a Rust implementation of a secure token manager
@@ -16,6 +17,73 @@
 
 namespace mozilla {
 namespace dom {
+
+class U2FKeyHandles {
+public:
+  explicit U2FKeyHandles(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors)
+  {
+    mKeyHandles = rust_u2f_khs_new();
+
+    for (auto desc: aDescriptors) {
+      rust_u2f_khs_add(mKeyHandles, desc.id().Elements(), desc.id().Length());
+    }
+  }
+
+  rust_u2f_key_handles* Get() { return mKeyHandles; }
+
+  ~U2FKeyHandles() { rust_u2f_khs_free(mKeyHandles); }
+
+private:
+  rust_u2f_key_handles* mKeyHandles;
+};
+
+class U2FResult {
+public:
+  explicit U2FResult(uint64_t aTransactionId, rust_u2f_result* aResult)
+    : mTransactionId(aTransactionId)
+    , mResult(aResult)
+  { }
+
+  ~U2FResult() { rust_u2f_res_free(mResult); }
+
+  uint64_t GetTransactionId() { return mTransactionId; }
+
+  bool CopyRegistration(nsTArray<uint8_t>& aBuffer)
+  {
+    return CopyBuffer(U2F_RESBUF_ID_REGISTRATION, aBuffer);
+  }
+
+  bool CopyKeyHandle(nsTArray<uint8_t>& aBuffer)
+  {
+    return CopyBuffer(U2F_RESBUF_ID_KEYHANDLE, aBuffer);
+  }
+
+  bool CopySignature(nsTArray<uint8_t>& aBuffer)
+  {
+    return CopyBuffer(U2F_RESBUF_ID_SIGNATURE, aBuffer);
+  }
+
+private:
+  bool CopyBuffer(uint8_t aResBufID, nsTArray<uint8_t>& aBuffer) {
+    if (!mResult) {
+      return false;
+    }
+
+    size_t len;
+    if (!rust_u2f_resbuf_length(mResult, aResBufID, &len)) {
+      return false;
+    }
+
+    if (!aBuffer.SetLength(len, fallible)) {
+      return false;
+    }
+
+    return rust_u2f_resbuf_copy(mResult, aResBufID, aBuffer.Elements());
+  }
+
+  uint64_t mTransactionId;
+  rust_u2f_result* mResult;
+};
 
 class U2FHIDTokenManager final : public U2FTokenTransport
 {
@@ -36,8 +104,21 @@ public:
 
   void Cancel() override;
 
+  void HandleRegisterResult(UniquePtr<U2FResult>&& aResult);
+  void HandleSignResult(UniquePtr<U2FResult>&& aResult);
+
 private:
   ~U2FHIDTokenManager();
+
+  void ClearPromises() {
+    mRegisterPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+    mSignPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+  }
+
+  rust_u2f_manager* mU2FManager;
+  uint64_t mTransactionId;
+  MozPromiseHolder<U2FRegisterPromise> mRegisterPromise;
+  MozPromiseHolder<U2FSignPromise> mSignPromise;
 };
 
 } // namespace dom

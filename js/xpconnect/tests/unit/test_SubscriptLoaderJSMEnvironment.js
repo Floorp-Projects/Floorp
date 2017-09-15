@@ -1,7 +1,11 @@
+const {utils: Cu} = Components;
+
 let tgt_load = {};
 let tgt_check = {};
-Components.utils.import("resource://test/environment_loadscript.jsm", tgt_load);
-Components.utils.import("resource://test/environment_checkscript.jsm", tgt_check);
+const a = Components.utils.import("resource://test/environment_loadscript.jsm", tgt_load);
+const b = Components.utils.import("resource://test/environment_checkscript.jsm", tgt_check);
+
+const isShared = Cu.getGlobalForObject(a) === Cu.getGlobalForObject(b);
 
 // Check target bindings
 var tgt_subscript_bound = "";
@@ -13,11 +17,13 @@ for (var name of ["vu", "vq", "vl", "gt", "ed", "ei", "fo", "fi", "fd"])
 //  - Qualified vars and |this| access occur on target object
 //  - Lexical vars occur on ExtensibleLexicalEnvironment of target object
 //  - Bareword assignments and global |this| access occur on caller's global
-if (tgt_load.bound != "vu,ei,fo,fi,")
-    throw new Error("Unexpected global binding set - " + tgt_load.bound);
-if (tgt_subscript_bound != "vq,gt,ed,fd,")
-    throw new Error("Unexpected target binding set - " + tgt_subscript_bound);
+Assert.equal(tgt_load.bound, "vu,ei,fo,fi,", "Should have expected module binding set");
+Assert.equal(tgt_subscript_bound, "vq,gt,ed,fd,", "Should have expected subscript binding set");
 
 // Components should not share namespace
-if (tgt_check.bound != "")
-    throw new Error("Unexpected shared binding set - " + tgt_check.bound);
+if (isShared) {
+  todo_check_eq(tgt_check.bound, "");
+  Assert.equal(tgt_check.bound, "ei,fo,", "Modules should have no shared non-eval bindings");
+} else {
+  Assert.equal(tgt_check.bound, "", "Modules should have no shared bindings");
+}

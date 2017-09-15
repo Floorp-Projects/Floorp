@@ -418,6 +418,7 @@ nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
 
 DrawResult
 nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                          const StackingContextHelper& aSc,
                                          mozilla::layers::WebRenderLayerManager* aManager,
                                          nsDisplayItem* aItem,
@@ -550,6 +551,7 @@ nsDisplayXULImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                           mozilla::wr::IpcResourceUpdateQueue& aResources,
                                            const StackingContextHelper& aSc,
                                            nsTArray<WebRenderParentCommand>& aParentCommands,
                                            mozilla::layers::WebRenderLayerManager* aManager,
@@ -571,7 +573,7 @@ nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
   }
 
   DrawResult result = static_cast<nsImageBoxFrame*>(mFrame)->
-    CreateWebRenderCommands(aBuilder, aSc, aManager, this, ToReferenceFrame(), flags);
+    CreateWebRenderCommands(aBuilder, aResources, aSc, aManager, this, ToReferenceFrame(), flags);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   return true;

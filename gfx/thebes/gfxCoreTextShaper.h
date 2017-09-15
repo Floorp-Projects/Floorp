@@ -40,8 +40,7 @@ protected:
     nsresult SetGlyphsFromRun(gfxShapedText *aShapedText,
                               uint32_t       aOffset,
                               uint32_t       aLength,
-                              CTRunRef       aCTRun,
-                              int32_t        aStringOffset);
+                              CTRunRef       aCTRun);
 
     CTFontRef CreateCTFontWithFeatures(CGFloat aSize,
                                        CTFontDescriptorRef aDescriptor);

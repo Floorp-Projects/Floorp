@@ -36,6 +36,32 @@ struct ParamTraits<mozilla::wr::ByteBuffer>
 };
 
 template<>
+struct ParamTraits<mozilla::wr::ImageDescriptor>
+{
+  typedef mozilla::wr::ImageDescriptor paramType;
+
+  static void
+  Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.format);
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+    WriteParam(aMsg, aParam.stride);
+    WriteParam(aMsg, aParam.is_opaque);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->format)
+        && ReadParam(aMsg, aIter, &aResult->width)
+        && ReadParam(aMsg, aIter, &aResult->height)
+        && ReadParam(aMsg, aIter, &aResult->stride)
+        && ReadParam(aMsg, aIter, &aResult->is_opaque);
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::wr::IdNamespace>
   : public PlainOldDataSerializer<mozilla::wr::IdNamespace>
 {

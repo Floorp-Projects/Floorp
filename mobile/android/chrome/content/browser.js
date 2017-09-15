@@ -46,12 +46,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
-                                  "resource://gre/modules/LoginManagerContent.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
-                                  "resource://gre/modules/LoginManagerParent.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
@@ -218,9 +212,6 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
 
 // Lazily-loaded JS subscripts and modules that use global/window EventDispatcher.
 [
-  ["ActionBarHandler", WindowEventDispatcher,
-   ["TextSelection:Get", "TextSelection:Action", "TextSelection:End"],
-   "chrome://browser/content/ActionBarHandler.js"],
   ["EmbedRT", WindowEventDispatcher,
    ["GeckoView:ImportScript"],
    "chrome://browser/content/EmbedRT.js"],
@@ -442,7 +433,6 @@ var BrowserApp = {
     });
 
     NativeWindow.init();
-    FormAssistant.init();
     IndexedDB.init();
     XPInstallObserver.init();
     CharacterEncoding.init();
@@ -551,20 +541,11 @@ var BrowserApp = {
 
       InitLater(() => LightWeightThemeWebInstaller.init());
       InitLater(() => CastingApps.init(), window, "CastingApps");
-      InitLater(() => Services.search.init(), Services, "search");
 
       // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
       InitLater(() => SafeBrowsing.init(), window, "SafeBrowsing");
 
-      InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
-      InitLater(() => LoginManagerParent.init(), window, "LoginManagerParent");
-
     }, {once: true});
-
-    // Pass caret StateChanged events to ActionBarHandler.
-    window.addEventListener("mozcaretstatechanged", e => {
-      ActionBarHandler.caretStateChangedHandler(e);
-    }, /* useCapture = */ true, /* wantsUntrusted = */ false);
   },
 
   get _startupStatus() {
@@ -3659,7 +3640,6 @@ Tab.prototype = {
 
     this.browser.addEventListener("DOMContentLoaded", this, true);
     this.browser.addEventListener("DOMFormHasPassword", this, true);
-    this.browser.addEventListener("DOMInputPasswordAdded", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMLinkChanged", this, true);
     this.browser.addEventListener("DOMMetaAdded", this);
@@ -3668,8 +3648,6 @@ Tab.prototype = {
     this.browser.addEventListener("DOMAudioPlaybackStopped", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
-    this.browser.addEventListener("DOMAutoComplete", this, true);
-    this.browser.addEventListener("blur", this, true);
     this.browser.addEventListener("pageshow", this, true);
     this.browser.addEventListener("MozApplicationManifest", this, true);
     this.browser.addEventListener("TabPreZombify", this, true);
@@ -3774,7 +3752,6 @@ Tab.prototype = {
 
     this.browser.removeEventListener("DOMContentLoaded", this, true);
     this.browser.removeEventListener("DOMFormHasPassword", this, true);
-    this.browser.removeEventListener("DOMInputPasswordAdded", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMLinkChanged", this, true);
     this.browser.removeEventListener("DOMMetaAdded", this);
@@ -3783,8 +3760,6 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMAudioPlaybackStopped", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
-    this.browser.removeEventListener("DOMAutoComplete", this, true);
-    this.browser.removeEventListener("blur", this, true);
     this.browser.removeEventListener("pageshow", this, true);
     this.browser.removeEventListener("MozApplicationManifest", this, true);
     this.browser.removeEventListener("TabPreZombify", this, true);
@@ -4144,9 +4119,6 @@ Tab.prototype = {
       }
 
       case "DOMFormHasPassword": {
-        LoginManagerContent.onDOMFormHasPassword(aEvent,
-                                                 this.browser.contentWindow);
-
         // Send logins for this hostname to Java.
         let hostname = aEvent.target.baseURIObject.prePath;
         let foundLogins = Services.logins.findLogins({}, hostname, "", "");
@@ -4160,11 +4132,6 @@ Tab.prototype = {
           });
         }
         break;
-      }
-
-      case "DOMInputPasswordAdded": {
-        LoginManagerContent.onDOMInputPasswordAdded(aEvent,
-                                                    this.browser.contentWindow);
       }
 
       case "DOMMetaAdded":
@@ -4296,12 +4263,6 @@ Tab.prototype = {
         break;
       }
 
-      case "DOMAutoComplete":
-      case "blur": {
-        LoginManagerContent.onUsernameInput(aEvent);
-        break;
-      }
-
       case "VideoBindingAttached": {
         CastingApps.handleVideoBindingAttached(this, aEvent);
         break;
@@ -4327,8 +4288,6 @@ Tab.prototype = {
       }
 
       case "pageshow": {
-        LoginManagerContent.onPageShow(aEvent, this.browser.contentWindow);
-
         // The rest of this only handles pageshow for the top-level document.
         if (aEvent.originalTarget.defaultView != this.browser.contentWindow)
           return;
@@ -4836,38 +4795,6 @@ var BrowserEventHandler = {
   }
 };
 
-const ElementTouchHelper = {
-  getBoundingContentRect: function(aElement) {
-    if (!aElement)
-      return {x: 0, y: 0, w: 0, h: 0};
-
-    let document = aElement.ownerDocument;
-    while (document.defaultView.frameElement)
-      document = document.defaultView.frameElement.ownerDocument;
-
-    let cwu = document.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let scrollX = {}, scrollY = {};
-    cwu.getScrollXY(false, scrollX, scrollY);
-
-    let r = aElement.getBoundingClientRect();
-
-    // step out of iframes and frames, offsetting scroll values
-    for (let frame = aElement.ownerGlobal; frame.frameElement && frame != content; frame = frame.parent) {
-      // adjust client coordinates' origin to be top left of iframe viewport
-      let rect = frame.frameElement.getBoundingClientRect();
-      let left = frame.getComputedStyle(frame.frameElement).borderLeftWidth;
-      let top = frame.getComputedStyle(frame.frameElement).borderTopWidth;
-      scrollX.value += rect.left + parseInt(left);
-      scrollY.value += rect.top + parseInt(top);
-    }
-
-    return {x: r.left + scrollX.value,
-            y: r.top + scrollY.value,
-            w: r.width,
-            h: r.height };
-  }
-};
-
 var ErrorPageEventHandler = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
@@ -4963,374 +4890,6 @@ var ErrorPageEventHandler = {
         break;
       }
     }
-  }
-};
-
-var FormAssistant = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
-
-  // Used to keep track of the element that corresponds to the current
-  // autocomplete suggestions
-  _currentInputElement: null,
-
-  // The value of the currently focused input
-  _currentInputValue: null,
-
-  // Whether we're in the middle of an autocomplete
-  _doingAutocomplete: false,
-
-  // Keep track of whether or not an invalid form has been submitted
-  _invalidSubmit: false,
-
-  init: function() {
-    WindowEventDispatcher.registerListener(this, [
-      "FormAssist:AutoComplete",
-      "FormAssist:Hidden",
-      "FormAssist:Remove",
-    ]);
-
-    Services.obs.addObserver(this, "invalidformsubmit");
-    Services.obs.addObserver(this, "PanZoom:StateChange");
-
-    // We need to use a capturing listener for focus events
-    BrowserApp.deck.addEventListener("focus", this, true);
-    BrowserApp.deck.addEventListener("blur", this, true);
-    BrowserApp.deck.addEventListener("click", this, true);
-    BrowserApp.deck.addEventListener("input", this);
-    BrowserApp.deck.addEventListener("pageshow", this);
-  },
-
-  onEvent: function(event, message, callback) {
-    switch (event) {
-      case "FormAssist:AutoComplete":
-        if (!this._currentInputElement)
-          break;
-
-        let editableElement = this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement);
-
-        this._doingAutocomplete = true;
-
-        // If we have an active composition string, commit it before sending
-        // the autocomplete event with the text that will replace it.
-        try {
-          if (editableElement.editor.composing)
-            editableElement.editor.forceCompositionEnd();
-        } catch (e) {}
-
-        editableElement.setUserInput(message.value);
-        this._currentInputValue = message.value;
-
-        let event = this._currentInputElement.ownerDocument.createEvent("Events");
-        event.initEvent("DOMAutoComplete", true, true);
-        this._currentInputElement.dispatchEvent(event);
-
-        this._doingAutocomplete = false;
-
-        break;
-
-      case "FormAssist:Hidden":
-        this._currentInputElement = null;
-        break;
-
-      case "FormAssist:Remove":
-        if (!this._currentInputElement) {
-          break;
-        }
-
-        FormHistory.update({
-          op: "remove",
-          fieldname: this._currentInputElement.name,
-          value: message.value,
-        });
-        break;
-    }
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "PanZoom:StateChange":
-        // If the user is just touching the screen and we haven't entered a pan or zoom state yet do nothing
-        if (aData == "TOUCHING" || aData == "WAITING_LISTENERS")
-          break;
-        if (aData == "NOTHING") {
-          // only look for input elements, not contentEditable or multiline text areas
-          let focused = BrowserApp.getFocusedInput(BrowserApp.selectedBrowser, true);
-          if (!focused)
-            break;
-
-          if (this._showValidationMessage(focused))
-            break;
-          let checkResultsClick = hasResults => {
-            if (!hasResults) {
-              this._hideFormAssistPopup();
-            }
-          };
-          this._showAutoCompleteSuggestions(focused, checkResultsClick);
-        } else {
-          // temporarily hide the form assist popup while we're panning or zooming the page
-          this._hideFormAssistPopup();
-        }
-        break;
-    }
-  },
-
-  notifyInvalidSubmit: function notifyInvalidSubmit(aFormElement, aInvalidElements) {
-    if (!aInvalidElements.length)
-      return;
-
-    // Ignore this notificaiton if the current tab doesn't contain the invalid element
-    let currentElement = aInvalidElements.queryElementAt(0, Ci.nsISupports);
-    if (BrowserApp.selectedBrowser.contentDocument !=
-        currentElement.ownerGlobal.top.document)
-      return;
-
-    this._invalidSubmit = true;
-
-    // Our focus listener will show the element's validation message
-    currentElement.focus();
-  },
-
-  handleEvent: function(aEvent) {
-    switch (aEvent.type) {
-      case "focus": {
-        let currentElement = aEvent.target;
-
-        // Only show a validation message on focus.
-        this._showValidationMessage(currentElement);
-        break;
-      }
-
-      case "blur": {
-        this._currentInputValue = null;
-        break;
-      }
-
-      case "click": {
-        let currentElement = aEvent.target;
-
-        // Prioritize a form validation message over autocomplete suggestions
-        // when the element is first focused (a form validation message will
-        // only be available if an invalid form was submitted)
-        if (this._showValidationMessage(currentElement))
-          break;
-
-        let checkResultsClick = hasResults => {
-          if (!hasResults) {
-            this._hideFormAssistPopup();
-          }
-        };
-
-        this._showAutoCompleteSuggestions(currentElement, checkResultsClick);
-        break;
-      }
-
-      case "input": {
-        let currentElement = aEvent.target;
-
-        // If this element isn't focused, we're already in middle of an
-        // autocomplete, or its value hasn't changed, don't show the
-        // autocomplete popup.
-        if (currentElement !== BrowserApp.getFocusedInput(BrowserApp.selectedBrowser) ||
-            this._doingAutocomplete ||
-            currentElement.value === this._currentInputValue) {
-          break;
-        }
-
-        this._currentInputValue = currentElement.value;
-
-        // Since we can only show one popup at a time, prioritze autocomplete
-        // suggestions over a form validation message
-        let checkResultsInput = hasResults => {
-          if (hasResults)
-            return;
-
-          if (this._showValidationMessage(currentElement))
-            return;
-
-          // If we're not showing autocomplete suggestions, hide the form assist popup
-          this._hideFormAssistPopup();
-        };
-
-        this._showAutoCompleteSuggestions(currentElement, checkResultsInput);
-        break;
-      }
-
-      // Reset invalid submit state on each pageshow
-      case "pageshow": {
-        if (!this._invalidSubmit)
-          return;
-
-        let selectedBrowser = BrowserApp.selectedBrowser;
-        if (selectedBrowser) {
-          let selectedDocument = selectedBrowser.contentDocument;
-          let target = aEvent.originalTarget;
-          if (target == selectedDocument || target.ownerDocument == selectedDocument)
-            this._invalidSubmit = false;
-        }
-        break;
-      }
-    }
-  },
-
-  // We only want to show autocomplete suggestions for certain elements
-  _isAutoComplete: function _isAutoComplete(aElement) {
-    if (!(aElement instanceof HTMLInputElement) || aElement.readOnly || aElement.disabled ||
-        (aElement.getAttribute("type") == "password") ||
-        (aElement.hasAttribute("autocomplete") &&
-         aElement.getAttribute("autocomplete").toLowerCase() == "off"))
-      return false;
-
-    return true;
-  },
-
-  // Retrieves autocomplete suggestions for an element from the form autocomplete service.
-  // aCallback(array_of_suggestions) is called when results are available.
-  _getAutoCompleteSuggestions: function _getAutoCompleteSuggestions(aSearchString, aElement, aCallback) {
-    // Cache the form autocomplete service for future use
-    if (!this._formAutoCompleteService) {
-      this._formAutoCompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"]
-          .getService(Ci.nsIFormAutoComplete);
-    }
-
-    let resultsAvailable = function (results) {
-      let suggestions = [];
-      for (let i = 0; i < results.matchCount; i++) {
-        let value = results.getValueAt(i);
-
-        // Do not show the value if it is the current one in the input field
-        if (value == aSearchString)
-          continue;
-
-        // Supply a label and value, since they can differ for datalist suggestions
-        suggestions.push({ label: value, value: value });
-      }
-      aCallback(suggestions);
-    };
-
-    this._formAutoCompleteService.autoCompleteSearchAsync(aElement.name || aElement.id,
-                                                          aSearchString, aElement, null,
-                                                          null, resultsAvailable);
-  },
-
-  /**
-   * (Copied from mobile/xul/chrome/content/forms.js)
-   * This function is similar to getListSuggestions from
-   * components/satchel/src/nsInputListAutoComplete.js but sadly this one is
-   * used by the autocomplete.xml binding which is not in used in fennec
-   */
-  _getListSuggestions: function _getListSuggestions(aElement) {
-    if (!(aElement instanceof HTMLInputElement) || !aElement.list)
-      return [];
-
-    let suggestions = [];
-    let filter = !aElement.hasAttribute("mozNoFilter");
-    let lowerFieldValue = aElement.value.toLowerCase();
-
-    let options = aElement.list.options;
-    let length = options.length;
-    for (let i = 0; i < length; i++) {
-      let item = options.item(i);
-
-      let label = item.value;
-      if (item.label)
-        label = item.label;
-      else if (item.text)
-        label = item.text;
-
-      if (filter && !(label.toLowerCase().includes(lowerFieldValue)) )
-        continue;
-      suggestions.push({ label: label, value: item.value });
-    }
-
-    return suggestions;
-  },
-
-  // Retrieves autocomplete suggestions for an element from the form autocomplete service
-  // and sends the suggestions to the Java UI, along with element position data. As
-  // autocomplete queries are asynchronous, calls aCallback when done with a true
-  // argument if results were found and false if no results were found.
-  _showAutoCompleteSuggestions: function _showAutoCompleteSuggestions(aElement, aCallback) {
-    if (!this._isAutoComplete(aElement)) {
-      aCallback(false);
-      return;
-    }
-    if (this._isDisabledElement(aElement)) {
-      aCallback(false);
-      return;
-    }
-
-    let isEmpty = (aElement.value.length === 0);
-
-    let resultsAvailable = autoCompleteSuggestions => {
-      // On desktop, we show datalist suggestions below autocomplete suggestions,
-      // without duplicates removed.
-      let listSuggestions = this._getListSuggestions(aElement);
-      let suggestions = autoCompleteSuggestions.concat(listSuggestions);
-
-      // Return false if there are no suggestions to show
-      if (!suggestions.length) {
-        aCallback(false);
-        return;
-      }
-
-      WindowEventDispatcher.sendRequest({
-        type:  "FormAssist:AutoCompleteResult",
-        suggestions: suggestions,
-        rect: ElementTouchHelper.getBoundingContentRect(aElement),
-        isEmpty: isEmpty,
-      });
-
-      // Keep track of input element so we can fill it in if the user
-      // selects an autocomplete suggestion
-      this._currentInputElement = aElement;
-      aCallback(true);
-    };
-
-    this._getAutoCompleteSuggestions(aElement.value, aElement, resultsAvailable);
-  },
-
-  // Only show a validation message if the user submitted an invalid form,
-  // there's a non-empty message string, and the element is the correct type
-  _isValidateable: function _isValidateable(aElement) {
-    if (!this._invalidSubmit ||
-        !aElement.validationMessage ||
-        !(aElement instanceof HTMLInputElement ||
-          aElement instanceof HTMLTextAreaElement ||
-          aElement instanceof HTMLSelectElement ||
-          aElement instanceof HTMLButtonElement))
-      return false;
-
-    return true;
-  },
-
-  // Sends a validation message and position data for an element to the Java UI.
-  // Returns true if there's a validation message to show, false otherwise.
-  _showValidationMessage: function _sendValidationMessage(aElement) {
-    if (!this._isValidateable(aElement))
-      return false;
-
-    WindowEventDispatcher.sendRequest({
-      type: "FormAssist:ValidationMessage",
-      validationMessage: aElement.validationMessage,
-      rect: ElementTouchHelper.getBoundingContentRect(aElement)
-    });
-
-    return true;
-  },
-
-  _hideFormAssistPopup: function _hideFormAssistPopup() {
-    WindowEventDispatcher.sendRequest({ type: "FormAssist:Hide" });
-  },
-
-  _isDisabledElement : function(aElement) {
-    let currentElement = aElement;
-    while (currentElement) {
-      if(currentElement.disabled)
-	return true;
-
-      currentElement = currentElement.parentElement;
-    }
-    return false;
   }
 };
 

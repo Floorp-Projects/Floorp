@@ -19,6 +19,7 @@ class CompositorWidget;
 namespace wr {
 class DisplayListBuilder;
 class ResourceUpdateQueue;
+class IpcResourceUpdateQueue;
 }
 
 namespace layers {
@@ -65,9 +66,11 @@ public:
   void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
   void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
-  void UpdateResources(wr::ResourceUpdateQueue& aResources);
+  void UpdateResources(wr::IpcResourceUpdateQueue& aResources);
   bool BeginTransaction(const  gfx::IntSize& aSize);
-  void EndTransaction(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize,
+  void EndTransaction(wr::DisplayListBuilder &aBuilder,
+                      wr::IpcResourceUpdateQueue& aResources,
+                      const gfx::IntSize& aSize,
                       bool aIsSync, uint64_t aTransactionId,
                       const WebRenderScrollData& aScrollData,
                       const mozilla::TimeStamp& aTxnStartTime);
@@ -122,6 +125,8 @@ public:
 
   void BeginClearCachedResources();
   void EndClearCachedResources();
+
+  ipc::IShmemAllocator* GetShmemAllocator();
 
 private:
   friend class CompositorBridgeChild;
