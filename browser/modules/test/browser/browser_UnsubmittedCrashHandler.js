@@ -206,6 +206,25 @@ add_task(async function setup() {
   // disabled is an intentional choice, as this allows for easier
   // simulation of startup and shutdown.
   UnsubmittedCrashHandler.uninit();
+
+  // While we're here, let's test that we don't show the notification
+  // if we're disabled and something happens to check for unsubmitted
+  // crash reports.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.crashReports.unsubmittedCheck.enabled", false],
+    ],
+  });
+
+  await createPendingCrashReports(1);
+
+  notification =
+    await UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+  Assert.ok(!notification, "There should not be a notification");
+
+  clearPendingCrashReports();
+  await SpecialPowers.popPrefEnv();
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.crashReports.unsubmittedCheck.enabled", true],
