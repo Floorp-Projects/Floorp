@@ -809,6 +809,8 @@ public:
 
   void* Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize);
 
+  inline void DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t *aMapElm);
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -3736,84 +3738,71 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   *aInfo = { tag, addr, size};
 }
 
-static inline void
-arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
-    arena_chunk_map_t *mapelm)
+void
+arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapElm)
 {
-	arena_run_t *run;
-	arena_bin_t *bin;
-	size_t size;
+  arena_run_t* run;
+  arena_bin_t* bin;
+  size_t size;
 
-	run = (arena_run_t *)(mapelm->bits & ~pagesize_mask);
-	MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
-	bin = run->bin;
-	size = bin->reg_size;
+  run = (arena_run_t*)(aMapElm->bits & ~pagesize_mask);
+  MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
+  bin = run->bin;
+  size = bin->reg_size;
 
-	memset(ptr, kAllocPoison, size);
+  memset(aPtr, kAllocPoison, size);
 
-	arena_run_reg_dalloc(run, bin, ptr, size);
-	run->nfree++;
+  arena_run_reg_dalloc(run, bin, aPtr, size);
+  run->nfree++;
 
-	if (run->nfree == bin->nregs) {
-		/* Deallocate run. */
-		if (run == bin->runcur)
-			bin->runcur = nullptr;
-		else if (bin->nregs != 1) {
-			size_t run_pageind = (((uintptr_t)run -
-			    (uintptr_t)chunk)) >> pagesize_2pow;
-			arena_chunk_map_t *run_mapelm =
-			    &chunk->map[run_pageind];
-			/*
-			 * This block's conditional is necessary because if the
-			 * run only contains one region, then it never gets
-			 * inserted into the non-full runs tree.
-			 */
-			MOZ_DIAGNOSTIC_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) ==
-				run_mapelm);
-			arena_run_tree_remove(&bin->runs, run_mapelm);
-		}
+  if (run->nfree == bin->nregs) {
+    /* Deallocate run. */
+    if (run == bin->runcur) {
+      bin->runcur = nullptr;
+    } else if (bin->nregs != 1) {
+      size_t run_pageind = (uintptr_t(run) - uintptr_t(aChunk)) >> pagesize_2pow;
+      arena_chunk_map_t* run_mapelm = &aChunk->map[run_pageind];
+      /*
+       * This block's conditional is necessary because if the
+       * run only contains one region, then it never gets
+       * inserted into the non-full runs tree.
+       */
+      MOZ_DIAGNOSTIC_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) == run_mapelm);
+      arena_run_tree_remove(&bin->runs, run_mapelm);
+    }
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-		run->magic = 0;
+    run->magic = 0;
 #endif
-		arena->DallocRun(run, true);
-		bin->stats.curruns--;
-	} else if (run->nfree == 1 && run != bin->runcur) {
-		/*
-		 * Make sure that bin->runcur always refers to the lowest
-		 * non-full run, if one exists.
-		 */
-		if (!bin->runcur)
-			bin->runcur = run;
-		else if ((uintptr_t)run < (uintptr_t)bin->runcur) {
-			/* Switch runcur. */
-			if (bin->runcur->nfree > 0) {
-				arena_chunk_t *runcur_chunk =
-				    (arena_chunk_t*)CHUNK_ADDR2BASE(bin->runcur);
-				size_t runcur_pageind =
-				    (((uintptr_t)bin->runcur -
-				    (uintptr_t)runcur_chunk)) >> pagesize_2pow;
-				arena_chunk_map_t *runcur_mapelm =
-				    &runcur_chunk->map[runcur_pageind];
+    DallocRun(run, true);
+    bin->stats.curruns--;
+  } else if (run->nfree == 1 && run != bin->runcur) {
+    /*
+     * Make sure that bin->runcur always refers to the lowest
+     * non-full run, if one exists.
+     */
+    if (!bin->runcur) {
+      bin->runcur = run;
+    } else if (uintptr_t(run) < uintptr_t(bin->runcur)) {
+      /* Switch runcur. */
+      if (bin->runcur->nfree > 0) {
+        arena_chunk_t* runcur_chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(bin->runcur);
+        size_t runcur_pageind = (uintptr_t(bin->runcur) - uintptr_t(runcur_chunk)) >> pagesize_2pow;
+        arena_chunk_map_t* runcur_mapelm = &runcur_chunk->map[runcur_pageind];
 
-				/* Insert runcur. */
-				MOZ_DIAGNOSTIC_ASSERT(!arena_run_tree_search(&bin->runs,
-				    runcur_mapelm));
-				arena_run_tree_insert(&bin->runs,
-				    runcur_mapelm);
-			}
-			bin->runcur = run;
-		} else {
-			size_t run_pageind = (((uintptr_t)run -
-			    (uintptr_t)chunk)) >> pagesize_2pow;
-			arena_chunk_map_t *run_mapelm =
-			    &chunk->map[run_pageind];
+        /* Insert runcur. */
+        MOZ_DIAGNOSTIC_ASSERT(!arena_run_tree_search(&bin->runs, runcur_mapelm));
+        arena_run_tree_insert(&bin->runs, runcur_mapelm);
+      }
+      bin->runcur = run;
+    } else {
+      size_t run_pageind = (uintptr_t(run) - uintptr_t(aChunk)) >> pagesize_2pow;
+      arena_chunk_map_t *run_mapelm = &aChunk->map[run_pageind];
 
-			MOZ_DIAGNOSTIC_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) ==
-			    nullptr);
-			arena_run_tree_insert(&bin->runs, run_mapelm);
-		}
-	}
-	arena->mStats.allocated_small -= size;
+      MOZ_DIAGNOSTIC_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) == nullptr);
+      arena_run_tree_insert(&bin->runs, run_mapelm);
+    }
+  }
+  mStats.allocated_small -= size;
 }
 
 static void
@@ -3852,7 +3841,7 @@ arena_dalloc(void *ptr, size_t offset)
 	MOZ_DIAGNOSTIC_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0);
 	if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
 		/* Small allocation. */
-		arena_dalloc_small(arena, chunk, ptr, mapelm);
+		arena->DallocSmall(chunk, ptr, mapelm);
 	} else {
 		/* Large allocation. */
 		arena_dalloc_large(arena, chunk, ptr);
