@@ -731,6 +731,7 @@ MediaPipelineFactory::GetOrCreateAudioConduit(
     }
 
     conduit->SetLocalCNAME(aTrack.GetCNAME().c_str());
+    conduit->SetLocalMID(aTrackPair.mRtpTransport->mTransportId);
 
     for (auto value: configs.values) {
       if (value->mName == "telephone-event") {
@@ -747,6 +748,7 @@ MediaPipelineFactory::GetOrCreateAudioConduit(
       return NS_ERROR_FAILURE;
     }
 
+    // Should these be genericized like they are in the video conduit case?
     const SdpExtmapAttributeList::Extmap* audioLevelExt =
         aTrack.GetNegotiatedDetails()->GetExt(
             webrtc::RtpExtension::kAudioLevelUri);
@@ -757,6 +759,19 @@ MediaPipelineFactory::GetOrCreateAudioConduit(
 
       if (error) {
         MOZ_MTLOG(ML_ERROR, "EnableAudioLevelExtension failed: " << error);
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    const SdpExtmapAttributeList::Extmap* midExt =
+        aTrack.GetNegotiatedDetails()->GetExt(webrtc::RtpExtension::kMIdUri);
+
+    if (midExt) {
+      MOZ_MTLOG(ML_DEBUG, "Calling EnableMIDExtension");
+      error = conduit->EnableMIDExtension(true, midExt->entry);
+
+      if (error) {
+        MOZ_MTLOG(ML_ERROR, "EnableMIDExtension failed: " << error);
         return NS_ERROR_FAILURE;
       }
     }
