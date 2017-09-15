@@ -789,6 +789,8 @@ public:
 
   void TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize);
 
+  void TrimRunTail(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize, bool dirty);
+
   void Purge(bool aAll);
 
   void HardPurge();
@@ -3027,25 +3029,25 @@ arena_t::TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize,
   DallocRun(aRun, false);
 }
 
-static void
-arena_run_trim_tail(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
-    size_t oldsize, size_t newsize, bool dirty)
+void
+arena_t::TrimRunTail(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize,
+                     size_t aNewSize, bool aDirty)
 {
-	size_t pageind = ((uintptr_t)run - (uintptr_t)chunk) >> pagesize_2pow;
-	size_t npages = newsize >> pagesize_2pow;
+  size_t pageind = (uintptr_t(aRun) - uintptr_t(aChunk)) >> pagesize_2pow;
+  size_t npages = aNewSize >> pagesize_2pow;
 
-	MOZ_ASSERT(oldsize > newsize);
+  MOZ_ASSERT(aOldSize > aNewSize);
 
-	/*
-	 * Update the chunk map so that arena_t::DallocRun() can treat the
-	 * trailing run as separately allocated.
-	 */
-	chunk->map[pageind].bits = newsize | CHUNK_MAP_LARGE |
-	    CHUNK_MAP_ALLOCATED;
-	chunk->map[pageind+npages].bits = (oldsize - newsize) | CHUNK_MAP_LARGE
-	    | CHUNK_MAP_ALLOCATED;
+  /*
+   * Update the chunk map so that arena_t::RunDalloc() can treat the
+   * trailing run as separately allocated.
+   */
+  aChunk->map[pageind].bits = aNewSize | CHUNK_MAP_LARGE |
+      CHUNK_MAP_ALLOCATED;
+  aChunk->map[pageind+npages].bits = (aOldSize - aNewSize) | CHUNK_MAP_LARGE
+      | CHUNK_MAP_ALLOCATED;
 
-	arena->DallocRun((arena_run_t*)(uintptr_t(run) + newsize), dirty);
+  DallocRun((arena_run_t*)(uintptr_t(aRun) + aNewSize), aDirty);
 }
 
 static arena_run_t *
@@ -3357,7 +3359,7 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 	MOZ_ASSERT((offset & pagesize_mask) == 0);
 	MOZ_ASSERT(offset < alloc_size);
 	if (offset == 0)
-		arena_run_trim_tail(arena, chunk, (arena_run_t*)ret, alloc_size, size, false);
+		arena->TrimRunTail(chunk, (arena_run_t*)ret, alloc_size, size, false);
 	else {
 		size_t leadsize, trailsize;
 
@@ -3372,7 +3374,7 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 		if (trailsize != 0) {
 			/* Trim trailing space. */
 			MOZ_ASSERT(trailsize < alloc_size);
-			arena_run_trim_tail(arena, chunk, (arena_run_t*)ret, size + trailsize,
+			arena->TrimRunTail(chunk, (arena_run_t*)ret, size + trailsize,
 			    size, false);
 		}
 	}
@@ -3867,8 +3869,7 @@ arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	 * allocations.
 	 */
 	malloc_spin_lock(&arena->mLock);
-	arena_run_trim_tail(arena, chunk, (arena_run_t *)ptr, oldsize, size,
-	    true);
+	arena->TrimRunTail(chunk, (arena_run_t *)ptr, oldsize, size, true);
 	arena->mStats.allocated_large -= oldsize - size;
 	malloc_spin_unlock(&arena->mLock);
 }
