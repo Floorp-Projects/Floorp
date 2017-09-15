@@ -14,6 +14,7 @@ const { batchActions } = require("devtools/client/shared/redux/middleware/deboun
 
 const {
   MESSAGE_ADD,
+  MESSAGES_ADD,
   NETWORK_MESSAGE_UPDATE,
   NETWORK_UPDATE_REQUEST,
   MESSAGES_CLEAR,
@@ -24,6 +25,31 @@ const {
 } = require("../constants");
 
 const defaultIdGenerator = new IdGenerator();
+
+function messagesAdd(packets, idGenerator = null) {
+  if (idGenerator == null) {
+    idGenerator = defaultIdGenerator;
+  }
+  let messages = packets.map(packet => prepareMessage(packet, idGenerator));
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].type === MESSAGE_TYPE.CLEAR) {
+      return batchActions([
+        messagesClear(),
+        {
+          type: MESSAGES_ADD,
+          messages: messages.slice(i),
+        }
+      ]);
+    }
+  }
+
+  // When this is used for non-cached messages then handle clear message and
+  // split up into batches
+  return {
+    type: MESSAGES_ADD,
+    messages
+  };
+}
 
 function messageAdd(packet, idGenerator = null) {
   if (idGenerator == null) {
@@ -117,6 +143,7 @@ function networkUpdateRequest(id, data) {
 
 module.exports = {
   messageAdd,
+  messagesAdd,
   messagesClear,
   messageOpen,
   messageClose,
