@@ -41,7 +41,7 @@ class Cache final : public nsISupports
                   , public TypeUtils
 {
 public:
-  Cache(nsIGlobalObject* aGlobal, CacheChild* aActor);
+  Cache(nsIGlobalObject* aGlobal, CacheChild* aActor, Namespace aNamespace);
 
   // webidl interface methods
   already_AddRefed<Promise>
@@ -109,6 +109,7 @@ private:
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   CacheChild* mActor;
+  const Namespace mNamespace;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
