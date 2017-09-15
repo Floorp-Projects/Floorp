@@ -1706,10 +1706,12 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         clsname = md.replyCtorFunc()
         msgid = md.replyId()
         prettyName = md.prettyReplyName(protocol.name+'::')
+        replyEnum = 'REPLY'
     else:
         clsname = md.msgCtorFunc()
         msgid = md.msgId()
         prettyName = md.prettyMsgName(protocol.name+'::')
+        replyEnum = 'NOT_REPLY'
 
     nested = md.decl.type.nested
     prio = md.decl.type.prio
@@ -1745,17 +1747,38 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
     else:
         prioEnum = 'HIGH_PRIORITY'
 
+    if md.decl.type.isSync():
+        syncEnum = 'SYNC'
+    else:
+        syncEnum = 'ASYNC'
+
+    if md.decl.type.isInterrupt():
+        interruptEnum = 'INTERRUPT'
+    else:
+        interruptEnum = 'NOT_INTERRUPT'
+
+    if md.decl.type.isCtor():
+        ctorEnum = 'CONSTRUCTOR'
+    else:
+        ctorEnum = 'NOT_CONSTRUCTOR'
+
     def messageEnum(valname):
         return ExprVar('IPC::Message::' + valname)
 
+    flags = ExprCall(ExprVar('IPC::Message::HeaderFlags'),
+                     args=[ messageEnum(nestedEnum),
+                            messageEnum(prioEnum),
+                            messageEnum(compression),
+                            messageEnum(ctorEnum),
+                            messageEnum(syncEnum),
+                            messageEnum(interruptEnum),
+                            messageEnum(replyEnum) ])
     func.addstmt(
         StmtReturn(ExprNew(Type('IPC::Message'),
                            args=[ routingId,
                                   ExprVar(msgid),
                                   ExprLiteral.Int(int(segmentSize)),
-                                  messageEnum(nestedEnum),
-                                  messageEnum(prioEnum),
-                                  messageEnum(compression),
+                                  flags,
                                   ExprLiteral.String(prettyName),
                                   # Pass `true` to recordWriteLatency to collect telemetry
                                   ExprLiteral.TRUE ])))
@@ -4279,7 +4302,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                  + [ self.checkedWrite(p.ipdltype, p.var(), msgvar, sentinelKey=p.name, this=this)
                      for p in md.params ]
                  + [ Whitespace.NL ]
-                 + self.setMessageFlags(md, msgvar, reply=0))
+                 + self.setMessageFlags(md, msgvar))
         return msgvar, stmts
 
 
@@ -4296,7 +4319,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         resolvertype = Type(md.resolverName())
         failifsendok = StmtIf(ExprNot(sendok))
         failifsendok.addifstmt(_printWarningMessage('Error sending reply'))
-        sendmsg = (self.setMessageFlags(md, self.replyvar, reply=1, seqno=seqno)
+        sendmsg = (self.setMessageFlags(md, self.replyvar, seqno=seqno)
                    + [ self.logMessage(md, self.replyvar, 'Sending reply '),
                        StmtDecl(Decl(Type.BOOL, sendok.name),
                                 init=ExprCall(
@@ -4367,7 +4390,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
               Whitespace.NL ]
             + [ self.checkedWrite(r.ipdltype, r.var(), replyvar, sentinelKey=r.name)
                 for r in md.returns ]
-            + self.setMessageFlags(md, replyvar, reply=1)
+            + self.setMessageFlags(md, replyvar)
             + [ self.logMessage(md, replyvar, 'Sending reply ') ])
 
     def genVerifyMessage(self, verify, params, errfn, msgsrcVar):
@@ -4410,23 +4433,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return stmts
 
-    def setMessageFlags(self, md, var, reply, seqno=None):
+    def setMessageFlags(self, md, var, seqno=None):
         stmts = [ ]
-
-        if md.decl.type.isSync():
-            stmts.append(StmtExpr(ExprCall(
-                ExprSelect(var, '->', 'set_sync'))))
-        elif md.decl.type.isInterrupt():
-            stmts.append(StmtExpr(ExprCall(
-                ExprSelect(var, '->', 'set_interrupt'))))
-
-        if md.decl.type.isCtor():
-            stmts.append(StmtExpr(ExprCall(
-                ExprSelect(var, '->', 'set_constructor'))))
-
-        if reply:
-            stmts.append(StmtExpr(ExprCall(
-                ExprSelect(var, '->', 'set_reply'))))
 
         if seqno:
             stmts.append(StmtExpr(ExprCall(
