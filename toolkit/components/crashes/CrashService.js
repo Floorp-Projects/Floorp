@@ -10,8 +10,15 @@ Cu.import("resource://gre/modules/AppConstants.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 Cu.import("resource://gre/modules/KeyValueParser.jsm");
 Cu.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+
+// Set to true if the application is quitting
+var gQuitting = false;
+
+// Tracks all the running instances of the minidump-analyzer
+var gRunningProcesses = new Set();
 
 /**
  * Run the minidump analyzer tool to gather stack traces from the minidump. The
@@ -31,9 +38,9 @@ function runMinidumpAnalyzer(minidumpPath) {
       let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
 
       if (AppConstants.platform === "macosx") {
-          exe.append("crashreporter.app");
-          exe.append("Contents");
-          exe.append("MacOS");
+        exe.append("crashreporter.app");
+        exe.append("Contents");
+        exe.append("MacOS");
       }
 
       exe.append(exeName);
@@ -46,6 +53,7 @@ function runMinidumpAnalyzer(minidumpPath) {
       process.runAsync(args, args.length, (subject, topic, data) => {
         switch (topic) {
           case "process-finished":
+            gRunningProcesses.delete(process);
             resolve();
             break;
           default:
@@ -53,6 +61,8 @@ function runMinidumpAnalyzer(minidumpPath) {
             break;
         }
       });
+
+      gRunningProcesses.add(process);
     } catch (e) {
       Cu.reportError(e);
     }
@@ -120,7 +130,9 @@ function processExtraFile(extraPath) {
  *
  * It is a service because some background activity will eventually occur.
  */
-this.CrashService = function() {};
+this.CrashService = function() {
+  Services.obs.addObserver(this, "quit-application");
+};
 
 CrashService.prototype = Object.freeze({
   classID: Components.ID("{92668367-1b17-4190-86b2-1061b2179744}"),
@@ -168,7 +180,12 @@ CrashService.prototype = Object.freeze({
     let metadata = {};
     let hash = null;
 
-    await runMinidumpAnalyzer(minidumpPath);
+    if (!gQuitting) {
+      // Minidump analysis can take a long time, don't start it if the browser
+      // is already quitting.
+      await runMinidumpAnalyzer(minidumpPath);
+    }
+
     metadata = await processExtraFile(extraPath);
     hash = await computeMinidumpHash(minidumpPath);
 
@@ -193,6 +210,13 @@ CrashService.prototype = Object.freeze({
       case "profile-after-change":
         // Side-effect is the singleton is instantiated.
         Services.crashmanager;
+        break;
+      case "quit-application":
+        gQuitting = true;
+        gRunningProcesses.forEach((process) => {
+          process.kill();
+          Services.obs.notifyObservers(null, "test-minidump-analyzer-killed");
+        });
         break;
     }
   },

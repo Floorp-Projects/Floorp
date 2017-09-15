@@ -309,12 +309,12 @@ Poison(void* ptr, uint8_t value, size_t num)
     // Unfortunately, this adds about 2% more overhead, so we can only enable
     // it in debug.
 #if defined(DEBUG)
-    uintptr_t obj;
-    memset(&obj, value, sizeof(obj));
+    uintptr_t poison;
+    memset(&poison, value, sizeof(poison));
 # if defined(JS_PUNBOX64)
-    obj = obj & ((uintptr_t(1) << JSVAL_TAG_SHIFT) - 1);
+    poison = poison & ((uintptr_t(1) << JSVAL_TAG_SHIFT) - 1);
 # endif
-    JS::Value v = JS::PoisonedObjectValue(reinterpret_cast<JSObject*>(obj));
+    JS::Value v = js::PoisonedObjectValue(poison);
 
     size_t value_count = num / sizeof(v);
     size_t byte_count = num % sizeof(v);

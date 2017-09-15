@@ -72,6 +72,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	const getOriginalURLs = dispatcher.task("getOriginalURLs");
 	const getGeneratedLocation = dispatcher.task("getGeneratedLocation");
 	const getOriginalLocation = dispatcher.task("getOriginalLocation");
+	const getLocationScopes = dispatcher.task("getLocationScopes");
 	const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
 	const applySourceMap = dispatcher.task("applySourceMap");
 	const clearSourceMaps = dispatcher.task("clearSourceMaps");
@@ -86,6 +87,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  getOriginalURLs,
 	  getGeneratedLocation,
 	  getOriginalLocation,
+	  getLocationScopes,
 	  getOriginalSourceText,
 	  applySourceMap,
 	  clearSourceMaps,
@@ -555,6 +557,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return;
 	          }
 
+	          if (!this.worker) {
+	            reject("Oops, The worker has shutdown!");
+	            return;
+	          }
 	          this.worker.removeEventListener("message", listener);
 	          if (result.error) {
 	            reject(result.error);
