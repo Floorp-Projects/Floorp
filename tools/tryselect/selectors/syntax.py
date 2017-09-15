@@ -451,8 +451,7 @@ class AutoTry(object):
             if action in ('store_true', 'store_false'):
                 parts.append(arg)
 
-        try_syntax = " ".join(parts)
-        return try_syntax
+        return " ".join(parts)
 
     def find_paths_and_tags(self, verbose):
         paths, tags = set(), set()
@@ -632,7 +631,7 @@ class AutoTry(object):
         if kwargs["verbose"]:
             print('The following try syntax was calculated:\n%s' % msg)
 
-        self.vcs.push_to_try(msg, push=kwargs['push'])
+        self.vcs.push_to_try('syntax', msg, push=kwargs['push'])
 
         if kwargs["save"]:
             assert msg.startswith("try: ")
