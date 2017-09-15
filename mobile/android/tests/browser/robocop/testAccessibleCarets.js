@@ -18,6 +18,8 @@ const TAB_CHANGE_EVENT = "testAccessibleCarets:TabChange";
 const TAB_STOP_EVENT = "STOP";
 
 const gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+const gActionBarHandler = Cc["@mozilla.org/browser/browser-clh;1"]
+    .getService().wrappedJSObject.ActionBarHandler;
 
 /**
  * Wait for and return, when an expected tab change event occurs.
@@ -115,10 +117,9 @@ function getLongPressResult(browser, midPoint) {
   domWinUtils.sendTouchEventToWindow("touchend", [0], [midPoint.x], [midPoint.y],
                                      [1], [1], [0], [1], 1, 0);
 
-  let ActionBarHandler = gChromeWin.ActionBarHandler;
-  return { focusedElement: ActionBarHandler._targetElement,
-           text: ActionBarHandler._getSelectedText(),
-           selectionID: ActionBarHandler._selectionID,
+  return { focusedElement: gActionBarHandler._targetElement,
+           text: gActionBarHandler._getSelectedText(),
+           selectionID: gActionBarHandler._selectionID,
   };
 }
 
@@ -130,7 +131,7 @@ function getLongPressResult(browser, midPoint) {
  * @return Result boolean.
  */
 function UIhasActionByID(expectedActionID) {
-  let actions = gChromeWin.ActionBarHandler._actionBarActions;
+  let actions = gActionBarHandler._actionBarActions;
   return actions.some(action => {
     return action.id === expectedActionID;
   });
@@ -141,7 +142,7 @@ function UIhasActionByID(expectedActionID) {
  */
 function closeSelectionUI() {
   gChromeWin.WindowEventDispatcher.dispatch("TextSelection:End",
-    {selectionID: gChromeWin.ActionBarHandler._selectionID});
+    {selectionID: gActionBarHandler._selectionID});
 }
 
 /**

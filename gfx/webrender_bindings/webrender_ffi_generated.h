@@ -1168,7 +1168,7 @@ WR_INLINE
 void wr_resource_updates_add_blob_image(ResourceUpdates *aResources,
                                         WrImageKey aImageKey,
                                         const WrImageDescriptor *aDescriptor,
-                                        ByteSlice aBytes)
+                                        WrVecU8 *aBytes)
 WR_FUNC;
 
 WR_INLINE
@@ -1193,14 +1193,13 @@ WR_INLINE
 void wr_resource_updates_add_image(ResourceUpdates *aResources,
                                    WrImageKey aImageKey,
                                    const WrImageDescriptor *aDescriptor,
-                                   ByteSlice aBytes)
+                                   WrVecU8 *aBytes)
 WR_FUNC;
 
 WR_INLINE
 void wr_resource_updates_add_raw_font(ResourceUpdates *aResources,
                                       WrFontKey aKey,
-                                      uint8_t *aFontBuffer,
-                                      size_t aBufferSize,
+                                      WrVecU8 *aBytes,
                                       uint32_t aIndex)
 WR_FUNC;
 
@@ -1244,7 +1243,7 @@ WR_INLINE
 void wr_resource_updates_update_blob_image(ResourceUpdates *aResources,
                                            WrImageKey aImageKey,
                                            const WrImageDescriptor *aDescriptor,
-                                           ByteSlice aBytes)
+                                           WrVecU8 *aBytes)
 WR_FUNC;
 
 WR_INLINE
@@ -1260,7 +1259,7 @@ WR_INLINE
 void wr_resource_updates_update_image(ResourceUpdates *aResources,
                                       WrImageKey aKey,
                                       const WrImageDescriptor *aDescriptor,
-                                      ByteSlice aBytes)
+                                      WrVecU8 *aBytes)
 WR_FUNC;
 
 WR_INLINE
@@ -1289,6 +1288,11 @@ WR_FUNC;
 
 WR_INLINE
 void wr_vec_u8_free(WrVecU8 aV)
+WR_FUNC;
+
+WR_INLINE
+void wr_vec_u8_push_bytes(WrVecU8 *aV,
+                          ByteSlice aBytes)
 WR_FUNC;
 
 WR_INLINE

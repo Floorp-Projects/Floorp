@@ -41,6 +41,7 @@ protected:
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   wr::IpcResourceUpdateQueue& aResources,
                    const StackingContextHelper& aSc) override;
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
@@ -67,6 +68,7 @@ protected:
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   wr::IpcResourceUpdateQueue& aResources,
                    const StackingContextHelper& aSc) override;
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override

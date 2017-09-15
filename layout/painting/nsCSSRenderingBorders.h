@@ -108,6 +108,7 @@ public:
 
   bool CanCreateWebRenderCommands();
   void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
                                const mozilla::layers::StackingContextHelper& aSc);
 
   // utility function used for background painting as well as borders
