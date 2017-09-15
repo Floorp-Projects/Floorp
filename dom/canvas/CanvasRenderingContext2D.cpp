@@ -976,7 +976,7 @@ public:
   {
   }
 
-  virtual void DoUpdate() override
+  virtual void OnRenderingChange() override
   {
     if (!mContext) {
       MOZ_CRASH("GFX: This should never be called without a context");

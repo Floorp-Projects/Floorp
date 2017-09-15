@@ -101,7 +101,7 @@ void
 nsSVGRenderingObserver::InvalidateViaReferencedElement()
 {
   mInObserverList = false;
-  DoUpdate();
+  OnRenderingChange();
 }
 
 void
@@ -132,7 +132,7 @@ nsSVGRenderingObserver::AttributeChanged(nsIDocument* aDocument,
   // observers and ourselves for all attribute changes? For non-ID changes
   // surely that is unnecessary.
 
-  DoUpdate();
+  OnRenderingChange();
 }
 
 void
@@ -140,7 +140,7 @@ nsSVGRenderingObserver::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aFirstNewContent)
 {
-  DoUpdate();
+  OnRenderingChange();
 }
 
 void
@@ -148,7 +148,7 @@ nsSVGRenderingObserver::ContentInserted(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aChild)
 {
-  DoUpdate();
+  OnRenderingChange();
 }
 
 void
@@ -157,7 +157,7 @@ nsSVGRenderingObserver::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aChild,
                                        nsIContent* aPreviousSibling)
 {
-  DoUpdate();
+  OnRenderingChange();
 }
 
 /**
@@ -193,7 +193,7 @@ nsSVGIDRenderingObserver::~nsSVGIDRenderingObserver()
 }
 
 void
-nsSVGIDRenderingObserver::DoUpdate()
+nsSVGIDRenderingObserver::OnRenderingChange()
 {
   if (mObservedElementTracker.get() && mInObserverList) {
     SVGObserverUtils::RemoveRenderingObserver(mObservedElementTracker.get(), this);
@@ -221,9 +221,9 @@ nsSVGFrameReferenceFromProperty::Get()
 NS_IMPL_ISUPPORTS(nsSVGRenderingObserverProperty, nsIMutationObserver)
 
 void
-nsSVGRenderingObserverProperty::DoUpdate()
+nsSVGRenderingObserverProperty::OnRenderingChange()
 {
-  nsSVGIDRenderingObserver::DoUpdate();
+  nsSVGIDRenderingObserver::OnRenderingChange();
 
   nsIFrame* frame = mFrameReference.Get();
 
@@ -264,9 +264,9 @@ nsSVGFilterReference::GetFilterFrame()
 }
 
 void
-nsSVGFilterReference::DoUpdate()
+nsSVGFilterReference::OnRenderingChange()
 {
-  nsSVGIDRenderingObserver::DoUpdate();
+  nsSVGIDRenderingObserver::OnRenderingChange();
 
   if (mFilterChainObserver) {
     mFilterChainObserver->Invalidate();
@@ -337,7 +337,7 @@ nsSVGFilterChainObserver::IsInObserverLists() const
 }
 
 void
-nsSVGFilterProperty::DoUpdate()
+nsSVGFilterProperty::OnRenderingChange()
 {
   nsIFrame* frame = mFrameReference.Get();
   if (!frame)
@@ -347,8 +347,8 @@ nsSVGFilterProperty::DoUpdate()
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame);
 
-  // Since we don't call nsSVGRenderingObserverProperty::DoUpdate, we have to
-  // add this bit ourselves.
+  // Since we don't call nsSVGRenderingObserverProperty::
+  // OnRenderingChange, we have to add this bit ourselves.
   if (frame->HasAllStateBits(NS_FRAME_SVG_LAYOUT)) {
     // Changes should propagate out to things that might be observing
     // the referencing frame or its ancestors.
@@ -364,9 +364,9 @@ nsSVGFilterProperty::DoUpdate()
 }
 
 void
-nsSVGMarkerProperty::DoUpdate()
+nsSVGMarkerProperty::OnRenderingChange()
 {
-  nsSVGRenderingObserverProperty::DoUpdate();
+  nsSVGRenderingObserverProperty::OnRenderingChange();
 
   nsIFrame* frame = mFrameReference.Get();
   if (!frame)
@@ -442,9 +442,9 @@ nsSVGTextPathProperty::TargetIsValid()
 }
 
 void
-nsSVGTextPathProperty::DoUpdate()
+nsSVGTextPathProperty::OnRenderingChange()
 {
-  nsSVGRenderingObserverProperty::DoUpdate();
+  nsSVGRenderingObserverProperty::OnRenderingChange();
 
   nsIFrame* frame = mFrameReference.Get();
   if (!frame)
@@ -488,9 +488,9 @@ InvalidateAllContinuations(nsIFrame* aFrame)
 }
 
 void
-nsSVGPaintingProperty::DoUpdate()
+nsSVGPaintingProperty::OnRenderingChange()
 {
-  nsSVGRenderingObserverProperty::DoUpdate();
+  nsSVGRenderingObserverProperty::OnRenderingChange();
 
   nsIFrame* frame = mFrameReference.Get();
   if (!frame)
@@ -759,7 +759,8 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
   aFrame->DeleteProperty(BackgroundImageProperty());
 
   // Ensure that the filter is repainted correctly
-  // We can't do that in DoUpdate as the referenced frame may not be valid
+  // We can't do that in OnRenderingChange as the referenced frame may
+  // not be valid
   GetOrCreateFilterProperty(aFrame);
 
   if (aFrame->IsSVGGeometryFrame() &&
