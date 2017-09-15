@@ -98,7 +98,7 @@ nsSVGRenderingObserver::GetReferencedFrame(LayoutFrameType aFrameType,
 }
 
 void
-nsSVGRenderingObserver::InvalidateViaReferencedElement()
+nsSVGRenderingObserver::OnNonDOMMutationRenderingChange()
 {
   mInObserverList = false;
   OnRenderingChange();
@@ -801,7 +801,7 @@ nsSVGRenderingObserverList::InvalidateAll()
   mObservers.Clear();
 
   for (uint32_t i = 0; i < observers.Length(); ++i) {
-    observers[i]->InvalidateViaReferencedElement();
+    observers[i]->OnNonDOMMutationRenderingChange();
   }
 }
 
@@ -822,7 +822,7 @@ nsSVGRenderingObserverList::InvalidateAllForReflow()
   }
 
   for (uint32_t i = 0; i < observers.Length(); ++i) {
-    observers[i]->InvalidateViaReferencedElement();
+    observers[i]->OnNonDOMMutationRenderingChange();
   }
 }
 

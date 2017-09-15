@@ -62,7 +62,15 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  void InvalidateViaReferencedElement();
+  /**
+   * Called when non-DOM-mutation changes to the observed element should likely
+   * cause the rendering of our observer to change.  This includes changes to
+   * CSS computed values, but also changes to rendering observers that the
+   * observed element itself may have (for example, when we're being used to
+   * observe an SVG pattern, and an element in that pattern references and
+   * observes a gradient that has changed).
+   */
+  void OnNonDOMMutationRenderingChange();
 
   // When a nsSVGRenderingObserver list gets forcibly cleared, it uses this
   // callback to notify every observer that's cleared from it, so they can
@@ -386,7 +394,7 @@ private:
  * nsSVGRenderingObservers can be added or removed. They are not strongly
  * referenced so an observer must be removed before it dies.
  * When InvalidateAll is called, all outstanding references get
- * InvalidateViaReferencedElement()
+ * OnNonDOMMutationRenderingChange()
  * called on them and the list is cleared. The intent is that
  * the observer will force repainting of whatever part of the document
  * is needed, and then at paint time the observer will do a clean lookup
