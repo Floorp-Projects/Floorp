@@ -1276,7 +1276,7 @@ public class GeckoView extends LayerView {
             public final String issuerOrganization;
             /**
              * Indicates the security level of the site; possible values are SECURITY_MODE_UNKNOWN,
-             * SECURITY_MODE_IDENTIFIED, and SECURITY_MODE_VERIFIED. SECURITY_MODE_IDENTIFIED 
+             * SECURITY_MODE_IDENTIFIED, and SECURITY_MODE_VERIFIED. SECURITY_MODE_IDENTIFIED
              * indicates domain validation only, while SECURITY_MODE_VERIFIED indicates extended validation.
              */
             public final int securityMode;
