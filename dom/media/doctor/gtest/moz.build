@@ -4,16 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += [
-    'gtest',
-]
-
-EXPORTS += [
-    'DecoderDoctorDiagnostics.h',
-]
-
 UNIFIED_SOURCES += [
-    'DecoderDoctorDiagnostics.cpp',
+    'TestRollingNumber.cpp',
 ]
 
-FINAL_LIBRARY = 'xul'
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/dom/media/doctor',
+]
+
+FINAL_LIBRARY = 'xul-gtest'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
