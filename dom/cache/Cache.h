@@ -107,9 +107,6 @@ private:
          const nsTArray<RefPtr<Response>>& aResponseList,
          ErrorResult& aRv);
 
-  OpenMode
-  OpenMode() const;
-
   nsCOMPtr<nsIGlobalObject> mGlobal;
   CacheChild* mActor;
   const Namespace mNamespace;
