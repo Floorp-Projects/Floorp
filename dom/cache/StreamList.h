@@ -31,7 +31,7 @@ public:
 
   void Activate(CacheId aCacheId);
 
-  void Add(const nsID& aId, nsCOMPtr<nsIInputStream>&& aStream);
+  void Add(const nsID& aId, nsIInputStream* aStream);
   already_AddRefed<nsIInputStream> Extract(const nsID& aId);
 
   void NoteClosed(const nsID& aId);
@@ -47,11 +47,6 @@ private:
   ~StreamList();
   struct Entry
   {
-    explicit Entry(const nsID& aId, nsCOMPtr<nsIInputStream>&& aStream)
-      : mId(aId)
-      , mStream(Move(aStream))
-    {}
-
     nsID mId;
     nsCOMPtr<nsIInputStream> mStream;
   };
