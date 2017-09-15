@@ -782,9 +782,9 @@ private:
 
   arena_run_t* AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero);
 
-public:
   void DallocRun(arena_run_t* aRun, bool aDirty);
 
+public:
   void SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero);
 
 private:
@@ -810,6 +810,8 @@ public:
   void* Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize);
 
   inline void DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t *aMapElm);
+
+  void DallocLarge(arena_chunk_t* aChunk, void* aPtr);
 
   void Purge(bool aAll);
 
@@ -3805,17 +3807,16 @@ arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapE
   mStats.allocated_small -= size;
 }
 
-static void
-arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
+void
+arena_t::DallocLarge(arena_chunk_t* aChunk, void* aPtr)
 {
-	size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >>
-	    pagesize_2pow;
-	size_t size = chunk->map[pageind].bits & ~pagesize_mask;
+  size_t pageind = (uintptr_t(aPtr) - uintptr_t(aChunk)) >> pagesize_2pow;
+  size_t size = aChunk->map[pageind].bits & ~pagesize_mask;
 
-	memset(ptr, kAllocPoison, size);
-	arena->mStats.allocated_large -= size;
+  memset(aPtr, kAllocPoison, size);
+  mStats.allocated_large -= size;
 
-	arena->DallocRun((arena_run_t*)ptr, true);
+  DallocRun((arena_run_t*)aPtr, true);
 }
 
 static inline void
@@ -3844,7 +3845,7 @@ arena_dalloc(void *ptr, size_t offset)
 		arena->DallocSmall(chunk, ptr, mapelm);
 	} else {
 		/* Large allocation. */
-		arena_dalloc_large(arena, chunk, ptr);
+		arena->DallocLarge(chunk, ptr);
 	}
 	malloc_spin_unlock(&arena->mLock);
 }
