@@ -504,7 +504,7 @@ var FormAutofillContent = {
     if (!formHandler) {
       let formLike = FormLikeFactory.createFromField(element);
       formHandler = new FormAutofillHandler(formLike);
-    } else if (!formHandler.isFormChangedSinceLastCollection) {
+    } else if (!formHandler.updateFormIfNeeded(element)) {
       this.log.debug("No control is removed or inserted since last collection.");
       return;
     }
