@@ -61,7 +61,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     private HomePager.OnUrlOpenListener onUrlOpenListener;
     private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
-    private int tiles;
     private int tilesSize;
 
     public enum RowItemType {
@@ -106,10 +105,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
-    public void setTileSize(int tiles, int tilesSize) {
+    public void setTileSize(int tilesSize) {
         this.tilesSize = tilesSize;
-        this.tiles = tiles;
-
         notifyDataSetChanged();
     }
 
@@ -177,7 +174,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             final Highlight highlight = (Highlight) recyclerViewModel.get(position);
             ((WebpageItemRow) holder).bind(highlight, position, tilesSize);
         } else if (type == RowItemType.TOP_PANEL.getViewType()) {
-            ((TopPanelRow) holder).bind(topSitesCursor, tiles, tilesSize);
+            ((TopPanelRow) holder).bind(topSitesCursor, tilesSize);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             final TopStory story = (TopStory) recyclerViewModel.get(position);
             ((WebpageItemRow) holder).bind(story, position, tilesSize);

@@ -19,6 +19,8 @@ import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPage.NUM_TILES;
+
 /**
  * The primary / top-level TopSites adapter: it handles the ViewPager, and also handles
  * all lower-level Adapters that populate the individual topsite items.
@@ -27,7 +29,6 @@ public class TopSitesPagerAdapter extends PagerAdapter {
     public static final int PAGES = 2;
     public static final int SUGGESTED_SITES_MAX_PAGES = 2;
 
-    private int tiles;
     private int tilesSize;
 
     private final List<TopSitesPage> pages;
@@ -48,9 +49,8 @@ public class TopSitesPagerAdapter extends PagerAdapter {
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
-    public void setTilesSize(int tiles, int tilesSize) {
+    public void setTilesSize(int tilesSize) {
         this.tilesSize = tilesSize;
-        this.tiles = tiles;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
     public void swapCursor(Cursor cursor) {
         // Divide while rounding up: 0 items = 0 pages, 1-ITEMS_PER_PAGE items = 1 page, etc.
         if (cursor != null) {
-            count = (cursor.getCount() - 1) / tiles + 1;
+            count = (cursor.getCount() - 1) / TopSitesPage.NUM_TILES + 1;
         } else {
             count = 0;
         }
@@ -111,7 +111,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
                 final TopSitesPage page = (TopSitesPage) inflater.inflate(R.layout.activity_stream_topsites_page, null, false);
 
                 final TopSitesPageAdapter adapter = new TopSitesPageAdapter(
-                        context, i, tiles, tilesSize, onUrlOpenListener, onUrlOpenInBackgroundListener);
+                        context, i, tilesSize, onUrlOpenListener, onUrlOpenInBackgroundListener);
                 page.setAdapter(adapter);
                 RecyclerViewClickSupport.addTo(page).setOnItemClickListener(adapter);
                 pages.add(page);
@@ -132,7 +132,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
         int startIndex = 0;
         for (TopSitesPage page : pages) {
             page.getAdapter().swapCursor(cursor, startIndex);
-            startIndex += tiles;
+            startIndex += NUM_TILES;
         }
 
         notifyDataSetChanged();
