@@ -36,7 +36,6 @@ protected:
   bool mIPCOpen;
 
   uint32_t mVRDisplayID;
-  gfx::IntSize mSize;
   gfx::Rect mLeftEyeRect;
   gfx::Rect mRightEyeRect;
   uint32_t mGroup;
