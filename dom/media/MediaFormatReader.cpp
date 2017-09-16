@@ -3165,8 +3165,11 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       mAudio.mLastStreamSourceID);
   }
 
-  VideoInfo videoInfo = mVideo.mInfo ? *mVideo.mInfo->GetAsVideoInfo()
-                                     : *mVideo.mOriginalInfo->GetAsVideoInfo();
+  VideoInfo videoInfo = mVideo.mInfo
+                        ? *mVideo.mInfo->GetAsVideoInfo()
+                        : mVideo.mOriginalInfo
+                          ? *mVideo.mOriginalInfo->GetAsVideoInfo()
+                          : VideoInfo();
 
   result += nsPrintfCString(
     "Video Decoder(%s, %dx%d @ %0.2ffps): %s\n",
