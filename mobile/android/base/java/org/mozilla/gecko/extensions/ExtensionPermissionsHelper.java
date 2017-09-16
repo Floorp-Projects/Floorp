@@ -88,6 +88,8 @@ public class ExtensionPermissionsHelper implements BundleEventListener {
                     });
             }
 
+            builder.setCancelable(false);
+
             final AlertDialog dialog = builder.create();
             dialog.show();
         } else if ("Extension:ShowUpdateIcon".equals(event)) {

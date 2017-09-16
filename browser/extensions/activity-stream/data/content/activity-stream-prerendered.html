@@ -13,13 +13,25 @@
     <div id="snippets-container">
       <div id="snippets"></div>
     </div>
-<script src="resource://activity-stream/data/content/activity-stream-initial-state.js"></script>
-    <script src="chrome://browser/content/contentSearchUI.js"></script>
-    <script src="resource://activity-stream/vendor/react.js"></script>
-    <script src="resource://activity-stream/vendor/react-dom.js"></script>
-    <script src="resource://activity-stream/vendor/react-intl.js"></script>
-    <script src="resource://activity-stream/vendor/redux.js"></script>
-    <script src="resource://activity-stream/vendor/react-redux.js"></script>
-    <script src="resource://activity-stream/data/content/activity-stream.bundle.js"></script>
+    <script>
+// Don't directly load the following scripts as part of html to let the page
+// finish loading to render the content sooner.
+for (const src of [
+  "resource://activity-stream/data/content/activity-stream-initial-state.js",
+  "chrome://browser/content/contentSearchUI.js",
+  "resource://activity-stream/vendor/react.js",
+  "resource://activity-stream/vendor/react-dom.js",
+  "resource://activity-stream/vendor/react-intl.js",
+  "resource://activity-stream/vendor/redux.js",
+  "resource://activity-stream/vendor/react-redux.js",
+  "resource://activity-stream/data/content/activity-stream.bundle.js"
+]) {
+  // These dynamically inserted scripts by default are async, but we need them
+  // to load in the desired order (i.e., bundle last).
+  const script = document.body.appendChild(document.createElement("script"));
+  script.async = false;
+  script.src = src;
+}
+    </script>
   </body>
 </html>

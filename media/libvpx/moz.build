@@ -18,32 +18,32 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     SOURCES += files['X64_SOURCES']
     if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/win/x64/' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/mac/x64/' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/linux/x64/' ]
 elif CONFIG['CPU_ARCH'] == 'x86':
     EXPORTS.vpx += files['IA32_EXPORTS']
     SOURCES += files['IA32_SOURCES']
     if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/win/ia32/' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/mac/ia32/' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/linux/ia32/' ]
 elif CONFIG['CPU_ARCH'] == 'arm':
     EXPORTS.vpx += files['ARM_EXPORTS']
     ASFLAGS += [
         '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR,
         '-I%s/libvpx' % OBJDIR,
     ]
-    CFLAGS += [ '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libvpx/config/linux/arm/' ]
 
     arm_asm_files = files['ARM_SOURCES']
 
@@ -72,7 +72,7 @@ else:
     EXPORTS.vpx += files['GENERIC_EXPORTS']
     SOURCES += files['GENERIC_SOURCES']
     ASFLAGS += [ '-I%s/media/libvpx/config/generic/' % TOPSRCDIR ]
-    CFLAGS += [ '-I%s/media/libvpx/config/generic/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libvpx/config/generic/' ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
@@ -130,9 +130,9 @@ ASFLAGS += [
     '-I%s/media/libvpx/libvpx' % TOPSRCDIR,
 ]
 
-CFLAGS += [
-    '-I%s/media/libvpx/libvpx' % TOPSRCDIR,
-    '-I%s/media/libvpx/config' % TOPSRCDIR, # vpx_version.h
+LOCAL_INCLUDES += [
+    '/media/libvpx/config', # vpx_version.h
+    '/media/libvpx/libvpx',
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
