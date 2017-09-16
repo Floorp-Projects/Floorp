@@ -105,6 +105,35 @@ config = {
                 },
             },
         },
+        "complete-mar-bz2": {
+            "product-name": "Firefox-%(version)s-Complete-bz2",
+            "check_uptake": True,
+            "ssl-only": False,
+            "add-locales": True,
+            "paths": {
+                "linux": {
+                    "path": "/firefox/releases/%(version)s/update/linux-i686/:lang/firefox-%(version)s.bz2.complete.mar",
+                    "bouncer-platform": "linux",
+                },
+                "linux64": {
+                    "path": "/firefox/releases/%(version)s/update/linux-x86_64/:lang/firefox-%(version)s.bz2.complete.mar",
+                    "bouncer-platform": "linux64",
+                },
+                "macosx64": {
+                    "path": "/firefox/releases/%(version)s/update/mac/:lang/firefox-%(version)s.bz2.complete.mar",
+                    "bouncer-platform": "osx",
+                },
+                "win32": {
+                    "path": "/firefox/releases/%(version)s/update/win32/:lang/firefox-%(version)s.bz2.complete.mar",
+                    "bouncer-platform": "win",
+                },
+                "win64": {
+                    "path": "/firefox/releases/%(version)s/update/win64/:lang/firefox-%(version)s.bz2.complete.mar",
+                    "bouncer-platform": "win64",
+                },
+            },
+        },
+    },
     },
     "partials": {
         "releases-dir": {
