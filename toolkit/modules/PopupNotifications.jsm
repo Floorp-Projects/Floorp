@@ -787,6 +787,7 @@ PopupNotifications.prototype = {
       } else {
         // Enable the default button to let the user close the popup if the close button is hidden
         popupnotification.setAttribute("buttoncommand", "PopupNotifications._onButtonEvent(event, 'buttoncommand');");
+        popupnotification.setAttribute("buttonhighlight", "true");
         popupnotification.removeAttribute("buttonlabel");
         popupnotification.removeAttribute("buttonaccesskey");
         popupnotification.removeAttribute("dropmarkerpopupshown");
