@@ -1263,6 +1263,7 @@ var gBrowserInit = {
         isRemote = remoteType != E10SUtils.NOT_REMOTE;
         sameProcessAsFrameLoader = linkedBrowser.frameLoader;
       }
+      initBrowser.removeAttribute("blank");
     }
 
     gBrowser.updateBrowserRemoteness(initBrowser, isRemote, {
@@ -1614,6 +1615,13 @@ var gBrowserInit = {
     mm.addMessageListener("Browser:FirstPaint", function onFirstPaint() {
       mm.removeMessageListener("Browser:FirstPaint", onFirstPaint);
       firstBrowserPaintDeferred.resolve();
+    });
+
+    let initialBrowser = gBrowser.selectedBrowser;
+    mm.addMessageListener("Browser:FirstNonBlankPaint",
+                          function onFirstNonBlankPaint() {
+      mm.removeMessageListener("Browser:FirstNonBlankPaint", onFirstNonBlankPaint);
+      initialBrowser.removeAttribute("blank");
     });
 
     this._uriToLoadPromise.then(uriToLoad => {

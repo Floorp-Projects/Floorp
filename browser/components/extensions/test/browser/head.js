@@ -194,8 +194,11 @@ function getPanelForNode(node) {
 }
 
 var awaitBrowserLoaded = browser => ContentTask.spawn(browser, null, () => {
-  if (content.document.readyState !== "complete") {
-    return ContentTaskUtils.waitForEvent(this, "load", true).then(() => {});
+  if (content.document.readyState !== "complete" ||
+      content.document.documentURI === "about:blank") {
+    return ContentTaskUtils.waitForEvent(this, "load", true, event => {
+      return content.document.documentURI !== "about:blank";
+    }).then(() => {});
   }
 });
 

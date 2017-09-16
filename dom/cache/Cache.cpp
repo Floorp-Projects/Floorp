@@ -256,12 +256,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Cache)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Cache::Cache(nsIGlobalObject* aGlobal, CacheChild* aActor)
+Cache::Cache(nsIGlobalObject* aGlobal, CacheChild* aActor, Namespace aNamespace)
   : mGlobal(aGlobal)
   , mActor(aActor)
+  , mNamespace(aNamespace)
 {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mNamespace != INVALID_NAMESPACE);
   mActor->SetListener(this);
 }
 
@@ -285,7 +287,9 @@ Cache::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheMatchArgs(CacheRequest(), params), 1);
+  AutoChildOpArgs args(this,
+                       CacheMatchArgs(CacheRequest(), params, GetOpenMode()),
+                       1);
 
   args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -309,7 +313,9 @@ Cache::MatchAll(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheMatchAllArgs(void_t(), params), 1);
+  AutoChildOpArgs args(this,
+                       CacheMatchAllArgs(void_t(), params, GetOpenMode()),
+                       1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir = ToInternalRequest(aCx, aRequest.Value(),
@@ -491,7 +497,9 @@ Cache::Keys(JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheKeysArgs(void_t(), params), 1);
+  AutoChildOpArgs args(this,
+                       CacheKeysArgs(void_t(), params, GetOpenMode()),
+                       1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir =
@@ -681,6 +689,12 @@ Cache::PutAll(JSContext* aCx, const nsTArray<RefPtr<Request>>& aRequestList,
   }
 
   return ExecuteOp(args, aRv);
+}
+
+OpenMode
+Cache::GetOpenMode() const
+{
+  return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager : OpenMode::Lazy;
 }
 
 } // namespace cache

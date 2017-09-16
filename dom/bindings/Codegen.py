@@ -7734,6 +7734,10 @@ class CGPerSignatureCall(CGThing):
             needsUnwrap = True
             needsUnwrappedVar = False
             unwrappedVar = "obj"
+            if descriptor.interface.isJSImplemented():
+                # We need the desired proto in our constructor, because the
+                # constructor will actually construct our reflector.
+                argsPost.append("desiredProto")
         elif descriptor.interface.isJSImplemented():
             if not idlNode.isStatic():
                 needsUnwrap = True
@@ -15335,8 +15339,10 @@ class CGJSImplMethod(CGJSImplMember):
     def getArgs(self, returnType, argList):
         if self.isConstructor:
             # Skip the JSCompartment bits for constructors; it's handled
-            # manually in getImpl.
-            return CGNativeMember.getArgs(self, returnType, argList)
+            # manually in getImpl.  But we do need our aGivenProto argument.  We
+            # allow it to be omitted if the default proto is desired.
+            return (CGNativeMember.getArgs(self, returnType, argList) +
+                    [Argument("JS::Handle<JSObject*>", "aGivenProto", "nullptr")])
         return CGJSImplMember.getArgs(self, returnType, argList)
 
     def getImpl(self):
@@ -15349,10 +15355,14 @@ class CGJSImplMethod(CGJSImplMember):
             raise TypeError("Named constructors are not supported for JS implemented WebIDL. See bug 851287.")
         if len(self.signature[1]) != 0:
             # The first two arguments to the constructor implementation are not
-            # arguments to the WebIDL constructor, so don't pass them to __Init()
+            # arguments to the WebIDL constructor, so don't pass them to
+            # __Init().  The last argument is the prototype we're supposed to
+            # use, and shouldn't get passed to __Init() either.
             assert args[0].argType == 'const GlobalObject&'
             assert args[1].argType == 'JSContext*'
-            constructorArgs = [arg.name for arg in args[2:]]
+            assert args[-1].argType == 'JS::Handle<JSObject*>'
+            assert args[-1].name == 'aGivenProto'
+            constructorArgs = [arg.name for arg in args[2:-1]]
             constructorArgs.append("js::GetObjectCompartment(scopeObj)")
             initCall = fill(
                 """
@@ -15360,7 +15370,7 @@ class CGJSImplMethod(CGJSImplMember):
                 JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
                 MOZ_ASSERT(js::IsObjectInContextCompartment(scopeObj, cx));
                 JS::Rooted<JS::Value> wrappedVal(cx);
-                if (!GetOrCreateDOMReflector(cx, impl, &wrappedVal)) {
+                if (!GetOrCreateDOMReflector(cx, impl, &wrappedVal, aGivenProto)) {
                   //XXX Assertion disabled for now, see bug 991271.
                   MOZ_ASSERT(true || JS_IsExceptionPending(cx));
                   aRv.Throw(NS_ERROR_UNEXPECTED);
