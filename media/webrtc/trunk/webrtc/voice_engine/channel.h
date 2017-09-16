@@ -423,8 +423,18 @@ class Channel
   // From OverheadObserver in the RTP/RTCP module
   void OnOverheadChanged(size_t overhead_bytes_per_packet) override;
 
+  bool GetRTCPReceiverStatistics(int64_t* timestamp,
+                                 uint32_t* jitterMs,
+                                 uint32_t* cumulativeLost,
+                                 uint32_t* packetsReceived,
+                                 uint64_t* bytesReceived,
+                                 double* packetsFractionLost,
+                                 int64_t* rtt) const;
  protected:
   void OnIncomingFractionLoss(int fraction_lost);
+  void OnIncomingReceiverReports(const ReportBlockList& aReportBlocks,
+                                 const int64_t aRoundTripTime,
+                                 const int64_t aReceptionTime);
 
  private:
   bool ReceivePacket(const uint8_t* packet,

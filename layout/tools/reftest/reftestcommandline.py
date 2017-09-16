@@ -136,10 +136,6 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           default=None,
                           help="host:port to use when connecting to Marionette")
 
-        self.add_argument("--marionette-port-timeout",
-                          default=None,
-                          help=argparse.SUPPRESS)
-
         self.add_argument("--marionette-socket-timeout",
                           default=None,
                           help=argparse.SUPPRESS)
@@ -373,7 +369,7 @@ class DesktopArgumentsParser(ReftestArgumentsParser):
         if options.debugger:
             # valgrind and some debuggers may cause Gecko to start slowly. Make sure
             # marionette waits long enough to connect.
-            options.marionette_port_timeout = 900
+            options.marionette_startup_timeout = 900
             options.marionette_socket_timeout = 540
 
         if not options.tests:

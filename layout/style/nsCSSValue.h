@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StyleComplexColor.h"
 #include "mozilla/URLExtraData.h"
@@ -40,6 +41,7 @@ class nsIURI;
 class nsPresContext;
 template <class T>
 class nsPtrHashKey;
+struct RustString;
 
 namespace mozilla {
 class CSSStyleSheet;
@@ -104,9 +106,14 @@ protected:
   // aString and aExtraData.
   URLValueData(const nsAString& aString,
                already_AddRefed<URLExtraData> aExtraData);
+  URLValueData(ServoRawOffsetArc<RustString> aString,
+               already_AddRefed<URLExtraData> aExtraData);
   // Construct with the actual URI.
   URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
                const nsAString& aString,
+               already_AddRefed<URLExtraData> aExtraData);
+  URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
+               ServoRawOffsetArc<RustString> aString,
                already_AddRefed<URLExtraData> aExtraData);
 
 public:
@@ -156,27 +163,51 @@ public:
 
   bool EqualsExceptRef(nsIURI* aURI) const;
 
+  // Can only be called from the main thread. Returns this URL's UTF-16 representation,
+  // converting and caching its value if necessary.
+  const nsString& GetUTF16String() const;
+  // Returns this URL's UTF-16 representation, converting if necessary.
+  nsString GetUTF16StringForAnyThread() const;
+
+  bool IsStringEmpty() const;
+
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
   // invalid, even once resolved.
   mutable PtrHandle<nsIURI> mURI;
 public:
-  nsString mString;
   RefPtr<URLExtraData> mExtraData;
 private:
+  // Returns a substring based on mStrings.mRustString which should not be exposed
+  // to external consumers.
+  nsDependentCSubstring GetRustString() const;
+
   mutable bool mURIResolved;
   // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
   mutable Maybe<bool> mIsLocalRef;
   mutable Maybe<bool> mMightHaveRef;
 
+  mutable union RustOrGeckoString {
+    explicit RustOrGeckoString(const nsAString& aString)
+    : mString(aString) {}
+    explicit RustOrGeckoString(ServoRawOffsetArc<RustString> aString)
+    : mRustString(aString) {}
+    ~RustOrGeckoString() {}
+    nsString mString;
+    mozilla::ServoRawOffsetArc<RustString> mRustString;
+  } mStrings;
+  mutable bool mUsingRustString;
+
 protected:
-  virtual ~URLValueData() = default;
+  virtual ~URLValueData();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   URLValueData(const URLValueData& aOther) = delete;
   URLValueData& operator=(const URLValueData& aOther) = delete;
+
+  friend struct ImageValue;
 };
 
 struct URLValue final : public URLValueData
@@ -200,6 +231,8 @@ struct URLValue final : public URLValueData
 
 struct ImageValue final : public URLValueData
 {
+  static ImageValue* CreateFromURLValue(URLValue* url, nsIDocument* aDocument);
+
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
   // this header is included all over.
@@ -209,9 +242,19 @@ struct ImageValue final : public URLValueData
              already_AddRefed<URLExtraData> aExtraData,
              nsIDocument* aDocument);
 
+  // This constructor is only safe to call from the main thread.
+  ImageValue(nsIURI* aURI, ServoRawOffsetArc<RustString> aString,
+             already_AddRefed<URLExtraData> aExtraData,
+             nsIDocument* aDocument);
+
   // This constructor is safe to call from any thread, but Initialize
   // must be called later for the object to be useful.
   ImageValue(const nsAString& aString,
+             already_AddRefed<URLExtraData> aExtraData);
+
+  // This constructor is safe to call from any thread, but Initialize
+  // must be called later for the object to be useful.
+  ImageValue(ServoRawOffsetArc<RustString> aURIString,
              already_AddRefed<URLExtraData> aExtraData);
 
   ImageValue(const ImageValue&) = delete;
@@ -850,8 +893,8 @@ public:
     MOZ_ASSERT(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
                "not a URL value");
     return mUnit == eCSSUnit_URL ?
-             mValue.mURL->mString.get() :
-             mValue.mImage->mString.get();
+             mValue.mURL->GetUTF16String().get() :
+             mValue.mImage->GetUTF16String().get();
   }
 
   // Not making this inline because that would force us to include

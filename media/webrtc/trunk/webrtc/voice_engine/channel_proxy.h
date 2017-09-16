@@ -64,6 +64,13 @@ class ChannelProxy {
   virtual void RegisterReceiverCongestionControlObjects(
       PacketRouter* packet_router);
   virtual void ResetCongestionControlObjects();
+  virtual bool GetRTCPReceiverStatistics(int64_t* timestamp,
+                                         uint32_t* jitterMs,
+                                         uint32_t* cumulativeLost,
+                                         uint32_t* packetsReceived,
+                                         uint64_t* bytesReceived,
+                                         double* packetsFractionLost,
+                                         int64_t* rtt) const;
   virtual CallStatistics GetRTCPStatistics() const;
   virtual int GetRTPStatistics(unsigned int& averageJitterMs,
                                unsigned int& maxJitterMs,

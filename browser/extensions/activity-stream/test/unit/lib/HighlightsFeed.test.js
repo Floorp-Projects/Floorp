@@ -113,14 +113,17 @@ describe("Highlights Feed", () => {
       assert.equal(feed.highlights[0].hostname, "mozilla.org");
       assert.equal(feed.highlights[0].hasImage, true);
     });
-    it("should add the image from the imageCache if it exists to the link", async () => {
-      links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jog"}];
-      feed.imageCache = new Map([["https://mozilla.org", FAKE_IMAGE]]);
+    it("should add an existing image if it exists to the link without calling fetchImage", async () => {
+      links = [{url: "https://mozilla.org", image: FAKE_IMAGE}];
+      feed.highlights = links;
+      sinon.spy(feed, "fetchImage");
       await feed.fetchHighlights();
       assert.equal(feed.highlights[0].image, FAKE_IMAGE);
+      assert.notCalled(feed.fetchImage);
     });
-    it("should call fetchImage with the correct arguments for each link", async () => {
+    it("should call fetchImage with the correct arguments for new links", async () => {
       links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jog"}];
+      feed.highlights = [];
       sinon.spy(feed, "fetchImage");
       await feed.fetchHighlights();
       assert.calledOnce(feed.fetchImage);
@@ -166,14 +169,6 @@ describe("Highlights Feed", () => {
       await feed.fetchHighlights();
       assert.equal(feed.highlights[0].type, "bookmark");
     });
-    it("should clear the imageCache at the end", async () => {
-      links = [{url: "https://mozilla.org", preview_image_url: "https://mozilla.org/preview.jpg"}];
-      feed.imageCache = new Map([["https://mozilla.org", FAKE_IMAGE]]);
-      // Stops fetchImage adding to the cache
-      feed.fetchImage = () => {};
-      await feed.fetchHighlights();
-      assert.equal(feed.imageCache.size, 0);
-    });
     it("should not filter out adult pages when pref is false", async() => {
       await feed.fetchHighlights();
 
@@ -202,15 +197,16 @@ describe("Highlights Feed", () => {
       assert.calledOnce(fakeScreenshot.getScreenshotForURL);
       assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_URL);
     });
-    it("should store the image in the imageCache", async () => {
-      feed.imageCache.clear();
-      await feed.fetchImage(FAKE_URL, FAKE_IMAGE_URL);
-      assert.equal(feed.imageCache.get(FAKE_URL), FAKE_IMAGE);
-    });
     it("should call SectionsManager.updateSectionCard with the right arguments", async () => {
       await feed.fetchImage(FAKE_URL, FAKE_IMAGE_URL);
       assert.calledOnce(sectionsManagerStub.updateSectionCard);
       assert.calledWith(sectionsManagerStub.updateSectionCard, "highlights", FAKE_URL, {image: FAKE_IMAGE}, true);
+    });
+    it("should update the card in feed.highlights with the image", async () => {
+      feed.highlights = [{url: FAKE_URL}];
+      await feed.fetchImage(FAKE_URL, FAKE_IMAGE_URL);
+      const highlight = feed.highlights.find(({url}) => url === FAKE_URL);
+      assert.propertyVal(highlight, "image", FAKE_IMAGE);
     });
   });
   describe("#uninit", () => {

@@ -1711,12 +1711,11 @@ nsAttrValue::LoadImage(nsIDocument* aDocument)
   MiscContainer* cont = GetMiscContainer();
   mozilla::css::URLValue* url = cont->mValue.mURL;
 
-  NS_ASSERTION(!url->mString.IsEmpty(),
+  NS_ASSERTION(!url->IsStringEmpty(),
                "How did we end up with an empty string for eURL");
 
   mozilla::css::ImageValue* image =
-    new css::ImageValue(url->GetURI(), url->mString,
-                        do_AddRef(url->mExtraData), aDocument);
+      mozilla::css::ImageValue::CreateFromURLValue(url, aDocument);
 
   NS_ADDREF(image);
   cont->mValue.mImage = image;
