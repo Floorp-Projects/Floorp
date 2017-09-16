@@ -42,6 +42,7 @@ Test preset with fuzzy subcommand
       "build-baz"
     ]
   }
+  
   $ ./mach try fuzzy $testargs --preset baz
   Calculated try selector:
   {
@@ -49,6 +50,7 @@ Test preset with fuzzy subcommand
       "build-baz"
     ]
   }
+  
   $ ./mach try $testargs --preset baz
   Calculated try selector:
   {
@@ -56,5 +58,6 @@ Test preset with fuzzy subcommand
       "build-baz"
     ]
   }
+  
   $ ./mach try fuzzy $testargs --list-presets
   baz: 'baz

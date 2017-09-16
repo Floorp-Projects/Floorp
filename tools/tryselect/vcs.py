@@ -86,6 +86,7 @@ class VCSHelper(object):
                 try_task_config['templates'] = templates
 
             json.dump(try_task_config, fh, indent=2, separators=(',', ':'))
+            fh.write('\n')
         return config
 
     def check_working_directory(self, push=True):
