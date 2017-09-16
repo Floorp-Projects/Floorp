@@ -5,6 +5,7 @@
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('callgraph.js');
+loadRelativeToScript('dumpCFG.js');
 
 ///////////////////////////////////////////////////////////////////////////////
 // Annotations
