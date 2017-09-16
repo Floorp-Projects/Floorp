@@ -12,7 +12,7 @@
 
 [package]
 name = "smallbitvec"
-version = "1.0.3"
+version = "1.0.6"
 authors = ["Matt Brubeck <mbrubeck@limpet.net>"]
 description = "A bit vector optimized for size and inline storage"
 documentation = "https://docs.rs/smallbitvec"
