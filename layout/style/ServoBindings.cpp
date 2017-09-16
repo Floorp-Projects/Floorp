@@ -850,6 +850,13 @@ Gecko_GetBody(RawGeckoPresContextBorrowed aPresContext)
   return aPresContext->Document()->GetBodyElement();
 }
 
+bool
+Gecko_IsDocumentBody(RawGeckoElementBorrowed aElement)
+{
+  nsIDocument* doc = aElement->GetUncomposedDoc();
+  return doc && doc->GetBodyElement() == aElement;
+}
+
 nscolor
 Gecko_GetLookAndFeelSystemColor(int32_t aId,
                                 RawGeckoPresContextBorrowed aPresContext)
@@ -1517,13 +1524,10 @@ CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
 }
 
 mozilla::css::ImageValue*
-Gecko_ImageValue_Create(ServoBundledURI aURI)
+Gecko_ImageValue_Create(ServoBundledURI aURI, ServoRawOffsetArc<RustString> aURIString)
 {
-  NS_ConvertUTF8toUTF16 url(reinterpret_cast<const char*>(aURI.mURLString),
-                            aURI.mURLStringLength);
-
   RefPtr<css::ImageValue> value(
-    new css::ImageValue(url, do_AddRef(aURI.mExtraData)));
+    new css::ImageValue(aURIString, do_AddRef(aURI.mExtraData)));
   return value.forget().take();
 }
 

@@ -10620,12 +10620,12 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
   return target.forget();
 }
 
-/* static */ bool
-nsContentUtils::IsLocalRefURL(const nsString& aString)
-{
+namespace {
+template<class T>
+bool IsLocalRefURL(const T& aString) {
   // Find the first non-"C0 controls + space" character.
-  const char16_t* current = aString.get();
-  for (; *current != '\0'; current++) {
+  const typename T::char_type* current = aString.BeginReading();
+  for (; current != aString.EndReading(); current++) {
     if (*current > 0x20) {
       // if the first non-"C0 controls + space" character is '#', this is a
       // local-ref URL.
@@ -10634,6 +10634,19 @@ nsContentUtils::IsLocalRefURL(const nsString& aString)
   }
 
   return false;
+}
+}
+
+/* static */ bool
+nsContentUtils::IsLocalRefURL(const nsString& aString)
+{
+  return ::IsLocalRefURL(aString);
+}
+
+/* static */ bool
+nsContentUtils::IsLocalRefURL(const nsACString& aString)
+{
+  return ::IsLocalRefURL(aString);
 }
 
 // Tab ID is composed in a similar manner of Window ID.

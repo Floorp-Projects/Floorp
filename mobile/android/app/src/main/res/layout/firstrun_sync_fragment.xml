@@ -63,7 +63,7 @@
                 android:layout_marginBottom="30dp"
                 android:text="@string/firstrun_welcome_button_browser"
                 android:textAllCaps="true"
-                android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"/>
+                android:textAppearance="@style/TextAppearance.Link"/>
         </RelativeLayout>
 
     </LinearLayout>

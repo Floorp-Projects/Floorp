@@ -2259,7 +2259,7 @@ const getFormattedMessage = message => typeof message === "string" ? React.creat
 const PreferencesInput = props => React.createElement(
   "section",
   null,
-  React.createElement("input", { type: "checkbox", id: props.prefName, name: props.prefName, checked: props.value, onChange: props.onChange, className: props.className }),
+  React.createElement("input", { type: "checkbox", id: props.prefName, name: props.prefName, checked: props.value, disabled: props.disabled, onChange: props.onChange, className: props.className }),
   React.createElement(
     "label",
     { htmlFor: props.prefName, className: props.labelClassName },
@@ -2359,8 +2359,9 @@ class PreferencesPane extends React.PureComponent {
               titleString: { id: "settings_pane_topsites_header" }, descString: { id: "settings_pane_topsites_body" } }),
             React.createElement(
               "div",
-              { className: "options" },
-              React.createElement(PreferencesInput, { className: "showMoreTopSites", prefName: "topSitesCount", value: prefs.topSitesCount !== TOP_SITES_DEFAULT_LENGTH, onChange: this.handlePrefChange,
+              { className: `options${prefs.showTopSites ? "" : " disabled"}` },
+              React.createElement(PreferencesInput, { className: "showMoreTopSites", prefName: "topSitesCount", disabled: !prefs.showTopSites,
+                value: prefs.topSitesCount !== TOP_SITES_DEFAULT_LENGTH, onChange: this.handlePrefChange,
                 titleString: { id: "settings_pane_topsites_options_showmore" }, labelClassName: "icon icon-topsites" })
             ),
             sections.filter(section => !section.shouldHidePref).map(({ id, title, enabled, pref }) => React.createElement(PreferencesInput, { key: id, className: "showSection", prefName: pref && pref.feed || id,

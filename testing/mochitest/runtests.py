@@ -2152,9 +2152,8 @@ toolbar#nav-bar {
 
             # start marionette and kick off the tests
             marionette_args = marionette_args or {}
-            port_timeout = marionette_args.pop('port_timeout', 60)
             self.marionette = Marionette(**marionette_args)
-            self.marionette.start_session(timeout=port_timeout)
+            self.marionette.start_session()
 
             # install specialpowers and mochikit addons
             addons = Addons(self.marionette)
@@ -2586,7 +2585,6 @@ toolbar#nav-bar {
             marionette_args = {
                 'symbols_path': options.symbolsPath,
                 'socket_timeout': options.marionette_socket_timeout,
-                'port_timeout': options.marionette_port_timeout,
                 'startup_timeout': options.marionette_startup_timeout,
             }
 
