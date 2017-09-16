@@ -300,6 +300,10 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
   // RFC 3490 - 4.2 ToUnicode
   // ToUnicode never fails.  If any step fails, then the original input
   // sequence is returned immediately in that step.
+  //
+  // Note that this refers to the decoding of a single label.
+  // ACEtoUTF8 may be called with a sequence of labels separated by dots;
+  // this test applies individually to each label.
 
   uint32_t len = 0, offset = 0;
   nsAutoCString decodedBuf;
@@ -313,13 +317,15 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
   while (start != end) {
     len++;
     if (*start++ == '.') {
-      if (NS_FAILED(decodeACE(Substring(input, offset, len - 1), decodedBuf,
-                              flag))) {
-        _retval.Assign(input);
-        return NS_OK;
+      nsDependentCSubstring origLabel(input, offset, len - 1);
+      if (NS_FAILED(decodeACE(origLabel, decodedBuf, flag))) {
+        // If decoding failed, use the original input sequence
+        // for this label.
+        _retval.Append(origLabel);
+      } else {
+        _retval.Append(decodedBuf);
       }
 
-      _retval.Append(decodedBuf);
       _retval.Append('.');
       offset += len;
       len = 0;
@@ -327,11 +333,12 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
   }
   // decode the last node
   if (len) {
-    if (NS_FAILED(decodeACE(Substring(input, offset, len), decodedBuf,
-                            flag)))
-      _retval.Assign(input);
-    else
+    nsDependentCSubstring origLabel(input, offset, len);
+    if (NS_FAILED(decodeACE(origLabel, decodedBuf, flag))) {
+      _retval.Append(origLabel);
+    } else {
       _retval.Append(decodedBuf);
+    }
   }
 
   return NS_OK;
