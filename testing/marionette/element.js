@@ -603,7 +603,15 @@ function findElements(using, value, rootNode, startNode) {
   }
 }
 
-/** Determines if |obj| is an HTML or JS collection. */
+/**
+ * Determines if <var>obj<var> is an HTML or JS collection.
+ *
+ * @param {*} seq
+ *     Type to determine.
+ *
+ * @return {boolean}
+ *     True if <var>seq</va> is collection.
+ */
 element.isCollection = function(seq) {
   switch (Object.prototype.toString.call(seq)) {
     case "[object Arguments]":
