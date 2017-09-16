@@ -297,7 +297,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
 
   // Use |windowPath|, but replace "explicit/" with "event-counts/".
   nsCString censusWindowPath(windowPath);
-  censusWindowPath.Replace(0, strlen("explicit"), "event-counts");
+  censusWindowPath.ReplaceLiteral(0, strlen("explicit"), "event-counts");
 
   // Remember the path for later.
   aWindowPaths->Put(aWindow->WindowID(), windowPath);
