@@ -41,6 +41,13 @@ let engine;
 let store;
 
 add_task(async function setup() {
+  initTestLogging("Trace");
+  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
+
+  await generateNewKeys(Service.collectionKeys);
+})
+
+add_task(async function setup() {
   await Service.engineManager.register(BookmarksEngine);
   engine = Service.engineManager.get("bookmarks");
   store = engine._store;
@@ -49,7 +56,7 @@ add_task(async function setup() {
 // Verify that Places smart bookmarks have their annotation uploaded and
 // handled locally.
 add_task(async function test_annotation_uploaded() {
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let startCount = smartBookmarkCount();
@@ -164,7 +171,7 @@ add_task(async function test_annotation_uploaded() {
 });
 
 add_task(async function test_smart_bookmarks_duped() {
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let parent = PlacesUtils.toolbarFolderId;
@@ -213,12 +220,3 @@ add_task(async function test_smart_bookmarks_duped() {
     Service.recordManager.clearCache();
   }
 });
-
-function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-
-  generateNewKeys(Service.collectionKeys);
-
-  run_next_test();
-}

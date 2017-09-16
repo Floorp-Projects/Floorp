@@ -184,10 +184,10 @@ add_task(async function run_test() {
     _("Attempting to screw up HMAC by re-encrypting keys.");
     let keys = Service.collectionKeys.asWBO();
     let b = new BulkKeyBundle("hmacerror");
-    b.generateRandom();
+    await b.generateRandom();
     collections.crypto = keys.modified = 100 + (Date.now() / 1000);  // Future modification time.
-    keys.encrypt(b);
-    keys.upload(Service.resource(Service.cryptoKeysURL));
+    await keys.encrypt(b);
+    await keys.upload(Service.resource(Service.cryptoKeysURL));
 
     do_check_false((await Service.verifyAndFetchSymmetricKeys()));
     do_check_eq(Service.status.login, LOGIN_FAILED_INVALID_PASSPHRASE);

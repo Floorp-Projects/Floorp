@@ -25,7 +25,7 @@ add_task(async function setup() {
 });
 
 async function sharedSetup() {
- let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");

@@ -110,7 +110,7 @@ add_task(async function test_processIncoming_error() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store  = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   let collection = server.user("foo").collection("bookmarks");
   try {
@@ -161,7 +161,7 @@ add_task(async function test_uploading() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store  = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let parent = PlacesUtils.toolbarFolderId;
@@ -257,7 +257,7 @@ add_task(async function test_sync_partialUpload() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
   await SyncTestingInfrastructure(server);
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let engine = new RotaryEngine(Service);
   engine.lastSync = 123;
@@ -340,7 +340,7 @@ add_task(async function test_generic_engine_fail() {
   await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   let e = new Error("generic failure message")
   engine._errToThrow = e;
@@ -366,7 +366,7 @@ add_task(async function test_engine_fail_ioerror() {
   await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   // create an IOError to re-throw as part of Sync.
   try {
@@ -401,7 +401,7 @@ add_task(async function test_clean_urls() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   engine._errToThrow = new TypeError("http://www.google .com is not a valid URL.");
 
@@ -435,7 +435,7 @@ add_task(async function test_initial_sync_engines() {
   engine.enabled = true;
   // These are the only ones who actually have things to sync at startup.
   let engineNames = ["clients", "bookmarks", "prefs", "tabs"];
-  let server = serverForEnginesWithKeys({"foo": "password"}, ["bookmarks", "prefs", "tabs"].map(name =>
+  let server = await serverForEnginesWithKeys({"foo": "password"}, ["bookmarks", "prefs", "tabs"].map(name =>
     Service.engineManager.get(name)
   ));
   await SyncTestingInfrastructure(server);
@@ -470,7 +470,7 @@ add_task(async function test_nserror() {
   await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   engine._errToThrow = Components.Exception("NS_ERROR_UNKNOWN_HOST", Cr.NS_ERROR_UNKNOWN_HOST);
   try {
@@ -545,7 +545,7 @@ add_task(async function test_no_foreign_engines_in_error_ping() {
   await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   engine._errToThrow = new Error("Oh no!");
   await SyncTestingInfrastructure(server);
   try {
@@ -564,7 +564,7 @@ add_task(async function test_sql_error() {
   await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   engine._sync = function() {
     // Just grab a DB connection and issue a bogus SQL statement synchronously.
@@ -589,7 +589,7 @@ add_task(async function test_no_foreign_engines_in_success_ping() {
   await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
 
   await SyncTestingInfrastructure(server);
   try {
@@ -607,7 +607,7 @@ add_task(async function test_events() {
   await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
 
   await SyncTestingInfrastructure(server);
   try {
@@ -651,7 +651,7 @@ add_task(async function test_invalid_events() {
   await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
 
   async function checkNotRecorded(...args) {
     Service.recordTelemetryEvent.call(args);
@@ -697,7 +697,7 @@ add_task(async function test_no_ping_for_self_hosters() {
   await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
 
   await SyncTestingInfrastructure(server);
   try {

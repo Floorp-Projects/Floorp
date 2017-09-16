@@ -336,7 +336,7 @@ add_task(async function test_wipeRemote_prolonged_server_maintenance_error() {
 
   server.registerPathHandler("/1.1/broken.wipe/storage/catapult", EHTestsCommon.service_unavailable);
   await configureIdentity({username: "broken.wipe"}, server);
-  EHTestsCommon.generateAndUploadKeys();
+  await EHTestsCommon.generateAndUploadKeys();
 
   engine.exception = null;
   engine.enabled = true;
@@ -564,7 +564,7 @@ add_task(async function test_wipeRemote_syncAndReportErrors_server_maintenance_e
   let server = await EHTestsCommon.sync_httpd_setup();
 
   await configureIdentity({username: "broken.wipe"}, server);
-  EHTestsCommon.generateAndUploadKeys();
+  await EHTestsCommon.generateAndUploadKeys();
 
   engine.exception = null;
   engine.enabled = true;

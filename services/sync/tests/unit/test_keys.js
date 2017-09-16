@@ -23,11 +23,12 @@ function do_check_keypair_eq(a, b) {
   do_check_eq(a[1], b[1]);
 }
 
-function test_time_keyFromString(iterations) {
+add_task(async function test_time_keyFromString() {
+  const iterations = 1000;
   let o;
   let b = new BulkKeyBundle("dummy");
   let d = Utils.decodeKeyBase32("ababcdefabcdefabcdefabcdef");
-  b.generateRandom();
+  await b.generateRandom();
 
   _("Running " + iterations + " iterations of hmacKeyObject + sha256HMAC.");
   for (let i = 0; i < iterations; ++i) {
@@ -36,7 +37,7 @@ function test_time_keyFromString(iterations) {
   }
   do_check_true(!!o);
   _("Done.");
-}
+})
 
 add_test(function test_set_invalid_values() {
   _("Ensure that setting invalid encryption and HMAC key values is caught.");
@@ -136,10 +137,10 @@ add_task(async function test_ensureLoggedIn() {
 
   log.info("Building storage keys...");
   let storage_keys = new CryptoWrapper("crypto", "keys");
-  let default_key64 = Weave.Crypto.generateRandomKey();
-  let default_hmac64 = Weave.Crypto.generateRandomKey();
-  let bookmarks_key64 = Weave.Crypto.generateRandomKey();
-  let bookmarks_hmac64 = Weave.Crypto.generateRandomKey();
+  let default_key64 = await Weave.Crypto.generateRandomKey();
+  let default_hmac64 = await Weave.Crypto.generateRandomKey();
+  let bookmarks_key64 = await Weave.Crypto.generateRandomKey();
+  let bookmarks_hmac64 = await Weave.Crypto.generateRandomKey();
 
   storage_keys.cleartext = {
     "default": [default_key64, default_hmac64],
@@ -151,7 +152,7 @@ add_task(async function test_ensureLoggedIn() {
   log.info("Encrypting storage keys...");
 
   // Use passphrase (sync key) itself to encrypt the key bundle.
-  storage_keys.encrypt(keyBundle);
+  await storage_keys.encrypt(keyBundle);
 
   // Sanity checking.
   do_check_true(null == storage_keys.cleartext);
@@ -161,7 +162,7 @@ add_task(async function test_ensureLoggedIn() {
 
   // updateContents decrypts the object, releasing the payload for us to use.
   // Returns true, because the default key has changed.
-  do_check_true(collectionKeys.updateContents(keyBundle, storage_keys));
+  do_check_true(await collectionKeys.updateContents(keyBundle, storage_keys));
   let payload = storage_keys.cleartext;
 
   _("CK: " + JSON.stringify(collectionKeys._collections));
@@ -185,8 +186,8 @@ add_task(async function test_ensureLoggedIn() {
   do_check_false("tabs" in collectionKeys._collections);
 
   _("Updating contents twice with the same data doesn't proceed.");
-  storage_keys.encrypt(keyBundle);
-  do_check_false(collectionKeys.updateContents(keyBundle, storage_keys));
+  await storage_keys.encrypt(keyBundle);
+  do_check_false(await collectionKeys.updateContents(keyBundle, storage_keys));
 
   /*
    * Test that we get the right keys out when we ask for
@@ -226,16 +227,16 @@ add_task(async function test_ensureLoggedIn() {
   /*
    * Check _compareKeyBundleCollections.
    */
-  function newBundle(name) {
+  async function newBundle(name) {
     let r = new BulkKeyBundle(name);
-    r.generateRandom();
+    await r.generateRandom();
     return r;
   }
-  let k1 = newBundle("k1");
-  let k2 = newBundle("k2");
-  let k3 = newBundle("k3");
-  let k4 = newBundle("k4");
-  let k5 = newBundle("k5");
+  let k1 = await newBundle("k1");
+  let k2 = await newBundle("k2");
+  let k3 = await newBundle("k3");
+  let k4 = await newBundle("k4");
+  let k5 = await newBundle("k5");
   let coll1 = {"foo": k1, "bar": k2};
   let coll2 = {"foo": k1, "bar": k2};
   let coll3 = {"foo": k1, "bar": k3};
@@ -268,10 +269,3 @@ add_task(async function test_ensureLoggedIn() {
   do_check_array_eq(d5.changed, ["baz", "foo"]);
   do_check_array_eq(d6.changed, ["bar", "foo"]);
 });
-
-function run_test() {
-  // Only do 1,000 to avoid a 5-second pause in test runs.
-  test_time_keyFromString(1000);
-
-  run_next_test();
-}

@@ -22,7 +22,7 @@ add_task(async function test_processIncoming_abort() {
   });
 
   await SyncTestingInfrastructure(server);
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   _("Create some server data.");
   let meta_global = Service.recordManager.set(engine.metaURL,

@@ -13,10 +13,10 @@ add_task(async function test_412_not_treated_as_failure() {
   await Service.engineManager.register(RotaryEngine);
   let engine = Service.engineManager.get("rotary");
 
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
 
   await SyncTestingInfrastructure(server);
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   // add an item to the server to the first sync advances lastModified.
   let collection = server.getCollection("foo", "rotary");

@@ -823,8 +823,8 @@ class BookmarkValidator {
   }
 
   async _getServerState(engine) {
-// XXXXX - todo - we need to capture last-modified of the server here and
-// ensure the repairer only applys with if-unmodified-since that date.
+    // XXXXX - todo - we need to capture last-modified of the server here and
+    // ensure the repairer only applys with if-unmodified-since that date.
     let collection = engine.itemSource();
     let collectionKey = engine.service.collectionKeys.keyForCollection(engine.name);
     collection.full = true;
@@ -832,10 +832,14 @@ class BookmarkValidator {
     if (!result.response.success) {
       throw result.response;
     }
-    return result.records.map(record => {
-      record.decrypt(collectionKey);
-      return record.cleartext;
-    });
+    let maybeYield = Async.jankYielder();
+    let cleartexts = [];
+    for (let record of result.records) {
+      await maybeYield();
+      await record.decrypt(collectionKey);
+      cleartexts.push(record.cleartext);
+    }
+    return cleartexts;
   }
 
   async validate(engine) {

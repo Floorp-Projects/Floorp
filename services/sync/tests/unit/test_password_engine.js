@@ -27,7 +27,7 @@ add_task(async function test_ignored_fields() {
 
   let engine = Service.engineManager.get("passwords");
 
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   enableValidationPrefs();
@@ -64,7 +64,7 @@ add_task(async function test_ignored_sync_credentials() {
 
   let engine = Service.engineManager.get("passwords");
 
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   enableValidationPrefs();
@@ -94,7 +94,7 @@ add_task(async function test_password_engine() {
 
   let engine = Service.engineManager.get("passwords");
 
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   let collection = server.user("foo").collection("passwords");
 

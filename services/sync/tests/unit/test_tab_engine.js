@@ -80,7 +80,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
   meta_global.payload.engines = {tabs: {version: engine.version,
                                         syncID: engine.syncID}};
 
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let promiseFinished = new Promise(resolve => {
     let syncFinish = engine._syncFinish;
