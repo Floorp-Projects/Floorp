@@ -57,7 +57,7 @@ Note that with geckodriver v0.19.0 the following versions are recommended:
 - `/moz/addon/install` command accepts an `addon` parameter, in lieu of
   `path`, containing an addon as a Base64 string (fixed by [Jason Juang])
 
-- [webdriver crate] upgraded to version 0.31.0
+- [webdriver crate] upgraded to version 0.30.0
 
 - [mozrunner crate] upgraded to version 0.5.0
 
