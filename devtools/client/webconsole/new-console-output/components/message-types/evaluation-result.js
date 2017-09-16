@@ -21,8 +21,6 @@ EvaluationResult.propTypes = {
   message: PropTypes.object.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
-  loadedObjectProperties: PropTypes.object,
-  loadedObjectEntries: PropTypes.object,
 };
 
 function EvaluationResult(props) {
@@ -31,8 +29,6 @@ function EvaluationResult(props) {
     message,
     serviceContainer,
     timestampsVisible,
-    loadedObjectProperties,
-    loadedObjectEntries,
   } = props;
 
   const {
@@ -67,8 +63,6 @@ function EvaluationResult(props) {
       serviceContainer,
       useQuotes: true,
       escapeWhitespace: false,
-      loadedObjectProperties,
-      loadedObjectEntries,
       type,
       helperType,
     });

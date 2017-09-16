@@ -56,11 +56,11 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     // Content sections available on the Activity Stream page. These may be hidden if the sections are disabled.
     private final RowItemType[] ACTIVITY_STREAM_SECTIONS = { RowItemType.TOP_PANEL, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE };
     public static final int MAX_TOP_STORIES = 3;
+    private static final String LINK_MORE_POCKET = "https://getpocket.cdn.mozilla.net/explore/trending?src=ff_android";
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
     private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
-    private int tiles;
     private int tilesSize;
 
     public enum RowItemType {
@@ -105,10 +105,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
-    public void setTileSize(int tiles, int tilesSize) {
+    public void setTileSize(int tilesSize) {
         this.tilesSize = tilesSize;
-        this.tiles = tiles;
-
         notifyDataSetChanged();
     }
 
@@ -128,7 +126,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
             final boolean pocketEnabled = GeckoSharedPrefs.forProfile(parent.getContext()).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED, true);
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, pocketEnabled);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, pocketEnabled, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
@@ -176,7 +174,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             final Highlight highlight = (Highlight) recyclerViewModel.get(position);
             ((WebpageItemRow) holder).bind(highlight, position, tilesSize);
         } else if (type == RowItemType.TOP_PANEL.getViewType()) {
-            ((TopPanelRow) holder).bind(topSitesCursor, tiles, tilesSize);
+            ((TopPanelRow) holder).bind(topSitesCursor, tilesSize);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             final TopStory story = (TopStory) recyclerViewModel.get(position);
             ((WebpageItemRow) holder).bind(story, position, tilesSize);

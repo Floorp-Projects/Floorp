@@ -183,14 +183,12 @@ js::math_abs(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_acos_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::acos, x, MathCache::Acos);
 }
 
 double
 js::math_acos_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::acos(x);
 }
 
@@ -220,14 +218,12 @@ js::math_acos(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_asin_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::asin, x, MathCache::Asin);
 }
 
 double
 js::math_asin_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::asin(x);
 }
 
@@ -257,14 +253,12 @@ js::math_asin(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_atan_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::atan, x, MathCache::Atan);
 }
 
 double
 js::math_atan_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::atan(x);
 }
 
@@ -294,7 +288,6 @@ js::math_atan(JSContext* cx, unsigned argc, Value* vp)
 double
 js::ecmaAtan2(double y, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::atan2(y, x);
 }
 
@@ -325,7 +318,6 @@ js::math_atan2(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_ceil_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::ceil(x);
 }
 
@@ -380,14 +372,12 @@ js::math_clz32(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_cos_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(cos, x, MathCache::Cos);
 }
 
 double
 js::math_cos_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cos(x);
 }
 
@@ -417,14 +407,12 @@ js::math_cos(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_exp_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::exp, x, MathCache::Exp);
 }
 
 double
 js::math_exp_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::exp(x);
 }
 
@@ -454,7 +442,6 @@ js::math_exp(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_floor_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::floor(x);
 }
 
@@ -545,14 +532,12 @@ js::math_fround(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_log_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(math_log_uncached, x, MathCache::Log);
 }
 
 double
 js::math_log_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::log(x);
 }
 
@@ -588,8 +573,6 @@ js::math_log(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_max_impl(double x, double y)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     // Math.max(num, NaN) => NaN, Math.max(-0, +0) => +0
     if (x > y || IsNaN(x) || (x == y && IsNegative(y)))
         return x;
@@ -615,8 +598,6 @@ js::math_max(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_min_impl(double x, double y)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     // Math.min(num, NaN) => NaN, Math.min(-0, +0) => -0
     if (x < y || IsNaN(x) || (x == y && IsNegativeZero(x)))
         return x;
@@ -660,7 +641,6 @@ js::minmax_impl(JSContext* cx, bool max, HandleValue a, HandleValue b, MutableHa
 double
 js::powi(double x, int y)
 {
-    AutoUnsafeCallWithABI unsafe;
     unsigned n = (y < 0) ? -y : y;
     double m = x;
     double p = 1;
@@ -689,8 +669,6 @@ js::powi(double x, int y)
 double
 js::ecmaPow(double x, double y)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     /*
      * Use powi if the exponent is an integer-valued double. We don't have to
      * check for NaN since a comparison with NaN is always false.
@@ -847,8 +825,6 @@ template float js::GetBiggestNumberLessThan<>(float x);
 double
 js::math_round_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     int32_t ignored;
     if (NumberIsInt32(x, &ignored))
         return x;
@@ -864,8 +840,6 @@ js::math_round_impl(double x)
 float
 js::math_roundf_impl(float x)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     int32_t ignored;
     if (NumberIsInt32(x, &ignored))
         return x;
@@ -894,14 +868,12 @@ js::math_round(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_sin_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(math_sin_uncached, x, MathCache::Sin);
 }
 
 double
 js::math_sin_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
 #ifdef _WIN64
     // Workaround MSVC bug where sin(-0) is +0 instead of -0 on x64 on
     // CPUs without FMA3 (pre-Haswell). See bug 1076670.
@@ -943,7 +915,6 @@ js::math_sin(JSContext* cx, unsigned argc, Value* vp)
 void
 js::math_sincos_uncached(double x, double *sin, double *cos)
 {
-    AutoUnsafeCallWithABI unsafe;
 #if defined(HAVE_SINCOS)
     sincos(x, sin, cos);
 #elif defined(HAVE___SINCOS)
@@ -957,7 +928,6 @@ js::math_sincos_uncached(double x, double *sin, double *cos)
 void
 js::math_sincos_impl(MathCache* mathCache, double x, double *sin, double *cos)
 {
-    AutoUnsafeCallWithABI unsafe;
     unsigned indexSin;
     unsigned indexCos;
     bool hasSin = mathCache->isCached(x, MathCache::Sin, sin, &indexSin);
@@ -1008,14 +978,12 @@ js::math_sqrt(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_tan_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(tan, x, MathCache::Tan);
 }
 
 double
 js::math_tan_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return tan(x);
 }
 
@@ -1069,14 +1037,12 @@ static bool math_function(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_log10_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::log10, x, MathCache::Log10);
 }
 
 double
 js::math_log10_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::log10(x);
 }
 
@@ -1089,14 +1055,12 @@ js::math_log10(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_log2_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::log2, x, MathCache::Log2);
 }
 
 double
 js::math_log2_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::log2(x);
 }
 
@@ -1109,14 +1073,12 @@ js::math_log2(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_log1p_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::log1p, x, MathCache::Log1p);
 }
 
 double
 js::math_log1p_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::log1p(x);
 }
 
@@ -1129,14 +1091,12 @@ js::math_log1p(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_expm1_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::expm1, x, MathCache::Expm1);
 }
 
 double
 js::math_expm1_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::expm1(x);
 }
 
@@ -1149,14 +1109,12 @@ js::math_expm1(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_cosh_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::cosh, x, MathCache::Cosh);
 }
 
 double
 js::math_cosh_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::cosh(x);
 }
 
@@ -1169,14 +1127,12 @@ js::math_cosh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_sinh_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::sinh, x, MathCache::Sinh);
 }
 
 double
 js::math_sinh_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::sinh(x);
 }
 
@@ -1189,14 +1145,12 @@ js::math_sinh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_tanh_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::tanh, x, MathCache::Tanh);
 }
 
 double
 js::math_tanh_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::tanh(x);
 }
 
@@ -1209,14 +1163,12 @@ js::math_tanh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_acosh_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::acosh, x, MathCache::Acosh);
 }
 
 double
 js::math_acosh_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::acosh(x);
 }
 
@@ -1229,14 +1181,12 @@ js::math_acosh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_asinh_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::asinh, x, MathCache::Asinh);
 }
 
 double
 js::math_asinh_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::asinh(x);
 }
 
@@ -1249,14 +1199,12 @@ js::math_asinh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_atanh_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::atanh, x, MathCache::Atanh);
 }
 
 double
 js::math_atanh_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::atanh(x);
 }
 
@@ -1270,7 +1218,6 @@ js::math_atanh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::ecmaHypot(double x, double y)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::hypot(x, y);
 }
 
@@ -1290,8 +1237,6 @@ hypot_step(double& scale, double& sumsq, double x)
 double
 js::hypot4(double x, double y, double z, double w)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     /* Check for infinity or NaNs so that we can return immediatelly.
      * Does not need to be WIN_XP specific as ecmaHypot
      */
@@ -1317,7 +1262,6 @@ js::hypot4(double x, double y, double z, double w)
 double
 js::hypot3(double x, double y, double z)
 {
-    AutoUnsafeCallWithABI unsafe;
     return hypot4(x, y, z, 0.0);
 }
 
@@ -1374,14 +1318,12 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 double
 js::math_trunc_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::trunc, x, MathCache::Trunc);
 }
 
 double
 js::math_trunc_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::trunc(x);
 }
 
@@ -1402,14 +1344,12 @@ static double sign(double x)
 double
 js::math_sign_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(sign, x, MathCache::Sign);
 }
 
 double
 js::math_sign_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return sign(x);
 }
 
@@ -1422,14 +1362,12 @@ js::math_sign(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_cbrt_impl(MathCache* cache, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return cache->lookup(fdlibm::cbrt, x, MathCache::Cbrt);
 }
 
 double
 js::math_cbrt_uncached(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
     return fdlibm::cbrt(x);
 }
 

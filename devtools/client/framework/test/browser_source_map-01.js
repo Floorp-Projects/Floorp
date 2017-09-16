@@ -26,7 +26,7 @@ add_task(function* () {
   yield sourceSeen;
 
   let loc1 = { url: JS_URL, line: 6 };
-  let newLoc1 = yield service.originalPositionFor(loc1.url, loc1.line);
+  let newLoc1 = yield service.originalPositionFor(loc1.url, loc1.line, 4);
   checkLoc1(loc1, newLoc1);
 
   let loc2 = { url: JS_URL, line: 8, column: 3 };

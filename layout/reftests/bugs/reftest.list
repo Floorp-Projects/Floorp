@@ -2025,8 +2025,8 @@ fails-if(!stylo||styloVsGecko) == 1365162-1.html 1365162-1-ref.html
 == 1375315-8.html 1375315-8-ref.html
 == 1375315-9.html 1375315-9-ref.html
 == 1375315-10.html 1375315-10-ref.html
-== 1375315-11.html 1375315-11-ref.html
-== 1375315-12.html 1375315-12-ref.html
+random-if(webrender) == 1375315-11.html 1375315-11-ref.html
+random-if(webrender) == 1375315-12.html 1375315-12-ref.html
 == 1374062.html 1374062-ref.html
 == 1375513.html 1375513-ref.html
 == 1375674.html 1375674-ref.html
@@ -2041,3 +2041,4 @@ needs-focus != 1377447-1.html 1377447-2.html
 == 1384275-1.html 1384275-1-ref.html
 == 1381821.html 1381821-ref.html
 == 1395650-1.html 1395650-1-ref.html
+== 1398500-1.html 1398500-1-ref.html

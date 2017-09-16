@@ -77,10 +77,10 @@
             "talos_options": ["--disable-stylo"]
         },
         "perf-reftest-singletons-e10s": {
-            "tests": ["bloom_basic_singleton"]
+            "tests": ["perf_reftest_singletons"]
         },
         "perf-reftest-singletons-stylo-disabled-e10s": {
-            "tests": ["bloom_basic_singleton"],
+            "tests": ["perf_reftest_singletons"],
             "talos_options": ["--disable-stylo"]
         },
         "tp5o-e10s": {

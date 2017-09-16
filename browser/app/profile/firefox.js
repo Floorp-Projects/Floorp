@@ -511,6 +511,8 @@ pref("javascript.options.showInConsole",          true);
 pref("general.warnOnAboutConfig",                 false);
 #endif
 
+pref("jsloader.shareGlobal", true);
+
 // This is the pref to control the location bar, change this to true to
 // force this - this makes the origin of popup windows more obvious to avoid
 // spoofing. We would rather not do it by default because it affects UE for web
@@ -1700,6 +1702,11 @@ pref("extensions.formautofill.available", "staged-rollout");
 pref("extensions.formautofill.available", "detect");
 #endif
 pref("extensions.formautofill.addresses.enabled", true);
+#ifdef NIGHTLY_BUILD
+pref("extensions.formautofill.creditCards.available", true);
+#else
+pref("extensions.formautofill.creditCards.available", false);
+#endif
 pref("extensions.formautofill.creditCards.enabled", true);
 pref("extensions.formautofill.firstTimeUse", true);
 pref("extensions.formautofill.heuristics.enabled", true);

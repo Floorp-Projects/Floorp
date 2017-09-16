@@ -89,7 +89,7 @@
 
 #pageAction-panel-emailLink,
 #pageAction-urlbar-emailLink {
-  list-style-image: url("chrome://browser/skin/email-link.svg");
+  list-style-image: url("chrome://browser/skin/mail.svg");
 }
 
 #pageAction-panel-sendToDevice,

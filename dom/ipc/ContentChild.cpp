@@ -516,7 +516,11 @@ PendingInputEventHangAnnotator PendingInputEventHangAnnotator::sSingleton;
 
 NS_IMPL_ISUPPORTS(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
 
+class ContentChild::ShutdownCanary final
+{ };
+
 ContentChild* ContentChild::sSingleton;
+StaticAutoPtr<ContentChild::ShutdownCanary> ContentChild::sShutdownCanary;
 
 ContentChild::ContentChild()
  : mID(uint64_t(-1))
@@ -530,6 +534,16 @@ ContentChild::ContentChild()
   // This process is a content process, so it's clearly running in
   // multiprocess mode!
   nsDebugImpl::SetMultiprocessMode("Child");
+
+  // When ContentChild is created, the observer service does not even exist.
+  // When ContentChild::RecvSetXPCOMProcessAttributes is called (the first
+  // IPDL call made on this object), shutdown may have already happened. Thus
+  // we create a canary here that relies upon getting cleared if shutdown
+  // happens without requiring the observer service at this time.
+  if (!sShutdownCanary) {
+    sShutdownCanary = new ShutdownCanary();
+    ClearOnShutdown(&sShutdownCanary, ShutdownPhase::Shutdown);
+  }
 }
 
 #ifdef _MSC_VER
@@ -558,9 +572,15 @@ NS_INTERFACE_MAP_END
 mozilla::ipc::IPCResult
 ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                             const StructuredCloneData& aInitialData,
-                                            nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
+                                            nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
+                                            nsTArray<FontFamilyListEntry>&& aFontFamilyList)
 {
-  mLookAndFeelCache = aLookAndFeelIntCache;
+  if (!sShutdownCanary) {
+    return IPC_OK();
+  }
+
+  mLookAndFeelCache = Move(aLookAndFeelIntCache);
+  mFontFamilies = Move(aFontFamilyList);
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitXPCOM(aXPCOMInit, aInitialData);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
@@ -3627,16 +3647,27 @@ already_AddRefed<nsIEventTarget>
 ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
   switch(aMsg.type()) {
+    // Javascript
     case PJavaScript::Msg_DropTemporaryStrongReferences__ID:
     case PJavaScript::Msg_DropObject__ID:
+
+    // Navigation
     case PContent::Msg_NotifyVisited__ID:
+
+    // Storage API
     case PContent::Msg_DataStoragePut__ID:
     case PContent::Msg_DataStorageRemove__ID:
     case PContent::Msg_DataStorageClear__ID:
-    case PContent::Msg_PIPCBlobInputStreamConstructor__ID:
+
+    // Blob and BlobURL
     case PContent::Msg_BlobURLRegistration__ID:
     case PContent::Msg_BlobURLUnregistration__ID:
+    case PContent::Msg_InitBlobURLs__ID:
+    case PContent::Msg_PIPCBlobInputStreamConstructor__ID:
+    case PContent::Msg_StoreAndBroadcastBlobURLRegistration__ID:
+
       return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
+
     default:
       return nullptr;
   }

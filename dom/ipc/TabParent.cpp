@@ -1140,7 +1140,6 @@ TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
   }
   if (!mIsReadyToHandleInputEvents) {
     if (eMouseEnterIntoWidget == aEvent.mMessage) {
-      MOZ_ASSERT(!mIsMouseEnterIntoWidgetEventSuppressed);
       mIsMouseEnterIntoWidgetEventSuppressed = true;
     } else if (eMouseExitFromWidget == aEvent.mMessage) {
       mIsMouseEnterIntoWidgetEventSuppressed = false;

@@ -4411,18 +4411,6 @@ XREMain::XRE_mainRun()
     io->SetOffline(true);
   }
 
-  {
-    nsCOMPtr<nsIObserver> startupNotifier
-      (do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-    startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
-  }
-
-  nsCOMPtr<nsIAppStartup> appStartup
-    (do_GetService(NS_APPSTARTUP_CONTRACTID));
-  NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
-
 
 #ifdef XP_WIN
   if (!PR_GetEnv("XRE_NO_DLL_READAHEAD"))
@@ -4522,6 +4510,22 @@ XREMain::XRE_mainRun()
       mProfileSvc->Flush();
     }
   }
+
+  // Initialize user preferences before notifying startup observers so they're
+  // ready in time for early consumers, such as the component loader.
+  mDirProvider.InitializeUserPrefs();
+
+  {
+    nsCOMPtr<nsIObserver> startupNotifier
+      (do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
+  }
+
+  nsCOMPtr<nsIAppStartup> appStartup
+    (do_GetService(NS_APPSTARTUP_CONTRACTID));
+  NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
   mDirProvider.DoStartup();
 

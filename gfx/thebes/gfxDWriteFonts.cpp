@@ -44,7 +44,7 @@ GetCairoAntialiasOption(gfxFont::AntialiasOption anAntialiasOption)
 #define FE_FONTSMOOTHINGCLEARTYPE 2
 #endif
 
-bool gfxDWriteFont::mUseClearType = true;
+bool gfxDWriteFont::sUseClearType = true;
 
 // This function is expensive so we only want to call it when we have to.
 static bool
@@ -114,8 +114,15 @@ gfxDWriteFont::~gfxDWriteFont()
 void
 gfxDWriteFont::UpdateClearTypeUsage()
 {
-  Factory::UpdateSystemTextQuality();
-  mUseClearType = UsingClearType();
+    Factory::UpdateSystemTextQuality();
+    // Check if ClearType status has changed; if so, toggle our flag,
+    // flush cached stuff that depended on the old setting, and force
+    // reflow everywhere to ensure we are using correct glyph metrics.
+    if (sUseClearType != UsingClearType()) {
+        sUseClearType = !sUseClearType;
+        gfxPlatform::FlushFontAndWordCaches();
+        gfxPlatform::ForceGlobalReflow();
+    }
 }
 
 UniquePtr<gfxFont>
@@ -175,7 +182,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
 
     // Note that GetMeasuringMode depends on mAdjustedSize
     if ((anAAOption == gfxFont::kAntialiasDefault &&
-         mUseClearType &&
+         sUseClearType &&
          GetMeasuringMode() == DWRITE_MEASURING_MODE_NATURAL) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
@@ -688,7 +695,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
         bool forceGDI = GetForceGDIClassic();
 
         IDWriteRenderingParams* params = gfxWindowsPlatform::GetPlatform()->GetRenderingParams(
-            mUseClearType ?
+            sUseClearType ?
                 (forceGDI ?
                     gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC :
                     gfxWindowsPlatform::TEXT_RENDERING_NORMAL) :

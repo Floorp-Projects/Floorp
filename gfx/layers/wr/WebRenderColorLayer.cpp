@@ -20,6 +20,7 @@ using namespace mozilla::gfx;
 
 void
 WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                 wr::IpcResourceUpdateQueue& aResources,
                                  const StackingContextHelper& aSc)
 {
   ScrollingLayersHelper scroller(this, aBuilder, aSc);

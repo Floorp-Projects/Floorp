@@ -187,7 +187,7 @@ VRManagerParent::CreateSameProcess()
 {
   MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
   RefPtr<VRManagerParent> vmp = new VRManagerParent(base::GetCurrentProcId(), false);
-  vmp->mCompositorThreadHolder = new layers::CompositorThreadHolderDebug("VRManagerSame");
+  vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
   vmp->mSelfRef = vmp;
   loop->PostTask(NewRunnableFunction(RegisterVRManagerInCompositorThread, vmp.get()));
   return vmp.get();
@@ -199,7 +199,7 @@ VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
   MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
 
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), false);
-  vmp->mCompositorThreadHolder = new layers::CompositorThreadHolderDebug("VRManager");
+  vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
     "gfx::VRManagerParent::Bind",
     vmp,
@@ -228,9 +228,7 @@ VRManagerParent::ActorDestroy(ActorDestroyReason why)
 void
 VRManagerParent::OnChannelConnected(int32_t aPid)
 {
-  mCompositorThreadHolder =
-    new layers::CompositorThreadHolderDebug(IsSameProcess() ? "VRManagerSame"
-                                                            : "VRManager");
+  mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
 }
 
 mozilla::ipc::IPCResult

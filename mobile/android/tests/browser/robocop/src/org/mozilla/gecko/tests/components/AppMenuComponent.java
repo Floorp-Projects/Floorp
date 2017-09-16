@@ -20,6 +20,7 @@ import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.RobotiumHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
+import org.mozilla.gecko.toolbar.BrowserToolbar;
 
 import android.text.TextUtils;
 import android.view.View;
@@ -117,7 +118,8 @@ public class AppMenuComponent extends BaseComponent {
     }
 
     private View getOverflowMenuButtonView() {
-        return mSolo.getView(R.id.menu);
+        final BrowserToolbar toolbar = (BrowserToolbar) mSolo.getView(R.id.browser_toolbar);
+        return toolbar.findViewById(R.id.menu);
     }
 
     /**

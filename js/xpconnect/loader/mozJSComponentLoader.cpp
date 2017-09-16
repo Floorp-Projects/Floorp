@@ -577,8 +577,6 @@ JSObject*
 mozJSComponentLoader::GetSharedGlobal(JSContext* aCx)
 {
     if (!mLoaderGlobal) {
-        MOZ_ASSERT(mShareLoaderGlobal);
-
         JS::RootedObject globalObj(aCx);
         CreateLoaderGlobal(aCx, NS_LITERAL_CSTRING("shared JSM global"),
                            nullptr, &globalObj);

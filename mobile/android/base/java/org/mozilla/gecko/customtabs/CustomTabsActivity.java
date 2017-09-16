@@ -22,6 +22,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.util.SparseArrayCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -36,6 +37,7 @@ import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.FormAssistPopup;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.R;
@@ -49,6 +51,7 @@ import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.prompts.PromptService;
+import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
@@ -56,12 +59,14 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 import java.util.List;
 
 public class CustomTabsActivity extends AppCompatActivity
-                                implements GeckoMenu.Callback,
+                                implements ActionModePresenter,
+                                           GeckoMenu.Callback,
                                            GeckoView.ContentListener,
                                            GeckoView.NavigationListener,
                                            GeckoView.ProgressListener {
@@ -81,6 +86,10 @@ public class CustomTabsActivity extends AppCompatActivity
     private GeckoView mGeckoView;
     private PromptService mPromptService;
     private DoorHangerPopup mDoorHangerPopup;
+    private FormAssistPopup mFormAssistPopup;
+
+    private ActionMode mActionMode;
+    private TextSelection mTextSelection;
 
     private boolean mCanGoBack = false;
     private boolean mCanGoForward = false;
@@ -120,6 +129,12 @@ public class CustomTabsActivity extends AppCompatActivity
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
 
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
+        mFormAssistPopup.create(mGeckoView);
+
+        mTextSelection = TextSelection.Factory.create(mGeckoView, this);
+        mTextSelection.create();
+
         final GeckoViewSettings settings = mGeckoView.getSettings();
         settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
 
@@ -133,6 +148,8 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
+        mTextSelection.destroy();
+        mFormAssistPopup.destroy();
         mDoorHangerPopup.destroy();
         mPromptService.destroy();
 
@@ -662,6 +679,20 @@ public class CustomTabsActivity extends AppCompatActivity
             return uri;
         } else {
             return null;
+        }
+    }
+
+    @Override // ActionModePresenter
+    public void startActionMode(final ActionMode.Callback callback) {
+        endActionMode();
+        mActionMode = startSupportActionMode(callback);
+    }
+
+    @Override // ActionModePresenter
+    public void endActionMode() {
+        if (mActionMode != null) {
+            mActionMode.finish();
+            mActionMode = null;
         }
     }
 }

@@ -1,0 +1,29 @@
+
+[package]
+name = "u2fhid-fuzz"
+version = "0.0.1"
+authors = ["Automatically generated"]
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+rand = "0.3"
+
+[dependencies.u2fhid]
+path = ".."
+[dependencies.libfuzzer-sys]
+git = "https://github.com/rust-fuzz/libfuzzer-sys.git"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "u2f_read"
+path = "fuzz_targets/u2f_read.rs"
+
+[[bin]]
+name = "u2f_read_write"
+path = "fuzz_targets/u2f_read_write.rs"

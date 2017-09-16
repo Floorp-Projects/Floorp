@@ -52,7 +52,7 @@ input {
   .icon.icon-new-window-private {
     background-image: url("chrome://browser/skin/privateBrowsing.svg"); }
   .icon.icon-settings {
-    background-image: url("assets/glyph-settings-16.svg"); }
+    background-image: url("chrome://browser/skin/settings.svg"); }
   .icon.icon-pin {
     background-image: url("assets/glyph-pin-16.svg"); }
   .icon.icon-unpin {
@@ -177,7 +177,7 @@ a {
 main {
   margin: auto;
   width: 224px;
-  padding-bottom: 120px; }
+  padding-bottom: 48px; }
   @media (min-width: 416px) {
     main {
       width: 352px; } }
@@ -203,9 +203,9 @@ main {
 .top-sites-list {
   list-style: none;
   margin: 0;
+  margin-bottom: -18px;
   padding: 0;
-  margin-inline-end: -32px;
-  margin-bottom: -18px; }
+  margin-inline-end: -32px; }
   @media (max-width: 416px) {
     .top-sites-list :nth-child(2n+1) .context-menu {
       margin-inline-start: auto;
@@ -249,7 +249,7 @@ main {
       offset-inline-end: 0; } }
   .top-sites-list li {
     display: inline-block;
-    margin: 0 0 18px;
+    margin: 0 0 8px;
     margin-inline-end: 32px; }
   .top-sites-list .top-site-outer {
     position: relative; }
@@ -336,11 +336,15 @@ main {
       background-size: 96px; }
     .top-sites-list .top-site-outer .default-icon {
       z-index: 1;
-      top: -6px;
-      offset-inline-start: -6px;
+      bottom: -6px;
       height: 42px;
+      offset-inline-end: -6px;
       width: 42px;
-      background-size: 32px; }
+      background-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px; }
     .top-sites-list .top-site-outer .title {
       font: message-box;
       height: 30px;
@@ -388,6 +392,10 @@ main {
         width: 25px; }
         .top-sites-list .top-site-outer .edit-menu button:hover {
           background-color: #EDEDF0; }
+        .top-sites-list .top-site-outer .edit-menu button:first-child:dir(ltr), .top-sites-list .top-site-outer .edit-menu button:last-child:dir(rtl) {
+          width: 30px; }
+        .top-sites-list .top-site-outer .edit-menu button:last-child:dir(ltr), .top-sites-list .top-site-outer .edit-menu button:first-child:dir(rtl) {
+          width: 28px; }
         .top-sites-list .top-site-outer .edit-menu button:last-child:dir(ltr) {
           border-right: 0; }
         .top-sites-list .top-site-outer .edit-menu button:first-child:dir(rtl) {
@@ -415,7 +423,8 @@ main {
   offset-inline-start: -31px;
   position: absolute;
   top: -29px;
-  width: calc(100% + 62px); }
+  width: calc(100% + 62px);
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1); }
 
 .edit-topsites-wrapper .edit-topsites-inner-wrapper {
   margin: 0;
@@ -512,7 +521,8 @@ main {
     -moz-context-properties: fill;
     height: 16px;
     width: 16px;
-    display: inline-block; }
+    display: inline-block;
+    margin-bottom: -2px; }
   .sections-list .section-top-bar .info-option-icon[aria-expanded="true"] {
     fill: rgba(12, 12, 13, 0.8); }
   .sections-list .section-top-bar .section-info-option .info-option {
@@ -532,11 +542,12 @@ main {
     border-radius: 3px;
     font-size: 13px;
     line-height: 120%;
-    margin-inline-end: -1px;
+    margin-inline-end: -13px;
     offset-inline-end: 0;
     top: 20px;
     width: 320px;
     padding: 24px;
+    box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
     -moz-user-select: none; }
   .sections-list .section-top-bar .info-option-header {
     font-size: 15px;
@@ -655,12 +666,16 @@ main {
   .search-wrapper input {
     border: 0;
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
+    border-radius: 3px;
     border-radius: 4px;
     color: inherit;
     padding: 0;
     padding-inline-end: 36px;
     padding-inline-start: 35px;
-    width: 100%; }
+    width: 100%;
+    font-size: 15px; }
     .search-wrapper input:focus {
       border-color: #0060DF;
       box-shadow: 0 0 0 2px #0060DF;
@@ -672,8 +687,8 @@ main {
       fill: #FFF;
       -moz-context-properties: fill; }
   .search-wrapper .search-label {
-    background: url("assets/glyph-search-16.svg") no-repeat center center/20px;
-    fill: rgba(12, 12, 13, 0.6);
+    background: url("chrome://browser/skin/find.svg") no-repeat 12px center/16px;
+    fill: rgba(12, 12, 13, 0.4);
     -moz-context-properties: fill;
     position: absolute;
     offset-inline-start: 0;
@@ -685,7 +700,7 @@ main {
     border-radius: 0 3px 3px 0;
     border: 0;
     width: 36px;
-    fill: rgba(12, 12, 13, 0.6);
+    fill: rgba(12, 12, 13, 0.4);
     -moz-context-properties: fill;
     background-size: 16px 16px;
     height: 100%;
@@ -737,12 +752,14 @@ main {
           color: #FFF; }
           .context-menu > ul > li > a:hover a, .context-menu > ul > li > a:focus a {
             color: #0C0C0D; }
+          .context-menu > ul > li > a:hover .icon, .context-menu > ul > li > a:focus .icon {
+            fill: #FFF; }
           .context-menu > ul > li > a:hover:hover, .context-menu > ul > li > a:hover:focus, .context-menu > ul > li > a:focus:hover, .context-menu > ul > li > a:focus:focus {
             color: #FFF; }
 
 .prefs-pane {
   color: #4A4A4F;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 21px; }
   .prefs-pane .sidebar {
     background: #FFF;
@@ -763,13 +780,13 @@ main {
       .prefs-pane .sidebar.hidden:dir(rtl) {
         transform: translateX(-100%); }
     .prefs-pane .sidebar h1 {
-      font-size: 24px;
+      font-size: 21px;
       margin: 0;
       padding-top: 20px; }
   .prefs-pane hr {
     border: 0;
     border-bottom: 1px solid #D7D7DB;
-    margin: 28px 0; }
+    margin: 20px 0; }
   .prefs-pane .prefs-modal-inner-wrapper {
     padding-bottom: 100px; }
     .prefs-pane .prefs-modal-inner-wrapper section {
@@ -785,7 +802,7 @@ main {
           position: absolute;
           top: 0; }
       .prefs-pane .prefs-modal-inner-wrapper section > label {
-        font-size: 17px;
+        font-size: 16px;
         font-weight: bold;
         line-height: 19px; }
     .prefs-pane .prefs-modal-inner-wrapper .options {
@@ -795,12 +812,14 @@ main {
       margin: -10px 0 20px;
       margin-inline-start: 30px;
       padding: 10px; }
+      .prefs-pane .prefs-modal-inner-wrapper .options.disabled {
+        opacity: 0.5; }
       .prefs-pane .prefs-modal-inner-wrapper .options label {
         background-position-x: 35px;
         background-position-y: 2.5px;
         background-repeat: no-repeat;
         display: inline-block;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: normal;
         height: auto;
         line-height: 21px;
@@ -826,8 +845,8 @@ main {
   .prefs-pane [type='checkbox']:checked {
     offset-inline-start: -9999px;
     position: absolute; }
-  .prefs-pane [type='checkbox']:not(:checked) + label,
-  .prefs-pane [type='checkbox']:checked + label {
+  .prefs-pane [type='checkbox']:not(:disabled):not(:checked) + label,
+  .prefs-pane [type='checkbox']:not(:disabled):checked + label {
     cursor: pointer;
     padding: 0 30px;
     position: relative; }
@@ -858,10 +877,10 @@ main {
     opacity: 0; }
   .prefs-pane [type='checkbox']:checked + label::after {
     opacity: 1; }
-  .prefs-pane [type='checkbox'] + label:hover::before {
+  .prefs-pane [type='checkbox']:not(:disabled) + label:hover::before {
     border: 1px solid #0060DF; }
-  .prefs-pane [type='checkbox']:checked:focus + label::before,
-  .prefs-pane [type='checkbox']:not(:checked):focus + label::before {
+  .prefs-pane [type='checkbox']:not(:disabled):checked:focus + label::before,
+  .prefs-pane [type='checkbox']:not(:disabled):not(:checked):focus + label::before {
     border: 1px dotted #0060DF; }
 
 .prefs-pane-button button {
@@ -1019,6 +1038,9 @@ main {
       max-height: 116px; }
     .card-outer .card-text.no-image.no-host-name.no-context {
       max-height: 230px; }
+    .card-outer .card-text:not(.no-description) .card-title {
+      max-height: 57px;
+      overflow: hidden; }
   .card-outer .card-host-name {
     color: #737373;
     font-size: 10px;
@@ -1036,7 +1058,7 @@ main {
     overflow: hidden;
     line-height: 19px; }
   .card-outer .card-context {
-    padding: 16px 16px 8px 14px;
+    padding: 12px 16px 12px 14px;
     position: absolute;
     bottom: 0;
     left: 0;

@@ -1326,6 +1326,8 @@ DXGIYCbCrTextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
                                       Range<const wr::ImageKey>& aImageKeys,
                                       const wr::ExternalImageId& aExtID)
 {
+  // TODO - This implementation is very slow (read-back, copy on the copy and re-upload).
+
   MOZ_ASSERT(mTextures[0] && mTextures[1] && mTextures[2]);
   MOZ_ASSERT(aImageKeys.length() == 1);
 
@@ -1346,8 +1348,9 @@ DXGIYCbCrTextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
 
   IntSize size = dataSourceSurface->GetSize();
   wr::ImageDescriptor descriptor(size, map.mStride, dataSourceSurface->GetFormat());
-  auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-  aResources.AddImage(aImageKeys[0], descriptor, slice);
+  wr::Vec_u8 imgBytes;
+  imgBytes.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
+  aResources.AddImage(aImageKeys[0], descriptor, imgBytes);
 
   dataSourceSurface->Unmap();
 }
