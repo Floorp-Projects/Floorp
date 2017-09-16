@@ -1384,7 +1384,7 @@ nsStandardURL::GetSensitiveInfoHiddenSpec(nsACString &result)
         return rv;
     }
     if (mPassword.mLen >= 0) {
-      result.Replace(mPassword.mPos, mPassword.mLen, "****");
+      result.ReplaceLiteral(mPassword.mPos, mPassword.mLen, "****");
     }
     CALL_RUST_GETTER_STR(result, GetSensitiveInfoHiddenSpec, result);
     return NS_OK;
