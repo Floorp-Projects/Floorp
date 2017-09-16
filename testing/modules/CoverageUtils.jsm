@@ -15,7 +15,7 @@ const Cu = Components.utils;
 /* globals Debugger */
 const {addDebuggerToGlobal} = Cu.import("resource://gre/modules/jsdebugger.jsm",
                                         {});
-addDebuggerToGlobal(this);
+addDebuggerToGlobal(Cu.getGlobalForObject(this));
 
 /**
  * Records coverage for each test by way of the js debugger.
