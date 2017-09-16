@@ -6,7 +6,10 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
 
-class DOMElement {
+const XBLNS = "http://www.mozilla.org/xbl";
+const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+class Element {
   constructor(tagName, attrs = {}) {
     this.tagName = tagName;
     this.localName = tagName;
@@ -14,6 +17,15 @@ class DOMElement {
     for (let attr in attrs) {
       this[attr] = attrs[attr];
     }
+  }
+
+  get nodeType() { return 1; }
+  get ELEMENT_NODE() { return 1; }
+}
+
+class DOMElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
 
     if (this.localName == "option") {
       this.selected = false;
@@ -24,9 +36,6 @@ class DOMElement {
     }
   }
 
-  get nodeType() { return 1; }
-  get ELEMENT_NODE() { return 1; }
-
   getBoundingClientRect() {
     return {
       top: 0,
@@ -35,9 +44,25 @@ class DOMElement {
       height: 100,
     };
   }
-};
+}
+
+class XULElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+    this.namespaceURI = XULNS;
+  }
+}
+
+class XBLElement extends XULElement {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+    this.namespaceURI = XBLNS;
+  }
+}
 
 const domEl = new DOMElement("p");
+const xulEl = new XULElement("browser");
+const xblEl = new XBLElement("framebox");
 
 add_test(function test_isSelected() {
   let checkbox = new DOMElement("input", {type: "checkbox"});
@@ -63,6 +88,16 @@ add_test(function test_isSelected() {
   // anything else should not be selected
   for (let typ of [domEl, undefined, null, "foo", true, [], {}]) {
     ok(!element.isSelected(typ));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isXULElement() {
+  ok(element.isXULElement(xulEl));
+  ok(element.isXULElement(xblEl));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isXULElement(typ));
   }
 
   run_next_test();
