@@ -434,16 +434,6 @@ public:
   virtual void
     SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
 
-  /**
-   * Add an observer that gets notified whenever the charset changes.
-   */
-  virtual nsresult AddCharSetObserver(nsIObserver* aObserver) override;
-
-  /**
-   * Remove a charset observer.
-   */
-  virtual void RemoveCharSetObserver(nsIObserver* aObserver) override;
-
   virtual Element* AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
                                        void* aData, bool aForImage) override;
   virtual void RemoveIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
@@ -1142,8 +1132,6 @@ protected:
   // Attempts to determine the Flash classification of this page based on the
   // the classification lists and the classification of parent documents.
   mozilla::dom::FlashClassification ComputeFlashClassification();
-
-  nsTArray<nsIObserver*> mCharSetObservers;
 
   PLDHashTable *mSubDocuments;
 

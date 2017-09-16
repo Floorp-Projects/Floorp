@@ -4,10 +4,24 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-Unreleased
-----------
+0.19.0 (2017-09-16)
+-------------------
+
+Note that with geckodriver v0.19.0 the following versions are recommended:
+- Firefox 55.0 (and greater)
+- Selenium 3.5 (and greater)
 
 ### Added
+
+- Added endpoint:
+  - POST `/session/{session id}/window/minimize` for the [Minimize Window]
+    command
+
+- Added preference `extensions.shield-recipe-client.api_url` to disable shield
+  studies which could unexpectedly change the behavior of Firefox
+
+- Introduced the temporary, boolean capability `moz:webdriverClick` to enable
+  the WebDriver conforming behavior of the [Element Click] command.
 
 - Added crashreporter environment variables to better control the browser
   in case of crashes
@@ -28,22 +42,32 @@ Unreleased
   `socksProxyPort` because _ports_ have to be set for `ftpProxy`,
   `httpProxy`, `sslProxy`, and `socksProxy` using ":<PORT>"
 
-- To make sure no browser process is left behind when the [`NewSession`]
-  fails, the process is closed immediately now
-
 - The `proxyType` `noproxy` has been replaced with `direct` in accordance
   with recent WebDriver specification changes
-
-- `/moz/addon/install` command accepts an `addon` parameter, in lieu of
-  `path`, containing an addon as a Base64 string
 
 - The [`WindowRectParameters`] have been updated to return signed 32-bit
   integers in accordance with the CSS and WebDriver specifications, and
   to be more liberal with the input types
 
+- Mapped the [`FullscreenWindow`] to the correct Marionette command
+
+- To make sure no browser process is left behind when the [`NewSession`]
+  fails, the process is closed immediately now
+
+- `/moz/addon/install` command accepts an `addon` parameter, in lieu of
+  `path`, containing an addon as a Base64 string (fixed by [Jason Juang])
+
 - [webdriver crate] upgraded to version 0.30.0
 
 - [mozrunner crate] upgraded to version 0.5.0
+
+### Removed
+
+- Removed the following obsolete preferences for Firefox:
+  - `browser.safebrowsing.enabled`
+  - `browser.safebrowsing.forbiddenURIs.enabled`
+  - `marionette.defaultPrefs.port`
+  - `marionette.logging`
 
 
 0.18.0 (2017-07-10)
@@ -54,7 +78,7 @@ Unreleased
 - [`RectResponse`] permits returning floats for `width` and `height`
   fields
 
-- New type [`CookieResponse`] for the [`GetNamedCookie` command] returns
+- New type [`CookieResponse`] for the [`GetNamedCookie`] command returns
   a single cookie, as opposed to an array of a single cookie
 
 - To pick up a prepared profile from the filesystem, it is now possible
@@ -745,12 +769,14 @@ and greater.
 [webdriver crate]: https://crates.io/crates/webdriver
 
 [Actions]: https://w3c.github.io/webdriver/webdriver-spec.html#actions
-[Get Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-get-timeouts
-[Get Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#set-timeouts
+[Element Click]: https://w3c.github.io/webdriver/webdriver-spec.html#element-click
+[Get Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#get-timeouts
+[Set Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#set-timeouts
 [Get Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#get-window-rect
-[Get Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#set-window-rect
+[Set Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#set-window-rect
 [insecure certificate]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-insecure-certificate
-[New Session]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-new-session
+[Minimize Window]: https://w3c.github.io/webdriver/webdriver-spec.html#minimize-window
+[New Session]: https://w3c.github.io/webdriver/webdriver-spec.html#new-session
 [Send Alert Text]: https://w3c.github.io/webdriver/webdriver-spec.html#send-alert-text
 [Status]: https://w3c.github.io/webdriver/webdriver-spec.html#status
 [Take Element Screenshot]: https://w3c.github.io/webdriver/webdriver-spec.html#take-element-screenshot

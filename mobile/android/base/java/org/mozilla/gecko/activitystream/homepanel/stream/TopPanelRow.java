@@ -53,10 +53,9 @@ public class TopPanelRow extends StreamViewHolder {
         topSitesPager.addOnPageChangeListener(swipeListener);
     }
 
-    public void bind(Cursor cursor, int tiles, int tilesSize) {
+    public void bind(Cursor cursor, int tilesSize) {
         final TopSitesPagerAdapter adapter = (TopSitesPagerAdapter) topSitesPager.getAdapter();
-        adapter.setTilesSize(tiles, tilesSize);
-        adapter.swapCursor(cursor);
+        adapter.swapCursor(cursor, tilesSize);
 
         final Resources resources = itemView.getResources();
         final int tilesMargin = resources.getDimensionPixelSize(R.dimen.activity_stream_base_margin);
