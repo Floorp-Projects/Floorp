@@ -299,7 +299,13 @@ add_task(async function test_update_account_data() {
   do_check_eq((await account.getSignedInUser()).assertion, "new_assertion",
               "new field value was saved");
 
-  // but we should fail attempting to change the uid.
+  // but we should fail attempting to change email or uid.
+  newCreds = {
+    email: "someoneelse@example.com",
+    uid: credentials.uid,
+    assertion: "new_assertion",
+  }
+  await Assert.rejects(account.updateUserAccountData(newCreds));
   newCreds = {
     email: credentials.email,
     uid: "another_uid",
@@ -307,7 +313,7 @@ add_task(async function test_update_account_data() {
   }
   await Assert.rejects(account.updateUserAccountData(newCreds));
 
-  // should fail without the uid.
+  // should fail without email or uid.
   newCreds = {
     assertion: "new_assertion",
   }

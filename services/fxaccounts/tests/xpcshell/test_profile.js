@@ -6,7 +6,6 @@
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccountsProfileClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsProfile.jsm");
-Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 const URL_STRING = "https://example.com";
 Services.prefs.setCharPref("identity.fxaccounts.settings.uri", "https://example.com/settings");
@@ -60,11 +59,8 @@ let mockClient = function(fxa) {
   return new FxAccountsProfileClient(options);
 };
 
-const ACCOUNT_UID = "abc123";
-const ACCOUNT_EMAIL = "foo@bar.com";
 const ACCOUNT_DATA = {
-  uid: ACCOUNT_UID,
-  email: ACCOUNT_EMAIL
+  uid: "abc123"
 };
 
 function FxaMock() {
@@ -126,13 +122,13 @@ add_test(function cacheProfile_change() {
     run_next_test();
   });
 
-  return profile._cacheProfile({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myurl" }, etag: "bogusetag" });
+  return profile._cacheProfile({ body: { avatar: "myurl" }, etag: "bogusetag" });
 });
 
 add_test(function fetchAndCacheProfile_ok() {
   let client = mockClient(mockFxa());
   client.fetchProfile = function() {
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, avatar: "myimg"} });
+    return Promise.resolve({ body: { avatar: "myimg"} });
   };
   let profile = CreateFxAccountsProfile(null, client);
   profile._cachedAt = 12345;
@@ -173,7 +169,7 @@ add_test(function fetchAndCacheProfile_sendsETag() {
   let client = mockClient(fxa);
   client.fetchProfile = function(etag) {
     do_check_eq(etag, "bogusETag");
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"} });
+    return Promise.resolve({ body: { avatar: "myimg"} });
   };
   let profile = CreateFxAccountsProfile(fxa, client);
 
@@ -199,18 +195,26 @@ add_task(async function fetchAndCacheProfileOnce() {
     return promiseProfile;
   };
   let fxa = mockFxa();
+  fxa.getProfileCache = () => {
+    // We do this because we are gonna have a race condition and fetchProfile will
+    // not be called before we check numFetches.
+    return {
+      then(thenFunc) {
+        return thenFunc();
+      }
+    }
+  };
   let profile = CreateFxAccountsProfile(fxa, client);
 
   let request1 = profile._fetchAndCacheProfile();
   profile._fetchAndCacheProfile();
-  await new Promise(res => setTimeout(res, 0)); // Yield so fetchProfile() is called (promise)
 
   // should be one request made to fetch the profile (but the promise returned
   // by it remains unresolved)
   do_check_eq(numFetches, 1);
 
   // resolve the promise.
-  resolveProfile({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"} });
+  resolveProfile({ body: { avatar: "myimg"} });
 
   // both requests should complete with the same data.
   let got1 = await request1;
@@ -238,11 +242,19 @@ add_task(async function fetchAndCacheProfileOnce() {
     return promiseProfile;
   };
   let fxa = mockFxa();
+  fxa.getProfileCache = () => {
+    // We do this because we are gonna have a race condition and fetchProfile will
+    // not be called before we check numFetches.
+    return {
+      then(thenFunc) {
+        return thenFunc();
+      }
+    }
+  };
   let profile = CreateFxAccountsProfile(fxa, client);
 
   let request1 = profile._fetchAndCacheProfile();
   let request2 = profile._fetchAndCacheProfile();
-  await new Promise(res => setTimeout(res, 0)); // Yield so fetchProfile() is called (promise)
 
   // should be one request made to fetch the profile (but the promise returned
   // by it remains unresolved)
@@ -271,7 +283,7 @@ add_task(async function fetchAndCacheProfileOnce() {
 
   // but a new request should works.
   client.fetchProfile = function() {
-    return Promise.resolve({body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"}});
+    return Promise.resolve({body: { avatar: "myimg"}});
   };
 
   let got = await profile._fetchAndCacheProfile();
@@ -281,7 +293,7 @@ add_task(async function fetchAndCacheProfileOnce() {
 add_test(function fetchAndCacheProfile_alreadyCached() {
   let cachedUrl = "cachedurl";
   let fxa = mockFxa();
-  fxa.profileCache = { profile: { uid: ACCOUNT_UID, avatar: cachedUrl }, etag: "bogusETag" };
+  fxa.profileCache = { profile: { avatar: cachedUrl }, etag: "bogusETag" };
   let client = mockClient(fxa);
   client.fetchProfile = function(etag) {
     do_check_eq(etag, "bogusETag");
@@ -306,9 +318,9 @@ add_test(function fetchAndCacheProfile_alreadyCached() {
 add_task(async function fetchAndCacheProfileAfterThreshold() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
-  client.fetchProfile = async function() {
+  client.fetchProfile = function() {
     numFetches += 1;
-    return {body: {uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"}};
+    return Promise.resolve({ avatar: "myimg"});
   };
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
@@ -323,14 +335,7 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
     do_timeout(1000, resolve);
   });
 
-  let origFetchAndCatch = profile._fetchAndCacheProfile;
-  let backgroundFetchDone = PromiseUtils.defer();
-  profile._fetchAndCacheProfile = async () => {
-    await origFetchAndCatch.call(profile);
-    backgroundFetchDone.resolve();
-  }
   await profile.getProfile();
-  await backgroundFetchDone.promise;
   do_check_eq(numFetches, 2);
 });
 
@@ -340,9 +345,9 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
 add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
-  client.fetchProfile = async function() {
+  client.fetchProfile = function() {
     numFetches += 1;
-    return {body: {uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"}};
+    return Promise.resolve({ avatar: "myimg"});
   };
   let profile = CreateFxAccountsProfile(null, client);
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
@@ -352,14 +357,7 @@ add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
 
   Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION);
 
-  let origFetchAndCatch = profile._fetchAndCacheProfile;
-  let backgroundFetchDone = PromiseUtils.defer();
-  profile._fetchAndCacheProfile = async () => {
-    await origFetchAndCatch.call(profile);
-    backgroundFetchDone.resolve();
-  }
   await profile.getProfile();
-  await backgroundFetchDone.promise;
   do_check_eq(numFetches, 2);
 });
 
@@ -381,7 +379,7 @@ add_test(function getProfile_ok() {
   let didFetch = false;
 
   let fxa = mockFxa();
-  fxa.profileCache = { profile: { uid: ACCOUNT_UID, avatar: cachedUrl } };
+  fxa.profileCache = { profile: { avatar: cachedUrl } };
   let profile = CreateFxAccountsProfile(fxa);
 
   profile._fetchAndCacheProfile = function() {
@@ -404,7 +402,7 @@ add_test(function getProfile_no_cache() {
   let profile = CreateFxAccountsProfile(fxa);
 
   profile._fetchAndCacheProfile = function() {
-    return Promise.resolve({ uid: ACCOUNT_UID, avatar: fetchedUrl });
+    return Promise.resolve({ avatar: fetchedUrl });
   };
 
   return profile.getProfile()
@@ -420,11 +418,11 @@ add_test(function getProfile_has_cached_fetch_deleted() {
   let fxa = mockFxa();
   let client = mockClient(fxa);
   client.fetchProfile = function() {
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: null } });
+    return Promise.resolve({ body: { avatar: null } });
   };
 
   let profile = CreateFxAccountsProfile(fxa, client);
-  fxa.profileCache = { profile: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: cachedUrl } };
+  fxa.profileCache = { profile: { avatar: cachedUrl } };
 
 // instead of checking this in a mocked "save" function, just check after the
 // observer
@@ -444,7 +442,7 @@ add_test(function getProfile_has_cached_fetch_deleted() {
 
 add_test(function getProfile_fetchAndCacheProfile_throws() {
   let fxa = mockFxa();
-  fxa.profileCache = { profile: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg" } };
+  fxa.profileCache = { profile: { avatar: "myimg" } };
   let profile = CreateFxAccountsProfile(fxa);
 
   profile._fetchAndCacheProfile = () => Promise.reject(new Error());
@@ -454,21 +452,6 @@ add_test(function getProfile_fetchAndCacheProfile_throws() {
       do_check_eq(result.avatar, "myimg");
       run_next_test();
     });
-});
-
-add_test(function getProfile_email_changed() {
-  let fxa = mockFxa();
-  let client = mockClient(fxa);
-  client.fetchProfile = function() {
-    return Promise.resolve({ body: { uid: ACCOUNT_UID, email: "newemail@bar.com" } });
-  };
-  fxa.handleEmailUpdated = email => {
-    do_check_eq(email, "newemail@bar.com");
-    run_next_test();
-  };
-
-  let profile = CreateFxAccountsProfile(fxa, client);
-  return profile._fetchAndCacheProfile();
 });
 
 function makeObserver(aObserveTopic, aObserveFunc) {
