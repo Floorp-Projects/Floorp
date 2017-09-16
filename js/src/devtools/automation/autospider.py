@@ -396,6 +396,12 @@ test_suites -= set(normalize_tests(args.skip_tests.split(",")))
 if 'all' in args.skip_tests.split(","):
     test_suites = []
 
+# Bug 1391877 - Windows test runs are getting mysterious timeouts when run
+# through taskcluster, but only when running multiple jit-test jobs in
+# parallel. Work around them for now.
+if platform.system() == 'Windows':
+    env['JITTEST_EXTRA_ARGS'] = "-j1 " + env.get('JITTEST_EXTRA_ARGS', '')
+
 # Always run all enabled tests, even if earlier ones failed. But return the
 # first failed status.
 results = []

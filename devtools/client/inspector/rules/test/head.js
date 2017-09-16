@@ -57,8 +57,8 @@ addTab = function (url) {
  */
 function getStyle(testActor, selector, propName) {
   return testActor.eval(`
-    content.document.querySelector("${selector}")
-                    .style.getPropertyValue("${propName}");
+    document.querySelector("${selector}")
+            .style.getPropertyValue("${propName}");
   `);
 }
 

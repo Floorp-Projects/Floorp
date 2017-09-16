@@ -17,6 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916893
 </div>
 <pre id="test">
 </pre>
+<script src="utils.js"></script>
 <script type="text/javascript">
   SimpleTest.requestFlakyTimeout("Mock alert service dispatches show and click events.");
 
@@ -40,11 +41,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916893
 
   function runTest() {
     MockServices.register();
-    testFrame('notificationclick_focus.html');
     navigator.serviceWorker.register("notificationclick_focus.js", { scope: "notificationclick_focus.html" }).then(function(reg) {
       registration = reg;
+      return waitForState(reg.installing, 'activated');
     }, function(e) {
       ok(false, "registration should have passed!");
+    }).then(() => {
+      testFrame('notificationclick_focus.html');
     });
   };
 

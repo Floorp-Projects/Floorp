@@ -544,11 +544,13 @@ public:
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = BodyOpen(aQuotaInfo, aDBDir, mResponse.mBodyId, getter_AddRefs(stream));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-    if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+    if (mArgs.openMode() == OpenMode::Eager) {
+      rv = BodyOpen(aQuotaInfo, aDBDir, mResponse.mBodyId, getter_AddRefs(stream));
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+    }
 
-    mStreamList->Add(mResponse.mBodyId, stream);
+    mStreamList->Add(mResponse.mBodyId, Move(stream));
 
     return rv;
   }
@@ -609,12 +611,14 @@ public:
       }
 
       nsCOMPtr<nsIInputStream> stream;
-      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponses[i].mBodyId,
-                    getter_AddRefs(stream));
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+      if (mArgs.openMode() == OpenMode::Eager) {
+        rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponses[i].mBodyId,
+                      getter_AddRefs(stream));
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+        if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+      }
 
-      mStreamList->Add(mSavedResponses[i].mBodyId, stream);
+      mStreamList->Add(mSavedResponses[i].mBodyId, Move(stream));
     }
 
     return rv;
@@ -1157,12 +1161,14 @@ public:
       }
 
       nsCOMPtr<nsIInputStream> stream;
-      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedRequests[i].mBodyId,
-                    getter_AddRefs(stream));
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+      if (mArgs.openMode() == OpenMode::Eager) {
+        rv = BodyOpen(aQuotaInfo, aDBDir, mSavedRequests[i].mBodyId,
+                      getter_AddRefs(stream));
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+        if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+      }
 
-      mStreamList->Add(mSavedRequests[i].mBodyId, stream);
+      mStreamList->Add(mSavedRequests[i].mBodyId, Move(stream));
     }
 
     return rv;
@@ -1221,12 +1227,14 @@ public:
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponse.mBodyId,
-                  getter_AddRefs(stream));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-    if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+    if (mArgs.openMode() == OpenMode::Eager) {
+      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponse.mBodyId,
+                    getter_AddRefs(stream));
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
+    }
 
-    mStreamList->Add(mSavedResponse.mBodyId, stream);
+    mStreamList->Add(mSavedResponse.mBodyId, Move(stream));
 
     return rv;
   }
@@ -1334,7 +1342,9 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     MOZ_DIAGNOSTIC_ASSERT(aRv.Failed() || mCacheId != INVALID_CACHE_ID);
-    aListener->OnOpComplete(Move(aRv), StorageOpenResult(), mCacheId);
+    aListener->OnOpComplete(Move(aRv),
+                            StorageOpenResult(nullptr, nullptr, mNamespace),
+                            mCacheId);
   }
 
 private:
@@ -1448,6 +1458,43 @@ public:
 private:
   const Namespace mNamespace;
   nsTArray<nsString> mKeys;
+};
+
+// ----------------------------------------------------------------------------
+
+class Manager::OpenStreamAction final : public Manager::BaseAction
+{
+public:
+  OpenStreamAction(Manager* aManager, ListenerId aListenerId,
+                   InputStreamResolver&& aResolver, const nsID& aBodyId)
+    : BaseAction(aManager, aListenerId)
+    , mResolver(Move(aResolver))
+    , mBodyId(aBodyId)
+  { }
+
+  virtual nsresult
+  RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
+                        mozIStorageConnection* aConn) override
+  {
+    nsresult rv = BodyOpen(aQuotaInfo, aDBDir, mBodyId,
+                           getter_AddRefs(mBodyStream));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(!mBodyStream)) { return NS_ERROR_FILE_NOT_FOUND; }
+
+    return rv;
+  }
+
+  virtual void
+  Complete(Listener* aListener, ErrorResult&& aRv) override
+  {
+    mResolver(Move(mBodyStream));
+    mResolver = nullptr;
+  }
+
+private:
+  InputStreamResolver mResolver;
+  const nsID mBodyId;
+  nsCOMPtr<nsIInputStream> mBodyStream;
 };
 
 // ----------------------------------------------------------------------------
@@ -1814,6 +1861,34 @@ Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
     default:
       MOZ_CRASH("Unknown CacheStorage operation!");
   }
+
+  context->Dispatch(action);
+}
+
+void
+Manager::ExecuteOpenStream(Listener* aListener, InputStreamResolver&& aResolver,
+                           const nsID& aBodyId)
+{
+  NS_ASSERT_OWNINGTHREAD(Manager);
+  MOZ_DIAGNOSTIC_ASSERT(aListener);
+  MOZ_DIAGNOSTIC_ASSERT(aResolver);
+
+  if (NS_WARN_IF(mState == Closing)) {
+    aResolver(nullptr);
+    return;
+  }
+
+  RefPtr<Context> context = mContext;
+  MOZ_DIAGNOSTIC_ASSERT(!context->IsCanceled());
+
+  // We save the listener simply to track the existence of the caller here.
+  // Our returned value will really be passed to the resolver when the
+  // operation completes.  In the future we should remove the Listener
+  // mechanism in favor of std::function or MozPromise.
+  ListenerId listenerId = SaveListener(aListener);
+
+  RefPtr<Action> action =
+    new OpenStreamAction(this, listenerId, Move(aResolver), aBodyId);
 
   context->Dispatch(action);
 }
