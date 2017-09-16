@@ -213,6 +213,8 @@ var tests = [
       this.notification = showNotification(this.notifyObj);
     },
     onShown(popup) {
+      let notification = popup.childNodes[0];
+      is(notification.getAttribute("buttonhighlight"), "true", "default action is highlighted");
       triggerMainCommand(popup);
     },
     onHidden(popup) {
@@ -233,6 +235,7 @@ var tests = [
     onShown(popup) {
       let notification = popup.childNodes[0];
       is(notification.getAttribute("secondarybuttonhidden"), "true", "secondary button is hidden");
+      is(notification.getAttribute("buttonhighlight"), "true", "default action is highlighted");
       triggerMainCommand(popup);
     },
     onHidden(popup) {
