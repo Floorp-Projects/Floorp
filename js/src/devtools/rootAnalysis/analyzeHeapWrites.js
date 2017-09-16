@@ -292,6 +292,9 @@ function checkFieldWrite(entry, location, fields)
             return;
         if (/nsCOMPtr<.*?>.mRawPtr/.test(field))
             return;
+
+        if (/\bThreadLocal<\b/.test(field))
+            return;
     }
 
     var str = "";
@@ -419,6 +422,7 @@ function ignoreContents(entry)
         /nsCSSValue::BufferFromString/,
         /NS_strdup/,
         /Assert_NoQueryNeeded/,
+        /PlatformThread::CurrentId/,
         /imgRequestProxy::GetProgressTracker/, // Uses an AutoLock
         /Smprintf/,
         "malloc",
@@ -478,20 +482,21 @@ function ignoreContents(entry)
             /nsTArray_Impl.*?::AppendElement/,
             /nsTArray_Impl.*?::RemoveElementsAt/,
             /nsTArray_Impl.*?::ReplaceElementsAt/,
-            /nsTArray_Impl.*?::InsertElementsAt/,
+            /nsTArray_Impl.*?::InsertElementAt/,
             /nsTArray_Impl.*?::SetCapacity/,
+            /nsTArray_Impl.*?::SetLength/,
             /nsTArray_base.*?::EnsureCapacity/,
             /nsTArray_base.*?::ShiftData/,
             /AutoTArray.*?::Init/,
-            /nsTSubstring<T>::SetCapacity/,
-            /nsTSubstring<T>::SetLength/,
-            /nsTSubstring<T>::Assign/,
-            /nsTSubstring<T>::Append/,
-            /nsTSubstring<T>::Replace/,
-            /nsTSubstring<T>::Trim/,
-            /nsTSubstring<T>::Truncate/,
-            /nsTSubstring<T>::StripTaggedASCII/,
-            /nsTSubstring<T>::operator=/,
+            /(nsTSubstring<T>|nsAC?String)::SetCapacity/,
+            /(nsTSubstring<T>|nsAC?String)::SetLength/,
+            /(nsTSubstring<T>|nsAC?String)::Assign/,
+            /(nsTSubstring<T>|nsAC?String)::Append/,
+            /(nsTSubstring<T>|nsAC?String)::Replace/,
+            /(nsTSubstring<T>|nsAC?String)::Trim/,
+            /(nsTSubstring<T>|nsAC?String)::Truncate/,
+            /(nsTSubstring<T>|nsAC?String)::StripTaggedASCII/,
+            /(nsTSubstring<T>|nsAC?String)::operator=/,
             /nsTAutoStringN<T, N>::nsTAutoStringN/,
             /nsTFixedString<T>::nsTFixedString/,
 
