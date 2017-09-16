@@ -275,6 +275,12 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/menu.svg");
 }
 
+#PanelUI-menu-button[badge-status="update-available"],
+#PanelUI-menu-button[badge-status="update-manual"],
+#PanelUI-menu-button[badge-status="update-restart"] {
+  list-style-image: url("chrome://browser/skin/menu-badged.svg");
+}
+
 #cut-button {
   list-style-image: url("chrome://browser/skin/edit-cut.svg");
 }

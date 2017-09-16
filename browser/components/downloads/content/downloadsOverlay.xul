@@ -153,7 +153,8 @@
                         label="&downloadsHistory.label;"
                         accesskey="&downloadsHistory.accesskey;"
                         flex="1"
-                        oncommand="DownloadsPanel.showDownloadsHistory();"/>
+                        oncommand="DownloadsPanel.showDownloadsHistory();"
+                        pack="start"/>
               </hbox>
             </stack>
           </vbox>

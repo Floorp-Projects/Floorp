@@ -21,6 +21,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.RobocopUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.ContentValues;
@@ -424,7 +425,8 @@ abstract class BaseTest extends BaseRobocopTest {
     public final void selectMenuItem(String menuItemName) {
         // build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
-        final View menuView = mSolo.getView(R.id.menu);
+        final BrowserToolbar toolbar = (BrowserToolbar) mSolo.getView(R.id.browser_toolbar);
+        final View menuView = toolbar.findViewById(R.id.menu);
         mAsserter.isnot(menuView, null, "Menu view is not null");
         mSolo.clickOnView(menuView, true);
         mAsserter.ok(waitForEnabledText(itemName), "Waiting for menu item " + itemName, itemName + " is present and enabled");

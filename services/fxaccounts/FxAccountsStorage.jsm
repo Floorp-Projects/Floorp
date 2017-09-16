@@ -208,11 +208,8 @@ this.FxAccountsStorageManager.prototype = {
       // update fields.
       throw new Error("No user is logged in");
     }
-    if (!newFields || "uid" in newFields || "email" in newFields) {
-      // Once we support
-      // user changing email address this may need to change, but it's not
-      // clear how we would be told of such a change anyway...
-      throw new Error("Can't change uid or email address");
+    if (!newFields || "uid" in newFields) {
+      throw new Error("Can't change uid");
     }
     log.debug("_updateAccountData with items", Object.keys(newFields));
     // work out what bucket.
