@@ -18,10 +18,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
-const HOST_MANIFEST_SCHEMA = "chrome://extensions/content/schemas/native_host_manifest.json";
-const VALID_APPLICATION = /^\w+(\.\w+)*$/;
+const DASHED = AppConstants.platform === "linux";
 
-const REGPATH = "Software\\Mozilla\\NativeMessagingHosts";
+// Supported native manifest types, with platform-specific slugs.
+const TYPES = {
+  stdio: DASHED ? "native-messaging-hosts" : "NativeMessagingHosts",
+  storage: DASHED ? "managed-storage" : "ManagedStorage",
+  pkcs11: DASHED ? "pkcs11-modules" : "PKCS11Modules",
+};
+
+const NATIVE_MANIFEST_SCHEMA = "chrome://extensions/content/schemas/native_manifest.json";
+
+const REGPATH = "Software\\Mozilla";
 
 this.NativeManifests = {
   _initializePromise: null,
@@ -37,18 +45,18 @@ this.NativeManifests = {
           Services.dirsvc.get("XREUserNativeManifests", Ci.nsIFile).path,
           Services.dirsvc.get("XRESysNativeManifests", Ci.nsIFile).path,
         ];
-        this._lookup = (application, context) => this._tryPaths(application, dirs, context);
+        this._lookup = (type, name, context) => this._tryPaths(type, name, dirs, context);
       } else {
-        throw new Error(`Native messaging is not supported on ${AppConstants.platform}`);
+        throw new Error(`Native manifests are not supported on ${AppConstants.platform}`);
       }
-      this._initializePromise = Schemas.load(HOST_MANIFEST_SCHEMA);
+      this._initializePromise = Schemas.load(NATIVE_MANIFEST_SCHEMA);
     }
     return this._initializePromise;
   },
 
-  _winLookup(application, context) {
+  _winLookup(type, name, context) {
     const REGISTRY = Ci.nsIWindowsRegKey;
-    let regPath = `${REGPATH}\\${application}`;
+    let regPath = `${REGPATH}\\${TYPES[type]}\\${name}`;
     let path = WindowsRegistry.readRegKey(REGISTRY.ROOT_KEY_CURRENT_USER,
                                           regPath, "", REGISTRY.WOW64_64);
     if (!path) {
@@ -58,11 +66,11 @@ this.NativeManifests = {
     if (!path) {
       return null;
     }
-    return this._tryPath(path, application, context)
+    return this._tryPath(type, path, name, context)
       .then(manifest => manifest ? {path, manifest} : null);
   },
 
-  _tryPath(path, application, context) {
+  _tryPath(type, path, name, context) {
     return Promise.resolve()
       .then(() => OS.File.read(path, {encoding: "utf-8"}))
       .then(data => {
@@ -70,23 +78,32 @@ this.NativeManifests = {
         try {
           manifest = JSON.parse(data);
         } catch (ex) {
-          let msg = `Error parsing native host manifest ${path}: ${ex.message}`;
-          Cu.reportError(msg);
+          Cu.reportError(`Error parsing native manifest ${path}: ${ex.message}`);
           return null;
         }
 
-        let normalized = Schemas.normalize(manifest, "manifest.NativeHostManifest", context);
+        let normalized = Schemas.normalize(manifest, "manifest.NativeManifest", context);
         if (normalized.error) {
           Cu.reportError(normalized.error);
           return null;
         }
         manifest = normalized.value;
-        if (manifest.name != application) {
-          let msg = `Native host manifest ${path} has name property ${manifest.name} (expected ${application})`;
-          Cu.reportError(msg);
+
+        if (manifest.type !== type) {
+          Cu.reportError(`Native manifest ${path} has type property ${manifest.type} (expected ${type})`);
           return null;
         }
-        return normalized.value;
+        if (manifest.name !== name) {
+          Cu.reportError(`Native manifest ${path} has name property ${manifest.name} (expected ${name})`);
+          return null;
+        }
+        if (manifest.allowed_extensions &&
+            !manifest.allowed_extensions.includes(context.extension.id)) {
+          Cu.reportError(`This extension does not have permission to use native manifest ${path}`);
+          return null;
+        }
+
+        return manifest;
       }).catch(ex => {
         if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
           return null;
@@ -95,10 +112,10 @@ this.NativeManifests = {
       });
   },
 
-  async _tryPaths(application, dirs, context) {
+  async _tryPaths(type, name, dirs, context) {
     for (let dir of dirs) {
-      let path = OS.Path.join(dir, `${application}.json`);
-      let manifest = await this._tryPath(path, application, context);
+      let path = OS.Path.join(dir, TYPES[type], `${name}.json`);
+      let manifest = await this._tryPath(type, path, name, context);
       if (manifest) {
         return {path, manifest};
       }
@@ -107,19 +124,17 @@ this.NativeManifests = {
   },
 
   /**
-   * Search for a valid native host manifest for the given application name.
+   * Search for a valid native manifest of the given type and name.
    * The directories searched and rules for manifest validation are all
-   * detailed in the native messaging documentation.
+   * detailed in the Native Manifests documentation.
    *
-   * @param {string} application The name of the applciation to search for.
+   * @param {string} type The type, one of: "pkcs11", "stdio" or "storage".
+   * @param {string} name The name of the manifest to search for.
    * @param {object} context A context object as expected by Schemas.normalize.
    * @returns {object} The contents of the validated manifest, or null if
-   *                   no valid manifest can be found for this application.
+   *                   no valid manifest can be found for this type and name.
    */
-  lookupApplication(application, context) {
-    if (!VALID_APPLICATION.test(application)) {
-      throw new Error(`Invalid application "${application}"`);
-    }
-    return this.init().then(() => this._lookup(application, context));
+  lookupManifest(type, name, context) {
+    return this.init().then(() => this._lookup(type, name, context));
   },
 };
