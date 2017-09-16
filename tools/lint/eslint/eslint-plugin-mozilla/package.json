@@ -20,10 +20,6 @@
   "author": "Mike Ratcliffe",
   "main": "lib/index.js",
   "dependencies": {
-    "escope": "3.6.0",
-    "espree": "3.4.3",
-    "estraverse": "4.2.0",
-    "globals": "9.18.0",
     "ini-parser": "0.0.2",
     "sax": "1.2.4"
   },
