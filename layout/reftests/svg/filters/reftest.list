@@ -126,7 +126,8 @@ fuzzy(2,2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.
 == fePointLight-zoomed-page.svg fePointLight-zoomed-page-ref.svg
 
 == feTurbulence-offset.svg feTurbulence-offset-ref.svg
-fuzzy(1,10000) == feTurbulence-zero-baseFreq.svg feTurbulence-zero-baseFreq-ref.svg
+fuzzy(1,10000) == feTurbulence-zero-baseFreq-01.svg feTurbulence-zero-baseFreq-01-ref.svg
+!= feTurbulence-zero-baseFreq-02.svg about:blank
 
 == outside-sourcegraphic-1.svg outside-sourcegraphic-ref.svg
 == outside-sourcegraphic-2.svg outside-sourcegraphic-ref.svg
