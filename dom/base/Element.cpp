@@ -1873,8 +1873,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
       nsPresContext* presContext = presShell->GetPresContext();
       if (presContext) {
         MOZ_ASSERT(this !=
-                   presContext->GetViewportScrollbarStylesOverrideNode(),
-                   "Leaving behind a raw pointer to this node (as having "
+                   presContext->GetViewportScrollbarStylesOverrideElement(),
+                   "Leaving behind a raw pointer to this element (as having "
                    "propagated scrollbar styles) - that's dangerous...");
       }
     }

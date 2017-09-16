@@ -98,9 +98,24 @@ function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback
 
 function runTest() {
   var win = open('bug574663.html', '_blank', 'width=300,height=300');
-  SimpleTest.waitForFocus(function () {
+  let winUtils = SpecialPowers.getDOMWindowUtils(win);
+
+  let waitUntilPainted = function(callback) {
+    // Until the first non-blank paint, the parent will set the opacity of our
+    // browser to 0 using the 'blank' attribute.
+    // Until the blank attribute is removed, we can't send scroll events.
+    SimpleTest.waitForFocus(function() {
+      SpecialPowers.loadChromeScript(_ => {
+        Components.utils.import("resource://gre/modules/Services.jsm");
+        Services.wm.getMostRecentWindow("navigator:browser")
+                .gBrowser.selectedBrowser.removeAttribute("blank");
+      });
+      waitForPaint(win, winUtils, callback);
+    }, win);
+  };
+
+  waitUntilPainted(function () {
     var scrollbox = win.document.getElementById("scrollbox");
-    let winUtils = SpecialPowers.getDOMWindowUtils(win);
     let outstandingTests = [
       [false, false],
       [false, true],
@@ -151,7 +166,7 @@ function runTest() {
       sendTouchpadScrollMotion(scrollbox, 1, ctrlKey, isMomentum, check);
     }
     nextTest();
-  }, win);
+  });
 }
 
 window.onload = function() {

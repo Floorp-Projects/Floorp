@@ -5,8 +5,6 @@
 "use strict";
 
 const {CC} = require("chrome");
-const defer = require("devtools/shared/defer");
-const promise = require("promise");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
@@ -25,52 +23,51 @@ const XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
  *         - Rejected with an error message in case of failure
  */
 exports.getJSON = function (prefName) {
-  let deferred = defer();
-  let xhr = new XMLHttpRequest();
+  return new Promise((resolve, reject) => {
+    let xhr = new XMLHttpRequest();
 
-  // We used to store cached data in preferences, but now we use asyncStorage
-  // Migration step: if it still exists, move this now useless preference in its
-  // new location and clear it
-  if (Services.prefs.prefHasUserValue(prefName + "_cache")) {
-    let json = Services.prefs.getCharPref(prefName + "_cache");
-    asyncStorage.setItem(prefName + "_cache", json).catch(function (e) {
-      // Could not move the cache, let's log the error but continue
-      console.error(e);
-    });
-    Services.prefs.clearUserPref(prefName + "_cache");
-  }
-
-  function readFromStorage(networkError) {
-    asyncStorage.getItem(prefName + "_cache").then(function (json) {
-      if (!json) {
-        return promise.reject("Empty cache for " + prefName);
-      }
-      return deferred.resolve(json);
-    }).catch(function (e) {
-      deferred.reject("JSON not available, CDN error: " + networkError +
-                      ", storage error: " + e);
-    });
-  }
-
-  xhr.onload = () => {
-    try {
-      let json = JSON.parse(xhr.responseText);
+    // We used to store cached data in preferences, but now we use asyncStorage
+    // Migration step: if it still exists, move this now useless preference in its
+    // new location and clear it
+    if (Services.prefs.prefHasUserValue(prefName + "_cache")) {
+      let json = Services.prefs.getCharPref(prefName + "_cache");
       asyncStorage.setItem(prefName + "_cache", json).catch(function (e) {
-        // Could not update cache, let's log the error but continue
+        // Could not move the cache, let's log the error but continue
         console.error(e);
       });
-      deferred.resolve(json);
-    } catch (e) {
-      readFromStorage(e);
+      Services.prefs.clearUserPref(prefName + "_cache");
     }
-  };
 
-  xhr.onerror = (e) => {
-    readFromStorage(e);
-  };
+    function readFromStorage(networkError) {
+      asyncStorage.getItem(prefName + "_cache").then(function (json) {
+        if (!json) {
+          return reject("Empty cache for " + prefName);
+        }
+        return resolve(json);
+      }).catch(function (e) {
+        reject("JSON not available, CDN error: " + networkError +
+                        ", storage error: " + e);
+      });
+    }
 
-  xhr.open("get", Services.prefs.getCharPref(prefName));
-  xhr.send();
+    xhr.onload = () => {
+      try {
+        let json = JSON.parse(xhr.responseText);
+        asyncStorage.setItem(prefName + "_cache", json).catch(function (e) {
+          // Could not update cache, let's log the error but continue
+          console.error(e);
+        });
+        resolve(json);
+      } catch (e) {
+        readFromStorage(e);
+      }
+    };
 
-  return deferred.promise;
+    xhr.onerror = (e) => {
+      readFromStorage(e);
+    };
+
+    xhr.open("get", Services.prefs.getCharPref(prefName));
+    xhr.send();
+  });
 };
