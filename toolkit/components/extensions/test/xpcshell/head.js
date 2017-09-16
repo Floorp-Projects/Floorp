@@ -2,7 +2,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-/* exported createHttpServer, promiseConsoleOutput, cleanupDir */
+/* exported createHttpServer, promiseConsoleOutput, cleanupDir, testEnv */
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 Services.prefs.setBoolPref("extensions.webextensions.remote", false);
+const testEnv = {
+  expectRemote: false, // tested in head_test.js
+};
 
 ExtensionTestUtils.init(this);
 
