@@ -231,6 +231,10 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_CopyAlternateValuesFrom", "aDest", null],
         ["Gecko_CounterStyle_GetName", "aResult", null],
         ["Gecko_CounterStyle_GetSingleString", "aResult", null],
+        ["Gecko_EnsureMozBorderColors", "aBorder", null],
+        ["Gecko_ClearMozBorderColors", "aBorder", null],
+        ["Gecko_AppendMozBorderColors", "aBorder", null],
+        ["Gecko_CopyMozBorderColors", "aDest", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
@@ -890,6 +894,22 @@ function processAssign(entry, location, lhs, edge)
             variable = lhs.Exp[0].Variable;
             if (isSafeVariable(entry, variable))
                 return;
+        } else if (lhs.Exp[0].Kind == "Fld") {
+            const {
+                Type: {Kind, Type: fieldType},
+                FieldCSU: {Type: {Kind: containerTypeKind,
+                                  Name: containerTypeName}}
+            } = lhs.Exp[0].Field;
+            const [containerExpr] = lhs.Exp[0].Exp;
+
+            if (containerTypeKind == 'CSU' &&
+                Kind == 'Pointer' &&
+                isEdgeSafeArgument(entry, containerExpr) &&
+                isSafeMemberPointer(containerTypeName, fieldType))
+            {
+                return;
+            }
+
         }
         if (fields.length)
             checkFieldWrite(entry, location, fields);
@@ -1263,6 +1283,26 @@ function isSafeLocalVariable(entry, name)
         return false;
 
     return true;
+}
+
+function isSafeMemberPointer(containerType, memberType)
+{
+    if (memberType.Kind != 'Pointer')
+        return false;
+
+    const {Type: {Kind: pointeeKind, Name: pointeeTypeName}} = memberType;
+
+    // nsStyleBorder has a member mBorderColors of type nsBorderColors**. It is
+    // lazily initialized to an array of 4 nsBorderColors, and should inherit
+    // the safety of its container.
+    if (containerType == 'nsStyleBorder' &&
+        pointeeKind == 'CSU' &&
+        pointeeTypeName == 'nsBorderColors')
+    {
+        return true;
+    }
+
+    return false;
 }
 
 // Return whether 'exp == value' holds only when execution is on the main thread.
