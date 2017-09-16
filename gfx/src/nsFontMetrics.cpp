@@ -134,7 +134,7 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
                        aFont.synthesis & NS_FONT_SYNTHESIS_STYLE,
                        aFont.languageOverride);
 
-    aFont.AddFontFeaturesToStyle(&style);
+    aFont.AddFontFeaturesToStyle(&style, mOrientation == gfxFont::eVertical);
     aFont.AddFontVariationsToStyle(&style);
 
     gfxFloat devToCssSize = gfxFloat(mP2A) /
