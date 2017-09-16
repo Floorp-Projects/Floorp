@@ -60,7 +60,7 @@ SetTime(PRTime offsetTime,nsAutoCString& serverString,nsAutoCString& cookieStrin
     // Set cookie string
     PR_ExplodeTime(SetExpiryTime , PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeStringPreset, 40, "%c GMT", &explodedTime);
-    cookieString.Replace(0, strlen("test=expiry; expires=") + strlen(timeStringPreset) + 1, "test=expiry; expires=");
+    cookieString.ReplaceLiteral(0, strlen("test=expiry; expires=") + strlen(timeStringPreset) + 1, "test=expiry; expires=");
     cookieString.Append(timeStringPreset);
 }
 
