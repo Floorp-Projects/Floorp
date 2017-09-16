@@ -30,6 +30,7 @@ function checkExternalFunction(entry)
         "strlen",
         "Servo_ComputedValues_EqualCustomProperties",
         /Servo_DeclarationBlock_GetCssText/,
+        "Servo_GetArcStringData",
         /nsIFrame::AppendOwnedAnonBoxes/,
         // Assume that atomic accesses are threadsafe.
         /^__atomic_fetch_/,
@@ -224,6 +225,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_StyleTransition_SetUnsupportedProperty", "aTransition", null],
         ["Gecko_AddPropertyToSet", "aPropertySet", null],
         ["Gecko_CalcStyleDifference", "aAnyStyleChanged", null],
+        ["Gecko_CalcStyleDifference", "aOnlyResetStructsChanged", null],
         ["Gecko_nsStyleSVG_CopyContextProperties", "aDst", null],
         ["Gecko_nsStyleFont_PrefillDefaultForGeneric", "aFont", null],
         ["Gecko_nsStyleSVG_SetContextPropertiesLength", "aSvg", null],
@@ -300,6 +302,14 @@ function checkFieldWrite(entry, location, fields)
     var str = "";
     for (var field of fields)
         str += " " + field;
+
+    // Bug 1400435
+    if (entry.stack[entry.stack.length - 1].callee.match(/^Gecko_CSSValue_Set/) &&
+        str == " nsAutoRefCnt.mValue")
+    {
+        return;
+    }
+
     dumpError(entry, location, "Field write" + str);
 }
 
@@ -319,6 +329,11 @@ function checkDereferenceWrite(entry, location, variable)
 
     // Operations on nsISupports reference counts.
     if (hasThreadsafeReferenceCounts(entry, /nsCOMPtr<T>::swap\(.*?\[with T = (.*?)\]/))
+        return;
+
+    // ConvertToLowerCase::write writes through a local pointer into the first
+    // argument.
+    if (/ConvertToLowerCase::write/.test(name) && entry.isSafeArgument(0))
         return;
 
     dumpError(entry, location, "Dereference write " + (variable ? variable : "<unknown>"));
@@ -408,6 +423,7 @@ function ignoreContents(entry)
         /MOZ_ReportAssertionFailure/,
         /MOZ_ReportCrash/,
         /MOZ_CrashPrintf/,
+        /MOZ_CrashOOL/,
         /AnnotateMozCrashReason/,
         /InvalidArrayIndex_CRASH/,
         /NS_ABORT_OOM/,
@@ -422,6 +438,7 @@ function ignoreContents(entry)
         /nsCSSValue::BufferFromString/,
         /NS_strdup/,
         /Assert_NoQueryNeeded/,
+        /AssertCurrentThreadOwnsMe/,
         /PlatformThread::CurrentId/,
         /imgRequestProxy::GetProgressTracker/, // Uses an AutoLock
         /Smprintf/,
@@ -429,8 +446,6 @@ function ignoreContents(entry)
         "free",
         "realloc",
         "jemalloc_thread_local_arena",
-        /profiler_register_thread/,
-        /profiler_unregister_thread/,
 
         // These all create static strings in local storage, which is threadsafe
         // to do but not understood by the analysis yet.
@@ -439,38 +454,36 @@ function ignoreContents(entry)
         /nsCSSProps::ValueToKeyword/,
         /nsCSSKeywords::GetStringValue/,
 
-        // The analysis can't cope with the indirection used for the objects
-        // being initialized here.
-        "Gecko_GetOrCreateKeyframeAtStart",
-        "Gecko_GetOrCreateInitialKeyframe",
-        "Gecko_GetOrCreateFinalKeyframe",
-        "Gecko_NewStyleQuoteValues",
-        "Gecko_NewCSSValueSharedList",
-        "Gecko_NewNoneTransform",
-        "Gecko_NewGridTemplateAreasValue",
-        /nsCSSValue::SetCalcValue/,
-        /CSSValueSerializeCalcOps::Append/,
-        "Gecko_CSSValue_SetFunction",
-        "Gecko_CSSValue_SetArray",
-        "Gecko_CSSValue_InitSharedList",
-        "Gecko_EnsureMozBorderColors",
-        "Gecko_ClearMozBorderColors",
-        "Gecko_AppendMozBorderColors",
-        "Gecko_CopyMozBorderColors",
-        "Gecko_SetNullImageValue",
+        // These could probably be handled by treating the scope of PSAutoLock
+        // aka BaseAutoLock<PSMutex> as threadsafe.
+        /profiler_register_thread/,
+        /profiler_unregister_thread/,
 
         // The analysis thinks we'll write to mBits in the DoGetStyleFoo<false>
         // call.  Maybe the template parameter confuses it?
         /nsStyleContext::PeekStyle/,
 
-        // Needs main thread assertions or other fixes.
-        /UndisplayedMap::GetEntryFor/,
+        // The analysis can't cope with the indirection used for the objects
+        // being initialized here, from nsCSSValue::Array::Create to the return
+        // value of the Item(i) getter.
+        /nsCSSValue::SetCalcValue/,
+
+        // Unable to analyze safety of linked list initialization.
+        "Gecko_NewCSSValueSharedList",
+        "Gecko_CSSValue_InitSharedList",
+
+        // Unable to trace through dataflow, but straightforward if inspected.
+        "Gecko_NewNoneTransform",
+
+        // Bug 1368922
+        "Gecko_UnsetDirtyStyleAttr",
+
+        // Bug 1400438
+        "Gecko_AppendMozBorderColors",
+
+        // Need main thread assertions or other fixes.
         /EffectCompositor::GetServoAnimationRule/,
         /LookAndFeel::GetColor/,
-        "Gecko_CopyStyleContentsFrom",
-        "Gecko_CSSValue_SetPixelValue",
-        "Gecko_UnsetDirtyStyleAttr",
-        /nsCSSPropertyIDSet::AddProperty/,
     ];
     if (entry.matches(whitelist))
         return true;
@@ -778,8 +791,6 @@ else
     loadTypes('src_comp.xdb');
 print(elapsedTime() + "Starting analysis...");
 
-var reachable = {};
-
 var xdb = xdbLibrary();
 xdb.open("src_body.xdb");
 
@@ -827,6 +838,9 @@ var assignments;
 
 // All loops in the current function which are reachable off main thread.
 var reachableLoops;
+
+// Functions that are reachable from the current root.
+var reachable = {};
 
 function dumpError(entry, location, text)
 {
@@ -1076,6 +1090,12 @@ function processRoot(name)
     var parameterNames = {};
     var worklist = [new WorklistEntry(name, safeArguments, [new CallSite(name, safeArguments, null, parameterNames)], parameterNames)];
 
+    reachable = {};
+
+    var armed = false;
+    if (name.includes("Gecko_CSSValue_Set"))
+        armed = true;
+
     while (worklist.length > 0) {
         var entry = worklist.pop();
 
@@ -1084,6 +1104,7 @@ function processRoot(name)
         // analyzing functions separately for each subset if simpler, ensures that
         // the stack traces we produce accurately characterize the stack arguments,
         // and should be fast enough for now.
+
         if (entry.mangledName() in reachable)
             continue;
         reachable[entry.mangledName()] = true;
