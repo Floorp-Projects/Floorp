@@ -653,7 +653,7 @@ void nsIDNService::normalizeFullStops(nsAString& s)
       case 0x3002:
       case 0xFF0E:
       case 0xFF61:
-        s.Replace(index, 1, NS_LITERAL_STRING("."));
+        s.ReplaceLiteral(index, 1, u".");
         break;
       default:
         break;
