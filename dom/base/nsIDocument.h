@@ -534,16 +534,6 @@ public:
   }
 
   /**
-   * Add an observer that gets notified whenever the charset changes.
-   */
-  virtual nsresult AddCharSetObserver(nsIObserver* aObserver) = 0;
-
-  /**
-   * Remove a charset observer.
-   */
-  virtual void RemoveCharSetObserver(nsIObserver* aObserver) = 0;
-
-  /**
    * This gets fired when the element that an id refers to changes.
    * This fires at difficult times. It is generally not safe to do anything
    * which could modify the DOM in any way. Use
