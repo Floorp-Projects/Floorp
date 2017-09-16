@@ -865,7 +865,7 @@ function variableAssignRhs(edge)
     return null;
 }
 
-function processAssign(entry, location, lhs, edge)
+function processAssign(body, entry, location, lhs, edge)
 {
     var fields;
     [lhs, fields] = stripFields(lhs);
@@ -879,17 +879,19 @@ function processAssign(entry, location, lhs, edge)
             // taken and indirect assignments might occur. This is an
             // unsoundness in the analysis.
 
+            let assign = [body, edge];
+
             // Chain assignments if the RHS has only been assigned once.
             var rhsVariable = variableAssignRhs(edge);
             if (rhsVariable) {
-                var rhsEdge = singleAssignment(variableName(rhsVariable));
-                if (rhsEdge)
-                    edge = rhsEdge;
+                var rhsAssign = singleAssignment(variableName(rhsVariable));
+                if (rhsAssign)
+                    assign = rhsAssign;
             }
 
             if (!(name in assignments))
                 assignments[name] = [];
-            assignments[name].push(edge);
+            assignments[name].push(assign);
         } else {
             checkVariableAssignment(entry, location, name);
         }
@@ -999,11 +1001,11 @@ function process(entry, body, addCallee)
 
         if (edge.Kind == "Assign") {
             assert(edge.Exp.length == 2);
-            processAssign(entry, location, edge.Exp[0], edge);
+            processAssign(body, entry, location, edge.Exp[0], edge);
         } else if (edge.Kind == "Call") {
             assert(edge.Exp.length <= 2);
             if (edge.Exp.length == 2)
-                processAssign(entry, location, edge.Exp[1], edge);
+                processAssign(body, entry, location, edge.Exp[1], edge);
 
             // Treat assertion failures as if they don't return, so that
             // asserting NS_IsMainThread() is sufficient to prevent the
@@ -1164,9 +1166,13 @@ function singleAssignment(name)
 }
 
 function expressionValueEdge(exp) {
-    if (exp.Kind == "Var" && exp.Variable.Kind == "Temp")
-        return singleAssignment(variableName(exp.Variable));
-    return null;
+    if (!(exp.Kind == "Var" && exp.Variable.Kind == "Temp"))
+        return null;
+    const assign = singleAssignment(variableName(exp.Variable));
+    if (!assign)
+        return null;
+    const [body, edge] = assign;
+    return edge;
 }
 
 function isSafeVariable(entry, variable)
@@ -1193,8 +1199,10 @@ function isSafeLocalVariable(entry, name)
 {
     // If there is a single place where this variable has been assigned on
     // edges we are considering, look at that edge.
-    var edge = singleAssignment(name);
-    if (edge) {
+    var assign = singleAssignment(name);
+    if (assign) {
+        const [body, edge] = assign;
+
         // Treat temporary pointers to DebugOnly contents as thread local.
         if (isDirectCall(edge, /DebugOnly.*?::operator/))
             return true;
@@ -1255,6 +1263,26 @@ function isSafeLocalVariable(entry, name)
             {
                 return true;
             }
+
+            // Special case:
+            //
+            //   keyframe->mTimingFunction.emplace()
+            //   keyframe->mTimingFunction->Init()
+            //
+            // The object calling Init should be considered safe here because
+            // we just emplaced it, though in general keyframe::operator->
+            // could do something crazy.
+            if (isDirectCall(edge, /operator->/)) do {
+                const predges = getPredecessors(body)[edge.Index[0]];
+                if (!predges || predges.length != 1)
+                    break;
+                const predge = predges[0];
+                if (!isDirectCall(predge, /\bemplace\b/))
+                    break;
+                const instance = predge.PEdgeCallInstance;
+                if (JSON.stringify(instance) == JSON.stringify(edge.PEdgeCallInstance))
+                    return true;
+            } while (false);
         }
 
         if (isSafeAssignment(entry, edge, name))
