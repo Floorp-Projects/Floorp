@@ -177,6 +177,13 @@ public:
   void ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
                         const CacheOpArgs& aOpArgs);
 
+  void ExecuteOpenStream(Listener* aListener, InputStreamResolver&& aResolver,
+                         const nsID& aBodyId);
+
+  void
+  NoteStreamOpenComplete(const nsID& aBodyId, ErrorResult&& aRv,
+                         nsCOMPtr<nsIInputStream>&& aBodyStream);
+
 private:
   class Factory;
   class BaseAction;
@@ -193,6 +200,8 @@ private:
   class StorageOpenAction;
   class StorageDeleteAction;
   class StorageKeysAction;
+
+  class OpenStreamAction;
 
   typedef uint64_t ListenerId;
 

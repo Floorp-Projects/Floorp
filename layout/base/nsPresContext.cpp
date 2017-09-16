@@ -30,6 +30,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
@@ -231,7 +232,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mFocusBackgroundColor(mBackgroundColor),
     mFocusTextColor(mDefaultColor),
     mBodyTextColor(mDefaultColor),
-    mViewportScrollbarOverrideNode(nullptr),
+    mViewportScrollbarOverrideElement(nullptr),
     mViewportStyleScrollbar(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mFocusRingWidth(1),
     mExistThrottledUpdates(false),
@@ -1457,7 +1458,7 @@ CheckOverflow(const nsStyleDisplay* aDisplay, ScrollbarStyles* aStyles)
   return true;
 }
 
-static nsIContent*
+static Element*
 GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
                                         ScrollbarStyles *aStyles)
 {
@@ -1479,19 +1480,17 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
   }
 
   // Don't look in the BODY for non-HTML documents or HTML documents
-  // with non-HTML roots
+  // with non-HTML roots.
   // XXX this should be earlier; we shouldn't even look at the document root
   // for non-HTML documents. Fix this once we support explicit CSS styling
   // of the viewport
   // XXX what about XHTML?
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(document));
+  nsHTMLDocument* htmlDoc = document->AsHTMLDocument();
   if (!htmlDoc || !docElement->IsHTMLElement()) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMHTMLElement> body;
-  htmlDoc->GetBody(getter_AddRefs(body));
-  nsCOMPtr<nsIContent> bodyElement = do_QueryInterface(body);
+  Element* bodyElement = htmlDoc->GetBody();
 
   if (!bodyElement ||
       !bodyElement->NodeInfo()->Equals(nsGkAtoms::body)) {
@@ -1500,7 +1499,7 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
   }
 
   RefPtr<nsStyleContext> bodyStyle =
-    styleSet->ResolveStyleFor(bodyElement->AsElement(), rootStyle,
+    styleSet->ResolveStyleFor(bodyElement, rootStyle,
                               LazyComputeBehavior::Allow);
 
   if (CheckOverflow(bodyStyle->StyleDisplay(), aStyles)) {
@@ -1511,16 +1510,16 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
   return nullptr;
 }
 
-nsIContent*
+Element*
 nsPresContext::UpdateViewportScrollbarStylesOverride()
 {
   // Start off with our default styles, and then update them as needed.
   mViewportStyleScrollbar = ScrollbarStyles(NS_STYLE_OVERFLOW_AUTO,
                                             NS_STYLE_OVERFLOW_AUTO);
-  mViewportScrollbarOverrideNode = nullptr;
+  mViewportScrollbarOverrideElement = nullptr;
   // Don't propagate the scrollbar state in printing or print preview.
   if (!IsPaginated()) {
-    mViewportScrollbarOverrideNode =
+    mViewportScrollbarOverrideElement =
       GetPropagatedScrollbarStylesForViewport(this, &mViewportStyleScrollbar);
   }
 
@@ -1532,12 +1531,12 @@ nsPresContext::UpdateViewportScrollbarStylesOverride()
     // the styles are from, so that the state of those elements is not
     // affected across fullscreen change.
     if (fullscreenElement != document->GetRootElement() &&
-        fullscreenElement != mViewportScrollbarOverrideNode) {
+        fullscreenElement != mViewportScrollbarOverrideElement) {
       mViewportStyleScrollbar = ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
                                                 NS_STYLE_OVERFLOW_HIDDEN);
     }
   }
-  return mViewportScrollbarOverrideNode;
+  return mViewportScrollbarOverrideElement;
 }
 
 bool
