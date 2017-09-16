@@ -113,8 +113,6 @@ exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
 // Firefox Accounts WebChannel ID
 exports.WEBCHANNEL_ID = "account_updates";
 
-exports.PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUserHash";
-
 // Server errno.
 // From https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-format
 exports.ERRNO_ACCOUNT_ALREADY_EXISTS         = 101;

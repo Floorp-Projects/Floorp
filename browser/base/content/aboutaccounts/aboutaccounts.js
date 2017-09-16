@@ -16,6 +16,8 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
 // for master-password utilities
 Cu.import("resource://services-sync/util.js");
 
+const PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUserHash";
+
 const ACTION_URL_PARAM = "action";
 
 const OBSERVER_TOPICS = [
@@ -25,6 +27,65 @@ const OBSERVER_TOPICS = [
 
 function log(msg) {
   // dump("FXA: " + msg + "\n");
+}
+
+function getPreviousAccountNameHash() {
+  try {
+    return Services.prefs.getStringPref(PREF_LAST_FXA_USER);
+  } catch (_) {
+    return "";
+  }
+}
+
+function setPreviousAccountNameHash(acctName) {
+  Services.prefs.setStringPref(PREF_LAST_FXA_USER, sha256(acctName));
+}
+
+function needRelinkWarning(acctName) {
+  let prevAcctHash = getPreviousAccountNameHash();
+  return prevAcctHash && prevAcctHash != sha256(acctName);
+}
+
+// Given a string, returns the SHA265 hash in base64
+function sha256(str) {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  // Data is an array of bytes.
+  let data = converter.convertToByteArray(str, {});
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+                 .createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA256);
+  hasher.update(data, data.length);
+
+  return hasher.finish(true);
+}
+
+function promptForRelink(acctName) {
+  let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
+  let continueLabel = sb.GetStringFromName("continue.label");
+  let title = sb.GetStringFromName("relinkVerify.title");
+  let description = sb.formatStringFromName("relinkVerify.description",
+                                            [acctName], 1);
+  let body = sb.GetStringFromName("relinkVerify.heading") +
+             "\n\n" + description;
+  let ps = Services.prompt;
+  let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
+                    (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
+                    ps.BUTTON_POS_1_DEFAULT;
+  let pressed = Services.prompt.confirmEx(window, title, body, buttonFlags,
+                                     continueLabel, null, null, null,
+                                     {});
+  return pressed == 0; // 0 is the "continue" button
+}
+
+// If the last fxa account used for sync isn't this account, we display
+// a modal dialog checking they really really want to do this...
+// (This is sync-specific, so ideally would be in sync's identity module,
+// but it's a little more seamless to do here, and sync is currently the
+// only fxa consumer, so...
+function shouldAllowRelink(acctName) {
+  return !needRelinkWarning(acctName) || promptForRelink(acctName);
 }
 
 function updateDisplayedEmail(user) {
@@ -51,6 +112,7 @@ var wrapper = {
     docShell.addProgressListener(this.iframeListener,
                                  Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
                                  Ci.nsIWebProgress.NOTIFY_LOCATION);
+    iframe.addEventListener("load", this);
 
     // Ideally we'd just merge urlParams with new URL(url).searchParams, but our
     // URLSearchParams implementation doesn't support iteration (bug 1085284).
@@ -106,7 +168,133 @@ var wrapper = {
         setErrorPage("networkError");
       }
     },
-  }
+  },
+
+  handleEvent(evt) {
+    switch (evt.type) {
+      case "load":
+        this.iframe.contentWindow.addEventListener("FirefoxAccountsCommand", this);
+        this.iframe.removeEventListener("load", this);
+        break;
+      case "FirefoxAccountsCommand":
+        this.handleRemoteCommand(evt);
+        break;
+    }
+  },
+
+  /**
+   * onLogin handler receives user credentials from the jelly after a
+   * sucessful login and stores it in the fxaccounts service
+   *
+   * @param accountData the user's account data and credentials
+   */
+  onLogin(accountData) {
+    log("Received: 'login'. Data:" + JSON.stringify(accountData));
+
+    // We don't act on customizeSync anymore, it used to open a dialog inside
+    // the browser to selecte the engines to sync but we do it on the web now.
+    delete accountData.customizeSync;
+    // sessionTokenContext is erroneously sent by the content server.
+    // https://github.com/mozilla/fxa-content-server/issues/2766
+    // To avoid having the FxA storage manager not knowing what to do with
+    // it we delete it here.
+    delete accountData.sessionTokenContext;
+
+    // We need to confirm a relink - see shouldAllowRelink for more
+    let newAccountEmail = accountData.email;
+    // The hosted code may have already checked for the relink situation
+    // by sending the can_link_account command. If it did, then
+    // it will indicate we don't need to ask twice.
+    if (!accountData.verifiedCanLinkAccount && !shouldAllowRelink(newAccountEmail)) {
+      // we need to tell the page we successfully received the message, but
+      // then bail without telling fxAccounts
+      this.injectData("message", { status: "login" });
+      // after a successful login we return to preferences
+      openPrefs();
+      return;
+    }
+    delete accountData.verifiedCanLinkAccount;
+
+    // Remember who it was so we can log out next time.
+    setPreviousAccountNameHash(newAccountEmail);
+
+    // A sync-specific hack - we want to ensure sync has been initialized
+    // before we set the signed-in user.
+    let xps = Cc["@mozilla.org/weave/service;1"]
+              .getService(Ci.nsISupports)
+              .wrappedJSObject;
+    xps.whenLoaded().then(() => {
+      updateDisplayedEmail(accountData);
+      return fxAccounts.setSignedInUser(accountData);
+    }).then(() => {
+      // If the user data is verified, we want it to immediately look like
+      // they are signed in without waiting for messages to bounce around.
+      if (accountData.verified) {
+        openPrefs();
+      }
+      this.injectData("message", { status: "login" });
+      // until we sort out a better UX, just leave the jelly page in place.
+      // If the account email is not yet verified, it will tell the user to
+      // go check their email, but then it will *not* change state after
+      // the verification completes (the browser will begin syncing, but
+      // won't notify the user). If the email has already been verified,
+      // the jelly will say "Welcome! You are successfully signed in as
+      // EMAIL", but it won't then say "syncing started".
+    }, (err) => this.injectData("message", { status: "error", error: err })
+    );
+  },
+
+  onCanLinkAccount(accountData) {
+    // We need to confirm a relink - see shouldAllowRelink for more
+    let ok = shouldAllowRelink(accountData.email);
+    this.injectData("message", { status: "can_link_account", data: { ok } });
+  },
+
+  /**
+   * onSignOut handler erases the current user's session from the fxaccounts service
+   */
+  onSignOut() {
+    log("Received: 'sign_out'.");
+
+    fxAccounts.signOut().then(
+      () => this.injectData("message", { status: "sign_out" }),
+      (err) => this.injectData("message", { status: "error", error: err })
+    );
+  },
+
+  handleRemoteCommand(evt) {
+    log("command: " + evt.detail.command);
+    let data = evt.detail.data;
+
+    switch (evt.detail.command) {
+      case "login":
+        this.onLogin(data);
+        break;
+      case "can_link_account":
+        this.onCanLinkAccount(data);
+        break;
+      case "sign_out":
+        this.onSignOut(data);
+        break;
+      default:
+        log("Unexpected remote command received: " + evt.detail.command + ". Ignoring command.");
+        break;
+    }
+  },
+
+  injectData(type, content) {
+    return fxAccounts.promiseAccountsSignUpURI().then(authUrl => {
+      let data = {
+        type,
+        content
+      };
+      this.iframe.contentWindow.postMessage(data, authUrl);
+    })
+    .catch(e => {
+      console.log("Failed to inject data", e);
+      setErrorPage("configError");
+    });
+  },
 };
 
 
