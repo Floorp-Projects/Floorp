@@ -24,7 +24,9 @@ const REGPATH = "Software\\Mozilla\\NativeMessagingHosts";
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
-let dir = FileUtils.getDir("TmpD", ["NativeMessaging"]);
+const TYPE_SLUG = AppConstants.platform === "linux" ? "native-messaging-hosts" : "NativeMessagingHosts";
+
+let dir = FileUtils.getDir("TmpD", ["NativeManifests"]);
 dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
 let userDir = dir.clone();
@@ -34,6 +36,9 @@ userDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 let globalDir = dir.clone();
 globalDir.append("global");
 globalDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+OS.File.makeDir(OS.Path.join(userDir.path, TYPE_SLUG));
+OS.File.makeDir(OS.Path.join(globalDir.path, TYPE_SLUG));
 
 let dirProvider = {
   getFile(property) {
@@ -75,6 +80,9 @@ let global = this;
 
 // Test of NativeManifests.lookupApplication() begin here...
 let context = {
+  extension: {
+    id: "extension@tests.mozilla.org",
+  },
   url: null,
   jsonStringify(...args) { return JSON.stringify(...args); },
   cloneScope: global,
@@ -109,7 +117,7 @@ let templateManifest = {
 };
 
 function lookupApplication(app, ctx) {
-  return NativeManifests.lookupApplication(app, ctx);
+  return NativeManifests.lookupManifest("stdio", app, ctx);
 }
 
 add_task(async function test_nonexistent_manifest() {
@@ -117,7 +125,7 @@ add_task(async function test_nonexistent_manifest() {
   equal(result, null, "lookupApplication returns null for non-existent application");
 });
 
-const USER_TEST_JSON = OS.Path.join(userDir.path, "test.json");
+const USER_TEST_JSON = OS.Path.join(userDir.path, TYPE_SLUG, "test.json");
 
 add_task(async function test_good_manifest() {
   await writeManifest(USER_TEST_JSON, templateManifest);
@@ -189,7 +197,7 @@ add_task(async function test_no_allowed_extensions() {
   equal(result, null, "lookupApplication ignores manifest with no allowed_extensions");
 });
 
-const GLOBAL_TEST_JSON = OS.Path.join(globalDir.path, "test.json");
+const GLOBAL_TEST_JSON = OS.Path.join(globalDir.path, TYPE_SLUG, "test.json");
 let globalManifest = Object.assign({}, templateManifest);
 globalManifest.description = "This manifest is from the systemwide directory";
 
@@ -245,8 +253,8 @@ while True:
     sys.stdout.write(msg)
   `;
 
-  let scriptPath = OS.Path.join(userDir.path, "wontdie.py");
-  let manifestPath = OS.Path.join(userDir.path, "wontdie.json");
+  let scriptPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.py");
+  let manifestPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.json");
 
   const ID = "native@tests.mozilla.org";
   let manifest = {
@@ -259,7 +267,7 @@ while True:
   if (AppConstants.platform == "win") {
     await OS.File.writeAtomic(scriptPath, SCRIPT);
 
-    let batPath = OS.Path.join(userDir.path, "wontdie.bat");
+    let batPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.bat");
     let batBody = `@ECHO OFF\n${PYTHON} -u "${scriptPath}" %*\n`;
     await OS.File.writeAtomic(batPath, batBody);
     await OS.File.setPermissions(batPath, {unixMode: 0o755});
