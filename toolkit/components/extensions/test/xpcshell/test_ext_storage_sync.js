@@ -333,7 +333,7 @@ class KintoServer {
   }
 
   // Utility function to install a keyring at the start of a test.
-  installKeyRing(fxaService, keysData, salts, etag, properties) {
+  async installKeyRing(fxaService, keysData, salts, etag, properties) {
     const keysRecord = {
       "id": "keys",
       "keys": keysData,
@@ -342,7 +342,7 @@ class KintoServer {
     };
     this.etag = etag;
     const transformer = new KeyRingEncryptionRemoteTransformer(fxaService);
-    this.encryptAndAddRecord(transformer, Object.assign({}, properties, {
+    return this.encryptAndAddRecord(transformer, Object.assign({}, properties, {
       collectionId: "storage-sync-crypto",
       data: keysRecord,
     }));
@@ -634,9 +634,9 @@ add_task(async function ensureCanSync_pulls_key() {
   const extensionOnlyKey = uuid();
   const extensionOnlySalt = uuid();
   const DEFAULT_KEY = new BulkKeyBundle("[default]");
-  DEFAULT_KEY.generateRandom();
+  await DEFAULT_KEY.generateRandom();
   const RANDOM_KEY = new BulkKeyBundle(extensionId);
-  RANDOM_KEY.generateRandom();
+  await RANDOM_KEY.generateRandom();
   await withContextAndServer(async function(context, server) {
     await withSignedInUser(loggedInUser, async function(extensionStorageSync, fxaService) {
       // FIXME: generating a random salt probably shouldn't require a CryptoCollection?
@@ -652,7 +652,7 @@ add_task(async function ensureCanSync_pulls_key() {
       const saltData = {
         [extensionId]: RANDOM_SALT,
       };
-      server.installKeyRing(fxaService, keysData, saltData, 950, {
+      await server.installKeyRing(fxaService, keysData, saltData, 950, {
         predicate: appearsAt(900),
       });
 
@@ -665,10 +665,10 @@ add_task(async function ensureCanSync_pulls_key() {
 
       // Another client generates a key for extensionId2
       const newKey = new BulkKeyBundle(extensionId2);
-      newKey.generateRandom();
+      await newKey.generateRandom();
       keysData.collections[extensionId2] = newKey.keyPairB64;
       saltData[extensionId2] = cryptoCollection.getNewSalt();
-      server.installKeyRing(fxaService, keysData, saltData, 1050, {
+      await server.installKeyRing(fxaService, keysData, saltData, 1050, {
         predicate: appearsAt(1000),
       });
 
@@ -682,9 +682,9 @@ add_task(async function ensureCanSync_pulls_key() {
 
       // Another client generates a key, but not a salt, for extensionOnlyKey
       const onlyKey = new BulkKeyBundle(extensionOnlyKey);
-      onlyKey.generateRandom();
+      await onlyKey.generateRandom();
       keysData.collections[extensionOnlyKey] = onlyKey.keyPairB64;
-      server.installKeyRing(fxaService, keysData, saltData, 1150, {
+      await server.installKeyRing(fxaService, keysData, saltData, 1150, {
         predicate: appearsAt(1100),
       });
 
@@ -705,7 +705,7 @@ add_task(async function ensureCanSync_pulls_key() {
       // Another client generates a key, but not a salt, for extensionOnlyKey
       const newSalt = cryptoCollection.getNewSalt();
       saltData[extensionOnlySalt] = newSalt;
-      server.installKeyRing(fxaService, keysData, saltData, 1250, {
+      await server.installKeyRing(fxaService, keysData, saltData, 1250, {
         predicate: appearsAt(1200),
       });
 
@@ -733,9 +733,9 @@ add_task(async function ensureCanSync_handles_conflicts() {
   // if this happens, we still behave sensibly (keep the remote key).
   const extensionId = uuid();
   const DEFAULT_KEY = new BulkKeyBundle("[default]");
-  DEFAULT_KEY.generateRandom();
+  await DEFAULT_KEY.generateRandom();
   const RANDOM_KEY = new BulkKeyBundle(extensionId);
-  RANDOM_KEY.generateRandom();
+  await RANDOM_KEY.generateRandom();
   await withContextAndServer(async function(context, server) {
     await withSignedInUser(loggedInUser, async function(extensionStorageSync, fxaService) {
       // FIXME: generating salts probably shouldn't rely on a CryptoCollection
@@ -750,7 +750,7 @@ add_task(async function ensureCanSync_handles_conflicts() {
       const saltData = {
         [extensionId]: RANDOM_SALT,
       };
-      server.installKeyRing(fxaService, keysData, saltData, 765, {conflict: true});
+      await server.installKeyRing(fxaService, keysData, saltData, 765, {conflict: true});
 
       await extensionStorageSync.cryptoCollection._clear();
 

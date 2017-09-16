@@ -32,7 +32,7 @@ function getServerBookmarks(server) {
 }
 
 async function makeServer() {
-  let server = serverForFoo(bookmarksEngine);
+  let server = await serverForFoo(bookmarksEngine);
   await SyncTestingInfrastructure(server);
   return server;
 }

@@ -170,8 +170,8 @@ class EncryptionRemoteTransformer {
     }
 
     let IV = WeaveCrypto.generateRandomIV();
-    let ciphertext = WeaveCrypto.encrypt(JSON.stringify(record),
-                                         keyBundle.encryptionKeyB64, IV);
+    let ciphertext = await WeaveCrypto.encrypt(JSON.stringify(record),
+                                               keyBundle.encryptionKeyB64, IV);
     let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
     const encryptedResult = {ciphertext, IV, hmac, id};
 
@@ -204,8 +204,8 @@ class EncryptionRemoteTransformer {
     }
 
     // Handle invalid data here. Elsewhere we assume that cleartext is an object.
-    let cleartext = WeaveCrypto.decrypt(record.ciphertext,
-                                        keyBundle.encryptionKeyB64, record.IV);
+    let cleartext = await WeaveCrypto.decrypt(record.ciphertext,
+                                              keyBundle.encryptionKeyB64, record.IV);
     let jsonResult = JSON.parse(cleartext);
     if (!jsonResult || typeof jsonResult !== "object") {
       throw new Error("Decryption failed: result is <" + jsonResult + ">, not an object.");
@@ -567,7 +567,7 @@ class CryptoCollection {
     } else {
       // We never actually use the default key, so it's OK if we
       // generate one multiple times.
-      collectionKeys.generateDefaultKey();
+      await collectionKeys.generateDefaultKey();
     }
     // Pass through uuid field so that we can save it if we need to.
     collectionKeys.uuid = cryptoKeyRecord.uuid;

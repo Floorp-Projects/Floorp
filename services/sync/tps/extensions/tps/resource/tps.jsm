@@ -627,7 +627,7 @@ var TPS = {
       for (let json of resp.obj) {
         let record = new collection._recordObj();
         record.deserialize(json);
-        record.decrypt(collectionKey);
+        await record.decrypt(collectionKey);
         items.push(record.cleartext);
       }
       return items;

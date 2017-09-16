@@ -26,7 +26,7 @@ add_task(async function test_clients_escape() {
     do_check_eq(record.name, "wéävê");
 
     _("Encrypting record...");
-    record.encrypt(keyBundle);
+    await record.encrypt(keyBundle);
     _("Encrypted.");
 
     let serialized = JSON.stringify(record);
@@ -43,7 +43,7 @@ add_task(async function test_clients_escape() {
     do_check_eq(checkCount, serialized.length);
 
     _("Making sure the record still looks like it did before");
-    record.decrypt(keyBundle);
+    await record.decrypt(keyBundle);
     do_check_eq(record.id, "ascii");
     do_check_eq(record.name, "wéävê");
 

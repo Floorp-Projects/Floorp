@@ -96,15 +96,15 @@ this.FakeCryptoService = function FakeCryptoService() {
 }
 FakeCryptoService.prototype = {
 
-  encrypt: function encrypt(clearText, symmetricKey, iv) {
+  async encrypt(clearText, symmetricKey, iv) {
     return clearText;
   },
 
-  decrypt: function decrypt(cipherText, symmetricKey, iv) {
+  async decrypt(cipherText, symmetricKey, iv) {
     return cipherText;
   },
 
-  generateRandomKey: function generateRandomKey() {
+  async generateRandomKey() {
     return btoa("fake-symmetric-key-" + this.counter++);
   },
 

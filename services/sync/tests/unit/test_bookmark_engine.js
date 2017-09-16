@@ -37,6 +37,10 @@ async function fetchAllSyncIds() {
   }
   return syncIds;
 }
+add_task(async function setup() {
+  initTestLogging("Trace");
+  await generateNewKeys(Service.collectionKeys);
+})
 
 add_task(async function test_delete_invalid_roots_from_server() {
   _("Ensure that we delete the Places and Reading List roots from the server.");
@@ -44,7 +48,7 @@ add_task(async function test_delete_invalid_roots_from_server() {
   let engine  = new BookmarksEngine(Service);
   await engine.initialize();
   let store   = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
@@ -131,7 +135,7 @@ add_task(async function test_processIncoming_error_orderChildren() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store  = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
@@ -217,7 +221,7 @@ async function test_restoreOrImport(aReplace) {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store  = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
@@ -442,7 +446,7 @@ add_task(async function test_mismatched_types() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store  = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   _("GUID: " + (await store.GUIDForId(6, true)));
@@ -487,7 +491,7 @@ add_task(async function test_bookmark_guidMap_fail() {
   await engine.initialize();
   let store = engine._store;
 
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   let coll   = server.user("foo").collection("bookmarks");
   await SyncTestingInfrastructure(server);
 
@@ -586,7 +590,7 @@ add_task(async function test_misreconciled_root() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   // Log real hard for this test.
@@ -643,7 +647,7 @@ add_task(async function test_sync_dateAdded() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store  = engine._store;
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
@@ -787,9 +791,3 @@ add_task(async function test_sync_dateAdded() {
     await promiseStopServer(server);
   }
 });
-
-function run_test() {
-  initTestLogging("Trace");
-  generateNewKeys(Service.collectionKeys);
-  run_next_test();
-}

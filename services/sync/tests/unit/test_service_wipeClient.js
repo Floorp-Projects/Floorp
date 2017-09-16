@@ -76,7 +76,7 @@ add_task(async function test_withEngineList() {
 });
 
 add_task(async function test_startOver_clears_keys() {
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
   do_check_true(!!Service.collectionKeys.keyForCollection());
   await Service.startOver();
   do_check_false(!!Service.collectionKeys.keyForCollection());

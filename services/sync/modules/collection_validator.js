@@ -77,10 +77,14 @@ class CollectionValidator {
     if (!result.response.success) {
       throw result.response;
     }
-    return result.records.map(record => {
-      record.decrypt(collectionKey);
-      return record.cleartext;
-    });
+    let maybeYield = Async.jankYielder();
+    let cleartexts = [];
+    for (let record of result.records) {
+      await maybeYield();
+      await record.decrypt(collectionKey);
+      cleartexts.push(record.cleartext);
+    }
+    return cleartexts;
   }
 
   // Should return a promise that resolves to an array of client items.

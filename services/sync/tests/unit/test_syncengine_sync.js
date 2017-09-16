@@ -56,11 +56,6 @@ async function createServerAndConfigureClient() {
   return [engine, server, USER];
 }
 
-function run_test() {
-  generateNewKeys(Service.collectionKeys);
-  Svc.Prefs.set("log.logger.engine.rotary", "Trace");
-  run_next_test();
-}
 
 /*
  * Tests
@@ -75,6 +70,11 @@ function run_test() {
  * In the spirit of unit testing, these are tested individually for
  * different scenarios below.
  */
+
+add_task(async function setup() {
+  await generateNewKeys(Service.collectionKeys);
+  Svc.Prefs.set("log.logger.engine.rotary", "Trace");
+});
 
 add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   _("SyncEngine._syncStartup resets sync and wipes server data if there's no or an outdated global record");
@@ -240,7 +240,7 @@ add_task(async function test_processIncoming_createFromServer() {
 
   await SyncTestingInfrastructure(server);
 
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
   let meta_global = Service.recordManager.set(engine.metaURL,
@@ -1165,7 +1165,7 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
   });
 
   await SyncTestingInfrastructure(server);
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1221,7 +1221,7 @@ async function test_uploadOutgoing_max_record_payload_bytes(allowSkippedRecord) 
   });
 
   await SyncTestingInfrastructure(server);
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
   engine.allowSkippedRecord = allowSkippedRecord;
@@ -1593,7 +1593,7 @@ add_task(async function test_sync_partialUpload() {
     max_post_records: 100
   };
   await SyncTestingInfrastructure(server);
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1688,7 +1688,7 @@ add_task(async function test_canDecrypt_noCryptoKeys() {
 add_task(async function test_canDecrypt_true() {
   _("SyncEngine.canDecrypt returns true if the engine can decrypt the items on the server.");
 
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO(

@@ -67,9 +67,9 @@ async function setUp(server) {
   await SyncTestingInfrastructure(server, "johndoe", "ilovejane");
   // Ensure that the server has valid keys so that logging in will work and not
   // result in a server wipe, rendering many of these tests useless.
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
-  serverKeys.encrypt(Service.identity.syncKeyBundle);
+  await serverKeys.encrypt(Service.identity.syncKeyBundle);
   return serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
 }
 
@@ -261,8 +261,8 @@ add_task(async function test_enabledRemotely() {
   // fresh start!
   try {
     _("Upload some keys to avoid a fresh start.");
-    let wbo = Service.collectionKeys.generateNewKeysWBO();
-    wbo.encrypt(Service.identity.syncKeyBundle);
+    let wbo = await Service.collectionKeys.generateNewKeysWBO();
+    await wbo.encrypt(Service.identity.syncKeyBundle);
     do_check_eq(200, (await wbo.upload(Service.resource(Service.cryptoKeysURL))).status);
 
     _("Engine is disabled.");
