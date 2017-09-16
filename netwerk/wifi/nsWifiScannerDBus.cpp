@@ -151,7 +151,7 @@ nsWifiScannerDBus::SendGetAPProperties(const char* aPath)
   DBusMessageIter argsIter;
   dbus_message_iter_init_append(msg, &argsIter);
 
-  const char* param = "";
+  const char* param = "org.freedesktop.NetworkManager.AccessPoint";
   if (!dbus_message_iter_append_basic(&argsIter, DBUS_TYPE_STRING, &param)) {
     return NS_ERROR_FAILURE;
   }
