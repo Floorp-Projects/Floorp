@@ -5611,6 +5611,8 @@ var IdentityHandler = {
       }
     };
 
+    result.host = this.getEffectiveHost();
+
     // Don't show identity data for pages with an unknown identity or if any
     // mixed content is loaded (mixed display content is loaded by default).
     // We also return for CHROMEUI pages since they don't have any certificate
@@ -5624,8 +5626,6 @@ var IdentityHandler = {
     }
 
     result.secure = true;
-
-    result.host = this.getEffectiveHost();
 
     let iData = this.getIdentityData();
     result.verifier = Strings.browser.formatStringFromName("identity.identified.verifier", [iData.caOrg], 1);
