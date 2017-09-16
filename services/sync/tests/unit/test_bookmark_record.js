@@ -18,7 +18,7 @@ function prepareBookmarkItem(collection, id) {
 add_task(async function test_bookmark_record() {
   await configureIdentity();
 
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
   let keyBundle = Service.identity.syncKeyBundle;
 
   let log = Log.repository.getLogger("Test");
@@ -33,13 +33,13 @@ add_task(async function test_bookmark_record() {
   do_check_eq(placesItem.getTypeObject(placesItem.type), Bookmark);
   do_check_eq(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
 
-  bookmarkItem.encrypt(keyBundle);
+  await bookmarkItem.encrypt(keyBundle);
   log.info("Ciphertext is " + bookmarkItem.ciphertext);
   do_check_true(bookmarkItem.ciphertext != null);
 
   log.info("Decrypting the record");
 
-  let payload = bookmarkItem.decrypt(keyBundle);
+  let payload = await bookmarkItem.decrypt(keyBundle);
   do_check_eq(payload.stuff, "my payload here");
   do_check_eq(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
   do_check_neq(payload, bookmarkItem.payload); // wrap.data.payload is the encrypted one

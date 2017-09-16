@@ -98,9 +98,9 @@ this.PlacesItem = function PlacesItem(collection, id, type) {
   this.type = type || "item";
 }
 PlacesItem.prototype = {
-  decrypt: function PlacesItem_decrypt(keyBundle) {
+  async decrypt(keyBundle) {
     // Do the normal CryptoWrapper decrypt, but change types before returning
-    let clear = CryptoWrapper.prototype.decrypt.call(this, keyBundle);
+    let clear = await CryptoWrapper.prototype.decrypt.call(this, keyBundle);
 
     // Convert the abstract places item to the actual object type
     if (!this.deleted)
