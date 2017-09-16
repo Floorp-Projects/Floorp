@@ -222,7 +222,15 @@ nsIDNService::IDNA2008StringPrep(const nsAString& input,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Output the result of nameToUnicode even if there were errors
+  // Output the result of nameToUnicode even if there were errors.
+  // But in the case of invalid punycode, the uidna_labelToUnicode result
+  // appears to get an appended U+FFFD REPLACEMENT CHARACTER, which will
+  // confuse our subsequent processing, so we drop that.
+  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1399540#c9)
+  if ((info.errors & UIDNA_ERROR_PUNYCODE) &&
+      outLen > 0 && outputBuffer[outLen - 1] == 0xfffd) {
+    --outLen;
+  }
   ICUUtils::AssignUCharArrayToString(outputBuffer, outLen, output);
 
   if (flag == eStringPrepIgnoreErrors) {
