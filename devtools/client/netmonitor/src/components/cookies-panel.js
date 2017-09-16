@@ -10,6 +10,7 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils/l10n");
+const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Component
 const PropertiesView = createFactory(require("./properties-view"));
@@ -50,11 +51,11 @@ function CookiesPanel({
   let object = {};
 
   if (responseCookies.length) {
-    object[RESPONSE_COOKIES] = getProperties(responseCookies);
+    object[RESPONSE_COOKIES] = sortObjectKeys(getProperties(responseCookies));
   }
 
   if (requestCookies.length) {
-    object[REQUEST_COOKIES] = getProperties(requestCookies);
+    object[REQUEST_COOKIES] = sortObjectKeys(getProperties(requestCookies));
   }
 
   return (

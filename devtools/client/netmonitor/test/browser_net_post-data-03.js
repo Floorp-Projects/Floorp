@@ -79,10 +79,10 @@ add_task(function* () {
   values = tabpanel
     .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
-  is(labels[0].textContent, "foo", "The first payload param name was incorrect.");
-  is(values[0].textContent, "bar", "The first payload param value was incorrect.");
-  is(labels[1].textContent, "baz", "The second payload param name was incorrect.");
-  is(values[1].textContent, "123", "The second payload param value was incorrect.");
+  is(labels[0].textContent, "baz", "The first payload param name was incorrect.");
+  is(values[0].textContent, "123", "The first payload param value was incorrect.");
+  is(labels[1].textContent, "foo", "The second payload param name was incorrect.");
+  is(values[1].textContent, "bar", "The second payload param value was incorrect.");
 
   return teardown(monitor);
 });
