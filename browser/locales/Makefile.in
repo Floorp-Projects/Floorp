@@ -216,9 +216,9 @@ l10n-check::
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/unpack.py $(DIST)/l10n-stage/$(MOZ_PKG_DIR)$(_RESPATH)
 	(cd $(DIST)/l10n-stage && test $$(cat $(MOZ_PKG_DIR)$(_RESPATH)/update.locale) = x-test)
 	@# package langpack as web extension, too, run some tests on it
-	$(MAKE) package-langpack-x-test L10NBASEDIR='$(PWD)' WEBEXT_LANGPACKS=1 MOZ_SIMPLE_PACKAGE_NAME=
-	$(MAKE) analyze-langpack-x-test MOZ_SIMPLE_PACKAGE_NAME=
-	$(MAKE) check-clobber-l10n-x-test MOZ_SIMPLE_PACKAGE_NAME=
+	$(MAKE) package-langpack-x-test L10NBASEDIR='$(PWD)' WEBEXT_LANGPACKS=1
+	$(MAKE) analyze-langpack-x-test
+	$(MAKE) check-clobber-l10n-x-test
 
 # Helper rules to have AB_CD set to the locale we test for testing
 # We need to split this out from l10n-check, as that needs AB_CD to be en-US
