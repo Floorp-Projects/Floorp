@@ -24,9 +24,9 @@ using mozilla::StaticMutexAutoLock;
 using mozilla::StaticAutoPtr;
 using mozilla::SystemGroup;
 using mozilla::TaskCategory;
-using mozilla::Telemetry::Accumulation;
+using mozilla::Telemetry::HistogramAccumulation;
 using mozilla::Telemetry::DiscardedData;
-using mozilla::Telemetry::KeyedAccumulation;
+using mozilla::Telemetry::KeyedHistogramAccumulation;
 using mozilla::Telemetry::ScalarActionType;
 using mozilla::Telemetry::ScalarAction;
 using mozilla::Telemetry::KeyedScalarAction;
@@ -62,8 +62,8 @@ mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArmed(false);
 mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArming(false);
 
 // This batches child process accumulations that should be sent to the parent.
-StaticAutoPtr<nsTArray<Accumulation>> gHistogramAccumulations;
-StaticAutoPtr<nsTArray<KeyedAccumulation>> gKeyedHistogramAccumulations;
+StaticAutoPtr<nsTArray<HistogramAccumulation>> gHistogramAccumulations;
+StaticAutoPtr<nsTArray<KeyedHistogramAccumulation>> gKeyedHistogramAccumulations;
 StaticAutoPtr<nsTArray<ScalarAction>> gChildScalarsActions;
 StaticAutoPtr<nsTArray<KeyedScalarAction>> gChildKeyedScalarsActions;
 StaticAutoPtr<nsTArray<ChildEventData>> gChildEvents;
@@ -143,7 +143,7 @@ TelemetryIPCAccumulator::AccumulateChildHistogram(mozilla::Telemetry::HistogramI
 {
   StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
   if (!gHistogramAccumulations) {
-    gHistogramAccumulations = new nsTArray<Accumulation>();
+    gHistogramAccumulations = new nsTArray<HistogramAccumulation>();
   }
   if (gHistogramAccumulations->Length() >=
       kWaterMarkDiscardFactor * kHistogramAccumulationsArrayHighWaterMark) {
@@ -153,7 +153,7 @@ TelemetryIPCAccumulator::AccumulateChildHistogram(mozilla::Telemetry::HistogramI
   if (gHistogramAccumulations->Length() == kHistogramAccumulationsArrayHighWaterMark) {
     DispatchIPCTimerFired();
   }
-  gHistogramAccumulations->AppendElement(Accumulation{aId, aSample});
+  gHistogramAccumulations->AppendElement(HistogramAccumulation{aId, aSample});
   ArmIPCTimer(locker);
 }
 
@@ -163,7 +163,7 @@ TelemetryIPCAccumulator::AccumulateChildKeyedHistogram(mozilla::Telemetry::Histo
 {
   StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
   if (!gKeyedHistogramAccumulations) {
-    gKeyedHistogramAccumulations = new nsTArray<KeyedAccumulation>();
+    gKeyedHistogramAccumulations = new nsTArray<KeyedHistogramAccumulation>();
   }
   if (gKeyedHistogramAccumulations->Length() >=
       kWaterMarkDiscardFactor * kHistogramAccumulationsArrayHighWaterMark) {
@@ -173,7 +173,7 @@ TelemetryIPCAccumulator::AccumulateChildKeyedHistogram(mozilla::Telemetry::Histo
   if (gKeyedHistogramAccumulations->Length() == kHistogramAccumulationsArrayHighWaterMark) {
     DispatchIPCTimerFired();
   }
-  gKeyedHistogramAccumulations->AppendElement(KeyedAccumulation{aId, aSample, aKey});
+  gKeyedHistogramAccumulations->AppendElement(KeyedHistogramAccumulation{aId, aSample, aKey});
   ArmIPCTimer(locker);
 }
 
@@ -264,8 +264,8 @@ static void
 SendAccumulatedData(TActor* ipcActor)
 {
   // Get the accumulated data and free the storage buffers.
-  nsTArray<Accumulation> accumulationsToSend;
-  nsTArray<KeyedAccumulation> keyedAccumulationsToSend;
+  nsTArray<HistogramAccumulation> histogramsToSend;
+  nsTArray<KeyedHistogramAccumulation> keyedHistogramsToSend;
   nsTArray<ScalarAction> scalarsToSend;
   nsTArray<KeyedScalarAction> keyedScalarsToSend;
   nsTArray<ChildEventData> eventsToSend;
@@ -274,10 +274,10 @@ SendAccumulatedData(TActor* ipcActor)
   {
     StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
     if (gHistogramAccumulations) {
-      accumulationsToSend.SwapElements(*gHistogramAccumulations);
+      histogramsToSend.SwapElements(*gHistogramAccumulations);
     }
     if (gKeyedHistogramAccumulations) {
-      keyedAccumulationsToSend.SwapElements(*gKeyedHistogramAccumulations);
+      keyedHistogramsToSend.SwapElements(*gKeyedHistogramAccumulations);
     }
     if (gChildScalarsActions) {
       scalarsToSend.SwapElements(*gChildScalarsActions);
@@ -294,13 +294,13 @@ SendAccumulatedData(TActor* ipcActor)
 
   // Send the accumulated data to the parent process.
   mozilla::Unused << NS_WARN_IF(!ipcActor);
-  if (accumulationsToSend.Length()) {
+  if (histogramsToSend.Length()) {
     mozilla::Unused <<
-      NS_WARN_IF(!ipcActor->SendAccumulateChildHistograms(accumulationsToSend));
+      NS_WARN_IF(!ipcActor->SendAccumulateChildHistograms(histogramsToSend));
   }
-  if (keyedAccumulationsToSend.Length()) {
+  if (keyedHistogramsToSend.Length()) {
     mozilla::Unused <<
-      NS_WARN_IF(!ipcActor->SendAccumulateChildKeyedHistograms(keyedAccumulationsToSend));
+      NS_WARN_IF(!ipcActor->SendAccumulateChildKeyedHistograms(keyedHistogramsToSend));
   }
   if (scalarsToSend.Length()) {
     mozilla::Unused <<

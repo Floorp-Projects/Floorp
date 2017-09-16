@@ -202,6 +202,21 @@ protected:
   virtual int GetPacketDuration() { return 0; }
 
   /**
+   * Attempt to initialize the audio encoder. The call of this method is
+   * delayed until we have received the first valid track from
+   * MediaStreamGraph, and the mReentrantMonitor will be notified if other
+   * methods is waiting for encoder to be completely initialized. This method
+   * is called on the MediaStreamGraph thread. This method will attempt to
+   * initialize with best effort if all the following are met:
+   * - it has been called multiple times
+   * - reached a threshold duration of audio data
+   * - the encoder has not yet initialized.
+   * Returns NS_OK on init, as well as when deferring for more data, so check
+   * mInitialized after calling as necessary.
+   */
+  virtual nsresult TryInit(const AudioSegment& aSegment, int aSamplingRate);
+
+  /**
    * Initializes the audio encoder. The call of this method is delayed until we
    * have received the first valid track from MediaStreamGraph, and the
    * mReentrantMonitor will be notified if other methods is waiting for encoder

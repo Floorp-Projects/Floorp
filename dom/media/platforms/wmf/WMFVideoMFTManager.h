@@ -26,6 +26,7 @@ public:
   WMFVideoMFTManager(const VideoInfo& aConfig,
                      layers::KnowsCompositor* aKnowsCompositor,
                      layers::ImageContainer* aImageContainer,
+                     float aFramerate,
                      bool aDXVAEnabled);
   ~WMFVideoMFTManager();
 
@@ -80,7 +81,7 @@ private:
 
   HRESULT SetDecoderMediaTypes();
 
-  bool CanUseDXVA(IMFMediaType* aType);
+  bool CanUseDXVA(IMFMediaType* aType, float aFramerate);
 
   already_AddRefed<MFTDecoder> LoadAMDVP9Decoder();
 
@@ -123,6 +124,7 @@ private:
   bool mIMFUsable = false;
   bool mCheckForAMDDecoder = true;
   Atomic<bool> mAMDVP9InUse;
+  const float mFramerate;
 };
 
 } // namespace mozilla

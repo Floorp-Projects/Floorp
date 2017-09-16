@@ -1360,6 +1360,7 @@ OggTrackDemuxer::NextSample()
     // This will also update mSharedAudioTrackInfo.
     mParent->ReadOggChain(data->GetEndTime());
   }
+  data->mTime += mParent->mDecodedAudioDuration;
   return data;
 }
 

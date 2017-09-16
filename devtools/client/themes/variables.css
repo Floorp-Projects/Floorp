@@ -52,14 +52,16 @@
 
   --theme-highlight-green: var(--green-70);
   --theme-highlight-blue: var(--blue-55);
-  --theme-highlight-bluegrey: #0072ab;
   --theme-highlight-purple: var(--blue-70);
+  --theme-highlight-red: var(--magenta-65);
+  --theme-highlight-yellow: #FFF89E;
+
+  /* These theme-highlight color variables have not been photonized. */
+  --theme-highlight-bluegrey: #0072ab;
   --theme-highlight-lightorange: #d97e00;
   --theme-highlight-orange: #f13c00;
-  --theme-highlight-red: var(--magenta-65);
   --theme-highlight-pink: #b82ee5;
   --theme-highlight-gray: #dde1e4;
-  --theme-highlight-yellow: #ffffb4;
 
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */
@@ -134,14 +136,16 @@
 
   --theme-highlight-green: #86DE74;
   --theme-highlight-blue: #75BFFF;
-  --theme-highlight-bluegrey: #5e88b0;
   --theme-highlight-purple: #B98EFF;
+  --theme-highlight-red: #FF7DE9;
+  --theme-highlight-yellow: #FFF89E;
+
+  /* These theme-highlight color variables have not been photonized. */
+  --theme-highlight-bluegrey: #5e88b0;
   --theme-highlight-lightorange: #d99b28;
   --theme-highlight-orange: #d96629;
-  --theme-highlight-red: #FF7DE9;
   --theme-highlight-pink: #df80ff;
   --theme-highlight-gray: #e9f4fe;
-  --theme-highlight-yellow: #ffffb4;
 
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */

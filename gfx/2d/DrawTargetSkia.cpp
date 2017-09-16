@@ -1261,13 +1261,7 @@ DrawTargetSkia::FillGlyphsWithCG(ScaledFont *aFont,
     return false;
   }
 
-  if (mPushedLayers.empty()) {
-    // Respect the font smoothing background color, but only if no layer is
-    // currently pushed, because this color usually describes what's under this
-    // DrawTarget, and not what's within this DrawTarget under the currently
-    // pushed layer.
-    SetFontSmoothingBackgroundColor(cgContext, mColorSpace, aRenderingOptions);
-  }
+  SetFontSmoothingBackgroundColor(cgContext, mColorSpace, aRenderingOptions);
   SetFontColor(cgContext, mColorSpace, aPattern);
 
   ScaledFontMac* macFont = static_cast<ScaledFontMac*>(aFont);

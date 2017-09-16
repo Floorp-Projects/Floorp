@@ -22,6 +22,7 @@
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
   --toolbarbutton-border-radius: 2px;
+  --toolbarbutton-icon-fill-opacity: 1;
 
   --panel-separator-color: ThreeDLightShadow;
   --arrowpanel-dimmed: hsla(0,0%,80%,.3);
@@ -40,6 +41,8 @@
     --toolbar-non-lwt-bgcolor: #f9f9fa;
     --toolbar-non-lwt-textcolor: #0c0c0d;
     --toolbar-non-lwt-bgimage: none;
+
+    --toolbarbutton-icon-fill-opacity: .7;
 
     --panel-separator-color: hsla(210,4%,10%,.14);
 
@@ -84,6 +87,7 @@
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   background-clip: padding-box;
+  color: var(--toolbar-color, inherit);
 }
 
 #toolbar-menubar,

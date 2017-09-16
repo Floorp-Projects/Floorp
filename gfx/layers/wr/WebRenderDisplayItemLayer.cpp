@@ -25,6 +25,7 @@ WebRenderDisplayItemLayer::~WebRenderDisplayItemLayer()
 
 void
 WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                       wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc)
 {
   if (mVisibleRegion.IsEmpty()) {
@@ -39,7 +40,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     // We might have recycled this layer. Throw away the old commands.
     mParentCommands.Clear();
 
-    mItem->CreateWebRenderCommands(builder, aSc, mParentCommands, WrManager(),
+    mItem->CreateWebRenderCommands(builder, aResources, aSc, mParentCommands, WrManager(),
                                    GetDisplayListBuilder());
     builder.Finalize(contentSize, mBuiltDisplayList);
   } else {

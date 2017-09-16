@@ -1433,8 +1433,10 @@ var Search = {
       if (section.parentElement.id === "category-home") {
         searchStatus = bundle.formatStringFromName("noSearchResultsAll", [text], 1);
       } else {
-        let format = [section.textContent.trim(), text];
-        searchStatus = bundle.formatStringFromName("noSearchResults", format, 2);
+        let sectionName = section.textContent.trim();
+        searchStatus = (text === "")
+          ? bundle.formatStringFromName("noDataToDisplay", [sectionName], 1)
+          : bundle.formatStringFromName("noSearchResults", [sectionName, text], 2);
       }
       document.getElementById("no-search-results-text").textContent = searchStatus;
     }

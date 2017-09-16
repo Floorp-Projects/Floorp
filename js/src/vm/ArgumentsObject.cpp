@@ -371,7 +371,7 @@ ArgumentsObject::finishForIon(JSContext* cx, jit::JitFrameLayout* frame,
 {
     // JIT code calls this directly (no callVM), because it's faster, so we're
     // not allowed to GC in here.
-    AutoUnsafeCallWithABI unsafe;
+    JS::AutoCheckCannotGC nogc;
 
     JSFunction* callee = jit::CalleeTokenToFunction(frame->calleeToken());
     RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain : nullptr);

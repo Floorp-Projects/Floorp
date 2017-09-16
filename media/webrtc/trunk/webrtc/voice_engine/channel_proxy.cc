@@ -92,6 +92,23 @@ void ChannelProxy::ResetCongestionControlObjects() {
   channel()->ResetCongestionControlObjects();
 }
 
+bool ChannelProxy::GetRTCPReceiverStatistics(int64_t* timestamp,
+                                             uint32_t* jitterMs,
+                                             uint32_t* cumulativeLost,
+                                             uint32_t* packetsReceived,
+                                             uint64_t* bytesReceived,
+                                             double* packetsFractionLost,
+                                             int64_t* rtt) const {
+  // No thread check necessary, we are synchronizing on the lock in StatsProxy
+  return channel()->GetRTCPReceiverStatistics(timestamp,
+                                              jitterMs,
+                                              cumulativeLost,
+                                              packetsReceived,
+                                              bytesReceived,
+                                              packetsFractionLost,
+                                              rtt);
+}
+
 CallStatistics ChannelProxy::GetRTCPStatistics() const {
   // Since we (Mozilla) need to collect stats on STS, we can't
   // use the thread-checker (which will want to be called on MainThread)

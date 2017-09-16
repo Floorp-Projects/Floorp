@@ -13,12 +13,12 @@
     <path id="short-bar-icon" d="m 13,14 a 1,1 0 1 1 0,2 h -10 a 1,1 0 1 1 0,-2 z"/>
     <path id="long-bar-icon" d="m 14,14 a 1,1 0 1 1 0,2 h -12 a 1,1 0 1 1 0,-2"/>
   </defs>
-  <use id="arrow" fill="context-fill" href="#arrow-icon"/>
-  <g id="arrow-with-bar" fill="context-fill">
+  <use id="arrow" fill="context-fill" fill-opacity="context-fill-opacity" href="#arrow-icon"/>
+  <g id="arrow-with-bar" fill="context-fill" fill-opacity="context-fill-opacity">
     <use href="#arrow-icon"/>
     <use href="#short-bar-icon"/>
   </g>
-  <use id="default-bar" fill="context-fill" href="#short-bar-icon"/>
+  <use id="default-bar" fill="context-fill" fill-opacity="context-fill-opacity" href="#short-bar-icon"/>
   <use id="progress-bar-bg" fill="context-fill" fill-opacity="0.2" href="#long-bar-icon"/>
-  <use id="progress-bar-fg" fill="context-fill" href="#long-bar-icon"/>
+  <use id="progress-bar-fg" fill="context-fill" fill-opacity="context-fill-opacity" href="#long-bar-icon"/>
 </svg>

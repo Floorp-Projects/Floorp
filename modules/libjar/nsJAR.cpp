@@ -8,8 +8,6 @@
 #include "nsJAR.h"
 #include "nsIFile.h"
 #include "nsIConsoleService.h"
-#include "nsICryptoHash.h"
-#include "nsIDataSignatureVerifier.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Unused.h"
 

@@ -5,8 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIX509Cert;
-
 /**
  * An interface for verifying that a given string of data was signed by the
  * private key matching the given public key.
@@ -26,14 +24,4 @@ interface nsIDataSignatureVerifier : nsISupports
    */
   [must_use]
   boolean verifyData(in ACString aData, in ACString aSignature, in ACString aPublicKey);
-
-   /* Sig Verification Error Codes */
-  const long VERIFY_OK = 0;
-  const long VERIFY_ERROR_UNKNOWN_ISSUER = 1;
-  const long VERIFY_ERROR_OTHER = 2;
-
-  [must_use]
-  nsIX509Cert verifySignature(in ACString signature, in ACString plaintext,
-                              out long errorCode);
-
 };

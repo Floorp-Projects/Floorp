@@ -4,4 +4,5 @@ try {
 g = newGlobal()
 g.parent = this
 g.eval("Debugger(parent).onExceptionUnwind=(function(){})");
-gcparam("maxBytes", gcparam("gcBytes"));
+gcparam("maxBytes", gcparam("maxBytes") - 8);
+gc();

@@ -31,10 +31,19 @@ where
 }
 
 /// A iterator over the stylesheets of a list of entries in the StylesheetSet.
-#[derive(Clone)]
 pub struct StylesheetCollectionIterator<'a, S>(slice::Iter<'a, StylesheetSetEntry<S>>)
 where
     S: StylesheetInDocument + PartialEq + 'static;
+
+impl<'a, S> Clone for StylesheetCollectionIterator<'a, S>
+where
+    S: StylesheetInDocument + PartialEq + 'static,
+{
+    fn clone(&self) -> Self {
+        StylesheetCollectionIterator(self.0.clone())
+    }
+}
+
 
 impl<'a, S> Iterator for StylesheetCollectionIterator<'a, S>
 where
@@ -59,14 +68,14 @@ where
 {
     origins: OriginSetIterator,
     collections: &'a PerOrigin<SheetCollection<S>>,
-    current: Option<StylesheetCollectionIterator<'a, S>>,
+    current: Option<(Origin, StylesheetCollectionIterator<'a, S>)>,
 }
 
 impl<'a, S> Iterator for StylesheetIterator<'a, S>
 where
     S: StylesheetInDocument + PartialEq + 'static,
 {
-    type Item = &'a S;
+    type Item = (&'a S, Origin);
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
@@ -77,11 +86,14 @@ where
                 };
 
                 self.current =
-                    Some(self.collections.borrow_for_origin(&next_origin).iter());
+                    Some((next_origin, self.collections.borrow_for_origin(&next_origin).iter()));
             }
 
-            if let Some(s) = self.current.as_mut().unwrap().next() {
-                return Some(s)
+            {
+                let (origin, ref mut iter) = *self.current.as_mut().unwrap();
+                if let Some(s) = iter.next() {
+                    return Some((s, origin))
+                }
             }
 
             self.current = None;
@@ -112,17 +124,12 @@ impl Default for OriginValidity {
 }
 
 /// A struct to iterate over the different stylesheets to be flushed.
-pub struct StylesheetFlusher<'a, 'b, S>
+pub struct StylesheetFlusher<'a, S>
 where
-    'b: 'a,
     S: StylesheetInDocument + PartialEq + 'static,
 {
-    guard: &'a SharedRwLockReadGuard<'b>,
-    origins_dirty: OriginSetIterator,
-    // NB: Bound to the StylesheetSet lifetime when constructed, see
-    // StylesheetSet::flush.
-    collections: *mut PerOrigin<SheetCollection<S>>,
-    current: Option<slice::IterMut<'a, StylesheetSetEntry<S>>>,
+    origins_dirty: OriginSet,
+    collections: &'a mut PerOrigin<SheetCollection<S>>,
     origin_data_validity: PerOrigin<OriginValidity>,
     author_style_disabled: bool,
     had_invalidations: bool,
@@ -143,9 +150,8 @@ impl SheetRebuildKind {
     }
 }
 
-impl<'a, 'b, S> StylesheetFlusher<'a, 'b, S>
+impl<'a, S> StylesheetFlusher<'a, S>
 where
-    'b: 'a,
     S: StylesheetInDocument + PartialEq + 'static,
 {
     /// The data validity for a given origin.
@@ -153,9 +159,56 @@ where
         *self.origin_data_validity.borrow_for_origin(&origin)
     }
 
+    /// Whether the origin data is dirty in any way.
+    pub fn origin_dirty(&self, origin: Origin) -> bool {
+        self.origins_dirty.contains(origin.into())
+    }
+
+    /// Returns an iterator over the stylesheets of a given origin, assuming all
+    /// of them will be flushed.
+    pub fn manual_origin_sheets<'b>(&'b mut self, origin: Origin) -> StylesheetCollectionIterator<'b, S>
+    where
+        'a: 'b
+    {
+        debug_assert_eq!(origin, Origin::UserAgent);
+
+        // We could iterate over `origin_sheets(origin)` to ensure state is
+        // consistent (that the `dirty` member of the Entry is reset to
+        // `false`).
+        //
+        // In practice it doesn't matter for correctness given our use of it
+        // (that this is UA only).
+        self.collections.borrow_for_origin(&origin).iter()
+    }
+
+    /// Returns a flusher for the dirty origin `origin`.
+    pub fn origin_sheets<'b>(&'b mut self, origin: Origin) -> PerOriginFlusher<'b, S>
+    where
+        'a: 'b
+    {
+        let validity = self.origin_validity(origin);
+        let origin_dirty = self.origins_dirty.contains(origin.into());
+
+        debug_assert!(
+            origin_dirty || validity == OriginValidity::Valid,
+            "origin_data_validity should be a subset of origins_dirty!"
+        );
+
+        if self.author_style_disabled && origin == Origin::Author {
+            return PerOriginFlusher {
+                iter: [].iter_mut(),
+                validity,
+            }
+        }
+        PerOriginFlusher {
+            iter: self.collections.borrow_mut_for_origin(&origin).entries.iter_mut(),
+            validity,
+        }
+    }
+
     /// Returns whether running the whole flushing process would be a no-op.
     pub fn nothing_to_do(&self) -> bool {
-        self.origins_dirty.clone().next().is_none()
+        self.origins_dirty.is_empty()
     }
 
     /// Returns whether any DOM invalidations were processed as a result of the
@@ -165,23 +218,18 @@ where
     }
 }
 
-#[cfg(debug_assertions)]
-impl<'a, 'b, S> Drop for StylesheetFlusher<'a, 'b, S>
+/// A flusher struct for a given origin, that takes care of returning the
+/// appropriate stylesheets that need work.
+pub struct PerOriginFlusher<'a, S>
 where
-    'b: 'a,
-    S: StylesheetInDocument + PartialEq + 'static,
+    S: StylesheetInDocument + PartialEq + 'static
 {
-    fn drop(&mut self) {
-        debug_assert!(
-            self.origins_dirty.next().is_none(),
-            "You're supposed to fully consume the flusher"
-        );
-    }
+    iter: slice::IterMut<'a, StylesheetSetEntry<S>>,
+    validity: OriginValidity,
 }
 
-impl<'a, 'b, S> Iterator for StylesheetFlusher<'a, 'b, S>
+impl<'a, S> Iterator for PerOriginFlusher<'a, S>
 where
-    'b: 'a,
     S: StylesheetInDocument + PartialEq + 'static,
 {
     type Item = (&'a S, SheetRebuildKind);
@@ -190,45 +238,18 @@ where
         use std::mem;
 
         loop {
-            if self.current.is_none() {
-                let next_origin = match self.origins_dirty.next() {
-                    Some(o) => o,
-                    None => return None,
-                };
-
-                // Should've been cleared already.
-                debug_assert_eq!(
-                    unsafe { &*self.collections }
-                        .borrow_for_origin(&next_origin)
-                        .data_validity,
-                    OriginValidity::Valid
-                );
-
-                self.current =
-                    Some(unsafe { &mut *self.collections }.borrow_mut_for_origin(&next_origin).entries.iter_mut());
-            }
-
-            let potential_sheet = match self.current.as_mut().unwrap().next() {
+            let potential_sheet = match self.iter.next() {
                 Some(s) => s,
-                None => {
-                    self.current = None;
-                    continue;
-                }
+                None => return None,
             };
 
             let dirty = mem::replace(&mut potential_sheet.dirty, false);
-
             if dirty {
                 // If the sheet was dirty, we need to do a full rebuild anyway.
                 return Some((&potential_sheet.sheet, SheetRebuildKind::Full))
             }
 
-            let origin = potential_sheet.sheet.contents(self.guard).origin;
-            if self.author_style_disabled && matches!(origin, Origin::Author) {
-                continue;
-            }
-
-            let rebuild_kind = match self.origin_validity(origin) {
+            let rebuild_kind = match self.validity {
                 OriginValidity::Valid => continue,
                 OriginValidity::CascadeInvalid => SheetRebuildKind::CascadeOnly,
                 OriginValidity::FullyInvalid => SheetRebuildKind::Full,
@@ -483,11 +504,10 @@ where
 
     /// Flush the current set, unmarking it as dirty, and returns a
     /// `StylesheetFlusher` in order to rebuild the stylist.
-    pub fn flush<'a, 'b, E>(
+    pub fn flush<'a, E>(
         &'a mut self,
         document_element: Option<E>,
-        guard: &'a SharedRwLockReadGuard<'b>,
-    ) -> StylesheetFlusher<'a, 'b, S>
+    ) -> StylesheetFlusher<'a, S>
     where
         E: TElement,
     {
@@ -497,10 +517,10 @@ where
 
         let had_invalidations = self.invalidations.flush(document_element);
         let origins_dirty =
-            mem::replace(&mut self.origins_dirty, OriginSet::empty()).iter();
+            mem::replace(&mut self.origins_dirty, OriginSet::empty());
 
         let mut origin_data_validity = PerOrigin::<OriginValidity>::default();
-        for origin in origins_dirty.clone() {
+        for origin in origins_dirty.iter() {
             let collection = self.collections.borrow_mut_for_origin(&origin);
             *origin_data_validity.borrow_mut_for_origin(&origin) =
                 mem::replace(&mut collection.data_validity, OriginValidity::Valid);
@@ -512,8 +532,6 @@ where
             had_invalidations,
             origins_dirty,
             origin_data_validity,
-            guard,
-            current: None,
         }
     }
 

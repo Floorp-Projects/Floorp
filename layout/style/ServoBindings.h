@@ -342,7 +342,8 @@ Gecko_CounterStyle_GetAnonymous(const mozilla::CounterStylePtr* ptr);
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
-mozilla::css::ImageValue* Gecko_ImageValue_Create(ServoBundledURI aURI);
+mozilla::css::ImageValue* Gecko_ImageValue_Create(ServoBundledURI aURI,
+                                                  mozilla::ServoRawOffsetArc<RustString> aURIString);
 void Gecko_SetLayerImageImageValue(nsStyleImage* image,
                                    mozilla::css::ImageValue* aImageValue);
 
@@ -631,6 +632,7 @@ void Gecko_CSSCounterStyle_GetCssText(const nsCSSCounterStyleRule* rule, nsAStri
 NS_DECL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
 RawGeckoElementBorrowedOrNull Gecko_GetBody(RawGeckoPresContextBorrowed pres_context);
+bool Gecko_IsDocumentBody(RawGeckoElementBorrowed element);
 
 // We use an int32_t here instead of a LookAndFeel::ColorID
 // because forward-declaring a nested enum/struct is impossible

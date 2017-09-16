@@ -124,7 +124,7 @@ ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
 {
   if (!mResource)
     return NS_OK;
-  return mResource->OnStartRequest(aRequest);
+  return mResource->OnStartRequest(aRequest, mOffset);
 }
 
 nsresult
@@ -190,7 +190,8 @@ IsPayloadCompressed(nsIHttpChannel* aChannel)
 }
 
 nsresult
-ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
+ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
+                                     int64_t aRequestOffset)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
 
@@ -288,7 +289,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
         mCacheStream.NotifyDataStarted(rangeStart);
       }
       acceptsRanges = gotRangeHeader;
-    } else if (GetOffset() > 0 && responseStatus == HTTP_OK_CODE) {
+    } else if (aRequestOffset > 0 && responseStatus == HTTP_OK_CODE) {
       // If we get an OK response but we were seeking, or requesting a byte
       // range, then we have to assume that seeking doesn't work. We also need
       // to tell the cache that it's getting data for the start of the stream.
@@ -297,7 +298,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       // The server claimed it supported range requests.  It lied.
       acceptsRanges = false;
     }
-    if (GetOffset() == 0 && contentLength >= 0 &&
+    if (aRequestOffset == 0 && contentLength >= 0 &&
         (responseStatus == HTTP_OK_CODE ||
          responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
       mCacheStream.NotifyDataLength(contentLength);

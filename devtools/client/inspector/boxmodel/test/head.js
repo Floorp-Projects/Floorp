@@ -103,15 +103,15 @@ function waitForMarkupLoaded(inspector) {
 
 function getStyle(testActor, selector, propertyName) {
   return testActor.eval(`
-    content.document.querySelector("${selector}")
-                    .style.getPropertyValue("${propertyName}");
+    document.querySelector("${selector}")
+            .style.getPropertyValue("${propertyName}");
   `);
 }
 
 function setStyle(testActor, selector, propertyName, value) {
   return testActor.eval(`
-    content.document.querySelector("${selector}")
-                    .style.${propertyName} = "${value}";
+    document.querySelector("${selector}")
+            .style.${propertyName} = "${value}";
   `);
 }
 

@@ -53,7 +53,7 @@ add_task(function* () {
     state.grids[0].highlighted &&
     !state.grids[1].highlighted);
   testActor.eval(`
-    content.document.getElementById("grid2").classList.add("grid");
+    document.getElementById("grid2").classList.add("grid");
   `);
   yield onGridListUpdate;
 

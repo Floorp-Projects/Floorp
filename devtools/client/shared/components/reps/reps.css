@@ -6,14 +6,15 @@
 .theme-dark,
 .theme-light {
   --number-color: var(--theme-highlight-green);
-  --string-color: var(--theme-highlight-orange);
+  --string-color: var(--theme-highlight-red);
   --null-color: var(--theme-comment);
-  --object-color: var(--theme-body-color);
+  --object-color: var(--theme-highlight-blue);
   --caption-color: var(--theme-highlight-blue);
-  --location-color: var(--theme-content-color1);
+  --location-color: var(--theme-comment);
   --source-link-color: var(--theme-highlight-blue);
-  --node-color: var(--theme-highlight-bluegrey);
-  --reference-color: var(--theme-highlight-purple);
+  --node-color: var(--theme-highlight-purple);
+  --reference-color: var(--theme-highlight-blue);
+  --comment-node-color: var(--theme-comment);
 }
 
 .theme-firebug {
@@ -73,16 +74,16 @@
   color: var(--object-color);
 }
 
-.objectBox-Location {
-  font-style: italic;
+.objectBox-Location,
+.location {
   color: var(--location-color);
 }
 
 .objectBox-null,
 .objectBox-undefined,
 .objectBox-hint,
+.objectBox-nan,
 .logRowHint {
-  font-style: italic;
   color: var(--null-color);
 }
 
@@ -109,25 +110,42 @@
 .objectBox-event,
 .objectBox-eventLog,
 .objectBox-regexp,
-.objectBox-object,
-.objectBox-Date {
-  font-weight: bold;
+.objectBox-object {
   color: var(--object-color);
+  white-space: pre-wrap;
+}
+
+.objectBox .Date {
+  color: var(--string-color);
   white-space: pre-wrap;
 }
 
 /******************************************************************************/
 
-.objectBox-object .nodeName,
-.objectBox-NamedNodeMap .nodeName,
-.objectBox-NamedNodeMap .objectEqual,
-.objectBox-Attr .attrEqual,
-.objectBox-Attr .attrTitle {
+.objectBox.theme-comment {
+  color: var(--comment-node-color);
+}
+
+.tag-name {
+  color: var(--object-color);
+}
+
+.attrName {
+  color: var(--string-color);
+}
+
+.attrEqual,
+.objectEqual {
+  color: var(--comment-node-color);
+}
+
+.attrValue,
+.attrValue.objectBox-string {
   color: var(--node-color);
 }
 
-.objectBox-object .nodeName {
-  font-weight: normal;
+.angleBracket {
+  color: var(--theme-body-color);
 }
 
 /******************************************************************************/
@@ -136,7 +154,7 @@
 .objectRightBrace,
 .arrayLeftBracket,
 .arrayRightBracket {
-  color: var(--theme-highlight-blue);
+  color: var(--object-color);
 }
 
 /******************************************************************************/
@@ -147,14 +165,12 @@
   color: var(--reference-color);
 }
 
-[class*="objectBox-"] > .objectTitle {
-  color: var(--theme-highlight-blue);
-  font-style: italic;
+[class*="objectBox"] > .objectTitle {
+  color: var(--object-color);
 }
 
 .caption {
-  font-weight: bold;
-  color:  var(--caption-color);
+  color: var(--caption-color);
 }
 
 /******************************************************************************/
@@ -182,7 +198,7 @@
 /* Open DOMNode in inspector button */
 
 .open-inspector svg {
-  fill: rgb(215, 215, 215);
+  fill: var(--comment-node-color);
   height: 16px;
   width: 16px;
   margin-left: .25em;
@@ -193,19 +209,29 @@
 .objectBox-node:hover .open-inspector svg,
 .objectBox-textNode:hover .open-inspector svg,
 .open-inspector svg:hover {
-  fill: rgb(65, 175, 230);
+  fill: var(--theme-highlight-blue);
 }
 
 /******************************************************************************/
 /* "more…" ellipsis */
 .more-ellipsis {
-  color: var(--theme-comment);
+  color: var(--comment-node-color);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .tree {
+  --arrow-width: 10px;
+  --arrow-single-margin: 5px;
+  --arrow-total-width: calc(var(--arrow-width) + var(--arrow-single-margin));
+  --arrow-fill-color: var(--theme-splitter-color, #9B9B9B);
+  --tree-indent-width: 1em;
+  --tree-indent-border-color: #A2D1FF;
+  --tree-indent-border-width: 1px;
+  --tree-node-hover-background-color: #F0F9FE;
+  --tree-node-focus-color: white;
+  --tree-node-focus-background-color: var(--theme-selection-background, #0a84ff);
   overflow: auto;
 }
 
@@ -229,22 +255,25 @@
   display: block;
 }
 
-.tree .node {
-  padding: 0 0.25em;
-  position: relative;
+.tree .tree-node {
   cursor: pointer;
 }
 
-.tree .node.focused {
-  color: white;
-  background-color: var(--theme-selection-background);
+.tree .tree-node:not(.focused):hover {
+  background-color: var(--tree-node-hover-background-color);
+}
+
+.tree .tree-node.focused {
+  color: var(--tree-node-focus-color);
+  background-color: var(--tree-node-focus-background-color);
+  --arrow-fill-color: currentColor;
 }
 
 .arrow svg {
-  fill: var(--theme-splitter-color);
+  fill: var(--arrow-fill-color);
   transition: transform 0.125s ease;
-  width: 10px;
-  margin-inline-end: 5px;
+  width: var(--arrow-width);
+  margin-inline-end: var(--arrow-single-margin);
   transform: rotate(-90deg);
 }
 
@@ -257,16 +286,26 @@ html[dir="rtl"] .arrow svg,
 .arrow.expanded.expanded svg {
   transform: rotate(0deg);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.object-label, .object-label * {
+.tree.object-inspector .object-label,
+.tree.object-inspector .object-label * {
   color: var(--theme-highlight-blue);
 }
 
-.tree .node .unavailable {
-  color: var(--theme-content-color3);
+.tree.object-inspector .node .unavailable {
+  color: var(--theme-comment);
 }
 
-.lessen {
-  opacity: 0.6;
+.tree.object-inspector .lessen,
+.tree.object-inspector .lessen *,
+.tree.object-inspector .lessen .object-label,
+.tree.object-inspector .lessen .object-label * {
+  color: var(--theme-comment);
 }
 
+.object-inspector .object-delimiter {
+  color: var(--theme-comment);
+}

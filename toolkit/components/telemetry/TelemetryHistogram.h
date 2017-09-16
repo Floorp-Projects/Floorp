@@ -44,9 +44,9 @@ void Accumulate(const char* name, const nsCString& key, uint32_t sample);
 void AccumulateCategorical(mozilla::Telemetry::HistogramID aId, const nsCString& aLabel);
 
 void AccumulateChild(mozilla::Telemetry::ProcessID aProcessType,
-                     const nsTArray<mozilla::Telemetry::Accumulation>& aAccumulations);
+                     const nsTArray<mozilla::Telemetry::HistogramAccumulation>& aAccumulations);
 void AccumulateChildKeyed(mozilla::Telemetry::ProcessID aProcessType,
-                          const nsTArray<mozilla::Telemetry::KeyedAccumulation>& aAccumulations);
+                          const nsTArray<mozilla::Telemetry::KeyedHistogramAccumulation>& aAccumulations);
 
 nsresult
 GetHistogramById(const nsACString &name, JSContext *cx,

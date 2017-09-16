@@ -15,10 +15,10 @@ const TEST_DATA = [
     before: true,
     changeStyle: function* (testActor) {
       yield testActor.eval(`
-        let div = content.document.createElement("div");
+        let div = document.createElement("div");
         div.id = "new-style";
         div.innerHTML = "<style>#normal-div {display:none;}</style>";
-        content.document.body.appendChild(div);
+        document.body.appendChild(div);
       `);
     },
     after: false
@@ -29,7 +29,7 @@ const TEST_DATA = [
     before: false,
     changeStyle: function* (testActor) {
       yield testActor.eval(`
-        content.document.getElementById("new-style").remove();
+        document.getElementById("new-style").remove();
       `);
     },
     after: true
@@ -40,7 +40,7 @@ const TEST_DATA = [
     before: false,
     changeStyle: function* (testActor) {
       yield testActor.eval(`
-        let node = content.document.querySelector("#display-none");
+        let node = document.querySelector("#display-none");
         node.style.display = "block";
       `);
     },
@@ -52,8 +52,8 @@ const TEST_DATA = [
     before: false,
     changeStyle: function* (testActor) {
       yield testActor.eval(`
-        content.document.querySelector("#hidden-true")
-                        .removeAttribute("hidden");
+        document.querySelector("#hidden-true")
+                .removeAttribute("hidden");
       `);
     },
     after: true
@@ -73,9 +73,9 @@ const TEST_DATA = [
     before: false,
     changeStyle: function* (testActor) {
       yield testActor.eval(`
-        content.document.styleSheets[0]
-                        .cssRules[0].style
-                        .setProperty("display", "inline");
+        document.styleSheets[0]
+                .cssRules[0].style
+                .setProperty("display", "inline");
       `);
     },
     after: true
@@ -86,7 +86,7 @@ const TEST_DATA = [
     before: true,
     changeStyle: function* (testActor) {
       yield testActor.eval(`
-        content.document.styleSheets[0].insertRule(
+        document.styleSheets[0].insertRule(
           "#hidden-via-stylesheet {display: none;}", 1);
       `);
     },
@@ -98,10 +98,10 @@ const TEST_DATA = [
     before: true,
     changeStyle: function* (testActor) {
       yield testActor.eval(`
-        content.document.styleSheets[0].insertRule(
+        document.styleSheets[0].insertRule(
           ".a-new-class {display: none;}", 2);
-        content.document.querySelector("#normal-div")
-                        .classList.add("a-new-class");
+        document.querySelector("#normal-div")
+                .classList.add("a-new-class");
       `);
     },
     after: false

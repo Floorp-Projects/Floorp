@@ -1050,3 +1050,11 @@ addEventListener("MozAfterPaint", function onFirstPaint() {
   removeEventListener("MozAfterPaint", onFirstPaint);
   sendAsyncMessage("Browser:FirstPaint");
 });
+
+// Remove this once bug 1397365 is fixed.
+addEventListener("MozAfterPaint", function onFirstNonBlankPaint() {
+  if (content.document.documentURI == "about:blank")
+    return;
+  removeEventListener("MozAfterPaint", onFirstNonBlankPaint);
+  sendAsyncMessage("Browser:FirstNonBlankPaint");
+});

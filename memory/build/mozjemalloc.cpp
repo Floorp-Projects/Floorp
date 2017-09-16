@@ -3510,36 +3510,41 @@ arena_salloc(const void *ptr)
  * + Check that ptr lies within a mapped chunk.
  */
 static inline size_t
-isalloc_validate(const void *ptr)
+isalloc_validate(const void* ptr)
 {
-	arena_chunk_t *chunk;
+  /* If the allocator is not initialized, the pointer can't belong to it. */
+  if (malloc_initialized == false) {
+    return 0;
+  }
 
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
-	if (!chunk)
-		return (0);
+  arena_chunk_t* chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(ptr);
+  if (!chunk) {
+    return 0;
+  }
 
-	if (!malloc_rtree_get(chunk_rtree, (uintptr_t)chunk))
-		return (0);
+  if (!malloc_rtree_get(chunk_rtree, (uintptr_t)chunk)) {
+    return 0;
+  }
 
-	if (chunk != ptr) {
-		MOZ_DIAGNOSTIC_ASSERT(chunk->arena->magic == ARENA_MAGIC);
-		return (arena_salloc(ptr));
-	} else {
-		size_t ret;
-		extent_node_t *node;
-		extent_node_t key;
+  if (chunk != ptr) {
+    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->magic == ARENA_MAGIC);
+    return arena_salloc(ptr);
+  } else {
+    size_t ret;
+    extent_node_t* node;
+    extent_node_t key;
 
-		/* Chunk. */
-		key.addr = (void *)chunk;
-		malloc_mutex_lock(&huge_mtx);
-		node = extent_tree_ad_search(&huge, &key);
-		if (node)
-			ret = node->size;
-		else
-			ret = 0;
-		malloc_mutex_unlock(&huge_mtx);
-		return (ret);
-	}
+    /* Chunk. */
+    key.addr = (void*)chunk;
+    malloc_mutex_lock(&huge_mtx);
+    node = extent_tree_ad_search(&huge, &key);
+    if (node)
+      ret = node->size;
+    else
+      ret = 0;
+    malloc_mutex_unlock(&huge_mtx);
+    return ret;
+  }
 }
 
 static inline size_t
@@ -4370,7 +4375,7 @@ huge_dalloc(void *ptr)
  * implementation has to take pains to avoid infinite recursion during
  * initialization.
  */
-#if (defined(XP_WIN) || defined(XP_DARWIN))
+#if defined(XP_WIN)
 #define	malloc_init() false
 #else
 static inline bool
@@ -4382,10 +4387,6 @@ malloc_init(void)
 
 	return (false);
 }
-#endif
-
-#if defined(XP_DARWIN)
-extern "C" void register_zone(void);
 #endif
 
 static size_t
@@ -4650,10 +4651,6 @@ MALLOC_OUT:
 #if !defined(XP_WIN) && !defined(XP_DARWIN)
   /* Prevent potential deadlock on malloc locks after fork. */
   pthread_atfork(_malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
-#endif
-
-#if defined(XP_DARWIN)
-  register_zone();
 #endif
 
 #ifndef XP_WIN
@@ -5443,18 +5440,6 @@ replace_malloc_init_funcs()
 
 #ifdef HAVE_DLOPEN
 #  include <dlfcn.h>
-#endif
-
-#if defined(XP_DARWIN)
-
-__attribute__((constructor))
-void
-jemalloc_darwin_init(void)
-{
-	if (malloc_init_hard())
-		MOZ_CRASH();
-}
-
 #endif
 
 #if defined(__GLIBC__) && !defined(__UCLIBC__)

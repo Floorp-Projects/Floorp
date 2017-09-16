@@ -52,6 +52,8 @@ public:
   // the responsibility of the apprunner.
   nsresult SetProfile(nsIFile* aProfileDir, nsIFile* aProfileLocalDir);
 
+  void InitializeUserPrefs();
+
   void DoShutdown();
 
   static nsresult GetUserAppDataDirectory(nsIFile* *aFile) {
@@ -138,6 +140,7 @@ protected:
   nsCOMPtr<nsIFile>      mProfileDir;
   nsCOMPtr<nsIFile>      mProfileLocalDir;
   bool                   mProfileNotified;
+  bool                   mPrefsInitialized = false;
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   nsCOMPtr<nsIFile>      mContentTempDir;
   nsCOMPtr<nsIFile>      mContentProcessSandboxTempDir;

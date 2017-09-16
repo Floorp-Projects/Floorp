@@ -793,7 +793,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     if (InvalidReg != outReg)
         masm.passABIArg(outReg);
 
-    masm.callWithABI(f.wrapped, MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+    masm.callWithABI(f.wrapped);
 
     if (!generateTLExitVM(cx, masm, f))
         return nullptr;

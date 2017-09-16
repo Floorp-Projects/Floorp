@@ -20,6 +20,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsILoadInfo.h"
+#include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
@@ -81,15 +82,22 @@ ExtensionPolicyService::ExtensionPolicyService()
   RegisterObservers();
 }
 
+bool
+ExtensionPolicyService::UseRemoteExtensions() const
+{
+  return sRemoteExtensions && BrowserTabsRemoteAutostart();
+}
 
 bool
 ExtensionPolicyService::IsExtensionProcess() const
 {
-  if (sRemoteExtensions && XRE_IsContentProcess()) {
+  bool isRemote = UseRemoteExtensions();
+
+  if (isRemote && XRE_IsContentProcess()) {
     auto& remoteType = dom::ContentChild::GetSingleton()->GetRemoteType();
     return remoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE);
   }
-  return XRE_IsParentProcess();
+  return !isRemote && XRE_IsParentProcess();
 }
 
 

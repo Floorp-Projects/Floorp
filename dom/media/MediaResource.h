@@ -533,7 +533,7 @@ public:
 protected:
   bool IsSuspendedByCache();
   // These are called on the main thread by Listener.
-  nsresult OnStartRequest(nsIRequest* aRequest);
+  nsresult OnStartRequest(nsIRequest* aRequest, int64_t aRequestOffset);
   nsresult OnStopRequest(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnDataAvailable(nsIRequest* aRequest,
                            nsIInputStream* aStream,

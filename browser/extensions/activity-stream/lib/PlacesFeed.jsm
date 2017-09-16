@@ -244,9 +244,14 @@ class PlacesFeed {
       case at.DELETE_BOOKMARK_BY_ID:
         NewTabUtils.activityStreamLinks.deleteBookmark(action.data);
         break;
-      case at.DELETE_HISTORY_URL:
-        NewTabUtils.activityStreamLinks.deleteHistoryEntry(action.data);
+      case at.DELETE_HISTORY_URL: {
+        const {url, forceBlock} = action.data;
+        NewTabUtils.activityStreamLinks.deleteHistoryEntry(url);
+        if (forceBlock) {
+          NewTabUtils.activityStreamLinks.blockURL({url});
+        }
         break;
+      }
       case at.OPEN_NEW_WINDOW:
         this.openNewWindow(action);
         break;

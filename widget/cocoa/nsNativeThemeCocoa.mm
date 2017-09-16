@@ -3813,52 +3813,6 @@ nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
   }
 }
 
-static nscolor ConvertNSColor(NSColor* aColor)
-{
-  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-  return NS_RGBA((unsigned int)([deviceColor redComponent] * 255.0),
-                 (unsigned int)([deviceColor greenComponent] * 255.0),
-                 (unsigned int)([deviceColor blueComponent] * 255.0),
-                 (unsigned int)([deviceColor alphaComponent] * 255.0));
-}
-
-bool
-nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
-                                                               uint8_t aWidgetType,
-                                                               nscolor* aColor)
-{
-  switch (aWidgetType) {
-    case NS_THEME_MAC_SOURCE_LIST:
-    case NS_THEME_MAC_SOURCE_LIST_SELECTION:
-    case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION:
-    case NS_THEME_MAC_VIBRANCY_LIGHT:
-    case NS_THEME_MAC_VIBRANCY_DARK:
-    case NS_THEME_TOOLTIP:
-    case NS_THEME_MENUPOPUP:
-    case NS_THEME_MENUITEM:
-    case NS_THEME_CHECKMENUITEM:
-    case NS_THEME_DIALOG:
-    {
-      if ((aWidgetType == NS_THEME_DIALOG && !IsWindowSheet(aFrame)) ||
-          ((aWidgetType == NS_THEME_MAC_SOURCE_LIST_SELECTION ||
-            aWidgetType == NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION) &&
-            !IsInSourceList(aFrame))) {
-        return false;
-      }
-      ChildView* childView = ChildViewForFrame(aFrame);
-      if (childView) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
-        NSColor* color = [childView vibrancyFontSmoothingBackgroundColorForThemeGeometryType:type];
-        *aColor = ConvertNSColor(color);
-        return true;
-      }
-      return false;
-    }
-    default:
-      return false;
-  }
-}
-
 nsITheme::ThemeGeometryType
 nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidgetType)
 {

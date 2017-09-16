@@ -2,7 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* global getDevToolsTargetForContext */
+// The ext-* files are imported into the same scopes.
+/* import-globals-from ext-devtools.js */
+/* import-globals-from ext-browser.js */
 
 XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
                                   "chrome://devtools-shim/content/DevToolsShim.jsm");
@@ -13,33 +15,8 @@ var {
 
 this.devtools_inspectedWindow = class extends ExtensionAPI {
   getAPI(context) {
-    // Lazily retrieve and store an inspectedWindow actor front per child context.
+    // Lazily retrieved inspectedWindow actor front per child context.
     let waitForInspectedWindowFront;
-    async function getInspectedWindowFront() {
-      // If there is not yet a front instance, then a lazily cloned target for the context is
-      // retrieved using the DevtoolsParentContextsManager helper (which is an asynchronous operation,
-      // because the first time that the target has been cloned, it is not ready to be used to create
-      // the front instance until it is connected to the remote debugger successfully).
-      const clonedTarget = await getDevToolsTargetForContext(context);
-      return DevToolsShim.createWebExtensionInspectedWindowFront(clonedTarget);
-    }
-
-    function getToolboxOptions() {
-      const options = {};
-      const toolbox = context.devToolsToolbox;
-      const selectedNode = toolbox.selection;
-
-      if (selectedNode && selectedNode.nodeFront) {
-        // If there is a selected node in the inspector, we hand over
-        // its actor id to the eval request in order to provide the "$0" binding.
-        options.toolboxSelectedNodeActorID = selectedNode.nodeFront.actorID;
-      }
-
-      // Provide the console actor ID to implement the "inspect" binding.
-      options.toolboxConsoleActorID = toolbox.target.form.consoleActor;
-
-      return options;
-    }
 
     // TODO(rpl): retrive a more detailed callerInfo object, like the filename and
     // lineNumber of the actual extension called, in the child process.
@@ -53,12 +30,12 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
         inspectedWindow: {
           async eval(expression, options) {
             if (!waitForInspectedWindowFront) {
-              waitForInspectedWindowFront = getInspectedWindowFront();
+              waitForInspectedWindowFront = getInspectedWindowFront(context);
             }
 
             const front = await waitForInspectedWindowFront;
 
-            const evalOptions = Object.assign({}, options, getToolboxOptions());
+            const evalOptions = Object.assign({}, options, getToolboxEvalOptions(context));
 
             const evalResult = await front.eval(callerInfo, expression, evalOptions);
 
@@ -70,7 +47,7 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
             const {ignoreCache, userAgent, injectedScript} = options || {};
 
             if (!waitForInspectedWindowFront) {
-              waitForInspectedWindowFront = getInspectedWindowFront();
+              waitForInspectedWindowFront = getInspectedWindowFront(context);
             }
 
             const front = await waitForInspectedWindowFront;

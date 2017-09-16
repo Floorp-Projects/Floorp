@@ -1272,41 +1272,11 @@ ServoStyleSet::CompatibilityModeChanged()
   Servo_StyleSet_CompatModeChanged(mRawSet.get());
 }
 
-inline static void
-UpdateBodyTextColorIfNeeded(
-    const Element& aElement,
-    ServoStyleContext& aStyleContext,
-    nsPresContext& aPresContext)
-{
-  if (aPresContext.CompatibilityMode() != eCompatibility_NavQuirks) {
-    return;
-  }
-
-  if (!aElement.IsHTMLElement(nsGkAtoms::body)) {
-    return;
-  }
-
-  nsIDocument* doc = aElement.GetUncomposedDoc();
-  if (!doc || doc->GetBodyElement() != &aElement) {
-    return;
-  }
-
-  MOZ_ASSERT(!aStyleContext.GetPseudo());
-
-  // NOTE(emilio): We do the ComputedData() dance to avoid triggering the
-  // IsInServoTraversal() assertion in StyleColor(), which seems useful enough
-  // in the general case, I guess...
-  aPresContext.SetBodyTextColor(
-      aStyleContext.ComputedData()->GetStyleColor()->mColor);
-}
-
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveServoStyle(Element* aElement)
 {
-  UpdateStylistIfNeeded();
   RefPtr<ServoStyleContext> result =
     Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
-  UpdateBodyTextColorIfNeeded(*aElement, *result, *mPresContext);
   return result.forget();
 }
 
@@ -1372,10 +1342,6 @@ ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
                                &Snapshots(),
                                mRawSet.get(),
                                aIgnoreExistingStyles).Consume();
-  }
-
-  if (aPseudoType == CSSPseudoElementType::NotPseudo) {
-    UpdateBodyTextColorIfNeeded(*aElement, *computedValues, *mPresContext);
   }
 
   return computedValues.forget();

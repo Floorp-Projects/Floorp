@@ -8291,4 +8291,13 @@ if (false) {
     other_values: [ "fill", "stroke", "fill, stroke", "fill, stroke, fill", "fill, foo", "foo" ],
     invalid_values: [ "default", "fill, auto", "all, stroke", "none, fill", "fill, none", "fill, default", "2px" ]
   };
+
+  gCSSProperties["-moz-font-smoothing-background-color"] = {
+    // domProp: "MozFontSmoothingBackgroundColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "transparent" ],
+    other_values: [ "green", "#fc3" ],
+    invalid_values: [ "000000", "ff00ff" ]
+  };
 }

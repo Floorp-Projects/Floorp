@@ -2152,9 +2152,8 @@ toolbar#nav-bar {
 
             # start marionette and kick off the tests
             marionette_args = marionette_args or {}
-            port_timeout = marionette_args.pop('port_timeout', 60)
             self.marionette = Marionette(**marionette_args)
-            self.marionette.start_session(timeout=port_timeout)
+            self.marionette.start_session()
 
             # install specialpowers and mochikit addons
             addons = Addons(self.marionette)
@@ -2337,6 +2336,7 @@ toolbar#nav-bar {
             stepOptions.keep_open = False
             stepOptions.runUntilFailure = True
             result = self.runTests(stepOptions)
+            result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
             return result
 
@@ -2346,6 +2346,7 @@ toolbar#nav-bar {
             stepOptions.keep_open = False
             for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
                 result = self.runTests(stepOptions)
+                result = result or (-2 if self.countfail > 0 else 0)
                 self.message_logger.finish()
                 if result != 0:
                     break
@@ -2396,7 +2397,7 @@ toolbar#nav-bar {
         self.log.info('::: Test verification %s' % finalResult)
         self.log.info(':::')
 
-        return result
+        return 0
 
     def runTests(self, options):
         """ Prepare, configure, run tests and cleanup """
@@ -2474,7 +2475,6 @@ toolbar#nav-bar {
             print("4 INFO Mode:    %s" % e10s_mode)
             print("5 INFO SimpleTest FINISHED")
 
-        result = result or (-2 if self.countfail > 0 else 0)
         return result
 
     def doTests(self, options, testsToFilter=None):
@@ -2585,7 +2585,6 @@ toolbar#nav-bar {
             marionette_args = {
                 'symbols_path': options.symbolsPath,
                 'socket_timeout': options.marionette_socket_timeout,
-                'port_timeout': options.marionette_port_timeout,
                 'startup_timeout': options.marionette_startup_timeout,
             }
 

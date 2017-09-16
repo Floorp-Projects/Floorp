@@ -105,8 +105,8 @@ public class CustomTabsSecurityPopup extends AnchoredPopup {
             init();
         }
 
-        final boolean isIdentityKnown = ("identified".equals(security.securityMode) ||
-                                         "verified".equals(security.securityMode));
+        final boolean isIdentityKnown = (SecurityInformation.SECURITY_MODE_IDENTIFIED == security.securityMode ||
+                                         SecurityInformation.SECURITY_MODE_VERIFIED == security.securityMode);
         updateConnectionState(security);
         toggleIdentityKnownContainerVisibility(isIdentityKnown);
 
@@ -132,18 +132,18 @@ public class CustomTabsSecurityPopup extends AnchoredPopup {
      */
     private void updateConnectionState(final SecurityInformation security) {
         if (!security.isSecure) {
-            if ("loaded".equals(security.mixedModeActive)) {
+            if (SecurityInformation.CONTENT_LOADED == security.mixedModeActive) {
                 // Active Mixed Content loaded because user has disabled blocking.
                 mIcon.setImageResource(R.drawable.ic_lock_disabled);
                 clearSecurityStateIcon();
                 mMixedContentActivity.setVisibility(View.VISIBLE);
                 mMixedContentActivity.setText(R.string.mixed_content_protection_disabled);
-            } else if ("loaded".equals(security.mixedModePassive)) {
+            } else if (SecurityInformation.CONTENT_LOADED == security.mixedModePassive) {
                 // Passive Mixed Content loaded.
                 mIcon.setImageResource(R.drawable.ic_lock_inactive);
                 setSecurityStateIcon(R.drawable.ic_warning_major, 1);
                 mMixedContentActivity.setVisibility(View.VISIBLE);
-                if ("blocked".equals(security.mixedModeActive)) {
+                if (SecurityInformation.CONTENT_BLOCKED == security.mixedModeActive) {
                     mMixedContentActivity.setText(R.string.mixed_content_blocked_some);
                 } else {
                     mMixedContentActivity.setText(R.string.mixed_content_display_loaded);
@@ -160,7 +160,6 @@ public class CustomTabsSecurityPopup extends AnchoredPopup {
             mSecurityState.setTextColor(ContextCompat.getColor(mContext, R.color.placeholder_active_grey));
 
         } else if (security.isException) {
-
             mIcon.setImageResource(R.drawable.ic_lock_inactive);
             setSecurityStateIcon(R.drawable.ic_warning_major, 1);
             mSecurityState.setText(R.string.identity_connection_insecure);
@@ -175,8 +174,8 @@ public class CustomTabsSecurityPopup extends AnchoredPopup {
             mSecurityState.setText(R.string.identity_connection_secure);
 
             // Mixed content has been blocked, if present.
-            if ("blocked".equals(security.mixedModeActive) ||
-                "blocked".equals(security.mixedModePassive)) {
+            if (SecurityInformation.CONTENT_BLOCKED == security.mixedModeActive ||
+                SecurityInformation.CONTENT_BLOCKED == security.mixedModePassive) {
                 mMixedContentActivity.setVisibility(View.VISIBLE);
                 mMixedContentActivity.setText(R.string.mixed_content_blocked_all);
             } else {

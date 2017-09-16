@@ -44,6 +44,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
@@ -105,6 +106,7 @@ nsDisplayColumnRule::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                             mozilla::wr::IpcResourceUpdateQueue& aResources,
                                              const StackingContextHelper& aSc,
                                              nsTArray<WebRenderParentCommand>& aParentCommands,
                                              mozilla::layers::WebRenderLayerManager* aManager,
@@ -129,7 +131,7 @@ nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
   }
 
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-    iter->CreateWebRenderCommands(aBuilder, aSc);
+    iter->CreateWebRenderCommands(aBuilder, aResources, aSc);
   }
 
   return true;

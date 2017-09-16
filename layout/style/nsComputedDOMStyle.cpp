@@ -1767,6 +1767,14 @@ nsComputedDOMStyle::DoGetOsxFontSmoothing()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetFontSmoothingBackgroundColor()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  SetToRGBAColor(val, StyleUserInterface()->mFontSmoothingBackgroundColor);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetFontStretch()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;

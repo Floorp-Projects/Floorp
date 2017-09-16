@@ -16,15 +16,15 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     USE_YASM = True
     if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
         EXPORTS.aom += [ 'config/win/x64/aom_config.h' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/mac/x64/' ]
         EXPORTS.aom += [ 'config/mac/x64/aom_config.h' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/linux/x64/' ]
         EXPORTS.aom += [ 'config/linux/x64/aom_config.h' ]
 elif CONFIG['CPU_ARCH'] == 'x86':
     EXPORTS.aom += files['IA32_EXPORTS']
@@ -33,15 +33,15 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     if CONFIG['OS_TARGET'] == 'WINNT':
         if CONFIG['CC_TYPE'] == 'gcc':
             ASFLAGS += [ '-I%s/media/libaom/config/win/mingw32/' % TOPSRCDIR ]
-            CFLAGS += [ '-I%s/media/libaom/config/win/mingw32/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libaom/config/win/mingw32/' ]
             EXPORTS.aom += [ 'config/win/mingw32/aom_config.h' ]
         else:
             ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
-            CFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libaom/config/win/ia32/' ]
             EXPORTS.aom += [ 'config/win/ia32/aom_config.h' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/linux/ia32/' ]
         EXPORTS.aom += [ 'config/linux/ia32/aom_config.h' ]
 elif CONFIG['CPU_ARCH'] == 'arm':
     EXPORTS.aom += files['ARM_EXPORTS']
@@ -49,7 +49,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         '-I%s/media/libaom/config/linux/arm/' % TOPSRCDIR,
         '-I%s/libaom' % OBJDIR,
     ]
-    CFLAGS += [ '-I%s/media/libaom/config/linux/arm/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libaom/config/linux/arm/' ]
     EXPORTS.aom += [ 'config/linux/arm/aom_config.h' ]
 
     arm_asm_files = files['ARM_SOURCES']
@@ -79,7 +79,7 @@ else:
     EXPORTS.aom += files['GENERIC_EXPORTS']
     SOURCES += files['GENERIC_SOURCES']
     ASFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
-    CFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libaom/config/generic/' ]
     EXPORTS.aom += [ 'config/generic/aom_config.h' ]
 
 # We allow warnings for third-party code that can be updated from upstream.
@@ -135,7 +135,7 @@ ASFLAGS += [
     '-I%s/third_party/aom' % TOPSRCDIR,
 ]
 
-CFLAGS += [
-    '-I%s/third_party/aom' % TOPSRCDIR,
-    '-I%s/media/libaom/config' % TOPSRCDIR, # aom_version.h
+LOCAL_INCLUDES += [
+    '/media/libaom/config', # aom_version.h
+    '/third_party/aom',
 ]

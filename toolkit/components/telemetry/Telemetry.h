@@ -34,8 +34,8 @@ namespace HangMonitor {
 } // namespace HangMonitor
 namespace Telemetry {
 
-struct Accumulation;
-struct KeyedAccumulation;
+struct HistogramAccumulation;
+struct KeyedHistogramAccumulation;
 struct ScalarAction;
 struct KeyedScalarAction;
 struct ChildEventData;

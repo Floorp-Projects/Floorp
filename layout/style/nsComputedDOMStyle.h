@@ -296,6 +296,7 @@ private:
   already_AddRefed<CSSValue> DoGetFontSize();
   already_AddRefed<CSSValue> DoGetFontSizeAdjust();
   already_AddRefed<CSSValue> DoGetOsxFontSmoothing();
+  already_AddRefed<CSSValue> DoGetFontSmoothingBackgroundColor();
   already_AddRefed<CSSValue> DoGetFontStretch();
   already_AddRefed<CSSValue> DoGetFontStyle();
   already_AddRefed<CSSValue> DoGetFontSynthesis();

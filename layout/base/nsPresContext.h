@@ -21,7 +21,6 @@
 #include "nsFont.h"
 #include "gfxFontConstants.h"
 #include "nsIAtom.h"
-#include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsCRT.h"
 #include "nsIWidgetListener.h"
@@ -126,7 +125,7 @@ class nsRootPresContext;
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 
-class nsPresContext : public nsIObserver,
+class nsPresContext : public nsISupports,
                       public mozilla::SupportsWeakPtr<nsPresContext> {
 public:
   using Encoding = mozilla::Encoding;
@@ -136,7 +135,6 @@ public:
   typedef mozilla::StaticPresData StaticPresData;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   NS_DECL_CYCLE_COLLECTION_CLASS(nsPresContext)
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsPresContext)
 
@@ -174,6 +172,8 @@ public:
   }
 
   nsIPresShell* GetPresShell() const { return mShell; }
+
+  void DispatchCharSetChange(NotNull<const Encoding*> aCharSet);
 
   /**
    * Returns the parent prescontext for this one. Returns null if this is a
@@ -717,7 +717,7 @@ public:
    * @return if scroll was propagated from some content node, the content node
    *         it was propagated from.
    */
-  nsIContent* UpdateViewportScrollbarStylesOverride();
+  mozilla::dom::Element* UpdateViewportScrollbarStylesOverride();
 
   /**
    * Returns the cached result from the last call to
@@ -725,8 +725,8 @@ public:
    * whose scrollbar styles we have propagated to the viewport (or nullptr if
    * there is no such node).
    */
-  nsIContent* GetViewportScrollbarStylesOverrideNode() const {
-    return mViewportScrollbarOverrideNode;
+  mozilla::dom::Element* GetViewportScrollbarStylesOverrideElement() const {
+    return mViewportScrollbarOverrideElement;
   }
 
   const ScrollbarStyles& GetViewportScrollbarStylesOverride() const
@@ -1361,14 +1361,14 @@ protected:
 
   nscolor               mBodyTextColor;
 
-  // This is a non-owning pointer. May be null. If non-null, it's guaranteed
-  // to be pointing to a node that's still alive, because we'll reset it in
-  // UpdateViewportScrollbarStylesOverride() as part of the cleanup code
-  // when this node is removed from the document. (For <body> and the root node,
-  // this call happens in nsCSSFrameConstructor::ContentRemoved(). For
-  // fullscreen elements, it happens in the fullscreen-specific cleanup
-  // invoked by Element::UnbindFromTree().)
-  nsIContent* MOZ_NON_OWNING_REF mViewportScrollbarOverrideNode;
+  // This is a non-owning pointer. May be null. If non-null, it's guaranteed to
+  // be pointing to an element that's still alive, because we'll reset it in
+  // UpdateViewportScrollbarStylesOverride() as part of the cleanup code when
+  // this element is removed from the document. (For <body> and the root
+  // element, this call happens in nsCSSFrameConstructor::ContentRemoved(). For
+  // fullscreen elements, it happens in the fullscreen-specific cleanup invoked
+  // by Element::UnbindFromTree().)
+  mozilla::dom::Element* MOZ_NON_OWNING_REF mViewportScrollbarOverrideElement;
   ScrollbarStyles       mViewportStyleScrollbar;
 
   uint8_t               mFocusRingWidth;

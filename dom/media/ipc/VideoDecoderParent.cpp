@@ -44,6 +44,7 @@ private:
 
 VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
                                        const VideoInfo& aVideoInfo,
+                                       float aFramerate,
                                        const layers::TextureFactoryIdentifier& aIdentifier,
                                        TaskQueue* aManagerTaskQueue,
                                        TaskQueue* aDecodeTaskQueue,
@@ -76,6 +77,7 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
   params.mTaskQueue = mDecodeTaskQueue;
   params.mKnowsCompositor = mKnowsCompositor;
   params.mImageContainer = new layers::ImageContainer();
+  params.mRate = CreateDecoderParams::VideoFrameRate(aFramerate);
   MediaResult error(NS_OK);
   params.mError = &error;
 

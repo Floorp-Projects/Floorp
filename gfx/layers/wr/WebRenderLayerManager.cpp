@@ -11,6 +11,7 @@
 #include "LayersLogging.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -96,8 +97,6 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
   if (IsDestroyed()) {
     return;
   }
-
-  mWidget->CleanupWebRenderWindowOverlay(WrBridge());
 
   LayerManager::Destroy();
 
@@ -206,7 +205,8 @@ void
 WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
                                                               nsDisplayListBuilder* aDisplayListBuilder,
                                                               const StackingContextHelper& aSc,
-                                                              wr::DisplayListBuilder& aBuilder)
+                                                              wr::DisplayListBuilder& aBuilder,
+                                                              wr::IpcResourceUpdateQueue& aResources)
 {
   bool apzEnabled = AsyncPanZoomEnabled();
   EventRegions eventRegions;
@@ -338,9 +338,9 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
 
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function if the |item| is a wrapper for a sublist.
-      if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
+      if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mParentCommands, this,
                                          aDisplayListBuilder)) {
-        PushItemAsImage(item, aBuilder, aSc, aDisplayListBuilder);
+        PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
       }
     }
 
@@ -512,6 +512,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 already_AddRefed<WebRenderFallbackData>
 WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
                                             wr::DisplayListBuilder& aBuilder,
+                                            wr::IpcResourceUpdateQueue& aResources,
                                             nsDisplayListBuilder* aDisplayListBuilder,
                                             LayerRect& aImageRect,
                                             LayerPoint& aOffset)
@@ -588,7 +589,7 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
       wr::ImageKey key = WrBridge()->GetNextImageKey();
       wr::ImageDescriptor descriptor(imageSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
-      aBuilder.Resources().AddBlobImage(key, descriptor, bytes);
+      aResources.AddBlobImage(key, descriptor, bytes);
       fallbackData->SetKey(key);
     } else {
       fallbackData->CreateImageClientIfNeeded();
@@ -633,13 +634,15 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
 Maybe<wr::WrImageMask>
 WebRenderLayerManager::BuildWrMaskImage(nsDisplayItem* aItem,
                                         wr::DisplayListBuilder& aBuilder,
+                                        wr::IpcResourceUpdateQueue& aResources,
                                         const StackingContextHelper& aSc,
                                         nsDisplayListBuilder* aDisplayListBuilder,
                                         const LayerRect& aBounds)
 {
   LayerRect imageRect;
   LayerPoint offset;
-  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aDisplayListBuilder,
+  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
+                                                                    aDisplayListBuilder,
                                                                     imageRect, offset);
   if (!fallbackData) {
     return Nothing();
@@ -655,12 +658,14 @@ WebRenderLayerManager::BuildWrMaskImage(nsDisplayItem* aItem,
 bool
 WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
                                        wr::DisplayListBuilder& aBuilder,
+                                       wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
                                        nsDisplayListBuilder* aDisplayListBuilder)
 {
   LayerRect imageRect;
   LayerPoint offset;
-  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aDisplayListBuilder,
+  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
+                                                                    aDisplayListBuilder,
                                                                     imageRect, offset);
   if (!fallbackData) {
     return false;
@@ -713,6 +718,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
 
   wr::LayoutSize contentSize { (float)size.width, (float)size.height };
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
+  wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
 
   if (mEndTransactionWithoutLayers) {
     // Reset the notification flag at the begin of the EndTransaction.
@@ -729,7 +735,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
       mLastCanvasDatas.Clear();
       mLastAsr = nullptr;
 
-      CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder);
+      CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder, resourceUpdates);
 
       builder.Finalize(contentSize, mBuiltDisplayList);
 
@@ -777,14 +783,14 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
     mRoot->StartPendingAnimations(mAnimationReadyTime);
     StackingContextHelper sc;
 
-    WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
+    WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, resourceUpdates, sc);
 
     // Need to do this after RenderLayer because the compositor animation IDs
     // get populated during RenderLayer and we need those.
     PopulateScrollData(mScrollData, mRoot.get());
   }
 
-  mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder);
+  mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder, resourceUpdates);
   WrBridge()->ClearReadLocks();
 
   // We can't finish this transaction so return. This usually
@@ -822,7 +828,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   {
     AutoProfilerTracing
       tracing("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
-    WrBridge()->EndTransaction(builder, size.ToUnknownSize(), sync,
+    WrBridge()->EndTransaction(builder, resourceUpdates, size.ToUnknownSize(), sync,
                                mLatestTransactionId, mScrollData, transactionStart);
   }
 
@@ -916,13 +922,18 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 void
 WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 {
-  mImageKeysToDelete.DeleteImage(key);
+  mImageKeysToDelete.AppendElement(key);
 }
 
 void
 WebRenderLayerManager::DiscardImages()
 {
-  WrBridge()->UpdateResources(mImageKeysToDelete);
+  wr::IpcResourceUpdateQueue resources(WrBridge()->GetShmemAllocator());
+  for (const auto& key : mImageKeysToDelete) {
+    resources.DeleteImage(key);
+  }
+  mImageKeysToDelete.Clear();
+  WrBridge()->UpdateResources(resources);
 }
 
 void

@@ -110,6 +110,7 @@ WebRenderImageLayer::SupportsAsyncUpdate()
 
 void
 WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                 wr::IpcResourceUpdateQueue& aResources,
                                  const StackingContextHelper& aSc)
 {
   if (!mContainer) {

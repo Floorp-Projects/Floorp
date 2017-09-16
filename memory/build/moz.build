@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'malloc_decls.h',
     'mozjemalloc_types.h',
     'mozmemory.h',
     'mozmemory_wrap.h',
@@ -15,14 +16,13 @@ DEFINES['MOZ_MEMORY_IMPL'] = True
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
     EXPORTS += [
-        'malloc_decls.h',
         'replace_malloc.h',
         'replace_malloc_bridge.h',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mozjemalloc.cpp',
-    'mozmemory_wrap.c',
+    'mozmemory_wrap.cpp',
 ]
 
 if CONFIG['OS_TARGET'] == 'Darwin' and (CONFIG['MOZ_REPLACE_MALLOC'] or

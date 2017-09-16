@@ -4,12 +4,14 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import os
 import re
 import sys
 from abc import ABCMeta, abstractmethod
 
 from mozlog import get_default_logger, commandline, structuredlog
 from mozlog.reader import LogHandler
+from mozpack.files import FileFinder
 
 from . import result
 from .pathutils import filterpaths, findobject
@@ -47,7 +49,7 @@ class BaseType(object):
         return errors
 
     @abstractmethod
-    def _lint(self, path):
+    def _lint(self, path, config, **lintargs):
         pass
 
 
@@ -63,9 +65,24 @@ class LineType(BaseType):
     def condition(payload, line):
         pass
 
-    def _lint(self, path, config, **lintargs):
-        payload = config['payload']
+    def _lint_dir(self, path, config, **lintargs):
+        if not config.get('extensions'):
+            patterns = ['**']
+        else:
+            patterns = ['**/*.{}'.format(e) for e in config['extensions']]
 
+        errors = []
+        finder = FileFinder(path, ignore=lintargs.get('exclude', []))
+        for pattern in patterns:
+            for p, f in finder.find(pattern):
+                errors.extend(self._lint(os.path.join(path, p), config, **lintargs))
+        return errors
+
+    def _lint(self, path, config, **lintargs):
+        if os.path.isdir(path):
+            return self._lint_dir(path, config, **lintargs)
+
+        payload = config['payload']
         with open(path, 'r') as fh:
             lines = fh.readlines()
 

@@ -39,16 +39,6 @@ public class testAccessibleCarets extends JavascriptTest {
         super.tearDown();
     }
 
-    @Override
-    public void testJavascript() throws Exception {
-        // This feature is currently only available in Nightly.
-        if (!AppConstants.NIGHTLY_BUILD) {
-            mAsserter.dumpLog(LOGTAG + " is disabled on non-Nightly builds: returning");
-            return;
-        }
-        super.testJavascript();
-    }
-
     /**
      * Observes tab change events to broadcast to the test script.
      */

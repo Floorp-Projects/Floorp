@@ -73,6 +73,7 @@ for patch in \
  u_setMemoryFunctions-callconvention-anachronism-msvc.diff \
  bug-1373763-convertToPosix-stack-value-out-of-scope.diff \
  bug-1380083 \
+ bug-1387937.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch

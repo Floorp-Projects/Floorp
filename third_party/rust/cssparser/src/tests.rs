@@ -1030,7 +1030,7 @@ fn parse_entirely_reports_first_error() {
 }
 
 #[test]
-fn parse_comments() {
+fn parse_sourcemapping_comments() {
     let tests = vec![
         ("/*# sourceMappingURL=here*/", Some("here")),
         ("/*# sourceMappingURL=here  */", Some("here")),
@@ -1051,6 +1051,31 @@ fn parse_comments() {
         while let Ok(_) = parser.next_including_whitespace() {
         }
         assert_eq!(parser.current_source_map_url(), test.1);
+    }
+}
+
+#[test]
+fn parse_sourceurl_comments() {
+    let tests = vec![
+        ("/*# sourceURL=here*/", Some("here")),
+        ("/*# sourceURL=here  */", Some("here")),
+        ("/*@ sourceURL=here*/", Some("here")),
+        ("/*@ sourceURL=there*/ /*# sourceURL=here*/", Some("here")),
+        ("/*# sourceURL=here there  */", Some("here")),
+        ("/*# sourceURL=  here  */", Some("")),
+        ("/*# sourceURL=*/", Some("")),
+        ("/*# sourceMappingUR=here  */", None),
+        ("/*! sourceURL=here  */", None),
+        ("/*# sourceURL = here  */", None),
+        ("/*   # sourceURL=here   */", None)
+    ];
+
+    for test in tests {
+        let mut input = ParserInput::new(test.0);
+        let mut parser = Parser::new(&mut input);
+        while let Ok(_) = parser.next_including_whitespace() {
+        }
+        assert_eq!(parser.current_source_url(), test.1);
     }
 }
 

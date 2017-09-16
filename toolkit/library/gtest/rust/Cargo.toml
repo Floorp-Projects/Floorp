@@ -44,3 +44,6 @@ opt-level = 2
 rpath = false
 debug-assertions = false
 panic = "abort"
+
+[replace]
+"libudev-sys:0.1.3" = { path = "../../../../dom/webauthn/libudev-sys" }

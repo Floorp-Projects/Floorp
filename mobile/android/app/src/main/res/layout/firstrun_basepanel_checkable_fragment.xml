@@ -51,7 +51,7 @@
                   android:layout_height="wrap_content"
                   android:layout_marginBottom="30dp"
                   android:gravity="center"
-                  android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
+                  android:textAppearance="@style/TextAppearance.Link"
                   android:textAllCaps="true"
                   android:text="@string/firstrun_button_next"/>
     </LinearLayout>

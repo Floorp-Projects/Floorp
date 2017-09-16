@@ -8,6 +8,8 @@
 #extension GL_OES_EGL_image_external_essl3 : require
 #endif
 
+#include base
+
 // The textureLod() doesn't support samplerExternalOES for WR_FEATURE_TEXTURE_EXTERNAL.
 // https://www.khronos.org/registry/OpenGL/extensions/OES/OES_EGL_image_external_essl3.txt
 //
@@ -21,24 +23,10 @@
 #define TEX_SAMPLE(sampler, tex_coord) textureLod(sampler, tex_coord, 0.0)
 #endif
 
-// texelFetchOffset is buggy on some Android GPUs (see issue #1694).
-// Fallback to texelFetch on mobile GPUs.
-#if defined(GL_ES) 
-    #if GL_ES == 1
-        #define TEXEL_FETCH(sampler, position, lod, offset) texelFetch(sampler, position + offset, lod)
-    #else
-        #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
-    #endif
-#else
-    #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
-#endif
-
 //======================================================================================
 // Vertex shader attributes and uniforms
 //======================================================================================
 #ifdef WR_VERTEX_SHADER
-    #define varying out
-
     // Uniform inputs
     uniform mat4 uTransform;       // Orthographic projection
     uniform float uDevicePixelRatio;
@@ -51,10 +39,6 @@
 // Fragment shader attributes and uniforms
 //======================================================================================
 #ifdef WR_FRAGMENT_SHADER
-    precision highp float;
-
-    #define varying in
-
     // Uniform inputs
 
     // Fragment shader outputs
@@ -64,25 +48,6 @@
 //======================================================================================
 // Shared shader uniforms
 //======================================================================================
-#if defined(GL_ES)
-    #if GL_ES == 1
-        #ifdef GL_FRAGMENT_PRECISION_HIGH
-        precision highp sampler2DArray;
-        #else
-        precision mediump sampler2DArray;
-        #endif
-
-        // Sampler default precision is lowp on mobile GPUs.
-        // This causes RGBA32F texture data to be clamped to 16 bit floats on some GPUs (e.g. Mali-T880).
-        // Define highp precision macro to allow lossless FLOAT texture sampling.
-        #define HIGHP_SAMPLER_FLOAT highp
-    #else
-        #define HIGHP_SAMPLER_FLOAT
-    #endif
-#else
-    #define HIGHP_SAMPLER_FLOAT
-#endif
-
 #ifdef WR_FEATURE_TEXTURE_2D
 uniform sampler2D sColor0;
 uniform sampler2D sColor1;

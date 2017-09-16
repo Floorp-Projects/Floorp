@@ -22,7 +22,7 @@ add_task(function* () {
   yield sourceSeen;
 
   info(`checking original location for ${JS_URL}:6`);
-  let newLoc = yield service.originalPositionFor(JS_URL, 6);
+  let newLoc = yield service.originalPositionFor(JS_URL, 6, 4);
 
   is(newLoc.sourceUrl, ORIGINAL_URL, "check mapped URL");
   is(newLoc.line, 4, "check mapped line number");

@@ -77,12 +77,7 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
     {
         if (mLoaderGlobal)
             return mLoaderGlobal;
-        if ((mInitialized || NS_SUCCEEDED(ReallyInit())) &&
-            mShareLoaderGlobal)
-        {
-            return GetSharedGlobal(aCx);
-        }
-        return xpc::CompilationScope();
+        return GetSharedGlobal(aCx);
     }
 
  private:

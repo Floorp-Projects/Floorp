@@ -287,6 +287,7 @@ public class GeckoApplication extends Application {
                 "Gecko:Exited",
                 "RuntimePermissions:Check",
                 "Snackbar:Show",
+                "Share:Text",
                 null);
         EventDispatcher.getInstance().registerBackgroundThreadListener(listener,
                 "Profile:Create",
@@ -445,6 +446,16 @@ public class GeckoApplication extends Application {
                                    callback.sendSuccess(true);
                                }
                            });
+
+            } else if ("Share:Text".equals(event)) {
+                final String text = message.getString("text");
+                final String title = message.getString("title", "");
+                IntentHelper.openUriExternal(text, "text/plain", "", "",
+                                             Intent.ACTION_SEND, title, false);
+
+                // Context: Sharing via chrome list (no explicit session is active)
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHARE,
+                                      TelemetryContract.Method.LIST, "text");
 
             } else if ("Snackbar:Show".equals(event)) {
                 final Activity currentActivity =

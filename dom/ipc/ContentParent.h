@@ -1147,9 +1147,9 @@ private:
                           const bool& aIsFromNsIFile) override;
 
   virtual mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
-    InfallibleTArray<Accumulation>&& aAccumulations) override;
+    InfallibleTArray<HistogramAccumulation>&& aAccumulations) override;
   virtual mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
-    InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
+    InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations) override;
   virtual mozilla::ipc::IPCResult RecvUpdateChildScalars(
     InfallibleTArray<ScalarAction>&& aScalarActions) override;
   virtual mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(

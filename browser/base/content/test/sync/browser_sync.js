@@ -3,6 +3,11 @@
 
 "use strict";
 
+add_task(function setup() {
+  // gSync.init() is called in a requestIdleCallback. Force its initialization.
+  gSync.init();
+});
+
 add_task(async function test_ui_state_notification_calls_updateAllUI() {
   let called = false;
   let updateAllUI = gSync.updateAllUI;

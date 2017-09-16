@@ -1584,15 +1584,6 @@ gfxPlatformFontList::GetPrefsAndStartLoader()
 }
 
 void
-gfxPlatformFontList::ForceGlobalReflow()
-{
-    // modify a preference that will trigger reflow everywhere
-    static const char kPrefName[] = "font.internaluseonly.changed";
-    bool fontInternalChange = Preferences::GetBool(kPrefName, false);
-    Preferences::SetBool(kPrefName, !fontInternalChange);
-}
-
-void
 gfxPlatformFontList::RebuildLocalFonts()
 {
     for (auto it = mUserFontSetList.Iter(); !it.Done(); it.Next()) {

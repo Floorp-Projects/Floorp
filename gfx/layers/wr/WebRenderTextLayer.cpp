@@ -20,6 +20,7 @@ using namespace mozilla::gfx;
 
 void
 WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                wr::IpcResourceUpdateQueue& aResources,
                                 const StackingContextHelper& aSc)
 {
     if (mBounds.IsEmpty()) {

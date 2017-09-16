@@ -1078,8 +1078,7 @@ IonCacheIRCompiler::emitCallNativeGetterResult()
     masm.passABIArg(argJSContext);
     masm.passABIArg(argUintN);
     masm.passABIArg(argVp);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()), MoveOp::GENERAL,
-                     CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()));
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -1137,8 +1136,7 @@ IonCacheIRCompiler::emitCallProxyGetResult()
     masm.passABIArg(argProxy);
     masm.passABIArg(argId);
     masm.passABIArg(argVp);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ProxyGetProperty), MoveOp::GENERAL,
-                     CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ProxyGetProperty));
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -1326,7 +1324,6 @@ IonCacheIRCompiler::emitCallStringSplitResult()
 static bool
 GroupHasPropertyTypes(ObjectGroup* group, jsid* id, Value* v)
 {
-    AutoUnsafeCallWithABI unsafe;
     if (group->unknownProperties())
         return true;
     HeapTypeSet* propTypes = group->maybeGetProperty(*id);
@@ -1994,8 +1991,7 @@ IonCacheIRCompiler::emitCallNativeSetter()
     masm.passABIArg(argJSContext);
     masm.passABIArg(argUintN);
     masm.passABIArg(argVp);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()), MoveOp::GENERAL,
-                     CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()));
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());

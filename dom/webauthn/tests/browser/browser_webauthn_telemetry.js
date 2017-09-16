@@ -82,28 +82,6 @@ add_task(async function test_loopback() {
     validateHistogramEntryCount("WEBAUTHN_GET_ASSERTION_MS", 1);
   }
 
-  {
-    cleanupTelemetry();
-    // Same as test_successful_loopback, but we will swap to using a (non-existent)
-    // usb token. This will cause U2FRegisterAbort to fire, but will not execute the
-    // Sign function, and no histogram entries will log.
-    Services.prefs.setBoolPref("security.webauth.webauthn", true);
-    Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", false);
-    Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", true);
-
-    await executeTestPage(testPage);
-
-    let webauthn_used = getTelemetryForScalar("security.webauthn_used");
-    ok(webauthn_used, "Scalar keys are set: " + Object.keys(webauthn_used).join(", "));
-    is(webauthn_used["U2FRegisterFinish"], undefined, "webauthn_used U2FRegisterFinish must be unset");
-    is(webauthn_used["U2FSignFinish"], undefined, "webauthn_used U2FSignFinish scalar must be unset");
-    is(webauthn_used["U2FRegisterAbort"], 1, "webauthn_used U2FRegisterAbort scalar should be a 1");
-    is(webauthn_used["U2FSignAbort"], undefined, "webauthn_used U2FSignAbort scalar must be unset");
-
-    validateHistogramEntryCount("WEBAUTHN_CREATE_CREDENTIAL_MS", 0);
-    validateHistogramEntryCount("WEBAUTHN_GET_ASSERTION_MS", 0);
-  }
-
   // There aren't tests for register succeeding and sign failing, as I don't see an easy way to prompt
   // the soft token to fail that way _and_ trigger the Abort telemetry.
 });

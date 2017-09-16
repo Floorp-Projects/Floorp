@@ -353,7 +353,7 @@ AutoChildOpArgs::SendAsOpArgs()
   MOZ_DIAGNOSTIC_ASSERT(!mSent);
   mSent = true;
   for (UniquePtr<AutoIPCStream>& autoStream : mStreamCleanupList) {
-    autoStream->TakeValue();
+    autoStream->TakeOptionalValue();
   }
   return mOpArgs;
 }
@@ -506,7 +506,7 @@ AutoParentOpResult::SendAsOpResult()
   MOZ_DIAGNOSTIC_ASSERT(!mSent);
   mSent = true;
   for (UniquePtr<AutoIPCStream>& autoStream : mStreamCleanupList) {
-    autoStream->TakeValue();
+    autoStream->TakeOptionalValue();
   }
   return mOpResult;
 }
@@ -537,7 +537,6 @@ AutoParentOpResult::SerializeReadStream(const nsID& aId, StreamList* aStreamList
   MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   nsCOMPtr<nsIInputStream> stream = aStreamList->Extract(aId);
-  MOZ_DIAGNOSTIC_ASSERT(stream);
 
   if (!mStreamControl) {
     mStreamControl = static_cast<CacheStreamControlParent*>(
