@@ -36,7 +36,7 @@ public:
   {
      mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
      MOZ_ASSERT(gIPCBlobThread);
-     gIPCBlobThread->InitializeOnMainThread();
+     gIPCBlobThread->Initialize();
      return NS_OK;
   }
 };
@@ -115,47 +115,20 @@ IPCBlobInputStreamThread::GetOrCreate()
 
   if (!gIPCBlobThread) {
     gIPCBlobThread = new IPCBlobInputStreamThread();
-    if (!gIPCBlobThread->Initialize()) {
-      return nullptr;
-    }
+    gIPCBlobThread->Initialize();
   }
 
   return gIPCBlobThread;
 }
 
-bool
+void
 IPCBlobInputStreamThread::Initialize()
 {
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread("DOM File", getter_AddRefs(thread));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  mThread = thread;
-
-  if (!mPendingActors.IsEmpty()) {
-    for (uint32_t i = 0; i < mPendingActors.Length(); ++i) {
-      MigrateActorInternal(mPendingActors[i]);
-    }
-
-    mPendingActors.Clear();
-  }
-
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
     SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
-    return true;
+    return;
   }
-
-  InitializeOnMainThread();
-  return true;
-}
-
-void
-IPCBlobInputStreamThread::InitializeOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (NS_WARN_IF(!obs)) {
@@ -167,12 +140,22 @@ IPCBlobInputStreamThread::InitializeOnMainThread()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-}
 
-nsIEventTarget*
-IPCBlobInputStreamThread::EventTarget() const
-{
-  return mThread;
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_NewNamedThread("DOM File", getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  mThread = thread;
+
+  if (!mPendingActors.IsEmpty()) {
+    for (uint32_t i = 0; i < mPendingActors.Length(); ++i) {
+      MigrateActorInternal(mPendingActors[i]);
+    }
+
+    mPendingActors.Clear();
+  }
 }
 
 NS_IMETHODIMP
