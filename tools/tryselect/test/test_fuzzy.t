@@ -11,6 +11,7 @@ Test fuzzy selector
       "test/foo-opt"
     ]
   }
+  
   $ ./mach try fuzzy $testargs -q "'bar"
   no tasks selected
   $ ./mach try fuzzy $testargs --full -q "'bar"
@@ -21,6 +22,7 @@ Test fuzzy selector
       "test/bar-opt"
     ]
   }
+  
 
 Test templates
 
@@ -37,6 +39,7 @@ Test templates
       "test/foo-opt"
     ]
   }
+  
   $ ./mach try fuzzy $testargs --env FOO=1 --env BAR=baz -q "'foo"
   Calculated try selector:
   {
@@ -51,3 +54,4 @@ Test templates
       "test/foo-opt"
     ]
   }
+  
