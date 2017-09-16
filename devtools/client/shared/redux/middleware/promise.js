@@ -4,7 +4,6 @@
 "use strict";
 
 const { generateUUID } = require("devtools/shared/generate-uuid");
-const defer = require("devtools/shared/defer");
 const {
   entries, toObject, executeSoon
 } = require("devtools/shared/DevToolsUtils");
@@ -15,39 +14,38 @@ function promiseMiddleware({ dispatch, getState }) {
     if (!(PROMISE in action)) {
       return next(action);
     }
-
-    const promiseInst = action[PROMISE];
-    const seqId = generateUUID().toString();
-
-    // Create a new action that doesn't have the promise field and has
-    // the `seqId` field that represents the sequence id
-    action = Object.assign(
-      toObject(entries(action).filter(pair => pair[0] !== PROMISE)), { seqId }
-    );
-
-    dispatch(Object.assign({}, action, { status: "start" }));
-
     // Return the promise so action creators can still compose if they
     // want to.
-    const deferred = defer();
-    promiseInst.then(value => {
-      executeSoon(() => {
-        dispatch(Object.assign({}, action, {
-          status: "done",
-          value: value
-        }));
-        deferred.resolve(value);
-      });
-    }, error => {
-      executeSoon(() => {
-        dispatch(Object.assign({}, action, {
-          status: "error",
-          error: error.message || error
-        }));
-        deferred.reject(error);
+    return new Promise((resolve, reject) => {
+      const promiseInst = action[PROMISE];
+      const seqId = generateUUID().toString();
+
+      // Create a new action that doesn't have the promise field and has
+      // the `seqId` field that represents the sequence id
+      action = Object.assign(
+        toObject(entries(action).filter(pair => pair[0] !== PROMISE)), { seqId }
+      );
+
+      dispatch(Object.assign({}, action, { status: "start" }));
+
+      promiseInst.then(value => {
+        executeSoon(() => {
+          dispatch(Object.assign({}, action, {
+            status: "done",
+            value: value
+          }));
+          resolve(value);
+        });
+      }, error => {
+        executeSoon(() => {
+          dispatch(Object.assign({}, action, {
+            status: "error",
+            error: error.message || error
+          }));
+          reject(error);
+        });
       });
     });
-    return deferred.promise;
   };
 }
 

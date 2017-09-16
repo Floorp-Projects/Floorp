@@ -59,13 +59,31 @@ CacheStreamControlParent::SerializeStream(CacheReadStream* aReadStreamOut,
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
-  MOZ_DIAGNOSTIC_ASSERT(aStream);
 
   UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
   DebugOnly<bool> ok = autoStream->Serialize(aStream, Manager());
   MOZ_ASSERT(ok);
 
   aStreamCleanupList.AppendElement(Move(autoStream));
+}
+
+void
+CacheStreamControlParent::OpenStream(const nsID& aId,
+                                     InputStreamResolver&& aResolver)
+{
+  NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
+  MOZ_DIAGNOSTIC_ASSERT(aResolver);
+
+  if (!mStreamList || !mStreamList->ShouldOpenStreamFor(aId)) {
+    aResolver(nullptr);
+    return;
+  }
+
+  // Make sure to add ourself as a Listener even thought we are using
+  // a separate resolver function to signal the completion of the
+  // operation.  The Manager uses the existence of the Listener to ensure
+  // that its safe to complete the operation.
+  mStreamList->GetManager()->ExecuteOpenStream(this, Move(aResolver), aId);
 }
 
 void
@@ -93,9 +111,35 @@ CacheStreamControlParent::ActorDestroy(ActorDestroyReason aReason)
   if (!mStreamList) {
     return;
   }
+  mStreamList->GetManager()->RemoveListener(this);
   mStreamList->RemoveStreamControl(this);
   mStreamList->NoteClosedAll();
   mStreamList = nullptr;
+}
+
+mozilla::ipc::IPCResult
+CacheStreamControlParent::RecvOpenStream(const nsID& aStreamId,
+                                         OpenStreamResolver&& aResolver)
+{
+  NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
+
+  // This is safe because:
+  //  1. We add ourself to the Manager as an operation Listener in OpenStream().
+  //  2. We remove ourself as a Listener from the Manager in ActorDestroy().
+  //  3. The Manager will not "complete" the operation if the Listener has
+  //     been removed.  This means the lambda will not be invoked.
+  //  4. The ActorDestroy() will also cause the child-side MozPromise for
+  //     this async returning method to be rejected.  So we don't have to
+  //     call the resolver in this case.
+  CacheStreamControlParent* self = this;
+
+  OpenStream(aStreamId, [self, aResolver](nsCOMPtr<nsIInputStream>&& aStream) {
+      AutoIPCStream stream;
+      Unused << stream.Serialize(aStream, self->Manager());
+      aResolver(stream.TakeOptionalValue());
+    });
+
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
