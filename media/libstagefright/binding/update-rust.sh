@@ -38,6 +38,9 @@ cp _upstream/mp4parse/mp4parse_capi/Cargo.toml mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/build.rs mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h include/
 cp _upstream/mp4parse/mp4parse_capi/src/*.rs mp4parse_capi/src/
+rm -rf mp4parse_fallible
+mkdir -p mp4parse_fallible
+cp _upstream/mp4parse/mp4parse_fallible/* mp4parse_fallible/
 
 echo "Applying patches..."
 patch -p4 < mp4parse-cargo.patch
