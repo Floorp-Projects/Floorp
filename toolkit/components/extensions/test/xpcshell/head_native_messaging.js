@@ -20,16 +20,18 @@ let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.
 let tmpDir = FileUtils.getDir("TmpD", ["Native Messaging"]);
 tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
+const TYPE_SLUG = AppConstants.platform === "linux" ? "native-messaging-hosts" : "NativeMessagingHosts";
+OS.File.makeDir(OS.Path.join(tmpDir.path, TYPE_SLUG));
+
 do_register_cleanup(() => {
   tmpDir.remove(true);
 });
 
 function getPath(filename) {
-  return OS.Path.join(tmpDir.path, filename);
+  return OS.Path.join(tmpDir.path, TYPE_SLUG, filename);
 }
 
 const ID = "native@tests.mozilla.org";
-
 
 async function setupHosts(scripts) {
   const PERMS = {unixMode: 0o755};

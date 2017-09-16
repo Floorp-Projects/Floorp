@@ -66,12 +66,12 @@ this.NativeApp = class extends EventEmitter {
     this.writePromise = null;
     this.sentDisconnect = false;
 
-    this.startupPromise = NativeManifests.lookupApplication(application, context)
+    this.startupPromise = NativeManifests.lookupManifest("stdio", application, context)
       .then(hostInfo => {
-        // Put the two errors together to not leak information about whether a native
+        // Report a generic error to not leak information about whether a native
         // application is installed to addons that do not have the right permission.
-        if (!hostInfo || !hostInfo.manifest.allowed_extensions.includes(context.extension.id)) {
-          throw new context.cloneScope.Error(`This extension does not have permission to use native application ${application} (or the application is not installed)`);
+        if (!hostInfo) {
+          throw new context.cloneScope.Error(`No such native application ${application}`);
         }
 
         let command = hostInfo.manifest.path;
