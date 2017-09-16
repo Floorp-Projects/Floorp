@@ -104,7 +104,8 @@ public class AnimatedProgressBar extends ProgressBar {
         } else {
             canvas.getClipBounds(tempRect);
             final float clipWidth = tempRect.width() * mClipRegion;
-            canvas.save();
+            final int saveCount = canvas.save();
+
 
             if (mIsRtl) {
                 canvas.clipRect(tempRect.left, tempRect.top, tempRect.right - clipWidth, tempRect.bottom);
@@ -112,7 +113,7 @@ public class AnimatedProgressBar extends ProgressBar {
                 canvas.clipRect(tempRect.left + clipWidth, tempRect.top, tempRect.right, tempRect.bottom);
             }
             super.onDraw(canvas);
-            canvas.restore();
+            canvas.restoreToCount(saveCount);
         }
     }
 
@@ -171,8 +172,11 @@ public class AnimatedProgressBar extends ProgressBar {
         mClosingAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                mClipRegion = (float) valueAnimator.getAnimatedValue();
-                invalidate();
+                final float region = (float) valueAnimator.getAnimatedValue();
+                if (mClipRegion != region) {
+                    mClipRegion = region;
+                    invalidate();
+                }
             }
         });
         mClosingAnimator.addListener(new Animator.AnimatorListener() {
