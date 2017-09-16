@@ -112,20 +112,20 @@ add_task(function* () {
     let values = tabpanel
       .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
-    is(labels[0].textContent, "foo", "The first query param name was incorrect.");
-    is(values[0].textContent, "bar", "The first query param value was incorrect.");
-    is(labels[1].textContent, "baz", "The second query param name was incorrect.");
-    is(values[1].textContent, "42", "The second query param value was incorrect.");
+    is(labels[0].textContent, "baz", "The first query param name was incorrect.");
+    is(values[0].textContent, "42", "The first query param value was incorrect.");
+    is(labels[1].textContent, "foo", "The second query param name was incorrect.");
+    is(values[1].textContent, "bar", "The second query param value was incorrect.");
     is(labels[2].textContent, "type", "The third query param name was incorrect.");
     is(values[2].textContent, type, "The third query param value was incorrect.");
 
     if (type == "urlencoded") {
       checkVisibility("params");
       is(labels.length, 5, "There should be 5 param values displayed in this tabpanel.");
-      is(labels[3].textContent, "foo", "The first post param name was incorrect.");
-      is(values[3].textContent, "bar", "The first post param value was incorrect.");
-      is(labels[4].textContent, "baz", "The second post param name was incorrect.");
-      is(values[4].textContent, "123", "The second post param value was incorrect.");
+      is(labels[3].textContent, "baz", "The first post param name was incorrect.");
+      is(values[3].textContent, "123", "The first post param value was incorrect.");
+      is(labels[4].textContent, "foo", "The second post param name was incorrect.");
+      is(values[4].textContent, "bar", "The second post param value was incorrect.");
     } else {
       checkVisibility("params editor");
 

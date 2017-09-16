@@ -54,10 +54,10 @@ add_task(function* () {
   let values = tabpanel
     .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
-  is(labels[0].textContent, "foo", "The first query param name was incorrect.");
-  is(values[0].textContent, "bar", "The first query param value was incorrect.");
-  is(labels[1].textContent, "baz", "The second query param name was incorrect.");
-  is(values[1].textContent, "123", "The second query param value was incorrect.");
+  is(labels[0].textContent, "baz", "The first query param name was incorrect.");
+  is(values[0].textContent, "123", "The first query param value was incorrect.");
+  is(labels[1].textContent, "foo", "The second query param name was incorrect.");
+  is(values[1].textContent, "bar", "The second query param value was incorrect.");
 
   return teardown(monitor);
 });
