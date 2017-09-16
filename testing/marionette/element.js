@@ -19,6 +19,7 @@ const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["element"];
 
+const XBLNS = "http://www.mozilla.org/xbl";
 const XMLNS = "http://www.w3.org/1999/xhtml";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -1050,8 +1051,21 @@ element.scrollIntoView = function(el) {
   }
 };
 
-element.isXULElement = function(el) {
-  return el.namespaceURI === XULNS;
+/**
+ * Ascertains whether <var>el</var> is a XUL- or XBL element.
+ *
+ * @param {*} node
+ *     Element thought to be a XUL- or XBL element.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is a XULElement or XBLElement,
+ *     false otherwise.
+ */
+element.isXULElement = function(node) {
+  return typeof node == "object" &&
+      node !== null &&
+      node.nodeType === node.ELEMENT_NODE &&
+      [XBLNS, XULNS].includes(node.namespaceURI);
 };
 
 const boolEls = {
