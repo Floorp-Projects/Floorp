@@ -44,7 +44,10 @@
                 "type": "string"
               },
               "data": {
-                "type": "object"
+                "type": "object",
+                "additionalProperties": {
+                  "type": "any"
+                }
               },
               "type": {
                 "type": "string",
