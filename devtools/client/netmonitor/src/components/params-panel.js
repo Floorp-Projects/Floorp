@@ -11,6 +11,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils/l10n");
 const { getUrlQuery, parseQueryString, parseFormData } = require("../utils/request-utils");
+const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Components
 const PropertiesView = createFactory(require("./properties-view"));
@@ -76,7 +77,7 @@ function ParamsPanel({
     }
 
     if (json) {
-      object[JSON_SCOPE_NAME] = json;
+      object[JSON_SCOPE_NAME] = sortObjectKeys(json);
     } else {
       object[PARAMS_POST_PAYLOAD] = {
         EDITOR_CONFIG: {
@@ -118,7 +119,7 @@ ParamsPanel.propTypes = {
  * @returns {Object} Rep compatible object
  */
 function getProperties(arr) {
-  return arr.reduce((map, obj) => {
+  return sortObjectKeys(arr.reduce((map, obj) => {
     let value = map[obj.name];
     if (value) {
       if (typeof value !== "object") {
@@ -129,7 +130,7 @@ function getProperties(arr) {
       map[obj.name] = obj.value;
     }
     return map;
-  }, {});
+  }, {}));
 }
 
 module.exports = ParamsPanel;
