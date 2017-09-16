@@ -32,6 +32,7 @@ public:
 
 protected:
   PVideoDecoderParent* AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
+                                                const float& aFramerate,
                                                 const layers::TextureFactoryIdentifier& aIdentifier,
                                                 bool* aSuccess,
                                                 nsCString* aBlacklistedD3D11Driver,

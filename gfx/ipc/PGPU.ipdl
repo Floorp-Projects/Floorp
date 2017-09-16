@@ -15,8 +15,8 @@ include protocol PVideoDecoderManager;
 
 using base::ProcessId from "base/process.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
-using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
-using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedHistogramAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
@@ -107,8 +107,8 @@ child:
   async NotifyUiObservers(nsCString aTopic);
 
   // Messages for reporting telemetry to the UI process.
-  async AccumulateChildHistograms(Accumulation[] accumulations);
-  async AccumulateChildKeyedHistograms(KeyedAccumulation[] accumulations);
+  async AccumulateChildHistograms(HistogramAccumulation[] accumulations);
+  async AccumulateChildKeyedHistograms(KeyedHistogramAccumulation[] accumulations);
   async UpdateChildScalars(ScalarAction[] actions);
   async UpdateChildKeyedScalars(KeyedScalarAction[] actions);
   async RecordChildEvents(ChildEventData[] events);

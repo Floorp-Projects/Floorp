@@ -11,6 +11,7 @@ add_task(async function setup() {
 
 add_task(async function test_support_toolbar_property() {
   const TOOLBAR_COLOR = "#ff00ff";
+  const TOOLBAR_TEXT_COLOR = "#9400ff";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
@@ -21,6 +22,7 @@ add_task(async function test_support_toolbar_property() {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
           "toolbar": TOOLBAR_COLOR,
+          "toolbar_text": TOOLBAR_TEXT_COLOR,
         },
       },
     },
@@ -37,12 +39,19 @@ add_task(async function test_support_toolbar_property() {
     return bounds.width > 0 && bounds.height > 0;
   });
 
-  info(`Checking toolbar background colors for ${toolbars.length} toolbars.`);
+  info(`Checking toolbar colors for ${toolbars.length} toolbars.`);
   for (let toolbar of toolbars) {
     info(`Testing ${toolbar.id}`);
     Assert.equal(window.getComputedStyle(toolbar).backgroundColor,
-      "rgb(" + hexToRGB(TOOLBAR_COLOR).join(", ") + ")", "Toolbar color should be set.");
+      "rgb(" + hexToRGB(TOOLBAR_COLOR).join(", ") + ")", "Toolbar background color should be set.");
+    Assert.equal(window.getComputedStyle(toolbar).color,
+      "rgb(" + hexToRGB(TOOLBAR_TEXT_COLOR).join(", ") + ")", "Toolbar text color should be set.");
   }
+
+  info("Checking selected tab colors");
+  let selectedTab = document.querySelector(".tabbrowser-tab[selected]");
+  Assert.equal(window.getComputedStyle(selectedTab).color,
+    "rgb(" + hexToRGB(TOOLBAR_TEXT_COLOR).join(", ") + ")", "Selected tab text color should be set.");
 
   await extension.unload();
 });

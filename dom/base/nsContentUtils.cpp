@@ -3054,33 +3054,10 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
   if (htmlDocument) {
     nsHTMLDocument* htmlDoc = static_cast<nsHTMLDocument*> (htmlDocument.get());
-    // Flush our content model so it'll be up to date
-    // If this becomes unnecessary and the following line is removed,
-    // please also remove the corresponding flush operation from
-    // nsHtml5TreeBuilderCppSupplement.h. (Look for "See bug 497861." there.)
-    aContent->GetUncomposedDoc()->FlushPendingNotifications(FlushType::Content);
-
-    RefPtr<nsContentList> htmlForms = htmlDoc->GetExistingForms();
-    if (!htmlForms) {
-      // If the document doesn't have an existing forms content list, create a
-      // new one, but avoid creating a live list since we only need to use the
-      // list here and it doesn't need to listen to mutation events.
-
-      // Please keep this in sync with nsHTMLDocument::GetForms().
-      htmlForms = new nsContentList(aDocument, kNameSpaceID_XHTML,
-                                    nsGkAtoms::form, nsGkAtoms::form,
-                                    /* aDeep = */ true,
-                                    /* aLiveList = */ false);
-    }
-    RefPtr<nsContentList> htmlFormControls =
-      new nsContentList(aDocument,
-                        nsHTMLDocument::MatchFormControls,
-                        nullptr, nullptr,
-                        /* aDeep = */ true,
-                        /* aMatchAtom = */ nullptr,
-                        /* aMatchNameSpaceId = */ kNameSpaceID_None,
-                        /* aFuncMayDependOnAttr = */ true,
-                        /* aLiveList = */ false);
+    RefPtr<nsContentList> htmlForms;
+    RefPtr<nsContentList> htmlFormControls;
+    htmlDoc->GetFormsAndFormControls(getter_AddRefs(htmlForms),
+                                     getter_AddRefs(htmlFormControls));
 
     // If we have a form control and can calculate form information, use that
     // as the key - it is more reliable than just recording position in the
@@ -10643,12 +10620,12 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
   return target.forget();
 }
 
-/* static */ bool
-nsContentUtils::IsLocalRefURL(const nsString& aString)
-{
+namespace {
+template<class T>
+bool IsLocalRefURL(const T& aString) {
   // Find the first non-"C0 controls + space" character.
-  const char16_t* current = aString.get();
-  for (; *current != '\0'; current++) {
+  const typename T::char_type* current = aString.BeginReading();
+  for (; current != aString.EndReading(); current++) {
     if (*current > 0x20) {
       // if the first non-"C0 controls + space" character is '#', this is a
       // local-ref URL.
@@ -10657,6 +10634,19 @@ nsContentUtils::IsLocalRefURL(const nsString& aString)
   }
 
   return false;
+}
+}
+
+/* static */ bool
+nsContentUtils::IsLocalRefURL(const nsString& aString)
+{
+  return ::IsLocalRefURL(aString);
+}
+
+/* static */ bool
+nsContentUtils::IsLocalRefURL(const nsACString& aString)
+{
+  return ::IsLocalRefURL(aString);
 }
 
 // Tab ID is composed in a similar manner of Window ID.

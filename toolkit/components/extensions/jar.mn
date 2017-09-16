@@ -15,6 +15,9 @@ toolkit.jar:
     content/extensions/ext-downloads.js
     content/extensions/ext-extension.js
     content/extensions/ext-i18n.js
+#ifndef ANDROID
+    content/extensions/ext-identity.js
+#endif
     content/extensions/ext-idle.js
     content/extensions/ext-management.js
     content/extensions/ext-notifications.js

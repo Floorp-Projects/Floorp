@@ -23,7 +23,6 @@ const {
   JSTERM_COMMANDS,
 } = require("../constants");
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const reps = require("devtools/client/shared/components/reps/reps");
 const { REPS, MODE } = reps;
 const ObjectInspector = createFactory(reps.ObjectInspector);
@@ -39,13 +38,11 @@ GripMessageBody.propTypes = {
   ]).isRequired,
   serviceContainer: PropTypes.shape({
     createElement: PropTypes.func.isRequired,
-    hudProxyClient: PropTypes.object.isRequired,
+    hudProxy: PropTypes.object.isRequired,
   }),
   userProvidedStyle: PropTypes.string,
   useQuotes: PropTypes.bool,
   escapeWhitespace: PropTypes.bool,
-  loadedObjectProperties: PropTypes.object,
-  loadedObjectEntries: PropTypes.object,
   type: PropTypes.string,
   helperType: PropTypes.string,
 };
@@ -56,16 +53,12 @@ GripMessageBody.defaultProps = {
 
 function GripMessageBody(props) {
   const {
-    dispatch,
-    messageId,
     grip,
     userProvidedStyle,
     serviceContainer,
     useQuotes,
     escapeWhitespace,
     mode = MODE.LONG,
-    loadedObjectProperties,
-    loadedObjectEntries,
   } = props;
 
   let styleObject;
@@ -103,15 +96,13 @@ function GripMessageBody(props) {
         value: grip
       }
     }],
-    getObjectProperties: actor => loadedObjectProperties && loadedObjectProperties[actor],
-    loadObjectProperties: object => {
-      const client = new ObjectClient(serviceContainer.hudProxyClient, object);
-      dispatch(actions.messageObjectPropertiesLoad(messageId, client, object));
-    },
-    getObjectEntries: actor => loadedObjectEntries && loadedObjectEntries[actor],
-    loadObjectEntries: object => {
-      const client = new ObjectClient(serviceContainer.hudProxyClient, object);
-      dispatch(actions.messageObjectEntriesLoad(messageId, client, object));
+    createObjectClient: object =>
+      new ObjectClient(serviceContainer.hudProxy.client, object),
+    releaseActor: actor => {
+      if (!actor || !serviceContainer.hudProxy.releaseActor) {
+        return;
+      }
+      serviceContainer.hudProxy.releaseActor(actor);
     },
     openLink: serviceContainer.openLink,
   };

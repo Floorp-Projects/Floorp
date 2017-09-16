@@ -18,14 +18,14 @@ add_task(function* () {
 
   info("Navigate to the second page");
   let onMarkupLoaded = waitForMarkupLoaded(inspector);
-  yield testActor.eval(`content.location.href="${IFRAME2}"`);
+  yield testActor.eval(`location.href="${IFRAME2}"`);
   yield onMarkupLoaded;
 
   yield testSecondPage(inspector, view, testActor);
 
   info("Go back to the first page");
   onMarkupLoaded = waitForMarkupLoaded(inspector);
-  yield testActor.eval("content.history.back();");
+  yield testActor.eval("history.back();");
   yield onMarkupLoaded;
 
   yield testBackToFirstPage(inspector, view, testActor);

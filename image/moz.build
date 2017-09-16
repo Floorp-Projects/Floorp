@@ -8,6 +8,9 @@ DIRS += ['build', 'decoders', 'encoders']
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['test/gtest']
 
+if CONFIG['FUZZING']:
+    DIRS += ['test/fuzzing']
+
 with Files('**'):
     BUG_COMPONENT = ('Core', 'ImageLib')
 
@@ -113,3 +116,9 @@ LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['FUZZING']:
+    if CONFIG['LIBFUZZER']:
+        # Add trace-pc coverage for libfuzzer
+        CFLAGS += ['-fsanitize-coverage=trace-pc-guard']
+        CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard']

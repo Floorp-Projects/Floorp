@@ -73,21 +73,6 @@ VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
   return [NSColor whiteColor];
 }
 
-@interface NSView(FontSmoothingBackgroundColor)
-- (NSColor*)fontSmoothingBackgroundColor;
-@end
-
-NSColor*
-VibrancyManager::VibrancyFontSmoothingBackgroundColorForType(VibrancyType aType)
-{
-  NSView* view = mVibrantRegions.LookupOrAdd(uint32_t(aType))->GetAnyView();
-
-  if (view && [view respondsToSelector:@selector(fontSmoothingBackgroundColor)]) {
-    return [view fontSmoothingBackgroundColor];
-  }
-  return [NSColor clearColor];
-}
-
 static void
 DrawRectNothing(id self, SEL _cmd, NSRect aRect)
 {

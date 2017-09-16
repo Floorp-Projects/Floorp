@@ -8,6 +8,7 @@
 #define mozilla_dom_cache_StreamControl_h
 
 #include "mozilla/dom/cache/ReadStream.h"
+#include "mozilla/dom/cache/Types.h"
 #include "mozilla/RefPtr.h"
 #include "nsTObserverArray.h"
 
@@ -35,6 +36,9 @@ public:
   virtual void
   SerializeStream(CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
                   nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList) = 0;
+
+  virtual void
+  OpenStream(const nsID& aId, InputStreamResolver&& aResolver) = 0;
 
   // inherited implementation of the ReadStream::Controllable list
 

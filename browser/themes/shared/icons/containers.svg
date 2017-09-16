@@ -2,5 +2,5 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <path fill="context-fill" d="M12 4H4v4h8zm-2 2.75a.25.25 0 0 1-.25.25h-3.5A.25.25 0 0 1 6 6.75v-.5A.25.25 0 0 1 6.25 6h3.5a.25.25 0 0 1 .25.25zM12 9H4v4h8zm-2 2.75a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25v-.5a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25zm3.854-9.9L13 1H3l-.854.853A.5.5 0 0 0 2 2.207V14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2.207a.5.5 0 0 0-.146-.354zM13 14H3V3h10z"/>
+  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M12 4H4v4h8zm-2 2.75a.25.25 0 0 1-.25.25h-3.5A.25.25 0 0 1 6 6.75v-.5A.25.25 0 0 1 6.25 6h3.5a.25.25 0 0 1 .25.25zM12 9H4v4h8zm-2 2.75a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25v-.5a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25zm3.854-9.9L13 1H3l-.854.853A.5.5 0 0 0 2 2.207V14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2.207a.5.5 0 0 0-.146-.354zM13 14H3V3h10z"/>
 </svg>

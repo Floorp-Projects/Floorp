@@ -75,7 +75,7 @@ AboutNewTabService.prototype = {
 
   _newTabURL: ABOUT_URL,
   _activityStreamEnabled: false,
-  _activityStreamPrerender: true,
+  _activityStreamPrerender: false,
   _overridden: false,
 
   classID: Components.ID("{dfcd2adc-7867-4d3a-ba70-17501f208142}"),
@@ -136,6 +136,7 @@ AboutNewTabService.prototype = {
     } else {
       this._activityStreamEnabled = false;
     }
+    this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
     this._newtabURL = ABOUT_URL;
     return true;
   },

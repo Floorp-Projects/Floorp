@@ -40,8 +40,10 @@ def add_common_arguments(parser):
                         help="Directory where testing modules are located.")
     parser.add_argument("--test-plugin-path",
                         type=str, dest="pluginsPath", default=None,
-                        help="Path to the location of a plugins directory containing the test plugin or plugins required for tests. "
-                        "By default xpcshell's dir svc provider returns gre/plugins. Use test-plugin-path to add a directory "
+                        help="Path to the location of a plugins directory containing the "
+                             "test plugin or plugins required for tests. "
+                             "By default xpcshell's dir svc provider returns gre/plugins. "
+                             "Use test-plugin-path to add a directory "
                         "to return for NS_APP_PLUGINS_DIR_LIST when queried.")
     parser.add_argument("--total-chunks",
                         type=int, dest="totalChunks", default=1,
@@ -54,7 +56,9 @@ def add_common_arguments(parser):
                         help="name of application profile being tested")
     parser.add_argument("--build-info-json",
                         type=str, dest="mozInfo", default=None,
-                        help="path to a mozinfo.json including information about the build configuration. defaults to looking for mozinfo.json next to the script.")
+                        help="path to a mozinfo.json including information about the build "
+                             "configuration. defaults to looking for mozinfo.json next to "
+                             "the script.")
     parser.add_argument("--shuffle",
                         action="store_true", dest="shuffle", default=False,
                         help="Execute tests in random order")
@@ -66,7 +70,8 @@ def add_common_arguments(parser):
     parser.add_argument("--symbols-path",
                         action="store", type=str, dest="symbolsPath",
                         default=None,
-                        help="absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
+                        help="absolute path to directory containing breakpad symbols, "
+                             "or the URL of a zip file containing symbols")
     parser.add_argument("--jscov-dir-prefix",
                         action="store", type=str, dest="jscovdir",
                         default=argparse.SUPPRESS,
@@ -116,9 +121,9 @@ def add_common_arguments(parser):
                         "(with --rerun-failure) or in which to record failed tests")
     parser.add_argument("--threads",
                         type=int, dest="threadCount", default=0,
-                        help="override the number of jobs (threads) when running tests in parallel, "
-                             "the default is CPU x 1.5 when running via mach and CPU x 4 when running "
-                             "in automation")
+                        help="override the number of jobs (threads) when running tests "
+                             "in parallel, the default is CPU x 1.5 when running via mach "
+                             "and CPU x 4 when running in automation")
     parser.add_argument("testPaths", nargs="*", default=None,
                         help="Paths of tests to run.")
     parser.add_argument("--verify",
@@ -128,6 +133,7 @@ def add_common_arguments(parser):
                         dest="verifyMaxTime",
                         type=int, default=3600,
                         help="Maximum time, in seconds, to run in --verify mode.")
+
 
 def add_remote_arguments(parser):
     parser.add_argument("--deviceIP", action="store", type=str, dest="deviceIP",
@@ -139,13 +145,12 @@ def add_remote_arguments(parser):
     parser.add_argument("--objdir", action="store", type=str, dest="objdir",
                         help="local objdir, containing xpcshell binaries")
 
-
     parser.add_argument("--apk", action="store", type=str, dest="localAPK",
                         help="local path to Fennec APK")
 
-
     parser.add_argument("--noSetup", action="store_false", dest="setup", default=True,
-                        help="do not copy any files to device (to be used only if device is already setup)")
+                        help="do not copy any files to device (to be used only if "
+                             "device is already setup)")
 
     parser.add_argument("--local-lib-dir", action="store", type=str, dest="localLib",
                         help="local path to library directory")
@@ -154,7 +159,8 @@ def add_remote_arguments(parser):
                         help="local path to bin directory")
 
     parser.add_argument("--remoteTestRoot", action="store", type=str, dest="remoteTestRoot",
-                        help="remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
+                        help="remote directory to use as test root "
+                             "(eg. /mnt/sdcard/tests or /data/local/tests)")
 
 
 def parser_desktop():

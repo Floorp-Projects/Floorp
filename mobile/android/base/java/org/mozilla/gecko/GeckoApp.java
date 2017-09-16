@@ -739,18 +739,6 @@ public abstract class GeckoApp extends GeckoActivity
         } else if ("PrivateBrowsing:Data".equals(event)) {
             mPrivateBrowsingSession = message.getString("session");
 
-        } else if ("Share:Text".equals(event)) {
-            final String text = message.getString("text");
-            final Tab tab = Tabs.getInstance().getSelectedTab();
-            String title = "";
-            if (tab != null) {
-                title = tab.getDisplayTitle();
-            }
-            IntentHelper.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title, false);
-
-            // Context: Sharing via chrome list (no explicit session is active)
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "text");
-
         } else if ("SystemUI:Visibility".equals(event)) {
             if (message.getBoolean("visible", true)) {
                 mMainLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
@@ -1228,7 +1216,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_media",
             "Permissions:Data",
             "PrivateBrowsing:Data",
-            "Share:Text",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
@@ -1241,11 +1228,7 @@ public abstract class GeckoApp extends GeckoActivity
         // Use global layout state change to kick off additional initialization
         mMainLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
-        if (Versions.preMarshmallow) {
-            mTextSelection = new ActionBarTextSelection(this, getTextSelectPresenter());
-        } else {
-            mTextSelection = new FloatingToolbarTextSelection(this, mLayerView);
-        }
+        mTextSelection = TextSelection.Factory.create(mLayerView, getTextSelectPresenter());
         mTextSelection.create();
 
         final Bundle finalSavedInstanceState = savedInstanceState;
@@ -1483,6 +1466,7 @@ public abstract class GeckoApp extends GeckoActivity
         mDoorHangerPopup = new DoorHangerPopup(this, getAppEventDispatcher());
         mDoorHangerPopup.setOnVisibilityChangeListener(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
+        mFormAssistPopup.create(mLayerView);
     }
 
     @Override
@@ -2186,6 +2170,21 @@ public abstract class GeckoApp extends GeckoActivity
             return;
         }
 
+        if (mFormAssistPopup != null) {
+            mFormAssistPopup.destroy();
+            mFormAssistPopup = null;
+        }
+
+        if (mDoorHangerPopup != null) {
+            mDoorHangerPopup.destroy();
+            mDoorHangerPopup = null;
+        }
+
+        if (mTextSelection != null) {
+            mTextSelection.destroy();
+            mTextSelection = null;
+        }
+
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Accessibility:Ready",
             "Gecko:Ready",
@@ -2217,7 +2216,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_media",
             "Permissions:Data",
             "PrivateBrowsing:Data",
-            "Share:Text",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",

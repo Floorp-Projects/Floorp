@@ -231,7 +231,9 @@ AudioSink::GetEndTime() const
     NS_WARNING("Int overflow calculating audio end time");
     return TimeUnit::Zero();
   }
-  return played;
+  // As we may be resampling, rounding errors may occur. Ensure we never get
+  // past the original end time.
+  return std::min(mLastEndTime, played);
 }
 
 UniquePtr<AudioStream::Chunk>

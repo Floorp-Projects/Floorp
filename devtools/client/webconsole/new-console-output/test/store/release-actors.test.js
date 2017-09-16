@@ -34,20 +34,13 @@ describe("Release actor enhancer:", () => {
         }
       }, { logLimit });
 
-      // Add a log message with loaded object properties.
+      // Add a log message.
       dispatch(actions.messageAdd(
         stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
 
       let messages = getAllMessagesById(getState());
       const firstMessage = messages.first();
       const firstMessageActor = firstMessage.parameters[1].actor;
-      const arrayProperties = Symbol();
-      const arraySubProperties = Symbol();
-      const [id] = [...messages.keys()];
-      dispatch(actions.messageObjectPropertiesReceive(
-        id, "fakeActor1", arrayProperties));
-      dispatch(actions.messageObjectPropertiesReceive(
-        id, "fakeActor2", arraySubProperties));
 
       const logCount = logLimit + 1;
       const packet = clonePacket(stubPackets.get(
@@ -59,10 +52,8 @@ describe("Release actor enhancer:", () => {
         dispatch(actions.messageAdd(packet));
       }
 
-      expect(releasedActors.length).toBe(4);
+      expect(releasedActors.length).toBe(2);
       expect(releasedActors).toInclude(firstMessageActor);
-      expect(releasedActors).toInclude("fakeActor1");
-      expect(releasedActors).toInclude("fakeActor2");
       expect(releasedActors).toInclude(secondMessageActor);
     });
 
@@ -76,26 +67,13 @@ describe("Release actor enhancer:", () => {
         }
       });
 
-      // Add a log message with loaded object properties.
+      // Add a log message.
       dispatch(actions.messageAdd(
         stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
 
       let messages = getAllMessagesById(getState());
       const firstMessage = messages.first();
       const firstMessageActor = firstMessage.parameters[1].actor;
-      const arrayProperties = Symbol();
-      const arraySubProperties = Symbol();
-      const mapEntries1 = Symbol();
-      const mapEntries2 = Symbol();
-      const [id] = [...messages.keys()];
-      dispatch(actions.messageObjectPropertiesReceive(
-        id, "fakeActor1", arrayProperties));
-      dispatch(actions.messageObjectPropertiesReceive(
-        id, "fakeActor2", arraySubProperties));
-      dispatch(actions.messageObjectEntriesReceive(
-        id, "mapActor1", mapEntries1));
-      dispatch(actions.messageObjectEntriesReceive(
-        id, "mapActor2", mapEntries2));
 
       const packet = clonePacket(stubPackets.get(
         "console.assert(false, {message: 'foobar'})"));
@@ -104,12 +82,8 @@ describe("Release actor enhancer:", () => {
 
       dispatch(actions.messagesClear());
 
-      expect(releasedActors.length).toBe(6);
+      expect(releasedActors.length).toBe(2);
       expect(releasedActors).toInclude(firstMessageActor);
-      expect(releasedActors).toInclude("fakeActor1");
-      expect(releasedActors).toInclude("fakeActor2");
-      expect(releasedActors).toInclude("mapActor1");
-      expect(releasedActors).toInclude("mapActor2");
       expect(releasedActors).toInclude(secondMessageActor);
     });
   });

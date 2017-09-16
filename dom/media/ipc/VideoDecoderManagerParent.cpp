@@ -55,10 +55,11 @@ class VideoDecoderManagerThreadHolder
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderManagerThreadHolder)
 
 public:
-  VideoDecoderManagerThreadHolder() {}
+  VideoDecoderManagerThreadHolder() { }
 
 private:
-  ~VideoDecoderManagerThreadHolder() {
+  ~VideoDecoderManagerThreadHolder()
+  {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
       "dom::VideoDecoderManagerThreadHolder::~VideoDecoderManagerThreadHolder",
       []() -> void {
@@ -73,7 +74,7 @@ class ManagerThreadShutdownObserver : public nsIObserver
 {
   virtual ~ManagerThreadShutdownObserver() = default;
 public:
-  ManagerThreadShutdownObserver() {}
+  ManagerThreadShutdownObserver() { }
 
   NS_DECL_ISUPPORTS
 
@@ -201,6 +202,7 @@ VideoDecoderManagerParent::ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyRea
 
 PVideoDecoderParent*
 VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
+                                                    const float& aFramerate,
                                                     const layers::TextureFactoryIdentifier& aIdentifier,
                                                     bool* aSuccess,
                                                     nsCString* aBlacklistedD3D11Driver,
@@ -212,7 +214,7 @@ VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
     "VideoDecoderParent::mDecodeTaskQueue");
 
   auto* parent = new VideoDecoderParent(
-    this, aVideoInfo, aIdentifier,
+    this, aVideoInfo, aFramerate, aIdentifier,
     sManagerTaskQueue, decodeTaskQueue, aSuccess, aErrorDescription);
 
 #ifdef XP_WIN

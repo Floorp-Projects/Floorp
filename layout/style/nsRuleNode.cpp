@@ -5326,6 +5326,18 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                                  mPresContext,
                                  ui->mCaretColor, conditions);
 
+  // -moz-font-smoothing-background-color:
+  const nsCSSValue* fsbColorValue =
+    aRuleData->ValueForFontSmoothingBackgroundColor();
+  if (eCSSUnit_Initial == fsbColorValue->GetUnit() ||
+      eCSSUnit_Unset == fsbColorValue->GetUnit()) {
+    ui->mFontSmoothingBackgroundColor = NS_RGBA(0, 0, 0, 0);
+  } else {
+    SetColor(*fsbColorValue, parentUI->mFontSmoothingBackgroundColor,
+             mPresContext, aContext, ui->mFontSmoothingBackgroundColor,
+             conditions);
+  }
+
   COMPUTE_END_INHERITED(UserInterface, ui)
 }
 

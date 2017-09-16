@@ -5,7 +5,7 @@
 
 /* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
 .theme-light {
-  --searchbox-background-color: #ffee99;
+  --searchbox-background-color: var(--theme-highlight-yellow);
   --searchbox-border-color: #ffbf00;
   --searcbox-no-match-background-color: #ffe5e5;
   --searcbox-no-match-border-color: #e52e2e;

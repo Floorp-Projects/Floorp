@@ -60,6 +60,7 @@ public:
   }
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
+                   wr::IpcResourceUpdateQueue& aResourceUpdates,
                    const StackingContextHelper& aSc) override;
 private:
   Maybe<wr::WrImageKey> mImageKey;

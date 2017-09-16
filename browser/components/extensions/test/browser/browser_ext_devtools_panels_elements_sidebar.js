@@ -6,6 +6,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
                                   "resource://devtools/client/framework/gDevTools.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://devtools/shared/Loader.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContentTaskUtils",
+                                  "resource://testing-common/ContentTaskUtils.jsm");
 
 function isActiveSidebarTabTitle(inspector, expectedTabTitle, message) {
   const actualTabTitle = inspector.panelDoc.querySelector(".tabs-menu-item.is-active").innerText;
@@ -18,6 +20,7 @@ add_task(async function test_devtools_panels_elements_sidebar() {
   async function devtools_page() {
     const sidebar1 = await browser.devtools.panels.elements.createSidebarPane("Test Sidebar 1");
     const sidebar2 = await browser.devtools.panels.elements.createSidebarPane("Test Sidebar 2");
+    const sidebar3 = await browser.devtools.panels.elements.createSidebarPane("Test Sidebar 3");
 
     const onShownListener = (event, sidebarInstance) => {
       browser.test.sendMessage(`devtools_sidebar_${event}`, sidebarInstance);
@@ -25,11 +28,19 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
     sidebar1.onShown.addListener(() => onShownListener("shown", "sidebar1"));
     sidebar2.onShown.addListener(() => onShownListener("shown", "sidebar2"));
+    sidebar3.onShown.addListener(() => onShownListener("shown", "sidebar3"));
+
     sidebar1.onHidden.addListener(() => onShownListener("hidden", "sidebar1"));
     sidebar2.onHidden.addListener(() => onShownListener("hidden", "sidebar2"));
+    sidebar3.onHidden.addListener(() => onShownListener("hidden", "sidebar3"));
 
     sidebar1.setObject({propertyName: "propertyValue"}, "Optional Root Object Title");
     sidebar2.setObject({anotherPropertyName: 123});
+
+    // Refresh the sidebar content on every inspector selection.
+    browser.devtools.panels.elements.onSelectionChanged.addListener(() => {
+      sidebar3.setExpression("$0 && $0.tagName", "Selected Element tagName");
+    });
 
     browser.test.sendMessage("devtools_page_loaded");
   }
@@ -115,6 +126,37 @@ add_task(async function test_devtools_panels_elements_sidebar() {
   is(sidebarPanel2.querySelectorAll("table.treeTable .numberCell").length, 1,
      "The TreeView component contains the expected a cell of type number.");
 
+  inspector.sidebar.show(sidebarIds[2]);
+
+  const shownSidebarInstance3 = await extension.awaitMessage("devtools_sidebar_shown");
+  const hiddenSidebarInstance2 = await extension.awaitMessage("devtools_sidebar_hidden");
+
+  is(shownSidebarInstance3, "sidebar3", "Got the shown event on the third extension sidebar");
+  is(hiddenSidebarInstance2, "sidebar2", "Got the hidden event on the second extension sidebar");
+
+  isActiveSidebarTabTitle(inspector, "Test Sidebar 3",
+                          "Got the expected title on the active sidebar tab");
+
+  const sidebarPanel3 = inspector.sidebar.getTabPanel(sidebarIds[2]);
+
+  ok(sidebarPanel3, "Got a rendered sidebar panel for the third registered extension sidebar");
+
+  info("Waiting for the third panel to be rendered");
+  await ContentTaskUtils.waitForCondition(() => {
+    return sidebarPanel3.querySelectorAll("table.treeTable").length > 0;
+  });
+
+  is(sidebarPanel3.querySelectorAll("table.treeTable").length, 1,
+     "The third sidebar panel contains a rendered TreeView component");
+
+  const treeViewStringValues = sidebarPanel3.querySelectorAll("table.treeTable .stringCell");
+
+  is(treeViewStringValues.length, 1,
+     "The TreeView component contains the expected content of type string.");
+
+  is(treeViewStringValues[0].innerText, "\"BODY\"",
+     "Got the expected content in the sidebar.setExpression rendered TreeView");
+
   await extension.unload();
 
   is(Array.from(toolbox._inspectorExtensionSidebars.keys()).length, 0,
@@ -125,6 +167,9 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   is(inspector.sidebar.getTabPanel(sidebarIds[1]), undefined,
      "The second registered sidebar has been removed");
+
+  is(inspector.sidebar.getTabPanel(sidebarIds[2]), undefined,
+     "The third registered sidebar has been removed");
 
   await gDevTools.closeToolbox(target);
 

@@ -110,6 +110,9 @@ class Theme {
         case "toolbar":
           this.lwtStyles.toolbarColor = cssColor;
           break;
+        case "toolbar_text":
+          this.lwtStyles.toolbar_text = cssColor;
+          break;
         case "toolbar_field":
           this.lwtStyles.toolbar_field = cssColor;
           break;

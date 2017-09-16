@@ -13,20 +13,21 @@
   width: 16px;
   height: 16px;
   background-size: 16px;
-  -moz-context-properties: fill;
   background: url("chrome://browser/skin/downloads/download-icons.svg#default-bar") center no-repeat;
 }
 
 #downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon,
 #downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
+  -moz-context-properties: fill, fill-opacity;
   fill: var(--toolbarbutton-icon-fill-attention);
+  fill-opacity: 1;
 }
 #downloads-button[progress] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
   background: url("chrome://browser/skin/downloads/download-icons.svg#progress-bar-bg") center no-repeat;
 }
 
 #downloads-indicator-icon {
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   background-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow");
   width: 16px;
   height: 16px;

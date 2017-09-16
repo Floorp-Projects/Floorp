@@ -52,12 +52,11 @@ const PREFS_CONFIG = new Map([
       api_key_pref: "extensions.pocket.oAuthConsumerKey",
       // Use the opposite value as what default value the feed would have used
       hidden: !PREFS_CONFIG.get("feeds.section.topstories").getValue(args),
-      learn_more_endpoint: "https://getpocket.cdn.mozilla.net/firefox_learnmore?src=ff_newtab",
       provider_header: "pocket_feedback_header",
       provider_description: "pocket_description",
       provider_icon: "pocket",
       provider_name: "Pocket",
-      read_more_endpoint: "https://getpocket.cdn.mozilla.net/explore/trending?src=ff_new_tab",
+      read_more_endpoint: "https://getpocket.cdn.mozilla.net/explore/trending?src=fx_new_tab",
       stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       stories_referrer: "https://getpocket.com/recommendations",
       info_link: "https://www.mozilla.org/privacy/firefox/#pocketstories",

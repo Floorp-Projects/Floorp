@@ -23,6 +23,7 @@
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
   --toolbarbutton-border-radius: 4px;
+  --toolbarbutton-icon-fill-opacity: .7;
 
   --panel-separator-color: hsla(210,4%,10%,.14);
   --arrowpanel-dimmed: hsla(210,4%,10%,.07);
@@ -125,6 +126,7 @@
 #navigator-toolbox > toolbar:not(#TabsToolbar) {
   -moz-appearance: none;
   background: var(--toolbar-bgcolor);
+  color: var(--toolbar-color, inherit);
 }
 
 /* Draw the bottom border of the tabs toolbar when it's not using
@@ -802,6 +804,7 @@ html|span.ac-emphasize-text-url {
 
 #sidebar-box {
   -moz-appearance: -moz-mac-source-list;
+  -moz-font-smoothing-background-color: -moz-mac-source-list;
 }
 
 #sidebar-header {
@@ -900,9 +903,14 @@ html|span.ac-emphasize-text-url {
 #main-window[tabsintitlebar] > #titlebar:not(:-moz-lwtheme),
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
   -moz-appearance: -moz-mac-vibrancy-dark;
+  -moz-font-smoothing-background-color: -moz-mac-vibrancy-dark;
   background-color: #232323;
   color: hsl(240, 9%, 98%);
   text-shadow: none;
+}
+
+.tabbrowser-tab[visuallyselected=true] {
+  -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
 }
 
 #tabbrowser-tabs {

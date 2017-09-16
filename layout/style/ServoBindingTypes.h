@@ -17,6 +17,7 @@
 
 struct RawServoStyleSet;
 struct RawServoAnimationValueMap;
+struct RustString;
 
 #define SERVO_ARC_TYPE(name_, type_) struct type_;
 #include "mozilla/ServoArcTypeList.h"

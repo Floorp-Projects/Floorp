@@ -4,19 +4,19 @@
 
 /* CSS Variables specific to this panel that aren't defined by the themes */
 .theme-light {
-  --rule-highlight-background-color: #ffee99;
+  --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-overridden-item-border-color: var(--theme-content-color3);
   --rule-header-background-color: var(--theme-toolbar-background);
 }
 
 .theme-dark {
-  --rule-highlight-background-color: #594724;
+  --rule-highlight-background-color: #521C76;
   --rule-overridden-item-border-color: var(--theme-content-color1);
   --rule-header-background-color: #141416;
 }
 
 .theme-firebug {
-  --rule-highlight-background-color: #ffee99;
+  --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-property-name: darkgreen;
   --rule-property-value: darkblue;
   --rule-overridden-item-border-color: var(--theme-content-color2);
@@ -550,7 +550,8 @@
   border-left-color: var(--theme-highlight-green);
 }
 
-.ruleview-highlight {
+.ruleview-highlight > .ruleview-namecontainer,
+.ruleview-highlight > .ruleview-propertyvaluecontainer {
   background-color: var(--rule-highlight-background-color);
 }
 

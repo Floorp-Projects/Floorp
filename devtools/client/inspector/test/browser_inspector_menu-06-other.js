@@ -84,7 +84,7 @@ add_task(function* () {
       executeSoon(resolve);
     });
 
-    ok((yield testActor.eval("!!content.document.documentElement")),
+    ok((yield testActor.eval("!!document.documentElement")),
        "Document element still alive.");
   }
 

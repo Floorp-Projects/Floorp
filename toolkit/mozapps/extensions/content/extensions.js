@@ -1887,8 +1887,7 @@ var gCategories = {
 
     this.node.addEventListener("click", (aEvent) => {
       var selectedItem = this.node.selectedItem;
-      if (aEvent.target.localName == "richlistitem" &&
-          aEvent.target == selectedItem) {
+      if (aEvent.target.closest("richlistitem") == selectedItem) {
         var viewId = selectedItem.value;
 
         if (gViewController.parseViewId(viewId).type == "search") {
@@ -1914,9 +1913,19 @@ var gCategories = {
     category.setAttribute("value", aView);
     category.setAttribute("class", "category");
     category.setAttribute("name", aName);
-    category.setAttribute("tooltiptext", aName);
     category.setAttribute("priority", aPriority);
     category.setAttribute("hidden", aStartHidden);
+    category.setAttribute("align", "center");
+
+    var icon = document.createElement("image");
+    icon.setAttribute("class", "category-icon");
+    category.appendChild(icon);
+
+    var label = document.createElement("label");
+    label.setAttribute("class", "category-name");
+    label.setAttribute("flex", "1");
+    label.textContent = aName;
+    category.appendChild(label);
 
     var node;
     for (node of this.node.children) {
@@ -2793,7 +2802,7 @@ var gLegacyView = {
   },
 
   async show(type, request) {
-    let addons = await AddonManager.getAddonsByTypes(["extension"]);
+    let addons = await AddonManager.getAddonsByTypes(["extension", "theme"]);
     addons = addons.filter(a => !a.hidden &&
                               (isDisabledLegacy(a) || isDisabledUnsigned(a)));
 
@@ -2831,7 +2840,7 @@ var gLegacyView = {
       return;
     }
 
-    let extensions = await AddonManager.getAddonsByTypes(["extension"]);
+    let extensions = await AddonManager.getAddonsByTypes(["extension", "theme"]);
 
     let haveUnsigned = false;
     let haveLegacy = false;
@@ -2848,7 +2857,7 @@ var gLegacyView = {
       this._categoryItem.disabled = false;
       let name = gStrings.ext.GetStringFromName(`type.${haveUnsigned ? "unsupported" : "legacy"}.name`);
       this._categoryItem.setAttribute("name", name);
-      this._categoryItem.tooltiptext = name;
+      this._categoryItem.querySelector("label").textContent = name;
     } else {
       this._categoryItem.disabled = true;
     }
@@ -2970,7 +2979,21 @@ var gListView = {
       }
 
       this.filterDisabledUnsigned(showOnlyDisabledUnsigned);
-      document.getElementById("legacy-extensions-notice").hidden = !showLegacyInfo;
+      let legacyNotice = document.getElementById("legacy-extensions-notice");
+      if (showLegacyInfo) {
+        let el = document.getElementById("legacy-extensions-description");
+        if (el.childNodes[0].nodeName == "#text") {
+          el.removeChild(el.childNodes[0]);
+        }
+
+        let descriptionId = (aType == "theme") ?
+                            "legacyThemeWarning.description" : "legacyWarning.description";
+        let text = gStrings.ext.formatStringFromName(descriptionId, [gStrings.brandShortName], 1) + " ";
+        el.insertBefore(document.createTextNode(text), el.childNodes[0]);
+        legacyNotice.hidden = false;
+      } else {
+        legacyNotice.hidden = true;
+      }
 
       gEventManager.registerInstallListener(this);
       gViewController.updateCommands();

@@ -557,6 +557,14 @@ public:
 
     int32_t GetBidiNumeralOption();
 
+    /**
+     * This is a bit ugly, but useful... force all presContexts to reflow,
+     * by toggling a preference that they observe. This is used when
+     * something about platform settings changes that might have an effect
+     * on layout, such as font rendering settings that influence metrics.
+     */
+    static void ForceGlobalReflow();
+
     static void
     FlushFontAndWordCaches();
 

@@ -207,3 +207,23 @@ fn bench_from_elem_sbv(b: &mut Bencher) {
     });
     b.bytes = cap as u64 / 8;
 }
+
+#[bench]
+fn bench_remove_small(b: &mut Bencher) {
+    b.iter(|| {
+        let mut v = SmallBitVec::from_elem(U32_BITS as u32, false);
+        for _ in 0..U32_BITS {
+            v.remove(0);
+        }
+    });
+}
+
+#[bench]
+fn bench_remove_big(b: &mut Bencher) {
+    b.iter(|| {
+        let mut v = SmallBitVec::from_elem(BENCH_BITS as u32, false);
+        for _ in 0..200 {
+            v.remove(0);
+        }
+    });
+}

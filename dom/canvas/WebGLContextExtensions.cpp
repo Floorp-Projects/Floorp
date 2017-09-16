@@ -466,7 +466,9 @@ WebGLContext::GetSupportedExtensions(dom::Nullable< nsTArray<nsString> >& retval
     nsTArray<nsString>& arr = retval.SetValue();
 
     for (size_t i = 0; i < size_t(WebGLExtensionID::Max); i++) {
-        WebGLExtensionID extension = WebGLExtensionID(i);
+        const auto extension = WebGLExtensionID(i);
+        if (extension == WebGLExtensionID::MOZ_debug)
+            continue; // Hide MOZ_debug from this list.
 
         if (IsExtensionSupported(callerType, extension)) {
             const char* extStr = GetExtensionString(extension);

@@ -5,7 +5,6 @@
 package org.mozilla.gecko.sync;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -35,7 +34,6 @@ import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
 public class Utils {
@@ -478,7 +476,7 @@ public class Utils {
    * @param filename name of file to read; must not be null.
    * @return <code>String</code> instance.
    */
-  public static String readFile(final Context context, final String filename) {
+  public static String readFile(final Context context, final String filename) throws IOException {
     if (filename == null) {
       throw new IllegalArgumentException("Passed null filename in readFile.");
     }
@@ -493,8 +491,6 @@ public class Utils {
         sb.append(line);
       }
       return sb.toString();
-    } catch (Exception e) {
-      return null;
     } finally {
       IOUtils.safeStreamClose(br);
     }

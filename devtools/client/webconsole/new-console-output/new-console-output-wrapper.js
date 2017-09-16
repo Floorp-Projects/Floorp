@@ -79,7 +79,7 @@ NewConsoleOutputWrapper.prototype = {
           messageId,
         }]));
       },
-      hudProxyClient: this.jsterm.hud.proxy.client,
+      hudProxy: this.jsterm.hud.proxy,
       openLink: url => {
         this.jsterm.hud.owner.openLink(url);
       },

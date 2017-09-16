@@ -17,7 +17,7 @@
       <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.59" d="M16.456 9.271l1.716 3.376 0.725 1.427 1.577 0.269 3.666 0.626 -2.67 2.907 -1.033 1.125 0.23 1.512 0.589 3.838 -3.333 -1.768 -1.5 -0.796 -1.496 0.803 -3.238 1.737 0.586 -3.813 0.234 -1.52 -1.047 -1.128 -2.686 -2.892 3.732 -0.627 1.619 -0.273 0.716 -1.477 1.612 -3.324"/>
     </g>
     <g mask="url(#b)" opacity=".08">
-      <path fill="context-fill" d="M16.502 10.083l2.255 4.57 5.044 0.734 -3.65 3.557 0.862 5.023 -4.511 -2.371 -4.512 2.371 0.862 -5.023 -3.65 -3.557 5.044 -0.733 2.256 -4.57z"/>
+      <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.502 10.083l2.255 4.57 5.044 0.734 -3.65 3.557 0.862 5.023 -4.511 -2.371 -4.512 2.371 0.862 -5.023 -3.65 -3.557 5.044 -0.733 2.256 -4.57z"/>
       <path fill="none" d="M16.502 10.083l2.255 4.57 5.044 0.734 -3.65 3.557 0.862 5.023 -4.511 -2.371 -4.512 2.371 0.862 -5.023 -3.65 -3.557 5.044 -0.733 2.256 -4.57z"/>
     </g>
   </svg>
@@ -131,15 +131,15 @@
       <path fill="context-stroke" d="M16.502 10.108l2.247 4.553 5.025 0.73 -3.636 3.545 0.858 5.004 -4.494 -2.363 -4.494 2.363 0.858 -5.004 -3.636 -3.545 5.025 -0.73 2.247 -4.553z"/>
       <path fill="none" d="M16.502 10.108l2.247 4.553 5.025 0.73 -3.636 3.545 0.858 5.004 -4.494 -2.363 -4.494 2.363 0.858 -5.004 -3.636 -3.545 5.025 -0.73 2.247 -4.553z"/>
     </g>
-    <path fill="context-fill" d="M4.273 14.274l-0.235 -0.115"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M4.273 14.274l-0.235 -0.115"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M4.273 14.274l-0.235 -0.115"/>
-    <path fill="context-fill" d="M28.738 14.306l0.234 -0.115"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M28.738 14.306l0.234 -0.115"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M28.738 14.306l0.234 -0.115"/>
-    <path fill="context-fill" d="M24.168 28.806l0.168 0.2"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.168 28.806l0.168 0.2"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.168 28.806l0.168 0.2"/>
-    <path fill="context-fill" d="M8.816 28.826l-0.168 0.2"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.816 28.826l-0.168 0.2"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.816 28.826l-0.168 0.2"/>
-    <path fill="context-fill" d="M16.559 4.97v-0.26"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.97v-0.26"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.97v-0.26"/>
   </svg>
   <svg x="231">
@@ -159,15 +159,15 @@
       <path fill="context-stroke" d="M16.495 9.857l2.332 4.727 5.217 0.758 -3.775 3.68 0.891 5.194 -4.665 -2.453 -4.666 2.453 0.891 -5.195 -3.774 -3.68 5.216 -0.757 2.333 -4.727z"/>
       <path fill="none" d="M16.495 9.857l2.332 4.727 5.217 0.758 -3.775 3.68 0.891 5.194 -4.665 -2.453 -4.666 2.453 0.891 -5.195 -3.774 -3.68 5.216 -0.757 2.333 -4.727z"/>
     </g>
-    <path fill="context-fill" d="M4.273 14.274l-0.772 -0.377"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M4.273 14.274l-0.772 -0.377"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M4.273 14.274l-0.772 -0.377"/>
-    <path fill="context-fill" d="M28.738 14.306s0.33 -0.16 0.772 -0.377"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M28.738 14.306s0.33 -0.16 0.772 -0.377"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M28.738 14.306s0.33 -0.16 0.772 -0.377"/>
-    <path fill="context-fill" d="M24.168 28.806l0.552 0.658"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.168 28.806l0.552 0.658"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.168 28.806l0.552 0.658"/>
-    <path fill="context-fill" d="M8.816 28.826l-0.552 0.657"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.816 28.826l-0.552 0.657"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.816 28.826l-0.552 0.657"/>
-    <path fill="context-fill" d="M16.559 4.97v-0.859"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.97v-0.859"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.97v-0.859"/>
   </svg>
   <svg x="264">
@@ -187,15 +187,15 @@
       <path fill="context-stroke" d="M16.486 9.568l2.432 4.927 5.437 0.79 -3.935 3.835 0.93 5.415 -4.864 -2.557 -4.863 2.557 0.929 -5.415 -3.935 -3.835 5.437 -0.79 2.432 -4.927z"/>
       <path fill="none" d="M16.486 9.568l2.432 4.927 5.437 0.79 -3.935 3.835 0.93 5.415 -4.864 -2.557 -4.863 2.557 0.929 -5.415 -3.935 -3.835 5.437 -0.79 2.432 -4.927z"/>
     </g>
-    <path fill="context-fill" d="M4.273 14.274l-1.48 -0.722"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M4.273 14.274l-1.48 -0.722"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M4.273 14.274l-1.48 -0.722"/>
-    <path fill="context-fill" d="M28.738 14.306l1.48 -0.722"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M28.738 14.306l1.48 -0.722"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M28.738 14.306l1.48 -0.722"/>
-    <path fill="context-fill" d="M24.168 28.806l1.058 1.26"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.168 28.806l1.058 1.26"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.168 28.806l1.058 1.26"/>
-    <path fill="context-fill" d="M8.816 28.826l-1.059 1.26"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.816 28.826l-1.059 1.26"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.816 28.826l-1.059 1.26"/>
-    <path fill="context-fill" d="M16.559 4.97v-1.646"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.97v-1.646"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.97v-1.646"/>
   </svg>
   <svg x="297">
@@ -215,15 +215,15 @@
       <path fill="context-stroke" d="M16.477 9.264l2.535 5.137 5.669 0.824 -4.102 3.998 0.968 5.646 -5.07 -2.666 -5.07 2.666 0.968 -5.646 -4.102 -3.998 5.669 -0.824 2.535 -5.137z"/>
       <path fill="none" d="M16.477 9.264l2.535 5.137 5.669 0.824 -4.102 3.998 0.968 5.646 -5.07 -2.666 -5.07 2.666 0.968 -5.646 -4.102 -3.998 5.669 -0.824 2.535 -5.137z"/>
     </g>
-    <path fill="context-fill" d="M4.273 14.274l-2.281 -1.113"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M4.273 14.274l-2.281 -1.113"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M4.273 14.274l-2.281 -1.113"/>
-    <path fill="context-fill" d="M28.738 14.306l2.28 -1.112"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M28.738 14.306l2.28 -1.112"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M28.738 14.306l2.28 -1.112"/>
-    <path fill="context-fill" d="M24.168 28.806l1.631 1.944"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.168 28.806l1.631 1.944"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.168 28.806l1.631 1.944"/>
-    <path fill="context-fill" d="M8.816 28.826l-1.631 1.943"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.816 28.826l-1.631 1.943"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.816 28.826l-1.631 1.943"/>
-    <path fill="context-fill" d="M16.559 4.97v-2.537"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.97v-2.537"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.97v-2.537"/>
   </svg>
   <svg x="330">
@@ -247,15 +247,15 @@
       <path fill="context-stroke" d="M16.468 8.97l2.636 5.34 5.893 0.857 -4.265 4.156 1.007 5.87 -5.27 -2.771 -5.272 2.77 1.007 -5.869 -4.265 -4.156 5.894 -0.857 2.635 -5.34z"/>
       <path fill="none" d="M16.468 8.97l2.636 5.34 5.893 0.857 -4.265 4.156 1.007 5.87 -5.27 -2.771 -5.272 2.77 1.007 -5.869 -4.265 -4.156 5.894 -0.857 2.635 -5.34z"/>
     </g>
-    <path fill="context-fill" d="M4.273 14.274l-3.056 -1.49"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M4.273 14.274l-3.056 -1.49"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M4.273 14.274l-3.056 -1.49"/>
-    <path fill="context-fill" d="M28.738 14.306l3.056 -1.49"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M28.738 14.306l3.056 -1.49"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M28.738 14.306l3.056 -1.49"/>
-    <path fill="context-fill" d="M24.168 28.806l2.186 2.605"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.168 28.806l2.186 2.605"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.168 28.806l2.186 2.605"/>
-    <path fill="context-fill" d="M8.816 28.826l-2.186 2.604"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.816 28.826l-2.186 2.604"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.816 28.826l-2.186 2.604"/>
-    <path fill="context-fill" d="M16.559 4.97v-3.4"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.97v-3.4"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.97v-3.4"/>
   </svg>
   <svg x="363">
@@ -279,15 +279,15 @@
       <path fill="context-stroke" d="M16.46 8.718l2.722 5.515 6.086 0.884 -4.404 4.292 1.04 6.061 -5.443 -2.861 -5.444 2.861 1.04 -6.06 -4.404 -4.293 6.086 -0.884 2.722 -5.515z"/>
       <path fill="none" d="M16.46 8.718l2.722 5.515 6.086 0.884 -4.404 4.292 1.04 6.061 -5.443 -2.861 -5.444 2.861 1.04 -6.06 -4.404 -4.293 6.086 -0.884 2.722 -5.515z"/>
     </g>
-    <path fill="context-fill" d="M4.145 14.211l-2.928 -1.428"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M4.145 14.211l-2.928 -1.428"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M4.145 14.211l-2.928 -1.428"/>
-    <path fill="context-fill" d="M28.866 14.243l2.928 -1.428"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M28.866 14.243l2.928 -1.428"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M28.866 14.243l2.928 -1.428"/>
-    <path fill="context-fill" d="M24.26 28.915l2.094 2.496"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.26 28.915l2.094 2.496"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.26 28.915l2.094 2.496"/>
-    <path fill="context-fill" d="M8.724 28.935l-2.094 2.495"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.724 28.935l-2.094 2.495"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.724 28.935l-2.094 2.495"/>
-    <path fill="context-fill" d="M16.559 4.828v-3.258"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.828v-3.258"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.828v-3.258"/>
   </svg>
   <svg x="396">
@@ -311,15 +311,15 @@
       <path fill="context-stroke" d="M16.457 8.587l2.766 5.605 6.186 0.899 -4.476 4.363 1.056 6.16 -5.532 -2.908 -5.533 2.909 1.057 -6.161 -4.476 -4.363 6.185 -0.899 2.767 -5.605z"/>
       <path fill="none" d="M16.457 8.587l2.766 5.605 6.186 0.899 -4.476 4.363 1.056 6.16 -5.532 -2.908 -5.533 2.909 1.057 -6.161 -4.476 -4.363 6.185 -0.899 2.767 -5.605z"/>
     </g>
-    <path fill="context-fill" d="M3.835 14.06l-2.618 -1.277"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M3.835 14.06l-2.618 -1.277"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M3.835 14.06l-2.618 -1.277"/>
-    <path fill="context-fill" d="M29.176 14.092l2.618 -1.277"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M29.176 14.092l2.618 -1.277"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M29.176 14.092l2.618 -1.277"/>
-    <path fill="context-fill" d="M24.481 29.18l1.873 2.23"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.481 29.18l1.873 2.23"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.481 29.18l1.873 2.23"/>
-    <path fill="context-fill" d="M8.502 29.199l-1.872 2.231"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.502 29.199l-1.872 2.231"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.502 29.199l-1.872 2.231"/>
-    <path fill="context-fill" d="M16.559 4.483v-2.913"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.483v-2.913"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.483v-2.913"/>
   </svg>
   <svg x="429">
@@ -343,15 +343,15 @@
       <path fill="context-stroke" d="M16.46 8.718l2.722 5.515 6.086 0.884 -4.404 4.292 1.04 6.061 -5.444 -2.861 -5.443 2.861 1.04 -6.06 -4.404 -4.293 6.086 -0.884 2.721 -5.515z"/>
       <path fill="none" d="M16.46 8.718l2.722 5.515 6.086 0.884 -4.404 4.292 1.04 6.061 -5.444 -2.861 -5.443 2.861 1.04 -6.06 -4.404 -4.293 6.086 -0.884 2.721 -5.515z"/>
     </g>
-    <path fill="context-fill" d="M3.408 13.852l-2.191 -1.069"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M3.408 13.852l-2.191 -1.069"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M3.408 13.852l-2.191 -1.069"/>
-    <path fill="context-fill" d="M29.602 13.884l2.192 -1.069"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M29.602 13.884l2.192 -1.069"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M29.602 13.884l2.192 -1.069"/>
-    <path fill="context-fill" d="M24.786 29.543l1.568 1.868"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M24.786 29.543l1.568 1.868"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M24.786 29.543l1.568 1.868"/>
-    <path fill="context-fill" d="M8.197 29.563l-1.567 1.867"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M8.197 29.563l-1.567 1.867"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M8.197 29.563l-1.567 1.867"/>
-    <path fill="context-fill" d="M16.559 4.008v-2.438"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 4.008v-2.438"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 4.008v-2.438"/>
   </svg>
   <svg x="462">
@@ -375,15 +375,15 @@
       <path fill="context-stroke" d="M16.467 8.925l2.65 5.371 5.928 0.862 -4.289 4.18 1.013 5.905 -5.302 -2.788 -5.302 2.788 1.012 -5.904 -4.289 -4.181 5.928 -0.862 2.65 -5.371z"/>
       <path fill="none" d="M16.467 8.925l2.65 5.371 5.928 0.862 -4.289 4.18 1.013 5.905 -5.302 -2.788 -5.302 2.788 1.012 -5.904 -4.289 -4.181 5.928 -0.862 2.65 -5.371z"/>
     </g>
-    <path fill="context-fill" d="M2.901 13.605l-1.684 -0.822"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M2.901 13.605l-1.684 -0.822"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M2.901 13.605l-1.684 -0.822"/>
-    <path fill="context-fill" d="M30.109 13.637l1.685 -0.822"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M30.109 13.637l1.685 -0.822"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M30.109 13.637l1.685 -0.822"/>
-    <path fill="context-fill" d="M25.149 29.975l1.205 1.436"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M25.149 29.975l1.205 1.436"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M25.149 29.975l1.205 1.436"/>
-    <path fill="context-fill" d="M7.835 29.994l-1.205 1.436"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M7.835 29.994l-1.205 1.436"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M7.835 29.994l-1.205 1.436"/>
-    <path fill="context-fill" d="M16.559 3.445v-1.875"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 3.445v-1.875"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 3.445v-1.875"/>
   </svg>
   <svg x="495">
@@ -407,15 +407,15 @@
       <path fill="context-stroke" d="M16.473 9.15l2.575 5.216 5.755 0.836 -4.165 4.06 0.984 5.733 -5.149 -2.707 -5.148 2.707 0.984 -5.733 -4.165 -4.06 5.755 -0.836 2.574 -5.216z"/>
       <path fill="none" d="M16.473 9.15l2.575 5.216 5.755 0.836 -4.165 4.06 0.984 5.733 -5.149 -2.707 -5.148 2.707 0.984 -5.733 -4.165 -4.06 5.755 -0.836 2.574 -5.216z"/>
     </g>
-    <path fill="context-fill" d="M2.342 13.332l-1.125 -0.549"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M2.342 13.332l-1.125 -0.549"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M2.342 13.332l-1.125 -0.549"/>
-    <path fill="context-fill" d="M30.668 13.364l1.126 -0.549"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M30.668 13.364l1.126 -0.549"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M30.668 13.364l1.126 -0.549"/>
-    <path fill="context-fill" d="M25.549 30.451l0.805 0.96"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M25.549 30.451l0.805 0.96"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M25.549 30.451l0.805 0.96"/>
-    <path fill="context-fill" d="M7.435 30.47l-0.805 0.96"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M7.435 30.47l-0.805 0.96"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M7.435 30.47l-0.805 0.96"/>
-    <path fill="context-fill" d="M16.559 2.822v-1.252"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 2.822v-1.252"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 2.822v-1.252"/>
   </svg>
   <svg x="528">
@@ -439,15 +439,15 @@
       <path fill="context-stroke" d="M16.48 9.38l2.496 5.056 5.581 0.811 -4.038 3.937 0.953 5.559 -4.992 -2.625 -4.992 2.625 0.954 -5.559 -4.039 -3.937 5.581 -0.81 2.496 -5.058z"/>
       <path fill="none" d="M16.48 9.38l2.496 5.056 5.581 0.811 -4.038 3.937 0.953 5.559 -4.992 -2.625 -4.992 2.625 0.954 -5.559 -4.039 -3.937 5.581 -0.81 2.496 -5.058z"/>
     </g>
-    <path fill="context-fill" d="M1.758 13.047l-0.541 -0.264"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M1.758 13.047l-0.541 -0.264"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M1.758 13.047l-0.541 -0.264"/>
-    <path fill="context-fill" d="M31.253 13.08l0.54 -0.265"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M31.253 13.08l0.54 -0.265"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M31.253 13.08l0.54 -0.265"/>
-    <path fill="context-fill" d="M25.967 30.95l0.387 0.46"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M25.967 30.95l0.387 0.46"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M25.967 30.95l0.387 0.46"/>
-    <path fill="context-fill" d="M7.017 30.97l-0.387 0.46"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M7.017 30.97l-0.387 0.46"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M7.017 30.97l-0.387 0.46"/>
-    <path fill="context-fill" d="M16.559 2.172v-0.602"/>
+    <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.559 2.172v-0.602"/>
     <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-width="1.6" d="M16.559 2.172v-0.602"/>
   </svg>
   <svg x="561">
@@ -535,7 +535,7 @@
       <path fill="none" stroke="context-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.59" d="M16.456 9.271l1.716 3.376 0.725 1.427 1.577 0.269 3.666 0.626 -2.67 2.907 -1.033 1.125 0.23 1.512 0.589 3.838 -3.333 -1.768 -1.5 -0.796 -1.496 0.803 -3.238 1.737 0.586 -3.813 0.234 -1.52 -1.047 -1.128 -2.686 -2.892 3.732 -0.627 1.619 -0.273 0.716 -1.477 1.612 -3.324"/>
     </g>
     <g mask="url(#P)" opacity=".08">
-      <path fill="context-fill" d="M16.502 10.083l2.255 4.57 5.044 0.734 -3.65 3.557 0.862 5.023 -4.511 -2.371 -4.512 2.371 0.862 -5.023 -3.65 -3.557 5.044 -0.733 2.256 -4.57z"/>
+      <path fill="context-fill" fill-opacity="context-fill-opacity" d="M16.502 10.083l2.255 4.57 5.044 0.734 -3.65 3.557 0.862 5.023 -4.511 -2.371 -4.512 2.371 0.862 -5.023 -3.65 -3.557 5.044 -0.733 2.256 -4.57z"/>
       <path fill="none" d="M16.502 10.083l2.255 4.57 5.044 0.734 -3.65 3.557 0.862 5.023 -4.511 -2.371 -4.512 2.371 0.862 -5.023 -3.65 -3.557 5.044 -0.733 2.256 -4.57z"/>
     </g>
   </svg>

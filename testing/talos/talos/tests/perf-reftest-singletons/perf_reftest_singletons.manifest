@@ -1,0 +1,13 @@
+% http://localhost/tests/perf-reftest-singletons/bloom-basic.html
+% http://localhost/tests/perf-reftest-singletons/bloom-basic-2.html
+% http://localhost/tests/perf-reftest-singletons/style-sharing.html
+% http://localhost/tests/perf-reftest-singletons/style-sharing-style-attr.html
+% http://localhost/tests/perf-reftest-singletons/display-none-1.html
+% http://localhost/tests/perf-reftest-singletons/only-children-1.html
+% http://localhost/tests/perf-reftest-singletons/slow-selector-1.html
+% http://localhost/tests/perf-reftest-singletons/slow-selector-2.html
+% http://localhost/tests/perf-reftest-singletons/style-attr-1.html
+% http://localhost/tests/perf-reftest-singletons/coalesce-1.html
+% http://localhost/tests/perf-reftest-singletons/coalesce-2.html
+% http://localhost/tests/perf-reftest-singletons/parent-basic-singleton.html
+% http://localhost/tests/perf-reftest-singletons/tiny-traversal-singleton.html

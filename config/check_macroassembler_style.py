@@ -144,10 +144,12 @@ def get_macroassembler_definitions(filename):
                 continue
 
             line = re.sub(r'//.*', '', line)
-            if line.startswith('{'):
+            if line.startswith('{') or line.strip() == "{}":
                 if 'MacroAssembler::' in lines:
                     signatures.extend(get_normalized_signatures(lines, fileAnnot))
-                code_section = True
+                if line.strip() != "{}": # Empty declaration, no need to declare
+                    # a new code section
+                    code_section = True
                 continue
             if line.startswith('}'):
                 code_section = False

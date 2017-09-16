@@ -18,6 +18,7 @@ Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", true);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
 });
+const { PREFS } = require("devtools/client/webconsole/new-console-output/constants");
 
 const { prepareMessage } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index.js");
@@ -288,6 +289,9 @@ module.exports = {
 function* generateConsoleApiStubs() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
 
+  // Hiding log messages so we don't get unwanted client/server communication.
+  Services.prefs.setBoolPref(PREFS.FILTER.LOG, false);
+
   let stubs = {
     preparedMessages: [],
     packets: [],
@@ -329,6 +333,8 @@ function* generateConsoleApiStubs() {
 
     yield received;
   }
+
+  Services.prefs.clearUserPref(PREFS.FILTER.LOG);
 
   yield closeTabAndToolbox();
   return formatFile(stubs, "ConsoleMessage");

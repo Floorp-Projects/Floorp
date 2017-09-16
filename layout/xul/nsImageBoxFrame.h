@@ -100,6 +100,7 @@ public:
                         nsPoint aPt, uint32_t aFlags);
 
   DrawResult CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
                                      const mozilla::layers::StackingContextHelper& aSc,
                                      mozilla::layers::WebRenderLayerManager* aManager,
                                      nsDisplayItem* aItem,
@@ -181,6 +182,7 @@ public:
                                              const ContainerLayerParameters& aContainerParameters) override;
 
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,

@@ -18,7 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class CompositorBridgeParent;
-class CompositorThreadHolderDebug;
+class CompositorThreadHolder;
 
 class CompositorManagerParent final : public PCompositorManagerParent
 {
@@ -56,7 +56,7 @@ private:
 
   void DeferredDestroy();
 
-  RefPtr<CompositorThreadHolderDebug> mCompositorThreadHolder;
+  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 
   AutoTArray<RefPtr<CompositorBridgeParent>, 1> mPendingCompositorBridges;
 };

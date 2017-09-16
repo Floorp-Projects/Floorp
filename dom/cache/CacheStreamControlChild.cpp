@@ -100,10 +100,28 @@ CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
-  MOZ_DIAGNOSTIC_ASSERT(aStream);
   UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
   autoStream->Serialize(aStream, Manager());
   aStreamCleanupList.AppendElement(Move(autoStream));
+}
+
+void
+CacheStreamControlChild::OpenStream(const nsID& aId, InputStreamResolver&& aResolver)
+{
+  NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
+
+  if (mDestroyStarted) {
+    aResolver(nullptr);
+    return;
+  }
+
+  SendOpenStream(aId)->Then(GetCurrentThreadSerialEventTarget(), __func__,
+  [aResolver](const OptionalIPCStream& aOptionalStream) {
+    nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aOptionalStream);
+    aResolver(Move(stream));
+  }, [aResolver](PromiseRejectReason aReason) {
+    aResolver(nullptr);
+  });
 }
 
 void

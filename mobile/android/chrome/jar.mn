@@ -43,6 +43,7 @@ chrome.jar:
   content/OfflineApps.js               (content/OfflineApps.js)
   content/MasterPassword.js            (content/MasterPassword.js)
   content/FindHelper.js                (content/FindHelper.js)
+  content/FormAssistant.js             (content/FormAssistant.js)
   content/PermissionsHelper.js         (content/PermissionsHelper.js)
   content/FeedHandler.js               (content/FeedHandler.js)
   content/Feedback.js                  (content/Feedback.js)

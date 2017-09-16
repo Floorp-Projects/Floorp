@@ -36,10 +36,15 @@ const SearchWidgetTracker = {
     CustomizableUI.addListener(this);
     Services.prefs.addObserver(PREF_NAME,
                                () => this.syncWidgetWithPreference());
+  },
 
+  onAreaNodeRegistered(aArea) {
     // The placement of the widget always takes priority, and the preference
-    // should always match the actual placement when the browser starts up.
-    this.syncPreferenceWithWidget();
+    // should always match the actual placement when the browser starts up - i.e.
+    // once the navigation bar has been registered.
+    if (aArea == CustomizableUI.AREA_NAVBAR) {
+      this.syncPreferenceWithWidget();
+    }
   },
 
   onCustomizeEnd() {

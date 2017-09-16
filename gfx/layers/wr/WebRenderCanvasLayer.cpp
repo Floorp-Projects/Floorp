@@ -38,6 +38,7 @@ WebRenderCanvasLayer::CreateCanvasRendererInternal()
 
 void
 WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
+                                  wr::IpcResourceUpdateQueue& aResources,
                                   const StackingContextHelper& aSc)
 {
   WebRenderCanvasRendererSync* canvasRenderer = mCanvasRenderer->AsWebRenderCanvasRendererSync();

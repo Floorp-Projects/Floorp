@@ -337,27 +337,36 @@ describe("Top Stories Feed", () => {
       instance.personalized = true;
 
       let rotated = instance.rotate(items);
-      assert.deepEqual({"g1": 0}, instance.topItem);
+      assert.deepEqual(new Map([["g1", 0]]), instance.topItems);
       assert.deepEqual(items, rotated);
 
       rotated = instance.rotate(items);
-      assert.deepEqual({"g1": 1}, instance.topItem);
+      assert.deepEqual(new Map([["g1", 1]]), instance.topItems);
       assert.deepEqual(items, rotated);
 
       rotated = instance.rotate(items);
-      assert.deepEqual({"g2": 0}, instance.topItem);
+      assert.deepEqual(new Map([["g1", 2], ["g2", 0]]), instance.topItems);
       assert.deepEqual([{"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}, {"guid": "g1"}], rotated);
 
-      rotated = instance.rotate(items);
-      assert.deepEqual({"g2": 1}, instance.topItem);
+      // Simulate g1 on top again which should again be rotated to the end
+      rotated = instance.rotate([{"guid": "g1"}, {"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}]);
+      assert.deepEqual(new Map([["g1", 3], ["g2", 1]]), instance.topItems);
       assert.deepEqual([{"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}, {"guid": "g1"}], rotated);
     });
-    it("should note rotate items if personalization is preffed off", () => {
+    it("should not rotate items if personalization is preffed off", () => {
       let items = [{"guid": "g1"}, {"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}];
 
       instance.personalized = false;
 
-      instance.topItem = {"g1": 1};
+      instance.topItems = new Map([["g1", 1]]);
+      const rotated = instance.rotate(items);
+      assert.deepEqual(items, rotated);
+    });
+    it("should stop rotating if all items have been on top", () => {
+      let items = [{"guid": "g1"}, {"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}];
+      instance.topItems = new Map([["g1", 2], ["g2", 2], ["g3", 2], ["g4", 2]]);
+      instance.personalized = true;
+
       const rotated = instance.rotate(items);
       assert.deepEqual(items, rotated);
     });

@@ -24,38 +24,39 @@ function debug(aMsg) {
 }
 
 var IdentityHandler = {
+  // The definitions below should be kept in sync with those in GeckoView.ProgressListener.SecurityInformation
   // No trusted identity information. No site identity icon is shown.
-  IDENTITY_MODE_UNKNOWN: "unknown",
+  IDENTITY_MODE_UNKNOWN: 0,
 
   // Domain-Validation SSL CA-signed domain verification (DV).
-  IDENTITY_MODE_IDENTIFIED: "identified",
+  IDENTITY_MODE_IDENTIFIED: 1,
 
   // Extended-Validation SSL CA-signed identity information (EV). A more rigorous validation process.
-  IDENTITY_MODE_VERIFIED: "verified",
+  IDENTITY_MODE_VERIFIED: 2,
 
   // The following mixed content modes are only used if "security.mixed_content.block_active_content"
   // is enabled. Our Java frontend coalesces them into one indicator.
 
   // No mixed content information. No mixed content icon is shown.
-  MIXED_MODE_UNKNOWN: "unknown",
+  MIXED_MODE_UNKNOWN: 0,
 
   // Blocked active mixed content.
-  MIXED_MODE_CONTENT_BLOCKED: "blocked",
+  MIXED_MODE_CONTENT_BLOCKED: 1,
 
   // Loaded active mixed content.
-  MIXED_MODE_CONTENT_LOADED: "loaded",
+  MIXED_MODE_CONTENT_LOADED: 2,
 
   // The following tracking content modes are only used if tracking protection
   // is enabled. Our Java frontend coalesces them into one indicator.
 
   // No tracking content information. No tracking content icon is shown.
-  TRACKING_MODE_UNKNOWN: "unknown",
+  TRACKING_MODE_UNKNOWN: 0,
 
   // Blocked active tracking content. Shield icon is shown, with a popup option to load content.
-  TRACKING_MODE_CONTENT_BLOCKED: "blocked",
+  TRACKING_MODE_CONTENT_BLOCKED: 1,
 
   // Loaded active tracking content. Yellow triangle icon is shown.
-  TRACKING_MODE_CONTENT_LOADED: "loaded",
+  TRACKING_MODE_CONTENT_LOADED: 2,
 
   _useTrackingProtection: false,
   _usePrivateMode: false,

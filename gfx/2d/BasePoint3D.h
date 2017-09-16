@@ -114,6 +114,10 @@ struct BasePoint3D {
   void Normalize() {
       *this /= Length();
   }
+
+  friend std::ostream& operator<<(std::ostream& stream, const BasePoint3D<T, Sub>& aPoint) {
+    return stream << '(' << aPoint.x << ',' << aPoint.y << ',' << aPoint.z << ')';
+  }
 };
 
 } // namespace gfx

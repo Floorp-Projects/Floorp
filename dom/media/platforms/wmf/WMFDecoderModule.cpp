@@ -108,6 +108,7 @@ WMFDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
     new WMFVideoMFTManager(aParams.VideoConfig(),
                            aParams.mKnowsCompositor,
                            aParams.mImageContainer,
+                           aParams.mRate.mValue,
                            sDXVAEnabled));
 
   MediaResult result = manager->Init();

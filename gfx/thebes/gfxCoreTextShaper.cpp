@@ -23,24 +23,15 @@ CTFontDescriptorRef gfxCoreTextShaper::sDisableLigaturesDescriptor = nullptr;
 CTFontDescriptorRef gfxCoreTextShaper::sIndicFeaturesDescriptor = nullptr;
 CTFontDescriptorRef gfxCoreTextShaper::sIndicDisableLigaturesDescriptor = nullptr;
 
-static CFStringRef sCTWritingDirectionAttributeName = nullptr;
-
-// See CTStringAttributes.h
-enum {
-    kMyCTWritingDirectionEmbedding = (0 << 1),
-    kMyCTWritingDirectionOverride = (1 << 1)
-};
-
 // Helper to create a CFDictionary with the right attributes for shaping our
 // text, including imposing the given directionality.
-// This will only be called if we're on 10.8 or later.
 CFDictionaryRef
 gfxCoreTextShaper::CreateAttrDict(bool aRightToLeft)
 {
     // Because we always shape unidirectional runs, and may have applied
     // directional overrides, we want to force a direction rather than
     // allowing CoreText to do its own unicode-based bidi processing.
-    SInt16 dirOverride = kMyCTWritingDirectionOverride |
+    SInt16 dirOverride = kCTWritingDirectionOverride |
                          (aRightToLeft ? kCTWritingDirectionRightToLeft
                                        : kCTWritingDirectionLeftToRight);
     CFNumberRef dirNumber =
@@ -51,7 +42,7 @@ gfxCoreTextShaper::CreateAttrDict(bool aRightToLeft)
                         (const void **) &dirNumber, 1,
                         &kCFTypeArrayCallBacks);
     ::CFRelease(dirNumber);
-    CFTypeRef attrs[] = { kCTFontAttributeName, sCTWritingDirectionAttributeName };
+    CFTypeRef attrs[] = { kCTFontAttributeName, kCTWritingDirectionAttributeName };
     CFTypeRef values[] = { mCTFont, dirArray };
     CFDictionaryRef attrDict =
         ::CFDictionaryCreate(kCFAllocatorDefault,
@@ -62,34 +53,11 @@ gfxCoreTextShaper::CreateAttrDict(bool aRightToLeft)
     return attrDict;
 }
 
-CFDictionaryRef
-gfxCoreTextShaper::CreateAttrDictWithoutDirection()
-{
-    CFTypeRef attrs[] = { kCTFontAttributeName };
-    CFTypeRef values[] = { mCTFont };
-    CFDictionaryRef attrDict =
-        ::CFDictionaryCreate(kCFAllocatorDefault,
-                             attrs, values, ArrayLength(attrs),
-                             &kCFTypeDictionaryKeyCallBacks,
-                             &kCFTypeDictionaryValueCallBacks);
-    return attrDict;
-}
-
 gfxCoreTextShaper::gfxCoreTextShaper(gfxMacFont *aFont)
     : gfxFontShaper(aFont)
     , mAttributesDictLTR(nullptr)
     , mAttributesDictRTL(nullptr)
 {
-    static bool sInitialized = false;
-    if (!sInitialized) {
-        CFStringRef* pstr = (CFStringRef*)
-            dlsym(RTLD_DEFAULT, "kCTWritingDirectionAttributeName");
-        if (pstr) {
-            sCTWritingDirectionAttributeName = *pstr;
-        }
-        sInitialized = true;
-    }
-
     // Create our CTFontRef
     mCTFont = CreateCTFontWithFeatures(aFont->GetAdjustedSize(),
                                        GetDefaultFeaturesDescriptor());
@@ -128,76 +96,19 @@ gfxCoreTextShaper::ShapeText(DrawTarget      *aDrawTarget,
     // Create a CFAttributedString with text and style info, so we can use CoreText to lay it out.
     bool isRightToLeft = aShapedText->IsRightToLeft();
     const UniChar* text = reinterpret_cast<const UniChar*>(aText);
-    uint32_t length = aLength;
 
-    uint32_t startOffset;
-    CFStringRef stringObj;
-    CFDictionaryRef attrObj;
+    CFStringRef stringObj =
+        ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
+                                             text, aLength,
+                                             kCFAllocatorNull);
 
-    if (sCTWritingDirectionAttributeName) {
-        startOffset = 0;
-        stringObj = ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
-                                                         text, length,
-                                                         kCFAllocatorNull);
-
-        // Get an attributes dictionary suitable for shaping text in the
-        // current direction, creating it if necessary.
-        attrObj = isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR;
-        if (!attrObj) {
-            attrObj = CreateAttrDict(isRightToLeft);
-            (isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR) = attrObj;
-        }
-    } else {
-        // OS is too old to support kCTWritingDirectionAttributeName:
-        // we need to bidi-wrap the text if the run is RTL,
-        // or if it is an LTR run but may contain (overridden) RTL chars
-        bool bidiWrap = isRightToLeft;
-        if (!bidiWrap && !aShapedText->TextIs8Bit()) {
-            uint32_t i;
-            for (i = 0; i < length; ++i) {
-                if (gfxFontUtils::PotentialRTLChar(aText[i])) {
-                    bidiWrap = true;
-                    break;
-                }
-            }
-        }
-
-        // If there's a possibility of any bidi, we wrap the text with
-        // direction overrides to ensure neutrals or characters that were
-        // bidi-overridden in HTML behave properly.
-        static const UniChar beginLTR[]    = { 0x202d, 0x20 };
-        static const UniChar beginRTL[]    = { 0x202e, 0x20 };
-        static const UniChar endBidiWrap[] = { 0x20, 0x2e, 0x202c };
-
-        if (bidiWrap) {
-            startOffset = isRightToLeft ? ArrayLength(beginRTL)
-                                        : ArrayLength(beginLTR);
-            CFMutableStringRef mutableString =
-                ::CFStringCreateMutable(kCFAllocatorDefault,
-                                        length + startOffset +
-                                            ArrayLength(endBidiWrap));
-            ::CFStringAppendCharacters(mutableString,
-                                       isRightToLeft ? beginRTL : beginLTR,
-                                       startOffset);
-            ::CFStringAppendCharacters(mutableString, text, length);
-            ::CFStringAppendCharacters(mutableString, endBidiWrap,
-                                       ArrayLength(endBidiWrap));
-            stringObj = mutableString;
-        } else {
-            startOffset = 0;
-            stringObj =
-                ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
-                                                     text, length,
-                                                     kCFAllocatorNull);
-        }
-
-        // Get an attributes dictionary suitable for shaping text,
-        // creating it if necessary. (This dict is not LTR-specific,
-        // but we use that field to store it anyway.)
-        if (!mAttributesDictLTR) {
-            mAttributesDictLTR = CreateAttrDictWithoutDirection();
-        }
-        attrObj = mAttributesDictLTR;
+    // Get an attributes dictionary suitable for shaping text in the
+    // current direction, creating it if necessary.
+    CFDictionaryRef attrObj =
+        isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR;
+    if (!attrObj) {
+        attrObj = CreateAttrDict(isRightToLeft);
+        (isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR) = attrObj;
     }
 
     CTFontRef tempCTFont = nullptr;
@@ -248,18 +159,11 @@ gfxCoreTextShaper::ShapeText(DrawTarget      *aDrawTarget,
     uint32_t numRuns = ::CFArrayGetCount(glyphRuns);
 
     // Iterate through the glyph runs.
-    // Note that this includes the bidi wrapper, so we have to be careful
-    // not to include the extra glyphs from there
     bool success = true;
     for (uint32_t runIndex = 0; runIndex < numRuns; runIndex++) {
         CTRunRef aCTRun =
             (CTRunRef)::CFArrayGetValueAtIndex(glyphRuns, runIndex);
-        // If the range is purely within bidi-wrapping text, ignore it.
         CFRange range = ::CTRunGetStringRange(aCTRun);
-        if (uint32_t(range.location + range.length) <= startOffset ||
-            range.location - startOffset >= aLength) {
-            continue;
-        }
         CFDictionaryRef runAttr = ::CTRunGetAttributes(aCTRun);
         if (runAttr != attrObj) {
             // If Core Text manufactured a new dictionary, this may indicate
@@ -274,7 +178,7 @@ gfxCoreTextShaper::ShapeText(DrawTarget      *aDrawTarget,
                 // selector or join control that is otherwise unsupported,
                 // we just ignore it.
                 if (range.length == 1) {
-                    char16_t ch = aText[range.location - startOffset];
+                    char16_t ch = aText[range.location];
                     if (gfxFontUtils::IsJoinControl(ch) ||
                         gfxFontUtils::IsVarSelector(ch)) {
                         continue;
@@ -285,8 +189,7 @@ gfxCoreTextShaper::ShapeText(DrawTarget      *aDrawTarget,
                 break;
             }
         }
-        if (SetGlyphsFromRun(aShapedText, aOffset, aLength, aCTRun,
-                             startOffset) != NS_OK) {
+        if (SetGlyphsFromRun(aShapedText, aOffset, aLength, aCTRun) != NS_OK) {
             success = false;
             break;
         }
@@ -308,13 +211,8 @@ nsresult
 gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
                                     uint32_t       aOffset,
                                     uint32_t       aLength,
-                                    CTRunRef       aCTRun,
-                                    int32_t        aStringOffset)
+                                    CTRunRef       aCTRun)
 {
-    // The word has been bidi-wrapped; aStringOffset is the number
-    // of chars at the beginning of the CTLine that we should skip.
-    // aCTRun is a glyph run from the CoreText layout process.
-
     int32_t direction = aShapedText->IsRightToLeft() ? -1 : 1;
 
     int32_t numGlyphs = ::CTRunGetGlyphCount(aCTRun);
@@ -327,16 +225,13 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
     // character offsets get really confusing here, as we have to keep track of
     // (a) the text in the actual textRun we're constructing
     // (c) the string that was handed to CoreText, which contains the text of the font run
-    //     plus directional-override padding
     // (d) the CTRun currently being processed, which may be a sub-run of the CoreText line
-    //     (but may extend beyond the actual font run into the bidi wrapping text).
-    //     aStringOffset tells us how many initial characters of the line to ignore.
 
     // get the source string range within the CTLine's text
     CFRange stringRange = ::CTRunGetStringRange(aCTRun);
     // skip the run if it is entirely outside the actual range of the font run
-    if (stringRange.location - aStringOffset + stringRange.length <= 0 ||
-        stringRange.location - aStringOffset >= wordLength) {
+    if (stringRange.location + stringRange.length <= 0 ||
+        stringRange.location >= wordLength) {
         return NS_OK;
     }
 
@@ -553,14 +448,14 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
             while (charEnd >= 0 && charToGlyph[charEnd] == NO_GLYPH) {
                 charEnd--;
             }
-            baseCharIndex = charEnd + stringRange.location - aStringOffset + 1;
-            endCharIndex = charStart + stringRange.location - aStringOffset + 1;
+            baseCharIndex = charEnd + stringRange.location + 1;
+            endCharIndex = charStart + stringRange.location + 1;
         } else {
             while (charEnd < stringRange.length && charToGlyph[charEnd] == NO_GLYPH) {
                 charEnd++;
             }
-            baseCharIndex = charStart + stringRange.location - aStringOffset;
-            endCharIndex = charEnd + stringRange.location - aStringOffset;
+            baseCharIndex = charStart + stringRange.location;
+            endCharIndex = charEnd + stringRange.location;
         }
 
         // Then we check if the clump falls outside our actual string range; if so, just go to the next.

@@ -485,7 +485,9 @@ protected:
     void GetPrefsAndStartLoader();
 
     // for font list changes that affect all documents
-    void ForceGlobalReflow();
+    void ForceGlobalReflow() {
+        gfxPlatform::ForceGlobalReflow();
+    }
 
     void RebuildLocalFonts();
 

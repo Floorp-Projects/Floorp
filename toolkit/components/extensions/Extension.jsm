@@ -82,8 +82,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
-XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
-                                      "extensions.webextensions.remote", false);
 
 var {
   GlobalManager,
@@ -831,7 +829,7 @@ this.ExtensionData = class {
     let perms = info.permissions || {origins: [], permissions: []};
 
     // First classify our host permissions
-    let allUrls = false, wildcards = [], sites = [];
+    let allUrls = false, wildcards = new Set(), sites = new Set();
     for (let permission of perms.origins) {
       if (permission == "<all_urls>") {
         allUrls = true;
@@ -845,9 +843,9 @@ this.ExtensionData = class {
       if (match[1] == "*") {
         allUrls = true;
       } else if (match[1].startsWith("*.")) {
-        wildcards.push(match[1].slice(2));
+        wildcards.add(match[1].slice(2));
       } else {
-        sites.push(match[1]);
+        sites.add(match[1]);
       }
     }
 
@@ -876,9 +874,9 @@ this.ExtensionData = class {
         }
       };
 
-      format(wildcards, "webextPerms.hostDescription.wildcard",
+      format(Array.from(wildcards), "webextPerms.hostDescription.wildcard",
              "webextPerms.hostDescription.tooManyWildcards");
-      format(sites, "webextPerms.hostDescription.oneSite",
+      format(Array.from(sites), "webextPerms.hostDescription.oneSite",
              "webextPerms.hostDescription.tooManySites");
     }
 
@@ -1026,7 +1024,7 @@ this.Extension = class extends ExtensionData {
       StartupCache.clearAddonData(addonData.id);
     }
 
-    this.remote = useRemoteWebExtensions;
+    this.remote = !WebExtensionPolicy.isExtensionProcess;
 
     if (this.remote && processCount !== 1) {
       throw new Error("Out-of-process WebExtensions are not supported with multiple child processes");

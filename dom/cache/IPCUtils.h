@@ -18,6 +18,13 @@ namespace IPC {
                                     mozilla::dom::cache::DEFAULT_NAMESPACE,
                                     mozilla::dom::cache::NUMBER_OF_NAMESPACES>
   {};
+
+  template<>
+  struct ParamTraits<mozilla::dom::cache::OpenMode> :
+    public ContiguousEnumSerializer<mozilla::dom::cache::OpenMode,
+                                    mozilla::dom::cache::OpenMode::Eager,
+                                    mozilla::dom::cache::OpenMode::NumTypes>
+  {};
 } // namespace IPC
 
 #endif // mozilla_dom_cache_IPCUtils_h

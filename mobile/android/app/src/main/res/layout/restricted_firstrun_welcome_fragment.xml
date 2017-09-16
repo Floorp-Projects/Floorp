@@ -66,7 +66,7 @@
                 android:gravity="center"
                 android:padding="20dp"
                 android:text="@string/pref_learn_more"
-                android:textAppearance="@style/TextAppearance.FirstrunRegular.Link" />
+                android:textAppearance="@style/TextAppearance.Link" />
 
         </LinearLayout>
     </LinearLayout>
