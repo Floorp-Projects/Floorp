@@ -5250,7 +5250,7 @@ pref("network.activity.blipIntervalMilliseconds", 0);
 // loader (JS components, JSMs, etc). This saves memory, but makes it possible
 // for the scripts to interfere with each other.  A restart is required for this
 // to take effect.
-pref("jsloader.shareGlobal", true);
+pref("jsloader.shareGlobal", false);
 
 // When we're asked to take a screenshot, don't wait more than 2000ms for the
 // event loop to become idle before actually taking the screenshot.
