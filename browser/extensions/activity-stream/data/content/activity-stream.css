@@ -336,9 +336,9 @@ main {
       background-size: 96px; }
     .top-sites-list .top-site-outer .default-icon {
       z-index: 1;
-      top: -6px;
-      offset-inline-start: -6px;
+      bottom: -6px;
       height: 42px;
+      offset-inline-end: -6px;
       width: 42px;
       background-size: 32px;
       display: flex;
@@ -812,6 +812,8 @@ main {
       margin: -10px 0 20px;
       margin-inline-start: 30px;
       padding: 10px; }
+      .prefs-pane .prefs-modal-inner-wrapper .options.disabled {
+        opacity: 0.5; }
       .prefs-pane .prefs-modal-inner-wrapper .options label {
         background-position-x: 35px;
         background-position-y: 2.5px;
@@ -843,8 +845,8 @@ main {
   .prefs-pane [type='checkbox']:checked {
     offset-inline-start: -9999px;
     position: absolute; }
-  .prefs-pane [type='checkbox']:not(:checked) + label,
-  .prefs-pane [type='checkbox']:checked + label {
+  .prefs-pane [type='checkbox']:not(:disabled):not(:checked) + label,
+  .prefs-pane [type='checkbox']:not(:disabled):checked + label {
     cursor: pointer;
     padding: 0 30px;
     position: relative; }
@@ -875,10 +877,10 @@ main {
     opacity: 0; }
   .prefs-pane [type='checkbox']:checked + label::after {
     opacity: 1; }
-  .prefs-pane [type='checkbox'] + label:hover::before {
+  .prefs-pane [type='checkbox']:not(:disabled) + label:hover::before {
     border: 1px solid #0060DF; }
-  .prefs-pane [type='checkbox']:checked:focus + label::before,
-  .prefs-pane [type='checkbox']:not(:checked):focus + label::before {
+  .prefs-pane [type='checkbox']:not(:disabled):checked:focus + label::before,
+  .prefs-pane [type='checkbox']:not(:disabled):not(:checked):focus + label::before {
     border: 1px dotted #0060DF; }
 
 .prefs-pane-button button {

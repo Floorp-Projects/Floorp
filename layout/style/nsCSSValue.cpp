@@ -8,7 +8,9 @@
 
 #include "nsCSSValue.h"
 
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
@@ -29,11 +31,11 @@
 using namespace mozilla;
 using namespace mozilla::css;
 
-static bool
-MightHaveRef(const nsString& aString)
+template<class T>
+static bool MightHaveRef(const T& aString)
 {
-  const char16_t* current = aString.get();
-  for (; *current != '\0'; current++) {
+  const typename T::char_type* current = aString.BeginReading();
+  for (; current != aString.EndReading(); current++) {
     if (*current == '#') {
       return true;
     }
@@ -902,10 +904,7 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 {
   MOZ_ASSERT(eCSSUnit_URL == mUnit, "Not a URL value!");
   mozilla::css::ImageValue* image =
-    new mozilla::css::ImageValue(mValue.mURL->GetURI(),
-                                 mValue.mURL->mString,
-                                 do_AddRef(mValue.mURL->mExtraData),
-                                 aDocument);
+      mozilla::css::ImageValue::CreateFromURLValue(mValue.mURL, aDocument);
 
   nsCSSValue* writable = const_cast<nsCSSValue*>(this);
   writable->SetImageValue(image);
@@ -2789,9 +2788,23 @@ css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
                                 const nsAString& aString,
                                 already_AddRefed<URLExtraData> aExtraData)
   : mURI(Move(aURI))
-  , mString(aString)
   , mExtraData(Move(aExtraData))
   , mURIResolved(true)
+  , mStrings(aString)
+  , mUsingRustString(false)
+{
+  MOZ_ASSERT(mExtraData);
+  MOZ_ASSERT(mExtraData->GetPrincipal());
+}
+
+css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
+                                ServoRawOffsetArc<RustString> aString,
+                                already_AddRefed<URLExtraData> aExtraData)
+  : mURI(Move(aURI))
+  , mExtraData(Move(aExtraData))
+  , mURIResolved(true)
+  , mStrings(aString)
+  , mUsingRustString(true)
 {
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
@@ -2799,12 +2812,33 @@ css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
 
 css::URLValueData::URLValueData(const nsAString& aString,
                                 already_AddRefed<URLExtraData> aExtraData)
-  : mString(aString)
-  , mExtraData(Move(aExtraData))
+  : mExtraData(Move(aExtraData))
   , mURIResolved(false)
+  , mStrings(aString)
+  , mUsingRustString(false)
 {
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
+}
+
+css::URLValueData::URLValueData(ServoRawOffsetArc<RustString> aString,
+                                already_AddRefed<URLExtraData> aExtraData)
+  : mExtraData(Move(aExtraData))
+  , mURIResolved(false)
+  , mStrings(aString)
+  , mUsingRustString(true)
+{
+  MOZ_ASSERT(mExtraData);
+  MOZ_ASSERT(mExtraData->GetPrincipal());
+}
+
+css::URLValueData::~URLValueData()
+{
+  if (mUsingRustString) {
+    Servo_ReleaseArcStringData(&mStrings.mRustString);
+  } else {
+    mStrings.mString.~nsString();
+  }
 }
 
 bool
@@ -2815,7 +2849,13 @@ css::URLValueData::Equals(const URLValueData& aOther) const
   bool eq;
   const URLExtraData* self = mExtraData;
   const URLExtraData* other = aOther.mExtraData;
-  return mString == aOther.mString &&
+  bool stringsEqual;
+  if (mUsingRustString && aOther.mUsingRustString) {
+    stringsEqual = GetRustString() == aOther.GetRustString();
+  } else {
+    stringsEqual = GetUTF16String() == aOther.GetUTF16String();
+  }
+  return stringsEqual &&
           (GetURI() == aOther.GetURI() || // handles null == null
            (mURI && aOther.mURI &&
             NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
@@ -2831,8 +2871,13 @@ css::URLValueData::Equals(const URLValueData& aOther) const
 bool
 css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
 {
-  return mExtraData->BaseURI() == aOther.mExtraData->BaseURI() &&
-         mString == aOther.mString;
+  if (mExtraData->BaseURI() != aOther.mExtraData->BaseURI()) {
+    return false;
+  }
+  if (mUsingRustString && aOther.mUsingRustString) {
+    return GetRustString() == aOther.GetRustString();
+  }
+  return GetUTF16StringForAnyThread() == aOther.GetUTF16StringForAnyThread();
 }
 
 bool
@@ -2843,6 +2888,49 @@ css::URLValueData::DefinitelyEqualURIsAndPrincipal(
          DefinitelyEqualURIs(aOther);
 }
 
+nsDependentCSubstring
+css::URLValueData::GetRustString() const
+{
+  uint8_t* chars;
+  uint32_t len;
+  Servo_GetArcStringData(mStrings.mRustString.mPtr, &chars, &len);
+  return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
+}
+
+bool
+css::URLValueData::IsStringEmpty() const
+{
+  if (mUsingRustString) {
+    return GetRustString().IsEmpty();
+  }
+  return mStrings.mString.IsEmpty();
+}
+
+const nsString&
+css::URLValueData::GetUTF16String() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mUsingRustString) {
+    nsDependentCSubstring rust = GetRustString();
+    nsString converted = NS_ConvertUTF8toUTF16(rust);
+    Servo_ReleaseArcStringData(&mStrings.mRustString);
+    mStrings.mString = converted;
+    mUsingRustString = false;
+  }
+  return mStrings.mString;
+}
+
+nsString
+css::URLValueData::GetUTF16StringForAnyThread() const
+{
+  if (!mUsingRustString) {
+    return mStrings.mString;
+  }
+  nsDependentCSubstring rust = GetRustString();
+  return NS_ConvertUTF8toUTF16(rust);
+}
+
 nsIURI*
 css::URLValueData::GetURI() const
 {
@@ -2851,9 +2939,15 @@ css::URLValueData::GetURI() const
   if (!mURIResolved) {
     MOZ_ASSERT(!mURI);
     nsCOMPtr<nsIURI> newURI;
-    NS_NewURI(getter_AddRefs(newURI),
-              NS_ConvertUTF16toUTF8(mString),
-              nullptr, mExtraData->BaseURI());
+    if (!mUsingRustString) {
+      NS_NewURI(getter_AddRefs(newURI),
+                NS_ConvertUTF16toUTF8(mStrings.mString),
+                nullptr, mExtraData->BaseURI());
+    } else {
+      NS_NewURI(getter_AddRefs(newURI),
+                GetRustString(),
+                nullptr, mExtraData->BaseURI());
+    }
     mURI = new PtrHolder<nsIURI>("URLValueData::mURI", newURI.forget());
     mURIResolved = true;
   }
@@ -2866,7 +2960,11 @@ css::URLValueData::IsLocalRef() const
 {
   if (mIsLocalRef.isNothing()) {
     // IsLocalRefURL is O(N), use it only when IsLocalRef is called.
-    mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(mString));
+    if (mUsingRustString) {
+      mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(GetRustString()));
+    } else {
+      mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(mStrings.mString));
+    }
   }
 
   return mIsLocalRef.value();
@@ -2898,7 +2996,9 @@ bool
 css::URLValueData::MightHaveRef() const
 {
   if (mMightHaveRef.isNothing()) {
-    bool result = ::MightHaveRef(mString);
+    bool result = mUsingRustString ?
+        ::MightHaveRef(GetRustString()) :
+        ::MightHaveRef(mStrings.mString);
     if (!ServoStyleSet::IsInServoTraversal()) {
       // Can only cache the result if we're not on a style worker thread.
       mMightHaveRef.emplace(result);
@@ -2976,7 +3076,9 @@ size_t
 css::URLValueData::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
-  n += mString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  if (!mUsingRustString) {
+    n += mStrings.mString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
@@ -3024,10 +3126,37 @@ css::ImageValue::ImageValue(nsIURI* aURI, const nsAString& aString,
   Initialize(aDocument);
 }
 
+css::ImageValue::ImageValue(nsIURI* aURI, ServoRawOffsetArc<RustString> aString,
+                            already_AddRefed<URLExtraData> aExtraData,
+                            nsIDocument* aDocument)
+  : URLValueData(do_AddRef(new PtrHolder<nsIURI>("URLValueData::mURI", aURI)),
+                 aString, Move(aExtraData))
+{
+  Initialize(aDocument);
+}
+
 css::ImageValue::ImageValue(const nsAString& aString,
                             already_AddRefed<URLExtraData> aExtraData)
   : URLValueData(aString, Move(aExtraData))
 {
+}
+
+css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
+                            already_AddRefed<URLExtraData> aExtraData)
+  : URLValueData(aString, Move(aExtraData))
+{
+}
+
+/*static*/ css::ImageValue*
+css::ImageValue::CreateFromURLValue(URLValue* aUrl, nsIDocument* aDocument)
+{
+  if (aUrl->mUsingRustString) {
+    return new css::ImageValue(aUrl->GetURI(),
+                               Servo_CloneArcStringData(&aUrl->mStrings.mRustString),
+                               do_AddRef(aUrl->mExtraData), aDocument);
+  }
+  return new css::ImageValue(aUrl->GetURI(), aUrl->mStrings.mString,
+                             do_AddRef(aUrl->mExtraData), aDocument);
 }
 
 void
