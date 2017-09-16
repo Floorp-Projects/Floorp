@@ -1,0 +1,16 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for recompressed completes"
+    owner: "release@mozilla.com"
+
+mapping:
+{% for locale in locales %}
+  {{ locale }}:
+    complete_mar:
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.bz2.complete.mar
+      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.bz2.complete.mar
+    complete_mar_sig:
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.{{ locale }}.{{ platform }}.bz2.complete.mar.asc
+      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.bz2.complete.mar.asc
+{% endfor %}
