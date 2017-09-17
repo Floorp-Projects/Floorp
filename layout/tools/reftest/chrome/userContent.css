@@ -4,12 +4,9 @@
 .reftest-userxbl {
   -moz-binding: url("binding.xml#reftest-userxbl") !important;
 }
-.RefTest-upperCase {
-  background: lime !important;
-}
 /*
  * file: URLs have an empty domain.
- * Android uses a special loopback-to-host address.
+ * Android uses special loopback-to-host address.
  */
 @-moz-document domain(), domain(10.0.2.2) {
   .reftest-domain {
