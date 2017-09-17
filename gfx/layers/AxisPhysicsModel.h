@@ -37,7 +37,7 @@ public:
   /**
    * Gets the raw velocity of this axis at this moment.
    */
-  double GetVelocity();
+  double GetVelocity() const;
 
   /**
    * Sets the raw velocity of this axis at this moment.
@@ -47,7 +47,7 @@ public:
   /**
    * Gets the raw position of this axis at this moment.
    */
-  double GetPosition();
+  double GetPosition() const;
 
   /**
    * Sets the raw position of this axis at this moment.
