@@ -62,6 +62,7 @@ version_info := @version_info@
 
 # Variables needed for `freetype-config' and `freetype.pc'.
 #
+PKG_CONFIG         := @PKG_CONFIG@
 REQUIRES_PRIVATE   := @REQUIRES_PRIVATE@
 LIBS_PRIVATE       := @LIBS_PRIVATE@
 LIBSSTATIC_CONFIG  := @LIBSSTATIC_CONFIG@
@@ -102,6 +103,7 @@ NO_OUTPUT := 2> /dev/null
 $(OBJ_BUILD)/freetype-config: $(TOP_DIR)/builds/unix/freetype-config.in
 	rm -f $@ $@.tmp
 	sed -e 's|%LIBSSTATIC_CONFIG%|$(LIBSSTATIC_CONFIG)|'   \
+	    -e 's|%PKG_CONFIG%|$(PKG_CONFIG)|'                 \
 	    -e 's|%build_libtool_libs%|$(build_libtool_libs)|' \
 	    -e 's|%exec_prefix%|$(exec_prefix)|'               \
 	    -e 's|%ft_version%|$(ft_version)|'                 \
