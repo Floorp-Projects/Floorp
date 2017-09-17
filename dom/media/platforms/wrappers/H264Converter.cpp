@@ -32,6 +32,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mType(aParams.mType)
   , mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent)
   , mDecoderOptions(aParams.mOptions)
+  , mRate(aParams.mRate)
 {
   mLastError = CreateDecoder(mOriginalConfig, aParams.mDiagnostics);
   if (mDecoder) {
@@ -278,6 +279,7 @@ H264Converter::CreateDecoder(const VideoInfo& aConfig,
     mType,
     mOnWaitingForKeyEvent,
     mDecoderOptions,
+    mRate,
     &error
   });
 
