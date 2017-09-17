@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8 API Reference</title>
+<title>FreeType-2.8.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8 API Reference</h1>
+<h1>FreeType-2.8.1 API Reference</h1>
 
 <h1 id="base_interface">Base Interface</h1>
 <h2>Synopsis</h2>
@@ -244,7 +244,7 @@
 <p>The currently active charmap is available as &lsquo;face-&gt;charmap&rsquo;. You should call <a href="ft2-base_interface.html#FT_Set_Charmap">FT_Set_Charmap</a> to change it.</p>
 
 <h4>note</h4>
-<p>When a new face is created (either through <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a> or <a href="ft2-base_interface.html#FT_Open_Face">FT_Open_Face</a>), the library looks for a Unicode charmap within the list and automatically activates it.</p>
+<p>When a new face is created (either through <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a> or <a href="ft2-base_interface.html#FT_Open_Face">FT_Open_Face</a>), the library looks for a Unicode charmap within the list and automatically activates it. If there is no Unicode charmap, FreeType doesn't set an &lsquo;active&rsquo; charmap.</p>
 
 <h4>also</h4>
 <p>See <a href="ft2-base_interface.html#FT_CharMapRec">FT_CharMapRec</a> for the publicly accessible fields of a given character map.</p>
@@ -814,7 +814,11 @@
 </table>
 
 <h4>note</h4>
-<p>The scaling values, if relevant, are determined first during a size changing operation. The remaining fields are then set by the driver. For scalable formats, they are usually set to scaled values of the corresponding fields in <a href="ft2-base_interface.html#FT_FaceRec">FT_FaceRec</a>. Some values like ascender or descender are rounded for historical reasons; more precise values (for outline fonts) can be derived by scaling the corresponding <a href="ft2-base_interface.html#FT_FaceRec">FT_FaceRec</a> values manually.</p>
+<p>The scaling values, if relevant, are determined first during a size changing operation. The remaining fields are then set by the driver. For scalable formats, they are usually set to scaled values of the corresponding fields in <a href="ft2-base_interface.html#FT_FaceRec">FT_FaceRec</a>. Some values like ascender or descender are rounded for historical reasons; more precise values (for outline fonts) can be derived by scaling the corresponding <a href="ft2-base_interface.html#FT_FaceRec">FT_FaceRec</a> values manually, with code similar to the following.</p>
+<pre class="colored">
+  scaled_ascender = FT_MulFix( face-&gt;root.ascender,
+                               size_metrics-&gt;y_scale );
+</pre>
 <p>Note that due to glyph hinting and the selected rendering mode these values are usually not exact; consequently, they must be treated as unreliable with an error margin of at least one pixel!</p>
 <p>Indeed, the only way to get the exact metrics is to render <i>all</i> glyphs. As this would be a definite performance hit, it is up to client applications to perform such computations.</p>
 <p>The &lsquo;FT_Size_Metrics&rsquo; structure is valid for bitmap fonts also.</p>
@@ -952,7 +956,7 @@
      and add it to `origin_x'&gt;
 
     origin_x += slot-&gt;advance.x;
-    origin_x += slot-&gt;rsb_delta - slot-&gt;lsb_relta;
+    origin_x += slot-&gt;rsb_delta - slot-&gt;lsb_delta;
   endfor
 </pre>
 <p>Here is another small pseudo code fragment that shows how to use &lsquo;lsb_delta&rsquo; and &lsquo;rsb_delta&rsquo; to improve integer positioning of glyphs:</p>
@@ -968,9 +972,9 @@
 
     &lt;load glyph with `FT_Load_Glyph'&gt;
 
-    if ( prev_rsb_delta - slot-&gt;lsb_delta &gt;= 32 )
+    if ( prev_rsb_delta - slot-&gt;lsb_delta &gt;  32 )
       origin_x -= 64;
-    else if ( prev_rsb_delta - slot-&gt;lsb_delta &lt; -32 )
+    else if ( prev_rsb_delta - slot-&gt;lsb_delta &lt; -31 )
       origin_x += 64;
 
     prev_rsb_delta = slot-&gt;rsb_delta;
@@ -2278,7 +2282,7 @@
 </table>
 
 <h4>note</h4>
-<p>The LCD-optimized glyph bitmaps produced by &lsquo;FT_Render_Glyph&rsquo; can be filtered to reduce color-fringes by using <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> (not active in the default builds). It is up to the caller to either call &lsquo;FT_Library_SetLcdFilter&rsquo; (if available) or do the filtering itself.</p>
+<p>Should you define FT_CONFIG_OPTION_SUBPIXEL_RENDERING in your &lsquo;ftoption.h&rsquo;, which enables patented ClearType-style rendering, the LCD-optimized glyph bitmaps should be filtered to reduce color fringes inherent to this technology. You can either set up LCD filtering with <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> or <a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a>, or do the filtering yourself. The default FreeType LCD rendering technology does not require filtering.</p>
 <p>The selected render mode only affects vector glyphs of a font. Embedded bitmaps often have a different pixel mode like <a href="ft2-basic_types.html#FT_Pixel_Mode">FT_PIXEL_MODE_MONO</a>. You can use <a href="ft2-bitmap_handling.html#FT_Bitmap_Convert">FT_Bitmap_Convert</a> to transform them into 8-bit pixmaps.</p>
 
 <hr>

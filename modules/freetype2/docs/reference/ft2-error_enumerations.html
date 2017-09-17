@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8 API Reference</title>
+<title>FreeType-2.8.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,15 +100,15 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8 API Reference</h1>
+<h1>FreeType-2.8.1 API Reference</h1>
 
 <h1 id="error_enumerations">Error Enumerations</h1>
 
 <p>The header file &lsquo;fterrors.h&rsquo; (which is automatically included by &lsquo;freetype.h&rsquo; defines the handling of FreeType's enumeration constants. It can also be used to generate error message strings with a small macro trick explained below.</p>
 <p><b>Error</b> <b>Formats</b></p>
-<p>The configuration macro FT_CONFIG_OPTION_USE_MODULE_ERRORS can be defined in &lsquo;ftoption.h&rsquo; in order to make the higher byte indicate the module where the error has happened (this is not compatible with standard builds of FreeType&amp;nbsp;2, however). See the file &lsquo;ftmoderr.h&rsquo; for more details.</p>
+<p>The configuration macro FT_CONFIG_OPTION_USE_MODULE_ERRORS can be defined in &lsquo;ftoption.h&rsquo; in order to make the higher byte indicate the module where the error has happened (this is not compatible with standard builds of FreeType&nbsp;2, however). See the file &lsquo;ftmoderr.h&rsquo; for more details.</p>
 <p><b>Error</b> <b>Message</b> <b>Strings</b></p>
-<p>Error definitions are set up with special macros that allow client applications to build a table of error message strings. The strings are not included in a normal build of FreeType&amp;nbsp;2 to save space (most client applications do not use them).</p>
+<p>Error definitions are set up with special macros that allow client applications to build a table of error message strings. The strings are not included in a normal build of FreeType&nbsp;2 to save space (most client applications do not use them).</p>
 <p>To do so, you have to define the following macros before including this file.</p>
 <pre class="colored">
   FT_ERROR_START_LIST

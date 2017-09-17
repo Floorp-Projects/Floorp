@@ -1,7 +1,7 @@
-How to build the freetype2 library on VMS
+How to build the FreeType 2 library on VMS
 -----------------------------------------
 
-It is actually very  straightforward to install the Freetype2 library.
+It is actually very straightforward to install the FreeType 2 library.
 Just  execute vms_make.com from  the toplevel  directory to  build the
 library.  This procedure currently accepts the following options:
 
@@ -15,10 +15,10 @@ ccopt=<value>
   Options to pass to the C compiler e.g. ccopt=/float=ieee
 
 In case you did download the demos, place them in a separate directory
-sharing the same toplevel as the directory of Freetype2 and follow the
-same  instructions as  above  for  the demos  from  there.  The  build
-process relies on this to figure the location of the Freetype2 include
-files.
+sharing the same top level  as the directory of FreeType 2  and follow
+the same instructions as above for  the demos from  there.  The  build
+process relies on this  to figure out  the location  of the FreeType 2
+include files.
 
 
 To rebuild  the  sources it is necessary to  have MMS/MMK installed on
