@@ -2406,6 +2406,15 @@ NewReactionRecord(JSContext* cx, HandleObject resultPromise, HandleValue onFulfi
                   HandleValue onRejected, HandleObject resolve, HandleObject reject,
                   HandleObject incumbentGlobalObject)
 {
+    // Either of the following conditions must be met:
+    //   * resultPromise is a PromiseObject
+    //   * resolve and reject are callable
+    // except for Async Generator, there resultPromise can be nullptr.
+    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), resolve);
+    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), IsCallable(resolve));
+    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), reject);
+    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), IsCallable(reject));
+
     Rooted<PromiseReactionRecord*> reaction(cx, NewObjectWithClassProto<PromiseReactionRecord>(cx));
     if (!reaction)
         return nullptr;
@@ -3113,7 +3122,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         // rejected promises list.
         bool addToDependent = true;
 
-        if (C == PromiseCtor) {
+        if (C == PromiseCtor && resultPromise->is<PromiseObject>()) {
             addToDependent = false;
         } else {
             // 25.4.5.3., step 4.
@@ -3172,11 +3181,13 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
             return false;
     }
 
-    // If the object to depend on isn't a, maybe-wrapped, Promise instance,
-    // we ignore it. All this does is lose some small amount of debug
-    // information in scenarios that are highly unlikely to occur in useful
-    // code.
+    // If either the object to depend on or the object that gets blocked isn't
+    // a, maybe-wrapped, Promise instance, we ignore it. All this does is lose
+    // some small amount of debug information in scenarios that are highly
+    // unlikely to occur in useful code.
     if (!unwrappedPromiseObj->is<PromiseObject>())
+        return true;
+    if (!blockedPromise_->is<PromiseObject>())
         return true;
 
     Rooted<PromiseObject*> promise(cx, &unwrappedPromiseObj->as<PromiseObject>());
