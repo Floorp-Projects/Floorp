@@ -631,14 +631,17 @@ CustomizeMode.prototype = {
       aNode = aNode.firstChild;
     }
 
-    // If the user explicitly moves this item, turn off autohide.
-    if (aNode.id == "downloads-button") {
-      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
-    }
-
     CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_NAVBAR);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
+    }
+
+    // If the user explicitly moves this item, turn off autohide.
+    if (aNode.id == "downloads-button") {
+      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      if (this._customizing) {
+        this._showDownloadsAutoHidePanel();
+      }
     }
   },
 
@@ -648,15 +651,18 @@ CustomizeMode.prototype = {
       aNode = aNode.firstChild;
     }
 
-    // If the user explicitly moves this item, turn off autohide.
-    if (aNode.id == "downloads-button") {
-      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
-    }
-
     let panel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
     CustomizableUI.addWidgetToArea(aNode.id, panel);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
+    }
+
+    // If the user explicitly moves this item, turn off autohide.
+    if (aNode.id == "downloads-button") {
+      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      if (this._customizing) {
+        this._showDownloadsAutoHidePanel();
+      }
     }
 
     if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
@@ -681,13 +687,17 @@ CustomizeMode.prototype = {
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
     }
-    // If the user explicitly removes this item, turn off autohide.
-    if (aNode.id == "downloads-button") {
-      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
-    }
     CustomizableUI.removeWidgetFromArea(aNode.id);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
+    }
+
+    // If the user explicitly removes this item, turn off autohide.
+    if (aNode.id == "downloads-button") {
+      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      if (this._customizing) {
+        this._showDownloadsAutoHidePanel();
+      }
     }
   },
 
@@ -1204,9 +1214,6 @@ CustomizeMode.prototype = {
         let paletteItem = this.makePaletteItem(widget, "palette");
         this.visiblePalette.appendChild(paletteItem);
       }
-    }
-    if (aNodeToChange.id == "downloads-button") {
-      this._showDownloadsAutoHidePanel();
     }
   },
 
@@ -1832,6 +1839,7 @@ CustomizeMode.prototype = {
     // If the user explicitly moves this item, turn off autohide.
     if (draggedItemId == "downloads-button") {
       Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      this._showDownloadsAutoHidePanel();
     }
   },
 
