@@ -11,6 +11,7 @@
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
 #include "nsIAtom.h"
+#include "nsIFrame.h"
 #include "mozilla/dom/Element.h"
 
 inline bool
@@ -23,6 +24,22 @@ inline bool
 nsIContent::IsInChromeDocument() const
 {
   return nsContentUtils::IsChromeDoc(OwnerDoc());
+}
+
+inline void
+nsIContent::SetPrimaryFrame(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(IsInUncomposedDoc() || IsInShadowTree(), "This will end badly!");
+  NS_PRECONDITION(!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame,
+                  "Losing track of existing primary frame");
+
+  if (aFrame) {
+    aFrame->SetIsPrimaryFrame(true);
+  } else if (nsIFrame* currentPrimaryFrame = GetPrimaryFrame()) {
+    currentPrimaryFrame->SetIsPrimaryFrame(false);
+  }
+
+  mPrimaryFrame = aFrame;
 }
 
 inline mozilla::dom::ShadowRoot* nsIContent::GetShadowRoot() const

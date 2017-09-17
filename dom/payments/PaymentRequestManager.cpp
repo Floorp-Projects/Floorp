@@ -105,8 +105,7 @@ ConvertDetailsBase(JSContext* aCx,
                    const PaymentDetailsBase& aDetails,
                    nsTArray<IPCPaymentItem>& aDisplayItems,
                    nsTArray<IPCPaymentShippingOption>& aShippingOptions,
-                   nsTArray<IPCPaymentDetailsModifier>& aModifiers,
-                   bool aResetShippingOptions)
+                   nsTArray<IPCPaymentDetailsModifier>& aModifiers)
 {
   NS_ENSURE_ARG_POINTER(aCx);
   if (aDetails.mDisplayItems.WasPassed()) {
@@ -116,7 +115,7 @@ ConvertDetailsBase(JSContext* aCx,
       aDisplayItems.AppendElement(displayItem);
     }
   }
-  if (aDetails.mShippingOptions.WasPassed() && !aResetShippingOptions) {
+  if (aDetails.mShippingOptions.WasPassed()) {
     for (const PaymentShippingOption& option : aDetails.mShippingOptions.Value()) {
       IPCPaymentShippingOption shippingOption;
       ConvertShippingOption(option, shippingOption);
@@ -139,8 +138,7 @@ ConvertDetailsBase(JSContext* aCx,
 nsresult
 ConvertDetailsInit(JSContext* aCx,
                    const PaymentDetailsInit& aDetails,
-                   IPCPaymentDetails& aIPCDetails,
-                   bool aResetShippingOptions)
+                   IPCPaymentDetails& aIPCDetails)
 {
   NS_ENSURE_ARG_POINTER(aCx);
   // Convert PaymentDetailsBase members
@@ -148,7 +146,7 @@ ConvertDetailsInit(JSContext* aCx,
   nsTArray<IPCPaymentShippingOption> shippingOptions;
   nsTArray<IPCPaymentDetailsModifier> modifiers;
   nsresult rv = ConvertDetailsBase(aCx, aDetails, displayItems, shippingOptions,
-                                   modifiers, aResetShippingOptions);
+                                   modifiers);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -185,10 +183,8 @@ ConvertDetailsUpdate(JSContext* aCx,
   nsTArray<IPCPaymentItem> displayItems;
   nsTArray<IPCPaymentShippingOption> shippingOptions;
   nsTArray<IPCPaymentDetailsModifier> modifiers;
-  // [TODO] Populate a boolean flag as aResetShippingOptions based on the
-  // result of processing details.shippingOptions in UpdatePayment method.
   nsresult rv = ConvertDetailsBase(aCx, aDetails, displayItems, shippingOptions,
-                                   modifiers, false);
+                                   modifiers);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -367,28 +363,16 @@ PaymentRequestManager::GetPaymentRequestById(const nsAString& aRequestId)
 
 void
 GetSelectedShippingOption(const PaymentDetailsInit& aDetails,
-                          nsAString& aOption,
-                          bool* aResetOptions)
+                          nsAString& aOption)
 {
   SetDOMStringToNull(aOption);
   if (!aDetails.mShippingOptions.WasPassed()) {
     return;
   }
 
-  nsTArray<nsString> seenIDs;
   const Sequence<PaymentShippingOption>& shippingOptions =
     aDetails.mShippingOptions.Value();
   for (const PaymentShippingOption& shippingOption : shippingOptions) {
-    // If there are duplicate IDs present in the shippingOptions, reset aOption
-    // to null and set resetOptions flag to reset details.shippingOptions later
-    // when converting to IPC structure.
-    if (seenIDs.Contains(shippingOption.mId)) {
-      SetDOMStringToNull(aOption);
-      *aResetOptions = true;
-      return;
-    }
-    seenIDs.AppendElement(shippingOption.mId);
-
     // set aOption to last selected option's ID
     if (shippingOption.mSelected) {
       aOption = shippingOption.mId;
@@ -430,23 +414,16 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
   request->SetId(requestId);
 
   /*
-   *  Set request's mShippingOption to last selected option's ID if
-   *  details.shippingOptions exists and IDs of all options are unique.
-   *  Otherwise, set mShippingOption to null and set the resetShippingOptions
-   *  flag to reset details.shippingOptions to an empty array later when
-   *  converting details to IPC structure.
-   */
-  nsAutoString shippingOption;
-  bool resetShippingOptions = false;
-  GetSelectedShippingOption(aDetails, shippingOption, &resetShippingOptions);
-  request->SetShippingOption(shippingOption);
-
-  /*
-   * Set request's |mShippingType| if shipping is required.
+   * Set request's |mShippingType| and |mShippingOption| if shipping is required.
+   * Set request's mShippingOption to last selected option's ID if
+   * details.shippingOptions exists.
    */
   if (aOptions.mRequestShipping) {
     request->SetShippingType(
         Nullable<PaymentShippingType>(aOptions.mShippingType));
+    nsAutoString shippingOption;
+    GetSelectedShippingOption(aDetails, shippingOption);
+    request->SetShippingOption(shippingOption);
   }
 
   nsAutoString internalId;
@@ -463,7 +440,7 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
   }
 
   IPCPaymentDetails details;
-  rv = ConvertDetailsInit(aCx, aDetails, details, resetShippingOptions);
+  rv = ConvertDetailsInit(aCx, aDetails, details);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

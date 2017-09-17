@@ -199,13 +199,81 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
 
   function testWithDuplicateShippingOptionsParameters() {
     return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(simplestMethods, duplicateShippingOptionsDetails);
-      ok(payRequest, "PaymentRequest should be created");
-      gScript.addMessageListener("check-complete", function checkCompleteHandler() {
-        gScript.removeMessageListener("check-complete", checkCompleteHandler);
+      try {
+        const payRequest = new PaymentRequest(simplestMethods,
+                                              duplicateShippingOptionsDetails,
+                                              {requestShipping: true});
+        ok(false, "Construction should fail with duplicate shippingOption Ids.");
         resolve();
-      });
-      gScript.sendAsyncMessage("check-duplicate-shipping-options-request");
+      } catch (e) {
+        is(e.name, "TypeError", "Expected 'TypeError' with duplicate shippingOption Ids.");
+        resolve();
+      }
+    });
+  }
+
+  function testShippingOtpionAttribute() {
+    return new Promise((resolve, reject) => {
+      const details = {
+        total: {
+          label: "Total",
+          amount: {
+            currency: "USD",
+            value: "1.00",
+          },
+        },
+        shippingOptions: [
+          {
+            id: "option1",
+            label: "option1",
+            amount: {
+              currency: "USD",
+              value: "1.00",
+            },
+            selected: false,
+          },
+          {
+            id: "option2",
+            label: "option2",
+            amount: {
+              currency: "USD",
+              value: "1.00",
+            },
+            selected: false,
+          },
+        ],
+      };
+      const payRequest1 = new PaymentRequest(simplestMethods,
+                                             details,
+                                             {requestShipping: false});
+      ok(payRequest1, "PaymentRequest should be created");
+      ok(!payRequest1.shippingOption,
+         "request.shippingOption should be null in default, when options.requestShipping is false");
+      details.shippingOptions[0].selected = true;
+      const payRequest2 = new PaymentRequest(simplestMethods,
+                                             details,
+                                             {requestShipping: false});
+      ok(payRequest2, "PaymentRequest should be created");
+      ok(!payRequest2.shippingOption,
+         "request.shippingOption should be null in default, when options.requestShipping is false");
+      const payRequest3 = new PaymentRequest(simplestMethods,
+                                             details,
+                                             {requestShipping: true});
+      ok(payRequest3, "PaymentRequest should be created");
+      ok(payRequest3.shippingOption,
+         "request.shippingOption should not be null when both shoppingOtpion.selected and options.requestOptions are true");
+      is(payRequest3.shippingOption, "option1",
+         "request.shippingOption should be 'option1'");
+      details.shippingOptions[1].selected = true;
+      const payRequest4 = new PaymentRequest(simplestMethods,
+                                             details,
+                                             {requestShipping: true});
+      ok(payRequest4, "PaymentRequest should be created");
+      ok(payRequest4.shippingOption,
+         "request.shippingOption should not be null when both shoppingOtpion.selected and options.requestOptions are true");
+      is(payRequest4.shippingOption, "option2",
+         "request.shippingOption should be 'option2' which is the last one selected.");
+      resolve();
     });
   }
 
@@ -213,10 +281,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     return new Promise((resolve, reject) => {
       const payRequest1 = new PaymentRequest(complexMethods, complexDetails, complexOptions);
       const payRequest2 = new PaymentRequest(simplestMethods, simplestDetails);
-      const payRequest3 = new PaymentRequest(simplestMethods, duplicateShippingOptionsDetails);
       ok(payRequest1, "PaymentRequest with complex parameters should be created");
       ok(payRequest2, "PaymentRequest with simplest parameters should be created");
-      ok(payRequest3, "PaymentRequest with duplicate shipping options parameters should be created");
       gScript.addMessageListener("check-complete", function checkCompleteHandler() {
         gScript.removeMessageListener("check-complete", checkCompleteHandler);
         resolve();
@@ -262,6 +328,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     .then(testWithDuplicateShippingOptionsParameters)
     .then(testMultipleRequests)
     .then(testCrossOriginTopLevelPrincipal)
+    .then(testShippingOtpionAttribute)
     .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);
@@ -281,11 +348,5 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345361">Mozilla Bug 1345361</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-
-</div>
-<pre id="test">
-</pre>
 </body>
 </html>
