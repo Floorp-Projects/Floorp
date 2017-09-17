@@ -1,6 +1,6 @@
 [package]
 name = "webdriver"
-version = "0.30.0"
+version = "0.31.0"
 authors = ["Mozilla Tools and Automation <tools@lists.mozilla.com>"]
 description = "Library implementing the wire protocol for the W3C WebDriver specification."
 keywords = ["webdriver", "browser", "automation", "protocol", "w3c"]

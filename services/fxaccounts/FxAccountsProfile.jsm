@@ -71,45 +71,40 @@ this.FxAccountsProfile.prototype = {
   },
 
   // Cache fetched data and send out a notification so that UI can update.
-  _cacheProfile(response) {
+  async _cacheProfile(response) {
+    const profile = response.body;
+    const userData = await this.fxa.getSignedInUser();
+    if (profile.uid != userData.uid) {
+      throw new Error("The fetched profile does not correspond with the current account.")
+    }
     let profileCache = {
-      profile: response.body,
+      profile,
       etag: response.etag
     };
-
-    return this.fxa.setProfileCache(profileCache)
-      .then(() => {
-        return this.fxa.getSignedInUser();
-      })
-      .then(userData => {
-        log.debug("notifying profile changed for user ${uid}", userData);
-        this._notifyProfileChange(userData.uid);
-        return response.body;
-      });
+    await this.fxa.setProfileCache(profileCache);
+    if (profile.email != userData.email) {
+      await this.fxa.handleEmailUpdated(profile.email);
+    }
+    log.debug("notifying profile changed for user ${uid}", userData);
+    this._notifyProfileChange(userData.uid);
+    return profile;
   },
 
-  _fetchAndCacheProfileInternal() {
-    let onFinally = () => {
+  async _fetchAndCacheProfileInternal() {
+    try {
+      const profileCache = await this.fxa.getProfileCache();
+      const etag = profileCache ? profileCache.etag : null;
+      const response = await this.client.fetchProfile(etag);
+
+      // response may be null if the profile was not modified (same ETag).
+      if (!response) {
+        return null;
+      }
+      return await this._cacheProfile(response);
+    } finally {
       this._cachedAt = Date.now();
       this._currentFetchPromise = null;
     }
-    return this.fxa.getProfileCache()
-      .then(profileCache => {
-        const etag = profileCache ? profileCache.etag : null;
-        return this.client.fetchProfile(etag);
-      })
-      .then(response => {
-        // response may be null if the profile was not modified (same ETag).
-        return response ? this._cacheProfile(response) : null;
-      })
-      .then(body => { // finally block
-        onFinally();
-        // body may be null if the profile was not modified
-        return body;
-      }, err => {
-        onFinally();
-        throw err;
-      });
   },
 
   _fetchAndCacheProfile() {
@@ -122,23 +117,21 @@ this.FxAccountsProfile.prototype = {
   // Returns cached data right away if available, then fetches the latest profile
   // data in the background. After data is fetched a notification will be sent
   // out if the profile has changed.
-  getProfile() {
-    return this.fxa.getProfileCache()
-      .then(profileCache => {
-        if (profileCache) {
-          if (Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD) {
-            // Note that _fetchAndCacheProfile isn't returned, so continues
-            // in the background.
-            this._fetchAndCacheProfile().catch(err => {
-              log.error("Background refresh of profile failed", err);
-            });
-          } else {
-            log.trace("not checking freshness of profile as it remains recent");
-          }
-          return profileCache.profile;
-        }
-        return this._fetchAndCacheProfile();
+  async getProfile() {
+    const profileCache = await this.fxa.getProfileCache();
+    if (!profileCache) {
+      return this._fetchAndCacheProfile();
+    }
+    if (Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD) {
+      // Note that _fetchAndCacheProfile isn't returned, so continues
+      // in the background.
+      this._fetchAndCacheProfile().catch(err => {
+        log.error("Background refresh of profile failed", err);
       });
+    } else {
+      log.trace("not checking freshness of profile as it remains recent");
+    }
+    return profileCache.profile;
   },
 
   QueryInterface: XPCOMUtils.generateQI([

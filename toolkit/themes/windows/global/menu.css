@@ -58,7 +58,6 @@ menuitem.spell-suggestion {
 }
 
 .menu-text {
-  padding-inline-start: 1.45em !important;
   -moz-appearance: menuitemtext;
 }
 
@@ -85,7 +84,6 @@ menucaption > .menu-iconic-text {
 .menu-iconic-accel {
   color: inherit;
   margin-inline-start: 0.74em !important;
-  margin-inline-end: 1.35em !important;
 }
 
 .menu-iconic-left {
