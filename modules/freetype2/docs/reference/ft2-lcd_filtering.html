@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8 API Reference</title>
+<title>FreeType-2.8.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8 API Reference</h1>
+<h1>FreeType-2.8.1 API Reference</h1>
 
 <h1 id="lcd_filtering">LCD Filtering</h1>
 <h2>Synopsis</h2>
@@ -110,8 +110,8 @@
 </table>
 
 
-<p>Subpixel rendering exploits the color-striped structure of LCD pixels, increasing the available resolution in the direction of the stripe (usually horizontal RGB) by a factor of&nbsp;3. Since these subpixels are color pixels, using them unfiltered creates severe color fringes. Use the <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> API to specify a low-pass filter, which is then applied to subpixel-rendered bitmaps generated through <a href="ft2-base_interface.html#FT_Render_Glyph">FT_Render_Glyph</a>. The filter sacrifices some of the higher resolution to reduce color fringes, making the glyph image slightly blurrier. Positional improvements will remain.</p>
-<p>Note that no filter is active by default, and that this function is <b>not</b> implemented in default builds of the library. You need to #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING in your &lsquo;ftoption.h&rsquo; file in order to activate it and explicitly call <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> to enable it.</p>
+<p>Should you #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING in your &lsquo;ftoption.h&rsquo;, which enables patented ClearType-style rendering, the LCD-optimized glyph bitmaps should be filtered to reduce color fringes inherent to this technology. The default FreeType LCD rendering uses different technology, and API described below, although available, does nothing.</p>
+<p>ClearType-style LCD rendering exploits the color-striped structure of LCD pixels, increasing the available resolution in the direction of the stripe (usually horizontal RGB) by a factor of&nbsp;3. Since these subpixels are color pixels, using them unfiltered creates severe color fringes. Use the <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> API to specify a low-pass filter, which is then applied to subpixel-rendered bitmaps generated through <a href="ft2-base_interface.html#FT_Render_Glyph">FT_Render_Glyph</a>. The filter sacrifices some of the higher resolution to reduce color fringes, making the glyph image slightly blurrier. Positional improvements will remain.</p>
 <p>A filter should have two properties:</p>
 <p>1) It should be normalized, meaning the sum of the 5&nbsp;components should be 256 (0x100). It is possible to go above or under this target sum, however: going under means tossing out contrast, going over means invoking clamping and thereby non-linearities that increase contrast somewhat at the expense of greater distortion and color-fringing. Contrast is better enhanced through stem darkening.</p>
 <p>2) It should be color-balanced, meaning a filter &lsquo;{&nbsp;a, b, c, b, a&nbsp;}&rsquo; where a&nbsp;+ b&nbsp;=&nbsp;c. It distributes the computed coverage for one subpixel to all subpixels equally, sacrificing some won resolution but drastically reducing color-fringing. Positioning improvements remain! Note that color-fringing can only really be minimized when using a color-balanced filter and alpha-blending the glyph onto a surface in linear space; see <a href="ft2-base_interface.html#FT_Render_Glyph">FT_Render_Glyph</a>.</p>

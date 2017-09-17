@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8 API Reference</title>
+<title>FreeType-2.8.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,18 +100,19 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8 API Reference</h1>
+<h1>FreeType-2.8.1 API Reference</h1>
 
 <h1 id="multiple_masters">Multiple Masters</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
-<tr><td><a href="#FT_MM_Axis">FT_MM_Axis</a></td><td><a href="#FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</a></td></tr>
-<tr><td><a href="#FT_Multi_Master">FT_Multi_Master</a></td><td><a href="#FT_Set_Var_Design_Coordinates">FT_Set_Var_Design_Coordinates</a></td></tr>
-<tr><td><a href="#FT_Var_Axis">FT_Var_Axis</a></td><td><a href="#FT_Get_Var_Design_Coordinates">FT_Get_Var_Design_Coordinates</a></td></tr>
-<tr><td><a href="#FT_Var_Named_Style">FT_Var_Named_Style</a></td><td><a href="#FT_Set_MM_Blend_Coordinates">FT_Set_MM_Blend_Coordinates</a></td></tr>
-<tr><td><a href="#FT_MM_Var">FT_MM_Var</a></td><td><a href="#FT_Get_MM_Blend_Coordinates">FT_Get_MM_Blend_Coordinates</a></td></tr>
-<tr><td><a href="#FT_Get_Multi_Master">FT_Get_Multi_Master</a></td><td><a href="#FT_Set_Var_Blend_Coordinates">FT_Set_Var_Blend_Coordinates</a></td></tr>
-<tr><td><a href="#FT_Get_MM_Var">FT_Get_MM_Var</a></td><td><a href="#FT_Get_Var_Blend_Coordinates">FT_Get_Var_Blend_Coordinates</a></td></tr>
+<tr><td><a href="#FT_MM_Axis">FT_MM_Axis</a></td><td><a href="#FT_Set_Var_Design_Coordinates">FT_Set_Var_Design_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Multi_Master">FT_Multi_Master</a></td><td><a href="#FT_Get_Var_Design_Coordinates">FT_Get_Var_Design_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Var_Axis">FT_Var_Axis</a></td><td><a href="#FT_Set_MM_Blend_Coordinates">FT_Set_MM_Blend_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Var_Named_Style">FT_Var_Named_Style</a></td><td><a href="#FT_Get_MM_Blend_Coordinates">FT_Get_MM_Blend_Coordinates</a></td></tr>
+<tr><td><a href="#FT_MM_Var">FT_MM_Var</a></td><td><a href="#FT_Set_Var_Blend_Coordinates">FT_Set_Var_Blend_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Get_Multi_Master">FT_Get_Multi_Master</a></td><td><a href="#FT_Get_Var_Blend_Coordinates">FT_Get_Var_Blend_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Get_MM_Var">FT_Get_MM_Var</a></td><td><a href="#FT_VAR_AXIS_FLAG_XXX">FT_VAR_AXIS_FLAG_XXX</a></td></tr>
+<tr><td><a href="#FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</a></td><td><a href="#FT_Get_Var_Axis_Flags">FT_Get_Var_Axis_Flags</a></td></tr>
 </table>
 
 
@@ -255,7 +256,7 @@
 <p>The entry in &lsquo;name&rsquo; table identifying this instance.</p>
 </td></tr>
 <tr><td class="val" id="psid">psid</td><td class="desc">
-<p>The entry in &lsquo;name&rsquo; table identifying a PostScript name for this instance.</p>
+<p>The entry in &lsquo;name&rsquo; table identifying a PostScript name for this instance. Value 0xFFFF indicates a missing entry.</p>
 </td></tr>
 </table>
 
@@ -277,7 +278,7 @@
   } <b>FT_MM_Var</b>;
 </pre>
 
-<p>A structure to model the axes and space of a Adobe MM, TrueType GX, or OpenType variation font.</p>
+<p>A structure to model the axes and space of an Adobe MM, TrueType GX, or OpenType variation font.</p>
 <p>Some fields are specific to one format and not to the others.</p>
 
 <h4>fields</h4>
@@ -400,6 +401,9 @@
 <h4>return</h4>
 <p>FreeType error code. 0&nbsp;means success.</p>
 
+<h4>note</h4>
+<p>To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL (new feature in FreeType version 2.8.1).</p>
+
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
@@ -435,6 +439,9 @@
 
 <h4>return</h4>
 <p>FreeType error code. 0&nbsp;means success.</p>
+
+<h4>note</h4>
+<p>To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL (new feature in FreeType version 2.8.1).</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -508,6 +515,9 @@
 <h4>return</h4>
 <p>FreeType error code. 0&nbsp;means success.</p>
 
+<h4>note</h4>
+<p>To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL (new feature in FreeType version 2.8.1).</p>
+
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
@@ -573,6 +583,61 @@
 </pre>
 
 <p>This is another name of <a href="ft2-multiple_masters.html#FT_Get_MM_Blend_Coordinates">FT_Get_MM_Blend_Coordinates</a>.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_VAR_AXIS_FLAG_XXX">FT_VAR_AXIS_FLAG_XXX</h3>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
+<pre>
+#define <a href="ft2-multiple_masters.html#FT_VAR_AXIS_FLAG_HIDDEN">FT_VAR_AXIS_FLAG_HIDDEN</a>  1
+</pre>
+
+<p>A list of bit flags used in the return value of <a href="ft2-multiple_masters.html#FT_Get_Var_Axis_Flags">FT_Get_Var_Axis_Flags</a>.</p>
+
+<h4>values</h4>
+<table class="fields">
+<tr><td class="val" id="FT_VAR_AXIS_FLAG_HIDDEN">FT_VAR_AXIS_FLAG_HIDDEN</td><td class="desc">
+<p>The variation axis should not be exposed to user interfaces.</p>
+</td></tr>
+</table>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_Get_Var_Axis_Flags">FT_Get_Var_Axis_Flags</h3>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
+<pre>
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Get_Var_Axis_Flags</b>( <a href="ft2-multiple_masters.html#FT_MM_Var">FT_MM_Var</a>*  master,
+                         <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>     axis_index,
+                         <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>*    flags );
+</pre>
+
+<p>Get the &lsquo;flags&rsquo; field of an OpenType Variation Axis Record.</p>
+<p>Not meaningful for Adobe MM fonts (&lsquo;*flags&rsquo; is always zero).</p>
+
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="master">master</td><td class="desc">
+<p>The variation descriptor.</p>
+</td></tr>
+<tr><td class="val" id="axis_index">axis_index</td><td class="desc">
+<p>The index of the requested variation axis.</p>
+</td></tr>
+</table>
+
+<h4>output</h4>
+<table class="fields">
+<tr><td class="val" id="flags">flags</td><td class="desc">
+<p>The &lsquo;flags&rsquo; field. See <a href="ft2-multiple_masters.html#FT_VAR_AXIS_FLAG_XXX">FT_VAR_AXIS_FLAG_XXX</a> for possible values.</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+<p>FreeType error code. 0&nbsp;means success.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
