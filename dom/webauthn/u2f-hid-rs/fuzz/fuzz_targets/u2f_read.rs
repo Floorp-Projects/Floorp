@@ -4,10 +4,8 @@
 
 #![no_main]
 #[macro_use] extern crate libfuzzer_sys;
-extern crate rand;
 extern crate u2fhid;
 
-use rand::{thread_rng, Rng};
 use std::{cmp, io};
 
 use u2fhid::{CID_BROADCAST, HID_RPT_SIZE};
@@ -59,7 +57,10 @@ impl<'a> U2FDevice for TestDevice<'a> {
 }
 
 fuzz_target!(|data: &[u8]| {
-    let mut dev = TestDevice::new(data);
-    let cmd = thread_rng().gen::<u8>();
-    let _ = sendrecv(&mut dev, cmd, data);
+    if data.len() > 0 {
+        let cmd = data[0];
+        let data = &data[1..];
+        let mut dev = TestDevice::new(data);
+        let _ = sendrecv(&mut dev, cmd, data);
+    }
 });

@@ -1,4 +1,4 @@
-$! make Freetype2 under OpenVMS
+$! make FreeType 2 under OpenVMS
 $!
 $! Copyright 2003-2017 by
 $! David Turner, Robert Wilhelm, and Werner Lemberg.
@@ -10,7 +10,7 @@ $! indicate that you have read the license and understand and accept it
 $! fully.
 $!
 $!
-$! External libraries (like Freetype, XPM, etc.) are supported via the
+$! External libraries (like FreeType, XPM, etc.) are supported via the
 $! config file VMSLIB.DAT. Please check the sample file, which is part of this
 $! distribution, for the information you need to provide
 $!
@@ -26,12 +26,12 @@ $! In case of problems with the install you might contact me at
 $! zinser@zinser.no-ip.info (preferred) or
 $! zinser@sysdev.deutsche-boerse.com (work)
 $!
-$! Make procedure history for Freetype2
+$! Make procedure history for FreeType 2
 $!
 $!------------------------------------------------------------------------------
 $! Version history
 $! 0.01 20040401 First version to receive a number
-$! 0.02 20041030 Add error handling, Freetype 2.1.9
+$! 0.02 20041030 Add error handling, FreeType 2.1.9
 $!
 $ on error then goto err_exit
 $ true  = 1
@@ -128,7 +128,7 @@ $ERR_LIB:
 $ write sys$output "Error reading config file vmslib.dat"
 $ goto err_exit
 $FT2_ERR:
-$ write sys$output "Could not locate Freetype 2 include files"
+$ write sys$output "Could not locate FreeType 2 include files"
 $ goto err_exit
 $ERR_EXIT:
 $ set message/facil/ident/sever/text
@@ -1070,7 +1070,7 @@ $ then
 $   type/out=vmslib.dat sys$input
 !
 ! This is a simple driver file with information used by vms_make.com to
-! check if external libraries (like t1lib and freetype) are available on
+! check if external libraries (like t1lib and FreeType) are available on
 ! the system.
 !
 ! Layout of the file:
@@ -1148,7 +1148,7 @@ $ if f$locate("EXE",libtype) .lt. f$length(libtype) then lqual = "/share"
 $ write optf libloc , lqual
 $ if (f$trnlnm("topt") .nes. "") then write topt libloc , lqual
 $!
-$! Nasty hack to get the freetype includes to work
+$! Nasty hack to get the FreeType includes to work
 $!
 $ ft2def = false
 $ if ((libname .eqs. "FREETYPE") .and. -
