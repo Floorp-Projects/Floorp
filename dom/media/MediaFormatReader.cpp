@@ -3172,7 +3172,7 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
                           : VideoInfo();
 
   result += nsPrintfCString(
-    "Video Decoder(%s, %dx%d @ %0.2ffps): %s\n",
+    "Video Decoder(%s, %dx%d @ %0.2f): %s\n",
     videoType.get(),
     videoInfo.mDisplay.width < 0 ? 0 : videoInfo.mDisplay.width,
     videoInfo.mDisplay.height < 0 ? 0 : videoInfo.mDisplay.height,
