@@ -1824,11 +1824,12 @@ AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
     StartAnimation(new KeyboardScrollAnimation(*this, initialPosition, aEvent.mAction.mType));
   }
 
-  // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
-  // appunits/second. We perform a cast to ParentLayerPoints/ms without a
-  // conversion so that the scroll duration isn't affected by zoom
+  // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and then
+  // to appunits/second.
   nsPoint velocity =
-    CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(), mY.GetVelocity())) * 1000.0f;
+    CSSPoint::ToAppUnits(
+      ParentLayerPoint(mX.GetVelocity() * 1000.0f, mY.GetVelocity() * 1000.0f) /
+      mFrameMetrics.GetZoom());
 
   KeyboardScrollAnimation* animation = mAnimation->AsKeyboardScrollAnimation();
   MOZ_ASSERT(animation);
@@ -2102,11 +2103,14 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
 
       nsPoint deltaInAppUnits =
         CSSPoint::ToAppUnits(delta / mFrameMetrics.GetZoom());
-      // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
-      // appunits/second. We perform a cast to ParentLayerPoints/ms without a
-      // conversion so that the scroll duration isn't affected by zoom
+
+      // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and
+      // then to appunits/second.
       nsPoint velocity =
-        CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(), mY.GetVelocity())) * 1000.0f;
+        CSSPoint::ToAppUnits(
+          ParentLayerPoint(mX.GetVelocity() * 1000.0f,
+                           mY.GetVelocity() * 1000.0f) /
+          mFrameMetrics.GetZoom());
 
       WheelScrollAnimation* animation = mAnimation->AsWheelScrollAnimation();
       animation->UpdateDelta(aEvent.mTimeStamp, deltaInAppUnits, nsSize(velocity.x, velocity.y));
@@ -2861,11 +2865,14 @@ void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination) {
     CancelAnimation();
     SetState(SMOOTH_SCROLL);
     nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
-    // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
-    // appunits/second. We perform a cast to ParentLayerPoints/ms without a
-    // conversion so that the scroll duration isn't affected by zoom
-    nsPoint initialVelocity = CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(),
-                                                            mY.GetVelocity())) * 1000.0f;
+    // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s and
+    // then to appunits/second.
+    nsPoint initialVelocity =
+      CSSPoint::ToAppUnits(
+        ParentLayerPoint(mX.GetVelocity() * 1000.0f,
+                          mY.GetVelocity() * 1000.0f) /
+        mFrameMetrics.GetZoom());
+
     nsPoint destination = CSSPoint::ToAppUnits(aDestination);
 
     StartAnimation(new SmoothScrollAnimation(*this,
