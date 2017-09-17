@@ -7,7 +7,6 @@
 #ifndef mozilla_layers_AxisPhysicsModel_h
 #define mozilla_layers_AxisPhysicsModel_h
 
-#include "AxisPhysicsModel.h"
 #include <sys/types.h>                  // for int32_t
 #include "mozilla/TimeStamp.h"          // for TimeDuration
 
