@@ -17,7 +17,7 @@ AC_CONFIG_SRCDIR([ftconfig.in])
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='20:0:14'
+version_info='21:0:15'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -275,7 +275,7 @@ if test "x$GCC" = xyes; then
             }
 
           ])],
-        [AC_MSG_RESULT([ok, add it to XX_ANSIFLAGS])
+        [AC_MSG_RESULT([ok, adding to XX_ANSIFLAGS])
          XX_ANSIFLAGS="${XX_ANSIFLAGS} ${a}"
         ],
         [AC_MSG_RESULT([no])])
