@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8 API Reference</title>
+<title>FreeType-2.8.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8 API Reference</h1>
+<h1>FreeType-2.8.1 API Reference</h1>
 
 <h1 id="raster">Scanline Converter</h1>
 <h2>Synopsis</h2>
@@ -370,8 +370,8 @@
 #define FT_Raster_Reset_Func  <b>FT_Raster_ResetFunc</b>
 </pre>
 
-<p>FreeType used to provide an area of memory called the &lsquo;render pool&rsquo; available to all registered rasters. This was not thread safe however and now FreeType never allocates this pool. NULL is always passed in as pool_base.</p>
-<p>This function is called each time the render pool changes, or just after a new raster object is created.</p>
+<p>FreeType used to provide an area of memory called the &lsquo;render pool&rsquo; available to all registered rasterizers. This was not thread safe, however, and now FreeType never allocates this pool.</p>
+<p>This function is called after a new raster object is created.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -379,15 +379,15 @@
 <p>A handle to the new raster object.</p>
 </td></tr>
 <tr><td class="val" id="pool_base">pool_base</td><td class="desc">
-<p>The address in memory of the render pool.</p>
+<p>Previously, the address in memory of the render pool. Set this to NULL.</p>
 </td></tr>
 <tr><td class="val" id="pool_size">pool_size</td><td class="desc">
-<p>The size in bytes of the render pool.</p>
+<p>Previously, the size in bytes of the render pool. Set this to 0.</p>
 </td></tr>
 </table>
 
 <h4>note</h4>
-<p>Rasters should ignore the render pool and rely on dynamic or stack allocation if they want to (a handle to the memory allocator is passed to the raster constructor).</p>
+<p>Rasterizers should rely on dynamic or stack allocation if they want to (a handle to the memory allocator is passed to the rasterizer constructor).</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
