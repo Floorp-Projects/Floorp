@@ -74,11 +74,12 @@ GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration
     mApzc.mX.SetVelocity(0);
     mApzc.mY.SetVelocity(0);
   } else if (!IsZero(displacement)) {
-    // Velocity is measured in ParentLayerCoords / Milliseconds
-    float xVelocity = displacement.x / aDelta.ToMilliseconds();
-    float yVelocity = displacement.y / aDelta.ToMilliseconds();
-    mApzc.mX.SetVelocity(xVelocity);
-    mApzc.mY.SetVelocity(yVelocity);
+    // Convert velocity from AppUnits/Seconds to ParentLayerCoords/Milliseconds
+    nsSize velocity = VelocityAt(now);
+    ParentLayerPoint velocityPL =
+      CSSPoint::FromAppUnits(nsPoint(velocity.width, velocity.height)) * zoom;
+    mApzc.mX.SetVelocity(velocityPL.x / 1000.0);
+    mApzc.mY.SetVelocity(velocityPL.y / 1000.0);
   }
 
   // Note: we ignore overscroll for generic animations.
