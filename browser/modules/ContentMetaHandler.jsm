@@ -54,6 +54,9 @@ this.EXPORTED_SYMBOLS = [ "ContentMetaHandler" ];
 
 this.ContentMetaHandler = {
   init(chromeGlobal) {
+    // Store a locally-scoped (for this chromeGlobal) mapping of the best
+    // description and preview image collected so far for a given URL
+    const metaTags = new Map();
     chromeGlobal.addEventListener("DOMMetaAdded", event => {
       const metaTag = event.originalTarget;
       const window = metaTag.ownerGlobal;
@@ -62,15 +65,12 @@ this.ContentMetaHandler = {
       if (!metaTag || !metaTag.ownerDocument || window != window.top) {
         return;
       }
-      this.handleMetaTag(metaTag, chromeGlobal);
+      this.handleMetaTag(metaTag, chromeGlobal, metaTags);
     });
-    // Stores a mapping of the best description and preview image collected so far
-    // for a given URL
-    this._metaTags = new Map();
   },
 
 
-  handleMetaTag(metaTag, chromeGlobal) {
+  handleMetaTag(metaTag, chromeGlobal, metaTags) {
     const url = metaTag.ownerDocument.documentURI;
 
     let name = metaTag.name;
@@ -81,7 +81,7 @@ this.ContentMetaHandler = {
 
     let tag = name || prop;
 
-    const entry = this._metaTags.get(url) || {
+    const entry = metaTags.get(url) || {
       description: {value: null, currMaxScore: -1},
       image: {value: null, currMaxScore: -1},
       timeout: null
@@ -106,8 +106,8 @@ this.ContentMetaHandler = {
       return;
     }
 
-    if (!this._metaTags.has(url)) {
-      this._metaTags.set(url, entry);
+    if (!metaTags.has(url)) {
+      metaTags.set(url, entry);
     }
 
     if (entry.timeout) {
@@ -125,7 +125,7 @@ this.ContentMetaHandler = {
           description: entry.description.value,
           previewImageURL: entry.image.value
         });
-        this._metaTags.delete(url);
+        metaTags.delete(url);
       }, TIMEOUT_DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
     }
   }
