@@ -155,6 +155,15 @@ html|*#webRTC-previewVideo {
   list-style-image: url("chrome://browser/skin/notification-icons/popup.svg");
 }
 
+.popup-subitem {
+  list-style-image: url("chrome://browser/skin/notification-icons/popup-subitem.svg");
+  margin-inline-start: 30px;
+}
+
+.identity-popup-popup-menulist {
+  width: 72px;
+}
+
 /* EME */
 
 .popup-notification-icon[popupid="drmContentPlaying"],
