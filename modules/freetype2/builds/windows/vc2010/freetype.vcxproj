@@ -50,6 +50,32 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+    <!--
+    Switch the PlatformToolset based on the Visual Studio Version
+-->
+<PropertyGroup>
+    <!-- Assume Visual Studio 2010 / 4.0 as the default -->
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">4.0</VisualStudioVersion>
+</PropertyGroup>
+<!-- Visual Studio 2010 (4.0) -->
+<PropertyGroup Condition="'$(VisualStudioVersion)' == '4.0'">
+    <PlatformToolset>v100</PlatformToolset>
+</PropertyGroup>
+<!-- Visual Studio 2013 (12.0) -->
+<PropertyGroup Condition="'$(VisualStudioVersion)' == '12.0'">
+    <PlatformToolset>v120</PlatformToolset>
+</PropertyGroup>
+<!-- Visual Studio 2015 (14.0) -->
+<PropertyGroup Condition="'$(VisualStudioVersion)' == '14.0'">
+    <PlatformToolset>v140</PlatformToolset>
+</PropertyGroup>
+<!-- Visual Studio 2017 (15.0) -->
+<PropertyGroup Condition="'$(VisualStudioVersion)' == '15.0'">
+    <PlatformToolset>v141</PlatformToolset>
+</PropertyGroup>
+<!--
+    End of: Switch the PlatformToolset based on the Visual Studio Version
+-->
   <PropertyGroup Label="Globals">
     <ProjectGuid>{78B079BD-9FC7-4B9E-B4A6-96DA0F00248B}</ProjectGuid>
   </PropertyGroup>
@@ -58,73 +84,61 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Multithreaded|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Multithreaded|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Singlethreaded|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Singlethreaded|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Multithreaded|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Multithreaded|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -191,18 +205,18 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|x64'" />
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">freetype28d</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">freetype28d</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Multithreaded|Win32'">freetype28MTd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Multithreaded|x64'">freetype28MTd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Singlethreaded|Win32'">freetype28STd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Singlethreaded|x64'">freetype28STd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">freetype28</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">freetype28</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Multithreaded|Win32'">freetype28MT</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Multithreaded|x64'">freetype28MT</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|Win32'">freetype28ST</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|x64'">freetype28ST</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">freetype281d</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">freetype281d</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Multithreaded|Win32'">freetype281MTd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Multithreaded|x64'">freetype281MTd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Singlethreaded|Win32'">freetype281STd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug Singlethreaded|x64'">freetype281STd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">freetype281</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">freetype281</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Multithreaded|Win32'">freetype281MT</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Multithreaded|x64'">freetype281MT</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|Win32'">freetype281ST</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Singlethreaded|x64'">freetype281ST</TargetName>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\freetype.user.props" Condition="exists('$(SolutionDir)\freetype.user.props')" Label="UserProperties" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

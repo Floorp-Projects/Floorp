@@ -2,7 +2,7 @@
 # Attempt to guess a canonical system name.
 #   Copyright 1992-2017 Free Software Foundation, Inc.
 
-timestamp='2017-03-05'
+timestamp='2017-09-12'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -259,6 +259,9 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
     *:Sortix:*:*)
 	echo ${UNAME_MACHINE}-unknown-sortix
 	exit ;;
+    *:Redox:*:*)
+	echo ${UNAME_MACHINE}-unknown-redox
+	exit ;;
     alpha:OSF1:*:*)
 	case $UNAME_RELEASE in
 	*4.0)
@@ -315,15 +318,6 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	exitcode=$?
 	trap '' 0
 	exit $exitcode ;;
-    Alpha\ *:Windows_NT*:*)
-	# How do we know it's Interix rather than the generic POSIX subsystem?
-	# Should we change UNAME_MACHINE based on the output of uname instead
-	# of the specific Alpha model?
-	echo alpha-pc-interix
-	exit ;;
-    21064:Windows_NT:50:3)
-	echo alpha-dec-winnt3.5
-	exit ;;
     Amiga*:UNIX_System_V:4.0:*)
 	echo m68k-unknown-sysv4
 	exit ;;
@@ -855,10 +849,6 @@ EOF
     *:MSYS*:*)
 	echo ${UNAME_MACHINE}-pc-msys
 	exit ;;
-    i*:windows32*:*)
-	# uname -m includes "-pc" on this system.
-	echo ${UNAME_MACHINE}-mingw32
-	exit ;;
     i*:PW*:*)
 	echo ${UNAME_MACHINE}-pc-pw32
 	exit ;;
@@ -874,26 +864,11 @@ EOF
 		echo ia64-unknown-interix${UNAME_RELEASE}
 		exit ;;
 	esac ;;
-    [345]86:Windows_95:* | [345]86:Windows_98:* | [345]86:Windows_NT:*)
-	echo i${UNAME_MACHINE}-pc-mks
-	exit ;;
-    8664:Windows_NT:*)
-	echo x86_64-pc-mks
-	exit ;;
-    i*:Windows_NT*:* | Pentium*:Windows_NT*:*)
-	# How do we know it's Interix rather than the generic POSIX subsystem?
-	# It also conflicts with pre-2.0 versions of AT&T UWIN. Should we
-	# UNAME_MACHINE based on the output of uname instead of i386?
-	echo i586-pc-interix
-	exit ;;
     i*:UWIN*:*)
 	echo ${UNAME_MACHINE}-pc-uwin
 	exit ;;
     amd64:CYGWIN*:*:* | x86_64:CYGWIN*:*:*)
 	echo x86_64-unknown-cygwin
-	exit ;;
-    p*:CYGWIN*:*)
-	echo powerpcle-unknown-cygwin
 	exit ;;
     prep*:SunOS:5.*:*)
 	echo powerpcle-unknown-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
@@ -1304,13 +1279,20 @@ EOF
 	if test `echo "$UNAME_RELEASE" | sed -e 's/\..*//'` -le 10 ; then
 	    if [ "$CC_FOR_BUILD" != no_compiler_found ]; then
 		if (echo '#ifdef __LP64__'; echo IS_64BIT_ARCH; echo '#endif') | \
-		    (CCOPTS="" $CC_FOR_BUILD -E - 2>/dev/null) | \
-		    grep IS_64BIT_ARCH >/dev/null
+		       (CCOPTS="" $CC_FOR_BUILD -E - 2>/dev/null) | \
+		       grep IS_64BIT_ARCH >/dev/null
 		then
 		    case $UNAME_PROCESSOR in
 			i386) UNAME_PROCESSOR=x86_64 ;;
 			powerpc) UNAME_PROCESSOR=powerpc64 ;;
 		    esac
+		fi
+		# On 10.4-10.6 one might compile for PowerPC via gcc -arch ppc
+		if (echo '#ifdef __POWERPC__'; echo IS_PPC; echo '#endif') | \
+		       (CCOPTS="" $CC_FOR_BUILD -E - 2>/dev/null) | \
+		       grep IS_PPC >/dev/null
+		then
+		    UNAME_PROCESSOR=powerpc
 		fi
 	    fi
 	elif test "$UNAME_PROCESSOR" = i386 ; then
@@ -1335,16 +1317,16 @@ EOF
     *:QNX:*:4*)
 	echo i386-pc-qnx
 	exit ;;
-    NEO-?:NONSTOP_KERNEL:*:*)
+    NEO-*:NONSTOP_KERNEL:*:*)
 	echo neo-tandem-nsk${UNAME_RELEASE}
 	exit ;;
     NSE-*:NONSTOP_KERNEL:*:*)
 	echo nse-tandem-nsk${UNAME_RELEASE}
 	exit ;;
-    NSR-?:NONSTOP_KERNEL:*:*)
+    NSR-*:NONSTOP_KERNEL:*:*)
 	echo nsr-tandem-nsk${UNAME_RELEASE}
 	exit ;;
-    NSX-?:NONSTOP_KERNEL:*:*)
+    NSX-*:NONSTOP_KERNEL:*:*)
 	echo nsx-tandem-nsk${UNAME_RELEASE}
 	exit ;;
     *:NonStop-UX:*:*)
@@ -1422,8 +1404,8 @@ cat >&2 <<EOF
 $0: unable to guess system type
 
 This script (version $timestamp), has failed to recognize the
-operating system you are using. If your script is old, overwrite
-config.guess and config.sub with the latest versions from:
+operating system you are using. If your script is old, overwrite *all*
+copies of config.guess and config.sub with the latest versions from:
 
   http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess
 and

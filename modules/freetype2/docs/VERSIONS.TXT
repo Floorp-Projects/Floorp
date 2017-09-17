@@ -52,6 +52,7 @@ on _most_ systems, but not all of them:
 
     release     libtool     so
   -------------------------------
+     2.8.1      21.0.15   6.15.0
      2.8.0      20.0.14   6.14.0
      2.7.1      19.0.13   6.13.0
      2.7.0      18.6.12   6.12.6
@@ -99,7 +100,7 @@ other release numbers.
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #if (FREETYPE_MAJOR*1000 + FREETYPE_MINOR)*1000 + FREETYPE_PATCH < 2000009
-#error Freetype version too low.
+#error FreeType version too low.
 #endif
   ],
   [AC_MSG_RESULT(yes)
