@@ -130,15 +130,15 @@ var gTests = [
 {
   desc: "getUserMedia audio+video: reloading a frame updates the sharing UI",
   run: async function checkUpdateWhenReloading() {
-    // We'll share only the mic in the first frame, then share both in the
+    // We'll share only the cam in the first frame, then share both in the
     // second frame, then reload the second frame. After each step, we'll check
     // the UI is in the correct state.
 
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    await promiseRequestDevice(true, false, "frame1");
+    await promiseRequestDevice(false, true, "frame1");
     await promise;
     await expectObserverCalled("getUserMedia:request");
-    checkDeviceSelectors(true, false);
+    checkDeviceSelectors(false, true);
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
@@ -146,11 +146,11 @@ var gTests = [
     });
     await expectObserverCalled("getUserMedia:response:allow");
     await expectObserverCalled("recording-device-events");
-    Assert.deepEqual((await getMediaCaptureState()), {audio: true},
-                     "expected microphone to be shared");
+    Assert.deepEqual((await getMediaCaptureState()), {video: true},
+                     "expected camera to be shared");
 
     await indicator;
-    await checkSharingUI({video: false, audio: true});
+    await checkSharingUI({video: true, audio: false});
     await expectNoObserverCalled();
 
     promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -176,7 +176,7 @@ var gTests = [
     await promise;
 
     await expectObserverCalled("recording-window-ended");
-    await checkSharingUI({video: false, audio: true});
+    await checkSharingUI({video: true, audio: false});
     await expectNoObserverCalled();
 
     await closeStream(false, "frame1");
