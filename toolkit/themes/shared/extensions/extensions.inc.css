@@ -723,7 +723,7 @@ button.warning {
   margin-bottom: 2em;
 }
 
-#detail-name-container label {
+#detail-name-container {
   font-size: 2.5rem;
   font-weight: normal;
 }

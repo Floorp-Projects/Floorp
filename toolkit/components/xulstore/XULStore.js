@@ -61,7 +61,15 @@ XULStore.prototype = {
   load() {
     Services.obs.addObserver(this, "profile-before-change", true);
 
-    this._storeFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    try {
+      this._storeFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    } catch (ex) {
+      try {
+        this._storeFile = Services.dirsvc.get("ProfDS", Ci.nsIFile);
+      } catch (ex) {
+        throw new Error("Can't find profile directory.");
+      }
+    }
     this._storeFile.append(STOREDB_FILENAME);
 
     this.readFile();
