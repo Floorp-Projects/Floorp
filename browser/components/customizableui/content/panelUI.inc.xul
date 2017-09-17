@@ -647,11 +647,7 @@
                        class="subviewbutton subviewbutton-iconic"
                        label="&printCmd.label;"
                        key="printKb"
-#ifdef XP_MACOSX
                        command="cmd_print"
-#else
-                       command="cmd_printPreview"
-#endif
                        />
         <toolbarseparator/>
         <toolbarbutton id="appMenu-find-button"
