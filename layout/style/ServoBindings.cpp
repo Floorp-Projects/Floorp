@@ -2442,11 +2442,16 @@ Gecko_XBLBinding_InheritsStyle(RawGeckoXBLBindingBorrowed aXBLBinding)
   return aXBLBinding->InheritsStyle();
 }
 
+static StaticRefPtr<UACacheReporter> gUACacheReporter;
+
 void
 InitializeServo()
 {
   URLExtraData::InitDummy();
   Servo_Initialize(URLExtraData::Dummy());
+
+  gUACacheReporter = new UACacheReporter();
+  RegisterWeakMemoryReporter(gUACacheReporter);
 
   sServoFontMetricsLock = new Mutex("Gecko_GetFontMetrics");
   sServoWidgetLock = new Mutex("Servo::WidgetLock");
@@ -2459,6 +2464,8 @@ ShutdownServo()
   MOZ_ASSERT(sServoFontMetricsLock);
   MOZ_ASSERT(sServoWidgetLock);
   MOZ_ASSERT(sServoLangFontPrefsLock);
+
+  UnregisterWeakMemoryReporter(gUACacheReporter);
 
   delete sServoFontMetricsLock;
   delete sServoWidgetLock;
