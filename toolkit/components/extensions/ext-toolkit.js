@@ -260,8 +260,12 @@ extensions.registerModules({
 if (AppConstants.MOZ_BUILD_APP === "browser") {
   extensions.registerModules({
     identity: {
+      url: "chrome://extensions/content/ext-identity.js",
       schema: "chrome://extensions/content/schemas/identity.json",
       scopes: ["addon_parent"],
+      paths: [
+        ["identity"],
+      ],
     },
   });
 }
