@@ -844,12 +844,6 @@ Gecko_FillAllMaskLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
   nsRuleNode::FillAllMaskLists(*aLayers, aMaxLen);
 }
 
-RawGeckoElementBorrowedOrNull
-Gecko_GetBody(RawGeckoPresContextBorrowed aPresContext)
-{
-  return aPresContext->Document()->GetBodyElement();
-}
-
 bool
 Gecko_IsDocumentBody(RawGeckoElementBorrowed aElement)
 {

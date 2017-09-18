@@ -227,19 +227,21 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-switch',
         '-Wno-unused',
         '-Wno-unused-variable',
-        '-Wno-unused-but-set-variable'
-    ]
-
-if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
-    CFLAGS += [
-        '-Wno-absolute-value',
-        '-Wno-deprecated-register',
-        '-Wno-incompatible-pointer-types',
-        '-Wno-macro-redefined',
-        '-Wno-tautological-compare',
-        '-Wno-tautological-constant-out-of-range-compare',
         '-Wno-error=uninitialized',
     ]
+    if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+        CFLAGS += [
+            '-Wno-absolute-value',
+            '-Wno-deprecated-register',
+            '-Wno-incompatible-pointer-types',
+            '-Wno-macro-redefined',
+            '-Wno-shift-negative-value',
+            '-Wno-tautological-compare',
+            '-Wno-tautological-constant-out-of-range-compare',
+            '-Wno-unreachable-code',
+        ]
+    else:
+        CFLAGS += ['-Wno-unused-but-set-variable']
 
 if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
     CFLAGS += [
