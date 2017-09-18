@@ -66,14 +66,13 @@ WindowsEMF::ReleaseAllResource()
 }
 
 bool
-WindowsEMF::Playback(HDC aDeviceContext, const RECT* aRect)
+WindowsEMF::Playback(HDC aDeviceContext, const RECT& aRect)
 {
-  MOZ_ASSERT(aRect);
   if (!FinishDocument()) {
     return false;
   }
 
-  return ::PlayEnhMetaFile(aDeviceContext, mEmf, aRect) != 0;
+  return ::PlayEnhMetaFile(aDeviceContext, mEmf, &aRect) != 0;
 }
 
 bool
