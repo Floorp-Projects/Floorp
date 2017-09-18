@@ -213,6 +213,7 @@ UNIFIED_SOURCES += [
     'CanvasCaptureMediaStream.cpp',
     'ChannelMediaDecoder.cpp',
     'ChannelMediaResource.cpp',
+    'CloneableWithRangeMediaResource.cpp',
     'CubebUtils.cpp',
     'DecoderDoctorDiagnostics.cpp',
     'DOMMediaStream.cpp',
