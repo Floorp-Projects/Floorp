@@ -1232,8 +1232,13 @@ public:
                                                  self->mSourceListener->GetPrincipalHandle());
         if (NS_FAILED(rv)) {
           nsString log;
-          log.AssignASCII("Starting audio failed");
-          error = new MediaMgrError(NS_LITERAL_STRING("InternalError"), log);
+          if (rv == NS_ERROR_NOT_AVAILABLE) {
+            log.AssignASCII("Concurrent mic process limit.");
+            error = new MediaMgrError(NS_LITERAL_STRING("NotReadableError"), log);
+          } else {
+            log.AssignASCII("Starting audio failed");
+            error = new MediaMgrError(NS_LITERAL_STRING("InternalError"), log);
+          }
         }
       }
 
