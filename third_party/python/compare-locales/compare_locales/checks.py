@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
+from collections import Counter
 from difflib import SequenceMatcher
 from xml import sax
 try:
@@ -10,17 +11,23 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-from compare_locales.parser import DTDParser, PropertiesParser
+from compare_locales.parser import DTDParser, PropertiesEntity
 
 
 class Checker(object):
     '''Abstract class to implement checks per file type.
     '''
     pattern = None
+    # if a check uses all reference entities, set this to True
+    needs_reference = False
 
     @classmethod
     def use(cls, file):
         return cls.pattern.match(file.file)
+
+    def __init__(self, extra_tests):
+        self.extra_tests = extra_tests
+        self.reference = None
 
     def check(self, refEnt, l10nEnt):
         '''Given the reference and localized Entities, performs checks.
@@ -33,6 +40,12 @@ class Checker(object):
         if True:
             raise NotImplementedError("Need to subclass")
         yield ("error", (0, 0), "This is an example error", "example")
+
+    def set_reference(self, reference):
+        '''Set the reference entities.
+        Only do this if self.needs_reference is True.
+        '''
+        self.reference = reference
 
 
 class PrintfException(Exception):
@@ -58,7 +71,8 @@ class PropertiesChecker(Checker):
         refSpecs = None
         # check for PluralForm.jsm stuff, should have the docs in the
         # comment
-        if 'Localization_and_Plurals' in refEnt.pre_comment:
+        if (refEnt.pre_comment
+                and 'Localization_and_Plurals' in refEnt.pre_comment.all):
             # For plurals, common variable pattern is #1. Try that.
             pats = set(int(m.group(1)) for m in re.finditer('#([0-9]+)',
                                                             refValue))
@@ -77,9 +91,9 @@ class PropertiesChecker(Checker):
             return
         # check for lost escapes
         raw_val = l10nEnt.raw_val
-        for m in PropertiesParser.escape.finditer(raw_val):
+        for m in PropertiesEntity.escape.finditer(raw_val):
             if m.group('single') and \
-               m.group('single') not in PropertiesParser.known_escapes:
+               m.group('single') not in PropertiesEntity.known_escapes:
                 yield ('warning', m.start(),
                        'unknown escape sequence, \\' + m.group('single'),
                        'escape')
@@ -159,10 +173,6 @@ class PropertiesChecker(Checker):
                     specs[ls:pos] = nones*[None]
                     specs.append(m.group('spec'))
                 else:
-                    if specs[pos] is not None:
-                        raise PrintfException('Double ordered argument %d' %
-                                              (pos+1),
-                                              m.start())
                     specs[pos] = m.group('spec')
             else:
                 specs.append(m.group('spec'))
@@ -184,6 +194,7 @@ class DTDChecker(Checker):
     Also checks for some CSS and number heuristics in the values.
     """
     pattern = re.compile('.*\.dtd$')
+    needs_reference = True  # to cast a wider net for known entity references
 
     eref = re.compile('&(%s);' % DTDParser.Name)
     tmpl = '''<!DOCTYPE elem [%s]>
@@ -191,8 +202,11 @@ class DTDChecker(Checker):
 '''
     xmllist = set(('amp', 'lt', 'gt', 'apos', 'quot'))
 
-    def __init__(self, reference):
-        self.reference = reference
+    def __init__(self, extra_tests):
+        super(DTDChecker, self).__init__(extra_tests)
+        self.processContent = False
+        if self.extra_tests is not None and 'android-dtd' in self.extra_tests:
+            self.processContent = True
         self.__known_entities = None
 
     def known_entities(self, refValue):
@@ -228,8 +242,6 @@ class DTDChecker(Checker):
     style = re.compile(r'^%(spec)s\s*(;\s*%(spec)s\s*)*;?$' %
                        {'spec': spec.pattern})
 
-    processContent = None
-
     def check(self, refEnt, l10nEnt):
         """Try to parse the refvalue inside a dummy element, and keep
         track of entities that we need to define to make that work.
@@ -263,7 +275,7 @@ class DTDChecker(Checker):
         l10nlist = self.entities_for_value(l10nValue)
         missing = sorted(l10nlist - reflist)
         _entities = entities + ''.join('<!ENTITY %s "">' % s for s in missing)
-        if self.processContent is not None:
+        if self.processContent:
             self.texthandler.textcontent = ''
             parser.setContentHandler(self.texthandler)
         try:
@@ -347,17 +359,10 @@ class DTDChecker(Checker):
                 if msgs:
                     yield ('warning', 0, ', '.join(msgs), 'css')
 
-        if self.processContent is not None:
-            for t in self.processContent(self.texthandler.textcontent):
+        if self.extra_tests is not None and 'android-dtd' in self.extra_tests:
+            for t in self.processAndroidContent(self.texthandler.textcontent):
                 yield t
 
-
-class PrincessAndroid(DTDChecker):
-    """Checker for the string values that Android puts into an XML container.
-
-    http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling  # noqa
-    has more info. Check for unescaped apostrophes and bad unicode escapes.
-    """
     quoted = re.compile("(?P<q>[\"']).*(?P=q)$")
 
     def unicode_escape(self, str):
@@ -385,15 +390,11 @@ class PrincessAndroid(DTDChecker):
             args[3] = i + len(badstring)
             raise UnicodeDecodeError(*args)
 
-    @classmethod
-    def use(cls, file):
-        """Use this Checker only for DTD files in embedding/android."""
-        return (file.module in ("embedding/android",
-                                "mobile/android/base") and
-                cls.pattern.match(file.file))
+    def processAndroidContent(self, val):
+        """Check for the string values that Android puts into an XML container.
 
-    def processContent(self, val):
-        """Actual check code.
+        http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling  # noqa
+
         Check for unicode escapes and unescaped quotes and apostrophes,
         if string's not quoted.
         """
@@ -428,11 +429,68 @@ class PrincessAndroid(DTDChecker):
                 yield ('error', m.end(0)+offset, msg, 'android')
 
 
-def getChecker(file, reference=None):
+class FluentChecker(Checker):
+    '''Tests to run on Fluent (FTL) files.
+    '''
+    pattern = re.compile('.*\.ftl')
+
+    # Positions yielded by FluentChecker.check are absolute offsets from the
+    # beginning of the file.  This is different from the base Checker behavior
+    # which yields offsets from the beginning of the current entity's value.
+    def check(self, refEnt, l10nEnt):
+        ref_entry = refEnt.entry
+        l10n_entry = l10nEnt.entry
+        # verify that values match, either both have a value or none
+        if ref_entry.value is not None and l10n_entry.value is None:
+            yield ('error', l10n_entry.span.start,
+                   'Missing value', 'fluent')
+        if ref_entry.value is None and l10n_entry.value is not None:
+            yield ('error', l10n_entry.value.span.start,
+                   'Obsolete value', 'fluent')
+
+        # verify that we're having the same set of attributes
+        ref_attr_names = set((attr.id.name for attr in ref_entry.attributes))
+        ref_pos = dict((attr.id.name, i)
+                       for i, attr in enumerate(ref_entry.attributes))
+        l10n_attr_counts = \
+            Counter(attr.id.name for attr in l10n_entry.attributes)
+        l10n_attr_names = set(l10n_attr_counts)
+        l10n_pos = dict((attr.id.name, i)
+                        for i, attr in enumerate(l10n_entry.attributes))
+        # check for duplicate Attributes
+        # only warn to not trigger a merge skip
+        for attr_name, cnt in l10n_attr_counts.items():
+            if cnt > 1:
+                yield (
+                    'warning',
+                    l10n_entry.attributes[l10n_pos[attr_name]].span.start,
+                    'Attribute "{}" occurs {} times'.format(
+                        attr_name, cnt),
+                    'fluent')
+
+        missing_attr_names = sorted(ref_attr_names - l10n_attr_names,
+                                    key=lambda k: ref_pos[k])
+        for attr_name in missing_attr_names:
+            yield ('error', l10n_entry.span.start,
+                   'Missing attribute: ' + attr_name, 'fluent')
+
+        obsolete_attr_names = sorted(l10n_attr_names - ref_attr_names,
+                                     key=lambda k: l10n_pos[k])
+        obsolete_attrs = [
+            attr
+            for attr in l10n_entry.attributes
+            if attr.id.name in obsolete_attr_names
+        ]
+        for attr in obsolete_attrs:
+            yield ('error', attr.span.start,
+                   'Obsolete attribute: ' + attr.id.name, 'fluent')
+
+
+def getChecker(file, extra_tests=None):
     if PropertiesChecker.use(file):
-        return PropertiesChecker()
-    if PrincessAndroid.use(file):
-        return PrincessAndroid(reference)
+        return PropertiesChecker(extra_tests)
     if DTDChecker.use(file):
-        return DTDChecker(reference)
+        return DTDChecker(extra_tests)
+    if FluentChecker.use(file):
+        return FluentChecker(extra_tests)
     return None

@@ -6,10 +6,8 @@
 
 import codecs
 import os
-import os.path
 import shutil
 import re
-from difflib import SequenceMatcher
 from collections import defaultdict
 
 try:
@@ -18,7 +16,7 @@ except:
     from simplejson import dumps
 
 from compare_locales import parser
-from compare_locales import paths
+from compare_locales import paths, mozpath
 from compare_locales.checks import getChecker
 
 
@@ -31,8 +29,10 @@ class Tree(object):
     def __getitem__(self, leaf):
         parts = []
         if isinstance(leaf, paths.File):
-            parts = [p for p in [leaf.locale, leaf.module] if p] + \
-                leaf.file.split('/')
+            parts = [] if not leaf.locale else [leaf.locale]
+            if leaf.module:
+                parts += leaf.module.split('/')
+            parts += leaf.file.split('/')
         else:
             parts = leaf.split('/')
         return self.__get(parts)
@@ -93,16 +93,10 @@ class Tree(object):
         Returns this Tree as a JSON-able tree of hashes.
         Only the values need to take care that they're JSON-able.
         '''
-        json = {}
-        keys = self.branches.keys()
-        keys.sort()
         if self.value is not None:
-            json['value'] = self.value
-        children = [('/'.join(key), self.branches[key].toJSON())
-                    for key in keys]
-        if children:
-            json['children'] = children
-        return json
+            return self.value
+        return dict(('/'.join(key), self.branches[key].toJSON())
+                    for key in self.branches.keys())
 
     def getStrRows(self):
         def tostr(t):
@@ -116,147 +110,129 @@ class Tree(object):
         return '\n'.join(self.getStrRows())
 
 
-class AddRemove(SequenceMatcher):
+class AddRemove(object):
     def __init__(self):
-        SequenceMatcher.__init__(self, None, None, None)
+        self.left = self.right = None
 
     def set_left(self, left):
         if not isinstance(left, list):
-            left = [l for l in left]
-        self.set_seq1(left)
+            left = list(l for l in left)
+        self.left = left
 
     def set_right(self, right):
         if not isinstance(right, list):
-            right = [l for l in right]
-        self.set_seq2(right)
+            right = list(l for l in right)
+        self.right = right
 
     def __iter__(self):
-        for tag, i1, i2, j1, j2 in self.get_opcodes():
-            if tag == 'equal':
-                for pair in zip(self.a[i1:i2], self.b[j1:j2]):
-                    yield ('equal', pair)
-            elif tag == 'delete':
-                for item in self.a[i1:i2]:
-                    yield ('delete', item)
-            elif tag == 'insert':
-                for item in self.b[j1:j2]:
-                    yield ('add', item)
+        # order_map stores index in left and then index in right
+        order_map = dict((item, (i, -1)) for i, item in enumerate(self.left))
+        left_items = set(order_map)
+        # as we go through the right side, keep track of which left
+        # item we had in right last, and for items not in left,
+        # set the sortmap to (left_offset, right_index)
+        left_offset = -1
+        right_items = set()
+        for i, item in enumerate(self.right):
+            right_items.add(item)
+            if item in order_map:
+                left_offset = order_map[item][0]
             else:
-                # tag == 'replace'
-                for item in self.a[i1:i2]:
-                    yield ('delete', item)
-                for item in self.b[j1:j2]:
-                    yield ('add', item)
-
-
-class DirectoryCompare(SequenceMatcher):
-    def __init__(self, reference):
-        SequenceMatcher.__init__(self, None, [i for i in reference],
-                                 [])
-        self.watcher = None
-
-    def setWatcher(self, watcher):
-        self.watcher = watcher
-
-    def compareWith(self, other):
-        if not self.watcher:
-            return
-        self.set_seq2([i for i in other])
-        for tag, i1, i2, j1, j2 in self.get_opcodes():
-            if tag == 'equal':
-                for i, j in zip(xrange(i1, i2), xrange(j1, j2)):
-                    self.watcher.compare(self.a[i], self.b[j])
-            elif tag == 'delete':
-                for i in xrange(i1, i2):
-                    self.watcher.add(self.a[i], other.cloneFile(self.a[i]))
-            elif tag == 'insert':
-                for j in xrange(j1, j2):
-                    self.watcher.remove(self.b[j])
+                order_map[item] = (left_offset, i)
+        for item in sorted(order_map, key=lambda item: order_map[item]):
+            if item in left_items and item in right_items:
+                yield ('equal', item)
+            elif item in left_items:
+                yield ('delete', item)
             else:
-                for j in xrange(j1, j2):
-                    self.watcher.remove(self.b[j])
-                for i in xrange(i1, i2):
-                    self.watcher.add(self.a[i], other.cloneFile(self.a[i]))
+                yield ('add', item)
 
 
 class Observer(object):
-    stat_cats = ['missing', 'obsolete', 'missingInFiles', 'report',
-                 'changed', 'unchanged', 'keys']
 
-    def __init__(self):
-        class intdict(defaultdict):
-            def __init__(self):
-                defaultdict.__init__(self, int)
-
-        self.summary = defaultdict(intdict)
-        self.details = Tree(dict)
-        self.filter = None
+    def __init__(self, filter=None, file_stats=False):
+        self.summary = defaultdict(lambda: defaultdict(int))
+        self.details = Tree(list)
+        self.filter = filter
+        self.file_stats = None
+        if file_stats:
+            self.file_stats = defaultdict(lambda: defaultdict(dict))
 
     # support pickling
     def __getstate__(self):
-        return dict(summary=self.getSummary(), details=self.details)
+        state = dict(summary=self._dictify(self.summary), details=self.details)
+        if self.file_stats is not None:
+            state['file_stats'] = self._dictify(self.file_stats)
+        return state
 
     def __setstate__(self, state):
-        class intdict(defaultdict):
-            def __init__(self):
-                defaultdict.__init__(self, int)
-
-        self.summary = defaultdict(intdict)
+        self.summary = defaultdict(lambda: defaultdict(int))
         if 'summary' in state:
             for loc, stats in state['summary'].iteritems():
                 self.summary[loc].update(stats)
+        self.file_stats = None
+        if 'file_stats' in state:
+            self.file_stats = defaultdict(lambda: defaultdict(dict))
+            for k, d in state['file_stats'].iteritems():
+                self.file_stats[k].update(d)
         self.details = state['details']
         self.filter = None
 
-    def getSummary(self):
+    def _dictify(self, d):
         plaindict = {}
-        for k, v in self.summary.iteritems():
+        for k, v in d.iteritems():
             plaindict[k] = dict(v)
         return plaindict
 
     def toJSON(self):
-        return dict(summary=self.getSummary(), details=self.details.toJSON())
+        # Don't export file stats, even if we collected them.
+        # Those are not part of the data we use toJSON for.
+        return {
+            'summary': self._dictify(self.summary),
+            'details': self.details.toJSON()
+        }
+
+    def updateStats(self, file, stats):
+        # in multi-project scenarios, this file might not be ours,
+        # check that.
+        # Pass in a dummy entity key '' to avoid getting in to
+        # generic file filters. If we have stats for those,
+        # we want to aggregate the counts
+        if (self.filter is not None and
+                self.filter(file, entity='') == 'ignore'):
+            return
+        for category, value in stats.iteritems():
+            self.summary[file.locale][category] += value
+        if self.file_stats is None:
+            return
+        if 'missingInFiles' in stats:
+            # keep track of how many strings are in a missing file
+            # we got the {'missingFile': 'error'} from the notify pass
+            self.details[file].append({'count': stats['missingInFiles']})
+            # missingInFiles should just be "missing" in file stats
+            self.file_stats[file.locale][file.localpath]['missing'] = \
+                stats['missingInFiles']
+            return  # there are no other stats for missing files
+        self.file_stats[file.locale][file.localpath].update(stats)
 
     def notify(self, category, file, data):
-        rv = "error"
-        if category in self.stat_cats:
-            # these get called post reporting just for stats
-            # return "error" to forward them to other other_observers
-            self.summary[file.locale][category] += data
-            # keep track of how many strings are in a missing file
-            # we got the {'missingFile': 'error'} from the first pass
-            if category == 'missingInFiles':
-                self.details[file]['strings'] = data
-            return "error"
+        rv = 'error'
         if category in ['missingFile', 'obsoleteFile']:
             if self.filter is not None:
                 rv = self.filter(file)
             if rv != "ignore":
-                self.details[file][category] = rv
+                self.details[file].append({category: rv})
             return rv
         if category in ['missingEntity', 'obsoleteEntity']:
             if self.filter is not None:
                 rv = self.filter(file, data)
             if rv == "ignore":
                 return rv
-            v = self.details[file]
-            try:
-                v[category].append(data)
-            except KeyError:
-                v[category] = [data]
+            self.details[file].append({category: data})
             return rv
-        if category == 'error':
-            try:
-                self.details[file][category].append(data)
-            except KeyError:
-                self.details[file][category] = [data]
-            self.summary[file.locale]['errors'] += 1
-        elif category == 'warning':
-            try:
-                self.details[file][category].append(data)
-            except KeyError:
-                self.details[file][category] = [data]
-            self.summary[file.locale]['warnings'] += 1
+        if category in ('error', 'warning'):
+            self.details[file].append({category: data})
+            self.summary[file.locale][category + 's'] += 1
         return rv
 
     def toExhibit(self):
@@ -276,6 +252,9 @@ class Observer(object):
                          for k in ('changed', 'unchanged', 'report', 'missing',
                                    'missingInFiles')
                          if k in summary])
+            total_w = sum([summary[k]
+                           for k in ('changed_w', 'unchanged_w', 'missing_w')
+                           if k in summary])
             rate = (('changed' in summary and summary['changed'] * 100) or
                     0) / total
             item.update((k, summary.get(k, 0))
@@ -287,6 +266,9 @@ class Observer(object):
                 summary.get('missingInFiles', 0)
             item['completion'] = rate
             item['total'] = total
+            item.update((k, summary.get(k, 0))
+                        for k in ('changed_w', 'unchanged_w', 'missing_w'))
+            item['total_w'] = total_w
             result = 'success'
             if item.get('warnings', 0):
                 result = 'warning'
@@ -297,6 +279,7 @@ class Observer(object):
         data = {
             "properties": dict.fromkeys(
                 ("completion", "errors", "warnings", "missing", "report",
+                 "missing_w", "changed_w", "unchanged_w",
                  "unchanged", "changed", "obsolete"),
                 {"valueType": "number"}),
             "types": {
@@ -316,26 +299,19 @@ class Observer(object):
                 return '  ' * t[0] + '/'.join(t[2])
             o = []
             indent = '  ' * (t[0] + 1)
-            if 'error' in t[2]:
-                o += [indent + 'ERROR: ' + e for e in t[2]['error']]
-            if 'warning' in t[2]:
-                o += [indent + 'WARNING: ' + e for e in t[2]['warning']]
-            if 'missingEntity' in t[2] or 'obsoleteEntity' in t[2]:
-                missingEntities = ('missingEntity' in t[2] and
-                                   t[2]['missingEntity']) or []
-                obsoleteEntities = ('obsoleteEntity' in t[2] and
-                                    t[2]['obsoleteEntity']) or []
-                entities = missingEntities + obsoleteEntities
-                entities.sort()
-                for entity in entities:
-                    op = '+'
-                    if entity in obsoleteEntities:
-                        op = '-'
-                    o.append(indent + op + entity)
-            elif 'missingFile' in t[2]:
-                o.append(indent + '// add and localize this file')
-            elif 'obsoleteFile' in t[2]:
-                o.append(indent + '// remove this file')
+            for item in t[2]:
+                if 'error' in item:
+                    o += [indent + 'ERROR: ' + item['error']]
+                elif 'warning' in item:
+                    o += [indent + 'WARNING: ' + item['warning']]
+                elif 'missingEntity' in item:
+                    o += [indent + '+' + item['missingEntity']]
+                elif 'obsoleteEntity' in item:
+                    o += [indent + '-' + item['obsoleteEntity']]
+                elif 'missingFile' in item:
+                    o.append(indent + '// add and localize this file')
+                elif 'obsoleteFile' in item:
+                    o.append(indent + '// remove this file')
             return '\n'.join(o)
 
         out = []
@@ -362,99 +338,121 @@ class ContentComparer:
     keyRE = re.compile('[kK]ey')
     nl = re.compile('\n', re.M)
 
-    def __init__(self):
+    def __init__(self, observers, stat_observers=None):
         '''Create a ContentComparer.
         observer is usually a instance of Observer. The return values
         of the notify method are used to control the handling of missing
         entities.
         '''
-        self.reference = dict()
-        self.observer = Observer()
-        self.other_observers = []
-        self.merge_stage = None
+        self.observers = observers
+        if stat_observers is None:
+            stat_observers = []
+        self.stat_observers = stat_observers
 
-    def add_observer(self, obs):
-        '''Add a non-filtering observer.
-        Results from the notify calls are ignored.
-        '''
-        self.other_observers.append(obs)
-
-    def set_merge_stage(self, merge_stage):
-        self.merge_stage = merge_stage
-
-    def merge(self, ref_entities, ref_map, ref_file, l10n_file, missing,
-              skips, ctx, canMerge, encoding):
-        outfile = os.path.join(self.merge_stage, l10n_file.module,
-                               l10n_file.file)
-        outdir = os.path.dirname(outfile)
+    def create_merge_dir(self, merge_file):
+        outdir = mozpath.dirname(merge_file)
         if not os.path.isdir(outdir):
             os.makedirs(outdir)
-        if not canMerge:
-            shutil.copyfile(ref_file.fullpath, outfile)
-            print "copied reference to " + outfile
+
+    def merge(self, ref_entities, ref_map, ref_file, l10n_file, merge_file,
+              missing, skips, ctx, capabilities, encoding):
+
+        if capabilities == parser.CAN_NONE:
             return
+
+        if capabilities & parser.CAN_COPY and (skips or missing):
+            self.create_merge_dir(merge_file)
+            shutil.copyfile(ref_file.fullpath, merge_file)
+            print "copied reference to " + merge_file
+            return
+
+        if not (capabilities & parser.CAN_SKIP):
+            return
+
+        # Start with None in case the merge file doesn't need to be created.
+        f = None
+
         if skips:
             # skips come in ordered by key name, we need them in file order
             skips.sort(key=lambda s: s.span[0])
-        trailing = (['\n'] +
-                    [ref_entities[ref_map[key]].all for key in missing] +
-                    [ref_entities[ref_map[skip.key]].all for skip in skips
-                     if not isinstance(skip, parser.Junk)])
-        if skips:
-            # we need to skip a few errornous blocks in the input, copy by hand
-            f = codecs.open(outfile, 'wb', encoding)
+
+            # we need to skip a few erroneous blocks in the input, copy by hand
+            self.create_merge_dir(merge_file)
+            f = codecs.open(merge_file, 'wb', encoding)
             offset = 0
             for skip in skips:
                 chunk = skip.span
                 f.write(ctx.contents[offset:chunk[0]])
                 offset = chunk[1]
             f.write(ctx.contents[offset:])
-        else:
-            shutil.copyfile(l10n_file.fullpath, outfile)
-            f = codecs.open(outfile, 'ab', encoding)
-        print "adding to " + outfile
 
-        def ensureNewline(s):
-            if not s.endswith('\n'):
-                return s + '\n'
-            return s
+        if not (capabilities & parser.CAN_MERGE):
+            return
 
-        f.write(''.join(map(ensureNewline, trailing)))
-        f.close()
+        if skips or missing:
+            if f is None:
+                self.create_merge_dir(merge_file)
+                shutil.copyfile(l10n_file.fullpath, merge_file)
+                f = codecs.open(merge_file, 'ab', encoding)
+
+            trailing = (['\n'] +
+                        [ref_entities[ref_map[key]].all for key in missing] +
+                        [ref_entities[ref_map[skip.key]].all for skip in skips
+                         if not isinstance(skip, parser.Junk)])
+
+            def ensureNewline(s):
+                if not s.endswith('\n'):
+                    return s + '\n'
+                return s
+
+            print "adding to " + merge_file
+            f.write(''.join(map(ensureNewline, trailing)))
+
+        if f is not None:
+            f.close()
 
     def notify(self, category, file, data):
         """Check observer for the found data, and if it's
-        not to ignore, notify other_observers.
+        not to ignore, notify stat_observers.
         """
-        rv = self.observer.notify(category, file, data)
-        if rv == 'ignore':
-            return rv
-        for obs in self.other_observers:
-            # non-filtering other_observers, ignore results
+        rvs = set(
+            observer.notify(category, file, data)
+            for observer in self.observers
+            )
+        if all(rv == 'ignore' for rv in rvs):
+            return 'ignore'
+        rvs.discard('ignore')
+        for obs in self.stat_observers:
+            # non-filtering stat_observers, ignore results
             obs.notify(category, file, data)
-        return rv
+        if 'error' in rvs:
+            return 'error'
+        assert len(rvs) == 1
+        return rvs.pop()
+
+    def updateStats(self, file, stats):
+        """Check observer for the found data, and if it's
+        not to ignore, notify stat_observers.
+        """
+        for observer in self.observers + self.stat_observers:
+            observer.updateStats(file, stats)
 
     def remove(self, obsolete):
         self.notify('obsoleteFile', obsolete, None)
         pass
 
-    def compare(self, ref_file, l10n):
+    def compare(self, ref_file, l10n, merge_file, extra_tests=None):
         try:
             p = parser.getParser(ref_file.file)
         except UserWarning:
             # no comparison, XXX report?
             return
-        if ref_file not in self.reference:
-            # we didn't parse this before
-            try:
-                p.readContents(ref_file.getContents())
-            except Exception, e:
-                self.notify('error', ref_file, str(e))
-                return
-            self.reference[ref_file] = p.parse()
-        ref = self.reference[ref_file]
-        ref_list = ref[1].keys()
-        ref_list.sort()
+        try:
+            p.readContents(ref_file.getContents())
+        except Exception, e:
+            self.notify('error', ref_file, str(e))
+            return
+        ref_entities, ref_map = p.parse()
         try:
             p.readContents(l10n.getContents())
             l10n_entities, l10n_map = p.parse()
@@ -463,96 +461,100 @@ class ContentComparer:
             self.notify('error', l10n, str(e))
             return
 
-        l10n_list = l10n_map.keys()
-        l10n_list.sort()
         ar = AddRemove()
-        ar.set_left(ref_list)
-        ar.set_right(l10n_list)
+        ar.set_left(e.key for e in ref_entities)
+        ar.set_right(e.key for e in l10n_entities)
         report = missing = obsolete = changed = unchanged = keys = 0
+        missing_w = changed_w = unchanged_w = 0  # word stats
         missings = []
         skips = []
-        checker = getChecker(l10n, reference=ref[0])
-        for action, item_or_pair in ar:
+        checker = getChecker(l10n, extra_tests=extra_tests)
+        if checker and checker.needs_reference:
+            checker.set_reference(ref_entities)
+        for msg in p.findDuplicates(ref_entities):
+            self.notify('warning', l10n, msg)
+        for msg in p.findDuplicates(l10n_entities):
+            self.notify('error', l10n, msg)
+        for action, entity_id in ar:
             if action == 'delete':
                 # missing entity
-                _rv = self.notify('missingEntity', l10n, item_or_pair)
+                if isinstance(ref_entities[ref_map[entity_id]], parser.Junk):
+                    self.notify('warning', l10n, 'Parser error in en-US')
+                    continue
+                _rv = self.notify('missingEntity', l10n, entity_id)
                 if _rv == "ignore":
                     continue
                 if _rv == "error":
                     # only add to missing entities for l10n-merge on error,
                     # not report
-                    missings.append(item_or_pair)
+                    missings.append(entity_id)
                     missing += 1
+                    refent = ref_entities[ref_map[entity_id]]
+                    missing_w += refent.count_words()
                 else:
                     # just report
                     report += 1
             elif action == 'add':
                 # obsolete entity or junk
-                if isinstance(l10n_entities[l10n_map[item_or_pair]],
+                if isinstance(l10n_entities[l10n_map[entity_id]],
                               parser.Junk):
-                    junk = l10n_entities[l10n_map[item_or_pair]]
+                    junk = l10n_entities[l10n_map[entity_id]]
                     params = (junk.val,) + junk.position() + junk.position(-1)
                     self.notify('error', l10n,
-                                'Unparsed content "%s" from line %d colum %d'
+                                'Unparsed content "%s" from line %d column %d'
                                 ' to line %d column %d' % params)
-                    if self.merge_stage is not None:
+                    if merge_file is not None:
                         skips.append(junk)
                 elif self.notify('obsoleteEntity', l10n,
-                                 item_or_pair) != 'ignore':
+                                 entity_id) != 'ignore':
                     obsolete += 1
             else:
                 # entity found in both ref and l10n, check for changed
-                entity = item_or_pair[0]
-                refent = ref[0][ref[1][entity]]
-                l10nent = l10n_entities[l10n_map[entity]]
-                if self.keyRE.search(entity):
+                refent = ref_entities[ref_map[entity_id]]
+                l10nent = l10n_entities[l10n_map[entity_id]]
+                if self.keyRE.search(entity_id):
                     keys += 1
                 else:
-                    if refent.val == l10nent.val:
+                    if refent.equals(l10nent):
                         self.doUnchanged(l10nent)
                         unchanged += 1
+                        unchanged_w += refent.count_words()
                     else:
                         self.doChanged(ref_file, refent, l10nent)
                         changed += 1
+                        changed_w += refent.count_words()
                         # run checks:
                 if checker:
                     for tp, pos, msg, cat in checker.check(refent, l10nent):
-                        # compute real src position, if first line,
-                        # col needs adjustment
-                        if isinstance(pos, tuple):
-                            _l, col = l10nent.value_position()
-                            # line, column
-                            if pos[0] == 1:
-                                col = col + pos[1]
-                            else:
-                                col = pos[1]
-                                _l += pos[0] - 1
-                        else:
-                            _l, col = l10nent.value_position(pos)
+                        line, col = l10nent.value_position(pos)
                         # skip error entities when merging
-                        if tp == 'error' and self.merge_stage is not None:
+                        if tp == 'error' and merge_file is not None:
                             skips.append(l10nent)
                         self.notify(tp, l10n,
                                     u"%s at line %d, column %d for %s" %
-                                    (msg, _l, col, refent.key))
+                                    (msg, line, col, refent.key))
                 pass
-        if missing:
-            self.notify('missing', l10n, missing)
-        if self.merge_stage is not None and (missings or skips):
+
+        if merge_file is not None:
             self.merge(
-                ref[0], ref[1], ref_file,
-                l10n, missings, skips, l10n_ctx,
-                p.canMerge, p.encoding)
-        if report:
-            self.notify('report', l10n, report)
-        if obsolete:
-            self.notify('obsolete', l10n, obsolete)
-        if changed:
-            self.notify('changed', l10n, changed)
-        if unchanged:
-            self.notify('unchanged', l10n, unchanged)
-        if keys:
-            self.notify('keys', l10n, keys)
+                ref_entities, ref_map, ref_file,
+                l10n, merge_file, missings, skips, l10n_ctx,
+                p.capabilities, p.encoding)
+
+        stats = {}
+        for cat, value in (
+                ('missing', missing),
+                ('missing_w', missing_w),
+                ('report', report),
+                ('obsolete', obsolete),
+                ('changed', changed),
+                ('changed_w', changed_w),
+                ('unchanged', unchanged),
+                ('unchanged_w', unchanged_w),
+                ('keys', keys)):
+            if value:
+                stats[cat] = value
+        self.updateStats(l10n, stats)
         pass
 
     def add(self, orig, missing):
@@ -567,10 +569,16 @@ class ContentComparer:
         try:
             p.readContents(f.getContents())
             entities, map = p.parse()
-        except Exception, e:
-            self.notify('error', f, str(e))
+        except Exception, ex:
+            self.notify('error', f, str(ex))
             return
-        self.notify('missingInFiles', missing, len(map))
+        # strip parse errors
+        entities = [e for e in entities if not isinstance(e, parser.Junk)]
+        self.updateStats(missing, {'missingInFiles': len(entities)})
+        missing_w = 0
+        for e in entities:
+            missing_w += e.count_words()
+        self.updateStats(missing, {'missing_w': missing_w})
 
     def doUnchanged(self, entity):
         # overload this if needed
@@ -581,52 +589,54 @@ class ContentComparer:
         pass
 
 
-def compareApp(app, other_observer=None, merge_stage=None, clobber=False):
-    '''Compare locales set in app.
-
-    Optional arguments are:
-    - other_observer. A object implementing
-        notify(category, _file, data)
-      The return values of that callback are ignored.
-    - merge_stage. A directory to be used for staging the output of
-      l10n-merge.
-    - clobber. Clobber the module subdirectories of the merge dir as we go.
-      Use wisely, as it might cause data loss.
-    '''
-    comparer = ContentComparer()
-    if other_observer is not None:
-        comparer.add_observer(other_observer)
-    comparer.observer.filter = app.filter
-    for module, reference, locales in app:
-        dir_comp = DirectoryCompare(reference)
-        dir_comp.setWatcher(comparer)
-        for _, localization in locales:
-            if merge_stage is not None:
-                locale_merge = merge_stage.format(ab_CD=localization.locale)
-                comparer.set_merge_stage(locale_merge)
-                if clobber:
-                    # if clobber, remove the stage for the module if it exists
-                    clobberdir = os.path.join(locale_merge, module)
+def compareProjects(project_configs, stat_observer=None,
+                    file_stats=False,
+                    merge_stage=None, clobber_merge=False):
+    locales = set()
+    observers = []
+    for project in project_configs:
+        observers.append(
+            Observer(filter=project.filter, file_stats=file_stats))
+        locales.update(project.locales)
+    if stat_observer is not None:
+        stat_observers = [stat_observer]
+    else:
+        stat_observers = None
+    comparer = ContentComparer(observers, stat_observers=stat_observers)
+    for locale in sorted(locales):
+        files = paths.ProjectFiles(locale, project_configs,
+                                   mergebase=merge_stage)
+        root = mozpath.commonprefix([m['l10n'].prefix for m in files.matchers])
+        if merge_stage is not None:
+            if clobber_merge:
+                mergematchers = set(_m.get('merge') for _m in files.matchers)
+                mergematchers.discard(None)
+                for matcher in mergematchers:
+                    clobberdir = matcher.prefix
                     if os.path.exists(clobberdir):
                         shutil.rmtree(clobberdir)
                         print "clobbered " + clobberdir
-            dir_comp.compareWith(localization)
-    return comparer.observer
-
-
-def compareDirs(reference, locale, other_observer=None, merge_stage=None):
-    '''Compare reference and locale dir.
-
-    Optional arguments are:
-    - other_observer. A object implementing
-        notify(category, _file, data)
-      The return values of that callback are ignored.
-    '''
-    comparer = ContentComparer()
-    if other_observer is not None:
-        comparer.add_observer(other_observer)
-    comparer.set_merge_stage(merge_stage)
-    dir_comp = DirectoryCompare(paths.EnumerateDir(reference))
-    dir_comp.setWatcher(comparer)
-    dir_comp.compareWith(paths.EnumerateDir(locale))
-    return comparer.observer
+        for l10npath, refpath, mergepath, extra_tests in files:
+            # module and file path are needed for legacy filter.py support
+            module = None
+            fpath = mozpath.relpath(l10npath, root)
+            for _m in files.matchers:
+                if _m['l10n'].match(l10npath):
+                    if _m['module']:
+                        # legacy ini support, set module, and resolve
+                        # local path against the matcher prefix,
+                        # which includes the module
+                        module = _m['module']
+                        fpath = mozpath.relpath(l10npath, _m['l10n'].prefix)
+                    break
+            reffile = paths.File(refpath, fpath or refpath, module=module)
+            l10n = paths.File(l10npath, fpath or l10npath,
+                              module=module, locale=locale)
+            if not os.path.exists(l10npath):
+                comparer.add(reffile, l10n)
+                continue
+            if not os.path.exists(refpath):
+                comparer.remove(l10n)
+                continue
+            comparer.compare(reffile, l10n, mergepath, extra_tests)
+    return observers
