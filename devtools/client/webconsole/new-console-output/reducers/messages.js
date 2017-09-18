@@ -151,18 +151,23 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
       // Preemptively remove messages that will never be rendered
       let list = [];
       let prunableCount = 0;
+      let lastMessageRepeatId = -1;
       for (let i = action.messages.length - 1; i >= 0; i--) {
-        if (!action.messages[i].groupId && !isGroupType(action.messages[i].type) &&
-            action.messages[i].type !== MESSAGE_TYPE.END_GROUP) {
+        let message = action.messages[i];
+        if (!message.groupId && !isGroupType(message.type) &&
+            message.type !== MESSAGE_TYPE.END_GROUP) {
           prunableCount++;
-          // Once we've added the max number of messages that can be added stop.
-          // TODO: what about repeats?
-          if (prunableCount <= logLimit) {
+          // Once we've added the max number of messages that can be added, stop.
+          // Except for repeated messages, where we keep adding over the limit.
+          if (prunableCount <= logLimit || message.repeatId == lastMessageRepeatId) {
             list.unshift(action.messages[i]);
+          } else {
+            break;
           }
         } else {
-          list.unshift(action.messages[i]);
+          list.unshift(message);
         }
+        lastMessageRepeatId = message.repeatId;
       }
 
       list.forEach(message => {

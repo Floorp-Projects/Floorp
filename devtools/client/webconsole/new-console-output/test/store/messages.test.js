@@ -757,4 +757,35 @@ describe("Message reducer:", () => {
       expect(getAllMessagesTableDataById(getState()).size).toBe(0);
     });
   });
+
+  describe("messagesAdd", () => {
+    it("still log repeated message over logLimit, but only repeated ones", () => {
+      // Log two distinct messages
+      const key1 = "console.log('foobar', 'test')";
+      const key2 = "console.log(undefined)";
+      const { dispatch, getState } = setupStore([key1, key2], null, {
+        logLimit: 2
+      });
+
+      // Then repeat the last one two times and log the first one again
+      const packet1 = clonePacket(stubPackets.get(key2));
+      const packet2 = clonePacket(stubPackets.get(key2));
+      const packet3 = clonePacket(stubPackets.get(key1));
+
+      // Repeat ID must be the same even if the timestamp is different.
+      packet1.message.timeStamp = 1;
+      packet2.message.timeStamp = 2;
+      packet3.message.timeStamp = 3;
+      dispatch(actions.messagesAdd([packet1, packet2, packet3]));
+
+      // There is still only two messages being logged,
+      const messages = getAllMessagesById(getState());
+      expect(messages.size).toBe(2);
+
+      // the second one being repeated 3 times
+      const repeat = getAllRepeatById(getState());
+      expect(repeat[messages.first().id]).toBe(3);
+      expect(repeat[messages.last().id]).toBe(undefined);
+    });
+  });
 });
