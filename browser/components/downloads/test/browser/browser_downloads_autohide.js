@@ -25,7 +25,7 @@ add_task(async function checkStateDuringPrefFlips() {
   let downloadsButton = document.getElementById("downloads-button");
   ok(downloadsButton.hasAttribute("hidden"),
      "Button should be hidden in the toolbar");
-  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.addToPanel(downloadsButton);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button shouldn't be hidden in the panel");
   ok(!Services.prefs.getBoolPref(kDownloadAutoHidePref),
@@ -40,7 +40,7 @@ add_task(async function checkStateDuringPrefFlips() {
   Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button shouldn't be hidden with autohide turned off");
-  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.addToPanel(downloadsButton);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button shouldn't be hidden with autohide turned off " +
      "after moving it to the panel");
@@ -48,7 +48,7 @@ add_task(async function checkStateDuringPrefFlips() {
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button shouldn't be hidden with autohide turned off " +
      "after moving it back to the toolbar");
-  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.addToPanel(downloadsButton);
   Services.prefs.setBoolPref(kDownloadAutoHidePref, true);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should still not be hidden with autohide turned back on " +
@@ -81,7 +81,7 @@ add_task(async function checkStateInCustomizeMode() {
      "Button should be hidden if it's in the toolbar " +
      "after customize mode without any moves.");
   await promiseCustomizeStart();
-  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.addToPanel(downloadsButton);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should be shown in customize mode when moved to the panel");
   gCustomizeMode.addToToolbar(downloadsButton);
@@ -95,7 +95,7 @@ add_task(async function checkStateInCustomizeMode() {
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should be shown in customize mode " +
      "even when flipping the autohide pref");
-  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.addToPanel(downloadsButton);
   await promiseCustomizeEnd();
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should be shown after customize mode when moved to the panel");
@@ -113,7 +113,7 @@ add_task(async function checkStateInCustomizeMode() {
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should be shown in the toolbar in customize mode " +
      "when undoing the reset.");
-  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.addToPanel(downloadsButton);
   await gCustomizeMode.reset();
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should be shown in the toolbar in customize mode " +
@@ -166,7 +166,7 @@ add_task(async function checkStateInCustomizeModeMultipleWindows() {
   ok(otherDownloadsButton.hasAttribute("hidden"),
      "Button should be hidden in the other window with the pref flipped again");
 
-  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.addToPanel(downloadsButton);
   ok(!downloadsButton.hasAttribute("hidden"),
      "Button should still be shown in customize mode.");
   ok(!otherDownloadsButton.hasAttribute("hidden"),

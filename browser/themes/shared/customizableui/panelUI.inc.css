@@ -469,6 +469,23 @@ photonpanelmultiview .panel-subview-body {
   height: calc(51px + 2.2em);
 }
 
+.animate-out {
+  animation-name: widget-animate-out;
+  animation-fill-mode: forwards;
+  animation-duration: 500ms;
+}
+
+@keyframes widget-animate-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0 ;
+    transform: scale(.5);
+  }
+}
+
 toolbarpaletteitem[place=panel] > .toolbarbutton-1 {
   -moz-box-flex: 1;
 }
