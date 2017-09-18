@@ -28,7 +28,6 @@ PARAMETER_NAMES = set([
     'project',
     'pushdate',
     'pushlog_id',
-    'release_history',
     'target_task_labels',
     'target_tasks_method',
 ])
