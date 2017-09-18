@@ -274,7 +274,6 @@ class ConfigSettings(collections.Mapping):
         def __delattr__(self, k):
             self.__delitem__(k)
 
-
     def __init__(self):
         self._config = RawConfigParser()
         self._config.optionxform = str

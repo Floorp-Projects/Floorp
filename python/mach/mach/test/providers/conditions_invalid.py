@@ -9,6 +9,7 @@ from mach.decorators import (
     Command,
 )
 
+
 @CommandProvider
 class ConditionsProvider(object):
     @Command('cmd_foo', category='testing', conditions=["invalid"])
