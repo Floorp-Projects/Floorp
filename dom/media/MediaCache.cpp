@@ -6,6 +6,7 @@
 
 #include "MediaCache.h"
 
+#include "ChannelMediaResource.h"
 #include "FileBlockCache.h"
 #include "MediaBlockCacheBase.h"
 #include "MediaPrefs.h"

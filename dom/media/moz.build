@@ -212,6 +212,7 @@ UNIFIED_SOURCES += [
     'Benchmark.cpp',
     'CanvasCaptureMediaStream.cpp',
     'ChannelMediaDecoder.cpp',
+    'ChannelMediaResource.cpp',
     'CubebUtils.cpp',
     'DecoderDoctorDiagnostics.cpp',
     'DOMMediaStream.cpp',
