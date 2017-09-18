@@ -240,6 +240,7 @@ this.FxAccountsWebChannel.prototype = {
                   log.w("Warning about creating a new Android Account: previously linked to different email address!");
                   let message = strings.formatStringFromName("relinkVerify.message", [data.email], 1);
                   new Prompt({
+                    window: sendingContext.browser && sendingContext.browser.ownerGlobal,
                     title: strings.GetStringFromName("relinkVerify.title"),
                     message: message,
                     buttons: [

@@ -73,25 +73,25 @@
   "genericErrorDetails": {
     "message": "Մենք վստահ չենք, թե ինչ է տեղի ունեցնել: Կրկին փորձեք կամ փորձեք ստանալ մեկ այլ էջի պատկերը:"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Ստացեք, պահպանեք և համօգտագործեք էկրանի հանույթները՝ առանց Firefox-ը լքելու:"
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Ստացեք միայն այն, ինչ Ձեզ պետք է:"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Սեղմեք և քաշեք՝ ստանալու համար միայն էջի մի մասը: Նաև կարող եք վրայով անցկացնել՝ գունանշելու համար ընտրումը:"
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Ստանալ պատուհանը կամ ամբողջ էջեր"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Ընտրեք կոճակները վերևի աջ մասում՝ տեսանելի հատվածը ստանալու համար պատուհանում կամ ամբողջ էջը ստանալու համար:"
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Ինչպես որ հավանում եք այն"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Պահպանեք ձեր եզրատած որոշ պատկերներ վեբում՝ դրանք հեշտությամբ համօգտագործելու կամ ներբեռնելու համար ձեր համակարգչում: Նաև կարող եք սեղմել Իմ պատկերները՝ գտնելու ձեր բոլոր ֆայլերը:"
   },
   "tourSkip": {

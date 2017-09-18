@@ -1,24 +1,17 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "16.1.0",
+  "version": "19.0.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
   "applications": {
     "gecko": {
-      "id": "screenshots@mozilla.org"
+      "id": "screenshots@mozilla.org",
+      "strict_min_version": "57.0a1"
     }
   },
   "default_locale": "en_US",
-  "browser_action": {
-    "default_icon": {
-      "16": "icons/icon-16-v2.svg",
-      "32": "icons/icon-32-v2.svg"
-    },
-    "default_title": "Firefox Screenshots",
-    "browser_style": false
-  },
   "background": {
     "scripts": [
       "build/buildSettings.js",
@@ -51,6 +44,7 @@
     "icons/onboarding-2.png",
     "icons/onboarding-3.png",
     "icons/onboarding-4.png",
+    "icons/onboarding-5.png",
     "icons/done.svg",
     "icons/icon-welcome-face-without-eyes.svg"
   ],

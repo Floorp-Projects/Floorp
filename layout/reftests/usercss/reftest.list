@@ -1,3 +1,4 @@
 == usercss.html usercss-ref.html
+random-if(!browserIsRemote&&(stylo||styloVsGecko)) == usercss-uppercase.html usercss-ref.html
 == usercss-xbl.html usercss-ref.html
 == usercss-moz-document.html usercss-moz-document-ref.html

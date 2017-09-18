@@ -192,11 +192,19 @@ var GeckoViewUtils = {
    * @param aWin a DOM window.
    */
   getChromeWindow: function(aWin) {
-    return aWin &&
-           aWin.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIDocShellTreeItem)
-               .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindow);
+    if (!aWin) {
+      return null;
+    }
+    let docShell;
+    try {
+      docShell = aWin.QueryInterface(Ci.nsIDocShell);
+    } catch (e) {
+      docShell = aWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDocShell);
+    }
+    return docShell.QueryInterface(Ci.nsIDocShellTreeItem)
+                   .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindow);
   },
 
   /**
@@ -206,10 +214,30 @@ var GeckoViewUtils = {
    */
   getDispatcherForWindow: function(aWin) {
     try {
-      let win = this.getChromeWindow(aWin.top);
-      return win.WindowEventDispatcher || EventDispatcher.for(win);
+      let win = this.getChromeWindow(aWin.top || aWin);
+      let dispatcher = win.WindowEventDispatcher || EventDispatcher.for(win);
+      if (!win.closed && dispatcher) {
+        return dispatcher;
+      }
     } catch (e) {
       return null;
     }
+  },
+
+  getActiveDispatcher: function() {
+    let dispatcher = this.getDispatcherForWindow(Services.focus.activeWindow);
+    if (dispatcher) {
+      return dispatcher;
+    }
+
+    let iter = Services.wm.getEnumerator(/* windowType */ null);
+    while (iter.hasMoreElements()) {
+      dispatcher = this.getDispatcherForWindow(
+          iter.getNext().QueryInterface(Ci.nsIDOMWindow));
+      if (dispatcher) {
+        return dispatcher;
+      }
+    }
+    return null;
   },
 };
