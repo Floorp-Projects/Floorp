@@ -4,7 +4,7 @@
 default-preferences pref(gfx.webrender.layers-free,true)
 
 == scalez-1a.html scalez-1-ref.html
-== rotatey-1a.html rotatey-1-ref.html
+fuzzy-if(webrender,0-1,0-6) == rotatey-1a.html rotatey-1-ref.html
 == rotatex-1a.html rotatex-1-ref.html
 # Check that scaleZ(-1) rotateX(180deg) is the same as rotateY(180deg)
 == scalezrotatex-1.html scalezrotatex-1-ref.html
@@ -46,7 +46,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) fails-if(webrender) == backface
 fails-if(webrender) == perspective-clipping-1.html perspective-clipping-1-ref.html
 == perspective-clipping-2.html perspective-clipping-2-ref.html
 != perspective-origin-1a.html rotatex-perspective-1a.html
-== perspective-origin-1b.html perspective-origin-1a.html
+fuzzy-if(webrender,0-1,0-1) == perspective-origin-1b.html perspective-origin-1a.html
 fuzzy(3,99) random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html perspective-origin-3-ref.html
 == perspective-origin-4a.html perspective-origin-4-ref.html
@@ -59,7 +59,7 @@ fails-if(webrender) == sorting-2a.html sorting-2-ref.html
 == sorting-2b.html sorting-2-ref.html
 == sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
-== rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
+fuzzy-if(webrender,0-1,0-1) == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
 fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
 fails-if(webrender) == transform-style-flat-1a.html transform-style-flat-1-ref.html
 == willchange-containing-block.html?willchange willchange-containing-block.html?ref
