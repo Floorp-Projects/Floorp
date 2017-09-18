@@ -69,6 +69,12 @@ class SyntaxParser(BaseTryParser):
           'help': 'Print detailed information about the resulting test selection '
                   'and commands performed.',
           }],
+        [['--detect-paths'],
+         {'dest': 'detect_paths',
+          'action': 'store_true',
+          'default': False,
+          'help': 'Provide test paths based on files changed in the working copy.',
+          }],
     ]
 
     # Arguments we will accept on the command line and pass through to try
@@ -453,10 +459,10 @@ class AutoTry(object):
 
         return " ".join(parts)
 
-    def find_paths_and_tags(self, verbose):
+    def find_paths_and_tags(self, verbose, detect_paths):
         paths, tags = set(), set()
         changed_files = self.vcs.files_changed
-        if changed_files:
+        if changed_files and detect_paths:
             if verbose:
                 print("Pushing tests based on modifications to the "
                       "following files:\n\t%s" % "\n\t".join(changed_files))
@@ -579,7 +585,8 @@ class AutoTry(object):
                     kwargs[key] = defaults[key]
 
         if not any(kwargs[item] for item in ("paths", "tests", "tags")):
-            kwargs["paths"], kwargs["tags"] = self.find_paths_and_tags(kwargs["verbose"])
+            kwargs["paths"], kwargs["tags"] = self.find_paths_and_tags(kwargs["verbose"],
+                                                                       kwargs["detect_paths"])
 
         builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
 
