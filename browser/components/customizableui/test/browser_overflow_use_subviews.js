@@ -55,7 +55,7 @@ add_task(async function check_developer_subview_in_overflow() {
  */
 add_task(async function check_downloads_panel_in_overflow() {
   let button = document.getElementById("downloads-button");
-  gCustomizeMode.addToPanel(button);
+  await gCustomizeMode.addToPanel(button);
   await waitForOverflowButtonShown();
 
   let chevron = document.getElementById("nav-bar-overflow-button");

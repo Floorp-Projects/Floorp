@@ -25,7 +25,7 @@ add_task(async function test_overflow_anchor() {
   ok(!button.overflowed, "Downloads button should not be overflowed.");
   is(button.node.getAttribute("cui-areatype"), "toolbar", "Button should know it's in the toolbar");
 
-  gCustomizeMode.addToPanel(button.node);
+  await gCustomizeMode.addToPanel(button.node);
 
   let promise = promisePanelOpened();
   EventUtils.sendMouseEvent({ type: "mousedown", button: 0 }, button.node);
