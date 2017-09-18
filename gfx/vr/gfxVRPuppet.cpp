@@ -166,17 +166,7 @@ VRDisplayPuppet::StartPresentation()
   mIsPresenting = true;
 
 #if defined(XP_WIN)
-  if (!mDevice) {
-    mDevice = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-    if (!mDevice) {
-      NS_WARNING("Failed to get a D3D11Device for Puppet");
-      return;
-    }
-  }
-
-  mDevice->GetImmediateContext(getter_AddRefs(mContext));
-  if (!mContext) {
-    NS_WARNING("Failed to get immediate context for Puppet");
+  if (!CreateD3DObjects()) {
     return;
   }
 
@@ -290,6 +280,14 @@ VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
                              const gfx::Rect& aRightEyeRect)
 {
   if (!mIsPresenting) {
+    return false;
+  }
+
+  if (!CreateD3DObjects()) {
+    return false;
+  }
+  AutoRestoreRenderState restoreState(this);
+  if (!restoreState.IsSuccess()) {
     return false;
   }
 
