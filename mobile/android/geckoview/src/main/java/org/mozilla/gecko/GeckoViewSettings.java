@@ -65,6 +65,8 @@ public final class GeckoViewSettings {
     public static final Key<Integer> DISPLAY_MODE =
         new Key<Integer>("displayMode");
 
+    public static final Key<Boolean> USE_REMOTE_DEBUGGER =
+        new Key<Boolean>("useRemoteDebugger");
 
     private final EventDispatcher mEventDispatcher;
     private final GeckoBundle mBundle;
@@ -81,6 +83,7 @@ public final class GeckoViewSettings {
         setBoolean(USE_PRIVATE_MODE, false);
         setBoolean(USE_MULTIPROCESS, true);
         setInt(DISPLAY_MODE, DisplayMode.BROWSER.value());
+        setBoolean(USE_REMOTE_DEBUGGER, false);
     }
 
     /* package */ GeckoViewSettings(GeckoViewSettings settings, EventDispatcher eventDispatcher) {

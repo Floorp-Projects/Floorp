@@ -22,9 +22,10 @@ function debug(aMsg) {
 // Stub BrowserApp implementation for WebExtensions support.
 class GeckoViewTab extends GeckoViewModule {
   init() {
-    this.browser.tab = { id: 0 };
+    this.browser.tab = { id: 0, browser: this.browser };
 
-    this.window.BrowserApp = {
+    this.window.gBrowser = this.window.BrowserApp = {
+      selectedBrowser: this.browser,
       tabs: [this.browser.tab],
       selectedTab: this.browser.tab,
 
