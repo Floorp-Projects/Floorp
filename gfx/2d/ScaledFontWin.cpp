@@ -64,7 +64,7 @@ UnscaledFontGDI::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
 bool
 ScaledFontWin::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 {
-  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), aBaton);
+  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), nullptr, 0, aBaton);
   return true;
 }
 
@@ -98,7 +98,9 @@ UnscaledFontGDI::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLe
 already_AddRefed<ScaledFont>
 UnscaledFontGDI::CreateScaledFont(Float aGlyphSize,
                                   const uint8_t* aInstanceData,
-                                  uint32_t aInstanceDataLength)
+                                  uint32_t aInstanceDataLength,
+                                  const FontVariation* aVariations,
+                                  uint32_t aNumVariations)
 {
   if (aInstanceDataLength < sizeof(LOGFONT)) {
     gfxWarning() << "GDI unscaled font instance data is truncated.";
