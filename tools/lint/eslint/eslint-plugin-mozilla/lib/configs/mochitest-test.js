@@ -45,8 +45,8 @@ module.exports = {
 
   "rules": {
     "mozilla/import-content-task-globals": "error",
-    "mozilla/import-headjs-globals": "warn",
-    "mozilla/mark-test-function-used": "warn",
+    "mozilla/import-headjs-globals": "error",
+    "mozilla/mark-test-function-used": "error",
     "no-shadow": "error"
   }
 };
