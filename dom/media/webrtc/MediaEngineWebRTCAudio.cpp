@@ -474,6 +474,13 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
     return NS_ERROR_FAILURE;
   }
 
+  // Until we fix bug 1400488 we need to block a second tab (OuterWindow)
+  // from opening an already-open device.  If it's the same tab, they
+  // will share a Graph(), and we can allow it.
+  if (!mSources.IsEmpty() && aStream->Graph() != mSources[0]->Graph()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   {
     MonitorAutoLock lock(mMonitor);
     mSources.AppendElement(aStream);
