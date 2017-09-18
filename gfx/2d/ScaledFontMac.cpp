@@ -351,7 +351,7 @@ ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
       }
     }
 
-    aCb(reinterpret_cast<uint8_t*>(variations), variationCount * sizeof(FontVariation), aBaton);
+    aCb(nullptr, 0, variations, variationCount, aBaton);
     delete[] variations;
 
     return true;
@@ -478,17 +478,15 @@ UnscaledFontMac::CreateCGFontWithVariations(CGFontRef aFont,
 already_AddRefed<ScaledFont>
 UnscaledFontMac::CreateScaledFont(Float aGlyphSize,
                                   const uint8_t* aInstanceData,
-                                  uint32_t aInstanceDataLength)
-{
-  uint32_t variationCount =
-    aInstanceDataLength / sizeof(FontVariation);
-  const FontVariation* variations =
-    reinterpret_cast<const FontVariation*>(aInstanceData);
+                                  uint32_t aInstanceDataLength,
+                                  const FontVariation* aVariations,
+                                  uint32_t aNumVariations)
 
+{
   CGFontRef fontRef = mFont;
-  if (variationCount > 0) {
+  if (aNumVariations > 0) {
     CGFontRef varFont =
-      CreateCGFontWithVariations(mFont, variationCount, variations);
+      CreateCGFontWithVariations(mFont, aNumVariations, aVariations);
     if (varFont) {
       fontRef = varFont;
     }
