@@ -69,6 +69,7 @@ private:
   WindowsEMF(const WindowsEMF& aEMF) = delete;
   bool FinishDocument();
   void ReleaseEMFHandle();
+  void ReleaseAllResource();
 
   /* Compiled EMF data handle. */
   HENHMETAFILE mEmf;
