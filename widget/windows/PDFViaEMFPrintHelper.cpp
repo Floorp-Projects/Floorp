@@ -37,8 +37,11 @@ nsresult
 PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
 {
   MOZ_ASSERT(aFile);
+
   if (mPDFDoc) {
-    MOZ_ASSERT_UNREACHABLE("We can only open one PDF at a time");
+    MOZ_ASSERT_UNREACHABLE("We can only open one PDF at a time,"
+                           "Use CloseDocument() to close the opened file"
+                           "before calling OpenDocument()");
     return NS_ERROR_FAILURE;
   }
 
