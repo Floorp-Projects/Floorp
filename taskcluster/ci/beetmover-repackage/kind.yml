@@ -12,7 +12,6 @@ transforms:
 
 kind-dependencies:
   - repackage-signing
-  - partials-signing
 
 only-for-build-platforms:
   - linux-nightly/opt

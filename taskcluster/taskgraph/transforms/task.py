@@ -515,7 +515,7 @@ GROUP_NAMES = {
     'tc-L10n-Rpk': 'Localized Repackaged Repacks executed by Taskcluster',
     'tc-BM-L10n': 'Beetmover for locales executed by Taskcluster',
     'tc-BMR-L10n': 'Beetmover repackages for locales executed by Taskcluster',
-    'c-Up': 'Balrog submission of complete updates',
+    'tc-Up': 'Balrog submission of updates, executed by Taskcluster',
     'tc-cs': 'Checksum signing executed by Taskcluster',
     'tc-rs': 'Repackage signing executed by Taskcluster',
     'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
@@ -528,10 +528,7 @@ GROUP_NAMES = {
     'TW64': 'Toolchain builds for Windows 64-bits',
     'SM-tc': 'Spidermonkey builds',
     'pub': 'APK publishing',
-    'p': 'Partial generation',
-    'ps': 'Partials signing',
 }
-
 UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
 
 V2_ROUTE_TEMPLATES = [
