@@ -510,15 +510,6 @@ class ContextMenu {
       return;
     }
 
-    let addonInfo = Object.create(null);
-    let subject = {
-      aEvent,
-      addonInfo,
-    };
-
-    subject.wrappedJSObject = subject;
-    Services.obs.notifyObservers(subject, "content-contextmenu");
-
     let doc = aEvent.target.ownerDocument;
     let {
       mozDocumentURIIfNotForErrorPages: docLocation,
@@ -612,7 +603,6 @@ class ContextMenu {
       baseURI,
       isRemote,
       referrer,
-      addonInfo,
       editFlags,
       principal,
       spellInfo,
