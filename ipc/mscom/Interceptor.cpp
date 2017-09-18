@@ -25,6 +25,29 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
+#if defined(MOZ_CRASHREPORTER)
+
+#include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
+
+#define ENSURE_HR_SUCCEEDED(hr) \
+  if (FAILED(hr)) { \
+    nsPrintfCString location("ENSURE_HR_SUCCEEDED \"%s\": %u", __FILE__, __LINE__); \
+    nsPrintfCString hrAsStr("0x%08X", hr); \
+    CrashReporter::AnnotateCrashReport(location, hrAsStr); \
+    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr)); \
+    return hr; \
+  }
+
+#else
+
+#define ENSURE_HR_SUCCEEDED(hr) \
+  if (FAILED(hr)) { \
+    return hr; \
+  }
+
+#endif // defined(MOZ_CRASHREPORTER)
+
 namespace mozilla {
 namespace mscom {
 namespace detail {
@@ -412,11 +435,11 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
     AutoLock lock(*this);
 
     HRESULT hr = PublishTarget(aLiveSetLock, nullptr, aTargetIid, Move(aTarget));
-    if (FAILED(hr)) {
-      return hr;
-    }
+    ENSURE_HR_SUCCEEDED(hr);
 
-    return QueryInterface(aTargetIid, aOutInterceptor);
+    hr = QueryInterface(aTargetIid, aOutInterceptor);
+    ENSURE_HR_SUCCEEDED(hr);
+    return hr;
   }
 
   // Raise the refcount for stabilization purposes during aggregation
@@ -426,36 +449,32 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
   RefPtr<IUnknown> unkInterceptor;
   HRESULT hr = CreateInterceptor(aTargetIid, kungFuDeathGrip,
                                  getter_AddRefs(unkInterceptor));
-  if (FAILED(hr)) {
-    return hr;
-  }
+  ENSURE_HR_SUCCEEDED(hr);
 
   RefPtr<ICallInterceptor> interceptor;
   hr = unkInterceptor->QueryInterface(IID_ICallInterceptor,
                                       getter_AddRefs(interceptor));
-  if (FAILED(hr)) {
-    return hr;
-  }
+  ENSURE_HR_SUCCEEDED(hr);
 
   hr = interceptor->RegisterSink(mEventSink);
-  if (FAILED(hr)) {
-    return hr;
-  }
+  ENSURE_HR_SUCCEEDED(hr);
 
   // We must lock ourselves so that nothing can race with us once we have been
   // published to the live set.
   AutoLock lock(*this);
 
   hr = PublishTarget(aLiveSetLock, unkInterceptor, aTargetIid, Move(aTarget));
-  if (FAILED(hr)) {
+  ENSURE_HR_SUCCEEDED(hr);
+
+  if (mEventSink->MarshalAs(aTargetIid) == aTargetIid) {
+    hr = unkInterceptor->QueryInterface(aTargetIid, aOutInterceptor);
+    ENSURE_HR_SUCCEEDED(hr);
     return hr;
   }
 
-  if (mEventSink->MarshalAs(aTargetIid) == aTargetIid) {
-    return unkInterceptor->QueryInterface(aTargetIid, aOutInterceptor);
-  }
-
-  return GetInterceptorForIID(aTargetIid, aOutInterceptor);
+  hr = GetInterceptorForIID(aTargetIid, aOutInterceptor);
+  ENSURE_HR_SUCCEEDED(hr);
+  return hr;
 }
 
 /**
@@ -505,7 +524,9 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
     // was requested.
     InterceptorLog::QI(S_OK, mTarget.get(), aIid, interfaceForQILog);
 
-    return unkInterceptor->QueryInterface(interceptorIid, aOutInterceptor);
+    HRESULT hr = unkInterceptor->QueryInterface(interceptorIid, aOutInterceptor);
+    ENSURE_HR_SUCCEEDED(hr);
+    return hr;
   }
 
   // (2) Obtain a new target interface.
@@ -522,9 +543,7 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
   targetInterface.reset(rawTargetInterface);
   InterceptorLog::QI(hr, mTarget.get(), aIid, targetInterface.get());
   MOZ_ASSERT(SUCCEEDED(hr) || hr == E_NOINTERFACE);
-  if (FAILED(hr)) {
-    return hr;
-  }
+  ENSURE_HR_SUCCEEDED(hr);
 
   // We *really* shouldn't be adding interceptors to proxies
   MOZ_ASSERT(aIid != IID_IMarshal);
@@ -538,23 +557,17 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
 
   hr = CreateInterceptor(interceptorIid, kungFuDeathGrip,
                          getter_AddRefs(unkInterceptor));
-  if (FAILED(hr)) {
-    return hr;
-  }
+  ENSURE_HR_SUCCEEDED(hr);
 
   // (4) Obtain the interceptor's ICallInterceptor interface and register our
   // event sink.
   RefPtr<ICallInterceptor> interceptor;
   hr = unkInterceptor->QueryInterface(IID_ICallInterceptor,
                                       (void**)getter_AddRefs(interceptor));
-  if (FAILED(hr)) {
-    return hr;
-  }
+  ENSURE_HR_SUCCEEDED(hr);
 
   hr = interceptor->RegisterSink(mEventSink);
-  if (FAILED(hr)) {
-    return hr;
-  }
+  ENSURE_HR_SUCCEEDED(hr);
 
   // (5) Now that we have this new COM interceptor, insert it into the map.
 
@@ -576,7 +589,9 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
     }
   }
 
-  return unkInterceptor->QueryInterface(interceptorIid, aOutInterceptor);
+  hr = unkInterceptor->QueryInterface(interceptorIid, aOutInterceptor);
+  ENSURE_HR_SUCCEEDED(hr);
+  return hr;
 }
 
 HRESULT
@@ -638,16 +653,12 @@ Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
                                  SMEXF_SERVER, getter_AddRefs(mStdMarshalUnk));
       }
 
-      if (FAILED(hr)) {
-        return hr;
-      }
+      ENSURE_HR_SUCCEEDED(hr);
     }
 
     if (!mStdMarshal) {
       hr = mStdMarshalUnk->QueryInterface(IID_IMarshal, (void**)&mStdMarshal);
-      if (FAILED(hr)) {
-        return hr;
-      }
+      ENSURE_HR_SUCCEEDED(hr);
 
       // mStdMarshal is weak, so drop its refcount
       mStdMarshal->Release();
@@ -668,9 +679,8 @@ Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
     STAUniquePtr<IDispatch> disp;
     IDispatch* rawDisp = nullptr;
     HRESULT hr = QueryInterfaceTarget(aIid, (void**)&rawDisp);
-    if (FAILED(hr)) {
-      return hr;
-    }
+    ENSURE_HR_SUCCEEDED(hr);
+
     disp.reset(rawDisp);
     return DispatchForwarder::Create(this, disp, aOutInterface);
   }
