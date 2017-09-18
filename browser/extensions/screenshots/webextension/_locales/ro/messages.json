@@ -2,14 +2,26 @@
   "addonDescription": {
     "message": "Realizează decupaje și capturi de ecran de pe web și salvează-le temporar sau permanent."
   },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
   "contextMenuLabel": {
     "message": "Realizează o captură de ecran"
   },
   "myShotsLink": {
     "message": "Capturile mele"
   },
+  "screenshotInstructions": {
+    "message": "Trage sau dă clic pe pagină pentru a selecta o regiune. Apasă ESC pentru a renunța."
+  },
   "saveScreenshotSelectedArea": {
     "message": "Salvează"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Salvează porțiunea vizibilă"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Salvează pagina completă"
   },
   "cancelScreenshot": {
     "message": "Renunță"
@@ -20,6 +32,38 @@
   "notificationLinkCopiedTitle": {
     "message": "Link copiat"
   },
+  "notificationLinkCopiedDetails": {
+    "message": "Linkul către captura ta a fost copiat în clipboard. Apasă $META_KEY$-V pentru lipire.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Nefuncțional."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Nu putem realiza o captură de ecran a acestei pagini."
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Selecția este prea mică"
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Capturează întocmai ceea ce dorești"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Clic și trage pentru a captura doar o porțiune a unei pagini. Poți și să poziționezi cursorul peste porțiune pentru a evidenția selecția."
+  },
+  "tourHeaderFullPage": {
+    "message": "Capturează ferestre sau pagini întregi"
+  },
+  "tourBodyFullPage": {
+    "message": "Selectează butoanele din partea dreaptă sus pentru a captura zona vizibilă din fereastră sau pentru a captura o pagină întreagă."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Pe placul tău"
+  },
   "tourSkip": {
     "message": "OMITE"
   },
@@ -29,10 +73,27 @@
   "tourPrevious": {
     "message": "Diapozitivul anterior"
   },
+  "tourDone": {
+    "message": "Terminat"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Folosind Firefox Screenshots, ești de acord cu $TERMSANDPRIVACYNOTICETERMSLINK$ și $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "Termenii"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Politica de confidenţialitate"
+  },
+  "libraryLabel": {
+    "message": "Capturi de ecran"
   }
 }

@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Emme oikein tiedä, mitä tapahtui. Haluatko yrittää uudestaan tai ottaa kuvan eri sivusta?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Ota, tallenna ja jaa kuvakaappaus poistumatta Firefoxista."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Kaappaa mitä haluat"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Kaappaa vain osa sivusta napsauttamalla ja vetämällä. Voit myös korostaa valinnan pitämällä hiirtä sen päällä."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Kaappaa näkyvä alue tai kokonainen sivu"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Valitse oikean yläkulman painikkeista joko ikkunassa näkyvän alueen tai koko sivun kaappaus."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Haluamallasi tavalla"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Tallenna rajaamasi kuvat verkkoon helpompaa jakamista varten tai lataa ne tietokoneellesi. Voit myös napsauttaa Omat kaappaukset -painiketta ja nähdä kaikki ottamasi kuvat."
   },
   "tourSkip": {

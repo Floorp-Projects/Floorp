@@ -104,6 +104,16 @@ def get_trailing_blank_line_state(depname):
       return "no blank line"
 
 def update_nspr_or_nss(tag, depfile, destination, hgpath):
+  destination = destination.rstrip('/')
+  permanent_patch_dir = destination + '/patches'
+  temporary_patch_dir = destination + '.patches'
+  if os.path.exists(temporary_patch_dir):
+    print "please clean up leftover directory " + temporary_patch_dir
+    sys.exit(2)
+  warn_if_patch_exists(permanent_patch_dir)
+  # protect patch directory from being removed by do_hg_replace
+  shutil.move(permanent_patch_dir, temporary_patch_dir)
+  # now update the destination
   print "reverting to HG version of %s to get its blank line state" % depfile
   check_call_noisy([options.hg, 'revert', depfile])
   old_state = get_trailing_blank_line_state(depfile)
@@ -116,6 +126,21 @@ def update_nspr_or_nss(tag, depfile, destination, hgpath):
     toggle_trailing_blank_line(depfile)
   tag_file = destination + "/TAG-INFO"
   print >>file(tag_file, "w"), tag
+  # move patch directory back to a subdirectory
+  shutil.move(temporary_patch_dir, permanent_patch_dir)
+
+def warn_if_patch_exists(path):
+  # If the given patch directory exists and contains at least one file,
+  # then print warning and wait for the user to acknowledge.
+  if os.path.isdir(path) and os.listdir(path):
+    print "========================================"
+    print "WARNING: At least one patch file exists"
+    print "in directory: " + path
+    print "You must manually re-apply all patches"
+    print "after this script has completed!"
+    print "========================================"
+    raw_input("Press Enter to continue...")
+    return
 
 o = OptionParser(usage="client.py [options] update_nspr tagname | update_nss tagname | update_libffi tagname")
 o.add_option("--skip-mozilla", dest="skip_mozilla",
