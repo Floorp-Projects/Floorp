@@ -3172,7 +3172,7 @@ var gDetailView = {
         legacy = !(aAddon.isWebExtension || aAddon.id.endsWith("@personas.mozilla.org"));
       }
 
-      if (legacy && aAddon.signedStatus == AddonManager.SIGNEDSTATE_PRIVILEGED) {
+      if (legacy && aAddon.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED) {
         legacy = false;
       }
 
