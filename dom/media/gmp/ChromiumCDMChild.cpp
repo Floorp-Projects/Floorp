@@ -52,7 +52,7 @@ public:
     , mSize(aShmem.Size<uint8_t>())
     , mShmem(aShmem)
   {
-    CDM_LOG("CDMShmemBuffer(size=%" PRIu32 ") created", Size());
+    GMP_LOG("CDMShmemBuffer(size=%" PRIu32 ") created", Size());
     // Note: Chrome initializes the size of a buffer to it capacity. We do the same.
   }
 
@@ -69,7 +69,7 @@ public:
 
   ~CDMShmemBuffer() override
   {
-    CDM_LOG("CDMShmemBuffer(size=%" PRIu32 ") destructed writable=%d",
+    GMP_LOG("CDMShmemBuffer(size=%" PRIu32 ") destructed writable=%d",
             Size(),
             mShmem.IsWritable());
     if (mShmem.IsWritable()) {
@@ -81,7 +81,7 @@ public:
 
   void Destroy() override
   {
-    CDM_LOG("CDMShmemBuffer::Destroy(size=%" PRIu32 ")", Size());
+    GMP_LOG("CDMShmemBuffer::Destroy(size=%" PRIu32 ")", Size());
     delete this;
   }
   uint32_t Capacity() const override { return mShmem.Size<uint8_t>(); }
@@ -94,7 +94,7 @@ public:
     // Note: We can't use the shmem's size member after ExtractShmem(),
     // has been called, so we track the size exlicitly so that we can use
     // Size() in logging after we've called ExtractShmem().
-    CDM_LOG("CDMShmemBuffer::SetSize(size=%" PRIu32 ")", Size());
+    GMP_LOG("CDMShmemBuffer::SetSize(size=%" PRIu32 ")", Size());
     mSize = aSize;
   }
 
@@ -826,7 +826,7 @@ ChromiumCDMChild::RecvDrain()
   WidevineVideoFrame frame;
   cdm::InputBuffer sample;
   cdm::Status rv = mCDM->DecryptAndDecodeFrame(sample, &frame);
-  CDM_LOG("ChromiumCDMChild::RecvDrain();  DecryptAndDecodeFrame() rv=%d", rv);
+  GMP_LOG("ChromiumCDMChild::RecvDrain();  DecryptAndDecodeFrame() rv=%d", rv);
   if (rv == cdm::kSuccess) {
     MOZ_ASSERT(frame.Format() != cdm::kUnknownVideoFormat);
     ReturnOutput(frame);

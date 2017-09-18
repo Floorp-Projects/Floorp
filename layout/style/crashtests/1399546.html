@@ -1,0 +1,17 @@
+<!doctype html>
+<script>
+var d = document
+var de = d.documentElement
+de.appendChild(d.createElement("x"))
+de.appendChild(d.createElement("x"))
+de.appendChild(d.createElement("x"))
+de.appendChild(d.createElement("body"))
+
+// Should be enough of them in order for styling to be paralelizable.
+for (var i = 0; i < 100; ++i)
+  de.appendChild(d.createElement("x"))
+
+var t = d.createElement("x")
+de.appendChild(t)
+t.appendChild(d.createElement("table"))
+</script>
