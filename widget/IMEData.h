@@ -409,6 +409,10 @@ struct InputContextAction final
     }
   }
 
+  bool IsUserAction() const {
+    return IsUserAction(mCause);
+  }
+
   InputContextAction()
     : mCause(CAUSE_UNKNOWN)
     , mFocusChange(FOCUS_NOT_CHANGED)

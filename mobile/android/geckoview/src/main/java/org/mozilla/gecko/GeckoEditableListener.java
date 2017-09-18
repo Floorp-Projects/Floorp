@@ -37,7 +37,7 @@ interface GeckoEditableListener {
     int IME_STATE_PLUGIN = 3;
 
     void notifyIME(int type);
-    void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint, boolean inPrivateBrowsing);
+    void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint, boolean inPrivateBrowsing, boolean isUserAction);
     void onSelectionChange();
     void onTextChange();
     void onDefaultKeyEvent(KeyEvent event);
