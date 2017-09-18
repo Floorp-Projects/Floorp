@@ -22,6 +22,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsChangeHint.h"
 #include "nsIAtom.h"
+#include "nsIMemoryReporter.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -612,6 +613,15 @@ private:
   RefPtr<nsBindingManager> mBindingManager;
 
   static ServoStyleSet* sInServoTraversal;
+};
+
+class UACacheReporter final : public nsIMemoryReporter
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
+
+private:
+  ~UACacheReporter() {}
 };
 
 } // namespace mozilla
