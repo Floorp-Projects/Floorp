@@ -25,9 +25,10 @@ TabSource.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITabSource]),
 
   getTabToStream: function() {
-    let app = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
-    let tabs = app.tabs;
-    if (tabs == null || tabs.length == 0) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let app = win && win.BrowserApp;
+    let tabs = app && app.tabs;
+    if (!tabs || tabs.length == 0) {
       Services.console.logStringMessage("ERROR: No tabs");
       return null;
     }
@@ -36,8 +37,8 @@ TabSource.prototype = {
     let title = bundle.GetStringFromName("tabshare.title")
 
     let prompt = new Prompt({
+      window: win,
       title: title,
-      window: null
     }).setSingleChoiceItems(tabs.map(function(tab) {
       let label;
       if (tab.browser.contentTitle)
