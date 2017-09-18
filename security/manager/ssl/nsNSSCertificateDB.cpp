@@ -768,13 +768,20 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t* data, uint32_t length,
     DisplayCertificateAlert(ctx, "UserCertImported", certToShow, locker);
   }
 
+  nsresult rv = NS_OK;
   int numCACerts = collectArgs->numcerts - 1;
   if (numCACerts) {
     SECItem* caCerts = collectArgs->rawCerts + 1;
-    return ImportValidCACerts(numCACerts, caCerts, ctx, locker);
+    rv = ImportValidCACerts(numCACerts, caCerts, ctx, locker);
   }
 
-  return NS_OK;
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "psm:user-certificate-added", nullptr);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -811,6 +818,13 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
                                                     nullptr);
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("cert deleted: %d", srv));
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "psm:user-certificate-deleted", nullptr);
+  }
+
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
@@ -990,7 +1004,15 @@ nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile)
 
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
-  return blob.ImportFromFile(aFile);
+  rv = blob.ImportFromFile(aFile);
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (NS_SUCCEEDED(rv) && observerService) {
+    observerService->NotifyObservers(nullptr, "psm:user-certificate-added", nullptr);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
