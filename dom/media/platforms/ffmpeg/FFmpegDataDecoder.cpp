@@ -38,22 +38,22 @@ FFmpegDataDecoder<LIBAV_VER>::~FFmpegDataDecoder()
   MOZ_COUNT_DTOR(FFmpegDataDecoder);
 }
 
-nsresult
+MediaResult
 FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
 {
   FFMPEG_LOG("Initialising FFmpeg decoder.");
 
   AVCodec* codec = FindAVCodec(mLib, mCodecID);
   if (!codec) {
-    NS_WARNING("Couldn't find ffmpeg decoder");
-    return NS_ERROR_FAILURE;
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Couldn't find ffmpeg decoder"));
   }
 
   StaticMutexAutoLock mon(sMonitor);
 
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
-    NS_WARNING("Couldn't init ffmpeg context");
-    return NS_ERROR_FAILURE;
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                       RESULT_DETAIL("Couldn't init ffmpeg context"));
   }
 
   mCodecContext->opaque = this;
@@ -75,10 +75,10 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
   }
 
   if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
-    NS_WARNING("Couldn't initialise ffmpeg decoder");
     mLib->avcodec_close(mCodecContext);
     mLib->av_freep(&mCodecContext);
-    return NS_ERROR_FAILURE;
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Couldn't initialise ffmpeg decoder"));
   }
 
   FFMPEG_LOG("FFmpeg init successful.");

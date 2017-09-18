@@ -86,6 +86,7 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--screenshot-on-fail",
                 "--cleanup-crashes",
+                "--marionette-startup-timeout=180",
                 "--work-path=%(abs_work_dir)s",
             ],
             "run_filename": "runtests.py",

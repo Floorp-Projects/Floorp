@@ -1692,7 +1692,6 @@ or run without that action (ie: --no-{action})"
             'multi_locale/%s_%s.json' % (branch, multi_config_pf),
             '--config-file',
             'multi_locale/android-mozharness-build.json',
-            '--merge-locales',
             '--pull-locale-source',
             '--add-locales',
             '--package-multi',
