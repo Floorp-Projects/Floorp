@@ -26,3 +26,5 @@ jobs:
     symbol: I(agb)
   index-task:
     symbol: I(idx)
+  funsize-update-generator:
+    symbol: I(pg)

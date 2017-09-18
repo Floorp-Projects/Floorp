@@ -166,6 +166,10 @@ public class ThemedListView extends android.widget.ListView
         return new ColorDrawable(ContextCompat.getColor(getContext(), id));
     }
 
+    public ColorStateList getDrawableColors() {
+        return drawableColors;
+    }
+
     protected LightweightTheme getTheme() {
         return theme;
     }
