@@ -3,6 +3,7 @@
 
 function frameScript() {
   function getSelectedText() {
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let frame = this.content.frames[0].frames[1];
     let Ci = Components.interfaces;
     let docShell = frame.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -135,4 +136,3 @@ add_task(async function testDuplicatePinnedTab() {
   is(message.data.rect.top, top, `rect.top: - Expected: ${message.data.rect.top}, Actual: ${top}`);
   is(message.data.rect.left, left, `rect.left: - Expected: ${message.data.rect.left}, Actual: ${left}`);
 });
-
