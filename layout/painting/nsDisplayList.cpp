@@ -6194,10 +6194,15 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
   // usually never have their own clip because during display item creation
   // time we propagated the clip to our contents, so maybe we should just
   // remove the clip parameter from ApplyOpacity completely.
-  DisplayItemClipChain clip { GetClip(), mActiveScrolledRoot, nullptr };
+  const DisplayItemClipChain* clip = nullptr;
+
+  if (mClip) {
+    clip = aBuilder->AllocateDisplayItemClipChain(*mClip, mActiveScrolledRoot,
+                                                  nullptr);
+  }
 
   for (uint32_t i = 0; i < childCount; i++) {
-    children[i].item->ApplyOpacity(aBuilder, mOpacity, mClip ? &clip : nullptr);
+    children[i].item->ApplyOpacity(aBuilder, mOpacity, clip);
   }
 
   return true;
