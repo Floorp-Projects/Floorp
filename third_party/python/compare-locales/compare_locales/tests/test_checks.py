@@ -6,7 +6,7 @@
 import unittest
 
 from compare_locales.checks import getChecker
-from compare_locales.parser import getParser, Parser, Entity
+from compare_locales.parser import getParser, Parser, DTDEntity
 from compare_locales.paths import File
 
 
@@ -19,19 +19,15 @@ class BaseHelper(unittest.TestCase):
         p.readContents(self.refContent)
         self.refList, self.refMap = p.parse()
 
-    def _test(self, content, refWarnOrErrors, with_ref_file=False):
+    def _test(self, content, refWarnOrErrors):
         p = getParser(self.file.file)
         p.readContents(content)
         l10n = [e for e in p]
         assert len(l10n) == 1
         l10n = l10n[0]
-        if with_ref_file:
-            kwargs = {
-                'reference': self.refList
-            }
-        else:
-            kwargs = {}
-        checker = getChecker(self.file, **kwargs)
+        checker = getChecker(self.file)
+        if checker.needs_reference:
+            checker.set_reference(self.refList)
         ref = self.refList[self.refMap[l10n.key]]
         found = tuple(checker.check(ref, l10n))
         self.assertEqual(found, refWarnOrErrors)
@@ -184,28 +180,24 @@ class TestEntitiesInDTDs(BaseHelper):
 '''
 
     def testOK(self):
-        self._test('''<!ENTITY ent.start "Mit &brandShorterName;">''', tuple(),
-                   with_ref_file=True)
+        self._test('''<!ENTITY ent.start "Mit &brandShorterName;">''', tuple())
 
     def testMismatch(self):
         self._test('''<!ENTITY ent.start "Mit &brandShortName;">''',
                    (('warning', (0, 0),
                      'Entity brandShortName referenced, '
                      'but brandShorterName used in context',
-                     'xmlparse'),),
-                   with_ref_file=True)
+                     'xmlparse'),))
 
     def testAcross(self):
         self._test('''<!ENTITY ent.end "Mit &brandShorterName;">''',
-                   tuple(),
-                   with_ref_file=True)
+                   tuple())
 
     def testAcrossWithMismatch(self):
         '''If we could tell that ent.start and ent.end are one string,
         we should warn. Sadly, we can't, so this goes without warning.'''
         self._test('''<!ENTITY ent.end "Mit &brandShortName;">''',
-                   tuple(),
-                   with_ref_file=True)
+                   tuple())
 
     def testUnknownWithRef(self):
         self._test('''<!ENTITY ent.start "Mit &foopy;">''',
@@ -214,8 +206,7 @@ class TestEntitiesInDTDs(BaseHelper):
                      'Referencing unknown entity `foopy` '
                      '(brandShorterName used in context, '
                      'brandShortName known)',
-                     'xmlparse'),),
-                   with_ref_file=True)
+                     'xmlparse'),))
 
     def testUnknown(self):
         self._test('''<!ENTITY ent.end "Mit &foopy;">''',
@@ -223,8 +214,7 @@ class TestEntitiesInDTDs(BaseHelper):
                      (0, 0),
                      'Referencing unknown entity `foopy`'
                      ' (brandShortName, brandShorterName known)',
-                     'xmlparse'),),
-                   with_ref_file=True)
+                     'xmlparse'),))
 
 
 class TestAndroid(unittest.TestCase):
@@ -240,16 +230,17 @@ class TestAndroid(unittest.TestCase):
 
     def getEntity(self, v):
         ctx = Parser.Context(v)
-        return Entity(ctx, lambda s: s, '', (0, len(v)), (), (), (),
-                      (0, len(v)), ())
+        return DTDEntity(
+            ctx, '', (0, len(v)), (), (), (), (0, len(v)), ())
 
     def getDTDEntity(self, v):
         v = v.replace('"', '&quot;')
         ctx = Parser.Context('<!ENTITY foo "%s">' % v)
-        return Entity(ctx,
-                      lambda s: s, '',
-                      (0, len(v) + 16), (), (), (9, 12),
-                      (14, len(v) + 14), ())
+        return DTDEntity(
+            ctx,
+            '',
+            (0, len(v) + 16), (), (), (9, 12),
+            (14, len(v) + 14), ())
 
     def test_android_dtd(self):
         """Testing the actual android checks. The logic is involved,
@@ -257,7 +248,7 @@ class TestAndroid(unittest.TestCase):
         """
         f = File("embedding/android/strings.dtd", "strings.dtd",
                  "embedding/android")
-        checker = getChecker(f)
+        checker = getChecker(f, extra_tests=['android-dtd'])
         # good string
         ref = self.getDTDEntity("plain string")
         l10n = self.getDTDEntity("plain localized string")
@@ -333,7 +324,7 @@ class TestAndroid(unittest.TestCase):
     def test_android_prop(self):
         f = File("embedding/android/strings.properties", "strings.properties",
                  "embedding/android")
-        checker = getChecker(f)
+        checker = getChecker(f, extra_tests=['android-dtd'])
         # good plain string
         ref = self.getEntity("plain string")
         l10n = self.getEntity("plain localized string")
@@ -381,7 +372,8 @@ class TestAndroid(unittest.TestCase):
         p = getParser(f.file)
         p.readContents('<!ENTITY other "some &good.ref;">')
         ref = p.parse()
-        checker = getChecker(f, reference=ref[0])
+        checker = getChecker(f)
+        checker.set_reference(ref[0])
         # good string
         ref = self.getDTDEntity("plain string")
         l10n = self.getDTDEntity("plain localized string")
