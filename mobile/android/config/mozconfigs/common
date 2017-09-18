@@ -10,27 +10,19 @@ fi
 MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/mozconfig.common"
 
-# For actual Android builds in TaskCluster, the system image is Debian,
-# and we use the Java JRE/JDK from the system, as well as the system
-# GCC for the host compiler.  l10n builds are still special, however:
-# they are run on older CentOS systems, and l10n builds on release are
-# still run on Buildbot.  So we have to set things up so this mozconfig
-# works in all cases.
-if [ -f /etc/debian_version ]; then
-    # We're on Debian, there's nothing to do.
-    true
-elif [ ! -f /etc/redhat-release ] || [ "$(< /etc/redhat-release)" != "CentOS release 6.2 (Final)" ]; then
+# In TaskCluster, the Java JRE/JDK are installed from tooltool, but that
+# install doesn't work on the old Buildbot mock builders (CentOS 6.2), so
+# the relevant env vars are not set up in that case, leaving the build to
+# run from the JRE/JDK in /usr/lib/jvm.
+if [ ! -f /etc/redhat-release ] || [ "$(< /etc/redhat-release)" != "CentOS release 6.2 (Final)" ]; then
     # set JAVA_HOME to find the JRE/JDK from tooltool.  Several scripts in the JDK
     # assume `java` is in PATH, so set that too.  To see how this tarball is built,
-    # see taskcluster/scripts/builder/build-android-dependencies/repackage-jdk-centos.sh
+    # see taskcluster/scripts/misc/repackage-jdk.sh
     export JAVA_HOME="$topsrcdir/java_home"
     export PATH="$PATH:$topsrcdir/java_home/bin"
 
     mk_add_options "export JAVA_HOME=$topsrcdir/java_home"
     mk_add_options "export PATH=$PATH:$topsrcdir/java_home/bin"
-
-    HOST_CC="$topsrcdir/gcc/bin/gcc"
-    HOST_CXX="$topsrcdir/gcc/bin/g++"
 fi
 
 ac_add_options --enable-elf-hack
@@ -105,6 +97,11 @@ export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
+
+# Use ccache
+
+HOST_CC="$topsrcdir/gcc/bin/gcc"
+HOST_CXX="$topsrcdir/gcc/bin/g++"
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 
