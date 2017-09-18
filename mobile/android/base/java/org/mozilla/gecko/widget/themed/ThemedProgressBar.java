@@ -166,6 +166,10 @@ public class ThemedProgressBar extends android.widget.ProgressBar
         return new ColorDrawable(ContextCompat.getColor(getContext(), id));
     }
 
+    public ColorStateList getDrawableColors() {
+        return drawableColors;
+    }
+
     protected LightweightTheme getTheme() {
         return theme;
     }

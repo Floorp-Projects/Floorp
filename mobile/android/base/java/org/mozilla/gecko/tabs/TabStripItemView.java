@@ -15,8 +15,12 @@ import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -112,6 +116,13 @@ public class TabStripItemView extends ThemedLinearLayout
 
         this.checked = checked;
         refreshDrawableState();
+
+        // Tint the close view based on current checked status.
+        final ColorStateList colorStateList = closeView.getDrawableColors();
+        final int tintColor = colorStateList.getColorForState(getDrawableState(), Color.TRANSPARENT);
+        final Drawable drawable = DrawableCompat.wrap(closeView.getDrawable());
+        DrawableCompat.setTint(drawable, tintColor);
+        closeView.setImageDrawable(drawable);
     }
 
     @Override
