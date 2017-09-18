@@ -391,6 +391,19 @@ function run() {
   should_not_apply("(aspect-ratio: 5900/7999)");
   should_apply("(aspect-ratio)");
 
+  // Test "unreasonable", but still valid aspect ratios, such as aspect ratios with negative numbers,
+  // and zeros, and with numbers near 2^32 and 2^64 (to check overflow).
+  should_not_apply("(aspect-ratio: 0/1)");
+  should_not_apply("(aspect-ratio: 1/0)");
+  should_not_apply("(aspect-ratio: -1/1)");
+  should_not_apply("(aspect-ratio: 1/-1)");
+  should_not_apply("(aspect-ratio: -1/-1)");
+  should_not_apply("(aspect-ratio: -59/-80)");
+  should_not_apply("(aspect-ratio: 4294967295/4294967295)");
+  should_not_apply("(aspect-ratio: 4294967297/4294967297)");
+  should_not_apply("(aspect-ratio: 18446744073709560000/18446744073709560000)");
+
+  // Test min and max aspect ratios.
   should_apply("(min-aspect-ratio: 59/80)");
   should_apply("(min-aspect-ratio: 58/80)");
   should_apply("(min-aspect-ratio: 59/81)");
