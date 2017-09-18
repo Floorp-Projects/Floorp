@@ -5159,32 +5159,34 @@ CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, cons
     }
 
     // Check that we have a valid GC pointer.
-    saveVolatile();
-    masm.setupUnalignedABICall(temp);
-    masm.loadJSContext(temp);
-    masm.passABIArg(temp);
-    masm.passABIArg(input);
+    if (JitOptions.fullDebugChecks) {
+        saveVolatile();
+        masm.setupUnalignedABICall(temp);
+        masm.loadJSContext(temp);
+        masm.passABIArg(temp);
+        masm.passABIArg(input);
 
-    void* callee;
-    switch (type) {
-      case MIRType::Object:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectPtr);
-        break;
-      case MIRType::ObjectOrNull:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectOrNullPtr);
-        break;
-      case MIRType::String:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidStringPtr);
-        break;
-      case MIRType::Symbol:
-        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidSymbolPtr);
-        break;
-      default:
-        MOZ_CRASH();
+        void* callee;
+        switch (type) {
+          case MIRType::Object:
+            callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectPtr);
+            break;
+          case MIRType::ObjectOrNull:
+            callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectOrNullPtr);
+            break;
+          case MIRType::String:
+            callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidStringPtr);
+            break;
+          case MIRType::Symbol:
+            callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidSymbolPtr);
+            break;
+          default:
+            MOZ_CRASH();
+        }
+
+        masm.callWithABI(callee);
+        restoreVolatile();
     }
-
-    masm.callWithABI(callee);
-    restoreVolatile();
 
     masm.bind(&done);
     masm.pop(temp);
@@ -5228,18 +5230,20 @@ CodeGenerator::emitAssertResultV(const ValueOperand input, const TemporaryTypeSe
     }
 
     // Check that we have a valid GC pointer.
-    saveVolatile();
+    if (JitOptions.fullDebugChecks) {
+        saveVolatile();
 
-    masm.pushValue(input);
-    masm.moveStackPtrTo(temp1);
+        masm.pushValue(input);
+        masm.moveStackPtrTo(temp1);
 
-    masm.setupUnalignedABICall(temp2);
-    masm.loadJSContext(temp2);
-    masm.passABIArg(temp2);
-    masm.passABIArg(temp1);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, AssertValidValue));
-    masm.popValue(input);
-    restoreVolatile();
+        masm.setupUnalignedABICall(temp2);
+        masm.loadJSContext(temp2);
+        masm.passABIArg(temp2);
+        masm.passABIArg(temp1);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, AssertValidValue));
+        masm.popValue(input);
+        restoreVolatile();
+    }
 
     masm.bind(&done);
     masm.pop(temp2);
@@ -5466,10 +5470,8 @@ CodeGenerator::generateBody()
                 extendTrackedOptimizationsEntry(iter->mirRaw()->trackedOptimizations());
 
 #ifdef DEBUG
-            if (!counts) {
-                if (JitOptions.fullDebugChecks)
-                    emitDebugResultChecks(*iter);
-            }
+            if (!counts)
+                emitDebugResultChecks(*iter);
 #endif
         }
         if (masm.oom())
