@@ -12,6 +12,8 @@
 #include "VorbisUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/SystemGroup.h"
+#include "mozilla/TaskCategory.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 #include "nsCharSeparatedTokenizer.h"

@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "ChannelMediaResource.h"
+#include "CloneableWithRangeMediaResource.h"
 #include "DecoderTraits.h"
 #include "FileMediaResource.h"
 #include "MediaResource.h"
@@ -31,6 +32,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include <algorithm>
 #include "nsProxyRelease.h"
+#include "nsICloneableInputStream.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/ErrorNames.h"
 
@@ -122,6 +124,16 @@ BaseMediaResource::Create(MediaResourceCallback* aCallback,
     if (seekableStream) {
       RefPtr<BaseMediaResource> resource =
         new FileMediaResource(aCallback, aChannel, uri, size);
+      return resource.forget();
+    }
+
+    // Maybe this blob URL can be cloned with a range.
+    nsCOMPtr<nsICloneableInputStreamWithRange> cloneableWithRange =
+      do_QueryInterface(stream);
+    if (cloneableWithRange) {
+      RefPtr<BaseMediaResource> resource =
+        new CloneableWithRangeMediaResource(aCallback, aChannel, uri, stream,
+                                            size);
       return resource.forget();
     }
   }
