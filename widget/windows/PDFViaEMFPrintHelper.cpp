@@ -87,9 +87,8 @@ PDFViaEMFPrintHelper::RenderPageToDC(HDC aDC, unsigned int aPageIndex,
   FPDF_PAGE pdfPage = mPDFiumEngine->LoadPage(mPDFDoc, aPageIndex);
   NS_ENSURE_TRUE(pdfPage, false);
 
-  int dcWidth = ::GetDeviceCaps(aDC, HORZRES);
-  int dcHeight = ::GetDeviceCaps(aDC, VERTRES);
-  float scaleFactor = ComputeScaleFactor(dcWidth,dcHeight,
+  float scaleFactor = ComputeScaleFactor(::GetDeviceCaps(aDC, HORZRES),
+                                         ::GetDeviceCaps(aDC, VERTRES),
                                          aPageWidth, aPageHeight);
   int savedState = ::SaveDC(aDC);
   ::SetGraphicsMode(aDC, GM_ADVANCED);
