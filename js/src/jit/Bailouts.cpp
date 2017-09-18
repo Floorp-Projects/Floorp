@@ -29,8 +29,6 @@ using mozilla::IsInRange;
 uint32_t
 jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     JSContext* cx = TlsContext.get();
     MOZ_ASSERT(bailoutInfo);
 
@@ -106,8 +104,6 @@ uint32_t
 jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
                          BaselineBailoutInfo** bailoutInfo)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     sp->checkInvariants();
 
     JSContext* cx = TlsContext.get();
