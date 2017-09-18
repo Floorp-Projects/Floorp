@@ -76,18 +76,9 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 nsresult
 FileBlockCache::Init()
 {
-  MutexAutoLock mon(mDataMutex);
-  if (mThread) {
-    LOG("Init() again");
-    // Just discard pending changes, assume MediaCache won't read from
-    // blocks it hasn't written to.
-    mChangeIndexList.clear();
-    mBlockChanges.Clear();
-    return NS_OK;
-  }
-
   LOG("Init()");
-
+  MutexAutoLock mon(mDataMutex);
+  MOZ_ASSERT(!mThread);
   nsresult rv = NS_NewNamedThread("FileBlockCache",
                                   getter_AddRefs(mThread),
                                   nullptr,
@@ -122,6 +113,18 @@ FileBlockCache::Init()
   }
 
   return rv;
+}
+
+void
+FileBlockCache::Flush()
+{
+  LOG("Flush()");
+  MutexAutoLock mon(mDataMutex);
+  MOZ_ASSERT(mThread);
+  // Just discard pending changes, assume MediaCache won't read from
+  // blocks it hasn't written to.
+  mChangeIndexList.clear();
+  mBlockChanges.Clear();
 }
 
 int32_t
