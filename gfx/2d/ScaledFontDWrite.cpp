@@ -296,14 +296,16 @@ bool
 ScaledFontDWrite::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 {
   InstanceData instance(this);
-  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance), aBaton);
+  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance), nullptr, 0, aBaton);
   return true;
 }
 
 already_AddRefed<ScaledFont>
 UnscaledFontDWrite::CreateScaledFont(Float aGlyphSize,
                                      const uint8_t* aInstanceData,
-                                     uint32_t aInstanceDataLength)
+                                     uint32_t aInstanceDataLength,
+                                     const FontVariation* aVariations,
+                                     uint32_t aNumVariations)
 {
   if (aInstanceDataLength < sizeof(ScaledFontDWrite::InstanceData)) {
     gfxWarning() << "DWrite scaled font instance data is truncated.";
