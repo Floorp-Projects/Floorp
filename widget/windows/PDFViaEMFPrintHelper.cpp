@@ -142,7 +142,7 @@ PDFViaEMFPrintHelper::DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
   NS_ENSURE_TRUE(result, false);
 
   RECT printRect = {0, 0, aPageWidth, aPageHeight};
-  result = emf.Playback(aPrinterDC, &printRect);
+  result = emf.Playback(aPrinterDC, printRect);
   return result;
 }
 
