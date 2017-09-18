@@ -26,6 +26,9 @@
     <color name="colorMultitasking">@color/photonBlue50</color>
     <color name="colorMultitaskingPressed">@color/photonBlue60</color>
 
+    <color name="colorSheetSessionBackground">#fff9f9fa</color>
+    <color name="colorSheetSessionBackgroundPressed">#ffededf0</color>
+
     <color name="colorOverlay">#cc000000</color>
 
     <color name="colorTextInactive">#80FFFFFF</color>
@@ -45,7 +48,6 @@
 
     <color name="add_to_homescreen_button_text">@color/photonBlue50</color>
     <color name="add_to_homescreen_text">#FFFFFF</color>
-
 
     <color name="firefoxInstallHint">@color/photonMagenta70</color>
 </resources>
