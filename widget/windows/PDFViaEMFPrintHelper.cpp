@@ -115,6 +115,15 @@ bool
 PDFViaEMFPrintHelper::DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
                                int aPageWidth, int aPageHeight)
 {
+  MOZ_ASSERT(aPrinterDC);
+
+  // OpenDocument might fail.
+  if (!mPDFDoc) {
+    MOZ_ASSERT_UNREACHABLE("Make sure OpenDocument return true before"
+                           "using DrawPage.");
+    return false;
+  }
+
   // There is a comment in Chromium.
   // https://cs.chromium.org/chromium/src/pdf/pdfium/pdfium_engine.cc?rcl=9ad9f6860b4d6a4ec7f7f975b2c99672e02d5d49&l=4008
   // Some PDFs seems to render very slowly if RenderPageToDC is directly used
@@ -125,7 +134,6 @@ PDFViaEMFPrintHelper::DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
   // whether our approach will avoid the performance issues though.  Bug
   // 1359298 covers investigating that.
 
-  MOZ_ASSERT(aPrinterDC);
   WindowsEMF emf;
   bool result = emf.InitForDrawing();
   NS_ENSURE_TRUE(result, false);
@@ -143,6 +151,13 @@ PDFViaEMFPrintHelper::DrawPageToFile(const wchar_t* aFilePath,
                                      unsigned int aPageIndex,
                                      int aPageWidth, int aPageHeight)
 {
+  // OpenDocument might fail.
+  if (!mPDFDoc) {
+    MOZ_ASSERT_UNREACHABLE("Make sure OpenDocument return true before"
+                           "using DrawPageToFile.");
+    return false;
+  }
+
   WindowsEMF emf;
   bool result = emf.InitForDrawing(aFilePath);
   NS_ENSURE_TRUE(result, false);
