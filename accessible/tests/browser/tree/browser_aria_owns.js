@@ -158,6 +158,14 @@ addAccessibleTask(`
   }
 );
 
+// Don't crash if ID in aria-owns does not exist
+addAccessibleTask(`
+  <select id="container" aria-owns="boom" multiple></select>`,
+  async function(browser, accDoc) {
+    ok(true, "Did not crash");
+  }
+);
+
 addAccessibleTask(`
   <ul id="one">
     <li id="a">Test</li>
