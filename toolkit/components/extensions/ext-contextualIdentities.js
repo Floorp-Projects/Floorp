@@ -19,6 +19,7 @@ const CONTAINER_PREF_INSTALL_DEFAULTS = {
   "privacy.userContext.longPressBehavior": 2,
   "privacy.userContext.ui.enabled": true,
   "privacy.usercontext.about_newtab_segregation.enabled": true,
+  "privacy.userContext.extension": undefined,
 };
 
 const CONTAINERS_ENABLED_SETTING_NAME = "privacy.containers";
@@ -108,8 +109,10 @@ ExtensionPreferencesManager.addSetting(CONTAINERS_ENABLED_SETTING_NAME, {
   prefNames: Object.keys(CONTAINER_PREF_INSTALL_DEFAULTS),
 
   setCallback(value) {
-    if (value === true) {
-      return CONTAINER_PREF_INSTALL_DEFAULTS;
+    if (value !== true) {
+      return Object.assign(CONTAINER_PREF_INSTALL_DEFAULTS, {
+        "privacy.userContext.extension": value,
+      });
     }
 
     let prefs = {};
@@ -125,7 +128,7 @@ this.contextualIdentities = class extends ExtensionAPI {
     let {extension} = this;
 
     if (extension.hasPermission("contextualIdentities")) {
-      ExtensionPreferencesManager.setSetting(extension, CONTAINERS_ENABLED_SETTING_NAME, true);
+      ExtensionPreferencesManager.setSetting(extension, CONTAINERS_ENABLED_SETTING_NAME, extension.id);
     }
   }
 
