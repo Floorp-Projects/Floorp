@@ -13,13 +13,13 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
+import android.preference.SwitchPreference;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -86,17 +86,10 @@ public class FxAccountStatusFragment
 
   private static final String[] STAGES_TO_SYNC_ON_DEVICE_NAME_CHANGE = new String[] { "clients" };
 
-  // By default, the auth/account server preference is only shown when the
-  // account is configured to use a custom server. In debug mode, this is set.
-  private static boolean ALWAYS_SHOW_AUTH_SERVER = false;
+  protected PreferenceCategory additionalSettingsCategory;
+  protected PreferenceCategory errorStatesCategory;
 
-  // By default, the Sync server preference is only shown when the account is
-  // configured to use a custom Sync server. In debug mode, this is set.
-  private static boolean ALWAYS_SHOW_SYNC_SERVER = false;
-
-  protected PreferenceCategory accountCategory;
   protected Preference profilePreference;
-  protected Preference manageAccountPreference;
   protected Preference authServerPreference;
   protected Preference removeAccountPreference;
 
@@ -106,17 +99,13 @@ public class FxAccountStatusFragment
   protected Preference needsMasterSyncAutomaticallyEnabledPreference;
   protected Preference needsFinishMigratingPreference;
 
-  protected PreferenceCategory syncCategory;
-
-  protected CheckBoxPreference bookmarksPreference;
-  protected CheckBoxPreference historyPreference;
-  protected CheckBoxPreference tabsPreference;
-  protected CheckBoxPreference passwordsPreference;
-  protected CheckBoxPreference readingListPreference;
+  protected SwitchPreference bookmarksPreference;
+  protected SwitchPreference historyPreference;
+  protected SwitchPreference tabsPreference;
+  protected SwitchPreference passwordsPreference;
 
   protected EditTextPreference deviceNamePreference;
   protected Preference syncServerPreference;
-  protected Preference morePreference;
   protected Preference syncNowPreference;
 
   protected volatile AndroidFxAccount fxAccount;
@@ -165,9 +154,10 @@ public class FxAccountStatusFragment
   protected void addPreferences() {
     addPreferencesFromResource(R.xml.fxaccount_status_prefscreen);
 
-    accountCategory = (PreferenceCategory) ensureFindPreference("signed_in_as_category");
+    errorStatesCategory = (PreferenceCategory) ensureFindPreference("error_state");
+    additionalSettingsCategory = (PreferenceCategory) ensureFindPreference("additional_settings");
+
     profilePreference = ensureFindPreference("profile");
-    manageAccountPreference = ensureFindPreference("manage_account");
     authServerPreference = ensureFindPreference("auth_server");
     removeAccountPreference = ensureFindPreference("remove_account");
 
@@ -177,23 +167,12 @@ public class FxAccountStatusFragment
     needsMasterSyncAutomaticallyEnabledPreference = ensureFindPreference("needs_master_sync_automatically_enabled");
     needsFinishMigratingPreference = ensureFindPreference("needs_finish_migrating");
 
-    syncCategory = (PreferenceCategory) ensureFindPreference("sync_category");
-
-    bookmarksPreference = (CheckBoxPreference) ensureFindPreference("bookmarks");
-    historyPreference = (CheckBoxPreference) ensureFindPreference("history");
-    tabsPreference = (CheckBoxPreference) ensureFindPreference("tabs");
-    passwordsPreference = (CheckBoxPreference) ensureFindPreference("passwords");
-
-    if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
-      removeDebugButtons();
-    } else {
-      connectDebugButtons();
-      ALWAYS_SHOW_AUTH_SERVER = true;
-      ALWAYS_SHOW_SYNC_SERVER = true;
-    }
+    bookmarksPreference = (SwitchPreference) ensureFindPreference("bookmarks");
+    historyPreference = (SwitchPreference) ensureFindPreference("history");
+    tabsPreference = (SwitchPreference) ensureFindPreference("tabs");
+    passwordsPreference = (SwitchPreference) ensureFindPreference("passwords");
 
     profilePreference.setOnPreferenceClickListener(this);
-    manageAccountPreference.setOnPreferenceClickListener(this);
     removeAccountPreference.setOnPreferenceClickListener(this);
 
     needsPasswordPreference.setOnPreferenceClickListener(this);
@@ -209,12 +188,18 @@ public class FxAccountStatusFragment
     deviceNamePreference.setOnPreferenceChangeListener(this);
 
     syncServerPreference = ensureFindPreference("sync_server");
-    morePreference = ensureFindPreference("more");
-    morePreference.setOnPreferenceClickListener(this);
 
     syncNowPreference = ensureFindPreference("sync_now");
     syncNowPreference.setEnabled(true);
     syncNowPreference.setOnPreferenceClickListener(this);
+
+    if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+      removeDebugButtons();
+    } else {
+      connectDebugButtons();
+    }
+
+    updateAdditionalPreferences();
 
     ensureFindPreference("linktos").setOnPreferenceClickListener(this);
     ensureFindPreference("linkprivacy").setOnPreferenceClickListener(this);
@@ -232,11 +217,6 @@ public class FxAccountStatusFragment
   @Override
   public boolean onPreferenceClick(Preference preference) {
     if (preference == profilePreference) {
-      ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), "about:accounts?action=avatar");
-      return true;
-    }
-
-    if (preference == manageAccountPreference) {
       ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), "about:accounts?action=manage");
       return true;
     }
@@ -287,11 +267,6 @@ public class FxAccountStatusFragment
       return true;
     }
 
-    if (preference == morePreference) {
-      getActivity().openOptionsMenu();
-      return true;
-    }
-
     if (preference == syncNowPreference) {
       if (fxAccount != null) {
         fxAccount.requestImmediateSync(null, null);
@@ -329,6 +304,22 @@ public class FxAccountStatusFragment
    *          single error preference to show; if null, hide all error preferences
    */
   protected void showOnlyOneErrorPreference(Preference errorPreferenceToShow) {
+    final PreferenceScreen statusScreen = (PreferenceScreen) ensureFindPreference("status_screen");
+    final boolean showShowErrorState = errorPreferenceToShow != null;
+    final boolean currentlyShowingErrorState = null != findPreference(errorStatesCategory.getKey());
+
+    if (currentlyShowingErrorState != showShowErrorState) {
+      if (showShowErrorState) {
+        statusScreen.addPreference(errorStatesCategory);
+      } else {
+        statusScreen.removePreference(errorStatesCategory);
+      }
+    }
+
+    if (!showShowErrorState) {
+      return;
+    }
+
     final Preference[] errorPreferences = new Preference[] {
         this.needsPasswordPreference,
         this.needsUpgradePreference,
@@ -337,39 +328,35 @@ public class FxAccountStatusFragment
         this.needsFinishMigratingPreference,
     };
     for (Preference errorPreference : errorPreferences) {
-      final boolean currentlyShown = null != findPreference(errorPreference.getKey());
+      final boolean currentlyShown = null != errorStatesCategory.findPreference(errorPreference.getKey());
       final boolean shouldBeShown = errorPreference == errorPreferenceToShow;
       if (currentlyShown == shouldBeShown) {
         continue;
       }
       if (shouldBeShown) {
-        syncCategory.addPreference(errorPreference);
+        errorStatesCategory.addPreference(errorPreference);
       } else {
-        syncCategory.removePreference(errorPreference);
+        errorStatesCategory.removePreference(errorPreference);
       }
     }
   }
 
   protected void showNeedsPassword() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync);
     showOnlyOneErrorPreference(needsPasswordPreference);
     setCheckboxesEnabled(false);
   }
 
   protected void showNeedsUpgrade() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync);
     showOnlyOneErrorPreference(needsUpgradePreference);
     setCheckboxesEnabled(false);
   }
 
   protected void showNeedsVerification() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync);
     showOnlyOneErrorPreference(needsVerificationPreference);
     setCheckboxesEnabled(false);
   }
 
   protected void showNeedsMasterSyncAutomaticallyEnabled() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync);
     needsMasterSyncAutomaticallyEnabledPreference.setTitle(AppConstants.Versions.preLollipop ?
                                                    R.string.fxaccount_status_needs_master_sync_automatically_enabled :
                                                    R.string.fxaccount_status_needs_master_sync_automatically_enabled_v21);
@@ -378,19 +365,17 @@ public class FxAccountStatusFragment
   }
 
   protected void showNeedsFinishMigrating() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync);
     showOnlyOneErrorPreference(needsFinishMigratingPreference);
     setCheckboxesEnabled(false);
   }
 
   protected void showConnected() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync_enabled);
     showOnlyOneErrorPreference(null);
     setCheckboxesEnabled(true);
   }
 
-  protected class InnerSyncStatusDelegate implements SyncStatusListener {
-    protected final Runnable refreshRunnable = new Runnable() {
+  private class InnerSyncStatusDelegate implements SyncStatusListener {
+    /* package-private */ final Runnable refreshRunnable = new Runnable() {
       @Override
       public void run() {
         refresh();
@@ -519,8 +504,7 @@ public class FxAccountStatusFragment
     profileAvatarTarget = new PicassoPreferenceIconTarget(getResources(), profilePreference, cornerRadius);
 
     updateProfileInformation();
-    updateAuthServerPreference();
-    updateSyncServerPreference();
+    updateAdditionalPreferences();
 
     try {
       // There are error states determined by Android, not the login state
@@ -648,31 +632,52 @@ public class FxAccountStatusFragment
     handler.postDelayed(lastSyncedTimeUpdateRunnable, LAST_SYNCED_TIME_UPDATE_INTERVAL_IN_MILLISECONDS);
   }
 
-  protected void updateAuthServerPreference() {
+  private void updateAdditionalPreferences() {
+    // Ensure we have fxAccount; it's set in refresh().
+    if (fxAccount == null) {
+      return;
+    }
+
+    // In debug mode, everything is shown. Otherwise, we show those that have been customized.
     final String authServer = fxAccount.getAccountServerURI();
-    final boolean shouldBeShown = ALWAYS_SHOW_AUTH_SERVER || !FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT.equals(authServer);
-    final boolean currentlyShown = null != findPreference(authServerPreference.getKey());
-    if (currentlyShown != shouldBeShown) {
+    final String syncServer = fxAccount.getTokenServerURI();
+    final boolean inDebugMode = FxAccountUtils.LOG_PERSONAL_INFORMATION;
+    final boolean authServerCustomized = !FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT.equals(authServer);
+    final boolean syncServerCustomized = !FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT.equals(syncServer);
+
+    final boolean shouldBeShown = inDebugMode || authServerCustomized || syncServerCustomized;
+
+    final boolean additionalSettingsCategoryCurrentlyShown = null != findPreference(additionalSettingsCategory.getKey());
+    if (shouldBeShown != additionalSettingsCategoryCurrentlyShown) {
+      final PreferenceScreen statusScreen = (PreferenceScreen) ensureFindPreference("status_screen");
       if (shouldBeShown) {
-        accountCategory.addPreference(authServerPreference);
+        statusScreen.addPreference(additionalSettingsCategory);
       } else {
-        accountCategory.removePreference(authServerPreference);
+        statusScreen.removePreference(additionalSettingsCategory);
+        return;
+      }
+    }
+
+    final boolean showAuthServerPref = authServerCustomized || inDebugMode;
+    final boolean authServerPrefCurrentlyShown = null != findPreference(authServerPreference.getKey());
+    if (authServerPrefCurrentlyShown != showAuthServerPref) {
+      if (showAuthServerPref) {
+        additionalSettingsCategory.addPreference(authServerPreference);
+      } else {
+        additionalSettingsCategory.removePreference(authServerPreference);
       }
     }
     // Always set the summary, because on first run, the preference is visible,
     // and the above block will be skipped if there is a custom value.
     authServerPreference.setSummary(authServer);
-  }
 
-  protected void updateSyncServerPreference() {
-    final String syncServer = fxAccount.getTokenServerURI();
-    final boolean shouldBeShown = ALWAYS_SHOW_SYNC_SERVER || !FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT.equals(syncServer);
-    final boolean currentlyShown = null != findPreference(syncServerPreference.getKey());
-    if (currentlyShown != shouldBeShown) {
-      if (shouldBeShown) {
-        syncCategory.addPreference(syncServerPreference);
+    final boolean showSyncServerPref = syncServerCustomized || inDebugMode;
+    final boolean syncServerPrefCurrentlyShown = null != findPreference(syncServerPreference.getKey());
+    if (syncServerPrefCurrentlyShown != showSyncServerPref) {
+      if (showSyncServerPref) {
+        additionalSettingsCategory.addPreference(syncServerPreference);
       } else {
-        syncCategory.removePreference(syncServerPreference);
+        additionalSettingsCategory.removePreference(syncServerPreference);
       }
     }
     // Always set the summary, because on first run, the preference is visible,
