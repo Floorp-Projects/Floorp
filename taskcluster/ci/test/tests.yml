@@ -389,6 +389,11 @@ marionette:
         by-test-platform:
             android.*: 10
             default: 1
+    run-on-projects:
+        by-test-platform:
+            # Deactivate due to bug 1391545
+            macosx.*: ['try']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
