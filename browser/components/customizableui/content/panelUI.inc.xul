@@ -561,28 +561,27 @@
                        class="subviewbutton subviewbutton-iconic"
                        command="Browser:RestoreLastSession"/>
         <toolbarseparator/>
-        <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons">
+        <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons" closemenu="none">
           <label value="&fullZoom.label;"/>
           <toolbarbutton id="appMenu-zoomReduce-button"
                          class="subviewbutton subviewbutton-iconic"
                          command="cmd_fullZoomReduce"
-                         closemenu="none"
                          tooltip="dynamic-shortcut-tooltip"/>
           <toolbarbutton id="appMenu-zoomReset-button"
                          class="subviewbutton"
                          command="cmd_fullZoomReset"
-                         closemenu="none"
                          tooltip="dynamic-shortcut-tooltip"/>
           <toolbarbutton id="appMenu-zoomEnlarge-button"
                          class="subviewbutton subviewbutton-iconic"
                          command="cmd_fullZoomEnlarge"
-                         closemenu="none"
                          tooltip="dynamic-shortcut-tooltip"/>
           <toolbarseparator orient="vertical"/>
           <toolbarbutton id="appMenu-fullscreen-button"
                          class="subviewbutton subviewbutton-iconic"
                          observes="View:FullScreen"
                          type="checkbox"
+                         closemenu="auto"
+                         onclick="if (event.button == 0) this.closest('panel').hidePopup();"
                          tooltip="dynamic-shortcut-tooltip"/>
         </toolbaritem>
         <toolbarseparator/>
