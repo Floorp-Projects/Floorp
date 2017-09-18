@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Ni ne tro certas, kio ĵus okazis. Ĉu vi povus klopodi denove aŭ fari ekrankopion de alia paĝo?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Faru, konservu kaj dividu ekrankopiojn sen forlasi Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Nova maniero konservi ekrankopiojn"
+  },
+  "tourBodyPageAction": {
+    "message": "Kiam vi volas fari ekrankopion, iru al la menuo «Retpaĝaj agoj» en la adresa strio."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Kopiu nur tion, kion vi volas."
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Alklaku kaj trenu por kopii nur parton de paĝo. Vi povas ankaŭ ŝvebi por elstarigi vian elekton."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Kapti fenestrojn aŭ tutaj paĝojn"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Elektu la butonojn supre kaj dekstre por kapti la videblan areon en la fenestro aŭ por kapti tutan paĝon."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Kiel vi volas"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Konservu vian eltonditajn ekrankopiojn en la reto, por pli facile dividi ilin, aŭ elŝutu ilin al via komputilo. Vi ankaŭ povas alklaki la butonon 'Miaj ekrankopioj' por trovi ĉiujn ekrankopiojn faritajn de vi."
   },
   "tourSkip": {

@@ -1608,7 +1608,7 @@ DocAccessible::AddDependentIDsFor(Accessible* aRelProvider, nsIAtom* aRelAttr)
         break;
 
       nsIContent* dependentContent = iter.GetElem(id);
-      if (relAttr == nsGkAtoms::aria_owns &&
+      if (relAttr == nsGkAtoms::aria_owns && dependentContent &&
           !aRelProvider->IsAcceptableChild(dependentContent))
         continue;
 

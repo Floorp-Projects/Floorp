@@ -24,6 +24,7 @@ jobs:
             kind: build
             symbol: AB
             tier: 2
+        run-on-projects: [ 'trunk', 'try' ]
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
             docker-image: {in-tree: desktop-build}

@@ -73,25 +73,25 @@
   "genericErrorDetails": {
     "message": "Nílimid cinnte cad a tharla. An bhfuil fonn ort triail eile a bhaint as, nó gabháil scáileáin eile a ghlacadh?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Glac, sábháil, agus comhroinn gabhálacha scáileáin gan Firefox a fhágáil."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "An rud atá uait a ghabháil"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Cliceáil agus tarraing le cuid de leathanach a ghabháil. Nó is féidir leat an luch a chur os cionn an réigiúin le gabháil."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Fuinneoga nó leathanaigh iomlána a ghabháil"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Úsáid na cnaipí ag barr na fuinneoige ar dheis chun an réigiún infheicthe san fhuinneog a ghabháil, nó an leathanach iomlán."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Go díreach mar is áil leat"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Is féidir leat gabhálacha a bhearradh agus a shábháil ar an nGréasán, nó iad a íoslódáil ar do ríomhaire. Is féidir teacht orthu go léir leis an gcnaipe Mo Chuid Gabhálacha."
   },
   "tourSkip": {
