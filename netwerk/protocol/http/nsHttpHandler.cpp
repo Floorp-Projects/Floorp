@@ -67,6 +67,8 @@
 
 #include "mozilla/dom/ContentParent.h"
 
+#include "nsNSSComponent.h"
+
 #if defined(XP_UNIX)
 #include <sys/utsname.h>
 #endif
@@ -242,6 +244,7 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
     , mConnectTimeout(90000)
     , mParallelSpeculativeConnectLimit(6)
+    , mSpeculativeConnectEnabled(true)
     , mRequestTokenBucketEnabled(true)
     , mRequestTokenBucketMinParallelism(6)
     , mRequestTokenBucketHz(100)
@@ -526,6 +529,8 @@ nsHttpHandler::Init()
         obsService->AddObserver(this, "browser:purge-session-history", true);
         obsService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
         obsService->AddObserver(this, "application-background", true);
+        obsService->AddObserver(this, "psm:user-certificate-added", true);
+        obsService->AddObserver(this, "psm:user-certificate-deleted", true);
 
         if (!IsNeckoChild()) {
             obsService->AddObserver(this,
@@ -2279,6 +2284,8 @@ nsHttpHandler::GetMisc(nsACString &value)
 // nsHttpHandler::nsIObserver
 //-----------------------------------------------------------------------------
 
+static bool CanEnableSpeculativeConnect(); // forward declaration
+
 NS_IMETHODIMP
 nsHttpHandler::Observe(nsISupports *subject,
                        const char *topic,
@@ -2424,12 +2431,49 @@ nsHttpHandler::Observe(nsISupports *subject,
          // We have detected a captive portal and we will reset the Fast Open
          // failure counter.
          ResetFastOpenConsecutiveFailureCounter();
+    } else if (!strcmp(topic, "psm:user-certificate-added")) {
+        // A user certificate has just been added.
+        // We should immediately disable speculative connect
+        mSpeculativeConnectEnabled = false;
+    } else if (!strcmp(topic, "psm:user-certificate-deleted")) {
+        // If a user certificate has been removed, we need to check if there
+        // are others installed
+        mSpeculativeConnectEnabled = CanEnableSpeculativeConnect();
     }
 
     return NS_OK;
 }
 
 // nsISpeculativeConnect
+
+static bool
+CanEnableSpeculativeConnect()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+
+  nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (!component) {
+    return false;
+  }
+
+  // Check if any 3rd party PKCS#11 module are installed, as they may produce
+  // client certificates
+  bool activeSmartCards = false;
+  nsresult rv = component->HasActiveSmartCards(activeSmartCards);
+  if (NS_FAILED(rv) || activeSmartCards) {
+    return false;
+  }
+
+  // If there are any client certificates installed, we can't enable speculative
+  // connect, as it may pop up the certificate chooser at any time.
+  bool hasUserCerts = false;
+  rv = component->HasUserCertsInstalled(hasUserCerts);
+  if (NS_FAILED(rv) || hasUserCerts) {
+    return false;
+  }
+
+  return true;
+}
 
 nsresult
 nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
@@ -2520,6 +2564,16 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     rv = aURI->SchemeIs("https", &usingSSL);
     if (NS_FAILED(rv))
         return rv;
+
+    static bool sCheckedIfSpeculativeEnabled = false;
+    if (!sCheckedIfSpeculativeEnabled) {
+        sCheckedIfSpeculativeEnabled = true;
+        mSpeculativeConnectEnabled = CanEnableSpeculativeConnect();
+    }
+
+    if (usingSSL && !mSpeculativeConnectEnabled) {
+        return NS_ERROR_UNEXPECTED;
+    }
 
     nsAutoCString host;
     rv = aURI->GetAsciiHost(host);
