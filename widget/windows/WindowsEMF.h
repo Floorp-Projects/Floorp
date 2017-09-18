@@ -50,7 +50,13 @@ public:
    * to draw EMF onto the given DC or call SaveToFile() to finish writing the
    * EMF file.
    */
-  HDC GetDC() { return mDC; }
+  HDC GetDC() const
+  {
+    MOZ_ASSERT(mDC, "GetDC can be used only after "
+                    "InitForDrawing/ InitFromFileContents and before"
+                    "Playback/ SaveToFile");
+    return mDC;
+  }
 
   /**
    * Play the EMF's drawing commands onto the given DC.
