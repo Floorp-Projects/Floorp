@@ -27,6 +27,7 @@ function isEvalSource(source) {
   // These are all the sources that are essentially eval-ed (either
   // by calling eval or passing a string to one of these functions).
   return (introType === "eval" ||
+          introType === "debugger eval" ||
           introType === "Function" ||
           introType === "eventHandler" ||
           introType === "setTimeout" ||
@@ -41,8 +42,7 @@ function getSourceURL(source, window) {
     // created with the sourceURL pragma. If the introduction script
     // is a non-eval script, generate an full absolute URL relative to it.
 
-    if (source.displayURL && source.introductionScript &&
-       !isEvalSource(source.introductionScript.source)) {
+    if (source.displayURL && source.introductionScript) {
       if (source.introductionScript.source.url === "debugger eval code") {
         if (window) {
           // If this is a named eval script created from the console, make it
@@ -50,7 +50,7 @@ function getSourceURL(source, window) {
           // when we care about this.
           return joinURI(window.location.href, source.displayURL);
         }
-      } else {
+      } else if (!isEvalSource(source.introductionScript.source)) {
         return joinURI(source.introductionScript.source.url, source.displayURL);
       }
     }
