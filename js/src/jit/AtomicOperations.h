@@ -412,6 +412,8 @@ AtomicOperations::isLockfreeJS(int32_t size)
 # include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__sh__)
 # include "jit/none/AtomicOperations-feeling-lucky.h"
+#elif defined(__s390__) || defined(__s390x__)
+# include "jit/none/AtomicOperations-feeling-lucky.h"
 #else
 # error "No AtomicOperations support provided for this platform"
 #endif
