@@ -424,27 +424,35 @@
               preference="browser.taskbar.previews.enable"/>
 #endif
 
-    <hbox id="browserContainersbox" hidden="true" align="center">
-      <checkbox id="browserContainersCheckbox"
-                label="&browserContainersEnabled.label;"
-                accesskey="&browserContainersEnabled.accesskey;"
-                preference="privacy.userContext.enabled"
-                onsyncfrompreference="return gPrivacyPane.readBrowserContainersCheckbox();"/>
-      <label id="browserContainersLearnMore" class="learnMore text-link">
-        &browserContainersLearnMore.label;
-      </label>
-      <spacer flex="1"/>
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <button id="browserContainersSettings"
-                class="accessory-button"
-                label="&browserContainersSettings.label;"
-                accesskey="&browserContainersSettings.accesskey;"
-                searchkeywords="&addButton.label;
-                                &preferencesButton.label;
-                                &removeButton.label;"/>
+    <vbox id="browserContainersbox" hidden="true">
+      <hbox id="browserContainersExtensionContent" align="center">
+        <description control="disableContainersExtension" flex="1" />
+        <button id="disableContainersExtension"
+                class="extension-controlled-button accessory-button"
+                label="&disableExtension.label;" />
       </hbox>
-    </hbox>
+      <hbox align="center">
+        <checkbox id="browserContainersCheckbox"
+                  label="&browserContainersEnabled.label;"
+                  accesskey="&browserContainersEnabled.accesskey;"
+                  preference="privacy.userContext.enabled"
+                  onsyncfrompreference="return gMainPane.readBrowserContainersCheckbox();"/>
+        <label id="browserContainersLearnMore" class="learnMore text-link">
+          &browserContainersLearnMore.label;
+        </label>
+        <spacer flex="1"/>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <button id="browserContainersSettings"
+                  class="accessory-button"
+                  label="&browserContainersSettings.label;"
+                  accesskey="&browserContainersSettings.accesskey;"
+                  searchkeywords="&addButton.label;
+                                  &preferencesButton.label;
+                                  &removeButton.label;"/>
+        </hbox>
+      </hbox>
+    </vbox>
 </groupbox>
 
 <hbox id="languageAndAppearanceCategory"
