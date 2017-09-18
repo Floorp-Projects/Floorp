@@ -39,7 +39,7 @@ class TestCommandLineArguments(MarionetteTestCase):
         startup_timeout = self.marionette.startup_timeout
 
         # Use a timeout which always cause an IOError
-        self.marionette.startup_timeout = 1
+        self.marionette.startup_timeout = .1
         msg = "Process killed after {}s".format(self.marionette.startup_timeout)
 
         try:
