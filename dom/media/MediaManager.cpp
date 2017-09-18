@@ -2791,7 +2791,8 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
 nsresult
 MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
                                nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-                               nsIDOMGetUserMediaErrorCallback* aOnFailure)
+                               nsIDOMGetUserMediaErrorCallback* aOnFailure,
+                               dom::CallerType aCallerType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(!sInShutdown, NS_ERROR_FAILURE);
@@ -2818,7 +2819,8 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
   RefPtr<SourceListener> sourceListener = new SourceListener();
   windowListener->Register(sourceListener);
 
-  bool fake = Preferences::GetBool("media.navigator.streams.fake");
+  bool fake = Preferences::GetBool("media.navigator.streams.fake") ||
+              nsContentUtils::ResistFingerprinting(aCallerType);
 
   RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowId,
                                                    MediaSourceEnum::Camera,

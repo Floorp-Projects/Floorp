@@ -43,7 +43,7 @@ public:
 	       CallerType aCallerType, ErrorResult &aRv);
 
   already_AddRefed<Promise>
-  EnumerateDevices(ErrorResult &aRv);
+  EnumerateDevices(CallerType aCallerType, ErrorResult &aRv);
 
   virtual void OnDeviceChange() override;
 
