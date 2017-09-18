@@ -631,14 +631,17 @@ CustomizeMode.prototype = {
       aNode = aNode.firstChild;
     }
 
-    // If the user explicitly moves this item, turn off autohide.
-    if (aNode.id == "downloads-button") {
-      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
-    }
-
     CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_NAVBAR);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
+    }
+
+    // If the user explicitly moves this item, turn off autohide.
+    if (aNode.id == "downloads-button") {
+      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      if (this._customizing) {
+        this._showDownloadsAutoHidePanel();
+      }
     }
   },
 
@@ -648,15 +651,18 @@ CustomizeMode.prototype = {
       aNode = aNode.firstChild;
     }
 
-    // If the user explicitly moves this item, turn off autohide.
-    if (aNode.id == "downloads-button") {
-      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
-    }
-
     let panel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
     CustomizableUI.addWidgetToArea(aNode.id, panel);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
+    }
+
+    // If the user explicitly moves this item, turn off autohide.
+    if (aNode.id == "downloads-button") {
+      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      if (this._customizing) {
+        this._showDownloadsAutoHidePanel();
+      }
     }
 
     if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
@@ -681,13 +687,17 @@ CustomizeMode.prototype = {
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
     }
-    // If the user explicitly removes this item, turn off autohide.
-    if (aNode.id == "downloads-button") {
-      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
-    }
     CustomizableUI.removeWidgetFromArea(aNode.id);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
+    }
+
+    // If the user explicitly removes this item, turn off autohide.
+    if (aNode.id == "downloads-button") {
+      Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      if (this._customizing) {
+        this._showDownloadsAutoHidePanel();
+      }
     }
   },
 
@@ -1204,9 +1214,6 @@ CustomizeMode.prototype = {
         let paletteItem = this.makePaletteItem(widget, "palette");
         this.visiblePalette.appendChild(paletteItem);
       }
-    }
-    if (aNodeToChange.id == "downloads-button") {
-      this._showDownloadsAutoHidePanel();
     }
   },
 
@@ -1832,6 +1839,7 @@ CustomizeMode.prototype = {
     // If the user explicitly moves this item, turn off autohide.
     if (draggedItemId == "downloads-button") {
       Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+      this._showDownloadsAutoHidePanel();
     }
   },
 
@@ -2360,7 +2368,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _showDownloadsAutoHidePanel() {
+  async _showDownloadsAutoHidePanel() {
     let doc = this.document;
     let panel = doc.getElementById(kDownloadAutohidePanelId);
     panel.hidePopup();
@@ -2370,6 +2378,38 @@ CustomizeMode.prototype = {
       return;
     }
 
+    let offsetX = 0, offsetY = 0;
+    let panelOnTheLeft = false;
+    let toolbarContainer = button.closest("toolbar");
+    if (toolbarContainer && toolbarContainer.id == "nav-bar") {
+      let navbarWidgets = CustomizableUI.getWidgetIdsInArea("nav-bar");
+      if (navbarWidgets.indexOf("urlbar-container") <= navbarWidgets.indexOf("downloads-button")) {
+        panelOnTheLeft = true;
+      }
+    } else {
+      await BrowserUtils.promiseLayoutFlushed(doc, "display", () => {});
+      if (!this._customizing || !this._wantToBeInCustomizeMode) {
+        return;
+      }
+      let buttonBounds = this._dwu.getBoundsWithoutFlushing(button);
+      let windowBounds = this._dwu.getBoundsWithoutFlushing(doc.documentElement);
+      panelOnTheLeft = (buttonBounds.left + buttonBounds.width / 2) > windowBounds.width / 2;
+    }
+    let position;
+    if (panelOnTheLeft) {
+      // Tested in RTL, these get inverted automatically, so this does the
+      // right thing without taking RTL into account explicitly.
+      position = "leftcenter topright";
+      if (toolbarContainer) {
+        offsetX = 8;
+      }
+    } else {
+      position = "rightcenter topleft";
+      if (toolbarContainer) {
+        offsetX = -8;
+      }
+    }
+
     let checkbox = doc.getElementById(kDownloadAutohideCheckboxId);
     if (this.window.DownloadsButton.autoHideDownloadsButton) {
       checkbox.setAttribute("checked", "true");
@@ -2377,28 +2417,6 @@ CustomizeMode.prototype = {
       checkbox.removeAttribute("checked");
     }
 
-    let offsetX = 0, offsetY = 0;
-    let position;
-    if (button.closest("#nav-bar")) {
-      let navbarWidgets = CustomizableUI.getWidgetIdsInArea("nav-bar");
-      if (navbarWidgets.indexOf("urlbar-container") > navbarWidgets.indexOf("downloads-button")) {
-        // Tested in RTL, these get inverted automatically, so this does the
-        // right thing without taking RTL into account explicitly.
-        position = "rightcenter topleft";
-        offsetX = -8;
-      } else {
-        position = "leftcenter topright";
-        offsetX = 8;
-      }
-    } else if (button.closest("#customization-palette")) {
-      position = "topcenter bottomleft";
-      offsetY = 10;
-    } else {
-      // For non-navbar toolbars, this works better than guessing whether
-      // left or right is a better place to position:
-      position = "bottomcenter topleft";
-      offsetY = -5;
-    }
     // We don't use the icon to anchor because it might be resizing because of
     // the animations for drag/drop. Hence the use of offsets.
     panel.openPopup(button, position, offsetX, offsetY);

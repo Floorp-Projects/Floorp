@@ -92,7 +92,7 @@ private:
   const uint32_t mDisplayHeight;
 
   // Method to set up the decompression session.
-  nsresult InitializeSession();
+  MediaResult InitializeSession();
   nsresult WaitForAsynchronousFrames();
   CFDictionaryRef CreateDecoderSpecification();
   CFDictionaryRef CreateDecoderExtensions();
