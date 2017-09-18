@@ -85,6 +85,10 @@ public:
 
   NS_IMETHOD BlockUntilLoadableRootsLoaded() = 0;
 
+  // Main thread only
+  NS_IMETHOD HasActiveSmartCards(bool& result) = 0;
+  NS_IMETHOD HasUserCertsInstalled(bool& result) = 0;
+
   virtual ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() = 0;
 };
@@ -143,6 +147,10 @@ public:
 #endif
 
   NS_IMETHOD BlockUntilLoadableRootsLoaded() override;
+
+  // Main thread only
+  NS_IMETHOD HasActiveSmartCards(bool& result) override;
+  NS_IMETHOD HasUserCertsInstalled(bool& result) override;
 
   ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() override;
