@@ -579,6 +579,10 @@ private:
     // when starting a new speculative connection.
     uint32_t       mParallelSpeculativeConnectLimit;
 
+    // We may disable speculative connect if the browser has user certificates
+    // installed as that might randomly popup the certificate choosing window.
+    bool           mSpeculativeConnectEnabled;
+
     // For Rate Pacing of HTTP/1 requests through a netwerk/base/EventTokenBucket
     // Active requests <= *MinParallelism are not subject to the rate pacing
     bool           mRequestTokenBucketEnabled;
