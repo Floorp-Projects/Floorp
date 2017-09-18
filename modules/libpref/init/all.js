@@ -1437,7 +1437,7 @@ pref("javascript.options.asyncstack",       false);
 pref("javascript.options.throw_on_asmjs_validation_failure", false);
 pref("javascript.options.ion.offthread_compilation", true);
 #ifdef DEBUG
-pref("javascript.options.jit.full_debug_checks", true);
+pref("javascript.options.jit.full_debug_checks", false);
 #endif
 // This preference instructs the JS engine to discard the
 // source of any privileged JS after compilation. This saves
