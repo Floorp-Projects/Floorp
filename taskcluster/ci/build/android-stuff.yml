@@ -10,7 +10,7 @@ android-dependencies/opt:
         symbol: tc(Deps)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: android-gradle-build}
+        docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle-online"
             PERFHERDER_EXTRA_OPTIONS: android-dependencies
@@ -44,7 +44,7 @@ android-dependencies/opt:
         - - "mobile/android/config/**"
           - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
           - "**/*.gradle"
-          - "taskcluster/docker/android-gradle-build/**"
+          - "taskcluster/docker/android-build/**"
 
 android-test/opt:
     description: "Android armv7 unit tests"

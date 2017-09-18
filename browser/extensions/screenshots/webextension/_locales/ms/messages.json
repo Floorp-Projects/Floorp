@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Kami tidak pasti apa yang baru berlaku. Anda mahu cuba lagi atau mengambil gambar halaman lain?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Ambil, simpan, dan kongsi skrinsyot tanpa meninggalkan pelayar Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Satu cara baru untuk menyimpan"
+  },
+  "tourBodyPageAction": {
+    "message": "Kembangkan menu tindakan halaman di dalam bar alamat apabila anda mahu mengambil skrinsyot."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Ambil gambar hanya yang anda mahu"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Klik dan seret untuk mengambil gambar sebahagian daripada halaman. Anda boleh juga serlahkan pilihan anda."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Tangkap Tetingkap atau Keseluruhan Halaman"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Pilih butang di bahagian atas kanan untuk merakam kawasan paparan dalam tetingkap atau untuk merakamkan keseluruhan halaman."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Seperti Yang Anda Suka"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Simpan rakaman yang dipotong ke Web, cara yang lebih mudah untuk berkongsi, atau memuat turun ke komputer anda. Anda juga boleh klik pada butang Syot Saya untuk mencari semua rakaman yang telah dibuat."
   },
   "tourSkip": {

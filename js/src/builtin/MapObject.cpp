@@ -160,7 +160,11 @@ static inline ValueMap::Range*
 MapIteratorObjectRange(NativeObject* obj)
 {
     MOZ_ASSERT(obj->is<MapIteratorObject>());
-    return static_cast<ValueMap::Range*>(obj->getSlot(MapIteratorObject::RangeSlot).toPrivate());
+    Value value = obj->getSlot(MapIteratorObject::RangeSlot);
+    if (value.isUndefined())
+        return nullptr;
+
+    return static_cast<ValueMap::Range*>(value.toPrivate());
 }
 
 inline MapObject::IteratorKind
@@ -1017,7 +1021,11 @@ static inline ValueSet::Range*
 SetIteratorObjectRange(NativeObject* obj)
 {
     MOZ_ASSERT(obj->is<SetIteratorObject>());
-    return static_cast<ValueSet::Range*>(obj->getSlot(SetIteratorObject::RangeSlot).toPrivate());
+    Value value = obj->getSlot(SetIteratorObject::RangeSlot);
+    if (value.isUndefined())
+        return nullptr;
+
+    return static_cast<ValueSet::Range*>(value.toPrivate());
 }
 
 inline SetObject::IteratorKind

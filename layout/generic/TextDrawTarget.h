@@ -90,6 +90,7 @@ public:
   explicit TextDrawTarget()
   : mCurrentlyDrawing(Phase::eSelection)
   {
+    mCurrentTarget = gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8);
     SetSelectionIndex(0);
   }
 
@@ -102,7 +103,7 @@ public:
 
   void SetSelectionIndex(size_t i) {
     // i should only be accessed if i-1 has already been
-    MOZ_ASSERT(i <= mParts.Length());
+    MOZ_ASSERT(mParts.Length() <= i);
 
     if (mParts.Length() == i){
       mParts.AppendElement();
@@ -309,42 +310,42 @@ private:
   // Chunks of the text, grouped by selection
   nsTArray<SelectedTextRunFragment> mParts;
 
+  // A dummy to handle parts of the DrawTarget impl we don't care for
+  RefPtr<DrawTarget> mCurrentTarget;
+
   // The rest of this is dummy implementations of DrawTarget's API
 public:
   DrawTargetType GetType() const override {
-    return DrawTargetType::SOFTWARE_RASTER;
+    return mCurrentTarget->GetType();
   }
 
   BackendType GetBackendType() const override {
-    return BackendType::SKIA;
+    return mCurrentTarget->GetBackendType();
   }
 
   bool IsRecording() const override { return true; }
   bool IsCaptureDT() const override { return false; }
 
   already_AddRefed<SourceSurface> Snapshot() override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    return mCurrentTarget->Snapshot();
   }
 
   already_AddRefed<SourceSurface> IntoLuminanceSource(LuminanceType aLuminanceType,
                                                       float aOpacity) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    return mCurrentTarget->IntoLuminanceSource(aLuminanceType, aOpacity);
   }
 
   IntSize GetSize() override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return IntSize(1, 1);
+    return mCurrentTarget->GetSize();
   }
 
   void Flush() override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->Flush();
   }
 
   void DrawCapturedDT(DrawTargetCapture *aCaptureDT,
                       const Matrix& aTransform) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->DrawCapturedDT(aCaptureDT, aTransform);
   }
 
   void DrawSurface(SourceSurface *aSurface,
@@ -352,14 +353,14 @@ public:
                    const Rect &aSource,
                    const DrawSurfaceOptions &aSurfOptions,
                    const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->DrawSurface(aSurface, aDest, aSource, aSurfOptions, aOptions);
   }
 
   void DrawFilter(FilterNode *aNode,
                           const Rect &aSourceRect,
                           const Point &aDestPoint,
                           const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->DrawFilter(aNode, aSourceRect, aDestPoint, aOptions);
   }
 
   void DrawSurfaceWithShadow(SourceSurface *aSurface,
@@ -368,30 +369,30 @@ public:
                              const Point &aOffset,
                              Float aSigma,
                              CompositionOp aOperator) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->DrawSurfaceWithShadow(aSurface, aDest, aColor, aOffset, aSigma, aOperator);
   }
 
   void ClearRect(const Rect &aRect) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->ClearRect(aRect);
   }
 
   void CopySurface(SourceSurface *aSurface,
                    const IntRect &aSourceRect,
                    const IntPoint &aDestination) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->CopySurface(aSurface, aSourceRect, aDestination);
   }
 
   void FillRect(const Rect &aRect,
                 const Pattern &aPattern,
                 const DrawOptions &aOptions = DrawOptions()) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->FillRect(aRect, aPattern, aOptions);
   }
 
   void StrokeRect(const Rect &aRect,
                   const Pattern &aPattern,
                   const StrokeOptions &aStrokeOptions,
                   const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->StrokeRect(aRect, aPattern, aStrokeOptions, aOptions);
   }
 
   void StrokeLine(const Point &aStart,
@@ -399,7 +400,7 @@ public:
                   const Pattern &aPattern,
                   const StrokeOptions &aStrokeOptions,
                   const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->StrokeLine(aStart, aEnd, aPattern, aStrokeOptions, aOptions);
   }
 
 
@@ -407,13 +408,13 @@ public:
               const Pattern &aPattern,
               const StrokeOptions &aStrokeOptions,
               const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
   }
 
   void Fill(const Path *aPath,
             const Pattern &aPattern,
             const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->Fill(aPath, aPattern, aOptions);
   }
 
   void StrokeGlyphs(ScaledFont* aFont,
@@ -422,41 +423,43 @@ public:
                     const StrokeOptions& aStrokeOptions,
                     const DrawOptions& aOptions,
                     const GlyphRenderingOptions* aRenderingOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    MOZ_ASSERT(mCurrentlyDrawing == Phase::eGlyphs);
+    mCurrentTarget->StrokeGlyphs(aFont, aBuffer, aPattern,
+                                 aStrokeOptions, aOptions, aRenderingOptions);
   }
 
   void Mask(const Pattern &aSource,
                     const Pattern &aMask,
                     const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    return mCurrentTarget->Mask(aSource, aMask, aOptions);
   }
 
   void MaskSurface(const Pattern &aSource,
                    SourceSurface *aMask,
                    Point aOffset,
                    const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    return mCurrentTarget->MaskSurface(aSource, aMask, aOffset, aOptions);
   }
 
   bool Draw3DTransformedSurface(SourceSurface* aSurface,
                                 const Matrix4x4& aMatrix) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    return mCurrentTarget->Draw3DTransformedSurface(aSurface, aMatrix);
   }
 
   void PushClip(const Path *aPath) override {
-    // Fine to pretend we do this
+    mCurrentTarget->PushClip(aPath);
   }
 
   void PushClipRect(const Rect &aRect) override {
-    // Fine to pretend we do this
+    mCurrentTarget->PushClipRect(aRect);
   }
 
   void PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    mCurrentTarget->PushDeviceSpaceClipRects(aRects, aCount);
   }
 
   void PopClip() override {
-    // Fine to pretend we do this
+    mCurrentTarget->PopClip();
   }
 
   void PushLayer(bool aOpaque, Float aOpacity,
@@ -464,11 +467,11 @@ public:
                          const Matrix& aMaskTransform,
                          const IntRect& aBounds,
                          bool aCopyBackground) override {
-    // Fine to pretend we do this
+    mCurrentTarget->PushLayer(aOpaque, aOpacity, aMask, aMaskTransform, aBounds, aCopyBackground);
   }
 
   void PopLayer() override {
-    // Fine to pretend we do this
+    mCurrentTarget->PopLayer();
   }
 
 
@@ -476,53 +479,49 @@ public:
                                                               const IntSize &aSize,
                                                               int32_t aStride,
                                                               SurfaceFormat aFormat) const override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    return mCurrentTarget->CreateSourceSurfaceFromData(aData, aSize, aStride, aFormat);
   }
 
   already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+      return mCurrentTarget->OptimizeSourceSurface(aSurface);
   }
 
   already_AddRefed<SourceSurface>
-  CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const override {
+      return mCurrentTarget->CreateSourceSurfaceFromNativeSurface(aSurface);
   }
 
   already_AddRefed<DrawTarget>
-  CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override {
+      return mCurrentTarget->CreateSimilarDrawTarget(aSize, aFormat);
   }
 
   already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule) const override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    return mCurrentTarget->CreatePathBuilder(aFillRule);
   }
 
   already_AddRefed<FilterNode> CreateFilter(FilterType aType) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    return mCurrentTarget->CreateFilter(aType);
   }
 
-  already_AddRefed<GradientStops>    
-  CreateGradientStops(GradientStop *aStops,
-                      uint32_t aNumStops,
-                      ExtendMode aExtendMode) const override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+  already_AddRefed<GradientStops>
+    CreateGradientStops(GradientStop *aStops,
+                        uint32_t aNumStops,
+                        ExtendMode aExtendMode) const override {
+      return mCurrentTarget->CreateGradientStops(aStops, aNumStops, aExtendMode);
+  }
+
+  void SetTransform(const Matrix &aTransform) override {
+    mCurrentTarget->SetTransform(aTransform);
+    // Need to do this to make inherited GetTransform to work
+    DrawTarget::SetTransform(aTransform);
   }
 
   void* GetNativeSurface(NativeSurfaceType aType) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
+    return mCurrentTarget->GetNativeSurface(aType);
   }
 
-  void DetachAllSnapshots() override { 
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-  }
+  void DetachAllSnapshots() override { mCurrentTarget->DetachAllSnapshots(); }
 };
 
 }
