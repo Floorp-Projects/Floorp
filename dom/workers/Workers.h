@@ -9,6 +9,7 @@
 
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include <stdint.h>
 #include "nsAutoPtr.h"
@@ -102,25 +103,12 @@ struct JSSettings
 
   struct JSGCSetting
   {
-    JSGCParamKey key;
+    mozilla::Maybe<JSGCParamKey> key;
     uint32_t value;
 
     JSGCSetting()
-    : key(static_cast<JSGCParamKey>(-1)), value(0)
+    : key(), value(0)
     { }
-
-    bool
-    IsSet() const
-    {
-      return key != static_cast<JSGCParamKey>(-1);
-    }
-
-    void
-    Unset()
-    {
-      key = static_cast<JSGCParamKey>(-1);
-      value = 0;
-    }
   };
 
   // There are several settings that we know we need so it makes sense to
@@ -166,11 +154,11 @@ struct JSSettings
 
     for (uint32_t index = 0; index < ArrayLength(gcSettings); index++) {
       JSSettings::JSGCSetting& setting = gcSettings[index];
-      if (setting.key == aKey) {
+      if (setting.key.isSome() && *setting.key == aKey) {
         foundSetting = &setting;
         break;
       }
-      if (!firstEmptySetting && !setting.IsSet()) {
+      if (!firstEmptySetting && setting.key.isNothing()) {
         firstEmptySetting = &setting;
       }
     }
@@ -183,13 +171,13 @@ struct JSSettings
           return false;
         }
       }
-      foundSetting->key = aKey;
+      foundSetting->key = mozilla::Some(aKey);
       foundSetting->value = aValue;
       return true;
     }
 
     if (foundSetting) {
-      foundSetting->Unset();
+      foundSetting->key.reset();
       return true;
     }
 
