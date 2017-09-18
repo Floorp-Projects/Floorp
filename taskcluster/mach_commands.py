@@ -504,22 +504,3 @@ class TaskClusterImagesProvider(object):
         except Exception:
             traceback.print_exc()
             sys.exit(1)
-
-@CommandProvider
-class TaskClusterPartialsData(object):
-    @Command('release-history', category="ci",
-             description="Query balrog for release history used by enable partials generation")
-    @CommandArgument('-b', '--branch',
-                     help="The gecko project branch used in balrog, such as "
-                          "mozilla-central, release, date")
-    @CommandArgument('--product', default='Firefox',
-                     help="The product identifier, such as 'Firefox'")
-    def generate_partials_builds(self, product, branch):
-        from taskgraph.util.partials import populate_release_history
-        try:
-            import yaml
-            release_history = {'release_history': populate_release_history(product, branch)}
-            print(yaml.safe_dump(release_history, allow_unicode=True, default_flow_style=False))
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
