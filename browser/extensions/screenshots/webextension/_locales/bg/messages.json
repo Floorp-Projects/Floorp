@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Не сме сигурни какво точно се случи. Може да опитате отново, както и да снимате друга страница."
   },
-  "tourBodyOne": {
-    "message": "Правете, запазвайте и споделяйте снимки на екрана без да напускате Firefox."
+  "tourBodyIntro": {
+    "message": "Създавайте, запазвайте и споделяйте снимки на екрана без да напускате Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Уловете само нужното"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Щракнете с мишката или влачете, за да уловите части от страницата. А когато посочите елементи от страницата – те се осветяват."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Улавяйте прозорци и цели страници"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Използвайте бутоните в горния десен ъгъл, за да уловите само видимата част или цялата страница."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Както ви харесва"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Запазвайте снимките на страници от Мрежата, за да ги споделяте по-лесно или ги изтегляйте на компютъра си. А бутонът „Моите снимки“ ще ви покаже всички направени от вас снимки."
   },
   "tourSkip": {
