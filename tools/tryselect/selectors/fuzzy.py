@@ -198,7 +198,8 @@ def format_header():
 
 
 def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
-                  save=False, preset=None, list_presets=False, push=True, **kwargs):
+                  save=False, preset=None, list_presets=False, push=True, message='{msg}',
+                  **kwargs):
     if list_presets:
         return pset.list_presets(section='fuzzy')
 
@@ -248,4 +249,4 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
 
     query = " with query: {}".format(query) if query else ""
     msg = "Fuzzy{}".format(query)
-    return vcs.push_to_try('fuzzy', msg, selected, templates, push=push)
+    return vcs.push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push)
