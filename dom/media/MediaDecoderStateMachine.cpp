@@ -34,6 +34,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIEventTarget.h"
+#include "nsIMemoryReporter.h"
 #include "nsITimer.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"

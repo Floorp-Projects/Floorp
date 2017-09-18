@@ -148,6 +148,7 @@ typedef media::IntervalSet<int64_t> MediaByteRangeSet;
  * handle any URI for which Necko supports AsyncOpen.
  * The 'file:' protocol can be implemented efficiently with direct random
  * access, so the FileMediaResource implementation class bypasses the cache.
+ * For cross-process blob URL, CloneableWithRangeMediaResource is used.
  * MediaResource::Create automatically chooses the best implementation class.
  */
 class MediaResource
