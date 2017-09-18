@@ -560,19 +560,16 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
     return true;
 }
 
-} // namespace xpc
-
-NS_IMETHODIMP
-nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
-                                             nsISupports* aCOMObj,
-                                             nsIPrincipal * aPrincipal,
-                                             uint32_t aFlags,
-                                             JS::CompartmentOptions& aOptions,
-                                             nsIXPConnectJSObjectHolder** _retval)
+nsresult
+InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
+                                nsISupports* aCOMObj,
+                                nsIPrincipal* aPrincipal,
+                                uint32_t aFlags,
+                                JS::CompartmentOptions& aOptions,
+                                MutableHandleObject aNewGlobal)
 {
     MOZ_ASSERT(aJSContext, "bad param");
     MOZ_ASSERT(aCOMObj, "bad param");
-    MOZ_ASSERT(_retval, "bad param");
 
     // We pass null for the 'extra' pointer during global object creation, so
     // we need to have a principal.
@@ -598,9 +595,11 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     if (!InitGlobalObject(aJSContext, global, aFlags))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    wrappedGlobal.forget(_retval);
+    aNewGlobal.set(global);
     return NS_OK;
 }
+
+} // namespace xpc
 
 static nsresult
 NativeInterface2JSObject(HandleObject aScope,
