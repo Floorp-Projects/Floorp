@@ -9,9 +9,9 @@ import os
 import unittest
 
 from mach.main import Mach
-from mach.base import CommandContext
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 class TestBase(unittest.TestCase):
     provider_dir = os.path.join(here, 'providers')

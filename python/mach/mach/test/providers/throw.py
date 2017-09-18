@@ -4,8 +4,6 @@
 
 from __future__ import unicode_literals
 
-import time
-
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -26,4 +24,3 @@ class TestCommandProvider(object):
     @CommandArgument('--message', '-m', default='General Error')
     def throw_deep(self, message):
         throw2.throw_deep(message)
-
