@@ -166,12 +166,12 @@ static gfx::IntRect ContainerVisibleRect(ContainerT* aContainer)
 /* all of the per-layer prepared data we need to maintain */
 struct PreparedLayer
 {
-  PreparedLayer(LayerComposite *aLayer,
+  PreparedLayer(Layer *aLayer,
                 RenderTargetIntRect aClipRect,
                 Maybe<gfx::Polygon>&& aGeometry)
   : mLayer(aLayer), mClipRect(aClipRect), mGeometry(Move(aGeometry)) {}
 
-  LayerComposite* mLayer;
+  RefPtr<Layer> mLayer;
   RenderTargetIntRect mClipRect;
   Maybe<Polygon> mGeometry;
 };
@@ -235,7 +235,8 @@ ContainerPrepare(ContainerT* aContainer,
     CULLING_LOG("Preparing sublayer %p\n", layerToRender->GetLayer());
 
     layerToRender->Prepare(clipRect);
-    aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender, clipRect,
+    aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender->GetLayer(),
+                                                               clipRect,
                                                                Move(layer.geometry)));
   }
 
@@ -413,7 +414,7 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
     PreparedLayer& preparedData = aContainer->mPrepared->mLayers[i];
 
     const gfx::IntRect clipRect = preparedData.mClipRect.ToUnknownRect();
-    LayerComposite* layerToRender = preparedData.mLayer;
+    LayerComposite* layerToRender = static_cast<LayerComposite*>(preparedData.mLayer->ImplData());
     const Maybe<gfx::Polygon>& childGeometry = preparedData.mGeometry;
 
     Layer* layer = layerToRender->GetLayer();
