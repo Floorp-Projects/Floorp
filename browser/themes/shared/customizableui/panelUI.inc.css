@@ -777,7 +777,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 #appMenu-mainView > .panel-subview-body > .panel-banner-item {
   border-bottom: 1px solid var(--panel-separator-color);
   margin-bottom: 3px;
-  padding-inline-start: 10px;
+  padding-inline-start: 12px;
 }
 
 .panel-banner-item > .toolbarbutton-text {
@@ -1396,7 +1396,7 @@ photonpanelmultiview .toolbaritem-combined-buttons > .subviewbutton:not(.subview
 }
 
 photonpanelmultiview .panel-banner-item::after {
-  margin-inline-end: 14px;
+  margin-inline-end: 12px;
   margin-inline-start: 10px;
 }
 
