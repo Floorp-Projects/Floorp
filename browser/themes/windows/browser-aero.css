@@ -326,11 +326,6 @@
     border-top-right-radius: 2.5px;
   }
 
-  #main-window[sizemode=fullscreen]:not(:-moz-lwtheme) {
-    -moz-appearance: none;
-    background-color: #556;
-  }
-
   #toolbar-menubar:not(:-moz-lwtheme) {
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
@@ -351,42 +346,6 @@
   #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
     -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
   }
-
-  /* Glass Fog */
-
-  #TabsToolbar:not(:-moz-lwtheme) {
-    position: relative;
-  }
-
-  #TabsToolbar:not(:-moz-lwtheme)::after {
-    /* Because we use placeholders for window controls etc. in the tabstrip,
-     * and position those with ordinal attributes, and because our layout code
-     * expects :before/:after nodes to come first/last in the frame list,
-     * we have to reorder this element to come last, hence the
-     * ordinal group value (see bug 853415). */
-    -moz-box-ordinal-group: 1001;
-    box-shadow: 0 0 30px 30px rgba(174,189,204,0.85);
-    content: "";
-    display: -moz-box;
-    height: 0;
-    margin: 0 60px; /* (30px + 30px) from box-shadow */
-    position: absolute;
-    pointer-events: none;
-    top: 50%;
-    width: -moz-available;
-    z-index: -1;
-  }
-
-  /* Need to constrain the glass fog to avoid overlapping layers, see bug 886281. */
-  #navigator-toolbox:not(:-moz-lwtheme) {
-    overflow: -moz-hidden-unscrollable;
-  }
-
-  #main-window[sizemode=normal] .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
-    position: relative;
-  }
-
-  /* End Glass Fog */
 }
 
 /* Aero Basic */
