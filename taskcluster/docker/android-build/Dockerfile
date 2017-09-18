@@ -1,88 +1,18 @@
-FROM debian:stretch-20170620
-MAINTAINER Nick Alexander <nalexander@mozilla.com>
+# TODO remove VOLUME below when the base image is updated next.
+FROM          taskcluster/centos6-build-upd:0.1.8.20170808150401
+MAINTAINER    Nick Alexander <nalexander@mozilla.com>
 
-### Add worker user and setup its workspace.
-RUN mkdir -p /builds && \
-    useradd -u 1000 -d /builds/worker -s /bin/bash -m worker && \
-    chown -R worker:worker /builds && \
-    mkdir -p /builds/worker/workspace && \
-    chown -R worker:worker /builds/worker/workspace
-
-# Declare default working folder
-WORKDIR /builds/worker
+# BEGIN ../desktop-build/Dockerfile
 
 VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
-# Add build scripts; these are the entry points from the taskcluster worker, and
-# operate on environment variables
-# %include taskcluster/docker/desktop-build/bin/
-COPY topsrcdir/taskcluster/docker/desktop-build/bin/ /builds/worker/bin/
-RUN chmod +x /builds/worker/bin/*
-
-# Add common hg configuration.
-# %include taskcluster/docker/centos6-build/hgrc
-COPY topsrcdir/taskcluster/docker/centos6-build/hgrc /builds/worker/.hgrc
-RUN chown worker:worker /builds/worker/.hgrc
-
-# Set variables normally configured at login, by the shell' parent process,
-# these are taken from GNU su manual.  Also set DEBIAN_FRONTEND to advise
-# apt-get of our situation.
-ENV HOME=/builds/worker \
-    SHELL=/bin/bash \
-    USER=worker \
-    LOGNAME=worker \
-    HOSTNAME=taskcluster-worker \
-    DEBIAN_FRONTEND=noninteractive
-
-# Set a default command useful for debugging.
-CMD ["/bin/bash", "--login"]
-
-# Set apt sources list to a snapshot.
-COPY sources.list /etc/apt/
-
-# We need i386 packages for the Android SDK.
-# Once https://bugzilla.mozilla.org/show_bug.cgi?id=1370119 is in-tree, we
-# will have 64-bit builds of everything, and we can then remove this and
-# the :i386 packages we install below.
-RUN dpkg --add-architecture i386
-
-RUN apt-get update -q && \
-    apt-get install -yyq --no-install-recommends \
-      autoconf2.13 \
-      build-essential \
-      base-files \
-      ca-certificates \
-      ccache \
-      cmake \
-      curl \
-      gnupg \
-      make \
-      procps \
-      python \
-      python-cryptography \
-      python-dev \
-      python-pip \
-      python-setuptools \
-      python-virtualenv \
-      sudo \
-      tar \
-      unzip \
-      uuid \
-      wget \
-      xz-utils \
-      yasm \
-      zip \
-      libstdc++6:i386 \
-      libgcc1:i386 \
-      zlib1g:i386 \
-      libncurses5:i386 \
-    && \
-    apt-get clean
-
 # %include python/mozbuild/mozbuild/action/tooltool.py
+COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /build/tooltool.py
+COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/tooltool.py
 COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
+COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /tmp/tooltool.py
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 COPY topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
@@ -99,52 +29,70 @@ COPY topsrcdir/taskcluster/docker/recipes/install-make.sh /setup/install-make.sh
 # %include taskcluster/docker/recipes/install-cmake.sh
 COPY topsrcdir/taskcluster/docker/recipes/install-cmake.sh /setup/install-cmake.sh
 
-# %include taskcluster/docker/recipes/debian-build-system-setup.sh
-COPY topsrcdir/taskcluster/docker/recipes/debian-build-system-setup.sh /setup/system-setup.sh
+# %include taskcluster/docker/recipes/centos6-build-system-setup.sh
+COPY topsrcdir/taskcluster/docker/recipes/centos6-build-system-setup.sh /setup/system-setup.sh
+
+# %include taskcluster/docker/recipes/centos-install-debug-symbols.sh
+COPY topsrcdir/taskcluster/docker/recipes/centos-install-debug-symbols.sh /setup/install-debug-symbols.sh
+
+# TODO remove once base image doesn't install Mercurial
+RUN pip uninstall -y Mercurial
 
 RUN bash /setup/system-setup.sh
 
-# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb.
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include taskcluster/docker/recipes/xvfb.sh
 COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 
 # %include taskcluster/docker/recipes/run-task
 COPY topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
 
-# Add pip configuration, among other things.
-COPY dot-config /builds/worker/.config
+# Add configuration
+COPY            dot-config                    /builds/worker/.config
+
+# Generate machine uuid file
+RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
 
 # Stubbed out credentials; mozharness looks for this file an issues a WARNING
 # if it's not found, which causes the build to fail.  Note that this needs to
 # be in the parent of the workspace directory and in the directory where
 # mozharness is run (not its --work-dir).  See Bug 1169652.
-# %include taskcluster/docker/desktop-build/oauth.txt
-COPY topsrcdir/taskcluster/docker/desktop-build/oauth.txt /builds/worker/
+ADD           oauth.txt /builds/worker/
 
-# Add a stubbed out buildprops, which keeps mozharness from choking.
+# stubbed out buildprops, which keeps mozharness from choking
 # Note that this needs to be in the parent of the workspace directory and in
-# the directory where mozharness is run (not its --work-dir).
-# %include taskcluster/docker/desktop-build/buildprops.json
-COPY topsrcdir/taskcluster/docker/desktop-build/buildprops.json /builds/worker/
+# the directory where mozharness is run (not its --work-dir)
+ADD           buildprops.json /builds/worker/
+
+# END ../desktop-build/Dockerfile
 
 # Reset user/workdir from parent image so we can install software.
 WORKDIR /
 USER root
 
+# Update base.
+RUN rpm --rebuilddb && yum upgrade -y
+
 # Install Sonatype Nexus.  Cribbed directly from
 # https://github.com/sonatype/docker-nexus/blob/fffd2c61b2368292040910c055cf690c8e76a272/oss/Dockerfile.
 
-# Observe missing --no-install-recommends, in order to install glib2.0/gconf/etc.
-RUN apt-get install -yyq \
-      libgconf2-4 \
-      libgnome2-0 \
-      openjdk-8-jdk-headless \
-    && \
-    apt-get clean
+# Install the screen package here to use with xvfb.
+# Move installation to base centos6-build image once Bug 1272629 is fixed
+# tzdata-java is symlinked from the JRE: see https://bugzilla.redhat.com/show_bug.cgi?id=1130800
+RUN rpm --rebuilddb && yum install -y \
+  createrepo \
+  curl \
+  screen \
+  sudo \
+  tar \
+  tzdata-java \
+  unzip \
+  wget \
+  zip \
+  && yum clean all
 
-ENV NEXUS_VERSION=2.12.0-01 \
-    NEXUS_SHA1SUM=1a9aaad8414baffe0a2fd46eed1f41b85f4049e6 \
-    NEXUS_WORK=/builds/worker/workspace/nexus
+ENV NEXUS_VERSION 2.12.0-01
+ENV NEXUS_SHA1SUM 1a9aaad8414baffe0a2fd46eed1f41b85f4049e6
 
 RUN mkdir -p /opt/sonatype/nexus
 
@@ -163,7 +111,10 @@ RUN tar zxf nexus-${NEXUS_VERSION}-bundle.tar.gz \
   && rm -rf /tmp/nexus-${NEXUS_VERSION}-bundle.tar.gz
 
 # So that we don't have to RUN_AS_USER=root.
-RUN chown -R worker:worker /opt/sonatype
+RUN chown -R worker:worker /opt/sonatype/nexus/
 
-# Back to the workdir, matching desktop-build.
+# Back to the centos6-build workdir, matching desktop-build.
 WORKDIR /builds/worker
+
+# Set a default command useful for debugging
+CMD ["/bin/bash", "--login"]

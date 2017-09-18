@@ -58,7 +58,7 @@ android-test/opt:
         symbol: tc(test)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: android-build}
+        docker-image: {in-tree: desktop-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-test
@@ -85,7 +85,6 @@ android-test/opt:
     optimizations:
       - - skip-unless-changed
         - - "mobile/android/base/**"
-          - "mobile/android/config/**"
           - "mobile/android/tests/background/junit4/**"
           - "**/*.gradle"
 
@@ -101,7 +100,7 @@ android-lint/opt:
         symbol: tc(lint)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: android-build}
+        docker-image: {in-tree: desktop-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-lint
@@ -149,7 +148,6 @@ android-lint/opt:
           - "mobile/android/**/*.svg"
           - "mobile/android/**/*.xml" # Manifest & android resources
           - "mobile/android/**/Makefile.in"
-          - "mobile/android/config/**"
           - "mobile/android/**/moz.build"
           - "**/*.gradle"
 
@@ -165,7 +163,7 @@ android-checkstyle/opt:
         symbol: tc(checkstyle)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: android-build}
+        docker-image: {in-tree: desktop-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-checkstyle
@@ -197,7 +195,6 @@ android-checkstyle/opt:
         - - "mobile/android/**/checkstyle.xml"
           - "mobile/android/**/*.java"
           - "mobile/android/**/Makefile.in"
-          - "mobile/android/config/**"
           - "mobile/android/**/moz.build"
           - "**/*.gradle"
 
@@ -213,7 +210,7 @@ android-findbugs/opt:
         symbol: tc(findbugs)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        docker-image: {in-tree: android-build}
+        docker-image: {in-tree: desktop-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
@@ -250,6 +247,5 @@ android-findbugs/opt:
       - - skip-unless-changed
         - - "mobile/android/**/*.java"
           - "mobile/android/**/Makefile.in"
-          - "mobile/android/config/**"
           - "mobile/android/**/moz.build"
           - "**/*.gradle"
