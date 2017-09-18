@@ -61,7 +61,7 @@ public:
   /**
    * Play the EMF's drawing commands onto the given DC.
    */
-  bool Playback(HDC aDeviceContext, const RECT* aRect);
+  bool Playback(HDC aDeviceContext, const RECT& aRect);
 
   /**
    * Called to generate the EMF file once a consumer has finished drawing to
