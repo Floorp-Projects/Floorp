@@ -2170,6 +2170,29 @@ enum class GetUserMediaSecurityState {
 };
 
 /**
+ * This function is used in getUserMedia when privacy.resistFingerprinting is true.
+ * Only mediaSource of audio/video constraint will be kept.
+ */
+static void
+ReduceConstraint(
+    mozilla::dom::OwningBooleanOrMediaTrackConstraints& aConstraint) {
+  // Not requesting stream.
+  if (!IsOn(aConstraint)) {
+    return;
+  }
+
+  // It looks like {audio: true}, do nothing.
+  if (!aConstraint.IsMediaTrackConstraints()) {
+    return;
+  }
+
+  // Keep mediaSource, ignore all other constraints.
+  auto& c = aConstraint.GetAsMediaTrackConstraints();
+  nsString mediaSource = c.mMediaSource;
+  aConstraint.SetAsMediaTrackConstraints().mMediaSource = mediaSource;
+}
+
+/**
  * The entry point for this file. A call from Navigator::mozGetUserMedia
  * will end up here. MediaManager is a singleton that is responsible
  * for handling all incoming getUserMedia calls from every window.
@@ -2278,6 +2301,13 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   rv = PrincipalToPrincipalInfo(principal, &principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  const bool resistFingerprinting = nsContentUtils::ResistFingerprinting(aCallerType);
+
+  if (resistFingerprinting) {
+    ReduceConstraint(c.mVideo);
+    ReduceConstraint(c.mAudio);
   }
 
   if (!Preferences::GetBool("media.navigator.video.enabled", true)) {
@@ -2509,7 +2539,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   RefPtr<MediaManager> self = this;
   p->Then([self, onSuccess, onFailure, windowID, c, windowListener,
            sourceListener, askPermission, prefs, isHTTPS, callID, principalInfo,
-           isChrome](SourceSet*& aDevices) mutable {
+           isChrome, resistFingerprinting](SourceSet*& aDevices) mutable {
     // grab result
     auto devices = MakeRefPtr<Refcountable<UniquePtr<SourceSet>>>(aDevices);
 
@@ -2523,7 +2553,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
     p2->Then([self, onSuccess, onFailure, windowID, c,
               windowListener, sourceListener, askPermission, prefs, isHTTPS,
-              callID, principalInfo, isChrome, devices
+              callID, principalInfo, isChrome, devices, resistFingerprinting
              ](const char*& badConstraint) mutable {
 
       // Ensure that the captured 'this' pointer and our windowID are still good.
@@ -2547,7 +2577,13 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       }
       if (!(*devices)->Length()) {
         RefPtr<MediaStreamError> error =
-            new MediaStreamError(window, NS_LITERAL_STRING("NotFoundError"));
+            new MediaStreamError(
+                window,
+                // When privacy.resistFingerprinting = true, no available
+                // device implies content script is requesting a fake
+                // device, so report NotAllowedError.
+                resistFingerprinting ? NS_LITERAL_STRING("NotAllowedError")
+                                     : NS_LITERAL_STRING("NotFoundError"));
         onFailure->OnError(error);
         return;
       }
