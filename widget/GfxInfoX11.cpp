@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
 // these global variables will be set when firing the glxtest process
-int glxtest_pipe = 0;
+int glxtest_pipe = -1;
 pid_t glxtest_pid = 0;
 
 nsresult
@@ -55,8 +55,8 @@ GfxInfo::GetData()
     // to understand this function, see bug 639842. We retrieve the OpenGL driver information in a
     // separate process to protect against bad drivers.
 
-    // if glxtest_pipe == 0, that means that we already read the information
-    if (!glxtest_pipe)
+    // if glxtest_pipe == -1, that means that we already read the information
+    if (glxtest_pipe == -1)
         return;
 
     enum { buf_size = 1024 };
@@ -65,7 +65,7 @@ GfxInfo::GetData()
                              &buf,
                              buf_size-1); // -1 because we'll append a zero
     close(glxtest_pipe);
-    glxtest_pipe = 0;
+    glxtest_pipe = -1;
 
     // bytesread < 0 would mean that the above read() call failed.
     // This should never happen. If it did, the outcome would be to blacklist anyway.
