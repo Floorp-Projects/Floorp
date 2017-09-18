@@ -34,7 +34,7 @@ InitContext(aom_codec_ctx_t* aCtx,
 {
   aom_codec_iface_t* dx = aom_codec_av1_dx();
   if (!dx) {
-    return MediaResult(NS_ERROR_FAILURE,
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Couldn't get AV1 decoder interface."));
   }
 
@@ -57,7 +57,7 @@ InitContext(aom_codec_ctx_t* aCtx,
   auto res = aom_codec_dec_init(aCtx, dx, &config, flags);
   if (res != AOM_CODEC_OK) {
     LOG_RESULT(res, "Codec initialization failed!");
-    return MediaResult(NS_ERROR_FAILURE,
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("AOM error initializing AV1 decoder: %s",
                                      aom_codec_err_to_string(res)));
   }
@@ -92,8 +92,9 @@ AOMDecoder::Shutdown()
 RefPtr<MediaDataDecoder::InitPromise>
 AOMDecoder::Init()
 {
-  if (NS_FAILED(InitContext(&mCodec, mInfo))) {
-    return AOMDecoder::InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+  MediaResult rv = InitContext(&mCodec, mInfo);
+  if (NS_FAILED(rv)) {
+    return AOMDecoder::InitPromise::CreateAndReject(rv,
                                                     __func__);
   }
   return AOMDecoder::InitPromise::CreateAndResolve(TrackInfo::kVideoTrack,
