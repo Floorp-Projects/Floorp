@@ -76,8 +76,6 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
         br.Remaining() != FLAC_STREAMINFO_SIZE + 4) {
       return false;
     }
-    aPacket += 4;
-    aLength -= 4;
   }
   uint8_t blockHeader = br.ReadU8();
   // blockType is a misnomer as it could indicate here either a packet type

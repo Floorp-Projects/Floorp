@@ -1215,6 +1215,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton > .toolbarbutton-text {
   padding: 0;
+  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined below. */
 }
 
 .subviewbutton > .menu-right,
@@ -1260,6 +1261,10 @@ panelview .toolbarbutton-1,
   -moz-appearance: none;
   padding-inline-end: 6px;
   -moz-box-flex: 0;
+}
+
+.subviewbutton.panel-subview-footer > .toolbarbutton-text {
+  padding-inline-start: 0;
 }
 
 .subviewbutton.panel-subview-footer > .menu-accel-container {

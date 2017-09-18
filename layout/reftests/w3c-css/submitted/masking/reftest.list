@@ -30,7 +30,7 @@ fuzzy-if(skiaContent||winWidget,1,43) == mask-image-3d.html mask-image-3-ref.htm
 # Due to SVG luminance, see bug 1372577, parent process doesn't use d2d for luminance.
 fuzzy-if(skiaContent||winWidget,50,85) fuzzy-if(webrender,1,126) fuzzy-if(d2d,255,1) fuzzy-if(winWidget&&!browserIsRemote,50,85) == mask-image-3f.html mask-image-3-ref.html
 fuzzy-if(skiaContent||winWidget,50,85) fuzzy-if(webrender,1,126) fuzzy-if(d2d,255,1) fuzzy-if(winWidget&&!browserIsRemote,50,85) == mask-image-3g.html mask-image-3-ref.html
-pref(layout.css.clip-path-shapes.enabled,true) fuzzy-if(winWidget,1,3) fuzzy-if(skiaContent,2,12) == mask-image-3h.html mask-image-3-ref.html
+fuzzy-if(winWidget,1,3) fuzzy-if(skiaContent,2,12) == mask-image-3h.html mask-image-3-ref.html
 fuzzy-if(skiaContent,71,203) == mask-image-3i.html mask-image-3-ref.html
 == mask-image-4a.html blank.html
 == mask-image-4b.html blank.html
@@ -87,8 +87,6 @@ fails == mask-origin-2.html mask-origin-2-ref.html # bug 1260094
 == mask-size-percent-percent.html mask-size-percent-percent-ref.html
 == mask-size-percent-percent-stretch.html mask-size-percent-percent-stretch-ref.html
 
-default-preferences pref(layout.css.clip-path-shapes.enabled,true)
-
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-contentBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-contentBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-contentBox-1c.html clip-path-geometryBox-1-ref.html
@@ -108,8 +106,6 @@ fuzzy(64,370) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,9,98) fuzzy-if(webrender,64,100) == clip-path-geometryBox-2.html clip-path-geometryBox-2-ref.html
 
 == clip-path-localRef-1.html clip-path-localRef-1-ref.html
-
-default-preferences
 
 # mask with opacity test cases
 fuzzy(1,5000) == mask-opacity-1a.html mask-opacity-1-ref.html
