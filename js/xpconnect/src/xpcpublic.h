@@ -175,6 +175,29 @@ XrayAwareCalleeGlobalForSpecializedGetters(JSContext* cx,
 void
 TraceXPCGlobal(JSTracer* trc, JSObject* obj);
 
+/**
+ * Creates a new global object using the given aCOMObj as the global
+ * object. The object will be set up according to the flags (defined
+ * below). If you do not pass INIT_JS_STANDARD_CLASSES, then aCOMObj
+ * must implement nsIXPCScriptable so it can resolve the standard
+ * classes when asked by the JS engine.
+ *
+ * @param aJSContext the context to use while creating the global object.
+ * @param aCOMObj the native object that represents the global object.
+ * @param aPrincipal the principal of the code that will run in this
+ *                   compartment. Can be null if not on the main thread.
+ * @param aFlags one of the flags below specifying what options this
+ *               global object wants.
+ * @param aOptions JSAPI-specific options for the new compartment.
+ */
+nsresult
+InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
+                                nsISupports* aCOMObj,
+                                nsIPrincipal* aPrincipal,
+                                uint32_t aFlags,
+                                JS::CompartmentOptions& aOptions,
+                                JS::MutableHandleObject aNewGlobal);
+
 } /* namespace xpc */
 
 namespace JS {
