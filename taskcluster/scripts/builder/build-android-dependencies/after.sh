@@ -19,10 +19,17 @@ tar cJf android-sdk-linux.tar.xz android-sdk-linux
 mkdir -p /builds/worker/private/android-sdk
 mv android-sdk-linux.tar.xz /builds/worker/private/android-sdk
 
-cp -R ${NEXUS_WORK}/storage/jcenter jcenter
+cp -R $WORKSPACE/build/src/java_home java_home
+tar cJf java_home.tar.xz java_home
+
+# We can't redistribute Java publicly.
+mkdir -p /builds/worker/private/java_home
+mv java_home.tar.xz /builds/worker/private/java_home
+
+cp -R $WORKSPACE/nexus/storage/jcenter jcenter
 tar cJf jcenter.tar.xz jcenter
 
-cp -R ${NEXUS_WORK}/storage/google google
+cp -R $WORKSPACE/nexus/storage/google google
 tar cJf google.tar.xz google
 
 # The Gradle wrapper will have downloaded and verified the hash of exactly one
