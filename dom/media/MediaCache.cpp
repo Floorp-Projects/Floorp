@@ -17,6 +17,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIObserverService.h"
