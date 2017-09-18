@@ -4,8 +4,6 @@ set -x -e
 
 echo "running as" $(id)
 
-. /builds/worker/scripts/xvfb.sh
-
 ####
 # Taskcluster friendly wrapper for performing fx desktop builds via mozharness.
 ####
@@ -59,15 +57,17 @@ fi
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
-cleanup() {
-    local rv=$?
-    cleanup_xvfb
-    exit $rv
-}
-trap cleanup EXIT INT
-
 # run XVfb in the background, if necessary
 if $NEED_XVFB; then
+    . /builds/worker/scripts/xvfb.sh
+
+    cleanup() {
+        local rv=$?
+        cleanup_xvfb
+        exit $rv
+    }
+    trap cleanup EXIT INT
+
     start_xvfb '1024x768x24' 2
 fi
 

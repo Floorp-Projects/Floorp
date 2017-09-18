@@ -9,6 +9,7 @@
 
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
+#include "MediaSegment.h"
 #include "MediaSink.h"
 
 #include "mozilla/AbstractThread.h"

@@ -29,6 +29,13 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     return result;
   }
 
+  function base64ToBinary(url) {
+    const binary = atob(url.split(',')[1]);
+    const data = Uint8Array.from(binary, char => char.charCodeAt(0));
+    const blob = new Blob([data], {type: "image/png"});
+    return blob;
+  }
+
   catcher.registerHandler((errorObj) => {
     callBackground("reportError", sanitizeError(errorObj));
   });
@@ -80,6 +87,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
         catcher.unhandled(exc);
         return;
     }
+    let imageBlob;
     const uicontrol = global.uicontrol;
     let deactivateAfterFinish = true;
     if (isSaving) {
@@ -99,11 +107,12 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     }
     let dataUrl = url || screenshotPage(selectedPos, captureType);
     if (dataUrl) {
+      imageBlob = base64ToBinary(dataUrl);
       shotObject.delAllClips();
       shotObject.addClip({
         createdDate: Date.now(),
         image: {
-          url: dataUrl,
+          url: "data:",
           captureType,
           text: captureText,
           location: selectedPos,
@@ -125,7 +134,8 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       },
       selectedPos,
       shotId: shotObject.id,
-      shot: shotObject.asJson()
+      shot: shotObject.asJson(),
+      imageBlob
     }).then((url) => {
       return clipboard.copy(url).then((copied) => {
         return callBackground("openShot", { url, copied });
