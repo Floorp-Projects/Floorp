@@ -17,10 +17,6 @@ const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/ne
 const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 
 let store = null;
-let queuedMessageAdds = [];
-let queuedMessageUpdates = [];
-let queuedRequestUpdates = [];
-let throttledDispatchTimeout = false;
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   EventEmitter.decorate(this);
@@ -32,6 +28,11 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   this.document = document;
 
   this.init = this.init.bind(this);
+
+  this.queuedMessageAdds = [];
+  this.queuedMessageUpdates = [];
+  this.queuedRequestUpdates = [];
+  this.throttledDispatchTimeout = false;
 
   store = configureStore(this.jsterm.hud);
 }
@@ -182,7 +183,7 @@ NewConsoleOutputWrapper.prototype = {
     this.jsterm.focus();
   },
   dispatchMessageAdd: function (message, waitForResponse) {
-    batchedMessagesAdd(message);
+    this.batchedMessagesAdd(message);
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
     // be removed once it's not needed anymore.
@@ -224,22 +225,62 @@ NewConsoleOutputWrapper.prototype = {
     // that networkInfo.updates has all we need.
     const NUMBER_OF_NETWORK_UPDATE = 8;
     if (res.networkInfo.updates.length === NUMBER_OF_NETWORK_UPDATE) {
-      batchedMessageUpdates(message);
-      this.jsterm.hud.emit("network-message-updated", res);
+      this.batchedMessageUpdates({ res, message });
     }
   },
 
   dispatchRequestUpdate: function (id, data) {
-    batchedRequestUpdates({ id, data });
+    this.batchedRequestUpdates({ id, data });
+  },
 
-    // Fire an event indicating that all data fetched from
-    // the backend has been received. This is based on
-    // 'FirefoxDataProvider.isQueuePayloadReady', see more
-    // comments in that method.
-    // (netmonitor/src/connector/firefox-data-provider).
-    // This event might be utilized in tests to find the right
-    // time when to finish.
-    this.jsterm.hud.emit("network-request-payload-ready", {id, data});
+  batchedMessageUpdates: function (info) {
+    this.queuedMessageUpdates.push(info);
+    this.setTimeoutIfNeeded();
+  },
+
+  batchedRequestUpdates: function (message) {
+    this.queuedRequestUpdates.push(message);
+    this.setTimeoutIfNeeded();
+  },
+
+  batchedMessagesAdd: function (message) {
+    this.queuedMessageAdds.push(message);
+    this.setTimeoutIfNeeded();
+  },
+
+  setTimeoutIfNeeded: function () {
+    if (this.throttledDispatchTimeout) {
+      return;
+    }
+
+    this.throttledDispatchTimeout = setTimeout(() => {
+      this.throttledDispatchTimeout = null;
+
+      store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
+      this.queuedMessageAdds = [];
+
+      if (this.queuedMessageUpdates.length > 0) {
+        this.queuedMessageUpdates.forEach(({ message, res }) => {
+          actions.networkMessageUpdate(message);
+          this.jsterm.hud.emit("network-message-updated", res);
+        });
+        this.queuedMessageUpdates = [];
+      }
+      if (this.queuedRequestUpdates.length > 0) {
+        this.queuedRequestUpdates.forEach(({ id, data}) => {
+          actions.networkUpdateRequest(id, data);
+          // Fire an event indicating that all data fetched from
+          // the backend has been received. This is based on
+          // 'FirefoxDataProvider.isQueuePayloadReady', see more
+          // comments in that method.
+          // (netmonitor/src/connector/firefox-data-provider).
+          // This event might be utilized in tests to find the right
+          // time when to finish.
+          this.jsterm.hud.emit("network-request-payload-ready", {id, data});
+        });
+        this.queuedRequestUpdates = [];
+      }
+    }, 50);
   },
 
   // Should be used for test purpose only.
@@ -247,39 +288,6 @@ NewConsoleOutputWrapper.prototype = {
     return store;
   }
 };
-
-function setTimeoutIfNeeded() {
-  if (!throttledDispatchTimeout) {
-    throttledDispatchTimeout = setTimeout(() => {
-      store.dispatch(actions.messagesAdd(queuedMessageAdds));
-      queuedMessageUpdates.forEach(message => {
-        actions.networkMessageUpdate(message);
-      });
-      queuedRequestUpdates.forEach(({ id, data}) => {
-        actions.networkUpdateRequest(id, data);
-      });
-      queuedMessageAdds = [];
-      queuedMessageUpdates = [];
-      queuedRequestUpdates = [];
-      throttledDispatchTimeout = null;
-    }, 50);
-  }
-}
-
-function batchedMessageUpdates(message) {
-  queuedMessageUpdates.push(message);
-  setTimeoutIfNeeded();
-}
-
-function batchedRequestUpdates(message) {
-  queuedRequestUpdates.push(message);
-  setTimeoutIfNeeded();
-}
-
-function batchedMessagesAdd(message) {
-  queuedMessageAdds.push(message);
-  setTimeoutIfNeeded();
-}
 
 // Exports from this module
 module.exports = NewConsoleOutputWrapper;
