@@ -200,15 +200,17 @@ class LoggingManager(object):
         self.json_handlers.append(handler)
 
     def add_terminal_logging(self, fh=sys.stdout, level=logging.INFO,
-            write_interval=False, write_times=True):
+                             write_interval=False, write_times=True):
         """Enable logging to the terminal."""
 
         formatter = StructuredHumanFormatter(self.start_time,
-            write_interval=write_interval, write_times=write_times)
+                                             write_interval=write_interval,
+                                             write_times=write_times)
 
         if self.terminal:
             formatter = StructuredTerminalFormatter(self.start_time,
-                write_interval=write_interval, write_times=write_times)
+                                                    write_interval=write_interval,
+                                                    write_times=write_times)
             formatter.set_terminal(self.terminal)
 
         handler = logging.StreamHandler(stream=fh)

@@ -68,7 +68,7 @@ class CommandAction(argparse.Action):
     For more, read the docs in __call__.
     """
     def __init__(self, option_strings, dest, required=True, default=None,
-        registrar=None, context=None):
+                 registrar=None, context=None):
         # A proper API would have **kwargs here. However, since we are a little
         # hacky, we intentionally omit it as a way of detecting potentially
         # breaking changes with argparse's implementation.
@@ -76,7 +76,7 @@ class CommandAction(argparse.Action):
         # In a similar vein, default is passed in but is not needed, so we drop
         # it.
         argparse.Action.__init__(self, option_strings, dest, required=required,
-            help=argparse.SUPPRESS, nargs=argparse.REMAINDER)
+                                 help=argparse.SUPPRESS, nargs=argparse.REMAINDER)
 
         self._mach_registrar = registrar
         self._context = context
@@ -276,7 +276,7 @@ class CommandAction(argparse.Action):
 
                 description = handler.description
                 group.add_argument(command, help=description,
-                    action='store_true')
+                                   action='store_true')
 
         if disabled_commands and 'disabled' in r.categories:
             title, description, _priority = r.categories['disabled']
@@ -376,7 +376,7 @@ class CommandAction(argparse.Action):
 
         for subcommand, subhandler in sorted(handler.subcommand_handlers.iteritems()):
             group.add_argument(subcommand, help=subhandler.description,
-                action='store_true')
+                               action='store_true')
 
         if handler.docstring:
             parser.description = format_docstring(handler.docstring)
@@ -413,7 +413,7 @@ class CommandAction(argparse.Action):
     def _suggest_command(self, command):
         # Make sure we don't suggest any deprecated commands.
         names = [h.name for h in self._mach_registrar.command_handlers.values()
-                    if h.cls.__name__ != 'DeprecatedCommands']
+                 if h.cls.__name__ != 'DeprecatedCommands']
         # We first try to look for a valid command that is very similar to the given command.
         suggested_commands = difflib.get_close_matches(command, names, cutoff=0.8)
         # If we find more than one matching command, or no command at all,

@@ -40,6 +40,7 @@ CONFIG2 = r"""
 bar = value2
 """
 
+
 @SettingsProvider
 class Provider1(object):
     config_settings = [

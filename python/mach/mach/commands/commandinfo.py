@@ -23,14 +23,14 @@ class BuiltinCommands(object):
                 if not v.conditions or v.conditions[0].__name__ != 'REMOVED')
 
     @Command('mach-commands', category='misc',
-        description='List all mach commands.')
+             description='List all mach commands.')
     def commands(self):
         print("\n".join(self.command_keys))
 
     @Command('mach-debug-commands', category='misc',
-        description='Show info about available mach commands.')
+             description='Show info about available mach commands.')
     @CommandArgument('match', metavar='MATCH', default=None, nargs='?',
-        help='Only display commands containing given substring.')
+                     help='Only display commands containing given substring.')
     def debug_commands(self, match=None):
         import inspect
 
@@ -50,4 +50,3 @@ class BuiltinCommands(object):
             print('Class: %s' % cls.__name__)
             print('Method: %s' % handler.method)
             print('')
-
