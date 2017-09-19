@@ -38,12 +38,6 @@ enum nsTimeFormatSelector : long
 
 class DateTimeFormat {
 public:
-  // performs a locale sensitive date formatting operation on the time_t parameter
-  static nsresult FormatTime(const nsDateFormatSelector aDateFormatSelector,
-                             const nsTimeFormatSelector aTimeFormatSelector,
-                             const time_t aTimetTime,
-                             nsAString& aStringOut);
-
   // performs a locale sensitive date formatting operation on the PRTime parameter
   static nsresult FormatPRTime(const nsDateFormatSelector aDateFormatSelector,
                                const nsTimeFormatSelector aTimeFormatSelector,
