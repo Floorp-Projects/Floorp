@@ -2976,17 +2976,9 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
         // shape list. This is updated in Nursery::sweepDictionaryModeObjects().
     }
 
-    if (src->is<ProxyObject>()) {
-        // TODO: Push this logic into proxy_ObjectMoved and make all proxies use
-        // this.
-
-        // Objects in the nursery are never swapped so the proxy must have an
-        // inline ProxyValueArray.
-        MOZ_ASSERT(src->as<ProxyObject>().usingInlineValueArray());
-        dst->as<ProxyObject>().setInlineValueArray();
-        if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp())
-            tenuredSize += op(dst, src);
-    } else if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp()) {
+    JSObjectMovedOp op = dst->getClass()->extObjectMovedOp();
+    MOZ_ASSERT_IF(src->is<ProxyObject>(), op == proxy_ObjectMoved);
+    if (op) {
         tenuredSize += op(dst, src);
     } else {
         MOZ_ASSERT_IF(src->getClass()->hasFinalize(),
