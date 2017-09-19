@@ -171,6 +171,9 @@ struct GCPolicy<jsid>
     static void trace(JSTracer* trc, jsid* idp, const char* name) {
         js::UnsafeTraceManuallyBarrieredEdge(trc, idp, name);
     }
+    static bool isValid(jsid id) {
+        return !JSID_IS_GCTHING(id) || js::gc::IsCellPointerValid(JSID_TO_GCTHING(id).asCell());
+    }
 };
 
 } // namespace JS
