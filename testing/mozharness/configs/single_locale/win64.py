@@ -11,7 +11,6 @@ config = {
         "EN_US_BINARY_URL": "%(en_us_binary_url)s",
         "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
         "DIST": "%(abs_objdir)s",
-        "LOCALE_MERGEDIR": "%(abs_merge_dir)s",
         "L10NBASEDIR": "../../l10n",
         "MOZ_MAKE_COMPLETE_MAR": "1",
         "PATH": '%(abs_objdir)s\\..\\xz-5.2.3\\bin_x86-64;'
@@ -42,7 +41,6 @@ config = {
     "locales_file": "%(branch)s/browser/locales/all-locales",
     "locales_dir": "browser/locales",
     "hg_l10n_tag": "default",
-    "merge_locales": True,
 
     # MAR
     "previous_mar_dir": "dist\\previous",

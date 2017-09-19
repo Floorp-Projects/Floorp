@@ -125,6 +125,14 @@ add_task(async function testInvalid() {
   await BrowserTestUtils.closeWindow(win);
 });
 
+add_task(async function testLongOID() {
+  // This certificate has a certificatePolicies extension with a policy with a
+  // very long OID. This tests that we don't crash when looking at it.
+  let cert = await readCertificate("longOID.pem", ",,");
+  let win = await displayCertificate(cert);
+  await BrowserTestUtils.closeWindow(win);
+});
+
 /**
  * Given a certificate, returns a promise that will resolve when the certificate
  * viewer has opened is displaying that certificate, and has finished

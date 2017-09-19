@@ -240,12 +240,12 @@ function TestHeadersIterator() {
   var value_iter = headers.values();
   var entries_iter = headers.entries();
 
-  arrayEquals(iterate(key_iter), ["foo", "foo", "foo2"], "Correct key iterator");
-  arrayEquals(iterate(value_iter), ["bar", ehsanInflated, "baz2"], "Correct value iterator");
-  arrayEquals(iterate(entries_iter), [["foo", "bar"], ["foo", ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+  arrayEquals(iterate(key_iter), ["foo", "foo2"], "Correct key iterator");
+  arrayEquals(iterate(value_iter), ["bar, " + ehsanInflated, "baz2"], "Correct value iterator");
+  arrayEquals(iterate(entries_iter), [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
 
-  arrayEquals(iterateForOf(headers), [["foo", "bar"], ["foo", ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
-  arrayEquals(iterateForOf(new Headers(headers)), [["foo", "bar"], ["foo", ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+  arrayEquals(iterateForOf(headers), [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+  arrayEquals(iterateForOf(new Headers(headers)), [["foo", "bar, " + ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
 }
 
 function runTest() {

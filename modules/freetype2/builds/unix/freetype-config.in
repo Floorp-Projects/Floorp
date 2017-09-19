@@ -14,7 +14,7 @@ export LC_ALL
 
 
 # if `pkg-config' is available, use values from `freetype2.pc'
-pkg-config --version >/dev/null 2>&1
+%PKG_CONFIG% --atleast-pkgconfig-version 0.24 >/dev/null 2>&1
 if test $? -eq 0 ; then
   # note that option `--variable' is not affected by the
   # PKG_CONFIG_SYSROOT_DIR environment variable
@@ -23,17 +23,17 @@ if test $? -eq 0 ; then
     export PKG_CONFIG_SYSROOT_DIR
   fi
 
-  prefix=`pkg-config --variable prefix freetype2`
-  exec_prefix=`pkg-config --variable exec_prefix freetype2`
+  prefix=`%PKG_CONFIG% --variable prefix freetype2`
+  exec_prefix=`%PKG_CONFIG% --variable exec_prefix freetype2`
 
-  includedir=`pkg-config --variable includedir freetype2`
-  libdir=`pkg-config --variable libdir freetype2`
+  includedir=`%PKG_CONFIG% --variable includedir freetype2`
+  libdir=`%PKG_CONFIG% --variable libdir freetype2`
 
-  version=`pkg-config --modversion freetype2`
+  version=`%PKG_CONFIG% --modversion freetype2`
 
-  cflags=`pkg-config --cflags freetype2`
-  dynamic_libs=`pkg-config --libs freetype2`
-  static_libs=`pkg-config --static --libs freetype2`
+  cflags=`%PKG_CONFIG% --cflags freetype2`
+  dynamic_libs=`%PKG_CONFIG% --libs freetype2`
+  static_libs=`%PKG_CONFIG% --static --libs freetype2`
 else
   prefix="%prefix%"
   exec_prefix="%exec_prefix%"

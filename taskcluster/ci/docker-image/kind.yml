@@ -22,7 +22,9 @@ jobs:
     symbol: I(vb)
   lint:
     symbol: I(lnt)
-  android-gradle-build:
+  android-build:
     symbol: I(agb)
   index-task:
     symbol: I(idx)
+  funsize-update-generator:
+    symbol: I(pg)

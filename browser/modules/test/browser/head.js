@@ -58,6 +58,27 @@ function checkKeyedScalar(scalars, scalarName, key, expectedValue) {
 }
 
 /**
+ * An helper that checks the value of a scalar if it's expected to be > 0,
+ * otherwise makes sure that the scalar it's not reported.
+ *
+ * @param {Object} scalars
+ *        The snapshot of the scalars.
+ * @param {String} scalarName
+ *        The name of the scalar to check.
+ * @param {Number} value
+ *        The expected value for the provided scalar.
+ * @param {String} msg
+ *        The message to print when checking the value.
+ */
+let checkScalar = (scalars, scalarName, value, msg) => {
+  if (value > 0) {
+    is(scalars[scalarName], value, msg);
+    return;
+  }
+  ok(!(scalarName in scalars), scalarName + " must not be reported.");
+};
+
+/**
  * An utility function to write some text in the search input box
  * in a content page.
  * @param {Object} browser

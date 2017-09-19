@@ -4,11 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict"
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Components.utils.import("resource://gre/modules/Messaging.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 this.EXPORTED_SYMBOLS = ["Prompt", "DoorHanger"];
 
@@ -185,20 +189,9 @@ Prompt.prototype = {
     this._innerShow();
   },
 
-  _getDispatcher: function(win) {
-    let root = win && getRootWindow(win);
-    try {
-      return root && (root.WindowEventDispatcher || EventDispatcher.for(root));
-    } catch (e) {
-      // No EventDispatcher for this window.
-      return null;
-    }
-  },
-
   _innerShow: function() {
-    let dispatcher =
-        this._getDispatcher(this.window) ||
-        this._getDispatcher(Services.wm.getMostRecentWindow("navigator:browser"));
+    let dispatcher = GeckoViewUtils.getDispatcherForWindow(this.window) ||
+                     GeckoViewUtils.getActiveDispatcher();
     dispatcher.sendRequestForResult(this.msg).then((data) => {
       if (this.callback) {
         this.callback(data);

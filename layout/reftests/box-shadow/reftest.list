@@ -14,7 +14,7 @@ fails-if(Android) fuzzy-if(webrender,50,3310) == boxshadow-button.html boxshadow
 fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) fuzzy-if(webrender,18,2160) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
 fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
-fuzzy-if(skiaContent,13,28) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
+fuzzy-if(skiaContent,13,28) fuzzy-if(webrender,29-29,450-450) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,127,3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
@@ -25,7 +25,7 @@ fuzzy(2,440) fuzzy-if(webrender,25,1300) == boxshadow-skiprect.html boxshadow-sk
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
-fuzzy(3,500) fuzzy-if(d2d,2,1080) fuzzy-if(webrender,12,1500) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
+fuzzy(3,500) fuzzy-if(d2d,2,1080) fuzzy-if(webrender,13-13,1000-1000) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 fuzzy-if(webrender,1,4) == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html
 fuzzy(26,3610) fuzzy-if(d2d,26,5910) fuzzy-if(webrender,43,200) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
@@ -40,7 +40,7 @@ fuzzy(13,9445) fuzzy-if(d2d,13,10926) fuzzy-if(webrender,14,14307) == boxshadow-
 fuzzy-if(webrender,1,655) == 611574-1.html 611574-1-ref.html
 fuzzy-if(webrender,4,144) == 611574-2.html 611574-2-ref.html
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) fuzzy-if(webrender,162-162,120-120) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
-fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) fuzzy-if(webrender,165-165,120-120) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
+fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) fails-if(webrender) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
 fuzzy(159,2) fails-if(!dwrite) == 1212823-1.html 1212823-1-ref.html

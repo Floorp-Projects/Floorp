@@ -232,10 +232,6 @@ panelview {
   -moz-box-flex: 1;
 }
 
-.cui-widget-panelview .subviewbutton.panel-subview-footer .menu-accel-container {
-  -moz-box-pack: end;
-}
-
 #appMenu-popup > arrowscrollbox > autorepeatbutton,
 #PanelUI-popup > arrowscrollbox > autorepeatbutton {
   display: none;
@@ -1215,6 +1211,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton > .toolbarbutton-text {
   padding: 0;
+  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined below. */
 }
 
 .subviewbutton > .menu-right,
@@ -1259,11 +1256,21 @@ panelview .toolbarbutton-1,
 .subviewbutton.panel-subview-footer > .menu-text {
   -moz-appearance: none;
   padding-inline-end: 6px;
+  padding-inline-start: 0 !important; /* to override menu.css on Windows */
   -moz-box-flex: 0;
+}
+
+.subviewbutton.panel-subview-footer > .toolbarbutton-text {
+  padding-inline-start: 0;
 }
 
 .subviewbutton.panel-subview-footer > .menu-accel-container {
   padding-inline-start: 6px;
+}
+
+.subviewbutton > .menu-accel-container > .menu-iconic-accel,
+.subviewbutton > .menu-accel-container > .menu-accel {
+  margin-inline-end: 0 !important; /* to override menu.css on Windows */
 }
 
 #widget-overflow-fixed-list .toolbarbutton-1 > .toolbarbutton-text,
@@ -1508,7 +1515,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 }
 
 .subviewbutton > .menu-accel-container {
-  -moz-box-pack: start;
+  -moz-box-pack: end;
   margin-inline-start: 10px;
   margin-inline-end: auto;
   color: GrayText;

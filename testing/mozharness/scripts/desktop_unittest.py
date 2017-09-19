@@ -792,8 +792,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
                     self.buildbot_status(tbpl_status, level=log_level)
                     if len(verify_args) > 0:
-                        self.log("TinderboxPrint: verification of %s in %s<br/>: %s" %
-                                 (verify_args[-1], suite, tbpl_status), level=log_level)
+                        self.log_verify_status(verify_args[-1], tbpl_status, log_level)
                     else:
                         self.log("The %s suite: %s ran with return status: %s" %
                                  (suite_category, suite, tbpl_status), level=log_level)
