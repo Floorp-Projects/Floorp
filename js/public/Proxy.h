@@ -335,7 +335,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const;
     virtual void trace(JSTracer* trc, JSObject* proxy) const;
     virtual void finalize(JSFreeOp* fop, JSObject* proxy) const;
-    virtual void objectMoved(JSObject* proxy, const JSObject* old) const;
+    virtual size_t objectMoved(JSObject* proxy, JSObject* old) const;
 
     // Allow proxies, wrappers in particular, to specify callability at runtime.
     // Note: These do not take const JSObject*, but they do in spirit.
@@ -684,18 +684,6 @@ extern JS_FRIEND_DATA(const js::ClassOps) ProxyClassOps;
 extern JS_FRIEND_DATA(const js::ClassExtension) ProxyClassExtension;
 extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
 
-/*
- * Helper Macros for creating JSClasses that function as proxies.
- *
- * NB: The macro invocation must be surrounded by braces, so as to
- *     allow for potential JSClass extensions.
- */
-#define PROXY_MAKE_EXT(objectMoved)                                     \
-    {                                                                   \
-        js::proxy_WeakmapKeyDelegate,                                   \
-        objectMoved                                                     \
-    }
-
 template <unsigned Flags>
 constexpr unsigned
 CheckProxyFlags()
@@ -722,7 +710,7 @@ CheckProxyFlags()
     return Flags;
 }
 
-#define PROXY_CLASS_WITH_EXT(name, flags, extPtr)                                       \
+#define PROXY_CLASS_DEF(name, flags)                                                    \
     {                                                                                   \
         name,                                                                           \
         js::Class::NON_NATIVE |                                                         \
@@ -731,12 +719,9 @@ CheckProxyFlags()
             js::CheckProxyFlags<flags>(),                                               \
         &js::ProxyClassOps,                                                             \
         JS_NULL_CLASS_SPEC,                                                             \
-        extPtr,                                                                         \
+        &js::ProxyClassExtension,                                                       \
         &js::ProxyObjectOps                                                             \
     }
-
-#define PROXY_CLASS_DEF(name, flags) \
-  PROXY_CLASS_WITH_EXT(name, flags, &js::ProxyClassExtension)
 
 } /* namespace js */
 

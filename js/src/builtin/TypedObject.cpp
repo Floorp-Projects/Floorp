@@ -2126,9 +2126,12 @@ InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
     typedObj.typeDescr().traceInstances(trc, typedObj.inlineTypedMem(), 1);
 }
 
-/* static */ void
-InlineTypedObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src)
+/* static */ size_t
+InlineTypedObject::obj_moved(JSObject* dst, JSObject* src)
 {
+    if (!IsInsideNursery(src))
+        return 0;
+
     // Inline typed object element arrays can be preserved on the stack by Ion
     // and need forwarding pointers created during a minor GC. We can't do this
     // in the trace hook because we don't have any stale data to determine
@@ -2140,9 +2143,12 @@ InlineTypedObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObje
         // but they will not set any direct forwarding pointers.
         uint8_t* oldData = reinterpret_cast<uint8_t*>(src) + offsetOfDataStart();
         uint8_t* newData = dst->as<InlineTypedObject>().inlineTypedMem();
-        dst->zone()->group()->nursery().maybeSetForwardingPointer(trc, oldData, newData,
-                                                                  descr.size() >= sizeof(uintptr_t));
+        auto& nursery = dst->zone()->group()->nursery();
+        bool direct = descr.size() >= sizeof(uintptr_t);
+        nursery.setForwardingPointerWhileTenuring(oldData, newData, direct);
     }
+
+    return 0;
 }
 
 ArrayBufferObject*
@@ -2219,7 +2225,7 @@ const ObjectOps TypedObject::objectOps_ = {
     nullptr, /* thisValue */
 };
 
-#define DEFINE_TYPEDOBJ_CLASS(Name, Trace, flag)         \
+#define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Moved, flag)   \
     static const ClassOps Name##ClassOps = {             \
         nullptr,        /* addProperty */                \
         nullptr,        /* delProperty */                \
@@ -2233,20 +2239,34 @@ const ObjectOps TypedObject::objectOps_ = {
         nullptr,        /* construct   */                \
         Trace,                                           \
     };                                                   \
+    static const ClassExtension Name##ClassExt = {       \
+        nullptr,        /* weakmapKeyDelegateOp */       \
+        Moved           /* objectMovedOp */              \
+    };                                                   \
     const Class Name::class_ = {                         \
         # Name,                                          \
         Class::NON_NATIVE | flag,                        \
         &Name##ClassOps,                                 \
         JS_NULL_CLASS_SPEC,                              \
-        JS_NULL_CLASS_EXT,                               \
+        &Name##ClassExt,                                 \
         &TypedObject::objectOps_                         \
     }
 
-DEFINE_TYPEDOBJ_CLASS(OutlineTransparentTypedObject, OutlineTypedObject::obj_trace, 0);
-DEFINE_TYPEDOBJ_CLASS(OutlineOpaqueTypedObject,      OutlineTypedObject::obj_trace, 0);
-DEFINE_TYPEDOBJ_CLASS(InlineTransparentTypedObject,  InlineTypedObject::obj_trace,
+DEFINE_TYPEDOBJ_CLASS(OutlineTransparentTypedObject,
+                      OutlineTypedObject::obj_trace,
+                      nullptr,
+                      0);
+DEFINE_TYPEDOBJ_CLASS(OutlineOpaqueTypedObject,
+                      OutlineTypedObject::obj_trace,
+                      nullptr,
+                      0);
+DEFINE_TYPEDOBJ_CLASS(InlineTransparentTypedObject,
+                      InlineTypedObject::obj_trace,
+                      InlineTypedObject::obj_moved,
                       JSCLASS_DELAY_METADATA_BUILDER);
-DEFINE_TYPEDOBJ_CLASS(InlineOpaqueTypedObject,       InlineTypedObject::obj_trace,
+DEFINE_TYPEDOBJ_CLASS(InlineOpaqueTypedObject,
+                      InlineTypedObject::obj_trace,
+                      InlineTypedObject::obj_moved,
                       JSCLASS_DELAY_METADATA_BUILDER);
 
 static int32_t

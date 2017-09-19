@@ -762,9 +762,13 @@
 <!-- addons, forgery (phishing) UI Security -->
 <groupbox id="browsingProtectionGroup" data-category="panePrivacy" hidden="true">
   <caption><label>&browsingProtection.label;</label></caption>
-  <checkbox id="enableSafeBrowsing"
-            label="&enableSafeBrowsing.label;"
-            accesskey="&enableSafeBrowsing.accesskey;" />
+  <hbox align = "center">
+    <checkbox id="enableSafeBrowsing"
+              label="&enableSafeBrowsing.label;"
+              accesskey="&enableSafeBrowsing.accesskey;" />
+    <label id="enableSafeBrowsingLearnMore"
+           class="learnMore text-link">&enableSafeBrowsingLearnMore.label;</label>
+  </hbox>
   <vbox class="indent">
 #ifdef MOZILLA_OFFICIAL
     <checkbox id="blockDownloads"

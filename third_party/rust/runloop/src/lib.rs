@@ -5,8 +5,7 @@
 use std::io;
 use std::sync::{Arc, Mutex, Weak};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::thread;
-use std::thread::JoinHandle;
+use std::thread::{Builder, JoinHandle};
 use std::time::{Duration, Instant};
 
 struct Canary {
@@ -28,7 +27,15 @@ pub struct RunLoop {
 }
 
 impl RunLoop {
-    pub fn new<F, T>(fun: F, timeout_ms: u64) -> io::Result<Self>
+    pub fn new<F, T>(fun: F) -> io::Result<Self>
+    where
+        F: FnOnce(&Fn() -> bool) -> T,
+        F: Send + 'static,
+    {
+        Self::new_with_timeout(fun, 0 /* no timeout */)
+    }
+
+    pub fn new_with_timeout<F, T>(fun: F, timeout_ms: u64) -> io::Result<Self>
     where
         F: FnOnce(&Fn() -> bool) -> T,
         F: Send + 'static,
@@ -37,7 +44,7 @@ impl RunLoop {
         let flag_ = flag.clone();
 
         // Spawn the run loop thread.
-        let thread = thread::Builder::new().spawn(move || {
+        let thread = Builder::new().spawn(move || {
             let timeout = Duration::from_millis(timeout_ms);
             let start = Instant::now();
 
@@ -97,21 +104,22 @@ impl RunLoop {
 #[cfg(test)]
 mod tests {
     use std::sync::{Arc, Barrier};
+    use std::sync::mpsc::channel;
 
     use super::RunLoop;
 
     #[test]
     fn test_empty() {
         // Create a runloop that exits right away.
-        let thread = RunLoop::new(move |_| {}, 0).unwrap();
-        while thread.alive() { /* wait */ }
-        thread.cancel(); // noop
+        let rloop = RunLoop::new(|_| {}).unwrap();
+        while rloop.alive() { /* wait */ }
+        rloop.cancel(); // noop
     }
 
     #[test]
     fn test_cancel_early() {
         // Create a runloop and cancel it before the thread spawns.
-        RunLoop::new(|alive| assert!(!alive()), 0).unwrap().cancel();
+        RunLoop::new(|alive| assert!(!alive())).unwrap().cancel();
     }
 
     #[test]
@@ -120,27 +128,41 @@ mod tests {
         let b = barrier.clone();
 
         // Create a runloop that never exits.
-        let thread = RunLoop::new(
-            move |alive| {
-                b.wait();
-                while alive() { /* loop */ }
-            },
-            0,
-        ).unwrap();
+        let rloop = RunLoop::new(move |alive| {
+            b.wait();
+            while alive() { /* loop */ }
+        }).unwrap();
 
         barrier.wait();
-        assert!(thread.alive());
-        thread.cancel();
-        assert!(!thread.alive());
+        assert!(rloop.alive());
+        rloop.cancel();
+        assert!(!rloop.alive());
     }
 
     #[test]
     fn test_timeout() {
-        // Create a runloop that never exits, but times out after a second.
-        let thread = RunLoop::new(|alive| while alive() {}, 1).unwrap();
+        // Create a runloop that never exits, but times out after 1ms.
+        let rloop = RunLoop::new_with_timeout(|alive| while alive() {}, 1).unwrap();
 
-        while thread.alive() { /* wait */ }
-        assert!(!thread.alive());
-        thread.cancel(); // noop
+        while rloop.alive() { /* wait */ }
+        assert!(!rloop.alive());
+        rloop.cancel(); // noop
+    }
+
+    #[test]
+    fn test_channel() {
+        let (tx, rx) = channel();
+
+        // A runloop that sends data via a channel.
+        let rloop = RunLoop::new(move |alive| while alive() {
+            tx.send(0u8).unwrap();
+        }).unwrap();
+
+        // Wait until the data arrives.
+        assert_eq!(rx.recv().unwrap(), 0u8);
+
+        assert!(rloop.alive());
+        rloop.cancel();
+        assert!(!rloop.alive());
     }
 }

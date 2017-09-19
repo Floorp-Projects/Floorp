@@ -545,15 +545,16 @@ WrappedNativeFinalize(js::FreeOp* fop, JSObject* obj, WNHelperType helperType)
     wrapper->FlatJSObjectFinalized();
 }
 
-static void
-WrappedNativeObjectMoved(JSObject* obj, const JSObject* old)
+static size_t
+WrappedNativeObjectMoved(JSObject* obj, JSObject* old)
 {
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (!p)
-        return;
+        return 0;
 
     XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
     wrapper->FlatJSObjectMoved(obj, old);
+    return 0;
 }
 
 void
@@ -1009,13 +1010,16 @@ XPC_WN_Shared_Proto_Finalize(js::FreeOp* fop, JSObject* obj)
         p->JSProtoObjectFinalized(fop, obj);
 }
 
-static void
-XPC_WN_Shared_Proto_ObjectMoved(JSObject* obj, const JSObject* old)
+static size_t
+XPC_WN_Shared_Proto_ObjectMoved(JSObject* obj, JSObject* old)
 {
     // This can be null if xpc shutdown has already happened
     XPCWrappedNativeProto* p = (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
-    if (p)
-        p->JSProtoObjectMoved(obj, old);
+    if (!p)
+        return 0;
+
+    p->JSProtoObjectMoved(obj, old);
+    return 0;
 }
 
 static void
@@ -1210,14 +1214,15 @@ XPC_WN_TearOff_Finalize(js::FreeOp* fop, JSObject* obj)
     p->JSObjectFinalized();
 }
 
-static void
-XPC_WN_TearOff_ObjectMoved(JSObject* obj, const JSObject* old)
+static size_t
+XPC_WN_TearOff_ObjectMoved(JSObject* obj, JSObject* old)
 {
     XPCWrappedNativeTearOff* p = (XPCWrappedNativeTearOff*)
         xpc_GetJSPrivate(obj);
     if (!p)
-        return;
+        return 0;
     p->JSObjectMoved(obj, old);
+    return 0;
 }
 
 // Make sure XPC_WRAPPER_FLAGS has no reserved slots, so our
