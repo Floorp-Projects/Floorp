@@ -1148,22 +1148,15 @@ reftest-no-accel:
     suite: reftest/reftest-no-accel
     treeherder-symbol: tc-R(Ru)
     virtualization: virtual-with-gpu
-    run-on-projects:
-        by-test-platform:
-            windows10.*: []
-            # Deactivate try on Buildbot, by default. We don't have enough machines
-            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
-            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
-            default: built-projects
     worker-type:
         by-test-platform:
-            windows8-64.*: buildbot-bridge/buildbot-bridge
+            windows10-64.*: buildbot-bridge/buildbot-bridge
             default: null
     chunks:
         by-test-platform:
             macosx.*: 1
-            windows8-64.*/debug: 2
-            windows8-64.*/opt: 1
+            windows10-64.*/debug: 2
+            windows10-64.*/opt: 1
             default: 8
     e10s:
         by-test-platform:
@@ -1175,7 +1168,7 @@ reftest-no-accel:
         no-read-buildbot-config: true
         chunked:
             by-test-platform:
-                windows8-64.*/opt: false
+                windows10-64.*/opt: false
                 macosx.*: false
                 default: true
         config:
