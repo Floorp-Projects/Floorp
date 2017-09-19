@@ -118,6 +118,19 @@ struct GCPolicy<mozilla::Variant<Ts...>>
     static void trace(JSTracer* trc, mozilla::Variant<Ts...>* v, const char* name) {
         Impl::trace(trc, v, name);
     }
+
+    static bool isValid(const mozilla::Variant<Ts...>& v) {
+        return v.match(IsValidMatcher());
+    }
+
+  private:
+    struct IsValidMatcher
+    {
+        template<typename T>
+        bool match(T& v) {
+            return GCPolicy<T>::isValid(v);
+        };
+    };
 };
 
 } // namespace JS
