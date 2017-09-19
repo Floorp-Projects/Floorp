@@ -162,7 +162,7 @@
       function initPage() {
         var err = getErrorCode();
         // List of error pages with an illustration.
-        let illustratedErrors = ["malformedURI"];
+        let illustratedErrors = ["malformedURI", "dnsNotFound"];
         if (illustratedErrors.includes(err)) {
           document.body.classList.add("illustrated", err);
         }
@@ -172,6 +172,11 @@
         let showCaptivePortalUI = isCaptive() && gIsCertError;
         if (showCaptivePortalUI) {
           err = "captivePortal";
+        }
+
+        let pageTitle = document.getElementById("ept_" + err);
+        if (pageTitle) {
+          document.title = pageTitle.textContent;
         }
 
         // if it's an unknown error or there's no title or description
@@ -316,8 +321,6 @@
 
       function initPageCaptivePortal() {
         document.body.className = "captiveportal";
-        document.title = document.getElementById("captivePortalPageTitle").textContent;
-
         document.getElementById("openPortalLoginPageButton")
                 .addEventListener("click", () => {
           let event = new CustomEvent("AboutNetErrorOpenCaptivePortal", {bubbles: true});
@@ -338,7 +341,6 @@
 
       function initPageCertError() {
         document.body.className = "certerror";
-        document.title = document.getElementById("certErrorPageTitle").textContent;
         for (let host of document.querySelectorAll(".hostname")) {
           host.textContent = document.location.hostname;
         }
@@ -516,16 +518,18 @@
   </head>
 
   <body dir="&locale.dir;">
-    <!-- Contains an alternate page title set on page init for cert errors. -->
-    <div id="certErrorPageTitle" style="display: none;">&certerror.pagetitle1;</div>
-    <div id="captivePortalPageTitle" style="display: none;">&captivePortal.title;</div>
-
     <!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
     <div id="errorContainer">
+      <div id="errorPageTitlesContainer">
+        <span id="ept_nssBadCert">&certerror.pagetitle1;</span>
+        <span id="ept_captivePortal">&captivePortal.title;</span>
+        <span id="ept_dnsNotFound">&dnsNotFound.pageTitle;</span>
+        <span id="ept_malformedURI">&malformedURI.pageTitle;</span>
+      </div>
       <div id="errorTitlesContainer">
         <h1 id="et_generic">&generic.title;</h1>
         <h1 id="et_captivePortal">&captivePortal.title;</h1>
-        <h1 id="et_dnsNotFound">&dnsNotFound.title;</h1>
+        <h1 id="et_dnsNotFound">&dnsNotFound.title1;</h1>
         <h1 id="et_fileNotFound">&fileNotFound.title;</h1>
         <h1 id="et_fileAccessDenied">&fileAccessDenied.title;</h1>
         <h1 id="et_malformedURI">&malformedURI.title1;</h1>
@@ -554,7 +558,7 @@
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
         <div id="ed_captivePortal">&captivePortal.longDesc2;</div>
-        <div id="ed_dnsNotFound">&dnsNotFound.longDesc;</div>
+        <div id="ed_dnsNotFound">&dnsNotFound.longDesc1;</div>
         <div id="ed_fileNotFound">&fileNotFound.longDesc;</div>
         <div id="ed_fileAccessDenied">&fileAccessDenied.longDesc;</div>
         <div id="ed_malformedURI"></div>

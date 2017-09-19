@@ -37,7 +37,7 @@ add_task(function* () {
   yield navigateTo(inspector, TEST_URL_3);
 
   domain = TEST_URL_3.match(/^http:\/\/(.*)\/$/)[1];
-  errorMsg = bundle.formatStringFromName("dnsNotFound",
+  errorMsg = bundle.formatStringFromName("dnsNotFound2",
                                          [domain], 1);
   is(yield getDisplayedNodeTextContent("#errorShortDescText", inspector), errorMsg,
      "Inspector really inspects the new error page");
