@@ -1737,14 +1737,16 @@ class CGClassObjectMovedHook(CGAbstractClassHook):
     is holding moves.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSObject*', 'obj'), Argument('const JSObject*', 'old')]
+        args = [Argument('JSObject*', 'obj'), Argument('JSObject*', 'old')]
         CGAbstractClassHook.__init__(self, descriptor, OBJECT_MOVED_HOOK_NAME,
-                                     'void', args)
+                                     'size_t', args)
 
     def generate_code(self):
         assert self.descriptor.wrapperCache
-        return CGIfWrapper(CGGeneric("UpdateWrapper(self, self, obj, old);\n"),
-                           "self").define()
+        return CGList([
+            CGIfWrapper(CGGeneric("UpdateWrapper(self, self, obj, old);\n"),
+                        "self"),
+            CGGeneric("return 0;\n")]).define()
 
 
 def JSNativeArguments():

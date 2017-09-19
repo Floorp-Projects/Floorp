@@ -241,8 +241,8 @@ static bool
 NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                      bool* resolved, JS::MutableHandle<JSObject*> method);
 
-static void
-NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old);
+static size_t
+NPObjWrapper_ObjectMoved(JSObject *obj, JSObject *old);
 
 static bool
 NPObjWrapper_toPrimitive(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -1787,19 +1787,19 @@ NPObjWrapperProxyHandler::finalize(JSFreeOp* fop, JSObject* proxy) const
   sDelayedReleases->AppendElement(npobj);
 }
 
-static void
-NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
+static size_t
+NPObjWrapper_ObjectMoved(JSObject *obj, JSObject *old)
 {
   // The wrapper JSObject has been moved, so we need to update the entry in the
   // sNPObjWrappers hash table, if present.
 
   if (!sNPObjWrappers) {
-    return;
+    return 0;
   }
 
   NPObject *npobj = (NPObject *)js::GetProxyPrivate(obj).toPrivate();
   if (!npobj) {
-    return;
+    return 0;
   }
 
   // Calling PLDHashTable::Search() will not result in GC.
@@ -1810,6 +1810,7 @@ NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
   MOZ_ASSERT(entry && entry->mJSObj);
   MOZ_ASSERT(entry->mJSObj == old);
   entry->mJSObj = obj;
+  return 0;
 }
 
 bool
