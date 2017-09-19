@@ -133,7 +133,8 @@ pub struct ProxyTraps {
     pub finalize:
         ::std::option::Option<unsafe extern "C" fn(fop: *mut JSFreeOp, proxy: *mut JSObject)>,
     pub objectMoved:
-        ::std::option::Option<unsafe extern "C" fn(proxy: *mut JSObject, old: *const JSObject)>,
+        ::std::option::Option<unsafe extern "C" fn(proxy: *mut JSObject,
+                                                   old: *mut JSObject) -> usize>,
     pub isCallable: ::std::option::Option<unsafe extern "C" fn(obj: *mut JSObject) -> bool>,
     pub isConstructor: ::std::option::Option<unsafe extern "C" fn(obj: *mut JSObject) -> bool>,
 }
