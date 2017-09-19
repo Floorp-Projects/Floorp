@@ -792,7 +792,7 @@ DumpName(GenericPrinter& out, const CharT* s, size_t len)
     for (size_t i = 0; i < len; i++) {
         char16_t c = s[i];
         if (c > 32 && c < 127)
-            fputc(c, stderr);
+            out.putChar(c);
         else if (c <= 255)
             out.printf("\\x%02x", unsigned(c));
         else
