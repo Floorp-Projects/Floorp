@@ -517,7 +517,7 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     rv = xpc::InitClassesWithNewWrappedGlobal(aCx,
                                               static_cast<nsIGlobalObject*>(backstagePass),
                                               nsContentUtils::GetSystemPrincipal(),
-                                              nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
+                                              xpc::DONT_FIRE_ONNEWGLOBALHOOK,
                                               options,
                                               &global);
     NS_ENSURE_SUCCESS_VOID(rv);

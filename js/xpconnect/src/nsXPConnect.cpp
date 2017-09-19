@@ -546,7 +546,7 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
     // Stuff coming through this path always ends up as a DOM global.
     MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL);
 
-    if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
+    if (!(aFlags & xpc::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
         if (!RealmPrivate::Get(aGlobal)->scope->AttachComponentsObject(aJSContext) ||
             !XPCNativeWrapper::AttachNewConstructorObject(aJSContext, aGlobal)) {
@@ -554,7 +554,7 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
         }
     }
 
-    if (!(aFlags & nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK))
+    if (!(aFlags & xpc::DONT_FIRE_ONNEWGLOBALHOOK))
         JS_FireOnNewGlobalObject(aJSContext, aGlobal);
 
     return true;
@@ -584,7 +584,7 @@ InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
     RefPtr<XPCWrappedNative> wrappedGlobal;
     nsresult rv =
         XPCWrappedNative::WrapNewGlobal(helper, aPrincipal,
-                                        aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES,
+                                        aFlags & xpc::INIT_JS_STANDARD_CLASSES,
                                         aOptions, getter_AddRefs(wrappedGlobal));
     NS_ENSURE_SUCCESS(rv, rv);
 
