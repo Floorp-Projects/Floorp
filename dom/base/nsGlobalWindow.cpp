@@ -1144,6 +1144,7 @@ public:
                         JS::Handle<JSObject*> wrapper) const override;
 
   void finalize(JSFreeOp *fop, JSObject *proxy) const override;
+  size_t objectMoved(JSObject* proxy, JSObject* old) const override;
 
   bool isCallable(JSObject *obj) const override {
     return false;
@@ -1156,8 +1157,6 @@ public:
              JS::Handle<jsid> id, JS::Handle<JSObject*> callable) const override;
   bool unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
                JS::Handle<jsid> id) const override;
-
-  static size_t ObjectMoved(JSObject *obj, JSObject *old);
 
   static const nsOuterWindowProxy singleton;
 
@@ -1188,17 +1187,12 @@ protected:
                                   JS::AutoIdVector &props) const;
 };
 
-static const js::ClassExtension OuterWindowProxyClassExtension = PROXY_MAKE_EXT(
-    nsOuterWindowProxy::ObjectMoved
-);
-
 // Give OuterWindowProxyClass 2 reserved slots, like the other wrappers, so
 // JSObject::swap can swap it with CrossCompartmentWrappers without requiring
 // malloc.
-const js::Class OuterWindowProxyClass = PROXY_CLASS_WITH_EXT(
+const js::Class OuterWindowProxyClass = PROXY_CLASS_DEF(
     "Proxy",
-    JSCLASS_HAS_RESERVED_SLOTS(2), /* additional class flags */
-    &OuterWindowProxyClassExtension);
+    JSCLASS_HAS_RESERVED_SLOTS(2)); /* additional class flags */
 
 const char *
 nsOuterWindowProxy::className(JSContext *cx, JS::Handle<JSObject*> proxy) const
@@ -1527,7 +1521,7 @@ nsOuterWindowProxy::unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 size_t
-nsOuterWindowProxy::ObjectMoved(JSObject *obj, const JSObject *old)
+nsOuterWindowProxy::objectMoved(JSObject *obj, JSObject *old) const
 {
   nsGlobalWindow* outerWindow = GetOuterWindow(obj);
   if (outerWindow) {
