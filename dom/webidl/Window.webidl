@@ -340,7 +340,8 @@ partial interface Window {
 #ifdef NIGHTLY_BUILD
    ChromeOnly,
 #endif
-   Replaceable, Throws, NeedsCallerType] readonly attribute object? content;
+   NonEnumerable, Replaceable, Throws, NeedsCallerType]
+  readonly attribute object? content;
 
   [Throws, ChromeOnly] any getInterface(IID iid);
 
