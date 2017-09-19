@@ -4240,6 +4240,35 @@ StyleShapeSourceToCSSArray(const StyleShapeSource& aShapeSource,
   return true;
 }
 
+static bool
+ExtractComputedValueFromShapeSource(const StyleShapeSource& aShapeSource,
+                                    StyleAnimationValue& aComputedValue)
+{
+  const StyleShapeSourceType type = aShapeSource.GetType();
+
+  if (type == StyleShapeSourceType::URL) {
+    auto result = MakeUnique<nsCSSValue>();
+    result->SetURLValue(aShapeSource.GetURL());
+    aComputedValue.SetAndAdoptCSSValueValue(result.release(),
+                                            StyleAnimationValue::eUnit_URL);
+  } else if (type == StyleShapeSourceType::Box) {
+    aComputedValue.SetEnumValue(aShapeSource.GetReferenceBox());
+  } else if (type == StyleShapeSourceType::Shape) {
+    RefPtr<nsCSSValue::Array> result = nsCSSValue::Array::Create(2);
+    if (!StyleShapeSourceToCSSArray(aShapeSource, result)) {
+      return false;
+    }
+    aComputedValue.SetCSSValueArrayValue(result,
+                                         StyleAnimationValue::eUnit_Shape);
+
+  } else {
+    MOZ_ASSERT(type == StyleShapeSourceType::None, "unknown type");
+    aComputedValue.SetNoneValue();
+  }
+
+  return true;
+}
+
 static void
 SetFallbackValue(nsCSSValuePair* aPair, const nsStyleSVGPaint& aPaint)
 {
@@ -4549,25 +4578,9 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
         case eCSSProperty_clip_path: {
           const nsStyleSVGReset* svgReset =
             static_cast<const nsStyleSVGReset*>(styleStruct);
-          const StyleShapeSource& clipPath = svgReset->mClipPath;
-          const StyleShapeSourceType type = clipPath.GetType();
-
-          if (type == StyleShapeSourceType::URL) {
-            auto result = MakeUnique<nsCSSValue>();
-            result->SetURLValue(clipPath.GetURL());
-            aComputedValue.SetAndAdoptCSSValueValue(result.release(), eUnit_URL);
-          } else if (type == StyleShapeSourceType::Box) {
-            aComputedValue.SetEnumValue(clipPath.GetReferenceBox());
-          } else if (type == StyleShapeSourceType::Shape) {
-            RefPtr<nsCSSValue::Array> result = nsCSSValue::Array::Create(2);
-            if (!StyleShapeSourceToCSSArray(clipPath, result)) {
-              return false;
-            }
-            aComputedValue.SetCSSValueArrayValue(result, eUnit_Shape);
-
-          } else {
-            MOZ_ASSERT(type == StyleShapeSourceType::None, "unknown type");
-            aComputedValue.SetNoneValue();
+          if (!ExtractComputedValueFromShapeSource(svgReset->mClipPath,
+                                                   aComputedValue)) {
+            return false;
           }
           break;
         }
