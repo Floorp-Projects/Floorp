@@ -396,11 +396,6 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
     , mYuvUploads_YSize(0, 0)
     , mYuvUploads_UVSize(0, 0)
 {
-    if (!mGL->IsSupported(GLFeature::vertex_array_object)) {
-        gfxCriticalError() << "GLBlitHelper requires vertex_array_object.";
-        return;
-    }
-
     mGL->fGenBuffers(1, &mQuadVBO);
     {
         const ScopedBindArrayBuffer bindVBO(mGL, mQuadVBO);
