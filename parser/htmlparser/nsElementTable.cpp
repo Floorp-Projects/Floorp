@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=78: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#include "nsIAtom.h"
 #include "nsElementTable.h"
 
 static const int kNone= 0x0;
@@ -222,14 +220,14 @@ static const HTMLElement gHTMLElements[] = {
 
 #undef ELEM
 
-/*********************************************************************************************/
-
-bool nsHTMLElement::IsContainer(nsHTMLTag aId)
+bool
+nsHTMLElement::IsContainer(nsHTMLTag aId)
 {
   return !gHTMLElements[aId].mLeaf;
 }
 
-bool nsHTMLElement::IsBlock(nsHTMLTag aId)
+bool
+nsHTMLElement::IsBlock(nsHTMLTag aId)
 {
   return gHTMLElements[aId].IsMemberOf(kBlock)       ||
          gHTMLElements[aId].IsMemberOf(kBlockEntity) ||
@@ -239,12 +237,14 @@ bool nsHTMLElement::IsBlock(nsHTMLTag aId)
 }
 
 #ifdef DEBUG
-void CheckElementTable()
+void
+CheckElementTable()
 {
   for (nsHTMLTag t = eHTMLTag_unknown;
        t <= eHTMLTag_userdefined;
        t = nsHTMLTag(t + 1)) {
-    NS_ASSERTION(gHTMLElements[t].mTagID == t, "gHTMLElements entries does match tag list.");
+    MOZ_ASSERT(gHTMLElements[t].mTagID == t,
+               "gHTMLElements entries does match tag list.");
   }
 }
 #endif
