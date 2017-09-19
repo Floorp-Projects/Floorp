@@ -161,6 +161,12 @@
 
       function initPage() {
         var err = getErrorCode();
+        // List of error pages with an illustration.
+        let illustratedErrors = ["malformedURI"];
+        if (illustratedErrors.includes(err)) {
+          document.body.classList.add("illustrated", err);
+        }
+
         gIsCertError = (err == "nssBadCert");
         // Only worry about captive portals if this is a cert error.
         let showCaptivePortalUI = isCaptive() && gIsCertError;
@@ -199,7 +205,7 @@
         }
         addAutofocus("errorTryAgain");
 
-        document.body.className = "neterror";
+        document.body.classList.add("neterror");
 
         var ld = document.getElementById("errorLongDesc");
         if (ld) {
@@ -522,7 +528,7 @@
         <h1 id="et_dnsNotFound">&dnsNotFound.title;</h1>
         <h1 id="et_fileNotFound">&fileNotFound.title;</h1>
         <h1 id="et_fileAccessDenied">&fileAccessDenied.title;</h1>
-        <h1 id="et_malformedURI">&malformedURI.title;</h1>
+        <h1 id="et_malformedURI">&malformedURI.title1;</h1>
         <h1 id="et_unknownProtocolFound">&unknownProtocolFound.title;</h1>
         <h1 id="et_connectionFailure">&connectionFailure.title;</h1>
         <h1 id="et_netTimeout">&netTimeout.title;</h1>
@@ -551,7 +557,7 @@
         <div id="ed_dnsNotFound">&dnsNotFound.longDesc;</div>
         <div id="ed_fileNotFound">&fileNotFound.longDesc;</div>
         <div id="ed_fileAccessDenied">&fileAccessDenied.longDesc;</div>
-        <div id="ed_malformedURI">&malformedURI.longDesc;</div>
+        <div id="ed_malformedURI"></div>
         <div id="ed_unknownProtocolFound">&unknownProtocolFound.longDesc;</div>
         <div id="ed_connectionFailure">&connectionFailure.longDesc;</div>
         <div id="ed_netTimeout">&netTimeout.longDesc;</div>
@@ -578,33 +584,35 @@
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer" class="container">
-      <!-- Error Title -->
-      <div class="title">
-        <h1 class="title-text"/>
-      </div>
-
-      <!-- LONG CONTENT (the section most likely to require scrolling) -->
-      <div id="errorLongContent">
-
-        <!-- Short Description -->
-        <div id="errorShortDesc">
-          <p id="errorShortDescText" />
-        </div>
-        <p id="badStsCertExplanation" hidden="true">&certerror.whatShouldIDo.badStsCertExplanation;</p>
-
-        <div id="wrongSystemTimePanel" style="display: none;">
-          &certerror.wrongSystemTime2;
+      <div id="text-container">
+        <!-- Error Title -->
+        <div class="title">
+          <h1 class="title-text"/>
         </div>
 
-        <div id="wrongSystemTimeWithoutReferencePanel" style="display: none;">
-          &certerror.wrongSystemTimeWithoutReference;
-        </div>
+        <!-- LONG CONTENT (the section most likely to require scrolling) -->
+        <div id="errorLongContent">
 
-        <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
-        <div id="errorLongDesc" />
+          <!-- Short Description -->
+          <div id="errorShortDesc">
+            <p id="errorShortDescText" />
+          </div>
+          <p id="badStsCertExplanation" hidden="true">&certerror.whatShouldIDo.badStsCertExplanation;</p>
 
-        <div id="learnMoreContainer">
-          <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
+          <div id="wrongSystemTimePanel" style="display: none;">
+            &certerror.wrongSystemTime2;
+          </div>
+
+          <div id="wrongSystemTimeWithoutReferencePanel" style="display: none;">
+            &certerror.wrongSystemTimeWithoutReference;
+          </div>
+
+          <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+          <div id="errorLongDesc" />
+
+          <div id="learnMoreContainer">
+            <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
+          </div>
         </div>
 
         <!-- UI for option to report certificate errors to Mozilla. Removed on

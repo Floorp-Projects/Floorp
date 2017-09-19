@@ -6,7 +6,7 @@ extern crate gleam;
 extern crate glutin;
 extern crate webrender;
 
-#[path="common/boilerplate.rs"]
+#[path = "common/boilerplate.rs"]
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
@@ -17,72 +17,61 @@ struct App {
 }
 
 impl Example for App {
-    fn render(&mut self,
-              _api: &RenderApi,
-              builder: &mut DisplayListBuilder,
-              _resources: &mut ResourceUpdates,
-              layout_size: LayoutSize,
-              pipeline_id: PipelineId,
-              _document_id: DocumentId) {
+    fn render(
+        &mut self,
+        _api: &RenderApi,
+        builder: &mut DisplayListBuilder,
+        _resources: &mut ResourceUpdates,
+        layout_size: LayoutSize,
+        pipeline_id: PipelineId,
+        _document_id: DocumentId,
+    ) {
         let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
-        let info = LayoutPrimitiveInfo {
-            rect: bounds,
-            local_clip: None,
-            is_backface_visible: true,
-        };
-        builder.push_stacking_context(&info,
-                                      ScrollPolicy::Scrollable,
-                                      None,
-                                      TransformStyle::Flat,
-                                      None,
-                                      MixBlendMode::Normal,
-                                      Vec::new());
+        let info = LayoutPrimitiveInfo::new(bounds);
+        builder.push_stacking_context(
+            &info,
+            ScrollPolicy::Scrollable,
+            None,
+            TransformStyle::Flat,
+            None,
+            MixBlendMode::Normal,
+            Vec::new(),
+        );
 
         let outer_scroll_frame_rect = (100, 100).to(600, 400);
-        let info = LayoutPrimitiveInfo {
-            rect: outer_scroll_frame_rect,
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new(outer_scroll_frame_rect);
         builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
-        let nested_clip_id = builder.define_scroll_frame(None,
-                                                         (100, 100).to(1000, 1000),
-                                                         outer_scroll_frame_rect,
-                                                         vec![],
-                                                         None,
-                                                         ScrollSensitivity::ScriptAndInputEvents);
+        let nested_clip_id = builder.define_scroll_frame(
+            None,
+            (100, 100).to(1000, 1000),
+            outer_scroll_frame_rect,
+            vec![],
+            None,
+            ScrollSensitivity::ScriptAndInputEvents,
+        );
         builder.push_clip_id(nested_clip_id);
 
         let mut builder2 = DisplayListBuilder::new(pipeline_id, layout_size);
         let mut builder3 = DisplayListBuilder::new(pipeline_id, layout_size);
 
-        let info = LayoutPrimitiveInfo {
-            rect: (110, 110).to(210, 210),
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new((110, 110).to(210, 210));
         builder3.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
         // A fixed position rectangle should be fixed to the reference frame that starts
         // in the outer display list.
-        let info = LayoutPrimitiveInfo {
-            rect: (220, 110).to(320, 210),
-            local_clip: None,
-            is_backface_visible: true,
-        };
-        builder3.push_stacking_context(&info,
-                                       ScrollPolicy::Fixed,
-                                       None,
-                                       TransformStyle::Flat,
-                                       None,
-                                       MixBlendMode::Normal,
-                                       Vec::new());
-        let info = LayoutPrimitiveInfo {
-            rect: (0, 0).to(100, 100),
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new((220, 110).to(320, 210));
+        builder3.push_stacking_context(
+            &info,
+            ScrollPolicy::Fixed,
+            None,
+            TransformStyle::Flat,
+            None,
+            MixBlendMode::Normal,
+            Vec::new(),
+        );
+
+        let info = LayoutPrimitiveInfo::new((0, 0).to(100, 100));
         builder3.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
         builder3.pop_stacking_context();
 
@@ -90,25 +79,18 @@ impl Example for App {
         // but the WebRender nested display list replacement code should convert it into
         // a unique ClipId.
         let inner_scroll_frame_rect = (330, 110).to(530, 360);
-        let info = LayoutPrimitiveInfo {
-            rect: inner_scroll_frame_rect,
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new(inner_scroll_frame_rect);
         builder3.push_rect(&info, ColorF::new(1.0, 0.0, 1.0, 0.5));
-        let inner_nested_clip_id =
-            builder3.define_scroll_frame(None,
-                                         (330, 110).to(2000, 2000),
-                                         inner_scroll_frame_rect,
-                                         vec![],
-                                         None,
-                                         ScrollSensitivity::ScriptAndInputEvents);
+        let inner_nested_clip_id = builder3.define_scroll_frame(
+            None,
+            (330, 110).to(2000, 2000),
+            inner_scroll_frame_rect,
+            vec![],
+            None,
+            ScrollSensitivity::ScriptAndInputEvents,
+        );
         builder3.push_clip_id(inner_nested_clip_id);
-        let info = LayoutPrimitiveInfo {
-            rect: (340, 120).to(440, 220),
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new((340, 120).to(440, 220));
         builder3.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
         builder3.pop_clip_id();
 
@@ -122,24 +104,23 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self,
-                event: glutin::Event,
-                api: &RenderApi,
-                document_id: DocumentId) -> bool {
+    fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
         match event {
             glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
                 let offset = match key {
-                     glutin::VirtualKeyCode::Down => (0.0, -10.0),
-                     glutin::VirtualKeyCode::Up => (0.0, 10.0),
-                     glutin::VirtualKeyCode::Right => (-10.0, 0.0),
-                     glutin::VirtualKeyCode::Left => (10.0, 0.0),
-                     _ => return false,
+                    glutin::VirtualKeyCode::Down => (0.0, -10.0),
+                    glutin::VirtualKeyCode::Up => (0.0, 10.0),
+                    glutin::VirtualKeyCode::Right => (-10.0, 0.0),
+                    glutin::VirtualKeyCode::Left => (10.0, 0.0),
+                    _ => return false,
                 };
 
-                api.scroll(document_id,
-                           ScrollLocation::Delta(LayoutVector2D::new(offset.0, offset.1)),
-                           self.cursor_position,
-                           ScrollEventPhase::Start);
+                api.scroll(
+                    document_id,
+                    ScrollLocation::Delta(LayoutVector2D::new(offset.0, offset.1)),
+                    self.cursor_position,
+                    ScrollEventPhase::Start,
+                );
             }
             glutin::Event::MouseMoved(x, y) => {
                 self.cursor_position = WorldPoint::new(x as f32, y as f32);
@@ -155,12 +136,14 @@ impl Example for App {
                     glutin::MouseScrollDelta::PixelDelta(dx, dy) => (dx, dy),
                 };
 
-                api.scroll(document_id,
-                           ScrollLocation::Delta(LayoutVector2D::new(dx, dy)),
-                           self.cursor_position,
-                           ScrollEventPhase::Start);
+                api.scroll(
+                    document_id,
+                    ScrollLocation::Delta(LayoutVector2D::new(dx, dy)),
+                    self.cursor_position,
+                    ScrollEventPhase::Start,
+                );
             }
-            _ => ()
+            _ => (),
         }
 
         false

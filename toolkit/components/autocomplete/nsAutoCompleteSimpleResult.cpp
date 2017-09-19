@@ -199,6 +199,15 @@ nsAutoCompleteSimpleResult::AppendMatch(const nsAString& aValue,
 }
 
 NS_IMETHODIMP
+nsAutoCompleteSimpleResult::RemoveMatchAt(int32_t aIndex)
+{
+  CHECK_MATCH_INDEX(aIndex, false);
+
+  mMatches.RemoveElementAt(aIndex);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAutoCompleteSimpleResult::GetMatchCount(uint32_t *aMatchCount)
 {
   *aMatchCount = mMatches.Length();

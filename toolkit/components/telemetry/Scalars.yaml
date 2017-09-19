@@ -670,7 +670,7 @@ devtools.copy.unique.css.selector:
       - 1323700
       - 1352115
     description: Number of times the DevTools copy unique CSS selector has been used.
-    expires: "57"
+    expires: "59"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -684,7 +684,7 @@ devtools.copy.full.css.selector:
       - 1323700
       - 1352115
     description: Number of times the DevTools copy full CSS selector has been used.
-    expires: "57"
+    expires: "59"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -697,7 +697,7 @@ devtools.copy.xpath:
     bug_numbers:
       - 987877
     description: Number of times the DevTools copy XPath has been used.
-    expires: "58"
+    expires: "59"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org

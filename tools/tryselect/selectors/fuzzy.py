@@ -247,5 +247,5 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         pset.save('fuzzy', save, query)
 
     query = " with query: {}".format(query) if query else ""
-    msg = "Pushed via 'mach try fuzzy'{}".format(query)
-    return vcs.push_to_try(msg, selected, templates, push=push)
+    msg = "Fuzzy{}".format(query)
+    return vcs.push_to_try('fuzzy', msg, selected, templates, push=push)

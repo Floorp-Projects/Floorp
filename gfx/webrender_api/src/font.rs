@@ -2,15 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use {ColorF, ColorU, IdNamespace, LayoutPoint};
 use app_units::Au;
-use {ColorU, ColorF, IdNamespace, LayoutPoint};
+#[cfg(target_os = "macos")]
+use core_foundation::string::CFString;
+#[cfg(target_os = "macos")]
+use core_graphics::font::CGFont;
+#[cfg(target_os = "windows")]
+use dwrote::FontDescriptor;
+#[cfg(target_os = "macos")]
+use serde::de::{self, Deserialize, Deserializer};
+#[cfg(target_os = "macos")]
+use serde::ser::{Serialize, Serializer};
 use std::sync::Arc;
-
-#[cfg(target_os = "macos")] use core_foundation::string::CFString;
-#[cfg(target_os = "macos")] use core_graphics::font::CGFont;
-#[cfg(target_os = "macos")] use serde::de::{self, Deserialize, Deserializer};
-#[cfg(target_os = "macos")] use serde::ser::{Serialize, Serializer};
-#[cfg(target_os = "windows")] use dwrote::FontDescriptor;
 
 
 #[cfg(target_os = "macos")]
@@ -19,7 +23,10 @@ pub struct NativeFontHandle(pub CGFont);
 
 #[cfg(target_os = "macos")]
 impl Serialize for NativeFontHandle {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let postscript_name = self.0.postscript_name().to_string();
         postscript_name.serialize(serializer)
     }
@@ -27,19 +34,25 @@ impl Serialize for NativeFontHandle {
 
 #[cfg(target_os = "macos")]
 impl<'de> Deserialize<'de> for NativeFontHandle {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         let postscript_name: String = try!(Deserialize::deserialize(deserializer));
 
         match CGFont::from_name(&CFString::new(&*postscript_name)) {
             Ok(font) => Ok(NativeFontHandle(font)),
-            _ => Err(de::Error::custom("Couldn't find a font with that PostScript name!")),
+            _ => Err(de::Error::custom(
+                "Couldn't find a font with that PostScript name!",
+            )),
         }
     }
 }
 
 /// Native fonts are not used on Linux; all fonts are raw.
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-#[cfg_attr(not(any(target_os = "macos", target_os = "windows")), derive(Clone, Serialize, Deserialize))]
+#[cfg_attr(not(any(target_os = "macos", target_os = "windows")),
+           derive(Clone, Serialize, Deserialize))]
 pub struct NativeFontHandle;
 
 #[cfg(target_os = "windows")]
@@ -88,31 +101,26 @@ pub enum SubpixelDirection {
     Vertical,
 }
 
-const FIXED16_SHIFT: i32 = 16;
-
-// This matches the behaviour of SkScalarToFixed
-fn f32_truncate_to_fixed16(x: f32) -> i32 {
-    let fixed1 = (1 << FIXED16_SHIFT) as f32;
-    (x * fixed1) as i32
-}
-
 impl FontRenderMode {
     // Skia quantizes subpixel offets into 1/4 increments.
     // Given the absolute position, return the quantized increment
     fn subpixel_quantize_offset(&self, pos: f32) -> SubpixelOffset {
-        const SUBPIXEL_BITS: i32 = 2;
-        const SUBPIXEL_FIXED16_MASK: i32 = ((1 << SUBPIXEL_BITS) - 1) << (FIXED16_SHIFT - SUBPIXEL_BITS);
+        // Following the conventions of Gecko and Skia, we want
+        // to quantize the subpixel position, such that abs(pos) gives:
+        // [0.0, 0.125) -> Zero
+        // [0.125, 0.375) -> Quarter
+        // [0.375, 0.625) -> Half
+        // [0.625, 0.875) -> ThreeQuarters,
+        // [0.875, 1.0) -> Zero
+        // The unit tests below check for this.
+        let apos = (pos.fract() * 8.0).abs() as i32;
 
-        const SUBPIXEL_ROUNDING: f32 = 0.5 / (1 << SUBPIXEL_BITS) as f32;
-        let pos = pos + SUBPIXEL_ROUNDING;
-        let fraction = (f32_truncate_to_fixed16(pos) & SUBPIXEL_FIXED16_MASK) >> (FIXED16_SHIFT - SUBPIXEL_BITS);
-
-        match fraction {
-            0 => SubpixelOffset::Zero,
-            1 => SubpixelOffset::Quarter,
-            2 => SubpixelOffset::Half,
-            3 => SubpixelOffset::ThreeQuarters,
-            _ => panic!("Should only be given the fractional part"),
+        match apos {
+            0 | 7 => SubpixelOffset::Zero,
+            1...2 => SubpixelOffset::Quarter,
+            3...4 => SubpixelOffset::Half,
+            5...6 => SubpixelOffset::ThreeQuarters,
+            _ => unreachable!("bug: unexpected quantized result"),
         }
     }
 
@@ -128,10 +136,10 @@ impl FontRenderMode {
 #[repr(u8)]
 #[derive(Hash, Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum SubpixelOffset {
-    Zero            = 0,
-    Quarter         = 1,
-    Half            = 2,
-    ThreeQuarters   = 3,
+    Zero = 0,
+    Quarter = 1,
+    Half = 2,
+    ThreeQuarters = 3,
 }
 
 impl Into<f64> for SubpixelOffset {
@@ -181,12 +189,14 @@ pub struct FontInstance {
 }
 
 impl FontInstance {
-    pub fn new(font_key: FontKey,
-               size: Au,
-               mut color: ColorF,
-               render_mode: FontRenderMode,
-               subpx_dir: SubpixelDirection,
-               platform_options: Option<FontInstancePlatformOptions>) -> FontInstance {
+    pub fn new(
+        font_key: FontKey,
+        size: Au,
+        mut color: ColorF,
+        render_mode: FontRenderMode,
+        subpx_dir: SubpixelDirection,
+        platform_options: Option<FontInstancePlatformOptions>,
+    ) -> FontInstance {
         // In alpha/mono mode, the color of the font is irrelevant.
         // Forcing it to black in those cases saves rasterizing glyphs
         // of different colors when not needed.
@@ -230,10 +240,12 @@ pub struct GlyphKey {
 }
 
 impl GlyphKey {
-    pub fn new(index: u32,
-               point: LayoutPoint,
-               render_mode: FontRenderMode,
-               subpx_dir: SubpixelDirection) -> GlyphKey {
+    pub fn new(
+        index: u32,
+        point: LayoutPoint,
+        render_mode: FontRenderMode,
+        subpx_dir: SubpixelDirection,
+    ) -> GlyphKey {
         let pos = match subpx_dir {
             SubpixelDirection::None => 0.0,
             SubpixelDirection::Horizontal => point.x,
@@ -254,4 +266,54 @@ pub type GlyphIndex = u32;
 pub struct GlyphInstance {
     pub index: GlyphIndex,
     pub point: LayoutPoint,
+}
+
+#[cfg(test)]
+mod test {
+    use super::{FontRenderMode, SubpixelOffset};
+
+    #[test]
+    fn test_subpx_quantize() {
+        let rm = FontRenderMode::Subpixel;
+
+        assert_eq!(rm.subpixel_quantize_offset(0.0), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(-0.0), SubpixelOffset::Zero);
+
+        assert_eq!(rm.subpixel_quantize_offset(0.1), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.01), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.05), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.12), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.124), SubpixelOffset::Zero);
+
+        assert_eq!(rm.subpixel_quantize_offset(0.125), SubpixelOffset::Quarter);
+        assert_eq!(rm.subpixel_quantize_offset(0.2), SubpixelOffset::Quarter);
+        assert_eq!(rm.subpixel_quantize_offset(0.25), SubpixelOffset::Quarter);
+        assert_eq!(rm.subpixel_quantize_offset(0.33), SubpixelOffset::Quarter);
+        assert_eq!(rm.subpixel_quantize_offset(0.374), SubpixelOffset::Quarter);
+
+        assert_eq!(rm.subpixel_quantize_offset(0.375), SubpixelOffset::Half);
+        assert_eq!(rm.subpixel_quantize_offset(0.4), SubpixelOffset::Half);
+        assert_eq!(rm.subpixel_quantize_offset(0.5), SubpixelOffset::Half);
+        assert_eq!(rm.subpixel_quantize_offset(0.58), SubpixelOffset::Half);
+        assert_eq!(rm.subpixel_quantize_offset(0.624), SubpixelOffset::Half);
+
+        assert_eq!(rm.subpixel_quantize_offset(0.625), SubpixelOffset::ThreeQuarters);
+        assert_eq!(rm.subpixel_quantize_offset(0.67), SubpixelOffset::ThreeQuarters);
+        assert_eq!(rm.subpixel_quantize_offset(0.7), SubpixelOffset::ThreeQuarters);
+        assert_eq!(rm.subpixel_quantize_offset(0.78), SubpixelOffset::ThreeQuarters);
+        assert_eq!(rm.subpixel_quantize_offset(0.874), SubpixelOffset::ThreeQuarters);
+
+        assert_eq!(rm.subpixel_quantize_offset(0.875), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.89), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.91), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.967), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(0.999), SubpixelOffset::Zero);
+
+        assert_eq!(rm.subpixel_quantize_offset(-1.0), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(1.0), SubpixelOffset::Zero);
+        assert_eq!(rm.subpixel_quantize_offset(1.5), SubpixelOffset::Half);
+        assert_eq!(rm.subpixel_quantize_offset(-1.625), SubpixelOffset::ThreeQuarters);
+        assert_eq!(rm.subpixel_quantize_offset(-4.33), SubpixelOffset::Quarter);
+
+    }
 }

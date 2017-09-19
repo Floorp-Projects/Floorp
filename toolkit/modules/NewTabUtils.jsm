@@ -1296,6 +1296,7 @@ var ActivityStreamLinks = {
    * @param {Object} aOptions
    *   {bool} excludeBookmarks: Don't add bookmark items.
    *   {bool} excludeHistory: Don't add history items.
+   *   {bool} withFavicons: Add favicon data: URIs, when possible.
    *   {int}  numItems: Maximum number of (bookmark or history) items to return.
    *
    * @return {Promise} Returns a promise with the array of links as the payload
@@ -1326,6 +1327,11 @@ var ActivityStreamLinks = {
           }
         }
       }
+    }
+
+    if (aOptions.withFavicons) {
+      return ActivityStreamProvider._faviconBytesToDataURI(
+        await ActivityStreamProvider._addFavicons(results));
     }
 
     return results;

@@ -28,15 +28,13 @@ impl GlyphCache {
         }
     }
 
-    pub fn get_glyph_key_cache_for_font_mut(&mut self,
-                                            font: FontInstance) -> &mut GlyphKeyCache {
+    pub fn get_glyph_key_cache_for_font_mut(&mut self, font: FontInstance) -> &mut GlyphKeyCache {
         self.glyph_key_caches
             .entry(font)
             .or_insert(ResourceClassCache::new())
     }
 
-    pub fn get_glyph_key_cache_for_font(&self,
-                                        font: &FontInstance) -> &GlyphKeyCache {
+    pub fn get_glyph_key_cache_for_font(&self, font: &FontInstance) -> &GlyphKeyCache {
         self.glyph_key_caches
             .get(font)
             .expect("BUG: Unable to find glyph key cache!")
@@ -52,9 +50,11 @@ impl GlyphCache {
     }
 
     pub fn clear_fonts<F>(&mut self, key_fun: F)
-    where for<'r> F: Fn(&'r &FontInstance) -> bool
+    where
+        for<'r> F: Fn(&'r &FontInstance) -> bool,
     {
-        let caches_to_destroy = self.glyph_key_caches.keys()
+        let caches_to_destroy = self.glyph_key_caches
+            .keys()
             .filter(&key_fun)
             .cloned()
             .collect::<Vec<_>>();

@@ -109,18 +109,3 @@ function* testSelect(view, swatch, inspector, testActor) {
      "div's color set to body color after dropper");
 }
 
-function* openEyedropper(view, swatch) {
-  let tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
-
-  info("Click on the swatch");
-  let onColorPickerReady = view.tooltips.getTooltip("colorPicker").once("ready");
-  swatch.click();
-  yield onColorPickerReady;
-
-  let dropperButton = tooltip.container.querySelector("#eyedropper-button");
-
-  info("Click on the eyedropper icon");
-  let onOpened = tooltip.once("eyedropper-opened");
-  dropperButton.click();
-  yield onOpened;
-}

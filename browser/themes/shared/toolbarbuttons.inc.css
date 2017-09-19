@@ -4,7 +4,6 @@
 
 :root {
   --toolbarbutton-hover-transition-duration: 150ms;
-  --toolbarbutton-active-transition-duration: 10ms;
 
   --toolbarbutton-inner-padding: 6px;
 
@@ -173,6 +172,7 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
   opacity: .3;
 }
 
+#PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]):hover,
 .findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover > .toolbarbutton-text,
@@ -184,6 +184,7 @@ toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:ac
   color: inherit;
 }
 
+#PersonalToolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active),
 .findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active) > .toolbarbutton-text,
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:active:not([disabled="true"]),
 toolbarbutton.bookmark-item[open="true"],
@@ -191,7 +192,6 @@ toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:a
 toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
 toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
   background-color: var(--toolbarbutton-active-background);
-  transition-duration: var(--toolbarbutton-active-transition-duration);
   color: inherit;
 }
 
@@ -292,6 +292,8 @@ toolbarbutton.bookmark-item {
   max-width: unset;
 }
 
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-icon,
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack,
 .bookmark-item > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
@@ -310,4 +312,21 @@ toolbarbutton.bookmark-item {
  * overflow the toolbar and push the button into the overflow menu. */
 :root[uidensity=compact] .toolbarbutton-badge {
   margin-inline-end: -7px !important;
+}
+
+/* To allow toolbarbuttons in the bookmarks toolbar to grow in
+ * height with the toolbar (like bookmark items), we apply background
+ * and padding to the buttons, not the button contents. This rule
+ * overrides attributes that would otherwise be duplicated. */
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-icon,
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-text,
+#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+  padding: 0 !important;
+  background: none !important;
+  min-height: 16px;
+}
+
+#PersonalToolbar .toolbarbutton-1 {
+  padding: 0 var(--toolbarbutton-inner-padding);
+  border-radius: var(--toolbarbutton-border-radius);
 }
