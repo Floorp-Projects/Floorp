@@ -18,11 +18,15 @@ add_task(function* () {
   assertAnimationsDisplayed(panel, 0);
 
   info("Start an animation on the node");
+  let onRendered = waitForAnimationTimelineRendering(panel);
   yield changeElementAndWait({
     selector: ".still",
     attributeName: "class",
     attributeValue: "ball animated"
   }, panel, inspector);
+
+  yield onRendered;
+  yield waitForAllAnimationTargets(panel);
 
   assertAnimationsDisplayed(panel, 1);
 
@@ -42,7 +46,5 @@ function* changeElementAndWait(options, panel, inspector) {
 
   yield executeInContent("devtools:test:setAttribute", options);
 
-  yield promise.all([onInspectorUpdated, onPanelUpdated,
-                     waitForAllAnimationTargets(panel),
-                     waitForAnimationTimelineRendering(panel)]);
+  yield promise.all([onInspectorUpdated, onPanelUpdated]);
 }

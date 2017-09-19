@@ -20,21 +20,21 @@ add_task(function* () {
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
   checkDelayAndName(timelineEl, true);
   let animationEl = timelineEl.querySelector(".animation");
-  let state = panel.animationsTimelineComponent.timeBlocks[0].animation.state;
+  let state = getAnimationTimeBlocks(panel)[0].animation.state;
   checkPath(animationEl, state);
 
   info("Selecting a no-delay animated node");
   yield selectNodeAndWaitForAnimations(".animated", inspector);
   checkDelayAndName(timelineEl, false);
   animationEl = timelineEl.querySelector(".animation");
-  state = panel.animationsTimelineComponent.timeBlocks[0].animation.state;
+  state = getAnimationTimeBlocks(panel)[0].animation.state;
   checkPath(animationEl, state);
 
   info("Selecting a negative-delay animated node");
   yield selectNodeAndWaitForAnimations(".negative-delay", inspector);
   checkDelayAndName(timelineEl, true);
   animationEl = timelineEl.querySelector(".animation");
-  state = panel.animationsTimelineComponent.timeBlocks[0].animation.state;
+  state = getAnimationTimeBlocks(panel)[0].animation.state;
   checkPath(animationEl, state);
 });
 
