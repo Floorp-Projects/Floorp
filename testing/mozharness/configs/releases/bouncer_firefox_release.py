@@ -188,6 +188,7 @@ config = {
                     "bouncer-platform": "win64",
                 },
             },
+        },
     },
     "partials": {
         "releases-dir": {
