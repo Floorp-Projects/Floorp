@@ -113,7 +113,7 @@ ReadIntoArray(nsIFile* aFile,
 
   PRFileDesc* fd = nullptr;
   nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
