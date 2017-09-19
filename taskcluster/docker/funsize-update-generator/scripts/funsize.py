@@ -248,9 +248,16 @@ def main():
                 verify_signature(dest, signing_certs)
             complete_mars["%s_size" % mar_type] = os.path.getsize(dest)
             complete_mars["%s_hash" % mar_type] = get_hash(dest)
-            if mar_type == 'to' and not is_lzma_compressed_mar(dest):
-                use_old_format = True
             unpack(work_env, dest, unpack_dir)
+            if mar_type == 'from':
+                version = get_option(unpack_dir, filename="application.ini",
+                                     section="App", option="Version")
+                major = int(version.split(".")[0])
+                # The updater for versions less than 56.0 requires BZ2
+                # compressed MAR files
+                if major < 56:
+                    use_old_format = True
+                    log.info("Forcing BZ2 compression for %s", f)
             log.info("AV-scanning %s ...", unpack_dir)
             sh.clamscan("-r", unpack_dir, _timeout=600, _err_to_out=True)
             log.info("Done.")
