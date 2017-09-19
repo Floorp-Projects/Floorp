@@ -1,6 +1,7 @@
 "use strict";
 
 Cu.import("resource://shield-recipe-client/lib/ShieldRecipeClient.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
 
 // We can't import bootstrap.js directly since it isn't in the jar manifest, but
 // we can use Addon.getResourceURI to get a path to the file and import using
@@ -171,13 +172,9 @@ decorate_task(
   withBootstrap,
   withStub(ShieldRecipeClient, "startup"),
   async function testStartupDelayed(Bootstrap, startupStub) {
-    Bootstrap.startup(undefined, 1); // 1 == APP_STARTUP
-    ok(
-      !startupStub.called,
-      "When started at app startup, do not call ShieldRecipeClient.startup immediately.",
-    );
-
+    const startupPromise = Bootstrap.startup(undefined, 1); // 1 == APP_STARTUP
     Bootstrap.observe(null, "sessionstore-windows-restored");
+    await startupPromise;
     ok(
       startupStub.called,
       "Once the sessionstore-windows-restored event is observed, call ShieldRecipeClient.startup.",
@@ -189,10 +186,54 @@ decorate_task(
   withBootstrap,
   withStub(ShieldRecipeClient, "startup"),
   async function testStartupDelayed(Bootstrap, startupStub) {
-    Bootstrap.startup(undefined, 3); // 1 == ADDON_ENABLED
+    await Bootstrap.startup(undefined, 3); // 3 == ADDON_ENABLED
     ok(
       startupStub.called,
       "When the add-on is enabled outside app startup, call ShieldRecipeClient.startup immediately.",
     );
+  },
+);
+
+decorate_task(
+  withBootstrap,
+  withMockPreferences,
+  PreferenceExperiments.withMockExperiments,
+  async function testMigrateOldPreferenceExperiments(Bootstrap, mockPreferences, mockExperiments) {
+    const defaultBranch = Services.prefs.getDefaultBranch("");
+    const experimentBranch = Services.prefs.getBranch("extensions.shield-recipe-client.startupExperimentPrefs.");
+    experimentBranch.deleteBranch("");
+
+    mockExperiments.test = experimentFactory({
+      preferenceName: "test.shieldMigrate",
+      preferenceType: "integer",
+      preferenceValue: 7,
+    });
+    mockPreferences.set("test.shieldMigrate", 10, "default");
+    mockPreferences.set("extensions.shield-recipe-client.startupExperimentMigrated", false, "user");
+
+    await Bootstrap.initExperimentPrefs();
+
+    is(
+      defaultBranch.getIntPref("test.shieldMigrate"),
+      7,
+      "initExperimentPrefs initialized test.shieldMigrate after migrating the experiment prefs.",
+    );
+    ok(
+      Services.prefs.getBoolPref("extensions.shield-recipe-client.startupExperimentMigrated"),
+      "initExperimentPrefs set the migration pref after finishing the migration.",
+    );
+  },
+);
+
+decorate_task(
+  withBootstrap,
+  withMockPreferences,
+  withStub(PreferenceExperiments, "saveStartupPrefs"),
+  async function testAlreadyMigrated(Bootstrap, mockPreferences, saveStartupPrefsStub) {
+    mockPreferences.set("extensions.shield-recipe-client.startupExperimentMigrated", true, "user");
+
+    await Bootstrap.initExperimentPrefs();
+
+    sinon.assert.notCalled(saveStartupPrefsStub);
   },
 );

@@ -9,20 +9,6 @@ const {withMockExperiments} = PreferenceExperiments;
 const DefaultPreferences = new Preferences({defaultBranch: true});
 const startupPrefs = "extensions.shield-recipe-client.startupExperimentPrefs";
 
-function experimentFactory(attrs) {
-  return Object.assign({
-    name: "fakename",
-    branch: "fakebranch",
-    expired: false,
-    lastSeen: new Date().toJSON(),
-    preferenceName: "fake.preference",
-    preferenceValue: "falkevalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldfakevalue",
-    preferenceBranchType: "default",
-  }, attrs);
-}
-
 // clearAllExperimentStorage
 add_task(withMockExperiments(async function(experiments) {
   experiments["test"] = experimentFactory({name: "test"});
