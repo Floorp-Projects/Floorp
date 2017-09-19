@@ -46,9 +46,6 @@ with Files("talos/talos/tests/scroll/**"):
 with Files("talos/talos/tests/tabpaint/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("talos/talos/tests/cpstartup/**"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
-
 with Files("talos/talos/tests/tart/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
