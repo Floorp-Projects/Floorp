@@ -241,6 +241,7 @@ var BrowserPageActions = {
       if (iframeNode) {
         action.onIframeHiding(iframeNode, panelNode);
       }
+      anchorNode.removeAttribute("open");
     }, { once: true });
 
     if (panelViewNode) {
@@ -252,6 +253,7 @@ var BrowserPageActions = {
     // panel.
     this.panelNode.hidePopup();
     panelNode.openPopup(anchorNode, "bottomcenter topright");
+    anchorNode.setAttribute("open", "true");
 
     if (iframeNode) {
       action.onIframeShown(iframeNode, panelNode);
@@ -593,6 +595,10 @@ var BrowserPageActions = {
     }
 
     this.panelNode.hidden = false;
+    this.panelNode.addEventListener("popuphiding", () => {
+      this.mainButtonNode.removeAttribute("open");
+    }, {once: true});
+    this.mainButtonNode.setAttribute("open", "true");
     this.panelNode.openPopup(this.mainButtonNode, {
       position: "bottomcenter topright",
       triggerEvent: event,
