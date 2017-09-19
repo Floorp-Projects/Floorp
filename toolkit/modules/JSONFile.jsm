@@ -178,6 +178,10 @@ JSONFile.prototype = {
    *          if there is no dataPostProcessor.
    */
   async load() {
+    if (this.dataReady) {
+      return;
+    }
+
     let data = {};
 
     try {
