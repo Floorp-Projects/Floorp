@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SEARCH_BOX_FOCUSED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SEARCH_BOX_FOCUSED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -448,7 +448,6 @@ function insertPinned(links, pinned) {
 function TopSites(prevState = INITIAL_STATE.TopSites, action) {
   let hasMatch;
   let newRows;
-  let pinned;
   switch (action.type) {
     case at.TOP_SITES_UPDATED:
       if (!action.data) {
@@ -497,10 +496,6 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       // events and removing the site that was blocked/deleted with an empty slot.
       // Once refresh() finishes, we update the UI again with a new site
       newRows = prevState.rows.filter(val => val && val.url !== action.data.url);
-      return Object.assign({}, prevState, { rows: newRows });
-    case at.PINNED_SITES_UPDATED:
-      pinned = action.data;
-      newRows = insertPinned(prevState.rows, pinned).slice(0, TOP_SITES_SHOWMORE_LENGTH);
       return Object.assign({}, prevState, { rows: newRows });
     default:
       return prevState;
@@ -1543,7 +1538,6 @@ class TopSitesEdit extends React.PureComponent {
             url: this.props.TopSites.rows[this.state.editIndex].url,
             index: this.state.editIndex,
             editMode: true,
-            link: this.props.TopSites.rows[this.state.editIndex],
             onClose: this.onFormClose,
             dispatch: this.props.dispatch,
             intl: this.props.intl })
@@ -1617,13 +1611,6 @@ class TopSiteForm extends React.PureComponent {
       let site = { url: this.cleanUrl() };
       if (this.state.label !== "") {
         site.label = this.state.label;
-      }
-      // Unpin links if the URL changed.
-      if (this.props.link.isPinned && this.props.link.url !== site.url) {
-        this.props.dispatch(ac.SendToMain({
-          type: at.TOP_SITES_UNPIN,
-          data: { site: { url: this.props.link.url } }
-        }));
       }
       this.props.dispatch(ac.SendToMain({
         type: at.TOP_SITES_PIN,
@@ -2464,7 +2451,7 @@ class Section extends React.PureComponent {
   sendImpressionStatsOrAddListener() {
     const { props } = this;
 
-    if (!props.dispatch) {
+    if (!props.shouldSendImpressionStats || !props.dispatch) {
       return;
     }
 
