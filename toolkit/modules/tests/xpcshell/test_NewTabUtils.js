@@ -365,6 +365,14 @@ add_task(async function addFavicons() {
   Assert.equal(links[0].faviconLength, links[0].favicon.length, "Got the right length for the byte array");
   Assert.equal(provider._faviconBytesToDataURI(links)[0].favicon, base64URL, "Got the right favicon");
   Assert.equal(links[0].faviconSize, 1, "Got the right favicon size (width and height of favicon)");
+
+  // Check with http version of the link that doesn't have its own
+  const nonHttps = [{url: links[0].url.replace("https", "http")}];
+  await provider._addFavicons(nonHttps);
+  Assert.equal(provider._faviconBytesToDataURI(nonHttps)[0].favicon, base64URL, "Got the same favicon");
+  Assert.equal(nonHttps[0].faviconLength, links[0].faviconLength, "Got the same favicon length");
+  Assert.equal(nonHttps[0].faviconSize, links[0].faviconSize, "Got the same favicon size");
+  Assert.equal(nonHttps[0].mimeType, links[0].mimeType, "Got the same mime type");
 });
 
 add_task(async function getHighlights() {
