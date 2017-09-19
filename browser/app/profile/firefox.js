@@ -499,8 +499,6 @@ pref("browser.bookmarks.autoExportHTML",          false);
 //  0: no backups created (and deletes all existing backups)
 pref("browser.bookmarks.max_backups",             15);
 
-pref("browser.bookmarks.showRecentlyBookmarked",  true);
-
 // Whether menu should close after Ctrl-click, middle-click, etc.
 pref("browser.bookmarks.openInTabClosesMenu", true);
 
