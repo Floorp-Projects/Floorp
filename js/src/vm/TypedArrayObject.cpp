@@ -180,19 +180,21 @@ TypedArrayObject::finalize(FreeOp* fop, JSObject* obj)
         js_free(curObj->elements());
 }
 
-/* static */ void
-TypedArrayObject::objectMoved(JSObject* obj, const JSObject* old)
+/* static */ size_t
+TypedArrayObject::objectMoved(JSObject* obj, JSObject* old)
 {
     TypedArrayObject* newObj = &obj->as<TypedArrayObject>();
     const TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
 
     // Typed arrays with a buffer object do not need an update.
     if (oldObj->hasBuffer())
-        return;
+        return 0;
 
     // Update the data slot pointer if it points to the old JSObject.
     if (oldObj->hasInlineElements())
         newObj->setInlineElements();
+
+    return 0;
 }
 
 /* static */ size_t

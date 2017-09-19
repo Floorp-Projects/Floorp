@@ -443,7 +443,7 @@ class UnboxedArrayObject : public UnboxedObject
                           Handle<GCVector<Value>> values, size_t* valueCursor);
 
     static void trace(JSTracer* trc, JSObject* object);
-    static void objectMoved(JSObject* obj, const JSObject* old);
+    static size_t objectMoved(JSObject* obj, JSObject* old);
     static void finalize(FreeOp* fop, JSObject* obj);
 
     static size_t objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src,

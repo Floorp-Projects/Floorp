@@ -741,11 +741,11 @@ proxy_Finalize(FreeOp* fop, JSObject* obj)
         js_free(js::detail::GetProxyDataLayout(obj)->values());
 }
 
-static void
-proxy_ObjectMoved(JSObject* obj, const JSObject* old)
+static size_t
+proxy_ObjectMoved(JSObject* obj, JSObject* old)
 {
     MOZ_ASSERT(obj->is<ProxyObject>());
-    obj->as<ProxyObject>().handler()->objectMoved(obj, old);
+    return obj->as<ProxyObject>().handler()->objectMoved(obj, old);
 }
 
 bool

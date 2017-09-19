@@ -1157,7 +1157,7 @@ public:
   bool unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
                JS::Handle<jsid> id) const override;
 
-  static void ObjectMoved(JSObject *obj, const JSObject *old);
+  static size_t ObjectMoved(JSObject *obj, JSObject *old);
 
   static const nsOuterWindowProxy singleton;
 
@@ -1526,13 +1526,14 @@ nsOuterWindowProxy::unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
   return js::UnwatchGuts(cx, proxy, id);
 }
 
-void
+size_t
 nsOuterWindowProxy::ObjectMoved(JSObject *obj, const JSObject *old)
 {
   nsGlobalWindow* outerWindow = GetOuterWindow(obj);
   if (outerWindow) {
     outerWindow->UpdateWrapper(obj, old);
   }
+  return 0;
 }
 
 const nsOuterWindowProxy
