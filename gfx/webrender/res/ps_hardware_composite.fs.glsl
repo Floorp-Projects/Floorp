@@ -3,5 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    oFragColor = texture(sCacheRGBA8, vUv);
+    vec2 uv = clamp(vUv.xy, vUvBounds.xy, vUvBounds.zw);
+    oFragColor = texture(sCacheRGBA8, vec3(uv, vUv.z));
 }

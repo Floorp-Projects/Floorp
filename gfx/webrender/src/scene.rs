@@ -28,18 +28,21 @@ impl SceneProperties {
         self.float_properties.clear();
 
         for property in properties.transforms {
-            self.transform_properties.insert(property.key.id, property.value);
+            self.transform_properties
+                .insert(property.key.id, property.value);
         }
 
         for property in properties.floats {
-            self.float_properties.insert(property.key.id, property.value);
+            self.float_properties
+                .insert(property.key.id, property.value);
         }
     }
 
     /// Get the current value for a transform property.
-    pub fn resolve_layout_transform(&self,
-                                    property: Option<&PropertyBinding<LayoutTransform>>)
-                                    -> LayoutTransform {
+    pub fn resolve_layout_transform(
+        &self,
+        property: Option<&PropertyBinding<LayoutTransform>>,
+    ) -> LayoutTransform {
         let property = match property {
             Some(property) => property,
             None => return LayoutTransform::identity(),
@@ -47,15 +50,13 @@ impl SceneProperties {
 
         match *property {
             PropertyBinding::Value(matrix) => matrix,
-            PropertyBinding::Binding(ref key) => {
-                self.transform_properties
-                    .get(&key.id)
-                    .cloned()
-                    .unwrap_or_else(|| {
-                        warn!("Property binding {:?} has an invalid value.", key);
-                        LayoutTransform::identity()
-                    })
-            }
+            PropertyBinding::Binding(ref key) => self.transform_properties
+                .get(&key.id)
+                .cloned()
+                .unwrap_or_else(|| {
+                    warn!("Property binding {:?} has an invalid value.", key);
+                    LayoutTransform::identity()
+                }),
         }
     }
 
@@ -63,15 +64,13 @@ impl SceneProperties {
     pub fn resolve_float(&self, property: &PropertyBinding<f32>, default_value: f32) -> f32 {
         match *property {
             PropertyBinding::Value(value) => value,
-            PropertyBinding::Binding(ref key) => {
-                self.float_properties
-                    .get(&key.id)
-                    .cloned()
-                    .unwrap_or_else(|| {
-                        warn!("Property binding {:?} has an invalid value.", key);
-                        default_value
-                    })
-            }
+            PropertyBinding::Binding(ref key) => self.float_properties
+                .get(&key.id)
+                .cloned()
+                .unwrap_or_else(|| {
+                    warn!("Property binding {:?} has an invalid value.", key);
+                    default_value
+                }),
         }
     }
 }
@@ -108,13 +107,15 @@ impl Scene {
         self.root_pipeline_id = Some(pipeline_id);
     }
 
-    pub fn set_display_list(&mut self,
-                            pipeline_id: PipelineId,
-                            epoch: Epoch,
-                            built_display_list: BuiltDisplayList,
-                            background_color: Option<ColorF>,
-                            viewport_size: LayerSize,
-                            content_size: LayoutSize) {
+    pub fn set_display_list(
+        &mut self,
+        pipeline_id: PipelineId,
+        epoch: Epoch,
+        built_display_list: BuiltDisplayList,
+        background_color: Option<ColorF>,
+        viewport_size: LayerSize,
+        content_size: LayoutSize,
+    ) {
         self.display_lists.insert(pipeline_id, built_display_list);
 
         let new_pipeline = ScenePipeline {
@@ -128,8 +129,7 @@ impl Scene {
         self.pipeline_map.insert(pipeline_id, new_pipeline);
     }
 
-    pub fn remove_pipeline(&mut self,
-                           pipeline_id: PipelineId) {
+    pub fn remove_pipeline(&mut self, pipeline_id: PipelineId) {
         if self.root_pipeline_id == Some(pipeline_id) {
             self.root_pipeline_id = None;
         }

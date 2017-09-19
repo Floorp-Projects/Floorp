@@ -5,3 +5,4 @@
 #include shared,prim_shared
 
 varying vec3 vUv;
+flat varying vec4 vUvBounds;
