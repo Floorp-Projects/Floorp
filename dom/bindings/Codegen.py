@@ -6851,8 +6851,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
                 # if they already threw an exception.
-                # XXX Assertion disabled for now, see bug 991271.
-                failed = ("MOZ_ASSERT(true || JS_IsExceptionPending(cx));\n" +
+                failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                           exceptionCode)
             else:
                 if descriptor.notflattened:
@@ -15371,8 +15370,7 @@ class CGJSImplMethod(CGJSImplMember):
                 MOZ_ASSERT(js::IsObjectInContextCompartment(scopeObj, cx));
                 JS::Rooted<JS::Value> wrappedVal(cx);
                 if (!GetOrCreateDOMReflector(cx, impl, &wrappedVal, aGivenProto)) {
-                  //XXX Assertion disabled for now, see bug 991271.
-                  MOZ_ASSERT(true || JS_IsExceptionPending(cx));
+                  MOZ_ASSERT(JS_IsExceptionPending(cx));
                   aRv.Throw(NS_ERROR_UNEXPECTED);
                   return nullptr;
                 }
