@@ -11,6 +11,30 @@
 #include "nsBaseWidget.h"
 #include "CompositorWidget.h"
 
+// The various synthesized event values are hardcoded to avoid pulling
+// in the platform specific widget code.
+#if defined(MOZ_WIDGET_GTK)
+#define MOZ_HEADLESS_MOUSE_MOVE 3 // GDK_MOTION_NOTIFY
+#define MOZ_HEADLESS_MOUSE_DOWN 4 // GDK_BUTTON_PRESS
+#define MOZ_HEADLESS_MOUSE_UP   7 // GDK_BUTTON_RELEASE
+#elif defined(XP_WIN)
+#define MOZ_HEADLESS_MOUSE_MOVE 1 // MOUSEEVENTF_MOVE
+#define MOZ_HEADLESS_MOUSE_DOWN 2 // MOUSEEVENTF_LEFTDOWN
+#define MOZ_HEADLESS_MOUSE_UP   4 // MOUSEEVENTF_LEFTUP
+#elif defined(XP_MACOSX)
+#define MOZ_HEADLESS_MOUSE_MOVE 5 // NSMouseMoved
+#define MOZ_HEADLESS_MOUSE_DOWN 1 // NSLeftMouseDown
+#define MOZ_HEADLESS_MOUSE_UP   2 // NSLeftMouseUp
+#elif defined(ANDROID)
+#define MOZ_HEADLESS_MOUSE_MOVE 7 // ACTION_HOVER_MOVE
+#define MOZ_HEADLESS_MOUSE_DOWN 5 // ACTION_POINTER_DOWN
+#define MOZ_HEADLESS_MOUSE_UP   6 // ACTION_POINTER_UP
+#else
+#define MOZ_HEADLESS_MOUSE_MOVE -1
+#define MOZ_HEADLESS_MOUSE_DOWN -1
+#define MOZ_HEADLESS_MOUSE_UP   -1
+#endif
+
 namespace mozilla {
 namespace widget {
 
@@ -91,6 +115,14 @@ public:
 
   virtual nsresult DispatchEvent(WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) override;
+
+  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                                              uint32_t aNativeMessage,
+                                              uint32_t aModifierFlags,
+                                              nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
+                                             nsIObserver* aObserver) override
+                   { return SynthesizeNativeMouseEvent(aPoint, MOZ_HEADLESS_MOUSE_MOVE, 0, aObserver); };
 
 private:
   ~HeadlessWidget();
