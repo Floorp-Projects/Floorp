@@ -672,6 +672,13 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateComboBoxEntryButtonWidget();
     case MOZ_GTK_COMBOBOX_ENTRY_ARROW:
       return CreateComboBoxEntryArrowWidget();
+    case MOZ_GTK_HEADER_BAR:
+    case MOZ_GTK_HEADER_BAR_MAXIMIZED:
+      return CreateHeaderBar(aWidgetType);
+    case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+      return CreateHeaderBarButton(aWidgetType);
     default:
       /* Not implemented */
       return nullptr;
