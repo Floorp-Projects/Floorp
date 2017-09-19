@@ -80,7 +80,7 @@
                 running = false;
               }),
             // ... or not. If not, we expect a load event.
-            waitForMessage("foo")
+            waitForMessage("foo", _ => win)
           ]))
           .then(_ => win.close())
           .catch(e => {
