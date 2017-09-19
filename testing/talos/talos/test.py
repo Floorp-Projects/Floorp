@@ -305,28 +305,6 @@ class tabpaint(PageloaderTest):
 
 
 @register_test()
-class cpstartup(PageloaderTest):
-    """
-
-    """
-    extensions = '${talos}/tests/cpstartup/cpstartup-signed.xpi'
-    tpmanifest = '${talos}/tests/cpstartup/cpstartup.manifest'
-    tppagecycles = 20
-    gecko_profile_entries = 1000000
-    tploadnocache = True
-    unit = 'ms'
-    preferences = {
-        # By default, Talos is configured to open links from
-        # content in new windows. We're overriding them so that
-        # they open in new tabs instead.
-        # See http://kb.mozillazine.org/Browser.link.open_newwindow
-        # and http://kb.mozillazine.org/Browser.link.open_newwindow.restriction
-        'browser.link.open_newwindow': 3,
-        'browser.link.open_newwindow.restriction': 2,
-    }
-
-
-@register_test()
 class tps(PageloaderTest):
     """
     Tests the amount of time it takes to switch between tabs
