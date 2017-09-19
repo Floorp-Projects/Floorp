@@ -58,13 +58,6 @@ AnimationTimeBlock.prototype = {
     this.unrender();
 
     this.animation = animation;
-    let {state} = this.animation;
-
-    // Create a container element to hold the delay and iterations.
-    // It is positioned according to its delay (divided by the playbackrate),
-    // and its width is according to its duration (divided by the playbackrate).
-    const {x, delayX, delayW, endDelayX, endDelayW} =
-      TimeScale.getAnimationDimensions(animation);
 
     // Animation summary graph element.
     const summaryEl = createSVGNode({
@@ -72,24 +65,14 @@ AnimationTimeBlock.prototype = {
       nodeType: "svg",
       attributes: {
         "class": "summary",
-        "preserveAspectRatio": "none",
-        "style": `left: ${ x - (state.delay > 0 ? delayW : 0) }%`
+        "preserveAspectRatio": "none"
       }
     });
+    this.updateSummaryGraphViewBox(summaryEl);
 
+    const {state} = this.animation;
     // Total displayed duration
-    const totalDisplayedDuration = state.playbackRate * TimeScale.getDuration();
-
-    // Calculate stroke height in viewBox to display stroke of path.
-    const strokeHeightForViewBox = 0.5 / this.containerEl.clientHeight;
-
-    // Set viewBox
-    summaryEl.setAttribute("viewBox",
-                           `${ state.delay < 0 ? state.delay : 0 }
-                            -${ 1 + strokeHeightForViewBox }
-                            ${ totalDisplayedDuration }
-                            ${ 1 + strokeHeightForViewBox * 2 }`);
-
+    const totalDisplayedDuration = this.getTotalDisplayedDuration();
     // Minimum segment duration is the duration of one pixel.
     const minSegmentDuration = totalDisplayedDuration / this.containerEl.clientWidth;
     // Minimum progress threshold for effect timing.
@@ -131,31 +114,92 @@ AnimationTimeBlock.prototype = {
     // Delay.
     if (state.delay) {
       // Negative delays need to start at 0.
-      createNode({
+      const delayEl = createNode({
         parent: this.containerEl,
         attributes: {
           "class": "delay"
                    + (state.delay < 0 ? " negative" : " positive")
                    + (state.fill === "both" ||
-                      state.fill === "backwards" ? " fill" : ""),
-          "style": `left:${ delayX }%; width:${ delayW }%;`
+                      state.fill === "backwards" ? " fill" : "")
         }
       });
+      this.updateDelayBounds(delayEl);
     }
 
     // endDelay
     if (state.iterationCount && state.endDelay) {
-      createNode({
+      const endDelayEl = createNode({
         parent: this.containerEl,
         attributes: {
           "class": "end-delay"
                    + (state.endDelay < 0 ? " negative" : " positive")
                    + (state.fill === "both" ||
-                      state.fill === "forwards" ? " fill" : ""),
-          "style": `left:${ endDelayX }%; width:${ endDelayW }%;`
+                      state.fill === "forwards" ? " fill" : "")
         }
       });
+      this.updateEndDelayBounds(endDelayEl);
     }
+  },
+
+  /**
+   * Update animation and updating its DOM accordingly.
+   * Unlike 'render' method, this method does not generate any elements, but update
+   * the bounds of DOM.
+   * @param {Object} animation
+   */
+  update: function (animation) {
+    this.animation = animation;
+    this.updateSummaryGraphViewBox(this.containerEl.querySelector(".summary"));
+    const delayEl = this.containerEl.querySelector(".delay");
+    if (delayEl) {
+      this.updateDelayBounds(delayEl);
+    }
+    const endDelayEl = this.containerEl.querySelector(".end-delay");
+    if (endDelayEl) {
+      this.updateEndDelayBounds(endDelayEl);
+    }
+  },
+
+  /**
+   * Update viewBox and style of SVG element for summary graph to fit to latest
+   * TimeScale.
+   * @param {Element} summaryEl - SVG element for summary graph.
+   */
+  updateSummaryGraphViewBox: function (summaryEl) {
+    const {x, delayW} = TimeScale.getAnimationDimensions(this.animation);
+    const totalDisplayedDuration = this.getTotalDisplayedDuration();
+    const strokeHeightForViewBox = 0.5 / this.containerEl.clientHeight;
+    const {state} = this.animation;
+    summaryEl.setAttribute("viewBox",
+                           `${state.delay < 0 ? state.delay : 0} ` +
+                           `-${1 + strokeHeightForViewBox} ` +
+                           `${totalDisplayedDuration} ` +
+                           `${1 + strokeHeightForViewBox * 2}`);
+    summaryEl.setAttribute("style", `left: ${ x - (state.delay > 0 ? delayW : 0) }%`);
+  },
+
+  /**
+   * Update bounds of element which represents delay to fit to latest TimeScale.
+   * @param {Element} delayEl - which represents delay.
+   */
+  updateDelayBounds: function (delayEl) {
+    const {delayX, delayW} = TimeScale.getAnimationDimensions(this.animation);
+    delayEl.style.left = `${ delayX }%`;
+    delayEl.style.width = `${ delayW }%`;
+  },
+
+  /**
+   * Update bounds of element which represents endDelay to fit to latest TimeScale.
+   * @param {Element} endDelayEl - which represents endDelay.
+   */
+  updateEndDelayBounds: function (endDelayEl) {
+    const {endDelayX, endDelayW} = TimeScale.getAnimationDimensions(this.animation);
+    endDelayEl.style.left = `${ endDelayX }%`;
+    endDelayEl.style.width = `${ endDelayW }%`;
+  },
+
+  getTotalDisplayedDuration: function () {
+    return this.animation.state.playbackRate * TimeScale.getDuration();
   },
 
   getTooltipText: function (state) {
