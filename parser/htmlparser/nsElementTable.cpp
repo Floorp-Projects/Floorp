@@ -47,7 +47,7 @@ static const int kAllTags       = 0xffffff;
 #define ELEM(tag, parent, leaf) { parent, leaf },
 #endif
 
-const nsHTMLElement gHTMLElements[] = {
+static const nsHTMLElement gHTMLElements[] = {
   ELEM(unknown,     kNone,                       true)
   ELEM(a,           kSpecial,                    false)
   ELEM(abbr,        kPhrase,                     false)
