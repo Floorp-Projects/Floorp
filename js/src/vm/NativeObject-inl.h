@@ -137,10 +137,13 @@ NativeObject::copyDenseElements(uint32_t dstStart, const Value* src, uint32_t co
     MOZ_ASSERT(dstStart + count <= getDenseCapacity());
     MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(!denseElementsAreFrozen());
+    MOZ_ASSERT_IF(count > 0, src != nullptr);
 #ifdef DEBUG
     for (uint32_t i = 0; i < count; ++i)
         checkStoredValue(src[i]);
 #endif
+    if (count == 0)
+        return;
     if (JS::shadow::Zone::asShadowZone(zone())->needsIncrementalBarrier()) {
         uint32_t numShifted = getElementsHeader()->numShiftedElements();
         for (uint32_t i = 0; i < count; ++i) {
