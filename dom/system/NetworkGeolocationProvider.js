@@ -7,6 +7,8 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 const POSITION_UNAVAILABLE = Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE;
 
 var gLoggingEnabled = false;
@@ -370,9 +372,7 @@ WifiGeoPositionProvider.prototype = {
     let url = Services.urlFormatter.formatURLPref("geo.wifi.uri");
     LOG("Sending request");
 
-    let xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                        .createInstance(Ci.nsIXMLHttpRequest);
-
+    let xhr = new XMLHttpRequest();
     try {
       xhr.open("POST", url, true);
       xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
