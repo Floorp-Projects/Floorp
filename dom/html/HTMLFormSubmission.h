@@ -193,13 +193,7 @@ private:
    * chunks--string streams and file streams interleaved to make one big POST
    * stream.
    */
-  nsCOMPtr<nsIMultiplexInputStream> mPostData;
-
-  /**
-   * The same stream, but as an nsIInputStream.
-   * Raw pointers because it is just QI of mInputStream.
-   */
-  nsIInputStream* mPostDataStream;
+  nsCOMPtr<nsIMultiplexInputStream> mPostDataStream;
 
   /**
    * The current string chunk.  When a file is hit, the string chunk gets

@@ -11,7 +11,7 @@
  */
 
 [scriptable, uuid(a076fd12-1dd1-11b2-b19a-d53b5dffaade)]
-interface nsIMultiplexInputStream : nsISupports
+interface nsIMultiplexInputStream : nsIInputStream
 {
     /**
      * Number of streams in this multiplex-stream
