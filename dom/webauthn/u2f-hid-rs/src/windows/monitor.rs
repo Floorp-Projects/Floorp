@@ -63,9 +63,7 @@ impl Monitor {
                 }
 
                 Ok(())
-            },
-            0, /* no timeout */
-        )?;
+            })?;
 
         Ok(Self {
             rx: rx,
