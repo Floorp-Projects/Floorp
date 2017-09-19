@@ -433,7 +433,6 @@
       </hbox>
       <hbox align="center">
         <checkbox id="browserContainersCheckbox"
-                class="tail-with-learn-more"
                   label="&browserContainersEnabled.label;"
                   accesskey="&browserContainersEnabled.accesskey;"
                   preference="privacy.userContext.enabled"
@@ -738,7 +737,7 @@
       <row id="playDRMContentRow">
         <hbox align="center">
           <checkbox id="playDRMContent" preference="media.eme.enabled"
-                    class="tail-with-learn-more" label="&playDRMContent2.label;" accesskey="&playDRMContent2.accesskey;"/>
+                    label="&playDRMContent2.label;" accesskey="&playDRMContent2.accesskey;"/>
           <label id="playDRMContentLink" class="learnMore text-link">
             &playDRMContent.learnMore.label;
           </label>
@@ -765,10 +764,10 @@
   <caption class="search-header" hidden="true"><label>&updateApplication.label;</label></caption>
 
   <label>&updateApplicationDescription.label;</label>
-  <hbox align="center">
+  <hbox align="start">
     <vbox flex="1">
       <description>
-        &updateApplication.version.pre;<label id="version" class="tail-with-learn-more" />&updateApplication.version.post;
+        &updateApplication.version.pre;<label id="version"/>&updateApplication.version.post;
         <label id="releasenotes" class="learnMore text-link" hidden="true">&releaseNotes.link;</label>
       </description>
       <description id="distribution" class="text-blurb" hidden="true"/>
@@ -922,7 +921,6 @@
 
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
-              class="tail-with-learn-more"
               label="&useRecommendedPerformanceSettings2.label;"
               accesskey="&useRecommendedPerformanceSettings2.accesskey;"
               preference="browser.preferences.defaultPerformanceSettings.enabled"/>

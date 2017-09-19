@@ -45,6 +45,7 @@ menulist.actionsMenu > .menulist-dropmarker {
   margin-bottom: 11px;
 }
 
+textbox + button,
 filefield + button {
   margin-inline-start: -4px;
 }
