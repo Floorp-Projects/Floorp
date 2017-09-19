@@ -26,6 +26,8 @@ add_task(function* () {
   let securityInfoLoaded = waitForDOM(document, ".security-info-value");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
+
+  yield waitUntil(() => document.querySelector("#security-tab"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#security-tab"));
   yield securityInfoLoaded;
@@ -50,6 +52,8 @@ add_task(function* () {
       "RECEIVED_RESPONSE_CONTENT",
       "UPDATING_EVENT_TIMINGS",
       "RECEIVED_EVENT_TIMINGS",
+      "UPDATING_SECURITY_INFO",
+      "RECEIVED_SECURITY_INFO",
     ];
 
     let promises = awaitedEvents.map((event) => {

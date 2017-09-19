@@ -51,6 +51,11 @@ function* throttleTest(actuallyThrottle) {
   yield triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);
   yield eventPromise;
 
+  yield waitUntil(() => {
+    let requestItem = getSortedRequests(store.getState()).get(0);
+    return requestItem && requestItem.eventTimings;
+  });
+
   let requestItem = getSortedRequests(store.getState()).get(0);
   const reportedOneSecond = requestItem.eventTimings.timings.receive > 1000;
   if (actuallyThrottle) {
