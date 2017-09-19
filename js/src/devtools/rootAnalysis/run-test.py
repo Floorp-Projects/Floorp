@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -81,9 +81,14 @@ for name in cfg.tests:
     except OSError:
         pass
 
-    test = Test(indir, outdir, cfg)
+    test = Test(indir, outdir, cfg, verbose=cfg.verbose)
 
     os.chdir(outdir)
     subprocess.call(["sh", "-c", "rm *.xdb"])
-    execfile(os.path.join(indir, "test.py"), {'test': test, 'equal': equal})
+    if cfg.verbose:
+        print("Running test %s" % name)
+    testpath = os.path.join(indir, "test.py")
+    testscript = open(testpath).read()
+    testcode = compile(testscript, testpath, 'exec')
+    exec(testcode, {'test': test, 'equal': equal})
     print("TEST-PASSED: %s" % name)

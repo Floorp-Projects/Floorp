@@ -190,7 +190,7 @@ class MapIteratorObject : public NativeObject
     static MapIteratorObject* create(JSContext* cx, HandleObject mapobj, ValueMap* data,
                                      MapObject::IteratorKind kind);
     static void finalize(FreeOp* fop, JSObject* obj);
-    static void objectMoved(JSObject* obj, const JSObject* old);
+    static size_t objectMoved(JSObject* obj, JSObject* old);
 
     static MOZ_MUST_USE bool next(Handle<MapIteratorObject*> mapIterator,
                                   HandleArrayObject resultPairObj, JSContext* cx);
@@ -293,7 +293,7 @@ class SetIteratorObject : public NativeObject
     static SetIteratorObject* create(JSContext* cx, HandleObject setobj, ValueSet* data,
                                      SetObject::IteratorKind kind);
     static void finalize(FreeOp* fop, JSObject* obj);
-    static void objectMoved(JSObject* obj, const JSObject* old);
+    static size_t objectMoved(JSObject* obj, JSObject* old);
 
     static MOZ_MUST_USE bool next(Handle<SetIteratorObject*> setIterator,
                                   HandleArrayObject resultObj, JSContext* cx);

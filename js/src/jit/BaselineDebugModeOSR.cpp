@@ -988,6 +988,7 @@ EmitBranchIsReturningFromCallVM(MacroAssembler& masm, Register entry, Label* lab
 static void
 SyncBaselineDebugModeOSRInfo(BaselineFrame* frame, Value* vp, bool rv)
 {
+    AutoUnsafeCallWithABI unsafe;
     BaselineDebugModeOSRInfo* info = frame->debugModeOSRInfo();
     MOZ_ASSERT(info);
     MOZ_ASSERT(frame->script()->baselineScript()->containsCodeAddress(info->resumeAddr));
@@ -1022,6 +1023,7 @@ SyncBaselineDebugModeOSRInfo(BaselineFrame* frame, Value* vp, bool rv)
 static void
 FinishBaselineDebugModeOSR(BaselineFrame* frame)
 {
+    AutoUnsafeCallWithABI unsafe;
     frame->deleteDebugModeOSRInfo();
 
     // We will return to JIT code now so we have to clear the override pc.

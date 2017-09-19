@@ -1293,6 +1293,8 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     requestDepth(0),
 #ifdef DEBUG
     checkRequestDepth(0),
+    inUnsafeCallWithABI(false),
+    hasAutoUnsafeCallWithABI(false),
 #endif
 #ifdef JS_SIMULATOR
     simulator_(nullptr),
@@ -1668,3 +1670,22 @@ AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason)
     }
     crash(reason);
 }
+
+#ifdef DEBUG
+AutoUnsafeCallWithABI::AutoUnsafeCallWithABI()
+  : cx_(TlsContext.get()),
+    nested_(cx_->hasAutoUnsafeCallWithABI),
+    nogc(cx_)
+{
+    cx_->hasAutoUnsafeCallWithABI = true;
+}
+
+AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI()
+{
+    MOZ_ASSERT(cx_->hasAutoUnsafeCallWithABI);
+    if (!nested_) {
+        cx_->hasAutoUnsafeCallWithABI = false;
+        cx_->inUnsafeCallWithABI = false;
+    }
+}
+#endif
