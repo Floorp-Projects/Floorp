@@ -44,9 +44,8 @@ pub use display_item::*;
 pub use display_list::*;
 pub use font::*;
 pub use image::*;
-pub use units::*;
-
-use std::hash::BuildHasherDefault;
 use std::collections::{HashMap, HashSet};
+use std::hash::BuildHasherDefault;
+pub use units::*;
 type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<fxhash::FxHasher>>;
 type FastHashSet<T> = HashSet<T, BuildHasherDefault<fxhash::FxHasher>>;

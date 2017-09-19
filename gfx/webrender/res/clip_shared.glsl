@@ -41,6 +41,11 @@ struct ClipVertexInfo {
     RectWithSize clipped_local_rect;
 };
 
+RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
+    vec4 p = clamp(vec4(a.p0, a.p0 + a.size), b.p0.xyxy, b.p0.xyxy + b.size.xyxy);
+    return RectWithSize(p.xy, max(vec2(0.0), p.zw - p.xy));
+}
+
 // The transformed vertex function that always covers the whole clip area,
 // which is the intersection of all clip instances of a given primitive
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
