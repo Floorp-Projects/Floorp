@@ -34,17 +34,26 @@ var iconDiscoveryTests = [
 ];
 
 function runIconDiscoveryTest() {
-  var testCase = iconDiscoveryTests[0];
-  var head = doc().getElementById("linkparent");
-  var hasSrc = gBrowser.getIcon() != null;
-  if (testCase.pass)
-    ok(hasSrc, testCase.text);
-  else
-    ok(!hasSrc, testCase.text);
+  let testCase = iconDiscoveryTests[0];
+  let head = doc().getElementById("linkparent");
 
-  head.removeChild(head.getElementsByTagName("link")[0]);
-  iconDiscoveryTests.shift();
-  iconDiscovery(); // Run the next test.
+  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
+  // favicon loads, we have to wait some time before checking that icon was
+  // stored properly.
+  BrowserTestUtils.waitForCondition(() => {
+    return gBrowser.getIcon() != null;
+  }, "wait for icon load to finish", 100, 5)
+  .then(() => {
+    ok(testCase.pass, testCase.text);
+  })
+  .catch(() => {
+    ok(!testCase.pass, testCase.text);
+  })
+  .then(() => {
+    head.removeChild(head.getElementsByTagName("link")[0]);
+    iconDiscoveryTests.shift();
+    iconDiscovery(); // Run the next test.
+  });
 }
 
 function iconDiscovery() {
@@ -62,6 +71,63 @@ function iconDiscovery() {
     var href = testCase.href || rootDir + "moz.png";
     var type = testCase.type || "image/png";
     if (testCase.pass == undefined)
+      testCase.pass = true;
+
+    link.rel = rel;
+    link.href = href;
+    link.type = type;
+    head.appendChild(link);
+  } else {
+    richIconDiscovery();
+  }
+}
+
+let richIconDiscoveryTests = [
+  { rel: "apple-touch-icon", text: "apple-touch-icon discovered" },
+  { rel: "apple-touch-icon-precomposed", text: "apple-touch-icon-precomposed discovered" },
+  { rel: "fluid-icon", text: "fluid-icon discovered" },
+  { rel: "unknown-icon", pass: false, text: "unknown icon not discovered" }
+];
+
+function runRichIconDiscoveryTest() {
+  let testCase = richIconDiscoveryTests[0];
+  let head = doc().getElementById("linkparent");
+
+  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
+  // favicon loads, we have to wait some time before checking that icon was
+  // stored properly.
+  BrowserTestUtils.waitForCondition(() => {
+    return gBrowser.getIcon() != null;
+  }, "wait for icon load to finish", 100, 5)
+  .then(() => {
+    ok(testCase.pass, testCase.text);
+  })
+  .catch(() => {
+    ok(!testCase.pass, testCase.text);
+  })
+  .then(() => {
+    head.removeChild(head.getElementsByTagName("link")[0]);
+    richIconDiscoveryTests.shift();
+    richIconDiscovery(); // Run the next test.
+  });
+}
+
+function richIconDiscovery() {
+  if (richIconDiscoveryTests.length) {
+    setHandlerFunc(runRichIconDiscoveryTest);
+    gBrowser.setIcon(gBrowser.selectedTab, null,
+                     Services.scriptSecurityManager.getSystemPrincipal()
+    );
+
+    let testCase = richIconDiscoveryTests[0];
+    let head = doc().getElementById("linkparent");
+    let link = doc().createElement("link");
+
+    let rel = testCase.rel;
+    let rootDir = getRootDirectory(gTestPath);
+    let href = testCase.href || rootDir + "moz.png";
+    let type = testCase.type || "image/png";
+    if (testCase.pass === undefined)
       testCase.pass = true;
 
     link.rel = rel;

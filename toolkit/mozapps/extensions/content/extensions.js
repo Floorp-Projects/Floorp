@@ -163,13 +163,6 @@ function initialize(event) {
     gDragDrop.onDrop(event);
   });
   addonPage.addEventListener("keypress", function(event) {
-    // If there is an embedded preferences <browser> running in a remote
-    // process, we will see the event here first before it gets a chance
-    // to bubble up through the embedded page.  To avoid stealing focus,
-    // we just ignore events when focus is in an options browser.
-    if (event.target.classList.contains("inline-options-browser")) {
-      return;
-    }
     gHeader.onKeyPress(event);
   });
 
@@ -3770,6 +3763,13 @@ var gDetailView = {
     browser.setAttribute("class", "inline-options-browser");
     browser.setAttribute("forcemessagemanager", "true");
     browser.setAttribute("selectmenulist", "ContentSelectDropdown");
+
+    // The outer about:addons document listens for key presses to focus
+    // the search box when / is pressed.  But if we're focused inside an
+    // options page, don't let those keypresses steal focus.
+    browser.addEventListener("keypress", event => {
+      event.stopPropagation();
+    });
 
     let {optionsURL} = this._addon;
     let remote = !E10SUtils.canLoadURIInProcess(optionsURL, Services.appinfo.PROCESS_TYPE_DEFAULT);

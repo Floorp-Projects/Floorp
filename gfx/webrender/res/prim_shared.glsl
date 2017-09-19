@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include rect
+
 #define EXTEND_MODE_CLAMP  0
 #define EXTEND_MODE_REPEAT 1
 
@@ -22,39 +24,8 @@ uniform sampler2DArray sSharedCacheA8;
 
 uniform sampler2D sGradients;
 
-struct RectWithSize {
-    vec2 p0;
-    vec2 size;
-};
-
-struct RectWithEndpoint {
-    vec2 p0;
-    vec2 p1;
-};
-
-RectWithEndpoint to_rect_with_endpoint(RectWithSize rect) {
-    RectWithEndpoint result;
-    result.p0 = rect.p0;
-    result.p1 = rect.p0 + rect.size;
-
-    return result;
-}
-
-RectWithSize to_rect_with_size(RectWithEndpoint rect) {
-    RectWithSize result;
-    result.p0 = rect.p0;
-    result.size = rect.p1 - rect.p0;
-
-    return result;
-}
-
 vec2 clamp_rect(vec2 point, RectWithSize rect) {
     return clamp(point, rect.p0, rect.p0 + rect.size);
-}
-
-RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
-    vec4 p = clamp(vec4(a.p0, a.p0 + a.size), b.p0.xyxy, b.p0.xyxy + b.size.xyxy);
-    return RectWithSize(p.xy, max(vec2(0.0), p.zw - p.xy));
 }
 
 float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
@@ -242,23 +213,6 @@ AlphaBatchTask fetch_alpha_batch_task(int index) {
     return task;
 }
 
-struct ReadbackTask {
-    vec2 render_target_origin;
-    vec2 size;
-    float render_target_layer_index;
-};
-
-ReadbackTask fetch_readback_task(int index) {
-    RenderTaskData data = fetch_render_task(index);
-
-    ReadbackTask task;
-    task.render_target_origin = data.data0.xy;
-    task.size = data.data0.zw;
-    task.render_target_layer_index = data.data1.x;
-
-    return task;
-}
-
 struct ClipArea {
     vec4 task_bounds;
     vec4 screen_origin_target_index;
@@ -335,19 +289,18 @@ Glyph fetch_glyph(int specific_prim_address,
         case SUBPX_DIR_NONE:
             break;
         case SUBPX_DIR_HORIZONTAL:
-            glyph.x = trunc(glyph.x);
+            // Glyphs positioned [-0.125, 0.125] get a
+            // subpx position of zero. So include that
+            // offset in the glyph position to ensure
+            // we truncate to the correct whole position.
+            glyph.x = trunc(glyph.x + 0.125);
             break;
         case SUBPX_DIR_VERTICAL:
-            glyph.y = trunc(glyph.y);
+            glyph.y = trunc(glyph.y + 0.125);
             break;
     }
 
     return Glyph(glyph);
-}
-
-RectWithSize fetch_instance_geometry(int address) {
-    vec4 data = fetch_from_resource_cache_1(address);
-    return RectWithSize(data.xy, data.zw);
 }
 
 struct PrimitiveInstance {
@@ -710,17 +663,6 @@ TextShadow fetch_text_shadow(int address) {
     return TextShadow(data[0], data[1].xy, data[1].z);
 }
 
-struct Line {
-    vec4 color;
-    float style;
-    float orientation;
-};
-
-Line fetch_line(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
-    return Line(data[0], data[1].x, data[1].y);
-}
-
 struct TextRun {
     vec4 color;
     vec2 offset;
@@ -741,15 +683,6 @@ struct Image {
 Image fetch_image(int address) {
     vec4 data[2] = fetch_from_resource_cache_2(address);
     return Image(data[0], data[1]);
-}
-
-struct YuvImage {
-    vec2 size;
-};
-
-YuvImage fetch_yuv_image(int address) {
-    vec4 data = fetch_from_resource_cache_1(address);
-    return YuvImage(data.xy);
 }
 
 struct BoxShadow {

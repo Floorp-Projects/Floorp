@@ -9,7 +9,7 @@
 // Bug 1255787.
 
 const TESTCASE_URI = URL_ROOT + "doc_inline_sourcemap.html";
-const PREF = "devtools.styleeditor.source-maps-enabled";
+const PREF = "devtools.source-map.client-service.enabled";
 
 add_task(function* () {
   Services.prefs.setBoolPref(PREF, true);

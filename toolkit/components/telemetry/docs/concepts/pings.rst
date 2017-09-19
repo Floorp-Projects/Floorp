@@ -4,7 +4,7 @@
 Telemetry pings
 =====================
 
-A *Telemetry ping* is the data that we send to Mozillas Telemetry servers.
+A *Telemetry ping* is the data that we send to Mozilla's Telemetry servers.
 
 That data is stored as a JSON object client-side and contains common information to all pings and a payload specific to a certain *ping types*.
 

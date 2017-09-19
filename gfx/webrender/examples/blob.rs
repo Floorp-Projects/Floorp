@@ -4,20 +4,21 @@
 
 extern crate gleam;
 extern crate glutin;
-extern crate webrender;
 extern crate rayon;
+extern crate webrender;
 
-#[path="common/boilerplate.rs"]
+#[path = "common/boilerplate.rs"]
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
-use rayon::ThreadPool;
 use rayon::Configuration as ThreadPoolConfig;
+use rayon::ThreadPool;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
-use std::sync::mpsc::{channel, Sender, Receiver};
-use webrender::api::{self, RenderApi, DisplayListBuilder, ResourceUpdates, LayoutSize, PipelineId, DocumentId};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use webrender::api::{self, DisplayListBuilder, DocumentId, LayoutSize, PipelineId, RenderApi,
+                     ResourceUpdates};
 
 // This example shows how to implement a very basic BlobImageRenderer that can only render
 // a checkerboard pattern.
@@ -38,15 +39,15 @@ fn deserialize_blob(blob: &[u8]) -> Result<ImageRenderingCommands, ()> {
         (Some(&r), Some(&g), Some(&b), Some(&a)) => Ok(api::ColorU::new(r, g, b, a)),
         (Some(&a), None, None, None) => Ok(api::ColorU::new(a, a, a, a)),
         _ => Err(()),
-    }
+    };
 }
 
 // This is the function that applies the deserialized drawing commands and generates
 // actual image data.
 fn render_blob(
     commands: Arc<ImageRenderingCommands>,
-   descriptor: &api::BlobImageDescriptor,
-   tile: Option<api::TileOffset>
+    descriptor: &api::BlobImageDescriptor,
+    tile: Option<api::TileOffset>,
 ) -> api::BlobImageResult {
     let color = *commands;
 
@@ -61,15 +62,19 @@ fn render_blob(
         None => true,
     };
 
-    for y in 0..descriptor.height {
-        for x in 0..descriptor.width {
+    for y in 0 .. descriptor.height {
+        for x in 0 .. descriptor.width {
             // Apply the tile's offset. This is important: all drawing commands should be
             // translated by this offset to give correct results with tiled blob images.
             let x2 = x + descriptor.offset.x as u32;
             let y2 = y + descriptor.offset.y as u32;
 
             // Render a simple checkerboard pattern
-            let checker = if (x2 % 20 >= 10) != (y2 % 20 >= 10) { 1 } else { 0 };
+            let checker = if (x2 % 20 >= 10) != (y2 % 20 >= 10) {
+                1
+            } else {
+                0
+            };
             // ..nested in the per-tile cherkerboard pattern
             let tc = if tile_checker { 0 } else { (1 - checker) * 40 };
 
@@ -84,10 +89,9 @@ fn render_blob(
                     texels.push(color.a * checker + tc);
                 }
                 _ => {
-                    return Err(api::BlobImageError::Other(format!(
-                        "Usupported image format {:?}",
-                        descriptor.format
-                    )));
+                    return Err(api::BlobImageError::Other(
+                        format!("Usupported image format {:?}", descriptor.format),
+                    ));
                 }
             }
         }
@@ -137,24 +141,28 @@ impl CheckerboardRenderer {
 
 impl api::BlobImageRenderer for CheckerboardRenderer {
     fn add(&mut self, key: api::ImageKey, cmds: api::BlobImageData, _: Option<api::TileSize>) {
-        self.image_cmds.insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
+        self.image_cmds
+            .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
     fn update(&mut self, key: api::ImageKey, cmds: api::BlobImageData) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
-        self.image_cmds.insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
+        self.image_cmds
+            .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
     fn delete(&mut self, key: api::ImageKey) {
         self.image_cmds.remove(&key);
     }
 
-    fn request(&mut self,
-               _resources: &api::BlobImageResources,
-               request: api::BlobImageRequest,
-               descriptor: &api::BlobImageDescriptor,
-               _dirty_rect: Option<api::DeviceUintRect>) {
+    fn request(
+        &mut self,
+        _resources: &api::BlobImageResources,
+        request: api::BlobImageRequest,
+        descriptor: &api::BlobImageDescriptor,
+        _dirty_rect: Option<api::DeviceUintRect>,
+    ) {
         // This method is where we kick off our rendering jobs.
         // It should avoid doing work on the calling thread as much as possible.
         // In this example we will use the thread pool to render individual tiles.
@@ -199,7 +207,7 @@ impl api::BlobImageRenderer for CheckerboardRenderer {
         while let Ok((req, result)) = self.rx.recv() {
             if req == request {
                 // There it is!
-                return result
+                return result;
             }
             self.rendered_images.insert(req, Some(result));
         }
@@ -207,22 +215,22 @@ impl api::BlobImageRenderer for CheckerboardRenderer {
         // If we break out of the loop above it means the channel closed unexpectedly.
         Err(api::BlobImageError::Other("Channel closed".into()))
     }
-    fn delete_font(&mut self, _font: api::FontKey) { }
-    fn delete_font_instance(&mut self, _instance: api::FontInstanceKey) { }
+    fn delete_font(&mut self, _font: api::FontKey) {}
+    fn delete_font_instance(&mut self, _instance: api::FontInstanceKey) {}
 }
 
-struct App {
-
-}
+struct App {}
 
 impl Example for App {
-    fn render(&mut self,
-              api: &RenderApi,
-              builder: &mut DisplayListBuilder,
-              resources: &mut ResourceUpdates,
-              layout_size: LayoutSize,
-              _pipeline_id: PipelineId,
-              _document_id: DocumentId) {
+    fn render(
+        &mut self,
+        api: &RenderApi,
+        builder: &mut DisplayListBuilder,
+        resources: &mut ResourceUpdates,
+        layout_size: LayoutSize,
+        _pipeline_id: PipelineId,
+        _document_id: DocumentId,
+    ) {
         let blob_img1 = api.generate_image_key();
         resources.add_image(
             blob_img1,
@@ -240,24 +248,18 @@ impl Example for App {
         );
 
         let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), layout_size);
-        let info = api::LayoutPrimitiveInfo {
-            rect: bounds,
-            local_clip: None,
-            is_backface_visible: true,
-        };
-        builder.push_stacking_context(&info,
-                                      api::ScrollPolicy::Scrollable,
-                                      None,
-                                      api::TransformStyle::Flat,
-                                      None,
-                                      api::MixBlendMode::Normal,
-                                      Vec::new());
+        let info = api::LayoutPrimitiveInfo::new(bounds);
+        builder.push_stacking_context(
+            &info,
+            api::ScrollPolicy::Scrollable,
+            None,
+            api::TransformStyle::Flat,
+            None,
+            api::MixBlendMode::Normal,
+            Vec::new(),
+        );
 
-        let info = api::LayoutPrimitiveInfo {
-            rect: (30, 30).by(500, 500),
-            local_clip: Some(api::LocalClip::from(bounds)),
-            is_backface_visible: true,
-        };
+        let info = api::LayoutPrimitiveInfo::new((30, 30).by(500, 500));
         builder.push_image(
             &info,
             api::LayoutSize::new(500.0, 500.0),
@@ -266,11 +268,7 @@ impl Example for App {
             blob_img1,
         );
 
-        let info = api::LayoutPrimitiveInfo {
-            rect: (600, 600).by(200, 200),
-            local_clip: Some(api::LocalClip::from(bounds)),
-            is_backface_visible: true,
-        };
+        let info = api::LayoutPrimitiveInfo::new((600, 600).by(200, 200));
         builder.push_image(
             &info,
             api::LayoutSize::new(200.0, 200.0),
@@ -282,18 +280,19 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self,
-                _event: glutin::Event,
-                _api: &RenderApi,
-                _document_id: DocumentId) -> bool {
+    fn on_event(
+        &mut self,
+        _event: glutin::Event,
+        _api: &RenderApi,
+        _document_id: DocumentId,
+    ) -> bool {
         false
     }
 }
 
 fn main() {
-    let worker_config = ThreadPoolConfig::new().thread_name(|idx|{
-        format!("WebRender:Worker#{}", idx)
-    });
+    let worker_config =
+        ThreadPoolConfig::new().thread_name(|idx| format!("WebRender:Worker#{}", idx));
 
     let workers = Arc::new(ThreadPool::new(worker_config).unwrap());
 
@@ -302,7 +301,7 @@ fn main() {
         // Register our blob renderer, so that WebRender integrates it in the resource cache..
         // Share the same pool of worker threads between WebRender and our blob renderer.
         blob_image_renderer: Some(Box::new(CheckerboardRenderer::new(Arc::clone(&workers)))),
-        .. Default::default()
+        ..Default::default()
     };
 
     let mut app = App {};

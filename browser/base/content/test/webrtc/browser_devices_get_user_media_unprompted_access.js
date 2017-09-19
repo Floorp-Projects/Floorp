@@ -53,7 +53,7 @@ var gTests = [
     checkDeviceSelectors(false, false, true);
 
     await promiseMessage(permissionError, () => {
-      PopupNotifications.panel.firstChild.button.click();
+      activateSecondaryAction(kActionDeny);
     });
 
     await expectObserverCalled("getUserMedia:response:deny");
@@ -146,7 +146,7 @@ var gTests = [
     checkDeviceSelectors(false, false, true);
 
     await promiseMessage(permissionError, () => {
-      PopupNotifications.panel.firstChild.button.click();
+      activateSecondaryAction(kActionDeny);
     });
 
     await expectObserverCalled("getUserMedia:response:deny");
