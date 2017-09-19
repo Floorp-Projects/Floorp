@@ -81,13 +81,13 @@ struct nsHTMLElement {
   bool            IsMemberOf(int32_t aType) const;
 
 #ifdef DEBUG
-  eHTMLTags       mTagID;
+  nsHTMLTag       mTagID;
 #endif
   int             mParentBits;        //defines groups that can contain this element
   bool            mLeaf;
 
-  static  bool    IsContainer(eHTMLTags aTag);
-  static  bool    IsBlock(eHTMLTags aTag);
+  static  bool    IsContainer(nsHTMLTag aTag);
+  static  bool    IsBlock(nsHTMLTag aTag);
 };
 
 extern const nsHTMLElement gHTMLElements[];

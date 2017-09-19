@@ -179,12 +179,12 @@ bool nsHTMLElement::IsMemberOf(int32_t aSet) const
   return TestBits(aSet, mParentBits);
 }
 
-bool nsHTMLElement::IsContainer(eHTMLTags aId)
+bool nsHTMLElement::IsContainer(nsHTMLTag aId)
 {
   return !gHTMLElements[aId].mLeaf;
 }
 
-bool nsHTMLElement::IsBlock(eHTMLTags aId)
+bool nsHTMLElement::IsBlock(nsHTMLTag aId)
 {
   return gHTMLElements[aId].IsMemberOf(kBlock)       ||
          gHTMLElements[aId].IsMemberOf(kBlockEntity) ||
@@ -196,7 +196,9 @@ bool nsHTMLElement::IsBlock(eHTMLTags aId)
 #ifdef DEBUG
 void CheckElementTable()
 {
-  for (eHTMLTags t = eHTMLTag_unknown; t <= eHTMLTag_userdefined; t = eHTMLTags(t + 1)) {
+  for (nsHTMLTag t = eHTMLTag_unknown;
+       t <= eHTMLTag_userdefined;
+       t = nsHTMLTag(t + 1)) {
     NS_ASSERTION(gHTMLElements[t].mTagID == t, "gHTMLElements entries does match tag list.");
   }
 }
