@@ -70,6 +70,9 @@ public:
        ErrorResult& aRv);
 
 private:
+  void
+  Cancel();
+
   nsString mOrigin;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsCOMPtr<nsISerialEventTarget> mEventTarget;

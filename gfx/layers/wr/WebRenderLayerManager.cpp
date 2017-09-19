@@ -102,6 +102,7 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
 
   if (WrBridge()) {
     // Just clear ImageKeys, they are deleted during WebRenderAPI destruction.
+    mImageKeysToDeleteLater.Clear();
     mImageKeysToDelete.Clear();
     // CompositorAnimations are cleared by WebRenderBridgeParent.
     mDiscardedCompositorAnimationsIds.Clear();
@@ -377,7 +378,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
 {
   MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
   mEndTransactionWithoutLayers = true;
-  DiscardImages();
   WrBridge()->RemoveExpiredFontKeys();
   EndTransactionInternal(nullptr,
                          nullptr,
@@ -687,7 +687,6 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       EndTransactionFlags aFlags)
 {
   mEndTransactionWithoutLayers = false;
-  DiscardImages();
   WrBridge()->RemoveExpiredFontKeys();
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
 }
@@ -818,6 +817,12 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
   TimeStamp transactionStart = mTransactionIdAllocator->GetTransactionStart();
 
+  for (const auto& key : mImageKeysToDelete) {
+    resourceUpdates.DeleteImage(key);
+  }
+  mImageKeysToDelete.Clear();
+  mImageKeysToDelete.SwapElements(mImageKeysToDeleteLater);
+
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
@@ -923,16 +928,20 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 void
 WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 {
-  mImageKeysToDelete.AppendElement(key);
+  mImageKeysToDeleteLater.AppendElement(key);
 }
 
 void
 WebRenderLayerManager::DiscardImages()
 {
   wr::IpcResourceUpdateQueue resources(WrBridge()->GetShmemAllocator());
+  for (const auto& key : mImageKeysToDeleteLater) {
+    resources.DeleteImage(key);
+  }
   for (const auto& key : mImageKeysToDelete) {
     resources.DeleteImage(key);
   }
+  mImageKeysToDeleteLater.Clear();
   mImageKeysToDelete.Clear();
   WrBridge()->UpdateResources(resources);
 }
@@ -959,6 +968,7 @@ WebRenderLayerManager::DiscardLocalImages()
   // Removes images but doesn't tell the parent side about them
   // This is useful in empty / failed transactions where we created
   // image keys but didn't tell the parent about them yet.
+  mImageKeysToDeleteLater.Clear();
   mImageKeysToDelete.Clear();
 }
 

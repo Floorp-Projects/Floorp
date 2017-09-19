@@ -1144,6 +1144,7 @@ public:
                         JS::Handle<JSObject*> wrapper) const override;
 
   void finalize(JSFreeOp *fop, JSObject *proxy) const override;
+  size_t objectMoved(JSObject* proxy, JSObject* old) const override;
 
   bool isCallable(JSObject *obj) const override {
     return false;
@@ -1156,8 +1157,6 @@ public:
              JS::Handle<jsid> id, JS::Handle<JSObject*> callable) const override;
   bool unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
                JS::Handle<jsid> id) const override;
-
-  static void ObjectMoved(JSObject *obj, const JSObject *old);
 
   static const nsOuterWindowProxy singleton;
 
@@ -1188,17 +1187,12 @@ protected:
                                   JS::AutoIdVector &props) const;
 };
 
-static const js::ClassExtension OuterWindowProxyClassExtension = PROXY_MAKE_EXT(
-    nsOuterWindowProxy::ObjectMoved
-);
-
 // Give OuterWindowProxyClass 2 reserved slots, like the other wrappers, so
 // JSObject::swap can swap it with CrossCompartmentWrappers without requiring
 // malloc.
-const js::Class OuterWindowProxyClass = PROXY_CLASS_WITH_EXT(
+const js::Class OuterWindowProxyClass = PROXY_CLASS_DEF(
     "Proxy",
-    JSCLASS_HAS_RESERVED_SLOTS(2), /* additional class flags */
-    &OuterWindowProxyClassExtension);
+    JSCLASS_HAS_RESERVED_SLOTS(2)); /* additional class flags */
 
 const char *
 nsOuterWindowProxy::className(JSContext *cx, JS::Handle<JSObject*> proxy) const
@@ -1526,13 +1520,14 @@ nsOuterWindowProxy::unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
   return js::UnwatchGuts(cx, proxy, id);
 }
 
-void
-nsOuterWindowProxy::ObjectMoved(JSObject *obj, const JSObject *old)
+size_t
+nsOuterWindowProxy::objectMoved(JSObject *obj, JSObject *old) const
 {
   nsGlobalWindow* outerWindow = GetOuterWindow(obj);
   if (outerWindow) {
     outerWindow->UpdateWrapper(obj, old);
   }
+  return 0;
 }
 
 const nsOuterWindowProxy
@@ -4989,6 +4984,9 @@ nsGlobalWindow::GetContentInternal(ErrorResult& aError, CallerType aCallerType)
 
   nsCOMPtr<nsIDocShellTreeItem> primaryContent;
   if (aCallerType != CallerType::System) {
+    if (mDoc) {
+      mDoc->WarnOnceAbout(nsIDocument::eWindowContentUntrusted);
+    }
     // If we're called by non-chrome code, make sure we don't return
     // the primary content window if the calling tab is hidden. In
     // such a case we return the same-type root in the hidden tab,
@@ -14067,14 +14065,13 @@ nsGlobalChromeWindow::Create(nsGlobalWindow *aOuterWindow)
   return window.forget();
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetWindowState(uint16_t* aWindowState)
-{
-  FORWARD_TO_INNER_CHROME(GetWindowState, (aWindowState), NS_ERROR_UNEXPECTED);
-
-  *aWindowState = WindowState();
-  return NS_OK;
-}
+enum WindowState {
+  // These constants need to match the constants in Window.webidl
+  STATE_MAXIMIZED = 1,
+  STATE_MINIMIZED = 2,
+  STATE_NORMAL = 3,
+  STATE_FULLSCREEN = 4
+};
 
 uint16_t
 nsGlobalWindow::WindowState()
@@ -14086,19 +14083,19 @@ nsGlobalWindow::WindowState()
 
   switch (mode) {
     case nsSizeMode_Minimized:
-      return nsIDOMChromeWindow::STATE_MINIMIZED;
+      return STATE_MINIMIZED;
     case nsSizeMode_Maximized:
-      return nsIDOMChromeWindow::STATE_MAXIMIZED;
+      return STATE_MAXIMIZED;
     case nsSizeMode_Fullscreen:
-      return nsIDOMChromeWindow::STATE_FULLSCREEN;
+      return STATE_FULLSCREEN;
     case nsSizeMode_Normal:
-      return nsIDOMChromeWindow::STATE_NORMAL;
+      return STATE_NORMAL;
     default:
       NS_WARNING("Illegal window state for this chrome window");
       break;
   }
 
-  return nsIDOMChromeWindow::STATE_NORMAL;
+  return STATE_NORMAL;
 }
 
 bool
@@ -14108,15 +14105,6 @@ nsGlobalWindow::IsFullyOccluded()
 
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
   return widget && widget->IsFullyOccluded();
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::Maximize()
-{
-  FORWARD_TO_INNER_CHROME(Maximize, (), NS_ERROR_UNEXPECTED);
-
-  nsGlobalWindow::Maximize();
-  return NS_OK;
 }
 
 void
@@ -14131,15 +14119,6 @@ nsGlobalWindow::Maximize()
   }
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::Minimize()
-{
-  FORWARD_TO_INNER_CHROME(Minimize, (), NS_ERROR_UNEXPECTED);
-
-  nsGlobalWindow::Minimize();
-  return NS_OK;
-}
-
 void
 nsGlobalWindow::Minimize()
 {
@@ -14150,15 +14129,6 @@ nsGlobalWindow::Minimize()
   if (widget) {
     widget->SetSizeMode(nsSizeMode_Minimized);
   }
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::Restore()
-{
-  FORWARD_TO_INNER_CHROME(Restore, (), NS_ERROR_UNEXPECTED);
-
-  nsGlobalWindow::Restore();
-  return NS_OK;
 }
 
 void
@@ -14173,31 +14143,11 @@ nsGlobalWindow::Restore()
   }
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetAttention()
-{
-  FORWARD_TO_INNER_CHROME(GetAttention, (), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  GetAttention(rv);
-  return rv.StealNSResult();
-}
-
 void
 nsGlobalWindow::GetAttention(ErrorResult& aResult)
 {
   MOZ_ASSERT(IsInnerWindow());
   return GetAttentionWithCycleCount(-1, aResult);
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetAttentionWithCycleCount(int32_t aCycleCount)
-{
-  FORWARD_TO_INNER_CHROME(GetAttentionWithCycleCount, (aCycleCount), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  GetAttentionWithCycleCount(aCycleCount, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -14211,23 +14161,6 @@ nsGlobalWindow::GetAttentionWithCycleCount(int32_t aCycleCount,
   if (widget) {
     aError = widget->GetAttention(aCycleCount);
   }
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElement* aPanel)
-{
-  FORWARD_TO_INNER_CHROME(BeginWindowMove, (aMouseDownEvent, aPanel), NS_ERROR_UNEXPECTED);
-
-  NS_ENSURE_TRUE(aMouseDownEvent, NS_ERROR_FAILURE);
-  Event* mouseDownEvent = aMouseDownEvent->InternalDOMEvent();
-  NS_ENSURE_TRUE(mouseDownEvent, NS_ERROR_FAILURE);
-
-  nsCOMPtr<Element> panel = do_QueryInterface(aPanel);
-  NS_ENSURE_TRUE(panel || !aPanel, NS_ERROR_FAILURE);
-
-  ErrorResult rv;
-  BeginWindowMove(*mouseDownEvent, panel, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -14285,16 +14218,6 @@ nsGlobalWindow::GetWindowRoot(mozilla::ErrorResult& aError)
 
 //Note: This call will lock the cursor, it will not change as it moves.
 //To unlock, the cursor must be set back to CURSOR_AUTO.
-NS_IMETHODIMP
-nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
-{
-  FORWARD_TO_INNER_CHROME(SetCursor, (aCursor), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  SetCursor(aCursor, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsGlobalWindow::SetCursorOuter(const nsAString& aCursor, ErrorResult& aError)
 {
@@ -14379,16 +14302,6 @@ nsGlobalWindow::GetBrowserDOMWindow(ErrorResult& aError)
   FORWARD_TO_OUTER_OR_THROW(GetBrowserDOMWindowOuter, (), aError, nullptr);
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::SetBrowserDOMWindow(nsIBrowserDOMWindow *aBrowserWindow)
-{
-  FORWARD_TO_INNER_CHROME(SetBrowserDOMWindow, (aBrowserWindow), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  SetBrowserDOMWindow(aBrowserWindow, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsGlobalWindow::SetBrowserDOMWindowOuter(nsIBrowserDOMWindow* aBrowserWindow)
 {
@@ -14402,20 +14315,6 @@ nsGlobalWindow::SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserWindow,
                                     ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(SetBrowserDOMWindowOuter, (aBrowserWindow), aError, );
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
-{
-  FORWARD_TO_INNER_CHROME(NotifyDefaultButtonLoaded,
-                          (aDefaultButton), NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<Element> defaultButton = do_QueryInterface(aDefaultButton);
-  NS_ENSURE_ARG(defaultButton);
-
-  ErrorResult rv;
-  NotifyDefaultButtonLoaded(*defaultButton, rv);
-  return rv.StealNSResult();
 }
 
 void

@@ -8615,7 +8615,15 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
   nsPresContext* presContext = mPresShell->GetPresContext();
   MOZ_ASSERT(presContext, "Our presShell should have a valid presContext");
 
-  if (aChild == presContext->GetViewportScrollbarStylesOverrideElement()) {
+  // We want to detect when the viewport override element stored in the
+  // prescontext is in the subtree being removed.  Except in fullscreen cases
+  // (which are handled in Element::UnbindFromTree and do not get stored on the
+  // prescontext), the override element is always either the root element or a
+  // <body> child of the root element.  So we can only be removing the stored
+  // override element if the thing being removed is either the override element
+  // itself or the root element (which can be a parent of the override element).
+  if (aChild == presContext->GetViewportScrollbarStylesOverrideElement() ||
+      (!aContainer && aChild->IsElement())) {
     // We might be removing the element that we propagated viewport scrollbar
     // styles from.  Recompute those. (This clause covers two of the three
     // possible scrollbar-propagation sources: the <body> [as aChild or a

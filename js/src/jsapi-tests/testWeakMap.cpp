@@ -140,13 +140,15 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     return true;
 }
 
-static void DelegateObjectMoved(JSObject* obj, const JSObject* old)
+static size_t
+DelegateObjectMoved(JSObject* obj, JSObject* old)
 {
     if (!keyDelegate)
-        return;  // Object got moved before we set keyDelegate to point to it.
+        return 0;  // Object got moved before we set keyDelegate to point to it.
 
     MOZ_RELEASE_ASSERT(keyDelegate == old);
     keyDelegate = obj;
+    return 0;
 }
 
 static JSObject* GetKeyDelegate(JSObject* obj)

@@ -178,8 +178,9 @@ def main():
                 appVersion=e["version"], extVersion=e["version"],
                 buildID=e["to_buildid"], locale=e["locale"],
                 hashFunction='sha512',
-                partialInfo=partial_info, completeInfo=complete_info,
-            ))
+                partialInfo=partial_info, completeInfo=complete_info),
+                attempts=30, sleeptime=10, max_sleeptime=60, jitter=3,
+            )
         elif "from_buildid" in e and uploads_enabled:
             log.info("Nightly style balrog submission")
             partial_mar_url = "{}/{}".format(args.artifacts_url_prefix,
@@ -213,7 +214,7 @@ def main():
                 appVersion=e["version"], locale=e["locale"],
                 hashFunction='sha512', extVersion=e["version"],
                 partialInfo=partial_info, completeInfo=complete_info),
-                attempts=30, sleeptime=10, max_sleeptime=60,
+                attempts=30, sleeptime=10, max_sleeptime=60, jitter=3,
             )
         else:
             raise RuntimeError("Cannot determine Balrog submission style")

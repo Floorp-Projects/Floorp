@@ -161,6 +161,10 @@ DOMIntersectionObserver::Observe(Element& aTarget)
 void
 DOMIntersectionObserver::Unobserve(Element& aTarget)
 {
+  if (!mObservationTargets.Contains(&aTarget)) {
+    return;
+  }
+
   if (mObservationTargets.Length() == 1) {
     Disconnect();
     return;

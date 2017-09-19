@@ -424,16 +424,18 @@ sandbox_finalize(js::FreeOp* fop, JSObject* obj)
     DeferredFinalize(sop);
 }
 
-static void
-sandbox_moved(JSObject* obj, const JSObject* old)
+static size_t
+sandbox_moved(JSObject* obj, JSObject* old)
 {
     // Note that this hook can be called before the private pointer is set. In
     // this case the SandboxPrivate will not exist yet, so there is nothing to
     // do.
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(obj));
-    if (sop)
-        static_cast<SandboxPrivate*>(sop)->ObjectMoved(obj, old);
+    if (!sop)
+        return 0;
+
+    return static_cast<SandboxPrivate*>(sop)->ObjectMoved(obj, old);
 }
 
 static bool

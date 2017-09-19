@@ -398,6 +398,10 @@ enum nsStyleImageType {
 
 struct CachedBorderImageData
 {
+  ~CachedBorderImageData() {
+    PurgeCachedImages();
+  }
+
   // Caller are expected to ensure that the value of aSVGViewportSize is
   // different from the cached one since the method won't do the check.
   void SetCachedSVGViewportSize(const mozilla::Maybe<nsSize>& aSVGViewportSize);

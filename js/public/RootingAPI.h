@@ -396,6 +396,7 @@ class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>>
 
     void setPtr(T newPtr) {
         MOZ_ASSERT((reinterpret_cast<uintptr_t>(newPtr) & flagsMask) == 0);
+        MOZ_ASSERT(js::gc::IsCellPointerValid(newPtr));
         if (newPtr)
             AssertGCThingMustBeTenured(newPtr);
         bits = (bits & flagsMask) | reinterpret_cast<uintptr_t>(newPtr);
@@ -571,9 +572,11 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T, MutableHan
   public:
     void set(const T& v) {
         *ptr = v;
+        MOZ_ASSERT(GCPolicy<T>::isValid(*ptr));
     }
     void set(T&& v) {
         *ptr = mozilla::Move(v);
+        MOZ_ASSERT(GCPolicy<T>::isValid(*ptr));
     }
 
     /*
@@ -818,6 +821,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>>
     Rooted(const RootingContext& cx, S&& initial)
       : ptr(mozilla::Forward<S>(initial))
     {
+        MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
         registerWithRootLists(rootLists(cx));
     }
 
@@ -834,9 +838,11 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>>
      */
     void set(const T& value) {
         ptr = value;
+        MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     }
     void set(T&& value) {
         ptr = mozilla::Move(value);
+        MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     }
 
     DECLARE_POINTER_CONSTREF_OPS(T);
