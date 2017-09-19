@@ -449,7 +449,7 @@ ManifestParser.prototype = {
     }
 
     if (/\s/.test(text)) {
-      this._addError(this.currentLine, "escapeSpaces", this.currentLine);
+      this._addError(this.currentLine, "escapeSpaces1", this.currentLine);
       text = text.replace(/\s/g, "%20");
     }
 
@@ -502,7 +502,7 @@ ManifestParser.prototype = {
     }
 
     if (/\s/.test(namespace)) {
-      this._addError(this.currentLine, "escapeSpaces", this.currentLine);
+      this._addError(this.currentLine, "escapeSpaces1", this.currentLine);
       namespace = namespace.replace(/\s/g, "%20");
     }
 
