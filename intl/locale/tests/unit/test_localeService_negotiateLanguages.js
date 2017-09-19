@@ -35,6 +35,9 @@ const data = {
       [["sr", "ru"], ["sr-Latn", "ru"], ["ru"]],
       [["sr-RU"], ["sr-Latn-RO", "sr-Cyrl"], ["sr-Latn-RO"]],
     ],
+    "should match likelySubtag region over other regions": [
+      [["en-CA"], ["en-ZA", "en-GB", "en-US"], ["en-US", "en-ZA", "en-GB"]],
+    ],
     "should match on a requested locale as a range": [
       [["en-*-US"], ["en-US"], ["en-US"]],
       [["en-Latn-US-*"], ["en-Latn-US"], ["en-Latn-US"]],

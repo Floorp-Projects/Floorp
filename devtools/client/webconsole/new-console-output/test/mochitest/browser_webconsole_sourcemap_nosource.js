@@ -51,4 +51,6 @@ add_task(function* () {
 
   const node = yield waitFor(() => findMessage(hud, "original source"));
   ok(node, "source map error is displayed in web console");
+
+  ok(!!node.querySelector(".learn-more-link"), "source map error has learn more link");
 });

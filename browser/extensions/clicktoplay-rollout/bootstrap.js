@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
 // The amount of people to be part of the rollout
 const TEST_THRESHOLD = {
   "beta": 1.0,  // 100%
-  "release": 0.25,  // 25%
+  "release": 1.0,  // 100%
 };
 
 if (AppConstants.RELEASE_OR_BETA) {

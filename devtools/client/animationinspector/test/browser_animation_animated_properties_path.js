@@ -313,7 +313,7 @@ add_task(function* () {
   for (let i = 0; i < TEST_CASES.length; i++) {
     info(`Click to select the animation[${ i }]`);
     yield clickOnAnimation(panel, i);
-    const timeBlock = timelineComponent.timeBlocks[0];
+    const timeBlock = getAnimationTimeBlocks(panel)[0];
     const state = timeBlock.animation.state;
     const properties = TEST_CASES[i];
     for (let property in properties) {

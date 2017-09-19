@@ -23,13 +23,13 @@ def _populate_context(context, key=None):
         return False
     raise AttributeError(key)
 
+
 class TestConditions(TestBase):
     """Tests for conditionally filtering commands."""
 
     def _run_mach(self, args, context_handler=None):
         return TestBase._run_mach(self, args, 'conditions.py',
                                   context_handler=context_handler)
-
 
     def test_conditions_pass(self):
         """Test that a command which passes its conditions is runnable."""
@@ -65,7 +65,7 @@ class TestConditions(TestBase):
         m = Mach(os.getcwd())
         m.define_category('testing', 'Mach unittest', 'Testing for mach core', 10)
         self.assertRaises(MachError, m.load_commands_from_file,
-                os.path.join(self.provider_dir, 'conditions_invalid.py'))
+                          os.path.join(self.provider_dir, 'conditions_invalid.py'))
 
     def test_help_message(self):
         """Test that commands that are not runnable do not show up in help."""

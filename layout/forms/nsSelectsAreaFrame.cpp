@@ -164,6 +164,8 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
                            const ReflowInput& aReflowInput,
                            nsReflowStatus&          aStatus)
 {
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   nsListControlFrame* list = GetEnclosingListFrame(this);
   NS_ASSERTION(list,
                "Must have an nsListControlFrame!  Frame constructor is "
