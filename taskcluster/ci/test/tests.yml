@@ -658,7 +658,6 @@ mochitest-chrome:
     suite: mochitest/chrome
     treeherder-symbol: tc-M(c)
     loopback-video: true
-    virtualization: hardware
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -674,12 +673,8 @@ mochitest-chrome:
         by-test-platform:
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo.*: ['mozilla-central', 'try']
+            windows.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
-    worker-type:
-        by-test-platform:
-            windows7-32.*: buildbot-bridge/buildbot-bridge
-            windows10-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     mozharness:
         by-test-platform:
             android.*:
@@ -711,7 +706,10 @@ mochitest-chrome:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=chrome
-
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
