@@ -48,6 +48,7 @@ public:
   void StartFrame();
   void SubmitFrame(VRLayerParent* aLayer,
                    mozilla::layers::PTextureParent* aTexture,
+                   uint64_t aFrameId,
                    const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect);
 

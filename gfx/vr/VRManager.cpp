@@ -345,6 +345,7 @@ VRManager::GetDisplay(const uint32_t& aDisplayID)
 
 void
 VRManager::SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
+                       uint64_t aFrameId,
                        const gfx::Rect& aLeftEyeRect,
                        const gfx::Rect& aRightEyeRect)
 {
@@ -352,7 +353,7 @@ VRManager::SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
   mLastFrame = th;
   RefPtr<VRDisplayHost> display = GetDisplay(aLayer->GetDisplayID());
   if (display) {
-    display->SubmitFrame(aLayer, aTexture, aLeftEyeRect, aRightEyeRect);
+    display->SubmitFrame(aLayer, aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
   }
 }
 
