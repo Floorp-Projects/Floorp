@@ -113,6 +113,11 @@ public class ActivityStreamPanel extends FrameLayout {
         adapter.swapTopSitesCursor(null);
     }
 
+    public void reload(LoaderManager lm) {
+        adapter.reset();
+        load(lm);
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
