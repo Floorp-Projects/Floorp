@@ -14,9 +14,7 @@ add_task(function* () {
 
   info("Select node .still and check that the panel is empty");
   let stillNode = yield getNodeFront(".still", inspector);
-  let onUpdated = panel.once(panel.UI_UPDATED_EVENT);
   yield selectNodeAndWaitForAnimations(stillNode, inspector);
-  yield onUpdated;
 
   is(panel.animationsTimelineComponent.animations.length, 0,
      "No animation players stored in the timeline component for a still node");
@@ -28,9 +26,7 @@ add_task(function* () {
 
   info("Select the comment text node and check that the panel is empty");
   let commentNode = yield inspector.walker.previousSibling(stillNode);
-  onUpdated = panel.once(panel.UI_UPDATED_EVENT);
   yield selectNodeAndWaitForAnimations(commentNode, inspector);
-  yield onUpdated;
 
   is(panel.animationsTimelineComponent.animations.length, 0,
      "No animation players stored in the timeline component for a text node");

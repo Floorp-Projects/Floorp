@@ -23,8 +23,7 @@ add_task(function* () {
     let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
     let animationEl = timelineEl.querySelector(".animation");
     checkEndDelayAndName(animationEl);
-    const state =
-      panel.animationsTimelineComponent.timeBlocks[0].animation.state;
+    const state = getAnimationTimeBlocks(panel)[0].animation.state;
     checkPath(animationEl, state);
   }
 });

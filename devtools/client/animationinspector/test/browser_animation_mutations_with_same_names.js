@@ -14,13 +14,16 @@ add_task(function* () {
   const {controller, panel} = yield openAnimationInspector();
   const timeline = panel.animationsTimelineComponent;
 
-  const areTracksReady = () => timeline.animations.every(a => timeline.tracksMap.has(a));
+  const areTracksReady = () => timeline.animations.every(a => {
+    return timeline.componentsMap[a.actorID];
+  });
 
   // We need to wait for all tracks to be ready, cause this is an async part of the init
   // of the panel.
   while (controller.animationPlayers.length < 3 || !areTracksReady()) {
     yield waitForAnimationTimelineRendering(panel);
   }
+
   // Same for animation targets, they're retrieved asynchronously.
   yield waitForAllAnimationTargets(panel);
 
@@ -28,7 +31,7 @@ add_task(function* () {
      "The timeline shows 3 animations too");
 
   // Reduce the known nodeFronts to a set to make them unique.
-  let nodeFronts = new Set(panel.animationsTimelineComponent
-                                .targetNodes.map(n => n.previewer.nodeFront));
+  let nodeFronts =
+    new Set(getAnimationTargetNodes(panel).map(n => n.previewer.nodeFront));
   is(nodeFronts.size, 3, "The animations are applied to 3 different node fronts");
 });

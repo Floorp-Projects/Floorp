@@ -9,13 +9,13 @@
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_pseudo_elements.html");
   let {inspector, panel} = yield openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
 
   info("With <body> selected by default check the content of the timeline");
-  is(timeline.timeBlocks.length, 3, "There are 3 animations in the timeline");
+  is(getAnimationTimeBlocks(panel).length, 3, "There are 3 animations in the timeline");
 
+  let targetNodes = getAnimationTargetNodes(panel);
   let getTargetNodeText = index => {
-    let el = timeline.targetNodes[index].previewer.previewEl;
+    let el = targetNodes[index].previewer.previewEl;
     return [...el.childNodes]
            .map(n => n.style.display === "none" ? "" : n.textContent)
            .join("");
@@ -35,15 +35,15 @@ add_task(function* () {
 
   info("Select the ::before pseudo-element in the inspector");
   yield selectNodeAndWaitForAnimations(beforeNode, inspector);
-  is(timeline.timeBlocks.length, 1, "There is 1 animation in the timeline");
-  is(timeline.targetNodes[0].previewer.nodeFront,
+  is(getAnimationTimeBlocks(panel).length, 1, "There is 1 animation in the timeline");
+  is(getAnimationTargetNodes(panel)[0].previewer.nodeFront,
      inspector.selection.nodeFront,
      "The right node front is displayed in the timeline");
 
   info("Select the ::after pseudo-element in the inspector");
   yield selectNodeAndWaitForAnimations(afterNode, inspector);
-  is(timeline.timeBlocks.length, 1, "There is 1 animation in the timeline");
-  is(timeline.targetNodes[0].previewer.nodeFront,
+  is(getAnimationTimeBlocks(panel).length, 1, "There is 1 animation in the timeline");
+  is(getAnimationTargetNodes(panel)[0].previewer.nodeFront,
      inspector.selection.nodeFront,
      "The right node front is displayed in the timeline");
 });
