@@ -240,7 +240,6 @@ PresentationTCPSessionTransport::CreateStream()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mMultiplexStream);
 
   mMultiplexStreamCopier = do_CreateInstance("@mozilla.org/network/async-stream-copier;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -254,7 +253,7 @@ PresentationTCPSessionTransport::CreateStream()
   }
 
   nsCOMPtr<nsIEventTarget> target = do_QueryInterface(sts);
-  rv = mMultiplexStreamCopier->Init(stream,
+  rv = mMultiplexStreamCopier->Init(mMultiplexStream,
                                     mSocketOutputStream,
                                     target,
                                     true, /* source buffered */
