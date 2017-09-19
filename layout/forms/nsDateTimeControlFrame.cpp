@@ -194,6 +194,7 @@ nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
 
   DO_GLOBAL_REFLOW_COUNT("nsDateTimeControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsDateTimeControlFrame::Reflow: availSize=%d,%d",
                   aReflowInput.AvailableWidth(),
@@ -315,8 +316,6 @@ nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
   }
 
   FinishAndStoreOverflow(&aDesiredSize);
-
-  aStatus.Reset();
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsDateTimeControlFrame::Reflow: size=%d,%d",

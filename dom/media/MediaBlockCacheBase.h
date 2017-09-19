@@ -49,8 +49,11 @@ protected:
 
 public:
   // Initialize this cache.
-  // If called again, re-initialize cache with minimal chance of failure.
   virtual nsresult Init() = 0;
+
+  // Erase data and discard pending changes to reset the cache to its pristine
+  // state as it was after Init().
+  virtual void Flush() = 0;
 
   // Maximum number of blocks expected in this block cache. (But allow overflow
   // to accomodate incoming traffic before MediaCache can handle it.)

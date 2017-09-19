@@ -125,8 +125,7 @@ const TEST_CASES = {
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_multiple_easings.html");
   const { panel } = yield openAnimationInspector();
-  const timelineComponent = panel.animationsTimelineComponent;
-  timelineComponent.timeBlocks.forEach(timeBlock => {
+  getAnimationTimeBlocks(panel).forEach(timeBlock => {
     const state = timeBlock.animation.state;
     const testcase = TEST_CASES[state.name];
     if (!testcase) {
