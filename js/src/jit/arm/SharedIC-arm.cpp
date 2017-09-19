@@ -94,7 +94,8 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.setupAlignedABICall();
         masm.passABIArg(R0.payloadReg());
         masm.passABIArg(R1.payloadReg());
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod), MoveOp::GENERAL,
+                         CheckUnsafeCallWithABI::DontCheckOther);
 
         // idivmod returns the quotient in r0, and the remainder in r1.
         if (op_ == JSOP_DIV) {

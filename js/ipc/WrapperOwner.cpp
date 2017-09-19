@@ -131,7 +131,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
     virtual RegExpShared* regexp_toShared(JSContext* cx, HandleObject proxy) const override;
     virtual void finalize(JSFreeOp* fop, JSObject* proxy) const override;
-    virtual void objectMoved(JSObject* proxy, const JSObject* old) const override;
+    virtual size_t objectMoved(JSObject* proxy, JSObject* old) const override;
     virtual bool isCallable(JSObject* obj) const override;
     virtual bool isConstructor(JSObject* obj) const override;
     virtual bool getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject protop) const override;
@@ -895,10 +895,11 @@ CPOWProxyHandler::finalize(JSFreeOp* fop, JSObject* proxy) const
         delete aux;
 }
 
-void
-CPOWProxyHandler::objectMoved(JSObject* proxy, const JSObject* old) const
+size_t
+CPOWProxyHandler::objectMoved(JSObject* proxy, JSObject* old) const
 {
     OwnerOf(proxy)->updatePointer(proxy, old);
+    return 0;
 }
 
 bool

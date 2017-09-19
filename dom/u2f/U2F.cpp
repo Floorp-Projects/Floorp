@@ -223,7 +223,7 @@ U2F::Register(const nsAString& aAppId,
     return;
   }
 
-  MOZ_ASSERT(!mPromiseHolder.Exists());
+  Cancel();
   MOZ_ASSERT(mRegisterCallback.isNothing());
   mRegisterCallback = Some(nsMainThreadPtrHandle<U2FRegisterCallback>(
                         new nsMainThreadPtrHolder<U2FRegisterCallback>(
@@ -320,7 +320,7 @@ U2F::Sign(const nsAString& aAppId,
     return;
   }
 
-  MOZ_ASSERT(!mPromiseHolder.Exists());
+  Cancel();
   MOZ_ASSERT(mSignCallback.isNothing());
   mSignCallback = Some(nsMainThreadPtrHandle<U2FSignCallback>(
                     new nsMainThreadPtrHolder<U2FSignCallback>(
@@ -383,6 +383,33 @@ U2F::Sign(const nsAString& aAppId,
               localReqHolder.Complete();
           })
   ->Track(mPromiseHolder);
+}
+
+void
+U2F::Cancel()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  const ErrorCode errorCode = ErrorCode::OTHER_ERROR;
+
+  if (mRegisterCallback.isSome()) {
+    RegisterResponse response;
+    response.mErrorCode.Construct(static_cast<uint32_t>(errorCode));
+    ExecuteCallback(response, mRegisterCallback);
+  }
+
+  if (mSignCallback.isSome()) {
+    SignResponse response;
+    response.mErrorCode.Construct(static_cast<uint32_t>(errorCode));
+    ExecuteCallback(response, mSignCallback);
+  }
+
+  RefPtr<U2FManager> mgr = U2FManager::Get();
+  if (mgr) {
+    mgr->Cancel(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  mPromiseHolder.DisconnectIfExists();
 }
 
 } // namespace dom

@@ -373,9 +373,10 @@ BaseProxyHandler::finalize(JSFreeOp* fop, JSObject* proxy) const
 {
 }
 
-void
-BaseProxyHandler::objectMoved(JSObject* proxy, const JSObject* old) const
+size_t
+BaseProxyHandler::objectMoved(JSObject* proxy, JSObject* old) const
 {
+    return 0;
 }
 
 JSObject*

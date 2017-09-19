@@ -67,6 +67,8 @@ var ignoreClasses = {
 // Ignore calls through TYPE.FIELD, where TYPE is the class or struct name containing
 // a function pointer field named FIELD.
 var ignoreCallees = {
+    "js::Class.trace" : true,
+    "js::Class.finalize" : true,
     "js::ClassOps.trace" : true,
     "js::ClassOps.finalize" : true,
     "JSRuntime.destroyPrincipals" : true,

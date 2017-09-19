@@ -1339,48 +1339,6 @@ NS_NewLocalFileStream(nsIFileStream **result,
 }
 
 nsresult
-NS_BackgroundInputStream(nsIInputStream **result,
-                         nsIInputStream  *stream,
-                         uint32_t         segmentSize /* = 0 */,
-                         uint32_t         segmentCount /* = 0 */)
-{
-    nsresult rv;
-    nsCOMPtr<nsIStreamTransportService> sts =
-        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsITransport> inTransport;
-        rv = sts->CreateInputTransport(stream, int64_t(-1), int64_t(-1),
-                                       true, getter_AddRefs(inTransport));
-        if (NS_SUCCEEDED(rv))
-            rv = inTransport->OpenInputStream(nsITransport::OPEN_BLOCKING,
-                                              segmentSize, segmentCount,
-                                              result);
-    }
-    return rv;
-}
-
-nsresult
-NS_BackgroundOutputStream(nsIOutputStream **result,
-                          nsIOutputStream  *stream,
-                          uint32_t          segmentSize  /* = 0 */,
-                          uint32_t          segmentCount /* = 0 */)
-{
-    nsresult rv;
-    nsCOMPtr<nsIStreamTransportService> sts =
-        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsITransport> inTransport;
-        rv = sts->CreateOutputTransport(stream, int64_t(-1), int64_t(-1),
-                                        true, getter_AddRefs(inTransport));
-        if (NS_SUCCEEDED(rv))
-            rv = inTransport->OpenOutputStream(nsITransport::OPEN_BLOCKING,
-                                               segmentSize, segmentCount,
-                                               result);
-    }
-    return rv;
-}
-
-nsresult
 NS_NewBufferedOutputStream(nsIOutputStream **result,
                            nsIOutputStream  *str,
                            uint32_t          bufferSize)

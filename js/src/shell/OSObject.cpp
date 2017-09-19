@@ -588,8 +588,9 @@ osfile_close(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpecWithHelp osfile_functions[] = {
     JS_FN_HELP("readFile", osfile_readFile, 1, 0,
 "readFile(filename, [\"binary\"])",
-"  Read filename into returned string. Filename is relative to the current\n"
-               "  working directory."),
+"  Read entire contents of filename. Returns a string, unless \"binary\" is passed\n"
+"  as the second argument, in which case it returns a Uint8Array. Filename is\n"
+"  relative to the current working directory."),
 
     JS_FN_HELP("readRelativeToScript", osfile_readRelativeToScript, 1, 0,
 "readRelativeToScript(filename, [\"binary\"])",

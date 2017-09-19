@@ -11,59 +11,27 @@ interface nsIDOMEvent;
 interface nsIMessageBroadcaster;
 interface mozIDOMWindowProxy;
 
-[scriptable, uuid(78bdcb41-1efa-409f-aaba-70842213f80f)]
+// Scriptable only so Components.interfaces.nsIDOMChromeWindow works.
+[scriptable, builtinclass, uuid(78bdcb41-1efa-409f-aaba-70842213f80f)]
 interface nsIDOMChromeWindow : nsISupports
 {
-  const unsigned short STATE_MAXIMIZED = 1;
-  const unsigned short STATE_MINIMIZED = 2;
-  const unsigned short STATE_NORMAL = 3;
-  const unsigned short STATE_FULLSCREEN = 4;
-
-  readonly attribute unsigned short              windowState;
-
   /**
    * browserDOMWindow provides access to yet another layer of
    * utility functions implemented by chrome script. It will be null
    * for DOMWindows not corresponding to browsers.
    */
-           attribute nsIBrowserDOMWindow browserDOMWindow;
+  [noscript]
+  readonly attribute nsIBrowserDOMWindow browserDOMWindow;
 
-  void                      getAttention();
-
-  void                      getAttentionWithCycleCount(in long aCycleCount);
-
-  void                      setCursor(in DOMString cursor);
-
-  void                      maximize();
-  void                      minimize();
-  void                      restore();
-
-  /**
-   * Notify a default button is loaded on a dialog or a wizard.
-   * defaultButton is the default button.
-   */
-  void notifyDefaultButtonLoaded(in nsIDOMElement defaultButton);
-
+  [noscript]
   readonly attribute nsIMessageBroadcaster messageManager;
 
   /**
    * Returns the message manager identified by the given group name that
    * manages all frame loaders belonging to that group.
    */
+  [noscript]
   nsIMessageBroadcaster getGroupMessageManager(in AString group);
-
-  /**
-   * On some operating systems, we must allow the window manager to
-   * handle window dragging. This function tells the window manager to
-   * start dragging the window. This function will fail unless called
-   * while the left mouse button is held down, callers must check this.
-   *
-   * The optional panel argument should be set when moving a panel.
-   *
-   * Returns NS_ERROR_NOT_IMPLEMENTED (and thus throws in JS) if the OS
-   * doesn't support this.
-   */
-  void beginWindowMove(in nsIDOMEvent mouseDownEvent, [optional] in nsIDOMElement panel);
 
   /**
    * These methods provide a way to specify the opener value for the content in
@@ -76,6 +44,8 @@ interface nsIDOMChromeWindow : nsISupports
    * take the value set earlier, and null out the value in the
    * nsIDOMChromeWindow.
    */
+  [noscript]
   void setOpenerForInitialContentBrowser(in mozIDOMWindowProxy aOpener);
+  [noscript]
   mozIDOMWindowProxy takeOpenerForInitialContentBrowser();
 };
