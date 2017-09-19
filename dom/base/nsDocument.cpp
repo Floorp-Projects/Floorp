@@ -13465,20 +13465,15 @@ nsIDocument::UpdateStyleBackendType()
 
 #ifdef MOZ_STYLO
   if (nsLayoutUtils::StyloEnabled()) {
-    if (IsBeingUsedAsImage()) {
-      // Enable stylo for SVG-as-image.
+    // Disable stylo only for system principal. Other principals aren't
+    // able to use XUL by default, and the back door to enable XUL is
+    // mostly just for testing, which means they don't matter, and we
+    // shouldn't respect them at the same time.
+    // Note that, since tests can have XUL support, we still need to
+    // explicitly exclude XUL documents here.
+    if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
+        !IsXULDocument()) {
       mStyleBackendType = StyleBackendType::Servo;
-    } else if (!mDocumentContainer) {
-      // Not docshell, assume Gecko. Various callers can end up setting this
-      // explicitly afterwards to inherit it in various situations.
-    } else if (!IsXULDocument() && IsContentDocument()) {
-      // Disable stylo for about: pages other than about:blank, since
-      // they tend to use unsupported selectors like XUL tree pseudos.
-      bool isAbout = false;
-      mDocumentURI->SchemeIs("about", &isAbout);
-      if (!isAbout || NS_IsAboutBlank(mDocumentURI)) {
-        mStyleBackendType = StyleBackendType::Servo;
-      }
     }
   }
 #endif
