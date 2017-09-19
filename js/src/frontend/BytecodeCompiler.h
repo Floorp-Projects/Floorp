@@ -120,10 +120,6 @@ IsIdentifier(const char16_t* chars, size_t length);
 bool
 IsKeyword(JSLinearString* str);
 
-/* Trace all GC things reachable from parser. Defined in Parser.cpp. */
-void
-TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
-
 class MOZ_STACK_CLASS AutoFrontendTraceLog
 {
 #ifdef JS_TRACE_LOGGING
