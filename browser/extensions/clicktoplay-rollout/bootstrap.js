@@ -71,6 +71,8 @@ function defineCohort() {
 
   switch (cohort) {
     case undefined:
+    case null:
+    case "":
     case "test":
     case "control":
     case "excluded":
