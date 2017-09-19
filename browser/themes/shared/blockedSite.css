@@ -4,11 +4,11 @@
 
 @import url("chrome://browser/skin/error-pages.css");
 
+html {
+  background-color: #A4000F;
+}
+
 body {
-  background-image: linear-gradient(-45deg, #9b2e2e,     #9b2e2e 33%,
-                                            #a83232 33%, #a83232 66%,
-                                            #9b2e2e 66%, #9b2e2e);
-  background-color: #b14646;
   color: white;
 }
 
@@ -20,51 +20,75 @@ body {
   color: white;
 }
 
-.button-container button:not(.primary) {
+.button-container button {
   background-color: transparent;
   color: white;
-  border: 1px solid #9b2e2e;
+  border: 1px solid white;
   margin-inline-end: 0;
+  margin-top: 1.5em;
 }
 
-.button-container button:not(.primary):hover {
-  background-color: #a83232;
+.button-container button:hover {
+  background-color: #5a0002;
 }
 
-.button-container button:not(.primary):active {
-  background-color: #9b2e2e;
+.button-container button:hover:active {
+  background-color: #3e0200;
 }
 
-.button-container button {
-  margin-top: 1.2em;
+#goBackButton {
+  color: black;
+  background-color: white;
 }
 
-/* Style warning button to look like a small text link in the
-   bottom right. This is preferable to just using a text link
-   since there is already a mechanism in browser.js for trapping
-   oncommand events from unprivileged chrome pages (BrowserOnCommand).*/
-#ignoreWarningButton {
-  -moz-appearance: none;
-  background: transparent;
-  border: none;
-  color: white;
-  text-decoration: underline;
-  margin: 4px 0 0 0;
-  padding: 0;
-  font-size: smaller;
-  min-width: 0;
+#goBackButton:hover {
+  background-color: white;
+  opacity: 0.8;
 }
 
-#ignoreWarningButton:hover {
-  cursor: pointer;
-}
-
-#ignoreWarning {
-  margin-top: 1.2em;
-  text-align: end;
+#goBackButton:active {
+  background-color: white;
+  opacity: 0.7;
 }
 
 #advisory_provider {
   color: white;
   text-decoration: underline;
+}
+
+#errorDescriptionContainer {
+  position: absolute;
+  margin: 48px auto;
+}
+
+.error-description {
+  min-width: var(--in-content-container-min-width);
+  max-width: var(--in-content-container-max-width);
+  color: black;
+  background-color: white;
+}
+
+.error-description > p:first-child {
+  padding: 3.5em 3.5em 1em 3.5em;
+}
+
+.error-description > p:last-child {
+  padding: 0 3.5em 3.5em 3.5em;
+}
+
+.error-description #ignore_warning_link,
+.error-description a:-moz-any(:link, :visited) {
+  cursor: pointer;
+  text-decoration: underline;
+  color: black;
+}
+
+a:not(:link) {
+  color: black;
+  text-decoration: none;
+  cursor: auto;
+}
+
+.sitename {
+  font-weight: bold;
 }

@@ -430,7 +430,7 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    let firstRunPolicyURL = Services.prefs.getStringPref(TelemetryUtils.Preferences.FirsRunURL, "");
+    let firstRunPolicyURL = Services.prefs.getStringPref(TelemetryUtils.Preferences.FirstRunURL, "");
     if (!firstRunPolicyURL) {
       return false;
     }

@@ -3595,7 +3595,8 @@ nsCycleCollector::FixGrayBits(bool aForceGC, TimeLog& aTimeLog)
     // It's possible that FixWeakMappingGrayBits will hit OOM when unmarking
     // gray and we will have to go round again. The second time there should not
     // be any weak mappings to fix up so the loop body should run at most twice.
-    MOZ_RELEASE_ASSERT(count++ < 2);
+    MOZ_RELEASE_ASSERT(count < 2);
+    count++;
   } while (!mCCJSRuntime->AreGCGrayBitsValid());
 
   aTimeLog.Checkpoint("FixGrayBits");
