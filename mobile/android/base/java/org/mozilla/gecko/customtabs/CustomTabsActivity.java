@@ -218,6 +218,8 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void finish() {
+        mGeckoView.loadUri("about:blank");
+
         super.finish();
 
         final SafeIntent intent = new SafeIntent(getIntent());
