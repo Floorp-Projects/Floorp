@@ -61,6 +61,7 @@ public class GeckoViewActivity extends Activity {
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
         mGeckoView.setContentListener(new MyGeckoViewContent());
         mGeckoView.setProgressListener(new MyGeckoViewProgress());
+        mGeckoView.setNavigationListener(new Navigation());
 
         final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt();
         prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
