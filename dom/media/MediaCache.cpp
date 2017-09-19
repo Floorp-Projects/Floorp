@@ -1907,11 +1907,12 @@ MediaCacheStream::NotifyDataReceived(uint32_t aLoadID,
   MOZ_ASSERT(aLoadID > 0);
   // This might happen off the main thread.
 
-  // It is safe to read mClosed without holding the monitor because this
-  // function is guaranteed to happen before Close().
-  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
-
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+  if (mClosed) {
+    // Nothing to do if the stream is closed.
+    return;
+  }
+
   LOG("Stream %p DataReceived at %" PRId64 " count=%" PRId64 " aLoadID=%u",
       this,
       mChannelOffset,
