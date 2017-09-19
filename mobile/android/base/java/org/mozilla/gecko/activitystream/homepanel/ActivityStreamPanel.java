@@ -115,6 +115,11 @@ public class ActivityStreamPanel extends FrameLayout {
 
     public void reload(LoaderManager lm) {
         adapter.clearAndInit();
+
+        // Destroy loaders so they don't restart loading when returning.
+        lm.destroyLoader(LOADER_ID_HIGHLIGHTS);
+        lm.destroyLoader(LOADER_ID_POCKET);
+
         load(lm);
     }
 
