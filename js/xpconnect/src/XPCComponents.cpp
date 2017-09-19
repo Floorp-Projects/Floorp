@@ -3398,6 +3398,15 @@ nsXPCComponents_Utils::ReadFile(nsIFile* aFile, nsACString& aResult)
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::ReadURI(nsIURI* aURI, nsACString& aResult)
+{
+    NS_ENSURE_TRUE(aURI, NS_ERROR_INVALID_ARG);
+
+    MOZ_TRY_VAR(aResult, URLPreloader::ReadURI(aURI));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::Now(double* aRetval)
 {
     TimeStamp start = TimeStamp::ProcessCreation();
