@@ -615,6 +615,9 @@ SERVO_BINDING_FUNC(Servo_TraverseSubtree,
 // Assert that the tree has no pending or unconsumed restyles.
 SERVO_BINDING_FUNC(Servo_AssertTreeIsClean, void, RawGeckoElementBorrowed root)
 
+// Returns true if the current thread is a Servo parallel worker thread.
+SERVO_BINDING_FUNC(Servo_IsWorkerThread, bool, )
+
 // Checks whether the rule tree has crossed its threshold for unused rule nodes,
 // and if so, frees them.
 SERVO_BINDING_FUNC(Servo_MaybeGCRuleTree, void, RawServoStyleSetBorrowed set)

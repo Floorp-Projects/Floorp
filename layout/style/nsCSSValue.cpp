@@ -417,10 +417,11 @@ nscoord nsCSSValue::GetPixelLength() const
 // traversal, since the refcounts aren't thread-safe.
 // Note that the caller might be an OMTA thread, which is allowed to operate off
 // main thread because it owns all of the corresponding nsCSSValues and any that
-// they might be sharing members with.
-#define DO_RELEASE(member) {                                                     \
-  MOZ_ASSERT(NS_IsInCompositorThread() || !ServoStyleSet::IsInServoTraversal()); \
-  mValue.member->Release();                                                      \
+// they might be sharing members with. Since this can happen concurrently with
+// the servo traversal, we have to use a more-precise (but slower) test.
+#define DO_RELEASE(member) {                                     \
+  MOZ_ASSERT(!ServoStyleSet::IsCurrentThreadInServoTraversal()); \
+  mValue.member->Release();                                      \
 }
 
 void nsCSSValue::DoReset()
