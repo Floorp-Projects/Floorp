@@ -15,7 +15,7 @@ requestLongerTimeout(2);
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, controller, inspector} = yield openAnimationInspector();
+  let {panel, inspector} = yield openAnimationInspector();
   let btn = panel.playTimelineButtonEl;
 
   // For a finite animation, once the scrubber reaches the end of the timeline, the pause
@@ -23,12 +23,11 @@ add_task(function* () {
   info("Select a finite animation and wait for the animation to complete");
   yield selectNodeAndWaitForAnimations(".negative-delay", inspector);
 
-  let onButtonPaused = waitForButtonPaused(btn);
-  let onTimelineUpdated = controller.once(controller.PLAYERS_UPDATED_EVENT);
-  // The page is reloaded to avoid missing the animation.
   yield reloadTab(inspector);
-  yield onTimelineUpdated;
-  yield onButtonPaused;
+
+  if (!btn.classList.contains("paused")) {
+    yield waitForButtonPaused(btn);
+  }
 
   ok(btn.classList.contains("paused"),
      "The button is in paused state once finite animations are done");
