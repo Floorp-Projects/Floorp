@@ -319,6 +319,11 @@ function test() {
     });
 
     expectEvent(EVENTS.RECEIVED_EVENT_TIMINGS, async () => {
+      await waitUntil(() => {
+        let requestItem = getSortedRequests(store.getState()).get(0);
+        return requestItem && requestItem.eventTimings;
+      });
+
       let requestItem = getSortedRequests(store.getState()).get(0);
 
       ok(requestItem.eventTimings,
