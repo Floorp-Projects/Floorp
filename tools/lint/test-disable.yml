@@ -1,0 +1,14 @@
+---
+no-comment-disable:
+    description: "Use 'disable=<reason>' to disable a test instead of a comment"
+    include:
+        - "**/*.ini"
+    exclude:
+        - "**/application.ini"
+        - "**/l10n.ini"
+        - testing/mozbase/manifestparser/tests
+        - testing/web-platform
+        - xpcom/tests/unit/data
+    extensions: ['ini']
+    type: regex
+    payload: ^[ \t]*(#|;)[ \t]*\[

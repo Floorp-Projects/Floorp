@@ -257,6 +257,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
     }
 
     if (item->BackfaceIsHidden() && aSc.IsBackfaceVisible()) {
+      item->Destroy(aDisplayListBuilder);
       continue;
     }
 

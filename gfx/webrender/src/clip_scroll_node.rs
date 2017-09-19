@@ -9,7 +9,7 @@ use api::WorldPoint;
 use clip::{ClipRegion, ClipSources, ClipSourcesHandle, ClipStore};
 use clip_scroll_tree::TransformUpdateState;
 use geometry::ray_intersects_rect;
-use spring::{DAMPING, STIFFNESS, Spring};
+use spring::{Spring, DAMPING, STIFFNESS};
 use tiling::PackedLayerIndex;
 use util::{MatrixHelpers, TransformedRectKind};
 
@@ -39,9 +39,11 @@ pub struct ClipInfo {
 }
 
 impl ClipInfo {
-    pub fn new(clip_region: ClipRegion,
-               packed_layer_index: PackedLayerIndex,
-               clip_store: &mut ClipStore) -> ClipInfo {
+    pub fn new(
+        clip_region: ClipRegion,
+        packed_layer_index: PackedLayerIndex,
+        clip_store: &mut ClipStore,
+    ) -> ClipInfo {
         let clip_rect = LayerRect::new(clip_region.origin, clip_region.main.size);
         ClipInfo {
             clip_sources: clip_store.insert(ClipSources::from(clip_region)),
@@ -118,12 +120,13 @@ pub struct ClipScrollNode {
 }
 
 impl ClipScrollNode {
-    pub fn new_scroll_frame(pipeline_id: PipelineId,
-                            parent_id: ClipId,
-                            frame_rect: &LayerRect,
-                            content_size: &LayerSize,
-                            scroll_sensitivity: ScrollSensitivity)
-                            -> ClipScrollNode {
+    pub fn new_scroll_frame(
+        pipeline_id: PipelineId,
+        parent_id: ClipId,
+        frame_rect: &LayerRect,
+        content_size: &LayerSize,
+        scroll_sensitivity: ScrollSensitivity,
+    ) -> ClipScrollNode {
         ClipScrollNode {
             content_size: *content_size,
             local_viewport_rect: *frame_rect,
@@ -155,13 +158,14 @@ impl ClipScrollNode {
         }
     }
 
-    pub fn new_reference_frame(parent_id: Option<ClipId>,
-                               local_viewport_rect: &LayerRect,
-                               content_size: LayerSize,
-                               transform: &LayerToScrollTransform,
-                               origin_in_parent_reference_frame: LayerVector2D,
-                               pipeline_id: PipelineId)
-                               -> ClipScrollNode {
+    pub fn new_reference_frame(
+        parent_id: Option<ClipId>,
+        local_viewport_rect: &LayerRect,
+        content_size: LayerSize,
+        transform: &LayerToScrollTransform,
+        origin_in_parent_reference_frame: LayerVector2D,
+        pipeline_id: PipelineId,
+    ) -> ClipScrollNode {
         let info = ReferenceFrameInfo {
             transform: *transform,
             origin_in_parent_reference_frame,
@@ -182,11 +186,12 @@ impl ClipScrollNode {
         }
     }
 
-    pub fn new_sticky_frame(parent_id: ClipId,
-                            frame_rect: LayerRect,
-                            sticky_frame_info: StickyFrameInfo,
-                            pipeline_id: PipelineId)
-                            -> ClipScrollNode {
+    pub fn new_sticky_frame(
+        parent_id: ClipId,
+        frame_rect: LayerRect,
+        sticky_frame_info: StickyFrameInfo,
+        pipeline_id: PipelineId,
+    ) -> ClipScrollNode {
         ClipScrollNode {
             content_size: frame_rect.size,
             local_viewport_rect: frame_rect,
@@ -214,8 +219,9 @@ impl ClipScrollNode {
                 *scrolling = *new_scrolling;
                 scrolling.scroll_sensitivity = scroll_sensitivity;
             }
-            _ if new_scrolling.offset != LayerVector2D::zero() =>
-                warn!("Tried to scroll a non-scroll node."),
+            _ if new_scrolling.offset != LayerVector2D::zero() => {
+                warn!("Tried to scroll a non-scroll node.")
+            }
             _ => {}
         }
     }
@@ -239,8 +245,10 @@ impl ClipScrollNode {
                 }
 
                 let origin = LayerPoint::new(origin.x.max(0.0), origin.y.max(0.0));
-                LayerVector2D::new((-origin.x).max(-scrollable_width).min(0.0).round(),
-                                   (-origin.y).max(-scrollable_height).min(0.0).round())
+                LayerVector2D::new(
+                    (-origin.x).max(-scrollable_width).min(0.0).round(),
+                    (-origin.y).max(-scrollable_height).min(0.0).round(),
+                )
             }
             ScrollClamping::NoClamping => LayerPoint::zero() - *origin,
         };
@@ -256,41 +264,49 @@ impl ClipScrollNode {
     }
 
     pub fn update_transform(&mut self, state: &TransformUpdateState) {
-        let scrolled_parent_combined_clip = state.parent_combined_viewport_rect
+        let scrolled_parent_combined_clip = state
+            .parent_combined_viewport_rect
             .translate(&-state.parent_scroll_offset);
 
         let (local_transform, accumulated_scroll_offset) = match self.node_type {
             NodeType::ReferenceFrame(ref info) => {
-                self.combined_local_viewport_rect =
-                    info.transform.with_destination::<LayerPixel>()
-                             .inverse_rect_footprint(&scrolled_parent_combined_clip);
+                self.combined_local_viewport_rect = info.transform
+                    .with_destination::<LayerPixel>()
+                    .inverse_rect_footprint(&scrolled_parent_combined_clip);
                 self.reference_frame_relative_scroll_offset = LayerVector2D::zero();
                 (info.transform, state.parent_accumulated_scroll_offset)
             }
             NodeType::Clip(_) | NodeType::ScrollFrame(_) => {
                 // Move the parent's viewport into the local space (of the node origin)
                 // and intersect with the local clip rectangle to get the local viewport.
-                self.combined_local_viewport_rect =
-                    scrolled_parent_combined_clip.intersection(&self.local_clip_rect)
-                                                 .unwrap_or(LayerRect::zero());
+                self.combined_local_viewport_rect = scrolled_parent_combined_clip
+                    .intersection(&self.local_clip_rect)
+                    .unwrap_or(LayerRect::zero());
                 self.reference_frame_relative_scroll_offset =
                     state.parent_accumulated_scroll_offset;
-                (LayerToScrollTransform::identity(), self.reference_frame_relative_scroll_offset)
+                (
+                    LayerToScrollTransform::identity(),
+                    self.reference_frame_relative_scroll_offset,
+                )
             }
             NodeType::StickyFrame(sticky_frame_info) => {
-                let sticky_offset =
-                    self.calculate_sticky_offset(&self.local_viewport_rect,
-                                                 &sticky_frame_info,
-                                                 &state.nearest_scrolling_ancestor_offset,
-                                                 &state.nearest_scrolling_ancestor_viewport);
+                let sticky_offset = self.calculate_sticky_offset(
+                    &self.local_viewport_rect,
+                    &sticky_frame_info,
+                    &state.nearest_scrolling_ancestor_offset,
+                    &state.nearest_scrolling_ancestor_viewport,
+                );
 
-                self.combined_local_viewport_rect =
-                    scrolled_parent_combined_clip.translate(&-sticky_offset)
-                                                 .intersection(&self.local_clip_rect)
-                                                 .unwrap_or(LayerRect::zero());
+                self.combined_local_viewport_rect = scrolled_parent_combined_clip
+                    .translate(&-sticky_offset)
+                    .intersection(&self.local_clip_rect)
+                    .unwrap_or(LayerRect::zero());
                 self.reference_frame_relative_scroll_offset =
                     state.parent_accumulated_scroll_offset + sticky_offset;
-                (LayerToScrollTransform::identity(), self.reference_frame_relative_scroll_offset)
+                (
+                    LayerToScrollTransform::identity(),
+                    self.reference_frame_relative_scroll_offset,
+                )
             }
         };
 
@@ -299,24 +315,25 @@ impl ClipScrollNode {
         // between our reference frame and this node. For reference frames, we also include
         // whatever local transformation this reference frame provides. This can be combined
         // with the local_viewport_rect to get its position in world space.
-        self.world_viewport_transform =
-            state.parent_reference_frame_transform
-                .pre_translate(accumulated_scroll_offset.to_3d())
-                .pre_mul(&local_transform.with_destination::<LayerPixel>());
+        self.world_viewport_transform = state
+            .parent_reference_frame_transform
+            .pre_translate(accumulated_scroll_offset.to_3d())
+            .pre_mul(&local_transform.with_destination::<LayerPixel>());
 
         // The transformation for any content inside of us is the viewport transformation, plus
         // whatever scrolling offset we supply as well.
         let scroll_offset = self.scroll_offset();
-        self.world_content_transform =
-            self.world_viewport_transform.pre_translate(scroll_offset.to_3d());
+        self.world_content_transform = self.world_viewport_transform
+            .pre_translate(scroll_offset.to_3d());
     }
 
-    fn calculate_sticky_offset(&self,
-                               sticky_rect: &LayerRect,
-                               sticky_frame_info: &StickyFrameInfo,
-                               viewport_scroll_offset: &LayerVector2D,
-                               viewport_rect: &LayerRect)
-                               -> LayerVector2D {
+    fn calculate_sticky_offset(
+        &self,
+        sticky_rect: &LayerRect,
+        sticky_frame_info: &StickyFrameInfo,
+        viewport_scroll_offset: &LayerVector2D,
+        viewport_rect: &LayerRect,
+    ) -> LayerVector2D {
         let sticky_rect = sticky_rect.translate(viewport_scroll_offset);
         let mut sticky_offset = LayerVector2D::zero();
 
@@ -325,10 +342,10 @@ impl ClipScrollNode {
             sticky_offset.y = sticky_offset.y.max(0.0).min(info.max_offset);
         }
 
-        if sticky_offset.y == 0.0  {
+        if sticky_offset.y == 0.0 {
             if let Some(info) = sticky_frame_info.bottom {
                 sticky_offset.y = (viewport_rect.max_y() - info.margin) -
-                                  (sticky_offset.y + sticky_rect.min_y() + sticky_rect.size.height);
+                    (sticky_offset.y + sticky_rect.min_y() + sticky_rect.size.height);
                 sticky_offset.y = sticky_offset.y.min(0.0).max(info.max_offset);
             }
         }
@@ -338,10 +355,10 @@ impl ClipScrollNode {
             sticky_offset.x = sticky_offset.x.max(0.0).min(info.max_offset);
         }
 
-        if sticky_offset.x == 0.0  {
+        if sticky_offset.x == 0.0 {
             if let Some(info) = sticky_frame_info.right {
                 sticky_offset.x = (viewport_rect.max_x() - info.margin) -
-                                  (sticky_offset.x + sticky_rect.min_x() + sticky_rect.size.width);
+                    (sticky_offset.x + sticky_rect.min_x() + sticky_rect.size.width);
                 sticky_offset.x = sticky_offset.x.min(0.0).max(info.max_offset);
             }
         }
@@ -380,7 +397,7 @@ impl ClipScrollNode {
 
                 scrolling.offset.y = 0.0;
                 return true;
-            },
+            }
             ScrollLocation::End => {
                 let end_pos = self.local_viewport_rect.size.height - self.content_size.height;
 
@@ -395,8 +412,8 @@ impl ClipScrollNode {
         };
 
         let overscroll_amount = scrolling.overscroll_amount(scrollable_width, scrollable_height);
-        let overscrolling = CAN_OVERSCROLL && (overscroll_amount.x != 0.0 ||
-                                               overscroll_amount.y != 0.0);
+        let overscrolling =
+            CAN_OVERSCROLL && (overscroll_amount.x != 0.0 || overscroll_amount.y != 0.0);
         if overscrolling {
             if overscroll_amount.x != 0.0 {
                 delta.x /= overscroll_amount.x.abs()
@@ -426,7 +443,8 @@ impl ClipScrollNode {
         if phase == ScrollEventPhase::Start || phase == ScrollEventPhase::Move(true) {
             scrolling.started_bouncing_back = false
         } else if overscrolling &&
-                ((delta.x < 1.0 && delta.y < 1.0) || phase == ScrollEventPhase::End) {
+            ((delta.x < 1.0 && delta.y < 1.0) || phase == ScrollEventPhase::End)
+        {
             scrolling.started_bouncing_back = true;
             scrolling.bouncing_back = true
         }
@@ -439,15 +457,15 @@ impl ClipScrollNode {
     }
 
     pub fn tick_scrolling_bounce_animation(&mut self) {
-       if let NodeType::ScrollFrame(ref mut scrolling) = self.node_type {
-           scrolling.tick_scrolling_bounce_animation();
+        if let NodeType::ScrollFrame(ref mut scrolling) = self.node_type {
+            scrolling.tick_scrolling_bounce_animation();
         }
     }
 
     pub fn ray_intersects_node(&self, cursor: &WorldPoint) -> bool {
         let inv = self.world_viewport_transform.inverse().unwrap();
         let z0 = -10000.0;
-        let z1 =  10000.0;
+        let z1 = 10000.0;
 
         let p0 = inv.transform_point3d(&cursor.extend(z0));
         let p1 = inv.transform_point3d(&cursor.extend(z1));
@@ -455,7 +473,11 @@ impl ClipScrollNode {
         if self.scrollable_width() <= 0. && self.scrollable_height() <= 0. {
             return false;
         }
-        ray_intersects_rect(p0.to_untyped(), p1.to_untyped(), self.local_viewport_rect.to_untyped())
+        ray_intersects_rect(
+            p0.to_untyped(),
+            p1.to_untyped(),
+            self.local_viewport_rect.to_untyped(),
+        )
     }
 
     pub fn scroll_offset(&self) -> LayerVector2D {
@@ -468,8 +490,8 @@ impl ClipScrollNode {
     pub fn is_overscrolling(&self) -> bool {
         match self.node_type {
             NodeType::ScrollFrame(ref scrolling) => {
-                let overscroll_amount = scrolling.overscroll_amount(self.scrollable_width(),
-                                                                    self.scrollable_height());
+                let overscroll_amount =
+                    scrolling.overscroll_amount(self.scrollable_width(), self.scrollable_height());
                 overscroll_amount.x != 0.0 || overscroll_amount.y != 0.0
             }
             _ => false,
@@ -509,7 +531,8 @@ impl ScrollingState {
 
     pub fn stretch_overscroll_spring(&mut self, overscroll_amount: LayerVector2D) {
         let offset = self.offset.to_point();
-        self.spring.coords(offset, offset, offset + overscroll_amount);
+        self.spring
+            .coords(offset, offset, offset + overscroll_amount);
     }
 
     pub fn tick_scrolling_bounce_animation(&mut self) {
@@ -520,10 +543,11 @@ impl ScrollingState {
         }
     }
 
-    pub fn overscroll_amount(&self,
-                             scrollable_width: f32,
-                             scrollable_height: f32)
-                             -> LayerVector2D {
+    pub fn overscroll_amount(
+        &self,
+        scrollable_width: f32,
+        scrollable_height: f32,
+    ) -> LayerVector2D {
         let overscroll_x = if self.offset.x > 0.0 {
             -self.offset.x
         } else if self.offset.x < -scrollable_width {

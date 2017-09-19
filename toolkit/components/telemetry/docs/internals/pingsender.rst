@@ -28,7 +28,7 @@ additional headers:
 
 In non-debug mode the ping sender doesn't print anything, not even on error,
 this is done deliberately to prevent startling the user on architectures such
-as Windows that would open a seperate console window just to display the
+as Windows that would open a separate console window just to display the
 program output. If you need runtime information to be printed out compile the
 ping sender with debugging enabled.
 

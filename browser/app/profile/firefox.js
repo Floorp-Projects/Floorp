@@ -1276,6 +1276,8 @@ pref("browser.newtabpage.activity-stream.enabled", true);
 pref("browser.newtabpage.activity-stream.prerender", true);
 pref("browser.newtabpage.activity-stream.aboutHome.enabled", true);
 
+pref("browser.library.activity-stream.enabled", true);
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 

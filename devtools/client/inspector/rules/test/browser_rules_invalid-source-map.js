@@ -8,7 +8,7 @@
 // correctly.
 
 const TESTCASE_URI = URL_ROOT + "doc_invalid_sourcemap.html";
-const PREF = "devtools.styleeditor.source-maps-enabled";
+const PREF = "devtools.source-map.client-service.enabled";
 const CSS_LOC = "doc_invalid_sourcemap.css:1";
 
 add_task(function* () {
