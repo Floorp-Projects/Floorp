@@ -353,7 +353,7 @@ var TPS = {
     Logger.logPass("executing action " + action.toUpperCase() + " on tabs");
   },
 
-  HandlePrefs(prefs, action) {
+  async HandlePrefs(prefs, action) {
     for (let pref of prefs) {
       Logger.logInfo("executing action " + action.toUpperCase() +
                      " on pref " + JSON.stringify(pref));
@@ -433,7 +433,7 @@ var TPS = {
     }
   },
 
-  HandlePasswords(passwords, action) {
+  async HandlePasswords(passwords, action) {
     this.shouldValidatePasswords = true;
     try {
       for (let password of passwords) {
@@ -473,7 +473,7 @@ var TPS = {
     }
   },
 
-  HandleAddons(addons, action, state) {
+  async HandleAddons(addons, action, state) {
     this.shouldValidateAddons = true;
     for (let entry of addons) {
       Logger.logInfo("executing action " + action.toUpperCase() +
@@ -1202,20 +1202,20 @@ var TPS = {
 };
 
 var Addons = {
-  install: function Addons__install(addons) {
-    TPS.HandleAddons(addons, ACTION_ADD);
+  async install(addons) {
+    await TPS.HandleAddons(addons, ACTION_ADD);
   },
-  setEnabled: function Addons__setEnabled(addons, state) {
-    TPS.HandleAddons(addons, ACTION_SET_ENABLED, state);
+  async setEnabled(addons, state) {
+    await TPS.HandleAddons(addons, ACTION_SET_ENABLED, state);
   },
-  uninstall: function Addons__uninstall(addons) {
-    TPS.HandleAddons(addons, ACTION_DELETE);
+  async uninstall(addons) {
+    await TPS.HandleAddons(addons, ACTION_DELETE);
   },
-  verify: function Addons__verify(addons, state) {
-    TPS.HandleAddons(addons, ACTION_VERIFY, state);
+  async verify(addons, state) {
+    await TPS.HandleAddons(addons, ACTION_VERIFY, state);
   },
-  verifyNot: function Addons__verifyNot(addons) {
-    TPS.HandleAddons(addons, ACTION_VERIFY_NOT);
+  async verifyNot(addons) {
+    await TPS.HandleAddons(addons, ACTION_VERIFY_NOT);
   },
   skipValidation() {
     TPS.shouldValidateAddons = false;
@@ -1244,50 +1244,50 @@ var Bookmarks = {
 };
 
 var Formdata = {
-  add: function Formdata__add(formdata) {
-    this.HandleForms(formdata, ACTION_ADD);
+  async add(formdata) {
+    await this.HandleForms(formdata, ACTION_ADD);
   },
-  delete: function Formdata__delete(formdata) {
-    this.HandleForms(formdata, ACTION_DELETE);
+  async delete(formdata) {
+    await this.HandleForms(formdata, ACTION_DELETE);
   },
-  verify: function Formdata__verify(formdata) {
-    this.HandleForms(formdata, ACTION_VERIFY);
+  async verify(formdata) {
+    await this.HandleForms(formdata, ACTION_VERIFY);
   },
-  verifyNot: function Formdata__verifyNot(formdata) {
-    this.HandleForms(formdata, ACTION_VERIFY_NOT);
+  async verifyNot(formdata) {
+    await this.HandleForms(formdata, ACTION_VERIFY_NOT);
   }
 };
 
 var History = {
-  add: function History__add(history) {
-    this.HandleHistory(history, ACTION_ADD);
+  async add(history) {
+    await this.HandleHistory(history, ACTION_ADD);
   },
-  delete: function History__delete(history) {
-    this.HandleHistory(history, ACTION_DELETE);
+  async delete(history) {
+    await this.HandleHistory(history, ACTION_DELETE);
   },
-  verify: function History__verify(history) {
-    this.HandleHistory(history, ACTION_VERIFY);
+  async verify(history) {
+    await this.HandleHistory(history, ACTION_VERIFY);
   },
-  verifyNot: function History__verifyNot(history) {
-    this.HandleHistory(history, ACTION_VERIFY_NOT);
+  async verifyNot(history) {
+    await this.HandleHistory(history, ACTION_VERIFY_NOT);
   }
 };
 
 var Passwords = {
-  add: function Passwords__add(passwords) {
-    this.HandlePasswords(passwords, ACTION_ADD);
+  async add(passwords) {
+    await this.HandlePasswords(passwords, ACTION_ADD);
   },
-  modify: function Passwords__modify(passwords) {
-    this.HandlePasswords(passwords, ACTION_MODIFY);
+  async modify(passwords) {
+    await this.HandlePasswords(passwords, ACTION_MODIFY);
   },
-  delete: function Passwords__delete(passwords) {
-    this.HandlePasswords(passwords, ACTION_DELETE);
+  async delete(passwords) {
+    await this.HandlePasswords(passwords, ACTION_DELETE);
   },
-  verify: function Passwords__verify(passwords) {
-    this.HandlePasswords(passwords, ACTION_VERIFY);
+  async verify(passwords) {
+    await this.HandlePasswords(passwords, ACTION_VERIFY);
   },
-  verifyNot: function Passwords__verifyNot(passwords) {
-    this.HandlePasswords(passwords, ACTION_VERIFY_NOT);
+  async verifyNot(passwords) {
+    await this.HandlePasswords(passwords, ACTION_VERIFY_NOT);
   },
   skipValidation() {
     TPS.shouldValidatePasswords = false;
@@ -1295,11 +1295,11 @@ var Passwords = {
 };
 
 var Prefs = {
-  modify: function Prefs__modify(prefs) {
-    TPS.HandlePrefs(prefs, ACTION_MODIFY);
+  async modify(prefs) {
+    await TPS.HandlePrefs(prefs, ACTION_MODIFY);
   },
-  verify: function Prefs__verify(prefs) {
-    TPS.HandlePrefs(prefs, ACTION_VERIFY);
+  async verify(prefs) {
+    await TPS.HandlePrefs(prefs, ACTION_VERIFY);
   }
 };
 
