@@ -14,7 +14,7 @@
 textbox {
   -moz-appearance: textfield;
   cursor: text;
-  margin: 4px;
+  margin: 2px 4px;
   padding: 2px 2px 3px;
   padding-inline-start: 4px;
   background-color: -moz-Field;

@@ -272,6 +272,7 @@
       <hbox align="center" flex="1">
         <vbox flex="1">
           <description>&rememberDescription.label;</description>
+          <separator class="thin"/>
           <description>&rememberActions.pre.label;<label
           class="text-link" id="historyRememberClear"
           >&rememberActions.clearHistory.label;</label>&rememberActions.middle.label;<label
@@ -284,6 +285,7 @@
       <hbox align="center" flex="1">
         <vbox flex="1">
           <description>&dontrememberDescription.label;</description>
+          <separator class="thin"/>
           <description>&dontrememberActions.pre.label;<label
           class="text-link" id="historyDontRememberClear"
           >&dontrememberActions.clearHistory.label;</label>&dontrememberActions.post.label;</description>
@@ -291,6 +293,7 @@
       </hbox>
     </vbox>
     <vbox id="historyCustomPane">
+      <separator class="thin"/>
       <vbox>
         <checkbox id="privateBrowsingAutoStart"
                   label="&privateBrowsingPermanent2.label;"
@@ -457,7 +460,7 @@
   <hbox align="baseline">
     <vbox flex="1">
       <description flex="1">
-        <label id="totalSiteDataSize" class="tail-with-learn-more"></label>
+        <label id="totalSiteDataSize"></label>
         <label id="siteDataLearnMoreLink" class="learnMore text-link">&siteDataLearnMoreLink.label;</label>
       </description>
     </vbox>
@@ -494,7 +497,7 @@
       <vbox id="trackingProtectionBox" flex="1" hidden="true">
         <description id="trackingProtectionDesc"
                      control="trackingProtectionRadioGroup">
-           <label class="tail-with-learn-more">&trackingProtection2.radioGroupLabel;</label>
+          &trackingProtection2.radioGroupLabel;
            <label id="trackingProtectionLearnMore" class="learnMore text-link">&trackingProtectionLearnMore.label;</label>
         </description>
         <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
@@ -547,7 +550,7 @@
       </vbox>
     </hbox>
     <vbox id="doNotTrackLearnMoreBox">
-      <label><label class="tail-with-learn-more">&doNotTrack.description;</label><label
+      <label>&doNotTrack.description;<label
       class="learnMore text-link" href="https://www.mozilla.org/dnt"
       >&doNotTrack.learnMore.label;</label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
@@ -633,7 +636,7 @@
         <description flex="1">
           <image class="desktop-notification-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
-          <label id="notificationPermissionsLabel" class="tail-with-learn-more">&notificationPermissions.label;</label>
+          <label id="notificationPermissionsLabel">&notificationPermissions.label;</label>
           <label id="notificationPermissionsLearnMore"
                  class="learnMore text-link">&notificationPermissionsLearnMore.label;</label>
         </description>
@@ -656,8 +659,8 @@
   <vbox id="notificationsDoNotDisturbBox" hidden="true">
     <checkbox id="notificationsDoNotDisturb" label="&notificationsDoNotDisturb.label;"
               accesskey="&notificationsDoNotDisturb.accesskey;"/>
-    <description id="notificationsDoNotDisturbDetails"
-           class="indent tip-caption">&notificationsDoNotDisturbDetails.value;</description>
+    <label id="notificationsDoNotDisturbDetails"
+           class="indent">&notificationsDoNotDisturbDetails.value;</label>
   </vbox>
 
   <hbox align="start">
@@ -699,14 +702,13 @@
   </hbox>
 
   <vbox id="a11yPermissionsBox">
-    <hbox flex="1" align="center">
-      <checkbox id="a11yPrivacyCheckbox" class="tail-with-learn-more"
-                label="&a11yPrivacy.checkbox.label;"
+    <description flex="1">
+      <checkbox id="a11yPrivacyCheckbox" label="&a11yPrivacy.checkbox.label;"
                 accesskey="&a11yPrivacy.checkbox.accesskey;"
                 oncommand="return gPrivacyPane.updateA11yPrefs(this.checked)"/>
       <label id="a11yLearnMoreLink" class="learnMore text-link"
               value="&a11yPrivacy.learnmore.label;"></label>
-    </hbox>
+    </description>
   </vbox>
 </groupbox>
 
@@ -725,12 +727,10 @@
 
   <vbox>
     <description>
-      <label class="tail-with-learn-more">&dataCollectionDesc.label;</label><label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
+      &dataCollectionDesc.label;<label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
     </description>
     <description flex="1">
-      <checkbox id="submitHealthReportBox"
-                class="tail-with-learn-more"
-                label="&enableHealthReport1.label;"
+      <checkbox id="submitHealthReportBox" label="&enableHealthReport1.label;"
                 accesskey="&enableHealthReport1.accesskey;"/>
       <label id="FHRLearnMore"
              class="learnMore text-link">&healthReportLearnMore.label;</label>
@@ -742,7 +742,6 @@
 #ifdef MOZ_CRASHREPORTER
   <hbox align="center">
     <checkbox id="automaticallySubmitCrashesBox"
-              class="tail-with-learn-more"
               preference="browser.crashReports.unsubmittedCheck.autoSubmit"
               label="&alwaysSubmitCrashReports1.label;"
               accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
