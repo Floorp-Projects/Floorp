@@ -78,7 +78,7 @@ class GeckoViewNavigation extends GeckoViewModule {
           " aWhere=" + aWhere +
           " aFlags=" + aFlags);
 
-    if (!aUri) {
+    if (!aUri || !this.isRegistered) {
       return false;
     }
 
