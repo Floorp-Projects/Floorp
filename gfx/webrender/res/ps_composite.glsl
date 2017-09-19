@@ -9,6 +9,23 @@ varying vec3 vUv1;
 flat varying int vOp;
 
 #ifdef WR_VERTEX_SHADER
+struct ReadbackTask {
+    vec2 render_target_origin;
+    vec2 size;
+    float render_target_layer_index;
+};
+
+ReadbackTask fetch_readback_task(int index) {
+    RenderTaskData data = fetch_render_task(index);
+
+    ReadbackTask task;
+    task.render_target_origin = data.data0.xy;
+    task.size = data.data0.zw;
+    task.render_target_layer_index = data.data1.x;
+
+    return task;
+}
+
 void main(void) {
     CompositeInstance ci = fetch_composite_instance();
     AlphaBatchTask dest_task = fetch_alpha_batch_task(ci.render_task_index);
