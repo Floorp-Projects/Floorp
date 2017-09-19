@@ -31,6 +31,7 @@ function checkExternalFunction(entry)
         "Servo_ComputedValues_EqualCustomProperties",
         /Servo_DeclarationBlock_GetCssText/,
         "Servo_GetArcStringData",
+        "Servo_IsWorkerThread",
         /nsIFrame::AppendOwnedAnonBoxes/,
         // Assume that atomic accesses are threadsafe.
         /^__atomic_fetch_/,
@@ -303,13 +304,6 @@ function checkFieldWrite(entry, location, fields)
     var str = "";
     for (var field of fields)
         str += " " + field;
-
-    // Bug 1400435
-    if (entry.stack[entry.stack.length - 1].callee.match(/^Gecko_CSSValue_Set/) &&
-        str == " nsAutoRefCnt.mValue")
-    {
-        return;
-    }
 
     dumpError(entry, location, "Field write" + str);
 }
@@ -1090,10 +1084,6 @@ function processRoot(name)
 
     reachable = {};
 
-    var armed = false;
-    if (name.includes("Gecko_CSSValue_Set"))
-        armed = true;
-
     while (worklist.length > 0) {
         var entry = worklist.pop();
 
@@ -1368,6 +1358,8 @@ function testFailsOffMainThread(exp, value) {
             if (isDirectCall(edge, /NS_IsMainThread/) && value)
                 return true;
             if (isDirectCall(edge, /IsInServoTraversal/) && !value)
+                return true;
+            if (isDirectCall(edge, /IsCurrentThreadInServoTraversal/) && !value)
                 return true;
             if (isDirectCall(edge, /__builtin_expect/))
                 return testFailsOffMainThread(edge.PEdgeCallArguments.Exp[0], value);
