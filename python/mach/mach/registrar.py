@@ -29,11 +29,11 @@ class MachRegistrar(object):
 
         if not handler.category:
             raise MachError('Cannot register a mach command without a '
-                'category: %s' % name)
+                            'category: %s' % name)
 
         if handler.category not in self.categories:
             raise MachError('Cannot register a command to an undefined '
-                'category: %s -> %s' % (name, handler.category))
+                            'category: %s -> %s' % (name, handler.category))
 
         self.command_handlers[name] = handler
         self.commands_by_category[handler.category].add(name)

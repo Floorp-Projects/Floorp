@@ -78,6 +78,7 @@ nsBackdropFrame::Reflow(nsPresContext* aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsBackdropFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // Note that this frame is a child of the viewport frame.
   WritingMode wm = aReflowInput.GetWritingMode();
@@ -85,5 +86,4 @@ nsBackdropFrame::Reflow(nsPresContext* aPresContext,
   nscoord isize = aReflowInput.ComputedISize() + borderPadding.IStartEnd(wm);
   nscoord bsize = aReflowInput.ComputedBSize() + borderPadding.BStartEnd(wm);
   aDesiredSize.SetSize(wm, LogicalSize(wm, isize, bsize));
-  aStatus.Reset();
 }

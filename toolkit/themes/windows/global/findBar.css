@@ -86,6 +86,9 @@ findbar[noanim] {
   border: 1px solid ThreeDShadow;
   padding: 1px 5px;
   line-height: 1em;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: inherit;
 }
 
 .findbar-find-previous:not([disabled]):active,
@@ -96,22 +99,10 @@ findbar[noanim] {
 
 .findbar-find-previous {
   list-style-image: url(chrome://global/skin/icons/find-previous-arrow.svg);
-  -moz-context-properties: fill;
-  fill: -moz-dialogtext;
 }
 
 .findbar-find-next {
   list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
-  -moz-context-properties: fill;
-  fill: -moz-dialogtext;
-}
-
-.findbar-find-previous[disabled] {
-  fill: GrayText;
-}
-
-.findbar-find-next[disabled] {
-  fill: GrayText;
 }
 
 .findbar-find-previous,
@@ -127,7 +118,7 @@ findbar[noanim] {
 
 .findbar-find-previous[disabled="true"] > .toolbarbutton-icon,
 .findbar-find-next[disabled="true"] > .toolbarbutton-icon {
-  opacity: .5;
+  opacity: .4;
 }
 
 .findbar-find-next:-moz-locale-dir(ltr) {

@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.icons.IconCallback;
@@ -22,6 +23,10 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.NetworkUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
+import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
@@ -46,8 +51,39 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
 
     private @Nullable Future<IconResponse> ongoingFaviconLoad;
 
-    public StreamOverridablePageIconLayout(final Context context, final AttributeSet attrs) {
+    /**
+     * A cache of URLs that Picasso has failed to load. Picasso will not cache which URLs it has failed to load so
+     * this is used to prevent Picasso from making additional requests to failed URLs, which is useful when the
+     * given URL does not contain an image.
+     *
+     * Picasso unfortunately does not implement this functionality: https://github.com/square/picasso/issues/475
+     *
+     * A single cache should be shared amongst all interchangeable views (e.g. in a RecyclerView) but could be
+     * shared across the app too.
+     *
+     * The consequences of not having highlight images and making requests each time the app is loaded are small,
+     * so we keep this cache in memory only.
+     */
+    private final @NonNull Set<String> nonFaviconFailedRequestURLs;
+
+    /**
+     * Create a new cache of failed requests non-favicon for use in
+     * {@link StreamOverridablePageIconLayout(Context, AttributeSet, Set)}.
+     */
+    public static Set<String> newFailedRequestCache() {
+        // To keep things simple and safe, we make this thread safe.
+        return Collections.synchronizedSet(new HashSet<String>());
+    }
+
+    /**
+     * @param nonFaviconFailedRequestCache a cache created by {@link #newFailedRequestCache()} - see that for details.
+     */
+    public StreamOverridablePageIconLayout(final Context context, final AttributeSet attrs,
+            @NonNull final Set<String> nonFaviconFailedRequestCache) {
         super(context, attrs);
+        if (nonFaviconFailedRequestCache == null) { throw new IllegalArgumentException("Expected non-null request cache"); }
+        this.nonFaviconFailedRequestURLs = nonFaviconFailedRequestCache;
+
         LayoutInflater.from(context).inflate(R.layout.activity_stream_overridable_page_icon_layout, this, true);
         initViews();
     }
@@ -61,8 +97,14 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
 
         // We don't know how the large the non-favicon images could be (bug 1388415) so for now we're only going
         // to download them on wifi. Alternatively, we could get these from the Gecko cache (see below).
+        //
+        // If the Picasso request will always fail (e.g. url does not contain an image), it will make the request each
+        // time this method is called, which is each time the View is shown (or hidden and reshown): we prevent this by
+        // checking against a cache of failed request urls. If we let Picasso make the request each time, this is bad
+        // for the user's network and the replacement icon will pop-in after the timeout each time, which looks bad.
         if (NetworkUtils.isWifi(getContext()) &&
-                !TextUtils.isEmpty(overrideImageURL)) {
+                !TextUtils.isEmpty(overrideImageURL) &&
+                !nonFaviconFailedRequestURLs.contains(overrideImageURL)) {
             setUIMode(UIMode.NONFAVICON_IMAGE);
 
             // TODO (bug 1322501): Optimization: since we've already navigated to these pages, there's a chance
@@ -71,17 +113,20 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
                     .load(Uri.parse(overrideImageURL))
                     .fit()
                     .centerCrop()
-                    .into(imageView);
+                    .into(imageView, new OnErrorUsePageURLCallback(this, pageURL, overrideImageURL, nonFaviconFailedRequestURLs));
         } else {
-            setUIMode(UIMode.FAVICON_IMAGE);
-
-            ongoingFaviconLoad = Icons.with(getContext())
-                    .pageUrl(pageURL)
-                    .skipNetwork()
-                    .forActivityStream()
-                    .build()
-                    .execute(this);
+            setFaviconImage(pageURL);
         }
+    }
+
+    private void setFaviconImage(@NonNull final String pageURL) {
+        setUIMode(UIMode.FAVICON_IMAGE);
+        ongoingFaviconLoad = Icons.with(getContext())
+                .pageUrl(pageURL)
+                .skipNetwork()
+                .forActivityStream()
+                .build()
+                .execute(this);
     }
 
     @Override
@@ -119,5 +164,41 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
         faviconView = (FaviconView) findViewById(R.id.favicon_view);
         imageView = (ImageView) findViewById(R.id.image_view);
         setUIMode(UIMode.FAVICON_IMAGE); // set in code to ensure state is consistent.
+    }
+
+    private static class OnErrorUsePageURLCallback implements Callback {
+        private final WeakReference<StreamOverridablePageIconLayout> layoutWeakReference;
+        private final String pageURL;
+        private final String requestURL;
+        private final Set<String> failedRequestURLs;
+
+        private OnErrorUsePageURLCallback(final StreamOverridablePageIconLayout layoutWeakReference,
+                @NonNull final String pageURL,
+                @NonNull final String requestURL,
+                final Set<String> failedRequestURLs) {
+            this.layoutWeakReference = new WeakReference<>(layoutWeakReference);
+            this.pageURL = pageURL;
+            this.requestURL = requestURL;
+            this.failedRequestURLs = failedRequestURLs;
+        }
+
+        @Override
+        public void onSuccess() { /* Picasso sets the image, nothing to do. */ }
+
+        @Override
+        public void onError() {
+            // We currently don't distinguish between URLs that do not contain an image and
+            // requests that failed for other reasons. However, these icons aren't vital
+            // so it should be fine.
+            failedRequestURLs.add(requestURL);
+
+            // I'm slightly concerned that cancelPendingRequests could get called during
+            // this Picasso -> Icons request chain and we'll get bugs where favicons don't
+            // appear correctly. However, we're already in an unexpected error case so it's
+            // probably not worth worrying about.
+            final StreamOverridablePageIconLayout layout = layoutWeakReference.get();
+            if (layout == null) { return; }
+            layout.setFaviconImage(pageURL);
+        }
     }
 }

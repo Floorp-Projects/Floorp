@@ -56,8 +56,6 @@ static nsresult
 GetAlgorithmName(const OOS& aAlgorithm,
                  /* out */ nsString& aName)
 {
-  MOZ_ASSERT(aAlgorithm.IsString()); // TODO: remove assertion when we coerce.
-
   if (aAlgorithm.IsString()) {
     // If string, then treat as algorithm name
     aName.Assign(aAlgorithm.GetAsString());

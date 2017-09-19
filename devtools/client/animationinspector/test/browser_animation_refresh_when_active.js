@@ -23,14 +23,16 @@ function* testRefresh(inspector, panel) {
   inspector.sidebar.select("ruleview");
 
   info("Select the animated node now");
-  yield selectNodeAndWaitForAnimations(".animated", inspector);
+  yield selectNode(".animated", inspector);
 
   assertAnimationsDisplayed(panel, 0,
     "The panel doesn't show the animation data while inactive");
 
   info("Switch to the animation panel");
+  let onRendered = waitForAnimationTimelineRendering(panel);
   inspector.sidebar.select("animationinspector");
   yield panel.once(panel.UI_UPDATED_EVENT);
+  yield onRendered;
 
   assertAnimationsDisplayed(panel, 1,
     "The panel shows the animation data after selecting it");

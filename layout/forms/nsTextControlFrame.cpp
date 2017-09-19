@@ -503,6 +503,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTextControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // make sure that the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
@@ -546,7 +547,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   // take into account css properties that affect overflow handling
   FinishAndStoreOverflow(&aDesiredSize);
 
-  aStatus.Reset();
+  aStatus.Reset(); // This type of frame can't be split.
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 

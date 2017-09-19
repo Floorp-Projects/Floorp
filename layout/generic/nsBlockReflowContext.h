@@ -42,11 +42,11 @@ public:
                    BlockReflowInput&         aState);
 
   bool PlaceBlock(const ReflowInput& aReflowInput,
-                  bool                     aForceFit,
-                  nsLineBox*               aLine,
-                  nsCollapsingMargin&      aBEndMarginResult /* out */,
-                  nsOverflowAreas&         aOverflowAreas,
-                  nsReflowStatus           aReflowStatus);
+                  bool aForceFit,
+                  nsLineBox* aLine,
+                  nsCollapsingMargin& aBEndMarginResult /* out */,
+                  nsOverflowAreas& aOverflowAreas,
+                  const nsReflowStatus& aReflowStatus);
 
   nsCollapsingMargin& GetCarriedOutBEndMargin() {
     return mMetrics.mCarriedOutBEndMargin;

@@ -669,9 +669,8 @@ MediaCache::Flush()
   // Truncate index array.
   Truncate();
   NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-  // Re-initialize block cache.
-  nsresult rv = mBlockCache->Init();
-  NS_ENSURE_SUCCESS_VOID(rv);
+  // Reset block cache to its pristine state.
+  mBlockCache->Flush();
 }
 
 void

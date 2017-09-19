@@ -4,6 +4,7 @@ flake8:
     include:
         - config/mozunit.py
         - layout/tools/reftest
+        - python/mach
         - python/mach_commands.py
         - python/mozlint
         - security/manager

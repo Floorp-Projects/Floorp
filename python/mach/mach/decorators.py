@@ -7,7 +7,6 @@ from __future__ import absolute_import, unicode_literals
 import argparse
 import collections
 import inspect
-import os
 import types
 
 from .base import MachError
@@ -185,7 +184,7 @@ def CommandProvider(cls):
 
         if command.name not in seen_commands:
             raise MachError('Command referenced by sub-command does not '
-                'exist: %s' % command.name)
+                            'exist: %s' % command.name)
 
         if command.name not in Registrar.command_handlers:
             continue
@@ -235,6 +234,7 @@ class Command(object):
 
         return func
 
+
 class SubCommand(object):
     """Decorator for functions or methods that provide a sub-command.
 
@@ -263,6 +263,7 @@ class SubCommand(object):
         func._mach_command |= self._mach_command
 
         return func
+
 
 class CommandArgument(object):
     """Decorator for additional arguments to mach subcommands.
@@ -343,4 +344,3 @@ def SettingsProvider(cls):
 
     Registrar.register_settings_provider(cls)
     return cls
-

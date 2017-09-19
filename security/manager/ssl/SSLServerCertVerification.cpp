@@ -1412,9 +1412,8 @@ AuthCertificate(CertVerifier& certVerifier,
                                                sctsFromTLSExtension, time,
                                                infoObject,
                                                infoObject->GetHostName(),
-                                               certList, &peerCertChain,
-                                               saveIntermediates, flags,
-                                               infoObject->
+                                               certList, saveIntermediates,
+                                               flags, infoObject->
                                                       GetOriginAttributes(),
                                                &evOidPolicy,
                                                &ocspStaplingStatus,

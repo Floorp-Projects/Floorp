@@ -14,11 +14,6 @@
 
 const epsilon = 0.00001;
 
-function getDistance(div, prop, v1, v2) {
-  return SpecialPowers.DOMWindowUtils
-           .computeAnimationDistance(div, prop, v1, v2);
-}
-
 // |v| should be a unit vector (i.e. having length 1)
 function getQuaternion(v, angle) {
   return [

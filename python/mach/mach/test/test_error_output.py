@@ -20,7 +20,7 @@ class TestErrorOutput(TestBase):
 
     def test_command_error(self):
         result, stdout, stderr = self._run_mach(['throw', '--message',
-            'Command Error'])
+                                                'Command Error'])
 
         self.assertEqual(result, 1)
 
@@ -28,7 +28,7 @@ class TestErrorOutput(TestBase):
 
     def test_invoked_error(self):
         result, stdout, stderr = self._run_mach(['throw_deep', '--message',
-            'Deep stack'])
+                                                'Deep stack'])
 
         self.assertEqual(result, 1)
 
