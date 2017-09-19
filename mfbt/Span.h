@@ -660,8 +660,9 @@ public:
   template<size_t Count>
   MOZ_SPAN_GCC_CONSTEXPR Span<element_type, Count> Last() const
   {
-    MOZ_RELEASE_ASSERT(Count <= size());
-    return { data() + (size() - Count), Count };
+    const size_t len = size();
+    MOZ_RELEASE_ASSERT(Count <= len);
+    return { data() + (len - Count), Count };
   }
 
   /**
@@ -670,10 +671,11 @@ public:
   template<size_t Offset, size_t Count = dynamic_extent>
   MOZ_SPAN_GCC_CONSTEXPR Span<element_type, Count> Subspan() const
   {
-    MOZ_RELEASE_ASSERT(Offset <= size() &&
-      (Count == dynamic_extent || (Offset + Count <= size())));
+    const size_t len = size();
+    MOZ_RELEASE_ASSERT(Offset <= len &&
+      (Count == dynamic_extent || (Offset + Count <= len)));
     return { data() + Offset,
-             Count == dynamic_extent ? size() - Offset : Count };
+             Count == dynamic_extent ? len - Offset : Count };
   }
 
   /**
@@ -692,8 +694,9 @@ public:
   MOZ_SPAN_GCC_CONSTEXPR Span<element_type, dynamic_extent> Last(
     index_type aCount) const
   {
-    MOZ_RELEASE_ASSERT(aCount <= size());
-    return { data() + (size() - aCount), aCount };
+    const size_t len = size();
+    MOZ_RELEASE_ASSERT(aCount <= len);
+    return { data() + (len - aCount), aCount };
   }
 
   /**
@@ -703,11 +706,12 @@ public:
     index_type aStart,
     index_type aLength = dynamic_extent) const
   {
-    MOZ_RELEASE_ASSERT(aStart <= size() &&
+    const size_t len = size();
+    MOZ_RELEASE_ASSERT(aStart <= len &&
                        (aLength == dynamic_extent ||
-                        (aStart + aLength <= size())));
+                        (aStart + aLength <= len)));
     return { data() + aStart,
-             aLength == dynamic_extent ? size() - aStart : aLength };
+             aLength == dynamic_extent ? len - aStart : aLength };
   }
 
   /**
@@ -847,9 +851,10 @@ private:
       // https://doc.rust-lang.org/std/slice/fn.from_raw_parts.html
       , data_(elements ? elements : reinterpret_cast<pointer>(0x1))
     {
+      const size_t extentSize = ExtentType::size();
       MOZ_RELEASE_ASSERT(
-        (!elements && ExtentType::size() == 0) ||
-        (elements && ExtentType::size() != mozilla::MaxValue<size_t>::value));
+        (!elements && extentSize == 0) ||
+        (elements && extentSize != mozilla::MaxValue<size_t>::value));
     }
 
     constexpr pointer data() const { return data_; }
