@@ -1622,8 +1622,8 @@ toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutt
 }
 
 #search-container[cui-areatype="menu-panel"] {
-  margin-top: 6px;
-  margin-bottom: 6px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 toolbarpaletteitem[place="palette"] > #search-container {
