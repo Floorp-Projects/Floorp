@@ -14074,6 +14074,14 @@ nsGlobalChromeWindow::GetWindowState(uint16_t* aWindowState)
   return NS_OK;
 }
 
+enum WindowState {
+  // These constants need to match the constants in Window.webidl
+  STATE_MAXIMIZED = 1,
+  STATE_MINIMIZED = 2,
+  STATE_NORMAL = 3,
+  STATE_FULLSCREEN = 4
+};
+
 uint16_t
 nsGlobalWindow::WindowState()
 {
@@ -14084,19 +14092,19 @@ nsGlobalWindow::WindowState()
 
   switch (mode) {
     case nsSizeMode_Minimized:
-      return nsIDOMChromeWindow::STATE_MINIMIZED;
+      return STATE_MINIMIZED;
     case nsSizeMode_Maximized:
-      return nsIDOMChromeWindow::STATE_MAXIMIZED;
+      return STATE_MAXIMIZED;
     case nsSizeMode_Fullscreen:
-      return nsIDOMChromeWindow::STATE_FULLSCREEN;
+      return STATE_FULLSCREEN;
     case nsSizeMode_Normal:
-      return nsIDOMChromeWindow::STATE_NORMAL;
+      return STATE_NORMAL;
     default:
       NS_WARNING("Illegal window state for this chrome window");
       break;
   }
 
-  return nsIDOMChromeWindow::STATE_NORMAL;
+  return STATE_NORMAL;
 }
 
 bool
