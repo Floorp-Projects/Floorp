@@ -921,23 +921,6 @@ var ActivityStreamProvider = {
   },
 
   /**
-   * Get favicon data (and metadata) for a uri.
-   *
-   * @param aUri {nsIURI} Page to check for favicon data
-   * @returns A promise of an object (possibly null) containing the data
-   */
-  _getIconData(aUri) {
-    // Use 0 to get the biggest width available
-    const preferredWidth = 0;
-    return new Promise(resolve => PlacesUtils.favicons.getFaviconDataForPage(
-      aUri,
-      // Package up the icon data in an object if we have it; otherwise null
-      (iconUri, faviconLength, favicon, mimeType, faviconSize) =>
-        resolve(iconUri ? {favicon, faviconLength, faviconSize, mimeType} : null),
-      preferredWidth));
-  },
-
-  /**
    * Computes favicon data for each url in a set of links
    *
    * @param {Array} links
@@ -947,29 +930,46 @@ var ActivityStreamProvider = {
    *                    favicon available (as a byte array), mimeType, byte array
    *                    length, and favicon size (width)
    */
-  _addFavicons(aLinks) {
-    // Each link in the array needs a favicon for it's page - so we fire off a
-    // promise for each link to compute the favicon data and attach it back to
-    // the original link object. We must wait until all favicons for the array
-    // of links are computed before returning
-    return Promise.all(aLinks.map(link => new Promise(async resolve => {
-      let iconData;
-      try {
-        const linkUri = Services.io.newURI(link.url);
-        iconData = await this._getIconData(linkUri);
-
-        // Switch the scheme to try again with the other
-        if (!iconData) {
-          linkUri.scheme = linkUri.scheme === "https" ? "http" : "https";
-          iconData = await this._getIconData(linkUri);
-        }
-      } catch (e) {
-        // We just won't put icon data on the link
-      }
-
-      // Add the icon data to the link if we have any
-      resolve(Object.assign(link, iconData || {}));
-    })));
+  async _addFavicons(aLinks) {
+    if (aLinks.length) {
+      // Each link in the array needs a favicon for it's page - so we fire off
+      // a promise for each link to compute the favicon data and attach it back
+      // to the original link object. We must wait until all favicons for
+      // the array of links are computed before returning
+      await Promise.all(aLinks.map(link => new Promise(resolve => {
+        return PlacesUtils.favicons.getFaviconDataForPage(
+            Services.io.newURI(link.url),
+            (iconuri, len, data, mime, size) => {
+              // Due to the asynchronous behaviour of inserting a favicon into
+              // moz_favicons, the data may not be available to us just yet,
+              // since we listen on a history entry being inserted. As a result,
+              // we don't want to throw if the icon uri is not here yet, we
+              // just want to resolve on an empty favicon. Activity Stream
+              // knows how to handle null favicons
+              if (!iconuri) {
+                link.favicon = null;
+                link.mimeType = null;
+                link.faviconSize = null;
+              } else {
+                link.favicon = data;
+                link.mimeType = mime;
+                link.faviconLength = len;
+                link.faviconSize = size;
+              }
+              return resolve(link);
+            },
+            0); // preferredWidth: get the biggest width available
+        }).catch(() => {
+          // If something goes wrong - that's ok - just return a null favicon
+          // without rejecting the entire Promise.all
+          link.favicon = null;
+          link.mimeType = null;
+          link.faviconSize = null;
+          return link;
+        })
+      ));
+    }
+    return aLinks;
   },
 
   /**
