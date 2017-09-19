@@ -7,7 +7,6 @@
 DIRS += [
     'activity-stream',
     'aushelper',
-    'clicktoplay-rollout',
     'e10srollout',
     'followonsearch',
     'formautofill',
