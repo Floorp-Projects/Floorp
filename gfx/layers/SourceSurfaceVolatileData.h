@@ -32,7 +32,6 @@ public:
     , mStride(0)
     , mMapCount(0)
     , mFormat(SurfaceFormat::UNKNOWN)
-    , mWasPurged(false)
   {
   }
 
@@ -67,14 +66,10 @@ public:
   bool Map(MapType, MappedSurface *aMappedSurface) override
   {
     MutexAutoLock lock(mMutex);
-    if (mWasPurged) {
-      return false;
-    }
     if (mMapCount == 0) {
       mVBufPtr = mVBuf;
     }
     if (mVBufPtr.WasBufferPurged()) {
-      mWasPurged = true;
       return false;
     }
     aMappedSurface->mData = mVBufPtr;
@@ -87,7 +82,6 @@ public:
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mMapCount > 0);
-    MOZ_ASSERT(!mWasPurged);
     if (--mMapCount == 0) {
       mVBufPtr = nullptr;
     }
@@ -106,7 +100,6 @@ private:
   RefPtr<VolatileBuffer> mVBuf;
   VolatileBufferPtr<uint8_t> mVBufPtr;
   SurfaceFormat mFormat;
-  bool mWasPurged;
 };
 
 } // namespace gfx
