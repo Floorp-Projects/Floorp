@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Nem vagyunk benne biztosak, hogy mi történt. Próbálja újra, vagy készítsen képet egy másik oldalról."
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Készítsen, mentsen és osszon meg képernyőképeket, anélkül, hogy elhagyná a Firefoxot."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "A mentés új módja"
+  },
+  "tourBodyPageAction": {
+    "message": "Nyissa le a lapműveletek menüt a címsávban bármikor, ha képernyőképet akar készíteni."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Csak azt mentse, amit szeretne"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Kattintson és húzzon, hogy csak a lap egy részét mentse el. Vagy csak rá is mutathat a kijelöléshez."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Mentsen ablakokat vagy teljes lapokat"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Válassza a jobb felső sarokban lévő gombokat, hogy egy látható területet mentsen az ablakból, vagy elmentsen egy teljes oldalt."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Ahogy tetszik"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Mentse a kivágott képeket a webre a könnyebb megosztáshoz, vagy töltse le a számítógépére. Rá is kattinthat a Képernyőképek gombra, hogy megtalálja az összes képét."
   },
   "tourSkip": {

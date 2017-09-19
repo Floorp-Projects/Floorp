@@ -1,1 +1,1 @@
-importScripts('redirect.py?Redirect=import-scripts-redirect-import.js');
+importScripts('redirect.py?Redirect=import-scripts-version.py');

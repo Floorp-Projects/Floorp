@@ -72,7 +72,7 @@ Archiving the Gradle executable is straight-forward, but archiving a
 local Maven repository is not.  Therefore a special Task Cluster
 Docker image and job exist for producing the required archives.  The
 Docker image definition is rooted in
-``taskcluster/docker/android-gradle-build``.  The Task Cluster job
+``taskcluster/docker/android-build``.  The Task Cluster job
 definition is in
 ``testing/taskcluster/tasks/builds/android_api_16_gradle_dependencies.yml``.
 The job runs in a container based on the custom Docker image and

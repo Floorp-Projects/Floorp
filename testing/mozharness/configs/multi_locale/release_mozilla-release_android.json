@@ -28,6 +28,5 @@
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "required_config_vars": ["tag_override"],
     "l10n_dir": "l10n-central",
-    "merge_locales": true,
     "mozilla_dir": "build"
 }

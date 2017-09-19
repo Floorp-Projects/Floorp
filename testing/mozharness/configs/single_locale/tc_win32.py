@@ -15,10 +15,8 @@ config = {
         "EN_US_INSTALLER_BINARY_URL": os.environ.get(
             "EN_US_INSTALLER_BINARY_URL", os.environ.get(
                 "EN_US_BINARY_URL", EN_US_BINARY_URL)),
-        "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
         "DIST": "%(abs_objdir)s",
-        "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "L10NBASEDIR": "../../l10n",
         "MOZ_MAKE_COMPLETE_MAR": "1",
         'TOOLTOOL_CACHE': os.environ.get('TOOLTOOL_CACHE', 'c:/builds/tooltool_cache'),

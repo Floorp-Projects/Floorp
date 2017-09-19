@@ -204,6 +204,7 @@
 #include "mozilla/dom/PSpeechSynthesisChild.h"
 #endif
 
+#include "ClearOnShutdown.h"
 #include "ProcessUtils.h"
 #include "URIUtils.h"
 #include "nsContentUtils.h"

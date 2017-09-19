@@ -1,4 +1,87 @@
 
+CHANGES BETWEEN 2.8 and 2.8.1
+
+  I. IMPORTANT BUG FIXES
+
+    - B/W  hinting   of  TrueType   fonts  didn't  work   properly  if
+      interpreter version 38 or 40 was selected.
+
+    - Some severe  problems within the handling  of TrueType Variation
+      Fonts were found and fixed.
+
+    - Function `FT_Set_Var_Design_Coordinates' didn't correctly handle
+      the case with less input coordinates than axes.
+
+
+  II. IMPORTANT CHANGES
+
+    - By default,  FreeType  now offers  high  quality  LCD-optimized
+      output  without resorting to ClearType techniques of resolution
+      tripling and filtering.  In this method,  called Harmony,  each
+      color channel is generated separately  after shifting the glyph
+      outline,  capitalizing on the fact  that the color grids on LCD
+      panels  are  shifted  by  a third  of  a pixel.  This output is
+      indistinguishable from ClearType with a light 3-tap filter.
+
+
+  III. MISCELLANEOUS
+
+    - Using the  new function `FT_Get_Var_Axis_Flags',  an application
+      can access the `flags' field  of a variation axis (introduced in
+      OpenType version 1.8.2)
+
+    - More sanity checks.
+
+    - The  internal representation  of buffers  for LCD  rendering has
+      changed (to be more precise, the amount of padding gets computed
+      differently).  Applications  that use  the FreeType API  are not
+      affected.
+
+    - To  reset all  design axis  values of  a variation  font to  its
+      default values you can now say
+
+        error = FT_Set_Var_Design_Coordinates( face, 0, NULL );
+
+      This  also works  with functions  `FT_Set_MM_Design_Coordinates'
+      and `FT_Set_MM_Blend_Coordinates'.
+
+    - FreeType  now synthesizes  a  missing Unicode  cmap for  (older)
+      TrueType fonts also if glyph names are available.
+
+    - FreeType  has  improved  handling   of  BDF  fonts  without  the
+      `POINT_SIZE', `RESOLUTION_X', or  `RESOLUTION_Y' properties; the
+      library now  uses the values of  the `SIZE' keyword if  they are
+      missing.   Previously,   `SIZE'  was  completely   ignored,  and
+      FreeType used heuristic values instead.
+
+    - Multiple calls to `FT_Bitmap_Convert' do work now as advertised.
+      Previously,  they failed with an assertion error if there was an
+      empty bitmap between non-empty ones.
+
+    - The warping option  has moved  from `light'  to `normal' hinting
+      where  it replaces  the original hinting algorithm.  The `light'
+      mode is now always void of any hinting in x-direction.
+
+    - 16bit  compiler  support is  now  officially  ended.  We  didn't
+      provide any maintenance  since many years,  and given that there
+      were no error  or problem reports either it seems  that it is no
+      longer needed.
+
+    - The `ftgrid' demo program can now toggle the display of grid lines
+      with the `G' key.
+
+    - The `ftgrid' demo program can toggle a different set of colors
+      (suitable to color-blind people) with the `C' key.
+
+    - The `ftgrid' demo program now supports the `-e' command line option
+      to select a cmap.
+
+    - The `ftdump' demo program has a new command line option `-t' to
+      output the SFNT table list.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.7.1 and 2.8
 
   I. IMPORTANT CHANGES
@@ -43,6 +126,20 @@ CHANGES BETWEEN 2.7.1 and 2.8
       necessary, you might enable the AF_CONFIG_OPTION_TT_SIZE_METRICS
       configuration option.   However, it  is strongly  recommended to
       avoid that, adjusting font sizes instead.
+
+    - Global size  metrics values  in the  `FT_Size_Metrics' structure
+      can be  different for TrueType  fonts.  Reason is that  in older
+      FreeType  versions  the  metrics  were  rounded  differently  to
+      integer pixels compared  to all other font  formats, yielding an
+      inconsistent behaviour if you used non-native hinting.  Starting
+      with this  version, global size  metrics for TrueType  fonts are
+      handled the same as other  font formats: `ascender' gets rounded
+      up,  `descender'  gets  rounded  down,  `height'  gets  normally
+      rounded, and `max_advance' gets normally rounded, too.
+
+      If you need more precise values of (global) ascender, descender,
+      height, or  `max_advance', please take the  corresponding values
+      from the `FT_Face' structure and scale them manually.
 
     - If a TrueType font gets loaded with FT_LOAD_NO_HINTING, FreeType
       now scales  the font linearly  again (bug introduced  in version
@@ -748,7 +845,7 @@ CHANGES BETWEEN 2.5.2 and 2.5.3
            and install FreeType again.
 
       With FreeType's  `configure' script the procedure  boils down to
-      configure, build, and install Freetype, then configure, compile,
+      configure, build, and install FreeType, then configure, compile,
       and  install  HarfBuzz,  then configure,  compile,  and  install
       FreeType again (after executing `make distclean').
 

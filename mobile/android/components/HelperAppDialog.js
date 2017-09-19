@@ -215,6 +215,7 @@ HelperAppLauncherDialog.prototype = {
     let newButtonOrder = this._useNewButtonOrder();
 
     HelperApps.prompt(apps, {
+      window: aContext,
       title: bundle.GetStringFromName("helperapps.pick"),
       buttons: [
         newButtonOrder ? alwaysUse : justOnce,

@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "We weten niet precies wat er zonet is gebeurd. Wilt u het nogmaals proberen, of een schermafbeelding van een andere pagina maken?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Maak, bewaar en deel schermafbeeldingen zonder Firefox te verlaten."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Een nieuwe manier om op te slaan"
+  },
+  "tourBodyPageAction": {
+    "message": "Vouw het menu Pagina-acties in de adresbalk uit zodra u een schermafbeelding wilt maken."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Leg alleen vast wat u wilt"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Klik en sleep om alleen een gedeelte van een pagina vast te leggen. U kunt ook de muisaanwijzer boven een gebied houden om uw selectie te accentueren."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Leg vensters of hele pagina’s vast"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Selecteer de knoppen rechtsboven om het zichtbare gebied in het venster vast te leggen, of om een hele pagina vast te leggen."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Zoals u wilt"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Sla uw bijgesneden afbeeldingen op op het web voor makkelijker delen, of download ze naar uw computer. U kunt ook op de knop Mijn afbeeldingen klikken om al uw gemaakte afbeeldingen te vinden."
   },
   "tourSkip": {

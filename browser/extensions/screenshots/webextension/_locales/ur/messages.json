@@ -73,25 +73,25 @@
   "genericErrorDetails": {
     "message": "ہمیں یقین نہیں کہ کیا ہوا تھا۔ خیال رکھ کر پھر کوشش کریں یا بھر مختلف صفحہ کی تصویرلیں؟"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "۔Firefox کو چھوڑے بغیر اسکرینشاٹس لیں، محفوظ کریں اور شیئر کریں۔"
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "جو آپ چاہتے ہیں وہ گرفت کریں"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "صفحہ کا ایک حصہ گرفت کرنے کے لیئے گھسیتیں اور کلک کریں.آُپ اپنے انتخاب کو نمایاں کرنے کے لیئے منڈلا سکتے ہیں۔"
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "دریچہ ہا مکمل صفحہ گرفت کریں"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "دریچہ میں نظر آنے والے علاقے یا مکمل صفحہ کو گرفت کرنے کے لیئے بالائی دائیں جانب بٹن کا انتخاب کریں۔"
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "جس طرح آپ کو پسند ہے"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "اپنے کمپیوٹڑ میں ڈائونلوڈ کرنے یا ویب پر آسانی سے شیئر کرنے کے لیئےاپنی کتری ہوئی شاٹس محفوظ کریں۔ آپ میری شاٹس کے بٹن پ کلک کر کے بھی اتمام پنی لی گئی شاٹس ڈھّونڈ سکتےہیں۔"
   },
   "tourSkip": {
@@ -111,5 +111,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "اطلاع نامہ نجی نوعیت"
+  },
+  "libraryLabel": {
+    "message": "اسکرین شاٹس"
   }
 }

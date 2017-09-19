@@ -95,6 +95,7 @@ let webpackConfig = {
       "devtools/client/shared/scroll": path.join(__dirname, "../../client/shared/scroll"),
       "devtools/client/shared/source-utils": path.join(__dirname, "../../client/shared/source-utils"),
       "devtools/client/shared/theme": path.join(__dirname, "../../client/shared/theme"),
+
       "devtools/client/shared/vendor/immutable": "immutable",
       "devtools/client/shared/vendor/react": "react",
       "devtools/client/shared/vendor/react-dom": "react-dom",
@@ -102,6 +103,8 @@ let webpackConfig = {
       "devtools/client/shared/vendor/redux": "redux",
       "devtools/client/shared/vendor/reselect": "reselect",
       "devtools/client/shared/vendor/jszip": "jszip",
+      "devtools/client/shared/vendor/lodash": path.join(__dirname, "../../client/shared/vendor/lodash"),
+
       "devtools/client/shared/widgets/tooltip/HTMLTooltip": path.join(__dirname, "../../client/shared/widgets/tooltip/HTMLTooltip"),
       "devtools/client/shared/widgets/tooltip/ImageTooltipHelper": path.join(__dirname, "../../client/shared/widgets/tooltip/ImageTooltipHelper"),
       "devtools/client/shared/widgets/tooltip/TooltipToggle": path.join(__dirname, "../../client/shared/widgets/tooltip/TooltipToggle"),

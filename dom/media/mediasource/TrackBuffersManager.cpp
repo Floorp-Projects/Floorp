@@ -1488,12 +1488,15 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
   // Some videos do not exactly start at 0, but instead a small negative value.
   // To avoid evicting the starting frame of those videos, we allow a leeway
   // of +- mLongestFrameDuration on the append window start.
-  // We only apply the leeway with the default append window start of 0
-  // otherwise do as per spec.
+  // We only apply the leeway with the default append window start of 0 and
+  // append window end of infinity.
+  // Otherwise do as per spec.
   TimeInterval targetWindow =
-    mAppendWindow.mStart != TimeUnit::FromSeconds(0)
+    (mAppendWindow.mStart != TimeUnit::FromSeconds(0) ||
+     mAppendWindow.mEnd != TimeUnit::FromInfinity())
     ? mAppendWindow
-    : TimeInterval(mAppendWindow.mStart, mAppendWindow.mEnd,
+    : TimeInterval(mAppendWindow.mStart,
+                   mAppendWindow.mEnd,
                    trackBuffer.mLastFrameDuration.isSome()
                    ? trackBuffer.mLongestFrameDuration
                    : aSamples[0]->mDuration);

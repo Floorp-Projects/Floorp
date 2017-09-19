@@ -120,6 +120,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/et/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["eu"] += [
+  'webextension/_locales/eu/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["fa"] += [
   'webextension/_locales/fa/messages.json'
 ]
@@ -373,7 +377,8 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["icons"] 
   'webextension/icons/onboarding-1.png',
   'webextension/icons/onboarding-2.png',
   'webextension/icons/onboarding-3.png',
-  'webextension/icons/onboarding-4.png'
+  'webextension/icons/onboarding-4.png',
+  'webextension/icons/onboarding-5.png'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["onboarding"] += [

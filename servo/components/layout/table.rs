@@ -11,7 +11,7 @@ use block::{BlockFlow, CandidateBSizeIterator, ISizeAndMarginsComputer};
 use block::{ISizeConstraintInput, ISizeConstraintSolution};
 use context::LayoutContext;
 use display_list_builder::{BlockFlowDisplayListBuilding, BorderPaintingMode};
-use display_list_builder::{DisplayListBuildState, EstablishContainingBlock};
+use display_list_builder::{DisplayListBuildState, StackingContextCollectionFlags};
 use display_list_builder::StackingContextCollectionState;
 use euclid::Point2D;
 use flow;
@@ -29,7 +29,7 @@ use style::logical_geometry::LogicalSize;
 use style::properties::ComputedValues;
 use style::servo::restyle_damage::{REFLOW, REFLOW_OUT_OF_FLOW};
 use style::values::CSSFloat;
-use style::values::computed::{LengthOrPercentageOrAuto, NonNegativeLength};
+use style::values::computed::LengthOrPercentageOrAuto;
 use table_row::{self, CellIntrinsicInlineSize, CollapsedBorder, CollapsedBorderProvenance};
 use table_row::TableRowFlow;
 use table_wrapper::TableLayout;
@@ -190,12 +190,7 @@ impl TableFlow {
         let style = self.block_flow.fragment.style();
         match style.get_inheritedtable().border_collapse {
             border_collapse::T::separate => style.get_inheritedtable().border_spacing,
-            border_collapse::T::collapse => {
-                border_spacing::T {
-                    horizontal: NonNegativeLength::zero(),
-                    vertical: NonNegativeLength::zero(),
-                }
-            }
+            border_collapse::T::collapse => border_spacing::T::zero(),
         }
     }
 
@@ -204,7 +199,7 @@ impl TableFlow {
         if num_columns == 0 {
             return Au(0);
         }
-        Au::from(self.spacing().horizontal) * (num_columns as i32 + 1)
+        self.spacing().horizontal() * (num_columns as i32 + 1)
     }
 }
 
@@ -471,8 +466,8 @@ impl Flow for TableFlow {
 
     fn assign_block_size(&mut self, _: &LayoutContext) {
         debug!("assign_block_size: assigning block_size for table");
-        let vertical_spacing = self.spacing().vertical.0;
-        self.block_flow.assign_block_size_for_table_like_flow(Au::from(vertical_spacing))
+        let vertical_spacing = self.spacing().vertical();
+        self.block_flow.assign_block_size_for_table_like_flow(vertical_spacing)
     }
 
     fn compute_stacking_relative_position(&mut self, layout_context: &LayoutContext) {
@@ -505,7 +500,8 @@ impl Flow for TableFlow {
     }
 
     fn collect_stacking_contexts(&mut self, state: &mut StackingContextCollectionState) {
-        self.block_flow.collect_stacking_contexts_for_block(state, EstablishContainingBlock::Yes);
+        self.block_flow.collect_stacking_contexts_for_block(state,
+                                                            StackingContextCollectionFlags::empty());
     }
 
     fn repair_style(&mut self, new_style: &::ServoArc<ComputedValues>) {

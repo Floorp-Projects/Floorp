@@ -157,11 +157,10 @@ var pageActionsHelper = {
 
 function ensureScreenshotsEnabled() {
   SpecialPowers.pushPrefEnv({ set: [
-    [ "extensions.screenshots.system", false ],
+    [ "extensions.screenshots.disabled", false ],
     [ "extensions.screenshots.system-disabled", false ]
   ]});
   return BrowserTestUtils.waitForCondition(() => {
-    return PageActions.actionForID("screenshots") &&
-           !CustomizableUI.getWidget("screenshots_mozilla_org-browser-action");
+    return PageActions.actionForID("screenshots");
   }, "Should enable Screenshots");
 }

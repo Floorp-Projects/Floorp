@@ -46,7 +46,7 @@ protected:
   // Methods only called on mTaskQueue.
   RefPtr<ShutdownPromise> ProcessShutdown();
   void UpdateInputStatus(int64_t aTimestamp, bool aProcessed);
-  void UpdateOutputStatus(MediaData* aSample);
+  void UpdateOutputStatus(RefPtr<MediaData>&& aSample);
   void ReturnDecodedData();
   void DrainComplete();
   void Error(const MediaResult& aError);
@@ -54,6 +54,9 @@ protected:
   {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   }
+
+  // Whether the sample will be used.
+  virtual bool IsUsefulData(const RefPtr<MediaData>& aSample) { return true; }
 
   MediaData::Type mType;
 

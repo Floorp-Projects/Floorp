@@ -344,6 +344,7 @@ void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient)
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
 mozilla::css::ImageValue* Gecko_ImageValue_Create(ServoBundledURI aURI,
                                                   mozilla::ServoRawOffsetArc<RustString> aURIString);
+size_t Gecko_ImageValue_SizeOfIncludingThis(mozilla::css::ImageValue* aImageValue);
 void Gecko_SetLayerImageImageValue(nsStyleImage* image,
                                    mozilla::css::ImageValue* aImageValue);
 
@@ -631,7 +632,6 @@ nsCSSCounterStyleRule* Gecko_CSSCounterStyle_Clone(const nsCSSCounterStyleRule* 
 void Gecko_CSSCounterStyle_GetCssText(const nsCSSCounterStyleRule* rule, nsAString* result);
 NS_DECL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
-RawGeckoElementBorrowedOrNull Gecko_GetBody(RawGeckoPresContextBorrowed pres_context);
 bool Gecko_IsDocumentBody(RawGeckoElementBorrowed element);
 
 // We use an int32_t here instead of a LookAndFeel::ColorID

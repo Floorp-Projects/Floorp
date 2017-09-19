@@ -26,7 +26,10 @@
   "notificationLinkCopiedTitle": {
     "message": "Đã sao chép liên kết"
   },
-  "tourHeaderFour": {
+  "emptySelectionErrorTitle": {
+    "message": "Vùng chọn của bạn quá nhỏ"
+  },
+  "tourHeaderDownloadUpload": {
     "message": "Như bạn thích"
   },
   "tourSkip": {

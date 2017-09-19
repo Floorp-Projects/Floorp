@@ -28,7 +28,7 @@ class LocalesTest(locales.LocalesMixin, script.BaseScript):
         self.log_obj = None
 
 class TestLocalesMixin(unittest.TestCase):
-    BASE_ABS_DIRS = ['abs_compare_locales_dir', 'abs_log_dir',
+    BASE_ABS_DIRS = ['abs_log_dir',
                      'abs_upload_dir', 'abs_work_dir', 'base_work_dir']
     def setUp(self):
         cleanup()
@@ -124,7 +124,7 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['objdir'] = "objdir"
         dirs = l.query_abs_dirs().keys()
         dirs.sort()
-        expected_dirs = self.BASE_ABS_DIRS + ['abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir', 'abs_objdir', 'abs_merge_dir', 'abs_locales_dir']
+        expected_dirs = self.BASE_ABS_DIRS + ['abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir', 'abs_objdir', 'abs_locales_dir']
         expected_dirs.sort()
         self.assertEqual(dirs, expected_dirs)
 

@@ -505,12 +505,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         success_count = total_count = 0
         for locale in locales:
             total_count += 1
-            self.enable_mock()
-            result = self.run_compare_locales(locale)
-            self.disable_mock()
-            if result:
-                self.add_failure(locale, message="%s failed in compare-locales!" % locale)
-                continue
             if self.run_command_m([make, "installers-%s" % locale],
                                   cwd=dirs['abs_locales_dir'],
                                   env=repack_env,

@@ -844,12 +844,6 @@ Gecko_FillAllMaskLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
   nsRuleNode::FillAllMaskLists(*aLayers, aMaxLen);
 }
 
-RawGeckoElementBorrowedOrNull
-Gecko_GetBody(RawGeckoPresContextBorrowed aPresContext)
-{
-  return aPresContext->Document()->GetBodyElement();
-}
-
 bool
 Gecko_IsDocumentBody(RawGeckoElementBorrowed aElement)
 {
@@ -1529,6 +1523,15 @@ Gecko_ImageValue_Create(ServoBundledURI aURI, ServoRawOffsetArc<RustString> aURI
   RefPtr<css::ImageValue> value(
     new css::ImageValue(aURIString, do_AddRef(aURI.mExtraData)));
   return value.forget().take();
+}
+
+MOZ_DEFINE_MALLOC_SIZE_OF(GeckoImageValueMallocSizeOf)
+
+size_t
+Gecko_ImageValue_SizeOfIncludingThis(mozilla::css::ImageValue* aImageValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return aImageValue->SizeOfIncludingThis(GeckoImageValueMallocSizeOf);
 }
 
 void

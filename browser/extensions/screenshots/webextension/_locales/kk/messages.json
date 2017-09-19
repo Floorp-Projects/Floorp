@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Не болғанын білмейміз. Қайталап көресіз бе, немесе басқа парақтың скриншотын түсіріп көресіз бе?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Firefox ішінен скриншоттарды түсіру, сақтау және олармен бөлісу."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Тек керек нәрсені түсіріңіз"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Беттің тек бір бөлігін түсіру үшін тышқанды шертіп, тартыңыз. Таңдауыңызды түспен ерекшелеу үшін үстінен өткізсеңіз болады."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Терезелер немесе толық беттерді түсіріңіз"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Жоғарғы оң жақта орналасқан батырмаларды терезенің көрінетін аймағын, немесе толық бетті түсіру үшін қолданыңыз."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Өзіңізге керек түрде"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Қиылған скриншоттарыңыздбен оңай бөлісу үшін оларды интернетте сақтаңыз, немесе өз компьютеріңізге жүктеп алыңыз. Сонымен қатар, сіз жасаған барлық скриншоттарды табу үшін Менің скриншоттарым батырмасына шерте аласыз."
   },
   "tourSkip": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Жекелік ескертуі"
+  },
+  "libraryLabel": {
+    "message": "Скриншоттар"
   }
 }

@@ -402,6 +402,9 @@ function checkBuildSection(data) {
       Assert.ok(checkString(data.build.architecturesInBinary));
     }
   }
+
+  Assert.equal(data.build.updaterAvailable, AppConstants.MOZ_UPDATER,
+               "build.updaterAvailable must equal AppConstants.MOZ_UPDATER");
 }
 
 function checkSettingsSection(data) {

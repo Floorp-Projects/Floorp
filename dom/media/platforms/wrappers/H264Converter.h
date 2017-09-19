@@ -104,6 +104,7 @@ private:
   const TrackInfo::TrackType mType;
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
   const CreateDecoderParams::OptionSet mDecoderOptions;
+  const CreateDecoderParams::VideoFrameRate mRate;
   Maybe<bool> mCanRecycleDecoder;
 };
 

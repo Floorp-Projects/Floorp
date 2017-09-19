@@ -988,19 +988,11 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
       dataSurface->Unmap();
 
       if (cr) {
-        if (!aSnapped || aTransparency != nsITheme::eOpaque) {
-          // The widget either needs to be masked or has transparency, so use the slower drawing path.
-          aDrawTarget->DrawSurface(dataSurface,
-                                   Rect(aSnapped ? drawOffset - aDrawTarget->GetTransform().GetTranslation() : drawOffset,
-                                        Size(aDrawSize)),
-                                   Rect(0, 0, aDrawSize.width, aDrawSize.height));
-        } else {
-          // The widget is a simple opaque rectangle, so just copy it out.
-          aDrawTarget->CopySurface(dataSurface,
-                                   IntRect(0, 0, aDrawSize.width, aDrawSize.height),
-                                   TruncatedToInt(drawOffset));
-        }
-
+        // The widget either needs to be masked or has transparency, so use the slower drawing path.
+        aDrawTarget->DrawSurface(dataSurface,
+                                 Rect(aSnapped ? drawOffset - aDrawTarget->GetTransform().GetTranslation() : drawOffset,
+                                      Size(aDrawSize)),
+                                 Rect(0, 0, aDrawSize.width, aDrawSize.height));
         cairo_destroy(cr);
       }
 

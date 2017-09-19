@@ -2,7 +2,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-/* exported createHttpServer, promiseConsoleOutput, cleanupDir */
+/* exported createHttpServer, promiseConsoleOutput, cleanupDir, testEnv */
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -22,7 +22,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Schemas: "resource://gre/modules/Schemas.jsm",
 });
 
+// These values may be changed in later head files and tested in check_remote
+// below.
 Services.prefs.setBoolPref("extensions.webextensions.remote", false);
+const testEnv = {
+  expectRemote: false,
+};
+
+add_task(function check_remote() {
+  Assert.equal(WebExtensionPolicy.useRemoteWebExtensions, testEnv.expectRemote, "useRemoteWebExtensions matches");
+  Assert.equal(WebExtensionPolicy.isExtensionProcess, !testEnv.expectRemote, "testing from extension process");
+});
 
 ExtensionTestUtils.init(this);
 

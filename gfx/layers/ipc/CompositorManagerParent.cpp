@@ -9,14 +9,12 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CrossProcessCompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "nsAutoPtr.h"
 #include "VsyncSource.h"
 
 namespace mozilla {
 namespace layers {
 
 StaticRefPtr<CompositorManagerParent> CompositorManagerParent::sInstance;
-StaticAutoPtr<nsTArray<CompositorManagerParent*>> CompositorManagerParent::sActiveActors;
 StaticMutex CompositorManagerParent::sMutex;
 
 /* static */ already_AddRefed<CompositorManagerParent>
@@ -44,11 +42,6 @@ CompositorManagerParent::CreateSameProcess()
   // we don't use that in the same process case.
   parent.get()->AddRef();
   sInstance = parent;
-
-  if (!sActiveActors) {
-    sActiveActors = new nsTArray<CompositorManagerParent*>();
-  }
-  sActiveActors->AppendElement(parent);
   return parent.forget();
 }
 
@@ -131,12 +124,6 @@ CompositorManagerParent::Bind(Endpoint<PCompositorManagerParent>&& aEndpoint)
   // Add the IPDL reference to ourself, so we can't get freed until IPDL is
   // done with us.
   AddRef();
-
-  StaticMutexAutoLock lock(sMutex);
-  if (!sActiveActors) {
-    sActiveActors = new nsTArray<CompositorManagerParent*>();
-  }
-  sActiveActors->AppendElement(this);
 }
 
 void
@@ -156,10 +143,6 @@ CompositorManagerParent::DeallocPCompositorManagerParent()
                             this,
                             &CompositorManagerParent::DeferredDestroy));
 
-  StaticMutexAutoLock lock(sMutex);
-  if (sActiveActors) {
-    sActiveActors->RemoveElement(this);
-  }
   Release();
 }
 
@@ -167,36 +150,6 @@ void
 CompositorManagerParent::DeferredDestroy()
 {
   mCompositorThreadHolder = nullptr;
-}
-
-/* static */ void
-CompositorManagerParent::ShutdownInternal()
-{
-  nsAutoPtr<nsTArray<CompositorManagerParent*>> actors;
-
-  // We move here because we may attempt to acquire the same lock during the
-  // destroy to remove the reference in sActiveActors.
-  {
-    StaticMutexAutoLock lock(sMutex);
-    actors = sActiveActors.forget();
-  }
-
-  if (actors) {
-    for (auto& actor : *actors) {
-      actor->Close();
-    }
-  }
-}
-
-/* static */ void
-CompositorManagerParent::Shutdown()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  CompositorThreadHolder::Loop()->PostTask(
-      NS_NewRunnableFunction("layers::CompositorManagerParent::Shutdown", []() -> void {
-        CompositorManagerParent::ShutdownInternal();
-      }));
 }
 
 PCompositorBridgeParent*

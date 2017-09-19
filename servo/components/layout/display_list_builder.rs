@@ -103,11 +103,10 @@ fn convert_repeat_mode(from: RepeatKeyword) -> RepeatMode {
     }
 }
 
-fn establishes_containing_block_for_absolute(can_establish_containing_block: EstablishContainingBlock,
+fn establishes_containing_block_for_absolute(flags: StackingContextCollectionFlags,
                                              positioning: position::T)
                                              -> bool {
-    can_establish_containing_block == EstablishContainingBlock::Yes &&
-    position::T::static_ != positioning
+    !flags.contains(NEVER_CREATES_CONTAINING_BLOCK) && position::T::static_ != positioning
 }
 
 trait RgbColor {
@@ -2230,13 +2229,10 @@ impl FragmentDisplayListBuilding for Fragment {
 
 
         // Create display items for text decorations.
-        let mut text_decorations = self.style()
-                                       .get_inheritedtext()
-                                       ._servo_text_decorations_in_effect;
-        // Note that the text decoration colors are always the same as the text color.
-        text_decorations.underline = text_decorations.underline.map(|_| text_color);
-        text_decorations.overline = text_decorations.overline.map(|_| text_color);
-        text_decorations.line_through = text_decorations.line_through.map(|_| text_color);
+        let text_decorations =
+            self.style()
+                .get_inheritedtext()
+                ._servo_text_decorations_in_effect;
 
         let stacking_relative_content_box =
             LogicalRect::from_physical(self.style.writing_mode,
@@ -2244,25 +2240,29 @@ impl FragmentDisplayListBuilding for Fragment {
                                        container_size);
 
         // Underline
-        if let Some(ref underline_color) = text_decorations.underline {
+        if text_decorations.underline {
             let mut stacking_relative_box = stacking_relative_content_box;
             stacking_relative_box.start.b = stacking_relative_content_box.start.b +
                 metrics.ascent - metrics.underline_offset;
             stacking_relative_box.size.block = metrics.underline_size;
-            self.build_display_list_for_text_decoration(state,
-                                                        underline_color,
-                                                        &stacking_relative_box,
-                                                        clip);
+            self.build_display_list_for_text_decoration(
+                state,
+                &text_color,
+                &stacking_relative_box,
+                clip,
+            );
         }
 
         // Overline
-        if let Some(ref overline_color) = text_decorations.overline {
+        if text_decorations.overline {
             let mut stacking_relative_box = stacking_relative_content_box;
             stacking_relative_box.size.block = metrics.underline_size;
-            self.build_display_list_for_text_decoration(state,
-                                                        overline_color,
-                                                        &stacking_relative_box,
-                                                        clip);
+            self.build_display_list_for_text_decoration(
+                state,
+                &text_color,
+                &stacking_relative_box,
+                clip,
+            );
         }
 
         // Text
@@ -2281,15 +2281,17 @@ impl FragmentDisplayListBuilding for Fragment {
 
 
         // Line-Through
-        if let Some(ref line_through_color) = text_decorations.line_through {
+        if text_decorations.line_through {
             let mut stacking_relative_box = stacking_relative_content_box;
             stacking_relative_box.start.b = stacking_relative_box.start.b + metrics.ascent -
                 metrics.strikeout_offset;
             stacking_relative_box.size.block = metrics.strikeout_size;
-            self.build_display_list_for_text_decoration(state,
-                                                        line_through_color,
-                                                        &stacking_relative_box,
-                                                        clip);
+            self.build_display_list_for_text_decoration(
+                state,
+                &text_color,
+                &stacking_relative_box,
+                clip,
+            );
         }
 
         // Pair all the PushTextShadows
@@ -2343,16 +2345,19 @@ impl FragmentDisplayListBuilding for Fragment {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum EstablishContainingBlock {
-    Yes,
-    No,
+bitflags! {
+    pub flags StackingContextCollectionFlags: u8 {
+        /// This flow never establishes a containing block.
+        const NEVER_CREATES_CONTAINING_BLOCK = 0x01,
+        /// This flow never creates a ClipScrollNode.
+        const NEVER_CREATES_CLIP_SCROLL_NODE = 0x02,
+    }
 }
 
 pub trait BlockFlowDisplayListBuilding {
     fn collect_stacking_contexts_for_block(&mut self,
                                            state: &mut StackingContextCollectionState,
-                                           can_establish_containing_block: EstablishContainingBlock);
+                                           flags: StackingContextCollectionFlags);
 
     fn transform_clip_to_coordinate_space(&mut self,
                                           state: &mut StackingContextCollectionState,
@@ -2361,7 +2366,7 @@ pub trait BlockFlowDisplayListBuilding {
                                 state: &mut StackingContextCollectionState,
                                 preserved_state: &mut SavedStackingContextCollectionState,
                                 stacking_context_type: BlockStackingContextType,
-                                can_establish_containing_block: EstablishContainingBlock)
+                                flags: StackingContextCollectionFlags)
                                 -> ClipAndScrollInfo;
     fn setup_clip_scroll_node_for_position(&mut self,
                                            state: &mut StackingContextCollectionState,
@@ -2518,7 +2523,7 @@ impl BlockFlowDisplayListBuilding for BlockFlow {
 
     fn collect_stacking_contexts_for_block(&mut self,
                                            state: &mut StackingContextCollectionState,
-                                           can_establish_containing_block: EstablishContainingBlock) {
+                                           flags: StackingContextCollectionFlags) {
         let mut preserved_state = SavedStackingContextCollectionState::new(state);
 
         let block_stacking_context_type = self.block_stacking_context_type();
@@ -2541,10 +2546,9 @@ impl BlockFlowDisplayListBuilding for BlockFlow {
             self.setup_clipping_for_block(state,
                                           &mut preserved_state,
                                           block_stacking_context_type,
-                                          can_establish_containing_block);
+                                          flags);
 
-        if establishes_containing_block_for_absolute(can_establish_containing_block,
-                                                     self.positioning()) {
+        if establishes_containing_block_for_absolute(flags, self.positioning()) {
             state.containing_block_clip_and_scroll_info = state.current_clip_and_scroll_info;
         }
 
@@ -2571,7 +2575,7 @@ impl BlockFlowDisplayListBuilding for BlockFlow {
                                 state: &mut StackingContextCollectionState,
                                 preserved_state: &mut SavedStackingContextCollectionState,
                                 stacking_context_type: BlockStackingContextType,
-                                can_establish_containing_block: EstablishContainingBlock)
+                                flags: StackingContextCollectionFlags)
                                 -> ClipAndScrollInfo {
         // If this block is absolutely positioned, we should be clipped and positioned by
         // the scroll root of our nearest ancestor that establishes a containing block.
@@ -2599,14 +2603,17 @@ impl BlockFlowDisplayListBuilding for BlockFlow {
             self.transform_clip_to_coordinate_space(state, preserved_state);
         }
 
-        self.setup_clip_scroll_node_for_position(state, &stacking_relative_border_box);
-        self.setup_clip_scroll_node_for_overflow(state, &stacking_relative_border_box);
-        self.setup_clip_scroll_node_for_css_clip(state, preserved_state, &stacking_relative_border_box);
+        if !flags.contains(NEVER_CREATES_CLIP_SCROLL_NODE) {
+            self.setup_clip_scroll_node_for_position(state, &stacking_relative_border_box);
+            self.setup_clip_scroll_node_for_overflow(state, &stacking_relative_border_box);
+            self.setup_clip_scroll_node_for_css_clip(state, preserved_state,
+                                                     &stacking_relative_border_box);
+        }
         self.base.clip = state.clip_stack.last().cloned().unwrap_or_else(max_rect);
 
         // We keep track of our position so that any stickily positioned elements can
         // properly determine the extent of their movement relative to scrolling containers.
-        if can_establish_containing_block == EstablishContainingBlock::Yes {
+        if !flags.contains(NEVER_CREATES_CONTAINING_BLOCK) {
             let border_box = if self.fragment.establishes_stacking_context() {
                 stacking_relative_border_box
             } else {
@@ -2675,6 +2682,9 @@ impl BlockFlowDisplayListBuilding for BlockFlow {
 
         let new_clip_scroll_node_id = ClipId::new(self.fragment.unique_id(IdType::OverflowClip),
                                                   state.pipeline_id.to_webrender());
+        if state.has_clip_scroll_node(new_clip_scroll_node_id) {
+             return;
+        }
         let parent_id = self.clip_and_scroll_info(state.pipeline_id).scroll_node_id;
         state.add_clip_scroll_node(
             ClipScrollNode {
@@ -2925,7 +2935,7 @@ impl InlineFlowDisplayListBuilding for InlineFlow {
 
         for fragment in self.fragments.fragments.iter_mut() {
             let previous_cb_clip_scroll_info = state.containing_block_clip_and_scroll_info;
-            if establishes_containing_block_for_absolute(EstablishContainingBlock::Yes,
+            if establishes_containing_block_for_absolute(StackingContextCollectionFlags::empty(),
                                                          fragment.style.get_box().position) {
                 state.containing_block_clip_and_scroll_info = state.current_clip_and_scroll_info;
             }

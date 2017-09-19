@@ -889,6 +889,7 @@ html|span.ac-emphasize-text-url {
   -moz-appearance: none;
   /* overlap the nav-bar's top border */
   margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap));
+  padding-top: var(--space-above-tabbar);
 }
 
 :root:not([customizing]):not([tabsintitlebar]):not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
@@ -900,7 +901,6 @@ html|span.ac-emphasize-text-url {
   text-shadow: @loweredShadow@;
 }
 
-#main-window[tabsintitlebar] > #titlebar:not(:-moz-lwtheme),
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
   -moz-appearance: -moz-mac-vibrancy-dark;
   -moz-font-smoothing-background-color: -moz-mac-vibrancy-dark;

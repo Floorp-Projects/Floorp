@@ -197,24 +197,23 @@ U2FTokenManager::GetTokenManagerImpl()
   }
 
   auto pm = U2FPrefManager::Get();
-  bool useSoftToken = pm->GetSoftTokenEnabled();
-  bool useUsbToken = pm->GetUsbTokenEnabled();
 
-  // At least one token type must be enabled.
-  // We currently don't support soft and USB tokens enabled at
-  // the same time as the softtoken would always win the race to register.
+  // Prefer the HW token, even if the softtoken is enabled too.
+  // We currently don't support soft and USB tokens enabled at the
+  // same time as the softtoken would always win the race to register.
   // We could support it for signing though...
-  if (!(useSoftToken ^ useUsbToken)) {
-    return nullptr;
+  if (pm->GetUsbTokenEnabled()) {
+    return new U2FHIDTokenManager();
   }
 
-  if (useSoftToken) {
+  if (pm->GetSoftTokenEnabled()) {
     return new U2FSoftTokenManager(pm->GetSoftTokenCounter());
   }
 
   // TODO Use WebAuthnRequest to aggregate results from all transports,
   //      once we have multiple HW transport types.
-  return new U2FHIDTokenManager();
+
+  return nullptr;
 }
 
 void

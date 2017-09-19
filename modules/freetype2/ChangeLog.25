@@ -2116,7 +2116,7 @@
 	builds/unix/unix-def.in (freetype-config, freetype2.pc): Handle
 	HarfBuzz.
 
-	* docs/INSTALL.UNIX: Document interdependency of Freetype with
+	* docs/INSTALL.UNIX: Document interdependency of FreeType with
 	HarfBuzz.
 
 2014-02-28  Alexei Podtelezhnikov  <apodtele@gmail.com>

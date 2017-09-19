@@ -28,7 +28,6 @@
     "hg_l10n_base": "https://hg.mozilla.org/%(user_repo_override)s",
     "required_config_vars": ["tag_override", "user_repo_override"],
     "l10n_dir": "mozilla-beta",
-    "merge_locales": true,
     "mozilla_dir": "build",
     "mozconfig": "build/mobile/android/config/mozconfigs/android-x86/release"
 }

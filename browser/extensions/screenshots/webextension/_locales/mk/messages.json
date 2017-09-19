@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Не сме баш сигурни што се случи. Сакате да се обидете повторно или да направите слика од друга страница?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Фаќајте, снимајте и споделувајте слики од екран без да го напуштите Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "Фатете слика од тоа што сакате"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Кликнете и влечете за да фатите само дел од страницата. Исто така можете да означите дел и со покажувачот."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Фатете слика од прозорци или цели страници"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Кликнете на копчињата во горниот десен дел за да го снимите видливиот дел на прозорецот или пак, целата страница."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Како што Вие сакате"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Снимете ги Вашите исечоци на Интернет за полесно споделување или преземете ги на Вашиот компјутер. Исто така можете да кликнете на копчето Мои слики за да ги најдете сите слики што ги имате направено."
   },
   "tourSkip": {

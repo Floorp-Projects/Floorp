@@ -72,6 +72,17 @@ js::EnsureHelperThreadsInitialized()
 }
 
 static size_t
+ClampDefaultCPUCount(size_t cpuCount)
+{
+    // It's extremely rare for SpiderMonkey to have more than a few cores worth
+    // of work. At higher core counts, performance can even decrease due to NUMA
+    // (and SpiderMonkey's lack of NUMA-awareness), contention, and general lack
+    // of optimization for high core counts. So to avoid wasting thread stack
+    // resources (and cluttering gdb and core dumps), clamp to 8 cores for now.
+    return Min<size_t>(cpuCount, 8);
+}
+
+static size_t
 ThreadCountForCPUCount(size_t cpuCount)
 {
     // Create additional threads on top of the number of cores available, to
@@ -968,7 +979,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    wasmTier2GeneratorsFinished_(0),
    helperLock(mutexid::GlobalHelperThreadState)
 {
-    cpuCount = GetCPUCount();
+    cpuCount = ClampDefaultCPUCount(GetCPUCount());
     threadCount = ThreadCountForCPUCount(cpuCount);
 
     MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");

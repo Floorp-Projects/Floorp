@@ -211,8 +211,12 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_ns_resize,
                 eCursor_ew_resize,
                 eCursor_none,
-                // This one better be the last one in this list.
-                eCursorCount
+                // This one is used for array sizing, and so better be the last
+                // one in this list...
+                eCursorCount,
+
+                // ...except for this one.
+                eCursorInvalid = eCursorCount + 1
                 };
 
 enum nsTopLevelWidgetZPlacement { // for PlaceBehind()

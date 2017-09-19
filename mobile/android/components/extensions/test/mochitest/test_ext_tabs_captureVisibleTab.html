@@ -134,6 +134,10 @@ function* runTest(options) {
 }
 
 add_task(function* testCaptureVisibleTab() {
+  yield SpecialPowers.pushPrefEnv({
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
+  });
+
   yield runTest({color: [0, 0, 0]});
 
   yield runTest({color: [255, 255, 255]});

@@ -34,7 +34,6 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/%s" % L10N_REPO_PATH,
     "hg_l10n_tag": "default",
     "l10n_dir": "l10n",
-    "merge_locales": True,
     "mozilla_dir": BUILD_DIR,
     "mozconfig": MOZCONFIG,
     "default_actions": [

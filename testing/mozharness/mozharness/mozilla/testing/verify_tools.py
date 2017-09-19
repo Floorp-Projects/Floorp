@@ -68,6 +68,7 @@ class VerifyToolsMixin(object):
                 man = TestManifest([path], strict=False)
                 active = man.active_tests(exists=False, disabled=False, filters=[], **mozinfo.info)
                 tests_by_path.update({t['relpath']:(suite,t.get('subsuite')) for t in active})
+                self.info("Verification updated with manifest %s" % path)
 
         # determine which files were changed on this push
         url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
@@ -83,6 +84,7 @@ class VerifyToolsMixin(object):
         for file in changed_files:
             entry = tests_by_path.get(file)
             if entry:
+                self.info("Verification found test %s" % file)
                 subsuite_mapping = {
                     ('browser-chrome', 'clipboard') : 'browser-chrome-clipboard',
                     ('chrome', 'clipboard') : 'chrome-clipboard',
@@ -128,6 +130,7 @@ class VerifyToolsMixin(object):
             files = self.verify_suites.get(suite)
             for file in files:
                 args.append(['--verify-max-time=%d' % MAX_TIME_PER_TEST, '--verify', file])
+            self.info("Verification file for '%s': %s" % (suite, files))
         return args
 
     def query_verify_category_suites(self, category, all_suites):
@@ -148,3 +151,26 @@ class VerifyToolsMixin(object):
                 if category in ['mochitest', 'xpcshell']:
                     suites = all_suites
         return suites
+
+    def log_verify_status(self, test_name, tbpl_status, log_level):
+        """
+           Log verification status of a single test. This will display in the
+           Job Details pane in treeherder - a convenient summary of verification.
+           Special test name formatting is needed because treeherder truncates
+           lines that are too long, and may remove duplicates after truncation.
+        """
+        max_test_name_len = 40
+        if len(test_name) > max_test_name_len:
+            head = test_name
+            new = ""
+            previous = None
+            max_test_name_len = max_test_name_len - len('.../')
+            while len(new) < max_test_name_len:
+                head, tail = os.path.split(head)
+                previous = new
+                new = os.path.join(tail, new)
+            test_name = os.path.join('...', previous or new)
+            test_name = test_name.rstrip(os.path.sep)
+        self.log("TinderboxPrint: Verification of %s<br/>: %s" %
+                 (test_name, tbpl_status), level=log_level)
+

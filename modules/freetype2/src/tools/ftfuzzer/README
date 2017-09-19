@@ -29,10 +29,14 @@ Usage:
 
 The exact flags and commands may vary.
 
+  https://github.com/google/oss-fuzz/tree/master/projects/freetype2
 
 There is a continuous fuzzing bot that runs ftfuzzer.
 
-  https://github.com/google/libfuzzer-bot/tree/master/freetype
+  https://oss-fuzz.com
+
+(You need an account  to be able to see coverage  reports and the like
+on oss-fuzz.com.)
 
 Check the bot configuration for the most current settings.
 

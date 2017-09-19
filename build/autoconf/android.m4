@@ -63,20 +63,19 @@ AC_DEFUN([MOZ_ANDROID_STLPORT],
 [
 
 if test "$OS_TARGET" = "Android"; then
-    cpu_arch_dir="$ANDROID_CPU_ARCH"
-    # NDK r12 removed the arm/thumb library split and just made everything
-    # thumb by default.  Attempt to compensate.
-    if test "$MOZ_THUMB2" = 1 -a -d "$cpu_arch_dir/thumb"; then
-        cpu_arch_dir="$cpu_arch_dir/thumb"
-    fi
-
     if test -z "$STLPORT_CPPFLAGS$STLPORT_LIBS"; then
         case "$android_cxx_stl" in
         libstdc++)
             # android-ndk-r8b and later
             ndk_base="$android_ndk/sources/cxx-stl/gnu-libstdc++/$android_gnu_compiler_version"
             ndk_libs_include="$ndk_base/libs/$ANDROID_CPU_ARCH"
-            ndk_libs="$ndk_base/libs/$cpu_arch_dir"
+            # NDK r12 removed the arm/thumb library split and just made
+            # everything thumb by default.  Attempt to compensate.
+            if test "$MOZ_THUMB2" = 1 -a -d "$ndk_libs_include/thumb"; then
+                ndk_libs="$ndk_libs_include/thumb"
+            else
+                ndk_libs="$ndk_libs_include"
+            fi
             ndk_include="$ndk_base/include"
 
             if ! test -e "$ndk_libs/libgnustl_static.a"; then
@@ -90,7 +89,12 @@ if test "$OS_TARGET" = "Android"; then
             # android-ndk-r8b and later
             ndk_base="$android_ndk/sources/cxx-stl"
             cxx_base="$ndk_base/llvm-libc++"
-            cxx_libs="$cxx_base/libs/$cpu_arch_dir"
+            cxx_libs="$cxx_base/libs/$ANDROID_CPU_ARCH"
+            # NDK r12 removed the arm/thumb library split and just made
+            # everything thumb by default.  Attempt to compensate.
+            if test "$MOZ_THUMB2" = 1 -a -d "$cxx_libs/thumb"; then
+                cxx_libs="$cxx_libs/thumb"
+            fi
             cxx_include="$cxx_base/libcxx/include"
             cxxabi_base="$ndk_base/llvm-libc++abi"
             cxxabi_include="$cxxabi_base/libcxxabi/include"
