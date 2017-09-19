@@ -3757,7 +3757,7 @@ CSS_PROP_DISPLAY(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Discrete) // FIXME: Bug 1289049 for adding animation support
+    eStyleAnimType_Custom)
 CSS_PROP_SVG(
     shape-rendering,
     shape_rendering,
