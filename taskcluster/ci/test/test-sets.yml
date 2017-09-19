@@ -315,8 +315,5 @@ android-x86-tests:
     - mochitest-chrome
     - xpcshell
 
-windows8-tests:
-    - reftest-no-accel
-
 devtools-tests:
     - mochitest-devtools-chrome
