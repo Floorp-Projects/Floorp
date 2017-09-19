@@ -274,8 +274,6 @@ class TypedArrayObject : public NativeObject
     static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static size_t objectMoved(JSObject* obj, JSObject* old);
-    static size_t objectMovedDuringMinorGC(JSTracer* trc, JSObject* obj, const JSObject* old,
-                                           gc::AllocKind allocKind);
 
     /* Initialization bits */
 
