@@ -94,14 +94,16 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     public StreamRecyclerAdapter() {
         setHasStableIds(true);
         recyclerViewModel = new LinkedList<>();
+
+        clearAndInit();
+    }
+
+    public void clearAndInit() {
+        recyclerViewModel.clear();
         for (RowItemType type : ACTIVITY_STREAM_SECTIONS) {
             recyclerViewModel.add(makeRowModelFromType(type));
         }
         topStoriesQueue = Collections.emptyList();
-    }
-
-    public void reset() {
-        // TODO: Reset adapter
     }
 
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
@@ -129,17 +131,13 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         if (type == RowItemType.TOP_PANEL.getViewType()) {
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
-            final boolean pocketEnabled = GeckoSharedPrefs.forProfile(parent.getContext()).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED, true);
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, pocketEnabled, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
-            final SharedPreferences sharedPreferences = GeckoSharedPrefs.forProfile(parent.getContext());
-            final boolean bookmarksEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_BOOKMARKS_ENABLED, true);
-            final boolean visitedEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_VISITED_ENABLED, true);
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights, bookmarksEnabled || visitedEnabled);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights);
         } else if (type == RowItemType.HIGHLIGHTS_EMPTY_STATE.getViewType()) {
             return new HighlightsEmptyStateRow(inflater.inflate(HighlightsEmptyStateRow.LAYOUT_ID, parent, false));
         } else {
@@ -182,6 +180,14 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             final TopStory story = (TopStory) recyclerViewModel.get(position);
             ((WebpageItemRow) holder).bind(story, position, tilesSize);
+        } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
+            final SharedPreferences sharedPreferences = GeckoSharedPrefs.forProfile(holder.itemView.getContext());
+            final boolean bookmarksEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_BOOKMARKS_ENABLED, true);
+            final boolean visitedEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_VISITED_ENABLED, true);
+            ((StreamTitleRow) holder).setVisible(bookmarksEnabled || visitedEnabled);
+        } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
+            final boolean pocketEnabled = GeckoSharedPrefs.forProfile(holder.itemView.getContext()).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED, true);
+            ((StreamTitleRow) holder).setVisible(pocketEnabled);
         }
     }
 

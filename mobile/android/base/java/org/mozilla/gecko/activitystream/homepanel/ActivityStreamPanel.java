@@ -114,7 +114,7 @@ public class ActivityStreamPanel extends FrameLayout {
     }
 
     public void reload(LoaderManager lm) {
-        adapter.reset();
+        adapter.clearAndInit();
         load(lm);
     }
 

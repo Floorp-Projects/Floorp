@@ -21,18 +21,15 @@ import java.util.EnumSet;
 public class StreamTitleRow extends StreamViewHolder {
     public static final int LAYOUT_ID = R.layout.activity_stream_main_highlightstitle;
 
-    public StreamTitleRow(final View itemView, final @StringRes @NonNull int titleResId, boolean isEnabled) {
+    public StreamTitleRow(final View itemView, final @StringRes @NonNull int titleResId) {
         super(itemView);
         final TextView titleView = (TextView) itemView.findViewById(R.id.title_highlights);
         titleView.setText(titleResId);
-        if (!isEnabled) {
-            hideView(itemView);
-        }
     }
 
-    public StreamTitleRow(final View itemView, final @StringRes @NonNull int titleResId, boolean isEnabled,
+    public StreamTitleRow(final View itemView, final @StringRes @NonNull int titleResId,
                           final @StringRes int linkTitleResId, final String url, final HomePager.OnUrlOpenListener onUrlOpenListener) {
-        this(itemView, titleResId, isEnabled);
+        this(itemView, titleResId);
         // Android 21+ is needed to set RTL-aware compound drawables, so we use a tinted ImageView here.
         final TextView titleLink = (TextView) itemView.findViewById(R.id.title_link);
         titleLink.setVisibility(View.VISIBLE);
@@ -53,13 +50,17 @@ public class StreamTitleRow extends StreamViewHolder {
         titleArrow.setOnClickListener(clickListener);
     }
 
-    private static void hideView(final View itemView) {
-        itemView.setVisibility(View.GONE);
-        // We also need to set the layout height, width, and margins to 0 for the RecyclerView child.
+    public void setVisible(boolean toShow) {
+        itemView.setVisibility(toShow ? View.VISIBLE : View.GONE);
+        // We also need to set the layout height and width to 0 for the RecyclerView child.
         final RecyclerView.LayoutParams layoutParams = (RecyclerView.LayoutParams) itemView.getLayoutParams();
-        layoutParams.setMargins(0, 0, 0, 0);
-        layoutParams.height = 0;
-        layoutParams.width = 0;
+        if (toShow) {
+            layoutParams.height = RecyclerView.LayoutParams.WRAP_CONTENT;
+            layoutParams.width = RecyclerView.LayoutParams.MATCH_PARENT;
+        } else {
+            layoutParams.height = 0;
+            layoutParams.width = 0;
+        }
         itemView.setLayoutParams(layoutParams);
     }
 }
