@@ -99,7 +99,6 @@ template<> struct IsIntegralHelper<unsigned long long> : TrueType {};
 template<> struct IsIntegralHelper<bool>               : TrueType {};
 template<> struct IsIntegralHelper<wchar_t>            : TrueType {};
 template<> struct IsIntegralHelper<char16_t>           : TrueType {};
-template<> struct IsIntegralHelper<char32_t>           : TrueType {};
 
 } /* namespace detail */
 
@@ -441,7 +440,6 @@ template<> struct IsPod<float>              : TrueType {};
 template<> struct IsPod<double>             : TrueType {};
 template<> struct IsPod<wchar_t>            : TrueType {};
 template<> struct IsPod<char16_t>           : TrueType {};
-template<> struct IsPod<char32_t>           : TrueType {};
 template<typename T> struct IsPod<T*>       : TrueType {};
 
 namespace detail {
