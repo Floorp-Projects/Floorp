@@ -198,6 +198,12 @@ InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
                                 JS::CompartmentOptions& aOptions,
                                 JS::MutableHandleObject aNewGlobal);
 
+enum InitClassesFlag {
+    INIT_JS_STANDARD_CLASSES  = 1 << 0,
+    DONT_FIRE_ONNEWGLOBALHOOK = 1 << 1,
+    OMIT_COMPONENTS_OBJECT    = 1 << 2,
+};
+
 } /* namespace xpc */
 
 namespace JS {
