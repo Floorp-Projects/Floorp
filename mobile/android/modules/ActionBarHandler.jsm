@@ -662,7 +662,13 @@ var ActionBarHandler = {
       action: function(element, win) {
         let title = win.document.title;
         if (title && title.length > 200) {
-          title = title.slice(0, 200) + "\u2026"; // Add ellipsis.
+          let ellipsis = "\u2026";
+          try {
+            ellipsis = Services.prefs.getComplexValue(
+                "intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+          } catch (e) {
+          }
+          title = title.slice(0, 200) + ellipsis; // Add ellipsis.
         } else if (!title) {
           title = win.location.href;
         }

@@ -116,6 +116,10 @@ var FormAssistant = {
       }
 
       case "blur": {
+        let focused = this._currentFocusedElement && this._currentFocusedElement.get();
+        if (focused) {
+          this._hideFormAssistPopup(focused);
+        }
         this._currentFocusedElement = null;
         break;
       }
@@ -307,6 +311,9 @@ var FormAssistant = {
   },
 
   _hideFormAssistPopup: function(aElement) {
+    if (!aElement.ownerGlobal) {
+      return;
+    }
     GeckoViewUtils.getDispatcherForWindow(aElement.ownerGlobal).sendRequest({
       type: "FormAssist:Hide",
     });
