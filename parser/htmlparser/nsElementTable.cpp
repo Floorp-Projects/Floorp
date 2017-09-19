@@ -39,7 +39,30 @@ static const int kBlockEntity   = (kHeading|kList|kPreformatted|kBlock); //  %he
 static const int kFlowEntity    = (kBlockEntity|kInlineEntity); //  %blockentity, %inlineentity
 static const int kAllTags       = 0xffffff;
 
+// Is aTest a member of aBitset?
+static bool
+TestBits(int32_t aBitset, int32_t aTest)
+{
+  if (aTest) {
+    int32_t result = aBitset & aTest;
+    return result == aTest;
+  }
+  return false;
+}
 
+struct HTMLElement
+{
+  bool IsMemberOf(int32_t aBitset) const
+  {
+    return TestBits(aBitset, mParentBits);
+  }
+
+#ifdef DEBUG
+  nsHTMLTag mTagID;
+#endif
+  int mParentBits;  // defines groups that can contain this element
+  bool mLeaf;
+};
 
 #ifdef DEBUG
 #define ELEM(tag, parent, leaf) { eHTMLTag_##tag, parent, leaf },
@@ -47,7 +70,7 @@ static const int kAllTags       = 0xffffff;
 #define ELEM(tag, parent, leaf) { parent, leaf },
 #endif
 
-static const nsHTMLElement gHTMLElements[] = {
+static const HTMLElement gHTMLElements[] = {
   ELEM(unknown,     kNone,                       true)
   ELEM(a,           kSpecial,                    false)
   ELEM(abbr,        kPhrase,                     false)
@@ -200,11 +223,6 @@ static const nsHTMLElement gHTMLElements[] = {
 #undef ELEM
 
 /*********************************************************************************************/
-
-bool nsHTMLElement::IsMemberOf(int32_t aSet) const
-{
-  return TestBits(aSet, mParentBits);
-}
 
 bool nsHTMLElement::IsContainer(nsHTMLTag aId)
 {
