@@ -614,26 +614,12 @@ public:
     return false;
   }
 
-  template<typename Function>
   void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
-                             MallocSizeOf                    aMallocSizeOf,
-                             Function&&                      aRemoveCallback)
+                             MallocSizeOf                    aMallocSizeOf)
   {
     CachedSurface::SurfaceMemoryReport report(aCounters, aMallocSizeOf);
-    for (auto iter = mSurfaces.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
       NotNull<CachedSurface*> surface = WrapNotNull(iter.UserData());
-
-      // We don't need the drawable surface for ourselves, but adding a surface
-      // to the report will trigger this indirectly. If the surface was
-      // discarded by the OS because it was in volatile memory, we should remove
-      // it from the cache immediately rather than include it in the report.
-      DrawableSurface drawableSurface = surface->GetDrawableSurface();
-      if (!drawableSurface) {
-        aRemoveCallback(surface);
-        iter.Remove();
-        continue;
-      }
-
       const IntSize& size = surface->GetSurfaceKey().Size();
       bool factor2Size = false;
       if (mFactor2Mode) {
@@ -1087,8 +1073,6 @@ public:
 
     cache->Prune([this, &aAutoLock](NotNull<CachedSurface*> aSurface) -> void {
       StopTracking(aSurface, /* aIsTracked */ true, aAutoLock);
-      // Individual surfaces must be freed outside the lock.
-      mCachedSurfacesDiscard.AppendElement(aSurface);
     });
   }
 
@@ -1181,8 +1165,7 @@ public:
 
   void CollectSizeOfSurfaces(const ImageKey                  aImageKey,
                              nsTArray<SurfaceMemoryCounter>& aCounters,
-                             MallocSizeOf                    aMallocSizeOf,
-                             const StaticMutexAutoLock&      aAutoLock)
+                             MallocSizeOf                    aMallocSizeOf)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -1190,12 +1173,7 @@ public:
     }
 
     // Report all surfaces in the per-image cache.
-    cache->CollectSizeOfSurfaces(aCounters, aMallocSizeOf,
-      [this, &aAutoLock](NotNull<CachedSurface*> aSurface) -> void {
-      StopTracking(aSurface, /* aIsTracked */ true, aAutoLock);
-      // Individual surfaces must be freed outside the lock.
-      mCachedSurfacesDiscard.AppendElement(aSurface);
-    });
+    cache->CollectSizeOfSurfaces(aCounters, aMallocSizeOf);
   }
 
 private:
@@ -1566,13 +1544,9 @@ SurfaceCache::RemoveImage(const ImageKey aImageKey)
 /* static */ void
 SurfaceCache::PruneImage(const ImageKey aImageKey)
 {
-  nsTArray<RefPtr<CachedSurface>> discard;
-  {
-    StaticMutexAutoLock lock(sInstanceMutex);
-    if (sInstance) {
-      sInstance->PruneImage(aImageKey, lock);
-      sInstance->TakeDiscard(discard, lock);
-    }
+  StaticMutexAutoLock lock(sInstanceMutex);
+  if (sInstance) {
+    sInstance->PruneImage(aImageKey, lock);
   }
 }
 
@@ -1594,16 +1568,12 @@ SurfaceCache::CollectSizeOfSurfaces(const ImageKey                  aImageKey,
                                     nsTArray<SurfaceMemoryCounter>& aCounters,
                                     MallocSizeOf                    aMallocSizeOf)
 {
-  nsTArray<RefPtr<CachedSurface>> discard;
-  {
-    StaticMutexAutoLock lock(sInstanceMutex);
-    if (!sInstance) {
-      return;
-    }
-
-    sInstance->CollectSizeOfSurfaces(aImageKey, aCounters, aMallocSizeOf, lock);
-    sInstance->TakeDiscard(discard, lock);
+  StaticMutexAutoLock lock(sInstanceMutex);
+  if (!sInstance) {
+    return;
   }
+
+  return sInstance->CollectSizeOfSurfaces(aImageKey, aCounters, aMallocSizeOf);
 }
 
 /* static */ size_t
