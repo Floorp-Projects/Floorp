@@ -44,6 +44,9 @@ moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
 static GtkBorder
 GetMarginBorderPadding(GtkStyleContext* aStyle);
 
+static void
+InsetByMargin(GdkRectangle* rect, GtkStyleContext* style);
+
 // GetStateFlagsFromGtkWidgetState() can be safely used for the specific
 // GtkWidgets that set both prelight and active flags.  For other widgets,
 // either the GtkStateFlags or Gecko's GtkWidgetState need to be carefully
@@ -303,6 +306,16 @@ moz_gtk_button_paint(cairo_t *cr, GdkRectangle* rect,
     }
     gtk_style_context_restore(style);
     return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_header_bar_button_paint(cairo_t *cr, GdkRectangle* rect,
+                                GtkWidgetState* state,
+                                GtkReliefStyle relief, GtkWidget* widget,
+                                GtkTextDirection direction)
+{
+    InsetByMargin(rect, gtk_widget_get_style_context(widget));
+    return moz_gtk_button_paint(cr, rect, state, relief, widget, direction);
 }
 
 static gint
@@ -1945,6 +1958,21 @@ moz_gtk_info_bar_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+static gint
+moz_gtk_header_bar_paint(WidgetNodeType widgetType,
+                         cairo_t *cr, GdkRectangle* rect, GtkWidgetState* state)
+{
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+    GtkStyleContext *style = GetStyleContext(widgetType, GTK_TEXT_DIR_LTR,
+                                             state_flags);
+    InsetByMargin(rect, style);
+    gtk_render_background(style, cr, rect->x, rect->y, rect->width,
+                          rect->height);
+    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+
+    return MOZ_GTK_SUCCESS;
+}
+
 static void
 moz_gtk_add_style_margin(GtkStyleContext* style,
                          gint* left, gint* top, gint* right, gint* bottom)
@@ -2205,6 +2233,22 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             moz_gtk_add_margin_border_padding(labelStyle,
                                               left, top, right, bottom);
 
+            return MOZ_GTK_SUCCESS;
+        }
+    case MOZ_GTK_HEADER_BAR:
+    case MOZ_GTK_HEADER_BAR_MAXIMIZED:
+        {
+            style = GetStyleContext(widget);
+            moz_gtk_add_style_border(style, left, top, right, bottom);
+            moz_gtk_add_style_padding(style, left, top, right, bottom);
+            return MOZ_GTK_SUCCESS;
+        }
+    case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+        {
+            style = GetStyleContext(widget);
+            moz_gtk_add_margin_border_padding(style, left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
 
@@ -2730,6 +2774,14 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
                                     GetWidget(MOZ_GTK_BUTTON),
                                     direction);
         break;
+    case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+        return moz_gtk_header_bar_button_paint(cr, rect, state,
+                                               (GtkReliefStyle) flags,
+                                               GetWidget(widget),
+                                               direction);
+        break;
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
         return moz_gtk_toggle_paint(cr, rect, state,
@@ -2935,6 +2987,10 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
         break;
     case MOZ_GTK_INFO_BAR:
         return moz_gtk_info_bar_paint(cr, rect, state);
+        break;
+    case MOZ_GTK_HEADER_BAR:
+    case MOZ_GTK_HEADER_BAR_MAXIMIZED:
+        return moz_gtk_header_bar_paint(widget, cr, rect, state);
         break;
     default:
         g_warning("Unknown widget type: %d", widget);
