@@ -92,6 +92,7 @@ enum NSWindowTitleVisibility {
 
 @interface NSWindow(TitleVisibility)
 - (void)setTitleVisibility:(NSWindowTitleVisibility)visibility;
+- (void)setTitlebarAppearsTransparent:(BOOL)isTitlebarTransparent;
 @end
 
 #endif
@@ -489,6 +490,10 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   if ([mWindow respondsToSelector:@selector(setTitleVisibility)]) {
     // By default, hide window titles.
     [mWindow setTitleVisibility:NSWindowTitleHidden];
+  }
+  if ([mWindow respondsToSelector:@selector(setTitlebarAppearsTransparent)]) {
+    // By default, hide window titlebars.
+    [mWindow setTitlebarAppearsTransparent:YES];
   }
 
   // setup our notification delegate. Note that setDelegate: does NOT retain.
@@ -3156,6 +3161,9 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     if ([self respondsToSelector:@selector(setTitleVisibility)]) {
       [self setTitleVisibility:mDrawsIntoWindowFrame ? NSWindowTitleHidden :
                                                        NSWindowTitleVisible];
+    }
+    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent)]) {
+      [self setTitlebarAppearsTransparent:mDrawsIntoWindowFrame];
     }
   }
 }
