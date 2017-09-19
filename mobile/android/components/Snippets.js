@@ -6,6 +6,8 @@ ChromeUtils.import("resource://gre/modules/Accounts.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 ChromeUtils.defineModuleGetter(this, "Home", "resource://gre/modules/Home.jsm");
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
@@ -326,7 +328,7 @@ function removeStats() {
  * @param callback function that is called with the xhr responseText
  */
 function _httpGetRequest(url, callback) {
-  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+  let xhr = new XMLHttpRequest();
   try {
     xhr.open("GET", url, true);
   } catch (e) {
