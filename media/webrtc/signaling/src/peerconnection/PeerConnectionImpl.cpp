@@ -3713,6 +3713,12 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
   // Gather stats from pipelines provided (can't touch mMedia + stream on STS)
 
   for (size_t p = 0; p < query->pipelines.Length(); ++p) {
+    MOZ_ASSERT(query->pipelines[p]);
+    MOZ_ASSERT(query->pipelines[p]->Conduit());
+    if (!query->pipelines[p] || !query->pipelines[p]->Conduit()) {
+      // continue if we don't have a valid conduit
+      continue;
+    }
     const MediaPipeline& mp = *query->pipelines[p];
     bool isAudio = (mp.Conduit()->type() == MediaSessionConduit::AUDIO);
     nsString mediaType = isAudio ?
