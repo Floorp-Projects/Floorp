@@ -1852,6 +1852,16 @@ Http2Session::RecvPushPromise(Http2Session *self)
   }
   if (NS_SUCCEEDED(rv)) {
     rv = pushedOrigin->GetPort(&pushedPort);
+    if (NS_SUCCEEDED(rv) && pushedPort == -1) {
+      // Need to get the right default port, so TestJoinConnection below can
+      // check things correctly. See bug 1397621.
+      bool isHttp = false;
+      if (NS_SUCCEEDED(pushedOrigin->SchemeIs("http", &isHttp)) && isHttp) {
+        pushedPort = NS_HTTP_DEFAULT_PORT;
+      } else {
+        pushedPort = NS_HTTPS_DEFAULT_PORT;
+      }
+    }
   }
   if (NS_FAILED(rv) ||
       !self->TestJoinConnection(pushedHostName, pushedPort)) {

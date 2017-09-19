@@ -21,74 +21,94 @@ const PRIM_FEATURES: &[&str] = &["", "TRANSFORM"];
 const SHADERS: &[Shader] = &[
     // Clip mask shaders
     Shader {
-        name: "cs_clip_rectangle", features: CLIP_FEATURES,
+        name: "cs_clip_rectangle",
+        features: CLIP_FEATURES,
     },
     Shader {
-        name: "cs_clip_image", features: CLIP_FEATURES,
+        name: "cs_clip_image",
+        features: CLIP_FEATURES,
     },
     Shader {
-        name: "cs_clip_border", features: CLIP_FEATURES,
+        name: "cs_clip_border",
+        features: CLIP_FEATURES,
     },
-
     // Cache shaders
     Shader {
-        name: "cs_blur", features: CACHE_FEATURES,
+        name: "cs_blur",
+        features: CACHE_FEATURES,
     },
     Shader {
-        name: "cs_text_run", features: CACHE_FEATURES,
+        name: "cs_text_run",
+        features: CACHE_FEATURES,
     },
     Shader {
-        name: "cs_box_shadow", features: CACHE_FEATURES,
+        name: "cs_box_shadow",
+        features: CACHE_FEATURES,
     },
-
     // Prim shaders
     Shader {
-        name: "ps_line", features: &["", "TRANSFORM", "CACHE"],
+        name: "ps_line",
+        features: &["", "TRANSFORM", "CACHE"],
     },
     Shader {
-        name: "ps_border_corner", features: PRIM_FEATURES,
+        name: "ps_border_corner",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_border_edge", features: PRIM_FEATURES,
+        name: "ps_border_edge",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_box_shadow", features: PRIM_FEATURES,
+        name: "ps_box_shadow",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_gradient", features: PRIM_FEATURES,
+        name: "ps_gradient",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_angle_gradient", features: PRIM_FEATURES,
+        name: "ps_angle_gradient",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_radial_gradient", features: PRIM_FEATURES,
+        name: "ps_radial_gradient",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_cache_image", features: PRIM_FEATURES,
+        name: "ps_cache_image",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_blend", features: PRIM_FEATURES,
+        name: "ps_blend",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_composite", features: PRIM_FEATURES,
+        name: "ps_composite",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_hardware_composite", features: PRIM_FEATURES,
+        name: "ps_hardware_composite",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_split_composite", features: PRIM_FEATURES,
+        name: "ps_split_composite",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_image", features: PRIM_FEATURES,
+        name: "ps_image",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_yuv_image", features: PRIM_FEATURES,
+        name: "ps_yuv_image",
+        features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_text_run", features: &["", "TRANSFORM", "SUBPIXEL_AA_FEATURE"],
+        name: "ps_text_run",
+        features: &["", "TRANSFORM", "SUBPIXEL_AA_FEATURE"],
     },
     Shader {
-        name: "ps_rectangle", features: &["", "TRANSFORM", "CLIP_FEATURE", "TRANSFORM,CLIP_FEATURE"],
+        name: "ps_rectangle",
+        features: &["", "TRANSFORM", "CLIP_FEATURE", "TRANSFORM,CLIP_FEATURE"],
     },
 ];
 
@@ -99,15 +119,11 @@ fn validate_shaders() {
     angle::hl::initialize().unwrap();
 
     let resources = BuiltInResources::default();
-    let vs_validator = ShaderValidator::new(VERTEX_SHADER,
-                                            ShaderSpec::Gles3,
-                                            Output::Essl,
-                                            &resources).unwrap();
+    let vs_validator =
+        ShaderValidator::new(VERTEX_SHADER, ShaderSpec::Gles3, Output::Essl, &resources).unwrap();
 
-    let fs_validator = ShaderValidator::new(FRAGMENT_SHADER,
-                                            ShaderSpec::Gles3,
-                                            Output::Essl,
-                                            &resources).unwrap();
+    let fs_validator =
+        ShaderValidator::new(FRAGMENT_SHADER, ShaderSpec::Gles3, Output::Essl, &resources).unwrap();
 
     for shader in SHADERS {
         for config in shader.features {
@@ -118,10 +134,8 @@ fn validate_shaders() {
                 features.push_str(&format!("#define WR_FEATURE_{}", feature));
             }
 
-            let (vs, fs) = webrender::build_shader_strings(VERSION_STRING,
-                                                           &features,
-                                                           shader.name,
-                                                           &None);
+            let (vs, fs) =
+                webrender::build_shader_strings(VERSION_STRING, &features, shader.name, &None);
 
             validate(&vs_validator, shader.name, vs);
             validate(&fs_validator, shader.name, fs);
@@ -133,9 +147,13 @@ fn validate(validator: &ShaderValidator, name: &str, source: String) {
     match validator.compile_and_translate(&[&source]) {
         Ok(_) => {
             println!("Shader translated succesfully: {}", name);
-        },
+        }
         Err(_) => {
-            panic!("Shader compilation failed: {}\n{}", name, validator.info_log());
-        },
+            panic!(
+                "Shader compilation failed: {}\n{}",
+                name,
+                validator.info_log()
+            );
+        }
     }
 }

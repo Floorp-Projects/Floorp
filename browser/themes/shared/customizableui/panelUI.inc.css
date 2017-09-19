@@ -1306,6 +1306,24 @@ panelview .toolbarbutton-1,
   margin-inline-start: 10px;
 }
 
+.subviewbutton[type="highlight-bookmark"]::after {
+  content: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+
+.subviewbutton[type="highlight-history"]::after {
+  content: url("chrome://browser/skin/history.svg");
+}
+
+.subviewbutton[type="highlight-bookmark"]::after,
+.subviewbutton[type="highlight-history"]::after {
+  -moz-context-properties: fill;
+  fill: GrayText;
+  float: right;
+  opacity: .5;
+  /* Centers the icon and resizes it to 12px square. */
+  transform: translateY(2px) scaleX(.75);
+}
+
 /* This is a <label> but it should fit in with the menu font- and colorwise. */
 #PanelUI-characterEncodingView-autodetect-label {
   font: menu;

@@ -15,9 +15,7 @@ struct Notifier {
 
 impl Notifier {
     fn new(window_proxy: glutin::WindowProxy) -> Notifier {
-        Notifier {
-            window_proxy,
-        }
+        Notifier { window_proxy }
     }
 }
 
@@ -41,41 +39,44 @@ pub trait HandyDandyRectBuilder {
 // values to build a f32 LayoutRect
 impl HandyDandyRectBuilder for (i32, i32) {
     fn to(&self, x2: i32, y2: i32) -> LayoutRect {
-        LayoutRect::new(LayoutPoint::new(self.0 as f32, self.1 as f32),
-                        LayoutSize::new((x2 - self.0) as f32, (y2 - self.1) as f32))
+        LayoutRect::new(
+            LayoutPoint::new(self.0 as f32, self.1 as f32),
+            LayoutSize::new((x2 - self.0) as f32, (y2 - self.1) as f32),
+        )
     }
 
     fn by(&self, w: i32, h: i32) -> LayoutRect {
-        LayoutRect::new(LayoutPoint::new(self.0 as f32, self.1 as f32),
-                        LayoutSize::new(w as f32, h as f32))
+        LayoutRect::new(
+            LayoutPoint::new(self.0 as f32, self.1 as f32),
+            LayoutSize::new(w as f32, h as f32),
+        )
     }
 }
 
 pub trait Example {
-    fn render(&mut self,
-              api: &RenderApi,
-              builder: &mut DisplayListBuilder,
-              resources: &mut ResourceUpdates,
-              layout_size: LayoutSize,
-              pipeline_id: PipelineId,
-              document_id: DocumentId);
-    fn on_event(&mut self,
-                event: glutin::Event,
-                api: &RenderApi,
-                document_id: DocumentId) -> bool;
+    fn render(
+        &mut self,
+        api: &RenderApi,
+        builder: &mut DisplayListBuilder,
+        resources: &mut ResourceUpdates,
+        layout_size: LayoutSize,
+        pipeline_id: PipelineId,
+        document_id: DocumentId,
+    );
+    fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool;
     fn get_external_image_handler(&self) -> Option<Box<webrender::ExternalImageHandler>> {
         None
     }
-    fn get_output_image_handler(&mut self, _gl: &gl::Gl) -> Option<Box<webrender::OutputImageHandler>> {
+    fn get_output_image_handler(
+        &mut self,
+        _gl: &gl::Gl,
+    ) -> Option<Box<webrender::OutputImageHandler>> {
         None
     }
-    fn draw_custom(&self, _gl: &gl::Gl) {
-    }
+    fn draw_custom(&self, _gl: &gl::Gl) {}
 }
 
-pub fn main_wrapper(example: &mut Example,
-                    options: Option<webrender::RendererOptions>)
-{
+pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOptions>) {
     let args: Vec<String> = env::args().collect();
     let res_path = if args.len() > 1 {
         Some(PathBuf::from(&args[1]))
@@ -84,22 +85,26 @@ pub fn main_wrapper(example: &mut Example,
     };
 
     let window = glutin::WindowBuilder::new()
-                .with_title("WebRender Sample App")
-                .with_multitouch()
-                .with_gl(glutin::GlRequest::GlThenGles {
-                    opengl_version: (3, 2),
-                    opengles_version: (3, 0)
-                })
-                .build()
-                .unwrap();
+        .with_title("WebRender Sample App")
+        .with_multitouch()
+        .with_gl(glutin::GlRequest::GlThenGles {
+            opengl_version: (3, 2),
+            opengles_version: (3, 0),
+        })
+        .build()
+        .unwrap();
 
     unsafe {
         window.make_current().ok();
     }
 
     let gl = match gl::GlType::default() {
-        gl::GlType::Gl => unsafe { gl::GlFns::load_with(|symbol| window.get_proc_address(symbol) as *const _) },
-        gl::GlType::Gles => unsafe { gl::GlesFns::load_with(|symbol| window.get_proc_address(symbol) as *const _) },
+        gl::GlType::Gl => unsafe {
+            gl::GlFns::load_with(|symbol| window.get_proc_address(symbol) as *const _)
+        },
+        gl::GlType::Gles => unsafe {
+            gl::GlesFns::load_with(|symbol| window.get_proc_address(symbol) as *const _)
+        },
     };
 
     println!("OpenGL version {}", gl.get_string(gl::VERSION));
@@ -112,7 +117,7 @@ pub fn main_wrapper(example: &mut Example,
         debug: true,
         precache_shaders: true,
         device_pixel_ratio: window.hidpi_factor(),
-        .. options.unwrap_or(webrender::RendererOptions::default())
+        ..options.unwrap_or(webrender::RendererOptions::default())
     };
 
     let size = DeviceUintSize::new(width, height);
@@ -138,7 +143,14 @@ pub fn main_wrapper(example: &mut Example,
     let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
     let mut resources = ResourceUpdates::new();
 
-    example.render(&api, &mut builder, &mut resources, layout_size, pipeline_id, document_id);
+    example.render(
+        &api,
+        &mut builder,
+        &mut resources,
+        layout_size,
+        pipeline_id,
+        document_id,
+    );
     api.set_display_list(
         document_id,
         epoch,
@@ -146,7 +158,7 @@ pub fn main_wrapper(example: &mut Example,
         LayoutSize::new(width as f32, height as f32),
         builder.finalize(),
         true,
-        resources
+        resources,
     );
     api.set_root_pipeline(document_id, pipeline_id);
     api.generate_frame(document_id, None);
@@ -165,52 +177,72 @@ pub fn main_wrapper(example: &mut Example,
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
                 glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Q)) => break 'outer,
 
-                glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
-                                             _, Some(glutin::VirtualKeyCode::P)) => {
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::P),
+                ) => {
                     let mut flags = renderer.get_debug_flags();
                     flags.toggle(webrender::PROFILER_DBG);
                     renderer.set_debug_flags(flags);
                 }
-                glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
-                                             _, Some(glutin::VirtualKeyCode::O)) => {
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::O),
+                ) => {
                     let mut flags = renderer.get_debug_flags();
                     flags.toggle(webrender::RENDER_TARGET_DBG);
                     renderer.set_debug_flags(flags);
                 }
-                glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
-                                             _, Some(glutin::VirtualKeyCode::I)) => {
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::I),
+                ) => {
                     let mut flags = renderer.get_debug_flags();
                     flags.toggle(webrender::TEXTURE_CACHE_DBG);
                     renderer.set_debug_flags(flags);
                 }
-                glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
-                                             _, Some(glutin::VirtualKeyCode::B)) => {
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::B),
+                ) => {
                     let mut flags = renderer.get_debug_flags();
                     flags.toggle(webrender::ALPHA_PRIM_DBG);
                     renderer.set_debug_flags(flags);
                 }
-                glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
-                                             _, Some(glutin::VirtualKeyCode::M)) => {
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::M),
+                ) => {
                     api.notify_memory_pressure();
                 }
-                _ => {
-                    if example.on_event(event, &api, document_id) {
-                        let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
-                        let mut resources = ResourceUpdates::new();
+                _ => if example.on_event(event, &api, document_id) {
+                    let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
+                    let mut resources = ResourceUpdates::new();
 
-                        example.render(&api, &mut builder, &mut resources, layout_size, pipeline_id, document_id);
-                        api.set_display_list(
-                            document_id,
-                            epoch,
-                            Some(root_background_color),
-                            LayoutSize::new(width as f32, height as f32),
-                            builder.finalize(),
-                            true,
-                            resources
-                        );
-                        api.generate_frame(document_id, None);
-                    }
-                }
+                    example.render(
+                        &api,
+                        &mut builder,
+                        &mut resources,
+                        layout_size,
+                        pipeline_id,
+                        document_id,
+                    );
+                    api.set_display_list(
+                        document_id,
+                        epoch,
+                        Some(root_background_color),
+                        LayoutSize::new(width as f32, height as f32),
+                        builder.finalize(),
+                        true,
+                        resources,
+                    );
+                    api.generate_frame(document_id, None);
+                },
             }
         }
 

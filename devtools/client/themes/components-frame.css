@@ -11,15 +11,16 @@
 .frame-link {
   display: flex;
   justify-content: space-between;
+  --frame-link-line-color: var(--theme-highlight-blue);
 }
 
 .frame-link-async-cause {
-  color: var(--theme-body-color-inactive);
+  color: var(--theme-comment);
 }
 
 .frame-link .frame-link-source {
   flex: initial;
-  color: var(--theme-highlight-blue);
+  color: var(--theme-highlight-purple);
 }
 
 .frame-link a.frame-link-source {
@@ -35,16 +36,18 @@
 .frame-link .frame-link-host {
   margin-inline-start: 5px;
   font-size: 90%;
-  color: var(--theme-content-color2);
+  color: var(--theme-comment);
 }
 
 .frame-link .frame-link-function-display-name {
   margin-inline-end: 5px;
+  color: var(--console-output-color, currentColor);
 }
 
 .frame-link .frame-link-line {
-  color: var(--theme-highlight-orange);
+  color: var(--frame-link-line-color);
 }
+
 
 .focused .frame-link .frame-link-source,
 .focused .frame-link .frame-link-line,

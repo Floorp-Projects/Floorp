@@ -100,6 +100,8 @@ OptionsPanel.prototype = {
   _addListeners: function () {
     Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.addObserver("devtools.theme", this._prefChanged);
+    Services.prefs.addObserver("devtools.source-map.client-service.enabled",
+                               this._prefChanged);
     gDevTools.on("theme-registered", this._themeRegistered);
     gDevTools.on("theme-unregistered", this._themeUnregistered);
   },
@@ -107,6 +109,8 @@ OptionsPanel.prototype = {
   _removeListeners: function () {
     Services.prefs.removeObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.removeObserver("devtools.theme", this._prefChanged);
+    Services.prefs.removeObserver("devtools.source-map.client-service.enabled",
+                                  this._prefChanged);
     gDevTools.off("theme-registered", this._themeRegistered);
     gDevTools.off("theme-unregistered", this._themeUnregistered);
   },
@@ -118,6 +122,8 @@ OptionsPanel.prototype = {
       cbx.checked = cacheDisabled;
     } else if (prefName === "devtools.theme") {
       this.updateCurrentTheme();
+    } else if (prefName === "devtools.source-map.client-service.enabled") {
+      this.updateSourceMapPref();
     }
   },
 
@@ -347,6 +353,7 @@ OptionsPanel.prototype = {
     for (let prefDefinition of prefDefinitions) {
       let parent = this.panelDoc.getElementById(prefDefinition.parentId);
       parent.appendChild(createPreferenceOption(prefDefinition));
+      parent.removeAttribute("hidden");
     }
   },
 
@@ -423,6 +430,13 @@ OptionsPanel.prototype = {
       let lightThemeInputRadio = themeBox.querySelector("[value=light]");
       lightThemeInputRadio.checked = true;
     }
+  },
+
+  updateSourceMapPref: function () {
+    const prefName = "devtools.source-map.client-service.enabled";
+    let enabled = GetPref(prefName);
+    let box = this.panelDoc.querySelector(`[data-pref="${prefName}"]`);
+    box.checked = enabled;
   },
 
   /**

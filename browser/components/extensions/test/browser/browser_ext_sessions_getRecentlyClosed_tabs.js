@@ -42,12 +42,29 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   let expectedTabs = [];
   let tab = win.gBrowser.selectedTab;
+  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
+  // favicon loads, we have to wait some time before checking that icon was
+  // stored properly. If that page doesn't have favicon links, let it timeout.
+  try {
+    await BrowserTestUtils.waitForCondition(() => {
+      return gBrowser.getIcon(tab) != null;
+    }, "wait for favicon load to finish", 100, 5);
+  } catch (e) {
+    // This page doesn't have any favicon link, just continue.
+  }
   expectedTabs.push(expectedTabInfo(tab, win));
   let lastAccessedTimes = new Map();
   lastAccessedTimes.set("about:mozilla", tab.lastAccessed);
 
   for (let url of ["about:robots", "about:buildconfig"]) {
     tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
+    try {
+      await BrowserTestUtils.waitForCondition(() => {
+        return gBrowser.getIcon(tab) != null;
+      }, "wait for favicon load to finish", 100, 5);
+    } catch (e) {
+      // This page doesn't have any favicon link, just continue.
+    }
     expectedTabs.push(expectedTabInfo(tab, win));
     lastAccessedTimes.set(url, tab.lastAccessed);
   }

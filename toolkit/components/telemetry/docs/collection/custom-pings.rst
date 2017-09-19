@@ -21,7 +21,7 @@ If the preferences allow upload of Telemetry pings, the ping will be uploaded at
 
 .. important::
 
-    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for :bsmedberg or one of the other data peers. We try to reply within a business day.
+    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. We try to reply within a business day.
 
 Submission constraints
 ----------------------
@@ -29,14 +29,14 @@ Submission constraints
 When submitting pings on shutdown, they should not be submitted after Telemetry shutdown.
 Pings should be submitted at the latest within:
 
-- the `observer notification <https://developer.mozilla.org/de/docs/Observer_Notifications#Application_shutdown>`_ ``"profile-before-change"``
+- the `observer notification <https://developer.mozilla.org/docs/Observer_Notifications#Application_shutdown>`_ ``"profile-before-change"``
 - the :ref:`AsyncShutdown phase <AsyncShutdown_phases>` ``sendTelemetry``
 
 There are other constraints that can lead to a ping submission getting dropped:
 
-- invalid ping type strings
+- invalid ping type strings.
 - invalid payload types: E.g. strings instead of objects.
-- oversized payloads: We currently only drop pings >1MB, but targetting sizes of <=10KB is recommended.
+- oversized payloads: We currently only drop pings >1MB, but targeting sizes of <=10KB is recommended.
 
 Tools
 =====
@@ -51,7 +51,7 @@ Designing custom pings
 
 In general, creating a new custom ping means you don't benefit automatically from the existing tooling. Further work is needed to make data show up in re:dash or other analysis tools.
 
-In addition to the `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`_, questions to guide a new pings design are:
+In addition to the `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`_, questions to guide a new ping design are:
 
 - Submission interval & triggers:
    - What events trigger ping submission?
@@ -74,5 +74,5 @@ In addition to the `data collection review <https://wiki.mozilla.org/Firefox/Dat
 - Data contents:
    - Does the submitted data answer the posed product questions?
    - Does the shape of the data allow to answer the questions efficiently?
-   - Is the data limited to whats needed to answer the questions?
+   - Is the data limited to what's needed to answer the questions?
    - Does the data use common formats? (i.e. can we re-use tooling or analysis know-how)

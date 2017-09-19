@@ -25,17 +25,215 @@ const SIZES_TELEMETRY_ENUM = {
   INVALID: 3,
 };
 
+const FAVICON_PARSING_TIMEOUT = 100;
+const FAVICON_RICH_ICON_MIN_WIDTH = 96;
+
+/*
+ * Create a nsITimer.
+ *
+ * @param {function} aCallback A timeout callback function.
+ * @param {Number} aDelay A timeout interval in millisecond.
+ * @return {nsITimer} A nsITimer object.
+ */
+function setTimeout(aCallback, aDelay) {
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(aCallback, aDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+  return timer;
+}
+
+/*
+ * Extract the icon width from the size attribute. It also sends the telemetry
+ * about the size type and size dimension info.
+ *
+ * @param {Array} aSizes An array of strings about size.
+ * @return {Number} A width of the icon in pixel.
+ */
+function extractIconSize(aSizes) {
+  let width = -1;
+  let sizesType;
+  const re = /^([1-9][0-9]*)x[1-9][0-9]*$/i;
+
+  if (aSizes.length) {
+    for (let size of aSizes) {
+      if (size.toLowerCase() == "any") {
+        sizesType = SIZES_TELEMETRY_ENUM.ANY;
+        break;
+      } else {
+        let values = re.exec(size);
+        if (values && values.length > 1) {
+          sizesType = SIZES_TELEMETRY_ENUM.DIMENSION;
+          width = parseInt(values[1]);
+          break;
+        } else {
+          sizesType = SIZES_TELEMETRY_ENUM.INVALID;
+          break;
+        }
+      }
+    }
+  } else {
+    sizesType = SIZES_TELEMETRY_ENUM.NO_SIZES;
+  }
+
+  // Telemetry probes for measuring the sizes attribute
+  // usage and available dimensions.
+  Services.telemetry.getHistogramById("LINK_ICON_SIZES_ATTR_USAGE").add(sizesType);
+  if (width > 0)
+    Services.telemetry.getHistogramById("LINK_ICON_SIZES_ATTR_DIMENSION").add(width);
+
+  return width;
+}
+
+/*
+ * Get link icon URI from a link dom node.
+ *
+ * @param {DOMNode} aLink A link dom node.
+ * @return {nsIURI} A uri of the icon.
+ */
+function getLinkIconURI(aLink) {
+  let targetDoc = aLink.ownerDocument;
+  let uri = Services.io.newURI(aLink.href, targetDoc.characterSet);
+  try {
+    uri.userPass = "";
+  } catch (e) {
+    // some URIs are immutable
+  }
+  return uri;
+}
+
+/*
+ * Set the icon via sending the "Link:Seticon" message.
+ *
+ * @param {Object} aIconInfo The IconInfo object looks like {
+ *   iconUri: icon URI,
+ *   loadingPrincipal: icon loading principal
+ * }.
+ * @param {Object} aChromeGlobal A global chrome object.
+ */
+function setIconForLink(aIconInfo, aChromeGlobal) {
+  aChromeGlobal.sendAsyncMessage(
+    "Link:SetIcon",
+    { url: aIconInfo.iconUri.spec, loadingPrincipal: aIconInfo.loadingPrincipal });
+}
+
+/*
+ * Timeout callback function for loading favicon.
+ *
+ * @param {Map} aFaviconLoads A map of page URL and FaviconLoad object pairs,
+ *   where the FaviconLoad object looks like {
+ *     timer: a nsITimer object,
+ *     iconInfos: an array of IconInfo objects
+ *   }
+ * @param {String} aPageUrl A page URL string for this callback.
+ * @param {Object} aChromeGlobal A global chrome object.
+ */
+function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
+  let load = aFaviconLoads.get(aPageUrl);
+  if (!load)
+    return;
+
+  // SVG and ico are the preferred icons
+  let preferredIcon;
+  // Other links with the "icon" tag are the default icons
+  let defaultIcon;
+  // Rich icons are either apple-touch or fluid icons, or the ones of the
+  // dimension 96x96 or greater
+  let largestRichIcon;
+
+  for (let icon of load.iconInfos) {
+    if (icon.type === "image/svg+xml" ||
+      icon.type === "image/x-icon" ||
+      icon.type === "image/vnd.microsoft.icon") {
+      preferredIcon = icon;
+      continue;
+    }
+
+    if (icon.isRichIcon) {
+      if (!largestRichIcon || largestRichIcon.width < icon.width) {
+        largestRichIcon = icon;
+      }
+    } else if (!defaultIcon) {
+      defaultIcon = icon;
+    }
+  }
+
+  // Now set the favicons for the page in the following order:
+  // 1. Set the preferred one if any, otherwise use the default one.
+  // 2. Set the best rich icon if any.
+  if (preferredIcon) {
+    setIconForLink(preferredIcon, aChromeGlobal);
+  } else if (defaultIcon) {
+    setIconForLink(defaultIcon, aChromeGlobal);
+  }
+
+  if (largestRichIcon) {
+    setIconForLink(largestRichIcon, aChromeGlobal);
+  }
+  load.timer = null;
+  aFaviconLoads.delete(aPageUrl);
+}
+
+/*
+ * Favicon link handler.
+ *
+ * @param {DOMNode} aLink A link dom node.
+ * @param {bool} aIsRichIcon A bool to indicate if the link is rich icon.
+ * @param {Object} aChromeGlobal A global chrome object.
+ * @param {Map} aFaviconLoads A map of page URL and FaviconLoad object pairs.
+ * @return {bool} Returns true if the link is successfully handled.
+ */
+function handleFaviconLink(aLink, aIsRichIcon, aChromeGlobal, aFaviconLoads) {
+  let pageUrl = aLink.ownerDocument.documentURI;
+  let iconUri = getLinkIconURI(aLink);
+  if (!iconUri)
+    return false;
+
+  // Extract the size type and width. Note that some sites use hi-res icons
+  // without specifying them as apple-touch or fluid icons.
+  let width = extractIconSize(aLink.sizes);
+  if (width >= FAVICON_RICH_ICON_MIN_WIDTH)
+    aIsRichIcon = true;
+
+  let iconInfo = {
+    iconUri,
+    width,
+    isRichIcon: aIsRichIcon,
+    type: aLink.type,
+    loadingPrincipal: aLink.ownerDocument.nodePrincipal
+  };
+
+  if (aFaviconLoads.has(pageUrl)) {
+    let load = aFaviconLoads.get(pageUrl);
+    load.iconInfos.push(iconInfo)
+    // Re-initialize the timer
+    load.timer.delay = FAVICON_PARSING_TIMEOUT;
+  } else {
+    let timer = setTimeout(() => faviconTimeoutCallback(aFaviconLoads, pageUrl, aChromeGlobal),
+                                                        FAVICON_PARSING_TIMEOUT);
+    let load = { timer, iconInfos: [iconInfo] };
+    aFaviconLoads.set(pageUrl, load);
+  }
+  return true;
+}
+
 this.ContentLinkHandler = {
   init(chromeGlobal) {
-    chromeGlobal.addEventListener("DOMLinkAdded", (event) => {
-      this.onLinkEvent(event, chromeGlobal);
+    const faviconLoads = new Map();
+    chromeGlobal.addEventListener("DOMLinkAdded", event => {
+      this.onLinkEvent(event, chromeGlobal, faviconLoads);
     });
-    chromeGlobal.addEventListener("DOMLinkChanged", (event) => {
-      this.onLinkEvent(event, chromeGlobal);
+    chromeGlobal.addEventListener("DOMLinkChanged", event => {
+      this.onLinkEvent(event, chromeGlobal, faviconLoads);
+    });
+    chromeGlobal.addEventListener("unload", event => {
+      for (const [pageUrl, load] of faviconLoads) {
+        load.timer.cancel();
+        load.timer = null;
+        faviconLoads.delete(pageUrl);
+      }
     });
   },
 
-  onLinkEvent(event, chromeGlobal) {
+  onLinkEvent(event, chromeGlobal, faviconLoads) {
     var link = event.originalTarget;
     var rel = link.rel && link.rel.toLowerCase();
     if (!link || !link.ownerDocument || !rel || !link.href)
@@ -46,6 +244,8 @@ this.ContentLinkHandler = {
     if (window != window.top)
       return;
 
+    // Note: following booleans only work for the current link, not for the
+    // whole content
     var feedAdded = false;
     var iconAdded = false;
     var searchAdded = false;
@@ -54,6 +254,8 @@ this.ContentLinkHandler = {
       rels[relString] = true;
 
     for (let relVal in rels) {
+      let isRichIcon = true;
+
       switch (relVal) {
         case "feed":
         case "alternate":
@@ -71,46 +273,15 @@ this.ContentLinkHandler = {
           }
           break;
         case "icon":
+          isRichIcon = false;
+          // Fall through to rich icon handling
+        case "apple-touch-icon":
+        case "apple-touch-icon-precomposed":
+        case "fluid-icon":
           if (iconAdded || !Services.prefs.getBoolPref("browser.chrome.site_icons"))
             break;
 
-          var uri = this.getLinkIconURI(link);
-          if (!uri)
-            break;
-
-          // Telemetry probes for measuring the sizes attribute
-          // usage and available dimensions.
-          let sizeHistogramTypes = Services.telemetry.
-                                   getHistogramById("LINK_ICON_SIZES_ATTR_USAGE");
-          let sizeHistogramDimension = Services.telemetry.
-                                       getHistogramById("LINK_ICON_SIZES_ATTR_DIMENSION");
-          let sizesType;
-          if (link.sizes.length) {
-            for (let size of link.sizes) {
-              if (size.toLowerCase() == "any") {
-                sizesType = SIZES_TELEMETRY_ENUM.ANY;
-                break;
-              } else {
-                let re = /^([1-9][0-9]*)x[1-9][0-9]*$/i;
-                let values = re.exec(size);
-                if (values && values.length > 1) {
-                  sizesType = SIZES_TELEMETRY_ENUM.DIMENSION;
-                  sizeHistogramDimension.add(parseInt(values[1]));
-                } else {
-                  sizesType = SIZES_TELEMETRY_ENUM.INVALID;
-                  break;
-                }
-              }
-            }
-          } else {
-            sizesType = SIZES_TELEMETRY_ENUM.NO_SIZES;
-          }
-          sizeHistogramTypes.add(sizesType);
-
-          chromeGlobal.sendAsyncMessage(
-            "Link:SetIcon",
-            {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
-          iconAdded = true;
+          iconAdded = handleFaviconLink(link, isRichIcon, chromeGlobal, faviconLoads);
           break;
         case "search":
           if (!searchAdded && event.type == "DOMLinkAdded") {
@@ -130,16 +301,5 @@ this.ContentLinkHandler = {
           break;
       }
     }
-  },
-
-  getLinkIconURI(aLink) {
-    let targetDoc = aLink.ownerDocument;
-    var uri = Services.io.newURI(aLink.href, targetDoc.characterSet);
-    try {
-      uri.userPass = "";
-    } catch (e) {
-      // some URIs are immutable
-    }
-    return uri;
   },
 };
