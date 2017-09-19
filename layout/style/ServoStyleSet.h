@@ -97,6 +97,13 @@ public:
     return sInServoTraversal;
   }
 
+#ifdef DEBUG
+  // Used for debug assertions. We make this debug-only to prevent callers from
+  // accidentally using it instead of IsInServoTraversal, which is cheaper. We
+  // can change this if a use-case arises.
+  static bool IsCurrentThreadInServoTraversal();
+#endif
+
   static ServoStyleSet* Current()
   {
     return sInServoTraversal;
