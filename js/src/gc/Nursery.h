@@ -217,7 +217,12 @@ class Nursery
     void forwardBufferPointer(HeapSlot** pSlotsElems);
 
     void maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct) {
-        if (trc->isTenuringTracer() && isInside(oldData))
+        if (trc->isTenuringTracer())
+            setForwardingPointerWhileTenuring(oldData, newData, direct);
+    }
+
+    void setForwardingPointerWhileTenuring(void* oldData, void* newData, bool direct) {
+        if (isInside(oldData))
             setForwardingPointer(oldData, newData, direct);
     }
 
