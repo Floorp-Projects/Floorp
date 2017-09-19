@@ -2361,6 +2361,12 @@ def IDLToCIdentifier(name):
     return name.replace("-", "_")
 
 
+def EnumerabilityFlags(member):
+    if member.getExtendedAttribute("NonEnumerable"):
+        return "0"
+    return "JSPROP_ENUMERATE"
+
+
 class MethodDefiner(PropertyDefiner):
     """
     A class for defining methods on a prototype object.
@@ -2421,18 +2427,11 @@ class MethodDefiner(PropertyDefiner):
                 })
                 continue
 
-            # Iterable methods should be enumerable, maplike/setlike methods
-            # should not.
-            isMaplikeOrSetlikeMethod = (m.isMaplikeOrSetlikeOrIterableMethod() and
-                                        (m.maplikeOrSetlikeOrIterable.isMaplike() or
-                                         m.maplikeOrSetlikeOrIterable.isSetlike()))
             method = {
                 "name": m.identifier.name,
                 "methodInfo": not m.isStatic(),
                 "length": methodLength(m),
-                # Methods generated for a maplike/setlike declaration are not
-                # enumerable.
-                "flags": "JSPROP_ENUMERATE" if not isMaplikeOrSetlikeMethod else "0",
+                "flags": EnumerabilityFlags(m),
                 "condition": PropertyDefiner.getControllingCondition(m, descriptor),
                 "allowCrossOriginThis": m.getExtendedAttribute("CrossOriginCallable"),
                 "returnsPromise": m.returnsPromise(),
@@ -2728,9 +2727,7 @@ class AttrDefiner(PropertyDefiner):
 
         def flags(attr):
             unforgeable = " | JSPROP_PERMANENT" if self.unforgeable else ""
-            # Attributes generated as part of a maplike/setlike declaration are
-            # not enumerable.
-            enumerable = " | JSPROP_ENUMERATE" if not attr.isMaplikeOrSetlikeAttr() else ""
+            enumerable = " | %s" % EnumerabilityFlags(attr)
             return ("JSPROP_SHARED" + enumerable + unforgeable)
 
         def getter(attr):

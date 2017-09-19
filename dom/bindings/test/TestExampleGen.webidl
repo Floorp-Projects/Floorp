@@ -802,6 +802,14 @@ interface TestExampleInterface {
   attribute byte dashed-attribute;
   void dashed-method();
 
+  // [NonEnumerable] tests
+  [NonEnumerable]
+  attribute boolean nonEnumerableAttr;
+  [NonEnumerable]
+  const boolean nonEnumerableConst = true;
+  [NonEnumerable]
+  void nonEnumerableMethod();
+
   // If you add things here, add them to TestCodeGen and TestJSImplGen as well
 };
 
