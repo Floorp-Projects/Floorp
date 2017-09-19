@@ -38,48 +38,45 @@ impl U2FManager {
         let (tx, rx) = channel();
 
         // Start a new work queue thread.
-        let queue = try!(RunLoop::new(
-            move |alive| {
-                let mut pm = PlatformManager::new();
+        let queue = RunLoop::new(move |alive| {
+            let mut pm = PlatformManager::new();
 
-                while alive() {
-                    match rx.recv_timeout(Duration::from_millis(50)) {
-                        Ok(QueueAction::Register {
-                               timeout,
-                               challenge,
-                               application,
-                               callback,
-                           }) => {
-                            // This must not block, otherwise we can't cancel.
-                            pm.register(timeout, challenge, application, callback);
-                        }
-                        Ok(QueueAction::Sign {
-                               timeout,
-                               challenge,
-                               application,
-                               key_handles,
-                               callback,
-                           }) => {
-                            // This must not block, otherwise we can't cancel.
-                            pm.sign(timeout, challenge, application, key_handles, callback);
-                        }
-                        Ok(QueueAction::Cancel) => {
-                            // Cancelling must block so that we don't start a new
-                            // polling thread before the old one has shut down.
-                            pm.cancel();
-                        }
-                        Err(RecvTimeoutError::Disconnected) => {
-                            break;
-                        }
-                        _ => { /* continue */ }
+            while alive() {
+                match rx.recv_timeout(Duration::from_millis(50)) {
+                    Ok(QueueAction::Register {
+                           timeout,
+                           challenge,
+                           application,
+                           callback,
+                       }) => {
+                        // This must not block, otherwise we can't cancel.
+                        pm.register(timeout, challenge, application, callback);
                     }
+                    Ok(QueueAction::Sign {
+                           timeout,
+                           challenge,
+                           application,
+                           key_handles,
+                           callback,
+                       }) => {
+                        // This must not block, otherwise we can't cancel.
+                        pm.sign(timeout, challenge, application, key_handles, callback);
+                    }
+                    Ok(QueueAction::Cancel) => {
+                        // Cancelling must block so that we don't start a new
+                        // polling thread before the old one has shut down.
+                        pm.cancel();
+                    }
+                    Err(RecvTimeoutError::Disconnected) => {
+                        break;
+                    }
+                    _ => { /* continue */ }
                 }
+            }
 
-                // Cancel any ongoing activity.
-                pm.cancel();
-            },
-            0, /* no timeout */
-        ));
+            // Cancel any ongoing activity.
+            pm.cancel();
+        })?;
 
         Ok(Self {
             queue: queue,

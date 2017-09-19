@@ -361,7 +361,7 @@ class ArgumentsObject : public NativeObject
 
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
-    static size_t objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src);
+    static size_t objectMoved(JSObject* dst, JSObject* src);
 
     /* For jit use: */
     static size_t getDataSlotOffset() {
@@ -399,6 +399,7 @@ class ArgumentsObject : public NativeObject
 class MappedArgumentsObject : public ArgumentsObject
 {
     static const ClassOps classOps_;
+    static const ClassExtension classExt_;
     static const ObjectOps objectOps_;
 
   public:
@@ -428,6 +429,7 @@ class MappedArgumentsObject : public ArgumentsObject
 class UnmappedArgumentsObject : public ArgumentsObject
 {
     static const ClassOps classOps_;
+    static const ClassExtension classExt_;
 
   public:
     static const Class class_;

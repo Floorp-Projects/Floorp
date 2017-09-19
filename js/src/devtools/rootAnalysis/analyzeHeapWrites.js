@@ -5,6 +5,7 @@
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('callgraph.js');
+loadRelativeToScript('dumpCFG.js');
 
 ///////////////////////////////////////////////////////////////////////////////
 // Annotations
@@ -24,9 +25,12 @@ function checkExternalFunction(entry)
         "fmod",
         "floor",
         "ceil",
+        "atof",
         /memchr/,
         "strlen",
+        "Servo_ComputedValues_EqualCustomProperties",
         /Servo_DeclarationBlock_GetCssText/,
+        "Servo_GetArcStringData",
         /nsIFrame::AppendOwnedAnonBoxes/,
         // Assume that atomic accesses are threadsafe.
         /^__atomic_fetch_/,
@@ -221,6 +225,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_StyleTransition_SetUnsupportedProperty", "aTransition", null],
         ["Gecko_AddPropertyToSet", "aPropertySet", null],
         ["Gecko_CalcStyleDifference", "aAnyStyleChanged", null],
+        ["Gecko_CalcStyleDifference", "aOnlyResetStructsChanged", null],
         ["Gecko_nsStyleSVG_CopyContextProperties", "aDst", null],
         ["Gecko_nsStyleFont_PrefillDefaultForGeneric", "aFont", null],
         ["Gecko_nsStyleSVG_SetContextPropertiesLength", "aSvg", null],
@@ -229,6 +234,10 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_CopyAlternateValuesFrom", "aDest", null],
         ["Gecko_CounterStyle_GetName", "aResult", null],
         ["Gecko_CounterStyle_GetSingleString", "aResult", null],
+        ["Gecko_EnsureMozBorderColors", "aBorder", null],
+        ["Gecko_ClearMozBorderColors", "aBorder", null],
+        ["Gecko_AppendMozBorderColors", "aBorder", null],
+        ["Gecko_CopyMozBorderColors", "aDest", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
@@ -240,6 +249,36 @@ function treatAsSafeArgument(entry, varName, csuName)
             continue;
         return true;
     }
+    return false;
+}
+
+function isSafeAssignment(entry, edge, variable)
+{
+    if (edge.Kind != 'Assign')
+        return false;
+
+    var [mangled, unmangled] = splitFunction(entry.name);
+
+    // The assignment
+    //
+    //   nsFont* font = fontTypes[eType];
+    //
+    // ends up with 'font' pointing to a member of 'this', so it should inherit
+    // the safety of 'this'.
+    if (unmangled.includes("mozilla::LangGroupFontPrefs::Initialize") &&
+        variable == 'font')
+    {
+        const [lhs, rhs] = edge.Exp;
+        const {Kind, Exp: [{Kind: indexKind, Exp: [collection, index]}]} = rhs;
+        if (Kind == 'Drf' &&
+            indexKind == 'Index' &&
+            collection.Kind == 'Var' &&
+            collection.Variable.Name[0] == 'fontTypes')
+        {
+            return entry.isSafeArgument(0); // 'this'
+        }
+    }
+
     return false;
 }
 
@@ -255,11 +294,22 @@ function checkFieldWrite(entry, location, fields)
             return;
         if (/nsCOMPtr<.*?>.mRawPtr/.test(field))
             return;
+
+        if (/\bThreadLocal<\b/.test(field))
+            return;
     }
 
     var str = "";
     for (var field of fields)
         str += " " + field;
+
+    // Bug 1400435
+    if (entry.stack[entry.stack.length - 1].callee.match(/^Gecko_CSSValue_Set/) &&
+        str == " nsAutoRefCnt.mValue")
+    {
+        return;
+    }
+
     dumpError(entry, location, "Field write" + str);
 }
 
@@ -279,6 +329,11 @@ function checkDereferenceWrite(entry, location, variable)
 
     // Operations on nsISupports reference counts.
     if (hasThreadsafeReferenceCounts(entry, /nsCOMPtr<T>::swap\(.*?\[with T = (.*?)\]/))
+        return;
+
+    // ConvertToLowerCase::write writes through a local pointer into the first
+    // argument.
+    if (/ConvertToLowerCase::write/.test(name) && entry.isSafeArgument(0))
         return;
 
     dumpError(entry, location, "Dereference write " + (variable ? variable : "<unknown>"));
@@ -367,6 +422,8 @@ function ignoreContents(entry)
         "abort",
         /MOZ_ReportAssertionFailure/,
         /MOZ_ReportCrash/,
+        /MOZ_CrashPrintf/,
+        /MOZ_CrashOOL/,
         /AnnotateMozCrashReason/,
         /InvalidArrayIndex_CRASH/,
         /NS_ABORT_OOM/,
@@ -381,14 +438,14 @@ function ignoreContents(entry)
         /nsCSSValue::BufferFromString/,
         /NS_strdup/,
         /Assert_NoQueryNeeded/,
+        /AssertCurrentThreadOwnsMe/,
+        /PlatformThread::CurrentId/,
         /imgRequestProxy::GetProgressTracker/, // Uses an AutoLock
         /Smprintf/,
         "malloc",
         "free",
         "realloc",
         "jemalloc_thread_local_arena",
-        /profiler_register_thread/,
-        /profiler_unregister_thread/,
 
         // These all create static strings in local storage, which is threadsafe
         // to do but not understood by the analysis yet.
@@ -397,38 +454,36 @@ function ignoreContents(entry)
         /nsCSSProps::ValueToKeyword/,
         /nsCSSKeywords::GetStringValue/,
 
-        // The analysis can't cope with the indirection used for the objects
-        // being initialized here.
-        "Gecko_GetOrCreateKeyframeAtStart",
-        "Gecko_GetOrCreateInitialKeyframe",
-        "Gecko_GetOrCreateFinalKeyframe",
-        "Gecko_NewStyleQuoteValues",
-        "Gecko_NewCSSValueSharedList",
-        "Gecko_NewNoneTransform",
-        "Gecko_NewGridTemplateAreasValue",
-        /nsCSSValue::SetCalcValue/,
-        /CSSValueSerializeCalcOps::Append/,
-        "Gecko_CSSValue_SetFunction",
-        "Gecko_CSSValue_SetArray",
-        "Gecko_CSSValue_InitSharedList",
-        "Gecko_EnsureMozBorderColors",
-        "Gecko_ClearMozBorderColors",
-        "Gecko_AppendMozBorderColors",
-        "Gecko_CopyMozBorderColors",
-        "Gecko_SetNullImageValue",
+        // These could probably be handled by treating the scope of PSAutoLock
+        // aka BaseAutoLock<PSMutex> as threadsafe.
+        /profiler_register_thread/,
+        /profiler_unregister_thread/,
 
         // The analysis thinks we'll write to mBits in the DoGetStyleFoo<false>
         // call.  Maybe the template parameter confuses it?
         /nsStyleContext::PeekStyle/,
 
-        // Needs main thread assertions or other fixes.
-        /UndisplayedMap::GetEntryFor/,
+        // The analysis can't cope with the indirection used for the objects
+        // being initialized here, from nsCSSValue::Array::Create to the return
+        // value of the Item(i) getter.
+        /nsCSSValue::SetCalcValue/,
+
+        // Unable to analyze safety of linked list initialization.
+        "Gecko_NewCSSValueSharedList",
+        "Gecko_CSSValue_InitSharedList",
+
+        // Unable to trace through dataflow, but straightforward if inspected.
+        "Gecko_NewNoneTransform",
+
+        // Bug 1368922
+        "Gecko_UnsetDirtyStyleAttr",
+
+        // Bug 1400438
+        "Gecko_AppendMozBorderColors",
+
+        // Need main thread assertions or other fixes.
         /EffectCompositor::GetServoAnimationRule/,
         /LookAndFeel::GetColor/,
-        "Gecko_CopyStyleContentsFrom",
-        "Gecko_CSSValue_SetPixelValue",
-        "Gecko_UnsetDirtyStyleAttr",
-        /nsCSSPropertyIDSet::AddProperty/,
     ];
     if (entry.matches(whitelist))
         return true;
@@ -440,20 +495,21 @@ function ignoreContents(entry)
             /nsTArray_Impl.*?::AppendElement/,
             /nsTArray_Impl.*?::RemoveElementsAt/,
             /nsTArray_Impl.*?::ReplaceElementsAt/,
-            /nsTArray_Impl.*?::InsertElementsAt/,
+            /nsTArray_Impl.*?::InsertElementAt/,
             /nsTArray_Impl.*?::SetCapacity/,
+            /nsTArray_Impl.*?::SetLength/,
             /nsTArray_base.*?::EnsureCapacity/,
             /nsTArray_base.*?::ShiftData/,
             /AutoTArray.*?::Init/,
-            /nsTSubstring<T>::SetCapacity/,
-            /nsTSubstring<T>::SetLength/,
-            /nsTSubstring<T>::Assign/,
-            /nsTSubstring<T>::Append/,
-            /nsTSubstring<T>::Replace/,
-            /nsTSubstring<T>::Trim/,
-            /nsTSubstring<T>::Truncate/,
-            /nsTSubstring<T>::StripTaggedASCII/,
-            /nsTSubstring<T>::operator=/,
+            /(nsTSubstring<T>|nsAC?String)::SetCapacity/,
+            /(nsTSubstring<T>|nsAC?String)::SetLength/,
+            /(nsTSubstring<T>|nsAC?String)::Assign/,
+            /(nsTSubstring<T>|nsAC?String)::Append/,
+            /(nsTSubstring<T>|nsAC?String)::Replace/,
+            /(nsTSubstring<T>|nsAC?String)::Trim/,
+            /(nsTSubstring<T>|nsAC?String)::Truncate/,
+            /(nsTSubstring<T>|nsAC?String)::StripTaggedASCII/,
+            /(nsTSubstring<T>|nsAC?String)::operator=/,
             /nsTAutoStringN<T, N>::nsTAutoStringN/,
             /nsTFixedString<T>::nsTFixedString/,
 
@@ -491,8 +547,8 @@ function ignoreContents(entry)
     if (entry.isSafeArgument(2)) {
         var secondArgWhitelist = [
             /nsStringBuffer::ToString/,
-            /AppendUTF8toUTF16/,
-            /AppendASCIItoUTF16/,
+            /AppendUTF\d+toUTF\d+/,
+            /AppendASCIItoUTF\d+/,
         ];
         if (entry.matches(secondArgWhitelist))
             return true;
@@ -571,12 +627,12 @@ function isZero(exp)
 // which are safe using a sorted array, so that this can be propagated down the
 // stack. Zero is |this|, and arguments are indexed starting at one.
 
-function WorklistEntry(name, safeArguments, stack)
+function WorklistEntry(name, safeArguments, stack, parameterNames)
 {
     this.name = name;
     this.safeArguments = safeArguments;
     this.stack = stack;
-    this.parameterNames = {};
+    this.parameterNames = parameterNames;
 }
 
 WorklistEntry.prototype.readable = function()
@@ -684,6 +740,12 @@ CallSite.prototype.safeString = function()
 var errorCount = 0;
 var errorLimit = 100;
 
+// We want to suppress output for functions that ended up not having any
+// hazards, for brevity of the final output. So each new toplevel function will
+// initialize this to a string, which should be printed only if an error is
+// seen.
+var errorHeader;
+
 var startTime = new Date;
 function elapsedTime()
 {
@@ -723,34 +785,40 @@ if (options.verbose) {
 }
 
 print(elapsedTime() + "Loading types...");
-loadTypes('src_comp.xdb');
+if (os.getenv("TYPECACHE"))
+    loadTypesWithCache('src_comp.xdb', os.getenv("TYPECACHE"));
+else
+    loadTypes('src_comp.xdb');
 print(elapsedTime() + "Starting analysis...");
-
-var reachable = {};
 
 var xdb = xdbLibrary();
 xdb.open("src_body.xdb");
 
 var minStream = xdb.min_data_stream();
 var maxStream = xdb.max_data_stream();
-
 var roots = [];
-for (var bodyIndex = minStream; bodyIndex <= maxStream; bodyIndex++) {
-    var key = xdb.read_key(bodyIndex);
-    var name = key.readString();
-    if (/^Gecko_/.test(name)) {
-        var data = xdb.read_entry(key);
-        if (/ServoBindings.cpp/.test(data.readString()))
-            roots.push(name);
-        xdb.free_string(data);
+
+var [flag, arg] = scriptArgs;
+if (flag && (flag == '-f' || flag == '--function')) {
+    roots = [arg];
+} else {
+    for (var bodyIndex = minStream; bodyIndex <= maxStream; bodyIndex++) {
+        var key = xdb.read_key(bodyIndex);
+        var name = key.readString();
+        if (/^Gecko_/.test(name)) {
+            var data = xdb.read_entry(key);
+            if (/ServoBindings.cpp/.test(data.readString()))
+                roots.push(name);
+            xdb.free_string(data);
+        }
+        xdb.free_string(key);
     }
-    xdb.free_string(key);
 }
 
 print(elapsedTime() + "Found " + roots.length + " roots.");
 for (var i = 0; i < roots.length; i++) {
     var root = roots[i];
-    print(elapsedTime() + "#" + (i + 1) + " Analyzing " + root + " ...");
+    errorHeader = elapsedTime() + "#" + (i + 1) + " Analyzing " + root + " ...";
     try {
         processRoot(root);
     } catch (e) {
@@ -771,8 +839,16 @@ var assignments;
 // All loops in the current function which are reachable off main thread.
 var reachableLoops;
 
+// Functions that are reachable from the current root.
+var reachable = {};
+
 function dumpError(entry, location, text)
 {
+    if (errorHeader) {
+        print(errorHeader);
+        errorHeader = undefined;
+    }
+
     var stack = entry.stack;
     print("Error: " + text);
     print("Location: " + entry.name + (location ? " @ " + location : "") + stack[0].safeString());
@@ -803,7 +879,7 @@ function variableAssignRhs(edge)
     return null;
 }
 
-function processAssign(entry, location, lhs, edge)
+function processAssign(body, entry, location, lhs, edge)
 {
     var fields;
     [lhs, fields] = stripFields(lhs);
@@ -817,17 +893,19 @@ function processAssign(entry, location, lhs, edge)
             // taken and indirect assignments might occur. This is an
             // unsoundness in the analysis.
 
+            let assign = [body, edge];
+
             // Chain assignments if the RHS has only been assigned once.
             var rhsVariable = variableAssignRhs(edge);
             if (rhsVariable) {
-                var rhsEdge = singleAssignment(variableName(rhsVariable));
-                if (rhsEdge)
-                    edge = rhsEdge;
+                var rhsAssign = singleAssignment(variableName(rhsVariable));
+                if (rhsAssign)
+                    assign = rhsAssign;
             }
 
             if (!(name in assignments))
                 assignments[name] = [];
-            assignments[name].push(edge);
+            assignments[name].push(assign);
         } else {
             checkVariableAssignment(entry, location, name);
         }
@@ -838,6 +916,22 @@ function processAssign(entry, location, lhs, edge)
             variable = lhs.Exp[0].Variable;
             if (isSafeVariable(entry, variable))
                 return;
+        } else if (lhs.Exp[0].Kind == "Fld") {
+            const {
+                Type: {Kind, Type: fieldType},
+                FieldCSU: {Type: {Kind: containerTypeKind,
+                                  Name: containerTypeName}}
+            } = lhs.Exp[0].Field;
+            const [containerExpr] = lhs.Exp[0].Exp;
+
+            if (containerTypeKind == 'CSU' &&
+                Kind == 'Pointer' &&
+                isEdgeSafeArgument(entry, containerExpr) &&
+                isSafeMemberPointer(containerTypeName, fieldType))
+            {
+                return;
+            }
+
         }
         if (fields.length)
             checkFieldWrite(entry, location, fields);
@@ -897,7 +991,7 @@ function process(entry, body, addCallee)
             switch (callee.kind) {
             case "direct":
                 var safeArguments = getEdgeSafeArguments(entry, edge, callee.name);
-                addCallee(new CallSite(callee.name, safeArguments, location, entry.parameterNames));
+                addCallee(new CallSite(callee.name, safeArguments, location, {}));
                 break;
               case "resolved-field":
                 break;
@@ -921,11 +1015,11 @@ function process(entry, body, addCallee)
 
         if (edge.Kind == "Assign") {
             assert(edge.Exp.length == 2);
-            processAssign(entry, location, edge.Exp[0], edge);
+            processAssign(body, entry, location, edge.Exp[0], edge);
         } else if (edge.Kind == "Call") {
             assert(edge.Exp.length <= 2);
             if (edge.Exp.length == 2)
-                processAssign(entry, location, edge.Exp[1], edge);
+                processAssign(body, entry, location, edge.Exp[1], edge);
 
             // Treat assertion failures as if they don't return, so that
             // asserting NS_IsMainThread() is sufficient to prevent the
@@ -993,7 +1087,14 @@ function maybeProcessMissingFunction(entry, addCallee)
 function processRoot(name)
 {
     var safeArguments = [];
-    var worklist = [new WorklistEntry(name, safeArguments, [new CallSite(name, safeArguments, null, {})])];
+    var parameterNames = {};
+    var worklist = [new WorklistEntry(name, safeArguments, [new CallSite(name, safeArguments, null, parameterNames)], parameterNames)];
+
+    reachable = {};
+
+    var armed = false;
+    if (name.includes("Gecko_CSSValue_Set"))
+        armed = true;
 
     while (worklist.length > 0) {
         var entry = worklist.pop();
@@ -1003,6 +1104,7 @@ function processRoot(name)
         // analyzing functions separately for each subset if simpler, ensures that
         // the stack traces we produce accurately characterize the stack arguments,
         // and should be fast enough for now.
+
         if (entry.mangledName() in reachable)
             continue;
         reachable[entry.mangledName()] = true;
@@ -1034,7 +1136,7 @@ function processRoot(name)
         for (var callee of callees) {
             if (!ignoreCallEdge(entry, callee.callee)) {
                 var nstack = [callee, ...entry.stack];
-                worklist.push(new WorklistEntry(callee.callee, callee.safeArguments, nstack));
+                worklist.push(new WorklistEntry(callee.callee, callee.safeArguments, nstack, callee.parameterNames));
             }
         }
     }
@@ -1085,9 +1187,13 @@ function singleAssignment(name)
 }
 
 function expressionValueEdge(exp) {
-    if (exp.Kind == "Var" && exp.Variable.Kind == "Temp")
-        return singleAssignment(variableName(exp.Variable));
-    return null;
+    if (!(exp.Kind == "Var" && exp.Variable.Kind == "Temp"))
+        return null;
+    const assign = singleAssignment(variableName(exp.Variable));
+    if (!assign)
+        return null;
+    const [body, edge] = assign;
+    return edge;
 }
 
 function isSafeVariable(entry, variable)
@@ -1100,10 +1206,24 @@ function isSafeVariable(entry, variable)
         return false;
     var name = variableName(variable);
 
+    if (!entry.safeLocals)
+        entry.safeLocals = new Map;
+    if (entry.safeLocals.has(name))
+        return entry.safeLocals.get(name);
+
+    const safe = isSafeLocalVariable(entry, name);
+    entry.safeLocals.set(name, safe);
+    return safe;
+}
+
+function isSafeLocalVariable(entry, name)
+{
     // If there is a single place where this variable has been assigned on
     // edges we are considering, look at that edge.
-    var edge = singleAssignment(name);
-    if (edge) {
+    var assign = singleAssignment(name);
+    if (assign) {
+        const [body, edge] = assign;
+
         // Treat temporary pointers to DebugOnly contents as thread local.
         if (isDirectCall(edge, /DebugOnly.*?::operator/))
             return true;
@@ -1121,21 +1241,30 @@ function isSafeVariable(entry, variable)
             // References to the contents of an array are threadsafe if the array
             // itself is threadsafe.
             if ((isDirectCall(edge, /operator\[\]/) ||
+                 isDirectCall(edge, /nsTArray.*?::InsertElementAt\b/) ||
                  isDirectCall(edge, /nsStyleContent::ContentAt/)) &&
                 isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
             {
                 return true;
             }
 
-            // Watch for the coerced result of a getter_AddRefs call.
+            // Watch for the coerced result of a getter_AddRefs or getter_Copies call.
             if (isDirectCall(edge, /operator /)) {
                 var otherEdge = expressionValueEdge(edge.PEdgeCallInstance.Exp);
                 if (otherEdge &&
-                    isDirectCall(otherEdge, /getter_AddRefs/) &&
+                    isDirectCall(otherEdge, /getter_(?:AddRefs|Copies)/) &&
                     isEdgeSafeArgument(entry, otherEdge.PEdgeCallArguments.Exp[0]))
                 {
                     return true;
                 }
+            }
+
+            // RefPtr::operator->() and operator* transmit the safety of the
+            // RefPtr to the return value.
+            if (isDirectCall(edge, /RefPtr<.*?>::operator(->|\*)\(\)/) &&
+                isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
+            {
+                return true;
             }
 
             // Placement-new returns a pointer that is as safe as the pointer
@@ -1155,7 +1284,30 @@ function isSafeVariable(entry, variable)
             {
                 return true;
             }
+
+            // Special case:
+            //
+            //   keyframe->mTimingFunction.emplace()
+            //   keyframe->mTimingFunction->Init()
+            //
+            // The object calling Init should be considered safe here because
+            // we just emplaced it, though in general keyframe::operator->
+            // could do something crazy.
+            if (isDirectCall(edge, /operator->/)) do {
+                const predges = getPredecessors(body)[edge.Index[0]];
+                if (!predges || predges.length != 1)
+                    break;
+                const predge = predges[0];
+                if (!isDirectCall(predge, /\bemplace\b/))
+                    break;
+                const instance = predge.PEdgeCallInstance;
+                if (JSON.stringify(instance) == JSON.stringify(edge.PEdgeCallInstance))
+                    return true;
+            } while (false);
         }
+
+        if (isSafeAssignment(entry, edge, name))
+            return true;
 
         // Watch out for variables which were assigned arguments.
         var rhsVariable = variableAssignRhs(edge);
@@ -1187,6 +1339,26 @@ function isSafeVariable(entry, variable)
         return false;
 
     return true;
+}
+
+function isSafeMemberPointer(containerType, memberType)
+{
+    if (memberType.Kind != 'Pointer')
+        return false;
+
+    const {Type: {Kind: pointeeKind, Name: pointeeTypeName}} = memberType;
+
+    // nsStyleBorder has a member mBorderColors of type nsBorderColors**. It is
+    // lazily initialized to an array of 4 nsBorderColors, and should inherit
+    // the safety of its container.
+    if (containerType == 'nsStyleBorder' &&
+        pointeeKind == 'CSU' &&
+        pointeeTypeName == 'nsBorderColors')
+    {
+        return true;
+    }
+
+    return false;
 }
 
 // Return whether 'exp == value' holds only when execution is on the main thread.

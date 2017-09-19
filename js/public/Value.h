@@ -354,17 +354,17 @@ class MOZ_NON_PARAM alignas(8) Value
     }
 
     void setString(JSString* str) {
-        MOZ_ASSERT(uintptr_t(str) > 0x1000);
+        MOZ_ASSERT(js::gc::IsCellPointerValid(str));
         data.asBits = bitsFromTagAndPayload(JSVAL_TAG_STRING, PayloadType(str));
     }
 
     void setSymbol(JS::Symbol* sym) {
-        MOZ_ASSERT(uintptr_t(sym) > 0x1000);
+        MOZ_ASSERT(js::gc::IsCellPointerValid(sym));
         data.asBits = bitsFromTagAndPayload(JSVAL_TAG_SYMBOL, PayloadType(sym));
     }
 
     void setObject(JSObject& obj) {
-        MOZ_ASSERT(uintptr_t(&obj) >= 0x1000);
+        MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
 #if defined(JS_PUNBOX64)
         // VisualStudio cannot contain parenthesized C++ style cast and shift
         // inside decltype in template parameter:
@@ -756,7 +756,7 @@ class MOZ_NON_PARAM alignas(8) Value
         MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Object,
                    "Private GC thing Values must not be objects. Make an ObjectValue instead.");
 
-        MOZ_ASSERT(uintptr_t(cell) > 0x1000);
+        MOZ_ASSERT(js::gc::IsCellPointerValid(cell));
 #if defined(JS_PUNBOX64)
         // VisualStudio cannot contain parenthesized C++ style cast and shift
         // inside decltype in template parameter:
@@ -1258,6 +1258,9 @@ struct GCPolicy<JS::Value>
     }
     static bool isTenured(const Value& thing) {
         return !thing.isGCThing() || !IsInsideNursery(thing.toGCThing());
+    }
+    static bool isValid(const Value& value) {
+        return !value.isGCThing() || js::gc::IsCellPointerValid(value.toGCThing());
     }
 };
 

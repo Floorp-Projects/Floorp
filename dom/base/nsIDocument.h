@@ -446,9 +446,23 @@ public:
   }
 
   /**
-   * Set the principal responsible for this document.
+   * Set the principal responsible for this document.  Chances are,
+   * you do not want to be using this.
    */
   virtual void SetPrincipal(nsIPrincipal *aPrincipal) = 0;
+
+  /**
+   * Get the list of ancestor principals for a document.  This is the same as
+   * the ancestor list for the document's docshell the last time SetContainer()
+   * was called with a non-null argument. See the documentation for the
+   * corresponding getter in docshell for how this list is determined.  We store
+   * a copy of the list, because we may lose the ability to reach our docshell
+   * before people stop asking us for this information.
+   */
+  const nsTArray<nsCOMPtr<nsIPrincipal>>& AncestorPrincipals() const
+  {
+    return mAncestorPrincipals;
+  }
 
   /**
    * Return the LoadGroup for the document. May return null.
@@ -3594,6 +3608,10 @@ protected:
   // CSP violation reports that have been buffered up due to a call to
   // StartBufferingCSPViolations.
   nsTArray<nsCOMPtr<nsIRunnable>> mBufferedCSPViolations;
+
+  // List of ancestor principals.  This is set at the point a document
+  // is connected to a docshell and not mutated thereafter.
+  nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
 
   // Restyle root for servo's style system.
   //
