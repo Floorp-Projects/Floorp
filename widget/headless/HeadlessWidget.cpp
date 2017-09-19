@@ -7,6 +7,7 @@
 #include "Layers.h"
 #include "BasicLayers.h"
 #include "BasicEvents.h"
+#include "MouseEvents.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
 
@@ -409,6 +410,41 @@ HeadlessWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
     aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
   }
 
+  return NS_OK;
+}
+
+nsresult
+HeadlessWidget::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                                           uint32_t aNativeMessage,
+                                           uint32_t aModifierFlags,
+                                           nsIObserver* aObserver)
+{
+  AutoObserverNotifier notifier(aObserver, "mouseevent");
+  EventMessage msg;
+  switch (aNativeMessage) {
+    case MOZ_HEADLESS_MOUSE_MOVE:
+      msg = eMouseMove;
+      break;
+    case MOZ_HEADLESS_MOUSE_DOWN:
+      msg = eMouseDown;
+      break;
+    case MOZ_HEADLESS_MOUSE_UP:
+      msg = eMouseUp;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported synthesized mouse event");
+      return NS_ERROR_UNEXPECTED;
+  }
+  WidgetMouseEvent event(true, msg, this, WidgetMouseEvent::eReal);
+  event.mRefPoint = aPoint - WidgetToScreenOffset();
+  if (msg == eMouseDown || msg == eMouseUp) {
+    event.button = WidgetMouseEvent::eLeftButton;
+  }
+  if (msg == eMouseDown) {
+    event.mClickCount = 1;
+  }
+  event.AssignEventTime(WidgetEventTime());
+  DispatchInputEvent(&event);
   return NS_OK;
 }
 
