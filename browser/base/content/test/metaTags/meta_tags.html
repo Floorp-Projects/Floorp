@@ -13,6 +13,18 @@
     <meta name="thumbnail" content="thumbnail" />
   </head>
   <body>
+    <script>
+      function addMeta(tag) {
+        const meta = document.createElement("meta");
+        meta.content = tag;
+        meta.setAttribute("property", tag);
+        document.head.appendChild(meta);
+      }
+
+      // Delay adding this "best" image tag to test that later tags are used.
+      // Use a delay that is long enough for tests to check for wrong metadata.
+      setTimeout(() => addMeta("og:image:secure_url"), 100);
+    </script>
   </body>
 </html>
 

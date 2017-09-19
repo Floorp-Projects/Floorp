@@ -6092,6 +6092,7 @@ nsTextFrame::PaintDecorationLine(const PaintDecorationLineParams& aParams)
  */
 void
 nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
+                                      TextDrawTarget* aTextDrawer,
                                       const LayoutDeviceRect& aDirtyRect,
                                       SelectionType aSelectionType,
                                       nsTextPaintStyle& aTextPaintStyle,
@@ -6108,6 +6109,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
 {
   PaintDecorationLineParams params;
   params.context = aContext;
+  params.textDrawer = aTextDrawer;
   params.dirtyRect = aDirtyRect;
   params.pt = aPt;
   params.lineSize.width = aWidth;
@@ -6123,6 +6125,12 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
                                              aFontMetrics);
 
   float relativeSize;
+
+  // Since this happens after text, all we *should* be allowed to do is strikeThrough.
+  // If this isn't true, we're at least bug-compatible with gecko!
+  if (aTextDrawer) {
+    aTextDrawer->StartDrawing(TextDrawTarget::Phase::eLineThrough);
+  }
 
   switch (aSelectionType) {
     case SelectionType::eIMERawClause:
@@ -6803,7 +6811,7 @@ nsTextFrame::PaintTextSelectionDecorations(
       gfxFloat width = Abs(advance) / app;
       gfxFloat xInFrame = pt.x - (aParams.framePt.x / app);
       DrawSelectionDecorations(
-        aParams.context, aParams.dirtyRect, aSelectionType,
+        aParams.context, aParams.textDrawer, aParams.dirtyRect, aSelectionType,
         *aParams.textPaintStyle, selectedStyle, pt, xInFrame,
         width, mAscent / app, decorationMetrics, aParams.callbacks,
         verticalRun, decorationOffsetDir, kDecoration);
@@ -9306,13 +9314,13 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTextFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // XXX If there's no line layout, we shouldn't even have created this
   // frame. This may happen if, for example, this is text inside a table
   // but not inside a cell. For now, just don't reflow.
   if (!aReflowInput.mLineLayout) {
     ClearMetrics(aMetrics);
-    aStatus.Reset();
     return;
   }
 
@@ -9356,6 +9364,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                         ReflowOutput& aMetrics,
                         nsReflowStatus& aStatus)
 {
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
 #ifdef NOISY_REFLOW
   ListTag(stdout);
   printf(": BeginReflow: availableWidth=%d\n", aAvailableWidth);
@@ -9390,7 +9400,6 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // We don't need to reflow if there is no content.
   if (!maxContentLength) {
     ClearMetrics(aMetrics);
-    aStatus.Reset();
     return;
   }
 
@@ -9549,7 +9558,6 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   if (!mTextRun) {
     ClearMetrics(aMetrics);
-    aStatus.Reset();
     return;
   }
 
@@ -9877,7 +9885,6 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
 
   // Compute reflow status
-  aStatus.Reset();
   if (contentLength != maxContentLength) {
     aStatus.SetIncomplete();
   }

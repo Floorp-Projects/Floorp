@@ -33,12 +33,15 @@ function checkDocumentTimeIsCorrect(controller) {
 function* startNewAnimation(controller, panel) {
   info("Add a new animation to the page and check the time again");
   let onPlayerAdded = controller.once(controller.PLAYERS_UPDATED_EVENT);
+  let onRendered = waitForAnimationTimelineRendering(panel);
+
   yield executeInContent("devtools:test:setAttribute", {
     selector: ".still",
     attributeName: "class",
     attributeValue: "ball still short"
   });
+
   yield onPlayerAdded;
-  yield waitForAnimationTimelineRendering(panel);
+  yield onRendered;
   yield waitForAllAnimationTargets(panel);
 }

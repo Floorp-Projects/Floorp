@@ -81,9 +81,9 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   MOZ_ASSERT(aOuterReflowInput, "aOuterReflowInput must not be null");
   NS_ASSERTION(aFloatManager || aOuterReflowInput->mFrame->IsLetterFrame(),
                "float manager should be present");
-  MOZ_ASSERT((!!mBaseLineLayout) ==
-              aOuterReflowInput->mFrame->IsRubyTextContainerFrame(),
-             "Only ruby text container frames have "
+  MOZ_ASSERT(aOuterReflowInput->mFrame->IsRubyTextContainerFrame() ||
+             !mBaseLineLayout,
+             "Only ruby text container frames may have "
              "a different base line layout");
   MOZ_COUNT_CTOR(nsLineLayout);
 

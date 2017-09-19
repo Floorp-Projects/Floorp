@@ -3091,6 +3091,9 @@ pref("layout.css.column-span.enabled", false);
 // Is effect of xml:base disabled for style attribute?
 pref("layout.css.style-attr-with-xml-base.disabled", true);
 
+// Are inter-character ruby annotations enabled?
+pref("layout.css.ruby.intercharacter.enabled", false);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction

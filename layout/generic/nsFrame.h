@@ -487,7 +487,7 @@ public:
    * level field.
    */
   void Trace(const char* aMethod, bool aEnter);
-  void Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus);
+  void Trace(const char* aMethod, bool aEnter, const nsReflowStatus& aStatus);
   void TraceMsg(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 
   // Helper function that verifies that each frame in the list has the

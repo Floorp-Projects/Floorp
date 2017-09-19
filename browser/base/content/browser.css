@@ -493,6 +493,11 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   opacity: 1 !important;
 }
 
+/* Ensure stop-button and reload-button are displayed correctly when in the overflow menu */
+.widget-overflow-list > #stop-reload-button > .toolbarbutton-1 {
+  -moz-box-flex: 1;
+}
+
 #PanelUI-feeds > .feed-toolbarbutton:-moz-locale-dir(rtl) {
   direction: rtl;
 }

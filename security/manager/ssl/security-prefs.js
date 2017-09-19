@@ -113,10 +113,13 @@ pref("security.pki.netscape_step_up_policy", 2);
 // 1: Only collect telemetry. CT qualification checks are not performed.
 pref("security.pki.certificate_transparency.mode", 0);
 
+// Hardware Origin-bound Second Factor Support
 pref("security.webauth.u2f", false);
 pref("security.webauth.webauthn", false);
+// Only one of "enable_softtoken" and "enable_usbtoken" can be true
+// at a time.
 pref("security.webauth.webauthn_enable_softtoken", false);
-pref("security.webauth.webauthn_enable_usbtoken", false);
+pref("security.webauth.webauthn_enable_usbtoken", true);
 
 pref("security.ssl.errorReporting.enabled", true);
 pref("security.ssl.errorReporting.url", "https://incoming.telemetry.mozilla.org/submit/sslreports/");

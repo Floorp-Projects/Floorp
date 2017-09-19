@@ -93,6 +93,8 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
                             nsReflowStatus&          aStatus)
 {
   MarkInReflow();
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
   mPresentationData.flags &= ~NS_MATHML_ERROR;
   ProcessAttributes(aPresContext);
 
@@ -109,7 +111,6 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
-  aStatus.Reset();
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 

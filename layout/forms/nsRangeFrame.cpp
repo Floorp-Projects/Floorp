@@ -316,6 +316,7 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsRangeFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   NS_ASSERTION(mTrackDiv, "::-moz-range-track div must exist!");
   NS_ASSERTION(mProgressDiv, "::-moz-range-progress div must exist!");
@@ -362,7 +363,7 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
 
-  aStatus.Reset();
+  MOZ_ASSERT(aStatus.IsEmpty(), "This type of frame can't be split.");
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }

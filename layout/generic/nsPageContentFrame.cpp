@@ -28,7 +28,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPageContentFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
-  aStatus.Reset();  // initialize out parameter
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   if (GetPrevInFlow() && (GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     nsresult rv = aPresContext->PresShell()->FrameConstructor()

@@ -68,12 +68,6 @@ if (Services.appinfo.OS == "WINNT") {
         "handleEvent@chrome://browser/content/browser.js",
       ],
     },
-
-    {
-      stack: [
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
-      ],
-    }
   );
 }
 
@@ -101,17 +95,22 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
   );
 }
 
+// Windows Vista, 7 or 8
+if (navigator.userAgent.indexOf("Windows NT 6") != -1) {
+  EXPECTED_REFLOWS.push(
+    {
+      stack: [
+        "handleEvent@chrome://browser/content/tabbrowser.xml",
+      ],
+    },
+  );
+}
+
 /*
  * This test ensures that there are no unexpected
  * uninterruptible reflows when opening new windows.
  */
 add_task(async function() {
-  const IS_WIN8 = (navigator.userAgent.indexOf("Windows NT 6.2") != -1);
-  if (IS_WIN8) {
-    ok(true, "Skipping this test because of perma-failures on Windows 8 x64 (bug 1381521)");
-    return;
-  }
-
   // Flushing all caches helps to ensure that we get consistent
   // behaviour when opening a new window, even if windows have been
   // opened in previous tests.
