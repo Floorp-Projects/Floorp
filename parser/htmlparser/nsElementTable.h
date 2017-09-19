@@ -50,6 +50,4 @@ struct nsHTMLElement {
   static  bool    IsBlock(nsHTMLTag aTag);
 };
 
-extern const nsHTMLElement gHTMLElements[];
-
 #endif
