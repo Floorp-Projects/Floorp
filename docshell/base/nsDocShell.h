@@ -19,6 +19,7 @@
 #include "nsIDOMStorageManager.h"
 #include "nsDocLoader.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/TimeStamp.h"
@@ -290,6 +291,41 @@ public:
   nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
 
   nsDOMNavigationTiming* GetNavigationTiming() const;
+
+  /**
+   * Get the list of ancestor principals for this docshell.  The list is meant
+   * to be the list of principals of the documents this docshell is "nested
+   * through" in the sense of
+   * <https://html.spec.whatwg.org/multipage/browsers.html#browsing-context-nested-through>.
+   * In practice, it is defined as follows:
+   *
+   * If this is an <iframe mozbrowser> or a toplevel content docshell
+   * (i.e. toplevel document in spec terms), the list is empty.
+   *
+   * Otherwise the list is the list for the document we're nested through (again
+   * in the spec sense), with the principal of that document prepended.  Note
+   * that this matches the ordering specified for Location.ancestorOrigins.
+   */
+  const nsTArray<nsCOMPtr<nsIPrincipal>>& AncestorPrincipals() const
+  {
+    return mAncestorPrincipals;
+  }
+
+  /**
+   * Set the list of ancestor principals for this docshell.  This is really only
+   * needed for use by the frameloader.  We can't do this ourselves, inside
+   * docshell, because there's a bunch of state setup that frameloader does
+   * (like telling us whether we're a mozbrowser), some of which comes after the
+   * docshell is added to the docshell tree, which can affect what the ancestor
+   * principals should look like.
+   *
+   * This method steals the data from the passed-in array.
+   */
+  void SetAncestorPrincipals(
+    nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals)
+  {
+    mAncestorPrincipals = mozilla::Move(aAncestorPrincipals);
+  }
 
 private:
   bool CanSetOriginAttributes();
@@ -1093,6 +1129,9 @@ private:
   // Whether or not touch events are overridden. Possible values are defined
   // as constants in the nsIDocShell.idl file.
   uint32_t mTouchEventsOverride;
+
+  // Our list of ancestor principals.
+  nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
 
   // Separate function to do the actual name (i.e. not _top, _self etc.)
   // searching for FindItemWithName.
