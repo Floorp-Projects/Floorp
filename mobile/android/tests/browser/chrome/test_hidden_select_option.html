@@ -19,12 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1178722
 
     const VISIBLE_OPTION_COUNT = 5;
     const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-    Cu.import("resource://gre/modules/Services.jsm");
-    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-    let sandbox = {};
-    Services.scriptloader.loadSubScript("chrome://browser/content/SelectHelper.js", sandbox);
-    let SelectHelper = sandbox.SelectHelper;
+    Cu.import("resource://gre/modules/SelectHelper.jsm");
 
     // Returns whether an element should be visible according to its text content.
     function shouldBeVisible(e) {

@@ -3,8 +3,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
-                                  "resource://gre/modules/Prompt.jsm");
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+this.EXPORTED_SYMBOLS = ["SelectHelper"];
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Prompt: "resource://gre/modules/Prompt.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 var SelectHelper = {
   _uiBusy: false,
