@@ -117,7 +117,7 @@ class TestEnvironment(object):
             for port, server in servers:
                 server.kill()
         for cm in self.env_extras:
-            cm.__exit__()
+            cm.__exit__(exc_type, exc_val, exc_tb)
         self.cache_manager.__exit__(exc_type, exc_val, exc_tb)
         self.ssl_env.__exit__(exc_type, exc_val, exc_tb)
         self.stash.__exit__()

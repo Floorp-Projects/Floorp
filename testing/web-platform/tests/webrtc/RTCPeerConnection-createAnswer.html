@@ -36,7 +36,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    return generateOffer({ video: true })
+    return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer => pc.setRemoteDescription(offer))
     .then(() => pc.createAnswer())
     .then(answer => {
@@ -51,7 +51,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    return generateOffer({ data: true })
+    return generateOffer({ pc, data: true })
     .then(offer => pc.setRemoteDescription(offer))
     .then(() => {
       pc.close();

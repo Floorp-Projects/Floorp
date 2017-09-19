@@ -13,6 +13,7 @@ async function checkNullShippingAddress(button, options) {
   const { request, response } = await getPaymentRequestResponse(options);
   await response.complete();
   test(() => {
+    assert_idl_attribute(response, "shippingAddress");
     assert_equals(
       response.shippingAddress,
       null,
@@ -32,6 +33,7 @@ async function runManualTest(button, options = {}, expected = {}, id) {
   await response.complete();
   test(() => {
     assert_equals(response.requestId, request.id, `Expected ids to match`);
+    assert_idl_attribute(response, "shippingAddress");
     const { shippingAddress: addr } = request;
     assert_true(
       addr instanceof PaymentAddress,
