@@ -695,14 +695,8 @@ pref("plugin.defaultXpi.state", 2);
 // Java is Click-to-Activate by default on all channels.
 pref("plugin.state.java", 1);
 
-// Flash is Click-to-Activate by default on Nightly.
-// On other channels, it will be controlled by a
-// rollout system addon.
-#ifdef NIGHTLY_BUILD
+// Flash is Click-to-Activate by default on all channels.
 pref("plugin.state.flash", 1);
-#else
-pref("plugin.state.flash", 2);
-#endif
 
 // Enables the download and use of the flash blocklists.
 pref("plugins.flashBlock.enabled", true);
