@@ -136,7 +136,7 @@ var supported_properties = {
                      test_true_currentcolor_transition,
                      test_auto_color_transition ],
     "clip": [ test_rect_transition ],
-    "clip-path": [ test_clip_path_transition ],
+    "clip-path": [ test_basic_shape_or_url_transition ],
     "color": [ test_color_transition,
                test_currentcolor_transition ],
     "fill": [ test_color_transition,
@@ -285,6 +285,13 @@ var supported_properties = {
     "-webkit-text-stroke-color": [ test_color_transition,
                                    test_true_currentcolor_transition ]
 };
+
+// Bug 1289049: After making shape-outside animatable on Gecko, we can remove
+// |isServo| flag from this if-condition.
+if (SpecialPowers.getBoolPref("layout.css.shape-outside.enabled") && isServo) {
+  supported_properties["shape-outside"] =
+    [ test_basic_shape_or_url_transition ];
+}
 
 if (SupportsMaskShorthand()) {
   supported_properties["mask-position"] = [ test_background_position_transition,
@@ -630,7 +637,13 @@ var transformTests = [
     round_error_ok: true },
 ];
 
-var clipPathTests = [
+// Even if the default reference-box of shape-outside is margin-box, which is
+// different from the default reference-box of clip-path, we still can reuse
+// these tests for both properties because we always explicitly assign a
+// reference-box (i.e. border-box or content-box) if needed.
+// Bug 1313619: Add some tests for two basic shapes with an explicit
+// reference-box and a default one.
+var clipPathAndShapeOutsideTests = [
   { start: "none", end: "none",
     expected: ["none"] },
   // none to shape
@@ -1433,12 +1446,16 @@ function test_true_currentcolor_shorthand_transition(prop) {
   test_true_currentcolor_transition(prop, get_color_from_shorthand_value, true);
 }
 
-function test_clip_path_equals(computedValStr, expectedList)
+function test_shape_or_url_equals(computedValStr, expected)
 {
   // Check simple case "none"
-  if (computedValStr == "none" && computedValStr == expectedList[0]) {
+  if (computedValStr == "none" && computedValStr == expected[0]) {
     return true;
   }
+  // We will update the expected list in this function for checking the result,
+  // so we clone it first to avoid affecting the input parameter.
+  var expectedList = expected.slice();
+
   var start = String(computedValStr);
 
   var regBox = /\s*(content\-box|padding\-box|border\-box|margin\-box|view\-box|stroke\-box|fill\-box)/
@@ -1474,7 +1491,7 @@ function test_clip_path_equals(computedValStr, expectedList)
     if (computedValStr == "") {
       return true;
     } else {
-      ok(false, "expected clip-path shape");
+      ok(false, "expected basic shape");
       return false;
     }
   }
@@ -1562,17 +1579,17 @@ function filter_function_list_equals(computedValStr, expectedList)
   return true;
 }
 
-function test_clip_path_transition(prop) {
-  for (var i in clipPathTests) {
-    var test = clipPathTests[i];
+function test_basic_shape_or_url_transition(prop) {
+  for (var i in clipPathAndShapeOutsideTests) {
+    var test = clipPathAndShapeOutsideTests[i];
     div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, test.start, "");
     cs.getPropertyValue(prop);
     div.style.setProperty("transition-property", prop, "");
     div.style.setProperty(prop, test.end, "");
     var actual = cs.getPropertyValue(prop);
-    ok(test_clip_path_equals(actual, test.expected),
-       "Clip-path property is " + actual + " expected values of " +
+    ok(test_shape_or_url_equals(actual, test.expected),
+       prop + " property is " + actual + " expected values of " +
        test.expected);
   }
 }
