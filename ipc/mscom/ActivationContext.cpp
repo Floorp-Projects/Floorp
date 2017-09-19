@@ -93,6 +93,8 @@ ActivationContext::~ActivationContext()
   Release();
 }
 
+#if defined(MOZILLA_INTERNAL_API)
+
 /* static */ Result<uintptr_t,HRESULT>
 ActivationContext::GetCurrent()
 {
@@ -103,6 +105,68 @@ ActivationContext::GetCurrent()
 
   return reinterpret_cast<uintptr_t>(actCtx);
 }
+
+/* static */ HRESULT
+ActivationContext::GetCurrentManifestPath(nsAString& aOutManifestPath)
+{
+  aOutManifestPath.Truncate();
+
+  SIZE_T bytesNeeded;
+  BOOL ok = ::QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, nullptr,
+                           nullptr, ActivationContextDetailedInformation,
+                           nullptr, 0, &bytesNeeded);
+  if (!ok) {
+    DWORD err = ::GetLastError();
+    if (err != ERROR_INSUFFICIENT_BUFFER) {
+      return HRESULT_FROM_WIN32(err);
+    }
+  }
+
+  auto ctxBuf = MakeUnique<BYTE[]>(bytesNeeded);
+
+  ok = ::QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, nullptr, nullptr,
+                      ActivationContextDetailedInformation, ctxBuf.get(),
+                      bytesNeeded, nullptr);
+  if (!ok) {
+    return HRESULT_FROM_WIN32(::GetLastError());
+  }
+
+  auto ctxInfo =
+    reinterpret_cast<ACTIVATION_CONTEXT_DETAILED_INFORMATION*>(ctxBuf.get());
+
+  // assemblyIndex is 1-based, and we want the last index, so we can just copy
+  // ctxInfo->ulAssemblyCount directly.
+  DWORD assemblyIndex = ctxInfo->ulAssemblyCount;
+  ok = ::QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, nullptr,
+                      &assemblyIndex,
+                      AssemblyDetailedInformationInActivationContext, nullptr,
+                      0, &bytesNeeded);
+  if (!ok) {
+    DWORD err = ::GetLastError();
+    if (err != ERROR_INSUFFICIENT_BUFFER) {
+      return HRESULT_FROM_WIN32(err);
+    }
+  }
+
+  auto assemblyBuf = MakeUnique<BYTE[]>(bytesNeeded);
+
+  ok = ::QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, nullptr,
+                      &assemblyIndex,
+                      AssemblyDetailedInformationInActivationContext,
+                      assemblyBuf.get(), bytesNeeded, &bytesNeeded);
+  if (!ok) {
+    return HRESULT_FROM_WIN32(::GetLastError());
+  }
+
+  auto assemblyInfo =
+    reinterpret_cast<ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION*>(assemblyBuf.get());
+  aOutManifestPath = nsDependentString(assemblyInfo->lpAssemblyManifestPath,
+                                       (assemblyInfo->ulManifestPathLength + 1) / sizeof(wchar_t));
+
+  return S_OK;
+}
+
+#endif // defined(MOZILLA_INTERNAL_API)
 
 ActivationContextRegion::ActivationContextRegion(const ActivationContext& aActCtx)
   : mActCtx(aActCtx)
