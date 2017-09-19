@@ -217,11 +217,6 @@ a {
   border-color: #777;
 }
 
-.theme-light .message[severity=error],
-.theme-light .message.error {
-  background-color: rgba(255, 150, 150, 0.3);
-}
-
 .theme-dark .message[severity=error],
 .theme-dark .message.error {
   background-color: rgba(235, 83, 104, 0.17);
@@ -714,14 +709,6 @@ a.learn-more-link.webconsole-learn-more-link {
 
 /* NEW CONSOLE STYLES */
 
-#output-wrapper > div {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-
 #output-container {
   height: 100%;
 }
@@ -731,6 +718,34 @@ a.learn-more-link.webconsole-learn-more-link {
   flex-direction: column;
   height: 100%;
   -moz-user-focus: normal;
+  color: var(--console-output-color);
+  --console-output-indent-width: 1rem;
+  --console-output-indent-border-color: var(--theme-selection-background);
+  --icon-top-margin: 4px;
+  --object-inspector-hover-background: transparent;
+  --attachment-margin-block-end: 3px;
+}
+
+/* Webconsole specific theme variables */
+.theme-light .webconsole-output-wrapper,
+.theme-firebug .webconsole-output-wrapper {
+  --error-color: var(--red-70);
+  --error-background-color: #FDF2F5;
+  --warning-color: var(--yellow-80);
+  --warning-background-color: #FFFBD5;
+  --console-output-color: var(--grey-90);
+  --attachment-border-color: var(--theme-content-color1);
+  --repeat-bubble-background-color: var(--theme-highlight-blue);
+}
+
+.theme-dark .webconsole-output-wrapper {
+  --error-color: #FF9494;
+  --error-background-color: #442923;
+  --warning-color: #FCE19F;
+  --warning-background-color: #44391F;
+  --console-output-color: white;
+  --attachment-border-color: var(--theme-body-color);
+  --repeat-bubble-background-color: var(--blue-60);
 }
 
 /*
@@ -764,6 +779,7 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
   /* Wrap so the "Hidden messages" bar can go to its own row if needed */
   flex-wrap: wrap;
+  --primary-toolbar-height: 29px;
 }
 
 .webconsole-filterbar-primary {
@@ -771,6 +787,8 @@ a.learn-more-link.webconsole-learn-more-link {
   /* We want the toolbar (which contain the text search input) to be at least 200px
   so we don't allow to shrink it */
   flex: 100 0 200px;
+  align-items: center;
+  min-height: var(--primary-toolbar-height);
 }
 
 .devtools-toolbar.webconsole-filterbar-secondary {
@@ -802,6 +820,8 @@ a.learn-more-link.webconsole-learn-more-link {
   justify-content: flex-end;
   color: var(--theme-comment);
   text-align: end;
+  align-items: center;
+  min-height: var(--primary-toolbar-height);
 }
 
 .webconsole-filterbar-filtered-messages .filter-message-text {
@@ -816,6 +836,7 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-output {
   flex: 1;
   overflow: auto;
+  font-size: 13px;
 }
 
 .webconsole-output-wrapper .message {
@@ -824,7 +845,41 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .webconsole-output-wrapper .message:hover {
-  border-inline-start-color: #0a84ff; /* Photon Design System Blue 50 */
+  border-inline-start-color: var(--theme-highlight-blue);
+}
+
+.webconsole-output-wrapper .message.warn.warn {
+  background-color: var(--warning-background-color);
+  color: var(--warning-color);
+}
+
+/* Special casing error and warning String reps so they are legible */
+.webconsole-output-wrapper .message.error .message-body,
+.webconsole-output-wrapper .message.error .message-body > .objectBox-string {
+  color: var(--error-color);
+}
+.webconsole-output-wrapper .message.warn .message-body > .objectBox-string {
+  color: var(--warning-color);
+}
+
+/* Special casing dark-theme error and warning ObjectInspector colors */
+.theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector .object-label,
+.theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector .object-label *,
+.theme-dark .webconsole-output-wrapper .message.warn .tree.object-inspector .object-label,
+.theme-dark .webconsole-output-wrapper .message.warn .tree.object-inspector .object-label *,
+.theme-dark .webconsole-output-wrapper .message.error .objectLeftBrace,
+.theme-dark .webconsole-output-wrapper .message.error .objectRightBrace,
+.theme-dark .webconsole-output-wrapper .message.error .arrayLeftBracket,
+.theme-dark .webconsole-output-wrapper .message.error .arrayRightBracket,
+.theme-dark .webconsole-output-wrapper .message.warn .objectLeftBrace,
+.theme-dark .webconsole-output-wrapper .message.warn .objectRightBrace,
+.theme-dark .webconsole-output-wrapper .message.warn .arrayLeftBracket,
+.theme-dark .webconsole-output-wrapper .message.warn .arrayRightBracket {
+  color: var(--theme-body-color);
+}
+.theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector,
+.theme-dark .webconsole-output-wrapper .message.warn .tree.object-inspector {
+  --tree-indent-border-color: var(--theme-body-color);
 }
 
 .webconsole-output-wrapper .message-flex-body > .message-body {
@@ -837,10 +892,6 @@ a.learn-more-link.webconsole-learn-more-link {
   flex-shrink: 0;
 }
 
-.webconsole-output.hideTimestamps > .message > .timestamp {
-  display: none;
-}
-
 .message.startGroup .message-body > .objectBox-string,
 .message.startGroupCollapsed .message-body > .objectBox-string {
   color: var(--theme-body-color);
@@ -848,8 +899,22 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .webconsole-output-wrapper .message > .icon {
-  margin: 3px 0 0 0;
+  margin: var(--icon-top-margin) 0 0 0;
   padding: 0 0 0 6px;
+}
+
+.webconsole-output-wrapper .message.error > .icon::before {
+  /* Red warning icon */
+  background-position: -24px -48px;
+}
+
+.webconsole-output-wrapper .message.warn > .icon::before {
+  /* Yellow warning icon */
+  background-position: -24px -24px;
+}
+
+.webconsole-output-wrapper .message .theme-twisty {
+  margin: var(--icon-top-margin) 0 0 0;
 }
 
 .message.error > .icon::before {
@@ -864,11 +929,38 @@ a.learn-more-link.webconsole-learn-more-link {
   background-position: -36px -36px;
 }
 
+/* The bubble that shows the number of times a message is repeated */
+.webconsole-output-wrapper .message-repeats {
+  background-color: var(--repeat-bubble-background-color);
+  font-weight: normal;
+  font-size: 0.8em;
+  height: auto;
+}
+
 /* Network Messages */
 
-.message.network .method {
+.webconsole-output-wrapper .message.network .method {
   margin-inline-end: 5px;
 }
+
+.webconsole-output-wrapper .message.network .xhr {
+  background-color: var(--theme-comment);
+  color: white;
+  border-radius: 2px;
+  font-weight: normal;
+  line-height: inherit;
+}
+
+.webconsole-output-wrapper .message.network:not(.navigation-marker) .url {
+  color: var(--theme-comment);
+  font-style: inherit;
+}
+
+.webconsole-output-wrapper .message.network .status {
+  color: var(--theme-highlight-blue);
+  font-style: inherit;
+}
+
 
 .network.message .network-info {
   display: none;
@@ -899,7 +991,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-output-wrapper .message .indent {
   display: inline-block;
-  border-inline-end: solid 1px var(--theme-splitter-color);
+  border-inline-end: solid 1px var(--console-output-indent-border-color);
 }
 .webconsole-output-wrapper .message .indent[data-indent="0"] {
   border-inline-end: none;
@@ -927,26 +1019,48 @@ a.learn-more-link.webconsole-learn-more-link {
   cursor: unset;
 }
 
+/* Stacktraces */
+.webconsole-output-wrapper  .stacktrace {
+  border: 1px solid var(--attachment-border-color);
+  border-radius: 2px;
+  margin-block-end: var(--attachment-margin-block-end);
+}
+
+.theme-dark .webconsole-output-wrapper .message.error .stacktrace,
+.theme-light .webconsole-output-wrapper .message.error .stacktrace {
+  /* Removing specificity from the old console */
+  background-color: inherit;
+}
+
 /* console.table() */
 .new-consoletable {
   width: 100%;
   border-collapse: collapse;
-  --consoletable-border: 1px solid var(--table-splitter-color);
+  --consoletable-border: var(--theme-splitter-color);
+  margin-block-end: var(--attachment-margin-block-end);
+  color: var(--theme-body-color);
 }
 
-.new-consoletable thead,
+.new-consoletable thead {
+  border: 1px solid var(--consoletable-border);
+}
+
 .new-consoletable tbody {
   background-color: var(--theme-body-background);
+  border: 1px solid var(--consoletable-border);
+  border-block-start-width: 0;
 }
 
 .new-consoletable th {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color);
   margin: 0;
   padding: 5px 0 0;
   font-weight: inherit;
-  border-inline-end: var(--consoletable-border);
-  border-bottom: var(--consoletable-border);
+}
+
+.new-consoletable th:not(:last-of-type) {
+  border-inline-end: 1px solid var(--consoletable-border);
 }
 
 .new-consoletable tr:nth-of-type(even) {
@@ -958,11 +1072,17 @@ a.learn-more-link.webconsole-learn-more-link {
   min-width: 100px;
   -moz-user-focus: normal;
   color: var(--theme-body-color);
-  border-inline-end: var(--consoletable-border);
   height: 1.25em;
   line-height: 1.25em;
+  /* Objects are expandable in cells, and if one gets tall,
+   * we still want other columns to stick to the top.
+   */
+  vertical-align: top;
 }
 
+.new-consoletable tr td:not(:last-of-type) {
+  border-inline-end: 1px solid var(--consoletable-border);
+}
 /* Layout */
 
 .webconsole-output {
@@ -1003,3 +1123,19 @@ body #output-container {
 }
 
 /* Object Inspector */
+.webconsole-output-wrapper .object-inspector.tree {
+  /*
+   * Make the arrow the same color and approximately the same size of the twisty icon.
+   * Should be properly fixed in https://bugzilla.mozilla.org/show_bug.cgi?id=1307937.
+   */
+  --arrow-width: 8px;
+  --arrow-fill-color: #AFA8AB;
+  --arrow-single-margin: 0.5rem;
+  --tree-indent-width: var(--console-output-indent-width);
+  --tree-indent-border-color: var(--console-output-indent-border-color);
+  --tree-node-hover-background-color : var(--object-inspector-hover-background);
+}
+
+.theme-dark .webconsole-output-wrapper .object-inspector.tree {
+  --arrow-fill-color: #7F7E81;
+}

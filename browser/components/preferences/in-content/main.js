@@ -441,19 +441,14 @@ var gMainPane = {
     }
 
     // Load the data and build the list of handlers.
-    // By doing this in a timeout, we let the preferences dialog resize itself
-    // to an appropriate size before we add a bunch of items to the list.
-    // Otherwise, if there are many items, and the Applications prefpane
-    // is the one that gets displayed when the user first opens the dialog,
-    // the dialog might stretch too much in an attempt to fit them all in.
-    // XXX Shouldn't we perhaps just set a max-height on the richlistbox?
-    var _delayedPaneLoad = function(self) {
-      self._loadData();
-      self._rebuildVisibleTypes();
-      self._sortVisibleTypes();
-      self._rebuildView();
-    }
-    setTimeout(_delayedPaneLoad, 0, this);
+    // By doing this after pageshow, we ensure it doesn't delay painting
+    // of the preferences page.
+    window.addEventListener("pageshow", () => {
+      this._loadData();
+      this._rebuildVisibleTypes();
+      this._sortVisibleTypes();
+      this._rebuildView();
+    });
 
     let browserBundle = document.getElementById("browserBundle");
     appendSearchKeywords("browserContainersSettings", [

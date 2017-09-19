@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use euclid::{SideOffsets2D, TypedRect, TypedSideOffsets2D};
-use {ColorF, FontInstanceKey, ImageKey, LayerPixel, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
+use {ColorF, FontInstanceKey, ImageKey, LayerPixel, LayoutPixel, LayoutPoint, LayoutRect,
+     LayoutSize, LayoutTransform};
 use {GlyphOptions, LayoutVector2D, PipelineId, PropertyBinding};
+use euclid::{SideOffsets2D, TypedRect, TypedSideOffsets2D};
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
 // This indicates that the BuiltDisplayList will have serialized
@@ -47,15 +48,25 @@ pub struct DisplayItem {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PrimitiveInfo<T> {
     pub rect: TypedRect<f32, T>,
-    pub local_clip: Option<LocalClip>,
+    pub local_clip: LocalClip,
     pub is_backface_visible: bool,
 }
 
 impl LayerPrimitiveInfo {
     pub fn new(rect: TypedRect<f32, LayerPixel>) -> Self {
+        Self::with_clip_rect(rect, rect)
+    }
+
+    pub fn with_clip_rect(rect: TypedRect<f32, LayerPixel>,
+                          clip_rect: TypedRect<f32, LayerPixel>)
+                          -> Self {
+        Self::with_clip(rect, LocalClip::from(clip_rect))
+    }
+
+    pub fn with_clip(rect: TypedRect<f32, LayerPixel>, clip: LocalClip) -> Self {
         PrimitiveInfo {
             rect: rect,
-            local_clip: Some(LocalClip::from(rect)),
+            local_clip: clip,
             is_backface_visible: true,
         }
     }
@@ -255,24 +266,24 @@ pub struct BorderSide {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum BorderStyle {
-    None    = 0,
-    Solid   = 1,
-    Double  = 2,
-    Dotted  = 3,
-    Dashed  = 4,
-    Hidden  = 5,
-    Groove  = 6,
-    Ridge   = 7,
-    Inset   = 8,
-    Outset  = 9,
+    None = 0,
+    Solid = 1,
+    Double = 2,
+    Dotted = 3,
+    Dashed = 4,
+    Hidden = 5,
+    Groove = 6,
+    Ridge = 7,
+    Inset = 8,
+    Outset = 9,
 }
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum BoxShadowClipMode {
-    None    = 0,
-    Outset  = 1,
-    Inset   = 2,
+    None = 0,
+    Outset = 1,
+    Inset = 2,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -357,8 +368,8 @@ pub struct StackingContext {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ScrollPolicy {
-    Scrollable  = 0,
-    Fixed       = 1,
+    Scrollable = 0,
+    Fixed = 1,
 }
 
 known_heap_size!(0, ScrollPolicy);
@@ -366,29 +377,29 @@ known_heap_size!(0, ScrollPolicy);
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum TransformStyle {
-    Flat        = 0,
-    Preserve3D  = 1,
+    Flat = 0,
+    Preserve3D = 1,
 }
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum MixBlendMode {
-    Normal      = 0,
-    Multiply    = 1,
-    Screen      = 2,
-    Overlay     = 3,
-    Darken      = 4,
-    Lighten     = 5,
-    ColorDodge  = 6,
-    ColorBurn   = 7,
-    HardLight   = 8,
-    SoftLight   = 9,
-    Difference  = 10,
-    Exclusion   = 11,
-    Hue         = 12,
-    Saturation  = 13,
-    Color       = 14,
-    Luminosity  = 15,
+    Normal = 0,
+    Multiply = 1,
+    Screen = 2,
+    Overlay = 3,
+    Darken = 4,
+    Lighten = 5,
+    ColorDodge = 6,
+    ColorBurn = 7,
+    HardLight = 8,
+    SoftLight = 9,
+    Difference = 10,
+    Exclusion = 11,
+    Hue = 12,
+    Saturation = 13,
+    Color = 14,
+    Luminosity = 15,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
@@ -420,16 +431,16 @@ pub struct ImageDisplayItem {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ImageRendering {
-    Auto        = 0,
-    CrispEdges  = 1,
-    Pixelated   = 2,
+    Auto = 0,
+    CrispEdges = 1,
+    Pixelated = 2,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct YuvImageDisplayItem {
     pub yuv_data: YuvData,
     pub color_space: YuvColorSpace,
-    pub image_rendering: ImageRendering
+    pub image_rendering: ImageRendering,
 }
 
 #[repr(u32)]
@@ -451,8 +462,8 @@ impl YuvColorSpace {
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum YuvData {
-    NV12(ImageKey, ImageKey),   // (Y channel, CbCr interleaved channel)
-    PlanarYCbCr(ImageKey, ImageKey, ImageKey),  // (Y channel, Cb channel, Cr Channel)
+    NV12(ImageKey, ImageKey), // (Y channel, CbCr interleaved channel)
+    PlanarYCbCr(ImageKey, ImageKey, ImageKey), // (Y channel, Cb channel, Cr Channel)
     InterleavedYCbCr(ImageKey), // (YCbCr interleaved channel)
 }
 
@@ -472,7 +483,11 @@ pub enum YuvFormat {
     PlanarYCbCr = 1,
     InterleavedYCbCr = 2,
 }
-pub const YUV_FORMATS: [YuvFormat; 3] = [YuvFormat::NV12, YuvFormat::PlanarYCbCr, YuvFormat::InterleavedYCbCr];
+pub const YUV_FORMATS: [YuvFormat; 3] = [
+    YuvFormat::NV12,
+    YuvFormat::PlanarYCbCr,
+    YuvFormat::InterleavedYCbCr,
+];
 
 impl YuvFormat {
     pub fn get_plane_num(&self) -> usize {
@@ -487,7 +502,7 @@ impl YuvFormat {
         match *self {
             YuvFormat::NV12 => "NV12",
             YuvFormat::PlanarYCbCr => "",
-            YuvFormat::InterleavedYCbCr => "INTERLEAVED_Y_CB_CR"
+            YuvFormat::InterleavedYCbCr => "INTERLEAVED_Y_CB_CR",
         }
     }
 }
@@ -523,13 +538,13 @@ impl LocalClip {
     pub fn create_with_offset(&self, offset: &LayoutVector2D) -> LocalClip {
         match *self {
             LocalClip::Rect(rect) => LocalClip::from(rect.translate(offset)),
-            LocalClip::RoundedRect(rect, complex) => {
-                LocalClip::RoundedRect(rect.translate(offset),
-                                       ComplexClipRegion {
-                                            rect: complex.rect.translate(offset),
-                                            radii: complex.radii,
-                                        })
-            }
+            LocalClip::RoundedRect(rect, complex) => LocalClip::RoundedRect(
+                rect.translate(offset),
+                ComplexClipRegion {
+                    rect: complex.rect.translate(offset),
+                    radii: complex.radii,
+                },
+            ),
         }
     }
 }
@@ -573,15 +588,15 @@ impl BorderRadius {
     pub fn is_uniform(&self) -> Option<f32> {
         match self.is_uniform_size() {
             Some(radius) if radius.width == radius.height => Some(radius.width),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn is_uniform_size(&self) -> Option<LayoutSize> {
         let uniform_radius = self.top_left;
-        if self.top_right == uniform_radius &&
-           self.bottom_left == uniform_radius &&
-           self.bottom_right == uniform_radius {
+        if self.top_right == uniform_radius && self.bottom_left == uniform_radius &&
+            self.bottom_right == uniform_radius
+        {
             Some(uniform_radius)
         } else {
             None
@@ -600,10 +615,7 @@ impl BorderRadius {
 impl ComplexClipRegion {
     /// Create a new complex clip region.
     pub fn new(rect: LayoutRect, radii: BorderRadius) -> ComplexClipRegion {
-        ComplexClipRegion {
-            rect,
-            radii,
-        }
+        ComplexClipRegion { rect, radii }
     }
 }
 
@@ -652,7 +664,7 @@ impl ClipId {
 
     pub fn is_root_scroll_node(&self) -> bool {
         match *self {
-            ClipId::Clip(0, 0, _)  => true,
+            ClipId::Clip(0, 0, _) => true,
             _ => false,
         }
     }

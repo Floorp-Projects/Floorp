@@ -105,8 +105,8 @@ public class WebAppManifest {
         mThemeColor = readThemeColor(manifestField);
         mName = readName(manifestField);
         mIcon = readIcon(manifest);
-        mScope = readScope(manifestField);
         mStartUri = readStartUrl(manifestField);
+        mScope = readScope(manifestField);
 
         mDisplayMode = manifestField.optString("display", null);
         mOrientation = manifestField.optString("orientation", null);
@@ -187,14 +187,15 @@ public class WebAppManifest {
     }
 
     private Uri readScope(final JSONObject manifest) {
+        final Uri defaultScope = stripLastPathSegment(mStartUri);
         final String scopeStr = manifest.optString("scope", null);
         if (scopeStr == null) {
-            return null;
+            return defaultScope;
         }
 
         Uri scope = Uri.parse(scopeStr);
         if (scope == null) {
-            return null;
+            return defaultScope;
         }
 
         if (scope.isRelative()) {

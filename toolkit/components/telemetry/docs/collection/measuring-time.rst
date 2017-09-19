@@ -18,7 +18,7 @@ API:
     TelemetryStopwatch = {
       // Start, check if running, cancel & finish recording elapsed time into a
       // histogram.
-      // |aObject| is optional. If specificied, the timer is associated with this
+      // |aObject| is optional. If specified, the timer is associated with this
       // object, so multiple time measurements can be done concurrently.
       start(histogramId, aObject);
       running(histogramId, aObject);
@@ -26,7 +26,7 @@ API:
       finish(histogramId, aObject);
       // Start, check if running, cancel & finish recording elapsed time into a
       // keyed histogram.
-      // |key| specificies the key to record into.
+      // |key| specifies the key to record into.
       // |aObject| is optional and used as above.
       startKeyed(histogramId, key, aObject);
       runningKeyed(histogramId, key, aObject);
@@ -58,7 +58,7 @@ Example:
     // TelemetryStopwatch that's already been canceled or
     // finished. Normally, that throws a warning to the
     // console. If the TelemetryStopwatch being possibly
-    // cancelled or finished is expected behaviour, the
+    // canceled or finished is expected behaviour, the
     // warning can be suppressed by passing the optional
     // aCanceledOkay argument.
 
