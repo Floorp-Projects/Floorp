@@ -35,19 +35,6 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
          "help": "Specify the locale(s) to repack"
          }
     ], [
-        ["--merge-locales"],
-        {"action": "store_true",
-         "dest": "merge_locales",
-         "default": False,
-         "help": "Use default [en-US] if there are missing strings"
-         }
-    ], [
-        ["--no-merge-locales"],
-        {"action": "store_false",
-         "dest": "merge_locales",
-         "help": "Do not allow missing strings"
-         }
-    ], [
         ["--objdir"],
         {"action": "store",
          "dest": "objdir",
@@ -153,10 +140,7 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
         locales = self.query_locales()
 
         for locale in locales:
-            self.run_compare_locales(locale, halt_on_failure=True)
             command = 'make chrome-%s L10NBASEDIR=%s' % (locale, dirs['abs_l10n_dir'])
-            if c['merge_locales']:
-                command += " LOCALE_MERGEDIR=%s" % dirs['abs_merge_dir'].replace(os.sep, '/')
             status = self._process_command(command=command,
                                            cwd=dirs['abs_locales_dir'],
                                            error_list=MakefileErrorList)

@@ -69,6 +69,16 @@
 #  define GNUC_COMPATIBLE
 #endif
 
+#ifdef __s390__
+#  define GNUC_COMPATIBLE
+#endif
+
+#ifdef __s390x__
+#  define HAS_64BIT_ATOMICS
+#  define HAS_64BIT_LOCKFREE
+#  define GNUC_COMPATIBLE
+#endif
+
 // The default implementation tactic for gcc/clang is to use the newer
 // __atomic intrinsics added for use in C++11 <atomic>.  Where that
 // isn't available, we use GCC's older __sync functions instead.

@@ -16432,13 +16432,6 @@ CSSParserImpl::ParseClipPath(nsCSSValue& aValue)
     return true;
   }
 
-  if (!nsLayoutUtils::CSSClipPathShapesEnabled()) {
-    // With CSS Clip Path Shapes disabled, we should only accept
-    // SVG clipPath reference and none.
-    REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURL);
-    return false;
-  }
-
   return ParseReferenceBoxAndBasicShape(
     aValue, nsCSSProps::kClipPathGeometryBoxKTable);
 }

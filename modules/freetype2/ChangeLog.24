@@ -1860,10 +1860,10 @@
 	Fix `checking if gcc static flag -static works' test.
 
 	On my linux build tree, I receive yes answer in every package I
-	build except freetype for this test checking if gcc static flag
+	build except FreeType for this test checking if gcc static flag
 	`-static' works
 
-	On freetype, no is received, unless bzip2 and zlib are disabled using
+	In FreeType, no is received, unless bzip2 and zlib are disabled using
 
 	  ./configure --without-bzip2 --without-zlib
 

@@ -43,7 +43,7 @@ protected:
   virtual void ProcessShutdown();
   virtual void InitCodecContext() { }
   AVFrame*        PrepareFrame();
-  nsresult        InitDecoder();
+  MediaResult     InitDecoder();
 
   FFmpegLibWrapper* mLib;
 

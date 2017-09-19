@@ -133,13 +133,16 @@ var tests = [
       isnot(PanelUI.panel.state, "closed", "Panel should have opened");
       isnot(highlight.classList.contains("rounded-highlight"), true, "Highlight should not be round-rectangle styled.");
 
+      let hiddenPromise = promisePanelElementHidden(window, PanelUI.panel);
       // Move the highlight outside which should close the app menu.
       gContentAPI.showHighlight("appMenu");
-      waitForElementToBeVisible(highlight, function checkPanelIsClosed() {
-        isnot(PanelUI.panel.state, "open",
-              "Panel should have closed after the highlight moved elsewhere.");
-        done();
-      }, "Highlight should move to the appMenu button");
+      hiddenPromise.then(() => {
+        waitForElementToBeVisible(highlight, function checkPanelIsClosed() {
+          isnot(PanelUI.panel.state, "open",
+                "Panel should have closed after the highlight moved elsewhere.");
+          done();
+        }, "Highlight should move to the appMenu button");
+      });
     }, "Highlight should be shown after showHighlight() for fixed panel items");
   },
   function test_highlight_customize_manual_open_close(done) {

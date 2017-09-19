@@ -697,6 +697,10 @@ def split_chunks(config, tests):
             yield test
             continue
 
+        # HACK: Bug 1373578 appears to pass with more chunks, non-e10s only though
+        if test['test-platform'] == 'windows7-32/debug' and test['test-name'] == 'reftest':
+            test['chunks'] = 32
+
         for this_chunk in range(1, test['chunks'] + 1):
             # copy the test and update with the chunk number
             chunked = copy.deepcopy(test)

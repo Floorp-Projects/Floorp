@@ -74,4 +74,4 @@ add_task(async function test_webRequest_auth_proxy() {
   await handlingExt.awaitMessage("done");
   await contentPage.close();
   await handlingExt.unload();
-}).only();
+});

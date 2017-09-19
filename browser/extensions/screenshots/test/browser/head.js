@@ -15,27 +15,14 @@ function promiseScreenshotsEnabled() {
   }
   info("Screenshots is not enabled");
   return new Promise((resolve, reject) => {
-    if (AppConstants.hasOwnProperty("MOZ_PHOTON_THEME") && !AppConstants.MOZ_PHOTON_THEME) {
-      let listener = {
-        onWidgetAfterCreation(widgetid) {
-          if (widgetid == "screenshots_mozilla_org-browser-action") {
-            info("screenshots_mozilla_org-browser-action button created");
-            CustomizableUI.removeListener(listener);
-            resolve(false);
-          }
-        }
+    let interval = setInterval(() => {
+      let action = PageActions.actionForID("screenshots");
+      if (action) {
+        info("screenshots page action created");
+        clearInterval(interval);
+        resolve(false);
       }
-      CustomizableUI.addListener(listener);
-    } else {
-      let interval = setInterval(() => {
-        let action = PageActions.actionForID("screenshots");
-        if (action) {
-          info("screenshots page action created");
-          clearInterval(interval);
-          resolve(false);
-        }
-      }, 100);
-    }
+    }, 100);
     info("Set Screenshots disabled pref to false.");
     Services.prefs.setBoolPref("extensions.screenshots.system-disabled", false);
   });
@@ -47,27 +34,14 @@ function promiseScreenshotsDisabled() {
     return Promise.resolve(true);
   }
   return new Promise((resolve, reject) => {
-    if (AppConstants.hasOwnProperty("MOZ_PHOTON_THEME") && !AppConstants.MOZ_PHOTON_THEME) {
-      let listener = {
-        onWidgetDestroyed(widgetid) {
-          if (widgetid == "screenshots_mozilla_org-browser-action") {
-            CustomizableUI.removeListener(listener);
-            info("screenshots_mozilla_org-browser-action destroyed");
-            resolve(false);
-          }
-        }
+    let interval = setInterval(() => {
+      let action = PageActions.actionForID("screenshots");
+      if (!action) {
+        info("screenshots page action removed");
+        clearInterval(interval);
+        resolve(false);
       }
-      CustomizableUI.addListener(listener);
-    } else {
-      let interval = setInterval(() => {
-        let action = PageActions.actionForID("screenshots");
-        if (!action) {
-          info("screenshots page action removed");
-          clearInterval(interval);
-          resolve(false);
-        }
-      }, 100);
-    }
+    }, 100);
     info("Set Screenshots disabled pref to true.");
     Services.prefs.setBoolPref("extensions.screenshots.system-disabled", true);
   });

@@ -79,25 +79,25 @@
   "genericErrorDetails": {
     "message": "Nə baş verdiyindən əmin deyilik. Bir daha yoxlayın və ya başqa səhifənin ekran görüntüsünü alaraq işləyib işləmədiyinə əmin olun."
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Firefoxu tərk etmədən ekran görüntüləri alın, saxlayın və paylaşın."
   },
-  "tourHeaderTwo": {
+  "tourHeaderClickAndDrag": {
     "message": "İstədiyiniz hər şeyin görüntüsünü alın"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Səhifənin hər hansı bir hissəsini almaq üçün basın və ya sürüşdürün. Seçiminizi işıqlandırmaq üçün üzərinə gedin."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Pəncərəni və ya bütün səhifəni çəkin"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Sadəcə pəncərədə görünən hissəni və ya bütün səhifəni çəkmək üçün sağ üstdəki düymələrdən birini seçin."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "İstədiyiniz kimi"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Kəsdiyiniz hissələri rahat paylaşmaq üçün internetdə saxlayın və ya kompüterinizə endirin. Həmçinin Ekran Görüntülərim düyməsinə basaraq çəkdiyiniz bütün ekran görüntülərini görə bilərsiz."
   },
   "tourSkip": {

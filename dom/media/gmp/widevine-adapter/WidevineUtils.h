@@ -16,25 +16,21 @@
 
 namespace mozilla {
 
-namespace detail {
-LogModule* GetCDMLog();
-} // namespace detail
+#define ENSURE_TRUE(condition, rv)                                             \
+  {                                                                            \
+    if (!(condition)) {                                                        \
+      GMP_LOG("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__);                 \
+      return rv;                                                               \
+    }                                                                          \
+  }
 
-#define CDM_LOG(...) MOZ_LOG(detail::GetCDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
-
-#define ENSURE_TRUE(condition, rv) { \
-  if (!(condition)) {\
-    CDM_LOG("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__); \
-    return rv; \
-  } \
-} \
-
-#define ENSURE_GMP_SUCCESS(err, rv) { \
-  if (GMP_FAILED(err)) {\
-    CDM_LOG("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__); \
-    return rv; \
-    } \
-} \
+#define ENSURE_GMP_SUCCESS(err, rv)                                            \
+  {                                                                            \
+    if (GMP_FAILED(err)) {                                                     \
+      GMP_LOG("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__);          \
+      return rv;                                                               \
+    }                                                                          \
+  }
 
 GMPErr
 ToGMPErr(cdm::Status aStatus);

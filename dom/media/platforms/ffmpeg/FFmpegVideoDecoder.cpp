@@ -125,8 +125,9 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
 RefPtr<MediaDataDecoder::InitPromise>
 FFmpegVideoDecoder<LIBAV_VER>::Init()
 {
-  if (NS_FAILED(InitDecoder())) {
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+  MediaResult rv = InitDecoder();
+  if (NS_FAILED(rv)) {
+    return InitPromise::CreateAndReject(rv, __func__);
   }
 
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);

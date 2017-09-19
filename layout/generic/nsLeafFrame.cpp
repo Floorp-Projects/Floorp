@@ -48,53 +48,6 @@ nsLeafFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
   return result.ConvertTo(aWM, wm);
 }
 
-void
-nsLeafFrame::Reflow(nsPresContext* aPresContext,
-                    ReflowOutput& aMetrics,
-                    const ReflowInput& aReflowInput,
-                    nsReflowStatus& aStatus)
-{
-  MarkInReflow();
-  DO_GLOBAL_REFLOW_COUNT("nsLeafFrame");
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("enter nsLeafFrame::Reflow: aMaxSize=%d,%d",
-                  aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
-
-  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
-
-  DoReflow(aPresContext, aMetrics, aReflowInput, aStatus);
-
-  FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
-}
-
-void
-nsLeafFrame::DoReflow(nsPresContext* aPresContext,
-                      ReflowOutput& aMetrics,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus)
-{
-  NS_ASSERTION(aReflowInput.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
-               "Shouldn't have unconstrained stuff here "
-               "thanks to the rules of reflow");
-  NS_ASSERTION(NS_INTRINSICSIZE != aReflowInput.ComputedHeight(),
-               "Shouldn't have unconstrained stuff here "
-               "thanks to ComputeAutoSize");
-
-  // XXX how should border&padding effect baseline alignment?
-  // => descent = borderPadding.bottom for example
-  WritingMode wm = aReflowInput.GetWritingMode();
-  aMetrics.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding());
-
-  aStatus.Reset();
-
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit nsLeafFrame::DoReflow: size=%d,%d",
-                  aMetrics.ISize(wm), aMetrics.BSize(wm)));
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
-
-  aMetrics.SetOverflowAreasToDesiredBounds();
-}
-
 nscoord
 nsLeafFrame::GetIntrinsicBSize()
 {

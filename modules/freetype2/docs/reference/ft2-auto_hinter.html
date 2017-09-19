@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8 API Reference</title>
+<title>FreeType-2.8.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8 API Reference</h1>
+<h1>FreeType-2.8.1 API Reference</h1>
 
 <h1 id="auto_hinter">The auto-hinter</h1>
 <h2>Synopsis</h2>
@@ -373,7 +373,7 @@
 
 <p><b>Experimental</b> <b>only</b></p>
 <p>If FreeType gets compiled with option AF_CONFIG_OPTION_USE_WARPER to activate the warp hinting code in the auto-hinter, this property switches warping on and off.</p>
-<p>Warping only works in &lsquo;light&rsquo; auto-hinting mode. The idea of the code is to slightly scale and shift a glyph along the non-hinted dimension (which is usually the horizontal axis) so that as much of its segments are aligned (more or less) to the grid. To find out a glyph's optimal scaling and shifting value, various parameter combinations are tried and scored.</p>
+<p>Warping only works in &lsquo;normal&rsquo; auto-hinting mode replacing it. The idea of the code is to slightly scale and shift a glyph along the non-hinted dimension (which is usually the horizontal axis) so that as much of its segments are aligned (more or less) to the grid. To find out a glyph's optimal scaling and shifting value, various parameter combinations are tried and scored.</p>
 <p>By default, warping is off. The example below shows how to switch on warping (omitting the error handling).</p>
 <pre class="colored">
   FT_Library  library;
@@ -390,7 +390,7 @@
 <p>This property can be used with <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a> also.</p>
 <p>This property can be set via the &lsquo;FREETYPE_PROPERTIES&rsquo; environment variable (using values 1 and 0 for &lsquo;on&rsquo; and &lsquo;off&rsquo;, respectively).</p>
 <p>The warping code can also change advance widths. Have a look at the &lsquo;lsb_delta&rsquo; and &lsquo;rsb_delta&rsquo; fields in the <a href="ft2-base_interface.html#FT_GlyphSlotRec">FT_GlyphSlotRec</a> structure for details on improving inter-glyph distances while rendering.</p>
-<p>Since warping is a global property of the auto-hinter it is best to change its value before rendering any face. Otherwise, you should reload all faces that get auto-hinted in &lsquo;light&rsquo; hinting mode.</p>
+<p>Since warping is a global property of the auto-hinter it is best to change its value before rendering any face. Otherwise, you should reload all faces that get auto-hinted in &lsquo;normal&rsquo; hinting mode.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>

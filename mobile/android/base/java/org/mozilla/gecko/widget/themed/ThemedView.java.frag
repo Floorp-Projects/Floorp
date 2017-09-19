@@ -205,6 +205,10 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
         return new ColorDrawable(ContextCompat.getColor(getContext(), id));
     }
 
+    public ColorStateList getDrawableColors() {
+        return drawableColors;
+    }
+
     protected LightweightTheme getTheme() {
         return theme;
     }

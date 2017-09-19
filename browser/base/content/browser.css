@@ -184,9 +184,15 @@ tabbrowser {
   transition: transform 200ms var(--animation-easing-function);
 }
 
-#TabsToolbar[movingtab] > .chromeclass-toolbar-additional,
+/* The next 3 rules allow dragging tabs slightly outside of the tabstrip
+ * to make it easier to drag tabs. */
+#TabsToolbar[movingtab] {
+  padding-bottom: 15px;
+}
+
 #TabsToolbar[movingtab] > .tabbrowser-tabs {
   padding-bottom: 15px;
+  margin-bottom: -15px;
 }
 
 #TabsToolbar[movingtab] + #nav-bar {

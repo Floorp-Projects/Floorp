@@ -107,10 +107,12 @@ this.senderror = (function() {
 
     // To improve Sentry reporting & grouping, replace the
     // moz-extension://$uuid base URL with a generic resource:// URL.
-    exception.stack = exception.stack.replace(
-      /moz-extension:\/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,
-      "resource://screenshots-addon"
-    );
+    if (exception.stack) {
+      exception.stack = exception.stack.replace(
+        /moz-extension:\/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,
+        "resource://screenshots-addon"
+      );
+    }
     let rest = {};
     for (let attr in e) {
       if (!["name", "message", "stack", "multilineStack", "popupMessage", "version", "sentryPublicDSN", "help", "fromMakeError"].includes(attr)) {

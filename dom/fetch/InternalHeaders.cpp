@@ -22,12 +22,14 @@ InternalHeaders::InternalHeaders(const nsTArray<Entry>&& aHeaders,
                                  HeadersGuardEnum aGuard)
   : mGuard(aGuard)
   , mList(aHeaders)
+  , mListDirty(true)
 {
 }
 
 InternalHeaders::InternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
                                  HeadersGuardEnum aGuard)
   : mGuard(aGuard)
+  , mListDirty(true)
 {
   for (const HeadersEntry& headersEntry : aHeadersEntryList) {
     mList.AppendElement(Entry(headersEntry.name(), headersEntry.value()));
@@ -59,6 +61,8 @@ InternalHeaders::Append(const nsACString& aName, const nsACString& aValue,
     return;
   }
 
+  SetListDirty();
+
   mList.AppendElement(Entry(lowerName, trimValue));
 }
 
@@ -71,6 +75,8 @@ InternalHeaders::Delete(const nsACString& aName, ErrorResult& aRv)
   if (IsInvalidMutableHeader(lowerName, aRv)) {
     return;
   }
+
+  SetListDirty();
 
   // remove in reverse order to minimize copying
   for (int32_t i = mList.Length() - 1; i >= 0; --i) {
@@ -160,6 +166,8 @@ InternalHeaders::Set(const nsACString& aName, const nsACString& aValue, ErrorRes
     return;
   }
 
+  SetListDirty();
+
   int32_t firstIndex = INT32_MAX;
 
   // remove in reverse order to minimize copying
@@ -182,6 +190,7 @@ InternalHeaders::Set(const nsACString& aName, const nsACString& aValue, ErrorRes
 void
 InternalHeaders::Clear()
 {
+  SetListDirty();
   mList.Clear();
 }
 
@@ -468,6 +477,55 @@ InternalHeaders::GetUnsafeHeaders(nsTArray<nsCString>& aNames) const
       aNames.AppendElement(header.mName);
     }
   }
+}
+
+void
+InternalHeaders::MaybeSortList()
+{
+  class Comparator {
+  public:
+    bool Equals(const Entry& aA, const Entry& aB) const
+    {
+       return aA.mName == aB.mName;
+    }
+
+    bool LessThan(const Entry& aA, const Entry& aB) const
+    {
+      return aA.mName < aB.mName;
+    }
+  };
+
+  if (!mListDirty) {
+    return;
+  }
+
+  mListDirty = false;
+
+  Comparator comparator;
+
+  mSortedList.Clear();
+  for (const Entry& entry : mList) {
+    bool found = false;
+    for (Entry& sortedEntry : mSortedList) {
+      if (sortedEntry.mName == entry.mName) {
+        sortedEntry.mValue += ", ";
+        sortedEntry.mValue += entry.mValue;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      mSortedList.InsertElementSorted(entry, comparator);
+    }
+  }
+}
+
+void
+InternalHeaders::SetListDirty()
+{
+  mSortedList.Clear();
+  mListDirty = true;
 }
 
 } // namespace dom

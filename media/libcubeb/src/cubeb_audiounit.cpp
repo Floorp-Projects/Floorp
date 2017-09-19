@@ -733,7 +733,12 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
         break;
       case kAudioDevicePropertyDataSource: {
           LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource for id=%d", (unsigned int) i, id);
-          switch_side |= DEV_INPUT;
+          if (stm->input_unit) {
+            switch_side |= DEV_INPUT;
+          }
+          if (stm->output_unit) {
+            switch_side |= DEV_OUTPUT;
+          }
         }
         break;
       default:

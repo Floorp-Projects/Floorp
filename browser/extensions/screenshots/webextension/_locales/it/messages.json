@@ -12,7 +12,7 @@
     "message": "I miei screenshot"
   },
   "screenshotInstructions": {
-    "message": "Trascina o fai clic su una pagina per selezionare una regione. Premi ESC per annullare."
+    "message": "Trascina o fai clic su una pagina per selezionare un’area della pagina. Premi ESC per annullare."
   },
   "saveScreenshotSelectedArea": {
     "message": "Salva"
@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Non sappiamo che cosa sia successo. Riprova, magari con una pagina diversa."
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Cattura, salva e condividi screenshot senza mai uscire da Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Un nuovo modo per salvare informazioni"
+  },
+  "tourBodyPageAction": {
+    "message": "Hai bisogno di catturare un’istantanea della pagina? Ti basta aprire il menu nella barra degli indirizzi."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Cattura solo ciò che ti serve"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Fai clic e trascina per catturare solo una parte della pagina. Posiziona il mouse sopra all’area selezionata per evidenziarla."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Cattura una finestra o una pagina intera"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Utilizza i pulsanti in alto a destra per catturare una parte della finestra o l’intera pagina."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Come piace a te"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Cattura lo screenshot di una pagina web, ritaglialo e salvalo online per condividerlo in modo più veloce, oppure scaricalo sul tuo computer. Puoi anche utilizzare il pulsante “I miei screenshot” per ritrovare tutte le immagini che hai salvato."
   },
   "tourSkip": {

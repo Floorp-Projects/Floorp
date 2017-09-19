@@ -891,10 +891,6 @@ a.learn-more-link.webconsole-learn-more-link {
   display: none;
 }
 
-.network.message #response-panel .treeTable {
-  overflow-y: hidden;
-}
-
 .network .message-flex-body > .message-body {
   display: flex;
 }

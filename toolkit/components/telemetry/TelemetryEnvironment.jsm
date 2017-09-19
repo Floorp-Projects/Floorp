@@ -1292,6 +1292,7 @@ EnvironmentCache.prototype = {
       platformVersion: Services.appinfo.platformVersion || null,
       xpcomAbi: Services.appinfo.XPCOMABI,
       hotfixVersion: Services.prefs.getStringPref(PREF_HOTFIX_LASTVERSION, null),
+      updaterAvailable: AppConstants.MOZ_UPDATER,
     };
 
     // Add |architecturesInBinary| only for Mac Universal builds.

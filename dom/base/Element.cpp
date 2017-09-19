@@ -4214,6 +4214,7 @@ Element::SetCustomElementData(CustomElementData* aData)
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoElementMallocSizeOf)
+MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoElementMallocEnclosingSizeOf)
 
 void
 Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
@@ -4226,11 +4227,13 @@ Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
       aSizes.mState.mMallocSizeOf(mServoData.Get());
 
     // Measure mServoData, excluding the ComputedValues. This measurement
-    // counts towards the element's size. We use ServoElementMallocSizeOf
-    // rather than |aState.mMallocSizeOf| to better distinguish in DMD's
-    // output the memory measured within Servo code.
+    // counts towards the element's size. We use ServoElementMallocSizeOf and
+    // ServoElementMallocEnclosingSizeOf rather than |aState.mMallocSizeOf| to
+    // better distinguish in DMD's output the memory measured within Servo
+    // code.
     *aNodeSize +=
       Servo_Element_SizeOfExcludingThisAndCVs(ServoElementMallocSizeOf,
+                                              ServoElementMallocEnclosingSizeOf,
                                               &aSizes.mState.mSeenPtrs, this);
 
     // Now measure just the ComputedValues (and style structs) under

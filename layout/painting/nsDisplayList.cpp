@@ -5529,18 +5529,32 @@ nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuild
                                                     nsIFrame* aFrame,
                                                     nsPoint aReferenceOffset)
 {
-  nsRect borderRect = nsRect(aReferenceOffset, aFrame->GetSize());
-  RectCornerRadii innerRadii;
-  bool hasBorderRadius =
-      nsCSSRendering::GetShadowInnerRadii(aFrame, borderRect, innerRadii);
-  if (hasBorderRadius) {
-    return false;
-  }
-
   nsCSSShadowArray *shadows = aFrame->StyleEffects()->mBoxShadow;
   if (!shadows) {
     // Means we don't have to paint anything
     return true;
+  }
+
+  bool hasBorderRadius;
+  bool nativeTheme =
+    nsCSSRendering::HasBoxShadowNativeTheme(aFrame, hasBorderRadius);
+
+  // We don't support native themed things yet like box shadows around
+  // input buttons.
+  if (nativeTheme) {
+    return false;
+  }
+
+  nsRect borderRect = nsRect(aReferenceOffset, aFrame->GetSize());
+  RectCornerRadii innerRadii;
+
+  if (hasBorderRadius) {
+    hasBorderRadius =
+      nsCSSRendering::GetShadowInnerRadii(aFrame, borderRect, innerRadii);
+  }
+
+  if (hasBorderRadius && !innerRadii.AreRadiiSame()) {
+    return false;
   }
 
   return true;
@@ -7915,12 +7929,18 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
     // transform animation, the transform value will be resolved
     // after animation sampling on the compositor
     transformForSC = nullptr;
+
+    // Pass default transform to compositor in case gecko fails to
+    // get animated value after animation sampling.
+    OptionalTransform transformForCompositor = newTransformMatrix;
+
+    OpAddCompositorAnimations
+      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
+           transformForCompositor, void_t());
+    aManager->WrBridge()->AddWebRenderParentCommand(anim);
   }
 
-  gfx::Matrix4x4Typed<LayerPixel, LayerPixel> boundTransform = ViewAs< gfx::Matrix4x4Typed<LayerPixel, LayerPixel> >(newTransformMatrix);
-  boundTransform._41 = 0.0f;
-  boundTransform._42 = 0.0f;
-  boundTransform._43 = 0.0f;
+  gfx::Matrix4x4Typed<LayerPixel, LayerPixel> boundTransform = ViewAs<gfx::Matrix4x4Typed<LayerPixel, LayerPixel>>(newTransformMatrix);
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc,
@@ -7935,33 +7955,6 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            nullptr,
                            filters);
 
-  if (animationsId) {
-    // Get the inheritedScale from parent and pass the scale to compositor
-    // to get correct sampling result
-    gfx::Size scale = aSc.GetInheritedScale();
-    for (layers::Animation& animation : animationInfo.GetAnimations()) {
-      if (animation.property() == eCSSProperty_transform) {
-        TransformData& transformData = animation.data().get_TransformData();
-        transformData.inheritedXScale() = scale.width;
-        transformData.inheritedYScale() = scale.height;
-        transformData.hasPerspectiveParent() = aSc.HasPerspectiveTransform();
-      }
-    }
-
-    // Pass default transform to compositor in case gecko fails to
-    // get animated value after animation sampling.
-    OptionalTransform transformForCompositor = newTransformMatrix;
-    OpAddCompositorAnimations
-      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
-           transformForCompositor, void_t());
-    aManager->WrBridge()->AddWebRenderParentCommand(anim);
-
-    // Since we passed a nullptr transformForSC to the StackingContextHelper,
-    // we now set up the correct inherited scale for the stacking context.
-    newTransformMatrix.PostScale(scale.width, scale.height, 1.0f);
-    sc.SetInheritedScale(newTransformMatrix.As2D().ScaleFactors(true));
-
-  }
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc, aParentCommands,
                                              aManager, aDisplayListBuilder);
 }

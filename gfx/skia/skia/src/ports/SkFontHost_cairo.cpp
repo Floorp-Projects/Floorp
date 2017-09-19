@@ -666,10 +666,15 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
         glyph->fTop    = -SkToS16(SkFDot6Floor(bbox.yMax));
         glyph->fLeft   = SkToS16(SkFDot6Floor(bbox.xMin));
 
-        if (isLCD(fRec) &&
-            gSetLcdFilter &&
-            (fLcdFilter == FT_LCD_FILTER_DEFAULT ||
-             fLcdFilter == FT_LCD_FILTER_LIGHT)) {
+        if (isLCD(fRec)) {
+            // In FreeType < 2.8.1, LCD filtering, if explicitly used, may
+            // add padding to the glyph. When not used, there is no padding.
+            // As of 2.8.1, LCD filtering is now always supported and may
+            // add padding even if an LCD filter is not explicitly set.
+            // Regardless, if no LCD filtering is used, or if LCD filtering
+            // doesn't add padding, it is safe to modify the glyph's bounds
+            // here. generateGlyphImage will detect if the mask is smaller
+            // than the bounds and clip things appropriately.
             if (fRec.fFlags & kLCD_Vertical_Flag) {
                 glyph->fTop -= 1;
                 glyph->fHeight += 2;

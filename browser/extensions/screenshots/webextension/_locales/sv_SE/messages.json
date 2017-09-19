@@ -79,25 +79,31 @@
   "genericErrorDetails": {
     "message": "Vi är inte säkra på vad som just hände. Kan du försöka igen eller ta en bild på en annan sida?"
   },
-  "tourBodyOne": {
+  "tourBodyIntro": {
     "message": "Ta, spara, och dela skärmbilder utan att lämna Firefox."
   },
-  "tourHeaderTwo": {
+  "tourHeaderPageAction": {
+    "message": "Ett nytt sätt att spara"
+  },
+  "tourBodyPageAction": {
+    "message": "Expandera sidåtgärdsmenyn i adressfältet när du vill ta en skärmbild."
+  },
+  "tourHeaderClickAndDrag": {
     "message": "Fånga precis vad du vill"
   },
-  "tourBodyTwo": {
+  "tourBodyClickAndDrag": {
     "message": "Klicka och dra för att fånga bara en del av en sida. Du kan också hovra för att markera ditt val."
   },
-  "tourHeaderThree": {
+  "tourHeaderFullPage": {
     "message": "Fånga fönster eller hela sidor"
   },
-  "tourBodyThree": {
+  "tourBodyFullPage": {
     "message": "Välj knapparna i det övre högra hörnet för att fånga det synliga området i fönstret eller för att fånga en hel sida."
   },
-  "tourHeaderFour": {
+  "tourHeaderDownloadUpload": {
     "message": "Som du vill ha det"
   },
-  "tourBodyFour": {
+  "tourBodyDownloadUpload": {
     "message": "Spara dina beskurna bilder till webben för enklare delning, eller hämta dem till datorn. Du kan också klicka på knappen Mina skärmbilder för att hitta alla bilder du tagit."
   },
   "tourSkip": {

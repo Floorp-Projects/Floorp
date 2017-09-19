@@ -669,7 +669,7 @@
               if (!this._shouldShowProgress(aRequest))
                 return;
 
-              if (this.mTotalProgress && aWebProgress && aWebProgress.isTopLevel)
+              if (this.mTotalProgress && this.mTab.hasAttribute("busy"))
                 this.mTab.setAttribute("progress", "true");
 
               this._callProgressListeners("onProgressChange",

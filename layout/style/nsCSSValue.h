@@ -262,18 +262,18 @@ struct ImageValue final : public URLValueData
 
   void Initialize(nsIDocument* aDocument);
 
-  // XXXheycam We should have our own SizeOfIncludingThis method.
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
   ~ImageValue();
+
+private:
+  bool mLoadedImage = false;
 
 public:
   // Inherit Equals from URLValueData
 
   nsRefPtrHashtable<nsPtrHashKey<nsIDocument>, imgRequestProxy> mRequests;
-
-private:
-  bool mLoadedImage = false;
 };
 
 struct GridNamedArea {

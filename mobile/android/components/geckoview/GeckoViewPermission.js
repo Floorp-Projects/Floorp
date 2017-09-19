@@ -8,6 +8,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -55,7 +56,7 @@ GeckoViewPermission.prototype = {
       perms.push(PERM_RECORD_AUDIO);
     }
 
-    let dispatcher = this.getActiveDispatcher();
+    let dispatcher = GeckoViewUtils.getActiveDispatcher();
     let callback = _ => {
       Services.obs.notifyObservers(aCallback, "getUserMedia:got-device-permission");
     };
@@ -103,7 +104,7 @@ GeckoViewPermission.prototype = {
         throw "no audio source";
       }
 
-      let dispatcher = this.getDispatcherForWindow(win);
+      let dispatcher = GeckoViewUtils.getDispatcherForWindow(win);
       let uri = win.document.documentURIObject;
       return dispatcher.sendRequestForResult({
         type: "GeckoView:MediaPermission",
@@ -149,42 +150,6 @@ GeckoViewPermission.prototype = {
     Services.obs.notifyObservers(null, "PeerConnection:response:allow", aRequest.callID);
   },
 
-  getActiveDispatcher: function() {
-    let getDispatcher = win => {
-      try {
-        let dispatcher = win.WindowEventDispatcher || EventDispatcher.for(win);
-        if (!win.closed && dispatcher) {
-          return dispatcher;
-        }
-      } catch (e) {
-        // Ignore.
-      }
-      return null;
-    };
-
-    let dispatcher = getDispatcher(Services.focus.activeWindow.top);
-    if (dispatcher) {
-      return dispatcher;
-    }
-
-    let iter = Services.wm.getEnumerator(/* windowType */ null);
-    while (iter.hasMoreElements()) {
-      dispatcher = getDispatcher(iter.getNext().QueryInterface(Ci.nsIDOMWindow).top);
-      if (dispatcher) {
-        return dispatcher;
-      }
-    }
-    return null;
-  },
-
-  getDispatcherForWindow: function(aWin) {
-    aWin = aWin.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIDocShellTreeItem)
-               .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindow);
-    return aWin.WindowEventDispatcher || EventDispatcher.for(aWin);
-  },
-
   checkAppPermissions: function(aPerms) {
     return aPerms.every(perm => this._appPermissions[perm]);
   },
@@ -216,8 +181,8 @@ GeckoViewPermission.prototype = {
     }
 
     let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-    let dispatcher = this.getDispatcherForWindow(
-        aRequest.window ? aRequest.window.top : aRequest.element.ownerGlobal.top);
+    let dispatcher = GeckoViewUtils.getDispatcherForWindow(
+        aRequest.window ? aRequest.window : aRequest.element.ownerGlobal);
     let promise = dispatcher.sendRequestForResult({
         type: "GeckoView:ContentPermission",
         uri: aRequest.principal.URI.spec,

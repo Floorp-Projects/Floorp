@@ -3020,7 +3020,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
   rv = nsWindowGfx::CreateIcon(aCursor, true, aHotspotX, aHotspotY, size, &cursor);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCursor = nsCursor(-1);
+  mCursor = eCursorInvalid;
   ::SetCursor(cursor);
 
   NS_IF_RELEASE(sCursorImgContainer);
@@ -7179,7 +7179,7 @@ void nsWindow::OnDestroy()
   }
 
   // Destroy any custom cursor resources.
-  if (mCursor == -1)
+  if (mCursor == eCursorInvalid)
     SetCursor(eCursor_standard);
 
   if (mCompositorWidgetDelegate) {

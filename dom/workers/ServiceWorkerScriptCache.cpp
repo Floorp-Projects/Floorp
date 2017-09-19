@@ -712,9 +712,11 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (httpChannel) {
-    // Spec says no redirects allowed for SW scripts.
-    rv = httpChannel->SetRedirectionLimit(0);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    // Spec says no redirects allowed for top-level SW scripts.
+    if (mIsMainScript) {
+      rv = httpChannel->SetRedirectionLimit(0);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
 
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Service-Worker"),
                                        NS_LITERAL_CSTRING("script"),
@@ -848,10 +850,9 @@ CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     return NS_OK;
   }
 
-#ifdef DEBUG
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  MOZ_ASSERT(channel == mChannel);
-#endif
+  MOZ_ASSERT_IF(mIsMainScript, channel == mChannel);
+  mChannel = channel;
 
   MOZ_ASSERT(!mChannelInfo.IsInitialized());
   mChannelInfo.InitFromChannel(mChannel);

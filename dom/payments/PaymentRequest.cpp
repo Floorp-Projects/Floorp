@@ -276,6 +276,7 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString
   // Check the shipping option
   if (aDetails.mShippingOptions.WasPassed()) {
     const Sequence<PaymentShippingOption>& shippingOptions = aDetails.mShippingOptions.Value();
+    nsTArray<nsString> seenIDs;
     for (const PaymentShippingOption& shippingOption : shippingOptions) {
       rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.shippingOptions"),
                                  shippingOption.mAmount,
@@ -284,6 +285,13 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString
       if (NS_FAILED(rv)) {
         return rv;
       }
+      if (seenIDs.Contains(shippingOption.mId)) {
+        aErrorMsg.AssignLiteral("Duplicate shippingOption id '");
+        aErrorMsg.Append(shippingOption.mId);
+        aErrorMsg.AppendLiteral("'");
+        return NS_ERROR_TYPE_ERR;
+      }
+      seenIDs.AppendElement(shippingOption.mId);
     }
   }
 
