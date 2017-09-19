@@ -665,7 +665,10 @@ class Tab extends TabBase {
 
     if (extension.tabManager.hasTabPermission(tabData)) {
       let entries = tabData.state ? tabData.state.entries : tabData.entries;
-      let entry = entries[entries.length - 1];
+      let lastTabIndex = tabData.state ? tabData.state.index : tabData.index;
+      // We need to take lastTabIndex - 1 because the index in the tab data is
+      // 1-based rather than 0-based.
+      let entry = entries[lastTabIndex - 1];
       result.url = entry.url;
       result.title = entry.title;
       if (tabData.image) {
