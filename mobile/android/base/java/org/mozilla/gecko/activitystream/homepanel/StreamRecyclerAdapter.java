@@ -100,6 +100,10 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         topStoriesQueue = Collections.emptyList();
     }
 
+    public void reset() {
+        // TODO: Reset adapter
+    }
+
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
