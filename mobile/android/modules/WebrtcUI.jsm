@@ -3,15 +3,32 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
 this.EXPORTED_SYMBOLS = ["WebrtcUI"];
 
-XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService", "@mozilla.org/mediaManagerService;1", "nsIMediaManagerService");
-XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls", "@mozilla.org/parental-controls-service;1", "nsIParentalControlsService");
-XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DoorHanger",
-                                  "resource://gre/modules/Prompt.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  DoorHanger: "resource://gre/modules/Prompt.jsm",
+  Notifications: "resource://gre/modules/Notifications.jsm",
+  RuntimePermissions: "resource://gre/modules/RuntimePermissions.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
+
+XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
+                                   "@mozilla.org/mediaManagerService;1",
+                                   "nsIMediaManagerService");
+XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls",
+                                   "@mozilla.org/parental-controls-service;1",
+                                   "nsIParentalControlsService");
+
+var Strings = {};
+
+XPCOMUtils.defineLazyGetter(Strings, "brand", _ =>
+        Services.strings.createBundle("chrome://branding/locale/brand.properties"));
+XPCOMUtils.defineLazyGetter(Strings, "browser", _ =>
+        Services.strings.createBundle("chrome://browser/locale/browser.properties"));
 
 var WebrtcUI = {
   _notificationId: null,

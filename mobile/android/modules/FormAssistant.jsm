@@ -1,10 +1,19 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "FormHistory", "resource://gre/modules/FormHistory.jsm");
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+this.EXPORTED_SYMBOLS = ["FormAssistant"];
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FormHistory: "resource://gre/modules/FormHistory.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 var FormAssistant = {
   // Weak-ref used to keep track of the currently focused element.
