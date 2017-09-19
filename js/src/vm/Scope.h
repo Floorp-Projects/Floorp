@@ -1517,17 +1517,7 @@ struct GCPolicy<js::ScopeKind> : public IgnoreGCPolicy<js::ScopeKind>
 { };
 
 template <typename T>
-struct ScopeDataGCPolicy
-{
-    static T initial() {
-        return nullptr;
-    }
-
-    static void trace(JSTracer* trc, T* vp, const char* name) {
-        if (*vp)
-            (*vp)->trace(trc);
-    }
-};
+struct ScopeDataGCPolicy : public NonGCPointerPolicy<T> {};
 
 #define DEFINE_SCOPE_DATA_GCPOLICY(Data)                        \
     template <>                                                 \

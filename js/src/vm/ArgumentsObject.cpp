@@ -371,7 +371,7 @@ ArgumentsObject::finishForIon(JSContext* cx, jit::JitFrameLayout* frame,
 {
     // JIT code calls this directly (no callVM), because it's faster, so we're
     // not allowed to GC in here.
-    JS::AutoCheckCannotGC nogc;
+    AutoUnsafeCallWithABI unsafe;
 
     JSFunction* callee = jit::CalleeTokenToFunction(frame->calleeToken());
     RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain : nullptr);
@@ -855,11 +855,14 @@ ArgumentsObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ size_t
-ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src)
+ArgumentsObject::objectMoved(JSObject* dst, JSObject* src)
 {
     ArgumentsObject* ndst = &dst->as<ArgumentsObject>();
-    ArgumentsObject* nsrc = &src->as<ArgumentsObject>();
+    const ArgumentsObject* nsrc = &src->as<ArgumentsObject>();
     MOZ_ASSERT(ndst->data() == nsrc->data());
+
+    if (!IsInsideNursery(src))
+        return 0;
 
     Nursery& nursery = dst->zone()->group()->nursery();
 
@@ -917,6 +920,11 @@ const ClassOps MappedArgumentsObject::classOps_ = {
     ArgumentsObject::trace
 };
 
+const js::ClassExtension MappedArgumentsObject::classExt_ = {
+    nullptr,                      /* weakmapKeyDelegateOp */
+    ArgumentsObject::objectMoved  /* objectMovedOp */
+};
+
 const ObjectOps MappedArgumentsObject::objectOps_ = {
     nullptr,                 /* lookupProperty */
     MappedArgumentsObject::obj_defineProperty
@@ -931,7 +939,7 @@ const Class MappedArgumentsObject::class_ = {
     JSCLASS_BACKGROUND_FINALIZE,
     &MappedArgumentsObject::classOps_,
     nullptr,
-    nullptr,
+    &MappedArgumentsObject::classExt_,
     &MappedArgumentsObject::objectOps_
 };
 
@@ -953,6 +961,11 @@ const ClassOps UnmappedArgumentsObject::classOps_ = {
     ArgumentsObject::trace
 };
 
+const js::ClassExtension UnmappedArgumentsObject::classExt_ = {
+    nullptr,                      /* weakmapKeyDelegateOp */
+    ArgumentsObject::objectMoved  /* objectMovedOp */
+};
+
 const Class UnmappedArgumentsObject::class_ = {
     "Arguments",
     JSCLASS_DELAY_METADATA_BUILDER |
@@ -960,5 +973,7 @@ const Class UnmappedArgumentsObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_SKIP_NURSERY_FINALIZE |
     JSCLASS_BACKGROUND_FINALIZE,
-    &UnmappedArgumentsObject::classOps_
+    &UnmappedArgumentsObject::classOps_,
+    nullptr,
+    &UnmappedArgumentsObject::classExt_
 };

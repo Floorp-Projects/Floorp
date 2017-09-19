@@ -544,23 +544,16 @@ class CGDOMProxyJSClass(CGThing):
         # HTMLAllCollection.  So just hardcode it here.
         if self.descriptor.interface.identifier.name == "HTMLAllCollection":
             flags.append("JSCLASS_EMULATES_UNDEFINED")
-        objectMovedHook = OBJECT_MOVED_HOOK_NAME if self.descriptor.wrapperCache else 'nullptr'
         return fill(
             """
-            static const js::ClassExtension sClassExtension = PROXY_MAKE_EXT(
-                ${objectMoved}
-            );
-
             static const DOMJSClass sClass = {
-              PROXY_CLASS_WITH_EXT("${name}",
-                                   ${flags},
-                                   &sClassExtension),
+              PROXY_CLASS_DEF("${name}",
+                              ${flags}),
               $*{descriptor}
             };
             """,
             name=self.descriptor.interface.identifier.name,
             flags=" | ".join(flags),
-            objectMoved=objectMovedHook,
             descriptor=DOMClass(self.descriptor))
 
 
@@ -1731,20 +1724,32 @@ class CGClassFinalizeHook(CGAbstractClassHook):
                             self.args[0].name, self.args[1].name).define()
 
 
+def objectMovedHook(descriptor, hookName, obj, old):
+    assert descriptor.wrapperCache
+    return fill("""
+	if (self) {
+	  UpdateWrapper(self, self, ${obj}, ${old});
+	}
+
+	return 0;
+	""",
+	obj=obj,
+	old=old)
+
+
 class CGClassObjectMovedHook(CGAbstractClassHook):
     """
     A hook for objectMovedOp, used to update the wrapper cache when an object it
     is holding moves.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSObject*', 'obj'), Argument('const JSObject*', 'old')]
+        args = [Argument('JSObject*', 'obj'), Argument('JSObject*', 'old')]
         CGAbstractClassHook.__init__(self, descriptor, OBJECT_MOVED_HOOK_NAME,
-                                     'void', args)
+                                     'size_t', args)
 
     def generate_code(self):
-        assert self.descriptor.wrapperCache
-        return CGIfWrapper(CGGeneric("UpdateWrapper(self, self, obj, old);\n"),
-                           "self").define()
+        return objectMovedHook(self.descriptor, self.name,
+                               self.args[0].name, self.args[1].name)
 
 
 def JSNativeArguments():
@@ -2361,6 +2366,12 @@ def IDLToCIdentifier(name):
     return name.replace("-", "_")
 
 
+def EnumerabilityFlags(member):
+    if member.getExtendedAttribute("NonEnumerable"):
+        return "0"
+    return "JSPROP_ENUMERATE"
+
+
 class MethodDefiner(PropertyDefiner):
     """
     A class for defining methods on a prototype object.
@@ -2421,18 +2432,11 @@ class MethodDefiner(PropertyDefiner):
                 })
                 continue
 
-            # Iterable methods should be enumerable, maplike/setlike methods
-            # should not.
-            isMaplikeOrSetlikeMethod = (m.isMaplikeOrSetlikeOrIterableMethod() and
-                                        (m.maplikeOrSetlikeOrIterable.isMaplike() or
-                                         m.maplikeOrSetlikeOrIterable.isSetlike()))
             method = {
                 "name": m.identifier.name,
                 "methodInfo": not m.isStatic(),
                 "length": methodLength(m),
-                # Methods generated for a maplike/setlike declaration are not
-                # enumerable.
-                "flags": "JSPROP_ENUMERATE" if not isMaplikeOrSetlikeMethod else "0",
+                "flags": EnumerabilityFlags(m),
                 "condition": PropertyDefiner.getControllingCondition(m, descriptor),
                 "allowCrossOriginThis": m.getExtendedAttribute("CrossOriginCallable"),
                 "returnsPromise": m.returnsPromise(),
@@ -2728,9 +2732,7 @@ class AttrDefiner(PropertyDefiner):
 
         def flags(attr):
             unforgeable = " | JSPROP_PERMANENT" if self.unforgeable else ""
-            # Attributes generated as part of a maplike/setlike declaration are
-            # not enumerable.
-            enumerable = " | JSPROP_ENUMERATE" if not attr.isMaplikeOrSetlikeAttr() else ""
+            enumerable = " | %s" % EnumerabilityFlags(attr)
             return ("JSPROP_SHARED" + enumerable + unforgeable)
 
         def getter(attr):
@@ -6851,8 +6853,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
                 # if they already threw an exception.
-                # XXX Assertion disabled for now, see bug 991271.
-                failed = ("MOZ_ASSERT(true || JS_IsExceptionPending(cx));\n" +
+                failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                           exceptionCode)
             else:
                 if descriptor.notflattened:
@@ -12408,6 +12409,20 @@ class CGDOMJSProxyHandler_finalize(ClassMethod):
                              self.args[0].name, self.args[1].name).define())
 
 
+class CGDOMJSProxyHandler_objectMoved(ClassMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSObject*', 'obj'), Argument('JSObject*', 'old')]
+        ClassMethod.__init__(self, "objectMoved", "size_t", args,
+                             virtual=True, override=True, const=True)
+        self.descriptor = descriptor
+
+    def getBody(self):
+        return (("%s* self = UnwrapPossiblyNotInitializedDOMObject<%s>(obj);\n" %
+                 (self.descriptor.nativeType, self.descriptor.nativeType)) +
+                objectMovedHook(self.descriptor, OBJECT_MOVED_HOOK_NAME,
+                                self.args[0].name, self.args[1].name))
+
+
 class CGDOMJSProxyHandler_getElements(ClassMethod):
     def __init__(self, descriptor):
         assert descriptor.supportsIndexedProperties()
@@ -12583,6 +12598,8 @@ class CGDOMJSProxyHandler(CGClass):
                 raise TypeError("Need a wrapper cache to support nursery "
                                 "allocation of DOM objects")
             methods.append(CGDOMJSProxyHandler_canNurseryAllocate())
+        if descriptor.wrapperCache:
+            methods.append(CGDOMJSProxyHandler_objectMoved(descriptor))
 
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             parentClass = 'ShadowingDOMProxyHandler'
@@ -12839,7 +12856,7 @@ class CGDescriptor(CGThing):
             # wants a custom hook.
             cgThings.append(CGClassFinalizeHook(descriptor))
 
-        if descriptor.concrete and descriptor.wrapperCache:
+        if descriptor.concrete and descriptor.wrapperCache and not descriptor.proxy:
             cgThings.append(CGClassObjectMovedHook(descriptor))
 
         # Generate the _ClearCachedFooValue methods before the property arrays that use them.
@@ -15371,8 +15388,7 @@ class CGJSImplMethod(CGJSImplMember):
                 MOZ_ASSERT(js::IsObjectInContextCompartment(scopeObj, cx));
                 JS::Rooted<JS::Value> wrappedVal(cx);
                 if (!GetOrCreateDOMReflector(cx, impl, &wrappedVal, aGivenProto)) {
-                  //XXX Assertion disabled for now, see bug 991271.
-                  MOZ_ASSERT(true || JS_IsExceptionPending(cx));
+                  MOZ_ASSERT(JS_IsExceptionPending(cx));
                   aRv.Throw(NS_ERROR_UNEXPECTED);
                   return nullptr;
                 }

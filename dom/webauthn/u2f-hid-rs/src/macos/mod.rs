@@ -45,7 +45,7 @@ impl PlatformManager {
 
         let cbc = callback.clone();
 
-        let thread = RunLoop::new(
+        let thread = RunLoop::new_with_timeout(
             move |alive| {
                 let mut devices = DeviceMap::new();
                 let monitor = try_or!(Monitor::new(), |e| { callback.call(Err(e)); });
@@ -98,7 +98,7 @@ impl PlatformManager {
 
         let cbc = callback.clone();
 
-        let thread = RunLoop::new(
+        let thread = RunLoop::new_with_timeout(
             move |alive| {
                 let mut devices = DeviceMap::new();
                 let monitor = try_or!(Monitor::new(), |e| { callback.call(Err(e)); });

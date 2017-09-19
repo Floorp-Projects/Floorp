@@ -340,7 +340,8 @@ partial interface Window {
 #ifdef NIGHTLY_BUILD
    ChromeOnly,
 #endif
-   Replaceable, Throws, NeedsCallerType] readonly attribute object? content;
+   NonEnumerable, Replaceable, Throws, NeedsCallerType]
+  readonly attribute object? content;
 
   [Throws, ChromeOnly] any getInterface(IID iid);
 
@@ -374,6 +375,7 @@ partial interface Window {
 
 [Func="IsChromeOrXBL"]
 interface ChromeWindow {
+  // The STATE_* constants need to match the corresponding enum in nsGlobalWindow.cpp.
   [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
   const unsigned short STATE_MAXIMIZED = 1;
   [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]

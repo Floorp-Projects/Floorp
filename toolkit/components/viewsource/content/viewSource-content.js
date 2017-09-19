@@ -437,15 +437,6 @@ var ViewSourceContent = {
   },
 
   onContextMenu(event) {
-    let addonInfo = {};
-    let subject = {
-      event,
-      addonInfo,
-    };
-
-    subject.wrappedJSObject = subject;
-    Services.obs.notifyObservers(subject, "content-contextmenu");
-
     let node = event.target;
 
     let result = {

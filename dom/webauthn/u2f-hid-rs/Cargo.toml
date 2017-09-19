@@ -2,7 +2,6 @@
 name = "u2fhid"
 version = "0.1.0"
 authors = ["Kyle Machulis <kyle@nonpolynomial.com>", "J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>"]
-build = "build.rs"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libudev = "^0.2"
@@ -19,6 +18,7 @@ log = "0.3"
 env_logger = "0.4.1"
 libc = "^0.2"
 boxfnonce = "0.0.3"
+runloop = "0.1.0"
 
 [dev-dependencies]
 rust-crypto = "^0.2"

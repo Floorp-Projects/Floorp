@@ -44,7 +44,6 @@ function openContextMenu(aMessage) {
                               spellInfo,
                               principal: data.principal,
                               customMenuItems: data.customMenuItems,
-                              addonInfo: data.addonInfo,
                               documentURIObject,
                               docLocation: data.docLocation,
                               charSet: data.charSet,

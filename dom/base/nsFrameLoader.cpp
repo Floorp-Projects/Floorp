@@ -2532,7 +2532,7 @@ nsFrameLoader::MaybeCreateDocShell()
   // Note: This logic duplicates a lot of logic in
   // nsSubDocumentFrame::AttributeChanged.  We should fix that.
 
-  int32_t parentType = docShell->ItemType();
+  const int32_t parentType = docShell->ItemType();
 
   // XXXbz why is this in content code, exactly?  We should handle
   // this some other way.....  Not sure how yet.
@@ -2710,6 +2710,16 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   nsDocShell::Cast(mDocShell)->SetOriginAttributes(attrs);
+
+  if (!mDocShell->GetIsMozBrowser() &&
+      parentType == mDocShell->ItemType()) {
+    // Propagate through the ancestor principals.
+    nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
+    // Make a copy, so we can modify it.
+    ancestorPrincipals = doc->AncestorPrincipals();
+    ancestorPrincipals.InsertElementAt(0, doc->NodePrincipal());
+    nsDocShell::Cast(mDocShell)->SetAncestorPrincipals(Move(ancestorPrincipals));
+  }
 
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
