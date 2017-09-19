@@ -11,7 +11,8 @@ interface nsIDOMEvent;
 interface nsIMessageBroadcaster;
 interface mozIDOMWindowProxy;
 
-[scriptable, uuid(78bdcb41-1efa-409f-aaba-70842213f80f)]
+// Scriptable only so Components.interfaces.nsIDOMChromeWindow works.
+[scriptable, builtinclass, uuid(78bdcb41-1efa-409f-aaba-70842213f80f)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;
