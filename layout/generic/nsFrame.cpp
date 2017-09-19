@@ -5989,8 +5989,8 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFrame");
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   aDesiredSize.ClearSize();
-  aStatus.Reset();
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
@@ -10833,7 +10833,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter)
 }
 
 void
-nsFrame::Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus)
+nsFrame::Trace(const char* aMethod, bool aEnter, const nsReflowStatus& aStatus)
 {
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];

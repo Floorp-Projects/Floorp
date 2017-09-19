@@ -391,9 +391,9 @@ public:
    * Must only be called while this block frame is in reflow.
    * aFloatStatus must be the float's true, unmodified reflow status.
    */
-  nsresult SplitFloat(BlockReflowInput& aState,
-                      nsIFrame* aFloat,
-                      nsReflowStatus aFloatStatus);
+  void SplitFloat(BlockReflowInput& aState,
+                  nsIFrame* aFloat,
+                  const nsReflowStatus& aFloatStatus);
 
   /**
    * Walks up the frame tree, starting with aCandidate, and returns the first

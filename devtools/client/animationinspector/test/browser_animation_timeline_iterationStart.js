@@ -10,7 +10,7 @@ add_task(function* () {
   yield addTab(URL_ROOT + "doc_script_animation.html");
   let {panel} = yield openAnimationInspector();
   let timelineComponent = panel.animationsTimelineComponent;
-  let timeBlockComponents = timelineComponent.timeBlocks;
+  let timeBlockComponents = getAnimationTimeBlocks(panel);
   let detailsComponent = timelineComponent.details;
 
   for (let i = 0; i < timeBlockComponents.length; i++) {

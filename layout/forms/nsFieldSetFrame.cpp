@@ -325,12 +325,9 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
-
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_PRECONDITION(aReflowInput.ComputedISize() != NS_INTRINSICSIZE,
                   "Should have a precomputed inline-size!");
-
-  // Initialize OUT parameter
-  aStatus.Reset();
 
   nsOverflowAreas ocBounds;
   nsReflowStatus ocStatus;

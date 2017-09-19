@@ -40,7 +40,7 @@ class TestStructuredHumanFormatter(unittest.TestCase):
         value = 's\xe9curit\xe9'
 
         logger.log(logging.INFO, 'Test: {utf}',
-            extra={'action': 'action', 'params': {'utf': value}})
+                   extra={'action': 'action', 'params': {'utf': value}})
 
 
 if __name__ == '__main__':

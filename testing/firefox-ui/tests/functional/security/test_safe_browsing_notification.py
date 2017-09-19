@@ -75,7 +75,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
                     self.marionette.navigate(unsafe_page)
                     # Wait for the DOM to receive events for about:blocked
                     time.sleep(1)
-                    self.check_ignore_warning_button(unsafe_page)
+                    self.check_ignore_warning_link(unsafe_page)
                     self.check_not_badware_button(button_property, report_page)
 
                 # Return to the unsafe page
@@ -83,7 +83,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
                 self.marionette.navigate(unsafe_page)
                 # Wait for the DOM to receive events for about:blocked
                 time.sleep(1)
-                self.check_ignore_warning_button(unsafe_page)
+                self.check_ignore_warning_link(unsafe_page)
                 self.check_get_me_out_of_here_button()
 
                 # Return to the unsafe page
@@ -91,12 +91,15 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
                 self.marionette.navigate(unsafe_page)
                 # Wait for the DOM to receive events for about:blocked
                 time.sleep(1)
-                self.check_ignore_warning_button(unsafe_page)
+                self.check_ignore_warning_link(unsafe_page)
                 self.check_x_button()
 
-    def check_ignore_warning_button(self, unsafe_page):
-        button = self.marionette.find_element(By.ID, 'ignoreWarningButton')
+    def check_ignore_warning_link(self, unsafe_page):
+        button = self.marionette.find_element(By.ID, 'seeDetailsButton')
         button.click()
+        time.sleep(1)
+        link = self.marionette.find_element(By.ID, 'ignore_warning_link')
+        link.click()
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             expected.element_present(By.ID, 'main-feature'),

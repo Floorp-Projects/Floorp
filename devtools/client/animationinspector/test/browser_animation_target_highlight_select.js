@@ -15,11 +15,9 @@ add_task(function* () {
   let {toolbox, inspector, panel} = yield openAnimationInspector();
 
   info("Select the simple animated node");
-  let onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
   yield selectNodeAndWaitForAnimations(".animated", inspector);
-  yield onPanelUpdated;
 
-  let targets = yield waitForAllAnimationTargets(panel);
+  let targets = getAnimationTargetNodes(panel);
   // Arbitrary select the first one
   let targetNodeComponent = targets[0];
 
@@ -49,17 +47,15 @@ add_task(function* () {
     "The highlighted node has the correct class");
 
   info("Select the body node in order to have the list of all animations");
-  onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
   yield selectNodeAndWaitForAnimations("body", inspector);
-  yield onPanelUpdated;
 
-  targets = yield waitForAllAnimationTargets(panel);
+  targets = getAnimationTargetNodes(panel);
   targetNodeComponent = targets[0];
 
   info("Click on the first animated node component and wait for the " +
        "selection to change");
   let onSelection = inspector.selection.once("new-node-front");
-  onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  let onRendered = waitForAnimationTimelineRendering(panel);
   let nodeEl = targetNodeComponent.previewer.previewEl;
   EventUtils.sendMouseEvent({type: "click"}, nodeEl,
                             nodeEl.ownerDocument.defaultView);
@@ -68,7 +64,5 @@ add_task(function* () {
   is(inspector.selection.nodeFront, targetNodeComponent.previewer.nodeFront,
     "The selected node is the one stored on the animation widget");
 
-  yield onPanelUpdated;
-  yield waitForAllAnimationTargets(panel);
-  yield waitForAnimationSelecting(panel);
+  yield onRendered;
 });

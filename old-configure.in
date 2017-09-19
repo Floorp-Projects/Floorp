@@ -3697,6 +3697,12 @@ then
     if test "x$ac_cv_sqlite_dbstat_vtab" = "xno"; then
         AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_DBSTAT_VTAB.])
     fi
+else
+    dnl ==============================
+    dnl === SQLite fdatasync check ===
+    dnl ==============================
+    dnl Check to see if fdatasync is available
+    AC_CHECK_FUNC(fdatasync)
 fi
 
 if test -n "$MOZ_SYSTEM_SQLITE"; then
