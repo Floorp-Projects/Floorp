@@ -9,6 +9,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/MediaManager.h"
 #include "MediaTrackConstraints.h"
+#include "nsContentUtils.h"
 #include "nsIEventTarget.h"
 #include "nsINamed.h"
 #include "nsIScriptGlobalObject.h"
@@ -229,6 +230,12 @@ MediaDevices::OnDeviceChange()
 
   if (!(MediaManager::Get()->IsActivelyCapturingOrHasAPermission(GetOwner()->WindowID()) ||
     Preferences::GetBool("media.navigator.permission.disabled", false))) {
+    return;
+  }
+
+  // Do not fire event to content script when
+  // privacy.resistFingerprinting is true.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
