@@ -18,7 +18,7 @@
 
       xhr.send();
 
-      assert_equals(xhr.status, 200, "Cross-domain access was denied in 'send'.");
+      assert_equals(xhr.status, 200, "Same-origin access doesn't issue preflight; not denied.");
     }, "Same-origin request with non-safelisted content type succeeds");
 
     test(function() {
