@@ -46,7 +46,7 @@
 
   <hbox id="sidebar-search-container">
     <textbox id="search-box" flex="1" type="search"
-             placeholder="&search.placeholder;"
+             placeholder="&historySearch.placeholder;"
              aria-controls="historyTree"
              oncommand="searchHistory(this.value);"/>
     <button id="viewButton" style="min-width:0px !important;" type="menu"
