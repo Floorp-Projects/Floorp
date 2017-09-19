@@ -1719,7 +1719,7 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(
   AutoSafeJSContext cx;
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
-  const uint32_t flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES;
+  const uint32_t flags = xpc::INIT_JS_STANDARD_CLASSES;
 
   JS::CompartmentOptions options;
   options.creationOptions().setSystemZone();
