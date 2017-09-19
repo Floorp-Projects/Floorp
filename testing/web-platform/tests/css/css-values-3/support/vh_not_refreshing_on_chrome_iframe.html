@@ -18,7 +18,7 @@
 			/* third box, changed by using CSS transition */
 		#testBoxWithTransition { background: #FF0; width: 20vh; height: 40px; float: left;
 			transition-property:       width, height;
-			transition-duration:       1.5s;
+			transition-duration:       0.3s;
 			transition-delay:          0;
 		}
 
@@ -42,6 +42,7 @@
 <div id="referenceBoxGrownHorizontallyByJS"></div>
 
 <script type="text/javascript">
+	'use strict';
 
 	// In case this file was opened by mistake, redirects to proper test
 	if (window.top.location.href  === document.location.href) {
@@ -68,11 +69,18 @@
 
 		setDimension('referenceBoxGrownHorizontallyByJS', 'height', referenceDimension);
 
-		setTimeout(animate, 20);
+		if (referenceDimension < 60) {
+			setTimeout(animate, 20);
+		} else {
+			parent.postMessage('referenceBoxGrownHorizontallyByJS', '*');
+		}
 	}
 
 	setTimeout(animate, 20);
 
+	addEventListener('transitionend', function() {
+		parent.postMessage('testBoxWithTransition', '*');
+	}, false);
 	var transitionedTestBoxStyle = document.getElementById('testBoxWithTransition').style;
 	transitionedTestBoxStyle.height = "60px";
 </script>

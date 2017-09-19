@@ -1,5 +1,6 @@
 "use strict";
 
+var typedefFrom = interfaceFrom;
 var dictionaryFrom = interfaceFrom;
 function interfaceFrom(i) {
     var idl = new IdlArray();

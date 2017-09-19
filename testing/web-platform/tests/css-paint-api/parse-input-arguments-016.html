@@ -20,12 +20,12 @@
 var testsPassed = false;
 try {
     registerPaint('foo12', class {
-        static get alpha() {
+        static get contextOptions() {
             return 42;
         }
     });
 } catch(ex) {
-    if (ex.name == "TypeError" && ex.message == "Failed to execute 'registerPaint' on 'PaintWorkletGlobalScope': The 'alpha' property on the class is not a boolean.")
+    if (ex.name == "TypeError" && ex.message == "Failed to execute 'registerPaint' on 'PaintWorkletGlobalScope': cannot convert to dictionary.")
         testsPassed = true;
 }
 
