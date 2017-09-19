@@ -14065,15 +14065,6 @@ nsGlobalChromeWindow::Create(nsGlobalWindow *aOuterWindow)
   return window.forget();
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetWindowState(uint16_t* aWindowState)
-{
-  FORWARD_TO_INNER_CHROME(GetWindowState, (aWindowState), NS_ERROR_UNEXPECTED);
-
-  *aWindowState = WindowState();
-  return NS_OK;
-}
-
 enum WindowState {
   // These constants need to match the constants in Window.webidl
   STATE_MAXIMIZED = 1,
@@ -14116,15 +14107,6 @@ nsGlobalWindow::IsFullyOccluded()
   return widget && widget->IsFullyOccluded();
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::Maximize()
-{
-  FORWARD_TO_INNER_CHROME(Maximize, (), NS_ERROR_UNEXPECTED);
-
-  nsGlobalWindow::Maximize();
-  return NS_OK;
-}
-
 void
 nsGlobalWindow::Maximize()
 {
@@ -14135,15 +14117,6 @@ nsGlobalWindow::Maximize()
   if (widget) {
     widget->SetSizeMode(nsSizeMode_Maximized);
   }
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::Minimize()
-{
-  FORWARD_TO_INNER_CHROME(Minimize, (), NS_ERROR_UNEXPECTED);
-
-  nsGlobalWindow::Minimize();
-  return NS_OK;
 }
 
 void
@@ -14158,15 +14131,6 @@ nsGlobalWindow::Minimize()
   }
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::Restore()
-{
-  FORWARD_TO_INNER_CHROME(Restore, (), NS_ERROR_UNEXPECTED);
-
-  nsGlobalWindow::Restore();
-  return NS_OK;
-}
-
 void
 nsGlobalWindow::Restore()
 {
@@ -14179,31 +14143,11 @@ nsGlobalWindow::Restore()
   }
 }
 
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetAttention()
-{
-  FORWARD_TO_INNER_CHROME(GetAttention, (), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  GetAttention(rv);
-  return rv.StealNSResult();
-}
-
 void
 nsGlobalWindow::GetAttention(ErrorResult& aResult)
 {
   MOZ_ASSERT(IsInnerWindow());
   return GetAttentionWithCycleCount(-1, aResult);
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetAttentionWithCycleCount(int32_t aCycleCount)
-{
-  FORWARD_TO_INNER_CHROME(GetAttentionWithCycleCount, (aCycleCount), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  GetAttentionWithCycleCount(aCycleCount, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -14217,23 +14161,6 @@ nsGlobalWindow::GetAttentionWithCycleCount(int32_t aCycleCount,
   if (widget) {
     aError = widget->GetAttention(aCycleCount);
   }
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElement* aPanel)
-{
-  FORWARD_TO_INNER_CHROME(BeginWindowMove, (aMouseDownEvent, aPanel), NS_ERROR_UNEXPECTED);
-
-  NS_ENSURE_TRUE(aMouseDownEvent, NS_ERROR_FAILURE);
-  Event* mouseDownEvent = aMouseDownEvent->InternalDOMEvent();
-  NS_ENSURE_TRUE(mouseDownEvent, NS_ERROR_FAILURE);
-
-  nsCOMPtr<Element> panel = do_QueryInterface(aPanel);
-  NS_ENSURE_TRUE(panel || !aPanel, NS_ERROR_FAILURE);
-
-  ErrorResult rv;
-  BeginWindowMove(*mouseDownEvent, panel, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -14291,16 +14218,6 @@ nsGlobalWindow::GetWindowRoot(mozilla::ErrorResult& aError)
 
 //Note: This call will lock the cursor, it will not change as it moves.
 //To unlock, the cursor must be set back to CURSOR_AUTO.
-NS_IMETHODIMP
-nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
-{
-  FORWARD_TO_INNER_CHROME(SetCursor, (aCursor), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  SetCursor(aCursor, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsGlobalWindow::SetCursorOuter(const nsAString& aCursor, ErrorResult& aError)
 {
@@ -14398,20 +14315,6 @@ nsGlobalWindow::SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserWindow,
                                     ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(SetBrowserDOMWindowOuter, (aBrowserWindow), aError, );
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
-{
-  FORWARD_TO_INNER_CHROME(NotifyDefaultButtonLoaded,
-                          (aDefaultButton), NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<Element> defaultButton = do_QueryInterface(aDefaultButton);
-  NS_ENSURE_ARG(defaultButton);
-
-  ErrorResult rv;
-  NotifyDefaultButtonLoaded(*defaultButton, rv);
-  return rv.StealNSResult();
 }
 
 void
