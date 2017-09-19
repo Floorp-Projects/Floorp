@@ -226,7 +226,7 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
     // This item in the chain is a no-op, skip over it
     return;
   }
-  if (!clipId) {
+  if (!clipId || aBuilder.HasMaskClip()) {
     // If we don't have a clip id for this chain item yet, define the clip in WR
     // and save the id
     LayoutDeviceRect clip = LayoutDeviceRect::FromAppUnits(
@@ -234,7 +234,9 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
     nsTArray<wr::WrComplexClipRegion> wrRoundedRects;
     aChain->mClip.ToWrComplexClipRegions(aAppUnitsPerDevPixel, aStackingContext, wrRoundedRects);
     clipId = Some(aBuilder.DefineClip(aStackingContext.ToRelativeLayoutRect(clip), &wrRoundedRects));
-    aCache[aChain] = clipId.value();
+    if (!aBuilder.HasMaskClip()) {
+      aCache[aChain] = clipId.value();
+    }
   }
   // Finally, push the clip onto the WR stack
   MOZ_ASSERT(clipId);
