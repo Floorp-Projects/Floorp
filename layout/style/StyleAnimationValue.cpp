@@ -4152,13 +4152,13 @@ ExtractImageLayerSizePairList(const nsStyleImageLayers& aLayer,
 }
 
 static bool
-StyleClipBasicShapeToCSSArray(const StyleShapeSource& aClipPath,
-                              nsCSSValue::Array* aResult)
+StyleShapeSourceToCSSArray(const StyleShapeSource& aShapeSource,
+                           nsCSSValue::Array* aResult)
 {
   MOZ_ASSERT(aResult->Count() == 2,
              "Expected array to be presized for a function and the sizing-box");
 
-  const StyleBasicShape* shape = aClipPath.GetBasicShape();
+  const StyleBasicShape* shape = aShapeSource.GetBasicShape();
   nsCSSKeyword functionName = shape->GetShapeTypeName();
   RefPtr<nsCSSValue::Array> functionArray;
   switch (shape->GetShapeType()) {
@@ -4236,7 +4236,7 @@ StyleClipBasicShapeToCSSArray(const StyleShapeSource& aClipPath,
       MOZ_ASSERT_UNREACHABLE("Unknown shape type");
       return false;
   }
-  aResult->Item(1).SetEnumValue(aClipPath.GetReferenceBox());
+  aResult->Item(1).SetEnumValue(aShapeSource.GetReferenceBox());
   return true;
 }
 
@@ -4560,7 +4560,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             aComputedValue.SetEnumValue(clipPath.GetReferenceBox());
           } else if (type == StyleShapeSourceType::Shape) {
             RefPtr<nsCSSValue::Array> result = nsCSSValue::Array::Create(2);
-            if (!StyleClipBasicShapeToCSSArray(clipPath, result)) {
+            if (!StyleShapeSourceToCSSArray(clipPath, result)) {
               return false;
             }
             aComputedValue.SetCSSValueArrayValue(result, eUnit_Shape);
