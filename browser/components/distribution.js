@@ -12,6 +12,10 @@ var Cu = Components.utils;
 const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
   "distribution-customization-complete";
 
+const PREF_CACHED_FILE_EXISTENCE  = "distribution.iniFile.exists.value";
+const PREF_CACHED_FILE_APPVERSION = "distribution.iniFile.exists.appversion";
+
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
@@ -20,37 +24,65 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
 this.DistributionCustomizer = function DistributionCustomizer() {
-  // For parallel xpcshell testing purposes allow loading the distribution.ini
-  // file from the profile folder through an hidden pref.
-  let loadFromProfile = Services.prefs.getBoolPref("distribution.testing.loadFromProfile", false);
-  let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  try {
-    let iniFile = loadFromProfile ? dirSvc.get("ProfD", Ci.nsIFile)
-                                  : dirSvc.get("XREAppDist", Ci.nsIFile);
-    if (loadFromProfile) {
-      iniFile.leafName = "distribution";
-    }
-    iniFile.append("distribution.ini");
-    if (iniFile.exists())
-      this._iniFile = iniFile;
-  } catch (ex) {}
 }
 
 DistributionCustomizer.prototype = {
-  _iniFile: null,
+  get _iniFile() {
+    // For parallel xpcshell testing purposes allow loading the distribution.ini
+    // file from the profile folder through an hidden pref.
+    let loadFromProfile = Services.prefs.getBoolPref("distribution.testing.loadFromProfile", false);
+    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                 getService(Ci.nsIProperties);
+
+    let iniFile;
+    try {
+      iniFile = loadFromProfile ? dirSvc.get("ProfD", Ci.nsIFile)
+                                : dirSvc.get("XREAppDist", Ci.nsIFile);
+      if (loadFromProfile) {
+        iniFile.leafName = "distribution";
+      }
+      iniFile.append("distribution.ini");
+    } catch (ex) {}
+
+    this.__defineGetter__("_iniFile", () => iniFile);
+    return iniFile;
+  },
+
+  get _hasDistributionIni() {
+    if (Services.prefs.prefHasUserValue(PREF_CACHED_FILE_EXISTENCE)) {
+      let knownForVersion = Services.prefs.getStringPref(PREF_CACHED_FILE_APPVERSION, "unknown");
+      if (knownForVersion == AppConstants.MOZ_APP_VERSION) {
+        return Services.prefs.getBoolPref(PREF_CACHED_FILE_EXISTENCE);
+      }
+    }
+
+    let fileExists = this._iniFile.exists();
+    Services.prefs.setBoolPref(PREF_CACHED_FILE_EXISTENCE, fileExists);
+    Services.prefs.setStringPref(PREF_CACHED_FILE_APPVERSION, AppConstants.MOZ_APP_VERSION);
+
+    this.__defineGetter__("_hasDistributionIni", () => fileExists);
+    return fileExists;
+  },
 
   get _ini() {
     let ini = null;
     try {
-      if (this._iniFile) {
+      if (this._hasDistributionIni) {
         ini = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
               getService(Ci.nsIINIParserFactory).
               createINIParser(this._iniFile);
       }
     } catch (e) {
-      // Unable to parse INI.
-      Cu.reportError("Unable to parse distribution.ini");
+      if (e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+        // We probably had cached the file existence as true,
+        // but it no longer exists. We could set the new cache
+        // value here, but let's just invalidate the cache and
+        // let it be cached by a single code path on the next check.
+        Services.prefs.clearUserPref(PREF_CACHED_FILE_EXISTENCE);
+      } else {
+        // Unable to parse INI.
+        Cu.reportError("Unable to parse distribution.ini");
+      }
     }
     this.__defineGetter__("_ini", () => ini);
     return this._ini;
