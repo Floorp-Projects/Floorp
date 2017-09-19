@@ -737,7 +737,10 @@ nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen,
     header->length = htons(length);
 
     /* make sure FINGERPRINT is final attribute in message */
-    assert(length + sizeof(*header) == buflen);
+    if (length + sizeof(*header) != buflen) {
+        r_log(NR_LOG_STUN, LOG_WARNING, "Fingerprint is not final attribute in message");
+        ABORT(R_FAILED);
+    }
 
     if (r_crc32((char*)buf, offset, &checksum)) {
         r_log(NR_LOG_STUN, LOG_WARNING, "Unable to compute fingerprint");
