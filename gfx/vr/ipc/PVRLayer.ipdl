@@ -16,7 +16,7 @@ async protocol PVRLayer
   manager PVRManager;
 
 parent:
-  async SubmitFrame(PTexture aTexture);
+  async SubmitFrame(PTexture aTexture, uint64_t aFrameId);
   async Destroy();
 
 child:

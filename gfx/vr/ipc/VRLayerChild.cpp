@@ -47,7 +47,7 @@ VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement)
 }
 
 void
-VRLayerChild::SubmitFrame()
+VRLayerChild::SubmitFrame(uint64_t aFrameId)
 {
   if (!mCanvasElement) {
     return;
@@ -72,7 +72,7 @@ VRLayerChild::SubmitFrame()
   mFront->SyncWithObject(vrmc->GetSyncObject());
   MOZ_ALWAYS_TRUE(mFront->InitIPDLActor(vrmc));
 
-  SendSubmitFrame(mFront->GetIPDLActor());
+  SendSubmitFrame(mFront->GetIPDLActor(), aFrameId);
 }
 
 bool
