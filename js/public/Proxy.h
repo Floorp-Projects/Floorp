@@ -335,7 +335,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const;
     virtual void trace(JSTracer* trc, JSObject* proxy) const;
     virtual void finalize(JSFreeOp* fop, JSObject* proxy) const;
-    virtual void objectMoved(JSObject* proxy, const JSObject* old) const;
+    virtual size_t objectMoved(JSObject* proxy, JSObject* old) const;
 
     // Allow proxies, wrappers in particular, to specify callability at runtime.
     // Note: These do not take const JSObject*, but they do in spirit.

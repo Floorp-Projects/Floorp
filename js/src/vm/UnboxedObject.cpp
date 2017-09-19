@@ -1203,8 +1203,8 @@ UnboxedArrayObject::trace(JSTracer* trc, JSObject* obj)
     }
 }
 
-/* static */ void
-UnboxedArrayObject::objectMoved(JSObject* obj, const JSObject* old)
+/* static */ size_t
+UnboxedArrayObject::objectMoved(JSObject* obj, JSObject* old)
 {
     UnboxedArrayObject& dst = obj->as<UnboxedArrayObject>();
     const UnboxedArrayObject& src = old->as<UnboxedArrayObject>();
@@ -1212,6 +1212,8 @@ UnboxedArrayObject::objectMoved(JSObject* obj, const JSObject* old)
     // Fix up possible inline data pointer.
     if (src.hasInlineElements())
         dst.setInlineElements();
+
+    return 0;
 }
 
 /* static */ void

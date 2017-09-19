@@ -2990,9 +2990,9 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
         MOZ_ASSERT(src->as<ProxyObject>().usingInlineValueArray());
         dst->as<ProxyObject>().setInlineValueArray();
         if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp())
-            op(dst, src);
+            tenuredSize += op(dst, src);
     } else if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp()) {
-        op(dst, src);
+        tenuredSize += op(dst, src);
     } else {
         MOZ_ASSERT_IF(src->getClass()->hasFinalize(),
                       CanNurseryAllocateFinalizedClass(src->getClass()));
