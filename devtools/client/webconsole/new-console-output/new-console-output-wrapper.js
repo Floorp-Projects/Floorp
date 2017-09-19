@@ -75,10 +75,11 @@ NewConsoleOutputWrapper.prototype = {
 
     const serviceContainer = {
       attachRefToHud,
-      emitNewMessage: (node, messageId) => {
+      emitNewMessage: (node, messageId, timeStamp) => {
         this.jsterm.hud.emit("new-messages", new Set([{
           node,
           messageId,
+          timeStamp,
         }]));
       },
       hudProxy: this.jsterm.hud.proxy,
@@ -182,19 +183,19 @@ NewConsoleOutputWrapper.prototype = {
 
     this.jsterm.focus();
   },
+
   dispatchMessageAdd: function (message, waitForResponse) {
-    this.batchedMessagesAdd(message);
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
     // be removed once it's not needed anymore.
     // Can only wait for response if the action contains a valid message.
+    let promise;
     if (waitForResponse) {
-      let {timeStamp} = message;
-      return new Promise(resolve => {
+      promise = new Promise(resolve => {
         let jsterm = this.jsterm;
         jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
           for (let m of messages) {
-            if (m.timeStamp === timeStamp) {
+            if (m.timeStamp === message.timestamp) {
               resolve(m.node);
               jsterm.hud.off("new-messages", onThisMessage);
               return;
@@ -202,9 +203,12 @@ NewConsoleOutputWrapper.prototype = {
           }
         });
       });
+    } else {
+      promise = Promise.resolve();
     }
 
-    return Promise.resolve();
+    this.batchedMessagesAdd(message);
+    return promise;
   },
 
   dispatchMessagesAdd: function (messages) {
