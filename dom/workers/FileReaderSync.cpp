@@ -232,9 +232,7 @@ FileReaderSync::ReadAsText(Blob& aBlob,
 
   nsAutoCString charset;
   encoding->Name(charset);
-
-  nsCOMPtr<nsIInputStream> multiplex(do_QueryInterface(multiplexStream));
-  aRv = ConvertStream(multiplex, charset.get(), aResult);
+  aRv = ConvertStream(multiplexStream, charset.get(), aResult);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
