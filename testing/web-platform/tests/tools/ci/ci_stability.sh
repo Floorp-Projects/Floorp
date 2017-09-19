@@ -8,7 +8,7 @@ cd $WPT_ROOT
 source tools/ci/lib.sh
 
 test_stability() {
-    ./wpt check-stability $PRODUCT --output-bytes $((1024 * 1024 * 3)) --metadata ~/meta/
+    ./wpt check-stability $PRODUCT --output-bytes $((1024 * 1024 * 3)) --metadata ~/meta/ --install-fonts
 }
 
 main() {
