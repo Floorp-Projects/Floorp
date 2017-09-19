@@ -4585,6 +4585,16 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           break;
         }
 
+        case eCSSProperty_shape_outside: {
+          const nsStyleDisplay* styleDisplay =
+            static_cast<const nsStyleDisplay*>(styleStruct);
+          if (!ExtractComputedValueFromShapeSource(styleDisplay->mShapeOutside,
+                                                   aComputedValue)) {
+            return false;
+          };
+          break;
+        }
+
         case eCSSProperty_filter: {
           const nsStyleEffects* effects =
             static_cast<const nsStyleEffects*>(styleStruct);
