@@ -139,6 +139,7 @@ if CONFIG['ENABLE_STREAMS']:
 
 if CONFIG['JS_BUILD_BINAST']:
     UNIFIED_SOURCES += [
+        'testBinASTReader.cpp',
         'testBinTokenReaderTester.cpp'
     ]
 
