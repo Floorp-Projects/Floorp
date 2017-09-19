@@ -75,6 +75,10 @@
             <item android:id="@+id/add_search_engine"
                   android:title="@string/contextmenu_add_search_engine"/>
 
+            <!-- Title is overridden dynamically (it can also be for unpinning). -->
+            <item android:id="@+id/pin_to_top_sites"
+                  android:title="@string/contextmenu_pin_to_top_sites"/>
+
             <item android:id="@+id/add_to_launcher"
                   android:title="@string/contextmenu_add_to_launcher"/>
 
