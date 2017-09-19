@@ -22,7 +22,7 @@ interface nsIDOMChromeWindow : nsISupports
    * utility functions implemented by chrome script. It will be null
    * for DOMWindows not corresponding to browsers.
    */
-           attribute nsIBrowserDOMWindow browserDOMWindow;
+  readonly attribute nsIBrowserDOMWindow browserDOMWindow;
 
   void                      getAttention();
 
