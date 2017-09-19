@@ -4,8 +4,28 @@
                   android:key="status_screen">
 
     <PreferenceCategory
-        android:key="error_state">
-
+        android:key="signed_in_as_category"
+        android:title="@string/fxaccount_status_signed_in_as" >
+        <Preference
+            android:editable="false"
+            android:key="profile"
+            android:icon="@drawable/sync_avatar_default"
+            android:persistent="false"
+            android:title="" />
+        <Preference
+            android:editable="false"
+            android:key="manage_account"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_manage_account" />
+        <Preference
+            android:editable="false"
+            android:key="auth_server"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_auth_server" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="sync_category"
+        android:title="@string/fxaccount_status_sync" >
         <Preference
             android:editable="false"
             android:icon="@drawable/fxaccount_sync_error"
@@ -41,73 +61,56 @@
             android:layout="@layout/fxaccount_status_error_preference"
             android:persistent="false"
             android:title="@string/fxaccount_status_needs_finish_migrating" />
-    </PreferenceCategory>
-
-    <Preference
-        android:editable="false"
-        android:key="profile"
-        android:icon="@drawable/sync_avatar_default"
-        android:persistent="false"
-        android:title="" />
-
-    <Preference
-        android:editable="false"
-        android:key="sync_now"
-        android:defaultValue=""
-        android:persistent="false"
-        android:title="@string/fxaccount_status_sync_now"
-        android:summary="" />
-
-    <PreferenceCategory
-        android:title="@string/fxaccount_status_choose_what">
-
-        <SwitchPreference
-            android:key="bookmarks"
-            android:persistent="false"
-            android:title="@string/fxaccount_status_bookmarks" />
-        <SwitchPreference
-            android:key="history"
-            android:persistent="false"
-            android:title="@string/fxaccount_status_history" />
-        <SwitchPreference
-            android:key="tabs"
-            android:persistent="false"
-            android:title="@string/fxaccount_status_tabs" />
-        <SwitchPreference
-            android:key="passwords"
-            android:persistent="false"
-            android:title="@string/fxaccount_status_passwords" />
-    </PreferenceCategory>
-
-    <EditTextPreference
-        android:singleLine="true"
-        android:key="device_name"
-        android:persistent="false"
-        android:title="@string/fxaccount_status_device_name" />
-
-    <org.mozilla.gecko.fxa.activities.CustomColorPreference
-        android:editable="false"
-        android:key="remove_account"
-        android:persistent="false"
-        gecko:titleColor="@color/rejection_red"
-        android:title="@string/fxaccount_remove_account" />
-
-    <PreferenceCategory
-        android:key="additional_settings"
-        android:title="@string/fxaccount_status_additional_settings">
 
         <Preference
             android:editable="false"
-            android:key="auth_server"
+            android:key="sync_now"
+            android:defaultValue=""
             android:persistent="false"
-            android:title="@string/fxaccount_status_auth_server" />
+            android:title="@string/fxaccount_status_sync_now"
+            android:summary="" />
+
+        <CheckBoxPreference
+            android:key="bookmarks"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_bookmarks" />
+        <CheckBoxPreference
+            android:key="history"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_history" />
+        <CheckBoxPreference
+            android:key="tabs"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_tabs" />
+        <CheckBoxPreference
+            android:key="passwords"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_passwords" />
+
+        <EditTextPreference
+            android:singleLine="true"
+            android:key="device_name"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_device_name" />
+
         <Preference
             android:editable="false"
             android:key="sync_server"
             android:persistent="false"
             android:title="@string/fxaccount_status_sync_server" />
-    </PreferenceCategory>
+        <org.mozilla.gecko.fxa.activities.CustomColorPreference
+            android:editable="false"
+            android:key="remove_account"
+            android:persistent="false"
+            gecko:titleColor="@color/rejection_red"
+            android:title="@string/fxaccount_remove_account" />
+        <Preference
+            android:editable="false"
+            android:key="more"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_more" />
 
+    </PreferenceCategory>
     <PreferenceCategory
         android:key="legal_category"
         android:title="@string/fxaccount_status_legal" >
@@ -122,7 +125,6 @@
             android:persistent="false"
             android:title="@string/fxaccount_status_linkprivacy" />
     </PreferenceCategory>
-
     <PreferenceCategory
         android:key="debug_category" >
         <Preference android:key="debug_refresh" />
