@@ -274,6 +274,8 @@ typedef enum {
   MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW,
+  /* Used only as a container for MOZ_GTK_HEADER_BAR_MAXIMIZED. */
+  MOZ_GTK_WINDOW_MAXIMIZED,
   /* Window container for all widgets */
   MOZ_GTK_WINDOW_CONTAINER,
   /* Paints a GtkInfoBar, for notifications. */
@@ -296,6 +298,14 @@ typedef enum {
   MOZ_GTK_COMBOBOX_ENTRY_ARROW,
   /* Used for scrolled window shell. */
   MOZ_GTK_SCROLLED_WINDOW,
+  /* Paints a GtkHeaderBar */
+  MOZ_GTK_HEADER_BAR,
+  /* Paints a GtkHeaderBar in maximized state */
+  MOZ_GTK_HEADER_BAR_MAXIMIZED,
+  /* Paints GtkHeaderBar title buttons */
+  MOZ_GTK_HEADER_BAR_BUTTON_CLOSE,
+  MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE,
+  MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE,
 
   MOZ_GTK_WIDGET_NODE_COUNT
 } WidgetNodeType;
