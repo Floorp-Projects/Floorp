@@ -21,7 +21,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
  *
  *        [
  *          {
- *            // This reflow is caused by lorem ipsum
+ *            // This reflow is caused by lorem ipsum.
+ *            // Sometimes, due to unpredictable timings, the reflow may be hit
+ *            // less times, or not hit at all; in such a case a minTimes
+ *            // property can be provided to avoid intermittent failures.
  *            stack: [
  *              "select@chrome://global/content/bindings/textbox.xml",
  *              "focusAndSelectUrlBar@chrome://browser/content/browser.js",
@@ -31,6 +34,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
  *            ],
  *            // We expect this particular reflow to happen 2 times
  *            times: 2,
+ *            // Sometimes this is not hit.
+ *            minTimes: 0
  *          },
  *
  *          {
@@ -43,7 +48,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
  *              "onxbltransitionend@chrome://browser/content/tabbrowser.xml",
  *            ],
  *          }
- *
  *        ]
  *
  *        Note that line numbers are not included in the stacks.
@@ -108,6 +112,9 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
       if (index != -1) {
         Assert.ok(true, "expected uninterruptible reflow: '" +
                   JSON.stringify(pathWithLineNumbers, null, "\t") + "'");
+        if (expectedReflows[index].minTimes) {
+          expectedReflows[index].minTimes--;
+        }
         if (--expectedReflows[index].times == 0) {
           expectedReflows.splice(index, 1);
         }
@@ -139,11 +146,13 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
     await testFn(dirtyFrameFn);
   } finally {
     for (let remainder of expectedReflows) {
-      Assert.ok(false,
-                `Unused expected reflow: ${JSON.stringify(remainder.stack, null, "\t")}\n` +
-                `This reflow was supposed to be hit ${remainder.times} more time(s).\n` +
-                "This is probably a good thing - just remove it from the " +
-                "expected list.");
+      if (!Number.isInteger(remainder.minTimes) || remainder.minTimes > 0) {
+        Assert.ok(false,
+                  `Unused expected reflow: ${JSON.stringify(remainder.stack, null, "\t")}\n` +
+                  `This reflow was supposed to be hit ${remainder.minTimes || remainder.times} more time(s).\n` +
+                  "This is probably a good thing - just remove it from the " +
+                  "expected list.");
+      }
     }
 
     els.removeListenerForAllEvents(win, dirtyFrameFn, true);
@@ -241,6 +250,7 @@ async function removeAllButFirstTab() {
  * do semi-realistic look-ups in the URL bar.
  */
 async function addDummyHistoryEntries() {
+  await PlacesTestUtils.clearHistory();
   const NUM_VISITS = 10;
   let visits = [];
 

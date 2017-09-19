@@ -3,7 +3,7 @@ const injector = require("inject!lib/TopSitesFeed.jsm");
 const {UPDATE_TIME} = require("lib/TopSitesFeed.jsm");
 const {FakePrefs, GlobalOverrider} = require("test/unit/utils");
 const action = {meta: {fromTarget: {}}};
-const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
+const {actionTypes: at} = require("common/Actions.jsm");
 const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = require("common/Reducers.jsm");
 
 const FAKE_FRECENCY = 200;
@@ -68,7 +68,7 @@ describe("Top Sites Feed", () => {
       dispatch: sinon.spy(),
       getState() { return this.state; },
       state: {
-        Prefs: {values: {filterAdult: false}},
+        Prefs: {values: {filterAdult: false, topSitesCount: 6}},
         TopSites: {rows: Array(12).fill("site")}
       }
     };
@@ -211,6 +211,13 @@ describe("Top Sites Feed", () => {
       assert.doesNotThrow(() => {
         feed.getLinksWithDefaults(action);
       });
+    });
+    it("should get more if the user has asked for more", async () => {
+      feed.store.state.Prefs.values.topSitesCount = TOP_SITES_SHOWMORE_LENGTH + 1;
+
+      const result = await feed.getLinksWithDefaults();
+
+      assert.propertyVal(result, "length", feed.store.state.Prefs.values.topSitesCount);
     });
     describe("deduping", () => {
       beforeEach(() => {
@@ -390,41 +397,6 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, pinAction.data.site, pinAction.data.index);
     });
-    it("should get correct isDefault and index property", () => {
-      // When calling _getPinnedWithData the state in `pinnedLinks` and in the store should merge.
-      const site = {url: "foo.com"};
-      const siteWithIndex = {url: "foo.com", isDefault: true, index: 7};
-      fakeNewTabUtils.pinnedLinks.links = [siteWithIndex];
-      feed.store = {dispatch: sinon.spy(), getState() { return {TopSites: {rows: [site]}}; }};
-      const pinAction = {
-        type: at.TOP_SITES_PIN,
-        data: {}
-      };
-      feed.onAction(pinAction);
-      assert.calledOnce(feed.store.dispatch);
-      assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({
-        type: at.PINNED_SITES_UPDATED,
-        data: [siteWithIndex]
-      }));
-    });
-    it("should get correct pinned links and data", () => {
-      // When calling _getPinnedWithData the state in `pinnedLinks` and in the store should merge.
-      // In this case `site1` is a pinned site and should be returned.
-      const site1 = {url: "foo.com", isDefault: true};
-      const site2 = {url: "bar.com", isDefault: false};
-      fakeNewTabUtils.pinnedLinks.links = [site1];
-      feed.store = {dispatch: sinon.spy(), getState() { return {TopSites: {rows: [site2]}}; }};
-      const pinAction = {
-        type: at.TOP_SITES_PIN,
-        data: {}
-      };
-      feed.onAction(pinAction);
-      assert.calledOnce(feed.store.dispatch);
-      assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({
-        type: at.PINNED_SITES_UPDATED,
-        data: [Object.assign({}, site1, {hostname: "foo.com"})]
-      }));
-    });
     it("should compare against links if available, instead of getting from store", () => {
       const frecentSite = {url: "foo.com", faviconSize: 32, favicon: "favicon.png"};
       const pinnedSite1 = {url: "bar.com"};
@@ -436,27 +408,21 @@ describe("Top Sites Feed", () => {
       assert.include(result[1], Object.assign({}, frecentSite, pinnedSite2));
       assert.notCalled(feed.store.getState().TopSites.rows);
     });
-    it("should fetch an icon on TOP_SITES_PIN and TOP_SITES_ADD for new urls", () => {
-      feed.store.getState = () => ({TopSites: {rows: FAKE_LINKS}});
-      fakeNewTabUtils.pinnedLinks = {
-        links: new Array(6).fill(null),
-        pin(site, index) {
-          this.links[index] = site;
-        }
-      };
-      sinon.spy(feed, "_fetchIcon");
-
+    it("should trigger refresh on TOP_SITES_PIN", () => {
+      sinon.stub(feed, "refresh");
       const pinExistingAction = {type: at.TOP_SITES_PIN, data: {site: FAKE_LINKS[4], index: 4}};
-      const addAction = {type: at.TOP_SITES_ADD, data: {site: {url: "foo.com"}}};
-      const pinNewAction = {type: at.TOP_SITES_PIN, data: {site: {url: "bar.net"}, index: 0}};
-      feed.onAction(pinExistingAction);
-      feed.onAction(addAction);
-      feed.onAction(pinNewAction);
 
-      assert.calledTwice(feed._fetchIcon);
-      assert.neverCalledWithMatch(feed._fetchIcon, {url: FAKE_LINKS[4].url});
-      assert.calledWithMatch(feed._fetchIcon, {url: "foo.com"});
-      assert.calledWithMatch(feed._fetchIcon, {url: "bar.net"});
+      feed.onAction(pinExistingAction);
+
+      assert.calledOnce(feed.refresh);
+    });
+    it("should trigger refresh on TOP_SITES_ADD", () => {
+      sinon.stub(feed, "refresh");
+      const addAction = {type: at.TOP_SITES_ADD, data: {site: {url: "foo.com"}}};
+
+      feed.onAction(addAction);
+
+      assert.calledOnce(feed.refresh);
     });
     it("should call unpin with correct parameters on TOP_SITES_UNPIN", () => {
       fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "foo.com"}, null, null, null, null, null, FAKE_LINKS[0]];

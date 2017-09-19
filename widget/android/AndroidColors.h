@@ -11,6 +11,7 @@
 namespace mozilla {
 namespace widget {
 
+static const Color sAndroidBackgroundColor(Color(1.0f, 1.0f, 1.0f));
 static const Color sAndroidBorderColor(Color(0.73f, 0.73f, 0.73f));
 static const Color sAndroidCheckColor(Color(0.19f, 0.21f, 0.23f));
 static const Color sAndroidDisabledColor(Color(0.88f, 0.88f, 0.88f));

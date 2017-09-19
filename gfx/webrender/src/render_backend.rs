@@ -2,13 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DebugCommand, DeviceIntPoint};
+#[cfg(feature = "debugger")]
+use api::{BuiltDisplayListIter, SpecificDisplayItem};
+use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, DocumentMsg};
+use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier};
+use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
+use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 #[cfg(feature = "debugger")]
 use debug_server;
 use frame::Frame;
 use frame_builder::FrameBuilderConfig;
 use gpu_cache::GpuCache;
-use internal_types::{DebugOutput, FastHashMap, FastHashSet, ResultMsg, RendererFrame};
+use internal_types::{DebugOutput, FastHashMap, FastHashSet, RendererFrame, ResultMsg};
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
+use rayon::ThreadPool;
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
 use scene::Scene;
@@ -18,16 +26,8 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use std::u32;
 use texture_cache::TextureCache;
-use time::precise_time_ns;
 use thread_profiler::register_thread_with_profiler;
-use rayon::ThreadPool;
-use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
-use api::channel::{PayloadSender, PayloadSenderHelperMethods};
-use api::{ApiMsg, DebugCommand, BlobImageRenderer, BuiltDisplayList, DeviceIntPoint};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, DocumentMsg};
-use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier};
-#[cfg(feature = "debugger")]
-use api::{BuiltDisplayListIter, SpecificDisplayItem};
+use time::precise_time_ns;
 
 struct Document {
     scene: Scene,
@@ -78,30 +78,37 @@ impl Document {
 
     fn build_scene(&mut self, resource_cache: &mut ResourceCache, hidpi_factor: f32) {
         let accumulated_scale_factor = self.accumulated_scale_factor(hidpi_factor);
-        self.frame.create(&self.scene,
-                          resource_cache,
-                          self.window_size,
-                          self.inner_rect,
-                          accumulated_scale_factor);
+        self.frame.create(
+            &self.scene,
+            resource_cache,
+            self.window_size,
+            self.inner_rect,
+            accumulated_scale_factor,
+        );
     }
 
-    fn render(&mut self,
+    fn render(
+        &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         resource_profile: &mut ResourceProfileCounters,
         hidpi_factor: f32,
-    )-> RendererFrame {
+    ) -> RendererFrame {
         let accumulated_scale_factor = self.accumulated_scale_factor(hidpi_factor);
-        let pan = LayerPoint::new(self.pan.x as f32 / accumulated_scale_factor,
-                                  self.pan.y as f32 / accumulated_scale_factor);
-        self.frame.build(resource_cache,
-                         gpu_cache,
-                         &self.scene.display_lists,
-                         accumulated_scale_factor,
-                         pan,
-                         &self.output_pipelines,
-                         &mut resource_profile.texture_cache,
-                         &mut resource_profile.gpu_cache)
+        let pan = LayerPoint::new(
+            self.pan.x as f32 / accumulated_scale_factor,
+            self.pan.y as f32 / accumulated_scale_factor,
+        );
+        self.frame.build(
+            resource_cache,
+            gpu_cache,
+            &self.scene.display_lists,
+            accumulated_scale_factor,
+            pan,
+            &self.output_pipelines,
+            &mut resource_profile.texture_cache,
+            &mut resource_profile.gpu_cache,
+        )
     }
 }
 
@@ -154,10 +161,7 @@ impl RenderBackend {
         blob_image_renderer: Option<Box<BlobImageRenderer>>,
         enable_render_on_scroll: bool,
     ) -> RenderBackend {
-
-        let resource_cache = ResourceCache::new(texture_cache,
-                                                workers,
-                                                blob_image_renderer);
+        let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer);
 
         register_thread_with_profiler("Backend".to_string());
 
@@ -180,10 +184,13 @@ impl RenderBackend {
         }
     }
 
-    fn process_document(&mut self, document_id: DocumentId, message: DocumentMsg,
-                        frame_counter: u32, profile_counters: &mut BackendProfileCounters)
-                        -> DocumentOp
-    {
+    fn process_document(
+        &mut self,
+        document_id: DocumentId,
+        message: DocumentMsg,
+        frame_counter: u32,
+        profile_counters: &mut BackendProfileCounters,
+    ) -> DocumentOp {
         let doc = self.documents.get_mut(&document_id).expect("No document?");
 
         match message {
@@ -207,7 +214,10 @@ impl RenderBackend {
                 doc.pan = pan;
                 DocumentOp::Nop
             }
-            DocumentMsg::SetWindowParameters{ window_size, inner_rect } => {
+            DocumentMsg::SetWindowParameters {
+                window_size,
+                inner_rect,
+            } => {
                 doc.window_size = window_size;
                 doc.inner_rect = inner_rect;
                 DocumentOp::Nop
@@ -224,13 +234,14 @@ impl RenderBackend {
             } => {
                 profile_scope!("SetDisplayList");
 
-                self.resource_cache.update_resources(resources, &mut profile_counters.resources);
+                self.resource_cache
+                    .update_resources(resources, &mut profile_counters.resources);
 
                 let mut data;
                 while {
                     data = self.payload_rx.recv_payload().unwrap();
                     data.epoch != epoch || data.pipeline_id != pipeline_id
-                }{
+                } {
                     self.payload_tx.send_payload(data).unwrap()
                 }
 
@@ -238,17 +249,16 @@ impl RenderBackend {
                     r.write_payload(frame_counter, &data.to_data());
                 }
 
-                let built_display_list = BuiltDisplayList::from_data(
-                    data.display_list_data,
-                    list_descriptor
-                );
+                let built_display_list =
+                    BuiltDisplayList::from_data(data.display_list_data, list_descriptor);
 
                 if !preserve_frame_state {
                     doc.frame.discard_frame_state_for_pipeline(pipeline_id);
                 }
 
                 let display_list_len = built_display_list.data().len();
-                let (builder_start_time, builder_finish_time, send_start_time) = built_display_list.times();
+                let (builder_start_time, builder_finish_time, send_start_time) =
+                    built_display_list.times();
                 let display_list_received_time = precise_time_ns();
 
                 {
@@ -259,7 +269,7 @@ impl RenderBackend {
                         built_display_list,
                         background,
                         viewport_size,
-                        content_size
+                        content_size,
                     );
                     doc.build_scene(&mut self.resource_cache, self.hidpi_factor);
                 }
@@ -273,12 +283,14 @@ impl RenderBackend {
                 // really simple and cheap to access, so it's not a big deal.
                 let display_list_consumed_time = precise_time_ns();
 
-                profile_counters.ipc.set(builder_start_time,
-                                         builder_finish_time,
-                                         send_start_time,
-                                         display_list_received_time,
-                                         display_list_consumed_time,
-                                         display_list_len);
+                profile_counters.ipc.set(
+                    builder_start_time,
+                    builder_finish_time,
+                    send_start_time,
+                    display_list_received_time,
+                    display_list_consumed_time,
+                    display_list_len,
+                );
 
                 DocumentOp::Built
             }
@@ -304,11 +316,14 @@ impl RenderBackend {
                 profile_scope!("Scroll");
                 let _timer = profile_counters.total_time.timer();
 
-                if doc.frame.scroll(delta, cursor, move_phase) && doc.render_on_scroll == Some(true) {
-                    let frame = doc.render(&mut self.resource_cache,
-                                           &mut self.gpu_cache,
-                                           &mut profile_counters.resources,
-                                           self.hidpi_factor);
+                if doc.frame.scroll(delta, cursor, move_phase) && doc.render_on_scroll == Some(true)
+                {
+                    let frame = doc.render(
+                        &mut self.resource_cache,
+                        &mut self.gpu_cache,
+                        &mut profile_counters.resources,
+                        self.hidpi_factor,
+                    );
                     DocumentOp::Scrolled(frame)
                 } else {
                     DocumentOp::ScrolledNop
@@ -319,10 +334,12 @@ impl RenderBackend {
                 let _timer = profile_counters.total_time.timer();
 
                 if doc.frame.scroll_node(origin, id, clamp) && doc.render_on_scroll == Some(true) {
-                    let frame = doc.render(&mut self.resource_cache,
-                                           &mut self.gpu_cache,
-                                           &mut profile_counters.resources,
-                                           self.hidpi_factor);
+                    let frame = doc.render(
+                        &mut self.resource_cache,
+                        &mut self.gpu_cache,
+                        &mut profile_counters.resources,
+                        self.hidpi_factor,
+                    );
                     DocumentOp::Scrolled(frame)
                 } else {
                     DocumentOp::ScrolledNop
@@ -334,10 +351,12 @@ impl RenderBackend {
 
                 doc.frame.tick_scrolling_bounce_animations();
                 if doc.render_on_scroll == Some(true) {
-                    let frame = doc.render(&mut self.resource_cache,
-                                           &mut self.gpu_cache,
-                                           &mut profile_counters.resources,
-                                           self.hidpi_factor);
+                    let frame = doc.render(
+                        &mut self.resource_cache,
+                        &mut self.gpu_cache,
+                        &mut profile_counters.resources,
+                        self.hidpi_factor,
+                    );
                     DocumentOp::Scrolled(frame)
                 } else {
                     DocumentOp::ScrolledNop
@@ -372,10 +391,12 @@ impl RenderBackend {
                 }
 
                 if doc.scene.root_pipeline_id.is_some() {
-                    let frame = doc.render(&mut self.resource_cache,
-                                           &mut self.gpu_cache,
-                                           &mut profile_counters.resources,
-                                           self.hidpi_factor);
+                    let frame = doc.render(
+                        &mut self.resource_cache,
+                        &mut self.gpu_cache,
+                        &mut profile_counters.resources,
+                        self.hidpi_factor,
+                    );
                     DocumentOp::Rendered(frame)
                 } else {
                     DocumentOp::ScrolledNop
@@ -399,24 +420,22 @@ impl RenderBackend {
                 }
                 Err(..) => {
                     let notifier = self.notifier.lock();
-                    notifier.unwrap()
-                            .as_mut()
-                            .unwrap()
-                            .shut_down();
+                    notifier.unwrap().as_mut().unwrap().shut_down();
                     break;
                 }
             };
 
             match msg {
                 ApiMsg::UpdateResources(updates) => {
-                    self.resource_cache.update_resources(updates, &mut profile_counters.resources);
+                    self.resource_cache
+                        .update_resources(updates, &mut profile_counters.resources);
                 }
                 ApiMsg::GetGlyphDimensions(font, glyph_keys, tx) => {
                     let mut glyph_dimensions = Vec::with_capacity(glyph_keys.len());
                     for glyph_key in &glyph_keys {
                         let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, glyph_key);
                         glyph_dimensions.push(glyph_dim);
-                    };
+                    }
                     tx.send(glyph_dimensions).unwrap();
                 }
                 ApiMsg::GetGlyphIndices(font_key, text, tx) => {
@@ -424,7 +443,7 @@ impl RenderBackend {
                     for ch in text.chars() {
                         let index = self.resource_cache.get_glyph_index(font_key, ch);
                         glyph_indices.push(index);
-                    };
+                    }
                     tx.send(glyph_indices).unwrap();
                 }
                 ApiMsg::CloneApi(sender) => {
@@ -433,44 +452,51 @@ impl RenderBackend {
                     sender.send(namespace).unwrap();
                 }
                 ApiMsg::AddDocument(document_id, initial_size) => {
-                    let document = Document::new(self.frame_config.clone(),
-                                                 initial_size,
-                                                 self.enable_render_on_scroll);
+                    let document = Document::new(
+                        self.frame_config.clone(),
+                        initial_size,
+                        self.enable_render_on_scroll,
+                    );
                     self.documents.insert(document_id, document);
                 }
-                ApiMsg::UpdateDocument(document_id, doc_msg) => {
-                    match self.process_document(document_id, doc_msg, frame_counter, &mut profile_counters) {
-                        DocumentOp::Nop => {}
-                        DocumentOp::Built => {}
-                        DocumentOp::ScrolledNop => {
-                            self.notify_compositor_of_new_scroll_frame(false);
-                        }
-                        DocumentOp::Scrolled(frame) => {
-                            self.publish_frame(document_id, frame, &mut profile_counters);
-                            self.notify_compositor_of_new_scroll_frame(true);
-                        }
-                        DocumentOp::Rendered(frame) => {
-                            frame_counter += 1;
-                            self.publish_frame_and_notify_compositor(document_id, frame, &mut profile_counters);
-                        }
+                ApiMsg::UpdateDocument(document_id, doc_msg) => match self.process_document(
+                    document_id,
+                    doc_msg,
+                    frame_counter,
+                    &mut profile_counters,
+                ) {
+                    DocumentOp::Nop => {}
+                    DocumentOp::Built => {}
+                    DocumentOp::ScrolledNop => {
+                        self.notify_compositor_of_new_scroll_frame(false);
                     }
-                }
+                    DocumentOp::Scrolled(frame) => {
+                        self.publish_frame(document_id, frame, &mut profile_counters);
+                        self.notify_compositor_of_new_scroll_frame(true);
+                    }
+                    DocumentOp::Rendered(frame) => {
+                        frame_counter += 1;
+                        self.publish_frame_and_notify_compositor(
+                            document_id,
+                            frame,
+                            &mut profile_counters,
+                        );
+                    }
+                },
                 ApiMsg::DeleteDocument(document_id) => {
                     self.documents.remove(&document_id);
                 }
                 ApiMsg::ExternalEvent(evt) => {
                     let notifier = self.notifier.lock();
-                    notifier.unwrap()
-                            .as_mut()
-                            .unwrap()
-                            .external_event(evt);
+                    notifier.unwrap().as_mut().unwrap().external_event(evt);
                 }
                 ApiMsg::ClearNamespace(namespace_id) => {
                     self.resource_cache.clear_namespace(namespace_id);
-                    let document_ids = self.documents.keys()
-                                                     .filter(|did| did.0 == namespace_id)
-                                                     .cloned()
-                                                     .collect::<Vec<_>>();
+                    let document_ids = self.documents
+                        .keys()
+                        .filter(|did| did.0 == namespace_id)
+                        .cloned()
+                        .collect::<Vec<_>>();
                     for document in document_ids {
                         self.documents.remove(&document);
                     }
@@ -479,12 +505,20 @@ impl RenderBackend {
                     self.resource_cache.on_memory_pressure();
 
                     let pending_update = self.resource_cache.pending_updates();
-                    let msg = ResultMsg::UpdateResources { updates: pending_update, cancel_rendering: true };
+                    let msg = ResultMsg::UpdateResources {
+                        updates: pending_update,
+                        cancel_rendering: true,
+                    };
                     self.result_tx.send(msg).unwrap();
                     // We use new_frame_ready to wake up the renderer and get the
                     // resource updates processed, but the UpdateResources message
                     // will cancel rendering the frame.
-                    self.notifier.lock().unwrap().as_mut().unwrap().new_frame_ready();
+                    self.notifier
+                        .lock()
+                        .unwrap()
+                        .as_mut()
+                        .unwrap()
+                        .new_frame_ready();
                 }
                 ApiMsg::DebugCommand(option) => {
                     let msg = match option {
@@ -496,43 +530,39 @@ impl RenderBackend {
                             let json = self.get_clip_scroll_tree_for_debugger();
                             ResultMsg::DebugOutput(DebugOutput::FetchClipScrollTree(json))
                         }
-                        _ => {
-                            ResultMsg::DebugCommand(option)
-                        }
+                        _ => ResultMsg::DebugCommand(option),
                     };
                     self.result_tx.send(msg).unwrap();
                     let notifier = self.notifier.lock();
-                    notifier.unwrap()
-                            .as_mut()
-                            .unwrap()
-                            .new_frame_ready();
+                    notifier.unwrap().as_mut().unwrap().new_frame_ready();
                 }
                 ApiMsg::ShutDown => {
                     let notifier = self.notifier.lock();
-                    notifier.unwrap()
-                            .as_mut()
-                            .unwrap()
-                            .shut_down();
+                    notifier.unwrap().as_mut().unwrap().shut_down();
                     break;
                 }
             }
         }
     }
 
-    fn publish_frame(&mut self,
-                     document_id: DocumentId,
-                     frame: RendererFrame,
-                     profile_counters: &mut BackendProfileCounters) {
+    fn publish_frame(
+        &mut self,
+        document_id: DocumentId,
+        frame: RendererFrame,
+        profile_counters: &mut BackendProfileCounters,
+    ) {
         let pending_update = self.resource_cache.pending_updates();
         let msg = ResultMsg::NewFrame(document_id, frame, pending_update, profile_counters.clone());
         self.result_tx.send(msg).unwrap();
         profile_counters.reset();
     }
 
-    fn publish_frame_and_notify_compositor(&mut self,
-                                           document_id: DocumentId,
-                                           frame: RendererFrame,
-                                           profile_counters: &mut BackendProfileCounters) {
+    fn publish_frame_and_notify_compositor(
+        &mut self,
+        document_id: DocumentId,
+        frame: RendererFrame,
+        profile_counters: &mut BackendProfileCounters,
+    ) {
         self.publish_frame(document_id, frame, profile_counters);
 
         // TODO(gw): This is kindof bogus to have to lock the notifier
@@ -540,7 +570,12 @@ impl RenderBackend {
         //           in initialization order for Servo. Perhaps find a
         //           cleaner way to do this, or use the OnceMutex on crates.io?
         let mut notifier = self.notifier.lock();
-        notifier.as_mut().unwrap().as_mut().unwrap().new_frame_ready();
+        notifier
+            .as_mut()
+            .unwrap()
+            .as_mut()
+            .unwrap()
+            .new_frame_ready();
     }
 
     fn notify_compositor_of_new_scroll_frame(&mut self, composite_needed: bool) {
@@ -549,7 +584,12 @@ impl RenderBackend {
         //           in initialization order for Servo. Perhaps find a
         //           cleaner way to do this, or use the OnceMutex on crates.io?
         let mut notifier = self.notifier.lock();
-        notifier.as_mut().unwrap().as_mut().unwrap().new_scroll_frame_ready(composite_needed);
+        notifier
+            .as_mut()
+            .unwrap()
+            .as_mut()
+            .unwrap()
+            .new_scroll_frame_ready(composite_needed);
     }
 
 
@@ -559,9 +599,11 @@ impl RenderBackend {
     }
 
     #[cfg(feature = "debugger")]
-    fn traverse_items<'a>(&self,
-                          traversal: &mut BuiltDisplayListIter<'a>,
-                          node: &mut debug_server::TreeNode) {
+    fn traverse_items<'a>(
+        &self,
+        traversal: &mut BuiltDisplayListIter<'a>,
+        node: &mut debug_server::TreeNode,
+    ) {
         loop {
             let subtraversal = {
                 let item = match traversal.next() {
@@ -572,7 +614,8 @@ impl RenderBackend {
                 match *item.item() {
                     display_item @ SpecificDisplayItem::PushStackingContext(..) => {
                         let mut subtraversal = item.sub_iter();
-                        let mut child_node = debug_server::TreeNode::new(&display_item.debug_string());
+                        let mut child_node =
+                            debug_server::TreeNode::new(&display_item.debug_string());
                         self.traverse_items(&mut subtraversal, &mut child_node);
                         node.add_child(child_node);
                         Some(subtraversal)
@@ -629,7 +672,9 @@ impl RenderBackend {
             // TODO(gw): Restructure the storage of clip-scroll tree, clip store
             //           etc so this isn't so untidy.
             let clip_store = &doc.frame.frame_builder.as_ref().unwrap().clip_store;
-            doc.frame.clip_scroll_tree.print_with(clip_store, &mut builder);
+            doc.frame
+                .clip_scroll_tree
+                .print_with(clip_store, &mut builder);
 
             debug_root.add(builder.build());
         }
@@ -647,66 +692,26 @@ trait ToDebugString {
 impl ToDebugString for SpecificDisplayItem {
     fn debug_string(&self) -> String {
         match *self {
-            SpecificDisplayItem::Image(..) => {
-                String::from("image")
-            }
-            SpecificDisplayItem::YuvImage(..) => {
-                String::from("yuv_image")
-            }
-            SpecificDisplayItem::Text(..) => {
-                String::from("text")
-            }
-            SpecificDisplayItem::Rectangle(..) => {
-                String::from("rectangle")
-            }
-            SpecificDisplayItem::Line(..) => {
-                String::from("line")
-            }
-            SpecificDisplayItem::Gradient(..) => {
-                String::from("gradient")
-            }
-            SpecificDisplayItem::RadialGradient(..) => {
-                String::from("radial_gradient")
-            }
-            SpecificDisplayItem::BoxShadow(..) => {
-                String::from("box_shadow")
-            }
-            SpecificDisplayItem::Border(..) => {
-                String::from("border")
-            }
-            SpecificDisplayItem::PushStackingContext(..) => {
-                String::from("push_stacking_context")
-            }
-            SpecificDisplayItem::Iframe(..) => {
-                String::from("iframe")
-            }
-            SpecificDisplayItem::Clip(..) => {
-                String::from("clip")
-            }
-            SpecificDisplayItem::ScrollFrame(..) => {
-                String::from("scroll_frame")
-            }
-            SpecificDisplayItem::StickyFrame(..) => {
-                String::from("sticky_frame")
-            }
-            SpecificDisplayItem::PushNestedDisplayList => {
-                String::from("push_nested_display_list")
-            }
-            SpecificDisplayItem::PopNestedDisplayList => {
-                String::from("pop_nested_display_list")
-            }
-            SpecificDisplayItem::SetGradientStops => {
-                String::from("set_gradient_stops")
-            }
-            SpecificDisplayItem::PopStackingContext => {
-                String::from("pop_stacking_context")
-            }
-            SpecificDisplayItem::PushTextShadow(..) => {
-                String::from("push_text_shadow")
-            }
-            SpecificDisplayItem::PopTextShadow => {
-                String::from("pop_text_shadow")
-            }
+            SpecificDisplayItem::Image(..) => String::from("image"),
+            SpecificDisplayItem::YuvImage(..) => String::from("yuv_image"),
+            SpecificDisplayItem::Text(..) => String::from("text"),
+            SpecificDisplayItem::Rectangle(..) => String::from("rectangle"),
+            SpecificDisplayItem::Line(..) => String::from("line"),
+            SpecificDisplayItem::Gradient(..) => String::from("gradient"),
+            SpecificDisplayItem::RadialGradient(..) => String::from("radial_gradient"),
+            SpecificDisplayItem::BoxShadow(..) => String::from("box_shadow"),
+            SpecificDisplayItem::Border(..) => String::from("border"),
+            SpecificDisplayItem::PushStackingContext(..) => String::from("push_stacking_context"),
+            SpecificDisplayItem::Iframe(..) => String::from("iframe"),
+            SpecificDisplayItem::Clip(..) => String::from("clip"),
+            SpecificDisplayItem::ScrollFrame(..) => String::from("scroll_frame"),
+            SpecificDisplayItem::StickyFrame(..) => String::from("sticky_frame"),
+            SpecificDisplayItem::PushNestedDisplayList => String::from("push_nested_display_list"),
+            SpecificDisplayItem::PopNestedDisplayList => String::from("pop_nested_display_list"),
+            SpecificDisplayItem::SetGradientStops => String::from("set_gradient_stops"),
+            SpecificDisplayItem::PopStackingContext => String::from("pop_stacking_context"),
+            SpecificDisplayItem::PushTextShadow(..) => String::from("push_text_shadow"),
+            SpecificDisplayItem::PopTextShadow => String::from("pop_text_shadow"),
         }
     }
 }

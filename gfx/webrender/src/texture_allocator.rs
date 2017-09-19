@@ -41,17 +41,20 @@ impl GuillotineAllocator {
         page
     }
 
-    fn find_index_of_best_rect_in_bin(&self, bin: FreeListBin, requested_dimensions: &DeviceUintSize)
-                                      -> Option<FreeListIndex> {
+    fn find_index_of_best_rect_in_bin(
+        &self,
+        bin: FreeListBin,
+        requested_dimensions: &DeviceUintSize,
+    ) -> Option<FreeListIndex> {
         let mut smallest_index_and_area = None;
         for (candidate_index, candidate_rect) in self.free_list.iter(bin).enumerate() {
             if !requested_dimensions.fits_inside(&candidate_rect.size) {
-                continue
+                continue;
             }
 
             let candidate_area = candidate_rect.size.width * candidate_rect.size.height;
             smallest_index_and_area = Some((candidate_index, candidate_area));
-            break
+            break;
         }
 
         smallest_index_and_area.map(|(index, _)| FreeListIndex(bin, index))
@@ -59,13 +62,16 @@ impl GuillotineAllocator {
 
     /// Find a suitable rect in the free list. We choose the smallest such rect
     /// in terms of area (Best-Area-Fit, BAF).
-    fn find_index_of_best_rect(&self, requested_dimensions: &DeviceUintSize)
-                               -> Option<FreeListIndex> {
+    fn find_index_of_best_rect(
+        &self,
+        requested_dimensions: &DeviceUintSize,
+    ) -> Option<FreeListIndex> {
         let bin = FreeListBin::for_size(requested_dimensions);
         for &target_bin in &[FreeListBin::Small, FreeListBin::Medium, FreeListBin::Large] {
             if bin <= target_bin {
-                if let Some(index) = self.find_index_of_best_rect_in_bin(target_bin,
-                                                                         requested_dimensions) {
+                if let Some(index) =
+                    self.find_index_of_best_rect_in_bin(target_bin, requested_dimensions)
+                {
                     return Some(index);
                 }
             }
@@ -75,7 +81,7 @@ impl GuillotineAllocator {
 
     pub fn allocate(&mut self, requested_dimensions: &DeviceUintSize) -> Option<DeviceUintPoint> {
         if requested_dimensions.width == 0 || requested_dimensions.height == 0 {
-            return Some(DeviceUintPoint::new(0, 0))
+            return Some(DeviceUintPoint::new(0, 0));
         }
         let index = match self.find_index_of_best_rect(requested_dimensions) {
             None => return None,
@@ -85,18 +91,30 @@ impl GuillotineAllocator {
         // Remove the rect from the free list and decide how to guillotine it. We choose the split
         // that results in the single largest area (Min Area Split Rule, MINAS).
         let chosen_rect = self.free_list.remove(index);
-        let candidate_free_rect_to_right =
-            DeviceUintRect::new(
-                DeviceUintPoint::new(chosen_rect.origin.x + requested_dimensions.width, chosen_rect.origin.y),
-                DeviceUintSize::new(chosen_rect.size.width - requested_dimensions.width, requested_dimensions.height));
-        let candidate_free_rect_to_bottom =
-            DeviceUintRect::new(
-                DeviceUintPoint::new(chosen_rect.origin.x, chosen_rect.origin.y + requested_dimensions.height),
-                DeviceUintSize::new(requested_dimensions.width, chosen_rect.size.height - requested_dimensions.height));
-        let candidate_free_rect_to_right_area = candidate_free_rect_to_right.size.width *
-            candidate_free_rect_to_right.size.height;
-        let candidate_free_rect_to_bottom_area = candidate_free_rect_to_bottom.size.width *
-            candidate_free_rect_to_bottom.size.height;
+        let candidate_free_rect_to_right = DeviceUintRect::new(
+            DeviceUintPoint::new(
+                chosen_rect.origin.x + requested_dimensions.width,
+                chosen_rect.origin.y,
+            ),
+            DeviceUintSize::new(
+                chosen_rect.size.width - requested_dimensions.width,
+                requested_dimensions.height,
+            ),
+        );
+        let candidate_free_rect_to_bottom = DeviceUintRect::new(
+            DeviceUintPoint::new(
+                chosen_rect.origin.x,
+                chosen_rect.origin.y + requested_dimensions.height,
+            ),
+            DeviceUintSize::new(
+                requested_dimensions.width,
+                chosen_rect.size.height - requested_dimensions.height,
+            ),
+        );
+        let candidate_free_rect_to_right_area =
+            candidate_free_rect_to_right.size.width * candidate_free_rect_to_right.size.height;
+        let candidate_free_rect_to_bottom_area =
+            candidate_free_rect_to_bottom.size.width * candidate_free_rect_to_bottom.size.height;
 
         // Guillotine the rectangle.
         let new_free_rect_to_right;
@@ -104,15 +122,21 @@ impl GuillotineAllocator {
         if candidate_free_rect_to_right_area > candidate_free_rect_to_bottom_area {
             new_free_rect_to_right = DeviceUintRect::new(
                 candidate_free_rect_to_right.origin,
-                DeviceUintSize::new(candidate_free_rect_to_right.size.width,
-                                    chosen_rect.size.height));
+                DeviceUintSize::new(
+                    candidate_free_rect_to_right.size.width,
+                    chosen_rect.size.height,
+                ),
+            );
             new_free_rect_to_bottom = candidate_free_rect_to_bottom
         } else {
             new_free_rect_to_right = candidate_free_rect_to_right;
-            new_free_rect_to_bottom =
-                DeviceUintRect::new(candidate_free_rect_to_bottom.origin,
-                          DeviceUintSize::new(chosen_rect.size.width,
-                                              candidate_free_rect_to_bottom.size.height))
+            new_free_rect_to_bottom = DeviceUintRect::new(
+                candidate_free_rect_to_bottom.origin,
+                DeviceUintSize::new(
+                    chosen_rect.size.width,
+                    candidate_free_rect_to_bottom.size.height,
+                ),
+            )
         }
 
         // Add the guillotined rects back to the free list. If any changes were made, we're now
@@ -137,7 +161,8 @@ impl GuillotineAllocator {
         self.free_list = FreeRectList::new();
         self.free_list.push(&DeviceUintRect::new(
             DeviceUintPoint::zero(),
-            self.texture_size));
+            self.texture_size,
+        ));
         self.allocations = 0;
         self.dirty = false;
     }
@@ -199,8 +224,8 @@ impl FreeListBin {
     fn for_size(size: &DeviceUintSize) -> FreeListBin {
         if size.width >= MINIMUM_LARGE_RECT_SIZE && size.height >= MINIMUM_LARGE_RECT_SIZE {
             FreeListBin::Large
-        } else if size.width >= MINIMUM_MEDIUM_RECT_SIZE &&
-                size.height >= MINIMUM_MEDIUM_RECT_SIZE {
+        } else if size.width >= MINIMUM_MEDIUM_RECT_SIZE && size.height >= MINIMUM_MEDIUM_RECT_SIZE
+        {
             FreeListBin::Medium
         } else {
             debug_assert!(size.width > 0 && size.height > 0);

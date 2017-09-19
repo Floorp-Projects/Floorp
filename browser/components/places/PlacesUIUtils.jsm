@@ -236,9 +236,6 @@ let InternalFaviconLoader = {
 
     let {innerWindowID, currentURI} = browser;
 
-    // Immediately cancel any earlier requests
-    this.removeRequestsForInner(innerWindowID);
-
     // First we do the actual setAndFetch call:
     let loadType = PrivateBrowsingUtils.isWindowPrivate(win)
       ? PlacesUtils.favicons.FAVICON_LOAD_PRIVATE
