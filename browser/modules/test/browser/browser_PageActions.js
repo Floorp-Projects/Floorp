@@ -1025,12 +1025,24 @@ function promisePanelEvent(panelIDOrNode, eventType) {
 }
 
 function promisePageActionViewShown() {
-  return new Promise(resolve => {
-    BrowserPageActions.panelNode.addEventListener("ViewShown", (event) => {
-      let target = event.originalTarget;
-      window.setTimeout(() => {
-        resolve(target);
-      }, 5000);
-    }, { once: true });
+  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindowUtils);
+  info("promisePageActionViewShown waiting for ViewShown");
+  return BrowserTestUtils.waitForEvent(BrowserPageActions.panelNode, "ViewShown").then(async event => {
+    let panelViewNode = event.originalTarget;
+    // Wait for the subview to be really truly shown by making sure there's at
+    // least one child with non-zero bounds.
+    info("promisePageActionViewShown waiting for a child node to be visible");
+    await BrowserTestUtils.waitForCondition(() => {
+      let bodyNode = panelViewNode.firstChild;
+      for (let childNode of bodyNode.childNodes) {
+        let bounds = dwu.getBoundsWithoutFlushing(childNode);
+        if (bounds.width > 0 && bounds.height > 0) {
+          return true;
+        }
+      }
+      return false;
+    });
+    return panelViewNode;
   });
 }
