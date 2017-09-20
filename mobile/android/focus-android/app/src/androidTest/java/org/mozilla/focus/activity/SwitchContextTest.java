@@ -118,7 +118,7 @@ public class SwitchContextTest {
         // Switch out of Focus, pull down system bar and select open action
         TestHelper.pressHomeKey();
         TestHelper.openNotification();
-
+        TestHelper.waitForIdle();
         // If simulator has more recent message, the options need to be expanded
         if (!TestHelper.notificationOpenItem.waitForExists(waitingTime)) {
             TestHelper.notificationExpandSwitch.click();

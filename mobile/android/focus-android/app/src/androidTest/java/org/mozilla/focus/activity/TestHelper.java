@@ -41,6 +41,7 @@ public final class TestHelper {
 
     static UiDevice mDevice =  UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 4;
+    static final long webPageLoadwaitingTime = DateUtils.SECOND_IN_MILLIS * 15;
 
     /********* First View Locators ***********/
 
@@ -75,6 +76,7 @@ public final class TestHelper {
     static UiObject browserURLbar = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/display_url")
             .clickable(true));
+
     static UiObject inlineAutocompleteEditText = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/url_edit")
             .focused(true)
@@ -87,6 +89,9 @@ public final class TestHelper {
             .clickable(true));
     static UiObject webView = mDevice.findObject(new UiSelector()
             .className("android.webkit.Webview")
+            .enabled(true));
+    static UiObject progressBar = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/progress")
             .enabled(true));
     static UiObject tryAgainBtn = mDevice.findObject(new UiSelector()
             .description("Try Again")
@@ -134,12 +139,15 @@ public final class TestHelper {
             .enabled(true));
     static UiObject AddtoHSmenuItem = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/add_to_homescreen")
-            .enabled(true));
+            .clickable(true));
     static UiObject AddtoHSCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/addtohomescreen_dialog_cancel")
             .enabled(true));
     static UiObject AddtoHSOKBtn = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/addtohomescreen_dialog_add")
+            .enabled(true));
+    static UiObject AddautoBtn = TestHelper.mDevice.findObject(new UiSelector()
+            .text("ADD AUTOMATICALLY")
             .enabled(true));
     static UiObject shortcutTitle = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/edit_title")
