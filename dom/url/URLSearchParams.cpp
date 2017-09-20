@@ -340,7 +340,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(URLSearchParams)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URLSearchParams)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -611,10 +610,13 @@ URLSearchParams::ReadStructuredClone(JSStructuredCloneReader* aReader)
  return mParams->ReadStructuredClone(aReader);
 }
 
-NS_IMETHODIMP
+// contentTypeWithCharset can be set to the contentType or
+// contentType+charset based on what the spec says.
+// See: https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+nsresult
 URLSearchParams::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                              nsACString& aContentTypeWithCharset,
-                             nsACString& aCharset)
+                             nsACString& aCharset) const
 {
   aContentTypeWithCharset.AssignLiteral("application/x-www-form-urlencoded;charset=UTF-8");
   aCharset.AssignLiteral("UTF-8");
