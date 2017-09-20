@@ -167,6 +167,15 @@ function testShouldNotIntercept(policy, done) {
         iframe.src = thirdPartyOrigin + basePath + "unregister.html";
       }
     }, {
+      status: "getregistrationfailed",
+      next: function() {
+        SpecialPowers.pushPrefEnv({"set": [
+            ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT],
+          ]}, function() {
+            iframe.src = thirdPartyOrigin + basePath + "unregister.html";
+          });
+      }
+    }, {
       status: "unregistrationdone",
       next: function() {
         window.onmessage = null;
