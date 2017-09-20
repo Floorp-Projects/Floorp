@@ -682,9 +682,10 @@ public class AndroidFxAccount {
    *
    * @param stagesToSync stage names to sync; can be null to sync <b>all</b> known stages.
    * @param stagesToSkip stage names to skip; can be null to skip <b>no</b> known stages.
+   * @param ignoreSettings whether we should check preferences for syncing over metered connections.
    */
-  public void requestImmediateSync(String[] stagesToSync, String[] stagesToSkip) {
-    FirefoxAccounts.requestImmediateSync(getAndroidAccount(), stagesToSync, stagesToSkip);
+  public void requestImmediateSync(String[] stagesToSync, String[] stagesToSkip, boolean ignoreSettings) {
+    FirefoxAccounts.requestImmediateSync(getAndroidAccount(), stagesToSync, stagesToSkip, ignoreSettings);
   }
 
   /**
