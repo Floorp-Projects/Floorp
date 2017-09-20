@@ -491,7 +491,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     // By default, hide window titles.
     [mWindow setTitleVisibility:NSWindowTitleHidden];
   }
-  if ([mWindow respondsToSelector:@selector(setTitlebarAppearsTransparent)]) {
+  if ([mWindow respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
     // By default, hide window titlebars.
     [mWindow setTitlebarAppearsTransparent:YES];
   }
@@ -3162,7 +3162,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
       [self setTitleVisibility:mDrawsIntoWindowFrame ? NSWindowTitleHidden :
                                                        NSWindowTitleVisible];
     }
-    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent)]) {
+    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
       [self setTitlebarAppearsTransparent:mDrawsIntoWindowFrame];
     }
   }
