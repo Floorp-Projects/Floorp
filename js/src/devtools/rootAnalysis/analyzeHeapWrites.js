@@ -35,6 +35,7 @@ function checkExternalFunction(entry)
         // Assume that atomic accesses are threadsafe.
         /^__atomic_fetch_/,
         /^__atomic_load_/,
+        /^__atomic_store_/,
         /^__atomic_thread_fence/,
     ];
     if (entry.matches(whitelist))
@@ -474,9 +475,6 @@ function ignoreContents(entry)
 
         // Unable to trace through dataflow, but straightforward if inspected.
         "Gecko_NewNoneTransform",
-
-        // Bug 1368922
-        "Gecko_UnsetDirtyStyleAttr",
 
         // Bug 1400438
         "Gecko_AppendMozBorderColors",
