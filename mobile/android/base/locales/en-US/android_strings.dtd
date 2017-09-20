@@ -831,8 +831,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY activity_stream_topstories "Recommended by &brandPocket;">
 <!ENTITY activity_stream_highlights "Highlights">
 
-<!-- LOCALIZATION NOET (activity_stream_link_more): Link-like text displayed to take user to a website with more content from Pocket. This string will be displayed in all uppercase. -->
-<!ENTITY activity_stream_link_more "more">
+<!-- LOCALIZATION NOTE (activity_stream_link_more1): Link-like text displayed to take user to a website with more content from Pocket. -->
+<!ENTITY activity_stream_link_more1 "MORE">
 
 <!-- LOCALIZATION NOTE (activity_stream_highlight_label_bookmarked): This label is shown in the Activity
 Stream list for highlights sourced from th user's bookmarks. -->
