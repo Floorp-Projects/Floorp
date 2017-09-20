@@ -1237,7 +1237,6 @@ bool
 InitBaselineFrameForOsr(BaselineFrame* frame, InterpreterFrame* interpFrame,
                         uint32_t numStackValues)
 {
-    AutoUnsafeCallWithABI unsafe;
     return frame->initForOsr(interpFrame, numStackValues);
 }
 
