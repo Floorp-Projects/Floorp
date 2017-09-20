@@ -1172,6 +1172,48 @@ def cubeb_remoting(value):
 set_config('MOZ_CUBEB_REMOTING', cubeb_remoting)
 set_define('MOZ_CUBEB_REMOTING', cubeb_remoting)
 
+# WebRTC
+# ========================================================
+@depends(target)
+def webrtc_default(target):
+    # Turn off webrtc for OS's we don't handle yet, but allow
+    # --enable-webrtc to override.
+    os_match = False
+    for os_fragment in ('linux', 'mingw', 'android', 'linuxandroid',
+                        'dragonfly', 'freebsd', 'netbsd', 'openbsd',
+                        'darwin'):
+        if target.raw_os.startswith(os_fragment):
+            os_match = True
+
+    cpu_match = False
+    if (target.cpu in ('x86_64', 'arm', 'aarch64', 'x86', 'ia64') or
+        target.cpu.startswith('ppc')):
+        cpu_match = True
+
+    if os_match and cpu_match:
+        return True
+    return False
+
+option('--disable-webrtc', default=webrtc_default,
+       help='Disable support for WebRTC')
+
+@depends('--disable-webrtc')
+def webrtc(enabled):
+    if enabled:
+        return True
+
+set_config('MOZ_WEBRTC', webrtc)
+set_define('MOZ_WEBRTC', webrtc)
+add_old_configure_assignment('MOZ_WEBRTC', webrtc)
+set_config('MOZ_WEBRTC_SIGNALING', webrtc)
+set_define('MOZ_WEBRTC_SIGNALING', webrtc)
+set_config('MOZ_PEERCONNECTION', webrtc)
+set_define('MOZ_PEERCONNECTION', webrtc)
+# MOZ_WEBRTC_ASSERT_ALWAYS turns on a number of safety asserts in
+# opt/production builds (via MOZ_CRASH())
+set_config('MOZ_WEBRTC_ASSERT_ALWAYS', webrtc)
+set_define('MOZ_WEBRTC_ASSERT_ALWAYS', webrtc)
+
 # ASan Reporter Addon
 # ==============================================================
 option('--enable-address-sanitizer-reporter',
