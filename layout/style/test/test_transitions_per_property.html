@@ -286,9 +286,7 @@ var supported_properties = {
                                    test_true_currentcolor_transition ]
 };
 
-// Bug 1289049: After making shape-outside animatable on Gecko, we can remove
-// |isServo| flag from this if-condition.
-if (SpecialPowers.getBoolPref("layout.css.shape-outside.enabled") && isServo) {
+if (SpecialPowers.getBoolPref("layout.css.shape-outside.enabled")) {
   supported_properties["shape-outside"] =
     [ test_basic_shape_or_url_transition ];
 }

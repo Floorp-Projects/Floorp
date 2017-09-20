@@ -186,6 +186,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
         cmd += ["--log-raw=-",
                 "--log-raw=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                               "wpt_raw.log"),
+                "--log-wptreport=%s" % os.path.join(dirs["abs_blob_upload_dir"],
+                                                    "wptreport.json"),
                 "--log-errorsummary=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                        "wpt_errorsummary.log"),
                 "--binary=%s" % self.binary_path,
