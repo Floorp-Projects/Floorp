@@ -76,8 +76,8 @@ add_task(async function() {
   // Make body scrollable
   doc.body.style.height = (doc.body.clientHeight + 100) + "px";
 
-  let tabList = doc.getElementById("tabList");
-  tabList.focus();
+  let tabsToggle = doc.getElementById("tabsToggle");
+  tabsToggle.focus();
   EventUtils.synthesizeKey(" ", {});
   await checkPageScrolling(doc.documentElement, "session restore");
 
