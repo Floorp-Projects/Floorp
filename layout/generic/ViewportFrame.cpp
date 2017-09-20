@@ -48,7 +48,7 @@ ViewportFrame::Init(nsIContent*       aContent,
   if (parent) {
     nsFrameState state = parent->GetStateBits();
 
-    mState |= state & (NS_FRAME_IN_POPUP);
+    AddStateBits(state & (NS_FRAME_IN_POPUP));
   }
 }
 

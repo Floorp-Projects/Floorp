@@ -317,7 +317,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   NS_ASSERTION(mContent, "We should have a content!");
 
-  mState |= NS_FRAME_INDEPENDENT_SELECTION;
+  AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
 
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");

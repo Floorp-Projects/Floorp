@@ -203,7 +203,8 @@ protected:
     , mLastContextScale(1.0f)
     , mLengthAdjustScaleFactor(1.0f)
   {
-    AddStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
+    AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY |
+                 NS_STATE_SVG_POSITIONING_DIRTY);
   }
 
   ~SVGTextFrame() {}
@@ -416,6 +417,18 @@ private:
    * within the <text>.
    */
   void DoGlyphPositioning();
+
+  /**
+   * This fallback version of GetSubStringLength that flushes layout and takes
+   * into account glyph positioning.  As per the SVG 2 spec, typically glyph
+   * positioning does not affect the results of getSubStringLength, but one
+   * exception is text in a textPath where we need to ignore characters that
+   * fall off the end of the textPath path.
+   */
+  nsresult GetSubStringLengthSlowFallback(nsIContent* aContent,
+                                          uint32_t charnum,
+                                          uint32_t nchars,
+                                          float* aResult);
 
   /**
    * Converts the specified index into mPositions to an addressable

@@ -20,7 +20,7 @@
 #include "nsIFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsSVGDisplayableFrame.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
 
 using namespace mozilla;
@@ -180,9 +180,9 @@ nsImageRenderer::PrepareImage()
       nsCOMPtr<nsIURI> base = mForFrame->GetContent()->GetBaseURI();
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), elementId,
                                                 mForFrame->GetContent()->GetUncomposedDoc(), base);
-      nsSVGPaintingProperty* property = nsSVGEffects::GetPaintingPropertyForURI(
+      nsSVGPaintingProperty* property = SVGObserverUtils::GetPaintingPropertyForURI(
           targetURI, mForFrame->FirstContinuation(),
-          nsSVGEffects::BackgroundImageProperty());
+          SVGObserverUtils::BackgroundImageProperty());
       if (!property) {
         mPrepareResult = DrawResult::BAD_IMAGE;
         return false;

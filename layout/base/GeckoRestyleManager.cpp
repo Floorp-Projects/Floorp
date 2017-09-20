@@ -28,7 +28,7 @@
 #include "nsStyleSet.h"
 #include "nsStyleUtil.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsAnimationManager.h"
