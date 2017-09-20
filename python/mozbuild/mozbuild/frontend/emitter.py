@@ -1021,13 +1021,24 @@ class TreeMetadataEmitter(LoggingMixin):
             for name in context.get(context_var, []):
                 yield klass(context, name)
 
+        local_includes = []
         for local_include in context.get('LOCAL_INCLUDES', []):
             if (not isinstance(local_include, ObjDirPath) and
                     not os.path.exists(local_include.full_path)):
                 raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
                     'does not exist: %s (resolved to %s)' % (local_include,
                     local_include.full_path), context)
-            yield LocalInclude(context, local_include)
+            include_obj = LocalInclude(context, local_include)
+            local_includes.append(include_obj.path.full_path)
+            yield include_obj
+
+        computed_flags.resolve_flags('LOCAL_INCLUDES', ['-I%s' % p for p in local_includes])
+
+        if len(context['CPP_UNIT_TESTS']):
+            # TODO: Move this to the CppUnitTests template.
+            dist_include_testing = mozpath.join(self.config.topobjdir,
+                                                'dist', 'include', 'testing')
+            computed_flags.flags['EXTRA_INCLUDES'].append('-I%s' % dist_include_testing)
 
         for obj in self._handle_linkables(context, passthru, generated_files):
             yield obj

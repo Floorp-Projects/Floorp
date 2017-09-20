@@ -44,13 +44,9 @@ class CompileDBBackend(CommonBackend):
         self._flags = {}
 
         self._envs = {}
-        self._includes = defaultdict(list)
         self._local_flags = defaultdict(dict)
         self._per_source_flags = defaultdict(list)
-        self._extra_includes = defaultdict(list)
         self._gyp_dirs = set()
-        self._dist_include_testing = '-I%s' % mozpath.join(
-            self.environment.topobjdir, 'dist', 'include', 'testing')
 
     def consume_object(self, obj):
         # Those are difficult directories, that will be handled later.
@@ -79,17 +75,6 @@ class CompileDBBackend(CommonBackend):
             for f in obj.files:
                 self._build_db_line(obj.objdir, obj.relativedir, obj.config, f,
                                     obj.canonical_suffix)
-
-        elif isinstance(obj, LocalInclude):
-            self._includes[obj.objdir].append('-I%s' % mozpath.normpath(
-                obj.path.full_path))
-
-        elif isinstance(obj, Linkable):
-            if isinstance(obj, SimpleProgram) and obj.is_unit_test:
-                if (self._dist_include_testing not in
-                        self._extra_includes[obj.objdir]):
-                    self._extra_includes[obj.objdir].append(
-                        self._dist_include_testing)
 
         elif isinstance(obj, VariablePassthru):
             if obj.variables.get('IS_GYP_DIR'):
@@ -124,7 +109,7 @@ class CompileDBBackend(CommonBackend):
                 cmd.append(filename)
             else:
                 cmd.append(unified)
-            local_extra = list(self._extra_includes[directory])
+            os_includes = []
             if directory not in self._gyp_dirs:
                 for var in (
                     'NSPR_CFLAGS',
@@ -136,10 +121,9 @@ class CompileDBBackend(CommonBackend):
                 ):
                     f = env.substs.get(var)
                     if f:
-                        local_extra.extend(f)
+                        os_includes.extend(f)
             variables = {
-                'LOCAL_INCLUDES': self._includes[directory],
-                'EXTRA_INCLUDES': local_extra,
+                'OS_INCLUDES': os_includes,
                 'DIST': mozpath.join(env.topobjdir, 'dist'),
                 'DEPTH': env.topobjdir,
                 'MOZILLA_DIR': env.topsrcdir,
@@ -231,11 +215,7 @@ class CompileDBBackend(CommonBackend):
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
         db.extend((
-            '-I%s' % mozpath.join(cenv.topsrcdir, reldir),
-            '-I%s' % objdir,
-            '$(LOCAL_INCLUDES)',
-            '-I%s/dist/include' % cenv.topobjdir,
-            '$(EXTRA_INCLUDES)',
+            '$(OS_INCLUDES)',
         ))
         append_var('DSO_CFLAGS')
         append_var('DSO_PIC_CFLAGS')
