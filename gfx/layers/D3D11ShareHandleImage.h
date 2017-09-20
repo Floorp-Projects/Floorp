@@ -20,14 +20,13 @@ class D3D11RecycleAllocator : public TextureClientRecycleAllocator
 {
 public:
   explicit D3D11RecycleAllocator(KnowsCompositor* aAllocator,
-                                 ID3D11Device* aDevice)
-    : TextureClientRecycleAllocator(aAllocator)
-    , mDevice(aDevice)
-  {}
+                                 ID3D11Device* aDevice);
 
   already_AddRefed<TextureClient>
   CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                         const gfx::IntSize& aSize);
+
+  uint32_t VendorId() const { return mVendorId; }
 
 protected:
   virtual already_AddRefed<TextureClient>
@@ -38,6 +37,7 @@ protected:
            TextureAllocationFlags aAllocFlags) override;
 
   RefPtr<ID3D11Device> mDevice;
+  uint32_t mVendorId;
 };
 
 // Image class that wraps a ID3D11Texture2D. This class copies the image
