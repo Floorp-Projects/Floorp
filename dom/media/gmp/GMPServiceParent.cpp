@@ -123,14 +123,14 @@ GeckoMediaPluginServiceParent::Init()
   }
 
   nsresult rv = InitStorage();
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Kick off scanning for plugins
   nsCOMPtr<nsIThread> thread;
   rv = GetThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -175,13 +175,13 @@ GMPPlatformString(nsAString& aOutPlatform)
 
   nsAutoCString OS;
   nsresult rv = runtime->GetOS(OS);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsAutoCString arch;
   rv = runtime->GetXPCOMABI(arch);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -225,13 +225,13 @@ GeckoMediaPluginServiceParent::InitStorage()
 
   nsCOMPtr<nsIFile> gmpDirWithoutPlatform;
   rv = mStorageBaseDir->Clone(getter_AddRefs(gmpDirWithoutPlatform));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsAutoString platform;
   rv = GMPPlatformString(platform);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -329,7 +329,7 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
     // Clear nodeIds/records modified after |t|.
     nsresult rv;
     PRTime t = nsDependentString(aSomeData).ToInteger64(&rv, 10);
-    if (NS_FAILED(rv)) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return GMPDispatch(NewRunnableMethod<PRTime>(
@@ -409,7 +409,7 @@ GeckoMediaPluginServiceParent::GetContentParent(
   nsCString nodeIdString;
   nsresult rv = GetNodeId(
     aNodeId.mOrigin, aNodeId.mTopLevelOrigin, aNodeId.mGMPName, nodeIdString);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return GetGMPContentParentPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
   }
@@ -1392,7 +1392,7 @@ DeleteDir(nsIFile* aPath)
 {
   bool exists = false;
   nsresult rv = aPath->Exists(&exists);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   if (exists) {
@@ -1416,7 +1416,7 @@ GeckoMediaPluginServiceParent::ClearNodeIdAndPlugin(DirectoryFilter& aFilter)
   // $profileDir/gmp/$platform/
   nsCOMPtr<nsIFile> path;
   nsresult rv = GetStorageDir(getter_AddRefs(path));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
@@ -1472,12 +1472,12 @@ GeckoMediaPluginServiceParent::ClearNodeIdAndPlugin(nsIFile* aPluginStorageDir,
   for (const nsCString& nodeId : nodeIDsToClear) {
     nsCOMPtr<nsIFile> dirEntry;
     nsresult rv = path->Clone(getter_AddRefs(dirEntry));
-    if (NS_FAILED(rv)) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
     }
 
     rv = dirEntry->AppendNative(nodeId);
-    if (NS_FAILED(rv)) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
     }
 
@@ -1544,23 +1544,23 @@ GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread(PRTime aSince)
       }
 
       nsAutoCString salt;
-      if (NS_FAILED(ReadSalt(aPath, salt))) {
+      if (NS_WARN_IF(NS_FAILED(ReadSalt(aPath, salt)))) {
         return false;
       }
 
       // $profileDir/gmp/$platform/$gmpName/id/
       nsCOMPtr<nsIFile> idDir;
-      if (NS_FAILED(aPath->GetParent(getter_AddRefs(idDir)))) {
+      if (NS_WARN_IF(NS_FAILED(aPath->GetParent(getter_AddRefs(idDir))))) {
         return false;
       }
       // $profileDir/gmp/$platform/$gmpName/
       nsCOMPtr<nsIFile> temp;
-      if (NS_FAILED(idDir->GetParent(getter_AddRefs(temp)))) {
+      if (NS_WARN_IF(NS_FAILED(idDir->GetParent(getter_AddRefs(temp))))) {
         return false;
       }
 
       // $profileDir/gmp/$platform/$gmpName/storage/
-      if (NS_FAILED(temp->Append(NS_LITERAL_STRING("storage")))) {
+      if (NS_WARN_IF(NS_FAILED(temp->Append(NS_LITERAL_STRING("storage"))))) {
         return false;
       }
       // $profileDir/gmp/$platform/$gmpName/storage/$originSalt
@@ -1766,8 +1766,8 @@ GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
 
   Endpoint<PGMPContentParent> parent;
   Endpoint<PGMPContentChild> child;
-  if (NS_FAILED(PGMPContent::CreateEndpoints(OtherPid(), *aOutProcessId,
-                                             &parent, &child))) {
+  if (NS_WARN_IF(NS_FAILED(PGMPContent::CreateEndpoints(
+        OtherPid(), *aOutProcessId, &parent, &child)))) {
     *aOutRv = NS_ERROR_FAILURE;
     return IPC_OK();
   }
@@ -1941,7 +1941,7 @@ GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService)
                                                      &ok),
                            NS_DISPATCH_SYNC);
 
-  if (NS_FAILED(rv) || !ok) {
+  if (NS_WARN_IF(NS_FAILED(rv) || !ok)) {
     return false;
   }
 

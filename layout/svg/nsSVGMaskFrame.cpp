@@ -12,7 +12,7 @@
 #include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "mozilla/dom/SVGMaskElement.h"
 
 using namespace mozilla;
@@ -191,7 +191,7 @@ nsSVGMaskFrame::AttributeChanged(int32_t  aNameSpaceID,
        aAttribute == nsGkAtoms::height||
        aAttribute == nsGkAtoms::maskUnits ||
        aAttribute == nsGkAtoms::maskContentUnits)) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
 
   return nsSVGContainerFrame::AttributeChanged(aNameSpaceID,

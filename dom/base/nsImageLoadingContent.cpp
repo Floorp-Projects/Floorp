@@ -39,7 +39,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIContentPolicy.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 
 #include "gfxPrefs.h"
 
@@ -256,7 +256,7 @@ nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
   }
 
   nsCOMPtr<nsINode> thisNode = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  nsSVGEffects::InvalidateDirectRenderingObservers(thisNode->AsElement());
+  SVGObserverUtils::InvalidateDirectRenderingObservers(thisNode->AsElement());
 
   return NS_OK;
 }

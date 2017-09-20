@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -9,19 +10,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   DelayedInit: "resource://gre/modules/DelayedInit.jsm",
-  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
-
-var Strings = {};
-
-XPCOMUtils.defineLazyGetter(Strings, "brand", _ =>
-        Services.strings.createBundle("chrome://branding/locale/brand.properties"));
-XPCOMUtils.defineLazyGetter(Strings, "browser", _ =>
-        Services.strings.createBundle("chrome://browser/locale/browser.properties"));
-XPCOMUtils.defineLazyGetter(Strings, "reader", _ =>
-        Services.strings.createBundle("chrome://global/locale/aboutReader.properties"));
 
 function BrowserCLH() {
   this.wrappedJSObject = this;
@@ -60,7 +51,7 @@ BrowserCLH.prototype = {
 
         if (AppConstants.MOZ_WEBRTC) {
           GeckoViewUtils.addLazyGetter(this, "WebrtcUI", {
-            script: "chrome://browser/content/WebrtcUI.js",
+            module: "resource://gre/modules/WebrtcUI.jsm",
             observers: [
               "getUserMedia:ask-device-permission",
               "getUserMedia:request",
@@ -73,14 +64,14 @@ BrowserCLH.prototype = {
         }
 
         GeckoViewUtils.addLazyGetter(this, "SelectHelper", {
-          script: "chrome://browser/content/SelectHelper.js",
+          module: "resource://gre/modules/SelectHelper.jsm",
         });
         GeckoViewUtils.addLazyGetter(this, "InputWidgetHelper", {
-          script: "chrome://browser/content/InputWidgetHelper.js",
+          module: "resource://gre/modules/InputWidgetHelper.jsm",
         });
 
         GeckoViewUtils.addLazyGetter(this, "FormAssistant", {
-          script: "chrome://browser/content/FormAssistant.js",
+          module: "resource://gre/modules/FormAssistant.jsm",
         });
         Services.obs.addObserver({
           QueryInterface: XPCOMUtils.generateQI([
@@ -109,7 +100,7 @@ BrowserCLH.prototype = {
         });
 
         GeckoViewUtils.addLazyGetter(this, "ActionBarHandler", {
-          script: "chrome://browser/content/ActionBarHandler.js",
+          module: "resource://gre/modules/ActionBarHandler.jsm",
         });
 
         // Once the first chrome window is loaded, schedule a list of startup

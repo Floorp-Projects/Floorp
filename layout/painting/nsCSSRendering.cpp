@@ -46,7 +46,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
 #include "nsContentUtils.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
 #include "gfxDrawable.h"
 #include "GeckoProfiler.h"

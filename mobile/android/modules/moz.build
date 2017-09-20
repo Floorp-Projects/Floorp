@@ -21,14 +21,17 @@ DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [
     'Accounts.jsm',
+    'ActionBarHandler.jsm',
     'BrowserActions.jsm',
     'dbg-browser-actors.js',
     'DelayedInit.jsm',
     'DownloadNotifications.jsm',
+    'FormAssistant.jsm',
     'FxAccountsWebChannel.jsm',
     'HelperApps.jsm',
     'Home.jsm',
     'HomeProvider.jsm',
+    'InputWidgetHelper.jsm',
     'JNI.jsm',
     'LightweightThemeConsumer.jsm',
     'MediaPlayerApp.jsm',
@@ -38,8 +41,10 @@ EXTRA_JS_MODULES += [
     'Prompt.jsm',
     'RuntimePermissions.jsm',
     'Sanitizer.jsm',
+    'SelectHelper.jsm',
     'SharedPreferences.jsm',
     'Snackbars.jsm',
     'SSLExceptions.jsm',
+    'WebrtcUI.jsm',
     'WebsiteMetadata.jsm'
 ]

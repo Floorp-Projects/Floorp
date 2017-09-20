@@ -5018,6 +5018,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     innermostURI->GetHost(host);
     CopyUTF8toUTF16(host, formatStrs[0]);
     formatStrCount = 1;
+    errorDescriptionID = "dnsNotFound2";
     error = "dnsNotFound";
   } else if (NS_ERROR_CONNECTION_REFUSED == aError) {
     NS_ENSURE_ARG_POINTER(aURI);

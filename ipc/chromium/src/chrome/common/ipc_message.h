@@ -347,8 +347,7 @@ class Message : public Pickle {
                                 const char* range_end) {
 #ifdef MOZ_TASK_TRACER
     return ((static_cast<unsigned int>(range_end - range_start) >= sizeof(Header)) &&
-            (reinterpret_cast<const Header*>(range_start)->flags &
-             TASKTRACER_BIT)) ?
+            (reinterpret_cast<const Header*>(range_start)->flags.IsTaskTracer())) ?
       sizeof(HeaderTaskTracer) : sizeof(Header);
 #else
     return sizeof(Header);

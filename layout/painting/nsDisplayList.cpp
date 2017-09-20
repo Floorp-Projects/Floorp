@@ -43,7 +43,7 @@
 #include "BasicLayers.h"
 #include "nsBoxFrame.h"
 #include "nsSubDocumentFrame.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "GeckoProfiler.h"
@@ -6194,10 +6194,15 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
   // usually never have their own clip because during display item creation
   // time we propagated the clip to our contents, so maybe we should just
   // remove the clip parameter from ApplyOpacity completely.
-  DisplayItemClipChain clip { GetClip(), mActiveScrolledRoot, nullptr };
+  const DisplayItemClipChain* clip = nullptr;
+
+  if (mClip) {
+    clip = aBuilder->AllocateDisplayItemClipChain(*mClip, mActiveScrolledRoot,
+                                                  nullptr);
+  }
 
   for (uint32_t i = 0; i < childCount; i++) {
-    children[i].item->ApplyOpacity(aBuilder, mOpacity, mClip ? &clip : nullptr);
+    children[i].item->ApplyOpacity(aBuilder, mOpacity, clip);
   }
 
   return true;
@@ -8750,8 +8755,8 @@ ComputeMaskGeometry(PaintFramesParams& aParams)
 
   const nsStyleSVGReset *svgReset = firstFrame->StyleSVGReset();
 
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
+  SVGObserverUtils::EffectProperties effectProperties =
+    SVGObserverUtils::GetEffectProperties(firstFrame);
   nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
 
   if (maskFrames.Length() == 0) {
@@ -8871,8 +8876,8 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
+  SVGObserverUtils::EffectProperties effectProperties =
+    SVGObserverUtils::GetEffectProperties(firstFrame);
 
   if (effectProperties.HasInvalidClipPath() ||
       effectProperties.HasInvalidMask()) {
@@ -9063,8 +9068,8 @@ nsDisplayMask::PrintEffects(nsACString& aTo)
 {
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
+  SVGObserverUtils::EffectProperties effectProperties =
+    SVGObserverUtils::GetEffectProperties(firstFrame);
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
   bool first = true;
   aTo += " effects=(";
@@ -9130,8 +9135,8 @@ nsDisplayFilter::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
+  SVGObserverUtils::EffectProperties effectProperties =
+    SVGObserverUtils::GetEffectProperties(firstFrame);
 
   if (effectProperties.HasInvalidFilter()) {
     return nullptr;
@@ -9295,8 +9300,8 @@ nsDisplayFilter::PrintEffects(nsACString& aTo)
 {
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
+  SVGObserverUtils::EffectProperties effectProperties =
+    SVGObserverUtils::GetEffectProperties(firstFrame);
   bool first = true;
   aTo += " effects=(";
   if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {

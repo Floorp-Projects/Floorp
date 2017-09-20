@@ -906,8 +906,6 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
   // Copy aSource's keyframes and animation properties.
   // Note: We don't call SetKeyframes directly, which might revise the
   //       computed offsets and rebuild the animation properties.
-  // FIXME: Bug 1314537: We have to make sure SharedKeyframeList is handled
-  //        properly.
   effect->mKeyframes = aSource.mKeyframes;
   effect->mProperties = aSource.mProperties;
   return effect.forget();

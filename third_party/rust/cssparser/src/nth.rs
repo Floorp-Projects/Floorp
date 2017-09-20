@@ -4,7 +4,7 @@
 
 use std::ascii::AsciiExt;
 
-use super::{Token, Parser, BasicParseError};
+use super::{Token, Parser, ParserInput, BasicParseError};
 
 
 /// Parse the *An+B* notation, as found in the `:nth-child()` selector.
@@ -93,8 +93,23 @@ fn parse_n_dash_digits(string: &str) -> Result<i32, ()> {
     && string[..2].eq_ignore_ascii_case("n-")
     && string[2..].chars().all(|c| matches!(c, '0'...'9'))
     {
-        Ok(string[1..].parse().unwrap())  // Include the minus sign
+        Ok(parse_number_saturate(&string[1..]).unwrap())  // Include the minus sign
     } else {
         Err(())
     }
+}
+
+fn parse_number_saturate(string: &str) -> Result<i32, ()> {
+    let mut input = ParserInput::new(string);
+    let mut parser = Parser::new(&mut input);
+    let int = if let Ok(&Token::Number {int_value: Some(int), ..})
+                = parser.next_including_whitespace_and_comments() {
+        int
+    } else {
+        return Err(())
+    };
+    if !parser.is_exhausted() {
+        return Err(())
+    }
+    Ok(int)
 }

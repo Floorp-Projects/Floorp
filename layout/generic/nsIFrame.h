@@ -1233,7 +1233,9 @@ public:
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BidiDataProperty, mozilla::FrameBidiData)
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(PlaceholderFrameProperty, nsPlaceholderFrame)
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(WebRenderUserDataProperty, WebRenderUserDataTable)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(WebRenderUserDataProperty, WebRenderUserDataTable, DestroyWebRenderUserDataTable)
+
+  static void DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable);
 
   mozilla::FrameBidiData GetBidiData() const
   {
@@ -4100,7 +4102,7 @@ protected:
     // bug 81268
     NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW), "frame is already in reflow");
 #endif
-    mState |= NS_FRAME_IN_REFLOW;
+    AddStateBits(NS_FRAME_IN_REFLOW);
   }
 
   nsFrameState     mState;

@@ -80,7 +80,7 @@ describe("ActivityStreamMessageChannel", () => {
         mm.createChannel();
         assert.notCalled(global.AboutNewTab.override);
       });
-      it("should simluate init for existing ports", () => {
+      it("should simulate init for existing ports", () => {
         sinon.stub(mm, "onActionFromContent");
 
         RPmessagePorts.push({
@@ -96,8 +96,8 @@ describe("ActivityStreamMessageChannel", () => {
 
         mm.createChannel();
 
-        assert.calledWith(mm.onActionFromContent.firstCall, {type: at.NEW_TAB_INIT, data: {url: "about:monkeys"}}, "inited");
-        assert.calledWith(mm.onActionFromContent.secondCall, {type: at.NEW_TAB_INIT, data: {url: "about:sheep"}}, "loaded");
+        assert.calledWith(mm.onActionFromContent.firstCall, {type: at.NEW_TAB_INIT, data: RPmessagePorts[0]});
+        assert.calledWith(mm.onActionFromContent.secondCall, {type: at.NEW_TAB_INIT, data: RPmessagePorts[1]});
       });
       it("should simluate load for loaded ports", () => {
         sinon.stub(mm, "onActionFromContent");
@@ -162,8 +162,8 @@ describe("ActivityStreamMessageChannel", () => {
 
         assert.calledWith(mm.onActionFromContent, {
           type: at.NEW_TAB_INIT,
-          data: {url: "about:monkeys"}
-        }, "foo");
+          data: t
+        });
       });
     });
     describe("#onNewTabLoad", () => {

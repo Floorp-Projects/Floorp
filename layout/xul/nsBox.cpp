@@ -131,7 +131,7 @@ nsBox::BeginXULLayout(nsBoxLayoutState& aState)
   // mark ourselves as dirty so no child under us
   // can post an incremental layout.
   // XXXldb Is this still needed?
-  mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
+  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
   if (GetStateBits() & NS_FRAME_IS_DIRTY)
   {

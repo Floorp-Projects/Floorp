@@ -11,6 +11,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.CheckResult;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 
 import java.util.Map;
 
@@ -35,4 +36,5 @@ public interface MmaInterface {
 
     String getMmaSenderId();
 
+    void setDeviceId(@NonNull String deviceId);
 }

@@ -2,7 +2,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY tabCrashed.closeTab "Close This Tab">
+<!ENTITY tabCrashed.title "Tab crash reporter">
+
+<!ENTITY tabCrashed.closeTab2  "Close Tab">
 <!ENTITY tabCrashed.restoreTab "Restore This Tab">
 <!ENTITY tabCrashed.restoreAll "Restore All Crashed Tabs">
 
@@ -14,17 +16,17 @@
      vulgar, use it. If not, feel free to skip the word in your
      translation. -->
 <!ENTITY tabCrashed.header2 "Gah. Your tab just crashed.">
-<!ENTITY tabCrashed.offerHelp "We can help you!">
-<!ENTITY tabCrashed.single.offerHelpMessage "Choose &tabCrashed.restoreTab; to reload page content.">
-<!ENTITY tabCrashed.multiple.offerHelpMessage "Choose &tabCrashed.restoreTab; or &tabCrashed.restoreAll; to reload page content.">
+<!ENTITY tabCrashed.offerHelp2 "We can help!">
+<!ENTITY tabCrashed.single.offerHelpMessage2 "Choose &tabCrashed.restoreTab; to reload the page.">
+<!ENTITY tabCrashed.multiple.offerHelpMessage2 "Choose &tabCrashed.restoreTab; or &tabCrashed.restoreAll; to reload the page/pages.">
 <!ENTITY tabCrashed.requestHelp "Will you help us?">
 <!ENTITY tabCrashed.requestHelpMessage "Crash reports help us diagnose problems and make &brandShortName; better.">
 <!ENTITY tabCrashed.requestReport "Report this tab">
-<!ENTITY tabCrashed.sendReport2 "Send a crash report for the tab you are viewing">
+<!ENTITY tabCrashed.sendReport3 "Send an automated crash report so we can fix issues like this.">
 <!ENTITY tabCrashed.commentPlaceholder2 "Optional comments (comments are publicly visible)">
-<!ENTITY tabCrashed.includeURL2 "Include page URL with this crash report">
+<!ENTITY tabCrashed.includeURL3 "Include the URLs of the sites you were on when &brandShortName; crashed.">
 <!ENTITY tabCrashed.emailPlaceholder "Enter your email address here">
 <!ENTITY tabCrashed.emailMe "Email me when more information is available">
 <!ENTITY tabCrashed.reportSent "Crash report already submitted; thank you for helping make &brandShortName; better!">
 <!ENTITY tabCrashed.requestAutoSubmit2 "Report background tabs">
-<!ENTITY tabCrashed.autoSubmit2 "Update preferences to automatically send crash reports, including reports for crashed background tabs from this session and future sessions">
+<!ENTITY tabCrashed.autoSubmit3 "Update preferences to automatically submit reports when &brandShortName; crashes.">
