@@ -256,13 +256,13 @@ public:
   // offset that the cache requested in
   // ChannelMediaResource::CacheClientSeek. This can be called at any
   // time by the client, not just after a CacheClientSeek.
-  void NotifyDataStarted(int64_t aOffset);
+  void NotifyDataStarted(uint32_t aLoadID, int64_t aOffset);
   // Notifies the cache that data has been received. The stream already
   // knows the offset because data is received in sequence and
   // the starting offset is known via NotifyDataStarted or because
   // the cache requested the offset in
   // ChannelMediaResource::CacheClientSeek, or because it defaulted to 0.
-  void NotifyDataReceived(int64_t aSize, const char* aData);
+  void NotifyDataReceived(uint32_t aLoadID, int64_t aSize, const char* aData);
   // Notifies the cache that the current bytes should be written to disk.
   // Called on the main thread.
   void FlushPartialBlock();
@@ -494,6 +494,9 @@ private:
   ReadMode          mCurrentMode;
   // True if some data in mPartialBlockBuffer has been read as metadata
   bool              mMetadataInPartialBlockBuffer;
+  // The load ID of the current channel. Used to check whether the data is
+  // coming from an old channel and should be discarded.
+  uint32_t mLoadID = 0;
 
   // The following field is protected by the cache's monitor but are
   // only written on the main thread.

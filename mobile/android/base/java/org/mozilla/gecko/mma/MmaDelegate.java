@@ -9,6 +9,7 @@ package org.mozilla.gecko.mma;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
@@ -33,6 +34,7 @@ import org.mozilla.gecko.util.ContextUtils;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 
 public class MmaDelegate {
@@ -64,6 +66,9 @@ public class MmaDelegate {
     private static final String KEY_PREF_BOOLEAN_MMA_ENABLED = "mma.enabled";
     private static final String[] PREFS = { KEY_PREF_BOOLEAN_MMA_ENABLED };
 
+    private static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
+    private static final String DEBUG_LEANPLUM_DEVICE_ID = "8effda84-99df-11e7-abc4-cec278b6b50a";
+
 
     @Deprecated
     private static boolean isGeckoPrefOn = false;
@@ -94,6 +99,8 @@ public class MmaDelegate {
                         // Note that generateUserAttribute always return a non null HashMap.
                         Map<String, Object> attributes = gatherUserAttributes(activity);
                         mmaHelper.setGcmSenderId(PushManager.getSenderIds());
+                        mmaHelper.setDeviceId(getDeviceId(activity));
+                        // above two config setup required to be invoked before mmaHelper.init.
                         mmaHelper.init(activity, attributes);
 
                         if (!isDefaultBrowser(activity)) {
@@ -181,5 +188,19 @@ public class MmaDelegate {
 
     public static String getMmaSenderId() {
         return mmaHelper.getMmaSenderId();
+    }
+
+    private static String getDeviceId(Activity activity) {
+        if (SwitchBoard.isInExperiment(activity, Experiments.LEANPLUM_DEBUG)) {
+            return DEBUG_LEANPLUM_DEVICE_ID;
+        }
+
+        final SharedPreferences sharedPreferences = activity.getPreferences(Context.MODE_PRIVATE);
+        String deviceId = sharedPreferences.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+        if (deviceId == null) {
+            deviceId = UUID.randomUUID().toString();
+            sharedPreferences.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
+        }
+        return deviceId;
     }
 }

@@ -110,6 +110,7 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
   }
 
   mLastCanvasDatas.Clear();
+  RemoveUnusedAndResetWebRenderUserData();
 
   if (mTransactionIdAllocator) {
     // Make sure to notify the refresh driver just in case it's waiting on a
@@ -764,6 +765,10 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
       }
       mLayerScrollData.clear();
       mClipIdCache.clear();
+
+      // Remove the user data those are not displayed on the screen and
+      // also reset the data to unused for next transaction.
+      RemoveUnusedAndResetWebRenderUserData();
     } else {
       for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
         RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();

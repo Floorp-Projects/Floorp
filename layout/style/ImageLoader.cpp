@@ -13,7 +13,7 @@
 #include "nsError.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "imgIContainer.h"
 #include "Image.h"
 
@@ -362,7 +362,7 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet, bool aForcePaint)
         // Update ancestor rendering observers (-moz-element etc)
         nsIFrame *f = frame;
         while (f && !f->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-          nsSVGEffects::InvalidateDirectRenderingObservers(f);
+          SVGObserverUtils::InvalidateDirectRenderingObservers(f);
           f = nsLayoutUtils::GetCrossDocParentFrame(f);
         }
 

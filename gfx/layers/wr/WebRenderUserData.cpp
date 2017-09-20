@@ -15,8 +15,13 @@
 namespace mozilla {
 namespace layers {
 
-WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager)
+WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem,
+                                     WebRenderUserDataRefTable* aTable)
   : mWRManager(aWRManager)
+  , mFrame(aItem->Frame())
+  , mDisplayItemKey(aItem->GetPerFrameKey())
+  , mTable(aTable)
+  , mUsed(false)
 {
 }
 
@@ -30,14 +35,21 @@ WebRenderUserData::IsDataValid(WebRenderLayerManager* aManager)
   return aManager == mWRManager;
 }
 
+void
+WebRenderUserData::RemoveFromTable()
+{
+  mTable->RemoveEntry(this);
+}
+
 WebRenderBridgeChild*
 WebRenderUserData::WrBridge() const
 {
   return mWRManager->WrBridge();
 }
 
-WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager)
-  : WebRenderUserData(aWRManager)
+WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem,
+                                       WebRenderUserDataRefTable* aTable)
+  : WebRenderUserData(aWRManager, aItem, aTable)
 {
 }
 
@@ -173,8 +185,9 @@ WebRenderImageData::CreateExternalImageIfNeeded()
   }
 }
 
-WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager)
-  : WebRenderImageData(aWRManager)
+WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem,
+                                             WebRenderUserDataRefTable* aTable)
+  : WebRenderImageData(aWRManager, aItem, aTable)
   , mInvalid(false)
 {
 }
@@ -195,14 +208,16 @@ WebRenderFallbackData::SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
   mGeometry = aGeometry;
 }
 
-WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager)
-  : WebRenderUserData(aWRManager),
-    mAnimationInfo(aWRManager)
+WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem,
+                                               WebRenderUserDataRefTable* aTable)
+  : WebRenderUserData(aWRManager, aItem, aTable)
+  , mAnimationInfo(aWRManager)
 {
 }
 
-WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager)
-  : WebRenderUserData(aWRManager)
+WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem,
+                                         WebRenderUserDataRefTable* aTable)
+  : WebRenderUserData(aWRManager, aItem, aTable)
 {
 }
 

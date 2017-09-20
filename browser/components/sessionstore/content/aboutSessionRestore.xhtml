@@ -30,17 +30,13 @@
     <div class="container restore-chosen">
 
       <div class="title">
-        <h1 class="title-text">&restorepage.errorTitle;</h1>
+        <h1 class="title-text">&restorepage.errorTitle2;</h1>
       </div>
       <div class="description">
-        <p>&restorepage.problemDesc;</p>
+        <p>&restorepage.problemDesc2;</p>
 
         <div id="errorLongDesc">
-          <p>&restorepage.tryThis;</p>
-          <ul>
-            <li>&restorepage.restoreSome;</li>
-            <li>&restorepage.startNew;</li>
-          </ul>
+          <p>&restorepage.tryThis2;</p>
         </div>
       </div>
       <div class="tree-container" available="true">
@@ -58,23 +54,23 @@
       <div class="button-container">
 #ifdef XP_UNIX
         <xul:button id="errorCancel"
-                label="&restorepage.closeButton;"
-                accesskey="&restorepage.close.access;"
+                label="&restorepage.closeButton2;"
+                accesskey="&restorepage.close.access2;"
                 oncommand="startNewSession();"/>
         <xul:button class="primary"
                 id="errorTryAgain"
-                label="&restorepage.tryagainButton;"
-                accesskey="&restorepage.restore.access;"
+                label="&restorepage.tryagainButton2;"
+                accesskey="&restorepage.restore.access2;"
                 oncommand="restoreSession();"/>
 #else
         <xul:button class="primary"
                 id="errorTryAgain"
-                label="&restorepage.tryagainButton;"
-                accesskey="&restorepage.restore.access;"
+                label="&restorepage.tryagainButton2;"
+                accesskey="&restorepage.restore.access2;"
                 oncommand="restoreSession();"/>
         <xul:button id="errorCancel"
-                label="&restorepage.closeButton;"
-                accesskey="&restorepage.close.access;"
+                label="&restorepage.closeButton2;"
+                accesskey="&restorepage.close.access2;"
                 oncommand="startNewSession();"/>
 #endif
       </div>

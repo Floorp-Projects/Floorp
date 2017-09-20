@@ -22,12 +22,11 @@ var GeckoViewUtils = {
    *
    * @param scope     Scope for holding the loaded object.
    * @param name      Name of the object to load.
-   * @param script    If specified, load the object from a JS subscript.
    * @param service   If specified, load the object from a JS component; the
    *                  component must include the line
    *                  "this.wrappedJSObject = this;" in its constructor.
    * @param module    If specified, load the object from a JS module.
-   * @param init      For non-scripts, optional post-load initialization function.
+   * @param init      Optional post-load initialization function.
    * @param observers If specified, listen to specified observer notifications.
    * @param ppmm      If specified, listen to specified process messages.
    * @param mm        If specified, listen to specified frame messages.
@@ -35,33 +34,29 @@ var GeckoViewUtils = {
    * @param once      if true, only listen to the specified
    *                  events/messages/notifications once.
    */
-  addLazyGetter: function(scope, name, {script, service, module, handler,
+  addLazyGetter: function(scope, name, {service, module, handler,
                                         observers, ppmm, mm, ged, init, once}) {
-    if (script) {
-      XPCOMUtils.defineLazyScriptGetter(scope, name, script);
-    } else {
-      XPCOMUtils.defineLazyGetter(scope, name, _ => {
-        let ret = undefined;
-        if (module) {
-          ret = Cu.import(module, {})[name];
-        } else if (service) {
-          ret = Cc[service].getService(Ci.nsISupports).wrappedJSObject;
-        } else if (typeof handler === "function") {
-          ret = {
-            handleEvent: handler,
-            observe: handler,
-            onEvent: handler,
-            receiveMessage: handler,
-          };
-        } else if (handler) {
-          ret = handler;
-        }
-        if (ret && init) {
-          init.call(scope, ret);
-        }
-        return ret;
-      });
-    }
+    XPCOMUtils.defineLazyGetter(scope, name, _ => {
+      let ret = undefined;
+      if (module) {
+        ret = Cu.import(module, {})[name];
+      } else if (service) {
+        ret = Cc[service].getService(Ci.nsISupports).wrappedJSObject;
+      } else if (typeof handler === "function") {
+        ret = {
+          handleEvent: handler,
+          observe: handler,
+          onEvent: handler,
+          receiveMessage: handler,
+        };
+      } else if (handler) {
+        ret = handler;
+      }
+      if (ret && init) {
+        init.call(scope, ret);
+      }
+      return ret;
+    });
 
     if (observers) {
       let observer = (subject, topic, data) => {

@@ -62,10 +62,10 @@ function startup() {
                     "GeckoViewProgress");
   ModuleManager.add("resource://gre/modules/GeckoViewScroll.jsm",
                     "GeckoViewScroll");
+  ModuleManager.add("resource://gre/modules/GeckoViewTab.jsm",
+                    "GeckoViewTab");
 
   // Move focus to the content window at the end of startup,
   // so things like text selection can work properly.
   document.getElementById("content").focus();
-  ModuleManager.add("resource://gre/modules/GeckoViewTab.jsm",
-                    "GeckoViewTab");
 }

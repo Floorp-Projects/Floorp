@@ -8,11 +8,17 @@ div {
   margin: 30px;
   border-width: 30px;
   border-style: solid;
+}
+#border5p {
   border-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50%" cy="50%" r="50%" fill="red"/></svg>') 5% stretch;
+}
+#border25p {
+  border-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50%" cy="50%" r="50%" fill="red"/></svg>') 25% stretch;
 }
 </style>
 </head>
 <body>
-<div></div>
+<div id="border5p"></div>
+<div id="border25p"></div>
 </body>
 </html>

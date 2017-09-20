@@ -303,7 +303,7 @@ GeckoMediaPluginService::GMPDispatch(already_AddRefed<nsIRunnable> event,
   nsCOMPtr<nsIRunnable> r(event);
   nsCOMPtr<nsIThread> thread;
   nsresult rv = GetThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   return thread->Dispatch(r, flags);
@@ -325,7 +325,7 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
     }
 
     nsresult rv = NS_NewNamedThread("GMPThread", getter_AddRefs(mGMPThread));
-    if (NS_FAILED(rv)) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 

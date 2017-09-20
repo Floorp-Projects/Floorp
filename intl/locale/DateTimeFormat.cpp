@@ -32,16 +32,6 @@ DateTimeFormat::Initialize()
   return NS_OK;
 }
 
-// performs a locale sensitive date formatting operation on the time_t parameter
-/*static*/ nsresult
-DateTimeFormat::FormatTime(const nsDateFormatSelector aDateFormatSelector,
-                           const nsTimeFormatSelector aTimeFormatSelector,
-                           const time_t aTimetTime,
-                           nsAString& aStringOut)
-{
-  return FormatPRTime(aDateFormatSelector, aTimeFormatSelector, (aTimetTime * PR_USEC_PER_SEC), aStringOut);
-}
-
 // performs a locale sensitive date formatting operation on the PRTime parameter
 /*static*/ nsresult
 DateTimeFormat::FormatPRTime(const nsDateFormatSelector aDateFormatSelector,
