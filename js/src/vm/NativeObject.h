@@ -543,6 +543,9 @@ class NativeObject : public ShapedObject
     create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
            js::HandleShape shape, js::HandleObjectGroup group);
 
+    static inline JS::Result<NativeObject*, JS::OOM&>
+    createWithTemplate(JSContext* cx, js::gc::InitialHeap heap, HandleObject templateObject);
+
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();
