@@ -714,22 +714,6 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     return true;
 }
 
-static inline bool
-CreateHolderIfNeeded(JSContext* cx, HandleObject obj, MutableHandleValue d,
-                     nsIXPConnectJSObjectHolder** dest)
-{
-    if (dest) {
-        if (!obj)
-            return false;
-        RefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(cx, obj);
-        objHolder.forget(dest);
-    }
-
-    d.setObjectOrNull(obj);
-
-    return true;
-}
-
 /***************************************************************************/
 // static
 bool
@@ -779,7 +763,8 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     if (flat) {
         if (allowNativeWrapper && !JS_WrapObject(cx, &flat))
             return false;
-        return CreateHolderIfNeeded(cx, flat, d, nullptr);
+        d.setObjectOrNull(flat);
+        return true;
     }
 
     if (iid->Equals(NS_GET_IID(nsISupports))) {
@@ -791,7 +776,8 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
             flat = promise->PromiseObj();
             if (!JS_WrapObject(cx, &flat))
                 return false;
-            return CreateHolderIfNeeded(cx, flat, d, nullptr);
+            d.setObjectOrNull(flat);
+            return true;
         }
     }
 
