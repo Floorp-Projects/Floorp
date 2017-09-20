@@ -875,9 +875,9 @@ Parser<ParseHandler, CharT>::Parser(JSContext* cx, LifoAlloc& alloc,
                                     SyntaxParser* syntaxParser,
                                     LazyScript* lazyOuterFunction)
   : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
+    AutoGCRooter(cx, PARSER),
     syntaxParser_(syntaxParser),
-    handler(cx, alloc, lazyOuterFunction),
-    root(cx, thisForCtor())
+    handler(cx, alloc, lazyOuterFunction)
 {
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
     // which are not generated if functions are parsed lazily. Note that the
@@ -990,6 +990,12 @@ void
 Parser<ParseHandler, CharT>::trace(JSTracer* trc)
 {
     ObjectBox::TraceList(trc, traceListHead);
+}
+
+void
+TraceParser(JSTracer* trc, AutoGCRooter* parser)
+{
+    static_cast<Parser<FullParseHandler, char16_t>*>(parser)->trace(trc);
 }
 
 /*
