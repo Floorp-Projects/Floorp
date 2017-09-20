@@ -92,7 +92,7 @@ ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
 {
   // This might happen off the main thread.
   MOZ_DIAGNOSTIC_ASSERT(mResource);
-  return mResource->OnDataAvailable(aRequest, aStream, aCount);
+  return mResource->OnDataAvailable(mLoadID, aStream, aCount);
 }
 
 nsresult
@@ -264,7 +264,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     startOffset = 0;
   }
 
-  mCacheStream.NotifyDataStarted(startOffset);
+  mCacheStream.NotifyDataStarted(mLoadID, startOffset);
   mCacheStream.SetTransportSeekable(seekable);
   mChannelStatistics.Start();
   mReopenOnError = false;
@@ -391,25 +391,27 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
 
 nsresult
 ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
-                                         void* aResource,
+                                         void* aClosure,
                                          const char* aFromSegment,
                                          uint32_t aToOffset,
                                          uint32_t aCount,
                                          uint32_t* aWriteCount)
 {
-  ChannelMediaResource* res = static_cast<ChannelMediaResource*>(aResource);
-  res->mCacheStream.NotifyDataReceived(aCount, aFromSegment);
+  Closure* closure = static_cast<Closure*>(aClosure);
+  closure->mResource->mCacheStream.NotifyDataReceived(
+    closure->mLoadID, aCount, aFromSegment);
   *aWriteCount = aCount;
   return NS_OK;
 }
 
 nsresult
-ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
+ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
                                       nsIInputStream* aStream,
                                       uint32_t aCount)
 {
   // This might happen off the main thread.
-  NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
+  // Don't assert |mChannel.get() == aRequest| since reading mChannel here off
+  // the main thread is a data race.
 
   // Update principals before putting the data in the cache. This is important,
   // we want to make sure all principals are updated before any consumer can see
@@ -423,10 +425,12 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
     [self, aCount]() { self->mChannelStatistics.AddBytes(aCount); });
   mCallback->AbstractMainThread()->Dispatch(r.forget());
 
+  Closure closure{ aLoadID, this };
   uint32_t count = aCount;
   while (count > 0) {
     uint32_t read;
-    nsresult rv = aStream->ReadSegments(CopySegmentToCache, this, count, &read);
+    nsresult rv =
+      aStream->ReadSegments(CopySegmentToCache, &closure, count, &read);
     if (NS_FAILED(rv))
       return rv;
     NS_ASSERTION(read > 0, "Read 0 bytes while data was available?");
@@ -457,7 +461,7 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   }
 
   MOZ_ASSERT(GetOffset() == 0, "Who set offset already?");
-  mListener = new Listener(this, 0);
+  mListener = new Listener(this, 0, ++mLoadID);
   *aStreamListener = mListener;
   NS_ADDREF(*aStreamListener);
   return NS_OK;
@@ -470,7 +474,7 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
   MOZ_ASSERT(mChannel);
   MOZ_ASSERT(!mListener, "Listener should have been removed by now");
 
-  mListener = new Listener(this, aOffset);
+  mListener = new Listener(this, aOffset, ++mLoadID);
   nsresult rv = mChannel->SetNotificationCallbacks(mListener.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
