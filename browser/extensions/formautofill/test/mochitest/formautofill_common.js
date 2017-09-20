@@ -37,7 +37,7 @@ function clickOnElement(selector) {
   SimpleTest.executeSoon(() => element.click());
 }
 
-async function onStorageChanged(type) {
+async function onAddressChanged(type) {
   return new Promise(resolve => {
     formFillChromeScript.addMessageListener("formautofill-storage-changed", function onChanged(data) {
       formFillChromeScript.removeMessageListener("formautofill-storage-changed", onChanged);
@@ -58,58 +58,60 @@ function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
   }
 }
 
-function invokeAsyncChromeTask(message, response, payload = {}) {
+async function addAddress(address) {
   return new Promise(resolve => {
-    formFillChromeScript.sendAsyncMessage(message, payload);
-    formFillChromeScript.addMessageListener(response, function onReceived(data) {
-      formFillChromeScript.removeMessageListener(response, onReceived);
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:AddAddress", {address});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressAdded", function onAdded(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressAdded", onAdded);
+
+      SimpleTest.requestFlakyTimeout("Ensure ProfileAutocomplete is registered");
+      setTimeout(resolve, 500);
+    });
+  });
+}
+
+async function removeAddress(guid) {
+  return new Promise(resolve => {
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:RemoveAddress", {guid});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressRemoved", function onDeleted(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressRemoved", onDeleted);
+
+      resolve();
+    });
+  });
+}
+
+async function updateAddress(guid, address) {
+  return new Promise(resolve => {
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:UpdateAddress", {address, guid});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressUpdated", function onUpdated(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressUpdated", onUpdated);
+
+      resolve();
+    });
+  });
+}
+
+async function checkAddresses(expectedAddresses) {
+  return new Promise(resolve => {
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:CheckAddresses", {expectedAddresses});
+    formFillChromeScript.addMessageListener("FormAutofillTest:areAddressesMatching", function onChecked(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:areAddressesMatching", onChecked);
 
       resolve(data);
     });
   });
 }
 
-async function addAddress(address) {
-  await invokeAsyncChromeTask("FormAutofillTest:AddAddress", "FormAutofillTest:AddressAdded", {address});
-  await sleep();
-}
+async function cleanUpAddress() {
+  return new Promise(resolve => {
+    formFillChromeScript.sendAsyncMessage("FormAutofillTest:CleanUpAddress", {});
+    formFillChromeScript.addMessageListener("FormAutofillTest:AddressCleanedUp", function onCleanedUp(data) {
+      formFillChromeScript.removeMessageListener("FormAutofillTest:AddressCleanedUp", onCleanedUp);
 
-async function removeAddress(guid) {
-  return invokeAsyncChromeTask("FormAutofillTest:RemoveAddress", "FormAutofillTest:AddressRemoved", {guid});
-}
-
-async function updateAddress(guid, address) {
-  return invokeAsyncChromeTask("FormAutofillTest:UpdateAddress", "FormAutofillTest:AddressUpdated", {address, guid});
-}
-
-async function checkAddresses(expectedAddresses) {
-  return invokeAsyncChromeTask("FormAutofillTest:CheckAddresses", "FormAutofillTest:areAddressesMatching", {expectedAddresses});
-}
-
-async function cleanUpAddresses() {
-  return invokeAsyncChromeTask("FormAutofillTest:CleanUpAddresses", "FormAutofillTest:AddressesCleanedUp");
-}
-
-async function addCreditCard(creditcard) {
-  await invokeAsyncChromeTask("FormAutofillTest:AddCreditCard", "FormAutofillTest:CreditCardAdded", {creditcard});
-  await sleep();
-}
-
-async function removeCreditCard(guid) {
-  return invokeAsyncChromeTask("FormAutofillTest:RemoveCreditCard", "FormAutofillTest:CreditCardRemoved", {guid});
-}
-
-async function checkCreditCards(expectedCreditCards) {
-  return invokeAsyncChromeTask("FormAutofillTest:CheckCreditCards", "FormAutofillTest:areCreditCardsMatching", {expectedCreditCards});
-}
-
-async function cleanUpCreditCards() {
-  return invokeAsyncChromeTask("FormAutofillTest:CleanUpCreditCards", "FormAutofillTest:CreditCardsCleanedUp");
-}
-
-async function cleanUpStorage() {
-  await cleanUpAddresses();
-  await cleanUpCreditCards();
+      resolve(data);
+    });
+  });
 }
 
 // Utils for registerPopupShownListener(in satchel_common.js) that handles dropdown popup
