@@ -480,12 +480,13 @@ nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox &aBBox,
   nsIContent* node = GetContent()->GetFirstChild();
   SVGBBox unionBBox, tmpBBox;
   for (; node; node = node->GetNextSibling()) {
-    nsIFrame *frame =
-      static_cast<nsSVGElement*>(node)->GetPrimaryFrame();
+    nsSVGElement* svgNode = static_cast<nsSVGElement*>(node);
+    nsIFrame* frame = svgNode->GetPrimaryFrame();
     if (frame) {
       nsSVGDisplayableFrame* svg = do_QueryFrame(frame);
       if (svg) {
-        tmpBBox = svg->GetBBoxContribution(mozilla::gfx::ToMatrix(aMatrix),
+        gfxMatrix matrix = svgNode->PrependLocalTransformsTo(aMatrix, eUserSpaceToParent);
+        tmpBBox = svg->GetBBoxContribution(mozilla::gfx::ToMatrix(matrix),
                                            nsSVGUtils::eBBoxIncludeFill);
         SVGObserverUtils::EffectProperties effectProperties =
                               SVGObserverUtils::GetEffectProperties(frame);
