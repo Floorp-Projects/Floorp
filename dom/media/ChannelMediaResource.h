@@ -178,10 +178,6 @@ protected:
                                      uint32_t aCount,
                                      uint32_t* aWriteCount);
 
-  nsresult CopySegmentToCache(const char* aFromSegment,
-                              uint32_t aCount,
-                              uint32_t* aWriteCount);
-
   // Main thread access only
   RefPtr<Listener> mListener;
   // When this flag is set, if we get a network error we should silently
