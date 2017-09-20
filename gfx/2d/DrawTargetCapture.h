@@ -168,6 +168,14 @@ private:
   RefPtr<DrawTarget> mRefDT;
   IntSize mSize;
 
+  struct PushedLayer
+  {
+    PushedLayer(bool aOldPermitSubpixelAA)
+      : mOldPermitSubpixelAA(aOldPermitSubpixelAA)
+    {}
+    bool mOldPermitSubpixelAA;
+  };
+  std::vector<PushedLayer> mPushedLayers;
   std::vector<uint8_t> mDrawCommandStorage;
 };
 
