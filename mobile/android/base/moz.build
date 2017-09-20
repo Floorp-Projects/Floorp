@@ -957,6 +957,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/AnimatedHeightLayout.java',
     'widget/AnimatedProgressBar.java',
     'widget/BasicColorPicker.java',
+    'widget/CheckableFadedSingleColorTextView.java',
     'widget/CheckableLinearLayout.java',
     'widget/ClickableWhenDisabledEditText.java',
     'widget/ContentSecurityDoorHanger.java',
