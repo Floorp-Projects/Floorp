@@ -31,53 +31,50 @@ impl Monitor {
     pub fn new() -> io::Result<Self> {
         let (tx, rx) = channel();
 
-        let thread = RunLoop::new(
-            move |alive| -> io::Result<()> {
-                let tx_box = Box::new(tx);
-                let tx_ptr = Box::into_raw(tx_box) as *mut libc::c_void;
+        let thread = RunLoop::new(move |alive| -> io::Result<()> {
+            let tx_box = Box::new(tx);
+            let tx_ptr = Box::into_raw(tx_box) as *mut libc::c_void;
 
-                // This will keep `tx` alive only for the scope.
-                let _tx = unsafe { Box::from_raw(tx_ptr as *mut Sender<Event>) };
+            // This will keep `tx` alive only for the scope.
+            let _tx = unsafe { Box::from_raw(tx_ptr as *mut Sender<Event>) };
 
-                // Create and initialize a scoped HID manager.
-                let manager = IOHIDManager::new()?;
+            // Create and initialize a scoped HID manager.
+            let manager = IOHIDManager::new()?;
 
-                // Match only U2F devices.
-                let dict = IOHIDDeviceMatcher::new();
-                unsafe { IOHIDManagerSetDeviceMatching(manager.get(), dict.get()) };
+            // Match only U2F devices.
+            let dict = IOHIDDeviceMatcher::new();
+            unsafe { IOHIDManagerSetDeviceMatching(manager.get(), dict.get()) };
 
-                // Register callbacks.
-                unsafe {
-                    IOHIDManagerRegisterDeviceMatchingCallback(
-                        manager.get(),
-                        Monitor::device_add_cb,
-                        tx_ptr,
-                    );
-                    IOHIDManagerRegisterDeviceRemovalCallback(
-                        manager.get(),
-                        Monitor::device_remove_cb,
-                        tx_ptr,
-                    );
+            // Register callbacks.
+            unsafe {
+                IOHIDManagerRegisterDeviceMatchingCallback(
+                    manager.get(),
+                    Monitor::device_add_cb,
+                    tx_ptr,
+                );
+                IOHIDManagerRegisterDeviceRemovalCallback(
+                    manager.get(),
+                    Monitor::device_remove_cb,
+                    tx_ptr,
+                );
+            }
+
+            // Run the Event Loop. CFRunLoopRunInMode() will dispatch HID
+            // input reports into the various callbacks
+            while alive() {
+                trace!("OSX Runloop running, handle={:?}", thread::current());
+
+                if unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, 0) } ==
+                    kCFRunLoopRunStopped
+                {
+                    debug!("OSX Runloop device stopped.");
+                    break;
                 }
+            }
+            debug!("OSX Runloop completed, handle={:?}", thread::current());
 
-                // Run the Event Loop. CFRunLoopRunInMode() will dispatch HID
-                // input reports into the various callbacks
-                while alive() {
-                    trace!("OSX Runloop running, handle={:?}", thread::current());
-
-                    if unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, 0) } ==
-                        kCFRunLoopRunStopped
-                    {
-                        debug!("OSX Runloop device stopped.");
-                        break;
-                    }
-                }
-                debug!("OSX Runloop completed, handle={:?}", thread::current());
-
-                Ok(())
-            },
-            0, /* no timeout */
-        )?;
+            Ok(())
+        })?;
 
         Ok(Self { rx, thread })
     }

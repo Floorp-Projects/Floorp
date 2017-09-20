@@ -4,17 +4,15 @@
 
 use api::{FontInstance, FontKey, FontRenderMode, GlyphDimensions};
 use api::{NativeFontHandle, SubpixelDirection};
-use api::{GlyphKey};
-use internal_types::FastHashMap;
-
-use freetype::freetype::{FT_Render_Mode, FT_Pixel_Mode, FT_BBox, FT_Outline_Translate};
+use api::GlyphKey;
+use freetype::freetype::{FT_BBox, FT_Outline_Translate, FT_Pixel_Mode, FT_Render_Mode};
+use freetype::freetype::{FT_Done_Face, FT_Error, FT_Get_Char_Index, FT_Int32};
 use freetype::freetype::{FT_Done_FreeType, FT_Library_SetLcdFilter, FT_Pos};
-use freetype::freetype::{FT_Library, FT_Set_Char_Size, FT_Outline_Get_CBox};
-use freetype::freetype::{FT_Face, FT_Long, FT_UInt, FT_F26Dot6, FT_Glyph_Format};
+use freetype::freetype::{FT_F26Dot6, FT_Face, FT_Glyph_Format, FT_Long, FT_UInt};
+use freetype::freetype::{FT_GlyphSlot, FT_LcdFilter, FT_New_Memory_Face};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
-use freetype::freetype::{FT_New_Memory_Face, FT_GlyphSlot, FT_LcdFilter};
-use freetype::freetype::{FT_Done_Face, FT_Error, FT_Int32, FT_Get_Char_Index};
-
+use freetype::freetype::{FT_Library, FT_Outline_Get_CBox, FT_Set_Char_Size};
+use internal_types::FastHashMap;
 use std::{mem, ptr, slice};
 use std::sync::Arc;
 
@@ -66,13 +64,19 @@ impl FontContext {
 
         unsafe {
             let result = FT_Init_FreeType(&mut lib);
-            assert!(result.succeeded(), "Unable to initialize FreeType library {:?}", result);
+            assert!(
+                result.succeeded(),
+                "Unable to initialize FreeType library {:?}",
+                result
+            );
 
             // TODO(gw): Check result of this to determine if freetype build supports subpixel.
             let result = FT_Library_SetLcdFilter(lib, FT_LcdFilter::FT_LCD_FILTER_DEFAULT);
 
             if !result.succeeded() {
-                println!("WARN: Initializing a FreeType library build without subpixel AA enabled!");
+                println!(
+                    "WARN: Initializing a FreeType library build without subpixel AA enabled!"
+                );
                 lcd_extra_pixels = 0;
             }
         }
@@ -92,17 +96,22 @@ impl FontContext {
         if !self.faces.contains_key(&font_key) {
             let mut face: FT_Face = ptr::null_mut();
             let result = unsafe {
-                FT_New_Memory_Face(self.lib,
-                                   bytes.as_ptr(),
-                                   bytes.len() as FT_Long,
-                                   index as FT_Long,
-                                   &mut face)
+                FT_New_Memory_Face(
+                    self.lib,
+                    bytes.as_ptr(),
+                    bytes.len() as FT_Long,
+                    index as FT_Long,
+                    &mut face,
+                )
             };
             if result.succeeded() && !face.is_null() {
-                self.faces.insert(*font_key, Face {
-                    face,
-                    _bytes: bytes,
-                });
+                self.faces.insert(
+                    *font_key,
+                    Face {
+                        face,
+                        _bytes: bytes,
+                    },
+                );
             } else {
                 println!("WARN: webrender failed to load font {:?}", font_key);
             }
@@ -115,17 +124,12 @@ impl FontContext {
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
         if let Some(face) = self.faces.remove(font_key) {
-            let result = unsafe {
-                FT_Done_Face(face.face)
-            };
+            let result = unsafe { FT_Done_Face(face.face) };
             assert!(result.succeeded());
         }
     }
 
-    fn load_glyph(&self,
-                  font: &FontInstance,
-                  glyph: &GlyphKey) -> Option<FT_GlyphSlot> {
-
+    fn load_glyph(&self, font: &FontInstance, glyph: &GlyphKey) -> Option<FT_GlyphSlot> {
         debug_assert!(self.faces.contains_key(&font.font_key));
         let face = self.faces.get(&font.font_key).unwrap();
         let char_size = font.size.to_f64_px() * 64.0 + 0.5;
@@ -134,11 +138,7 @@ impl FontContext {
             FT_Set_Char_Size(face.face, char_size as FT_F26Dot6, 0, 0, 0)
         });
 
-        let result = unsafe {
-            FT_Load_Glyph(face.face,
-                          glyph.index as FT_UInt,
-                          GLYPH_LOAD_FLAGS)
-        };
+        let result = unsafe { FT_Load_Glyph(face.face, glyph.index as FT_UInt, GLYPH_LOAD_FLAGS) };
 
         if result == SUCCESS {
             let slot = unsafe { (*face.face).glyph };
@@ -148,26 +148,31 @@ impl FontContext {
             //           We will need a custom code path for bitmap fonts (which
             //           are very rare).
             match unsafe { (*slot).format } {
-                FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
-                    Some(slot)
-                }
+                FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => Some(slot),
                 _ => {
                     error!("TODO: Support bitmap fonts!");
                     None
                 }
             }
         } else {
-            error!("Unable to load glyph for {} of size {:?} from font {:?}, {:?}",
-                glyph.index, font.size, font.font_key, result);
+            error!(
+                "Unable to load glyph for {} of size {:?} from font {:?}, {:?}",
+                glyph.index,
+                font.size,
+                font.font_key,
+                result
+            );
             None
         }
     }
 
     // Get the bounding box for a glyph, accounting for sub-pixel positioning.
-    fn get_bounding_box(&self,
-                        slot: FT_GlyphSlot,
-                        font: &FontInstance,
-                        glyph: &GlyphKey) -> FT_BBox {
+    fn get_bounding_box(
+        &self,
+        slot: FT_GlyphSlot,
+        font: &FontInstance,
+        glyph: &GlyphKey,
+    ) -> FT_BBox {
         let mut cbox: FT_BBox = unsafe { mem::uninitialized() };
 
         // Get the estimated bounding box from FT (control points).
@@ -211,10 +216,12 @@ impl FontContext {
         cbox
     }
 
-    fn get_glyph_dimensions_impl(&self,
-                                 slot: FT_GlyphSlot,
-                                 font: &FontInstance,
-                                 glyph: &GlyphKey) -> Option<GlyphDimensions> {
+    fn get_glyph_dimensions_impl(
+        &self,
+        slot: FT_GlyphSlot,
+        font: &FontInstance,
+        glyph: &GlyphKey,
+    ) -> Option<GlyphDimensions> {
         let metrics = unsafe { &(*slot).metrics };
 
         // If there's no advance, no need to consider this glyph
@@ -235,9 +242,7 @@ impl FontContext {
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
-        let face = self.faces
-                       .get(&font_key)
-                       .expect("Unknown font key!");
+        let face = self.faces.get(&font_key).expect("Unknown font key!");
         unsafe {
             let idx = FT_Get_Char_Index(face.face, ch as _);
             if idx != 0 {
@@ -248,20 +253,20 @@ impl FontContext {
         }
     }
 
-    pub fn get_glyph_dimensions(&mut self,
-                                font: &FontInstance,
-                                key: &GlyphKey) -> Option<GlyphDimensions> {
+    pub fn get_glyph_dimensions(
+        &mut self,
+        font: &FontInstance,
+        key: &GlyphKey,
+    ) -> Option<GlyphDimensions> {
         let slot = self.load_glyph(font, key);
-        slot.and_then(|slot| {
-            self.get_glyph_dimensions_impl(slot, font, key)
-        })
+        slot.and_then(|slot| self.get_glyph_dimensions_impl(slot, font, key))
     }
 
-    pub fn rasterize_glyph(&mut self,
-                           font: &FontInstance,
-                           key: &GlyphKey)
-                           -> Option<RasterizedGlyph> {
-
+    pub fn rasterize_glyph(
+        &mut self,
+        font: &FontInstance,
+        key: &GlyphKey,
+    ) -> Option<RasterizedGlyph> {
         let slot = match self.load_glyph(font, key) {
             Some(slot) => slot,
             None => return None,
@@ -295,29 +300,39 @@ impl FontContext {
             let outline = &(*slot).outline;
             let mut cbox: FT_BBox = mem::uninitialized();
             FT_Outline_Get_CBox(outline, &mut cbox);
-            FT_Outline_Translate(outline, dx - ((cbox.xMin + dx) & !63),
-                                          dy - ((cbox.yMin + dy) & !63));
+            FT_Outline_Translate(
+                outline,
+                dx - ((cbox.xMin + dx) & !63),
+                dy - ((cbox.yMin + dy) & !63),
+            );
         }
 
         let result = unsafe { FT_Render_Glyph(slot, render_mode) };
         if result != SUCCESS {
-            error!("Unable to rasterize {:?} with {:?}, {:?}", key, render_mode, result);
+            error!(
+                "Unable to rasterize {:?} with {:?}, {:?}",
+                key,
+                render_mode,
+                result
+            );
             return None;
         }
 
         let bitmap = unsafe { &(*slot).bitmap };
         let pixel_mode = unsafe { mem::transmute(bitmap.pixel_mode as u32) };
-        info!("Rasterizing {:?} as {:?} with dimensions {:?}", key, render_mode, dimensions);
+        info!(
+            "Rasterizing {:?} as {:?} with dimensions {:?}",
+            key,
+            render_mode,
+            dimensions
+        );
 
         let actual_width = match pixel_mode {
             FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
                 assert!(bitmap.width % 3 == 0);
                 bitmap.width / 3
-            },
-            FT_Pixel_Mode::FT_PIXEL_MODE_MONO |
-            FT_Pixel_Mode::FT_PIXEL_MODE_GRAY => {
-                bitmap.width
             }
+            FT_Pixel_Mode::FT_PIXEL_MODE_MONO | FT_Pixel_Mode::FT_PIXEL_MODE_GRAY => bitmap.width,
             _ => {
                 panic!("Unexpected pixel mode!");
             }
@@ -330,13 +345,11 @@ impl FontContext {
 
         // Extract the final glyph from FT format into RGBA8 format, which is
         // what WR expects.
-        for y in 0..actual_height {
+        for y in 0 .. actual_height {
             // Get pointer to the bytes for this row.
-            let mut src = unsafe {
-                bitmap.buffer.offset((y * bitmap.pitch) as isize)
-            };
+            let mut src = unsafe { bitmap.buffer.offset((y * bitmap.pitch) as isize) };
 
-            for x in 0..actual_width {
+            for x in 0 .. actual_width {
                 let value = match pixel_mode {
                     FT_Pixel_Mode::FT_PIXEL_MODE_MONO => {
                         let mask = 0x80 >> (x & 0x7);
@@ -354,10 +367,10 @@ impl FontContext {
                         src = unsafe { src.offset(3) };
                         [t[2], t[1], t[0], 0xff]
                     }
-                    _ => panic!("Unsupported {:?}", pixel_mode)
+                    _ => panic!("Unsupported {:?}", pixel_mode),
                 };
                 let i = 4 * (y * actual_width + x) as usize;
-                let dest = &mut final_buffer[i..i+4];
+                let dest = &mut final_buffer[i .. i + 4];
                 dest.clone_from_slice(&value);
             }
         }

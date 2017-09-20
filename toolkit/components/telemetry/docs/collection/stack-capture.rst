@@ -9,7 +9,7 @@ demand and annotated with a unique key for further inspection.
 
 Capturing stacks is only supported on official builds with ``--enable-profiling``
 switch enabled, such as Nightly builds, for example. The feature is available on
-Windows, Linux and OSX. Capturing stacks is only available with extended Telemetry
+Windows, Linux and macOS. Capturing stacks is only available with extended Telemetry
 enabled.
 
 Captured stacks are grouped by a user-defined key. Identical stacks captured under

@@ -67,6 +67,7 @@ define(function (require, exports, module) {
             className: "rawdata",
             title: JSONView.Locale.$STR("jsonViewer.tab.RawData")},
             TextPanel({
+              isValidJson: !(this.props.json instanceof Error),
               data: this.state.jsonText,
               actions: this.props.actions
             })

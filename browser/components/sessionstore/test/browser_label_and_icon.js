@@ -17,6 +17,12 @@ add_task(async function test_label_and_icon() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
+  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
+  // favicon loads, we have to wait some time before checking that icon was
+  // stored properly.
+  await BrowserTestUtils.waitForCondition(() => {
+    return gBrowser.getIcon(tab) != null;
+  }, "wait for favicon load to finish", 100, 5);
 
   // Retrieve the tab state.
   await TabStateFlusher.flush(browser);

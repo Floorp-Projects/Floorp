@@ -2647,6 +2647,7 @@ Gecko_RegisterNamespace(nsIAtom* aNamespace)
 bool
 Gecko_ShouldCreateStyleThreadPool()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return !mozilla::BrowserTabsRemoteAutostart() || XRE_IsContentProcess();
 }
 

@@ -50,6 +50,7 @@ pub struct IOHIDDeviceRef(*const c_void);
 unsafe impl Send for IOHIDDeviceRef {}
 unsafe impl Sync for IOHIDDeviceRef {}
 
+#[link(name = "IOKit", kind = "framework")]
 extern "C" {
     // IOHIDManager
     pub fn IOHIDManagerCreate(

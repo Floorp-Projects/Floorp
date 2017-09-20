@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use {BuiltDisplayList, BuiltDisplayListDescriptor, ClipId, ColorF, DeviceIntPoint};
+use {DeviceUintRect, DeviceUintSize, FontInstanceKey, FontKey, GlyphDimensions, GlyphKey};
+use {FontInstance, FontInstanceOptions, FontInstancePlatformOptions, NativeFontHandle, WorldPoint};
+use {ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutSize, LayoutTransform,
+     LayoutVector2D};
 use app_units::Au;
-use channel::{self, MsgSender, Payload, PayloadSenderHelperMethods, PayloadSender};
+use channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethods};
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
-use {BuiltDisplayList, BuiltDisplayListDescriptor, ClipId, ColorF, DeviceIntPoint};
-use {DeviceUintRect, DeviceUintSize, FontInstanceKey, FontKey, GlyphDimensions, GlyphKey};
-use {ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutVector2D, LayoutSize, LayoutTransform};
-use {FontInstance, FontInstanceOptions, FontInstancePlatformOptions, NativeFontHandle, WorldPoint};
 
 pub type TileSize = u16;
 
@@ -43,9 +44,14 @@ impl ResourceUpdates {
         key: ImageKey,
         descriptor: ImageDescriptor,
         data: ImageData,
-        tiling: Option<TileSize>
+        tiling: Option<TileSize>,
     ) {
-        self.updates.push(ResourceUpdate::AddImage(AddImage { key, descriptor, data, tiling }));
+        self.updates.push(ResourceUpdate::AddImage(AddImage {
+            key,
+            descriptor,
+            data,
+            tiling,
+        }));
     }
 
     pub fn update_image(
@@ -53,9 +59,14 @@ impl ResourceUpdates {
         key: ImageKey,
         descriptor: ImageDescriptor,
         data: ImageData,
-        dirty_rect: Option<DeviceUintRect>
+        dirty_rect: Option<DeviceUintRect>,
     ) {
-        self.updates.push(ResourceUpdate::UpdateImage(UpdateImage { key, descriptor, data, dirty_rect }));
+        self.updates.push(ResourceUpdate::UpdateImage(UpdateImage {
+            key,
+            descriptor,
+            data,
+            dirty_rect,
+        }));
     }
 
     pub fn delete_image(&mut self, key: ImageKey) {
@@ -63,24 +74,35 @@ impl ResourceUpdates {
     }
 
     pub fn add_raw_font(&mut self, key: FontKey, bytes: Vec<u8>, index: u32) {
-        self.updates.push(ResourceUpdate::AddFont(AddFont::Raw(key, bytes, index)));
+        self.updates
+            .push(ResourceUpdate::AddFont(AddFont::Raw(key, bytes, index)));
     }
 
     pub fn add_native_font(&mut self, key: FontKey, native_handle: NativeFontHandle) {
-        self.updates.push(ResourceUpdate::AddFont(AddFont::Native(key, native_handle)));
+        self.updates
+            .push(ResourceUpdate::AddFont(AddFont::Native(key, native_handle)));
     }
 
     pub fn delete_font(&mut self, key: FontKey) {
         self.updates.push(ResourceUpdate::DeleteFont(key));
     }
 
-    pub fn add_font_instance(&mut self,
-                             key: FontInstanceKey,
-                             font_key: FontKey,
-                             glyph_size: Au,
-                             options: Option<FontInstanceOptions>,
-                             platform_options: Option<FontInstancePlatformOptions>) {
-        self.updates.push(ResourceUpdate::AddFontInstance(AddFontInstance { key, font_key, glyph_size, options, platform_options }));
+    pub fn add_font_instance(
+        &mut self,
+        key: FontInstanceKey,
+        font_key: FontKey,
+        glyph_size: Au,
+        options: Option<FontInstanceOptions>,
+        platform_options: Option<FontInstancePlatformOptions>,
+    ) {
+        self.updates
+            .push(ResourceUpdate::AddFontInstance(AddFontInstance {
+                key,
+                font_key,
+                glyph_size,
+                options,
+                platform_options,
+            }));
     }
 
     pub fn delete_font_instance(&mut self, key: FontInstanceKey) {
@@ -159,13 +181,13 @@ pub enum DocumentMsg {
 impl fmt::Debug for DocumentMsg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match *self {
-            DocumentMsg::SetDisplayList{..} => "DocumentMsg::SetDisplayList",
+            DocumentMsg::SetDisplayList { .. } => "DocumentMsg::SetDisplayList",
             DocumentMsg::SetPageZoom(..) => "DocumentMsg::SetPageZoom",
             DocumentMsg::SetPinchZoom(..) => "DocumentMsg::SetPinchZoom",
             DocumentMsg::SetPan(..) => "DocumentMsg::SetPan",
             DocumentMsg::SetRootPipeline(..) => "DocumentMsg::SetRootPipeline",
             DocumentMsg::RemovePipeline(..) => "DocumentMsg::RemovePipeline",
-            DocumentMsg::SetWindowParameters{..} => "DocumentMsg::SetWindowParameters",
+            DocumentMsg::SetWindowParameters { .. } => "DocumentMsg::SetWindowParameters",
             DocumentMsg::Scroll(..) => "DocumentMsg::Scroll",
             DocumentMsg::ScrollNodeWithId(..) => "DocumentMsg::ScrollNodeWithId",
             DocumentMsg::TickScrollingBounce => "DocumentMsg::TickScrollingBounce",
@@ -199,7 +221,11 @@ pub enum ApiMsg {
     /// Add/remove/update images and fonts.
     UpdateResources(ResourceUpdates),
     /// Gets the glyph dimensions
-    GetGlyphDimensions(FontInstance, Vec<GlyphKey>, MsgSender<Vec<Option<GlyphDimensions>>>),
+    GetGlyphDimensions(
+        FontInstance,
+        Vec<GlyphKey>,
+        MsgSender<Vec<Option<GlyphDimensions>>>,
+    ),
     /// Gets the glyph indices from a string
     GetGlyphIndices(FontKey, String, MsgSender<Vec<Option<u32>>>),
     /// Adds a new document namespace.
@@ -287,9 +313,13 @@ pub struct ExternalEvent {
 unsafe impl Send for ExternalEvent {}
 
 impl ExternalEvent {
-    pub fn from_raw(raw: usize) -> Self { ExternalEvent { raw: raw } }
+    pub fn from_raw(raw: usize) -> Self {
+        ExternalEvent { raw: raw }
+    }
     /// Consumes self to make it obvious that the event should be forwarded only once.
-    pub fn unwrap(self) -> usize { self.raw }
+    pub fn unwrap(self) -> usize {
+        self.raw
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -305,9 +335,7 @@ pub struct RenderApiSender {
 }
 
 impl RenderApiSender {
-    pub fn new(api_sender: MsgSender<ApiMsg>,
-               payload_sender: PayloadSender)
-               -> Self {
+    pub fn new(api_sender: MsgSender<ApiMsg>, payload_sender: PayloadSender) -> Self {
         RenderApiSender {
             api_sender,
             payload_sender,
@@ -374,10 +402,11 @@ impl RenderApi {
     /// Note: Internally, the internal texture cache doesn't store
     /// 'empty' textures (height or width = 0)
     /// This means that glyph dimensions e.g. for spaces (' ') will mostly be None.
-    pub fn get_glyph_dimensions(&self,
-                                font: FontInstance,
-                                glyph_keys: Vec<GlyphKey>)
-                                -> Vec<Option<GlyphDimensions>> {
+    pub fn get_glyph_dimensions(
+        &self,
+        font: FontInstance,
+        glyph_keys: Vec<GlyphKey>,
+    ) -> Vec<Option<GlyphDimensions>> {
         let (tx, rx) = channel::msg_channel().unwrap();
         let msg = ApiMsg::GetGlyphDimensions(font, glyph_keys, tx);
         self.api_sender.send(msg).unwrap();
@@ -386,9 +415,7 @@ impl RenderApi {
 
     /// Gets the glyph indices for the supplied string. These
     /// can be used to construct GlyphKeys.
-    pub fn get_glyph_indices(&self,
-                             font_key: FontKey,
-                             text: &str) -> Vec<Option<u32>> {
+    pub fn get_glyph_indices(&self, font_key: FontKey, text: &str) -> Vec<Option<u32>> {
         let (tx, rx) = channel::msg_channel().unwrap();
         let msg = ApiMsg::GetGlyphIndices(font_key, text.to_string(), tx);
         self.api_sender.send(msg).unwrap();
@@ -406,7 +433,9 @@ impl RenderApi {
         if resources.updates.is_empty() {
             return;
         }
-        self.api_sender.send(ApiMsg::UpdateResources(resources)).unwrap();
+        self.api_sender
+            .send(ApiMsg::UpdateResources(resources))
+            .unwrap();
     }
 
     pub fn send_external_event(&self, evt: ExternalEvent) {
@@ -451,7 +480,9 @@ impl RenderApi {
     // For use in Wrench only
     #[doc(hidden)]
     pub fn send_payload(&self, data: &[u8]) {
-        self.payload_sender.send_payload(Payload::from_data(data)).unwrap();
+        self.payload_sender
+            .send_payload(Payload::from_data(data))
+            .unwrap();
     }
 
     /// A helper method to send document messages.
@@ -459,7 +490,9 @@ impl RenderApi {
         // This assertion fails on Servo use-cases, because it creates different
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
-        self.api_sender.send(ApiMsg::UpdateDocument(document_id, msg)).unwrap()
+        self.api_sender
+            .send(ApiMsg::UpdateDocument(document_id, msg))
+            .unwrap()
     }
 
     /// Sets the root pipeline.
@@ -521,36 +554,57 @@ impl RenderApi {
         resources: ResourceUpdates,
     ) {
         let (display_list_data, list_descriptor) = display_list.into_data();
-        self.send(document_id, DocumentMsg::SetDisplayList {
-            epoch,
-            pipeline_id,
-            background,
-            viewport_size,
-            content_size,
-            list_descriptor,
-            preserve_frame_state,
-            resources,
-        });
+        self.send(
+            document_id,
+            DocumentMsg::SetDisplayList {
+                epoch,
+                pipeline_id,
+                background,
+                viewport_size,
+                content_size,
+                list_descriptor,
+                preserve_frame_state,
+                resources,
+            },
+        );
 
-        self.payload_sender.send_payload(Payload {
-            epoch,
-            pipeline_id,
-            display_list_data,
-        }).unwrap();
+        self.payload_sender
+            .send_payload(Payload {
+                epoch,
+                pipeline_id,
+                display_list_data,
+            })
+            .unwrap();
     }
 
     /// Scrolls the scrolling layer under the `cursor`
     ///
     /// WebRender looks for the layer closest to the user
     /// which has `ScrollPolicy::Scrollable` set.
-    pub fn scroll(&self, document_id: DocumentId, scroll_location: ScrollLocation,
-                  cursor: WorldPoint, phase: ScrollEventPhase) {
-        self.send(document_id, DocumentMsg::Scroll(scroll_location, cursor, phase));
+    pub fn scroll(
+        &self,
+        document_id: DocumentId,
+        scroll_location: ScrollLocation,
+        cursor: WorldPoint,
+        phase: ScrollEventPhase,
+    ) {
+        self.send(
+            document_id,
+            DocumentMsg::Scroll(scroll_location, cursor, phase),
+        );
     }
 
-    pub fn scroll_node_with_id(&self, document_id: DocumentId, origin: LayoutPoint,
-                               id: ClipId, clamp: ScrollClamping) {
-        self.send(document_id, DocumentMsg::ScrollNodeWithId(origin, id, clamp));
+    pub fn scroll_node_with_id(
+        &self,
+        document_id: DocumentId,
+        origin: LayoutPoint,
+        id: ClipId,
+        clamp: ScrollClamping,
+    ) {
+        self.send(
+            document_id,
+            DocumentMsg::ScrollNodeWithId(origin, id, clamp),
+        );
     }
 
     pub fn set_page_zoom(&self, document_id: DocumentId, page_zoom: ZoomFactor) {
@@ -565,14 +619,19 @@ impl RenderApi {
         self.send(document_id, DocumentMsg::SetPan(pan));
     }
 
-    pub fn set_window_parameters(&self,
-                                 document_id: DocumentId,
-                                 window_size: DeviceUintSize,
-                                 inner_rect: DeviceUintRect) {
-        self.send(document_id, DocumentMsg::SetWindowParameters {
-            window_size,
-            inner_rect,
-        });
+    pub fn set_window_parameters(
+        &self,
+        document_id: DocumentId,
+        window_size: DeviceUintSize,
+        inner_rect: DeviceUintRect,
+    ) {
+        self.send(
+            document_id,
+            DocumentMsg::SetWindowParameters {
+                window_size,
+                inner_rect,
+            },
+        );
     }
 
     pub fn tick_scrolling_bounce_animations(&self, document_id: DocumentId) {
@@ -587,18 +646,26 @@ impl RenderApi {
 
     /// Enable copying of the output of this pipeline id to
     /// an external texture for callers to consume.
-    pub fn enable_frame_output(&self,
-                               document_id: DocumentId,
-                               pipeline_id: PipelineId,
-                               enable: bool) {
-        self.send(document_id, DocumentMsg::EnableFrameOutput(pipeline_id, enable));
+    pub fn enable_frame_output(
+        &self,
+        document_id: DocumentId,
+        pipeline_id: PipelineId,
+        enable: bool,
+    ) {
+        self.send(
+            document_id,
+            DocumentMsg::EnableFrameOutput(pipeline_id, enable),
+        );
     }
 
     /// Generate a new frame. Optionally, supply a list of animated
     /// property bindings that should be used to resolve bindings
     /// in the current display list.
-    pub fn generate_frame(&self, document_id: DocumentId,
-                          property_bindings: Option<DynamicProperties>) {
+    pub fn generate_frame(
+        &self,
+        document_id: DocumentId,
+        property_bindings: Option<DynamicProperties>,
+    ) {
         self.send(document_id, DocumentMsg::GenerateFrame(property_bindings));
     }
 }
@@ -634,7 +701,7 @@ pub enum ScrollLocation {
     /// Scroll to very top of element.
     Start,
     /// Scroll to very bottom of element.
-    End
+    End,
 }
 
 /// Represents a zoom factor.
@@ -662,7 +729,7 @@ pub struct PropertyBindingId {
 impl PropertyBindingId {
     pub fn new(value: u64) -> Self {
         PropertyBindingId {
-            namespace: IdNamespace((value>>32) as u32),
+            namespace: IdNamespace((value >> 32) as u32),
             uid: value as u32,
         }
     }
@@ -679,10 +746,7 @@ pub struct PropertyBindingKey<T> {
 /// Construct a property value from a given key and value.
 impl<T: Copy> PropertyBindingKey<T> {
     pub fn with(&self, value: T) -> PropertyValue<T> {
-        PropertyValue {
-            key: *self,
-            value,
-        }
+        PropertyValue { key: *self, value }
     }
 }
 
@@ -736,6 +800,8 @@ pub struct DynamicProperties {
 pub trait RenderNotifier: Send {
     fn new_frame_ready(&mut self);
     fn new_scroll_frame_ready(&mut self, composite_needed: bool);
-    fn external_event(&mut self, _evt: ExternalEvent) { unimplemented!() }
+    fn external_event(&mut self, _evt: ExternalEvent) {
+        unimplemented!()
+    }
     fn shut_down(&mut self) {}
 }

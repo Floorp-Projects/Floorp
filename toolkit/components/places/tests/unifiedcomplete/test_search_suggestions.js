@@ -110,7 +110,7 @@ add_task(async function singleWordQuery() {
         searchSuggestion: "hello foo",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }, {
       uri: makeActionURI(("searchengine"), {
@@ -120,7 +120,7 @@ add_task(async function singleWordQuery() {
         searchSuggestion: "hello bar",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }],
   });
@@ -144,7 +144,7 @@ add_task(async function multiWordQuery() {
         searchSuggestion: "hello world foo",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }, {
       uri: makeActionURI(("searchengine"), {
@@ -154,7 +154,7 @@ add_task(async function multiWordQuery() {
         searchSuggestion: "hello world bar",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }],
   });
@@ -183,7 +183,7 @@ add_task(async function suffixMatch() {
         searchSuggestion: "baz hello",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }, {
       uri: makeActionURI(("searchengine"), {
@@ -193,7 +193,7 @@ add_task(async function suffixMatch() {
         searchSuggestion: "quux hello",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }],
   });
@@ -220,7 +220,7 @@ add_task(async function queryIsNotASubstring() {
         searchSuggestion: "aaa",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }, {
       uri: makeActionURI(("searchengine"), {
@@ -230,7 +230,7 @@ add_task(async function queryIsNotASubstring() {
         searchSuggestion: "bbb",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }],
   });
@@ -285,7 +285,7 @@ add_task(async function restrictToken() {
           searchSuggestion: "hello foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       {
@@ -296,7 +296,7 @@ add_task(async function restrictToken() {
           searchSuggestion: "hello bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
     ],
@@ -317,7 +317,7 @@ add_task(async function restrictToken() {
           searchSuggestion: "hello foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       {
@@ -328,7 +328,7 @@ add_task(async function restrictToken() {
           searchSuggestion: "hello bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       }
     ],
@@ -418,7 +418,7 @@ add_task(async function mixup_frecency() {
           searchSuggestion: "frecency foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       {
@@ -429,7 +429,7 @@ add_task(async function mixup_frecency() {
           searchSuggestion: "frecency bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       { uri: NetUtil.newURI("http://example.com/lo3"),
@@ -463,7 +463,7 @@ add_task(async function mixup_frecency() {
           searchSuggestion: "frecency foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       { uri: NetUtil.newURI("http://example.com/hi3"),
@@ -488,7 +488,7 @@ add_task(async function mixup_frecency() {
           searchSuggestion: "frecency bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       { uri: NetUtil.newURI("http://example.com/lo3"),
@@ -520,7 +520,7 @@ add_task(async function mixup_frecency() {
           searchSuggestion: "frecency foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       {
@@ -531,7 +531,7 @@ add_task(async function mixup_frecency() {
           searchSuggestion: "frecency bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       { uri: NetUtil.newURI("http://example.com/hi3"),
@@ -580,7 +580,7 @@ add_task(async function prohibit_suggestions() {
           searchSuggestion: "localhost foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       {
@@ -591,7 +591,7 @@ add_task(async function prohibit_suggestions() {
           searchSuggestion: "localhost bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
     ],
@@ -623,7 +623,7 @@ add_task(async function prohibit_suggestions() {
           searchSuggestion: "localhost other foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       {
@@ -634,7 +634,7 @@ add_task(async function prohibit_suggestions() {
           searchSuggestion: "localhost other bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
     ],
@@ -680,7 +680,7 @@ add_task(async function prohibit_suggestions() {
           searchSuggestion: "localhost other foo",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
       {
@@ -691,7 +691,7 @@ add_task(async function prohibit_suggestions() {
           searchSuggestion: "localhost other bar",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
     ],
@@ -767,7 +767,7 @@ add_task(async function avoid_url_suggestions() {
           searchSuggestion: "test. com",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
     ],
@@ -796,7 +796,7 @@ add_task(async function avoid_http_url_suggestions() {
           searchSuggestion: "htted",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
     ],
@@ -839,7 +839,7 @@ add_task(async function avoid_http_url_suggestions() {
           searchSuggestion: "httpded",
         }),
         title: ENGINE_NAME,
-        style: ["action", "searchengine"],
+        style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
     ],
@@ -1034,7 +1034,7 @@ add_task(async function historicalSuggestion() {
         searchSuggestion: "hello Barney!",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }, {
       uri: makeActionURI(("searchengine"), {
@@ -1044,7 +1044,7 @@ add_task(async function historicalSuggestion() {
         searchSuggestion: "hello foo",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }, {
       uri: makeActionURI(("searchengine"), {
@@ -1054,7 +1054,7 @@ add_task(async function historicalSuggestion() {
         searchSuggestion: "hello bar",
       }),
       title: ENGINE_NAME,
-      style: ["action", "searchengine"],
+      style: ["action", "searchengine", "suggestion"],
       icon: "",
     }],
   });

@@ -85,7 +85,7 @@ struct ProxyTraps {
     bool (*defaultValue)(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);
     void (*trace)(JSTracer *trc, JSObject *proxy);
     void (*finalize)(JSFreeOp *fop, JSObject *proxy);
-    void (*objectMoved)(JSObject *proxy, const JSObject *old);
+    size_t (*objectMoved)(JSObject *proxy, JSObject *old);
 
     bool (*isCallable)(JSObject *obj);
     bool (*isConstructor)(JSObject *obj);
@@ -226,12 +226,11 @@ static int HandlerFamily;
         : _base::finalize(fop, proxy);                                          \
     }                                                                           \
                                                                                 \
-    virtual void objectMoved(JSObject* proxy,                                   \
-                             const JSObject *old) const override                \
+    virtual size_t objectMoved(JSObject* proxy, JSObject *old) const override   \
     {                                                                           \
-        mTraps.objectMoved                                                      \
-        ? mTraps.objectMoved(proxy, old)                                        \
-        : _base::objectMoved(proxy, old);                                       \
+        return mTraps.objectMoved                                               \
+               ? mTraps.objectMoved(proxy, old)                                 \
+               : _base::objectMoved(proxy, old);                                \
     }                                                                           \
                                                                                 \
     virtual bool isCallable(JSObject* obj) const override                       \
@@ -568,19 +567,9 @@ WrapperNew(JSContext* aCx, JS::HandleObject aObj, const void* aHandler,
     return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
-void WindowProxyObjectMoved(JSObject*, const JSObject*)
-{
-    abort();
-}
-
-static const js::ClassExtension WindowProxyClassExtension = PROXY_MAKE_EXT(
-    WindowProxyObjectMoved
-);
-
-const js::Class WindowProxyClass = PROXY_CLASS_WITH_EXT(
+const js::Class WindowProxyClass = PROXY_CLASS_DEF(
     "Proxy",
-    JSCLASS_HAS_RESERVED_SLOTS(1), /* additional class flags */
-    &WindowProxyClassExtension);
+    JSCLASS_HAS_RESERVED_SLOTS(1)); /* additional class flags */
 
 const js::Class*
 GetWindowProxyClass()

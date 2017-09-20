@@ -676,25 +676,27 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
       ctsOffset = reader->Read32();
     }
 
-    Sample sample;
-    sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
-    offset += sampleSize;
+    if (sampleSize) {
+      Sample sample;
+      sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
+      offset += sampleSize;
 
-    sample.mDecodeTime =
-      aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
-    sample.mCompositionRange = Interval<Microseconds>(
-      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset),
-      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset));
+      sample.mDecodeTime =
+        aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
+      sample.mCompositionRange = Interval<Microseconds>(
+        aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset),
+        aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset));
+
+      // Sometimes audio streams don't properly mark their samples as keyframes,
+      // because every audio sample is a keyframe.
+      sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
+
+      // FIXME: Make this infallible after bug 968520 is done.
+      MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
+
+      mMdatRange = mMdatRange.Span(sample.mByteRange);
+    }
     decodeTime += sampleDuration;
-
-    // Sometimes audio streams don't properly mark their samples as keyframes,
-    // because every audio sample is a keyframe.
-    sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
-
-    // FIXME: Make this infallible after bug 968520 is done.
-    MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
-
-    mMdatRange = mMdatRange.Span(sample.mByteRange);
   }
   mMaxRoundingError += aMdhd.ToMicroseconds(sampleCount);
 

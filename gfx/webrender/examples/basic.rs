@@ -8,7 +8,7 @@ extern crate gleam;
 extern crate glutin;
 extern crate webrender;
 
-#[path="common/boilerplate.rs"]
+#[path = "common/boilerplate.rs"]
 mod boilerplate;
 
 use app_units::Au;
@@ -52,7 +52,12 @@ impl Touch {
     }
 
     fn current_distance_from_other(&self, other: &Touch) -> f32 {
-        dist(self.current_x, self.current_y, other.current_x, other.current_y)
+        dist(
+            self.current_x,
+            self.current_y,
+            other.current_x,
+            other.current_y,
+        )
     }
 }
 
@@ -87,13 +92,16 @@ impl TouchState {
         match touch.phase {
             TouchPhase::Started => {
                 debug_assert!(!self.active_touches.contains_key(&touch.id));
-                self.active_touches.insert(touch.id, Touch {
-                    id: touch.id,
-                    start_x: touch.location.0 as f32,
-                    start_y: touch.location.1 as f32,
-                    current_x: touch.location.0 as f32,
-                    current_y: touch.location.1 as f32,
-                });
+                self.active_touches.insert(
+                    touch.id,
+                    Touch {
+                        id: touch.id,
+                        start_x: touch.location.0 as f32,
+                        start_y: touch.location.1 as f32,
+                        current_x: touch.location.0 as f32,
+                        current_y: touch.location.1 as f32,
+                    },
+                );
                 self.current_gesture = Gesture::None;
             }
             TouchPhase::Moved => {
@@ -102,7 +110,7 @@ impl TouchState {
                         active_touch.current_x = touch.location.0 as f32;
                         active_touch.current_y = touch.location.1 as f32;
                     }
-                    None => panic!("move touch event with unknown touch id!")
+                    None => panic!("move touch event with unknown touch id!"),
                 }
 
                 match self.current_gesture {
@@ -177,33 +185,33 @@ struct App {
 }
 
 impl Example for App {
-    fn render(&mut self,
-              api: &RenderApi,
-              builder: &mut DisplayListBuilder,
-              resources: &mut ResourceUpdates,
-              layout_size: LayoutSize,
-              _pipeline_id: PipelineId,
-              _document_id: DocumentId) {
+    fn render(
+        &mut self,
+        api: &RenderApi,
+        builder: &mut DisplayListBuilder,
+        resources: &mut ResourceUpdates,
+        layout_size: LayoutSize,
+        _pipeline_id: PipelineId,
+        _document_id: DocumentId,
+    ) {
         let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
-        let info = LayoutPrimitiveInfo {
-            rect: bounds,
-            local_clip: None,
-            is_backface_visible: true,
-        };
-        builder.push_stacking_context(&info,
-                                      ScrollPolicy::Scrollable,
-                                      None,
-                                      TransformStyle::Flat,
-                                      None,
-                                      MixBlendMode::Normal,
-                                      Vec::new());
+        let info = LayoutPrimitiveInfo::new(bounds);
+        builder.push_stacking_context(
+            &info,
+            ScrollPolicy::Scrollable,
+            None,
+            TransformStyle::Flat,
+            None,
+            MixBlendMode::Normal,
+            Vec::new(),
+        );
 
         let image_mask_key = api.generate_image_key();
         resources.add_image(
             image_mask_key,
             ImageDescriptor::new(2, 2, ImageFormat::A8, true),
             ImageData::new(vec![0, 80, 180, 255]),
-            None
+            None,
         );
         let mask = ImageMask {
             image: image_mask_key,
@@ -214,18 +222,10 @@ impl Example for App {
         let id = builder.define_clip(None, bounds, vec![complex], Some(mask));
         builder.push_clip_id(id);
 
-        let info = LayoutPrimitiveInfo {
-            rect: (100, 100).to(200, 200),
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
         builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
-        let info = LayoutPrimitiveInfo {
-            rect: (250, 100).to(350, 200),
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new((250, 100).to(350, 200));
         builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
         let border_side = BorderSide {
             color: ColorF::new(0.0, 0.0, 1.0, 1.0),
@@ -245,15 +245,12 @@ impl Example for App {
             radius: BorderRadius::uniform(20.0),
         });
 
-        let info = LayoutPrimitiveInfo {
-            rect: (100, 100).to(200, 200),
-            local_clip: None,
-            is_backface_visible: true,
-        };
+        let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
         builder.push_border(&info, border_widths, border_details);
 
 
-        if false { // draw text?
+        if false {
+            // draw text?
             let font_key = api.generate_font_key();
             let font_bytes = load_file("res/FreeSans.ttf");
             resources.add_raw_font(font_key, font_bytes, 0);
@@ -312,20 +309,19 @@ impl Example for App {
                     point: LayoutPoint::new(650.0, 100.0),
                 },
             ];
-            let info = LayoutPrimitiveInfo {
-                rect: text_bounds,
-                local_clip: None,
-                is_backface_visible: true,
-            };
 
-            builder.push_text(&info,
-                              &glyphs,
-                              font_instance_key,
-                              ColorF::new(1.0, 1.0, 0.0, 1.0),
-                              None);
+            let info = LayoutPrimitiveInfo::new(text_bounds);
+            builder.push_text(
+                &info,
+                &glyphs,
+                font_instance_key,
+                ColorF::new(1.0, 1.0, 0.0, 1.0),
+                None,
+            );
         }
 
-        if false { // draw box shadow?
+        if false {
+            // draw box shadow?
             let rect = LayoutRect::zero();
             let simple_box_bounds = (20, 200).by(50, 50);
             let offset = vec2(10.0, 10.0);
@@ -334,45 +330,38 @@ impl Example for App {
             let spread_radius = 0.0;
             let simple_border_radius = 8.0;
             let box_shadow_type = BoxShadowClipMode::Inset;
-            let info = LayoutPrimitiveInfo {
-                rect: rect,
-                local_clip: Some(LocalClip::from(bounds)),
-                is_backface_visible: true,
-            };
+            let info = LayoutPrimitiveInfo::with_clip_rect(rect, bounds);
 
-            builder.push_box_shadow(&info,
-                                    simple_box_bounds,
-                                    offset,
-                                    color,
-                                    blur_radius,
-                                    spread_radius,
-                                    simple_border_radius,
-                                    box_shadow_type);
+            builder.push_box_shadow(
+                &info,
+                simple_box_bounds,
+                offset,
+                color,
+                blur_radius,
+                spread_radius,
+                simple_border_radius,
+                box_shadow_type,
+            );
         }
 
         builder.pop_clip_id();
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self,
-                event: glutin::Event,
-                api: &RenderApi,
-                document_id: DocumentId) -> bool {
+    fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
         match event {
-            glutin::Event::Touch(touch) => {
-                match self.touch_state.handle_event(touch) {
-                    TouchResult::Pan(pan) => {
-                        api.set_pan(document_id, pan);
-                        api.generate_frame(document_id, None);
-                    }
-                    TouchResult::Zoom(zoom) => {
-                        api.set_pinch_zoom(document_id, ZoomFactor::new(zoom));
-                        api.generate_frame(document_id, None);
-                    }
-                    TouchResult::None => {}
+            glutin::Event::Touch(touch) => match self.touch_state.handle_event(touch) {
+                TouchResult::Pan(pan) => {
+                    api.set_pan(document_id, pan);
+                    api.generate_frame(document_id, None);
                 }
-            }
-            _ => ()
+                TouchResult::Zoom(zoom) => {
+                    api.set_pinch_zoom(document_id, ZoomFactor::new(zoom));
+                    api.generate_frame(document_id, None);
+                }
+                TouchResult::None => {}
+            },
+            _ => (),
         }
 
         false

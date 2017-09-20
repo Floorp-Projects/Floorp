@@ -351,6 +351,13 @@ class Messenger {
     this.sender = sender;
     this.filter = filter;
     this.optionalFilter = optionalFilter;
+
+    // Include the context envType in the sender info.
+    this.sender.envType = context.envType;
+
+    // Exclude messages coming from content scripts for the devtools extension contexts
+    // (See Bug 1383310).
+    this.excludeContentScriptSender = (this.context.envType === "devtools_child");
   }
 
   _sendMessage(messageManager, message, data, recipient) {
@@ -393,6 +400,12 @@ class Messenger {
         messageFilterStrict: this.filter,
 
         filterMessage: (sender, recipient) => {
+          // Exclude messages coming from content scripts for the devtools extension contexts
+          // (See Bug 1383310).
+          if (this.excludeContentScriptSender && sender.envType === "content_child") {
+            return false;
+          }
+
           // Ignore the message if it was sent by this Messenger.
           return (sender.contextId !== this.context.contextId &&
                   filter(sender, recipient));
@@ -488,6 +501,12 @@ class Messenger {
         messageFilterStrict: this.filter,
 
         filterMessage: (sender, recipient) => {
+          // Exclude messages coming from content scripts for the devtools extension contexts
+          // (See Bug 1383310).
+          if (this.excludeContentScriptSender && sender.envType === "content_child") {
+            return false;
+          }
+
           // Ignore the port if it was created by this Messenger.
           return (sender.contextId !== this.context.contextId &&
                   filter(sender, recipient));

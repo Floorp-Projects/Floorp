@@ -33,8 +33,8 @@ void main(void) {
 
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0).xy);
     vUv.z = src_task.data1.x;
-    vBlurRadius = int(task.data1.y);
-    vSigma = task.data1.y * 0.5;
+    vBlurRadius = 3 * int(task.data1.y);
+    vSigma = task.data1.y;
 
     switch (aBlurDirection) {
         case DIR_HORIZONTAL:
@@ -65,41 +65,41 @@ void main(void) {
 // TODO(gw): Make use of the bilinear sampling trick to reduce
 //           the number of texture fetches needed for a gaussian blur.
 
-float gauss(float x, float sigma) {
-    return (1.0 / sqrt(6.283185307179586 * sigma * sigma)) * exp(-(x * x) / (2.0 * sigma * sigma));
-}
-
 void main(void) {
-    vec4 cache_sample = texture(sCacheRGBA8, vUv);
+    vec4 original_color = texture(sCacheRGBA8, vUv);
 
     // TODO(gw): The gauss function gets NaNs when blur radius
     //           is zero. In the future, detect this earlier
     //           and skip the blur passes completely.
     if (vBlurRadius == 0) {
-        oFragColor = cache_sample;
+        oFragColor = original_color;
         return;
     }
 
-    vec4 color = vec4(cache_sample.rgb, 1.0) * (cache_sample.a * gauss(0.0, vSigma));
+    // Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
+    vec3 gauss_coefficient;
+    gauss_coefficient.x = 1.0 / (sqrt(2.0 * 3.14159265) * vSigma);
+    gauss_coefficient.y = exp(-0.5 / (vSigma * vSigma));
+    gauss_coefficient.z = gauss_coefficient.y * gauss_coefficient.y;
 
-    for (int i=1 ; i < vBlurRadius ; ++i) {
-        vec2 offset = vec2(float(i)) * vOffsetScale;
+    float gauss_coefficient_sum = 0.0;
+    vec4 avg_color = original_color * gauss_coefficient.x;
+    gauss_coefficient_sum += gauss_coefficient.x;
+    gauss_coefficient.xy *= gauss_coefficient.yz;
 
-        vec2 st0 = clamp(vUv.xy + offset, vUvRect.xy, vUvRect.zw);
-        vec4 color0 = texture(sCacheRGBA8, vec3(st0, vUv.z));
+    for (int i=1 ; i <= vBlurRadius/2 ; ++i) {
+        vec2 offset = vOffsetScale * float(i);
 
-        vec2 st1 = clamp(vUv.xy - offset, vUvRect.xy, vUvRect.zw);
-        vec4 color1 = texture(sCacheRGBA8, vec3(st1, vUv.z));
+        vec2 st0 = clamp(vUv.xy - offset, vUvRect.xy, vUvRect.zw);
+        avg_color += texture(sCacheRGBA8, vec3(st0, vUv.z)) * gauss_coefficient.x;
 
-        // Alpha must be premultiplied in order to properly blur the alpha channel.
-        float weight = gauss(float(i), vSigma);
-        color += vec4(color0.rgb * color0.a, color0.a) * weight;
-        color += vec4(color1.rgb * color1.a, color1.a) * weight;
+        vec2 st1 = clamp(vUv.xy + offset, vUvRect.xy, vUvRect.zw);
+        avg_color += texture(sCacheRGBA8, vec3(st1, vUv.z)) * gauss_coefficient.x;
+
+        gauss_coefficient_sum += 2.0 * gauss_coefficient.x;
+        gauss_coefficient.xy *= gauss_coefficient.yz;
     }
 
-    // Unpremultiply the alpha.
-    color.rgb /= color.a;
-
-    oFragColor = dither(color);
+    oFragColor = avg_color / gauss_coefficient_sum;
 }
 #endif

@@ -12,6 +12,10 @@ Test fuzzy selector
     ]
   }
   
+  Commit message:
+  Fuzzy with query: 'foo
+  
+  Pushed via `mach try fuzzy`
   $ ./mach try fuzzy $testargs -q "'bar"
   no tasks selected
   $ ./mach try fuzzy $testargs --full -q "'bar"
@@ -23,6 +27,10 @@ Test fuzzy selector
     ]
   }
   
+  Commit message:
+  Fuzzy with query: 'bar
+  
+  Pushed via `mach try fuzzy`
 
 Test templates
 
@@ -40,6 +48,10 @@ Test templates
     ]
   }
   
+  Commit message:
+  Fuzzy with query: 'foo
+  
+  Pushed via `mach try fuzzy`
   $ ./mach try fuzzy $testargs --env FOO=1 --env BAR=baz -q "'foo"
   Calculated try selector:
   {
@@ -55,3 +67,7 @@ Test templates
     ]
   }
   
+  Commit message:
+  Fuzzy with query: 'foo
+  
+  Pushed via `mach try fuzzy`

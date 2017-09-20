@@ -11,7 +11,7 @@ For events recorded into Firefox Telemetry we also provide an API that opaquely 
 
 .. important::
 
-    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for :bsmedberg or one of the other data peers. We try to reply within a business day.
+    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. We try to reply within a business day.
 
 Serialization format
 ====================
@@ -40,8 +40,8 @@ Where the individual fields are:
 
 - ``timestamp``: ``Number``, positive integer. This is the time in ms when the event was recorded, relative to the main process start time.
 - ``category``: ``String``, identifier. The category is a group name for events and helps to avoid name conflicts.
-- ``method``: ``String``, identifier. This describes the type of event that occured, e.g. ``click``, ``keydown`` or ``focus``.
-- ``object``: ``String``, identifier. This is the object the event occured on, e.g. ``reload_button`` or ``urlbar``.
+- ``method``: ``String``, identifier. This describes the type of event that occurred, e.g. ``click``, ``keydown`` or ``focus``.
+- ``object``: ``String``, identifier. This is the object the event occurred on, e.g. ``reload_button`` or ``urlbar``.
 - ``value``: ``String``, optional, may be ``null``. This is a user defined value, providing context for the event.
 - ``extra``: ``Object``, optional, may be ``null``. This is an object of the form ``{"key": "value", ...}``, both keys and values need to be strings. This is used for events where additional richer context is needed.
 
@@ -108,7 +108,7 @@ The following event properties are valid:
   - ``all_child`` (record in all the child processes)
   - ``all`` (record in all the processes).
 
-- ``bug_numbers`` *(required, list of numbers)*: A list of bugzilla bug numbers that are relevant to this event.
+- ``bug_numbers`` *(required, list of numbers)*: A list of Bugzilla bug numbers that are relevant to this event.
 - ``notification_emails`` *(required, list of strings)*: A list of emails of owners for this event. This is used for contact for data reviews and potentially to email alerts.
 - expiry: There are two properties that can specify expiry, at least one needs to be set:
 
@@ -132,8 +132,8 @@ Public JS API
 
 Record a registered event.
 
-* ``value``: Optional, may be ``null``. A string value, limitted to 80 bytes.
-* ``extra``: Optional. An object with string keys & values. Key strings are limitted to what was registered. Value strings are limitted to 80 bytes.
+* ``value``: Optional, may be ``null``. A string value, limited to 80 bytes.
+* ``extra``: Optional. An object with string keys & values. Key strings are limited to what was registered. Value strings are limited to 80 bytes.
 
 Throws if the combination of ``category``, ``method`` and ``object`` is unknown.
 Recording an expired event will not throw, but print a warning into the browser console.
@@ -162,7 +162,7 @@ Example:
 
   Services.telemetry.setEventRecordingEnabled(category, enabled);
 
-Event recording is currently disabled by default. Privileged addons and Firefox code can enable & disable recording events for specific categories using this function.
+Event recording is currently disabled by default. Privileged add-ons and Firefox code can enable & disable recording events for specific categories using this function.
 
 Example:
 
