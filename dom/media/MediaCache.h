@@ -435,8 +435,9 @@ private:
   // Instance of MediaCache to use with this MediaCacheStream.
   RefPtr<MediaCache> mMediaCache;
 
+  ChannelMediaResource* const mClient;
+
   // These fields are main-thread-only.
-  ChannelMediaResource*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   // True if CacheClientNotifyDataEnded has been called for this stream.
   bool                   mDidNotifyDataEnded;
@@ -461,7 +462,7 @@ private:
   // True if the channel ended and we haven't seeked it again.
   bool mChannelEnded;
 
-  // The following fields are protected by the cache's monitor can can be written
+  // The following fields are protected by the cache's monitor and can be written
   // by any thread.
 
   // The reported or discovered length of the data, or -1 if nothing is known
@@ -499,16 +500,15 @@ private:
 
   bool mThrottleReadahead = false;
 
-  // The following field is protected by the cache's monitor but are
-  // only written on the main thread.
-
   // Data received for the block containing mChannelOffset. Data needs
   // to wait here so we can write back a complete block. The first
   // mChannelOffset%BLOCK_SIZE bytes have been filled in with good data,
   // the rest are garbage.
   // Heap allocate this buffer since the exact power-of-2 will cause allocation
   // slop when combined with the rest of the object members.
-  UniquePtr<uint8_t[]> mPartialBlockBuffer = MakeUnique<uint8_t[]>(BLOCK_SIZE);
+  // This partial buffer should always be read/write within the cache's monitor.
+  const UniquePtr<uint8_t[]> mPartialBlockBuffer =
+    MakeUnique<uint8_t[]>(BLOCK_SIZE);
 
   // True if associated with a private browsing window.
   const bool mIsPrivateBrowsing;
