@@ -170,6 +170,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(aRequest);
   bool seekable = false;
+  int64_t startOffset = aRequestOffset;
+
   if (hc) {
     uint32_t responseStatus = 0;
     Unused << hc->GetResponseStatus(&responseStatus);
@@ -225,6 +227,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
       bool gotRangeHeader = NS_SUCCEEDED(rv);
 
       if (gotRangeHeader) {
+        startOffset = rangeStart;
         // We received 'Content-Range', so the server accepts range requests.
         // Notify media cache about the length and start offset of data received.
         // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
@@ -232,17 +235,17 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
         if (rangeTotal != -1) {
           contentLength = std::max(contentLength, rangeTotal);
         }
-        mCacheStream.NotifyDataStarted(rangeStart);
       }
       acceptsRanges = gotRangeHeader;
-    } else if (aRequestOffset > 0 && responseStatus == HTTP_OK_CODE) {
-      // If we get an OK response but we were seeking, or requesting a byte
-      // range, then we have to assume that seeking doesn't work. We also need
-      // to tell the cache that it's getting data for the start of the stream.
-      mCacheStream.NotifyDataStarted(0);
+    } else if (responseStatus == HTTP_OK_CODE) {
+      // HTTP_OK_CODE means data will be sent from the start of the stream.
+      startOffset = 0;
 
-      // The server claimed it supported range requests.  It lied.
-      acceptsRanges = false;
+      if (aRequestOffset > 0) {
+        // If HTTP_OK_CODE is responded for a non-zero range request, we have
+        // to assume seeking doesn't work.
+        acceptsRanges = false;
+      }
     }
     if (aRequestOffset == 0 && contentLength >= 0 &&
         (responseStatus == HTTP_OK_CODE ||
@@ -256,7 +259,12 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     // and the server isn't sending Accept-Ranges:bytes then we don't
     // support seeking. We also can't seek in compressed streams.
     seekable = !isCompressed && acceptsRanges;
+  } else {
+    // Not an HTTP channel. Assume data will be sent from position zero.
+    startOffset = 0;
   }
+
+  mCacheStream.NotifyDataStarted(startOffset);
   mCacheStream.SetTransportSeekable(seekable);
   mChannelStatistics.Start();
   mReopenOnError = false;
