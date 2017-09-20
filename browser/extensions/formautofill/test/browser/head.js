@@ -189,6 +189,13 @@ function removeCreditCards(guids) {
   return TestUtils.topicObserved("formautofill-storage-changed");
 }
 
+function getNotification(index = 0) {
+  let notifications = PopupNotifications.panel.childNodes;
+  ok(notifications.length > 0, "at least one notification displayed");
+  ok(true, notifications.length + " notification(s)");
+  return notifications[index];
+}
+
 /**
  * Clicks the popup notification button and wait for popup hidden.
  *
@@ -197,19 +204,17 @@ function removeCreditCards(guids) {
  */
 async function clickDoorhangerButton(button, index) {
   let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
-  let notifications = PopupNotifications.panel.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
-  ok(true, notifications.length + " notification(s)");
-  let notification = notifications[0];
 
   if (button == MAIN_BUTTON || button == SECONDARY_BUTTON) {
-    EventUtils.synthesizeMouseAtCenter(notification[button], {});
+    EventUtils.synthesizeMouseAtCenter(getNotification()[button], {});
   } else if (button == MENU_BUTTON) {
     // Click the dropmarker arrow and wait for the menu to show up.
+    await sleep(); // menubutton needs extra time for binding
+    let notification = getNotification();
+    ok(notification.menubutton, "notification menupopup displayed");
     let dropdownPromise =
       BrowserTestUtils.waitForEvent(notification.menupopup, "popupshown");
     await EventUtils.synthesizeMouseAtCenter(notification.menubutton, {});
-    ok(true, "notification menupopup displayed");
     await dropdownPromise;
 
     let actionMenuItem = notification.querySelectorAll("menuitem")[index];
@@ -219,10 +224,7 @@ async function clickDoorhangerButton(button, index) {
 }
 
 function getDoorhangerCheckbox() {
-  let notifications = PopupNotifications.panel.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
-  ok(true, notifications.length + " notification(s)");
-  return notifications[0].checkbox;
+  return getNotification().checkbox;
 }
 
 // Wait for master password dialog and cancel to close it.
