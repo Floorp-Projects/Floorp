@@ -8,7 +8,11 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  DoorHanger: "resource://gre/modules/Prompt.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 /* Constants for password prompt telemetry.
 * Mirrored in nsLoginManagerPrompter.js */
@@ -39,22 +43,6 @@ LoginManagerPrompter.prototype = {
   _factory: null,
   _window: null,
   _debug: false, // mirrors signon.debug
-
-  __pwmgr: null, // Password Manager service
-  get _pwmgr() {
-    if (!this.__pwmgr)
-      this.__pwmgr = Cc["@mozilla.org/login-manager;1"].
-                     getService(Ci.nsILoginManager);
-    return this.__pwmgr;
-  },
-
-  __promptService: null, // Prompt service for user interaction
-  get _promptService() {
-    if (!this.__promptService)
-      this.__promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                             getService(Ci.nsIPromptService2);
-    return this.__promptService;
-  },
 
   __strBundle: null, // String bundle for L10N
   get _strBundle() {
@@ -105,7 +93,7 @@ LoginManagerPrompter.prototype = {
    *
    */
   init: function(aWindow, aFactory) {
-    this._chromeWindow = this._getChromeWindow(aWindow).wrappedJSObject;
+    this._window = aWindow;
     this._factory = aFactory || null;
     this._browser = null;
 
@@ -146,8 +134,6 @@ LoginManagerPrompter.prototype = {
    *        Password string used in creating a doorhanger action
    */
   _showLoginNotification: function(aBody, aButtons, aUsername, aPassword) {
-    let tabID = this._chromeWindow.BrowserApp.getTabForBrowser(this._browser).id;
-
     let actionText = {
       text: aUsername,
       type: "EDIT",
@@ -168,9 +154,8 @@ LoginManagerPrompter.prototype = {
       actionText: actionText
     }
 
-    var nativeWindow = this._getNativeWindow();
-    if (nativeWindow)
-      nativeWindow.doorhanger.show(aBody, "password", aButtons, tabID, options, "LOGIN");
+    let win = (this._browser && this._browser.contentWindow) || this._window;
+    DoorHanger.show(win, aBody, "password", aButtons, options, "LOGIN");
   },
 
   /*
@@ -188,9 +173,9 @@ LoginManagerPrompter.prototype = {
     let username = aLogin.username ? this._sanitizeUsername(aLogin.username) : "";
 
     // The callbacks in |buttons| have a closure to access the variables
-    // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
+    // in scope here; set one to |Services.logins| so we can get back to pwmgr
     // without a getService() call.
-    var pwmgr = this._pwmgr;
+    var pwmgr = Services.logins;
     let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION");
 
     var buttons = [
@@ -248,9 +233,6 @@ LoginManagerPrompter.prototype = {
       notificationText  = this._getLocalizedString("updatePasswordNoUser");
     }
 
-    // The callbacks in |buttons| have a closure to access the variables
-    // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
-    // without a getService() call.
     var self = this;
     let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION");
 
@@ -300,7 +282,7 @@ LoginManagerPrompter.prototype = {
 
     // If user selects ok, outparam.value is set to the index
     // of the selected username.
-    var ok = this._promptService.select(null,
+    var ok = Services.prompt.select(null,
       dialogTitle, dialogText,
       usernames.length, usernames,
       selectedIndex);
@@ -330,45 +312,7 @@ LoginManagerPrompter.prototype = {
     }
     propBag.setProperty("timeLastUsed", now);
     propBag.setProperty("timesUsedIncrement", 1);
-    this._pwmgr.modifyLogin(login, propBag);
-  },
-
-  /*
-   * _getChromeWindow
-   *
-   * Given a content DOM window, returns the chrome window it's in.
-   */
-  _getChromeWindow: function(aWindow) {
-    if (aWindow instanceof Ci.nsIDOMChromeWindow)
-      return aWindow;
-    var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShell)
-      .chromeEventHandler.ownerGlobal;
-    return chromeWin;
-  },
-
-  /*
-   * _getNativeWindow
-   *
-   * Returns the NativeWindow to this prompter, or null if there isn't
-   * a NativeWindow available (w/ error sent to logcat).
-   */
-  _getNativeWindow: function() {
-    let nativeWindow = null;
-    try {
-      let chromeWin = this._chromeWindow;
-      if (chromeWin.NativeWindow) {
-        nativeWindow = chromeWin.NativeWindow;
-      } else {
-        Cu.reportError("NativeWindow not available on window");
-      }
-
-    } catch (e) {
-      // If any errors happen, just assume no native window helper.
-      Cu.reportError("No NativeWindow available: " + e);
-    }
-    return nativeWindow;
+    Services.logins.modifyLogin(login, propBag);
   },
 
   /*

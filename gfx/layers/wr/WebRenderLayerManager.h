@@ -39,6 +39,7 @@ class WebRenderParentCommand;
 class WebRenderLayerManager final : public LayerManager
 {
   typedef nsTArray<RefPtr<Layer> > LayerRefArray;
+  typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>> WebRenderUserDataRefTable;
 
 public:
   explicit WebRenderLayerManager(nsIWidget* aWidget);
@@ -217,7 +218,12 @@ public:
       frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
     RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
     if (!data || (data->GetType() != T::Type()) || !data->IsDataValid(this)) {
-      data = new T(this);
+      // To recreate a new user data, we should remove the data from the table first.
+      if (data) {
+        data->RemoveFromTable();
+      }
+      data = new T(this, aItem, &mWebRenderUserDatas);
+      mWebRenderUserDatas.PutEntry(data);
       if (aOutIsRecycled) {
         *aOutIsRecycled = false;
       }
@@ -225,6 +231,10 @@ public:
 
     MOZ_ASSERT(data);
     MOZ_ASSERT(data->GetType() == T::Type());
+
+    // Mark the data as being used. We will remove unused user data in the end of EndTransaction.
+    data->SetUsed(true);
+
     if (T::Type() == WebRenderUserData::UserDataType::eCanvas) {
       mLastCanvasDatas.PutEntry(data->AsCanvasData());
     }
@@ -248,6 +258,31 @@ private:
                               EndTransactionFlags aFlags,
                               nsDisplayList* aDisplayList = nullptr,
                               nsDisplayListBuilder* aDisplayListBuilder = nullptr);
+
+  void RemoveUnusedAndResetWebRenderUserData()
+  {
+    for (auto iter = mWebRenderUserDatas.Iter(); !iter.Done(); iter.Next()) {
+      WebRenderUserData* data = iter.Get()->GetKey();
+      if (!data->IsUsed()) {
+        nsIFrame* frame = data->GetFrame();
+
+        MOZ_ASSERT(frame->HasProperty(nsIFrame::WebRenderUserDataProperty()));
+
+        nsIFrame::WebRenderUserDataTable* userDataTable =
+          frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
+
+        MOZ_ASSERT(userDataTable->Count());
+
+        userDataTable->Remove(data->GetDisplayItemKey());
+
+        if (!userDataTable->Count()) {
+          frame->RemoveProperty(nsIFrame::WebRenderUserDataProperty());
+        }
+        iter.Remove();
+      }
+      data->SetUsed(false);
+    }
+  }
 
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
@@ -340,6 +375,8 @@ private:
   // True if the layers-free transaction has invalidation region and then
   // we should send notification after EndTransaction
   bool mShouldNotifyInvalidation;
+
+  WebRenderUserDataRefTable mWebRenderUserDatas;
 };
 
 } // namespace layers

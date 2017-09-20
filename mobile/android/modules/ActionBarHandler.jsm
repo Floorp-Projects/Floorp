@@ -4,14 +4,28 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+this.EXPORTED_SYMBOLS = ["ActionBarHandler"];
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   Snackbars: "resource://gre/modules/Snackbars.jsm",
   UITelemetry: "resource://gre/modules/UITelemetry.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls",
   "@mozilla.org/parental-controls-service;1", "nsIParentalControlsService");
+
+var Strings = {};
+
+XPCOMUtils.defineLazyGetter(Strings, "browser", _ =>
+        Services.strings.createBundle("chrome://browser/locale/browser.properties"));
 
 const PHONE_REGEX = /^\+?[0-9\s,-.\(\)*#pw]{1,30}$/; // Are we a phone #?
 
@@ -648,7 +662,13 @@ var ActionBarHandler = {
       action: function(element, win) {
         let title = win.document.title;
         if (title && title.length > 200) {
-          title = title.slice(0, 200) + "\u2026"; // Add ellipsis.
+          let ellipsis = "\u2026";
+          try {
+            ellipsis = Services.prefs.getComplexValue(
+                "intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+          } catch (e) {
+          }
+          title = title.slice(0, 200) + ellipsis; // Add ellipsis.
         } else if (!title) {
           title = win.location.href;
         }
