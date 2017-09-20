@@ -2929,7 +2929,7 @@ XMLHttpRequestMainThread::Send(JSContext* aCx,
   }
 
   if (aData.Value().IsBlob()) {
-    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsBlob());
+    BodyExtractor<const Blob> body(&aData.Value().GetAsBlob());
     aRv = SendInternal(&body);
     return;
   }
@@ -2948,13 +2948,13 @@ XMLHttpRequestMainThread::Send(JSContext* aCx,
   }
 
   if (aData.Value().IsFormData()) {
-    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsFormData());
+    BodyExtractor<const FormData> body(&aData.Value().GetAsFormData());
     aRv = SendInternal(&body);
     return;
   }
 
   if (aData.Value().IsURLSearchParams()) {
-    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsURLSearchParams());
+    BodyExtractor<const URLSearchParams> body(&aData.Value().GetAsURLSearchParams());
     aRv = SendInternal(&body);
     return;
   }

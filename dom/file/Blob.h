@@ -29,14 +29,12 @@ class File;
 class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
 
 class Blob : public nsIDOMBlob
-           , public nsIXHRSendable
            , public nsIMutable
            , public nsSupportsWeakReference
            , public nsWrapperCache
 {
 public:
   NS_DECL_NSIDOMBLOB
-  NS_DECL_NSIXHRSENDABLE
   NS_DECL_NSIMUTABLE
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -126,6 +124,12 @@ public:
                                ErrorResult& aRv);
 
   size_t GetAllocationSize() const;
+
+  nsresult
+  GetSendInfo(nsIInputStream** aBody,
+              uint64_t* aContentLength,
+              nsACString& aContentType,
+              nsACString& aCharset) const;
 
 protected:
   // File constructor should never be used directly. Use Blob::Create instead.
