@@ -497,6 +497,8 @@ private:
   // coming from an old channel and should be discarded.
   uint32_t mLoadID = 0;
 
+  bool mThrottleReadahead = false;
+
   // The following field is protected by the cache's monitor but are
   // only written on the main thread.
 
@@ -510,8 +512,6 @@ private:
 
   // True if associated with a private browsing window.
   const bool mIsPrivateBrowsing;
-
-  bool mThrottleReadahead = false;
 };
 
 } // namespace mozilla

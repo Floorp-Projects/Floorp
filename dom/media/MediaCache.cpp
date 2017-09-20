@@ -2371,10 +2371,10 @@ void
 MediaCacheStream::ThrottleReadahead(bool bThrottle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   if (mThrottleReadahead != bThrottle) {
     LOGI("Stream %p ThrottleReadahead %d", this, bThrottle);
     mThrottleReadahead = bThrottle;
-    ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
     mMediaCache->QueueUpdate();
   }
 }
