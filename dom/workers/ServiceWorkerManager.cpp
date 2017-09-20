@@ -2194,7 +2194,15 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIDocument* aDoc)
   MOZ_ASSERT(aDoc);
   nsCOMPtr<nsIURI> documentURI = aDoc->GetDocumentURI();
   nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
-  return GetServiceWorkerRegistrationInfo(principal, documentURI);
+  RefPtr<ServiceWorkerRegistrationInfo> reg =
+    GetServiceWorkerRegistrationInfo(principal, documentURI);
+  if (reg) {
+    auto storageAllowed = nsContentUtils::StorageAllowedForDocument(aDoc);
+    if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+      reg = nullptr;
+    }
+  }
+  return reg.forget();
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
@@ -2486,6 +2494,11 @@ ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* a
 {
   MOZ_ASSERT(aRegistration);
   MOZ_ASSERT(aDoc);
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  auto storageAllowed = nsContentUtils::StorageAllowedForDocument(aDoc);
+  MOZ_DIAGNOSTIC_ASSERT(storageAllowed == nsContentUtils::StorageAccess::eAllow);
+#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   aRegistration->StartControllingADocument();
   mControlledDocuments.Put(aDoc, aRegistration);
