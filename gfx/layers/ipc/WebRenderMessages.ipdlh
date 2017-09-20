@@ -68,6 +68,7 @@ union WebRenderParentCommand {
 };
 
 struct OffsetRange {
+  uint32_t source;
   uint32_t start;
   uint32_t length;
 };
