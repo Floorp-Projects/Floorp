@@ -1075,7 +1075,8 @@ public class AndroidFxAccount {
 
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   private void doOptionalProfileRename21Plus(final String newEmail, final Runnable migrateSyncSettingsCallback, final Runnable callback) {
-    accountManager.renameAccount(account, newEmail, new AccountManagerCallback<Account>() {
+    final Account currentAccount = new Account(account.name, account.type);
+    accountManager.renameAccount(currentAccount, newEmail, new AccountManagerCallback<Account>() {
       @Override
       public void run(AccountManagerFuture<Account> future) {
         if (future.isCancelled()) {
@@ -1127,7 +1128,8 @@ public class AndroidFxAccount {
     accountManager.setUserData(account, ACCOUNT_KEY_RENAME_IN_PROGRESS, ACCOUNT_VALUE_RENAME_IN_PROGRESS);
 
     // Then, remove current account.
-    accountManager.removeAccount(account, new AccountManagerCallback<Boolean>() {
+    final Account currentAccount = new Account(account.name, account.type);
+    accountManager.removeAccount(currentAccount, new AccountManagerCallback<Boolean>() {
       @Override
       public void run(AccountManagerFuture<Boolean> future) {
         boolean accountRemovalSucceeded = false;
