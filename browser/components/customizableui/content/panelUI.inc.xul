@@ -379,25 +379,6 @@
   </menupopup>
 </panel>
 
-<panel id="customization-tipPanel"
-       type="arrow"
-       flip="none"
-       side="left"
-       position="leftcenter topright"
-       noautohide="true"
-       hidden="true">
-  <hbox class="customization-tipPanel-wrapper">
-    <vbox class="customization-tipPanel-infoBox"/>
-    <vbox class="customization-tipPanel-content" flex="1">
-      <description class="customization-tipPanel-contentMessage"/>
-      <image class="customization-tipPanel-contentImage"/>
-    </vbox>
-    <vbox pack="start" align="end" class="customization-tipPanel-closeBox">
-      <toolbarbutton oncommand="gCustomizeMode.hideTip()" class="close-icon"/>
-    </vbox>
-  </hbox>
-</panel>
-
 <panel id="panic-button-success-notification"
        type="arrow"
        position="bottomcenter topright"
