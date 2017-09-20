@@ -264,6 +264,11 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     startOffset = 0;
   }
 
+  // Update principals before OnDataAvailable() putting the data in the cache.
+  // This is important, we want to make sure all principals are updated before
+  // any consumer can see the new data.
+  UpdatePrincipal();
+
   mCacheStream.NotifyDataStarted(mLoadID, startOffset);
   mCacheStream.SetTransportSeekable(seekable);
   mChannelStatistics.Start();
@@ -412,12 +417,6 @@ ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
   // This might happen off the main thread.
   // Don't assert |mChannel.get() == aRequest| since reading mChannel here off
   // the main thread is a data race.
-
-  // Update principals before putting the data in the cache. This is important,
-  // we want to make sure all principals are updated before any consumer can see
-  // the new data.
-  // TODO: Handle the case where OnDataAvailable() runs off the main thread.
-  UpdatePrincipal();
 
   RefPtr<ChannelMediaResource> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
@@ -784,9 +783,10 @@ void
 ChannelMediaResource::UpdatePrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mChannel);
   nsCOMPtr<nsIPrincipal> principal;
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (secMan && mChannel) {
+  if (secMan) {
     secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
     mCacheStream.UpdatePrincipal(principal);
   }
