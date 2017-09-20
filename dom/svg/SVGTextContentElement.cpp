@@ -145,7 +145,7 @@ SVGTextContentElement::SelectSubString(uint32_t charnum, uint32_t nchars, ErrorR
 float
 SVGTextContentElement::GetSubStringLength(uint32_t charnum, uint32_t nchars, ErrorResult& rv)
 {
-  SVGTextFrame* textFrame = GetSVGTextFrame();
+  SVGTextFrame* textFrame = GetSVGTextFrameForNonLayoutDependentQuery();
   if (!textFrame)
     return 0.0f;
 

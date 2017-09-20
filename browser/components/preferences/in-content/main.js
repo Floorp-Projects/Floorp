@@ -107,6 +107,10 @@ if (AppConstants.MOZ_DEV_EDITION) {
     "resource://gre/modules/FxAccounts.jsm");
 }
 
+// A promise that resolves when the list of application handlers is loaded.
+// We store this in a global so tests can await it.
+var promiseLoadHandlersList;
+
 var gMainPane = {
   // The set of types the app knows how to handle.  A hash of HandlerInfoWrapper
   // objects, indexed by type.
@@ -443,11 +447,18 @@ var gMainPane = {
     // Load the data and build the list of handlers.
     // By doing this after pageshow, we ensure it doesn't delay painting
     // of the preferences page.
-    window.addEventListener("pageshow", () => {
-      this._loadData();
-      this._rebuildVisibleTypes();
-      this._sortVisibleTypes();
-      this._rebuildView();
+    promiseLoadHandlersList = new Promise((resolve, reject) => {
+      window.addEventListener("pageshow", async () => {
+        try {
+          this._loadData();
+          await this._rebuildVisibleTypes();
+          this._sortVisibleTypes();
+          this._rebuildView();
+          resolve();
+        } catch (ex) {
+          reject(ex);
+        }
+      }, {once: true});
     });
 
     let browserBundle = document.getElementById("browserBundle");
@@ -1391,7 +1402,7 @@ var gMainPane = {
 
   // nsIObserver
 
-  observe(aSubject, aTopic, aData) {
+  async observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed") {
       if (aData == PREF_CONTAINERS_EXTENSION) {
         this.readBrowserContainersCheckbox();
@@ -1404,7 +1415,7 @@ var gMainPane = {
         // that list when they change.
         if (aData == PREF_SHOW_PLUGINS_IN_LIST ||
           aData == PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS) {
-          this._rebuildVisibleTypes();
+          await this._rebuildVisibleTypes();
           this._sortVisibleTypes();
         }
 
@@ -1524,7 +1535,7 @@ var gMainPane = {
 
   // View Construction
 
-  _rebuildVisibleTypes() {
+  async _rebuildVisibleTypes() {
     // Reset the list of visible types and the visible type description counts.
     this._visibleTypes = [];
     this._visibleTypeDescriptionCount = {};
@@ -1535,6 +1546,11 @@ var gMainPane = {
       this._prefSvc.getBoolPref(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS);
 
     for (let type in this._handledTypes) {
+      // Yield before processing each handler info object to avoid monopolizing
+      // the main thread, as the objects are retrieved lazily, and retrieval
+      // can be expensive on Windows.
+      await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+
       let handlerInfo = this._handledTypes[type];
 
       // Hide plugins without associated extensions if so prefed so we don't

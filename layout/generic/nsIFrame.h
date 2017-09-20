@@ -4102,7 +4102,7 @@ protected:
     // bug 81268
     NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW), "frame is already in reflow");
 #endif
-    mState |= NS_FRAME_IN_REFLOW;
+    AddStateBits(NS_FRAME_IN_REFLOW);
   }
 
   nsFrameState     mState;

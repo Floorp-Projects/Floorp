@@ -27,7 +27,7 @@
 #include "nsLayoutUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "FilterSupport.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "Layers.h"
 #include "nsBidi.h"
 

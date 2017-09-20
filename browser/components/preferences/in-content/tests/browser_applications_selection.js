@@ -8,6 +8,9 @@ add_task(async function setup() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   info("Preferences page opened on the general pane.");
 
+  await gBrowser.selectedBrowser.contentWindow.promiseLoadHandlersList;
+  info("Apps list loaded.");
+
   registerCleanupFunction(() => {
     gBrowser.removeCurrentTab();
   });

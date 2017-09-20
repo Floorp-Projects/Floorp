@@ -271,7 +271,29 @@ HandlerService.prototype = {
       handlers.appendElement(handler);
     }
     for (let type of Object.keys(this._store.data.schemes)) {
-      let handler = gExternalProtocolService.getProtocolHandlerInfo(type);
+      // nsIExternalProtocolService.getProtocolHandlerInfo can be expensive
+      // on Windows, so we return a proxy to delay retrieving the nsIHandlerInfo
+      // until one of its properties is accessed.
+      //
+      // Note: our caller still needs to yield periodically when iterating
+      // the enumerator and accessing handler properties to avoid monopolizing
+      // the main thread.
+      //
+      let handler = new Proxy(
+        {
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIHandlerInfo]),
+          type: type,
+          get _handlerInfo() {
+            delete this._handlerInfo;
+            return this._handlerInfo = gExternalProtocolService.getProtocolHandlerInfo(type);
+          },
+        },
+        {
+          get: function(target, name) {
+            return target[name] || target._handlerInfo[name];
+          },
+        },
+      );
       handlers.appendElement(handler);
     }
     return handlers.enumerate();
