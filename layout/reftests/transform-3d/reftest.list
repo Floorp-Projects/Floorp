@@ -39,9 +39,9 @@ fuzzy-if(skiaContent,1,4) == matrix3d-1a.html matrix3d-1-ref.html
 == rotate3d-1a.html rotatex-1-ref.html
 == rotate3d-2a.html rotatey-1-ref.html
 != backface-visibility-1a.html about:blank
-== backface-visibility-1b.html about:blank
-== backface-visibility-1c.html about:blank
-fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) == backface-visibility-2.html backface-visibility-2-ref.html
+fails-if(webrender) == backface-visibility-1b.html about:blank
+fails-if(webrender) == backface-visibility-1c.html about:blank
+fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) fails-if(webrender) == backface-visibility-2.html backface-visibility-2-ref.html
 == backface-visibility-3.html backface-visibility-3-ref.html
 fails-if(webrender) == perspective-clipping-1.html perspective-clipping-1-ref.html
 == perspective-clipping-2.html perspective-clipping-2-ref.html
