@@ -100,7 +100,7 @@ public:
                       const Float* aBorderWidths,
                       RectCornerRadii& aBorderRadii,
                       const nscolor* aBorderColors,
-                      const nsBorderColors* aCompositeColors,
+                      nsBorderColors* const* aCompositeColors,
                       nscolor aBackgroundColor);
 
   // draw the entire border
@@ -151,9 +151,7 @@ private:
   nscolor mBorderColors[4];
 
   // the lists of colors for '-moz-border-top-colors' et. al.
-  // the pointers here are either nullptr, or referring to a non-empty
-  // nsTArray, so no additional empty check is needed.
-  const nsTArray<nscolor>* mCompositeColors[4];
+  nsBorderColors* mCompositeColors[4];
 
   // the background color
   nscolor mBackgroundColor;
@@ -237,8 +235,7 @@ private:
   void DrawBorderSides (int aSides);
 
   // function used by the above to handle -moz-border-colors
-  void DrawBorderSidesCompositeColors(
-    int aSides, const nsTArray<nscolor>& compositeColors);
+  void DrawBorderSidesCompositeColors(int aSides, const nsBorderColors *compositeColors);
 
   // Setup the stroke options for the given dashed/dotted side
   void SetupDashedOptions(StrokeOptions* aStrokeOptions,

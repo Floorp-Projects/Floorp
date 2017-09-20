@@ -5490,14 +5490,19 @@ nsComputedDOMStyle::GetBorderColorsFor(mozilla::Side aSide)
   const nsStyleBorder *border = StyleBorder();
 
   if (border->mBorderColors) {
-    const nsTArray<nscolor>& borderColors = (*border->mBorderColors)[aSide];
-    if (!borderColors.IsEmpty()) {
+    nsBorderColors* borderColors = border->mBorderColors[aSide];
+    if (borderColors) {
       RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-      for (nscolor color : borderColors) {
+
+      do {
         RefPtr<nsROCSSPrimitiveValue> primitive = new nsROCSSPrimitiveValue;
-        SetToRGBAColor(primitive, color);
+
+        SetToRGBAColor(primitive, borderColors->mColor);
+
         valueList->AppendCSSValue(primitive.forget());
-      }
+        borderColors = borderColors->mNext;
+      } while (borderColors);
+
       return valueList.forget();
     }
   }
