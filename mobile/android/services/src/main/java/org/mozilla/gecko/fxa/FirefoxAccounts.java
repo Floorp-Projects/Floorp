@@ -148,8 +148,11 @@ public class FirefoxAccounts {
     Logger.info(LOG_TAG, "Sync options -- scheduling now: " + scheduleNow);
   }
 
-  public static void requestImmediateSync(final Account account, String[] stagesToSync, String[] stagesToSkip) {
+  public static void requestImmediateSync(final Account account, String[] stagesToSync, String[] stagesToSkip, boolean ignoreSettings) {
     final Bundle syncOptions = new Bundle();
+    if (ignoreSettings) {
+      syncOptions.putBoolean(ContentResolver.SYNC_EXTRAS_IGNORE_SETTINGS, true);
+    }
     syncOptions.putBoolean(ContentResolver.SYNC_EXTRAS_IGNORE_BACKOFF, true);
     syncOptions.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
     requestSync(account, syncOptions, stagesToSync, stagesToSkip);

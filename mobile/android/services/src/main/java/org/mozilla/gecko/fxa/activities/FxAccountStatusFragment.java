@@ -269,7 +269,7 @@ public class FxAccountStatusFragment
 
     if (preference == syncNowPreference) {
       if (fxAccount != null) {
-        fxAccount.requestImmediateSync(null, null);
+        fxAccount.requestImmediateSync(null, null, true);
       }
       return true;
     }
@@ -857,7 +857,7 @@ public class FxAccountStatusFragment
         fxAccount.dump();
       } else if ("debug_force_sync".equals(key)) {
         Logger.info(LOG_TAG, "Force syncing.");
-        fxAccount.requestImmediateSync(null, null);
+        fxAccount.requestImmediateSync(null, null, true);
         // No sense refreshing, since the sync will complete in the future.
       } else if ("debug_forget_certificate".equals(key)) {
         State state = fxAccount.getState();
@@ -943,7 +943,7 @@ public class FxAccountStatusFragment
       // Force sync the client record, we want the user to see the device name change immediately
       // on the FxA Device Manager if possible ( = we are online) to avoid confusion
       // ("I changed my Android's device name but I don't see it on my computer").
-      fxAccount.requestImmediateSync(STAGES_TO_SYNC_ON_DEVICE_NAME_CHANGE, null);
+      fxAccount.requestImmediateSync(STAGES_TO_SYNC_ON_DEVICE_NAME_CHANGE, null, true);
       hardRefresh(); // Updates the value displayed to the user, among other things.
       return true;
     }
