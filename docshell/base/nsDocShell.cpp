@@ -14985,6 +14985,12 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     return NS_OK;
   }
 
+  uint32_t cookieBehavior = nsContentUtils::CookiesBehavior();
+  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
+    // If cookies are disabled, don't intercept.
+    return NS_OK;
+  }
+
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
     return NS_OK;
@@ -15005,7 +15011,9 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     return NS_OK;
   }
 
-  if (nsContentUtils::CookiesBehavior() == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
+  // If the user has set a cookie policy that restricts cookies, then
+  // avoid intercepting 3rd party iframes.
+  if (cookieBehavior != nsICookieService::BEHAVIOR_ACCEPT) {
     nsCOMPtr<nsIDocShellTreeItem> parent;
     GetSameTypeParent(getter_AddRefs(parent));
     nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parent ? parent->GetWindow()
