@@ -61,7 +61,7 @@ add_task(async function test_loopback() {
   // These tests can't run simultaneously as the preference changes will race.
   // So let's run them sequentially here, but in an async function so we can
   // use await.
-  const testPage = "https://example.com/browser/dom/webauthn/tests/browser/frame_webauthn_success.html";
+  const testPage = "https://example.com/browser/dom/webauthn/tests/browser/tab_webauthn_success.html";
   {
     cleanupTelemetry();
     // Enable the soft token, and execute a simple end-to-end test
