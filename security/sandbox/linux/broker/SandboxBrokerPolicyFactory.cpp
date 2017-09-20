@@ -107,6 +107,9 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddDir(rdonly, "/usr/lib32");
   policy->AddDir(rdonly, "/usr/lib64");
   policy->AddDir(rdonly, "/etc");
+#ifdef MOZ_PULSEAUDIO
+  policy->AddPath(rdonly, "/var/lib/dbus/machine-id");
+#endif
   policy->AddDir(rdonly, "/usr/share");
   policy->AddDir(rdonly, "/usr/local/share");
   policy->AddDir(rdonly, "/usr/tmp");
