@@ -29,7 +29,13 @@ const INITIAL_STATE = {
     // Have we received real data from history yet?
     initialized: false,
     // The history (and possibly default) links
-    rows: []
+    rows: [],
+    // Used in content only to dispatch action from
+    // context menu to TopSitesEdit.
+    editForm: {
+      visible: false,
+      site: null
+    }
   },
   Prefs: {
     initialized: false,
@@ -104,6 +110,10 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return prevState;
       }
       return Object.assign({}, prevState, {initialized: true, rows: action.data});
+    case at.TOP_SITES_EDIT:
+      return Object.assign({}, prevState, {editForm: {visible: true, site: action.data}});
+    case at.TOP_SITES_CANCEL_EDIT:
+      return Object.assign({}, prevState, {editForm: {visible: false}});
     case at.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row && row.url === action.data.url) {
