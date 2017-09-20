@@ -7,5 +7,7 @@
     registration.unregister().then(() => {
       window.parent.postMessage({status: "unregistrationdone"}, "*");
     });
+  }).catch(function(e) {
+    window.parent.postMessage({status: "getregistrationfailed"}, "*");
   });
 </script>
