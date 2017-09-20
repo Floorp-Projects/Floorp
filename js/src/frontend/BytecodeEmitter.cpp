@@ -9790,8 +9790,6 @@ BytecodeEmitter::emitIncOrDec(ParseNode* pn)
       default:
         return emitNameIncDec(pn);
     }
-
-    return true;
 }
 
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
