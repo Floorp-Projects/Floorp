@@ -209,6 +209,7 @@
   background-size: 20px;
   font-size: 16px;
   cursor: pointer;
+  max-height: 54px;
 }
 
 #onboarding-tour-list .onboarding-tour-item:dir(rtl) {
