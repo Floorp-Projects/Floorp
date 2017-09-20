@@ -900,7 +900,7 @@
                       class="urlbar-icon-wrapper urlbar-page-action"
                       context="pageActionPanelContextMenu"
                       oncontextmenu="BrowserPageActions.onContextMenu(event);"
-                      onclick="BrowserPageActions.bookmark.onUrlbarNodeClicked(event);">
+                      onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('bookmark'), event, this);">
                   <image id="star-button"
                          class="urlbar-icon"
                          role="button"
