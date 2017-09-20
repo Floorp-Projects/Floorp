@@ -133,7 +133,7 @@ function DatePicker(context) {
     /**
      * Update date picker and its components.
      */
-    _update() {
+    _update(options = {}) {
       const { dateKeeper, isMonthPickerVisible } = this.state;
 
       if (isMonthPickerVisible) {
@@ -148,7 +148,8 @@ function DatePicker(context) {
         dateObj: dateKeeper.state.dateObj,
         months: this.state.months,
         years: this.state.years,
-        toggleMonthPicker: this.state.toggleMonthPicker
+        toggleMonthPicker: this.state.toggleMonthPicker,
+        noSmoothScroll: options.noSmoothScroll
       });
       this.components.calendar.setProps({
         isVisible: !isMonthPickerVisible,
@@ -269,7 +270,7 @@ function DatePicker(context) {
       dateKeeper.setSelection({
         year, month, day
       });
-      this._update();
+      this._update({ noSmoothScroll: true });
     }
   };
 
@@ -350,14 +351,14 @@ function DatePicker(context) {
           items: props.months,
           isInfiniteScroll: true,
           isValueSet: this.state.isMonthSet,
-          smoothScroll: !this.state.firstOpened
+          smoothScroll: !(this.state.firstOpened || props.noSmoothScroll)
         });
         this.components.year.setState({
           value: props.dateObj.getUTCFullYear(),
           items: props.years,
           isInfiniteScroll: false,
           isValueSet: this.state.isYearSet,
-          smoothScroll: !this.state.firstOpened
+          smoothScroll: !(this.state.firstOpened || props.noSmoothScroll)
         });
         this.state.firstOpened = false;
       } else {
