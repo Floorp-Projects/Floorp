@@ -246,14 +246,16 @@ class ExpectedUpdater(object):
     def suite_start(self, data):
         self.run_info = data["run_info"]
 
-    def test_id(self, id):
-        if type(id) in types.StringTypes:
-            return id
-        else:
-            return tuple(id)
+    def test_type(self, path):
+        for manifest in self.test_manifests.iterkeys():
+            tests = list(manifest.iterpath(path))
+            if len(tests):
+                assert all(test.item_type == tests[0].item_type for test in tests)
+                return tests[0].item_type
+        assert False
 
     def test_start(self, data):
-        test_id = self.test_id(data["test"])
+        test_id = data["test"]
         try:
             test_manifest, test = self.id_path_map[test_id]
             expected_node = self.expected_tree[test_manifest][test].get_test(test_id)
@@ -268,11 +270,10 @@ class ExpectedUpdater(object):
             self.tests_visited[test_id] = set()
 
     def test_status(self, data):
-        test_id = self.test_id(data["test"])
-        test = self.test_cache.get(test_id)
+        test = self.test_cache.get(data["test"])
         if test is None:
             return
-        test_cls = wpttest.manifest_test_cls[test.test_type]
+        test_cls = wpttest.manifest_test_cls[self.test_type(test.root.test_path)]
 
         subtest = test.get_subtest(data["subtest"])
 
@@ -286,11 +287,11 @@ class ExpectedUpdater(object):
         subtest.set_result(self.run_info, result)
 
     def test_end(self, data):
-        test_id = self.test_id(data["test"])
+        test_id = data["test"]
         test = self.test_cache.get(test_id)
         if test is None:
             return
-        test_cls = wpttest.manifest_test_cls[test.test_type]
+        test_cls = wpttest.manifest_test_cls[self.test_type(test.root.test_path)]
 
         if data["status"] == "SKIP":
             return
@@ -336,7 +337,7 @@ def create_expected(test_manifest, test_path, tests, property_order=None,
                                                property_order=property_order,
                                                boolean_properties=boolean_properties)
     for test in tests:
-        expected.append(manifestupdate.TestNode.create(test.item_type, test.id))
+        expected.append(manifestupdate.TestNode.create(test.id))
     return expected
 
 
@@ -360,6 +361,6 @@ def load_expected(test_manifest, metadata_path, test_path, tests, property_order
     # Add tests that don't have expected data
     for test in tests:
         if not expected_manifest.has_test(test.id):
-            expected_manifest.append(manifestupdate.TestNode.create(test.item_type, test.id))
+            expected_manifest.append(manifestupdate.TestNode.create(test.id))
 
     return expected_manifest
