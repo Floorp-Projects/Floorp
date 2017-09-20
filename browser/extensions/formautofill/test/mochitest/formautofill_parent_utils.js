@@ -7,192 +7,113 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://formautofill/FormAutofillUtils.jsm");
-
 let {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
 
-const {ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME} = FormAutofillUtils;
-
 var ParentUtils = {
-  async _getRecords(collectionName) {
-    return new Promise(resolve => {
-      Services.cpmm.addMessageListener("FormAutofill:Records", function getResult({data}) {
-        Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
-        resolve(data);
-      });
-      Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", {searchString: "", collectionName});
+  cleanUpAddress() {
+    Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
+      Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
+
+      let addresses = result.data;
+      Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses",
+                                     {guids: addresses.map(address => address.guid)});
+
+      let count = addresses.length;
+      Services.obs.addObserver(function observer(subject, topic, data) {
+        if (!--count) {
+          Services.obs.removeObserver(observer, topic);
+          sendAsyncMessage("FormAutofillTest:AddressCleanedUp");
+        }
+      }, "formautofill-storage-changed");
     });
+
+    Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", {searchString: "", collectionName: "addresses"});
   },
 
-  async _storageChangeObserved({topic = "formautofill-storage-changed", type, times = 1}) {
-    let count = times;
-
-    return new Promise(resolve => {
-      Services.obs.addObserver(function observer(subject, obsTopic, data) {
-        if (type && data != type || !!--count) {
-          return;
-        }
-
-        Services.obs.removeObserver(observer, obsTopic);
-        resolve();
-      }, topic);
-    });
-  },
-
-  async _operateRecord(collectionName, type, msgData, contentMsg) {
-    let times, topic;
-
-    if (collectionName == ADDRESSES_COLLECTION_NAME) {
-      switch (type) {
-        case "add": {
-          Services.cpmm.sendAsyncMessage("FormAutofill:SaveAddress", msgData);
-          break;
-        }
-        case "update": {
-          Services.cpmm.sendAsyncMessage("FormAutofill:SaveAddress", msgData);
-          break;
-        }
-        case "remove": {
-          times = msgData.guids.length;
-          Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses", msgData);
-          break;
-        }
+  updateAddress(type, chromeMsg, msgData, contentMsg) {
+    Services.cpmm.sendAsyncMessage(chromeMsg, msgData);
+    Services.obs.addObserver(function observer(subject, topic, data) {
+      if (data != type) {
+        return;
       }
-    } else {
-      switch (type) {
-        case "add": {
-          const msgDataCloned = Object.assign({}, msgData);
 
-          Services.cpmm.sendAsyncMessage("FormAutofill:SaveCreditCard", msgDataCloned);
-          break;
-        }
-        case "remove": {
-          times = msgData.guids.length;
-          Services.cpmm.sendAsyncMessage("FormAutofill:RemoveCreditCards", msgData);
-          break;
-        }
-      }
-    }
-
-    await this._storageChangeObserved({type, times, topic});
-    sendAsyncMessage(contentMsg);
-  },
-
-  async operateAddress(type, msgData, contentMsg) {
-    await this._operateRecord(ADDRESSES_COLLECTION_NAME, ...arguments);
-  },
-
-  async operateCreditCard(type, msgData, contentMsg) {
-    await this._operateRecord(CREDITCARDS_COLLECTION_NAME, ...arguments);
-  },
-
-  async cleanUpAddresses() {
-    const guids = (await this._getRecords(ADDRESSES_COLLECTION_NAME)).map(record => record.guid);
-
-    await this.operateAddress("remove", {guids}, "FormAutofillTest:AddressesCleanedUp");
-  },
-
-  async cleanUpCreditCards() {
-    const guids = (await this._getRecords(CREDITCARDS_COLLECTION_NAME)).map(record => record.guid);
-
-    await this.operateCreditCard("remove", {guids}, "FormAutofillTest:CreditCardsCleanedUp");
-  },
-
-  async cleanup() {
-    Services.obs.removeObserver(this, "formautofill-storage-changed");
-    await this.cleanUpAddresses();
-    await this.cleanUpCreditCards();
-  },
-
-  _areRecordsMatching(recordA, recordB, collectionName) {
-    for (let field of profileStorage[collectionName].VALID_FIELDS) {
-      if (recordA[field] !== recordB[field]) {
-        return false;
-      }
-    }
-    // Check the internal field if both addresses have valid value.
-    for (let field of profileStorage.INTERNAL_FIELDS) {
-      if (field in recordA && field in recordB && (recordA[field] !== recordB[field])) {
-        return false;
-      }
-    }
-    return true;
-  },
-
-  async _checkRecords(collectionName, expectedRecords) {
-    const records = await this._getRecords(collectionName);
-
-    if (records.length !== expectedRecords.length) {
-      return false;
-    }
-
-    for (let record of records) {
-      let matching = expectedRecords.some(expectedRecord => {
-        return ParentUtils._areRecordsMatching(record, expectedRecord, collectionName);
-      });
-
-      if (!matching) {
-        return false;
-      }
-    }
-
-    return true;
-  },
-
-  async checkAddresses({expectedAddresses}) {
-    const areMatched = await this._checkRecords(ADDRESSES_COLLECTION_NAME, expectedAddresses);
-
-    sendAsyncMessage("FormAutofillTest:areAddressesMatching", areMatched);
-  },
-
-  async checkCreditCards({expectedCreditCards}) {
-    const areMatched = await this._checkRecords(CREDITCARDS_COLLECTION_NAME, expectedCreditCards);
-
-    sendAsyncMessage("FormAutofillTest:areCreditCardsMatching", areMatched);
+      Services.obs.removeObserver(observer, topic);
+      sendAsyncMessage(contentMsg);
+    }, "formautofill-storage-changed");
   },
 
   observe(subject, topic, data) {
     assert.ok(topic === "formautofill-storage-changed");
     sendAsyncMessage("formautofill-storage-changed", {subject: null, topic, data});
   },
+
+  cleanup() {
+    Services.obs.removeObserver(this, "formautofill-storage-changed");
+    this.cleanUpAddress();
+  },
+
+  areAddressesMatching(addressA, addressB) {
+    for (let field of profileStorage.addresses.VALID_FIELDS) {
+      if (addressA[field] !== addressB[field]) {
+        return false;
+      }
+    }
+    // Check the internal field if both addresses have valid value.
+    for (let field of profileStorage.INTERNAL_FIELDS) {
+      if (field in addressA && field in addressB && (addressA[field] !== addressB[field])) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  checkAddresses({expectedAddresses}) {
+    Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
+      Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
+      let addresses = result.data;
+      if (addresses.length !== expectedAddresses.length) {
+        sendAsyncMessage("FormAutofillTest:areAddressesMatching", false);
+        return;
+      }
+
+      for (let address of addresses) {
+        let matching = expectedAddresses.some((expectedAddress) => {
+          return ParentUtils.areAddressesMatching(address, expectedAddress);
+        });
+
+        if (!matching) {
+          sendAsyncMessage("FormAutofillTest:areAddressesMatching", false);
+          return;
+        }
+      }
+
+      sendAsyncMessage("FormAutofillTest:areAddressesMatching", true);
+    });
+
+    Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", {searchString: "", collectionName: "addresses"});
+  },
 };
 
 Services.obs.addObserver(ParentUtils, "formautofill-storage-changed");
 
 addMessageListener("FormAutofillTest:AddAddress", (msg) => {
-  ParentUtils.operateAddress("add", msg, "FormAutofillTest:AddressAdded");
+  ParentUtils.updateAddress("add", "FormAutofill:SaveAddress", msg, "FormAutofillTest:AddressAdded");
 });
 
 addMessageListener("FormAutofillTest:RemoveAddress", (msg) => {
-  ParentUtils.operateAddress("remove", msg, "FormAutofillTest:AddressRemoved");
+  ParentUtils.updateAddress("remove", "FormAutofill:RemoveAddress", msg, "FormAutofillTest:AddressRemoved");
 });
 
 addMessageListener("FormAutofillTest:UpdateAddress", (msg) => {
-  ParentUtils.operateAddress("update", msg, "FormAutofillTest:AddressUpdated");
+  ParentUtils.updateAddress("update", "FormAutofill:SaveAddress", msg, "FormAutofillTest:AddressUpdated");
 });
 
 addMessageListener("FormAutofillTest:CheckAddresses", (msg) => {
   ParentUtils.checkAddresses(msg);
 });
 
-addMessageListener("FormAutofillTest:CleanUpAddresses", (msg) => {
-  ParentUtils.cleanUpAddresses();
-});
-
-addMessageListener("FormAutofillTest:AddCreditCard", (msg) => {
-  ParentUtils.operateCreditCard("add", msg, "FormAutofillTest:CreditCardAdded");
-});
-
-addMessageListener("FormAutofillTest:RemoveCreditCard", (msg) => {
-  ParentUtils.operateCreditCard("remove", msg, "FormAutofillTest:CreditCardRemoved");
-});
-
-addMessageListener("FormAutofillTest:CheckCreditCards", (msg) => {
-  ParentUtils.checkCreditCards(msg);
-});
-
-addMessageListener("FormAutofillTest:CleanUpCreditCards", (msg) => {
-  ParentUtils.cleanUpCreditCards();
+addMessageListener("FormAutofillTest:CleanUpAddress", (msg) => {
+  ParentUtils.cleanUpAddress();
 });
 
 addMessageListener("cleanup", () => {
