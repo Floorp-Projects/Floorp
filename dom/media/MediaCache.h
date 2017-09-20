@@ -460,13 +460,12 @@ private:
   bool mCacheSuspended;
   // True if the channel ended and we haven't seeked it again.
   bool mChannelEnded;
-  // The reported or discovered length of the data, or -1 if nothing is
-  // known
-  int64_t      mStreamLength;
 
   // The following fields are protected by the cache's monitor can can be written
   // by any thread.
 
+  // The reported or discovered length of the data, or -1 if nothing is known
+  int64_t mStreamLength = -1;
   // The offset where the next data from the channel will arrive
   int64_t mChannelOffset = 0;
   // The offset where the reader is positioned in the stream
