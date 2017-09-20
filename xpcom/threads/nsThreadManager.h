@@ -20,11 +20,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITHREADMANAGER
 
-  static nsThreadManager& get()
-  {
-    static nsThreadManager sInstance;
-    return sInstance;
-  }
+  static nsThreadManager& get();
 
   nsresult Init();
 
