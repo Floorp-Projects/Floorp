@@ -224,11 +224,26 @@ class TestEmitterBasic(unittest.TestCase):
             self.read_topsrcdir(reader)
 
     def test_compile_flags_templates(self):
-        reader = self.reader('compile-flags-templates')
+        reader = self.reader('compile-flags-templates', extra_substs={
+            'NSPR_CFLAGS': ['-I/nspr/path'],
+            'NSS_CFLAGS': ['-I/nss/path'],
+            'MOZ_JPEG_CFLAGS': ['-I/jpeg/path'],
+            'MOZ_PNG_CFLAGS': ['-I/png/path'],
+            'MOZ_ZLIB_CFLAGS': ['-I/zlib/path'],
+            'MOZ_PIXMAN_CFLAGS': ['-I/pixman/path'],
+        })
         sources, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['STL'], [])
         self.assertEqual(flags.flags['VISIBILITY'], [])
+        self.assertEqual(flags.flags['OS_INCLUDES'], [
+            '-I/nspr/path',
+            '-I/nss/path',
+            '-I/jpeg/path',
+            '-I/png/path',
+            '-I/zlib/path',
+            '-I/pixman/path',
+        ])
 
     def test_disable_stl_wrapping(self):
         reader = self.reader('disable-stl-wrapping')

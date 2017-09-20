@@ -312,6 +312,10 @@ class CompileFlags(ContextDerivedValue, dict):
             ('LOCAL_INCLUDES', None, ('CXXFLAGS', 'CFLAGS')),
             ('EXTRA_INCLUDES', ['-I%s/dist/include' % context.config.topobjdir],
              ('CXXFLAGS', 'CFLAGS')),
+            ('OS_INCLUDES', list(itertools.chain(*(context.config.substs.get(v, []) for v in (
+                'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS', 'MOZ_PNG_CFLAGS',
+                'MOZ_ZLIB_CFLAGS', 'MOZ_PIXMAN_CFLAGS')))),
+             ('CXXFLAGS', 'CFLAGS')),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
