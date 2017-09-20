@@ -3646,7 +3646,7 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = &mBounds;
   DrawResult result =
-    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aSc, aParentCommands, nullptr, aManager, this);
+    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aResources, aSc, aParentCommands, nullptr, aManager, this);
   nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
 
   return true;
@@ -5032,7 +5032,7 @@ nsDisplayBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
   }
 
   if (mBorderImageRenderer) {
-    CreateBorderImageWebRenderCommands(aBuilder, aSc, aParentCommands,
+    CreateBorderImageWebRenderCommands(aBuilder, aResources, aSc, aParentCommands,
                                        aManager, aDisplayListBuilder);
   } else if (mBorderRenderer) {
     mBorderRenderer->CreateWebRenderCommands(aBuilder, aResources, aSc);
@@ -5043,6 +5043,7 @@ nsDisplayBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
 
 void
 nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                     const StackingContextHelper& aSc,
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
                                                     mozilla::layers::WebRenderLayerManager* aManager,
@@ -5088,7 +5089,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       }
 
       gfx::IntSize size;
-      Maybe<wr::ImageKey> key = aManager->CreateImageKey(this, container, aBuilder, aSc, size);
+      Maybe<wr::ImageKey> key = aManager->CreateImageKey(this, container, aBuilder, aResources, aSc, size);
       if (key.isNothing()) {
         return;
       }

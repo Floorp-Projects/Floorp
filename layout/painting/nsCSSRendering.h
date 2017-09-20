@@ -502,6 +502,7 @@ struct nsCSSRendering {
                                                               int32_t aLayer);
   static DrawResult BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                                  mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                 mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                                  const mozilla::layers::StackingContextHelper& aSc,
                                                                  nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                  mozilla::layers::WebRenderDisplayItemLayer* aLayer,
@@ -510,6 +511,7 @@ struct nsCSSRendering {
 
   static DrawResult BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                        mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                                        const mozilla::layers::StackingContextHelper& aSc,
                                                                        nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer,
