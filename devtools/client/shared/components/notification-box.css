@@ -83,7 +83,7 @@
   background-color: transparent;
   background-repeat: no-repeat;
   border-radius: 11px;
-  filter: invert(0);
+  filter: var(--theme-messageCloseButtonFilter);
 }
 
 .notificationbox .messageCloseButton:hover {

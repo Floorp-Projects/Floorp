@@ -270,7 +270,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin: 0 2px;
-  padding: 0 4px;
+  padding: 1px 4px;
   -moz-appearance: none;
 }
 
@@ -327,6 +327,6 @@ toolbarbutton.bookmark-item {
 }
 
 #PersonalToolbar .toolbarbutton-1 {
-  padding: 0 var(--toolbarbutton-inner-padding);
+  padding: 1px var(--toolbarbutton-inner-padding);
   border-radius: var(--toolbarbutton-border-radius);
 }

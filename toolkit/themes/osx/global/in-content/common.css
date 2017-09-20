@@ -14,13 +14,6 @@ xul|tab[visuallyselected] {
   text-shadow: none;
 }
 
-xul|button,
-html|button {
-  /* use the same margin of other elements for the alignment */
-  margin-left: 4px;
-  margin-right: 4px;
-}
-
 xul|button[dlgtype="help"] {
   -moz-appearance: none;
   width: auto;

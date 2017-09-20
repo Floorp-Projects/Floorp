@@ -80,6 +80,7 @@ FormAutofillPreferences.prototype = {
     let savedCreditCardsBtnWrapper = document.createElementNS(XUL_NS, "hbox");
 
     savedAddressesBtn.className = "accessory-button";
+    addressAutofillCheckbox.className = "tail-with-learn-more";
     addressAutofillLearnMore.className = "learnMore text-link";
 
     formAutofillGroup.id = "formAutofillGroup";
@@ -123,6 +124,7 @@ FormAutofillPreferences.prototype = {
       let creditCardAutofillLearnMore = document.createElementNS(XUL_NS, "label");
       let savedCreditCardsBtn = document.createElementNS(XUL_NS, "button");
       savedCreditCardsBtn.className = "accessory-button";
+      creditCardAutofillCheckbox.className = "tail-with-learn-more";
       creditCardAutofillLearnMore.className = "learnMore text-link";
 
       creditCardAutofill.id = "creditCardAutofill";

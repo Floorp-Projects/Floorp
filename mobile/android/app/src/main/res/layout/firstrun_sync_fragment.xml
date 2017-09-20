@@ -40,31 +40,29 @@
                   android:gravity="center"
                   android:textAppearance="@style/TextAppearance.FirstrunRegular.Body"/>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="invisible"/>
 
-            <Button
-                android:id="@+id/welcome_account"
-                style="@style/Widget.Firstrun.Button"
-                android:layout_above="@+id/welcome_browse"
-                android:layout_gravity="center"
-                android:layout_centerHorizontal="true"
-                android:layout_marginBottom="20dp"
-                android:background="@drawable/button_background_action_photon_round"
-                android:text="@string/firstrun_signin_button"/>
+        <Button
+            android:id="@+id/welcome_account"
+            style="@style/Widget.Firstrun.Button"
+            android:layout_gravity="center"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_background_action_photon_round"
+            android:text="@string/firstrun_signin_button"/>
 
-            <TextView
-                android:id="@+id/welcome_browse"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
-                android:layout_marginBottom="30dp"
-                android:text="@string/firstrun_welcome_button_browser"
-                android:textAllCaps="true"
-                android:textAppearance="@style/TextAppearance.Link"/>
-        </RelativeLayout>
+        <TextView
+            android:id="@+id/welcome_browse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="30dp"
+            android:text="@string/firstrun_welcome_button_browser"
+            android:textAllCaps="true"
+            android:textAppearance="@style/TextAppearance.Link"/>
 
     </LinearLayout>
 </ScrollView>
