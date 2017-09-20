@@ -118,6 +118,3 @@ HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref1.html
 random-if(cocoaWidget) HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref2.html # bug 1139269
 HTTP(..) != subsuper-nofallback.html subsuper-nofallback-notref.html
 HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size-ref.html
-
-# GPOS spacing adjustments in vertical mode
-HTTP(..) == 1376231-vertical-gpos-adjustments.html 1376231-vertical-gpos-adjustments-ref.html
