@@ -1717,6 +1717,9 @@ public:
     , mVisibleRect(aOther.mVisibleRect)
     , mForceNotVisible(aOther.mForceNotVisible)
     , mDisableSubpixelAA(aOther.mDisableSubpixelAA)
+#ifdef MOZ_DUMP_PAINTING
+    , mPainted(false)
+#endif
   {
   }
 
