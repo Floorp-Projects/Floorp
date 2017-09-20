@@ -1201,6 +1201,37 @@ SPAN_TEST(from_cstring)
     ASSERT_EQ(cs.size(), 3U);
     ASSERT_EQ(cs.data(), str);
     ASSERT_EQ(cs[2], 'c');
+
+#ifdef CONFIRM_COMPILATION_ERRORS
+    Span<const char> scccl("literal"); // error
+
+    Span<const char> sccel;
+    sccel = "literal"; // error
+
+    cs = MakeSpan("literal"); // error
+#endif
+  }
+  {
+    char arr[4] = {'a', 'b', 'c', 0};
+
+    auto cs = MakeStringSpan(arr);
+    ASSERT_EQ(cs.size(), 3U);
+    ASSERT_EQ(cs.data(), arr);
+    ASSERT_EQ(cs[2], 'c');
+
+    cs = MakeSpan(arr);
+    ASSERT_EQ(cs.size(), 4U); // zero terminator is part of the array span.
+    ASSERT_EQ(cs.data(), arr);
+    ASSERT_EQ(cs[2], 'c');
+    ASSERT_EQ(cs[3], '\0'); // zero terminator is part of the array span.
+
+#ifdef CONFIRM_COMPILATION_ERRORS
+    Span<char> scca(arr); // error
+    Span<const char> sccca(arr); // error
+
+    Span<const char> scccea;
+    scccea = arr; // error
+#endif
   }
   {
     char16_t arr[4] = {'a', 'b', 'c', 0};
@@ -1210,6 +1241,31 @@ SPAN_TEST(from_cstring)
     ASSERT_EQ(cs.size(), 3U);
     ASSERT_EQ(cs.data(), str);
     ASSERT_EQ(cs[2], 'c');
+
+    cs = MakeStringSpan(arr);
+    ASSERT_EQ(cs.size(), 3U);
+    ASSERT_EQ(cs.data(), str);
+    ASSERT_EQ(cs[2], 'c');
+
+    cs = MakeSpan(arr);
+    ASSERT_EQ(cs.size(), 4U); // zero terminator is part of the array span.
+    ASSERT_EQ(cs.data(), str);
+    ASSERT_EQ(cs[2], 'c');
+    ASSERT_EQ(cs[3], '\0'); // zero terminator is part of the array span.
+
+#ifdef CONFIRM_COMPILATION_ERRORS
+    Span<char16_t> scca(arr); // error
+
+    Span<const char16_t> scccea;
+    scccea = arr; // error
+
+    Span<const char16_t> scccl(u"literal"); // error
+
+    Span<const char16_t> *sccel;
+    *sccel = u"literal"; // error
+
+    cs = MakeSpan(u"literal"); // error
+#endif
   }
 }
 
