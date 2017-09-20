@@ -128,10 +128,8 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-    void Revoke() { mResource = nullptr; }
-
   private:
-    RefPtr<ChannelMediaResource> mResource;
+    const RefPtr<ChannelMediaResource> mResource;
     const int64_t mOffset;
     const uint32_t mLoadID;
   };
