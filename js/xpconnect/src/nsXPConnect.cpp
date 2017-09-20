@@ -607,15 +607,14 @@ NativeInterface2JSObject(HandleObject aScope,
                          nsWrapperCache* aCache,
                          const nsIID * aIID,
                          bool aAllowWrapping,
-                         MutableHandleValue aVal,
-                         nsIXPConnectJSObjectHolder** aHolder)
+                         MutableHandleValue aVal)
 {
     AutoJSContext cx;
     JSAutoCompartment ac(cx, aScope);
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
-    if (!XPCConvert::NativeInterface2JSObject(aVal, aHolder, helper, aIID,
+    if (!XPCConvert::NativeInterface2JSObject(aVal, nullptr, helper, aIID,
                                               aAllowWrapping, &rv))
         return rv;
 
@@ -639,7 +638,7 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
     RootedObject aScope(aJSContext, aScopeArg);
     RootedValue v(aJSContext);
     nsresult rv = NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID,
-                                           true, &v, nullptr);
+                                           true, &v);
     if (NS_FAILED(rv))
         return rv;
 
@@ -665,7 +664,7 @@ nsXPConnect::WrapNativeToJSVal(JSContext* aJSContext,
 
     RootedObject aScope(aJSContext, aScopeArg);
     return NativeInterface2JSObject(aScope, aCOMObj, aCache, aIID,
-                                    aAllowWrapping, aVal, nullptr);
+                                    aAllowWrapping, aVal);
 }
 
 NS_IMETHODIMP
