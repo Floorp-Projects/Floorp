@@ -358,6 +358,17 @@ ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
     return true;
 }
 
+bool
+ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+                                        Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+                                        std::vector<FontVariation>* aOutVariations)
+{
+    if (!GetVariationsForCTFont(mCTFont, aOutVariations)) {
+      return false;
+    }
+    return true;
+}
+
 static CFDictionaryRef
 CreateVariationDictionaryOrNull(CGFontRef aCGFont, uint32_t aVariationCount,
                                 const FontVariation* aVariations)

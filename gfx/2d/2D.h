@@ -72,6 +72,11 @@ namespace mozilla {
 
 class Mutex;
 
+namespace wr {
+struct FontInstanceOptions;
+struct FontInstancePlatformOptions;
+}
+
 namespace gfx {
 class UnscaledFont;
 class ScaledFont;
@@ -827,6 +832,13 @@ public:
                                          void* aBaton);
 
   virtual bool GetFontInstanceData(FontInstanceDataOutput, void *) { return false; }
+
+  virtual bool GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+                                        Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+                                        std::vector<FontVariation>* aOutVariations)
+  {
+    return false;
+  }
 
   virtual bool CanSerialize() { return false; }
 
