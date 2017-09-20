@@ -25,7 +25,6 @@ class HTMLFormElement;
 class GlobalObject;
 
 class FormData final : public nsIDOMFormData,
-                       public nsIXHRSendable,
                        public HTMLFormSubmission,
                        public nsWrapperCache
 {
@@ -65,7 +64,6 @@ public:
                                                          nsIDOMFormData)
 
   NS_DECL_NSIDOMFORMDATA
-  NS_DECL_NSIXHRSENDABLE
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -154,6 +152,10 @@ public:
 
     return true;
   }
+
+  nsresult
+  GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+              nsACString& aContentTypeWithCharset, nsACString& aCharset) const;
 
 private:
   nsCOMPtr<nsISupports> mOwner;
