@@ -3751,7 +3751,8 @@ CSS_PROP_DISPLAY(
     ShapeOutside,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_STORES_CALC,
     "layout.css.shape-outside.enabled",
     0,
     nullptr,
