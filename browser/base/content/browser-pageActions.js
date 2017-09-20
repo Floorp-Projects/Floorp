@@ -144,17 +144,7 @@ var BrowserPageActions = {
       this.multiViewNode.appendChild(panelViewNode);
     }
     buttonNode.addEventListener("command", event => {
-      if (panelViewNode) {
-        action.subview.onShowing(panelViewNode);
-        this.multiViewNode.showSubView(panelViewNode, buttonNode);
-        return;
-      }
-      if (action.wantsIframe) {
-        this._toggleActivatedActionPanelForAction(action);
-        return;
-      }
-      this.panelNode.hidePopup();
-      action.onCommand(event, buttonNode);
+      this.doCommandForAction(action, event, buttonNode);
     });
     return [buttonNode, panelViewNode];
   },
@@ -381,14 +371,7 @@ var BrowserPageActions = {
       }
     }
     buttonNode.addEventListener("click", event => {
-      if (event.button != 0) {
-        return;
-      }
-      if (action.subview || action.wantsIframe) {
-        this._toggleActivatedActionPanelForAction(action);
-        return;
-      }
-      action.onCommand(event, buttonNode);
+      this.doCommandForAction(action, event, buttonNode);
     });
     return buttonNode;
   },
@@ -477,12 +460,32 @@ var BrowserPageActions = {
     }
   },
 
-  doCommandForAction(action) {
+  doCommandForAction(action, event, buttonNode) {
+    if (event.type == "click" && event.button != 0) {
+      return;
+    }
+    PageActions.logTelemetry("used", action, buttonNode);
+    // If we're in the panel, open a subview inside the panel:
+    // Note that we can't use this.panelNode.contains(buttonNode) here
+    // because of XBL boundaries breaking ELement.contains.
+    if (action.subview && buttonNode && buttonNode.closest("panel") == this.panelNode) {
+      let panelViewNodeID = this._panelViewNodeIDForActionID(action.id, false);
+      let panelViewNode = document.getElementById(panelViewNodeID);
+      action.subview.onShowing(panelViewNode);
+      this.multiViewNode.showSubView(panelViewNode, buttonNode);
+      return;
+    }
+    // Otherwise, hide the main popup in case it was open:
+    this.panelNode.hidePopup();
+
+    // Toggle the activated action's panel if necessary
     if (action.subview || action.wantsIframe) {
       this._toggleActivatedActionPanelForAction(action);
       return;
     }
-    action.onCommand();
+
+    // Otherwise, run the action.
+    action.onCommand(event, buttonNode);
   },
 
   /**
@@ -666,6 +669,8 @@ var BrowserPageActions = {
     if (!this._contextAction) {
       return;
     }
+    let telemetryType = this._contextAction.shownInUrlbar ? "removed" : "added";
+    PageActions.logTelemetry(telemetryType, this._contextAction);
     this._contextAction.shownInUrlbar = !this._contextAction.shownInUrlbar;
   },
 
@@ -759,13 +764,6 @@ BrowserPageActions.bookmark = {
 
   onCommand(event, buttonNode) {
     BrowserPageActions.panelNode.hidePopup();
-    BookmarkingUI.onStarCommand(event);
-  },
-
-  onUrlbarNodeClicked(event) {
-    if (event.type == "click" && event.button != 0) {
-      return;
-    }
     BookmarkingUI.onStarCommand(event);
   },
 };
