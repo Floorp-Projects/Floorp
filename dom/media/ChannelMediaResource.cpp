@@ -382,16 +382,6 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
 }
 
 nsresult
-ChannelMediaResource::CopySegmentToCache(const char* aFromSegment,
-                                         uint32_t aCount,
-                                         uint32_t* aWriteCount)
-{
-  mCacheStream.NotifyDataReceived(aCount, aFromSegment);
-  *aWriteCount = aCount;
-  return NS_OK;
-}
-
-nsresult
 ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
                                          void* aResource,
                                          const char* aFromSegment,
@@ -400,7 +390,9 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
                                          uint32_t* aWriteCount)
 {
   ChannelMediaResource* res = static_cast<ChannelMediaResource*>(aResource);
-  return res->CopySegmentToCache(aFromSegment, aCount, aWriteCount);
+  res->mCacheStream.NotifyDataReceived(aCount, aFromSegment);
+  *aWriteCount = aCount;
+  return NS_OK;
 }
 
 nsresult
