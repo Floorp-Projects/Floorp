@@ -713,7 +713,7 @@ JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
              * We have a cross-compartment wrapper. Its private pointer may
              * point into the compartment being collected, so we should mark it.
              */
-            TraceEdge(trc, wrapper->slotOfPrivate(), "cross-compartment wrapper");
+            ProxyObject::traceEdgeToTarget(trc, wrapper);
         }
     }
 }
