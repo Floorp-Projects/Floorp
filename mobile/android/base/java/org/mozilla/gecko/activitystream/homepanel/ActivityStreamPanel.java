@@ -61,7 +61,7 @@ public class ActivityStreamPanel extends FrameLayout {
     public ActivityStreamPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        setBackgroundColor(ContextCompat.getColor(context, R.color.about_page_header_grey));
+        setBackgroundColor(ContextCompat.getColor(context, R.color.photon_browser_toolbar_bg));
 
         inflate(context, R.layout.as_content, this);
 
