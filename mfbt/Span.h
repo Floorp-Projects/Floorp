@@ -500,6 +500,16 @@ public:
   {
   }
 
+  // Implicit constructors for char* and char16_t* pointers are deleted in order
+  // to avoid accidental construction in cases where a pointer does not point to
+  // a zero-terminated string. A Span<const char> or Span<const char16_t> can be
+  // obtained for const char* or const char16_t pointing to a zero-terminated
+  // string using the MakeStringSpan() function.
+  Span(char* aStr) = delete;
+  Span(const char* aStr) = delete;
+  Span(char16_t* aStr) = delete;
+  Span(const char16_t* aStr) = delete;
+
   /**
    * Constructor for std::array.
    */
@@ -971,11 +981,20 @@ MakeSpan(ElementType* aStartPtr, ElementType* aEndPtr)
 
 /**
  * Create span from C array.
+ * MakeSpan() does not permit creating Span objects from string literals (const
+ * char or char16_t arrays) because the Span length would include the zero
+ * terminator, which may surprise callers. Use MakeStringSpan() to create a
+ * Span whose length that excludes the string literal's zero terminator or use
+ * the MakeSpan() overload that accepts a pointer and length and specify the
+ * string literal's full length.
  */
-template<class ElementType, size_t N>
+template<class ElementType, size_t N,
+         class = span_details::enable_if_t<
+                   !IsSame<ElementType, const char>::value &&
+                   !IsSame<ElementType, const char16_t>::value>>
 Span<ElementType> MakeSpan(ElementType (&aArr)[N])
 {
-  return Span<ElementType>(aArr);
+  return Span<ElementType>(aArr, N);
 }
 
 /**
