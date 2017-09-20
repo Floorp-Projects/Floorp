@@ -136,10 +136,8 @@ var PocketPageAction = {
           wrapper.hidden = true;
 
           wrapper.addEventListener("click", event => {
-            if (event.type == "click" && event.button != 0) {
-              return;
-            }
-            this.doCommand(event.target.ownerGlobal);
+            let {BrowserPageActions} = wrapper.ownerGlobal;
+            BrowserPageActions.doCommandForAction(this, event, wrapper);
           });
         },
         onPlacedInPanel(panelNode, urlbarNode) {
