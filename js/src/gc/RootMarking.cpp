@@ -150,6 +150,10 @@ inline void
 AutoGCRooter::trace(JSTracer* trc)
 {
     switch (tag_) {
+      case PARSER:
+        frontend::TraceParser(trc, this);
+        return;
+
       case VALARRAY: {
         /*
          * We don't know the template size parameter, but we can safely treat it
