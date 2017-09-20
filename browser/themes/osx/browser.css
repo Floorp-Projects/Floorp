@@ -68,8 +68,10 @@
 #titlebar-secondary-buttonbox {
   position: relative;
   z-index: 1;
-  align-items: center;
-  display: flex;
+}
+
+#titlebar-buttonbox-container {
+  -moz-box-align: center;
 }
 
 /* These would be margin-inline-start/end if it wasn't for the fact that OS X
