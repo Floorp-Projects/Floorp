@@ -721,6 +721,53 @@ class NativeObject : public ShapedObject
     }
 
     /*
+     * The methods below shadow methods on JSObject and are more efficient for
+     * known-native objects.
+     */
+    bool hasAllFlags(js::BaseShape::Flag flags) const {
+        MOZ_ASSERT(flags);
+        return shape_->hasAllObjectFlags(flags);
+    }
+    bool watched() const {
+        return hasAllFlags(js::BaseShape::WATCHED);
+    }
+    bool nonProxyIsExtensible() const {
+        return !hasAllFlags(js::BaseShape::NOT_EXTENSIBLE);
+    }
+
+    /*
+     * Whether there may be indexed properties on this object, excluding any in
+     * the object's elements.
+     */
+    bool isIndexed() const {
+        return hasAllFlags(js::BaseShape::INDEXED);
+    }
+
+    static bool setHadElementsAccess(JSContext* cx, HandleNativeObject obj) {
+        return setFlags(cx, obj, js::BaseShape::HAD_ELEMENTS_ACCESS);
+    }
+
+    /*
+     * Whether SETLELEM was used to access this object. See also the comment near
+     * PropertyTree::MAX_HEIGHT.
+     */
+    bool hadElementsAccess() const {
+        return hasAllFlags(js::BaseShape::HAD_ELEMENTS_ACCESS);
+    }
+
+    // Mark an object as having its 'new' script information cleared.
+    bool wasNewScriptCleared() const {
+        return hasAllFlags(js::BaseShape::NEW_SCRIPT_CLEARED);
+    }
+    static bool setNewScriptCleared(JSContext* cx, HandleNativeObject obj) {
+        return setFlags(cx, obj, js::BaseShape::NEW_SCRIPT_CLEARED);
+    }
+
+    bool hasInterestingSymbol() const {
+        return hasAllFlags(js::BaseShape::HAS_INTERESTING_SYMBOL);
+    }
+
+    /*
      * Grow or shrink slots immediately before changing the slot span.
      * The number of allocated slots is not stored explicitly, and changes to
      * the slots must track changes in the slot span.
