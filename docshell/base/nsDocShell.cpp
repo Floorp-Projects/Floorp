@@ -14990,32 +14990,6 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     return NS_OK;
   }
 
-  nsresult result;
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-    do_GetService(THIRDPARTYUTIL_CONTRACTID, &result);
-  NS_ENSURE_SUCCESS(result, result);
-
-  if (mCurrentURI &&
-      nsContentUtils::CookiesBehavior() == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
-    nsAutoCString uriSpec;
-    if (!(mCurrentURI->GetSpecOrDefault().EqualsLiteral("about:blank"))) {
-      // Reject the interception of third-party iframes if the cookie behaviour
-      // is set to reject all third-party cookies (1). In case that this pref
-      // is not set or can't be read, we default to allow all cookies (0) as
-      // this is the default value in all.js.
-      bool isThirdPartyURI = true;
-      result = thirdPartyUtil->IsThirdPartyURI(mCurrentURI, aURI,
-                                               &isThirdPartyURI);
-      if (NS_FAILED(result)) {
-          return result;
-      }
-
-      if (isThirdPartyURI) {
-        return NS_OK;
-      }
-    }
-  }
-
   if (!aIsNonSubresourceRequest) {
     nsCOMPtr<nsIDocument> doc = GetDocument();
     if (!doc) {
@@ -15029,6 +15003,25 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     }
 
     return NS_OK;
+  }
+
+  if (nsContentUtils::CookiesBehavior() == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
+    nsCOMPtr<nsIDocShellTreeItem> parent;
+    GetSameTypeParent(getter_AddRefs(parent));
+    nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parent ? parent->GetWindow()
+                                                       : nullptr;
+    if (parentWindow) {
+      nsresult rv = NS_OK;
+      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      bool isThirdPartyURI = true;
+      rv = thirdPartyUtil->IsThirdPartyWindow(parentWindow, aURI, &isThirdPartyURI);
+      if (NS_SUCCEEDED(rv) && isThirdPartyURI) {
+        return NS_OK;
+      }
+    }
   }
 
   nsCOMPtr<nsIPrincipal> principal =
