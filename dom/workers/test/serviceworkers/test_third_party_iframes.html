@@ -160,13 +160,13 @@ let steps = [() => {
     ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECT]
   ]}, next);
 }, () => {
-  testShouldIntercept(next);
+  testShouldNotIntercept(next);
 }, () => {
   SpecialPowers.pushPrefEnv({"set": [
     ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_LIMITFOREIGN]
   ]}, next);
 }, () => {
-  testShouldIntercept(next);
+  testShouldNotIntercept(next);
 }];
 
 </script>
