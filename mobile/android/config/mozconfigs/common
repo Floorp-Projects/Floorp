@@ -44,7 +44,6 @@ ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
 
 if [ -z "$NO_NDK" ]; then
     ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
-    ac_add_options --with-android-gnu-compiler-version=4.9
 fi
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
