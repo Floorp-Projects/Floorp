@@ -68,11 +68,13 @@ pub struct SimplePrimitiveInstance {
 }
 
 impl SimplePrimitiveInstance {
-    pub fn new(specific_prim_address: GpuCacheAddress,
-               task_address: RenderTaskAddress,
-               clip_task_address: RenderTaskAddress,
-               layer_address: PackedLayerAddress,
-               z_sort_index: i32) -> SimplePrimitiveInstance {
+    pub fn new(
+        specific_prim_address: GpuCacheAddress,
+        task_address: RenderTaskAddress,
+        clip_task_address: RenderTaskAddress,
+        layer_address: PackedLayerAddress,
+        z_sort_index: i32,
+    ) -> SimplePrimitiveInstance {
         SimplePrimitiveInstance {
             specific_prim_address,
             task_address,
@@ -93,7 +95,7 @@ impl SimplePrimitiveInstance {
                 data0,
                 data1,
                 data2,
-            ]
+            ],
         }
     }
 }
@@ -108,12 +110,14 @@ pub struct CompositePrimitiveInstance {
 }
 
 impl CompositePrimitiveInstance {
-    pub fn new(task_address: RenderTaskAddress,
-               src_task_address: RenderTaskAddress,
-               backdrop_task_address: RenderTaskAddress,
-               data0: i32,
-               data1: i32,
-               z: i32) -> CompositePrimitiveInstance {
+    pub fn new(
+        task_address: RenderTaskAddress,
+        src_task_address: RenderTaskAddress,
+        backdrop_task_address: RenderTaskAddress,
+        data0: i32,
+        data1: i32,
+        z: i32,
+    ) -> CompositePrimitiveInstance {
         CompositePrimitiveInstance {
             task_address,
             src_task_address,
@@ -137,7 +141,7 @@ impl From<CompositePrimitiveInstance> for PrimitiveInstance {
                 instance.data1,
                 0,
                 0,
-            ]
+            ],
         }
     }
 }

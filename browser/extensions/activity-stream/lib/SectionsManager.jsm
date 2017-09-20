@@ -35,6 +35,7 @@ const BUILT_IN_SECTIONS = {
       message: {id: "topstories_empty_state", values: {provider: options.provider_name}},
       icon: "check"
     },
+    shouldSendImpressionStats: true,
     order: 0
   }),
   "feeds.section.highlights": options => ({
@@ -53,6 +54,7 @@ const BUILT_IN_SECTIONS = {
       message: {id: "highlights_empty_state"},
       icon: "highlights"
     },
+    shouldSendImpressionStats: false,
     order: 1
   })
 };

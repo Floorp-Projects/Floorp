@@ -6,7 +6,7 @@ extern crate gleam;
 extern crate glutin;
 extern crate webrender;
 
-#[path="common/boilerplate.rs"]
+#[path = "common/boilerplate.rs"]
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
@@ -16,8 +16,16 @@ use webrender::api::*;
 // This example demonstrates using the frame output feature to copy
 // the output of a WR framebuffer to a custom texture.
 
-const VS: &str = "#version 130\nin vec2 aPos;out vec2 vUv;\nvoid main() { vUv = aPos; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
-const FS: &str = "#version 130\nout vec4 oFragColor;\nin vec2 vUv;\nuniform sampler2D s;\nvoid main() { oFragColor = texture(s, vUv); }\n";
+const VS: &str = "#version 130
+    in vec2 aPos;out vec2 vUv;
+    void main() { vUv = aPos; gl_Position = vec4(aPos, 0.0, 1.0); }
+";
+const FS: &str = "#version 130
+    out vec4 oFragColor;
+    in vec2 vUv;
+    uniform sampler2D s;
+    void main() { oFragColor = texture(s, vUv); }
+";
 
 struct App {
     iframe_pipeline_id: Option<PipelineId>,
@@ -30,9 +38,7 @@ struct OutputHandler {
 
 impl OutputHandler {
     fn new(texture_id: gl::GLuint) -> OutputHandler {
-        OutputHandler {
-            texture_id
-        }
+        OutputHandler { texture_id }
     }
 }
 
@@ -41,18 +47,19 @@ impl webrender::OutputImageHandler for OutputHandler {
         Some((self.texture_id, DeviceIntSize::new(100, 100)))
     }
 
-    fn unlock(&mut self, _id: PipelineId) {
-    }
+    fn unlock(&mut self, _id: PipelineId) {}
 }
 
 impl Example for App {
-    fn render(&mut self,
-              api: &RenderApi,
-              builder: &mut DisplayListBuilder,
-              _resources: &mut ResourceUpdates,
-              _layout_size: LayoutSize,
-              _pipeline_id: PipelineId,
-              document_id: DocumentId) {
+    fn render(
+        &mut self,
+        api: &RenderApi,
+        builder: &mut DisplayListBuilder,
+        _resources: &mut ResourceUpdates,
+        _layout_size: LayoutSize,
+        _pipeline_id: PipelineId,
+        document_id: DocumentId,
+    ) {
         // Build the iframe display list on first render.
         if self.iframe_pipeline_id.is_none() {
             let epoch = Epoch(0);
@@ -63,19 +70,17 @@ impl Example for App {
             let mut builder = DisplayListBuilder::new(iframe_pipeline_id, layout_size);
             let resources = ResourceUpdates::new();
 
-            let bounds = (0,0).to(50, 50);
-            let info = LayoutPrimitiveInfo {
-                rect: bounds,
-                local_clip: None,
-                is_backface_visible: true,
-            };
-            builder.push_stacking_context(&info,
-                                          ScrollPolicy::Scrollable,
-                                          None,
-                                          TransformStyle::Flat,
-                                          None,
-                                          MixBlendMode::Normal,
-                                          Vec::new());
+            let bounds = (0, 0).to(50, 50);
+            let info = LayoutPrimitiveInfo::new(bounds);
+            builder.push_stacking_context(
+                &info,
+                ScrollPolicy::Scrollable,
+                None,
+                TransformStyle::Flat,
+                None,
+                MixBlendMode::Normal,
+                Vec::new(),
+            );
 
             builder.push_rect(&info, ColorF::new(1.0, 1.0, 0.0, 1.0));
             builder.pop_stacking_context();
@@ -87,26 +92,24 @@ impl Example for App {
                 layout_size,
                 builder.finalize(),
                 true,
-                resources
+                resources,
             );
 
             self.iframe_pipeline_id = Some(iframe_pipeline_id);
             api.enable_frame_output(document_id, iframe_pipeline_id, true);
         }
 
-        let bounds = (100,100).to(200, 200);
-        let info = LayoutPrimitiveInfo {
-            rect: bounds,
-            local_clip: None,
-            is_backface_visible: true,
-        };
-        builder.push_stacking_context(&info,
-                                      ScrollPolicy::Scrollable,
-                                      None,
-                                      TransformStyle::Flat,
-                                      None,
-                                      MixBlendMode::Normal,
-                                      Vec::new());
+        let bounds = (100, 100).to(200, 200);
+        let info = LayoutPrimitiveInfo::new(bounds);
+        builder.push_stacking_context(
+            &info,
+            ScrollPolicy::Scrollable,
+            None,
+            TransformStyle::Flat,
+            None,
+            MixBlendMode::Normal,
+            Vec::new(),
+        );
 
         builder.push_iframe(&info, self.iframe_pipeline_id.unwrap());
 
@@ -119,14 +122,7 @@ impl Example for App {
 
         let pid = create_program(gl);
 
-        let vertices: [f32; 12] = [
-            0.0, 1.0,
-            1.0, 0.0,
-            0.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            1.0, 0.0
-        ];
+        let vertices: [f32; 12] = [0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0];
 
         gl.active_texture(gl::TEXTURE0);
         gl.bind_texture(gl::TEXTURE_2D, self.texture_id);
@@ -150,30 +146,53 @@ impl Example for App {
         gl.delete_program(pid);
     }
 
-    fn on_event(&mut self,
-                _event: glutin::Event,
-                _api: &RenderApi,
-                _document_id: DocumentId) -> bool {
+    fn on_event(
+        &mut self,
+        _event: glutin::Event,
+        _api: &RenderApi,
+        _document_id: DocumentId,
+    ) -> bool {
         false
     }
 
-    fn get_output_image_handler(&mut self, gl: &gl::Gl) -> Option<Box<webrender::OutputImageHandler>> {
+    fn get_output_image_handler(
+        &mut self,
+        gl: &gl::Gl,
+    ) -> Option<Box<webrender::OutputImageHandler>> {
         let texture_id = gl.gen_textures(1)[0];
 
         gl.bind_texture(gl::TEXTURE_2D, texture_id);
-        gl.tex_parameter_i(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as gl::GLint);
-        gl.tex_parameter_i(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as gl::GLint);
-        gl.tex_parameter_i(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as gl::GLint);
-        gl.tex_parameter_i(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as gl::GLint);
-        gl.tex_image_2d(gl::TEXTURE_2D,
-                        0,
-                        gl::RGBA as gl::GLint,
-                        100,
-                        100,
-                        0,
-                        gl::BGRA,
-                        gl::UNSIGNED_BYTE,
-                        None);
+        gl.tex_parameter_i(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_MAG_FILTER,
+            gl::LINEAR as gl::GLint,
+        );
+        gl.tex_parameter_i(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_MIN_FILTER,
+            gl::LINEAR as gl::GLint,
+        );
+        gl.tex_parameter_i(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_WRAP_S,
+            gl::CLAMP_TO_EDGE as gl::GLint,
+        );
+        gl.tex_parameter_i(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_WRAP_T,
+            gl::CLAMP_TO_EDGE as gl::GLint,
+        );
+        gl.tex_image_2d(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGBA as gl::GLint,
+            100,
+            100,
+            0,
+            gl::BGRA,
+            gl::UNSIGNED_BYTE,
+            None,
+        );
         gl.bind_texture(gl::TEXTURE_2D, 0);
 
         self.texture_id = texture_id;
@@ -189,10 +208,7 @@ fn main() {
     boilerplate::main_wrapper(&mut app, None);
 }
 
-pub fn compile_shader(gl: &gl::Gl,
-                      shader_type: gl::GLenum,
-                      source: &str)
-                      -> gl::GLuint {
+pub fn compile_shader(gl: &gl::Gl, shader_type: gl::GLenum, source: &str) -> gl::GLuint {
     let id = gl.create_shader(shader_type);
     gl.shader_source(id, &[source.as_bytes()]);
     gl.compile_shader(id);

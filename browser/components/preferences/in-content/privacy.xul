@@ -730,8 +730,8 @@
       &dataCollectionDesc.label;<label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
     </description>
     <description flex="1">
-      <checkbox id="submitHealthReportBox" label="&enableHealthReport1.label;"
-                accesskey="&enableHealthReport1.accesskey;"/>
+      <checkbox id="submitHealthReportBox" label="&enableHealthReport2.label;"
+                accesskey="&enableHealthReport2.accesskey;"/>
       <label id="FHRLearnMore"
              class="learnMore text-link">&healthReportLearnMore.label;</label>
     </description>
@@ -762,9 +762,13 @@
 <!-- addons, forgery (phishing) UI Security -->
 <groupbox id="browsingProtectionGroup" data-category="panePrivacy" hidden="true">
   <caption><label>&browsingProtection.label;</label></caption>
-  <checkbox id="enableSafeBrowsing"
-            label="&enableSafeBrowsing.label;"
-            accesskey="&enableSafeBrowsing.accesskey;" />
+  <hbox align = "center">
+    <checkbox id="enableSafeBrowsing"
+              label="&enableSafeBrowsing.label;"
+              accesskey="&enableSafeBrowsing.accesskey;" />
+    <label id="enableSafeBrowsingLearnMore"
+           class="learnMore text-link">&enableSafeBrowsingLearnMore.label;</label>
+  </hbox>
   <vbox class="indent">
 #ifdef MOZILLA_OFFICIAL
     <checkbox id="blockDownloads"

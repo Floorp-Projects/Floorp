@@ -259,7 +259,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
                          uint32_t count);
 
     static void trace(JSTracer* trc, JSObject* obj);
-    static void objectMoved(JSObject* obj, const JSObject* old);
+    static size_t objectMoved(JSObject* obj, JSObject* old);
 
     static BufferContents externalizeContents(JSContext* cx,
                                               Handle<ArrayBufferObject*> buffer,

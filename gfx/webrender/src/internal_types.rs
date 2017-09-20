@@ -2,21 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::{ClipId, DevicePoint, DeviceUintRect, DocumentId, Epoch};
+use api::{ExternalImageData, ExternalImageId};
+use api::{ImageFormat, PipelineId};
 use api::DebugCommand;
 use device::TextureFilter;
 use fxhash::FxHasher;
 use profiler::BackendProfileCounters;
+use renderer::BlendMode;
+use std::{usize, i32};
 use std::collections::{HashMap, HashSet};
 use std::f32;
 use std::hash::BuildHasherDefault;
-use std::{i32, usize};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tiling;
-use renderer::BlendMode;
-use api::{ClipId, DevicePoint, DeviceUintRect, DocumentId, Epoch};
-use api::{ExternalImageData, ExternalImageId};
-use api::{ImageFormat, PipelineId};
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
@@ -71,15 +71,13 @@ impl BatchTextures {
                 SourceTexture::CacheRGBA8,
                 SourceTexture::CacheA8,
                 SourceTexture::Invalid,
-            ]
+            ],
         }
     }
 
     pub fn color(texture: SourceTexture) -> Self {
         BatchTextures {
-            colors: [ texture,
-                      SourceTexture::Invalid,
-                      SourceTexture::Invalid ]
+            colors: [texture, SourceTexture::Invalid, SourceTexture::Invalid],
         }
     }
 }
@@ -92,7 +90,10 @@ pub enum RenderTargetMode {
 
 #[derive(Debug)]
 pub enum TextureUpdateSource {
-    External { id: ExternalImageId, channel_index: u8 },
+    External {
+        id: ExternalImageId,
+        channel_index: u8,
+    },
     Bytes { data: Arc<Vec<u8>> },
 }
 
@@ -152,10 +153,11 @@ pub struct RendererFrame {
 }
 
 impl RendererFrame {
-    pub fn new(pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
-               layers_bouncing_back: FastHashSet<ClipId>,
-               frame: Option<tiling::Frame>)
-               -> RendererFrame {
+    pub fn new(
+        pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
+        layers_bouncing_back: FastHashSet<ClipId>,
+        frame: Option<tiling::Frame>,
+    ) -> RendererFrame {
         RendererFrame {
             pipeline_epoch_map,
             layers_bouncing_back,
@@ -173,8 +175,16 @@ pub enum ResultMsg {
     DebugCommand(DebugCommand),
     DebugOutput(DebugOutput),
     RefreshShader(PathBuf),
-    NewFrame(DocumentId, RendererFrame, TextureUpdateList, BackendProfileCounters),
-    UpdateResources { updates: TextureUpdateList, cancel_rendering: bool },
+    NewFrame(
+        DocumentId,
+        RendererFrame,
+        TextureUpdateList,
+        BackendProfileCounters,
+    ),
+    UpdateResources {
+        updates: TextureUpdateList,
+        cancel_rendering: bool,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]

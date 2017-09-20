@@ -32,7 +32,7 @@ impl PrintTree {
     }
 
     fn print_level_prefix(&self) {
-        for _ in 0..self.level {
+        for _ in 0 .. self.level {
             print!("\u{2502}  ");
         }
     }
@@ -67,7 +67,7 @@ impl PrintTreePrinter for PrintTree {
     fn add_item(&mut self, text: String) {
         self.flush_queued_item("\u{251C}\u{2500}");
         self.queued_item = Some(text);
-    }    
+    }
 }
 
 impl Drop for PrintTree {

@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.background.fxa;
 
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
@@ -98,28 +97,6 @@ public class FxAccountClientException extends Exception {
 
     public boolean isAccountLocked() {
       return apiErrorNumber == FxAccountRemoteError.ACCOUNT_LOCKED;
-    }
-
-    public int getErrorMessageStringResource() {
-      if (isUpgradeRequired()) {
-        return R.string.fxaccount_remote_error_UPGRADE_REQUIRED;
-      } else if (isAccountAlreadyExists()) {
-        return R.string.fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS;
-      } else if (isAccountDoesNotExist()) {
-        return R.string.fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST;
-      } else if (isBadPassword()) {
-        return R.string.fxaccount_remote_error_INCORRECT_PASSWORD;
-      } else if (isUnverified()) {
-        return R.string.fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT;
-      } else if (isTooManyRequests()) {
-        return R.string.fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS;
-      } else if (isServerUnavailable()) {
-        return R.string.fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD;
-      } else if (isAccountLocked()) {
-        return R.string.fxaccount_remote_error_ACCOUNT_LOCKED;
-      } else {
-        return R.string.fxaccount_remote_error_UNKNOWN_ERROR;
-      }
     }
   }
 

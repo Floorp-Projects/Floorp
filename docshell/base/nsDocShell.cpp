@@ -4969,6 +4969,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   const char* error = nullptr;
+  // The key used to select the appropriate error message from the properties file.
+  const char* errorDescriptionID = nullptr;
   const uint32_t kMaxFormatStrArgs = 3;
   nsAutoString formatStrs[kMaxFormatStrArgs];
   uint32_t formatStrCount = 0;
@@ -5214,6 +5216,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       case NS_ERROR_MALFORMED_URI:
         // URI is malformed
         error = "malformedURI";
+        errorDescriptionID = "malformedURI2";
         break;
       case NS_ERROR_REDIRECT_LOOP:
         // Doc failed to load because the server generated too many redirects
@@ -5288,6 +5291,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     return NS_OK;
   }
 
+  if (!errorDescriptionID) {
+    errorDescriptionID = error;
+  }
+
   // Test if the error needs to be formatted
   if (!messageStr.IsEmpty()) {
     // already obtained message
@@ -5336,7 +5343,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       strs[i] = formatStrs[i].get();
     }
     nsAutoString str;
-    rv = stringBundle->FormatStringFromName(error, strs, formatStrCount, str);
+    rv = stringBundle->FormatStringFromName(errorDescriptionID, strs, formatStrCount, str);
     NS_ENSURE_SUCCESS(rv, rv);
     messageStr.Assign(str.get());
   }

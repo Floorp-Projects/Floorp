@@ -4965,6 +4965,8 @@ nsIDocument::SetContainer(nsDocShell* aContainer)
 
     static_cast<nsDocument*>(this)->SetIsContentDocument(true);
   }
+
+  mAncestorPrincipals = aContainer->AncestorPrincipals();
 }
 
 nsISupports*

@@ -721,6 +721,16 @@
                        label="&appMenuRemoteTabs.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
+        <toolbarseparator/>
+        <label value="&appMenuRecentHighlights.label;"
+               class="subview-subheader"/>
+        <toolbaritem id="appMenu-library-recentHighlights"
+                     orient="vertical"
+                     smoothscroll="false"
+                     flatList="true"
+                     tooltip="bhTooltip">
+          <!-- Recent Highlights will go here -->
+        </toolbaritem>
       </vbox>
     </panelview>
 

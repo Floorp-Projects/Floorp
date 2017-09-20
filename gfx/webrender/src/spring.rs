@@ -53,17 +53,24 @@ impl Spring {
     /// Run one tick of the spring animation. Return true if the animation is complete.
     pub fn animate(&mut self) -> bool {
         if !is_resting(self.cur.x, self.prev.x, self.dest.x) ||
-                !is_resting(self.cur.y, self.prev.y, self.dest.y) {
-            let next = LayerPoint::new(next(self.cur.x,
-                                            self.prev.x,
-                                            self.dest.x,
-                                            self.stiffness,
-                                            self.damping),
-                                       next(self.cur.y,
-                                            self.prev.y,
-                                            self.dest.y,
-                                            self.stiffness,
-                                            self.damping));
+            !is_resting(self.cur.y, self.prev.y, self.dest.y)
+        {
+            let next = LayerPoint::new(
+                next(
+                    self.cur.x,
+                    self.prev.x,
+                    self.dest.x,
+                    self.stiffness,
+                    self.damping,
+                ),
+                next(
+                    self.cur.y,
+                    self.prev.y,
+                    self.dest.y,
+                    self.stiffness,
+                    self.damping,
+                ),
+            );
             let (cur, dest) = (self.cur, self.dest);
             self.coords(next, cur, dest);
             false

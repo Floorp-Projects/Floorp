@@ -223,7 +223,14 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #handlersView > richlistitem {
-  min-height: 36px !important;
+  min-height: 30px !important;
+}
+
+#handlersView > richlistitem > hbox > hbox > menulist {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-inline-end: 0;
+  min-height: 0;
 }
 
 .typeIcon {
@@ -592,20 +599,22 @@ separator.thin:not([orient="vertical"]) {
 }
 
 .help-button {
+  display: flex;
+  align-items: center;
   position: fixed;
   left: 0;
   bottom: 36px;
   background-image: url("chrome://global/skin/icons/help.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  line-height: 36px;
-  height: 36px;
+  line-height: 22px;
+  height: unset;
+  min-height: 36px;
   width: 168px;
-  background-position: left 10px top 10px;
+  background-position: left 10px center;
   background-size: 16px;
   padding-inline-start: 38px;
   margin-inline-start: 34px;
-  white-space: nowrap;
 }
 
 .help-button:-moz-locale-dir(rtl) {

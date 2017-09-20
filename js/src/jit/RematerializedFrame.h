@@ -259,16 +259,8 @@ struct MapTypeToRootKind<js::jit::RematerializedFrame*>
 
 template <>
 struct GCPolicy<js::jit::RematerializedFrame*>
-{
-    static js::jit::RematerializedFrame* initial() {
-        return nullptr;
-    }
-
-    static void trace(JSTracer* trc, js::jit::RematerializedFrame** frame, const char* name) {
-        if (*frame)
-            (*frame)->trace(trc);
-    }
-};
+  : public NonGCPointerPolicy<js::jit::RematerializedFrame*>
+{};
 
 } // namespace JS
 

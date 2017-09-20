@@ -47,6 +47,7 @@ RegExpStackScope::~RegExpStackScope()
 int
 irregexp::GrowBacktrackStack(JSRuntime* rt)
 {
+    AutoUnsafeCallWithABI unsafe;
     return TlsContext.get()->regexpStack.ref().grow();
 }
 

@@ -741,11 +741,19 @@ proxy_Finalize(FreeOp* fop, JSObject* obj)
         js_free(js::detail::GetProxyDataLayout(obj)->values());
 }
 
-static void
-proxy_ObjectMoved(JSObject* obj, const JSObject* old)
+size_t
+js::proxy_ObjectMoved(JSObject* obj, JSObject* old)
 {
-    MOZ_ASSERT(obj->is<ProxyObject>());
-    obj->as<ProxyObject>().handler()->objectMoved(obj, old);
+    ProxyObject& proxy = obj->as<ProxyObject>();
+
+    if (IsInsideNursery(old)) {
+        // Objects in the nursery are never swapped so the proxy must have an
+        // inline ProxyValueArray.
+        MOZ_ASSERT(old->as<ProxyObject>().usingInlineValueArray());
+        proxy.setInlineValueArray();
+    }
+
+    return proxy.handler()->objectMoved(obj, old);
 }
 
 bool
@@ -780,9 +788,10 @@ const ClassOps js::ProxyClassOps = {
     ProxyObject::trace,      /* trace       */
 };
 
-const ClassExtension js::ProxyClassExtension = PROXY_MAKE_EXT(
+const ClassExtension js::ProxyClassExtension = {
+    proxy_WeakmapKeyDelegate,
     proxy_ObjectMoved
-);
+};
 
 const ObjectOps js::ProxyObjectOps = {
     proxy_LookupProperty,

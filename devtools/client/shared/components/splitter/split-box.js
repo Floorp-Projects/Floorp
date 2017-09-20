@@ -72,6 +72,18 @@ const SplitBox = React.createClass({
     }
   },
 
+  shouldComponentUpdate(nextProps, nextState) {
+    return nextState.width != this.state.width ||
+      nextState.height != this.state.height ||
+      nextState.vert != this.state.vert ||
+      nextProps.startPanel != this.props.startPanel ||
+      nextProps.endPanel != this.props.endPanel ||
+      nextProps.endPanelControl != this.props.endPanelControl ||
+      nextProps.minSize != this.props.minSize ||
+      nextProps.maxSize != this.props.maxSize ||
+      nextProps.splitterSize != this.props.splitterSize;
+  },
+
   // Dragging Events
 
   /**

@@ -180,33 +180,25 @@ TypedArrayObject::finalize(FreeOp* fop, JSObject* obj)
         js_free(curObj->elements());
 }
 
-/* static */ void
-TypedArrayObject::objectMoved(JSObject* obj, const JSObject* old)
-{
-    TypedArrayObject* newObj = &obj->as<TypedArrayObject>();
-    const TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
-
-    // Typed arrays with a buffer object do not need an update.
-    if (oldObj->hasBuffer())
-        return;
-
-    // Update the data slot pointer if it points to the old JSObject.
-    if (oldObj->hasInlineElements())
-        newObj->setInlineElements();
-}
-
 /* static */ size_t
-TypedArrayObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* obj, const JSObject* old,
-                                           gc::AllocKind newAllocKind)
+TypedArrayObject::objectMoved(JSObject* obj, JSObject* old)
 {
     TypedArrayObject* newObj = &obj->as<TypedArrayObject>();
-    const TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
+    TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
     MOZ_ASSERT(newObj->elementsRaw() == oldObj->elementsRaw());
     MOZ_ASSERT(obj->isTenured());
 
     // Typed arrays with a buffer object do not need an update.
     if (oldObj->hasBuffer())
         return 0;
+
+    if (!IsInsideNursery(old)) {
+        // Update the data slot pointer if it points to the old JSObject.
+        if (oldObj->hasInlineElements())
+            newObj->setInlineElements();
+
+        return 0;
+    }
 
     Nursery& nursery = obj->zone()->group()->nursery();
     void* buf = oldObj->elements();
@@ -234,6 +226,7 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
     size_t headerSize = dataOffset() + sizeof(HeapSlot);
 
     // See AllocKindForLazyBuffer.
+    AllocKind newAllocKind = obj->asTenured().getAllocKind();
     MOZ_ASSERT_IF(nbytes == 0, headerSize + sizeof(uint8_t) <= GetGCKindBytes(newAllocKind));
 
     if (headerSize + nbytes <= GetGCKindBytes(newAllocKind)) {
@@ -260,8 +253,8 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
 
     // Set a forwarding pointer for the element buffers in case they were
     // preserved on the stack by Ion.
-    nursery.maybeSetForwardingPointer(trc, oldObj->elements(), newObj->elements(),
-                                      /* direct = */nbytes >= sizeof(uintptr_t));
+    nursery.setForwardingPointerWhileTenuring(oldObj->elements(), newObj->elements(),
+                                              /* direct = */nbytes >= sizeof(uintptr_t));
 
     return newObj->hasInlineElements() ? 0 : nbytes;
 }

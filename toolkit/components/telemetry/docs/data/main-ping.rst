@@ -90,7 +90,7 @@ If the monotonic clock failed, this will be ``-1``.
 Note that this currently does not behave consistently over our supported platforms:
 
 * On Windows this uses ``GetTickCount64()``, which does increase over sleep periods
-* On OS X this uses ``mach_absolute_time()``, which does not increase over sleep periods
+* On macOS this uses ``mach_absolute_time()``, which does not increase over sleep periods
 * On POSIX/Linux this uses ``clock_gettime(CLOCK_MONOTONIC, &ts)``, which should not increase over sleep time
 
 See `bug 1204823 <https://bugzilla.mozilla.org/show_bug.cgi?id=1204823>`_ for details.
@@ -149,7 +149,7 @@ The recorded events are defined in the `Events.yaml <https://dxr.mozilla.org/moz
 
 childPayloads
 -------------
-The Telemetry payloads sent by child processes, recorded on child process shutdown (event ``content-child-shutdown`` observed). They are reduced session payloads, only available with e10s. Among some other things, they don't contain histograms, keyed histograms, addon details, or UI Telemetry.
+The Telemetry payloads sent by child processes, recorded on child process shutdown (event ``content-child-shutdown`` observed). They are reduced session payloads, only available with e10s. Among some other things, they don't contain histograms, keyed histograms, add-on details, or UI Telemetry.
 
 Note: Child payloads are not collected and cleared with subsession splits, they are currently only meaningful when analysed from ``saved-session`` or ``main`` pings with ``reason`` set to ``shutdown``.
 
@@ -607,7 +607,7 @@ Structure:
 
 addonDetails
 ------------
-This section contains per-addon telemetry details, as reported by each addon provider. The XPI provider is the only one reporting at the time of writing (`see DXR <https://dxr.mozilla.org/mozilla-central/search?q=setTelemetryDetails&case=true>`_). Telemetry does not manipulate or enforce a specific format for the supplied provider's data.
+This section contains per add-on telemetry details, as reported by each add-on provider. The XPI provider is the only one reporting at the time of writing (`see DXR <https://dxr.mozilla.org/mozilla-central/search?q=setTelemetryDetails&case=true>`_). Telemetry does not manipulate or enforce a specific format for the supplied provider's data.
 
 Structure:
 

@@ -250,6 +250,11 @@ private:
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   nsTArray<wr::ImageKey> mImageKeysToDelete;
+  // TODO - This is needed because we have some code that creates image keys
+  // and enqueues them for deletion right away which is bad not only because
+  // of poor texture cache usage, but also because images end up deleted before
+  // they are used. This should hopfully be temporary.
+  nsTArray<wr::ImageKey> mImageKeysToDeleteLater;
   nsTArray<uint64_t> mDiscardedCompositorAnimationsIds;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,

@@ -24,6 +24,15 @@ varying vec2 vLocalPos;
 #endif
 
 #ifdef WR_VERTEX_SHADER
+struct YuvImage {
+    vec2 size;
+};
+
+YuvImage fetch_yuv_image(int address) {
+    vec4 data = fetch_from_resource_cache_1(address);
+    return YuvImage(data.xy);
+}
+
 void main(void) {
     Primitive prim = load_primitive();
 #ifdef WR_FEATURE_TRANSFORM

@@ -510,8 +510,8 @@ typedef void
 typedef JSObject*
 (* JSWeakmapKeyDelegateOp)(JSObject* obj);
 
-typedef void
-(* JSObjectMovedOp)(JSObject* obj, const JSObject* old);
+typedef size_t
+(* JSObjectMovedOp)(JSObject* obj, JSObject* old);
 
 /* js::Class operation signatures. */
 
@@ -711,7 +711,8 @@ struct JS_STATIC_CLASS ClassExtension
     JSWeakmapKeyDelegateOp weakmapKeyDelegateOp;
 
     /**
-     * Optional hook called when an object is moved by a compacting GC.
+     * Optional hook called when an object is moved by generational or
+     * compacting GC.
      *
      * There may exist weak pointers to an object that are not traced through
      * when the normal trace APIs are used, for example objects in the wrapper
@@ -720,6 +721,12 @@ struct JS_STATIC_CLASS ClassExtension
      * Note that this hook can be called before JS_NewObject() returns if a GC
      * is triggered during construction of the object. This can happen for
      * global objects for example.
+     *
+     * The function should return the difference between nursery bytes used and
+     * tenured bytes used, which may be nonzero e.g. if some nursery-allocated
+     * data beyond the actual GC thing is moved into malloced memory.
+     *
+     * This is used to compute the nursery promotion rate.
      */
     JSObjectMovedOp objectMovedOp;
 };

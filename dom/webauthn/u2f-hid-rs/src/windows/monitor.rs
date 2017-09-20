@@ -37,35 +37,32 @@ impl Monitor {
     pub fn new() -> io::Result<Self> {
         let (tx, rx) = channel();
 
-        let thread = RunLoop::new(
-            move |alive| -> io::Result<()> {
-                let mut stored = HashSet::new();
+        let thread = RunLoop::new(move |alive| -> io::Result<()> {
+            let mut stored = HashSet::new();
 
-                while alive() {
-                    let device_info_set = DeviceInfoSet::new()?;
-                    let devices = HashSet::from_iter(device_info_set.devices());
+            while alive() {
+                let device_info_set = DeviceInfoSet::new()?;
+                let devices = HashSet::from_iter(device_info_set.devices());
 
-                    // Remove devices that are gone.
-                    for path in stored.difference(&devices) {
-                        tx.send(Event::Remove(path.clone())).map_err(to_io_err)?;
-                    }
-
-                    // Add devices that were plugged in.
-                    for path in devices.difference(&stored) {
-                        tx.send(Event::Add(path.clone())).map_err(to_io_err)?;
-                    }
-
-                    // Remember the new set.
-                    stored = devices;
-
-                    // Wait a little before looking for devices again.
-                    thread::sleep(Duration::from_millis(100));
+                // Remove devices that are gone.
+                for path in stored.difference(&devices) {
+                    tx.send(Event::Remove(path.clone())).map_err(to_io_err)?;
                 }
 
-                Ok(())
-            },
-            0, /* no timeout */
-        )?;
+                // Add devices that were plugged in.
+                for path in devices.difference(&stored) {
+                    tx.send(Event::Add(path.clone())).map_err(to_io_err)?;
+                }
+
+                // Remember the new set.
+                stored = devices;
+
+                // Wait a little before looking for devices again.
+                thread::sleep(Duration::from_millis(100));
+            }
+
+            Ok(())
+        })?;
 
         Ok(Self {
             rx: rx,

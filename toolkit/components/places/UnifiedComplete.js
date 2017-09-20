@@ -22,6 +22,13 @@ const {
   MATCH_BEGINNING_CASE_SENSITIVE,
 } = Ci.mozIPlacesAutoComplete;
 
+// Values for browser.urlbar.insertMethod
+const INSERTMETHOD = {
+  APPEND: 0, // Just append new results.
+  MERGE_RELATED: 1, // Merge previous and current results if search strings are related
+  MERGE: 2 // Always merge previous and current results
+};
+
 // Prefs are defined as [pref name, default value].
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
 const PREF_URLBAR_DEFAULTS = new Map([
@@ -45,6 +52,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["usepreloadedtopurls.expire_days", 14],
   ["matchBuckets", "general:5,suggestion:Infinity"],
   ["matchBucketsSearch", ""],
+  ["insertMethod", INSERTMETHOD.MERGE_RELATED],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
@@ -786,9 +794,12 @@ function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
  *        An nsIAutoCompleteSearch.
  * @param prohibitSearchSuggestions
  *        Whether search suggestions are allowed for this search.
+ * @param [optional] previousResult
+ *        The result object from the previous search. if available.
  */
 function Search(searchString, searchParam, autocompleteListener,
-                resultListener, autocompleteSearch, prohibitSearchSuggestions) {
+                resultListener, autocompleteSearch, prohibitSearchSuggestions,
+                previousResult) {
   // We want to store the original string for case sensitive searches.
   this._originalSearchString = searchString;
   this._trimmedOriginalSearchString = searchString.trim();
@@ -829,7 +840,8 @@ function Search(searchString, searchParam, autocompleteListener,
 
   // Create a new result to add eventual matches.  Note we need a result
   // regardless having matches.
-  let result = Cc["@mozilla.org/autocomplete/simple-result;1"]
+  let result = previousResult ||
+               Cc["@mozilla.org/autocomplete/simple-result;1"]
                  .createInstance(Ci.nsIAutoCompleteSimpleResult);
   result.setSearchString(searchString);
   result.setListener(resultListener);
@@ -837,12 +849,28 @@ function Search(searchString, searchParam, autocompleteListener,
   result.setDefaultIndex(-1);
   this._result = result;
 
+  this._previousSearchMatchTypes = [];
+  for (let i = 0; previousResult && i < previousResult.matchCount; ++i) {
+    let style = previousResult.getStyleAt(i);
+    if (style.includes("heuristic")) {
+      this._previousSearchMatchTypes.push(MATCHTYPE.HEURISTIC);
+    } else if (style.includes("suggestion")) {
+      this._previousSearchMatchTypes.push(MATCHTYPE.SUGGESTION);
+    } else if (style.includes("extension")) {
+      this._previousSearchMatchTypes.push(MATCHTYPE.EXTENSION);
+    } else {
+      this._previousSearchMatchTypes.push(MATCHTYPE.GENERAL);
+    }
+  }
+
+  // This is a replacement for this._result.matchCount, to be used when you need
+  // to check how many "current" matches have been inserted.
+  // Indeed this._result.matchCount may include matches from the previous search.
+  this._currentMatchCount = 0;
+
   // These are used to avoid adding duplicate entries to the results.
   this._usedURLs = new Set();
   this._usedPlaceIds = new Set();
-
-  // Resolved when all the matches providers have been fetched.
-  this._allMatchesPromises = [];
 
   // Counters for the number of matches per MATCHTYPE.
   this._counts = Object.values(MATCHTYPE)
@@ -955,6 +983,9 @@ Search.prototype = {
    * and no new matches may be added to the current result.
    */
   stop() {
+    // Avoid multiple calls or re-entrance.
+    if (!this.pending)
+      return;
     if (this._sleepTimer)
       this._sleepTimer.cancel();
     if (this._sleepResolve) {
@@ -995,8 +1026,7 @@ Search.prototype = {
     }
 
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, this);
-    if (this._searchString)
-      TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, this);
+    TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, this);
 
     // Since we call the synchronous parseSubmissionURL function later, we must
     // wait for the initialization of PlacesSearchAutocompleteProvider first.
@@ -1046,6 +1076,7 @@ Search.prototype = {
     this._addingHeuristicFirstMatch = true;
     let hasHeuristic = await this._matchFirstHeuristicResult(conn);
     this._addingHeuristicFirstMatch = false;
+    this._cleanUpNonCurrentMatches(MATCHTYPE.HEURISTIC);
     if (!this.pending)
       return;
 
@@ -1062,21 +1093,43 @@ Search.prototype = {
 
     // Only add extension suggestions if the first token is a registered keyword
     // and the search string has characters after the first token.
+    let extensionsCompletePromise = Promise.resolve();
     if (this._searchTokens.length > 0 &&
         ExtensionSearchHandler.isKeywordRegistered(this._searchTokens[0]) &&
         this._originalSearchString.length > this._searchTokens[0].length) {
-      await this._matchExtensionSuggestions();
-      if (!this.pending)
-        return;
+      // Do not await on this, since extensions cannot notify when they are done
+      // adding results, it may take too long.
+      extensionsCompletePromise = this._matchExtensionSuggestions();
     } else if (ExtensionSearchHandler.hasActiveInputSession()) {
       ExtensionSearchHandler.handleInputCancelled();
     }
 
+    let searchSuggestionsCompletePromise = Promise.resolve();
     if (this._enableActions && this._searchTokens.length > 0) {
-      await this._matchSearchSuggestions();
-      if (!this.pending)
-        return;
+      // Limit the string sent for search suggestions to a maximum length.
+      let searchString = this._searchTokens.join(" ")
+                             .substr(0, Prefs.get("maxCharsForSearchSuggestions"));
+      // Avoid fetching suggestions if they are not required, private browsing
+      // mode is enabled, or the search string may expose sensitive information.
+      if (this.hasBehavior("searches") && !this._inPrivateWindow &&
+          !this._prohibitSearchSuggestionsFor(searchString)) {
+        searchSuggestionsCompletePromise = this._matchSearchSuggestions(searchString);
+        if (this.hasBehavior("restrict")) {
+          // Wait for the suggestions to be added.
+          await searchSuggestionsCompletePromise;
+          this._cleanUpNonCurrentMatches(MATCHTYPE.SUGGESTION);
+          // We're done if we're restricting to search suggestions.
+          // Notify the result completion then stop the search.
+          this._autocompleteSearch.finishSearch(true);
+          this.stop();
+          return;
+        }
+      }
     }
+    // In any case, clear previous suggestions.
+    searchSuggestionsCompletePromise.then(() => {
+      this._cleanUpNonCurrentMatches(MATCHTYPE.SUGGESTION);
+    });
 
     for (let [query, params] of queries) {
       await conn.executeCached(query, params, this._onResultRow.bind(this));
@@ -1089,6 +1142,10 @@ Search.prototype = {
       if (!this.pending)
         return;
     }
+
+    // Ideally we should wait until MATCH_BOUNDARY_ANYWHERE, but that query
+    // may be really slow and we may end up showing old results for too long.
+    this._cleanUpNonCurrentMatches(MATCHTYPE.GENERAL);
 
     // If we do not have enough results, and our match type is
     // MATCH_BOUNDARY_ANYWHERE, search again with MATCH_ANYWHERE to get more
@@ -1107,11 +1164,10 @@ Search.prototype = {
 
     this._matchPreloadedSites();
 
-    // Ensure to fill any remaining space. Suggestions which come from extensions are
-    // inserted at the beginning, so any suggestions
-    await Promise.all(this._allMatchesPromises);
+    // Ensure to fill any remaining space.
+    await searchSuggestionsCompletePromise;
+    await extensionsCompletePromise;
   },
-
 
   async _checkPreloadedSitesExpiry() {
     if (!Prefs.get("usepreloadedtopurls.enabled"))
@@ -1318,17 +1374,7 @@ Search.prototype = {
     return false;
   },
 
-  async _matchSearchSuggestions() {
-    // Limit the string sent for search suggestions to a maximum length.
-    let searchString = this._searchTokens.join(" ")
-                           .substr(0, Prefs.get("maxCharsForSearchSuggestions"));
-    // Avoid fetching suggestions if they are not required, private browsing
-    // mode is enabled, or the search string may expose sensitive information.
-    if (!this.hasBehavior("searches") || this._inPrivateWindow ||
-        this._prohibitSearchSuggestionsFor(searchString)) {
-      return;
-    }
-
+  _matchSearchSuggestions(searchString) {
     this._searchSuggestionController =
       PlacesSearchAutocompleteProvider.getSuggestionController(
         searchString,
@@ -1337,36 +1383,27 @@ Search.prototype = {
         Prefs.get("maxRichResults") - Prefs.get("maxHistoricalSearchSuggestions"),
         this._userContextId
       );
-    let promise = this._searchSuggestionController.fetchCompletePromise
-      .then(() => {
-        // The search has been canceled already.
-        if (!this._searchSuggestionController)
-          return;
-        if (this._searchSuggestionController.resultsCount >= 0 &&
-            this._searchSuggestionController.resultsCount < 2) {
-          // The original string is used to properly compare with the next search.
-          this._lastLowResultsSearchSuggestion = this._originalSearchString;
+    return this._searchSuggestionController.fetchCompletePromise.then(() => {
+      // The search has been canceled already.
+      if (!this._searchSuggestionController)
+        return;
+      if (this._searchSuggestionController.resultsCount >= 0 &&
+          this._searchSuggestionController.resultsCount < 2) {
+        // The original string is used to properly compare with the next search.
+        this._lastLowResultsSearchSuggestion = this._originalSearchString;
+      }
+      while (this.pending) {
+        let result = this._searchSuggestionController.consume();
+        if (!result)
+          break;
+        let { match, suggestion, historical } = result;
+        if (!looksLikeUrl(suggestion)) {
+          // Don't include the restrict token, if present.
+          let searchString = this._searchTokens.join(" ");
+          this._addSearchEngineMatch(match, searchString, suggestion, historical);
         }
-        while (this.pending) {
-          let result = this._searchSuggestionController.consume();
-          if (!result)
-            break;
-          let { match, suggestion, historical } = result;
-          if (!looksLikeUrl(suggestion)) {
-            // Don't include the restrict token, if present.
-            let searchString = this._searchTokens.join(" ");
-            this._addSearchEngineMatch(match, searchString, suggestion, historical);
-          }
-        }
-      });
-
-    if (this.hasBehavior("restrict")) {
-      // We're done if we're restricting to search suggestions.
-      await promise;
-      this.stop();
-    } else {
-      this._allMatchesPromises.push(promise);
-    }
+      }
+    }).catch(Cu.reportError);
   },
 
   _prohibitSearchSuggestionsFor(searchString) {
@@ -1599,8 +1636,10 @@ Search.prototype = {
       style: "action searchengine",
       frecency: FRECENCY_DEFAULT
     };
-    if (suggestion)
+    if (suggestion) {
+      match.style += " suggestion";
       match.type = MATCHTYPE.SUGGESTION;
+    }
 
     this._addMatch(match);
   },
@@ -1614,13 +1653,19 @@ Search.prototype = {
         }
       }
     );
+    // Remove previous search matches sooner than the maximum timeout, otherwise
+    // matches may appear stale for a long time.
+    // This is necessary because WebExtensions don't have a method to notify
+    // that they are done providing results, so they could be pending forever.
+    setTimeout(() => this._cleanUpNonCurrentMatches(MATCHTYPE.EXTENSION), 100);
+
     // Since the extension has no way to signale when it's done pushing
     // results, we add a timeout racing with the addition.
     let timeoutPromise = new Promise((resolve, reject) => {
       setTimeout(() => reject(new Error("timeout waiting for the extension to add its results to the location bar")),
                  MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
     });
-    this._allMatchesPromises.push(Promise.race([timeoutPromise, promise]).catch(Cu.reportError));
+    return Promise.race([timeoutPromise, promise]).catch(Cu.reportError);
   },
 
   async _matchRemoteTabs() {
@@ -1841,19 +1886,23 @@ Search.prototype = {
     match.icon = match.icon || "";
     match.finalCompleteValue = match.finalCompleteValue || "";
 
-    this._result.insertMatchAt(this._getInsertIndexForMatch(match),
+    let {index, replace} = this._getInsertIndexForMatch(match);
+    if (replace) { // Replacing an existing match from the previous search.
+      this._result.removeMatchAt(index);
+    }
+    this._result.insertMatchAt(index,
                                match.value,
                                match.comment,
                                match.icon,
                                match.style,
                                match.finalCompleteValue);
+    this._currentMatchCount++;
     this._counts[match.type]++;
 
-    if (this._result.matchCount == 1)
+    if (this._currentMatchCount == 1)
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
-    if (this._result.matchCount == 6)
+    if (this._currentMatchCount == 6)
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
-
     this.notifyResults(true);
   },
 
@@ -1863,13 +1912,38 @@ Search.prototype = {
     // the first added match (the heuristic one).
     if (!this._buckets) {
       // Convert the buckets to readable objects with a count property.
-      let buckets = match.style.includes("searchengine") ? Prefs.get("matchBucketsSearch")
+      let buckets = match.type == MATCHTYPE.HEURISTIC &&
+                    match.style.includes("searchengine") ? Prefs.get("matchBucketsSearch")
                                                          : Prefs.get("matchBuckets");
+      // - available is the number of available slots in the bucket
+      // - insertIndex is the index of the first available slot in the bucket
+      // - count is the number of matches in the bucket, note that it also
+      //   account for matches from the previous search, while available and
+      //   insertIndex don't.
       this._buckets = buckets.map(([type, available]) => ({ type,
                                                             available,
-                                                            count: 0,
+                                                            insertIndex: 0,
+                                                            count: 0
                                                           }));
+
+      // If we have matches from the previous search, we want to replace them
+      // in-place to reduce flickering.
+      // This requires walking the previous matches and marking their existence
+      // into the current buckets, so that, when we'll add the new matches to
+      // the buckets, we can either append or replace a match.
+      if (this._previousSearchMatchTypes.length > 0) {
+        for (let type of this._previousSearchMatchTypes) {
+          for (let bucket of this._buckets) {
+            if (type == bucket.type && bucket.count < bucket.available) {
+              bucket.count++;
+              break;
+            }
+          }
+        }
+      }
     }
+
+    let replace = false;
     for (let bucket of this._buckets) {
       // Move to the next bucket if the match type is incompatible, or if there
       // is no available space or if the frecency is below the threshold.
@@ -1878,12 +1952,73 @@ Search.prototype = {
         continue;
       }
 
-      index += bucket.count;
+      index += bucket.insertIndex;
       bucket.available--;
-      bucket.count++;
+      if (bucket.insertIndex < bucket.count) {
+        replace = true;
+      } else {
+        bucket.count++;
+      }
+      bucket.insertIndex++;
       break;
     }
-    return index;
+    return { index, replace };
+  },
+
+  /**
+   * Removes matches from a previous search, that are no more returned by the
+   * current search
+   * @param type
+   *        The MATCHTYPE to clean up.
+   * @param [optional] notify
+   *        Whether to notify a result change.
+   */
+  _cleanUpNonCurrentMatches(type, notify = true) {
+    if (this._previousSearchMatchTypes.length == 0 || !this.pending)
+      return;
+
+    let index = 0;
+    let changed = false;
+    if (!this._buckets) {
+      // No match arrived yet, so any match of the given type should be removed
+      // from the top.
+      while (this._previousSearchMatchTypes[0] == type) {
+        this._previousSearchMatchTypes.shift();
+        this._result.removeMatchAt(0);
+        changed = true;
+      }
+    } else {
+      for (let bucket of this._buckets) {
+        if (bucket.type != type) {
+          index += bucket.count;
+          continue;
+        }
+        index += bucket.insertIndex;
+
+        while (bucket.count > bucket.insertIndex) {
+          this._result.removeMatchAt(index);
+          changed = true;
+          bucket.count--;
+        }
+      }
+    }
+    if (changed && notify) {
+      this.notifyResults(true);
+    }
+  },
+
+  /**
+   * If in restrict mode, cleanups non current matches for all the empty types.
+   */
+  cleanUpRestrictNonCurrentMatches() {
+    if (this.hasBehavior("restrict") && this._previousSearchMatchTypes.length > 0) {
+      for (let type of new Set(this._previousSearchMatchTypes)) {
+        if (this._counts[type] == 0) {
+          // Don't notify, since we are about to notify completion.
+          this._cleanUpNonCurrentMatches(type, false);
+        }
+      }
+    }
   },
 
   _processHostRow(row) {
@@ -2231,12 +2366,18 @@ Search.prototype = {
    */
   notifyResults(searchOngoing) {
     let result = this._result;
-    let resultCode = result.matchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
+    let resultCode = this._currentMatchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
     if (searchOngoing) {
       resultCode += "_ONGOING";
     }
     result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
     this._listener.onSearchResult(this._autocompleteSearch, result);
+    if (!searchOngoing) {
+      // Break possible cycles.
+      this._result.setListener(null);
+      this._listener = null;
+      this._autocompleteSearch = null;
+    }
   },
 }
 
@@ -2281,7 +2422,7 @@ UnifiedComplete.prototype = {
    */
   getDatabaseHandle() {
     if (Prefs.get("autocomplete.enabled") && !this._promiseDatabase) {
-      this._promiseDatabase = (async function() {
+      this._promiseDatabase = (async () => {
         let conn = await Sqlite.cloneStorageConnection({
           connection: PlacesUtils.history.DBConnection,
           readOnly: true
@@ -2289,7 +2430,11 @@ UnifiedComplete.prototype = {
 
         try {
            Sqlite.shutdown.addBlocker("Places UnifiedComplete.js clone closing",
-                                      async function() {
+                                      async () => {
+                                        // Break a possible cycle through the
+                                        // previous result, the controller and
+                                        // ourselves.
+                                        this._currentSearch = null;
                                         SwitchToTabStorage.shutdown();
                                         await conn.close();
                                       });
@@ -2332,14 +2477,11 @@ UnifiedComplete.prototype = {
 
   // nsIAutoCompleteSearch
 
-  startSearch(searchString, searchParam, previousResult, listener) {
+  startSearch(searchString, searchParam, acPreviousResult, listener) {
     // Stop the search in case the controller has not taken care of it.
     if (this._currentSearch) {
       this.stopSearch();
     }
-
-    // Note: We don't use previousResult to make sure ordering of results are
-    //       consistent.  See bug 412730 for more details.
 
     // If the previous search didn't fetch enough search suggestions, it's
     // unlikely a longer text would do.
@@ -2348,8 +2490,42 @@ UnifiedComplete.prototype = {
       searchString.length > this._lastLowResultsSearchSuggestion.length &&
       searchString.startsWith(this._lastLowResultsSearchSuggestion);
 
+
+    // We don't directly reuse the controller provided previousResult because:
+    //  * it is only populated when the new searchString is an extension of the
+    //    previous one. We want to handle the backspace case too.
+    //  * Bookmarks may be titled differently than history and we want to show
+    //    the right title.  For example a "foo" titled page could be bookmarked
+    //    as "foox", typing "foo" followed by "x" would show the history result
+    //    from the previous search (See bug 412730).
+    //  * Adaptive History means a result may appear even if the previous string
+    //    didn't match it.
+    // What we can do is reuse the previous result along with the bucketing
+    // system to avoid flickering. Since we know where a new match should be
+    // positioned, we  wait for a new match to arrive before replacing the
+    // previous one. This may leave stale matches from the previous search that
+    // would not be returned by the current one, thus once the current search is
+    // complete, we remove those stale matches with _cleanUpNonCurrentMatches().
+    let previousResult = null;
+    let insertMethod = Prefs.get("insertMethod");
+    if (this._currentSearch && insertMethod != INSERTMETHOD.APPEND) {
+      let result = this._currentSearch._result;
+      // Only reuse the previous result when one of the search strings is an
+      // extension of the other one.  We could expand this to any case, but
+      // that may leave exposed unrelated matches for a longer time.
+      let previousSearchString = result.searchString;
+      let stringsRelated = previousSearchString.length > 0 &&
+                           searchString.length > 0 &&
+                           (previousSearchString.includes(searchString) ||
+                            searchString.includes(previousSearchString));
+      if (insertMethod == INSERTMETHOD.MERGE || stringsRelated) {
+        previousResult = result;
+      }
+    }
+
     this._currentSearch = new Search(searchString, searchParam, listener,
-                                     this, this, prohibitSearchSuggestions);
+                                     this, this, prohibitSearchSuggestions,
+                                     previousResult);
 
     // If we are not enabled, we need to return now.  Notice we need an empty
     // result regardless, so we still create the Search object.
@@ -2395,10 +2571,15 @@ UnifiedComplete.prototype = {
     if (!search)
       return;
     this._lastLowResultsSearchSuggestion = search._lastLowResultsSearchSuggestion;
-    delete this._currentSearch;
 
-    if (!notify)
+    if (!notify || !search.pending)
       return;
+
+
+    // If we are in restrict mode and we reused the previous search results,
+    // it's possible we didn't go through all the cleanup methods due to early
+    // bailouts. Thus we could still have nonmatching results to remove.
+    search.cleanUpRestrictNonCurrentMatches();
 
     // There is a possible race condition here.
     // When a search completes it calls finishSearch that notifies results

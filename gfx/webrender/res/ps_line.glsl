@@ -20,6 +20,17 @@ varying vec2 vLocalPos;
 #define LINE_ORIENTATION_VERTICAL       0
 #define LINE_ORIENTATION_HORIZONTAL     1
 
+struct Line {
+    vec4 color;
+    float style;
+    float orientation;
+};
+
+Line fetch_line(int address) {
+    vec4 data[2] = fetch_from_resource_cache_2(address);
+    return Line(data[0], data[1].x, data[1].y);
+}
+
 void main(void) {
     Primitive prim = load_primitive();
     Line line = fetch_line(prim.specific_prim_address);

@@ -744,7 +744,8 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool)
         } else {
             masm.setupUnalignedABICall(output);
             masm.passABIArg(input, MoveOp::DOUBLE);
-            masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
+            masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32), MoveOp::GENERAL,
+                             CheckUnsafeCallWithABI::DontCheckOther);
         }
         masm.storeCallWordResult(output);
 
@@ -831,10 +832,12 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool)
         masm.vcvtss2sd(input, input, input);
         masm.passABIArg(input.asDouble(), MoveOp::DOUBLE);
 
-        if (gen->compilingWasm())
+        if (gen->compilingWasm()) {
             masm.callWithABI(ins->mir()->bytecodeOffset(), wasm::SymbolicAddress::ToInt32);
-        else
-            masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
+        } else {
+            masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32), MoveOp::GENERAL,
+                             CheckUnsafeCallWithABI::DontCheckOther);
+        }
 
         masm.storeCallWordResult(output);
         masm.Pop(input);

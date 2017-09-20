@@ -126,6 +126,9 @@ struct InternalGCPointerPolicy {
     static void trace(JSTracer* trc, T* vp, const char* name) {
         TraceManuallyBarrieredEdge(trc, vp, name);
     }
+    static bool isValid(T v) {
+        return gc::IsCellPointerValid(v);
+    }
 };
 
 } // namespace js

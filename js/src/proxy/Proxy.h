@@ -80,6 +80,8 @@ bool
 proxy_Call(JSContext* cx, unsigned argc, Value* vp);
 bool
 proxy_Construct(JSContext* cx, unsigned argc, Value* vp);
+size_t
+proxy_ObjectMoved(JSObject* obj, JSObject* old);
 
 // These functions are used by JIT code
 

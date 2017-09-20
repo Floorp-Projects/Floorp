@@ -29,8 +29,6 @@
 <string name="fxaccount_getting_started_get_started">&fxaccount_getting_started_get_started;</string>
 
 <string name="fxaccount_status_activity_label">&syncBrand.shortName.label;</string>
-<string name="fxaccount_status_signed_in_as">&fxaccount_status_signed_in_as;</string>
-<string name="fxaccount_status_manage_account">&fxaccount_status_manage_account;</string>
 <string name="fxaccount_status_auth_server">&fxaccount_status_auth_server;</string>
 <string name="fxaccount_status_sync_now">&fxaccount_status_sync_now;</string>
 <string name="fxaccount_status_syncing">&fxaccount_status_syncing2;</string>
@@ -38,38 +36,27 @@
 <string name="fxaccount_status_never_synced">&remote_tabs_never_synced;</string>
 <string name="fxaccount_status_device_name">&fxaccount_status_device_name;</string>
 <string name="fxaccount_status_sync_server">&fxaccount_status_sync_server;</string>
-<string name="fxaccount_status_sync">&fxaccount_status_sync;</string>
-<string name="fxaccount_status_sync_enabled">&fxaccount_status_sync_enabled;</string>
 <string name="fxaccount_status_needs_verification">&fxaccount_status_needs_verification2;</string>
 <string name="fxaccount_status_needs_credentials">&fxaccount_status_needs_credentials;</string>
 <string name="fxaccount_status_needs_upgrade">&fxaccount_status_needs_upgrade;</string>
 <string name="fxaccount_status_needs_master_sync_automatically_enabled">&fxaccount_status_needs_master_sync_automatically_enabled;</string>
 <string name="fxaccount_status_needs_master_sync_automatically_enabled_v21">&fxaccount_status_needs_master_sync_automatically_enabled_v21;</string>
 <string name="fxaccount_status_needs_finish_migrating">&fxaccount_status_needs_finish_migrating;</string>
+<string name="fxaccount_status_choose_what">&fxaccount_status_choose_what;</string>
 <string name="fxaccount_status_bookmarks">&fxaccount_status_bookmarks;</string>
 <string name="fxaccount_status_history">&fxaccount_status_history;</string>
 <string name="fxaccount_status_passwords">&fxaccount_status_passwords2;</string>
 <string name="fxaccount_status_tabs">&fxaccount_status_tabs;</string>
+<string name="fxaccount_status_additional_settings">&fxaccount_status_additional_settings;</string>
 <string name="fxaccount_status_legal">&fxaccount_status_legal;</string>
 <string name="fxaccount_status_linktos">&fxaccount_status_linktos2;</string>
 <string name="fxaccount_status_linkprivacy">&fxaccount_status_linkprivacy2;</string>
-<string name="fxaccount_status_more">&fxaccount_status_more;</string>
 <string name="fxaccount_remove_account">&fxaccount_remove_account;</string>
 
 <string name="fxaccount_label">&fxaccount_account_type_label;</string>
 
 <string name="fxaccount_options_title">&fxaccount_options_title;</string>
 <string name="fxaccount_options_configure_title">&fxaccount_options_configure_title;</string>
-
-<string name="fxaccount_remote_error_UPGRADE_REQUIRED">&fxaccount_remote_error_UPGRADE_REQUIRED;</string>
-<string name="fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS">&fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS_2;</string>
-<string name="fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST">&fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST;</string>
-<string name="fxaccount_remote_error_INCORRECT_PASSWORD">&fxaccount_remote_error_INCORRECT_PASSWORD;</string>
-<string name="fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT">&fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT;</string>
-<string name="fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS">&fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS;</string>
-<string name="fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD">&fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD;</string>
-<string name="fxaccount_remote_error_UNKNOWN_ERROR">&fxaccount_remote_error_UNKNOWN_ERROR;</string>
-<string name="fxaccount_remote_error_ACCOUNT_LOCKED">&fxaccount_remote_error_ACCOUNT_LOCKED;</string>
 
 <string name="fxaccount_sync_sign_in_error_notification_title">&fxaccount_sync_sign_in_error_notification_title2;</string>
 <string name="fxaccount_sync_sign_in_error_notification_text">&fxaccount_sync_sign_in_error_notification_text2;</string>

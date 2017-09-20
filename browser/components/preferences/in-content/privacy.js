@@ -1071,6 +1071,10 @@ var gPrivacyPane = {
     let blockUnwantedPref = document.getElementById("browser.safebrowsing.downloads.remote.block_potentially_unwanted");
     let blockUncommonPref = document.getElementById("browser.safebrowsing.downloads.remote.block_uncommon");
 
+    let learnMoreLink = document.getElementById("enableSafeBrowsingLearnMore");
+    let phishingUrl = "https://support.mozilla.org/kb/how-does-phishing-and-malware-protection-work";
+    learnMoreLink.setAttribute("href", phishingUrl);
+
     enableSafeBrowsing.addEventListener("command", function() {
       safeBrowsingPhishingPref.value = enableSafeBrowsing.checked;
       safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;

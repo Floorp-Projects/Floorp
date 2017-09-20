@@ -76,23 +76,12 @@
         </label>
       </fieldset>
 
-      <fieldset id="debugger-options" class="options-groupbox">
+      <fieldset id="debugger-options" class="options-groupbox" hidden="true">
         <legend>&options.debugger.label;</legend>
-        <label title="&options.sourceMaps.tooltip;">
-          <input type="checkbox"
-                 id="debugger-sourcemaps"
-                 data-pref="devtools.debugger.client-source-maps-enabled"/>
-          <span>&options.sourceMaps.label;</span>
-        </label>
       </fieldset>
 
       <fieldset id="styleeditor-options" class="options-groupbox">
         <legend>&options.styleeditor.label;</legend>
-        <label title="&options.stylesheetSourceMaps.tooltip;">
-          <input type="checkbox"
-                 data-pref="devtools.styleeditor.source-maps-enabled"/>
-          <span>&options.stylesheetSourceMaps.label;</span>
-        </label>
         <label title="&options.stylesheetAutocompletion.tooltip;">
           <input type="checkbox"
                  data-pref="devtools.styleeditor.autocompletion-enabled"/>
@@ -161,6 +150,11 @@
 
       <fieldset id="context-options" class="options-groupbox">
         <legend>&options.context.advancedSettings;</legend>
+          <label title="&options.sourceMaps.tooltip1;">
+            <input type="checkbox"
+                   data-pref="devtools.source-map.client-service.enabled"/>
+            <span>&options.sourceMaps.label;</span>
+          </label>
          <label title="&options.showPlatformData.tooltip;">
             <input type="checkbox"
                    id="devtools-show-gecko-data"

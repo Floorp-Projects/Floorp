@@ -104,17 +104,20 @@ async function doTests() {
     var signedData = assembleRegistrationSignedData(state.appParam, state.challengeParam, state.keyHandleBytes, state.publicKeyBytes);
     return verifySignature(attestationPublicKey, signedData, state.attestationSig);
   }).then(function(verified) {
-    local_ok(verified, "Attestation Certificate signature verified")
+    local_ok(verified, "Attestation Certificate signature verified");
      // Import the public key of the U2F token into WebCrypto
-    return importPublicKey(state.publicKeyBytes)
+    return importPublicKey(state.publicKeyBytes);
   }).then(function(key) {
     state.publicKey = key;
-    local_ok(true, "Imported public key")
+    local_ok(true, "Imported public key");
 
     // Ensure the attestation certificate is properly self-signed
-    return state.attestationCert.verify()
+    return state.attestationCert.verify();
   }).then(function(verified) {
-    local_ok(verified, "Register attestation signature verified")
+    if (!verified) {
+      local_ok(verified, "Cert problem: " + bytesToBase64UrlSafe(state.attestation));
+    }
+    local_ok(verified, "Register attestation signature verified");
   });
 
   state.regKey = {

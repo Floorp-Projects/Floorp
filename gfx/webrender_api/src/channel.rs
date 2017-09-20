@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use byteorder::{LittleEndian, WriteBytesExt, ReadBytesExt};
-use std::io::{Cursor, Read};
 use api::{Epoch, PipelineId};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use std::io::{Cursor, Read};
 use std::mem;
 
 #[derive(Clone)]
@@ -27,14 +27,15 @@ impl Payload {
     /// TODO(emilio, #1049): Consider moving the IPC boundary to the
     /// constellation in Servo and remove this complexity from WR.
     pub fn to_data(&self) -> Vec<u8> {
-        let mut data = Vec::with_capacity(mem::size_of::<u32>() +
-                                          2 * mem::size_of::<u32>() +
-                                          mem::size_of::<u64>() +
-                                          self.display_list_data.len());
+        let mut data = Vec::with_capacity(
+            mem::size_of::<u32>() + 2 * mem::size_of::<u32>() + mem::size_of::<u64>() +
+                self.display_list_data.len(),
+        );
         data.write_u32::<LittleEndian>(self.epoch.0).unwrap();
         data.write_u32::<LittleEndian>(self.pipeline_id.0).unwrap();
         data.write_u32::<LittleEndian>(self.pipeline_id.1).unwrap();
-        data.write_u64::<LittleEndian>(self.display_list_data.len() as u64).unwrap();
+        data.write_u64::<LittleEndian>(self.display_list_data.len() as u64)
+            .unwrap();
         data.extend_from_slice(&self.display_list_data);
         data
     }
@@ -43,12 +44,16 @@ impl Payload {
     pub fn from_data(data: &[u8]) -> Payload {
         let mut payload_reader = Cursor::new(data);
         let epoch = Epoch(payload_reader.read_u32::<LittleEndian>().unwrap());
-        let pipeline_id = PipelineId(payload_reader.read_u32::<LittleEndian>().unwrap(),
-                                     payload_reader.read_u32::<LittleEndian>().unwrap());
+        let pipeline_id = PipelineId(
+            payload_reader.read_u32::<LittleEndian>().unwrap(),
+            payload_reader.read_u32::<LittleEndian>().unwrap(),
+        );
 
         let dl_size = payload_reader.read_u64::<LittleEndian>().unwrap() as usize;
         let mut built_display_list_data = vec![0; dl_size];
-        payload_reader.read_exact(&mut built_display_list_data[..]).unwrap();
+        payload_reader
+            .read_exact(&mut built_display_list_data[..])
+            .unwrap();
 
         assert_eq!(payload_reader.position(), data.len() as u64);
 

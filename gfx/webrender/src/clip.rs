@@ -27,10 +27,11 @@ pub struct ClipRegion {
 }
 
 impl ClipRegion {
-    pub fn create_for_clip_node(rect: LayerRect,
-                                mut complex_clips: Vec<ComplexClipRegion>,
-                                mut image_mask: Option<ImageMask>)
-                                -> ClipRegion {
+    pub fn create_for_clip_node(
+        rect: LayerRect,
+        mut complex_clips: Vec<ComplexClipRegion>,
+        mut image_mask: Option<ImageMask>,
+    ) -> ClipRegion {
         // All the coordinates we receive are relative to the stacking context, but we want
         // to convert them to something relative to the origin of the clip.
         let negative_origin = -rect.origin.to_vector();
@@ -62,8 +63,8 @@ impl ClipRegion {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ClipMode {
-    Clip,           // Pixels inside the region are visible.
-    ClipOut,        // Pixels outside the region are visible.
+    Clip,    // Pixels inside the region are visible.
+    ClipOut, // Pixels outside the region are visible.
 }
 
 impl Not for ClipMode {
@@ -72,7 +73,7 @@ impl Not for ClipMode {
     fn not(self) -> ClipMode {
         match self {
             ClipMode::Clip => ClipMode::ClipOut,
-            ClipMode::ClipOut => ClipMode::Clip
+            ClipMode::ClipOut => ClipMode::Clip,
         }
     }
 }
@@ -100,7 +101,11 @@ impl From<ClipRegion> for ClipSources {
         clips.push(ClipSource::Rectangle(region.main));
 
         for complex in region.complex_clips {
-            clips.push(ClipSource::RoundedRectangle(complex.rect, complex.radii, ClipMode::Clip));
+            clips.push(ClipSource::RoundedRectangle(
+                complex.rect,
+                complex.radii,
+                ClipMode::Clip,
+            ));
         }
 
         ClipSources::new(clips)
@@ -115,9 +120,10 @@ pub struct ClipSources {
 
 impl ClipSources {
     pub fn new(clips: Vec<ClipSource>) -> ClipSources {
-        let clips = clips.into_iter()
-                         .map(|clip| (clip, GpuCacheHandle::new()))
-                         .collect();
+        let clips = clips
+            .into_iter()
+            .map(|clip| (clip, GpuCacheHandle::new()))
+            .collect();
 
         ClipSources {
             clips,
@@ -132,19 +138,23 @@ impl ClipSources {
         &self.clips
     }
 
-    pub fn update(&mut self,
-                  layer_transform: &LayerToWorldTransform,
-                  gpu_cache: &mut GpuCache,
-                  resource_cache: &mut ResourceCache,
-                  device_pixel_ratio: f32) {
+    pub fn update(
+        &mut self,
+        layer_transform: &LayerToWorldTransform,
+        gpu_cache: &mut GpuCache,
+        resource_cache: &mut ResourceCache,
+        device_pixel_ratio: f32,
+    ) {
         if self.clips.is_empty() {
             return;
         }
 
         // compute the local bounds
         if self.bounds.inner.is_none() {
-            let mut local_rect = Some(LayerRect::new(LayerPoint::new(-MAX_CLIP, -MAX_CLIP),
-                                                     LayerSize::new(2.0 * MAX_CLIP, 2.0 * MAX_CLIP)));
+            let mut local_rect = Some(LayerRect::new(
+                LayerPoint::new(-MAX_CLIP, -MAX_CLIP),
+                LayerSize::new(2.0 * MAX_CLIP, 2.0 * MAX_CLIP),
+            ));
             let mut local_inner = local_rect;
             let mut has_clip_out = false;
             let mut has_border_clip = false;
@@ -171,9 +181,10 @@ impl ClipSources {
                         local_rect = local_rect.and_then(|r| r.intersection(rect));
 
                         let inner_rect = extract_inner_rect_safe(rect, radius);
-                        local_inner = local_inner.and_then(|r| inner_rect.and_then(|ref inner| r.intersection(inner)));
+                        local_inner = local_inner
+                            .and_then(|r| inner_rect.and_then(|ref inner| r.intersection(inner)));
                     }
-                    ClipSource::BorderCorner{..} => {
+                    ClipSource::BorderCorner { .. } => {
                         has_border_clip = true;
                     }
                 }
@@ -224,10 +235,7 @@ impl ClipSources {
 
         for &(ref clip, _) in &self.clips {
             if let ClipSource::Image(ref mask) = *clip {
-                resource_cache.request_image(mask.image,
-                                             ImageRendering::Auto,
-                                             None,
-                                             gpu_cache);
+                resource_cache.request_image(mask.image, ImageRendering::Auto, None, gpu_cache);
             }
         }
     }
@@ -269,15 +277,13 @@ pub struct MaskBounds {
 impl MaskBounds {
     pub fn update(&mut self, transform: &LayerToWorldTransform, device_pixel_ratio: f32) {
         if let Some(ref mut outer) = self.outer {
-            let transformed = TransformedRect::new(&outer.local_rect,
-                                                   transform,
-                                                   device_pixel_ratio);
+            let transformed =
+                TransformedRect::new(&outer.local_rect, transform, device_pixel_ratio);
             outer.device_rect = transformed.bounding_rect;
         }
         if let Some(ref mut inner) = self.inner {
-            let transformed = TransformedRect::new(&inner.local_rect,
-                                                   transform,
-                                                   device_pixel_ratio);
+            let transformed =
+                TransformedRect::new(&inner.local_rect, transform, device_pixel_ratio);
             inner.device_rect = transformed.inner_rect;
         }
     }

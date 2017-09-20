@@ -8083,6 +8083,7 @@ JS::AssertGCThingIsNotAnObjectSubclass(Cell* cell)
 JS_FRIEND_API(void)
 js::gc::AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind)
 {
+    MOZ_ASSERT(IsCellPointerValid(cell));
     if (!cell)
         MOZ_ASSERT(kind == JS::TraceKind::Null);
     else if (IsInsideNursery(cell))

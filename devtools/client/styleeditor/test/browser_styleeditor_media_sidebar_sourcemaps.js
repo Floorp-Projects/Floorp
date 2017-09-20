@@ -6,7 +6,7 @@
 
 // https rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules-sourcemaps.html";
-const MAP_PREF = "devtools.styleeditor.source-maps-enabled";
+const MAP_PREF = "devtools.source-map.client-service.enabled";
 
 const LABELS = ["screen and (max-width: 320px)",
                 "screen and (min-width: 1200px)"];

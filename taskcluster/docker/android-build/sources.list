@@ -1,0 +1,3 @@
+deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20170830T000511Z/ stretch main
+deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20170830T000511Z/ stretch-updates main
+deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20170830T000511Z/ stretch/updates main

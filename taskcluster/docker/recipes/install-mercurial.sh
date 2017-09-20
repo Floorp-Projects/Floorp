@@ -27,6 +27,23 @@ if [ -f /etc/lsb-release ]; then
 
     CERT_PATH=/etc/ssl/certs/ca-certificates.crt
 
+elif [ -f /etc/os-release ]; then
+    . /etc/os-release
+
+    if [ "${ID}" = "debian" -a "${VERSION_ID}" = "9" ]; then
+        if [ -f /usr/bin/pip2 ]; then
+            PIP_PATH=/usr/bin/pip2
+        else
+            echo "We currently require Python 2.7 and /usr/bin/pip2 to run Mercurial"
+            exit 1
+        fi
+    else
+        echo "Unsupported debian-like system with ID '${ID}' and VERSION_ID '${VERSION_ID}'"
+        exit 1
+    fi
+
+    CERT_PATH=/etc/ssl/certs/ca-certificates.crt
+
 elif [ -f /etc/centos-release ]; then
     CENTOS_VERSION=`rpm -q --queryformat '%{VERSION}' centos-release`
     if [ "${CENTOS_VERSION}" = "6" ]; then

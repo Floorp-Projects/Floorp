@@ -7216,7 +7216,7 @@ module.exports = {
       var array = this._array;
       var maxIndex = array.length - 1;
       var ii = 0;
-      return new Iterator(function() 
+      return new Iterator(function()
         {return ii > maxIndex ?
           iteratorDone() :
           iteratorValue(type, ii, array[reverse ? maxIndex - ii++ : ii++])}
@@ -7687,7 +7687,7 @@ module.exports = {
 
     Repeat.prototype.__iterator = function(type, reverse) {var this$0 = this;
       var ii = 0;
-      return new Iterator(function() 
+      return new Iterator(function()
         {return ii < this$0.size ? iteratorValue(type, ii++, this$0._value) : iteratorDone()}
       );
     };
@@ -9885,7 +9885,7 @@ module.exports = {
         return flipSequence;
       };
     }
-    reversedSequence.get = function(key, notSetValue) 
+    reversedSequence.get = function(key, notSetValue)
       {return iterable.get(useKeys ? key : -1 - key, notSetValue)};
     reversedSequence.has = function(key )
       {return iterable.has(useKeys ? key : -1 - key)};
@@ -10084,7 +10084,7 @@ module.exports = {
         return this.cacheResult().__iterate(fn, reverse);
       }
       var iterations = 0;
-      iterable.__iterate(function(v, k, c) 
+      iterable.__iterate(function(v, k, c)
         {return predicate.call(context, v, k, c) && ++iterations && fn(v, k, this$0)}
       );
       return iterations;
@@ -10275,7 +10275,7 @@ module.exports = {
     interposedSequence.size = iterable.size && iterable.size * 2 -1;
     interposedSequence.__iterateUncached = function(fn, reverse) {var this$0 = this;
       var iterations = 0;
-      iterable.__iterate(function(v, k) 
+      iterable.__iterate(function(v, k)
         {return (!iterations || fn(separator, iterations++, this$0) !== false) &&
         fn(v, iterations++, this$0) !== false},
         reverse
@@ -14741,7 +14741,7 @@ module.exports = function() {
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * 
+ *
  */
 
 function makeEmptyFunction(arg) {
@@ -15980,7 +15980,8 @@ const prefs = new PrefsHelper("devtools", {
 
 const features = new PrefsHelper("devtools.debugger.features", {
   asyncStepping: ["Bool", "async-stepping", false],
-  projectTextSearch: ["Bool", "debugger.project-text-search-enabled", true]
+  projectTextSearch: ["Bool", "project-text-search-enabled", true],
+  wasm: ["Bool", "wasm", true]
 });
 /* harmony export (immutable) */ __webpack_exports__["features"] = features;
 
@@ -21620,7 +21621,7 @@ function loadObjectProperties(object) {
 
     var objectId = object.actor || object.objectId;
 
-    if (!(0, _selectors.getPause)(getState()) || (0, _selectors.getLoadedObject)(getState(), objectId)) {
+    if ((0, _selectors.getLoadedObject)(getState(), objectId)) {
       return;
     }
 

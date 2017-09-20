@@ -13,7 +13,7 @@ Some parts of the environment must be fetched asynchronously at startup. We don'
 This currently affects the following sections:
 
 - profile
-- addons
+- add-ons
 
 
 Structure:
@@ -205,7 +205,7 @@ Structure:
           },
       },
       addons: {
-        activeAddons: { // the currently enabled addons
+        activeAddons: { // the currently enabled add-ons
           <addon id>: {
             blocklisted: <bool>,
             description: <string>, // null if not available
@@ -400,7 +400,7 @@ activeAddons
 
 Starting from Firefox 44, the length of the following string fields: ``name``, ``description`` and ``version`` is limited to 100 characters. The same limitation applies to the same fields in ``theme`` and ``activePlugins``.
 
-Some of the fields in the record for each addon are not available during startup.  The fields that will always be present are ``id``, ``version``, ``type``, ``updateDate``, ``scope``, ``isSystem``, ``isWebExtension``, and ``multiprocessCompatible``.  All the other fields documented above become present shortly after the ``sessionstore-windows-restored`` event is dispatched.
+Some of the fields in the record for each add-on are not available during startup.  The fields that will always be present are ``id``, ``version``, ``type``, ``updateDate``, ``scope``, ``isSystem``, ``isWebExtension``, and ``multiprocessCompatible``.  All the other fields documented above become present shortly after the ``sessionstore-windows-restored`` event is dispatched.
 
 experiments
 -----------
