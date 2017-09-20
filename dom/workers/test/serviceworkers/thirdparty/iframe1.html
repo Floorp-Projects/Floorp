@@ -17,6 +17,8 @@
       }
       else if (message.source == "iframe") {
         parent.postMessage(event.data, "*");
+      } else if (message.source == "worker") {
+        parent.postMessage(event.data, "*");
       }
     }
   </script>
