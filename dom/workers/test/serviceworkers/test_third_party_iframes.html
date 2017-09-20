@@ -103,6 +103,8 @@ function testShouldIntercept(policy, done) {
         iframe.src = thirdPartyOrigin + basePath + "unregister.html";
       }
     }, {
+      status: "controlled",
+    }, {
       status: "unregistrationdone",
       next: function() {
         window.onmessage = null;
@@ -167,6 +169,8 @@ function testShouldNotIntercept(policy, done) {
         iframe.src = thirdPartyOrigin + basePath + "unregister.html";
       }
     }, {
+      status: "uncontrolled",
+    }, {
       status: "getregistrationfailed",
       next: function() {
         SpecialPowers.pushPrefEnv({"set": [
@@ -175,6 +179,8 @@ function testShouldNotIntercept(policy, done) {
             iframe.src = thirdPartyOrigin + basePath + "unregister.html";
           });
       }
+    }, {
+      status: "controlled",
     }, {
       status: "unregistrationdone",
       next: function() {

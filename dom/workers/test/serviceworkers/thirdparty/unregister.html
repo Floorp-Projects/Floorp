@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <script>
+  if (navigator.serviceWorker.controller) {
+    window.parent.postMessage({status: "controlled"}, "*");
+  } else {
+    window.parent.postMessage({status: "uncontrolled"}, "*");
+  }
+
   navigator.serviceWorker.getRegistration(".").then(function(registration) {
     if(!registration) {
       return;
