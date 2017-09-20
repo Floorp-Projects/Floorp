@@ -124,8 +124,6 @@ function Spinner(props, context) {
     /**
      * Whenever scroll event is detected:
      * - Update the index state
-     * - If a smooth scroll has reached its destination, set [isScrolling] state
-     *   to false
      * - If the value has changed, update the [value] state and call [setValue]
      * - If infinite scrolling is on, reset the scrolling position if necessary
      */
@@ -138,14 +136,8 @@ function Spinner(props, context) {
 
       const value = itemsView[this.state.index + viewportTopOffset].value;
 
-      // Check if smooth scrolling has reached its destination.
-      // This prevents input box jump when input box changes values.
-      if (this.state.value == value && this.state.isScrolling) {
-        this.state.isScrolling = false;
-      }
-
-      // Call setValue if value has changed, and is not smooth scrolling
-      if (this.state.value != value && !this.state.isScrolling) {
+      // Call setValue if value has changed
+      if (this.state.value != value) {
         this.state.value = value;
         this.props.setValue(value);
       }
@@ -444,10 +436,6 @@ function Spinner(props, context) {
     _smoothScrollToIndex(index) {
       const element = this.elements.spinner.children[index];
       if (element) {
-        // Set the isScrolling flag before smooth scrolling begins
-        // and remove it when it has reached the destination.
-        // This prevents input box jump when input box changes values
-        this.state.isScrolling = true;
         element.scrollIntoView({
           behavior: "smooth", block: "start"
         });
