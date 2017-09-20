@@ -15016,24 +15016,24 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     }
   }
 
-  if (aIsNonSubresourceRequest) {
-    nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
-    *aShouldIntercept = swm->IsAvailable(principal, aURI);
+  if (!aIsNonSubresourceRequest) {
+    nsCOMPtr<nsIDocument> doc = GetDocument();
+    if (!doc) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    ErrorResult rv;
+    *aShouldIntercept = swm->IsControlled(doc, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
+    }
+
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (!doc) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  ErrorResult rv;
-  *aShouldIntercept = swm->IsControlled(doc, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
+  nsCOMPtr<nsIPrincipal> principal =
+    BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
+  *aShouldIntercept = swm->IsAvailable(principal, aURI);
   return NS_OK;
 }
 
