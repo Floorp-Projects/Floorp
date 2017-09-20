@@ -162,6 +162,12 @@ interface FrameLoader {
   void requestFrameLoaderClose();
 
   /**
+   * Force a remote browser to recompute its dimension and screen position.
+   */
+  [Throws]
+  void requestUpdatePosition();
+
+  /**
    * Print the current document.
    *
    * @param aOuterWindowID the ID of the outer window to print
