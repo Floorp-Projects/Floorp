@@ -695,7 +695,10 @@ IDBDatabase::Transaction(JSContext* aCx,
 
   RefPtr<IDBTransaction> transaction =
     IDBTransaction::Create(aCx, this, sortedStoreNames, mode);
-  MOZ_ASSERT(transaction);
+  if (NS_WARN_IF(!transaction)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
 
   BackgroundTransactionChild* actor =
     new BackgroundTransactionChild(transaction);
