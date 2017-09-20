@@ -694,7 +694,7 @@ class ZoneGroupsIter
         it = rt->gc.groups().begin();
         end = rt->gc.groups().end();
 
-        if (!done() && (*it)->createdForHelperThread())
+        if (!done() && (*it)->usedByHelperThread())
             next();
     }
 
@@ -704,7 +704,7 @@ class ZoneGroupsIter
         MOZ_ASSERT(!done());
         do {
             it++;
-        } while (!done() && (*it)->createdForHelperThread());
+        } while (!done() && (*it)->usedByHelperThread());
     }
 
     ZoneGroup* get() const {
