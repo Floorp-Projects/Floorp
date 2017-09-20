@@ -385,11 +385,20 @@ partial interface Document {
 
   // Blocks the initial document parser until the given promise is settled.
   [ChromeOnly, Throws]
-  Promise<any> blockParsing(Promise<any> promise);
+  Promise<any> blockParsing(Promise<any> promise,
+                            optional BlockParsingOptions options);
 
   // like documentURI, except that for error pages, it returns the URI we were
   // trying to load when we hit an error, rather than the error page's own URI.
   [ChromeOnly] readonly attribute URI? mozDocumentURIIfNotForErrorPages;
+};
+
+dictionary BlockParsingOptions {
+  /**
+   * If true, blocks script-created parsers (created via document.open()) in
+   * addition to network-created parsers.
+   */
+  boolean blockScriptCreated = true;
 };
 
 // Extension to give chrome JS the ability to determine when a document was
