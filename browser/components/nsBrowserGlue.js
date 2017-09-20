@@ -1687,7 +1687,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 55;
+    const UI_VERSION = 56;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2017,14 +2017,6 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 48) {
-      // Bug 1372954 - the checked value was persisted but the attribute removal wouldn't
-      // be persisted (Bug 15232). Turns out we can just not persist the value in this case.
-      // The situation was only happening for a few nightlies in 56, so this migration can
-      // be removed in version 58.
-      xulStore.removeValue(BROWSER_DOCURL, "sidebar-box", "checked");
-    }
-
     if (currentUIVersion < 49) {
       // Annotate that a user haven't seen any onboarding tour
       Services.prefs.setIntPref("browser.onboarding.seen-tourset-version", 0);
@@ -2089,6 +2081,17 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 55) {
       Services.prefs.clearUserPref("browser.customizemode.tip0.shown");
+    }
+
+    if (currentUIVersion < 56) {
+      // Prior to the end of the Firefox 57 cycle, the sidebarcommand being present
+      // or not was the only thing that distinguished whether the sidebar was open.
+      // Now, the sidebarcommand always indicates the last opened sidebar, and we
+      // correctly persist the checked attribute to indicate whether or not the
+      // sidebar was open. We should set the checked attribute in case it wasn't:
+      if (xulStore.getValue(BROWSER_DOCURL, "sidebar-box", "sidebarcommand")) {
+        xulStore.setValue(BROWSER_DOCURL, "sidebar-box", "checked", "true");
+      }
     }
 
     // Update the migration version.
