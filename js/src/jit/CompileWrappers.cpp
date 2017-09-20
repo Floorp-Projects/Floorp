@@ -8,6 +8,8 @@
 
 #include "jscompartmentinlines.h"
 
+#include "jit/JitCompartment.h"
+
 using namespace js;
 using namespace js::jit;
 
