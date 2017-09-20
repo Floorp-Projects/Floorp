@@ -165,6 +165,8 @@ public:
 
   void RequestFrameLoaderClose(mozilla::ErrorResult& aRv);
 
+  void RequestUpdatePosition(mozilla::ErrorResult& aRv);
+
   void Print(uint64_t aOuterWindowID,
              nsIPrintSettings* aPrintSettings,
              nsIWebProgressListener* aProgressListener,
