@@ -556,17 +556,6 @@ FRAME_STATE_BIT(Block, 62, BULLET_FRAME_HAS_FONT_INFLATION)
 FRAME_STATE_BIT(Block, 63, BULLET_FRAME_IMAGE_LOADING)
 
 
-// == Frame state bits that apply to scroll frames ============================
-
-FRAME_STATE_GROUP(Scroll, nsIScrollableFrame)
-
-// When set, the next scroll operation on the scrollframe will invalidate its
-// entire contents. Useful for text-overflow.
-// This bit is cleared after each time the scrollframe is scrolled. Whoever
-// needs to set it should set it again on each paint.
-FRAME_STATE_BIT(Scroll, 20, NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL)
-
-
 // == Frame state bits that apply to image frames =============================
 
 FRAME_STATE_GROUP(Image, nsImageFrame)
