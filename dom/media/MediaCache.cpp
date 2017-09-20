@@ -462,7 +462,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
   , mIsTransportSeekable(false)
   , mCacheSuspended(false)
   , mChannelEnded(false)
-  , mStreamLength(-1)
   , mStreamOffset(0)
   , mPlaybackBytesPerSecond(10000)
   , mPinCount(0)
