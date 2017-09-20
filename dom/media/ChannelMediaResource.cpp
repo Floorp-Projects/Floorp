@@ -68,6 +68,7 @@ nsresult
 ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
                                                nsISupports* aContext)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mResource)
     return NS_OK;
   return mResource->OnStartRequest(aRequest, mOffset);
@@ -78,6 +79,7 @@ ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
                                               nsISupports* aContext,
                                               nsresult aStatus)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mResource)
     return NS_OK;
   return mResource->OnStopRequest(aRequest, aStatus);
@@ -91,8 +93,14 @@ ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
                                                 uint32_t aCount)
 {
   // This might happen off the main thread.
-  MOZ_DIAGNOSTIC_ASSERT(mResource);
-  return mResource->OnDataAvailable(mLoadID, aStream, aCount);
+  RefPtr<ChannelMediaResource> res;
+  {
+    MutexAutoLock lock(mMutex);
+    res = mResource;
+  }
+  // Note Rekove() might happen at the same time to reset mResource. We check
+  // the load ID to determine if the data is from an old channel.
+  return res ? res->OnDataAvailable(mLoadID, aStream, aCount) : NS_OK;
 }
 
 nsresult
@@ -102,6 +110,8 @@ ChannelMediaResource::Listener::AsyncOnChannelRedirect(
   uint32_t aFlags,
   nsIAsyncVerifyRedirectCallback* cb)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsresult rv = NS_OK;
   if (mResource) {
     rv = mResource->OnChannelRedirect(aOld, aNew, aFlags, mOffset);
@@ -125,6 +135,14 @@ nsresult
 ChannelMediaResource::Listener::GetInterface(const nsIID& aIID, void** aResult)
 {
   return QueryInterface(aIID, aResult);
+}
+
+void
+ChannelMediaResource::Listener::Revoke()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+  mResource = nullptr;
 }
 
 static bool
@@ -415,8 +433,6 @@ ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
                                       uint32_t aCount)
 {
   // This might happen off the main thread.
-  // Don't assert |mChannel.get() == aRequest| since reading mChannel here off
-  // the main thread is a data race.
 
   RefPtr<ChannelMediaResource> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
