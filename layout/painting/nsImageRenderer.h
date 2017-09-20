@@ -22,6 +22,7 @@ class WebRenderLayerManager;
 
 namespace wr {
 class DisplayListBuilder;
+class IpcResourceUpdateQueue;
 } // namespace wr
 
 // A CSSSizeOrRatio represents a (possibly partially specified) size for use
@@ -210,6 +211,7 @@ public:
    */
   DrawResult BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                                 mozilla::wr::DisplayListBuilder& aBuilder,
+                                                mozilla::wr::IpcResourceUpdateQueue& aResource,
                                                 const mozilla::layers::StackingContextHelper& aSc,
                                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                 mozilla::layers::WebRenderDisplayItemLayer* aLayer,
@@ -297,6 +299,7 @@ private:
    */
   DrawResult BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                         mozilla::wr::DisplayListBuilder& aBuilder,
+                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const mozilla::layers::StackingContextHelper& aSc,
                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         mozilla::layers::WebRenderDisplayItemLayer* aLayer,

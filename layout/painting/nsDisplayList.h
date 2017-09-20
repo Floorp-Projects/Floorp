@@ -3079,6 +3079,7 @@ public:
 
 protected:
   void CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                          mozilla::wr::IpcResourceUpdateQueue& aResource,
                                           const StackingContextHelper& aSc,
                                           nsTArray<WebRenderParentCommand>& aParentCommands,
                                           mozilla::layers::WebRenderLayerManager* aManager,
