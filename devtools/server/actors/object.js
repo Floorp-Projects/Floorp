@@ -1228,6 +1228,10 @@ DebuggerServer.ObjectActorPreviewers = {
     return wrappedPrimitivePreviewer("Number", Number, objectActor, grip, rawObj);
   }],
 
+  Symbol: [function (objectActor, grip, rawObj) {
+    return wrappedPrimitivePreviewer("Symbol", Symbol, objectActor, grip, rawObj);
+  }],
+
   Function: [function ({obj, hooks}, grip) {
     if (obj.name) {
       grip.name = obj.name;
@@ -1507,10 +1511,6 @@ DebuggerServer.ObjectActorPreviewers = {
  */
 function wrappedPrimitivePreviewer(className, classObj, objectActor, grip, rawObj) {
   let {obj, hooks} = objectActor;
-
-  if (!obj.proto || obj.proto.class != className) {
-    return false;
-  }
 
   let v = null;
   try {
