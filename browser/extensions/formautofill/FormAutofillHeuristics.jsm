@@ -476,6 +476,23 @@ this.FormAutofillHeuristics = {
     ];
     let regexps = isAutoCompleteOff ? FIELDNAMES_IGNORING_AUTOCOMPLETE_OFF : Object.keys(this.RULES);
 
+    if (!FormAutofillUtils.isAutofillCreditCardsAvailable) {
+      if (isAutoCompleteOff) {
+        if (!this._regexpListOf_CcUnavailable_AcOff) {
+          this._regexpListOf_CcUnavailable_AcOff = regexps.filter(name => !FormAutofillUtils.isCreditCardField(name));
+        }
+        regexps = this._regexpListOf_CcUnavailable_AcOff;
+      } else {
+        if (!this._regexpListOf_CcUnavailable_AcOn) {
+          this._regexpListOf_CcUnavailable_AcOn = regexps.filter(name => !FormAutofillUtils.isCreditCardField(name));
+        }
+        regexps = this._regexpListOf_CcUnavailable_AcOn;
+      }
+    }
+    if (regexps.length == 0) {
+      return null;
+    }
+
     let labelStrings;
     let getElementStrings = {};
     getElementStrings[Symbol.iterator] = function* () {
