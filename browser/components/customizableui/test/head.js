@@ -190,10 +190,8 @@ function endCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.getAttribute("customizing") != "true") {
     return true;
   }
-  Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   return new Promise(resolve => {
     function onCustomizationEnds() {
-      Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
       aWindow.gNavToolbox.removeEventListener("aftercustomization", onCustomizationEnds);
       resolve();
     }
@@ -207,11 +205,9 @@ function startCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.getAttribute("customizing") == "true") {
     return null;
   }
-  Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   return new Promise(resolve => {
     function onCustomizing() {
       aWindow.gNavToolbox.removeEventListener("customizationready", onCustomizing);
-      Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
       resolve();
     }
     aWindow.gNavToolbox.addEventListener("customizationready", onCustomizing);
