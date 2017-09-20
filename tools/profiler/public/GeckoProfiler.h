@@ -319,9 +319,6 @@ using UniqueProfilerBacktrace =
 // if the profiler is inactive or in privacy mode.
 PROFILER_FUNC(UniqueProfilerBacktrace profiler_get_backtrace(), nullptr)
 
-PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char* aOutput,
-                                                  size_t aOutputSize))
-
 // Get information about the current buffer status. A no-op when the profiler
 // is inactive. Do not call this function; call profiler_get_buffer_info()
 // instead.
