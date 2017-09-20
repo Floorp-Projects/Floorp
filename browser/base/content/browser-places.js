@@ -335,6 +335,12 @@ var StarUI = {
                                               "loadInSidebar", "keyword"],
                                  focusedElement: "preferred"});
 
+    if (aAnchorElement && aAnchorElement.id == BookmarkingUI.STAR_BOX_ID) {
+      aAnchorElement.setAttribute("open", "true");
+      this.panel.addEventListener("popuphiding", () => {
+        aAnchorElement.removeAttribute("open");
+      });
+    }
     this.panel.openPopup(aAnchorElement, aPosition);
   },
 

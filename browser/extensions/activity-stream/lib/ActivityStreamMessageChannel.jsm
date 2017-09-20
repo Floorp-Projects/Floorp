@@ -174,7 +174,7 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
   onNewTabInit(msg) {
     this.onActionFromContent({
       type: at.NEW_TAB_INIT,
-      data: {url: msg.target.url}
+      data: msg.target
     }, msg.target.portID);
   }
 

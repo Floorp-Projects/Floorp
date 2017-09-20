@@ -66,9 +66,9 @@ body {
 }
 
 ul, ol {
-  margin: 0;
+  margin: 1em 0;
   padding: 0;
-  margin-inline-start: 1em;
+  margin-inline-start: 2em;
 }
 
 ul > li, ol > li {

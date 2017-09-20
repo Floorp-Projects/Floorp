@@ -36,6 +36,7 @@ add_task(async function test_simple() {
     max_post_records: 100,
     max_batch_bytes: Infinity,
     max_batch_records: Infinity,
+    max_record_payload_bytes: 1000,
   }
 
   const time = 11111111;
@@ -60,9 +61,10 @@ add_task(async function test_simple() {
 add_task(async function test_max_post_bytes_no_batch() {
   let config = {
     max_post_bytes: 50,
-    max_post_records: 4,
+    max_post_records: Infinity,
     max_batch_bytes: Infinity,
     max_batch_records: Infinity,
+    max_record_payload_bytes: 50,
   }
 
   const time = 11111111;
@@ -76,7 +78,6 @@ add_task(async function test_max_post_bytes_no_batch() {
   await pq.enqueue(makeRecord(20)); // total size now 43 bytes - "[" + record + "," + record + "]"
   await pq.enqueue(makeRecord(20)); // this will exceed our byte limit, so will be in the 2nd POST.
   await pq.flush(true);
-
   deepEqual(stats.posts, [
     {
       nbytes: 43, // 43 for the first post
@@ -93,42 +94,37 @@ add_task(async function test_max_post_bytes_no_batch() {
   equal(pq.lastModified, time + 200);
 });
 
-// Similar to the above, but we've hit max_records instead of max_bytes.
-add_task(async function test_max_post_records_no_batch() {
+
+add_task(async function test_max_record_payload_bytes_no_batch() {
   let config = {
     max_post_bytes: 100,
-    max_post_records: 2,
+    max_post_records: Infinity,
     max_batch_bytes: Infinity,
     max_batch_records: Infinity,
+    max_record_payload_bytes: 50,
   }
 
   const time = 11111111;
 
   function* responseGenerator() {
     yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 100, "x-last-modified": time + 100 } };
-    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 200, "x-last-modified": time + 200 } };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
-  await pq.enqueue(makeRecord(20)); // total size now 22 bytes - "[" + record + "]"
-  await pq.enqueue(makeRecord(20)); // total size now 43 bytes - "[" + record + "," + record + "]"
-  await pq.enqueue(makeRecord(20)); // this will exceed our records limit, so will be in the 2nd POST.
+  await pq.enqueue(makeRecord(50)); // total size now 52 bytes - "[" + record + "]"
+  await pq.enqueue(makeRecord(46)); // total size now 99 bytes - "[" + record0 + "," + record1 + "]"
+
   await pq.flush(true);
 
   deepEqual(stats.posts, [
     {
-      nbytes: 43, // 43 for the first post
-      commit: false,
+      nbytes: 99,
+      commit: true, // we know we aren't in a batch, so never commit.
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    }, {
-      nbytes: 22,
-      commit: false, // we know we aren't in a batch, so never commit.
-      batch: null,
-      headers: [["x-if-unmodified-since", time + 100]],
     }
   ]);
-  equal(pq.lastModified, time + 200);
+  equal(pq.lastModified, time + 100);
 });
 
 // Batch tests.
@@ -140,6 +136,7 @@ add_task(async function test_single_batch() {
     max_post_records: 100,
     max_batch_bytes: 2000,
     max_batch_records: 200,
+    max_record_payload_bytes: 1000,
   }
   const time = 11111111;
   function* responseGenerator() {
@@ -170,6 +167,7 @@ add_task(async function test_max_post_bytes_batch() {
     max_post_records: 4,
     max_batch_bytes: 5000,
     max_batch_records: 100,
+    max_record_payload_bytes: 50,
   }
 
   const time = 11111111;
@@ -206,12 +204,13 @@ add_task(async function test_max_post_bytes_batch() {
 });
 
 // Test we do the right thing when the batch bytes limit is exceeded.
-add_task(async function test_max_post_bytes_batch() {
+add_task(async function test_max_batch_bytes_batch() {
   let config = {
     max_post_bytes: 50,
     max_post_records: 20,
     max_batch_bytes: 70,
     max_batch_records: 100,
+    max_record_payload_bytes: 50,
   }
 
   const time0 = 11111111;
@@ -281,6 +280,7 @@ add_task(async function test_max_post_bytes_batch() {
     max_post_records: 2,
     max_batch_bytes: 5000,
     max_batch_records: 100,
+    max_record_payload_bytes: 1000,
   }
 
   const time = 11111111;
@@ -323,6 +323,7 @@ add_task(async function test_huge_record() {
     max_post_records: 100,
     max_batch_bytes: 5000,
     max_batch_records: 100,
+    max_record_payload_bytes: 50,
   }
 
   const time = 11111111;
@@ -373,6 +374,7 @@ add_task(async function test_max_records_batch() {
     max_post_records: 3,
     max_batch_bytes: 10000,
     max_batch_records: 5,
+    max_record_payload_bytes: 1000,
   }
 
   const time0 = 11111111;
@@ -434,4 +436,48 @@ add_task(async function test_max_records_batch() {
   ]);
 
   equal(pq.lastModified, time1 + 200);
+});
+
+// Test we do the right thing when the batch byte limit is met but not exceeded.
+add_task(async function test_packed_batch() {
+  let config = {
+    max_post_bytes: 54,
+    max_post_records: 4,
+    max_batch_bytes: 107,
+    max_batch_records: 100,
+    max_record_payload_bytes: 25,
+  }
+
+  const time = 11111111;
+  function* responseGenerator() {
+    yield { success: true, status: 202, obj: { batch: 1234 },
+            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
+    };
+    yield { success: true, status: 202, obj: { batch: 1234 },
+            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
+   };
+  }
+
+  let { pq, stats } = makePostQueue(config, time, responseGenerator());
+  ok((await pq.enqueue(makeRecord(25))).enqueued); // total size now 27 bytes - "[" + record + "]"
+  ok((await pq.enqueue(makeRecord(25))).enqueued); // total size now 53 bytes - "[" + record + "," + record + "]"
+  ok((await pq.enqueue(makeRecord(25))).enqueued); // this will exceed our byte limit, so will be in the 2nd POST.
+  ok((await pq.enqueue(makeRecord(25))).enqueued);
+  await pq.flush(true);
+
+  deepEqual(stats.posts, [
+    {
+      nbytes: 53,
+      commit: false,
+      batch: "true",
+      headers: [["x-if-unmodified-since", time]],
+    }, {
+      nbytes: 53,
+      commit: true,
+      batch: 1234,
+      headers: [["x-if-unmodified-since", time]],
+    }
+  ]);
+
+  equal(pq.lastModified, time + 200);
 });

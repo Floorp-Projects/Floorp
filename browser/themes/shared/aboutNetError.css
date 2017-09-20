@@ -160,6 +160,7 @@ span#hostname {
 .illustrated #errorPageContainer {
   min-height: 300px;
   display: flex;
+  flex-direction: column;
   background-position: left center;
 }
 
@@ -181,6 +182,10 @@ span#hostname {
 .illustrated #errorPageContainer {
   background-repeat: no-repeat;
   background-size: 38%;
+}
+
+.dnsNotFound #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/error-server-not-found.svg");
 }
 
 .malformedURI #errorPageContainer {
