@@ -33,7 +33,7 @@ def get_tool_path(tool):
     except which.WhichError:
         try:
             return which.which(tool)
-        except which.WhichError as e:
+        except which.WhichError:
             pass
 
     raise MissingVCSTool('Unable to obtain %s path. Try running '
