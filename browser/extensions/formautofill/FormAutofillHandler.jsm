@@ -175,10 +175,17 @@ FormAutofillHandler.prototype = {
     return this.fieldDetails.find(detail => detail.fieldName == fieldName);
   },
 
-  getFieldDetailsByElement(element) {
-    let fieldDetail = this.fieldDetails.find(
+  getFieldDetailByElement(element) {
+    return this.fieldDetails.find(
       detail => detail.elementWeakRef.get() == element
     );
+  },
+
+  getFieldDetailsByElement(element) {
+    let fieldDetail = this.getFieldDetailByElement(element);
+    if (!fieldDetail) {
+      return [];
+    }
     if (FormAutofillUtils.isAddressField(fieldDetail.fieldName)) {
       return this.address.fieldDetails;
     }

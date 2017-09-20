@@ -18,16 +18,15 @@
 <!ENTITY deniedPortAccess.title "This address is restricted">
 <!ENTITY deniedPortAccess.longDesc "">
 
-<!ENTITY dnsNotFound.title "Server not found">
-<!ENTITY dnsNotFound.longDesc "
+<!ENTITY dnsNotFound.pageTitle "Server Not Found">
+<!-- Localization note (dnsNotFound.title1) - "Hmm" is a sound made when considering or puzzling over something. You don't have to include it in your translation if your language does not have a written word like this. -->
+<!ENTITY dnsNotFound.title1 "Hmm. We’re having trouble finding that site.">
+<!ENTITY dnsNotFound.longDesc1 "
+<strong>If that address is correct, here are three other things you can try:</strong>
 <ul>
-  <li>Check the address for typing errors such as
-    <strong>ww</strong>.example.com instead of
-    <strong>www</strong>.example.com</li>
-  <li>If you are unable to load any pages, check your computer’s network
-    connection.</li>
-  <li>If your computer or network is protected by a firewall or proxy, make sure
-    that &brandShortName; is permitted to access the Web.</li>
+  <li>Try again later.</li>
+  <li>Check your network connection.</li>
+  <li>If you are connected but behind a firewall, check that &brandShortName; has permission to access the Web.</li>
 </ul>
 ">
 
@@ -58,6 +57,8 @@
 
 <!ENTITY openPortalLoginPage.label2 "Open Network Login Page">
 
+<!ENTITY malformedURI.pageTitle "Invalid URL">
+<!-- Localization note (malformedURI.title1) - "Hmm" is a sound made when considering or puzzling over something. You don't have to include it in your translation if your language does not have a written word like this. -->
 <!ENTITY malformedURI.title1 "Hmm. That address doesn’t look right.">
 
 <!ENTITY netInterrupt.title "The connection was interrupted">

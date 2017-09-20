@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
 let connector = {};
 
 function onConnect(connection, actions, getState) {
@@ -29,7 +28,8 @@ function onDisconnect() {
 }
 
 function onChromeConnect(connection, actions, getState) {
-  // TODO: support chrome debugging protocol
+  connector = require("./chrome-connector");
+  connector.connect(connection, actions, getState);
 }
 
 function onFirefoxConnect(connection, actions, getState) {
