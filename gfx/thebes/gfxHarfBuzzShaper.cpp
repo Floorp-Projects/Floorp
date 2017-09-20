@@ -398,7 +398,11 @@ gfxHarfBuzzShaper::HBGetGlyphVAdvance(hb_font_t *font, void *font_data,
     // and provide hinted platform-specific vertical advances (analogous to the
     // GetGlyphWidth method for horizontal advances). If that proves necessary,
     // we'll add a new gfxFont method and call it from here.
-    return fcd->mShaper->GetGlyphVAdvance(glyph);
+    //
+    // We negate the value from GetGlyphVAdvance here because harfbuzz shapes
+    // with a coordinate system where positive is upwards, whereas the inline
+    // direction in which glyphs advance is downwards.
+    return -fcd->mShaper->GetGlyphVAdvance(glyph);
 }
 
 struct VORG {
@@ -423,6 +427,9 @@ gfxHarfBuzzShaper::HBGetGlyphVOrigin(hb_font_t *font, void *font_data,
     const gfxHarfBuzzShaper::FontCallbackData *fcd =
         static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
     fcd->mShaper->GetGlyphVOrigin(glyph, x, y);
+    // Negate the value we computed from font data (see comment re coordinate
+    // system orientation in HBGetGlyphVAdvance).
+    *y = -*y;
     return true;
 }
 
@@ -1703,8 +1710,9 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
         hb_position_t i_offset, i_advance; // inline-direction offset/advance
         hb_position_t b_offset, b_advance; // block-direction offset/advance
         if (aVertical) {
-            i_offset = posInfo[glyphStart].y_offset;
-            i_advance = posInfo[glyphStart].y_advance;
+            // our inline coordinate direction is the opposite of harfbuzz's
+            i_offset = -posInfo[glyphStart].y_offset;
+            i_advance = -posInfo[glyphStart].y_advance;
             b_offset = posInfo[glyphStart].x_offset;
             b_advance = posInfo[glyphStart].x_advance;
         } else {
@@ -1772,8 +1780,9 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
                 }
 
                 if (aVertical) {
-                    i_offset = baseIOffset - posInfo[glyphStart].y_offset;
-                    i_advance = posInfo[glyphStart].y_advance;
+                    // our inline coordinate direction is the opposite of HB's
+                    i_offset = baseIOffset + posInfo[glyphStart].y_offset;
+                    i_advance = -posInfo[glyphStart].y_advance;
                     b_offset = baseBOffset - posInfo[glyphStart].x_offset;
                     b_advance = posInfo[glyphStart].x_advance;
                 } else {
