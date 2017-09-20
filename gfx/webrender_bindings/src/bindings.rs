@@ -1114,8 +1114,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               perspective: *const LayoutTransform,
                                               mix_blend_mode: MixBlendMode,
                                               filters: *const WrFilterOp,
-                                              filter_count: usize,
-                                              is_backface_visible: bool) {
+                                              filter_count: usize) {
     assert!(unsafe { !is_in_render_thread() });
 
     let c_filters = make_slice(filters, filter_count);
@@ -1157,9 +1156,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         None => None,
     };
 
-    let mut prim_info = LayoutPrimitiveInfo::new(bounds);
-    prim_info.is_backface_visible = is_backface_visible;
-
+    let prim_info = LayoutPrimitiveInfo::new(bounds);
     state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
@@ -1275,12 +1272,10 @@ pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: LayoutRect,
-                                    is_backface_visible: bool,
                                     pipeline_id: WrPipelineId) {
     assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::new(rect);
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::new(rect);
     state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id);
 }
 
@@ -1288,12 +1283,10 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
 pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   rect: LayoutRect,
                                   clip: LayoutRect,
-                                  is_backface_visible: bool,
                                   color: ColorF) {
     assert!(unsafe { !is_in_render_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder.dl_builder.push_rect(&prim_info,
                                              color);
 }
@@ -1302,15 +1295,13 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    bounds: LayoutRect,
                                    clip: LayoutRect,
-                                   is_backface_visible: bool,
                                    stretch_size: LayoutSize,
                                    tile_spacing: LayoutSize,
                                    image_rendering: ImageRendering,
                                    key: WrImageKey) {
     assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
          .dl_builder
          .push_image(&prim_info,
@@ -1325,7 +1316,6 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
 pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               bounds: LayoutRect,
                                               clip: LayoutRect,
-                                              is_backface_visible: bool,
                                               image_key_0: WrImageKey,
                                               image_key_1: WrImageKey,
                                               image_key_2: WrImageKey,
@@ -1333,8 +1323,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               image_rendering: ImageRendering) {
     assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
@@ -1348,15 +1337,13 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
 pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             bounds: LayoutRect,
                                             clip: LayoutRect,
-                                            is_backface_visible: bool,
                                             image_key_0: WrImageKey,
                                             image_key_1: WrImageKey,
                                             color_space: WrYuvColorSpace,
                                             image_rendering: ImageRendering) {
     assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
@@ -1370,14 +1357,12 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
 pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    bounds: LayoutRect,
                                                    clip: LayoutRect,
-                                                   is_backface_visible: bool,
                                                    image_key_0: WrImageKey,
                                                    color_space: WrYuvColorSpace,
                                                    image_rendering: ImageRendering) {
     assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
@@ -1390,7 +1375,6 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
 pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   bounds: LayoutRect,
                                   clip: LayoutRect,
-                                  is_backface_visible: bool,
                                   color: ColorF,
                                   font_key: WrFontInstanceKey,
                                   glyphs: *const GlyphInstance,
@@ -1400,8 +1384,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 
     let glyph_slice = make_slice(glyphs, glyph_count as usize);
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
          .dl_builder
          .push_text(&prim_info,
@@ -1415,12 +1398,10 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 pub extern "C" fn wr_dp_push_text_shadow(state: &mut WrState,
                                          bounds: LayoutRect,
                                          clip: LayoutRect,
-                                         is_backface_visible: bool,
                                          shadow: TextShadow) {
     assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder.dl_builder.push_text_shadow(&prim_info, shadow.into());
 }
 
@@ -1434,7 +1415,6 @@ pub extern "C" fn wr_dp_pop_text_shadow(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_line(state: &mut WrState,
                                   clip: LayoutRect,
-                                  is_backface_visible: bool,
                                   baseline: f32,
                                   start: f32,
                                   end: f32,
@@ -1444,8 +1424,7 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
                                   style: LineStyle) {
     assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(LayoutRect::zero(), clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(LayoutRect::zero(), clip.into());
     state.frame_builder
          .dl_builder
          .push_line(&prim_info,
@@ -1463,7 +1442,6 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     rect: LayoutRect,
                                     clip: LayoutRect,
-                                    is_backface_visible: bool,
                                     widths: BorderWidths,
                                     top: BorderSide,
                                     right: BorderSide,
@@ -1479,8 +1457,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                                    bottom: bottom.into(),
                                                    radius: radius.into(),
                                                });
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1492,7 +1469,6 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           rect: LayoutRect,
                                           clip: LayoutRect,
-                                          is_backface_visible: bool,
                                           widths: BorderWidths,
                                           image: WrImageKey,
                                           patch: NinePatchDescriptor,
@@ -1509,8 +1485,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                  repeat_horizontal: repeat_horizontal.into(),
                                  repeat_vertical: repeat_vertical.into(),
                              });
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1522,7 +1497,6 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
-                                             is_backface_visible: bool,
                                              widths: BorderWidths,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
@@ -1545,8 +1519,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                                                                extend_mode.into()),
                                                      outset: outset.into(),
                                                  });
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1558,7 +1531,6 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     rect: LayoutRect,
                                                     clip: LayoutRect,
-                                                    is_backface_visible: bool,
                                                     widths: BorderWidths,
                                                     center: LayoutPoint,
                                                     radius: LayoutSize,
@@ -1582,8 +1554,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                                            extend_mode.into()),
                                           outset: outset.into(),
                                       });
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
@@ -1595,7 +1566,6 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
 pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
-                                             is_backface_visible: bool,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
                                              stops: *const GradientStop,
@@ -1614,8 +1584,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                          end_point.into(),
                                          stops_vector,
                                          extend_mode.into());
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
          .dl_builder
          .push_gradient(&prim_info,
@@ -1628,7 +1597,6 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
 pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
-                                             is_backface_visible: bool,
                                              center: LayoutPoint,
                                              radius: LayoutSize,
                                              stops: *const GradientStop,
@@ -1647,8 +1615,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                                 radius.into(),
                                                 stops_vector,
                                                 extend_mode.into());
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
          .dl_builder
          .push_radial_gradient(&prim_info,
@@ -1661,7 +1628,6 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
 pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         rect: LayoutRect,
                                         clip: LayoutRect,
-                                        is_backface_visible: bool,
                                         box_bounds: LayoutRect,
                                         offset: LayoutVector2D,
                                         color: ColorF,
@@ -1671,8 +1637,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         clip_mode: BoxShadowClipMode) {
     assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
          .dl_builder
          .push_box_shadow(&prim_info,
