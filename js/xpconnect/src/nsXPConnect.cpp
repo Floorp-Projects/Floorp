@@ -651,24 +651,6 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
 }
 
 NS_IMETHODIMP
-nsXPConnect::WrapNativeHolder(JSContext * aJSContext,
-                              JSObject * aScopeArg,
-                              nsISupports* aCOMObj,
-                              const nsIID & aIID,
-                              nsIXPConnectJSObjectHolder **aHolder)
-{
-    MOZ_ASSERT(aHolder, "bad param");
-    MOZ_ASSERT(aJSContext, "bad param");
-    MOZ_ASSERT(aScopeArg, "bad param");
-    MOZ_ASSERT(aCOMObj, "bad param");
-
-    RootedObject aScope(aJSContext, aScopeArg);
-    RootedValue v(aJSContext);
-    return NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID,
-                                    true, &v, aHolder);
-}
-
-NS_IMETHODIMP
 nsXPConnect::WrapNativeToJSVal(JSContext* aJSContext,
                                JSObject* aScopeArg,
                                nsISupports* aCOMObj,
