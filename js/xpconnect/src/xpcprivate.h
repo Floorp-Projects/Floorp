@@ -2120,8 +2120,7 @@ public:
      * @param src_is_identity optional performance hint. Set to true only
      *                        if src is the identity pointer.
      */
-    static bool NativeInterface2JSObject(JS::MutableHandleValue d,
-                                         nsIXPConnectJSObjectHolder** dest,
+    static bool NativeInterface2JSObject(JS::MutableHandleValue dest,
                                          xpcObjectHelper& aHelper,
                                          const nsID* iid,
                                          bool allowNativeWrapper,
