@@ -10,11 +10,9 @@ import logging
 
 from .util import (
     create_tasks,
-    find_decision_task
+    fetch_graph_and_labels
 )
 from .registry import register_callback_action
-from taskgraph.util.taskcluster import get_artifact
-from taskgraph.taskgraph import TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +49,7 @@ logger = logging.getLogger(__name__)
     }
 )
 def retrigger_action(parameters, input, task_group_id, task_id, task):
-    decision_task_id = find_decision_task(parameters)
-
-    full_task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
-    _, full_task_graph = TaskGraph.from_json(full_task_graph)
-    label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
+    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(parameters)
 
     label = task['metadata']['name']
     with_downstream = ' '
