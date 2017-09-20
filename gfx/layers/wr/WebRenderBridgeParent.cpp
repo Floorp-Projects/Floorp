@@ -235,10 +235,11 @@ WebRenderBridgeParent::DeallocShmems(nsTArray<ipc::Shmem>& aShmems)
 
 bool
 WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
-                                       const nsTArray<ipc::Shmem>& aResourceData,
+                                       const nsTArray<ipc::Shmem>& aSmallShmems,
+                                       const nsTArray<ipc::Shmem>& aLargeShmems,
                                        wr::ResourceUpdateQueue& aUpdates)
 {
-  wr::ShmSegmentsReader reader(aResourceData);
+  wr::ShmSegmentsReader reader(aSmallShmems, aLargeShmems);
 
   for (const auto& cmd : aResourceUpdates) {
     switch (cmd.type()) {
@@ -376,22 +377,26 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourceUpdates,
-                                           nsTArray<ipc::Shmem>&& aResourceData)
+                                           nsTArray<ipc::Shmem>&& aSmallShmems,
+                                           nsTArray<ipc::Shmem>&& aLargeShmems)
 {
   if (mDestroyed) {
-    DeallocShmems(aResourceData);
+    DeallocShmems(aSmallShmems);
+    DeallocShmems(aLargeShmems);
     return IPC_OK();
   }
 
   wr::ResourceUpdateQueue updates;
 
-  if (!UpdateResources(aResourceUpdates, aResourceData, updates)) {
-    DeallocShmems(aResourceData);
+  if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, updates)) {
+    DeallocShmems(aSmallShmems);
+    DeallocShmems(aLargeShmems);
     IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
   }
 
   mApi->UpdateResources(updates);
-  DeallocShmems(aResourceData);
+  DeallocShmems(aSmallShmems);
+  DeallocShmems(aLargeShmems);
   return IPC_OK();
 }
 
@@ -497,7 +502,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           const wr::BuiltDisplayListDescriptor& dlDesc,
                                           const WebRenderScrollData& aScrollData,
                                           nsTArray<OpUpdateResource>&& aResourceUpdates,
-                                          nsTArray<ipc::Shmem>&& aResourceData,
+                                          nsTArray<ipc::Shmem>&& aSmallShmems,
+                                          nsTArray<ipc::Shmem>&& aLargeShmems,
                                           const wr::IdNamespace& aIdNamespace,
                                           const TimeStamp& aTxnStartTime,
                                           const TimeStamp& aFwdTime)
@@ -506,7 +512,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
     }
-    DeallocShmems(aResourceData);
+    DeallocShmems(aSmallShmems);
+    DeallocShmems(aLargeShmems);
     return IPC_OK();
   }
 
@@ -526,7 +533,9 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
   ProcessWebRenderParentCommands(aCommands, resources);
 
-  UpdateResources(aResourceUpdates, aResourceData, resources);
+  if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, resources)) {
+    return IPC_FAIL(this, "Failed to deserialize resource updates");
+  }
 
   // If id namespaces do not match, it means the command is obsolete, probably
   // because the tab just moved to a new window.
@@ -561,7 +570,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
   }
 
-  DeallocShmems(aResourceData);
+  DeallocShmems(aSmallShmems);
+  DeallocShmems(aLargeShmems);
   return IPC_OK();
 }
 
@@ -576,7 +586,8 @@ WebRenderBridgeParent::RecvSetDisplayListSync(const gfx::IntSize &aSize,
                                               const wr::BuiltDisplayListDescriptor& dlDesc,
                                               const WebRenderScrollData& aScrollData,
                                               nsTArray<OpUpdateResource>&& aResourceUpdates,
-                                              nsTArray<ipc::Shmem>&& aResourceData,
+                                              nsTArray<ipc::Shmem>&& aSmallShmems,
+                                              nsTArray<ipc::Shmem>&& aLargeShmems,
                                               const wr::IdNamespace& aIdNamespace,
                                               const TimeStamp& aTxnStartTime,
                                               const TimeStamp& aFwdTime)
@@ -584,7 +595,7 @@ WebRenderBridgeParent::RecvSetDisplayListSync(const gfx::IntSize &aSize,
   return RecvSetDisplayList(aSize, Move(aCommands), Move(aToDestroy),
                             aFwdTransactionId, aTransactionId,
                             aContentSize, dl, dlDesc, aScrollData,
-                            Move(aResourceUpdates), Move(aResourceData),
+                            Move(aResourceUpdates), Move(aSmallShmems), Move(aLargeShmems),
                             aIdNamespace, aTxnStartTime, aFwdTime);
 }
 
