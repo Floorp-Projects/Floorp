@@ -257,6 +257,18 @@ class TestEmitterBasic(unittest.TestCase):
             "`DEFINES` may not be set in COMPILE_FLAGS from moz.build"):
             self.read_topsrcdir(reader)
 
+    def test_includes_in_flags(self):
+        reader = self.reader('compile-includes')
+        defines, sources, lib, flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['BASE_INCLUDES'],
+                         ['-I%s' % reader.config.topsrcdir,
+                          '-I%s' % reader.config.topobjdir])
+        self.assertEqual(flags.flags['EXTRA_INCLUDES'],
+                         ['-I%s/dist/include' % reader.config.topobjdir])
+        self.assertEqual(flags.flags['LOCAL_INCLUDES'],
+                         ['-I%s/subdir' % reader.config.topsrcdir])
+
     def test_use_yasm(self):
         # When yasm is not available, this should raise.
         reader = self.reader('use-yasm')
