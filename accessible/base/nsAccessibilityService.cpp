@@ -1307,9 +1307,11 @@ nsAccessibilityService::Init()
       // obtain a MSAA content process id.
       contentChild->SendGetA11yContentId();
     }
-#endif // defined(XP_WIN)
 
+    gApplicationAccessible = new ApplicationAccessibleWrap();
+#else
     gApplicationAccessible = new ApplicationAccessible();
+#endif // defined(XP_WIN)
   }
 
   NS_ADDREF(gApplicationAccessible); // will release in Shutdown()

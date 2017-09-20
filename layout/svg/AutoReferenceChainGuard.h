@@ -151,9 +151,11 @@ public:
 
 private:
   void ReportErrorToConsole() {
-    nsAutoString tag;
-    mFrame->GetContent()->AsElement()->GetTagName(tag);
-    const char16_t* params[] = { tag.get() };
+    nsAutoString tag, id;
+    dom::Element* element = mFrame->GetContent()->AsElement();
+    element->GetTagName(tag);
+    element->GetId(id);
+    const char16_t* params[] = { tag.get(), id.get() };
     auto doc = mFrame->GetContent()->OwnerDoc();
     auto warning = *mFrameInUse ?
                      nsIDocument::eSVGReferenceLoop :

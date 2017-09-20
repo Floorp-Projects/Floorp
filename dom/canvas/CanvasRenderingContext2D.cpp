@@ -17,7 +17,7 @@
 
 #include "nsIDocument.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 
@@ -1300,7 +1300,7 @@ CanvasRenderingContext2D::Redraw()
     return NS_OK;
   }
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(nullptr);
 
@@ -1329,7 +1329,7 @@ CanvasRenderingContext2D::Redraw(const gfx::Rect& aR)
     return;
   }
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(&aR);
 }

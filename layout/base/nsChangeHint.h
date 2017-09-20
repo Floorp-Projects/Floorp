@@ -54,8 +54,8 @@ enum nsChangeHint : uint32_t {
    * filter/mask/clip/etc CSS properties changes, causing the element's frame
    * to start/stop referencing (or reference different) SVG resource elements.
    * (_Not_ used to handle changes to referenced resource elements.) Using this
-   * hint results in nsSVGEffects::UpdateEffects being called on the element's
-   * frame.
+   * hint results in SVGObserverUtils::UpdateEffects being called on the
+   * element's frame.
    */
   nsChangeHint_UpdateEffects = 1 << 7,
 

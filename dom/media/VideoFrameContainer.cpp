@@ -11,7 +11,7 @@
 
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 
 using namespace mozilla::layers;
 
@@ -389,7 +389,7 @@ void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
     }
   }
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(mElement);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(mElement);
 }
 
 } // namespace mozilla

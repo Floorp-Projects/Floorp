@@ -426,7 +426,7 @@ private:
   nsTHashtable<nsPtrHashKey<nsSVGRenderingObserver> > mObservers;
 };
 
-class nsSVGEffects
+class SVGObserverUtils
 {
 public:
   typedef mozilla::dom::Element Element;
