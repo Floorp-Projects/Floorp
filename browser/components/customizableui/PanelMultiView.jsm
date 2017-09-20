@@ -534,7 +534,13 @@ this.PanelMultiView = class {
 
       // Now we have to transition the panel.
       if (this.panelViews && playTransition) {
-        await this._transitionViews(previousViewNode, viewNode, reverse, previousRect, aAnchor);
+        if (aAnchor)
+          aAnchor.setAttribute("open", true);
+
+        await this._transitionViews(previousViewNode, viewNode, reverse, previousRect);
+
+        if (aAnchor)
+          aAnchor.removeAttribute("open");
 
         this._dispatchViewEvent(viewNode, "ViewShown");
         this._updateKeyboardFocus(viewNode);
@@ -571,10 +577,11 @@ this.PanelMultiView = class {
    *                                     previous view or forward to a next view.
    * @param {Object}    previousRect     Rect object, with the same structure as
    *                                     a DOMRect, of the `previousViewNode`.
-   * @param {Element}   anchor           the anchor for which we're opening
-   *                                     a new panelview, if any
+   * @param {Function}  callback         Function that will be invoked when the
+   *                                     transition is finished or when the
+   *                                     operation was canceled (early return).
    */
-  async _transitionViews(previousViewNode, viewNode, reverse, previousRect, anchor) {
+  async _transitionViews(previousViewNode, viewNode, reverse, previousRect) {
     // There's absolutely no need to show off our epic animation skillz when
     // the panel's not even open.
     if (this._panel.state != "open") {
@@ -588,11 +595,8 @@ this.PanelMultiView = class {
 
     this._transitionDetails = {
       phase: TRANSITION_PHASES.START,
-      previousViewNode, viewNode, reverse, anchor
+      previousViewNode, viewNode, reverse
     };
-
-    if (anchor)
-      anchor.setAttribute("open", "true");
 
     // Set the viewContainer dimensions to make sure only the current view is
     // visible.
@@ -700,7 +704,7 @@ this.PanelMultiView = class {
     if (!this._transitionDetails)
       return;
 
-    let {phase, previousViewNode, viewNode, reverse, resolve, listener, anchor} = this._transitionDetails;
+    let {phase, previousViewNode, viewNode, reverse, resolve, listener} = this._transitionDetails;
     this._transitionDetails = null;
 
     // Do the things we _always_ need to do whenever the transition ends or is
@@ -710,9 +714,6 @@ this.PanelMultiView = class {
     if (reverse)
       this._resetKeyNavigation(previousViewNode);
     this.descriptionHeightWorkaround(viewNode);
-
-    if (anchor)
-      anchor.removeAttribute("open");
 
     if (phase >= TRANSITION_PHASES.START) {
       this._panel.removeAttribute("width");
@@ -994,6 +995,7 @@ this.PanelMultiView = class {
         this._viewShowing = null;
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
+        this.showMainView();
         if (this.panelViews) {
           this._cleanupTransitionPhase();
           for (let panelView of this._viewStack.children) {
@@ -1016,7 +1018,6 @@ this.PanelMultiView = class {
           this._viewContainer.style.removeProperty("min-width");
           this._viewContainer.style.removeProperty("max-width");
         }
-        this.showMainView();
 
         // Always try to layout the panel normally when reopening it. This is
         // also the layout that will be used in customize mode.
