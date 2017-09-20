@@ -83,6 +83,19 @@ For "loadurl.1" event, the following extra information is also recorded:
         "count": number, /* total number of stories displayed */
     }
 
+One event type is recorded for interaction with the Top Stories section title UI:
+1) User clicks on the "MORE" link in the Top Stories section title: event="action.1", method="button"
+
+In addition to global extras, the following information is included:
+
+.. code-block:: js
+
+    extras: {
+        ...
+        "source_type": "pocket",
+        "item": "link_more"
+    }
+
 Highlight interactions
 ----------------------
 Two event types are recorded:
