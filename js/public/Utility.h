@@ -154,6 +154,54 @@ HadSimulatedOOM() {
     return counter >= maxAllocations;
 }
 
+/*
+ * Out of stack space testing support, similar to OOM testing functions.
+ */
+
+extern JS_PUBLIC_DATA(uint32_t) stackTargetThread;
+extern JS_PUBLIC_DATA(uint64_t) maxStackChecks;
+extern JS_PUBLIC_DATA(uint64_t) stackCheckCounter;
+extern JS_PUBLIC_DATA(bool) stackCheckFailAlways;
+
+extern void
+SimulateStackOOMAfter(uint64_t checks, uint32_t thread, bool always);
+
+extern void
+ResetSimulatedStackOOM();
+
+inline bool
+IsThreadSimulatingStackOOM()
+{
+    return js::oom::stackTargetThread && js::oom::stackTargetThread == js::oom::GetThreadType();
+}
+
+inline bool
+IsSimulatedStackOOMCheck()
+{
+    return IsThreadSimulatingStackOOM() &&
+           (stackCheckCounter == maxStackChecks || (stackCheckCounter > maxStackChecks && stackCheckFailAlways));
+}
+
+inline bool
+ShouldFailWithStackOOM()
+{
+    if (!IsThreadSimulatingStackOOM())
+        return false;
+
+    stackCheckCounter++;
+    if (IsSimulatedStackOOMCheck()) {
+        JS_OOM_CALL_BP_FUNC();
+        return true;
+    }
+    return false;
+}
+
+inline bool
+HadSimulatedStackOOM()
+{
+    return stackCheckCounter >= maxStackChecks;
+}
+
 } /* namespace oom */
 } /* namespace js */
 
@@ -169,10 +217,26 @@ HadSimulatedOOM() {
             return false;                                                     \
     } while (0)
 
+#  define JS_STACK_OOM_POSSIBLY_FAIL()                                        \
+    do {                                                                      \
+        if (js::oom::ShouldFailWithStackOOM())                                \
+            return false;                                                     \
+    } while (0)
+
+#  define JS_STACK_OOM_POSSIBLY_FAIL_REPORT()                                 \
+    do {                                                                      \
+        if (js::oom::ShouldFailWithStackOOM()) {                              \
+            ReportOverRecursed(cx);                                           \
+            return false;                                                     \
+        }                                                                     \
+    } while (0)
+
 # else
 
 #  define JS_OOM_POSSIBLY_FAIL() do {} while(0)
 #  define JS_OOM_POSSIBLY_FAIL_BOOL() do {} while(0)
+#  define JS_STACK_OOM_POSSIBLY_FAIL() do {} while(0)
+#  define JS_STACK_OOM_POSSIBLY_FAIL_REPORT() do {} while(0)
 namespace js {
 namespace oom {
 static inline bool IsSimulatedOOMAllocation() { return false; }
