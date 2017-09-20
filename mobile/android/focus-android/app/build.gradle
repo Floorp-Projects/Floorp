@@ -183,6 +183,10 @@ dependencies {
     }
 
     androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.7.0'
+
+    androidTestCompile "tools.fastlane:screengrab:1.1.0", {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
 }
 
 // -------------------------------------------------------------------------------------------------
