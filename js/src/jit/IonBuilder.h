@@ -283,11 +283,22 @@ class IonBuilder
                                                            int32_t fieldOffset, MDefinition* value,
                                                            TypedObjectPrediction fieldPrediction,
                                                            PropertyName* name);
+    AbortReasonOr<Ok> setPropTryReferenceTypedObjectValue(bool* emitted,
+                                                          MDefinition* typedObj,
+                                                          const LinearSum& byteOffset,
+                                                          ReferenceTypeDescr::Type type,
+                                                          MDefinition* value,
+                                                          PropertyName* name);
     AbortReasonOr<Ok> setPropTryScalarPropOfTypedObject(bool* emitted,
                                                         MDefinition* obj,
                                                         int32_t fieldOffset,
                                                         MDefinition* value,
                                                         TypedObjectPrediction fieldTypeReprs);
+    AbortReasonOr<Ok> setPropTryScalarTypedObjectValue(bool* emitted,
+                                                       MDefinition* typedObj,
+                                                       const LinearSum& byteOffset,
+                                                       ScalarTypeDescr::Type type,
+                                                       MDefinition* value);
     AbortReasonOr<Ok> setPropTryCache(bool* emitted, MDefinition* obj,
                                       PropertyName* name, MDefinition* value,
                                       bool barrier, TemporaryTypeSet* objTypes);
@@ -358,15 +369,6 @@ class IonBuilder
     MDefinition* typeObjectForElementFromArrayStructType(MDefinition* typedObj);
     MDefinition* typeObjectForFieldFromStructType(MDefinition* type,
                                                   size_t fieldIndex);
-    AbortReasonOr<bool> storeReferenceTypedObjectValue(MDefinition* typedObj,
-                                                       const LinearSum& byteOffset,
-                                                       ReferenceTypeDescr::Type type,
-                                                       MDefinition* value,
-                                                       PropertyName* name);
-    AbortReasonOr<Ok> storeScalarTypedObjectValue(MDefinition* typedObj,
-                                                  const LinearSum& byteOffset,
-                                                  ScalarTypeDescr::Type type,
-                                                  MDefinition* value);
     bool checkTypedObjectIndexInBounds(uint32_t elemSize,
                                        MDefinition* obj,
                                        MDefinition* index,
