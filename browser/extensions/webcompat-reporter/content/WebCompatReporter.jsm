@@ -30,6 +30,7 @@ let WebCompatReporter = {
       id: "webcompat-reporter-button",
       title: wcStrings.GetStringFromName("wc-reporter.label2"),
       iconURL: "chrome://webcompat-reporter/skin/lightbulb.svg",
+      labelForHistogram: "webcompat",
       onCommand: (e) => this.reportIssue(e.target.ownerGlobal),
       onShowingInPanel: (buttonNode) => this.onShowingInPanel(buttonNode)
     }));
