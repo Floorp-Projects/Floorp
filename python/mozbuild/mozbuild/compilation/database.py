@@ -54,8 +54,7 @@ class CompileDBBackend(CommonBackend):
                 'build/unix/elfhack',
                 'build/unix/elfhack/inject',
                 'build/clang-plugin',
-                'build/clang-plugin/tests',
-                'toolkit/crashreporter/google-breakpad/src/common'):
+                'build/clang-plugin/tests'):
             return True
 
         consumed = CommonBackend.consume_object(self, obj)
