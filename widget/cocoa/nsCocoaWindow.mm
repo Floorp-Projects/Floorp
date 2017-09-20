@@ -487,7 +487,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   mWindow = [[windowClass alloc] initWithContentRect:contentRect styleMask:features 
                                  backing:NSBackingStoreBuffered defer:YES];
 
-  if ([mWindow respondsToSelector:@selector(setTitleVisibility)]) {
+  if ([mWindow respondsToSelector:@selector(setTitleVisibility:)]) {
     // By default, hide window titles.
     [mWindow setTitleVisibility:NSWindowTitleHidden];
   }
@@ -3158,7 +3158,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   if (changed) {
     [self updateContentViewSize];
     [self reflowTitlebarElements];
-    if ([self respondsToSelector:@selector(setTitleVisibility)]) {
+    if ([self respondsToSelector:@selector(setTitleVisibility:)]) {
       [self setTitleVisibility:mDrawsIntoWindowFrame ? NSWindowTitleHidden :
                                                        NSWindowTitleVisible];
     }
