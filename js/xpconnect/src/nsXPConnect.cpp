@@ -614,8 +614,7 @@ NativeInterface2JSObject(HandleObject aScope,
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
-    if (!XPCConvert::NativeInterface2JSObject(aVal, nullptr, helper, aIID,
-                                              aAllowWrapping, &rv))
+    if (!XPCConvert::NativeInterface2JSObject(aVal, helper, aIID, aAllowWrapping, &rv))
         return rv;
 
     MOZ_ASSERT(aAllowWrapping || !xpc::WrapperFactory::IsXrayWrapper(&aVal.toObject()),
