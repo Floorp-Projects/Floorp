@@ -2034,26 +2034,6 @@ private:
     nsCOMPtr<nsISupports> mOuter;    // only set in root
 };
 
-/***************************************************************************/
-
-class XPCJSObjectHolder final : public nsIXPConnectJSObjectHolder
-{
-public:
-    // all the interface method declarations...
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
-
-    // non-interface implementation
-
-public:
-    XPCJSObjectHolder(JSContext* cx, JSObject* obj);
-
-private:
-    virtual ~XPCJSObjectHolder() {}
-    XPCJSObjectHolder() = delete;
-
-    JS::PersistentRooted<JSObject*> mJSObj;
-};
 
 /***************************************************************************
 ****************************************************************************
