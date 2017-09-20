@@ -282,10 +282,15 @@
   z-index: 1;
 }
 
-#titlebar-buttonbox,
 #titlebar-buttonbox-container {
-  display: flex;
-  align-items: center;
+  -moz-box-align: center;
+}
+
+@media (-moz-os-version: windows-win7) {
+  /* Preserve window control buttons position at the top of the button box. */
+  #titlebar-buttonbox-container {
+    -moz-box-align: start;
+  }
 }
 
 .titlebar-placeholder[type="caption-buttons"] {
@@ -1122,6 +1127,19 @@ notification[value="translation"] {
 /* End customization mode */
 
 /* Private browsing and accessibility indicators */
+
+@media (-moz-os-version: windows-win7) {
+  /* Making sure that indicators take up all available vertical space. */
+  :root[tabsintitlebar]:not([inFullscreen]) .private-browsing-indicator,
+  :root[tabsintitlebar]:not([inFullscreen]) .accessibility-indicator {
+    height: var(--tab-min-height);
+  }
+
+  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) .private-browsing-indicator,
+  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) .accessibility-indicator {
+    height: calc(var(--tab-min-height) + 4px);
+  }
+}
 
 :root:-moz-any([tabsintitlebar], [inFullscreen]):not([privatebrowsingmode=temporary]) .accessibility-indicator,
 :root:-moz-any([tabsintitlebar], [inFullscreen]) .private-browsing-indicator {
