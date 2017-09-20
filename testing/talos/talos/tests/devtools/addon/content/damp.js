@@ -1,11 +1,27 @@
-Components.utils.import("resource://devtools/client/framework/gDevTools.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-const { devtools } =
-  Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-const ThreadSafeChromeUtils = devtools.require("ThreadSafeChromeUtils");
-const { EVENTS } = devtools.require("devtools/client/netmonitor/src/constants");
+const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+
+XPCOMUtils.defineLazyGetter(this, "require", function() {
+  let { require } =
+    Components.utils.import("resource://devtools/shared/Loader.jsm", {});
+  return require;
+});
+XPCOMUtils.defineLazyGetter(this, "gDevTools", function() {
+  let { gDevTools } = require("devtools/client/framework/devtools");
+  return gDevTools;
+});
+XPCOMUtils.defineLazyGetter(this, "EVENTS", function() {
+  let { EVENTS } = require("devtools/client/netmonitor/src/constants");
+  return EVENTS;
+});
+XPCOMUtils.defineLazyGetter(this, "TargetFactory", function() {
+  let { TargetFactory } = require("devtools/client/framework/target");
+  return TargetFactory;
+});
+XPCOMUtils.defineLazyGetter(this, "ThreadSafeChromeUtils", function() {
+  return require("ThreadSafeChromeUtils");
+});
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
@@ -65,7 +81,7 @@ Damp.prototype = {
 
   openToolbox(tool = "webconsole") {
     let tab = getActiveTab(getMostRecentBrowserWindow());
-    let target = devtools.TargetFactory.forTab(tab);
+    let target = TargetFactory.forTab(tab);
     let startRecordTimestamp = performance.now();
     let showPromise = gDevTools.showToolbox(target, tool);
 
@@ -80,7 +96,7 @@ Damp.prototype = {
 
   closeToolbox: Task.async(function* () {
     let tab = getActiveTab(getMostRecentBrowserWindow());
-    let target = devtools.TargetFactory.forTab(tab);
+    let target = TargetFactory.forTab(tab);
     yield target.client.waitForRequestsToSettle();
     let startRecordTimestamp = performance.now();
     yield gDevTools.closeToolbox(target);
@@ -92,7 +108,7 @@ Damp.prototype = {
 
   saveHeapSnapshot(label) {
     let tab = getActiveTab(getMostRecentBrowserWindow());
-    let target = devtools.TargetFactory.forTab(tab);
+    let target = TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let panel = toolbox.getCurrentPanel();
     let memoryFront = panel.panelWin.gFront;
@@ -465,7 +481,7 @@ Damp.prototype = {
    */
   waitForAllRequestsFinished() {
     let tab = getActiveTab(getMostRecentBrowserWindow());
-    let target = devtools.TargetFactory.forTab(tab);
+    let target = TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let window = toolbox.getCurrentPanel().panelWin;
 
