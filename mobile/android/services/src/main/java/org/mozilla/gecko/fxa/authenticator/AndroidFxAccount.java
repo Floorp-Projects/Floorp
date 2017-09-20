@@ -153,21 +153,6 @@ public class AndroidFxAccount {
   protected volatile Account account;
 
   /**
-   * A cache associating Account name (email address) to a representation of the
-   * account's internal bundle.
-   * <p>
-   * The cache is invalidated entirely when <it>any</it> new Account is added,
-   * because there is no reliable way to know that an Account has been removed
-   * and then re-added.
-   */
-  private static final ConcurrentHashMap<String, ExtendedJSONObject> perAccountBundleCache =
-      new ConcurrentHashMap<>();
-
-  public static void invalidateCaches() {
-    perAccountBundleCache.clear();
-  }
-
-  /**
    * Create an Android Firefox Account instance backed by an Android Account
    * instance.
    * <p>
@@ -244,10 +229,6 @@ public class AndroidFxAccount {
     // Persist our UID into userData, so that we never have to do this dance again.
     accountManager.setUserData(account, ACCOUNT_KEY_UID, unpickledAccountUID);
 
-    // Our internal caches were also keyed by 'email' instead of 'uid', so we blow them away here
-    // so that they're re-populated correctly later on.
-    invalidateCaches();
-
     return unpickledAccountUID;
   }
 
@@ -256,28 +237,15 @@ public class AndroidFxAccount {
    * @param bundle to write to account.
    */
   private synchronized void persistBundle(ExtendedJSONObject bundle) {
-    perAccountBundleCache.put(getAccountUID(), bundle);
     accountManager.setUserData(account, ACCOUNT_KEY_DESCRIPTOR, bundle.toJSONString());
-  }
-
-  /* package-private */ ExtendedJSONObject unbundle() {
-    return unbundle(true);
   }
 
   /**
    * Retrieve the internal bundle associated with this account.
    * @return bundle associated with account.
    */
-  private synchronized ExtendedJSONObject unbundle(boolean allowCachedBundle) {
-    final String accountUID = getAccountUID();
-
-    if (allowCachedBundle) {
-      final ExtendedJSONObject cachedBundle = perAccountBundleCache.get(accountUID);
-      if (cachedBundle != null) {
-        Logger.debug(LOG_TAG, "Returning cached account bundle.");
-        return cachedBundle;
-      }
-    }
+  /* package-private */ synchronized ExtendedJSONObject unbundle() {
+    final String bundleString = accountManager.getUserData(account, ACCOUNT_KEY_DESCRIPTOR);
 
     final int version = getAccountVersion();
     if (version < CURRENT_ACCOUNT_VERSION) {
@@ -288,17 +256,14 @@ public class AndroidFxAccount {
 
     if (version > CURRENT_ACCOUNT_VERSION) {
       // Oh dear.
-      return null;
+      throw new IllegalStateException("Invalid account bundle version. Current: " + CURRENT_ACCOUNT_VERSION + ", bundle version: " + version);
     }
 
-    String bundleString = accountManager.getUserData(account, ACCOUNT_KEY_DESCRIPTOR);
     if (bundleString == null) {
       return null;
     }
-    final ExtendedJSONObject bundle = unbundleAccountV2(bundleString);
-    perAccountBundleCache.put(accountUID, bundle);
-    Logger.info(LOG_TAG, "Account bundle persisted to cache.");
-    return bundle;
+
+    return unbundleAccountV2(bundleString);
   }
 
   private String getBundleData(String key) {
@@ -1135,7 +1100,6 @@ public class AndroidFxAccount {
             account = updatedAccount;
             migrateSyncSettingsCallback.run();
 
-            invalidateCaches();
             callback.run();
           }
         } catch (OperationCanceledException | IOException | AuthenticatorException e) {
@@ -1192,9 +1156,6 @@ public class AndroidFxAccount {
         }
 
         // It appears that we've successfully removed the account. It's now time to re-add it.
-
-        // Purge our internal state.
-        invalidateCaches();
 
         // Finally, add an Android account with new name and old user data.
         final Account newAccount = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
