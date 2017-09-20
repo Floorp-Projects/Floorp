@@ -200,6 +200,12 @@ main {
     fill: #737373;
     vertical-align: middle; }
 
+.body-wrapper {
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out; }
+  .body-wrapper.on {
+    opacity: 1; }
+
 .top-sites-list {
   list-style: none;
   margin: 0;
@@ -450,6 +456,9 @@ main {
   .topsite-form .form-wrapper .field {
     margin-inline-start: 205px;
     position: relative; }
+  .topsite-form .form-wrapper .url input:not(:placeholder-shown):dir(rtl) {
+    direction: ltr;
+    text-align: right; }
   .topsite-form .form-wrapper .section-title {
     margin-bottom: 5px;
     margin-inline-start: 205px; }
