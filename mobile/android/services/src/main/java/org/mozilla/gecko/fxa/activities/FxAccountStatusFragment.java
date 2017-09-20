@@ -13,13 +13,13 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
-import android.preference.SwitchPreference;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -99,10 +99,10 @@ public class FxAccountStatusFragment
   protected Preference needsMasterSyncAutomaticallyEnabledPreference;
   protected Preference needsFinishMigratingPreference;
 
-  protected SwitchPreference bookmarksPreference;
-  protected SwitchPreference historyPreference;
-  protected SwitchPreference tabsPreference;
-  protected SwitchPreference passwordsPreference;
+  protected CheckBoxPreference bookmarksPreference;
+  protected CheckBoxPreference historyPreference;
+  protected CheckBoxPreference tabsPreference;
+  protected CheckBoxPreference passwordsPreference;
 
   protected EditTextPreference deviceNamePreference;
   protected Preference syncServerPreference;
@@ -167,10 +167,10 @@ public class FxAccountStatusFragment
     needsMasterSyncAutomaticallyEnabledPreference = ensureFindPreference("needs_master_sync_automatically_enabled");
     needsFinishMigratingPreference = ensureFindPreference("needs_finish_migrating");
 
-    bookmarksPreference = (SwitchPreference) ensureFindPreference("bookmarks");
-    historyPreference = (SwitchPreference) ensureFindPreference("history");
-    tabsPreference = (SwitchPreference) ensureFindPreference("tabs");
-    passwordsPreference = (SwitchPreference) ensureFindPreference("passwords");
+    bookmarksPreference = (CheckBoxPreference) ensureFindPreference("bookmarks");
+    historyPreference = (CheckBoxPreference) ensureFindPreference("history");
+    tabsPreference = (CheckBoxPreference) ensureFindPreference("tabs");
+    passwordsPreference = (CheckBoxPreference) ensureFindPreference("passwords");
 
     profilePreference.setOnPreferenceClickListener(this);
     removeAccountPreference.setOnPreferenceClickListener(this);
