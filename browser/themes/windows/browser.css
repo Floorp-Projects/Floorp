@@ -13,6 +13,7 @@
   --titlebar-text-color: currentColor;
 
   --tabs-border: threedshadow;
+  --tab-line-color: highlight;
 
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
@@ -37,6 +38,7 @@
 @media (-moz-windows-default-theme) {
   :root {
     --tabs-border: rgba(0,0,0,.3);
+    --tab-line-color: #0a84ff;
 
     --toolbar-non-lwt-bgcolor: #f9f9fa;
     --toolbar-non-lwt-textcolor: #0c0c0d;
