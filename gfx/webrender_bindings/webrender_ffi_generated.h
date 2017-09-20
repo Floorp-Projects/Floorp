@@ -886,7 +886,6 @@ WR_INLINE
 void wr_dp_push_border(WrState *aState,
                        LayoutRect aRect,
                        LayoutRect aClip,
-                       bool aIsBackfaceVisible,
                        BorderWidths aWidths,
                        BorderSide aTop,
                        BorderSide aRight,
@@ -899,7 +898,6 @@ WR_INLINE
 void wr_dp_push_border_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
-                                bool aIsBackfaceVisible,
                                 BorderWidths aWidths,
                                 LayoutPoint aStartPoint,
                                 LayoutPoint aEndPoint,
@@ -913,7 +911,6 @@ WR_INLINE
 void wr_dp_push_border_image(WrState *aState,
                              LayoutRect aRect,
                              LayoutRect aClip,
-                             bool aIsBackfaceVisible,
                              BorderWidths aWidths,
                              WrImageKey aImage,
                              NinePatchDescriptor aPatch,
@@ -926,7 +923,6 @@ WR_INLINE
 void wr_dp_push_border_radial_gradient(WrState *aState,
                                        LayoutRect aRect,
                                        LayoutRect aClip,
-                                       bool aIsBackfaceVisible,
                                        BorderWidths aWidths,
                                        LayoutPoint aCenter,
                                        LayoutSize aRadius,
@@ -940,7 +936,6 @@ WR_INLINE
 void wr_dp_push_box_shadow(WrState *aState,
                            LayoutRect aRect,
                            LayoutRect aClip,
-                           bool aIsBackfaceVisible,
                            LayoutRect aBoxBounds,
                            LayoutVector2D aOffset,
                            ColorF aColor,
@@ -970,7 +965,6 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_iframe(WrState *aState,
                        LayoutRect aRect,
-                       bool aIsBackfaceVisible,
                        WrPipelineId aPipelineId)
 WR_FUNC;
 
@@ -978,7 +972,6 @@ WR_INLINE
 void wr_dp_push_image(WrState *aState,
                       LayoutRect aBounds,
                       LayoutRect aClip,
-                      bool aIsBackfaceVisible,
                       LayoutSize aStretchSize,
                       LayoutSize aTileSpacing,
                       ImageRendering aImageRendering,
@@ -988,7 +981,6 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_line(WrState *aState,
                      LayoutRect aClip,
-                     bool aIsBackfaceVisible,
                      float aBaseline,
                      float aStart,
                      float aEnd,
@@ -1002,7 +994,6 @@ WR_INLINE
 void wr_dp_push_linear_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
-                                bool aIsBackfaceVisible,
                                 LayoutPoint aStartPoint,
                                 LayoutPoint aEndPoint,
                                 const GradientStop *aStops,
@@ -1016,7 +1007,6 @@ WR_INLINE
 void wr_dp_push_radial_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
-                                bool aIsBackfaceVisible,
                                 LayoutPoint aCenter,
                                 LayoutSize aRadius,
                                 const GradientStop *aStops,
@@ -1030,7 +1020,6 @@ WR_INLINE
 void wr_dp_push_rect(WrState *aState,
                      LayoutRect aRect,
                      LayoutRect aClip,
-                     bool aIsBackfaceVisible,
                      ColorF aColor)
 WR_FUNC;
 
@@ -1049,15 +1038,13 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  const LayoutTransform *aPerspective,
                                  MixBlendMode aMixBlendMode,
                                  const WrFilterOp *aFilters,
-                                 size_t aFilterCount,
-                                 bool aIsBackfaceVisible)
+                                 size_t aFilterCount)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_text(WrState *aState,
                      LayoutRect aBounds,
                      LayoutRect aClip,
-                     bool aIsBackfaceVisible,
                      ColorF aColor,
                      WrFontInstanceKey aFontKey,
                      const GlyphInstance *aGlyphs,
@@ -1069,7 +1056,6 @@ WR_INLINE
 void wr_dp_push_text_shadow(WrState *aState,
                             LayoutRect aBounds,
                             LayoutRect aClip,
-                            bool aIsBackfaceVisible,
                             TextShadow aShadow)
 WR_FUNC;
 
@@ -1078,7 +1064,6 @@ WR_INLINE
 void wr_dp_push_yuv_NV12_image(WrState *aState,
                                LayoutRect aBounds,
                                LayoutRect aClip,
-                               bool aIsBackfaceVisible,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
                                WrYuvColorSpace aColorSpace,
@@ -1090,7 +1075,6 @@ WR_INLINE
 void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       LayoutRect aBounds,
                                       LayoutRect aClip,
-                                      bool aIsBackfaceVisible,
                                       WrImageKey aImageKey0,
                                       WrYuvColorSpace aColorSpace,
                                       ImageRendering aImageRendering)
@@ -1101,7 +1085,6 @@ WR_INLINE
 void wr_dp_push_yuv_planar_image(WrState *aState,
                                  LayoutRect aBounds,
                                  LayoutRect aClip,
-                                 bool aIsBackfaceVisible,
                                  WrImageKey aImageKey0,
                                  WrImageKey aImageKey1,
                                  WrImageKey aImageKey2,
