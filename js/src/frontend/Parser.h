@@ -511,7 +511,7 @@ class Parser final : public ParserBase
     // a dummy type that traces the owning Parser.)
     struct Rooter {
         Parser* parser;
-        Rooter(Parser* parser) : parser(parser) {}
+        explicit Rooter(Parser* parser) : parser(parser) {}
         void trace(JSTracer* trc) { parser->trace(trc); }
     };
     PersistentRooted<Rooter> root;
