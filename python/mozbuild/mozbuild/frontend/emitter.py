@@ -1034,12 +1034,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         computed_flags.resolve_flags('LOCAL_INCLUDES', ['-I%s' % p for p in local_includes])
 
-        if len(context['CPP_UNIT_TESTS']):
-            # TODO: Move this to the CppUnitTests template.
-            dist_include_testing = mozpath.join(self.config.topobjdir,
-                                                'dist', 'include', 'testing')
-            computed_flags.flags['EXTRA_INCLUDES'].append('-I%s' % dist_include_testing)
-
         for obj in self._handle_linkables(context, passthru, generated_files):
             yield obj
 
