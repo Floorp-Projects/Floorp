@@ -52,6 +52,10 @@ public:
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
+  bool GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+                                Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+                                std::vector<FontVariation>* aOutVariations) override;
+
   bool CanSerialize() override { return true; }
 
 #ifdef USE_CAIRO_SCALED_FONT
