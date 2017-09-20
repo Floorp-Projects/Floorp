@@ -1687,7 +1687,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 54;
+    const UI_VERSION = 55;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2085,6 +2085,10 @@ BrowserGlue.prototype = {
         Services.prefs.setStringPref("browser.onboarding.state", state);
         Services.prefs.clearUserPref("browser.onboarding.hidden");
       }
+    }
+
+    if (currentUIVersion < 55) {
+      Services.prefs.clearUserPref("browser.customizemode.tip0.shown");
     }
 
     // Update the migration version.
