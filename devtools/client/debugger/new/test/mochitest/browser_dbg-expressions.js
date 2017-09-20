@@ -61,7 +61,7 @@ add_task(async function() {
 
   await addExpression(dbg, "f");
   is(getLabel(dbg, 1), "f");
-  is(getValue(dbg, 1), "(unavailable)");
+  is(getValue(dbg, 1), `"ReferenceError: f is not defined"`);
 
   await editExpression(dbg, "oo");
   is(getLabel(dbg, 1), "foo()");
