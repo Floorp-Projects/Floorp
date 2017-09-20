@@ -50,3 +50,7 @@ l10n-repo/
 
 # Infer output
 infer-out/
+
+# Screenshots
+fastlane/
+
