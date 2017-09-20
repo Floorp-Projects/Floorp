@@ -51,14 +51,14 @@ parent:
   async SetDisplayList(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                        LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
                        WebRenderScrollData aScrollData,
-                       OpUpdateResource[] aResourceUpdates, Shmem[] aResourceData,
+                       OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
                        IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
   sync SetDisplayListSync(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                           LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
                           WebRenderScrollData aScrollData,
-                          OpUpdateResource[] aResourceUpdates, Shmem[] aResourceData,
+                          OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
                           IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
-  async UpdateResources(OpUpdateResource[] aResourceUpdates, Shmem[] aResourceData);
+  async UpdateResources(OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture);
   async AddPipelineIdForCompositable(PipelineId aImageId, CompositableHandle aHandle, bool aAsync);
