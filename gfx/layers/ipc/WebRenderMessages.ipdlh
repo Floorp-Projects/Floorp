@@ -62,7 +62,6 @@ struct OpUpdateAsyncImagePipeline {
 };
 
 union WebRenderParentCommand {
-  OpAddExternalImage;
   OpUpdateAsyncImagePipeline;
   CompositableOperation;
   OpAddCompositorAnimations;
