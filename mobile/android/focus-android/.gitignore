@@ -45,5 +45,8 @@ l10n-repo/
 # Compiled python code
 *.pyc
 
+# OS X
+.DS_Store
+
 # Infer output
 infer-out/
