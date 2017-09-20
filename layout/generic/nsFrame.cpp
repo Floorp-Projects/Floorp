@@ -76,7 +76,7 @@
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsChangeHint.h"
 #include "nsDeckFrame.h"
 #include "nsSubDocumentFrame.h"
@@ -623,11 +623,11 @@ nsFrame::Init(nsIContent*       aContent,
     nsFrameState state = aPrevInFlow->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
-    mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
-                       NS_FRAME_PART_OF_IBSPLIT |
-                       NS_FRAME_MAY_BE_TRANSFORMED |
-                       NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
-                       NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+    AddStateBits(state & (NS_FRAME_INDEPENDENT_SELECTION |
+                          NS_FRAME_PART_OF_IBSPLIT |
+                          NS_FRAME_MAY_BE_TRANSFORMED |
+                          NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
+                          NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN));
   } else {
     PresContext()->ConstructedFrame();
   }
@@ -635,11 +635,11 @@ nsFrame::Init(nsIContent*       aContent,
     nsFrameState state = GetParent()->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
-    mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
-                       NS_FRAME_GENERATED_CONTENT |
-                       NS_FRAME_IS_SVG_TEXT |
-                       NS_FRAME_IN_POPUP |
-                       NS_FRAME_IS_NONDISPLAY);
+    AddStateBits(state & (NS_FRAME_INDEPENDENT_SELECTION |
+                          NS_FRAME_GENERATED_CONTENT |
+                          NS_FRAME_IS_SVG_TEXT |
+                          NS_FRAME_IN_POPUP |
+                          NS_FRAME_IS_NONDISPLAY));
 
     if (HasAnyStateBits(NS_FRAME_IN_POPUP) && TrackingVisibility()) {
       // Assume all frames in popups are visible.
@@ -652,7 +652,7 @@ nsFrame::Init(nsIContent*       aContent,
        nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_transform))) {
     // The frame gets reconstructed if we toggle the -moz-transform
     // property, so we can set this bit here and then ignore it.
-    mState |= NS_FRAME_MAY_BE_TRANSFORMED;
+    AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
   if (disp->mPosition == NS_STYLE_POSITION_STICKY &&
       !aPrevInFlow &&
@@ -715,7 +715,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT),
              "NS_FRAME_PART_OF_IBSPLIT set on non-nsContainerFrame?");
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(this);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(this);
 
   if (StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY) {
     StickyScrollContainer* ssc =
@@ -5892,11 +5892,12 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", static_cast<uint32_t>(aStatus)));
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(this, nsSVGEffects::INVALIDATE_REFLOW);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(this,
+                      SVGObserverUtils::INVALIDATE_REFLOW);
 
   if (nsDidReflowStatus::FINISHED == aStatus) {
-    mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
-                NS_FRAME_HAS_DIRTY_CHILDREN);
+    RemoveStateBits(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW |
+                    NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
   // Notify the percent bsize observer if there is a percent bsize.
@@ -6407,12 +6408,12 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
 static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot, nsIFrame* aFrame)
 {
   MOZ_ASSERT(aDisplayRoot == nsLayoutUtils::GetDisplayRootFrame(aFrame));
-  nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
   nsIFrame* parent = aFrame;
   while (parent != aDisplayRoot &&
          (parent = nsLayoutUtils::GetCrossDocParentFrame(parent)) &&
          !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
   }
 }
 
@@ -6451,7 +6452,7 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
   if (aHasDisplayItem) {
     aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
   }
-  nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
   bool needsSchedulePaint = false;
   if (nsLayoutUtils::IsPopup(aFrame)) {
     needsSchedulePaint = true;
@@ -6461,7 +6462,7 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
       if (aHasDisplayItem && !parent->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
         parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
       }
-      nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+      SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
 
       // If we're inside a popup, then we need to make sure that we
       // call schedule paint so that the NS_FRAME_UPDATE_LAYER_TREE
@@ -6997,7 +6998,7 @@ nsFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
 {
   if (aReflowInput.mReflowDepth >  MAX_FRAME_DEPTH) {
     NS_WARNING("frame tree too deep; setting zero size and returning");
-    mState |= NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
+    AddStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE);
     ClearOverflowRects();
     aMetrics.ClearSize();
     aMetrics.SetBlockStartAscent(0);
@@ -7014,7 +7015,7 @@ nsFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
 
     return true;
   }
-  mState &= ~NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
+  RemoveStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE);
   return false;
 }
 
@@ -9138,7 +9139,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   if (anyOverflowChanged) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
   return anyOverflowChanged;
 }

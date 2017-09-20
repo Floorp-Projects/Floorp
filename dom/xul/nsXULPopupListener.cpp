@@ -138,8 +138,13 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   if (!targetContent) {
     return NS_OK;
   }
-  if (EventStateManager::IsRemoteTarget(targetContent)) {
-    return NS_OK;
+
+  {
+    EventTarget* originalTarget = mouseEvent->AsEvent()->InternalDOMEvent()->GetOriginalTarget();
+    nsCOMPtr<nsIContent> content = do_QueryInterface(originalTarget);
+    if (content && EventStateManager::IsRemoteTarget(content)) {
+      return NS_OK;
+    }
   }
 
   bool preventDefault;
