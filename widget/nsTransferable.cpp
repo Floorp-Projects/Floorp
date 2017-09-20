@@ -68,13 +68,10 @@ DataStruct::SetData ( nsISupports* aData, uint32_t aDataLen, bool aIsPrivateData
   // as well as ensuring that private browsing mode is disabled
   if (aDataLen > kLargeDatasetSize && !aIsPrivateData) {
     // if so, cache it to disk instead of memory
-    if (NS_SUCCEEDED(WriteCache(aData, aDataLen))) {
-      // Clear previously set small data.
-      mData = nullptr;
-      mDataLen = 0;
+    if ( NS_SUCCEEDED(WriteCache(aData, aDataLen)) )
       return;
-    }
-    NS_WARNING("Oh no, couldn't write data to the cache file");
+    else
+			NS_WARNING("Oh no, couldn't write data to the cache file");
   }
 
   mData    = aData;
@@ -87,7 +84,7 @@ void
 DataStruct::GetData ( nsISupports** aData, uint32_t *aDataLen )
 {
   // check here to see if the data is cached on disk
-  if (mCacheFD) {
+  if ( !mData && mCacheFD ) {
     // if so, read it in and pass it back
     // ReadCache creates memory and copies the data into it.
     if ( NS_SUCCEEDED(ReadCache(aData, aDataLen)) )
@@ -97,8 +94,6 @@ DataStruct::GetData ( nsISupports** aData, uint32_t *aDataLen )
       NS_WARNING("Oh no, couldn't read data in from the cache file");
       *aData = nullptr;
       *aDataLen = 0;
-      PR_Close(mCacheFD);
-      mCacheFD = nullptr;
       return;
     }
   }
@@ -132,8 +127,6 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
       return NS_OK;
     }
   }
-  PR_Close(mCacheFD);
-  mCacheFD = nullptr;
   return NS_ERROR_FAILURE;
 }
 
