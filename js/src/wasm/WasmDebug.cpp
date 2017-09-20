@@ -417,7 +417,7 @@ DebugState::getOrCreateBreakpointSite(JSContext* cx, uint32_t offset)
 
     WasmBreakpointSiteMap::AddPtr p = breakpointSites_.lookupForAdd(offset);
     if (!p) {
-        site = cx->runtime()->new_<WasmBreakpointSite>(this, offset);
+        site = cx->zone()->new_<WasmBreakpointSite>(this, offset);
         if (!site || !breakpointSites_.add(p, offset, site)) {
             js_delete(site);
             ReportOutOfMemory(cx);

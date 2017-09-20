@@ -320,11 +320,6 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
     if (!objectGroupPreBarrier_)
         return false;
 
-    JitSpew(JitSpew_Codegen, "# Emitting malloc stub");
-    mallocStub_ = generateMallocStub(cx);
-    if (!mallocStub_)
-        return false;
-
     JitSpew(JitSpew_Codegen, "# Emitting free stub");
     freeStub_ = generateFreeStub(cx);
     if (!freeStub_)
@@ -466,6 +461,13 @@ bool
 JitZone::init(JSContext* cx)
 {
     if (!baselineCacheIRStubCodes_.init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    JitSpew(JitSpew_Codegen, "# Emitting malloc stub");
+    mallocStub_ = generateMallocStub(cx);
+    if (!mallocStub_) {
         ReportOutOfMemory(cx);
         return false;
     }
