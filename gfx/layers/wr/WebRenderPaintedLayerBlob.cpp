@@ -93,7 +93,6 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
   aBuilder.PushImage(sc.ToRelativeLayoutRect(LayerRect(mImageBounds)),
                      sc.ToRelativeLayoutRect(rect),
-                     true,
                      wr::ImageRendering::Auto, mImageKey.value());
 }
 

@@ -1031,7 +1031,6 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
                                                   const nsRect& aFillArea,
                                                   const nsSize& aRepeatSize,
                                                   const CSSIntRect& aSrc,
-                                                  bool aIsBackfaceVisible,
                                                   float aOpacity)
 {
   if (aDest.IsEmpty() || aFillArea.IsEmpty()) {
@@ -1086,7 +1085,6 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     aBuilder.PushLinearGradient(
       wrGradientBounds,
       wrClipBounds,
-      aIsBackfaceVisible,
       mozilla::wr::ToLayoutPoint(lineStart),
       mozilla::wr::ToLayoutPoint(lineEnd),
       stops,
@@ -1100,7 +1098,6 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     aBuilder.PushRadialGradient(
       wrGradientBounds,
       wrClipBounds,
-      aIsBackfaceVisible,
       mozilla::wr::ToLayoutPoint(lineStart),
       mozilla::wr::ToLayoutSize(gradientRadius),
       stops,

@@ -131,8 +131,7 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
                                                       const gfx::Matrix4x4& aSCTransform,
                                                       const gfx::MaybeIntSize& aScaleToSize,
                                                       const wr::ImageRendering& aFilter,
-                                                      const wr::MixBlendMode& aMixBlendMode,
-                                                      bool aIsBackfaceVisible)
+                                                      const wr::MixBlendMode& aMixBlendMode)
 {
   MOZ_ASSERT(aContainer->IsAsync());
   if (!mPipelineId) {
@@ -153,7 +152,7 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
   // where it will be done when we build the display list for the iframe.
   // That happens in AsyncImagePipelineManager.
   wr::LayoutRect r = aSc.ToRelativeLayoutRect(aBounds);
-  aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref());
+  aBuilder.PushIFrame(r, mPipelineId.ref());
 
   WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(mPipelineId.value(),
                                                                    aSCBounds,

@@ -630,12 +630,11 @@ BufferTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
 {
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
-    aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0]);
+    aBuilder.PushImage(aBounds, aClip, aFilter, aImageKeys[0]);
   } else {
     MOZ_ASSERT(aImageKeys.length() == 3);
     aBuilder.PushYCbCrPlanarImage(aBounds,
                                   aClip,
-                                  true,
                                   aImageKeys[0],
                                   aImageKeys[1],
                                   aImageKeys[2],

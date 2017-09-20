@@ -257,6 +257,11 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       continue;
     }
 
+    if (item->BackfaceIsHidden() && aSc.IsBackfaceVisible()) {
+      item->Destroy(aDisplayListBuilder);
+      continue;
+    }
+
     savedItems.AppendToTop(item);
 
     bool forceNewLayerData = false;
@@ -412,8 +417,7 @@ WebRenderLayerManager::CreateImageKey(nsDisplayItem* aItem,
                                                  gfx::Matrix4x4(),
                                                  scaleToSize,
                                                  wr::ImageRendering::Auto,
-                                                 wr::MixBlendMode::Normal,
-                                                 !aItem->BackfaceIsHidden());
+                                                 wr::MixBlendMode::Normal);
     return Nothing();
   }
 
@@ -447,7 +451,7 @@ WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
 
   auto r = aSc.ToRelativeLayoutRect(aRect);
   SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
-  aBuilder.PushImage(r, r, !aItem->BackfaceIsHidden(), wr::ToImageRendering(sampleFilter), key.value());
+  aBuilder.PushImage(r, r, wr::ToImageRendering(sampleFilter), key.value());
 
   return true;
 }
@@ -673,7 +677,6 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
   SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
   aBuilder.PushImage(dest,
                      dest,
-                     !aItem->BackfaceIsHidden(),
                      wr::ToImageRendering(sampleFilter),
                      fallbackData->GetKey().value());
   return true;

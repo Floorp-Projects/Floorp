@@ -236,7 +236,7 @@ MacIOSurfaceTextureHostOGL::PushExternalImage(wr::DisplayListBuilder& aBuilder,
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
-      aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0]);
+      aBuilder.PushImage(aBounds, aClip, aFilter, aImageKeys[0]);
       break;
     }
     case gfx::SurfaceFormat::YUV422: {
@@ -244,7 +244,6 @@ MacIOSurfaceTextureHostOGL::PushExternalImage(wr::DisplayListBuilder& aBuilder,
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
       aBuilder.PushYCbCrInterleavedImage(aBounds,
                                          aClip,
-                                         true,
                                          aImageKeys[0],
                                          wr::WrYuvColorSpace::Rec601,
                                          aFilter);
@@ -255,7 +254,6 @@ MacIOSurfaceTextureHostOGL::PushExternalImage(wr::DisplayListBuilder& aBuilder,
       MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
       aBuilder.PushNV12Image(aBounds,
                              aClip,
-                             true,
                              aImageKeys[0],
                              aImageKeys[1],
                              wr::WrYuvColorSpace::Rec601,

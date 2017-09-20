@@ -291,8 +291,7 @@ AsyncImagePipelineManager::ApplyAsyncImages()
                                   wr::TransformStyle::Flat,
                                   nullptr,
                                   pipeline->mMixBlendMode,
-                                  nsTArray<wr::WrFilterOp>(),
-                                  true);
+                                  nsTArray<wr::WrFilterOp>());
 
       LayerRect rect(0, 0, pipeline->mCurrentTexture->GetSize().width, pipeline->mCurrentTexture->GetSize().height);
       if (pipeline->mScaleToSize.isSome()) {
@@ -312,7 +311,6 @@ AsyncImagePipelineManager::ApplyAsyncImages()
         MOZ_ASSERT(keys.Length() == 1);
         builder.PushImage(wr::ToLayoutRect(rect),
                           wr::ToLayoutRect(rect),
-                          true,
                           pipeline->mFilter,
                           keys[0]);
       }

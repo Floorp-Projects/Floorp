@@ -104,7 +104,7 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
   WrManager()->AddImageKeyForDiscard(key);
 
   wr::LayoutRect r = sc.ToRelativeLayoutRect(rect);
-  aBuilder.PushImage(r, r, true, wr::ImageRendering::Auto, key);
+  aBuilder.PushImage(r, r, wr::ImageRendering::Auto, key);
 }
 
 void
