@@ -13,6 +13,7 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
+Cu.import("resource://gre/modules/DeferredTask.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
@@ -4151,3 +4152,21 @@ var gBrowser = {
     return null;
   }
 };
+
+// Force the options_ui remote browser to recompute window.mozInnerScreenX and
+// window.mozInnerScreenY when the "addon details" page has been scrolled
+// (See Bug 1390445 for rationale).
+{
+  const UPDATE_POSITION_DELAY = 100;
+
+  const updatePositionTask = new DeferredTask(() => {
+    const browser = document.getElementById("addon-options");
+    if (browser && browser.isRemoteBrowser) {
+      browser.frameLoader.requestUpdatePosition();
+    }
+  }, UPDATE_POSITION_DELAY);
+
+  window.addEventListener("scroll", () => {
+    updatePositionTask.arm();
+  }, true);
+}
