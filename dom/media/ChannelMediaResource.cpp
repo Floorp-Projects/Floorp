@@ -436,8 +436,13 @@ ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
 
   RefPtr<ChannelMediaResource> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ChannelMediaResource::OnDataAvailable",
-    [self, aCount]() { self->mChannelStatistics.AddBytes(aCount); });
+    "ChannelMediaResource::OnDataAvailable", [self, aCount, aLoadID]() {
+      if (aLoadID != self->mLoadID) {
+        // Ignore data from the old channel.
+        return;
+      }
+      self->mChannelStatistics.AddBytes(aCount);
+    });
   mCallback->AbstractMainThread()->Dispatch(r.forget());
 
   Closure closure{ aLoadID, this };
