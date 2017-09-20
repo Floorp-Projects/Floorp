@@ -492,7 +492,7 @@ class JitCompartment
     using ICStubCodeMap = GCHashMap<uint32_t,
                                     ReadBarrieredJitCode,
                                     DefaultHasher<uint32_t>,
-                                    RuntimeAllocPolicy,
+                                    ZoneAllocPolicy,
                                     IcStubCodeMapGCPolicy<uint32_t>>;
     ICStubCodeMap* stubCodes_;
 
