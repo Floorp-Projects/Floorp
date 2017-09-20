@@ -3,13 +3,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- The width and height of this view are always overridden in StreamTitleRow because
-     this view is dynamically shown/hidden in onBindViewHolder.
+<!-- The width and height of this view are always overridden in onBindViewHolder because
+     this view is dynamically shown/hidden.
 
-     NB: This is a hack because the title views for each section are always included
-     in the RecyclerView adapter.
-     A more correct implementation would dynamically add/remove these title views rather than
-     showing and hiding them. -->
+     See StreamRecyclerAdapter.setViewVisible . -->
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="0dp"
