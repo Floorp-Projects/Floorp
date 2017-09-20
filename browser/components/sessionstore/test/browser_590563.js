@@ -25,14 +25,18 @@ function test() {
     executeSoon(function() {
       waitForFocus(function() {
         middleClickTest(win);
-        finish();
       }, win);
     });
   });
 }
 
-function middleClickTest(win) {
+async function middleClickTest(win) {
   let browser = win.gBrowser.selectedBrowser;
+  let tabsToggle = browser.contentDocument.getElementById("tabsToggle");
+  EventUtils.synthesizeMouseAtCenter(tabsToggle, { button: 0 }, browser.contentWindow);
+  let treeContainer = browser.contentDocument.querySelector(".tree-container")
+  await BrowserTestUtils.waitForCondition(() => win.getComputedStyle(treeContainer).visibility == "visible");
+
   let tree = browser.contentDocument.getElementById("tabList");
   is(tree.view.rowCount, 3, "There should be three items");
 
@@ -49,6 +53,7 @@ function middleClickTest(win) {
      "The total number of tabs should be 3 after restoring 2 tabs by middle click.");
   is(win.gBrowser.visibleTabs.length, 3,
      "The total number of visible tabs should be 3 after restoring 2 tabs by middle click");
+  finish();
 }
 
 function newWindowWithState(state, callback) {
