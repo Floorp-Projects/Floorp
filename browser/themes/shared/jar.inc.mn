@@ -56,6 +56,8 @@
   skin/classic/browser/identity-icon-notice.svg                (../shared/identity-block/identity-icon-notice.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
 
+  skin/classic/browser/illustrations/error-session-restore.svg (../shared/illustrations/error-session-restore.svg)
+
   skin/classic/browser/notification-icons/camera-blocked.svg                (../shared/notification-icons/camera-blocked.svg)
   skin/classic/browser/notification-icons/camera.svg                        (../shared/notification-icons/camera.svg)
   skin/classic/browser/notification-icons/default-info.svg                  (../shared/notification-icons/default-info.svg)
@@ -211,7 +213,6 @@
   skin/classic/browser/warning-white.svg                       (../shared/warning-white.svg)
   skin/classic/browser/cert-error.svg                          (../shared/incontent-icons/cert-error.svg)
   skin/classic/browser/wifi.svg                                (../shared/incontent-icons/wifi.svg)
-  skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
   skin/classic/browser/favicon-search-16.svg                   (../shared/favicon-search-16.svg)
   skin/classic/browser/icon-search-64.svg                      (../shared/incontent-icons/icon-search-64.svg)
