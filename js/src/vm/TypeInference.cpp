@@ -1316,10 +1316,8 @@ js::EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id)
         if (obj->hasLazyGroup()) {
             AutoEnterOOMUnsafeRegion oomUnsafe;
             RootedObject objRoot(cx, obj);
-            if (!JSObject::getGroup(cx, objRoot)) {
+            if (!JSObject::getGroup(cx, objRoot))
                 oomUnsafe.crash("Could not allocate ObjectGroup in EnsureTrackPropertyTypes");
-                return;
-            }
         }
         if (!obj->group()->unknownProperties() && !obj->group()->getProperty(cx, obj, id)) {
             MOZ_ASSERT(obj->group()->unknownProperties());
