@@ -412,8 +412,9 @@ class damp(PageloaderTest):
     """
     tpmanifest = '${talos}/tests/devtools/damp.manifest'
     extensions = '${talos}/tests/devtools/addon/devtools-signed.xpi'
+    cycles = 5
     tpcycles = 1
-    tppagecycles = 25
+    tppagecycles = 5
     tploadnocache = True
     tpmozafterpaint = False
     gecko_profile_interval = 10
