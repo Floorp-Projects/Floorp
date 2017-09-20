@@ -24,6 +24,10 @@ else:
         'nsAuthSambaNTLM.cpp',
     ]
 
+LOCAL_INCLUDES += [
+    '/netwerk/dns', # For nsDNSService2.h
+]
+
 FINAL_LIBRARY = 'xul'
 
 with Files('**'):

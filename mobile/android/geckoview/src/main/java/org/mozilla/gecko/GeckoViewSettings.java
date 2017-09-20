@@ -62,8 +62,8 @@ public final class GeckoViewSettings {
     /*
      * Key to specify which display-mode we should use
      */
-    public static final Key<Boolean> DISPLAY_MODE =
-        new Key<Boolean>("displayMode");
+    public static final Key<Integer> DISPLAY_MODE =
+        new Key<Integer>("displayMode");
 
 
     private final EventDispatcher mEventDispatcher;
@@ -105,7 +105,7 @@ public final class GeckoViewSettings {
         }
     }
 
-    public void setInt(final Key<Boolean> key, int value) {
+    public void setInt(final Key<Integer> key, int value) {
         synchronized (mBundle) {
             final Object old = mBundle.get(key.text);
             if (old != null && old.equals(value)) {
@@ -116,7 +116,7 @@ public final class GeckoViewSettings {
         dispatchUpdate();
     }
 
-    public int getInt(final Key<Boolean> key) {
+    public int getInt(final Key<Integer> key) {
         synchronized (mBundle) {
             return mBundle.getInt(key.text);
         }
