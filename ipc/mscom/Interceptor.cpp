@@ -543,6 +543,9 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
   targetInterface.reset(rawTargetInterface);
   InterceptorLog::QI(hr, mTarget.get(), aIid, targetInterface.get());
   MOZ_ASSERT(SUCCEEDED(hr) || hr == E_NOINTERFACE);
+  if (hr == E_NOINTERFACE) {
+    return hr;
+  }
   ENSURE_HR_SUCCEEDED(hr);
 
   // We *really* shouldn't be adding interceptors to proxies
