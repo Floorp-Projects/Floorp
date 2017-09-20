@@ -7,6 +7,7 @@
 requestLongerTimeout(2);
 
 let {SyncedTabs} = Cu.import("resource://services-sync/SyncedTabs.jsm", {});
+Cu.import("resource://services-sync/UIState.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
 
@@ -48,8 +49,12 @@ add_task(async function setup() {
   for (let id of ["sync-reauth-state", "sync-setup-state", "sync-syncnow-state"]) {
     initialObserverStates[id] = document.getElementById(id).hidden;
   }
+  let origNotifyStateUpdated = UIState._internal.notifyStateUpdated;
+  // Sync start-up will interfere with our tests, don't let UIState send UI updates.
+  UIState._internal.notifyStateUpdated = () => {};
 
   registerCleanupFunction(() => {
+    UIState._internal.notifyStateUpdated = origNotifyStateUpdated;
     SyncedTabs._internal = oldInternal;
     for (let [id, initial] of Object.entries(initialObserverStates)) {
       document.getElementById(id).hidden = initial;
