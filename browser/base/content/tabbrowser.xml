@@ -1852,12 +1852,8 @@
               this.moveTabTo(tab, ++tabNum);
           }
 
-          if (!aLoadInBackground) {
-            if (firstTabAdded) {
-              // .selectedTab setter focuses the content area
-              this.selectedTab = firstTabAdded;
-            } else
-              this.selectedBrowser.focus();
+          if (firstTabAdded && !aLoadInBackground) {
+            this.selectedTab = firstTabAdded;
           }
         ]]></body>
       </method>
