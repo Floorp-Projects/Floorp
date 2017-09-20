@@ -1139,6 +1139,7 @@ MediaCache::Update()
     } mTag = NONE;
     // Members for 'SEEK' only.
     bool mResume = false;
+    int64_t mSeekTarget = -1;
   };
 
   // The action to use for each stream. We store these so we can make
@@ -1401,6 +1402,7 @@ MediaCache::Update()
           OffsetToBlockIndexUnchecked(desiredOffset) * BLOCK_SIZE;
         actions[i].mTag = StreamAction::SEEK;
         actions[i].mResume = stream->mCacheSuspended;
+        actions[i].mSeekTarget = stream->mChannelOffset;
         // mChannelOffset is updated to a new position. We don't want data from
         // the old channel to be written to the wrong position. 0 is a sentinel
         // value which will not match any ID passed to NotifyDataReceived().
@@ -1452,9 +1454,9 @@ MediaCache::Update()
       case StreamAction::SEEK:
         LOG("Stream %p CacheSeek to %" PRId64 " (resume=%d)",
             stream,
-            stream->mChannelOffset,
+            actions[i].mSeekTarget,
             actions[i].mResume);
-        rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
+        rv = stream->mClient->CacheClientSeek(actions[i].mSeekTarget,
                                               actions[i].mResume);
         break;
       case StreamAction::RESUME:
