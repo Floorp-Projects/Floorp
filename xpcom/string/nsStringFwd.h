@@ -35,6 +35,7 @@ template <typename T> class nsTStringComparator;
 template <typename T> class nsTDefaultStringComparator;
 template <typename T> class nsTLiteralString;
 template <typename T> class nsTFixedString;
+template <typename T> class nsTSubstringSplitter;
 
 // We define this version without a size param instead of providing a
 // default value for N so that so there is a default typename that doesn't
@@ -56,6 +57,7 @@ using nsStringComparator = nsTStringComparator<char16_t>;
 using nsDefaultStringComparator = nsTDefaultStringComparator<char16_t>;
 using nsLiteralString = nsTLiteralString<char16_t>;
 using nsFixedString = nsTFixedString<char16_t>;
+using nsSubstringSplitter = nsTSubstringSplitter<char16_t>;
 
 // Single-byte (char) string types.
 
@@ -71,5 +73,6 @@ using nsCStringComparator = nsTStringComparator<char>;
 using nsDefaultCStringComparator = nsTDefaultStringComparator<char>;
 using nsLiteralCString = nsTLiteralString<char>;
 using nsFixedCString = nsTFixedString<char>;
+using nsCSubstringSplitter = nsTSubstringSplitter<char>;
 
 #endif /* !defined(nsStringFwd_h) */
