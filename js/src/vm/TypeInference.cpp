@@ -4428,6 +4428,8 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
 /* static */ void
 JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
 {
+    MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
+
     if (!types_ || typesGeneration() == zone()->types.generation)
         return;
 
@@ -4611,6 +4613,7 @@ AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
   : zone(zone), oom(false)
 {
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
+    MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
     zone->types.setSweepingTypes(true);
 }
 
