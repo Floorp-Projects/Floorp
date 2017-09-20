@@ -761,11 +761,13 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
 
   uint8_t borderStyles[4];
   nscolor borderColors[4];
+  nsBorderColors* compositeColors[4];
 
-  // pull out styles, colors
+  // pull out styles, colors, composite colors
   NS_FOR_CSS_SIDES (i) {
     borderStyles[i] = aStyleBorder.GetBorderStyle(i);
     borderColors[i] = ourColor->CalcComplexColor(aStyleBorder.mBorderColor[i]);
+    aStyleBorder.GetCompositeColors(i, &compositeColors[i]);
   }
 
   PrintAsFormatString(" borderStyles: %d %d %d %d\n", borderStyles[0], borderStyles[1], borderStyles[2], borderStyles[3]);
@@ -785,7 +787,7 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
                              borderWidths,
                              bgRadii,
                              borderColors,
-                             aStyleBorder.mBorderColors.get(),
+                             compositeColors,
                              bgColor);
 }
 
