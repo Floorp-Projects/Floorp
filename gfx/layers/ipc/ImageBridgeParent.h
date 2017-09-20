@@ -122,8 +122,6 @@ public:
   virtual bool IPCOpen() const override { return !mClosed; }
 
 protected:
-  void OnChannelConnected(int32_t pid) override;
-
   void Bind(Endpoint<PImageBridgeParent>&& aEndpoint);
 
 private:
