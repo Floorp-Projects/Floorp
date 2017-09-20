@@ -21,4 +21,6 @@ locales ['ar', 'ast', 'az', 'bg', 'bn-BD', 'bn-IN', 'ca', 'cs',
 # clear all previously generated screenshots in your local output directory before creating new ones
 clear_previous_screenshots false
 
+exit_on_test_failure false
+
 skip_open_summary true
