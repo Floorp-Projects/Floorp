@@ -46,7 +46,6 @@ class CompileDBBackend(CommonBackend):
         self._envs = {}
         self._local_flags = defaultdict(dict)
         self._per_source_flags = defaultdict(list)
-        self._gyp_dirs = set()
 
     def consume_object(self, obj):
         # Those are difficult directories, that will be handled later.
@@ -76,8 +75,6 @@ class CompileDBBackend(CommonBackend):
                                     obj.canonical_suffix)
 
         elif isinstance(obj, VariablePassthru):
-            if obj.variables.get('IS_GYP_DIR'):
-                self._gyp_dirs.add(obj.objdir)
             for var in ('MOZBUILD_CFLAGS', 'MOZBUILD_CXXFLAGS',
                         'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS',
                         'RTL_FLAGS'):
@@ -108,21 +105,7 @@ class CompileDBBackend(CommonBackend):
                 cmd.append(filename)
             else:
                 cmd.append(unified)
-            os_includes = []
-            if directory not in self._gyp_dirs:
-                for var in (
-                    'NSPR_CFLAGS',
-                    'NSS_CFLAGS',
-                    'MOZ_JPEG_CFLAGS',
-                    'MOZ_PNG_CFLAGS',
-                    'MOZ_ZLIB_CFLAGS',
-                    'MOZ_PIXMAN_CFLAGS',
-                ):
-                    f = env.substs.get(var)
-                    if f:
-                        os_includes.extend(f)
             variables = {
-                'OS_INCLUDES': os_includes,
                 'DIST': mozpath.join(env.topobjdir, 'dist'),
                 'DEPTH': env.topobjdir,
                 'MOZILLA_DIR': env.topsrcdir,
@@ -213,9 +196,6 @@ class CompileDBBackend(CommonBackend):
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
-        db.extend((
-            '$(OS_INCLUDES)',
-        ))
         append_var('DSO_CFLAGS')
         append_var('DSO_PIC_CFLAGS')
         if canonical_suffix in ('.c', '.cpp'):

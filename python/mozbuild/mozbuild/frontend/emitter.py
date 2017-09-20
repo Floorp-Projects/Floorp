@@ -951,9 +951,6 @@ class TreeMetadataEmitter(LoggingMixin):
             if v in context and context[v]:
                 passthru.variables['MOZBUILD_' + v] = context[v]
 
-        if isinstance(context, TemplateContext) and context.template == 'Gyp':
-            passthru.variables['IS_GYP_DIR'] = True
-
         dist_install = context['DIST_INSTALL']
         if dist_install is True:
             passthru.variables['DIST_INSTALL'] = True
