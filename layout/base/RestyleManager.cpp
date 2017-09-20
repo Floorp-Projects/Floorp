@@ -1568,6 +1568,18 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         didReflowThisFrame = true;
       }
 
+      // Here we need to propagate repaint frame change hint instead of update
+      // opacity layer change hint when we do opacity optimization for SVG.
+      // We can't do it in nsStyleEffects::CalcDifference() just like we do
+      // for the optimization for 0.99 over opacity values since we have no way
+      // to call nsSVGUtils::CanOptimizeOpacity() there.
+      if ((hint & nsChangeHint_UpdateOpacityLayer) &&
+          nsSVGUtils::CanOptimizeOpacity(frame) &&
+          frame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+        hint &= ~nsChangeHint_UpdateOpacityLayer;
+        hint |= nsChangeHint_RepaintFrame;
+      }
+
       if ((hint & nsChangeHint_UpdateUsesOpacity) &&
           frame->IsFrameOfType(nsIFrame::eTablePart)) {
         NS_ASSERTION(hint & nsChangeHint_UpdateOpacityLayer,
