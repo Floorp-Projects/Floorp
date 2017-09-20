@@ -299,6 +299,14 @@ class WatchdogManager : public nsIObserver
 
         // aContext must be in one of our two lists, simply remove it.
         aContext->LinkedListElement<XPCJSContext>::remove();
+
+#ifdef DEBUG
+        // If this was the last context, we should have already shut down
+        // the watchdog.
+        if (mActiveContexts.isEmpty() && mInactiveContexts.isEmpty()) {
+            MOZ_ASSERT(!mWatchdog);
+        }
+#endif
     }
 
     // Context statistics. These live on the watchdog manager, are written
@@ -474,7 +482,6 @@ WatchdogMain(void* arg)
     AutoLockWatchdog lock(self);
 
     MOZ_ASSERT(self->Initialized());
-    MOZ_ASSERT(!self->ShuttingDown());
     while (!self->ShuttingDown()) {
         // Sleep only 1 second if recently (or currently) active; otherwise, hibernate
         if (manager->IsAnyContextActive() ||
@@ -504,7 +511,7 @@ WatchdogMain(void* arg)
         // dialog. If the computer is put to sleep during one of the (timeout/2)
         // periods, the script still has the other (timeout/2) seconds to
         // finish.
-        if (manager->IsAnyContextActive()) {
+        if (!self->ShuttingDown() && manager->IsAnyContextActive()) {
             bool debuggerAttached = false;
             nsCOMPtr<nsIDebug2> dbg = do_GetService("@mozilla.org/xpcom/debug;1");
             if (dbg)
@@ -880,13 +887,17 @@ XPCJSContext::~XPCJSContext()
     SetPendingException(nullptr);
 
     // If we're the last XPCJSContext around, clean up the watchdog manager.
-    mWatchdogManager->UnregisterContext(this);
     if (--sInstanceCount == 0) {
         if (mWatchdogManager->GetWatchdog()) {
             mWatchdogManager->StopWatchdog();
         }
+
+        mWatchdogManager->UnregisterContext(this);
         mWatchdogManager->Shutdown();
         sWatchdogInstance = nullptr;
+    } else {
+        // Otherwise, simply remove ourselves from the list.
+        mWatchdogManager->UnregisterContext(this);
     }
 
     if (mCallContext)
