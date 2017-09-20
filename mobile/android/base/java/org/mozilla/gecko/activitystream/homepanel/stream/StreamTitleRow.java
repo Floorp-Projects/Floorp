@@ -7,7 +7,6 @@ package org.mozilla.gecko.activitystream.homepanel.stream;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -48,20 +47,6 @@ public class StreamTitleRow extends StreamViewHolder {
 
         titleLink.setOnClickListener(clickListener);
         titleArrow.setOnClickListener(clickListener);
-    }
-
-    public void setVisible(boolean toShow) {
-        itemView.setVisibility(toShow ? View.VISIBLE : View.GONE);
-        // We also need to set the layout height and width to 0 for the RecyclerView child.
-        final RecyclerView.LayoutParams layoutParams = (RecyclerView.LayoutParams) itemView.getLayoutParams();
-        if (toShow) {
-            layoutParams.height = RecyclerView.LayoutParams.WRAP_CONTENT;
-            layoutParams.width = RecyclerView.LayoutParams.MATCH_PARENT;
-        } else {
-            layoutParams.height = 0;
-            layoutParams.width = 0;
-        }
-        itemView.setLayoutParams(layoutParams);
     }
 }
 
