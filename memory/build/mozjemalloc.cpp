@@ -4690,17 +4690,6 @@ RETURN:
   return ret;
 }
 
-/*
- * In ELF systems the default visibility allows symbols to be preempted at
- * runtime. This in turn prevents the uses of memalign in this file from being
- * optimized. What we do in here is define two aliasing symbols (they point to
- * the same code): memalign and memalign_internal. The internal version has
- * hidden visibility and is used in every reference from this file.
- *
- * For more information on this technique, see section 2.2.7 (Avoid Using
- * Exported Symbols) in http://www.akkadia.org/drepper/dsohowto.pdf.
- */
-
 template<> inline void*
 MozJemalloc::memalign(size_t aAlignment, size_t aSize)
 {
