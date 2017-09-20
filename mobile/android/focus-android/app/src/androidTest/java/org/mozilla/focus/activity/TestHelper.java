@@ -39,28 +39,28 @@ import static org.hamcrest.Matchers.allOf;
 // This test visits each page and checks whether some essential elements are being displayed
 public final class TestHelper {
 
-    static UiDevice mDevice =  UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    public static UiDevice mDevice =  UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 4;
     static final long webPageLoadwaitingTime = DateUtils.SECOND_IN_MILLIS * 15;
 
     /********* First View Locators ***********/
 
-    static UiObject firstSlide = mDevice.findObject(new UiSelector()
+    public static UiObject firstSlide = mDevice.findObject(new UiSelector()
             .text("Power up your privacy")
             .enabled(true));
-    static UiObject secondSlide = mDevice.findObject(new UiSelector()
+    public static UiObject secondSlide = mDevice.findObject(new UiSelector()
             .text("Your search, your way")
             .enabled(true));
-    static UiObject thirdSlide = mDevice.findObject(new UiSelector()
+    public static UiObject thirdSlide = mDevice.findObject(new UiSelector()
             .text("Add shortcuts to your home screen")
             .enabled(true));
-    static UiObject lastSlide = mDevice.findObject(new UiSelector()
+    public static UiObject lastSlide = mDevice.findObject(new UiSelector()
             .text("Make privacy a habit")
             .enabled(true));
-    static UiObject nextBtn = mDevice.findObject(new UiSelector()
+    public static UiObject nextBtn = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/next")
             .enabled(true));
-    static UiObject finishBtn = mDevice.findObject(new UiSelector()
+    public static UiObject finishBtn = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/finish")
             .enabled(true));
     static UiObject initialView = mDevice.findObject(new UiSelector()
@@ -68,26 +68,26 @@ public final class TestHelper {
             .enabled(true));
 
     /********* Main View Locators ***********/
-    static ViewInteraction menuButton = onView(
+    public static ViewInteraction menuButton = onView(
             allOf(withId(R.id.menu),
                     isDisplayed()));
 
     /********* Web View Locators ***********/
-    static UiObject browserURLbar = mDevice.findObject(new UiSelector()
+    public static UiObject browserURLbar = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/display_url")
             .clickable(true));
 
-    static UiObject inlineAutocompleteEditText = mDevice.findObject(new UiSelector()
+    public static UiObject inlineAutocompleteEditText = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/url_edit")
             .focused(true)
             .enabled(true));
     static UiObject cleartextField = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/clear")
             .enabled(true));
-    static UiObject hint = mDevice.findObject(new UiSelector()
+    public static UiObject hint = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/search_hint")
             .clickable(true));
-    static UiObject webView = mDevice.findObject(new UiSelector()
+    public static UiObject webView = mDevice.findObject(new UiSelector()
             .className("android.webkit.Webview")
             .enabled(true));
     static UiObject progressBar = mDevice.findObject(new UiSelector()
@@ -96,7 +96,7 @@ public final class TestHelper {
     static UiObject tryAgainBtn = mDevice.findObject(new UiSelector()
             .description("Try Again")
             .clickable(true));
-    static ViewInteraction floatingEraseButton = onView(
+    public static ViewInteraction floatingEraseButton = onView(
             allOf(withId(R.id.erase), isDisplayed()));
     static UiObject notFoundMsg = mDevice.findObject(new UiSelector()
             .description("The address wasn’t understood")
@@ -114,7 +114,7 @@ public final class TestHelper {
     static UiObject lockIcon = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/lock")
             .description("Secure connection"));
-    static UiObject notificationBarDeleteItem = TestHelper.mDevice.findObject(new UiSelector()
+    public static UiObject notificationBarDeleteItem = TestHelper.mDevice.findObject(new UiSelector()
             .text("Erase browsing history")
             .resourceId("android:id/text")
             .enabled(true));
@@ -137,10 +137,10 @@ public final class TestHelper {
     static UiObject blockOffIcon = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/block")
             .enabled(true));
-    static UiObject AddtoHSmenuItem = TestHelper.mDevice.findObject(new UiSelector()
+    public static UiObject AddtoHSmenuItem = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/add_to_homescreen")
-            .clickable(true));
-    static UiObject AddtoHSCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
+            .enabled(true));
+    public static UiObject AddtoHSCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/addtohomescreen_dialog_cancel")
             .enabled(true));
     static UiObject AddtoHSOKBtn = TestHelper.mDevice.findObject(new UiSelector()
@@ -154,18 +154,18 @@ public final class TestHelper {
             .enabled(true));
 
     /********* Main View Menu Item Locators ***********/
-    static UiObject RightsItem = mDevice.findObject(new UiSelector()
+    public static UiObject RightsItem = mDevice.findObject(new UiSelector()
             .className("android.widget.LinearLayout")
             .instance(2));
-    static UiObject AboutItem = mDevice.findObject(new UiSelector()
+    public static UiObject AboutItem = mDevice.findObject(new UiSelector()
             .className("android.widget.LinearLayout")
             .instance(0)
             .enabled(true));
-    static UiObject HelpItem = mDevice.findObject(new UiSelector()
+    public static UiObject HelpItem = mDevice.findObject(new UiSelector()
             .className("android.widget.LinearLayout")
             .instance(1)
             .enabled(true));
-    static UiObject settingsMenuItem = mDevice.findObject(new UiSelector()
+    public static UiObject settingsMenuItem = mDevice.findObject(new UiSelector()
             .className("android.widget.LinearLayout")
             .instance(3));
     static UiObject blockCounterItem = mDevice.findObject(new UiSelector()
@@ -186,14 +186,14 @@ public final class TestHelper {
             .resourceId("android:id/title")
             .text("Share via")
             .enabled(true));
-    static UiObject shareAppList = TestHelper.mDevice.findObject(new UiSelector()
+    public static UiObject shareAppList = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("android:id/resolver_list")
             .enabled(true));
 
     /********* Settings Menu Item Locators ***********/
-    static UiScrollable settingsList = new UiScrollable(new UiSelector()
+    public static UiScrollable settingsList = new UiScrollable(new UiSelector()
             .resourceId("android:id/list").scrollable(true));
-    static UiObject settingsHeading = mDevice.findObject(new UiSelector()
+    public static UiObject settingsHeading = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/toolbar")
             .enabled(true));
     static UiObject navigateUp = mDevice.findObject(new UiSelector()
@@ -211,10 +211,10 @@ public final class TestHelper {
     static void waitForIdle() {
         mDevice.waitForIdle(waitingTime);
     }
-    static void pressEnterKey() {
+    public static void pressEnterKey() {
         mDevice.pressKeyCode(KEYCODE_ENTER);
     }
-    static void pressBackKey() {
+    public static void pressBackKey() {
         mDevice.pressBack();
     }
     static void pressHomeKey() {
@@ -260,7 +260,7 @@ public final class TestHelper {
                 .setBody(TestHelper.readTestAsset(fileName));
     }
 
-    static Buffer readTestAsset(String filename) throws IOException {
+    public static Buffer readTestAsset(String filename) throws IOException {
         try (final InputStream stream = InstrumentationRegistry.getContext().getAssets().open(filename)) {
             return readStreamFile(stream);
         }

@@ -1,4 +1,4 @@
-package org.mozilla.focus.activity;
+package org.mozilla.focus.activity.screenshots;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -22,6 +22,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
+import org.mozilla.focus.activity.MainActivity;
+import org.mozilla.focus.activity.TestHelper;
 
 import java.io.IOException;
 
