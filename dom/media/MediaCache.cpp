@@ -1134,10 +1134,11 @@ MediaCache::Update()
     {
       NONE,
       SEEK,
-      SEEK_AND_RESUME,
       RESUME,
       SUSPEND
     } mTag = NONE;
+    // Members for 'SEEK' only.
+    bool mResume = false;
   };
 
   // The action to use for each stream. We store these so we can make
@@ -1398,9 +1399,8 @@ MediaCache::Update()
         // in mPartialBlockBuffer.
         stream->mChannelOffset =
           OffsetToBlockIndexUnchecked(desiredOffset) * BLOCK_SIZE;
-        actions[i].mTag = stream->mCacheSuspended
-                            ? StreamAction::SEEK_AND_RESUME
-                            : StreamAction::SEEK;
+        actions[i].mTag = StreamAction::SEEK;
+        actions[i].mResume = stream->mCacheSuspended;
         // mChannelOffset is updated to a new position. We don't want data from
         // the old channel to be written to the wrong position. 0 is a sentinel
         // value which will not match any ID passed to NotifyDataReceived().
@@ -1431,7 +1431,6 @@ MediaCache::Update()
     MediaCacheStream* stream = mStreams[i];
     switch (actions[i].mTag) {
       case StreamAction::SEEK:
-      case StreamAction::SEEK_AND_RESUME:
         stream->mCacheSuspended = false;
         stream->mChannelEnded = false;
         break;
@@ -1451,14 +1450,12 @@ MediaCache::Update()
     nsresult rv;
     switch (actions[i].mTag) {
       case StreamAction::SEEK:
-      case StreamAction::SEEK_AND_RESUME:
         LOG("Stream %p CacheSeek to %" PRId64 " (resume=%d)",
             stream,
             stream->mChannelOffset,
-            actions[i].mTag == StreamAction::SEEK_AND_RESUME);
+            actions[i].mResume);
         rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
-                                              actions[i].mTag ==
-                                                StreamAction::SEEK_AND_RESUME);
+                                              actions[i].mResume);
         break;
       case StreamAction::RESUME:
         LOG("Stream %p Resumed", stream);
