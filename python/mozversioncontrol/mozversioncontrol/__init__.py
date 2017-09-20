@@ -58,6 +58,7 @@ class Repository(object):
         self._tool = get_tool_path(tool)
         self._env = os.environ.copy()
         self._version = None
+        self._valid_diff_filter = ('m', 'a', 'd')
 
     def __enter__(self):
         return self
@@ -98,14 +99,22 @@ class Repository(object):
         """
 
     @abc.abstractmethod
-    def get_modified_files(self):
-        '''Return a list of files that are modified in this repository's
-        working copy.'''
+    def get_changed_files(self, diff_filter, mode='unstaged'):
+        """Return a list of files that are changed in this repository's
+        working copy.
 
-    @abc.abstractmethod
-    def get_added_files(self):
-        '''Return a list of files that are added in this repository's
-        working copy.'''
+        ``diff_filter`` controls which kinds of modifications are returned.
+        It is a string which may only contain the following characters:
+
+            A - Include files that were added
+            D - Include files that were deleted
+            M - Include files that were modified
+
+        By default, all three will be included.
+
+        ``mode`` can be one of 'unstaged', 'staged' or 'all'. Only has an
+        affect on git. Defaults to 'unstaged'.
+        """
 
     @abc.abstractmethod
     def add_remove_files(self, path):
@@ -196,13 +205,21 @@ class HgRepository(Repository):
 
             return False
 
-    def get_modified_files(self):
-        # Use --no-status to print just the filename.
-        return self._run('status', '--modified', '--no-status').splitlines()
+    def _format_diff_filter(self, diff_filter):
+        df = diff_filter.lower()
+        assert all(f in self._valid_diff_filter for f in df)
 
-    def get_added_files(self):
+        # Mercurial uses 'r' to denote removed files whereas git uses 'd'.
+        if 'd' in df:
+            df.replace('d', 'r')
+
+        return df.lower()
+
+    def get_changed_files(self, diff_filter='ADM', mode='unstaged'):
+        df = self._format_diff_filter(diff_filter)
+
         # Use --no-status to print just the filename.
-        return self._run('status', '--added', '--no-status').splitlines()
+        return self._run('status', '--no-status', '-{}'.format(df)).splitlines()
 
     def add_remove_files(self, path):
         args = ['addremove', path]
@@ -245,11 +262,16 @@ class GitRepository(Repository):
         # Not yet implemented.
         return False
 
-    def get_modified_files(self):
-        return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
+    def get_changed_files(self, diff_filter='ADM', mode='unstaged'):
+        assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
 
-    def get_added_files(self):
-        return self._run('diff', '--diff-filter=A', '--name-only').splitlines()
+        cmd = ['diff', '--diff-filter={}'.format(diff_filter.upper()), '--name-only']
+        if mode == 'staged':
+            cmd.append('--cached')
+        elif mode == 'all':
+            cmd.append('HEAD')
+
+        return self._run(*cmd).splitlines()
 
     def add_remove_files(self, path):
         self._run('add', path)
