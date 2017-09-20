@@ -462,7 +462,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
   , mIsTransportSeekable(false)
   , mCacheSuspended(false)
   , mChannelEnded(false)
-  , mChannelOffset(0)
   , mStreamLength(-1)
   , mStreamOffset(0)
   , mPlaybackBytesPerSecond(10000)
@@ -2206,7 +2205,7 @@ MediaCacheStream::GetLength()
 int64_t
 MediaCacheStream::GetOffset() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   return mChannelOffset;
 }
 
