@@ -7,7 +7,7 @@
 #include "nsContentUtils.h"
 
 #include "mozilla/dom/SVGUseElement.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 
 using namespace mozilla::dom;
 
