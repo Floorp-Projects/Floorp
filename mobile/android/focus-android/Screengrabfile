@@ -7,8 +7,8 @@ use_tests_in_packages ['org.mozilla.focus.activity.screenshots']
 app_package_name 'org.mozilla.focus.debug'
 use_tests_in_packages ['org.mozilla.focus.activity']
 
-app_apk_path 'app/build/outputs/apk/app-focus-webkit-debug.apk'
-tests_apk_path 'app/build/outputs/apk/app-focus-webkit-debug-androidTest.apk'
+app_apk_path 'app/build/outputs/apk/app-focus-webview-debug.apk'
+tests_apk_path 'app/build/outputs/apk/app-focus-webview-debug-androidTest.apk'
 
 # 63 locales
 locales ['ar', 'ast', 'az', 'bg', 'bn-BD', 'bn-IN', 'ca', 'cs', 
