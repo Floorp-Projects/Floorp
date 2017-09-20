@@ -1319,7 +1319,7 @@ RegExpZone::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 }
 
 RegExpZone::RegExpZone(Zone* zone)
-  : set_(zone, zone->runtimeFromActiveCooperatingThread())
+  : set_(zone, zone)
 {}
 
 /* Functions */

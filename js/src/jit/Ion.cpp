@@ -438,7 +438,7 @@ JitCompartment::~JitCompartment()
 bool
 JitCompartment::initialize(JSContext* cx)
 {
-    stubCodes_ = cx->new_<ICStubCodeMap>(cx->runtime());
+    stubCodes_ = cx->new_<ICStubCodeMap>(cx->zone());
     if (!stubCodes_)
         return false;
 
