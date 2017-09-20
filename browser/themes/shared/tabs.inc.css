@@ -8,7 +8,6 @@
 
 :root {
   --tab-toolbar-navbar-overlap: 1px;
-  --tab-line-color: highlight;
   --tab-min-height: 33px;
   --tab-loading-fill: #0A84FF;
 }
