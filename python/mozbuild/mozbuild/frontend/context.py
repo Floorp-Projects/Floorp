@@ -299,12 +299,19 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
 
 class CompileFlags(ContextDerivedValue, dict):
     def __init__(self, context):
+        main_src_dir = mozpath.dirname(context.main_path)
+
         self.flag_variables = (
             ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
             ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
              ('CXXFLAGS', 'CFLAGS')),
             ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
             ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('BASE_INCLUDES', ['-I%s' % main_src_dir, '-I%s' % context.objdir],
+             ('CXXFLAGS', 'CFLAGS')),
+            ('LOCAL_INCLUDES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('EXTRA_INCLUDES', ['-I%s/dist/include' % context.config.topobjdir],
+             ('CXXFLAGS', 'CFLAGS')),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
