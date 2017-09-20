@@ -5260,7 +5260,7 @@ pref("dom.placeholder.show_on_focus", true);
 
 // WebVR is enabled by default in beta and release for Windows and for all
 // platforms in nightly and aurora.
-#if defined(XP_WIN) || !defined(RELEASE_OR_BETA)
+#if defined(XP_WIN) || defined(XP_MACOSX) || !defined(RELEASE_OR_BETA)
 pref("dom.vr.enabled", true);
 #else
 pref("dom.vr.enabled", false);
@@ -5307,11 +5307,14 @@ pref("dom.vr.oculus.quit.timeout", 30000);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
 // OpenVR device
-#if defined(XP_WIN) && defined(HAVE_64BIT_BUILD)
+#if !defined(HAVE_64BIT_BUILD)
 // We are only enabling WebVR by default on 64-bit builds (Bug 1384459)
+pref("dom.vr.openvr.enabled", false);
+#elif defined(XP_WIN) || defined(XP_MACOSX)
+// We enable WebVR by default for Windows and macOS
 pref("dom.vr.openvr.enabled", true);
 #else
-// See Bug 1310663 (Linux) and Bug 1310665 (macOS)
+// See Bug 1310663 (Linux)
 pref("dom.vr.openvr.enabled", false);
 #endif
 // Pose prediction reduces latency effects by returning future predicted HMD
