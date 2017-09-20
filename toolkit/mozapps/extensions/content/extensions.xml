@@ -410,7 +410,7 @@
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <content align="center">
       <xul:image anonid="icon" class="category-icon"/>
-      <xul:label anonid="name" class="category-name" flex="1" xbl:inherits="value=name"/>
+      <xul:label anonid="name" class="category-name" crop="end" flex="1" xbl:inherits="value=name"/>
       <xul:label anonid="badge" class="category-badge" xbl:inherits="value=count"/>
     </content>
 
