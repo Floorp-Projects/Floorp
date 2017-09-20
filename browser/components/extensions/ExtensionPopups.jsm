@@ -469,6 +469,7 @@ class ViewPopup extends BasePopup {
   async attach(viewNode) {
     this.viewNode = viewNode;
     this.viewNode.addEventListener(this.DESTROY_EVENT, this);
+    this.viewNode.setAttribute("closemenu", "none");
 
     if (this.extension.remote) {
       this.panel.setAttribute("remote", "true");

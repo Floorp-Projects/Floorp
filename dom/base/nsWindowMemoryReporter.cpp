@@ -376,13 +376,6 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   aWindowTotalSizes->mLayoutServoStyleSetsStylistRuleTree +=
     windowSizes.mLayoutServoStyleSetsStylistRuleTree;
 
-  REPORT_SIZE("/layout/servo-style-sets/stylist/precomputed-pseudos",
-              windowSizes.mLayoutServoStyleSetsStylistPrecomputedPseudos,
-              "Memory used by precomputed pseudo-element declarations within "
-              "Servo style sets within a window.");
-  aWindowTotalSizes->mLayoutServoStyleSetsStylistPrecomputedPseudos +=
-    windowSizes.mLayoutServoStyleSetsStylistPrecomputedPseudos;
-
   REPORT_SIZE("/layout/servo-style-sets/stylist/element-and-pseudos-maps",
               windowSizes.mLayoutServoStyleSetsStylistElementAndPseudosMaps,
               "Memory used by element and pseudos maps within Servo style "
@@ -713,7 +706,6 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   REPORT("window-objects/layout/servo-style-sets",
          windowTotalSizes.mLayoutServoStyleSetsStylistRuleTree +
-         windowTotalSizes.mLayoutServoStyleSetsStylistPrecomputedPseudos +
          windowTotalSizes.mLayoutServoStyleSetsStylistElementAndPseudosMaps +
          windowTotalSizes.mLayoutServoStyleSetsStylistInvalidationMap +
          windowTotalSizes.mLayoutServoStyleSetsStylistRevalidationSelectors +

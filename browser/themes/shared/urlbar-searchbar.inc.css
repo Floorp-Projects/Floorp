@@ -186,11 +186,14 @@
   background-color: hsla(0,0%,80%,.4);
 }
 
+.urlbar-icon[open],
+.urlbar-icon-wrapper[open],
 .urlbar-icon:hover:active,
 .urlbar-icon-wrapper:hover:active {
-  background-color: hsla(0,0%,80%,.45);
+  background-color: hsla(0,0%,80%,.6);
 }
 
+.urlbar-icon-wrapper[open] > .urlbar-icon,
 .urlbar-icon-wrapper > .urlbar-icon:hover,
 .urlbar-icon-wrapper > .urlbar-icon:hover:active {
   background-color: transparent;

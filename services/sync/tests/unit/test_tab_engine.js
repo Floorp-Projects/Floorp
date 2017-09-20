@@ -21,7 +21,7 @@ add_task(async function test_getOpenURLs() {
   _("Test getOpenURLs.");
   let [engine, store] = await getMocks();
 
-  let superLongURL = "http://" + (new Array(MAX_UPLOAD_BYTES).join("w")) + ".com/";
+  let superLongURL = "http://" + (new Array(URI_LENGTH_MAX).join("w")) + ".com/";
   let urls = ["http://bar.com", "http://foo.com", "http://foobar.com", superLongURL];
   function fourURLs() {
     return urls.pop();

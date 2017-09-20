@@ -874,8 +874,6 @@ XPCJSContext::~XPCJSContext()
     // to destroy it later we will crash.
     SetPendingException(nullptr);
 
-    xpc_DelocalizeContext(Context());
-
     // If we're the last XPCJSContext around, clean up the watchdog manager.
     mWatchdogManager->UnregisterContext(this);
     if (--sInstanceCount == 0) {
@@ -1080,12 +1078,6 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
 
     js::SetActivityCallback(cx, ActivityCallback, this);
     JS_AddInterruptCallback(cx, InterruptCallback);
-
-    // Set up locale information and callbacks for the newly-created context so
-    // that the various toLocaleString() methods, localeCompare(), and other
-    // internationalization APIs work as desired.
-    if (!xpc_LocalizeContext(cx))
-        NS_RUNTIMEABORT("xpc_LocalizeContext failed.");
 
     if (!aPrimaryContext) {
         Runtime()->Initialize(cx);

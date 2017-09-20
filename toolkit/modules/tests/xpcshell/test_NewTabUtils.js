@@ -3,6 +3,9 @@
 
 // See also browser/base/content/test/newtab/.
 
+// A small 1x1 test png
+const image1x1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+
 function getBookmarksSize() {
   return NewTabUtils.activityStreamProvider.executePlacesQuery(
     "SELECT count(*) FROM moz_bookmarks WHERE type = :type",
@@ -347,9 +350,8 @@ add_task(async function addFavicons() {
 
   // now fix the url and try again - this time we get good favicon data back
   // a 1x1 favicon as a data URI of mime type image/png
+  const base64URL = image1x1;
   links[0].url = "https://mozilla.com";
-  let base64URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
-    "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
 
   let visit = [
     {uri: links[0].url, visitDate: timeDaysAgo(0), transition: PlacesUtils.history.TRANSITION_TYPED}
@@ -365,6 +367,14 @@ add_task(async function addFavicons() {
   Assert.equal(links[0].faviconLength, links[0].favicon.length, "Got the right length for the byte array");
   Assert.equal(provider._faviconBytesToDataURI(links)[0].favicon, base64URL, "Got the right favicon");
   Assert.equal(links[0].faviconSize, 1, "Got the right favicon size (width and height of favicon)");
+
+  // Check with http version of the link that doesn't have its own
+  const nonHttps = [{url: links[0].url.replace("https", "http")}];
+  await provider._addFavicons(nonHttps);
+  Assert.equal(provider._faviconBytesToDataURI(nonHttps)[0].favicon, base64URL, "Got the same favicon");
+  Assert.equal(nonHttps[0].faviconLength, links[0].faviconLength, "Got the same favicon length");
+  Assert.equal(nonHttps[0].faviconSize, links[0].faviconSize, "Got the same favicon size");
+  Assert.equal(nonHttps[0].mimeType, links[0].mimeType, "Got the same mime type");
 });
 
 add_task(async function getHighlights() {
@@ -480,13 +490,12 @@ add_task(async function getHighlights() {
   Assert.equal(links[2].url, bookmarks[0].url, "still have older bookmark now third");
 
   // Test the `withFavicons` option.
+  await PlacesTestUtils.addFavicons(new Map([[testURI, image1x1]]));
   links = await provider.getHighlights({ withFavicons: true });
   Assert.equal(links.length, 3, "We're not expecting a change in links");
-  // We don't have the favicon service all bootstrapped and that's unnecessary
-  // for this unit.
-  Assert.ok("favicon" in links[0], "Link 1 should contain a favicon");
-  Assert.ok("favicon" in links[1], "Link 2 should contain a favicon");
-  Assert.ok("favicon" in links[2], "Link 3 should contain a favicon");
+  Assert.equal(links[0].favicon, image1x1, "Link 1 should contain a favicon");
+  Assert.equal(links[1].favicon, null, "Link 2 has no favicon data");
+  Assert.equal(links[2].favicon, null, "Link 3 has no favicon data");
 });
 
 add_task(async function getTopFrecentSites() {
@@ -628,12 +637,9 @@ add_task(async function getTopFrecentSites_order() {
   let links = await provider.getTopSites({topsiteFrecency: 0});
   Assert.equal(links.length, 0, "empty history yields empty links");
 
-  let base64URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
-    "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
-
   // map of page url to favicon url
   let faviconData = new Map();
-  faviconData.set("https://mozilla3.com/2", base64URL);
+  faviconData.set("https://mozilla3.com/2", image1x1);
 
   await PlacesTestUtils.addVisits(visits);
   await PlacesTestUtils.addFavicons(faviconData);

@@ -22,6 +22,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsChangeHint.h"
 #include "nsIAtom.h"
+#include "nsIMemoryReporter.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -95,6 +96,13 @@ public:
     MOZ_ASSERT(sInServoTraversal || NS_IsMainThread());
     return sInServoTraversal;
   }
+
+#ifdef DEBUG
+  // Used for debug assertions. We make this debug-only to prevent callers from
+  // accidentally using it instead of IsInServoTraversal, which is cheaper. We
+  // can change this if a use-case arises.
+  static bool IsCurrentThreadInServoTraversal();
+#endif
 
   static ServoStyleSet* Current()
   {
@@ -612,6 +620,15 @@ private:
   RefPtr<nsBindingManager> mBindingManager;
 
   static ServoStyleSet* sInServoTraversal;
+};
+
+class UACacheReporter final : public nsIMemoryReporter
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
+
+private:
+  ~UACacheReporter() {}
 };
 
 } // namespace mozilla

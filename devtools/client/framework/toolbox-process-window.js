@@ -34,22 +34,25 @@ var connect = Task.async(function* () {
   window.removeEventListener("load", connect);
 
   // Initiate the connection
-  const params = new URLSearchParams(window.location.search);
+  let env = Components.classes["@mozilla.org/process/environment;1"]
+    .getService(Components.interfaces.nsIEnvironment);
+  let port = env.get("MOZ_BROWSER_TOOLBOX_PORT");
+  let addonID = env.get("MOZ_BROWSER_TOOLBOX_ADDONID");
 
-  // A port needs to be passed in from the query string, for instance:
-  // `./mach run -chrome chrome://devtools/content/framework/toolbox-process-window.xul?port=6080`
-  if (!params.get("port")) {
-    throw new Error("Must specify a port on the query string");
+  // A port needs to be passed in from the environment, for instance:
+  //    MOZ_BROWSER_TOOLBOX_PORT=6080 ./mach run -chrome \
+  //      chrome://devtools/content/framework/toolbox-process-window.xul
+  if (!port) {
+    throw new Error("Must pass a port in an env variable with MOZ_BROWSER_TOOLBOX_PORT");
   }
 
   let transport = yield DebuggerClient.socketConnect({
     host: Prefs.chromeDebuggingHost,
-    port: params.get("port"),
+    port,
     webSocket: Prefs.chromeDebuggingWebSocket,
   });
   gClient = new DebuggerClient(transport);
   yield gClient.connect();
-  let addonID = params.get("addonID");
 
   if (addonID) {
     let { addons } = yield gClient.listAddons();

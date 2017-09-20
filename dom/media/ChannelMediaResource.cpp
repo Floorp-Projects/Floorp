@@ -92,7 +92,7 @@ ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
 {
   // This might happen off the main thread.
   MOZ_DIAGNOSTIC_ASSERT(mResource);
-  return mResource->OnDataAvailable(aRequest, aStream, aCount);
+  return mResource->OnDataAvailable(mLoadID, aStream, aCount);
 }
 
 nsresult
@@ -170,6 +170,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(aRequest);
   bool seekable = false;
+  int64_t startOffset = aRequestOffset;
+
   if (hc) {
     uint32_t responseStatus = 0;
     Unused << hc->GetResponseStatus(&responseStatus);
@@ -225,6 +227,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
       bool gotRangeHeader = NS_SUCCEEDED(rv);
 
       if (gotRangeHeader) {
+        startOffset = rangeStart;
         // We received 'Content-Range', so the server accepts range requests.
         // Notify media cache about the length and start offset of data received.
         // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
@@ -232,17 +235,17 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
         if (rangeTotal != -1) {
           contentLength = std::max(contentLength, rangeTotal);
         }
-        mCacheStream.NotifyDataStarted(rangeStart);
       }
       acceptsRanges = gotRangeHeader;
-    } else if (aRequestOffset > 0 && responseStatus == HTTP_OK_CODE) {
-      // If we get an OK response but we were seeking, or requesting a byte
-      // range, then we have to assume that seeking doesn't work. We also need
-      // to tell the cache that it's getting data for the start of the stream.
-      mCacheStream.NotifyDataStarted(0);
+    } else if (responseStatus == HTTP_OK_CODE) {
+      // HTTP_OK_CODE means data will be sent from the start of the stream.
+      startOffset = 0;
 
-      // The server claimed it supported range requests.  It lied.
-      acceptsRanges = false;
+      if (aRequestOffset > 0) {
+        // If HTTP_OK_CODE is responded for a non-zero range request, we have
+        // to assume seeking doesn't work.
+        acceptsRanges = false;
+      }
     }
     if (aRequestOffset == 0 && contentLength >= 0 &&
         (responseStatus == HTTP_OK_CODE ||
@@ -256,7 +259,12 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     // and the server isn't sending Accept-Ranges:bytes then we don't
     // support seeking. We also can't seek in compressed streams.
     seekable = !isCompressed && acceptsRanges;
+  } else {
+    // Not an HTTP channel. Assume data will be sent from position zero.
+    startOffset = 0;
   }
+
+  mCacheStream.NotifyDataStarted(mLoadID, startOffset);
   mCacheStream.SetTransportSeekable(seekable);
   mChannelStatistics.Start();
   mReopenOnError = false;
@@ -382,34 +390,28 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
 }
 
 nsresult
-ChannelMediaResource::CopySegmentToCache(const char* aFromSegment,
-                                         uint32_t aCount,
-                                         uint32_t* aWriteCount)
-{
-  mCacheStream.NotifyDataReceived(aCount, aFromSegment);
-  *aWriteCount = aCount;
-  return NS_OK;
-}
-
-nsresult
 ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
-                                         void* aResource,
+                                         void* aClosure,
                                          const char* aFromSegment,
                                          uint32_t aToOffset,
                                          uint32_t aCount,
                                          uint32_t* aWriteCount)
 {
-  ChannelMediaResource* res = static_cast<ChannelMediaResource*>(aResource);
-  return res->CopySegmentToCache(aFromSegment, aCount, aWriteCount);
+  Closure* closure = static_cast<Closure*>(aClosure);
+  closure->mResource->mCacheStream.NotifyDataReceived(
+    closure->mLoadID, aCount, aFromSegment);
+  *aWriteCount = aCount;
+  return NS_OK;
 }
 
 nsresult
-ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
+ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
                                       nsIInputStream* aStream,
                                       uint32_t aCount)
 {
   // This might happen off the main thread.
-  NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
+  // Don't assert |mChannel.get() == aRequest| since reading mChannel here off
+  // the main thread is a data race.
 
   // Update principals before putting the data in the cache. This is important,
   // we want to make sure all principals are updated before any consumer can see
@@ -423,10 +425,12 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
     [self, aCount]() { self->mChannelStatistics.AddBytes(aCount); });
   mCallback->AbstractMainThread()->Dispatch(r.forget());
 
+  Closure closure{ aLoadID, this };
   uint32_t count = aCount;
   while (count > 0) {
     uint32_t read;
-    nsresult rv = aStream->ReadSegments(CopySegmentToCache, this, count, &read);
+    nsresult rv =
+      aStream->ReadSegments(CopySegmentToCache, &closure, count, &read);
     if (NS_FAILED(rv))
       return rv;
     NS_ASSERTION(read > 0, "Read 0 bytes while data was available?");
@@ -457,7 +461,7 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   }
 
   MOZ_ASSERT(GetOffset() == 0, "Who set offset already?");
-  mListener = new Listener(this, 0);
+  mListener = new Listener(this, 0, ++mLoadID);
   *aStreamListener = mListener;
   NS_ADDREF(*aStreamListener);
   return NS_OK;
@@ -470,7 +474,7 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
   MOZ_ASSERT(mChannel);
   MOZ_ASSERT(!mListener, "Listener should have been removed by now");
 
-  mListener = new Listener(this, aOffset);
+  mListener = new Listener(this, aOffset, ++mLoadID);
   nsresult rv = mChannel->SetNotificationCallbacks(mListener.get());
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -4038,6 +4038,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       MOZ_ASSERT(childItems);
       ProcessDisplayItems(childItems, aLastAnimatedGeometryRoot, aLastASR,
                           aLastAGRTopLeft, aTopLeft, aMaxLayers, aLayerCount);
+      if (childItems->NeedsTransparentSurface()) {
+        aList->SetNeedsTransparentSurface();
+      }
       continue;
     }
 

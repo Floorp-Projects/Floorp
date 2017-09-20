@@ -390,6 +390,10 @@ FRAME_STATE_BIT(SVG, 23, NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES)
 
 FRAME_STATE_BIT(SVG, 24, NS_STATE_SVG_TEXT_IN_REFLOW)
 
+// Set on SVGTextFrame frames when they need a
+// TextNodeCorrespondenceRecorder::RecordCorrespondence call
+// to update the cached nsTextNode indexes that they correspond to.
+FRAME_STATE_BIT(SVG, 25, NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY)
 
 // == Frame state bits that apply to text frames ==============================
 

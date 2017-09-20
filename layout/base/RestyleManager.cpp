@@ -1554,14 +1554,14 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       if (hint & nsChangeHint_UpdateEffects) {
         for (nsIFrame* cont = frame; cont;
              cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-          nsSVGEffects::UpdateEffects(cont);
+          SVGObserverUtils::UpdateEffects(cont);
         }
       }
       if ((hint & nsChangeHint_InvalidateRenderingObservers) ||
           ((hint & nsChangeHint_UpdateOpacityLayer) &&
            frame->IsFrameOfType(nsIFrame::eSVG) &&
            !(frame->GetStateBits() & NS_STATE_IS_OUTER_SVG))) {
-        nsSVGEffects::InvalidateRenderingObservers(frame);
+        SVGObserverUtils::InvalidateRenderingObservers(frame);
       }
       if (hint & nsChangeHint_NeedReflow) {
         StyleChangeReflow(frame, hint);

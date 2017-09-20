@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 
 import java.util.Map;
 
@@ -58,6 +59,11 @@ public class MmaStubImp implements MmaInterface {
     @Override
     public String getMmaSenderId() {
         return "";
+    }
+
+    @Override
+    public void setDeviceId(@NonNull String deviceId) {
+
     }
 
 }
