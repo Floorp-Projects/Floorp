@@ -98,6 +98,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     jitCompartment_(nullptr),
     mappedArgumentsTemplate_(nullptr),
     unmappedArgumentsTemplate_(nullptr),
+    iterResultTemplate_(nullptr),
     lcovOutput()
 {
     PodArrayZero(sawDeprecatedLanguageExtension);
@@ -993,6 +994,9 @@ JSCompartment::sweepTemplateObjects()
 
     if (unmappedArgumentsTemplate_ && IsAboutToBeFinalized(&unmappedArgumentsTemplate_))
         unmappedArgumentsTemplate_.set(nullptr);
+
+    if (iterResultTemplate_ && IsAboutToBeFinalized(&iterResultTemplate_))
+        iterResultTemplate_.set(nullptr);
 }
 
 /* static */ void
