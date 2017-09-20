@@ -32,7 +32,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     return;
   }
 
-  ScrollingLayersHelper scroller(this, aBuilder, aSc);
+  ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
 
   if (mItem) {
     wr::LayoutSize contentSize; // this won't actually be used by anything

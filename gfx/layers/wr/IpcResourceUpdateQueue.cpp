@@ -173,6 +173,12 @@ IpcResourceUpdateQueue::AddBlobImage(ImageKey key, const ImageDescriptor& aDescr
 }
 
 void
+IpcResourceUpdateQueue::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey)
+{
+  mUpdates.AppendElement(layers::OpAddExternalImage(aExtId, aKey));
+}
+
+void
 IpcResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
                                           const ImageDescriptor& aDescriptor,
                                           Range<uint8_t> aBytes)
