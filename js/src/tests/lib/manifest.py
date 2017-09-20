@@ -21,9 +21,10 @@ def split_path_into_dirs(path):
     return dirs
 
 class XULInfo:
-    def __init__(self, abi, os, isdebug):
+    def __init__(self, abi, os, is64Bit, isdebug):
         self.abi = abi
         self.os = os
+        self.is64Bit = is64Bit
         self.isdebug = isdebug
         self.browserIsRemote = False
 
@@ -31,11 +32,12 @@ class XULInfo:
         """Return JS that when executed sets up variables so that JS expression
         predicates on XUL build info evaluate properly."""
 
-        return ('var xulRuntime = {{ OS: "{}", XPCOMABI: "{}", shell: true }};'
+        return ('var xulRuntime = {{ OS: "{}", is64Bit: {}, XPCOMABI: "{}", shell: true }};'
                 'var release_or_beta = getBuildConfiguration().release_or_beta;'
                 'var isDebugBuild={}; var Android={}; '
                 'var browserIsRemote={}'.format(
                     self.os,
+                    "true" if self.is64Bit else "false",
                     self.abi,
                     str(self.isdebug).lower(),
                     str(self.os == "Android").lower(),
@@ -64,8 +66,8 @@ class XULInfo:
             sys.exit(1)
 
         # Read the values.
-        val_re = re.compile(r'(TARGET_XPCOM_ABI|OS_TARGET|MOZ_DEBUG)\s*=\s*(.*)')
-        kw = {'isdebug': False}
+        val_re = re.compile(r'(TARGET_XPCOM_ABI|OS_TARGET|MOZ_DEBUG|HAVE_64BIT_BUILD)\s*=\s*(.*)')
+        kw = {'isdebug': False, 'is64Bit': False}
         for line in open(path):
             m = val_re.match(line)
             if m:
@@ -75,6 +77,8 @@ class XULInfo:
                     kw['abi'] = val
                 if key == 'OS_TARGET':
                     kw['os'] = val
+                if key == 'HAVE_64BIT_BUILD':
+                    kw['is64Bit'] = (val == '1')
                 if key == 'MOZ_DEBUG':
                     kw['isdebug'] = (val == '1')
         return cls(**kw)
