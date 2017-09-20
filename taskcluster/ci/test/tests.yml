@@ -1193,7 +1193,6 @@ reftest-stylo:
     treeherder-symbol: tc-R(Rs)
     virtualization: virtual-with-gpu
     chunks: 8
-    run-on-projects: ['autoland', 'mozilla-central', 'try']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
