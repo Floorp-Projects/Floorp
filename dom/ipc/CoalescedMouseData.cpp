@@ -20,6 +20,7 @@ CoalescedMouseData::Coalesce(const WidgetMouseEvent& aEvent,
     mCoalescedInputEvent = MakeUnique<WidgetMouseEvent>(aEvent);
     mGuid = aGuid;
     mInputBlockId = aInputBlockId;
+    MOZ_ASSERT(!mCoalescedInputEvent->mCoalescedWidgetEvents);
   } else {
     MOZ_ASSERT(mGuid == aGuid);
     MOZ_ASSERT(mInputBlockId == aInputBlockId);
@@ -33,6 +34,22 @@ CoalescedMouseData::Coalesce(const WidgetMouseEvent& aEvent,
     mCoalescedInputEvent->pressure = aEvent.pressure;
     mCoalescedInputEvent->AssignPointerHelperData(aEvent);
   }
+
+  if (aEvent.mMessage == eMouseMove &&
+      PointerEventHandler::IsPointerEventEnabled()) {
+    // PointerEvent::getCoalescedEvents is only applied to pointermove events.
+    if (!mCoalescedInputEvent->mCoalescedWidgetEvents) {
+      mCoalescedInputEvent->mCoalescedWidgetEvents =
+        new WidgetPointerEventHolder();
+    }
+    // Append current event in mCoalescedWidgetEvents. We use them to generate
+    // DOM events when content calls PointerEvent::getCoalescedEvents.
+    WidgetPointerEvent* event = mCoalescedInputEvent->mCoalescedWidgetEvents
+                                  ->mEvents.AppendElement(aEvent);
+
+    event->mFlags.mBubbles = false;
+    event->mFlags.mCancelable = false;
+  }
 }
 
 bool
@@ -40,6 +57,7 @@ CoalescedMouseData::CanCoalesce(const WidgetMouseEvent& aEvent,
                              const ScrollableLayerGuid& aGuid,
                              const uint64_t& aInputBlockId)
 {
+  MOZ_ASSERT(aEvent.mMessage == eMouseMove);
   return !mCoalescedInputEvent ||
          (mCoalescedInputEvent->mModifiers == aEvent.mModifiers &&
           mCoalescedInputEvent->inputSource == aEvent.inputSource &&
