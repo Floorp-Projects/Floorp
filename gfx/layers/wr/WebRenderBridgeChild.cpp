@@ -241,7 +241,7 @@ WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
 void
 WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<gfx::Glyph>& aGlyphs,
                                  gfx::ScaledFont* aFont, const gfx::Color& aColor, const StackingContextHelper& aSc,
-                                 const LayerRect& aBounds, const LayerRect& aClip, bool aBackfaceVisible)
+                                 const LayerRect& aBounds, const LayerRect& aClip)
 {
   MOZ_ASSERT(aFont);
   MOZ_ASSERT(!aGlyphs.IsEmpty());
@@ -260,7 +260,6 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
 
   aBuilder.PushText(aSc.ToRelativeLayoutRect(aBounds),
                     aSc.ToRelativeLayoutRect(aClip),
-                    aBackfaceVisible,
                     aColor,
                     key,
                     Range<const wr::GlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()));

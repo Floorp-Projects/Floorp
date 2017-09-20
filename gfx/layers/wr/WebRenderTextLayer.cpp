@@ -43,7 +43,7 @@ WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
     for (GlyphArray& glyphs : mGlyphs) {
         WrBridge()->PushGlyphs(aBuilder, glyphs.glyphs(), mFont,
-                               glyphs.color().value(), aSc, rect, rect, true);
+                               glyphs.color().value(), aSc, rect, rect);
     }
 }
 

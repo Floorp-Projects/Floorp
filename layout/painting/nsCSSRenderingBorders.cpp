@@ -179,16 +179,14 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
                                          RectCornerRadii& aBorderRadii,
                                          const nscolor* aBorderColors,
                                          nsBorderColors* const* aCompositeColors,
-                                         nscolor aBackgroundColor,
-                                         bool aBackfaceIsVisible)
+                                         nscolor aBackgroundColor)
   : mPresContext(aPresContext),
     mDocument(aDocument),
     mDrawTarget(aDrawTarget),
     mDirtyRect(aDirtyRect),
     mOuterRect(aOuterRect),
     mBorderRadii(aBorderRadii),
-    mBackgroundColor(aBackgroundColor),
-    mBackfaceIsVisible(aBackfaceIsVisible)
+    mBackgroundColor(aBackgroundColor)
 {
   PodCopy(mBorderStyles, aBorderStyles, 4);
   PodCopy(mBorderWidths, aBorderWidths, 4);
@@ -3630,7 +3628,6 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
   Range<const wr::BorderSide> wrsides(side, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
-                      mBackfaceIsVisible,
                       wr::ToBorderWidths(mBorderWidths[0], mBorderWidths[1], mBorderWidths[2], mBorderWidths[3]),
                       wrsides,
                       borderRadius);

@@ -5204,7 +5204,6 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   LayerRect clipRect = LayerRect::FromUnknownRect(layoutClipRect.ToUnknownRect());
   wr::LayoutRect wrClipRect = aSc.ToRelativeLayoutRect(clipRect); // wr::ToLayoutRect(clipRect);
   wr::LayoutRect wrBoundsRect = aSc.ToRelativeLayoutRect(boundsRect); //wr::ToLayoutRect(boundsRect);
-  bool backfaceVisible = !BackfaceIsHidden();
 
   // Drawing order: selections, shadows,
   //                underline, overline, [grouped in one array]
@@ -5214,7 +5213,7 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   for (auto& part : mTextDrawer->GetParts()) {
     if (part.selection) {
       auto selection = part.selection.value();
-      aBuilder.PushRect(selection.rect, wrClipRect, backfaceVisible, selection.color);
+      aBuilder.PushRect(selection.rect, wrClipRect, selection.color);
     }
   }
 
@@ -5222,11 +5221,11 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     // WR takes the shadows in CSS-order (reverse of rendering order),
     // because the drawing of a shadow actually occurs when it's popped.
     for (const wr::TextShadow& shadow : part.shadows) {
-      aBuilder.PushTextShadow(wrBoundsRect, wrClipRect, backfaceVisible, shadow);
+      aBuilder.PushTextShadow(wrBoundsRect, wrClipRect, shadow);
     }
 
     for (const wr::Line& decoration : part.beforeDecorations) {
-      aBuilder.PushLine(wrClipRect, backfaceVisible, decoration);
+      aBuilder.PushLine(wrClipRect, decoration);
     }
 
     for (const mozilla::layout::TextRunFragment& text : part.text) {
@@ -5237,12 +5236,11 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
       color.a *= mOpacity;
 
       aManager->WrBridge()->PushGlyphs(aBuilder, text.glyphs, text.font,
-                                       color, aSc, boundsRect, clipRect,
-                                       backfaceVisible);
+                                       color, aSc, boundsRect, clipRect);
     }
 
     for (const wr::Line& decoration : part.afterDecorations) {
-      aBuilder.PushLine(wrClipRect, backfaceVisible, decoration);
+      aBuilder.PushLine(wrClipRect, decoration);
     }
 
     for (size_t i = 0; i < part.shadows.Length(); ++i) {
