@@ -96,9 +96,13 @@ function testShouldIntercept(policy, done) {
       }
     }, {
       status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
       next: loadThirdPartyIframe
     }, {
       status: "swresponse",
+    }, {
+      status: "worker-swresponse",
       next: function() {
         iframe.src = thirdPartyOrigin + basePath + "unregister.html";
       }
@@ -129,9 +133,13 @@ function testShouldNotRegister(policy, done) {
       }
     }, {
       status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
       next: loadThirdPartyIframe
     }, {
       status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
       next: function() {
         window.onmessage = null;
         ok(true, "Test finished successfully");
@@ -162,9 +170,13 @@ function testShouldNotIntercept(policy, done) {
       }
     }, {
       status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
       next: loadThirdPartyIframe
     }, {
       status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
       next: function() {
         iframe.src = thirdPartyOrigin + basePath + "unregister.html";
       }
