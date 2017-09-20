@@ -484,7 +484,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     FxAccountDeviceListUpdater deviceListUpdater = new FxAccountDeviceListUpdater(fxAccount, context.getContentResolver());
     // Since the clients stage requires a fresh list of remote devices, we update the device list synchronously.
-    deviceListUpdater.updateAndMaybeRenewRegistration(context);
+    deviceListUpdater.update();
   }
 
   /**
