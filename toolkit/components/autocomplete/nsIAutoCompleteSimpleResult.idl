@@ -89,6 +89,13 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
                    [optional] in AString aLabel);
 
   /**
+   * Removes an existing match.
+   * @note this is different from removeValueAt, since it's not a consequence of
+   * a user action, and as such it won't notify onValueRemoved.
+   */
+  void removeMatchAt(in long aIndex);
+
+  /**
    * Gets the listener for changes in the result.
    */
   nsIAutoCompleteSimpleResultListener getListener();

@@ -61,48 +61,45 @@ impl Monitor {
     pub fn new() -> io::Result<Self> {
         let (tx, rx) = channel();
 
-        let thread = RunLoop::new(
-            move |alive| -> io::Result<()> {
-                let ctx = libudev::Context::new()?;
-                let mut enumerator = libudev::Enumerator::new(&ctx)?;
-                enumerator.match_subsystem(UDEV_SUBSYSTEM)?;
+        let thread = RunLoop::new(move |alive| -> io::Result<()> {
+            let ctx = libudev::Context::new()?;
+            let mut enumerator = libudev::Enumerator::new(&ctx)?;
+            enumerator.match_subsystem(UDEV_SUBSYSTEM)?;
 
-                // Iterate all existing devices.
-                for dev in enumerator.scan_devices()? {
-                    if let Some(path) = dev.devnode().map(|p| p.to_owned().into_os_string()) {
-                        tx.send(Event::Add(path)).map_err(to_io_err)?;
-                    }
+            // Iterate all existing devices.
+            for dev in enumerator.scan_devices()? {
+                if let Some(path) = dev.devnode().map(|p| p.to_owned().into_os_string()) {
+                    tx.send(Event::Add(path)).map_err(to_io_err)?;
                 }
+            }
 
-                let mut monitor = libudev::Monitor::new(&ctx)?;
-                monitor.match_subsystem(UDEV_SUBSYSTEM)?;
+            let mut monitor = libudev::Monitor::new(&ctx)?;
+            monitor.match_subsystem(UDEV_SUBSYSTEM)?;
 
-                // Start listening for new devices.
-                let mut socket = monitor.listen()?;
-                let mut fds = vec![
-                    ::libc::pollfd {
-                        fd: socket.as_raw_fd(),
-                        events: POLLIN,
-                        revents: 0,
-                    },
-                ];
+            // Start listening for new devices.
+            let mut socket = monitor.listen()?;
+            let mut fds = vec![
+                ::libc::pollfd {
+                    fd: socket.as_raw_fd(),
+                    events: POLLIN,
+                    revents: 0,
+                },
+            ];
 
-                // Loop until we're stopped by the controlling thread, or fail.
-                while alive() {
-                    // Wait for new events, break on failure.
-                    poll(&mut fds)?;
+            // Loop until we're stopped by the controlling thread, or fail.
+            while alive() {
+                // Wait for new events, break on failure.
+                poll(&mut fds)?;
 
-                    // Send the event over.
-                    let udev_event = socket.receive_event();
-                    if let Some(event) = udev_event.and_then(Event::from_udev) {
-                        tx.send(event).map_err(to_io_err)?;
-                    }
+                // Send the event over.
+                let udev_event = socket.receive_event();
+                if let Some(event) = udev_event.and_then(Event::from_udev) {
+                    tx.send(event).map_err(to_io_err)?;
                 }
+            }
 
-                Ok(())
-            },
-            0, /* no timeout */
-        )?;
+            Ok(())
+        })?;
 
         Ok(Self { rx, thread })
     }

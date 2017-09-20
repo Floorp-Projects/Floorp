@@ -9,9 +9,9 @@ suppressed = test.load_suppressed_functions()
 
 # Only one of these is fully suppressed (ie, *always* called within the scope
 # of an AutoSuppressGC).
-assert(len(filter(lambda f: 'suppressedFunction' in f, suppressed)) == 1)
-assert(len(filter(lambda f: 'halfSuppressedFunction' in f, suppressed)) == 0)
-assert(len(filter(lambda f: 'unsuppressedFunction' in f, suppressed)) == 0)
+assert(len(list(filter(lambda f: 'suppressedFunction' in f, suppressed))) == 1)
+assert(len(list(filter(lambda f: 'halfSuppressedFunction' in f, suppressed))) == 0)
+assert(len(list(filter(lambda f: 'unsuppressedFunction' in f, suppressed))) == 0)
 
 # gcFunctions should be the inverse, but we get to rely on unmangled names here.
 gcFunctions = test.load_gcFunctions()

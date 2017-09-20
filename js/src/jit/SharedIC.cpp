@@ -1205,7 +1205,8 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.push(intReg);
         masm.setupUnalignedABICall(scratchReg);
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-        masm.callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
+        masm.callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32),
+                         MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
         masm.storeCallWordResult(scratchReg);
         masm.pop(intReg);
 
@@ -1358,7 +1359,8 @@ ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
         masm.bind(&truncateABICall);
         masm.setupUnalignedABICall(scratchReg);
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-        masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
+        masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32),
+                         MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
         masm.storeCallWordResult(scratchReg);
 
         masm.bind(&doneTruncate);

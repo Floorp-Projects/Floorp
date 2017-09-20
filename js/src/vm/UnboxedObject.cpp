@@ -1204,17 +1204,6 @@ UnboxedArrayObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ void
-UnboxedArrayObject::objectMoved(JSObject* obj, const JSObject* old)
-{
-    UnboxedArrayObject& dst = obj->as<UnboxedArrayObject>();
-    const UnboxedArrayObject& src = old->as<UnboxedArrayObject>();
-
-    // Fix up possible inline data pointer.
-    if (src.hasInlineElements())
-        dst.setInlineElements();
-}
-
-/* static */ void
 UnboxedArrayObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(!IsInsideNursery(obj));
@@ -1223,15 +1212,21 @@ UnboxedArrayObject::finalize(FreeOp* fop, JSObject* obj)
 }
 
 /* static */ size_t
-UnboxedArrayObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src,
-                                             gc::AllocKind allocKind)
+UnboxedArrayObject::objectMoved(JSObject* dst, JSObject* src)
 {
     UnboxedArrayObject* ndst = &dst->as<UnboxedArrayObject>();
     UnboxedArrayObject* nsrc = &src->as<UnboxedArrayObject>();
     MOZ_ASSERT(ndst->elements() == nsrc->elements());
 
-    Nursery& nursery = dst->zone()->group()->nursery();
+    if (!IsInsideNursery(src)) {
+        // Fix up possible inline data pointer.
+        if (nsrc->hasInlineElements())
+            ndst->setInlineElements();
 
+        return 0;
+    }
+
+    Nursery& nursery = dst->zone()->group()->nursery();
     if (!nursery.isInside(nsrc->elements())) {
         nursery.removeMallocedBuffer(nsrc->elements());
         return 0;
@@ -1241,7 +1236,8 @@ UnboxedArrayObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObj
     // possible, the nursery will have picked an allocation size that is large
     // enough.
     size_t nbytes = nsrc->capacity() * nsrc->elementSize();
-    if (offsetOfInlineElements() + nbytes <= GetGCKindBytes(allocKind)) {
+    gc::AllocKind allocKind = dst->asTenured().getAllocKind();
+    if (offsetOfInlineElements() + nbytes <= gc::GetGCKindBytes(allocKind)) {
         ndst->setInlineElements();
     } else {
         MOZ_ASSERT(allocKind == gc::AllocKind::OBJECT0);
@@ -1258,7 +1254,7 @@ UnboxedArrayObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObj
     // Set a forwarding pointer for the element buffers in case they were
     // preserved on the stack by Ion.
     bool direct = nsrc->capacity() * nsrc->elementSize() >= sizeof(uintptr_t);
-    nursery.maybeSetForwardingPointer(trc, nsrc->elements(), ndst->elements(), direct);
+    nursery.setForwardingPointerWhileTenuring(nsrc->elements(), ndst->elements(), direct);
 
     return ndst->hasInlineElements() ? 0 : nbytes;
 }

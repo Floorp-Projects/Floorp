@@ -13,6 +13,11 @@ flat varying vec4 vCacheUvRectCoords;
 #ifdef WR_VERTEX_SHADER
 #define BS_HEADER_VECS 4
 
+RectWithSize fetch_instance_geometry(int address) {
+    vec4 data = fetch_from_resource_cache_1(address);
+    return RectWithSize(data.xy, data.zw);
+}
+
 void main(void) {
     Primitive prim = load_primitive();
     BoxShadow bs = fetch_boxshadow(prim.specific_prim_address);

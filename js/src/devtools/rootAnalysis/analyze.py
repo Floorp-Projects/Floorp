@@ -231,10 +231,13 @@ parser.add_argument('--tag', '-t', type=str, nargs='?',
                     help='name of job, also sets build command to "build.<tag>"')
 parser.add_argument('--expect-file', type=str, nargs='?',
                     help='deprecated option, temporarily still present for backwards compatibility')
-parser.add_argument('--verbose', '-v', action='store_true',
+parser.add_argument('--verbose', '-v', action='count', default=1,
                     help='Display cut & paste commands to run individual steps')
+parser.add_argument('--quiet', '-q', action='count', default=0,
+                    help='Suppress output')
 
 args = parser.parse_args()
+args.verbose = max(0, args.verbose - args.quiet)
 
 for default in defaults:
     try:
@@ -256,7 +259,7 @@ if args.tag and not args.buildcommand:
 if args.jobs is not None:
     data['jobs'] = args.jobs
 if not data.get('jobs'):
-    data['jobs'] = subprocess.check_output(['nproc', '--ignore=1']).strip()
+    data['jobs'] = int(subprocess.check_output(['nproc', '--ignore=1']).strip())
 
 if args.buildcommand:
     data['buildcommand'] = args.buildcommand

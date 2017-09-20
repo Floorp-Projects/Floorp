@@ -2358,7 +2358,7 @@ SetIonCheckGraphCoherency(JSContext* cx, unsigned argc, Value* vp)
 }
 
 class CloneBufferObject : public NativeObject {
-    static const JSPropertySpec props_[2];
+    static const JSPropertySpec props_[3];
     static const size_t DATA_SLOT   = 0;
     static const size_t LENGTH_SLOT = 1;
     static const size_t NUM_SLOTS   = 2;
@@ -2413,15 +2413,6 @@ class CloneBufferObject : public NativeObject {
 
     static bool
     setCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
-        if (args.length() != 1) {
-            JS_ReportErrorASCII(cx, "clonebuffer setter requires a single string argument");
-            return false;
-        }
-        if (!args[0].isString()) {
-            JS_ReportErrorASCII(cx, "clonebuffer value must be a string");
-            return false;
-        }
-
         if (fuzzingSafe) {
             // A manually-created clonebuffer could easily trigger a crash
             args.rval().setUndefined();
@@ -2429,20 +2420,37 @@ class CloneBufferObject : public NativeObject {
         }
 
         Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
-        obj->discard();
 
-        char* str = JS_EncodeString(cx, args[0].toString());
-        if (!str)
-            return false;
-        size_t nbytes = JS_GetStringLength(args[0].toString());
-        MOZ_ASSERT(nbytes % sizeof(uint64_t) == 0);
-        auto buf = js::MakeUnique<JSStructuredCloneData>(0, 0, nbytes);
-        if (!buf->Init(nbytes, nbytes)) {
-            JS_free(cx, str);
+        uint8_t* data = nullptr;
+        UniquePtr<uint8_t[], JS::FreePolicy> dataOwner;
+        uint32_t nbytes;
+
+        if (args.get(0).isObject() && args[0].toObject().is<ArrayBufferObject>()) {
+            ArrayBufferObject* buffer = &args[0].toObject().as<ArrayBufferObject>();
+            bool isSharedMemory;
+            js::GetArrayBufferLengthAndData(buffer, &nbytes, &isSharedMemory, &data);
+            MOZ_ASSERT(!isSharedMemory);
+        } else {
+            JSString* str = JS::ToString(cx, args.get(0));
+            if (!str)
+                return false;
+            data = reinterpret_cast<uint8_t*>(JS_EncodeString(cx, str));
+            if (!data)
+                return false;
+            dataOwner.reset(data);
+            nbytes = JS_GetStringLength(str);
+        }
+
+        if (nbytes % sizeof(uint64_t) != 0) {
+            JS_ReportErrorASCII(cx, "Invalid length for clonebuffer data");
             return false;
         }
-        js_memcpy(buf->Start(), str, nbytes);
-        JS_free(cx, str);
+
+        auto buf = js::MakeUnique<JSStructuredCloneData>(0, 0, nbytes);
+        if (!buf->Init(nbytes, nbytes))
+            return false;
+        js_memcpy(buf->Start(), data, nbytes);
+        obj->discard();
         obj->setData(buf.release());
 
         args.rval().setUndefined();
@@ -2461,12 +2469,9 @@ class CloneBufferObject : public NativeObject {
     }
 
     static bool
-    getCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
-        Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
-        MOZ_ASSERT(args.length() == 0);
-
+    getData(JSContext* cx, Handle<CloneBufferObject*> obj, JSStructuredCloneData** data) {
         if (!obj->data()) {
-            args.rval().setUndefined();
+            *data = nullptr;
             return true;
         }
 
@@ -2479,14 +2484,27 @@ class CloneBufferObject : public NativeObject {
             return false;
         }
 
-        size_t size = obj->data()->Size();
+        *data = obj->data();
+        return true;
+    }
+
+    static bool
+    getCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
+        Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
+        MOZ_ASSERT(args.length() == 0);
+
+        JSStructuredCloneData* data;
+        if (!getData(cx, obj, &data))
+            return false;
+
+        size_t size = data->Size();
         UniqueChars buffer(static_cast<char*>(js_malloc(size)));
         if (!buffer) {
             ReportOutOfMemory(cx);
             return false;
         }
-        auto iter = obj->data()->Iter();
-        obj->data()->ReadBytes(iter, buffer.get(), size);
+        auto iter = data->Iter();
+        data->ReadBytes(iter, buffer.get(), size);
         JSString* str = JS_NewStringCopyN(cx, buffer.get(), size);
         if (!str)
             return false;
@@ -2498,6 +2516,36 @@ class CloneBufferObject : public NativeObject {
     getCloneBuffer(JSContext* cx, unsigned int argc, JS::Value* vp) {
         CallArgs args = CallArgsFromVp(argc, vp);
         return CallNonGenericMethod<is, getCloneBuffer_impl>(cx, args);
+    }
+
+    static bool
+    getCloneBufferAsArrayBuffer_impl(JSContext* cx, const CallArgs& args) {
+        Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
+        MOZ_ASSERT(args.length() == 0);
+
+        JSStructuredCloneData* data;
+        if (!getData(cx, obj, &data))
+            return false;
+
+        size_t size = data->Size();
+        UniqueChars buffer(static_cast<char*>(js_malloc(size)));
+        if (!buffer) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        auto iter = data->Iter();
+        data->ReadBytes(iter, buffer.get(), size);
+        JSObject* arrayBuffer = JS_NewArrayBufferWithContents(cx, size, buffer.release());
+        if (!arrayBuffer)
+            return false;
+        args.rval().setObject(*arrayBuffer);
+        return true;
+    }
+
+    static bool
+    getCloneBufferAsArrayBuffer(JSContext* cx, unsigned int argc, JS::Value* vp) {
+        CallArgs args = CallArgsFromVp(argc, vp);
+        return CallNonGenericMethod<is, getCloneBufferAsArrayBuffer_impl>(cx, args);
     }
 
     static void Finalize(FreeOp* fop, JSObject* obj) {
@@ -2524,6 +2572,7 @@ const Class CloneBufferObject::class_ = {
 
 const JSPropertySpec CloneBufferObject::props_[] = {
     JS_PSGS("clonebuffer", getCloneBuffer, setCloneBuffer, 0),
+    JS_PSG("arraybuffer", getCloneBufferAsArrayBuffer, 0),
     JS_PS_END
 };
 
@@ -4545,7 +4594,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,
 "oomThreadTypes()",
 "  Get the number of thread types that can be used as an argument for\n"
-"oomAfterAllocations() and oomAtAllocation()."),
+"  oomAfterAllocations() and oomAtAllocation()."),
 
     JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 2, 0,
 "oomAfterAllocations(count [,threadType])",
@@ -4699,8 +4748,8 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("enableOsiPointRegisterChecks", EnableOsiPointRegisterChecks, 0, 0,
 "enableOsiPointRegisterChecks()",
-"Emit extra code to verify live regs at the start of a VM call are not\n"
-"modified before its OsiPoint."),
+"  Emit extra code to verify live regs at the start of a VM call are not\n"
+"  modified before its OsiPoint."),
 
     JS_FN_HELP("displayName", DisplayName, 1, 0,
 "displayName(fn)",
@@ -4719,7 +4768,7 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("getJitCompilerOptions", GetJitCompilerOptions, 0, 0,
 "getCompilerOptions()",
-"Return an object describing some of the JIT compiler options.\n"),
+"  Return an object describing some of the JIT compiler options.\n"),
 
     JS_FN_HELP("isAsmJSModule", IsAsmJSModule, 1, 0,
 "isAsmJSModule(fn)",
@@ -4772,7 +4821,7 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("isRelazifiableFunction", IsRelazifiableFunction, 1, 0,
 "isRelazifiableFunction(fun)",
-"  Ture if fun is a JSFunction with a relazifiable JSScript."),
+"  True if fun is a JSFunction with a relazifiable JSScript."),
 
     JS_FN_HELP("enableShellAllocationMetadataBuilder", EnableShellAllocationMetadataBuilder, 0, 0,
 "enableShellAllocationMetadataBuilder()",
@@ -4825,11 +4874,10 @@ gc::ZealModeHelpText),
 "  Serialize 'data' using JS_WriteStructuredClone. Returns a structured\n"
 "  clone buffer object. 'policy' may be an options hash. Valid keys:\n"
 "    'SharedArrayBuffer' - either 'allow' (the default) or 'deny'\n"
-"    to specify whether SharedArrayBuffers may be serialized.\n"
-"\n"
+"      to specify whether SharedArrayBuffers may be serialized.\n"
 "    'scope' - SameProcessSameThread, SameProcessDifferentThread, or\n"
-"    DifferentProcess. Determines how some values will be serialized.\n"
-"    Clone buffers may only be deserialized with a compatible scope."),
+"      DifferentProcess. Determines how some values will be serialized.\n"
+"      Clone buffers may only be deserialized with a compatible scope."),
 
     JS_FN_HELP("deserialize", Deserialize, 1, 0,
 "deserialize(clonebuffer[, opts])",

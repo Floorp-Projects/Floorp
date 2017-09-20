@@ -63,6 +63,7 @@
 #include "shellmoduleloader.out.h"
 
 #include "builtin/ModuleObject.h"
+#include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
 #include "frontend/Parser.h"
 #include "gc/GCInternals.h"
@@ -6284,7 +6285,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Return the current time with sub-ms precision."),
 
     JS_FN_HELP("help", Help, 0, 0,
-"help([name ...])",
+"help([function or interface object or /pattern/])",
 "  Display usage and help messages."),
 
     JS_FN_HELP("quit", Quit, 0, 0,
@@ -6862,22 +6863,56 @@ PrintHelp(JSContext* cx, HandleObject obj)
 }
 
 static bool
-PrintEnumeratedHelp(JSContext* cx, HandleObject obj, bool brief)
+PrintEnumeratedHelp(JSContext* cx, HandleObject obj, HandleObject pattern, bool brief)
 {
     AutoIdVector idv(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &idv))
         return false;
+
+    Rooted<RegExpObject*> regex(cx);
+    if (pattern)
+        regex = &UncheckedUnwrap(pattern)->as<RegExpObject>();
 
     for (size_t i = 0; i < idv.length(); i++) {
         RootedValue v(cx);
         RootedId id(cx, idv[i]);
         if (!JS_GetPropertyById(cx, obj, id, &v))
             return false;
-        if (v.isObject()) {
-            RootedObject funcObj(cx, &v.toObject());
-            if (!PrintHelp(cx, funcObj))
+        if (!v.isObject())
+            continue;
+
+        RootedObject funcObj(cx, &v.toObject());
+        if (regex) {
+            // Only pay attention to objects with a 'help' property, which will
+            // either be documented functions or interface objects.
+            if (!JS_GetProperty(cx, funcObj, "help", &v))
                 return false;
+            if (!v.isString())
+                continue;
+
+            // For functions, match against the name. For interface objects,
+            // match against the usage string.
+            if (!JS_GetProperty(cx, funcObj, "name", &v))
+                return false;
+            if (!v.isString()) {
+                if (!JS_GetProperty(cx, funcObj, "usage", &v))
+                    return false;
+                if (!v.isString())
+                    continue;
+            }
+
+            size_t ignored = 0;
+            if (!JSString::ensureLinear(cx, v.toString()))
+                return false;
+            RootedLinearString input(cx, &v.toString()->asLinear());
+            if (!ExecuteRegExpLegacy(cx, nullptr, regex, input, &ignored, true, &v))
+                return false;
+            if (v.isNull())
+                continue;
         }
+
+        if (!PrintHelp(cx, funcObj))
+            return false;
     }
 
     return true;
@@ -6892,28 +6927,42 @@ Help(JSContext* cx, unsigned argc, Value* vp)
     }
 
     CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setUndefined();
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
-    RootedObject obj(cx);
+    // help() - display the version and dump out help for all functions on the
+    // global.
     if (args.length() == 0) {
         fprintf(gOutFile->fp, "%s\n", JS_GetImplementationVersion());
 
-        RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-        if (!PrintEnumeratedHelp(cx, global, false))
+        if (!PrintEnumeratedHelp(cx, global, nullptr, false))
             return false;
-    } else {
-        for (unsigned i = 0; i < args.length(); i++) {
-            if (args[i].isPrimitive()) {
-                JS_ReportErrorASCII(cx, "primitive arg");
-                return false;
-            }
-            obj = args[i].toObjectOrNull();
-            if (!PrintHelp(cx, obj))
-                return false;
-        }
+        return true;
     }
 
-    args.rval().setUndefined();
-    return true;
+    RootedValue v(cx);
+
+    if (args[0].isPrimitive()) {
+        // help("foo")
+        JS_ReportErrorASCII(cx, "primitive arg");
+        return false;
+    }
+
+    RootedObject obj(cx, &args[0].toObject());
+    if (!obj)
+        return true;
+    bool isRegexp;
+    if (!JS_ObjectIsRegExp(cx, obj, &isRegexp))
+        return false;
+
+    if (isRegexp) {
+        // help(/pattern/)
+        return PrintEnumeratedHelp(cx, global, obj, false);
+    }
+
+    // help(function)
+    // help(namespace_obj)
+    return PrintHelp(cx, obj);
 }
 
 static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
