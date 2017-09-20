@@ -4426,6 +4426,7 @@ public:
     , mScrollTarget(aOther.mFlags)
     , mThumbData(aOther.mThumbData)
     , mForceActive(aOther.mForceActive)
+    , mWrAnimationId(aOther.mWrAnimationId)
   {
     MOZ_COUNT_CTOR(nsDisplayOwnLayer);
   }
