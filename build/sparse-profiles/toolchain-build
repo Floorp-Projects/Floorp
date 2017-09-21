@@ -1,9 +1,0 @@
-# Profile needed to build toolchain tasks.
-
-# This is probably a little wider than we need it to be. But it is
-# still relatively small and it keeps this profile simple.
-%include build/sparse-profiles/taskgraph
-
-[include]
-# Needed by build-clang.py.
-path:tools/rewriting/
