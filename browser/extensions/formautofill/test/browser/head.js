@@ -9,6 +9,8 @@
 
 "use strict";
 
+Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
+
 const MANAGE_ADDRESSES_DIALOG_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const MANAGE_CREDIT_CARDS_DIALOG_URL = "chrome://formautofill/content/manageCreditCards.xhtml";
 const EDIT_ADDRESS_DIALOG_URL = "chrome://formautofill/content/editAddress.xhtml";
@@ -227,13 +229,20 @@ function getDoorhangerCheckbox() {
   return getNotification().checkbox;
 }
 
-// Wait for master password dialog and cancel to close it.
-function waitForMasterPasswordDialog() {
+
+// Wait for the master password dialog to popup and enter the password to log in
+// if "login" is "true" or dismiss it directly if otherwise.
+function waitForMasterPasswordDialog(login = false) {
   let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
-  return dialogShown.then(function([subject]) {
+  return dialogShown.then(([subject]) => {
     let dialog = subject.Dialog;
     is(dialog.args.title, "Password Required", "Master password dialog shown");
-    dialog.ui.button1.click();
+    if (login) {
+      dialog.ui.password1Textbox.value = LoginTestUtils.masterPassword.masterPassword;
+      dialog.ui.button0.click();
+    } else {
+      dialog.ui.button1.click();
+    }
   });
 }
 
