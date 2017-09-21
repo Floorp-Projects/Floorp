@@ -624,7 +624,8 @@ def handle_keyed_by(config, tests):
 def enable_code_coverage(config, tests):
     """Enable code coverage for the linux64-ccov/opt & linux64-jsdcov/opt build-platforms"""
     for test in tests:
-        if test['build-platform'] == 'linux64-ccov/opt':
+        if test['build-platform'] == 'linux64-ccov/opt' and \
+                not test['test-name'].startswith('test-verify'):
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
             test['when'] = {}
             test['instance-size'] = 'xlarge'
