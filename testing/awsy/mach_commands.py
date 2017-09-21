@@ -84,7 +84,7 @@ class MachCommands(MachCommandBase):
 
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
-                    'perTabPause', 'settleWaitTime', 'maxTabs'):
+                    'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd'):
             if kwargs[arg]:
                 runtime_testvars[arg] = kwargs[arg]
 
