@@ -1982,6 +1982,8 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
         AutoCompartment ac(cx, task->parseGlobal);
 
         task->parse(cx);
+
+        cx->frontendCollectionPool().purge();
     }
 
     // The callback is invoked while we are still off thread.
