@@ -19,6 +19,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
+
+XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
+                                   "@mozilla.org/dom/quota-manager-service;1",
+                                   "nsIQuotaManagerService");
+
 var {classes: Cc, interfaces: Ci} = Components;
 
 /**
@@ -280,9 +285,33 @@ Sanitizer.prototype = {
 
     offlineApps: {
       async clear(range) {
+        // AppCache
         Components.utils.import("resource:///modules/offlineAppCache.jsm");
         // This doesn't wait for the cleanup to be complete.
         OfflineAppCacheHelper.clear();
+
+        // LocalStorage
+        Services.obs.notifyObservers(null, "extension:purge-localStorage");
+
+        // QuotaManager
+        let promises = [];
+        await new Promise(resolve => {
+          quotaManagerService.getUsage(request => {
+            for (let item of request.result) {
+              let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+              let uri = principal.URI;
+              if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
+                promises.push(new Promise(r => {
+                  let req = quotaManagerService.clearStoragesForPrincipal(principal, null, true);
+                  req.callback = () => { r(); };
+                }));
+              }
+            }
+            resolve();
+          });
+        });
+
+        return Promise.all(promises);
       }
     },
 
