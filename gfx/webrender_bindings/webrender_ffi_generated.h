@@ -439,16 +439,6 @@ struct WrImageMask {
   }
 };
 
-struct StickySideConstraint {
-  float margin;
-  float max_offset;
-
-  bool operator==(const StickySideConstraint& aOther) const {
-    return margin == aOther.margin &&
-           max_offset == aOther.max_offset;
-  }
-};
-
 struct BorderWidths {
   float left;
   float top;
@@ -866,15 +856,6 @@ void wr_dp_define_scroll_layer(WrState *aState,
                                uint64_t aScrollId,
                                LayoutRect aContentRect,
                                LayoutRect aClipRect)
-WR_FUNC;
-
-WR_INLINE
-uint64_t wr_dp_define_sticky_frame(WrState *aState,
-                                   LayoutRect aContentRect,
-                                   const StickySideConstraint *aTopRange,
-                                   const StickySideConstraint *aRightRange,
-                                   const StickySideConstraint *aBottomRange,
-                                   const StickySideConstraint *aLeftRange)
 WR_FUNC;
 
 WR_INLINE
