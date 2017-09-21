@@ -1213,12 +1213,6 @@ var BrowserApp = {
     if (selected)
       this.selectedTab = newTab;
 
-    let pinned = "pinned" in aParams ? aParams.pinned : false;
-    if (pinned) {
-      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-      ss.setTabValue(newTab, "appOrigin", aURI);
-    }
-
     let evt = document.createEvent("UIEvents");
     evt.initUIEvent("TabOpen", true, false, window, null);
     newTab.browser.dispatchEvent(evt);
@@ -1352,7 +1346,7 @@ var BrowserApp = {
     for (let i = 0; i < this._tabs.length; ++i) {
       let tab = this._tabs[i];
       if (aOptions.startsWith) {
-        if (tab.currentURI.spec.startsWith(aURL)) {
+        if (tab.currentURI.spec.startsWith(uri.spec)) {
           return tab;
         }
       } else {
@@ -2209,8 +2203,8 @@ var BrowserApp = {
     for (let i = toIndex; i >= fromIndex; i--) {
       let entry = hist.getEntryAtIndex(i, false);
       let item = {
-        title: entry.title || entry.URI.spec,
-        url: entry.URI.spec,
+        title: entry.title || entry.URI.displaySpec,
+        url: entry.URI.displaySpec,
         selected: (i == selIndex)
       };
       listitems.push(item);
@@ -2835,7 +2829,7 @@ var NativeWindow = {
         if (originalURL) {
           return originalURL;
         }
-        return node.currentURI.spec;
+        return node.currentURI.displaySpec;
       } else if (node instanceof Ci.nsIDOMHTMLMediaElement) {
         let srcUrl = node.currentSrc || node.src;
         // If URL prepended with blob or mediasource, we'll remove it.
@@ -3048,7 +3042,7 @@ var NativeWindow = {
     // XXX - These are stolen from Util.js, we should remove them if we bring it back
     makeURLAbsolute: function makeURLAbsolute(base, url) {
       // Note:  makeURI() will throw if url is not a valid URI
-      return this.makeURI(url, null, this.makeURI(base)).spec;
+      return this.makeURI(url, null, this.makeURI(base)).displaySpec;
     },
 
     makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
@@ -3083,8 +3077,9 @@ var NativeWindow = {
 
     _getLinkURL: function ch_getLinkURL(aLink) {
       let href = aLink.href;
-      if (href)
-        return href;
+      if (href) {
+        return this.makeURI(href).displaySpec;
+      }
 
       href = aLink.getAttribute("href") ||
              aLink.getAttributeNS(kXLinkNamespace, "href");
@@ -3205,7 +3200,9 @@ var LightWeightThemeWebInstaller = {
     }
 
     let allowButtonText = Strings.browser.GetStringFromName("lwthemeInstallRequest.allowButton");
-    let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [node.ownerDocument.location.hostname], 1);
+    let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+    let hostname = IDNService.convertToDisplayIDN(node.ownerDocument.location.hostname);
+    let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [hostname], 1);
     let buttons = [{
       label: allowButtonText,
       callback: function () {
@@ -3387,7 +3384,7 @@ nsBrowserAccess.prototype = {
 
     if (aURI && aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB) {
       pinned = true;
-      let spec = aURI.spec;
+      let spec = aURI.displaySpec;
       let tabs = BrowserApp.tabs;
       for (let i = 0; i < tabs.length; i++) {
         let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
@@ -3582,7 +3579,7 @@ Tab.prototype = {
     let uri = null;
     let title = aParams.title || aURL;
     try {
-      uri = Services.io.newURI(aURL).spec;
+      uri = Services.io.newURI(aURL).displaySpec;
     } catch (e) {}
 
     // When the tab is stubbed from Java, there's a window between the stub
@@ -3665,7 +3662,7 @@ Tab.prototype = {
     // problems with functions that always expect it to be present
     this.browser.__SS_data = {
       entries: [{
-        url: aURL,
+        url: uri,
         title: truncate(title, MAX_TITLE_LENGTH)
       }],
       index: 1,
@@ -3674,6 +3671,12 @@ Tab.prototype = {
       tabId: this.id,
       parentId: this.parentId
     };
+
+    let pinned = "pinned" in aParams ? aParams.pinned : false;
+    if (pinned && uri) {
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      ss.setTabValue(this, "appOrigin", uri);
+    }
 
     if (aParams.delayLoad) {
       // If this is a zombie tab, mark the browser for delay loading, which will
@@ -4362,7 +4365,7 @@ Tab.prototype = {
         this.originalURI = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI;
 
         if (this.originalURI != null)
-          uri = this.originalURI.spec;
+          uri = this.originalURI.displaySpec;
       } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
@@ -4442,10 +4445,10 @@ Tab.prototype = {
     let baseDomain = "";
     // For recognized scheme, get base domain from host.
     let principalURI = contentWin.document.nodePrincipal.URI;
-    if (principalURI && ["http", "https", "ftp"].includes(principalURI.scheme) && principalURI.host) {
+    if (principalURI && ["http", "https", "ftp"].includes(principalURI.scheme) && principalURI.displayHost) {
       try {
-        baseDomain = Services.eTLD.getBaseDomainFromHost(principalURI.host);
-        if (!principalURI.host.endsWith(baseDomain)) {
+        baseDomain = Services.eTLD.getBaseDomainFromHost(principalURI.displayHost);
+        if (!principalURI.displayHost.endsWith(baseDomain)) {
           // getBaseDomainFromHost converts its resultant to ACE.
           let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
           baseDomain = IDNService.convertACEtoUTF8(baseDomain);
@@ -4479,7 +4482,7 @@ Tab.prototype = {
     let message = {
       type: "Content:LocationChange",
       tabID: this.id,
-      uri: truncate(fixedURI.spec, MAX_URI_LENGTH),
+      uri: truncate(fixedURI.displaySpec, MAX_URI_LENGTH),
       userRequested: this.userRequested || "",
       baseDomain: baseDomain,
       contentType: (contentType ? contentType : ""),
@@ -4911,7 +4914,7 @@ var XPInstallObserver = {
       installInfo = aSubject.wrappedJSObject;
       tab = BrowserApp.getTabForBrowser(installInfo.browser);
       if (installInfo.originatingURI) {
-        host = installInfo.originatingURI.host;
+        host = installInfo.originatingURI.displayHost;
       }
     }
 
@@ -5094,9 +5097,9 @@ var XPInstallObserver = {
       return;
     }
 
-    let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.host;
+    let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.displayHost;
     if (!host) {
-      host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.host;
+      host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.displayHost;
     }
 
     let error = (host || aInstall.error == 0) ? "addonError" : "addonLocalError";
@@ -5589,12 +5592,12 @@ var IdentityHandler = {
     }
     this._lastLocation = locationObj;
 
-    let uri = aBrowser.currentURI;
+    this._uri = aBrowser.currentURI;
     try {
-      uri = Services.uriFixup.createExposableURI(uri);
+      this._uri = Services.uriFixup.createExposableURI(this._uri);
     } catch (e) {}
 
-    let identityMode = this.getIdentityMode(aState, uri);
+    let identityMode = this.getIdentityMode(aState, this._uri);
     let mixedDisplay = this.getMixedDisplayMode(aState);
     let mixedActive = this.getMixedActiveMode(aState);
     let trackingMode = this.getTrackingMode(aState, aBrowser);
@@ -5607,6 +5610,8 @@ var IdentityHandler = {
         tracking: trackingMode
       }
     };
+
+    result.host = this.getEffectiveHost();
 
     // Don't show identity data for pages with an unknown identity or if any
     // mixed content is loaded (mixed display content is loaded by default).
@@ -5621,8 +5626,6 @@ var IdentityHandler = {
     }
 
     result.secure = true;
-
-    result.host = this.getEffectiveHost();
 
     let iData = this.getIdentityData();
     result.verifier = Strings.browser.formatStringFromName("identity.identified.verifier", [iData.caOrg], 1);
@@ -5976,7 +5979,7 @@ var SearchEngines = {
 
     // prompt user for name of search engine
     let promptTitle = Strings.browser.GetStringFromName("contextmenu.addSearchEngine3");
-    let title = { value: (aElement.ownerDocument.title || docURI.host) };
+    let title = { value: (aElement.ownerDocument.title || docURI.displayHost) };
     if (!Services.prompt.prompt(null, promptTitle, null, title, null, {})) {
       if (resultCallback) {
         resultCallback(false);

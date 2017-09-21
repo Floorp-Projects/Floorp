@@ -1459,7 +1459,7 @@ exports.unreachable = unreachable;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.isValidUrl = exports.isExternalLinkTargetSet = exports.addLinkAttributes = exports.RenderingCancelledException = exports.CustomStyle = undefined;
+exports.SimpleXMLParser = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.isValidUrl = exports.isExternalLinkTargetSet = exports.addLinkAttributes = exports.RenderingCancelledException = exports.CustomStyle = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
@@ -1560,6 +1560,107 @@ class DOMSVGFactory {
   createElement(type) {
     (0, _util.assert)(typeof type === 'string', 'Invalid SVG element type');
     return document.createElementNS(SVG_NS, type);
+  }
+}
+class SimpleDOMNode {
+  constructor(nodeName, nodeValue) {
+    this.nodeName = nodeName;
+    this.nodeValue = nodeValue;
+    Object.defineProperty(this, 'parentNode', {
+      value: null,
+      writable: true
+    });
+  }
+  get firstChild() {
+    return this.childNodes[0];
+  }
+  get nextSibling() {
+    let index = this.parentNode.childNodes.indexOf(this);
+    return this.parentNode.childNodes[index + 1];
+  }
+  get textContent() {
+    if (!this.childNodes) {
+      return this.nodeValue || '';
+    }
+    return this.childNodes.map(function (child) {
+      return child.textContent;
+    }).join('');
+  }
+  hasChildNodes() {
+    return this.childNodes && this.childNodes.length > 0;
+  }
+}
+class SimpleXMLParser {
+  parseFromString(data) {
+    let nodes = [];
+    data = data.replace(/<\?[\s\S]*?\?>|<!--[\s\S]*?-->/g, '').trim();
+    data = data.replace(/<!DOCTYPE[^>\[]+(\[[^\]]+)?[^>]+>/g, '').trim();
+    data = data.replace(/>([^<][\s\S]*?)</g, (all, text) => {
+      let length = nodes.length;
+      let node = new SimpleDOMNode('#text', this._decodeXML(text));
+      nodes.push(node);
+      if (node.textContent.trim().length === 0) {
+        return '><';
+      }
+      return '>' + length + ',<';
+    });
+    data = data.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, function (all, text) {
+      let length = nodes.length;
+      let node = new SimpleDOMNode('#text', text);
+      nodes.push(node);
+      return length + ',';
+    });
+    let regex = /<([\w\:]+)((?:[\s\w:=]|'[^']*'|"[^"]*")*)(?:\/>|>([\d,]*)<\/[^>]+>)/g;
+    let lastLength;
+    do {
+      lastLength = nodes.length;
+      data = data.replace(regex, function (all, name, attrs, data) {
+        let length = nodes.length;
+        let node = new SimpleDOMNode(name);
+        let children = [];
+        if (data) {
+          data = data.split(',');
+          data.pop();
+          data.forEach(function (child) {
+            let childNode = nodes[+child];
+            childNode.parentNode = node;
+            children.push(childNode);
+          });
+        }
+        node.childNodes = children;
+        nodes.push(node);
+        return length + ',';
+      });
+    } while (lastLength < nodes.length);
+    return { documentElement: nodes.pop() };
+  }
+  _decodeXML(text) {
+    if (text.indexOf('&') < 0) {
+      return text;
+    }
+    return text.replace(/&(#(x[0-9a-f]+|\d+)|\w+);/gi, function (all, entityName, number) {
+      if (number) {
+        if (number[0] === 'x') {
+          number = parseInt(number.substring(1), 16);
+        } else {
+          number = +number;
+        }
+        return String.fromCharCode(number);
+      }
+      switch (entityName) {
+        case 'amp':
+          return '&';
+        case 'lt':
+          return '<';
+        case 'gt':
+          return '>';
+        case 'quot':
+          return '\"';
+        case 'apos':
+          return '\'';
+      }
+      return '&' + entityName + ';';
+    });
   }
 }
 var CustomStyle = function CustomStyleClosure() {
@@ -1723,6 +1824,7 @@ exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
 exports.DOMCanvasFactory = DOMCanvasFactory;
 exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
 exports.DOMSVGFactory = DOMSVGFactory;
+exports.SimpleXMLParser = SimpleXMLParser;
 
 /***/ }),
 /* 2 */
@@ -1911,7 +2013,8 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     postMessageTransfers: (0, _dom_utils.getDefaultSetting)('postMessageTransfers') && !isPostMessageTransfersDisabled,
     docBaseUrl: source.docBaseUrl,
     nativeImageDecoderSupport: source.nativeImageDecoderSupport,
-    ignoreErrors: source.ignoreErrors
+    ignoreErrors: source.ignoreErrors,
+    isEvalSupported: (0, _dom_utils.getDefaultSetting)('isEvalSupported')
   }).then(function (workerId) {
     if (worker.destroyed) {
       throw new Error('Worker was destroyed');
@@ -3206,8 +3309,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.9.562';
-  exports.build = build = '31a34335';
+  exports.version = version = '1.9.583';
+  exports.build = build = 'd7b37ae7';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3597,74 +3700,79 @@ exports.WebGLUtils = WebGLUtils;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-function fixMetadata(meta) {
-  return meta.replace(/>\\376\\377([^<]+)/g, function (all, codes) {
-    var bytes = codes.replace(/\\([0-3])([0-7])([0-7])/g, function (code, d1, d2, d3) {
-      return String.fromCharCode(d1 * 64 + d2 * 8 + d3 * 1);
-    });
-    var chars = '';
-    for (var i = 0; i < bytes.length; i += 2) {
-      var code = bytes.charCodeAt(i) * 256 + bytes.charCodeAt(i + 1);
-      chars += code >= 32 && code < 127 && code !== 60 && code !== 62 && code !== 38 ? String.fromCharCode(code) : '&#x' + (0x10000 + code).toString(16).substring(1) + ';';
-    }
-    return '>' + chars;
-  });
-}
-function Metadata(meta) {
-  if (typeof meta === 'string') {
-    meta = fixMetadata(meta);
-    var parser = new DOMParser();
-    meta = parser.parseFromString(meta, 'application/xml');
-  } else if (!(meta instanceof Document)) {
-    throw new Error('Metadata: Invalid metadata object');
+exports.Metadata = undefined;
+
+var _util = __w_pdfjs_require__(0);
+
+var _dom_utils = __w_pdfjs_require__(1);
+
+class Metadata {
+  constructor(data) {
+    (0, _util.assert)(typeof data === 'string', 'Metadata: input is not a string');
+    data = this._repair(data);
+    let parser = new _dom_utils.SimpleXMLParser();
+    data = parser.parseFromString(data);
+    this._metadata = Object.create(null);
+    this._parse(data);
   }
-  this.metaDocument = meta;
-  this.metadata = Object.create(null);
-  this.parse();
-}
-Metadata.prototype = {
-  parse: function Metadata_parse() {
-    var doc = this.metaDocument;
-    var rdf = doc.documentElement;
+  _repair(data) {
+    return data.replace(/>\\376\\377([^<]+)/g, function (all, codes) {
+      let bytes = codes.replace(/\\([0-3])([0-7])([0-7])/g, function (code, d1, d2, d3) {
+        return String.fromCharCode(d1 * 64 + d2 * 8 + d3 * 1);
+      });
+      let chars = '';
+      for (let i = 0, ii = bytes.length; i < ii; i += 2) {
+        let code = bytes.charCodeAt(i) * 256 + bytes.charCodeAt(i + 1);
+        if (code >= 32 && code < 127 && code !== 60 && code !== 62 && code !== 38) {
+          chars += String.fromCharCode(code);
+        } else {
+          chars += '&#x' + (0x10000 + code).toString(16).substring(1) + ';';
+        }
+      }
+      return '>' + chars;
+    });
+  }
+  _parse(domDocument) {
+    let rdf = domDocument.documentElement;
     if (rdf.nodeName.toLowerCase() !== 'rdf:rdf') {
       rdf = rdf.firstChild;
       while (rdf && rdf.nodeName.toLowerCase() !== 'rdf:rdf') {
         rdf = rdf.nextSibling;
       }
     }
-    var nodeName = rdf ? rdf.nodeName.toLowerCase() : null;
+    let nodeName = rdf ? rdf.nodeName.toLowerCase() : null;
     if (!rdf || nodeName !== 'rdf:rdf' || !rdf.hasChildNodes()) {
       return;
     }
-    var children = rdf.childNodes,
-        desc,
-        entry,
-        name,
-        i,
-        ii,
-        length,
-        iLength;
-    for (i = 0, length = children.length; i < length; i++) {
-      desc = children[i];
+    let children = rdf.childNodes;
+    for (let i = 0, ii = children.length; i < ii; i++) {
+      let desc = children[i];
       if (desc.nodeName.toLowerCase() !== 'rdf:description') {
         continue;
       }
-      for (ii = 0, iLength = desc.childNodes.length; ii < iLength; ii++) {
-        if (desc.childNodes[ii].nodeName.toLowerCase() !== '#text') {
-          entry = desc.childNodes[ii];
-          name = entry.nodeName.toLowerCase();
-          this.metadata[name] = entry.textContent.trim();
+      for (let j = 0, jj = desc.childNodes.length; j < jj; j++) {
+        if (desc.childNodes[j].nodeName.toLowerCase() !== '#text') {
+          let entry = desc.childNodes[j];
+          let name = entry.nodeName.toLowerCase();
+          this._metadata[name] = entry.textContent.trim();
         }
       }
     }
-  },
-  get: function Metadata_get(name) {
-    return this.metadata[name] || null;
-  },
-  has: function Metadata_has(name) {
-    return typeof this.metadata[name] !== 'undefined';
   }
-};
+  get(name) {
+    return this._metadata[name] || null;
+  }
+  getAll() {
+    return this._metadata;
+  }
+  has(name) {
+    return typeof this._metadata[name] !== 'undefined';
+  }
+  get metadata() {
+    (0, _util.deprecated)('`metadata` getter; use `getAll()` instead.');
+    return this.getAll();
+  }
+}
 exports.Metadata = Metadata;
 
 /***/ }),
@@ -3724,6 +3832,8 @@ class AnnotationElementFactory {
         return new SquigglyAnnotationElement(parameters);
       case _util.AnnotationType.STRIKEOUT:
         return new StrikeOutAnnotationElement(parameters);
+      case _util.AnnotationType.STAMP:
+        return new StampAnnotationElement(parameters);
       case _util.AnnotationType.FILEATTACHMENT:
         return new FileAttachmentAnnotationElement(parameters);
       default:
@@ -4241,6 +4351,19 @@ class StrikeOutAnnotationElement extends AnnotationElement {
   }
   render() {
     this.container.className = 'strikeoutAnnotation';
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+    return this.container;
+  }
+}
+class StampAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+  render() {
+    this.container.className = 'stampAnnotation';
     if (!this.data.hasPopup) {
       this._createPopup(this.container, null, this.data);
     }
@@ -4882,8 +5005,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '1.9.562';
-var pdfjsBuild = '31a34335';
+var pdfjsVersion = '1.9.583';
+var pdfjsBuild = 'd7b37ae7';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(13);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -8009,8 +8132,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '1.9.562';
-  PDFJS.build = '31a34335';
+  PDFJS.version = '1.9.583';
+  PDFJS.build = 'd7b37ae7';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {

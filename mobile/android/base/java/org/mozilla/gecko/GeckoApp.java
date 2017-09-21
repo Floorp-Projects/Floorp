@@ -445,7 +445,7 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     public MenuPanel getMenuPanel() {
-        if (mMenuPanel == null) {
+        if (mMenuPanel == null || mMenu == null) {
             onCreatePanelMenu(Window.FEATURE_OPTIONS_PANEL, null);
             invalidateOptionsMenu();
         }

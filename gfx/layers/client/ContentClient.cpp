@@ -23,7 +23,6 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessages.h"  // for ThebesBufferData
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/PaintThread.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsIWidget.h"                  // for nsIWidget
@@ -613,11 +612,6 @@ ContentClientDoubleBuffered::BeginAsyncPaint()
 void
 ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
-  MOZ_ASSERT(NS_IsMainThread() || PaintThread::IsOnPaintThread());
-  if (!HaveBuffer()) {
-    return;
-  }
-
   if (!mFrontAndBackBufferDiffer) {
     MOZ_ASSERT(!mDidSelfCopy, "If we have to copy the world, then our buffers are different, right?");
     return;
@@ -649,14 +643,6 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     return;
   }
 
-  CopyFrontBufferToBackBuffer(updateRegion);
-}
-
-void
-ContentClientDoubleBuffered::CopyFrontBufferToBackBuffer(nsIntRegion& aUpdateRegion)
-{
-  MOZ_ASSERT(NS_IsMainThread() || PaintThread::IsOnPaintThread());
-
   // We need to ensure that we lock these two buffers in the same
   // order as the compositor to prevent deadlocks.
   TextureClientAutoLock frontLock(mFrontClient, OpenMode::OPEN_READ_ONLY);
@@ -683,7 +669,7 @@ ContentClientDoubleBuffered::CopyFrontBufferToBackBuffer(nsIntRegion& aUpdateReg
                                     surfOnWhite,
                                     mFrontBufferRect,
                                     mFrontBufferRotation);
-    UpdateDestinationFrom(frontBuffer, aUpdateRegion);
+    UpdateDestinationFrom(frontBuffer, updateRegion);
   } else {
     // We know this can happen, but we want to track it somewhat, in case it leads
     // to other problems.

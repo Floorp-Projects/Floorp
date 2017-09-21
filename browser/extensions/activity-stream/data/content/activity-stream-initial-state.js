@@ -2,7 +2,11 @@
   window.gActivityStreamPrerenderedState = {
   "TopSites": {
     "initialized": false,
-    "rows": []
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
   },
   "App": {
     "initialized": false,

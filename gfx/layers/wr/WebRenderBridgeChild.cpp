@@ -163,6 +163,8 @@ WebRenderBridgeChild::EndTransaction(wr::DisplayListBuilder &aBuilder,
 void
 WebRenderBridgeChild::ProcessWebRenderParentCommands()
 {
+  MOZ_ASSERT(!mDestroyed);
+
   if (mParentCommands.IsEmpty()) {
     return;
   }
@@ -174,6 +176,7 @@ void
 WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
                                                         const CompositableHandle& aHandle)
 {
+  MOZ_ASSERT(!mDestroyed);
   SendAddPipelineIdForCompositable(aPipelineId, aHandle, true);
 }
 
@@ -181,12 +184,16 @@ void
 WebRenderBridgeChild::AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                                    const CompositableHandle& aHandle)
 {
+  MOZ_ASSERT(!mDestroyed);
   SendAddPipelineIdForCompositable(aPipelineId, aHandle, false);
 }
 
 void
 WebRenderBridgeChild::RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId)
 {
+  if (!IPCOpen()) {
+    return;
+  }
   SendRemovePipelineIdForCompositable(aPipelineId);
 }
 
@@ -243,7 +250,7 @@ WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
 void
 WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<gfx::Glyph>& aGlyphs,
                                  gfx::ScaledFont* aFont, const gfx::Color& aColor, const StackingContextHelper& aSc,
-                                 const LayerRect& aBounds, const LayerRect& aClip)
+                                 const LayerRect& aBounds, const LayerRect& aClip, bool aBackfaceVisible)
 {
   MOZ_ASSERT(aFont);
   MOZ_ASSERT(!aGlyphs.IsEmpty());
@@ -262,6 +269,7 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
 
   aBuilder.PushText(aSc.ToRelativeLayoutRect(aBounds),
                     aSc.ToRelativeLayoutRect(aClip),
+                    aBackfaceVisible,
                     aColor,
                     key,
                     Range<const wr::GlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()));
@@ -362,6 +370,7 @@ void
 WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
                               ImageContainer* aImageContainer)
 {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aCompositable);
 
   static uint64_t sNextID = 1;
@@ -528,6 +537,10 @@ WebRenderBridgeChild::BeginClearCachedResources()
 void
 WebRenderBridgeChild::EndClearCachedResources()
 {
+  if (!IPCOpen()) {
+    mIsInClearCachedResources = false;
+    return;
+  }
   ProcessWebRenderParentCommands();
   SendClearCachedResources();
   mIsInClearCachedResources = false;

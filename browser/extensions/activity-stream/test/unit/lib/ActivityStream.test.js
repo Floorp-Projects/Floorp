@@ -232,4 +232,17 @@ describe("ActivityStream", () => {
       assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
   });
+  describe("telemetry reporting on init failure", () => {
+    it("should send a ping on init error", () => {
+      as = new ActivityStream();
+      const telemetry = {handleUndesiredEvent: sandbox.spy()};
+      sandbox.stub(as.store, "init").throws();
+      sandbox.stub(as.store.feeds, "get").returns(telemetry);
+      try {
+        as.init();
+      } catch (e) {
+      }
+      assert.calledOnce(telemetry.handleUndesiredEvent);
+    });
+  });
 });

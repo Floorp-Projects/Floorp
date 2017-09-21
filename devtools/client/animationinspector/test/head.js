@@ -440,8 +440,16 @@ function* clickOnAnimation(panel, index, shouldAlreadySelected) {
 
   info("Click on animation " + index + " in the timeline");
   let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
-  EventUtils.sendMouseEvent({type: "click"}, timeBlock,
-                            timeBlock.ownerDocument.defaultView);
+  // Scroll to show the timeBlock since the element may be out of displayed area.
+  timeBlock.scrollIntoView(false);
+  let timeBlockBounds = timeBlock.getBoundingClientRect();
+  let x = timeBlockBounds.width / 2;
+  let y = timeBlockBounds.height / 2;
+  if (timeBlock != timeBlock.ownerDocument.elementFromPoint(x, y)) {
+    // Move the mouse pointer a little since scrubber element may be at the point.
+    x += timeBlockBounds.width / 4;
+  }
+  EventUtils.synthesizeMouse(timeBlock, x, y, {}, timeBlock.ownerDocument.defaultView);
 
   return yield onSelectionChanged;
 }

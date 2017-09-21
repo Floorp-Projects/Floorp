@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.activitystream.homepanel;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
@@ -94,6 +95,12 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     public StreamRecyclerAdapter() {
         setHasStableIds(true);
         recyclerViewModel = new LinkedList<>();
+
+        clearAndInit();
+    }
+
+    public void clearAndInit() {
+        recyclerViewModel.clear();
         for (RowItemType type : ACTIVITY_STREAM_SECTIONS) {
             recyclerViewModel.add(makeRowModelFromType(type));
         }
@@ -125,17 +132,13 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         if (type == RowItemType.TOP_PANEL.getViewType()) {
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
-            final boolean pocketEnabled = GeckoSharedPrefs.forProfile(parent.getContext()).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED, true);
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, pocketEnabled, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
-            final SharedPreferences sharedPreferences = GeckoSharedPrefs.forProfile(parent.getContext());
-            final boolean bookmarksEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_BOOKMARKS_ENABLED, true);
-            final boolean visitedEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_VISITED_ENABLED, true);
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights, bookmarksEnabled || visitedEnabled);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights);
         } else if (type == RowItemType.HIGHLIGHTS_EMPTY_STATE.getViewType()) {
             return new HighlightsEmptyStateRow(inflater.inflate(HighlightsEmptyStateRow.LAYOUT_ID, parent, false));
         } else {
@@ -178,7 +181,50 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             final TopStory story = (TopStory) recyclerViewModel.get(position);
             ((WebpageItemRow) holder).bind(story, position, tilesSize);
+        } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()
+                || type == RowItemType.HIGHLIGHTS_EMPTY_STATE.getViewType()) {
+            final Context context = holder.itemView.getContext();
+            final SharedPreferences sharedPreferences = GeckoSharedPrefs.forProfile(context);
+            final boolean bookmarksEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_BOOKMARKS_ENABLED,
+                    context.getResources().getBoolean(R.bool.pref_activitystream_recentbookmarks_enabled_default));
+            final boolean visitedEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_VISITED_ENABLED,
+                    context.getResources().getBoolean(R.bool.pref_activitystream_visited_enabled_default));
+            setViewVisible(bookmarksEnabled || visitedEnabled, holder.itemView);
+        } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
+            final Context context = holder.itemView.getContext();
+            final boolean pocketEnabled = GeckoSharedPrefs.forProfile(context).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED,
+                    context.getResources().getBoolean(R.bool.pref_activitystream_pocket_enabled_default));
+            setViewVisible(pocketEnabled, holder.itemView);
         }
+    }
+
+    /**
+     * This sets a child view of the adapter visible or hidden.
+     *
+     * This only applies to children whose height and width are WRAP_CONTENT and MATCH_PARENT
+     * respectively.
+     *
+     * NB: This is a hack for the views that are included in the RecyclerView adapter even if
+     * they shouldn't be shown, such as the section title views or the empty view for highlights.
+     *
+     * A more correct implementation would dynamically add/remove these title views rather than
+     * showing and hiding them.
+     *
+     * @param toShow true if the view is to be shown, false to be hidden
+     * @param view child View whose visibility is to be changed
+     */
+    private static void setViewVisible(boolean toShow, final View view) {
+        view.setVisibility(toShow ? View.VISIBLE : View.GONE);
+        // We also need to set the layout height and width to 0 for the RecyclerView child.
+        final RecyclerView.LayoutParams layoutParams = (RecyclerView.LayoutParams) view.getLayoutParams();
+        if (toShow) {
+            layoutParams.height = RecyclerView.LayoutParams.WRAP_CONTENT;
+            layoutParams.width = RecyclerView.LayoutParams.MATCH_PARENT;
+        } else {
+            layoutParams.height = 0;
+            layoutParams.width = 0;
+        }
+        view.setLayoutParams(layoutParams);
     }
 
     @Override

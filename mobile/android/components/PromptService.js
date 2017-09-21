@@ -790,7 +790,7 @@ var PromptUtils = {
    * Strip out things like userPass and path for display.
    */
   getFormattedHostname: function pu_getFormattedHostname(uri) {
-    return uri.scheme + "://" + uri.hostPort;
+    return uri.scheme + "://" + uri.displayHostPort;
   },
 
   fireDialogEvent: function(aDomWin, aEventName) {

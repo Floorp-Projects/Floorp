@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Table border collapse</title>
+<style>
+  table {
+    border-collapse: collapse;
+  }
+  tr.odd {
+    background-color: LightCyan;
+  }
+  tr.even {
+    background-color: LightSkyBlue;
+  }
+  td {
+    border: 5px solid DarkBlue;
+  }
+  .inner td {
+    border: 5px solid red;
+  }
+  .inner tr:first-child td {
+    border-top: 5px solid DarkBlue;
+  }
+  .inner tr td:first-child {
+    border-left: 5px solid DarkBlue;
+  }
+  .inner tr:last-child td {
+    border-bottom: 5px solid DarkBlue;
+  }
+  .inner tr td:last-child {
+    border-right: 5px solid DarkBlue;
+  }
+  div {
+    height: 10px;
+  }
+</style>
+</head>
+<body>
+  <div></div>
+  <table>
+    <caption></caption>
+    <tr class="odd">
+      <td>Cell 1-1</td>
+      <td>Cell 1-2</td>
+    </tr>
+    <tr class="even">
+      <td>Cell 2-1</td>
+      <td>Cell 2-2
+        <table class="inner">
+          <tr class="odd">
+            <td>Cell 2-2/1-1</td>
+            <td>Cell 2-2/1-2</td>
+          </tr>
+          <tr class="even">
+            <td>Cell 2-2/2-1</td>
+            <td>Cell 2-2/2-2</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

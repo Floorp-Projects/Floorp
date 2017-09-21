@@ -7748,13 +7748,10 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     case eCSSUnit_Inherit: {
       conditions.SetUncacheable();
       border->ClearBorderColors(side);
-      if (parentContext) {
-        nsBorderColors *parentColors;
-        parentBorder->GetCompositeColors(side, &parentColors);
-        if (parentColors) {
-          border->EnsureBorderColors();
-          border->mBorderColors[side] = parentColors->Clone();
-        }
+      if (parentBorder->mBorderColors) {
+        border->EnsureBorderColors();
+        border->mBorderColors->mColors[side] =
+          parentBorder->mBorderColors->mColors[side];
       }
       break;
     }
@@ -7769,7 +7766,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       while (list) {
         if (SetColor(list->mValue, unused, mPresContext,
                      aContext, borderColor, conditions))
-          border->AppendBorderColor(side, borderColor);
+          border->mBorderColors->mColors[side].AppendElement(borderColor);
         else {
           NS_NOTREACHED("unexpected item in -moz-border-*-colors list");
         }

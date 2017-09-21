@@ -219,7 +219,8 @@ public:
                            wr::TransformStyle aTransformStyle,
                            const gfx::Matrix4x4* aPerspective,
                            const wr::MixBlendMode& aMixBlendMode,
-                           const nsTArray<wr::WrFilterOp>& aFilters);
+                           const nsTArray<wr::WrFilterOp>& aFilters,
+                           bool aIsBackfaceVisible);
   void PopStackingContext();
 
   wr::WrClipId DefineClip(const wr::LayoutRect& aClipRect,
@@ -243,10 +244,12 @@ public:
 
   void PushRect(const wr::LayoutRect& aBounds,
                 const wr::LayoutRect& aClip,
+                bool aIsBackfaceVisible,
                 const wr::ColorF& aColor);
 
   void PushLinearGradient(const wr::LayoutRect& aBounds,
                           const wr::LayoutRect& aClip,
+                          bool aIsBackfaceVisible,
                           const wr::LayoutPoint& aStartPoint,
                           const wr::LayoutPoint& aEndPoint,
                           const nsTArray<wr::GradientStop>& aStops,
@@ -256,6 +259,7 @@ public:
 
   void PushRadialGradient(const wr::LayoutRect& aBounds,
                           const wr::LayoutRect& aClip,
+                          bool aIsBackfaceVisible,
                           const wr::LayoutPoint& aCenter,
                           const wr::LayoutSize& aRadius,
                           const nsTArray<wr::GradientStop>& aStops,
@@ -265,11 +269,13 @@ public:
 
   void PushImage(const wr::LayoutRect& aBounds,
                  const wr::LayoutRect& aClip,
+                 bool aIsBackfaceVisible,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushImage(const wr::LayoutRect& aBounds,
                  const wr::LayoutRect& aClip,
+                 bool aIsBackfaceVisible,
                  const wr::LayoutSize& aStretchSize,
                  const wr::LayoutSize& aTileSpacing,
                  wr::ImageRendering aFilter,
@@ -277,6 +283,7 @@ public:
 
   void PushYCbCrPlanarImage(const wr::LayoutRect& aBounds,
                             const wr::LayoutRect& aClip,
+                            bool aIsBackfaceVisible,
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
@@ -285,6 +292,7 @@ public:
 
   void PushNV12Image(const wr::LayoutRect& aBounds,
                      const wr::LayoutRect& aClip,
+                     bool aIsBackfaceVisible,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
                      wr::WrYuvColorSpace aColorSpace,
@@ -292,23 +300,27 @@ public:
 
   void PushYCbCrInterleavedImage(const wr::LayoutRect& aBounds,
                                  const wr::LayoutRect& aClip,
+                                 bool aIsBackfaceVisible,
                                  wr::ImageKey aImageChannel0,
                                  wr::WrYuvColorSpace aColorSpace,
                                  wr::ImageRendering aFilter);
 
   void PushIFrame(const wr::LayoutRect& aBounds,
+                  bool aIsBackfaceVisible,
                   wr::PipelineId aPipeline);
 
   // XXX WrBorderSides are passed with Range.
   // It is just to bypass compiler bug. See Bug 1357734.
   void PushBorder(const wr::LayoutRect& aBounds,
                   const wr::LayoutRect& aClip,
+                  bool aIsBackfaceVisible,
                   const wr::BorderWidths& aWidths,
                   const Range<const wr::BorderSide>& aSides,
                   const wr::BorderRadius& aRadius);
 
   void PushBorderImage(const wr::LayoutRect& aBounds,
                        const wr::LayoutRect& aClip,
+                       bool aIsBackfaceVisible,
                        const wr::BorderWidths& aWidths,
                        wr::ImageKey aImage,
                        const wr::NinePatchDescriptor& aPatch,
@@ -318,6 +330,7 @@ public:
 
   void PushBorderGradient(const wr::LayoutRect& aBounds,
                           const wr::LayoutRect& aClip,
+                          bool aIsBackfaceVisible,
                           const wr::BorderWidths& aWidths,
                           const wr::LayoutPoint& aStartPoint,
                           const wr::LayoutPoint& aEndPoint,
@@ -327,6 +340,7 @@ public:
 
   void PushBorderRadialGradient(const wr::LayoutRect& aBounds,
                                 const wr::LayoutRect& aClip,
+                                bool aIsBackfaceVisible,
                                 const wr::BorderWidths& aWidths,
                                 const wr::LayoutPoint& aCenter,
                                 const wr::LayoutSize& aRadius,
@@ -336,16 +350,19 @@ public:
 
   void PushText(const wr::LayoutRect& aBounds,
                 const wr::LayoutRect& aClip,
+                bool aIsBackfaceVisible,
                 const gfx::Color& aColor,
                 wr::FontInstanceKey aFontKey,
                 Range<const wr::GlyphInstance> aGlyphBuffer,
                 const wr::GlyphOptions* aGlyphOptions = nullptr);
 
   void PushLine(const wr::LayoutRect& aClip,
+                bool aIsBackfaceVisible,
                 const wr::Line& aLine);
 
   void PushTextShadow(const wr::LayoutRect& aBounds,
                       const wr::LayoutRect& aClip,
+                      bool aIsBackfaceVisible,
                       const wr::TextShadow& aShadow);
 
   void PopTextShadow();
@@ -354,6 +371,7 @@ public:
 
   void PushBoxShadow(const wr::LayoutRect& aRect,
                      const wr::LayoutRect& aClip,
+                     bool aIsBackfaceVisible,
                      const wr::LayoutRect& aBoxBounds,
                      const wr::LayoutVector2D& aOffset,
                      const wr::ColorF& aColor,

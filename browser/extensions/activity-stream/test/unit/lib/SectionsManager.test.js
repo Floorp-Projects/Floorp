@@ -146,6 +146,7 @@ describe("SectionsManager", () => {
     });
     it("should update all sections", () => {
       SectionsManager.sections.clear();
+      const updateSectionOrig = SectionsManager.updateSection;
       SectionsManager.updateSection = sinon.spy();
 
       SectionsManager.addSection("ID1", {title: "FAKE_TITLE_1"});
@@ -155,6 +156,7 @@ describe("SectionsManager", () => {
       assert.calledTwice(SectionsManager.updateSection);
       assert.calledWith(SectionsManager.updateSection, "ID1", {title: "FAKE_TITLE_1"}, true);
       assert.calledWith(SectionsManager.updateSection, "ID2", {title: "FAKE_TITLE_2"}, true);
+      SectionsManager.updateSection = updateSectionOrig;
     });
     it("context menu pref change should update sections", () => {
       let observer;
@@ -201,6 +203,27 @@ describe("SectionsManager", () => {
       SectionsManager.on(SectionsManager.UPDATE_SECTION_CARD, spy);
       SectionsManager.updateSectionCard(FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS, true);
       assert.notCalled(spy);
+    });
+  });
+  describe("#dedupe", () => {
+    it("should dedupe stories from highlights", () => {
+      SectionsManager.init();
+      // Add some rows to highlights
+      SectionsManager.updateSection("highlights", {rows: [{url: "https://highlight.com/abc"}, {url: "https://shared.com/def"}]});
+      // Add some rows to top stories
+      SectionsManager.updateSection("topstories", {rows: [{url: "https://topstory.com/ghi"}, {url: "https://shared.com/def"}]});
+      // Verify deduping
+      assert.deepEqual(SectionsManager.sections.get("topstories").rows, [{url: "https://topstory.com/ghi"}]);
+    });
+    it("should dedupe stories from highlights when updating highlights", () => {
+      SectionsManager.init();
+      // Add some rows to top stories
+      SectionsManager.updateSection("topstories", {rows: [{url: "https://topstory.com/ghi"}, {url: "https://shared.com/def"}]});
+      assert.deepEqual(SectionsManager.sections.get("topstories").rows, [{url: "https://topstory.com/ghi"}, {url: "https://shared.com/def"}]);
+      // Add some rows to highlights
+      SectionsManager.updateSection("highlights", {rows: [{url: "https://highlight.com/abc"}, {url: "https://shared.com/def"}]});
+      // Verify deduping
+      assert.deepEqual(SectionsManager.sections.get("topstories").rows, [{url: "https://topstory.com/ghi"}]);
     });
   });
 });

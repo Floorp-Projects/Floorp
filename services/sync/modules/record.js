@@ -819,8 +819,9 @@ Collection.prototype = {
     };
 
     if (config.max_post_bytes <= config.max_record_payload_bytes) {
-      this._log.error("Server configuration max_post_bytes is too low", config);
-      throw new Error("Server configuration max_post_bytes is too low");
+      this._log.warn("Server configuration max_post_bytes is too low for max_record_payload_bytes", config);
+      // Assume 4k of extra is enough. See also getMaxRecordPayloadSize in service.js
+      config.max_record_payload_bytes = config.max_post_bytes - 4096;
     }
 
     this._log.trace("new PostQueue created with config", config);

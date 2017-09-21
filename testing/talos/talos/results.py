@@ -253,12 +253,7 @@ class PageloaderResults(Results):
         """
         page = page.rstrip('/')
         if '/' in page:
-            if 'base_page' in page or 'ref_page' in page:
-                # for base vs ref type test, the page name is different format, i.e.
-                # base_page_1_http://localhost:53309/tests/perf-reftest/bloom-basic.html
-                page = page.split('/')[-1]
-            else:
-                page = page.split('/')[0]
+            page = page.split('/')[0]
         return page
 
 

@@ -234,7 +234,6 @@ def old_configure_options(*options):
     '--libdir',
     '--no-create',
     '--prefix',
-    '--with-android-cxx-stl',
     '--with-android-distribution-directory',
     '--with-android-max-sdk',
     '--with-android-min-sdk',

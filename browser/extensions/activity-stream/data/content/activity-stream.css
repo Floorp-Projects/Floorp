@@ -166,6 +166,9 @@ a {
       color: #FFF;
       margin-inline-start: auto; }
 
+#snippets-container {
+  z-index: 1; }
+
 .outer-wrapper {
   display: flex;
   padding: 40px 32px 32px;
@@ -284,8 +287,7 @@ main {
       transform: scale(0.25);
       opacity: 0;
       transition-property: transform, opacity;
-      transition-duration: 200ms;
-      z-index: 399; }
+      transition-duration: 200ms; }
       .top-sites-list .top-site-outer .context-menu-button:focus, .top-sites-list .top-site-outer .context-menu-button:active {
         transform: scale(1);
         opacity: 1; }
@@ -341,7 +343,6 @@ main {
       width: 100%;
       background-size: 96px; }
     .top-sites-list .top-site-outer .default-icon {
-      z-index: 1;
       bottom: -6px;
       height: 42px;
       offset-inline-end: -6px;
@@ -972,8 +973,7 @@ main {
     transform: scale(0.25);
     opacity: 0;
     transition-property: transform, opacity;
-    transition-duration: 200ms;
-    z-index: 399; }
+    transition-duration: 200ms; }
     .card-outer .context-menu-button:focus, .card-outer .context-menu-button:active {
       transform: scale(1);
       opacity: 1; }
