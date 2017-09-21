@@ -1619,7 +1619,7 @@ ControlFlowGenerator::processBreak(JSOp op, jssrcnote* sn)
     DebugOnly<bool> found = false;
 
     if (SN_TYPE(sn) == SRC_BREAK2LABEL) {
-        for (size_t i = labels_.length() - 1; i < labels_.length(); i--) {
+        for (size_t i = labels_.length() - 1; ; i--) {
             CFGState& cfg = cfgStack_[labels_[i].cfgEntry];
             MOZ_ASSERT(cfg.state == CFGState::LABEL);
             if (cfg.stopAt == target) {
@@ -1627,9 +1627,11 @@ ControlFlowGenerator::processBreak(JSOp op, jssrcnote* sn)
                 found = true;
                 break;
             }
+            if (i == 0)
+                break;
         }
     } else {
-        for (size_t i = loops_.length() - 1; i < loops_.length(); i--) {
+        for (size_t i = loops_.length() - 1; ; i--) {
             CFGState& cfg = cfgStack_[loops_[i].cfgEntry];
             MOZ_ASSERT(cfg.isLoop());
             if (cfg.loop.exitpc == target) {
@@ -1637,6 +1639,8 @@ ControlFlowGenerator::processBreak(JSOp op, jssrcnote* sn)
                 found = true;
                 break;
             }
+            if (i == 0)
+                break;
         }
     }
 
@@ -1665,7 +1669,7 @@ ControlFlowGenerator::processContinue(JSOp op)
     // Find the target loop.
     CFGState* found = nullptr;
     jsbytecode* target = pc + GetJumpOffset(pc);
-    for (size_t i = loops_.length() - 1; i < loops_.length(); i--) {
+    for (size_t i = loops_.length() - 1; ; i--) {
         // +1 to skip JSOP_JUMPTARGET.
         if (loops_[i].continuepc == target + 1 ||
             EffectiveContinue(loops_[i].continuepc) == target)
@@ -1673,6 +1677,8 @@ ControlFlowGenerator::processContinue(JSOp op)
             found = &cfgStack_[loops_[i].cfgEntry];
             break;
         }
+        if (i == 0)
+            break;
     }
 
     // There must always be a valid target loop structure. If not, there's
@@ -1698,11 +1704,13 @@ ControlFlowGenerator::processSwitchBreak(JSOp op)
     // Find the target switch.
     CFGState* found = nullptr;
     jsbytecode* target = pc + GetJumpOffset(pc);
-    for (size_t i = switches_.length() - 1; i < switches_.length(); i--) {
+    for (size_t i = switches_.length() - 1; ; i--) {
         if (switches_[i].continuepc == target) {
             found = &cfgStack_[switches_[i].cfgEntry];
             break;
         }
+        if (i == 0)
+            break;
     }
 
     // There must always be a valid target loop structure. If not, there's
