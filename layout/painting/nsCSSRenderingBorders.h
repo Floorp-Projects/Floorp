@@ -101,7 +101,8 @@ public:
                       RectCornerRadii& aBorderRadii,
                       const nscolor* aBorderColors,
                       nsBorderColors* const* aCompositeColors,
-                      nscolor aBackgroundColor);
+                      nscolor aBackgroundColor,
+                      bool aBackfaceIsVisible);
 
   // draw the entire border
   void DrawBorders();
@@ -162,6 +163,7 @@ private:
   bool mOneUnitBorder;
   bool mNoBorderRadius;
   bool mAvoidStroke;
+  bool mBackfaceIsVisible;
 
   // For all the sides in the bitmask, would they be rendered
   // in an identical color and style?
