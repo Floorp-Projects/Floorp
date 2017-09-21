@@ -6164,6 +6164,16 @@
     "n_buckets": 20,
     "description": "Firefox: Time taken to load a page (ms). This includes all static contents, no dynamic content. Loading of about: pages is not counted."
   },
+  "FX_SCHEDULE_PRESSURE_IDLE_SAMPLE_MS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "bug_numbers": [1406414],
+    "alert_emails": ["jaws@mozilla.com"],
+    "description": "Firefox: Time taken to get an idle callback while loading a page (ms). Loading of about: pages is not counted."
+  },
   "FX_TOTAL_TOP_VISITS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
