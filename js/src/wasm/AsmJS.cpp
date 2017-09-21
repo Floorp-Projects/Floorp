@@ -4470,8 +4470,6 @@ CheckSharedArrayAtomicAccess(FunctionValidator& f, ParseNode* viewName, ParseNod
       default:
         return f.failf(viewName, "not an integer array");
     }
-
-    return true;
 }
 
 static bool

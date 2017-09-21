@@ -143,7 +143,6 @@ struct JSContext : public JS::RootingContext,
     void recoverFromOutOfMemory();
 
     inline void updateMallocCounter(size_t nbytes) {
-        // Note: this is racy.
         runtime()->updateMallocCounter(zone(), nbytes);
     }
 

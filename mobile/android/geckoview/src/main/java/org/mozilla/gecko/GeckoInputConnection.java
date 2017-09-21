@@ -67,6 +67,7 @@ class GeckoInputConnection
     private String mIMEModeHint = "";
     private String mIMEActionHint = "";
     private boolean mInPrivateBrowsing;
+    private boolean mIsUserAction;
     private boolean mFocused;
 
     private String mCurrentInputMethod = "";
@@ -646,7 +647,10 @@ class GeckoInputConnection
         outAttrs.initialSelStart = Selection.getSelectionStart(editable);
         outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
 
-        showSoftInput();
+        if (mIsUserAction) {
+            showSoftInput();
+        }
+
         return this;
     }
 
@@ -969,7 +973,7 @@ class GeckoInputConnection
 
     @Override
     public void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint,
-                                 boolean inPrivateBrowsing) {
+                                 boolean inPrivateBrowsing, boolean isUserAction) {
         // For some input type we will use a widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is 11 or greater, for datetime/month/week as well.
@@ -997,6 +1001,7 @@ class GeckoInputConnection
         mIMEModeHint = (modeHint == null) ? "" : modeHint;
         mIMEActionHint = (actionHint == null) ? "" : actionHint;
         mInPrivateBrowsing = inPrivateBrowsing;
+        mIsUserAction = isUserAction;
 
         // These fields are reset here and will be updated when restartInput is called below
         mUpdateRequest = null;

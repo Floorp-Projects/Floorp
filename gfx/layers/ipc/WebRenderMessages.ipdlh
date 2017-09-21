@@ -62,13 +62,13 @@ struct OpUpdateAsyncImagePipeline {
 };
 
 union WebRenderParentCommand {
-  OpAddExternalImage;
   OpUpdateAsyncImagePipeline;
   CompositableOperation;
   OpAddCompositorAnimations;
 };
 
 struct OffsetRange {
+  uint32_t source;
   uint32_t start;
   uint32_t length;
 };
@@ -135,6 +135,7 @@ union OpUpdateResource {
   OpDeleteFont;
   OpAddFontInstance;
   OpDeleteFontInstance;
+  OpAddExternalImage;
 };
 
 } // namespace

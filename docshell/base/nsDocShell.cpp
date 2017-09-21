@@ -14985,55 +14985,56 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     return NS_OK;
   }
 
+  uint32_t cookieBehavior = nsContentUtils::CookiesBehavior();
+  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
+    // If cookies are disabled, don't intercept.
+    return NS_OK;
+  }
+
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
     return NS_OK;
   }
 
-  nsresult result;
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-    do_GetService(THIRDPARTYUTIL_CONTRACTID, &result);
-  NS_ENSURE_SUCCESS(result, result);
+  if (!aIsNonSubresourceRequest) {
+    nsCOMPtr<nsIDocument> doc = GetDocument();
+    if (!doc) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
 
-  if (mCurrentURI &&
-      nsContentUtils::CookiesBehavior() == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
-    nsAutoCString uriSpec;
-    if (!(mCurrentURI->GetSpecOrDefault().EqualsLiteral("about:blank"))) {
-      // Reject the interception of third-party iframes if the cookie behaviour
-      // is set to reject all third-party cookies (1). In case that this pref
-      // is not set or can't be read, we default to allow all cookies (0) as
-      // this is the default value in all.js.
+    ErrorResult rv;
+    *aShouldIntercept = swm->IsControlled(doc, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
+    }
+
+    return NS_OK;
+  }
+
+  // If the user has set a cookie policy that restricts cookies, then
+  // avoid intercepting 3rd party iframes.
+  if (cookieBehavior != nsICookieService::BEHAVIOR_ACCEPT) {
+    nsCOMPtr<nsIDocShellTreeItem> parent;
+    GetSameTypeParent(getter_AddRefs(parent));
+    nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parent ? parent->GetWindow()
+                                                       : nullptr;
+    if (parentWindow) {
+      nsresult rv = NS_OK;
+      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       bool isThirdPartyURI = true;
-      result = thirdPartyUtil->IsThirdPartyURI(mCurrentURI, aURI,
-                                               &isThirdPartyURI);
-      if (NS_FAILED(result)) {
-          return result;
-      }
-
-      if (isThirdPartyURI) {
+      rv = thirdPartyUtil->IsThirdPartyWindow(parentWindow, aURI, &isThirdPartyURI);
+      if (NS_SUCCEEDED(rv) && isThirdPartyURI) {
         return NS_OK;
       }
     }
   }
 
-  if (aIsNonSubresourceRequest) {
-    nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
-    *aShouldIntercept = swm->IsAvailable(principal, aURI);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (!doc) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  ErrorResult rv;
-  *aShouldIntercept = swm->IsControlled(doc, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
+  nsCOMPtr<nsIPrincipal> principal =
+    BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
+  *aShouldIntercept = swm->IsAvailable(principal, aURI);
   return NS_OK;
 }
 
