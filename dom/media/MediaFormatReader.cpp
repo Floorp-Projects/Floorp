@@ -696,6 +696,7 @@ MediaFormatReader::DecoderFactory::RunStage(Data& aData)
         NS_WARNING("Error constructing decoders");
         aData.mToken = nullptr;
         aData.mStage = Stage::None;
+        aData.mOwnerData.mDescription = rv.Description();
         mOwner->NotifyError(aData.mTrack, rv);
         return;
       }
@@ -727,7 +728,12 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
     }
   }
 
-  MediaResult result(NS_OK);
+  // result may not be updated by PDMFactory::CreateDecoder, as such it must be
+  // initialized to a fatal error by default.
+  MediaResult result = MediaResult(
+    NS_ERROR_DOM_MEDIA_FATAL_ERR,
+    nsPrintfCString("error creating %s decoder", TrackTypeToStr(aData.mTrack)));
+
   switch (aData.mTrack) {
     case TrackInfo::kAudioTrack: {
       aData.mDecoder = mOwner->mPlatform->CreateDecoder({
@@ -770,9 +776,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
     return NS_OK;
   }
 
-  if (NS_FAILED(result)) {
-    ownerData.mDescription = result.Description();
-  }
+  MOZ_RELEASE_ASSERT(NS_FAILED(result), "PDM returned an invalid error code");
 
   return result;
 }
