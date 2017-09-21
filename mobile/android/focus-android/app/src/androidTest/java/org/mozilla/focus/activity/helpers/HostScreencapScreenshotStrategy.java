@@ -38,7 +38,7 @@ public class HostScreencapScreenshotStrategy implements ScreenshotStrategy {
 
     @Override
     public void takeScreenshot(String screenshotName, ScreenshotCallback screenshotCallback) {
-        takeScreenshotViaHost();
+        takeScreenshotViaHost(screenshotName);
 
         Bitmap bitmap = readScreenshotFromStorage();
 
@@ -49,9 +49,9 @@ public class HostScreencapScreenshotStrategy implements ScreenshotStrategy {
         screenshotCallback.screenshotCaptured(screenshotName, bitmap);
     }
 
-    private void takeScreenshotViaHost() {
+    private void takeScreenshotViaHost(String name) {
         try {
-            final HttpURLConnection connection = (HttpURLConnection) new URL("http://" + HOST_LOOPBACK + ":" + PORT).openConnection();
+            final HttpURLConnection connection = (HttpURLConnection) new URL("http://" + HOST_LOOPBACK + ":" + PORT + "/" + name).openConnection();
             connection.setConnectTimeout(CONNECT_TIMEOUT);
             connection.setReadTimeout(READ_TIMEOUT);
 
