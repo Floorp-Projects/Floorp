@@ -115,6 +115,7 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
     challenge_len: usize,
     application_ptr: *const u8,
     application_len: usize,
+    khs: *const U2FKeyHandles,
 ) -> u64 {
     if mgr.is_null() {
         return 0;
@@ -127,9 +128,10 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
 
     let challenge = from_raw(challenge_ptr, challenge_len);
     let application = from_raw(application_ptr, application_len);
+    let key_handles = (*khs).clone();
 
     let tid = new_tid();
-    let res = (*mgr).register(timeout, challenge, application, move |rv| {
+    let res = (*mgr).register(timeout, challenge, application, key_handles, move |rv| {
         if let Ok(registration) = rv {
             let mut result = U2FResult::new();
             result.insert(RESBUF_ID_REGISTRATION, registration);
