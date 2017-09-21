@@ -251,6 +251,7 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
 
     aBuilder.PushBoxShadow(deviceBoxRect,
                            deviceClipRect,
+                           !BackfaceIsHidden(),
                            deviceBoxRect,
                            wr::ToLayoutVector2D(shadowOffset),
                            wr::ToColorF(shadowColor),

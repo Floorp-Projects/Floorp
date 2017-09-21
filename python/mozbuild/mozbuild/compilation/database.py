@@ -14,7 +14,6 @@ from mozbuild.frontend.data import (
     Sources,
     GeneratedSources,
     DirectoryTraversal,
-    Defines,
     Linkable,
     LocalInclude,
     PerSourceFlag,
@@ -45,14 +44,8 @@ class CompileDBBackend(CommonBackend):
         self._flags = {}
 
         self._envs = {}
-        self._includes = defaultdict(list)
-        self._defines = defaultdict(list)
         self._local_flags = defaultdict(dict)
         self._per_source_flags = defaultdict(list)
-        self._extra_includes = defaultdict(list)
-        self._gyp_dirs = set()
-        self._dist_include_testing = '-I%s' % mozpath.join(
-            self.environment.topobjdir, 'dist', 'include', 'testing')
 
     def consume_object(self, obj):
         # Those are difficult directories, that will be handled later.
@@ -60,8 +53,7 @@ class CompileDBBackend(CommonBackend):
                 'build/unix/elfhack',
                 'build/unix/elfhack/inject',
                 'build/clang-plugin',
-                'build/clang-plugin/tests',
-                'toolkit/crashreporter/google-breakpad/src/common'):
+                'build/clang-plugin/tests'):
             return True
 
         consumed = CommonBackend.consume_object(self, obj)
@@ -82,25 +74,7 @@ class CompileDBBackend(CommonBackend):
                 self._build_db_line(obj.objdir, obj.relativedir, obj.config, f,
                                     obj.canonical_suffix)
 
-        elif isinstance(obj, LocalInclude):
-            self._includes[obj.objdir].append('-I%s' % mozpath.normpath(
-                obj.path.full_path))
-
-        elif isinstance(obj, Linkable):
-            if isinstance(obj.defines, Defines): # As opposed to HostDefines
-                for d in obj.defines.get_defines():
-                    if d not in self._defines[obj.objdir]:
-                        self._defines[obj.objdir].append(d)
-            self._defines[obj.objdir].extend(obj.lib_defines.get_defines())
-            if isinstance(obj, SimpleProgram) and obj.is_unit_test:
-                if (self._dist_include_testing not in
-                        self._extra_includes[obj.objdir]):
-                    self._extra_includes[obj.objdir].append(
-                        self._dist_include_testing)
-
         elif isinstance(obj, VariablePassthru):
-            if obj.variables.get('IS_GYP_DIR'):
-                self._gyp_dirs.add(obj.objdir)
             for var in ('MOZBUILD_CFLAGS', 'MOZBUILD_CXXFLAGS',
                         'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS',
                         'RTL_FLAGS'):
@@ -131,23 +105,7 @@ class CompileDBBackend(CommonBackend):
                 cmd.append(filename)
             else:
                 cmd.append(unified)
-            local_extra = list(self._extra_includes[directory])
-            if directory not in self._gyp_dirs:
-                for var in (
-                    'NSPR_CFLAGS',
-                    'NSS_CFLAGS',
-                    'MOZ_JPEG_CFLAGS',
-                    'MOZ_PNG_CFLAGS',
-                    'MOZ_ZLIB_CFLAGS',
-                    'MOZ_PIXMAN_CFLAGS',
-                ):
-                    f = env.substs.get(var)
-                    if f:
-                        local_extra.extend(f)
             variables = {
-                'LOCAL_INCLUDES': self._includes[directory],
-                'DEFINES': self._defines[directory],
-                'EXTRA_INCLUDES': local_extra,
                 'DIST': mozpath.join(env.topobjdir, 'dist'),
                 'DEPTH': env.topobjdir,
                 'MOZILLA_DIR': env.topsrcdir,
@@ -238,14 +196,6 @@ class CompileDBBackend(CommonBackend):
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
-        db.extend((
-            '$(DEFINES)',
-            '-I%s' % mozpath.join(cenv.topsrcdir, reldir),
-            '-I%s' % objdir,
-            '$(LOCAL_INCLUDES)',
-            '-I%s/dist/include' % cenv.topobjdir,
-            '$(EXTRA_INCLUDES)',
-        ))
         append_var('DSO_CFLAGS')
         append_var('DSO_PIC_CFLAGS')
         if canonical_suffix in ('.c', '.cpp'):

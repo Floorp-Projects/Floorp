@@ -73,7 +73,6 @@ import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
 import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
-import org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout;
 import org.mozilla.gecko.adjust.AdjustBrowserAppDelegate;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -351,23 +350,15 @@ public class BrowserApp extends GeckoApp
     @NonNull
     private SearchEngineManager mSearchEngineManager; // Contains reference to Context - DO NOT LEAK!
 
-    // Ideally, we would set this cache from the specific places it is used in Activity Stream. However, given that
-    // it's unlikely that StreamOverridablePageIconLayout will be used elsewhere and how messy it is to pass references
-    // from an object with the application lifecycle to the individual views using the cache in activity stream, we settle
-    // for storing it here and setting it on all new instances.
-    private final Set<String> mStreamIconLayoutFailedRequestCache = StreamOverridablePageIconLayout.newFailedRequestCache();
-
     private boolean mHasResumed;
 
     @Override
-    public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
+    public View onCreateView(final View parent, final String name, final Context context, final AttributeSet attrs) {
         final View view;
         if (BrowserToolbar.class.getName().equals(name)) {
             view = BrowserToolbar.create(context, attrs);
         } else if (TabsPanel.TabsLayout.class.getName().equals(name)) {
             view = TabsPanel.createTabsLayout(context, attrs);
-        } else if (StreamOverridablePageIconLayout.class.getName().equals(name)) {
-            view = new StreamOverridablePageIconLayout(context, attrs, mStreamIconLayoutFailedRequestCache);
         } else {
             view = super.onCreateView(name, context, attrs);
         }

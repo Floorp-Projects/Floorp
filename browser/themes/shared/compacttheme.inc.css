@@ -7,6 +7,8 @@
    there are overrides for each platform in their compacttheme.css files. */
 
 :root:-moz-lwtheme {
+  text-shadow: none;
+
   --toolbar-bgcolor: var(--chrome-secondary-background-color);
   --toolbar-gbimage: none;
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
@@ -85,15 +87,6 @@ toolbar[brighttext] .toolbarbutton-1 {
 .browserContainer > findbar .findbar-find-status,
 .browserContainer > findbar .found-matches {
   color: inherit;
-}
-
-.browserContainer > findbar .findbar-button,
-#PlacesToolbar toolbarbutton.bookmark-item {
-  text-shadow: none;
-}
-
-#TabsToolbar {
-  text-shadow: none !important;
 }
 
 /* URL bar and search bar*/

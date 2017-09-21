@@ -5216,11 +5216,6 @@ _malloc_postfork_child(void)
 #define ARGS2(t1, t2) ARGS1(t1), arg2
 #define ARGS3(t1, t2, t3) ARGS2(t1, t2), arg3
 
-#define GENERIC_MALLOC_DECL(name, return_type, ...) \
-  GENERIC_MALLOC_DECL_HELPER(name, return, return_type, ##__VA_ARGS__)
-#define GENERIC_MALLOC_DECL_VOID(name, ...) \
-  GENERIC_MALLOC_DECL_HELPER(name, , void, ##__VA_ARGS__)
-
 /******************************************************************************/
 #ifdef MOZ_REPLACE_MALLOC
 
@@ -5331,7 +5326,7 @@ init()
   }
 }
 
-#define GENERIC_MALLOC_DECL_HELPER(name, return, return_type, ...) \
+#define MALLOC_DECL(name, return_type, ...) \
   template<> inline return_type \
   ReplaceMalloc::name(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
   { \
@@ -5340,13 +5335,8 @@ init()
     } \
     return replace_malloc_table.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
   }
-
-#define MALLOC_DECL(...) MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
-#define MALLOC_DECL_VOID(...) MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
 #define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
 #include "malloc_decls.h"
-
-#undef GENERIC_MALLOC_DECL_HELPER
 
 MOZ_JEMALLOC_API struct ReplaceMallocBridge*
 get_bridge(void)
@@ -5403,26 +5393,24 @@ replace_malloc_init_funcs()
 /******************************************************************************/
 /* Definition of all the _impl functions */
 
-#define GENERIC_MALLOC_DECL_HELPER2(name, name_impl, return, return_type, ...) \
+#define GENERIC_MALLOC_DECL2(name, name_impl, return_type, ...) \
   return_type name_impl(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
   { \
     return DefaultMalloc::name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
   }
 
-#define GENERIC_MALLOC_DECL_HELPER(name, return, return_type, ...) \
-  GENERIC_MALLOC_DECL_HELPER2(name, name##_impl, return, return_type, ##__VA_ARGS__)
+#define GENERIC_MALLOC_DECL(name, return_type, ...) \
+  GENERIC_MALLOC_DECL2(name, name##_impl, return_type, ##__VA_ARGS__)
 
 #define MALLOC_DECL(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
-#define MALLOC_DECL_VOID(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
-#undef GENERIC_MALLOC_DECL_HELPER
-#define GENERIC_MALLOC_DECL_HELPER(name, return, return_type, ...) \
-  GENERIC_MALLOC_DECL_HELPER2(name, name, return, return_type, ##__VA_ARGS__)
+#undef GENERIC_MALLOC_DECL
+#define GENERIC_MALLOC_DECL(name, return_type, ...) \
+  GENERIC_MALLOC_DECL2(name, name, return_type, ##__VA_ARGS__)
 
 #define MALLOC_DECL(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
-#define MALLOC_DECL_VOID(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 /******************************************************************************/

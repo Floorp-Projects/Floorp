@@ -54,6 +54,9 @@ public class Experiments {
     // Show AddOns menu-item in top level menu
     public static final String TOP_ADDONS_MENU = "top-addons-menu";
 
+    // User in this group will enable Custom Tabs
+    public static final String CUSTOM_TABS = "custom-tabs";
+
     // Enable full bookmark management(full-page dialog, bookmark/folder modification, etc.)
     public static final String FULL_BOOKMARK_MANAGEMENT = "full-bookmark-management";
 

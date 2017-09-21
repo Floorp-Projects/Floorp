@@ -68,6 +68,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_SizeOfIncludingThis, size_t,
                    RawServoStyleSheetContentsBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetSourceMapURL, void,
                    RawServoStyleSheetContentsBorrowed sheet, nsAString* result)
+SERVO_BINDING_FUNC(Servo_StyleSheet_GetSourceURL, void,
+                   RawServoStyleSheetContentsBorrowed sheet, nsAString* result)
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
@@ -547,6 +549,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleRuleList, void,
 // Initialize Servo components. Should be called exactly once at startup.
 SERVO_BINDING_FUNC(Servo_Initialize, void,
                    RawGeckoURLExtraData* dummy_url_data)
+// Initialize Servo on a cooperative Quantum DOM thread.
+SERVO_BINDING_FUNC(Servo_InitializeCooperativeThread, void);
 // Shut down Servo components. Should be called exactly once at shutdown.
 SERVO_BINDING_FUNC(Servo_Shutdown, void)
 

@@ -2,10 +2,16 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- The width and height of this view are always overridden in onBindViewHolder because
+     this view is dynamically shown/hidden.
+
+     See StreamRecyclerAdapter.setViewVisible . -->
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
     android:orientation="horizontal">
 
     <TextView
@@ -15,7 +21,7 @@
         android:layout_weight="1"
         android:layout_margin="@dimen/activity_stream_base_margin"
         android:textColor="#FF858585"
-        android:textSize="16sp"
+        android:textSize="18sp"
         android:textStyle="bold" />
 
     <!-- These *_link items are shown if the constructor includes a link to be shown
@@ -27,8 +33,8 @@
         android:gravity="center_vertical"
         android:paddingStart="0dp"
         android:paddingLeft="0dp"
-        android:paddingEnd="@dimen/activity_stream_base_margin"
-        android:paddingRight="@dimen/activity_stream_base_margin"
+        android:paddingEnd="5dp"
+        android:paddingRight="5dp"
         android:textAppearance="@style/TextAppearance.Link"
         android:textAllCaps="true"
         android:visibility="gone"/>

@@ -305,13 +305,6 @@ public class AppConstants {
     false;
 //#endif
 
-    public static final boolean MOZ_ANDROID_CUSTOM_TABS =
-//#ifdef MOZ_ANDROID_CUSTOM_TABS
-    true;
-//#else
-    false;
-//#endif
-
     public static final boolean MOZ_ANDROID_PWA =
 //#ifdef MOZ_ANDROID_PWA
     true;

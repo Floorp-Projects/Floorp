@@ -65,7 +65,7 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   }
 
   nsAutoCString uri;
-  rv = aURI->GetSpec(uri);
+  rv = aURI->GetDisplaySpec(uri);
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
 
@@ -90,7 +90,7 @@ nsAndroidHistory::UnregisterVisitedCallback(nsIURI *aURI, Link *aContent)
     return NS_OK;
 
   nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
+  nsresult rv = aURI->GetDisplaySpec(uri);
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
 
@@ -209,7 +209,7 @@ nsAndroidHistory::SaveVisitURI(nsIURI* aURI) {
   if (jni::IsFennec()) {
     // Save this URI in our history
     nsAutoCString spec;
-    (void)aURI->GetSpec(spec);
+    (void)aURI->GetDisplaySpec(spec);
     java::GlobalHistory::MarkURIVisited(NS_ConvertUTF8toUTF16(spec));
   }
 
@@ -292,7 +292,7 @@ nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
 
   if (jni::IsFennec()) {
     nsAutoCString uri;
-    nsresult rv = aURI->GetSpec(uri);
+    nsresult rv = aURI->GetDisplaySpec(uri);
     if (NS_FAILED(rv)) return rv;
     if (RemovePendingVisitURI(aURI)) {
       // We have a title, so aURI isn't a redirect, so save the visit now before setting the title.
@@ -309,7 +309,7 @@ nsAndroidHistory::NotifyVisited(nsIURI *aURI)
 {
   if (aURI && sHistory) {
     nsAutoCString spec;
-    (void)aURI->GetSpec(spec);
+    (void)aURI->GetDisplaySpec(spec);
     sHistory->mPendingLinkURIs.Push(NS_ConvertUTF8toUTF16(spec));
     NS_DispatchToMainThread(sHistory);
   }

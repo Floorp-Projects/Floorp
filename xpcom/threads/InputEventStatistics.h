@@ -7,6 +7,7 @@
 #if !defined(InputEventStatistics_h_)
 #define InputEventStatistics_h_
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
@@ -64,16 +65,27 @@ class InputEventStatistics
   TimeDuration mMinInputDuration;
   bool mEnable;
 
-  InputEventStatistics();
+  // We'd like to have our constructor and destructor be private to enforce our
+  // singleton, but because UniquePtr needs to be able to destruct our class we
+  // can't. This is a trick that ensures that we're the only code that can
+  // construct ourselves: nobody else can access ConstructorCookie and therefore
+  // nobody else can construct an InputEventStatistics.
+  struct ConstructorCookie {};
+
+public:
+  explicit InputEventStatistics(ConstructorCookie&&);
   ~InputEventStatistics()
   {
   }
 
-public:
   static InputEventStatistics& Get()
   {
-    static InputEventStatistics sInstance;
-    return sInstance;
+    static UniquePtr<InputEventStatistics> sInstance;
+    if (!sInstance) {
+      sInstance = MakeUnique<InputEventStatistics>(ConstructorCookie());
+      ClearOnShutdown(&sInstance);
+    }
+    return *sInstance;
   }
 
   void UpdateInputDuration(TimeDuration aDuration)

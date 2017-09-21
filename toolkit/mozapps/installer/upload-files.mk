@@ -419,7 +419,9 @@ endif
 
 ifdef MOZ_CODE_COVERAGE
   UPLOAD_FILES += \
-    $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip)
+    $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip) \
+    $(call QUOTED_WILDCARD,$(topobjdir)/chrome-map.json) \
+    $(NULL)
 endif
 
 ifdef MOZ_STYLO

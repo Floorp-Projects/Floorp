@@ -58,32 +58,19 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
      *
      * Picasso unfortunately does not implement this functionality: https://github.com/square/picasso/issues/475
      *
-     * A single cache should be shared amongst all interchangeable views (e.g. in a RecyclerView) but could be
-     * shared across the app too.
-     *
      * The consequences of not having highlight images and making requests each time the app is loaded are small,
      * so we keep this cache in memory only.
+     *
+     * HACK: this cache is static because it's messy to create a single instance of this cache and pass it to all
+     * relevant instances at construction time. The downside of being static is that 1) the lifecycle of the cache
+     * no longer related to the Activity and 2) *all* instances share the same cache. The original implementation
+     * fixed these problems by overriding Activity.onCreateView and passing in a single instance to the cache there,
+     * but it crashed on Android O.
      */
-    private final @NonNull Set<String> nonFaviconFailedRequestURLs;
+    private final static Set<String> nonFaviconFailedRequestURLs = Collections.synchronizedSet(new HashSet<String>());
 
-    /**
-     * Create a new cache of failed requests non-favicon for use in
-     * {@link StreamOverridablePageIconLayout(Context, AttributeSet, Set)}.
-     */
-    public static Set<String> newFailedRequestCache() {
-        // To keep things simple and safe, we make this thread safe.
-        return Collections.synchronizedSet(new HashSet<String>());
-    }
-
-    /**
-     * @param nonFaviconFailedRequestCache a cache created by {@link #newFailedRequestCache()} - see that for details.
-     */
-    public StreamOverridablePageIconLayout(final Context context, final AttributeSet attrs,
-            @NonNull final Set<String> nonFaviconFailedRequestCache) {
+    public StreamOverridablePageIconLayout(final Context context, final AttributeSet attrs) {
         super(context, attrs);
-        if (nonFaviconFailedRequestCache == null) { throw new IllegalArgumentException("Expected non-null request cache"); }
-        this.nonFaviconFailedRequestURLs = nonFaviconFailedRequestCache;
-
         LayoutInflater.from(context).inflate(R.layout.activity_stream_overridable_page_icon_layout, this, true);
         initViews();
     }

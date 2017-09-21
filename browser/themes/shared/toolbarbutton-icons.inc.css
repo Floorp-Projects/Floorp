@@ -23,7 +23,8 @@ toolbar[brighttext] {
 #reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #PlacesChevron:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+#panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#PanelUI-menu-button:-moz-locale-dir(rtl) > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
 

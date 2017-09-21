@@ -163,6 +163,17 @@ describe("Store", () => {
       assert.calledOnce(store.dispatch);
       assert.calledWith(store.dispatch, action);
     });
+    it("should initialize the telemtry feed first", () => {
+      store._prefs.set("feeds.foo", true);
+      store._prefs.set("feeds.telemetry", true);
+      const telemetrySpy = sandbox.stub().returns({});
+      const fooSpy = sandbox.stub().returns({});
+      // Intentionally put the telemetry feed as the second item.
+      const feedFactories = new Map([["feeds.foo", fooSpy],
+                                     ["feeds.telemetry", telemetrySpy]]);
+      store.init(feedFactories);
+      assert.ok(telemetrySpy.calledBefore(fooSpy));
+    });
   });
   describe("#uninit", () => {
     it("should emit an uninit event if provided on init", () => {

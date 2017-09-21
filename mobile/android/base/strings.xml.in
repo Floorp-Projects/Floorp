@@ -228,8 +228,6 @@
 
   <string name="pref_category_experimental">&pref_category_experimental;</string>
 
-  <string name="pref_custom_tabs">&pref_custom_tabs;</string>
-  <string name="pref_custom_tabs_summary">&pref_custom_tabs_summary3;</string>
   <string name="custom_tabs_menu_item_open_in">&custom_tabs_menu_item_open_in;</string>
   <string name="custom_tabs_menu_footer">&custom_tabs_menu_footer;</string>
   <string name="custom_tabs_hint_url_copy">&custom_tabs_hint_url_copy;</string>
@@ -624,7 +622,7 @@
   <string name="activity_stream_topsites">&activity_stream_topsites;</string>
   <string name="activity_stream_topstories">&activity_stream_topstories;</string>
   <string name="activity_stream_highlights">&activity_stream_highlights;</string>
-  <string name="activity_stream_link_more">&activity_stream_link_more;</string>
+  <string name="activity_stream_link_more">&activity_stream_link_more1;</string>
 
   <string name="activity_stream_highlight_label_bookmarked">&activity_stream_highlight_label_bookmarked;</string>
   <string name="activity_stream_highlight_label_visited">&activity_stream_highlight_label_visited;</string>

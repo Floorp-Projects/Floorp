@@ -236,7 +236,12 @@
                'defines': [
                   "DONT_HAVE_ETHTOOL_SPEED_HI",
                ]
-             }]
+             }],
+        ['libfuzzer == 1', {
+          'cflags_mozilla': [
+            '-fsanitize-coverage=trace-pc-guard',
+         ],
+        }],
           ],
       }]
 }

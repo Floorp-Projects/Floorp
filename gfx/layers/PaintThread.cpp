@@ -9,7 +9,6 @@
 #include "base/task.h"
 #include "gfxPrefs.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
-#include "mozilla/layers/ContentClient.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/gfx/2D.h"
@@ -143,37 +142,6 @@ PaintThread::Get()
 PaintThread::IsOnPaintThread()
 {
   return sThreadId == PlatformThread::CurrentId();
-}
-
-void
-PaintThread::CopyFrontToBack(ContentClientRemoteBuffer* aContentClient,
-                             nsIntRegion aRegionToDraw)
-{
-  MOZ_ASSERT(PaintThread::IsOnPaintThread());
-  aContentClient->FinalizeFrameOnPaintThread(aRegionToDraw);
-}
-
-void
-PaintThread::CopyFrontBufferToBackBuffer(ContentClientRemoteBuffer* aContentClient,
-                                         nsIntRegion aRegionToDraw)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aContentClient);
-
-  RefPtr<ContentClientRemoteBuffer> cc(aContentClient);
-  RefPtr<PaintThread> self = this;
-
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::CopyFrontToBack",
-    [self, cc, aRegionToDraw]() -> void
-  {
-    self->CopyFrontToBack(cc, aRegionToDraw);
-  });
-
-  if (!gfxPrefs::LayersOMTPForceSync()) {
-    sThread->Dispatch(task.forget());
-  } else {
-    SyncRunnable::DispatchToThread(sThread, task);
-  }
 }
 
 void

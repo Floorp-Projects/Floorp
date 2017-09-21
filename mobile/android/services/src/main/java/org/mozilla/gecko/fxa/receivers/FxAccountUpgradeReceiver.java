@@ -91,7 +91,7 @@ public class FxAccountUpgradeReceiver extends BroadcastReceiver {
       for (Account account : accounts) {
         try {
           final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-          fxAccount.requestImmediateSync(new String[] { "clients" }, null);
+          fxAccount.requestImmediateSync(new String[] { "clients" }, null, true);
         } catch (Exception e) {
           Logger.warn(LOG_TAG, "Got exception trying to force sync account named like " + Utils.obfuscateEmail(account.name) +
                                "; ignoring.", e);

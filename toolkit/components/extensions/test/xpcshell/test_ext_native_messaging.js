@@ -408,7 +408,7 @@ add_task(async function test_app_permission() {
     let port = browser.runtime.connectNative("echo");
     port.onDisconnect.addListener(msgPort => {
       browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the first argument");
-      browser.test.assertEq("This extension does not have permission to use native application echo (or the application is not installed)", port.error && port.error.message);
+      browser.test.assertEq("No such native application echo", port.error && port.error.message);
       browser.test.sendMessage("result", "disconnected");
     });
     port.onMessage.addListener(msg => {
@@ -459,7 +459,7 @@ add_task(async function test_child_process() {
   equal(msg.args.length, 3, "Received two command line arguments");
   equal(msg.args[1], getPath("info.json"), "Command line argument is the path to the native host manifest");
   equal(msg.args[2], ID, "Second command line argument is the ID of the calling extension");
-  equal(msg.cwd.replace(/^\/private\//, "/"), tmpDir.path,
+  equal(msg.cwd.replace(/^\/private\//, "/"), OS.Path.join(tmpDir.path, TYPE_SLUG),
         "Working directory is the directory containing the native appliation");
 
   let exitPromise = waitForSubprocessExit();

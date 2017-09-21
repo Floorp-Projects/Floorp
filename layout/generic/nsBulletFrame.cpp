@@ -483,6 +483,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 
   aBuilder.PushImage(dest,
                      dest,
+                     !aItem->BackfaceIsHidden(),
                      wr::ImageRendering::Auto,
                      key.value());
 }
@@ -524,7 +525,7 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
   for (layers::GlyphArray& glyphs : mGlyphs) {
     aManager->WrBridge()->PushGlyphs(aBuilder, glyphs.glyphs(), mFont,
                                      glyphs.color().value(),
-                                     aSc, destRect, destRect);
+                                     aSc, destRect, destRect, !aItem->BackfaceIsHidden());
   }
 }
 

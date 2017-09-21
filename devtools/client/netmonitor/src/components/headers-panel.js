@@ -66,12 +66,16 @@ const HeadersPanel = createClass({
 
   getProperties(headers, title) {
     if (headers && headers.headers.length) {
-      return {
-        [`${title} (${getFormattedSize(headers.headersSize, 3)})`]:
+      let headerKey = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
+      let propertiesResult = {
+        [headerKey]:
           headers.headers.reduce((acc, { name, value }) =>
             name ? Object.assign(acc, { [name]: value }) : acc
           , {})
       };
+
+      propertiesResult[headerKey] = this.sortByKey(propertiesResult[headerKey]);
+      return propertiesResult;
     }
 
     return null;
@@ -122,6 +126,16 @@ const HeadersPanel = createClass({
         }) : null
       )
     );
+  },
+
+  sortByKey: function (object) {
+    let result = {};
+    Object.keys(object).sort(function (left, right) {
+      return left.toLowerCase().localeCompare(right.toLowerCase());
+    }).forEach(function (key) {
+      result[key] = object[key];
+    });
+    return result;
   },
 
   render() {

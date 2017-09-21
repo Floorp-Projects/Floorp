@@ -70,6 +70,9 @@ struct StyleSheetInfo
   // so that the value does not overwrite any value that might have
   // come from a response header.
   nsString mSourceMapURLFromComment;
+  // This stores any source URL that might have been seen in a comment
+  // in the style sheet.
+  nsString mSourceURL;
 
 #ifdef DEBUG
   bool                   mPrincipalSet;

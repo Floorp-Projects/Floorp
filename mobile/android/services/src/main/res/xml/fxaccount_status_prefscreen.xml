@@ -61,19 +61,19 @@
     <PreferenceCategory
         android:title="@string/fxaccount_status_choose_what">
 
-        <SwitchPreference
+        <CheckBoxPreference
             android:key="bookmarks"
             android:persistent="false"
             android:title="@string/fxaccount_status_bookmarks" />
-        <SwitchPreference
+        <CheckBoxPreference
             android:key="history"
             android:persistent="false"
             android:title="@string/fxaccount_status_history" />
-        <SwitchPreference
+        <CheckBoxPreference
             android:key="tabs"
             android:persistent="false"
             android:title="@string/fxaccount_status_tabs" />
-        <SwitchPreference
+        <CheckBoxPreference
             android:key="passwords"
             android:persistent="false"
             android:title="@string/fxaccount_status_passwords" />

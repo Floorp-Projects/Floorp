@@ -615,7 +615,8 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
       nsCSSGradientRenderer renderer =
         nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
 
-      renderer.BuildWebRenderDisplayItems(aBuilder, aSc, aLayer, aDest, aFill, aRepeatSize, aSrc, aOpacity);
+      renderer.BuildWebRenderDisplayItems(aBuilder, aSc, aLayer, aDest, aFill,
+                                          aRepeatSize, aSrc, !aItem->BackfaceIsHidden(), aOpacity);
       break;
     }
     case eStyleImageType_Image:
@@ -659,7 +660,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
           aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
 
       SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
-      aBuilder.PushImage(fill, clip,
+      aBuilder.PushImage(fill, clip, !aItem->BackfaceIsHidden(),
                          wr::ToLayoutSize(destRect.Size()), wr::ToLayoutSize(gapSize),
                          wr::ToImageRendering(samplingFilter), key.value());
       break;

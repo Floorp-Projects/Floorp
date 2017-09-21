@@ -1129,13 +1129,14 @@ DXGITextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
-      aBuilder.PushImage(aBounds, aClip, aFilter, aImageKeys[0]);
+      aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0]);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
       aBuilder.PushNV12Image(aBounds,
                              aClip,
+                             true,
                              aImageKeys[0],
                              aImageKeys[1],
                              wr::WrYuvColorSpace::Rec601,
@@ -1364,7 +1365,7 @@ DXGIYCbCrTextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
 {
   // 1 image key
   MOZ_ASSERT(aImageKeys.length() == 1);
-  aBuilder.PushImage(aBounds, aClip, aFilter, aImageKeys[0]);
+  aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0]);
 }
 
 bool

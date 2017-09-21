@@ -44,9 +44,9 @@ TabSource.prototype = {
       if (tab.browser.contentTitle)
         label = tab.browser.contentTitle;
       else if (tab.browser.contentURI)
-        label = tab.browser.contentURI.spec;
+        label = tab.browser.contentURI.displaySpec;
       else
-        label = tab.originalURI.spec;
+        label = tab.originalURI.displaySpec;
       return { label: label,
                icon: "thumbnail:" + tab.id }
     }));

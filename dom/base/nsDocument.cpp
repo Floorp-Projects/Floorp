@@ -7792,6 +7792,29 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
   }
 }
 
+// Recursively check whether this node or its descendants contain any
+// pre-existing style declaration or any shared restyle flags.
+static bool
+NodeContainsAnyStyleData(nsINode* aNode)
+{
+  if (aNode->IsElement()) {
+    Element* elem = aNode->AsElement();
+    if (elem->GetInlineStyleDeclaration() ||
+        elem->GetSMILOverrideStyleDeclaration() ||
+        elem->HasAnyOfFlags(ELEMENT_SHARED_RESTYLE_BITS) ||
+        elem->HasServoData()) {
+      return true;
+    }
+  }
+  for (nsIContent* child = aNode->GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    if (NodeContainsAnyStyleData(child)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsINode*
 nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 {
@@ -7907,6 +7930,12 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
   AutoJSContext cx;
   JS::Rooted<JSObject*> newScope(cx, nullptr);
   if (!sameDocument) {
+    if (MOZ_UNLIKELY(oldDocument->GetStyleBackendType() != GetStyleBackendType())) {
+      NS_WARNING("Adopting node across different style backend");
+      MOZ_RELEASE_ASSERT(!NodeContainsAnyStyleData(adoptedNode),
+                         "Must not adopt a node with pre-existing style data "
+                         "into a document with different style backend");
+    }
     newScope = GetWrapper();
     if (!newScope && GetScopeObject() && GetScopeObject()->GetGlobalJSObject()) {
       // Make sure cx is in a semi-sane compartment before we call WrapNative.

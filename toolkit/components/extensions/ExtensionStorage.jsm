@@ -108,9 +108,12 @@ this.ExtensionStorage = {
     let jsonFile = new JSONFile({path: this.getStorageFile(extensionId)});
     await jsonFile.load();
 
-    jsonFile.data = new SerializeableMap(Object.entries(jsonFile.data));
-
+    jsonFile.data = this._serializableMap(jsonFile.data);
     return jsonFile;
+  },
+
+  _serializableMap(data) {
+    return new SerializeableMap(Object.entries(data));
   },
 
   /**
@@ -281,8 +284,10 @@ this.ExtensionStorage = {
    */
   async get(extensionId, keys) {
     let jsonFile = await this.getFile(extensionId);
-    let {data} = jsonFile;
+    return this._filterProperties(jsonFile.data, keys);
+  },
 
+  async _filterProperties(data, keys) {
     let result = {};
     if (keys === null) {
       Object.assign(result, data.toJSON());

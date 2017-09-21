@@ -484,7 +484,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     FxAccountDeviceListUpdater deviceListUpdater = new FxAccountDeviceListUpdater(fxAccount, context.getContentResolver());
     // Since the clients stage requires a fresh list of remote devices, we update the device list synchronously.
-    deviceListUpdater.update();
+    deviceListUpdater.updateAndMaybeRenewRegistration(context);
   }
 
   /**
@@ -701,7 +701,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     // will happen right away.
     if (syncDelegate.fullSyncNecessary) {
       Logger.info(LOG_TAG, "Syncing done. Full follow-up sync necessary, requesting immediate sync.");
-      fxAccount.requestImmediateSync(null, null);
+      fxAccount.requestImmediateSync(null, null, false);
       return;
     }
 
@@ -724,6 +724,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     // If there are any other stages marked as incomplete, request that they're synced again.
     Logger.info(LOG_TAG, "Syncing done. Requesting an immediate follow-up sync.");
-    fxAccount.requestImmediateSync(stagesToSyncAgain, null);
+    fxAccount.requestImmediateSync(stagesToSyncAgain, null, false);
   }
 }
