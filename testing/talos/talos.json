@@ -111,6 +111,7 @@
         },
         "tp6-e10s": {
             "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
+            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
                 "--mitmproxy",
@@ -120,6 +121,7 @@
         },
         "tp6-stylo-disabled-e10s": {
             "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
+            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
                 "--disable-stylo",
@@ -130,6 +132,7 @@
         },
         "tp6-stylo-threads-e10s": {
             "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
+            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
                 "--stylo-threads=1",

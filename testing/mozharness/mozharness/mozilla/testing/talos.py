@@ -198,6 +198,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         self.gecko_profile = self.config.get('gecko_profile')
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.pagesets_name = None
+        self.mitmproxy_rel_bin = None # some platforms download a mitmproxy release binary
         self.mitmproxy_recording_set = None # zip file found on tooltool that contains all of the mitmproxy recordings
         self.mitmproxy_recordings_file_list = self.config.get('mitmproxy', None) # files inside the recording set
         self.mitmdump = None # path to mitdump tool itself, in py3 venv
@@ -457,13 +458,44 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             self.mitmdump = os.path.join(self.py3_path_to_executables(), 'mitmdump')
         else:
             # on macosx we use a prebuilt mitmproxy release binary
-            mitmproxy_bin_url = 'https://github.com/mitmproxy/mitmproxy/releases/download/v2.0.2/mitmproxy-2.0.2-osx.tar.gz'
             mitmproxy_path = os.path.join(self.talos_path, 'talos', 'mitmproxy')
             self.mitmdump = os.path.join(mitmproxy_path, 'mitmdump')
             if not os.path.exists(self.mitmdump):
-                self.download_unpack(mitmproxy_bin_url, mitmproxy_path)
+                # download the mitmproxy release binary; will be overridden by the --no-download
+                if '--no-download' not in self.config['talos_extra_options']:
+                    self.query_mitmproxy_rel_bin('osx')
+                    if self.mitmproxy_rel_bin is None:
+                        self.fatal("Aborting: mitmproxy_release_bin_osx not found in talos.json")
+                    self.download_mitmproxy_binary('osx')
+                else:
+                    self.info("Not downloading mitmproxy rel binary because no-download was specified")
             self.info('The mitmdump macosx binary is found at: %s' % self.mitmdump)
         self.run_command([self.mitmdump, '--version'], env=self.query_env())
+
+    def query_mitmproxy_rel_bin(self, platform):
+        """Mitmproxy requires external playback archives to be downloaded and extracted"""
+        if self.mitmproxy_rel_bin:
+            return self.mitmproxy_rel_bin
+        if self.query_talos_json_config() and self.suite is not None:
+            config_key = "mitmproxy_release_bin_" + platform
+            self.mitmproxy_rel_bin = self.talos_json_config['suites'][self.suite].get(config_key, False)
+            return self.mitmproxy_rel_bin
+
+    def download_mitmproxy_binary(self, platform):
+        """Download the mitmproxy release binary from tooltool"""
+        self.info("Downloading the mitmproxy release binary using tooltool")
+        dest = os.path.join(self.talos_path, 'talos', 'mitmproxy')
+        _manifest = "mitmproxy-rel-bin-%s.manifest" % platform
+        manifest_file = os.path.join(self.talos_path, 'talos', 'mitmproxy', _manifest)
+        self.tooltool_fetch(
+            manifest_file,
+            output_dir=dest,
+            cache=self.config.get('tooltool_cache')
+        )
+        archive = os.path.join(dest, self.mitmproxy_rel_bin)
+        tar = self.query_exe('tar')
+        unzip_cmd = [tar, '-xvzf', archive, '-C', dest]
+        self.run_command(unzip_cmd, halt_on_failure=True)
 
     def query_mitmproxy_recording_set(self):
         """Mitmproxy requires external playback archives to be downloaded and extracted"""
