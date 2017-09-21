@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+  <iframe id="iframe"></iframe>
+
+  <script type="text/javascript">
+    "use strict";
+    addEventListener("load", () => {
+      // Send a heap-minimize observer notification so our script cache is
+      // cleared, and our content script isn't available for synchronous
+      // insertion.
+      window.dispatchEvent(new CustomEvent("MozHeapMinimize"));
+
+      let iframe = document.getElementById("iframe");
+      let doc = iframe.contentDocument;
+      doc.open("text/html");
+      // We need to do two writes here. The first creates the document element,
+      // which normally triggers parser blocking. The second triggers the
+      // creation of the element we're about to query for, which would normally
+      // happen asynchronously if the parser were blocked.
+      doc.write("<div id=meh>");
+      doc.write("<div id=beer></div>");
+
+      let elem = doc.getElementById("beer");
+      top.postMessage(elem instanceof HTMLDivElement ? "ok" : "fail",
+                      "*");
+
+      doc.close();
+    }, {once: true});
+  </script>
+</body>
+</html>
