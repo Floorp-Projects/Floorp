@@ -169,6 +169,11 @@ class ComputedFlags(ContextDerived):
         ContextDerived.__init__(self, context)
         self.flags = reader_flags
 
+    def resolve_flags(self, key, value):
+        # Bypass checks done by CompileFlags that would keep us from
+        # setting a value here.
+        dict.__setitem__(self.flags, key, value)
+
     def get_flags(self):
         flags = defaultdict(list)
         for key, _, dest_vars in self.flags.flag_variables:

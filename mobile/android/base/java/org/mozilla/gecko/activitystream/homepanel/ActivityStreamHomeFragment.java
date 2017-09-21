@@ -4,25 +4,57 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko.activitystream.homepanel;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.home.HomeFragment;
 
 /**
  * Simple wrapper around the ActivityStream view that allows embedding as a HomePager panel.
  */
 public class ActivityStreamHomeFragment
-        extends HomeFragment {
+        extends HomeFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     private ActivityStreamPanel activityStreamPanel;
 
     private boolean isSessionActive;
+    private SharedPreferences sharedPreferences;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        sharedPreferences = GeckoSharedPrefs.forProfile(getContext());
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        final boolean shouldReload = TextUtils.equals(s, ActivityStreamPanel.PREF_BOOKMARKS_ENABLED)
+                || TextUtils.equals(s, ActivityStreamPanel.PREF_VISITED_ENABLED)
+                || TextUtils.equals(s, ActivityStreamPanel.PREF_POCKET_ENABLED);
+
+        if (shouldReload) {
+            activityStreamPanel.reload(getLoaderManager());
+        }
+
+    }
 
     @Override
     protected void load() {

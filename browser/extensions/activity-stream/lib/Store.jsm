@@ -105,6 +105,9 @@ this.Store = class Store {
   /**
    * init - Initializes the ActivityStreamMessageChannel channel, and adds feeds.
    *
+   * Note that it intentionally initializes the TelemetryFeed first so that the
+   * addon is able to report the init errors from other feeds.
+   *
    * @param  {Map} feedFactories A Map of feeds with the name of the pref for
    *                                the feed as the key and a function that
    *                                constructs an instance of the feed.
@@ -117,8 +120,13 @@ this.Store = class Store {
     this._initAction = initAction;
     this._uninitAction = uninitAction;
 
+    const telemetryKey = "feeds.telemetry";
+    if (feedFactories.has(telemetryKey) && this._prefs.get(telemetryKey)) {
+      this.initFeed(telemetryKey);
+    }
+
     for (const pref of feedFactories.keys()) {
-      if (this._prefs.get(pref)) {
+      if (pref !== telemetryKey && this._prefs.get(pref)) {
         this.initFeed(pref);
       }
     }

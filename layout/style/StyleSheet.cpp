@@ -261,6 +261,7 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
                    // without children.
   , mSourceMapURL(aCopy.mSourceMapURL)
   , mSourceMapURLFromComment(aCopy.mSourceMapURLFromComment)
+  , mSourceURL(aCopy.mSourceURL)
 #ifdef DEBUG
   , mPrincipalSet(aCopy.mPrincipalSet)
 #endif
@@ -528,6 +529,18 @@ void
 StyleSheet::SetSourceMapURLFromComment(const nsAString& aSourceMapURLFromComment)
 {
   mInner->mSourceMapURLFromComment = aSourceMapURLFromComment;
+}
+
+void
+StyleSheet::GetSourceURL(nsAString& aSourceURL)
+{
+  aSourceURL = mInner->mSourceURL;
+}
+
+void
+StyleSheet::SetSourceURL(const nsAString& aSourceURL)
+{
+  mInner->mSourceURL = aSourceURL;
 }
 
 css::Rule*

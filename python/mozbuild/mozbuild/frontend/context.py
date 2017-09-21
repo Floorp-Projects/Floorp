@@ -299,9 +299,22 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
 
 class CompileFlags(ContextDerivedValue, dict):
     def __init__(self, context):
+        main_src_dir = mozpath.dirname(context.main_path)
+
         self.flag_variables = (
             ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
             ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
+            ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('BASE_INCLUDES', ['-I%s' % main_src_dir, '-I%s' % context.objdir],
+             ('CXXFLAGS', 'CFLAGS')),
+            ('LOCAL_INCLUDES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('EXTRA_INCLUDES', ['-I%s/dist/include' % context.config.topobjdir],
+             ('CXXFLAGS', 'CFLAGS')),
+            ('OS_INCLUDES', list(itertools.chain(*(context.config.substs.get(v, []) for v in (
+                'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS', 'MOZ_PNG_CFLAGS',
+                'MOZ_ZLIB_CFLAGS', 'MOZ_PIXMAN_CFLAGS')))),
              ('CXXFLAGS', 'CFLAGS')),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
@@ -312,7 +325,8 @@ class CompileFlags(ContextDerivedValue, dict):
         # a template were set and which were provided as defaults.
         template_name = getattr(context, 'template', None)
         if template_name in (None, 'Gyp'):
-            dict.__init__(self, ((k, TypedList(unicode)(v)) for k, v, _ in self.flag_variables))
+            dict.__init__(self, ((k, v if v is None else TypedList(unicode)(v))
+                                 for k, v, _ in self.flag_variables))
         else:
             dict.__init__(self)
 
@@ -320,6 +334,9 @@ class CompileFlags(ContextDerivedValue, dict):
         if key not in self._known_keys:
             raise ValueError('Invalid value. `%s` is not a compile flags '
                              'category.' % key)
+        if key in self and self[key] is None:
+            raise ValueError('`%s` may not be set in COMPILE_FLAGS from moz.build, this '
+                             'value is resolved from the emitter.' % key)
         if not (isinstance(value, list) and all(isinstance(v, unicode) for v in value)):
             raise ValueError('A list of strings must be provided as a value for a '
                              'compile flags category.')

@@ -61,7 +61,7 @@ public class ActivityStreamPanel extends FrameLayout {
     public ActivityStreamPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        setBackgroundColor(ContextCompat.getColor(context, R.color.about_page_header_grey));
+        setBackgroundColor(ContextCompat.getColor(context, R.color.photon_browser_toolbar_bg));
 
         inflate(context, R.layout.as_content, this);
 
@@ -111,6 +111,16 @@ public class ActivityStreamPanel extends FrameLayout {
         adapter.swapHighlights(Collections.<Highlight>emptyList());
 
         adapter.swapTopSitesCursor(null);
+    }
+
+    public void reload(LoaderManager lm) {
+        adapter.clearAndInit();
+
+        // Destroy loaders so they don't restart loading when returning.
+        lm.destroyLoader(LOADER_ID_HIGHLIGHTS);
+        lm.destroyLoader(LOADER_ID_POCKET);
+
+        load(lm);
     }
 
     @Override

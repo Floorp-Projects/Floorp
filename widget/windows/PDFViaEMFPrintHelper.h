@@ -37,7 +37,7 @@ public:
   /** Releases document buffer. */
   void CloseDocument();
 
-  int GetPageCount() { return mPDFiumEngine->GetPageCount(mPDFDoc); }
+  int GetPageCount() const { return mPDFiumEngine->GetPageCount(mPDFDoc); }
 
   /** Convert specified PDF page to EMF and draw the EMF onto the given DC. */
   bool DrawPage(HDC aPrinterDC, unsigned int aPageIndex,

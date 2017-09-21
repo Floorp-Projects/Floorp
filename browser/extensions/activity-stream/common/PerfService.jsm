@@ -67,6 +67,14 @@ _PerfService.prototype = {
    * Used to ensure that timestamps from the add-on code and the content code
    * are comparable.
    *
+   * @note If this is called from a context without a window
+   * (eg a JSM in chrome), it will return the timeOrigin of the XUL hidden
+   * window, which appears to be the first created window (and thus
+   * timeOrigin) in the browser.  Note also, however, there is also a private
+   * hidden window, presumably for private browsing, which appears to be
+   * created dynamically later.  Exactly how/when that shows up needs to be
+   * investigated.
+   *
    * @return {Number} A double of milliseconds with a precision of 0.5us.
    */
   get timeOrigin() {
@@ -75,7 +83,8 @@ _PerfService.prototype = {
 
   /**
    * Returns the "absolute" version of performance.now(), i.e. one that
-   * based on the timeOrigin of the XUL hiddenwindow.
+   * should ([bug 1401406](https://bugzilla.mozilla.org/show_bug.cgi?id=1401406)
+   * be comparable across both chrome and content.
    *
    * @return {Number}
    */

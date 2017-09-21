@@ -293,7 +293,7 @@ public class SendTab extends ShareMethod {
 
         @Override
         public void sync() {
-            fxAccount.requestImmediateSync(STAGES_TO_SYNC, null);
+            fxAccount.requestImmediateSync(STAGES_TO_SYNC, null, true);
         }
     }
 }

@@ -106,7 +106,7 @@ var SessionHistoryInternal = {
     // valid entries, make sure we at least include the current page,
     // unless of course we just skipped all entries because aFromIdx was big enough.
     if (data.entries.length == 0 && (skippedCount != entryCount || aFromIdx < 0)) {
-      let uri = webNavigation.currentURI.spec;
+      let uri = webNavigation.currentURI.displaySpec;
       let body = webNavigation.document.body;
       // We landed here because the history is inaccessible or there are no
       // history entries. In that case we should at least record the docShell's
@@ -146,7 +146,7 @@ var SessionHistoryInternal = {
    * @return object
    */
   serializeEntry(shEntry) {
-    let entry = { url: shEntry.URI.spec, title: shEntry.title };
+    let entry = { url: shEntry.URI.displaySpec, title: shEntry.title };
 
     if (shEntry.isSubFrame) {
       entry.subframe = true;
