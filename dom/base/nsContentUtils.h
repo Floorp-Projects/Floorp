@@ -800,6 +800,7 @@ public:
                             nsINode* aContext,
                             nsIDocument* aLoadingDocument,
                             nsIPrincipal* aLoadingPrincipal,
+                            uint64_t aRequestContextID,
                             nsIURI* aReferrer,
                             mozilla::net::ReferrerPolicy aReferrerPolicy,
                             imgINotificationObserver* aObserver,
@@ -3038,7 +3039,8 @@ public:
   static void
   GetContentPolicyTypeForUIImageLoading(nsIContent* aLoadingNode,
                                         nsIPrincipal** aLoadingPrincipal,
-                                        nsContentPolicyType& aContentPolicyType);
+                                        nsContentPolicyType& aContentPolicyType,
+                                        uint64_t* aRequestContextID);
 
   static nsresult
   CreateJSValueFromSequenceOfObject(JSContext* aCx,
