@@ -75,8 +75,8 @@ function promiseLibraryClosed(organizer) {
  *        Data flavor to expect.
  */
 function promiseClipboard(aPopulateClipboardFn, aFlavor) {
-  return new Promise(resolve => {
-    waitForClipboard(data => !!data, aPopulateClipboardFn, resolve, aFlavor);
+  return new Promise((resolve, reject) => {
+    waitForClipboard(data => !!data, aPopulateClipboardFn, resolve, reject, aFlavor);
   });
 }
 
@@ -471,3 +471,15 @@ var withSidebarTree = async function(type, taskFn) {
     SidebarUI.hide();
   }
 };
+
+function promisePlacesInitComplete() {
+  const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
+                         .getService(Ci.nsIObserver);
+
+  let placesInitCompleteObserved = TestUtils.topicObserved("places-browser-init-complete")
+
+  gBrowserGlue.observe(null, "browser-glue-test",
+    "places-browser-init-complete");
+
+  return placesInitCompleteObserved;
+}

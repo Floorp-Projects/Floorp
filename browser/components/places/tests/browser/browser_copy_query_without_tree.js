@@ -8,6 +8,8 @@ const SHORTCUT_URL = "place:folder=2";
 const QUERY_URL = "place:sort=8&maxResults=10";
 
 add_task(async function copy_toolbar_shortcut() {
+  await promisePlacesInitComplete();
+
   let library = await promiseLibrary();
 
   registerCleanupFunction(function() {
@@ -21,6 +23,7 @@ add_task(async function copy_toolbar_shortcut() {
                          PlacesUtils.TYPE_X_MOZ_PLACE);
 
   library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+
   await library.ContentTree.view.controller.paste();
 
   let toolbarCopyNode = library.ContentTree.view.view.nodeForTreeIndex(0);

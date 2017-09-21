@@ -264,6 +264,7 @@ const OBSERVE_LASTWINDOW_CLOSE_TOPICS = AppConstants.platform != "macosx";
 BrowserGlue.prototype = {
   _saveSession: false,
   _migrationImportsDefaultBookmarks: false,
+  _placesBrowserInitComplete: false,
 
   _setPrefToSaveSession: function BG__setPrefToSaveSession(aForce) {
     if (!this._saveSession && !aForce)
@@ -407,6 +408,10 @@ BrowserGlue.prototype = {
           Object.defineProperty(this, "AlertsService", {
             value: subject.wrappedJSObject
           });
+        } else if (data == "places-browser-init-complete") {
+          if (this._placesBrowserInitComplete) {
+            Services.obs.notifyObservers(null, "places-browser-init-complete");
+          }
         }
         break;
       case "initial-migration-will-import-default-bookmarks":
@@ -1455,6 +1460,7 @@ BrowserGlue.prototype = {
       // in any case, better safe than sorry.
       this._firstWindowReady.then(() => {
         this._showPlacesLockedNotificationBox();
+        this._placesBrowserInitComplete = true;
         Services.obs.notifyObservers(null, "places-browser-init-complete");
       });
       return;
@@ -1623,6 +1629,7 @@ BrowserGlue.prototype = {
     }).then(() => {
       // NB: deliberately after the catch so that we always do this, even if
       // we threw halfway through initializing in the Task above.
+      this._placesBrowserInitComplete = true;
       Services.obs.notifyObservers(null, "places-browser-init-complete");
     });
   },
