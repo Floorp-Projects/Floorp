@@ -75,7 +75,7 @@ XPCOMUtils.defineLazyGetter(this, "SMALLSVG_DATA_URI", function() {
 var gTestDir = do_get_cwd();
 
 // Initialize profile.
-var gProfD = do_get_profile(true);
+var gProfD = do_get_profile();
 
 Services.prefs.setBoolPref("browser.urlbar.usepreloadedtopurls.enabled", false);
 do_register_cleanup(() =>
