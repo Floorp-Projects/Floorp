@@ -23,7 +23,6 @@ caption > label:not(.dialogTitle) {
   margin-inline-end: 9px;
 }
 
-textbox + button,
 filefield + button {
   margin-inline-start: -4px;
   margin-top: 4px;

@@ -98,6 +98,7 @@
   --theme-command-line-image-focus: url(chrome://devtools/skin/images/commandline-icon.svg#light-theme-focus);
 
   --theme-codemirror-gutter-background: #f4f4f4;
+  --theme-messageCloseButtonFilter: invert(0);
 }
 
 :root.theme-dark {
@@ -182,6 +183,7 @@
   --theme-command-line-image-focus: url(chrome://devtools/skin/images/commandline-icon.svg#dark-theme-focus);
 
   --theme-codemirror-gutter-background: #262b37;
+  --theme-messageCloseButtonFilter: invert(1);
 }
 
 :root.theme-firebug {
