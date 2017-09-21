@@ -16,6 +16,17 @@ const device = {
   os: "android",
 };
 
+const unicodeDevice = {
+  name: "\u00B6\u00C7\u00DA\u00E7\u0126",
+  width: 400,
+  height: 570,
+  pixelRatio: 1.5,
+  userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
+  touch: true,
+  firefoxOS: false,
+  os: "android",
+};
+
 const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
@@ -109,6 +120,65 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Ensure device properties like UA have been reset");
   yield testUserAgent(ui, navigator.userAgent);
+});
+
+addRDMTask(TEST_URL, function* ({ ui }) {
+  let { toolWindow } = ui;
+  let { store, document } = toolWindow;
+  let React = toolWindow.require("devtools/client/shared/vendor/react");
+  let { Simulate } = React.addons.TestUtils;
+
+  // Wait until the viewport has been added and the device list has been loaded
+  yield waitUntilState(store, state => state.viewports.length == 1
+    && state.devices.listState == Types.deviceListState.LOADED);
+
+  let deviceSelector = document.querySelector(".viewport-device-selector");
+  let submitButton = document.querySelector("#device-submit-button");
+
+  openDeviceModal(ui);
+
+  info("Reveal device adder form");
+  let adderShow = document.querySelector("#device-adder-show");
+  Simulate.click(adderShow);
+
+  info("Fill out device adder form by setting details to unicode device and save");
+  setDeviceAdder(ui, unicodeDevice);
+  let adderSave = document.querySelector("#device-adder-save");
+  let saved = waitUntilState(store, state => state.devices.custom.length == 1);
+  Simulate.click(adderSave);
+  yield saved;
+
+  info("Verify unicode device defaults to enabled in modal");
+  let deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
+    return cb.value == unicodeDevice.name;
+  });
+  ok(deviceCb, "Custom unicode device checkbox added to modal");
+  ok(deviceCb.checked, "Custom unicode device enabled");
+  Simulate.click(submitButton);
+
+  info("Look for custom unicode device in device selector");
+  let selectorOption = [...deviceSelector.options].find(opt =>
+    opt.value == unicodeDevice.name);
+  ok(selectorOption, "Custom unicode device option added to device selector");
+});
+
+addRDMTask(TEST_URL, function* ({ ui }) {
+  let { toolWindow } = ui;
+  let { store, document } = toolWindow;
+
+  // Wait until the viewport has been added and the device list has been loaded
+  yield waitUntilState(store, state => state.viewports.length == 1
+    && state.devices.listState == Types.deviceListState.LOADED);
+
+  let deviceSelector = document.querySelector(".viewport-device-selector");
+
+  // Check if the unicode custom device is present in the list of device options since
+  // we want to ensure that unicode device names are not forgotten after restarting RDM
+  // see bug 1379687
+  info("Look for custom unicode device in device selector");
+  let selectorOption = [...deviceSelector.options].find(opt =>
+    opt.value == unicodeDevice.name);
+  ok(selectorOption, "Custom unicode device option present in device selector");
 });
 
 function testDeviceAdder(ui, expected) {

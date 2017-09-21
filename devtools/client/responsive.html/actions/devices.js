@@ -36,7 +36,7 @@ function loadPreferredDevices() {
 
   if (Services.prefs.prefHasUserValue(DISPLAYED_DEVICES_PREF)) {
     try {
-      let savedData = Services.prefs.getCharPref(DISPLAYED_DEVICES_PREF);
+      let savedData = Services.prefs.getStringPref(DISPLAYED_DEVICES_PREF);
       savedData = JSON.parse(savedData);
       if (savedData.added && savedData.removed) {
         preferredDevices.added = new Set(savedData.added);
@@ -63,7 +63,7 @@ function updatePreferredDevices(devices) {
     removed: Array.from(devices.removed),
   };
   devicesToSave = JSON.stringify(devicesToSave);
-  Services.prefs.setCharPref(DISPLAYED_DEVICES_PREF, devicesToSave);
+  Services.prefs.setStringPref(DISPLAYED_DEVICES_PREF, devicesToSave);
 }
 
 module.exports = {
