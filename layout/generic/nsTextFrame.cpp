@@ -5192,58 +5192,7 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     return true;
   }
 
-  auto appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  LayoutDeviceRect layoutBoundsRect = LayoutDeviceRect::FromAppUnits(
-      mBounds, appUnitsPerDevPixel);
-  LayoutDeviceRect layoutClipRect = layoutBoundsRect;
-  if (GetClip().HasClip()) {
-    layoutClipRect = LayoutDeviceRect::FromAppUnits(
-                GetClip().GetClipRect(), appUnitsPerDevPixel);
-  }
-
-  LayerRect boundsRect = LayerRect::FromUnknownRect(layoutBoundsRect.ToUnknownRect());
-  LayerRect clipRect = LayerRect::FromUnknownRect(layoutClipRect.ToUnknownRect());
-  wr::LayoutRect wrClipRect = aSc.ToRelativeLayoutRect(clipRect); // wr::ToLayoutRect(clipRect);
-  wr::LayoutRect wrBoundsRect = aSc.ToRelativeLayoutRect(boundsRect); //wr::ToLayoutRect(boundsRect);
-  bool backfaceVisible = !BackfaceIsHidden();
-
-  // Drawing order: selections, shadows,
-  //                underline, overline, [grouped in one array]
-  //                text, emphasisText,  [grouped in one array]
-  //                lineThrough
-
-  for (auto& part : mTextDrawer->GetParts()) {
-    if (part.selection) {
-      auto selection = part.selection.value();
-      aBuilder.PushRect(selection.rect, wrClipRect, backfaceVisible, selection.color);
-    }
-  }
-
-  for (auto& part : mTextDrawer->GetParts()) {
-    // WR takes the shadows in CSS-order (reverse of rendering order),
-    // because the drawing of a shadow actually occurs when it's popped.
-    for (const wr::TextShadow& shadow : part.shadows) {
-      aBuilder.PushTextShadow(wrBoundsRect, wrClipRect, backfaceVisible, shadow);
-    }
-
-    for (const wr::Line& decoration : part.beforeDecorations) {
-      aBuilder.PushLine(wrClipRect, backfaceVisible, decoration);
-    }
-
-    for (const mozilla::layout::TextRunFragment& text : part.text) {
-      aManager->WrBridge()->PushGlyphs(aBuilder, text.glyphs, text.font,
-                                       text.color, aSc, boundsRect, clipRect,
-                                       backfaceVisible);
-    }
-
-    for (const wr::Line& decoration : part.afterDecorations) {
-      aBuilder.PushLine(wrClipRect, backfaceVisible, decoration);
-    }
-
-    for (size_t i = 0; i < part.shadows.Length(); ++i) {
-      aBuilder.PopTextShadow();
-    }
-  }
+  mTextDrawer->CreateWebRenderCommands(aBuilder, aSc, aManager, this, mBounds);
 
   return true;
 }
