@@ -5,6 +5,9 @@
 # If a command fails then do not proceed and fail this script too.
 set -e
 
+# Required for fastlane (otherwise it just crashes randomly)
+export LC_ALL="en_US.UTF-8"
+
 # Start emulator (in background)
 emulator64-arm -avd test -noaudio -no-window -no-accel -gpu off -verbose &
 
