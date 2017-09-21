@@ -44,8 +44,11 @@
 
   <script type="application/javascript"
           src="chrome://browser/content/places/places.js"/>
+#ifndef XP_MACOSX
+  <!-- On Mac, this is included via macBrowserOverlay.xul -> browser.js -> defineLazyScriptGetter -->
   <script type="application/javascript"
           src="chrome://browser/content/places/editBookmarkOverlay.js"/>
+#endif
 
   <stringbundleset id="placesStringSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
