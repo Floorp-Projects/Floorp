@@ -4,6 +4,7 @@
 
 import fnmatch
 import glob
+import gzip
 import json
 import os
 import sys
@@ -116,11 +117,16 @@ class TestMemoryUsage(MarionetteTestCase):
         """
         Handles moving DMD reports from the temp dir to our resultsDir.
         """
+        from dmd import fixStackTraces
+
         # Move DMD files from temp dir to resultsDir.
         tmpdir = tempfile.gettempdir()
         tmp_files = os.listdir(tmpdir)
         for f in fnmatch.filter(tmp_files, "dmd-*.json.gz"):
             f = os.path.join(tmpdir, f)
+            self.logger.info("Fixing stacks for %s, this may take a while" % f)
+            isZipped = True
+            fixStackTraces(f, isZipped, gzip.open)
             shutil.move(f, self._resultsDir)
 
         # Also attempt to cleanup the unified memory reports.
