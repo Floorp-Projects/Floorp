@@ -311,12 +311,6 @@ toolbarpaletteitem {
 #main-window[tabletmode] #titlebar-max {
   display: none !important;
 }
-
-#main-window[tabsintitlebar] #TabsToolbar,
-#main-window[tabsintitlebar] #toolbar-menubar,
-#main-window[tabsintitlebar] #navigator-toolbox > toolbar:-moz-lwtheme {
-  -moz-window-dragging: drag;
-}
 %endif
 
 %endif
