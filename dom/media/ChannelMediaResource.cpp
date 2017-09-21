@@ -68,9 +68,8 @@ nsresult
 ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
                                                nsISupports* aContext)
 {
-  if (aRequest != mResource->mChannel) {
+  if (!mResource)
     return NS_OK;
-  }
   return mResource->OnStartRequest(aRequest, mOffset);
 }
 
@@ -79,9 +78,8 @@ ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
                                               nsISupports* aContext,
                                               nsresult aStatus)
 {
-  if (aRequest != mResource->mChannel) {
+  if (!mResource)
     return NS_OK;
-  }
   return mResource->OnStopRequest(aRequest, aStatus);
 }
 
@@ -93,9 +91,7 @@ ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
                                                 uint32_t aCount)
 {
   // This might happen off the main thread.
-  // Don't check |aRequest != mResource->mChannel| for it is a data race to read
-  // mResource->mChannel off the main thread. Instead we check the load ID to
-  // determine if the data is from an old channel.
+  MOZ_DIAGNOSTIC_ASSERT(mResource);
   return mResource->OnDataAvailable(mLoadID, aStream, aCount);
 }
 
@@ -107,7 +103,7 @@ ChannelMediaResource::Listener::AsyncOnChannelRedirect(
   nsIAsyncVerifyRedirectCallback* cb)
 {
   nsresult rv = NS_OK;
-  if (aOld == mResource->mChannel) {
+  if (mResource) {
     rv = mResource->OnChannelRedirect(aOld, aNew, aFlags, mOffset);
   }
 
@@ -419,6 +415,8 @@ ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
                                       uint32_t aCount)
 {
   // This might happen off the main thread.
+  // Don't assert |mChannel.get() == aRequest| since reading mChannel here off
+  // the main thread is a data race.
 
   RefPtr<ChannelMediaResource> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
@@ -589,6 +587,7 @@ void ChannelMediaResource::CloseChannel()
   }
 
   if (mListener) {
+    mListener->Revoke();
     mListener = nullptr;
   }
 }
