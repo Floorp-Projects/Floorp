@@ -1896,7 +1896,8 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, nscoord a
   // reflow... If that's the case, and aWidth or aHeight is unconstrained,
   // ignore them altogether.
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
-  if (!rootFrame && aHeight == NS_UNCONSTRAINEDSIZE) {
+  if (!rootFrame &&
+      (aHeight == NS_UNCONSTRAINEDSIZE || aWidth == NS_UNCONSTRAINEDSIZE)) {
     // We can't do the work needed for SizeToContent without a root
     // frame, and we want to return before setting the visible area.
     return NS_ERROR_NOT_AVAILABLE;
