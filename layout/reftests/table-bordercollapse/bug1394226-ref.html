@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Table border collapse</title>
+<style>
+  table {
+    border-collapse: collapse;
+  }
+  tr.odd {
+    background-color: LightCyan;
+  }
+  tr.even {
+    background-color: LightSkyBlue;
+  }
+  td {
+    border: 5px solid DarkBlue;
+  }
+  div {
+    height: 10px;
+  }
+</style>
+</head>
+<body>
+  <div></div>
+  <table>
+    <tr class="odd">
+      <td>Cell 1-1</td>
+      <td>Cell 1-2</td>
+    </tr>
+    <tr class="even">
+      <td>Cell 2-1</td>
+      <td>Cell 2-2
+        <table>
+          <tr class="odd">
+            <td>Cell 2-2/1-1</td>
+            <td>Cell 2-2/1-2</td>
+          </tr>
+          <tr class="even">
+            <td>Cell 2-2/2-1</td>
+            <td>Cell 2-2/2-2</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

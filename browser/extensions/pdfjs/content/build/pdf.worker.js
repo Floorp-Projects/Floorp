@@ -2244,6 +2244,16 @@ var PredictorStream = function PredictorStreamClosure() {
         buffer[pos] = buffer[pos - colors] + rawBytes[i];
         pos++;
       }
+    } else if (bits === 16) {
+      var bytesPerPixel = colors * 2;
+      for (i = 0; i < bytesPerPixel; ++i) {
+        buffer[pos++] = rawBytes[i];
+      }
+      for (; i < rowBytes; i += 2) {
+        var sum = ((rawBytes[i] & 0xFF) << 8) + (rawBytes[i + 1] & 0xFF) + ((buffer[pos - bytesPerPixel] & 0xFF) << 8) + (buffer[pos - bytesPerPixel + 1] & 0xFF);
+        buffer[pos++] = sum >> 8 & 0xFF;
+        buffer[pos++] = sum & 0xFF;
+      }
     } else {
       var compArray = new Uint8Array(colors + 1);
       var bitMask = (1 << bits) - 1;
@@ -2740,7 +2750,9 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
   function CCITTFaxStream(str, maybeLength, params) {
     this.str = str;
     this.dict = str.dict;
-    params = params || _primitives.Dict.empty;
+    if (!(0, _primitives.isDict)(params)) {
+      params = _primitives.Dict.empty;
+    }
     this.encoding = params.get('K') || 0;
     this.eoline = params.get('EndOfLine') || false;
     this.byteAlign = params.get('EncodedByteAlign') || false;
@@ -2761,6 +2773,7 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
     this.inputBits = 0;
     this.inputBuf = 0;
     this.outputBits = 0;
+    this.rowsDone = false;
     var code1;
     while ((code1 = this.lookBits(12)) === 0) {
       this.eatBits(1);
@@ -2830,6 +2843,9 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
     var columns = this.columns;
     var refPos, blackPixels, bits, i;
     if (this.outputBits === 0) {
+      if (this.rowsDone) {
+        this.eof = true;
+      }
       if (this.eof) {
         return null;
       }
@@ -2995,7 +3011,7 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
         this.inputBits &= ~7;
       }
       if (!this.eoblock && this.row === this.rows - 1) {
-        this.eof = true;
+        this.rowsDone = true;
       } else {
         code1 = this.lookBits(12);
         if (this.eoline) {
@@ -3016,7 +3032,7 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
           this.eof = true;
         }
       }
-      if (!this.eof && this.encoding > 0) {
+      if (!this.eof && this.encoding > 0 && !this.rowsDone) {
         this.nextLine2D = !this.lookBits(1);
         this.eatBits(1);
       }
@@ -4796,7 +4812,7 @@ var Parser = function ParserClosure() {
       var params = dict.get('DecodeParms', 'DP');
       if ((0, _primitives.isName)(filter)) {
         if (Array.isArray(params)) {
-          params = this.xref.fetchIfRef(params[0]);
+          (0, _util.warn)('/DecodeParms should not contain an Array, ' + 'when /Filter contains a Name.');
         }
         return this.makeFilter(stream, filter.name, length, params);
       }
@@ -5333,12 +5349,21 @@ var _primitives = __w_pdfjs_require__(1);
 
 var _ps_parser = __w_pdfjs_require__(26);
 
+let IsEvalSupportedCached = {
+  get value() {
+    return (0, _util.shadow)(this, 'value', (0, _util.isEvalSupported)());
+  }
+};
 var PDFFunction = function PDFFunctionClosure() {
   var CONSTRUCT_SAMPLED = 0;
   var CONSTRUCT_INTERPOLATED = 2;
   var CONSTRUCT_STICHED = 3;
   var CONSTRUCT_POSTSCRIPT = 4;
+  let isEvalSupported = true;
   return {
+    setIsEvalSupported(support = true) {
+      isEvalSupported = support !== false;
+    },
     getSampleArray: function PDFFunction_getSampleArray(size, outputSize, bps, str) {
       var i, ii;
       var length = 1;
@@ -5610,9 +5635,11 @@ var PDFFunction = function PDFFunctionClosure() {
       var domain = IR[1];
       var range = IR[2];
       var code = IR[3];
-      var compiled = new PostScriptCompiler().compile(code, domain, range);
-      if (compiled) {
-        return new Function('src', 'srcOffset', 'dest', 'destOffset', compiled);
+      if (isEvalSupported && IsEvalSupportedCached.value) {
+        let compiled = new PostScriptCompiler().compile(code, domain, range);
+        if (compiled) {
+          return new Function('src', 'srcOffset', 'dest', 'destOffset', compiled);
+        }
       }
       (0, _util.info)('Unable to compile PS function');
       var numOutputs = range.length >> 1;
@@ -16705,7 +16732,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     maxImageSize: -1,
     disableFontFace: false,
     nativeImageDecoderSupport: _util.NativeImageDecoding.DECODE,
-    ignoreErrors: false
+    ignoreErrors: false,
+    isEvalSupported: true
   };
   function NativeImageDecoder(xref, resources, handler, forceDataSchema) {
     this.xref = xref;
@@ -18270,7 +18298,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var defaultVMetrics;
       var i, ii, j, jj, start, code, widths;
       if (properties.composite) {
-        defaultWidth = dict.get('DW') || 1000;
+        defaultWidth = dict.has('DW') ? dict.get('DW') : 1000;
         widths = dict.get('W');
         if (widths) {
           for (i = 0, ii = widths.length; i < ii; i++) {
@@ -23702,8 +23730,8 @@ exports.getUnicodeForGlyph = getUnicodeForGlyph;
 "use strict";
 
 
-var pdfjsVersion = '1.9.562';
-var pdfjsBuild = '31a34335';
+var pdfjsVersion = '1.9.583';
+var pdfjsBuild = 'd7b37ae7';
 var pdfjsCoreWorker = __w_pdfjs_require__(18);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -24088,7 +24116,8 @@ var WorkerMessageHandler = {
         maxImageSize: data.maxImageSize === undefined ? -1 : data.maxImageSize,
         disableFontFace: data.disableFontFace,
         nativeImageDecoderSupport: data.nativeImageDecoderSupport,
-        ignoreErrors: data.ignoreErrors
+        ignoreErrors: data.ignoreErrors,
+        isEvalSupported: data.isEvalSupported
       };
       getPdfManager(data, evaluatorOptions).then(function (newPdfManager) {
         if (terminated) {
@@ -27541,6 +27570,8 @@ var _crypto = __w_pdfjs_require__(12);
 
 var _parser = __w_pdfjs_require__(5);
 
+var _function = __w_pdfjs_require__(6);
+
 var Page = function PageClosure() {
   var DEFAULT_USER_UNIT = 1.0;
   var LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -27948,6 +27979,8 @@ var PDFDocument = function PDFDocumentClosure() {
         }
       };
       this.catalog = new _obj.Catalog(this.pdfManager, this.xref, pageFactory);
+      let evaluatorOptions = this.pdfManager.evaluatorOptions;
+      _function.PDFFunction.setIsEvalSupported(evaluatorOptions.isEvalSupported);
     },
     get numPages() {
       var linearization = this.linearization;
@@ -39522,6 +39555,8 @@ class AnnotationFactory {
         return new SquigglyAnnotation(parameters);
       case 'StrikeOut':
         return new StrikeOutAnnotation(parameters);
+      case 'Stamp':
+        return new StampAnnotation(parameters);
       case 'FileAttachment':
         return new FileAttachmentAnnotation(parameters);
       default:
@@ -40045,6 +40080,13 @@ class StrikeOutAnnotation extends Annotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.STRIKEOUT;
+    this._preparePopup(parameters.dict);
+  }
+}
+class StampAnnotation extends Annotation {
+  constructor(parameters) {
+    super(parameters);
+    this.data.annotationType = _util.AnnotationType.STAMP;
     this._preparePopup(parameters.dict);
   }
 }
