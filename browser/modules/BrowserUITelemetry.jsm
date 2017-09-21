@@ -92,7 +92,6 @@ XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
     "developer-button",
     "feed-button",
     "email-link-button",
-    "containers-panelmenu",
     ...LEGACY_PANEL_PLACEMENTS,
     "characterencoding-button",
   ];
