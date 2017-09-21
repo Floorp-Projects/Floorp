@@ -1061,6 +1061,34 @@ ServiceWorkerRegistrar::ProfileStopped()
 
   PBackgroundChild* child = BackgroundChild::GetForCurrentThread();
   if (!child) {
+    // Mutations to the ServiceWorkerRegistrar happen on the PBackground thread,
+    // issued by the ServiceWorkerManagerService, so the appropriate place to
+    // trigger shutdown is on that thread.
+    //
+    // However, it's quite possible that the PBackground thread was not brought
+    // into existence for xpcshell tests.  We don't cause it to be created
+    // ourselves for any reason, for example.
+    //
+    // In this scenario, we know that:
+    // - We will receive exactly one call to ourself from BlockShutdown() and
+    //   BlockShutdown() will be called (at most) once.
+    // - The only way our Shutdown() method gets called is via
+    //   BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar() being
+    //   invoked, which only happens if we get to that send below here that we
+    //   can't get to.
+    // - All Shutdown() does is set mShuttingDown=true (essential for
+    //   invariants) and invoke MaybeScheduleShutdownCompleted().
+    // - Since there is no PBackground thread, mRunnableCounter must be 0
+    //   because only ScheduleSaveData() increments it and it only runs on the
+    //   background thread, so it cannot have run.  And so we would expect
+    //   MaybeScheduleShutdownCompleted() to schedule an invocation of
+    //   ShutdownCompleted on the main thread.
+    //
+    // So it's appropriate for us to set mShuttingDown=true (as Shutdown would
+    // do) and directly invoke ShutdownCompleted() (as Shutdown would indirectly
+    // do via MaybeScheduleShutdownCompleted).
+    mShuttingDown = true;
+    ShutdownCompleted();
     return;
   }
 
