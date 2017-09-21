@@ -225,8 +225,6 @@ public:
    * opaque to transparent or vice versa, since the details of rendering can
    * depend on the buffer type.  mDidSelfCopy is true if we kept our buffer
    * but used MovePixels() to shift its content.
-   * mFinalizeOnPaintThread is true if we need to copy the front
-   * to back buffer and we didn't destroy the buffer during BeginPaint.
    */
   struct PaintState {
     PaintState()
@@ -236,7 +234,6 @@ public:
       , mClip(DrawRegionClip::NONE)
       , mContentType(gfxContentType::SENTINEL)
       , mDidSelfCopy(false)
-      , mFinalizeOnPaintThread(true)
     {}
 
     nsIntRegion mRegionToDraw;
@@ -245,7 +242,6 @@ public:
     DrawRegionClip mClip;
     ContentType mContentType;
     bool mDidSelfCopy;
-    bool mFinalizeOnPaintThread;
   };
 
   enum {
@@ -272,13 +268,9 @@ public:
    * rotated content that crosses the physical buffer boundary. The caller
    * will need to call BorrowDrawTargetForPainting multiple times to achieve
    * this.
-   * @param aCopyToBackBuffer Whether to copy the front buffer to back buffer
-   * This should generally be true unless OMTP is enabled where we want to do
-   * this on the paint thread instead.
    */
   PaintState BeginPaint(PaintedLayer* aLayer,
-                        uint32_t aFlags,
-                        bool aCopyToBackbuffer = true);
+                        uint32_t aFlags);
 
   struct DrawIterator {
     friend class RotatedContentBuffer;
