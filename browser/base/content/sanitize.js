@@ -20,6 +20,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 
+XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
+                                   "@mozilla.org/serviceworkers/manager;1",
+                                   "nsIServiceWorkerManager");
 XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");
@@ -292,6 +295,14 @@ Sanitizer.prototype = {
 
         // LocalStorage
         Services.obs.notifyObservers(null, "extension:purge-localStorage");
+
+        // ServiceWorkers
+        let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+        for (let i = 0; i < serviceWorkers.length; i++) {
+          let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+          let host = sw.principal.URI.host;
+          serviceWorkerManager.removeAndPropagate(host);
+        }
 
         // QuotaManager
         let promises = [];
