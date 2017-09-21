@@ -190,6 +190,7 @@ class DateTimeTestHelper {
       let pickerClosePromise = new Promise(resolve => {
         this.panel.addEventListener("popuphidden", resolve, {once: true});
       });
+      this.panel.hidePopup();
       this.panel.closePicker();
       await pickerClosePromise;
     }
