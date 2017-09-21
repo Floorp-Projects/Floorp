@@ -243,10 +243,6 @@ var noframe_container = document.getElementById("content");
 })();
 
 (function test_bug_1235015() {
-  if (!("maskImage" in document.documentElement.style)) {
-    return;
-  }
-
   // "masks" object contains non-initial mask longhand values.
   var emptyMasks = {
     // More then one <mask-reference>, or any mask-image value other then
