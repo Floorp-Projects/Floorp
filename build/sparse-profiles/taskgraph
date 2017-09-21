@@ -7,6 +7,10 @@ path:browser/locales/all-locales
 # Lots of random files in here are read. Just pull in the whole thing.
 path:build/
 
+# TODO remove once bug 1402010 is resolved and test manifests aren't
+# processed in Files() reading mode in moz.build files.
+path:layout/tools/reftest/
+
 # This file is read as part of validating the taskgraph.
 path:mobile/locales/l10n-changesets.json
 
