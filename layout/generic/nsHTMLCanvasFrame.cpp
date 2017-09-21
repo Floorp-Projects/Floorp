@@ -175,7 +175,7 @@ public:
         // That happens in WebRenderCompositableHolder.
 
         wr::LayoutRect r = aSc.ToRelativeLayoutRect(bounds);
-        aBuilder.PushIFrame(r, data->GetPipelineId().ref());
+        aBuilder.PushIFrame(r, !BackfaceIsHidden(), data->GetPipelineId().ref());
 
         gfx::Matrix4x4 scTransform;
         if (data->NeedsYFlip()) {

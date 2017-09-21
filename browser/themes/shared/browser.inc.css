@@ -79,3 +79,47 @@
   display: -moz-box;
 }
 
+/* Private browsing and accessibility indicators */
+
+.accessibility-indicator,
+.private-browsing-indicator {
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  margin-right: 8px;
+  position: relative;
+  /* Need to ensure this gets positioned on top of the position:relative #navigator-toolbox
+   * in case the dark/light themes give that item a background. */
+  z-index: 1;
+}
+
+.accessibility-indicator {
+  background-image: url("chrome://browser/skin/accessibility.svg");
+  -moz-user-focus: normal;
+  /* Clear default button styling */
+  -moz-appearance: none;
+  margin-top: unset;
+  margin-bottom: unset;
+  min-width: unset;
+  color: unset;
+  text-shadow: unset;
+}
+
+.accessibility-indicator:-moz-any(:hover, :active, :focus, :-moz-focusring) {
+  background-image: url("chrome://browser/skin/accessibility-active.svg");
+  outline: 0;
+}
+
+.private-browsing-indicator {
+  background-image: url("chrome://browser/skin/private-browsing.svg");
+}
+
+:root:not([accessibilitymode]) .accessibility-indicator,
+:root:not([privatebrowsingmode=temporary]) .private-browsing-indicator {
+  display: none;
+}
+
+/* End private browsing and accessibility indicators */

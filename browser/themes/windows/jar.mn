@@ -23,11 +23,6 @@ browser.jar:
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/pageInfo.css
   skin/classic/browser/pageInfo.png
-  skin/classic/browser/privatebrowsing-mask-tabstrip.png
-  skin/classic/browser/privatebrowsing-mask-tabstrip-win7.png
-  skin/classic/browser/privatebrowsing-mask-titlebar.png
-  skin/classic/browser/privatebrowsing-mask-titlebar-win7.png
-  skin/classic/browser/privatebrowsing-mask-titlebar-win7-tall.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
@@ -91,6 +86,4 @@ browser.jar:
 % override chrome://browser/skin/feeds/videoFeedIcon.png              chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/videoFeedIcon16.png            chrome://browser/skin/feeds/feedIcon16.png
 
-% override chrome://browser/skin/privatebrowsing-mask-tabstrip.png    chrome://browser/skin/privatebrowsing-mask-tabstrip-win7.png  os=WINNT osversion<=6.1
-% override chrome://browser/skin/privatebrowsing-mask-titlebar.png    chrome://browser/skin/privatebrowsing-mask-titlebar-win7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-win7.png   os=WINNT osversion<=6.1
