@@ -1080,7 +1080,7 @@ pub extern "C" fn wr_state_delete(state: *mut WrState) {
 pub extern "C" fn wr_dp_begin(state: &mut WrState,
                               width: u32,
                               height: u32) {
-    assert!(unsafe { !is_in_render_thread() });
+    debug_assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.data.clear();
 
     let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
@@ -1100,7 +1100,7 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_end(state: &mut WrState) {
-    assert!(unsafe { !is_in_render_thread() });
+    debug_assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
 }
 
@@ -1115,7 +1115,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               mix_blend_mode: MixBlendMode,
                                               filters: *const WrFilterOp,
                                               filter_count: usize) {
-    assert!(unsafe { !is_in_render_thread() });
+    debug_assert!(unsafe { !is_in_render_thread() });
 
     let c_filters = make_slice(filters, filter_count);
     let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
@@ -1170,7 +1170,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
-    assert!(unsafe { !is_in_render_thread() });
+    debug_assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
 }
 
@@ -1181,7 +1181,7 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
                                     complex_count: usize,
                                     mask: *const WrImageMask)
                                     -> u64 {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
     let complex_slice = make_slice(complex, complex_count);
     let complex_iter = complex_slice.iter().map(|x| x.into());
     let mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
@@ -1201,13 +1201,13 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
                                   clip_id: u64) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.push_clip_id(ClipId::Clip(clip_id, 0, state.pipeline_id));
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
-    assert!(unsafe { !is_in_render_thread() });
+    debug_assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_clip_id();
 }
 
@@ -1226,14 +1226,14 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
                                           scroll_id: u64) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
     let clip_id = ClipId::new(scroll_id, state.pipeline_id);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.pop_clip_id();
 }
 
@@ -1251,7 +1251,7 @@ pub extern "C" fn wr_scroll_layer_with_id(dh: &mut DocumentHandle,
 pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
                                                   scroll_id: u64,
                                                   clip_id: *const u64) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
     let scroll_id = ClipId::new(scroll_id, state.pipeline_id);
     let info = if let Some(&id) = unsafe { clip_id.as_ref() } {
         ClipAndScrollInfo::new(
@@ -1265,7 +1265,7 @@ pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.pop_clip_id();
 }
 
@@ -1273,7 +1273,7 @@ pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: LayoutRect,
                                     pipeline_id: WrPipelineId) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let prim_info = LayoutPrimitiveInfo::new(rect);
     state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id);
@@ -1284,7 +1284,7 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   rect: LayoutRect,
                                   clip: LayoutRect,
                                   color: ColorF) {
-    assert!(unsafe { !is_in_render_thread() });
+    debug_assert!(unsafe { !is_in_render_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder.dl_builder.push_rect(&prim_info,
@@ -1299,7 +1299,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    tile_spacing: LayoutSize,
                                    image_rendering: ImageRendering,
                                    key: WrImageKey) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
@@ -1321,7 +1321,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               image_key_2: WrImageKey,
                                               color_space: WrYuvColorSpace,
                                               image_rendering: ImageRendering) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
@@ -1341,7 +1341,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             image_key_1: WrImageKey,
                                             color_space: WrYuvColorSpace,
                                             image_rendering: ImageRendering) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
@@ -1360,7 +1360,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    image_key_0: WrImageKey,
                                                    color_space: WrYuvColorSpace,
                                                    image_rendering: ImageRendering) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder
@@ -1380,7 +1380,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   glyphs: *const GlyphInstance,
                                   glyph_count: u32,
                                   glyph_options: *const GlyphOptions) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let glyph_slice = make_slice(glyphs, glyph_count as usize);
 
@@ -1399,7 +1399,7 @@ pub extern "C" fn wr_dp_push_text_shadow(state: &mut WrState,
                                          bounds: LayoutRect,
                                          clip: LayoutRect,
                                          shadow: TextShadow) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     state.frame_builder.dl_builder.push_text_shadow(&prim_info, shadow.into());
@@ -1407,7 +1407,7 @@ pub extern "C" fn wr_dp_push_text_shadow(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_text_shadow(state: &mut WrState) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder.dl_builder.pop_text_shadow();
 }
@@ -1422,7 +1422,7 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
                                   width: f32,
                                   color: ColorF,
                                   style: LineStyle) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(LayoutRect::zero(), clip.into());
     state.frame_builder
@@ -1448,7 +1448,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     bottom: BorderSide,
                                     left: BorderSide,
                                     radius: BorderRadius) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let border_details = BorderDetails::Normal(NormalBorder {
                                                    left: left.into(),
@@ -1475,7 +1475,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           outset: SideOffsets2D<f32>,
                                           repeat_horizontal: RepeatMode,
                                           repeat_vertical: RepeatMode) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
     let border_details =
         BorderDetails::Image(ImageBorder {
                                  image_key: image,
@@ -1504,7 +1504,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              stops_count: usize,
                                              extend_mode: ExtendMode,
                                              outset: SideOffsets2D<f32>) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.to_owned();
@@ -1538,7 +1538,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     stops_count: usize,
                                                     extend_mode: ExtendMode,
                                                     outset: SideOffsets2D<f32>) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.to_owned();
@@ -1573,7 +1573,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              extend_mode: ExtendMode,
                                              tile_size: LayoutSize,
                                              tile_spacing: LayoutSize) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.to_owned();
@@ -1604,7 +1604,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              extend_mode: ExtendMode,
                                              tile_size: LayoutSize,
                                              tile_spacing: LayoutSize) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.to_owned();
@@ -1635,7 +1635,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         spread_radius: f32,
                                         border_radius: f32,
                                         clip_mode: BoxShadowClipMode) {
-    assert!(unsafe { is_in_main_thread() });
+    debug_assert!(unsafe { is_in_main_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder
