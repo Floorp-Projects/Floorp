@@ -15,6 +15,4 @@ XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
-JAR_MANIFESTS += ['jar.mn']
-
 FINAL_LIBRARY = 'xul'
