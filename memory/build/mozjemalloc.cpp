@@ -4723,65 +4723,6 @@ MozJemalloc::memalign(size_t aAlignment, size_t aSize)
   return ret;
 }
 
-template<void* (*memalign)(size_t, size_t)>
-struct AlignedAllocator
-{
-  static inline int
-  posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize)
-  {
-    void* result;
-
-    /* alignment must be a power of two and a multiple of sizeof(void*) */
-    if (((aAlignment - 1) & aAlignment) != 0 || aAlignment < sizeof(void*)) {
-      return EINVAL;
-    }
-
-    /* The 0-->1 size promotion is done in the memalign() call below */
-
-    result = memalign(aAlignment, aSize);
-
-    if (!result) {
-      return ENOMEM;
-    }
-
-    *aMemPtr = result;
-    return 0;
-  }
-
-  static inline void*
-  aligned_alloc(size_t aAlignment, size_t aSize)
-  {
-    if (aSize % aAlignment) {
-      return nullptr;
-    }
-    return memalign(aAlignment, aSize);
-  }
-
-  static inline void*
-  valloc(size_t aSize)
-  {
-    return memalign(GetKernelPageSize(), aSize);
-  }
-};
-
-template<> inline int
-MozJemalloc::posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize)
-{
-  return AlignedAllocator<memalign>::posix_memalign(aMemPtr, aAlignment, aSize);
-}
-
-template<> inline void*
-MozJemalloc::aligned_alloc(size_t aAlignment, size_t aSize)
-{
-  return AlignedAllocator<memalign>::aligned_alloc(aAlignment, aSize);
-}
-
-template<> inline void*
-MozJemalloc::valloc(size_t aSize)
-{
-  return AlignedAllocator<memalign>::valloc(aSize);
-}
-
 template<> inline void*
 MozJemalloc::calloc(size_t aNum, size_t aSize)
 {
@@ -4867,6 +4808,65 @@ MozJemalloc::free(void* aPtr)
   } else if (aPtr) {
     huge_dalloc(aPtr);
   }
+}
+
+template<void* (*memalign)(size_t, size_t)>
+struct AlignedAllocator
+{
+  static inline int
+  posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize)
+  {
+    void* result;
+
+    /* alignment must be a power of two and a multiple of sizeof(void*) */
+    if (((aAlignment - 1) & aAlignment) != 0 || aAlignment < sizeof(void*)) {
+      return EINVAL;
+    }
+
+    /* The 0-->1 size promotion is done in the memalign() call below */
+
+    result = memalign(aAlignment, aSize);
+
+    if (!result) {
+      return ENOMEM;
+    }
+
+    *aMemPtr = result;
+    return 0;
+  }
+
+  static inline void*
+  aligned_alloc(size_t aAlignment, size_t aSize)
+  {
+    if (aSize % aAlignment) {
+      return nullptr;
+    }
+    return memalign(aAlignment, aSize);
+  }
+
+  static inline void*
+  valloc(size_t aSize)
+  {
+    return memalign(GetKernelPageSize(), aSize);
+  }
+};
+
+template<> inline int
+MozJemalloc::posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize)
+{
+  return AlignedAllocator<memalign>::posix_memalign(aMemPtr, aAlignment, aSize);
+}
+
+template<> inline void*
+MozJemalloc::aligned_alloc(size_t aAlignment, size_t aSize)
+{
+  return AlignedAllocator<memalign>::aligned_alloc(aAlignment, aSize);
+}
+
+template<> inline void*
+MozJemalloc::valloc(size_t aSize)
+{
+  return AlignedAllocator<memalign>::valloc(aSize);
 }
 
 /*
