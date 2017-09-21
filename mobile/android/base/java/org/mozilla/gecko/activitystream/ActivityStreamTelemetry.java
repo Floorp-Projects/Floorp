@@ -144,9 +144,6 @@ public class ActivityStreamTelemetry {
                     case BOOKMARKED:
                         this.set(Contract.SOURCE_SUBTYPE, Contract.SUBTYPE_BOOKMARKED);
                         break;
-                    case POCKET:
-                        this.set(Contract.SOURCE_TYPE, Contract.TYPE_POCKET);
-                        break;
                     default:
                         throw new IllegalStateException("Unknown highlight source: " + source);
                 }

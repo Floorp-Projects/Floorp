@@ -57,6 +57,32 @@ Subtype indicates a reason an item which is being interacted with appeared in th
 - "suggested": a suggested top site, one of the default ones displayed when there's not enough browsing history available
 - "top": a frecency-based top site, based on browsing history. Neither "pinned" nor "suggested".
 
+Top Stories (Pocket) interactions
+---------------------------------
+
+Two event types are recorded for row items (links):
+1) User clicked on a Story item: event="loadurl.1", method="listitem"
+2) User clicked on the menu button: event="show.1", method="contextmenu"
+
+For both event types, in addition to global extras, the following information is recorded:
+
+.. code-block:: js
+
+    extras: {
+        ...
+        "source_type": "pocket",
+        "action_position": number /* 0-based index of a story being interacted with */
+    }
+
+For "loadurl.1" event, the following extra information is also recorded:
+
+.. code-block:: js
+
+    extras: {
+        ...
+        "count": number, /* total number of stories displayed */
+    }
+
 Highlight interactions
 ----------------------
 Two event types are recorded:
@@ -71,7 +97,8 @@ For both event types, in addition to global extras, the following information is
     extras: {
         ...
         "source_type": "highlights",
-        "source_subtype": "visited"/"bookmarked"
+        "source_subtype": "visited"/"bookmarked",
+        "action_position": number, /* 0-based index of a highlight being interacted with */
     }
 
 Subtype indicates reason an item being which is being interacted with appeared in the Highlights:
@@ -84,8 +111,7 @@ For "loadurl.1" event, the following extra information is also recorded:
 
     extras: {
         ...
-        "action_position": number, /* 0-based index of a highlight being interacted with */
-        "count": number, /* total number of highlights displayed */
+        "count": number /* total number of highlights displayed */
     }
 
 Context Menu interactions

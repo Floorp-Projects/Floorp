@@ -241,7 +241,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         final String referrerUri;
         final int viewType = getItemViewType(position);
 
+        final ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder();
         if (viewType == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
+            extras.forHighlightSource(model.getSource());
             sourceType = ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS;
             actionPosition = getHighlightsIndexFromAdapterPosition(position);
             size = getNumOfTypeShown(RowItemType.HIGHLIGHT_ITEM);
@@ -253,11 +255,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             referrerUri = PocketStoriesLoader.POCKET_REFERRER_URI;
         }
 
-        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
-                .forHighlightSource(model.getSource())
-                .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, sourceType)
-                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actionPosition)
-                .set(ActivityStreamTelemetry.Contract.COUNT, size);
+        extras.set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, sourceType)
+              .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actionPosition)
+              .set(ActivityStreamTelemetry.Contract.COUNT, size);
 
         Telemetry.sendUIEvent(
                 TelemetryContract.Event.LOAD_URL,
@@ -317,7 +317,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         final int actionPosition;
         final ActivityStreamContextMenu.MenuMode menuMode;
 
+        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder();
         if (model.getRowItemType() == RowItemType.HIGHLIGHT_ITEM) {
+            extras.forHighlightSource(model.getSource());
             sourceType = ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS;
             actionPosition = getHighlightsIndexFromAdapterPosition(position);
             menuMode = ActivityStreamContextMenu.MenuMode.HIGHLIGHT;
@@ -327,11 +329,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             menuMode = ActivityStreamContextMenu.MenuMode.TOPSTORY;
         }
 
-        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
-                .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, sourceType)
-                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actionPosition)
-                .set(ActivityStreamTelemetry.Contract.INTERACTION, interactionExtra)
-                .forHighlightSource(model.getSource());
+        extras.set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, sourceType)
+              .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actionPosition)
+              .set(ActivityStreamTelemetry.Contract.INTERACTION, interactionExtra);
 
         ActivityStreamContextMenu.show(webpageItemRow.itemView.getContext(),
                 webpageItemRow.getContextMenuAnchor(),
