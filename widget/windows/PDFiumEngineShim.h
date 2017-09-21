@@ -49,8 +49,6 @@ public:
 
   static already_AddRefed<PDFiumEngineShim> GetInstanceOrNull();
 
-  bool Init();
-
   FPDF_DOCUMENT LoadDocument(FPDF_STRING file_path,
                              FPDF_BYTESTRING aPassword);
   void CloseDocument(FPDF_DOCUMENT aDocument);
@@ -66,9 +64,9 @@ public:
                   int aRotate, int aFlags);
 
 private:
-
   PDFiumEngineShim();
   ~PDFiumEngineShim();
+  bool Init();
 
   bool        mInitialized ;
 
