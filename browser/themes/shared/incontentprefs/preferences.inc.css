@@ -62,6 +62,7 @@ label {
   margin-bottom: 0 !important;
 }
 
+menulist > hbox > label,
 menuitem > label,
 button > hbox > label {
   line-height: unset;
