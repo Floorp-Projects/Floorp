@@ -51,12 +51,14 @@ static char bin2hex_map[][3] = { "00", "01", "02", "03", "04", "05", "06", "07",
 static int hex2bin_map[] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0 /* '0' */, 1 /* '1' */, 2 /* '2' */, 3 /* '3' */, 4 /* '4' */, 5 /* '5' */, 6 /* '6' */, 7 /* '7' */, 8 /* '8' */, 9 /* '9' */, -1, -1, -1, -1, -1, -1, -1, 10 /* 'A' */, 11 /* 'B' */, 12 /* 'C' */, 13 /* 'D' */, 14 /* 'E' */, 15 /* 'F' */, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10 /* 'a' */, 11 /* 'b' */, 12 /* 'c' */, 13 /* 'd' */, 14 /* 'e' */, 15 /* 'f' */, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 int
-nr_nbin2hex(UCHAR *bin, int binlen, char hex[], size_t size, int *len)
+nr_nbin2hex(UCHAR *bin, size_t binlen, char hex[], size_t size, size_t *len)
 {
     int _status;
-    int i;
+    size_t i;
+    size_t hexlen;
 
-    if (size < (2*binlen))
+    hexlen = 2*binlen;
+    if (size < hexlen)
         ABORT(R_BAD_ARGS);
 
     for (i = 0; i < binlen; ++i) {
@@ -64,10 +66,10 @@ nr_nbin2hex(UCHAR *bin, int binlen, char hex[], size_t size, int *len)
         *hex++ = bin2hex_map[bin[i]][1];
     }
 
-    if (size >= (2*binlen)+1)
+    if (size >= hexlen+1)
         *hex = '\0';
 
-    *len = (2*binlen);
+    *len = hexlen;
 
     _status=0;
   abort:
@@ -76,13 +78,13 @@ nr_nbin2hex(UCHAR *bin, int binlen, char hex[], size_t size, int *len)
 
 
 int
-nr_nhex2bin(char *hex, int hexlen, UCHAR bin[], size_t size, int *len)
+nr_nhex2bin(char *hex, size_t hexlen, UCHAR bin[], size_t size, size_t *len)
 {
     int _status;
-    int binlen;
+    size_t binlen;
     int h1;
     int h2;
-    int i;
+    size_t i;
 
     if (hexlen % 2)
         ABORT(R_BAD_ARGS);
