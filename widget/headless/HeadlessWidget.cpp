@@ -477,5 +477,30 @@ HeadlessWidget::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   return NS_OK;
 }
 
+nsresult
+HeadlessWidget::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+                                                 uint32_t aNativeMessage,
+                                                 double aDeltaX,
+                                                 double aDeltaY,
+                                                 double aDeltaZ,
+                                                 uint32_t aModifierFlags,
+                                                 uint32_t aAdditionalFlags,
+                                                 nsIObserver* aObserver)
+{
+  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+  // The various platforms seem to handle scrolling deltas differently,
+  // but the following seems to emulate it well enough.
+  WidgetWheelEvent event(true, eWheel, this);
+  event.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+  event.mIsNoLineOrPageDelta = true;
+  event.mDeltaX = -aDeltaX * MOZ_HEADLESS_SCROLL_MULTIPLIER;
+  event.mDeltaY = -aDeltaY * MOZ_HEADLESS_SCROLL_MULTIPLIER;
+  event.mDeltaZ = -aDeltaZ * MOZ_HEADLESS_SCROLL_MULTIPLIER;
+  event.mRefPoint = aPoint - WidgetToScreenOffset();
+  event.AssignEventTime(WidgetEventTime());
+  DispatchInputEvent(&event);
+  return NS_OK;
+}
+
 } // namespace widget
 } // namespace mozilla

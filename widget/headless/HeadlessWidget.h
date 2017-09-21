@@ -17,22 +17,27 @@
 #define MOZ_HEADLESS_MOUSE_MOVE 3 // GDK_MOTION_NOTIFY
 #define MOZ_HEADLESS_MOUSE_DOWN 4 // GDK_BUTTON_PRESS
 #define MOZ_HEADLESS_MOUSE_UP   7 // GDK_BUTTON_RELEASE
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 3
 #elif defined(XP_WIN)
 #define MOZ_HEADLESS_MOUSE_MOVE 1 // MOUSEEVENTF_MOVE
 #define MOZ_HEADLESS_MOUSE_DOWN 2 // MOUSEEVENTF_LEFTDOWN
 #define MOZ_HEADLESS_MOUSE_UP   4 // MOUSEEVENTF_LEFTUP
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 1
 #elif defined(XP_MACOSX)
 #define MOZ_HEADLESS_MOUSE_MOVE 5 // NSMouseMoved
 #define MOZ_HEADLESS_MOUSE_DOWN 1 // NSLeftMouseDown
 #define MOZ_HEADLESS_MOUSE_UP   2 // NSLeftMouseUp
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 1
 #elif defined(ANDROID)
 #define MOZ_HEADLESS_MOUSE_MOVE 7 // ACTION_HOVER_MOVE
 #define MOZ_HEADLESS_MOUSE_DOWN 5 // ACTION_POINTER_DOWN
 #define MOZ_HEADLESS_MOUSE_UP   6 // ACTION_POINTER_UP
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 1
 #else
 #define MOZ_HEADLESS_MOUSE_MOVE -1
 #define MOZ_HEADLESS_MOUSE_DOWN -1
 #define MOZ_HEADLESS_MOUSE_UP   -1
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER = -1
 #endif
 
 namespace mozilla {
@@ -123,6 +128,15 @@ public:
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override
                    { return SynthesizeNativeMouseEvent(aPoint, MOZ_HEADLESS_MOUSE_MOVE, 0, aObserver); };
+
+  virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
+                                                    uint32_t aNativeMessage,
+                                                    double aDeltaX,
+                                                    double aDeltaY,
+                                                    double aDeltaZ,
+                                                    uint32_t aModifierFlags,
+                                                    uint32_t aAdditionalFlags,
+                                                    nsIObserver* aObserver) override;
 
 private:
   ~HeadlessWidget();
