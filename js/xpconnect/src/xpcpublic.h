@@ -30,7 +30,7 @@
 class nsGlobalWindow;
 class nsIPrincipal;
 class nsScriptNameSpaceManager;
-class nsIMemoryReporterCallback;
+class nsIHandleReportCallback;
 
 namespace mozilla {
 namespace dom {
@@ -431,7 +431,7 @@ private:
 void
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
                                  const nsACString& rtPath,
-                                 nsIMemoryReporterCallback* handleReport,
+                                 nsIHandleReportCallback* handleReport,
                                  nsISupports* data,
                                  bool anonymize,
                                  size_t* rtTotal = nullptr);
