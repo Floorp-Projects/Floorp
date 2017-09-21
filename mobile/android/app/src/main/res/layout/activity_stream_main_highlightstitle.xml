@@ -45,6 +45,7 @@
         android:layout_height="match_parent"
         android:layout_marginEnd="@dimen/activity_stream_base_margin"
         android:layout_marginRight="@dimen/activity_stream_base_margin"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        android:importantForAccessibility="no" />
 
 </LinearLayout>
