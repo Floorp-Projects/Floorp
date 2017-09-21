@@ -148,7 +148,10 @@ public class ScreenGrabTest {
         takeScreenshotOfEraseSnackbar(device);
 
         takeScreenshotOfSettings(device);
-        takeScreenshotOfGooglePlayDialog(device);
+
+        // Temporarily disabled: Our emulator image doesn't include Google Play - So we can't take
+        // a screenshot of this dialog.
+        // takeScreenshotOfGooglePlayDialog(device);
 
         takeScreenshotOfErrorPages(device);
     }
