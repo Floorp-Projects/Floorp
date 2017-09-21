@@ -26,13 +26,14 @@
 #define ARGS2(t1, t2) ARGS1(t1), arg2
 #define ARGS3(t1, t2, t3) ARGS2(t1, t2), arg3
 
+#ifdef MOZ_MEMORY
+
 /* Generic interface exposing the whole public allocator API
  * This facilitates the implementation of things like replace-malloc.
  * Note: compilers are expected to be able to optimize out `this`.
  */
 template <typename T>
 struct Allocator: public T {
-#define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
 #define MALLOC_DECL(name, return_type, ...) \
   static return_type name(__VA_ARGS__);
 #include "malloc_decls.h"
@@ -51,3 +52,23 @@ typedef ReplaceMalloc DefaultMalloc;
 #else
 typedef MozJemalloc DefaultMalloc;
 #endif
+
+#endif /* MOZ_MEMORY */
+
+/* Dummy implementation of the moz_arena_* API, falling back to a given
+ * implementation of the base allocator. */
+template <typename T>
+struct DummyArenaAllocator {
+  static arena_id_t moz_create_arena(void) { return 0; }
+
+  static void moz_dispose_arena(arena_id_t) { }
+
+#define MALLOC_DECL(name, return_type, ...) \
+  static return_type \
+  moz_arena_ ## name(arena_id_t, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
+  { \
+    return T::name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+  }
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
+#include "malloc_decls.h"
+};

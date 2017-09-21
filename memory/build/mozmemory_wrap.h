@@ -88,10 +88,6 @@
  * That implementation would call malloc by using "malloc_impl".
  */
 
-#ifndef MOZ_MEMORY
-#  error Should only include mozmemory_wrap.h when MOZ_MEMORY is set.
-#endif
-
 #if defined(MOZ_MEMORY_IMPL) && !defined(IMPL_MFBT)
 #  ifdef MFBT_API /* mozilla/Types.h was already included */
 #    error mozmemory_wrap.h has to be included before mozilla/Types.h when MOZ_MEMORY_IMPL is set and IMPL_MFBT is not.
