@@ -14,6 +14,23 @@
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
+using mozilla::LogLevel;
+
+#ifdef MOZ_LOGGING
+
+#include "mozilla/Logging.h"
+static mozilla::LazyLogModule sWidgetLog("Widget");
+static mozilla::LazyLogModule sWidgetFocusLog("WidgetFocus");
+#define LOG(args) MOZ_LOG(sWidgetLog, mozilla::LogLevel::Debug, args)
+#define LOGFOCUS(args) MOZ_LOG(sWidgetFocusLog, mozilla::LogLevel::Debug, args)
+
+#else
+
+#define LOG(args)
+#define LOGFOCUS(args)
+
+#endif /* MOZ_LOGGING */
+
 /*static*/ already_AddRefed<nsIWidget>
 nsIWidget::CreateHeadlessWidget()
 {
@@ -71,6 +88,8 @@ HeadlessWidget::HeadlessWidget()
 
 HeadlessWidget::~HeadlessWidget()
 {
+  LOG(("HeadlessWidget::~HeadlessWidget() [%p]\n", (void *)this));
+
   Destroy();
 }
 
@@ -80,6 +99,7 @@ HeadlessWidget::Destroy()
   if (mDestroyed) {
     return;
   }
+  LOG(("HeadlessWidget::Destroy [%p]\n", (void *)this));
   mDestroyed = true;
 
   if (sActiveWindows) {
@@ -189,6 +209,8 @@ HeadlessWidget::Show(bool aState)
 {
   mVisible = aState;
 
+  LOG(("HeadlessWidget::Show [%p] state %d\n", (void *)this, aState));
+
   // Top-level window and dialogs are activated/raised when shown.
   if (aState && (mTopLevel == this || mWindowType == eWindowType_dialog)) {
     RaiseWindow();
@@ -206,6 +228,8 @@ HeadlessWidget::IsVisible() const
 nsresult
 HeadlessWidget::SetFocus(bool aRaise)
 {
+  LOGFOCUS(("  SetFocus %d [%p]\n", aRaise, (void *)this));
+
   // aRaise == true means we request activation of our toplevel window.
   if (aRaise) {
     HeadlessWidget* topLevel = (HeadlessWidget*) GetTopLevelWidget();
@@ -233,6 +257,9 @@ HeadlessWidget::IsEnabled() const
 void
 HeadlessWidget::Move(double aX, double aY)
 {
+  LOG(("HeadlessWidget::Move [%p] %f %f\n", (void *)this,
+       aX, aY));
+
   double scale = BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
   int32_t x = NSToIntRound(aX * scale);
   int32_t y = NSToIntRound(aY * scale);
@@ -318,6 +345,8 @@ HeadlessWidget::Resize(double aX,
 void
 HeadlessWidget::SetSizeMode(nsSizeMode aMode)
 {
+  LOG(("HeadlessWidget::SetSizeMode [%p] %d\n", (void *)this, aMode));
+
   if (aMode == mSizeMode) {
     return;
   }
