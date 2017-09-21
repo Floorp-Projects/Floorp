@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+    try { o1 = document.createElement('button') } catch(e) { }
+    try { o2 = document.createElement('p') } catch(e) { }
+    try { o3 = o1.labels } catch(e) { }
+    try { o4 = document.createNSResolver(document.documentElement) } catch(e) { }
+    try { o5 = document.createRange(); } catch(e) { }
+    try { document.documentElement.appendChild(o1) } catch(e) { }
+    try { o5.selectNode(o4); } catch(e) { }
+    try { o5.surroundContents(o2) } catch(e) { }
+    try { o5.surroundContents(o2) } catch(e) { }
+    try { o1.labels.length } catch(e) { }
+</script>
+</head>
+</html>
