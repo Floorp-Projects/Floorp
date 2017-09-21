@@ -2122,7 +2122,7 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 
     wr::LayoutRect rect = wr::ToLayoutRect(mTitlebarRect);
     aBuilder.PushImage(wr::LayoutRect{ rect.origin, { float(size.width), float(size.height) } },
-                       rect, wr::ImageRendering::Auto, *mTitlebarImageKey);
+                       rect, true, wr::ImageRendering::Auto, *mTitlebarImageKey);
   }
 }
 
