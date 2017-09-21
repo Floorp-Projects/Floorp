@@ -7,7 +7,7 @@
 // but http:// is ok with dom.serviceWorkers.testing.enabled turned on.
 const SERVICE_WORKER = URL_ROOT + "service-workers/delay-sw.js";
 const TAB_URL = URL_ROOT + "service-workers/delay-sw.html";
-const SW_TIMEOUT = 2000;
+const SW_TIMEOUT = 5000;
 
 requestLongerTimeout(2);
 
@@ -36,14 +36,12 @@ add_task(function* () {
 
   let targetElement = name.parentNode.parentNode;
   let status = targetElement.querySelector(".target-status");
-  // We might miss the registering state in some setup...
-  if (status.textContent == "Registering") {
-    yield waitForMutation(serviceWorkersElement, { childList: true, subtree: true });
-  }
 
-  is(status.textContent, "Running", "Service worker is currently running");
-
-  yield waitForMutation(serviceWorkersElement, { attributes: true, subtree: true });
+  // We should ideally check that the service worker registration goes through the
+  // "registering" and "running" steps, but it is difficult to workaround race conditions
+  // for a test running on a wide variety of platforms. Due to intermittent failures, we
+  // simply check that the registration transitions to "stopped".
+  yield waitUntil(() => status.textContent == "Stopped", 100);
   is(status.textContent, "Stopped", "Service worker is currently stopped");
 
   try {
