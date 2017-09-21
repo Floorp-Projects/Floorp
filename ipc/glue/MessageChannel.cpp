@@ -17,6 +17,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAppRunner.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
@@ -416,7 +417,7 @@ public:
         MOZ_RELEASE_ASSERT(aMessage.transaction_id() == mTransaction);
         MOZ_RELEASE_ASSERT(!mReply);
         IPC_LOG("Reply received on worker thread: seqno=%d", mSeqno);
-        mReply = new IPC::Message(Move(aMessage));
+        mReply = MakeUnique<IPC::Message>(Move(aMessage));
         MOZ_RELEASE_ASSERT(IsComplete());
     }
 
@@ -455,7 +456,7 @@ public:
         return mReply->is_reply_error();
     }
 
-    nsAutoPtr<IPC::Message> GetReply() {
+    UniquePtr<IPC::Message> GetReply() {
         return Move(mReply);
     }
 
@@ -480,7 +481,7 @@ private:
     AutoEnterTransaction *mNext;
 
     // Pointer the a reply received for this message, if one was received.
-    nsAutoPtr<IPC::Message> mReply;
+    UniquePtr<IPC::Message> mReply;
 };
 
 class PromiseReporter final : public nsIMemoryReporter
@@ -1534,7 +1535,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     IPC_LOG("Got reply: seqno=%d, xid=%d, msgName=%s, latency=%ums",
             seqno, transaction, msgName, latencyMs);
 
-    nsAutoPtr<Message> reply = transact.GetReply();
+    UniquePtr<Message> reply = transact.GetReply();
 
     MOZ_RELEASE_ASSERT(reply);
     MOZ_RELEASE_ASSERT(reply->is_reply(), "expected reply");
