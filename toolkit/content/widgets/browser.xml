@@ -520,6 +520,17 @@
                 onget="return this.contentDocument.nodePrincipal;"
                 readonly="true"/>
 
+      <property name="contentRequestContextID" readonly="true">
+        <getter><![CDATA[
+          try {
+            return this.contentDocument.documentLoadGroup
+                       .requestContextID;
+          } catch (e) {
+            return null;
+          }
+        ]]></getter>
+      </property>
+
       <property name="showWindowResizer"
                 onset="if (val) this.setAttribute('showresizer', 'true');
                        else this.removeAttribute('showresizer');

@@ -153,6 +153,12 @@
                 onget="return this._contentPrincipal"
                 readonly="true"/>
 
+      <field name="_contentRequestContextID">null</field>
+
+      <property name="contentRequestContextID"
+                onget="return this._contentRequestContextID"
+                readonly="true"/>
+
       <property name="contentDocumentAsCPOW"
                 onget="return this.contentWindowAsCPOW ? this.contentWindowAsCPOW.document : null"
                 readonly="true"/>
