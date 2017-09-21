@@ -171,6 +171,10 @@ class MachCommands(MachCommandBase):
             for k, v in env_vars[arch].iteritems():
                 os.environ[k] = v
 
+            # Also add the bin dir to the python path so we can use dmd.py
+            if bin_dir not in sys.path:
+                sys.path.append(bin_dir)
+
         for k, v in kwargs.iteritems():
             setattr(args, k, v)
 
