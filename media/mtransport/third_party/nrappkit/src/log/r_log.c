@@ -195,14 +195,14 @@ int r_log_register(char *facility_name,int *log_facility)
 
       if(NR_reg_initted()){
 
-        if(snprintf(dest_prefix,sizeof(NR_registry),
+        if((size_t)snprintf(dest_prefix,sizeof(NR_registry),
           "logging.%s.facility",log_destinations[j].dest_name)>=sizeof(NR_registry))
           ABORT(R_INTERNAL);
 
         if (r=NR_reg_make_registry(dest_prefix,facility_name,dest_facility_prefix))
           ABORT(r);
 
-        if(snprintf(log_types[i].dest_facility_key[j],sizeof(NR_registry),
+        if((size_t)snprintf(log_types[i].dest_facility_key[j],sizeof(NR_registry),
           "%s.level",dest_facility_prefix)>=sizeof(NR_registry))
           ABORT(R_INTERNAL);
 
@@ -283,6 +283,8 @@ static void r_log_facility_change_cb(void *cb_arg, char action, NR_registry name
 
     _status=0;
   abort:
+    (void)_status; // to avoid unused variable warning and still conform to
+                   // pattern of using ABORT
     return;
   }
 
@@ -309,7 +311,7 @@ int r_log(int facility,int level,const char *format,...)
 int r_dump(int facility,int level,char *name,char *data,int len)
   {
     char *hex = 0;
-    int unused;
+    size_t unused;
 
     if(!r_logging(facility,level))
       return(0);
@@ -565,7 +567,7 @@ static int r_log_get_destinations(int usereg)
       /* Get the data out of the registry */
       for(i=0; i<LOG_NUM_DESTINATIONS; i++){
         /* set callback for default level */
-        if(snprintf(reg_key,sizeof(reg_key),"%s.%s.level",LOGGING_REG_PREFIX,
+        if((size_t)snprintf(reg_key,sizeof(reg_key),"%s.%s.level",LOGGING_REG_PREFIX,
           log_destinations[i].dest_name)>=sizeof(reg_key))
           ABORT(R_INTERNAL);
 
@@ -583,7 +585,7 @@ static int r_log_get_destinations(int usereg)
           log_destinations[i].default_level=value;
 
         /* set callback for the enabled key for this logging dest */
-        if(snprintf(reg_key,sizeof(reg_key),"%s.%s.enabled",LOGGING_REG_PREFIX,
+        if((size_t)snprintf(reg_key,sizeof(reg_key),"%s.%s.enabled",LOGGING_REG_PREFIX,
           log_destinations[i].dest_name)>=sizeof(reg_key))
           ABORT(R_INTERNAL);
 
