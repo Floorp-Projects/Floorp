@@ -75,7 +75,6 @@
           this.dateTimePopupFrame.removeEventListener("load", this, true);
           this.dateTimePopupFrame.contentDocument.removeEventListener("message", this);
           this.dateTimePopupFrame.setAttribute("src", "");
-          this.hidePopup();
           this.hidden = true;
         ]]></body>
       </method>
@@ -320,6 +319,7 @@
               break;
             }
             case "ClosePopup": {
+              this.hidePopup();
               this.closePicker();
               break;
             }
