@@ -107,8 +107,8 @@ Handler::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                            void* pvDestContext, DWORD mshlflags,
                            CLSID* pCid)
 {
-  return mUnmarshal->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext,
-                                       mshlflags, pCid);
+  return mUnmarshal->GetUnmarshalClass(MarshalAs(riid), pv, dwDestContext,
+                                       pvDestContext, mshlflags, pCid);
 }
 
 HRESULT
