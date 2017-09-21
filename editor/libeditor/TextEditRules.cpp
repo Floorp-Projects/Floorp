@@ -873,9 +873,6 @@ TextEditRules::WillSetText(Selection& aSelection,
     return NS_OK;
   }
 
-  // don't change my selection in subtransactions
-  AutoTransactionsConserveSelection dontChangeMySelection(textEditor);
-
   // Even if empty text, we don't remove text node and set empty text
   // for performance
   nsresult rv = textEditor->SetTextImpl(aSelection, tString,

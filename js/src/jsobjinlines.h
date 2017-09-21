@@ -468,18 +468,6 @@ JSObject::hasUncacheableProto() const
     return hasAllFlags(js::BaseShape::UNCACHEABLE_PROTO);
 }
 
-inline bool
-JSObject::hadElementsAccess() const
-{
-    return hasAllFlags(js::BaseShape::HAD_ELEMENTS_ACCESS);
-}
-
-inline bool
-JSObject::isIndexed() const
-{
-    return hasAllFlags(js::BaseShape::INDEXED);
-}
-
 MOZ_ALWAYS_INLINE bool
 JSObject::maybeHasInterestingSymbolProperty() const
 {
@@ -494,7 +482,7 @@ JSObject::maybeHasInterestingSymbolProperty() const
         return true;
     }
 
-    return nobj->hasAllFlags(js::BaseShape::HAS_INTERESTING_SYMBOL);
+    return nobj->hasInterestingSymbol();
 }
 
 inline bool
@@ -514,12 +502,6 @@ inline bool
 JSObject::isNewGroupUnknown() const
 {
     return hasAllFlags(js::BaseShape::NEW_GROUP_UNKNOWN);
-}
-
-inline bool
-JSObject::wasNewScriptCleared() const
-{
-    return hasAllFlags(js::BaseShape::NEW_SCRIPT_CLEARED);
 }
 
 namespace js {

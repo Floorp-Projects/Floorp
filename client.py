@@ -112,7 +112,8 @@ def update_nspr_or_nss(tag, depfile, destination, hgpath):
     sys.exit(2)
   warn_if_patch_exists(permanent_patch_dir)
   # protect patch directory from being removed by do_hg_replace
-  shutil.move(permanent_patch_dir, temporary_patch_dir)
+  if os.path.exists(permanent_patch_dir):
+    shutil.move(permanent_patch_dir, temporary_patch_dir)
   # now update the destination
   print "reverting to HG version of %s to get its blank line state" % depfile
   check_call_noisy([options.hg, 'revert', depfile])
@@ -127,7 +128,8 @@ def update_nspr_or_nss(tag, depfile, destination, hgpath):
   tag_file = destination + "/TAG-INFO"
   print >>file(tag_file, "w"), tag
   # move patch directory back to a subdirectory
-  shutil.move(temporary_patch_dir, permanent_patch_dir)
+  if os.path.exists(temporary_patch_dir):
+    shutil.move(temporary_patch_dir, permanent_patch_dir)
 
 def warn_if_patch_exists(path):
   # If the given patch directory exists and contains at least one file,

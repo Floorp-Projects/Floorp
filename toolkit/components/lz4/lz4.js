@@ -25,7 +25,7 @@ if (typeof Components != "undefined") {
   throw new Error("Please load this module with Component.utils.import or with require()");
 }
 
-const MAGIC_NUMBER = new Uint8Array([109, 111, 122, 76, 122, 52, 48, 0]); // "mozLz4a\0"
+const MAGIC_NUMBER = new Uint8Array([109, 111, 122, 76, 122, 52, 48, 0]); // "mozLz40\0"
 
 const BYTES_IN_SIZE_HEADER = ctypes.uint32_t.size;
 

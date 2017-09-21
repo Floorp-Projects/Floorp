@@ -949,7 +949,7 @@ class DebugEnvironments
     typedef HashMap<MissingEnvironmentKey,
                     ReadBarrieredDebugEnvironmentProxy,
                     MissingEnvironmentKey,
-                    RuntimeAllocPolicy> MissingEnvironmentMap;
+                    ZoneAllocPolicy> MissingEnvironmentMap;
     MissingEnvironmentMap missingEnvs;
 
     /*
@@ -963,7 +963,7 @@ class DebugEnvironments
     typedef GCHashMap<ReadBarriered<JSObject*>,
                       LiveEnvironmentVal,
                       MovableCellHasher<ReadBarriered<JSObject*>>,
-                      RuntimeAllocPolicy> LiveEnvironmentMap;
+                      ZoneAllocPolicy> LiveEnvironmentMap;
     LiveEnvironmentMap liveEnvs;
 
   public:

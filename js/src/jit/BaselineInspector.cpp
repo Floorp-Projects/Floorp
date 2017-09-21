@@ -540,10 +540,8 @@ BaselineInspector::hasSeenDoubleResult(jsbytecode* pc)
 
     if (stub->isUnaryArith_Fallback())
         return stub->toUnaryArith_Fallback()->sawDoubleResult();
-    else
-        return stub->toBinaryArith_Fallback()->sawDoubleResult();
 
-    return false;
+    return stub->toBinaryArith_Fallback()->sawDoubleResult();
 }
 
 JSObject*

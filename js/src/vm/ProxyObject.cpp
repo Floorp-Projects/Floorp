@@ -114,13 +114,21 @@ ProxyObject::allocKindForTenure() const
 void
 ProxyObject::setCrossCompartmentPrivate(const Value& priv)
 {
-    *slotOfPrivate() = priv;
+    setPrivate(priv);
 }
 
 void
 ProxyObject::setSameCompartmentPrivate(const Value& priv)
 {
     MOZ_ASSERT(IsObjectValueInCompartment(priv, compartment()));
+    setPrivate(priv);
+}
+
+inline void
+ProxyObject::setPrivate(const Value& priv)
+{
+    MOZ_ASSERT_IF(IsMarkedBlack(this) && priv.isGCThing(),
+                  !JS::GCThingIsMarkedGray(JS::GCCellPtr(priv)));
     *slotOfPrivate() = priv;
 }
 

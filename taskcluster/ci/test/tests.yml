@@ -468,7 +468,7 @@ mochitest:
             default: true
     max-run-time:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 10800
+            android-4.3-arm7-api-16/debug: 7200
             linux64-jsdcov/opt: 10800
             default: 5400
     allow-software-gl-layers: false
@@ -1064,7 +1064,7 @@ reftest:
             default: true
     max-run-time:
         by-test-platform:
-            android.*: 10800
+            android.*: 7200
             default: 3600
     mozharness:
         by-test-platform:
@@ -1997,7 +1997,10 @@ test-verify:
     loopback-video: true
     max-run-time: 5400
     allow-software-gl-layers: false
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            linux64-ccov/.*: [] # don't run on ccov
+            default: built-projects
     tier: 3
     mozharness:
         script: desktop_unittest.py
