@@ -81,7 +81,7 @@ struct CommonNameInfo
 bool
 JSRuntime::initializeAtoms(JSContext* cx)
 {
-    atoms_ = cx->new_<AtomSet>();
+    atoms_ = js_new<AtomSet>();
     if (!atoms_ || !atoms_->init(JS_STRING_HASH_COUNT))
         return false;
 
@@ -97,7 +97,7 @@ JSRuntime::initializeAtoms(JSContext* cx)
         return true;
     }
 
-    staticStrings = cx->new_<StaticStrings>();
+    staticStrings = js_new<StaticStrings>();
     if (!staticStrings || !staticStrings->init(cx))
         return false;
 
@@ -116,7 +116,7 @@ JSRuntime::initializeAtoms(JSContext* cx)
 #undef COMMON_NAME_INFO
     };
 
-    commonNames = cx->new_<JSAtomState>();
+    commonNames = js_new<JSAtomState>();
     if (!commonNames)
         return false;
 
@@ -132,7 +132,7 @@ JSRuntime::initializeAtoms(JSContext* cx)
     emptyString = commonNames->empty;
 
     // Create the well-known symbols.
-    wellKnownSymbols = cx->new_<WellKnownSymbols>();
+    wellKnownSymbols = js_new<WellKnownSymbols>();
     if (!wellKnownSymbols)
         return false;
 
@@ -242,9 +242,9 @@ JSRuntime::transformToPermanentAtoms(JSContext* cx)
     // of the atoms table into permanentAtoms and mark each as permanent.
 
     MOZ_ASSERT(!permanentAtoms);
-    permanentAtoms = cx->new_<FrozenAtomSet>(atoms_);   // takes ownership of atoms_
+    permanentAtoms = js_new<FrozenAtomSet>(atoms_);   // takes ownership of atoms_
 
-    atoms_ = cx->new_<AtomSet>();
+    atoms_ = js_new<AtomSet>();
     if (!atoms_ || !atoms_->init(JS_STRING_HASH_COUNT))
         return false;
 

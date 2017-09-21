@@ -434,7 +434,6 @@ public:
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const mozilla::layers::StackingContextHelper& aSc,
-                                       nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override
   {
@@ -487,7 +486,7 @@ public:
     container->SetScaleHint(scaleHint);
 
     LayerRect rect(destGFXRect.x, destGFXRect.y, destGFXRect.width, destGFXRect.height);
-    return aManager->PushImage(this, container, aBuilder, aSc, rect);
+    return aManager->PushImage(this, container, aBuilder, aResources, aSc, rect);
   }
 
   // It would be great if we could override GetOpaqueRegion to return nonempty here,

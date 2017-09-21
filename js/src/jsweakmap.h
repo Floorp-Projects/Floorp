@@ -120,11 +120,11 @@ static T* extractUnbarriered(T* v)
 
 template <class Key, class Value,
           class HashPolicy = DefaultHasher<Key> >
-class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
+class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
                 public WeakMapBase
 {
   public:
-    typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
+    typedef HashMap<Key, Value, HashPolicy, ZoneAllocPolicy> Base;
     typedef typename Base::Enum Enum;
     typedef typename Base::Lookup Lookup;
     typedef typename Base::Entry Entry;
@@ -133,7 +133,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
     typedef typename Base::AddPtr AddPtr;
 
     explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr)
-        : Base(cx->runtime()), WeakMapBase(memOf, cx->compartment()->zone()) { }
+        : Base(cx->zone()), WeakMapBase(memOf, cx->zone()) { }
 
     bool init(uint32_t len = 16) {
         if (!Base::init(len))

@@ -23,7 +23,7 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                  wr::IpcResourceUpdateQueue& aResources,
                                  const StackingContextHelper& aSc)
 {
-  ScrollingLayersHelper scroller(this, aBuilder, aSc);
+  ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect = Bounds();

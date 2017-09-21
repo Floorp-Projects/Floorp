@@ -236,21 +236,6 @@ class JSObject : public js::gc::Cell
     }
 
     /*
-     * Whether SETLELEM was used to access this object. See also the comment near
-     * PropertyTree::MAX_HEIGHT.
-     */
-    inline bool hadElementsAccess() const;
-    static bool setHadElementsAccess(JSContext* cx, JS::HandleObject obj) {
-        return setFlags(cx, obj, js::BaseShape::HAD_ELEMENTS_ACCESS);
-    }
-
-    /*
-     * Whether there may be indexed properties on this object, excluding any in
-     * the object's elements.
-     */
-    inline bool isIndexed() const;
-
-    /*
      * Whether there may be "interesting symbol" properties on this object. An
      * interesting symbol is a symbol for which symbol->isInterestingSymbol()
      * returns true.
@@ -412,12 +397,6 @@ class JSObject : public js::gc::Cell
      */
     inline bool isNewGroupUnknown() const;
     static bool setNewGroupUnknown(JSContext* cx, const js::Class* clasp, JS::HandleObject obj);
-
-    // Mark an object as having its 'new' script information cleared.
-    inline bool wasNewScriptCleared() const;
-    static bool setNewScriptCleared(JSContext* cx, JS::HandleObject obj) {
-        return setFlags(cx, obj, js::BaseShape::NEW_SCRIPT_CLEARED);
-    }
 
     /* Set a new prototype for an object with a singleton type. */
     static bool splicePrototype(JSContext* cx, js::HandleObject obj, const js::Class* clasp,

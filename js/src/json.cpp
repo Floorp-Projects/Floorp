@@ -505,7 +505,7 @@ JA(JSContext* cx, HandleObject obj, StringifyContext* scx)
                                "all its initially-dense elements were sparsified "
                                "and the object is indexed");
                 } else {
-                    MOZ_ASSERT(obj->isIndexed());
+                    MOZ_ASSERT(nativeObj->isIndexed());
                 }
             }
 #endif

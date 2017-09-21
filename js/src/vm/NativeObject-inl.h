@@ -500,6 +500,20 @@ NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap 
     return nobj;
 }
 
+/* static */ inline JS::Result<NativeObject*, JS::OOM&>
+NativeObject::createWithTemplate(JSContext* cx, js::gc::InitialHeap heap,
+                                 HandleObject templateObject)
+{
+    RootedObjectGroup group(cx, templateObject->group());
+    RootedShape shape(cx, templateObject->as<NativeObject>().lastProperty());
+
+    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+    MOZ_ASSERT(CanBeFinalizedInBackground(kind, shape->getObjectClass()));
+    kind = gc::GetBackgroundAllocKind(kind);
+
+    return create(cx, kind, heap, shape, group);
+}
+
 MOZ_ALWAYS_INLINE uint32_t
 NativeObject::numDynamicSlots() const
 {

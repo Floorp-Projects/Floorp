@@ -1701,7 +1701,6 @@ bool
 nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const StackingContextHelper& aSc,
-                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                         WebRenderLayerManager* aManager,
                                         nsDisplayListBuilder* aDisplayListBuilder)
 {
@@ -1725,7 +1724,7 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   const LayoutDeviceRect destRect(
     LayoutDeviceIntRect::FromAppUnits(GetDestRect(), factor));
   const LayerRect dest = ViewAs<LayerPixel>(destRect, PixelCastJustification::WebRenderHasUnitResolution);
-  return aManager->PushImage(this, container, aBuilder, aSc, dest);
+  return aManager->PushImage(this, container, aBuilder, aResources, aSc, dest);
 }
 
 DrawResult

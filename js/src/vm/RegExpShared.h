@@ -260,7 +260,7 @@ class RegExpZone
      * The set of all RegExpShareds in the zone. On every GC, every RegExpShared
      * that was not marked is deleted and removed from the set.
      */
-    using Set = JS::WeakCache<JS::GCHashSet<ReadBarriered<RegExpShared*>, Key, RuntimeAllocPolicy>>;
+    using Set = JS::WeakCache<JS::GCHashSet<ReadBarriered<RegExpShared*>, Key, ZoneAllocPolicy>>;
     Set set_;
 
   public:

@@ -6,6 +6,8 @@
 
 #include "jit/Ion.h"
 
+#include "jit/JitCompartment.h"
+
 #include "jscompartmentinlines.h"
 
 using namespace js;
@@ -139,6 +141,12 @@ CompileRuntime*
 CompileZone::runtime()
 {
     return CompileRuntime::get(zone()->runtimeFromAnyThread());
+}
+
+JitCode*
+CompileZone::mallocStub()
+{
+    return zone()->jitZone()->mallocStub();
 }
 
 bool

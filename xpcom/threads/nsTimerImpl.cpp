@@ -133,16 +133,8 @@ nsTimer::Release(void)
   NS_LOG_RELEASE(this, count, "nsTimer");
 
   if (count == 1) {
-    if (!mImpl->CancelCheckIfFiring()) {
-      // Last ref, in nsTimerImpl::mITimer. Make sure the cycle is broken.
-      // (when Cancel fails, nsTimerImpl::Fire is in progress, which has grabbed
-      // another ref to the nsITimer since we checked the value of mRefCnt
-      // above)
-      // If there is a nsTimerEvent in a queue for this timer, the nsTimer will
-      // live until that event pops, otherwise the nsTimerImpl will go away and
-      // the nsTimer along with it.
-      mImpl = nullptr;
-    }
+    // Last ref, in nsTimerImpl::mITimer. Make sure the cycle is broken.
+    mImpl->CancelImpl(true);
   } else if (count == 0) {
     delete this;
   }
@@ -322,31 +314,37 @@ nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay, uint32_t aType)
   return InitCommon(aDelay, aType, mozilla::Move(cb));
 }
 
-bool
-nsTimerImpl::CancelCheckIfFiring()
-{
-  Callback cb;
-
-  MutexAutoLock lock(mMutex);
-
-  if (gThread) {
-    gThread->RemoveTimer(this);
-  }
-
-  cb.swap(mCallback);
-  ++mGeneration;
-
-  if (mCallbackDuringFire.mType != Callback::Type::Unknown) {
-    return true;
-  }
-  return false;
-}
-
 nsresult
 nsTimerImpl::Cancel()
 {
-  (void)CancelCheckIfFiring();
+  CancelImpl(false);
   return NS_OK;
+}
+
+void
+nsTimerImpl::CancelImpl(bool aClearITimer)
+{
+  Callback cbTrash;
+  RefPtr<nsITimer> timerTrash;
+
+  {
+    MutexAutoLock lock(mMutex);
+    if (gThread) {
+      gThread->RemoveTimer(this);
+    }
+
+    cbTrash.swap(mCallback);
+    ++mGeneration;
+
+    // Don't clear this if we're firing; once Fire returns, we'll get this call
+    // again.
+    if (aClearITimer &&
+        (mCallbackDuringFire.mType == Callback::Type::Unknown)) {
+      MOZ_RELEASE_ASSERT(mITimer, "mITimer was nulled already! "
+          "This indicates that someone has messed up the refcount on nsTimer!");
+      timerTrash.swap(mITimer);
+    }
+  }
 }
 
 nsresult

@@ -331,7 +331,7 @@ TimerThread::Shutdown()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsTArray<UniquePtr<Entry>> timers;
+  nsTArray<RefPtr<nsTimerImpl>> timers;
   {
     // lock scope
     MonitorAutoLock lock(mMonitor);
@@ -350,12 +350,14 @@ TimerThread::Shutdown()
     // might potentially call some code reentering the same lock
     // that leads to unexpected behavior or deadlock.
     // See bug 422472.
-    mTimers.SwapElements(timers);
+    for (const UniquePtr<Entry>& entry : mTimers) {
+      timers.AppendElement(entry->Take());
+    }
+
+    mTimers.Clear();
   }
 
-  uint32_t timersCount = timers.Length();
-  for (uint32_t i = 0; i < timersCount; i++) {
-    RefPtr<nsTimerImpl> timer = timers[i]->Take();
+  for (const RefPtr<nsTimerImpl>& timer : timers) {
     if (timer) {
       timer->Cancel();
     }

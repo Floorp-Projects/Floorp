@@ -1,0 +1,93 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 94048 - test install event.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script src="utils.js"></script>
+<script class="testbody" type="text/javascript">
+
+  // NOTE: This is just test_fetch_event.html but with an alternate cookie
+  //       mode preference set to make sure that setting the preference does
+  //       not break interception as observed in bug 1336364.
+  // TODO: Refactor this test so it doesn't duplicate so much code logic.
+
+  SimpleTest.requestCompleteLog();
+
+  var registration;
+  function simpleRegister() {
+    return navigator.serviceWorker.register("fetch_event_worker.js", { scope: "./fetch" })
+      .then(swr => {
+        registration = swr;
+        return waitForState(swr.installing, 'activated');
+      });
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(success) {
+      ok(success, "Service worker should be unregistered successfully");
+    }, function(e) {
+      dump("SW unregistration error: " + e + "\n");
+    });
+  }
+
+  function testController() {
+    var p = new Promise(function(resolve, reject) {
+      var reloaded = false;
+      window.onmessage = function(e) {
+        if (e.data.status == "ok") {
+          ok(e.data.result, e.data.message);
+        } else if (e.data.status == "done") {
+          if (reloaded) {
+            window.onmessage = null;
+            w.close();
+            resolve();
+          } else {
+            w.location.reload();
+            reloaded = true;
+          }
+        }
+      }
+    });
+
+    var w = window.open("fetch/index.html");
+    return p;
+  }
+
+  function runTest() {
+    simpleRegister()
+      .then(testController)
+      .then(unregister)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  const COOKIE_BEHAVIOR_REJECTFOREIGN = 1;
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["javascript.options.streams", true],
+    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECTFOREIGN],
+    ["dom.streams.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

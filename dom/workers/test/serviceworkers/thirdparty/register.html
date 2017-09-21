@@ -23,5 +23,7 @@
       } else {
         done(registration);
       }
+    }).catch(function(e) {
+      window.parent.postMessage({status: "registrationfailed"}, "*");
     });
 </script>
