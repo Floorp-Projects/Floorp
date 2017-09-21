@@ -20,7 +20,6 @@
 #include "nsDisplayList.h"
 #include "JustificationUtils.h"
 #include "RubyUtils.h"
-#include "TextDrawTarget.h"
 
 // Undo the windows.h damage
 #if defined(XP_WIN) && defined(DrawText)
@@ -49,7 +48,6 @@ class nsTextFrame : public nsFrame
   typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::Size Size;
-  typedef mozilla::layout::TextDrawTarget TextDrawTarget;
   typedef gfxTextRun::Range Range;
 
 public:
