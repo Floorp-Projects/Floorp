@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::collections::hash_map::ValuesMut;
+use std::collections::hash_map::IterMut;
 use std::collections::HashMap;
 use std::ffi::OsString;
 
@@ -19,8 +19,8 @@ impl DeviceMap {
         Self { map: HashMap::new() }
     }
 
-    pub fn values_mut(&mut self) -> ValuesMut<OsString, Device> {
-        self.map.values_mut()
+    pub fn iter_mut(&mut self) -> IterMut<OsString, Device> {
+        self.map.iter_mut()
     }
 
     pub fn process_event(&mut self, event: Event) {
