@@ -111,7 +111,6 @@
 #include "mozjemalloc.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Likely.h"
-#include "mozilla/MacroArgs.h"
 #include "mozilla/DoublyLinkedList.h"
 
 #ifdef ANDROID
@@ -5209,26 +5208,6 @@ _malloc_postfork_child(void)
 /*
  * End library-private functions.
  */
-/******************************************************************************/
-/* Macro helpers */
-
-#define MACRO_CALL(a, b) a b
-/* Can't use macros recursively, so we need another one doing the same as above. */
-#define MACRO_CALL2(a, b) a b
-
-#define ARGS_HELPER(name, ...) MACRO_CALL2( \
-  MOZ_PASTE_PREFIX_AND_ARG_COUNT(name, ##__VA_ARGS__), \
-  (__VA_ARGS__))
-#define TYPED_ARGS0()
-#define TYPED_ARGS1(t1) t1 arg1
-#define TYPED_ARGS2(t1, t2) TYPED_ARGS1(t1), t2 arg2
-#define TYPED_ARGS3(t1, t2, t3) TYPED_ARGS2(t1, t2), t3 arg3
-
-#define ARGS0()
-#define ARGS1(t1) arg1
-#define ARGS2(t1, t2) ARGS1(t1), arg2
-#define ARGS3(t1, t2, t3) ARGS2(t1, t2), arg3
-
 /******************************************************************************/
 #ifdef MOZ_REPLACE_MALLOC
 
