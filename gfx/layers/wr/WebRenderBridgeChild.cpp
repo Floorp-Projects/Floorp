@@ -163,6 +163,8 @@ WebRenderBridgeChild::EndTransaction(wr::DisplayListBuilder &aBuilder,
 void
 WebRenderBridgeChild::ProcessWebRenderParentCommands()
 {
+  MOZ_ASSERT(!mDestroyed);
+
   if (mParentCommands.IsEmpty()) {
     return;
   }
@@ -174,6 +176,7 @@ void
 WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
                                                         const CompositableHandle& aHandle)
 {
+  MOZ_ASSERT(!mDestroyed);
   SendAddPipelineIdForCompositable(aPipelineId, aHandle, true);
 }
 
@@ -181,12 +184,16 @@ void
 WebRenderBridgeChild::AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                                    const CompositableHandle& aHandle)
 {
+  MOZ_ASSERT(!mDestroyed);
   SendAddPipelineIdForCompositable(aPipelineId, aHandle, false);
 }
 
 void
 WebRenderBridgeChild::RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId)
 {
+  if (!IPCOpen()) {
+    return;
+  }
   SendRemovePipelineIdForCompositable(aPipelineId);
 }
 
@@ -362,6 +369,7 @@ void
 WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
                               ImageContainer* aImageContainer)
 {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aCompositable);
 
   static uint64_t sNextID = 1;
@@ -528,6 +536,10 @@ WebRenderBridgeChild::BeginClearCachedResources()
 void
 WebRenderBridgeChild::EndClearCachedResources()
 {
+  if (!IPCOpen()) {
+    mIsInClearCachedResources = false;
+    return;
+  }
   ProcessWebRenderParentCommands();
   SendClearCachedResources();
   mIsInClearCachedResources = false;
