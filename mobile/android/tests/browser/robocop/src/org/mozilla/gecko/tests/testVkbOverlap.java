@@ -29,7 +29,8 @@ public class testVkbOverlap extends PixelTest {
 
         // scroll to the bottom of the page and let it settle
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
-        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mSolo,
+                                                      mDriver.getGeckoLeft(), mDriver.getGeckoTop());
         meh.dragSync(10, 150, 10, 50);
 
         // the input field has a green background, so let's count the number of green pixels

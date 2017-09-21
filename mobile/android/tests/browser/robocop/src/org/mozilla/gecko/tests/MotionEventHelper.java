@@ -5,8 +5,11 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.gfx.LayerView;
+
+import com.robotium.solo.Solo;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
@@ -26,11 +29,12 @@ class MotionEventHelper {
     private float mTouchStartTolerance;
     private final int mDpi;
 
-    public MotionEventHelper(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY) {
+    public MotionEventHelper(Instrumentation inst, Solo solo,
+                             int surfaceOffsetX, int surfaceOffsetY) {
         mInstrumentation = inst;
         mSurfaceOffsetX = surfaceOffsetX;
         mSurfaceOffsetY = surfaceOffsetY;
-        layerView = GeckoAppShell.getLayerView();
+        layerView = (LayerView) solo.getView(R.id.layer_view);
         mApzEnabled = false;
         mTouchStartTolerance = 0.0f;
         mDpi = GeckoAppShell.getDpi();
