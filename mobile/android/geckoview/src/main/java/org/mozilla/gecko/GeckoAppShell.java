@@ -1584,21 +1584,6 @@ public class GeckoAppShell
         return HardwareUtils.isTablet();
     }
 
-    private static boolean sImeWasEnabledOnLastResize = false;
-    public static void viewSizeChanged() {
-        GeckoView v = (GeckoView) getLayerView();
-        if (v == null) {
-            return;
-        }
-        boolean imeIsEnabled = v.isIMEEnabled();
-        if (imeIsEnabled && !sImeWasEnabledOnLastResize) {
-            // The IME just came up after not being up, so let's scroll
-            // to the focused input.
-            EventDispatcher.getInstance().dispatch("ScrollTo:FocusedInput", null);
-        }
-        sImeWasEnabledOnLastResize = imeIsEnabled;
-    }
-
     @WrapForJNI(calledFrom = "gecko")
     private static double[] getCurrentNetworkInformation() {
         return GeckoNetworkManager.getInstance().getCurrentInformation();
