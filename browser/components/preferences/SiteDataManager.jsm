@@ -9,6 +9,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "OfflineAppCacheHelper",
                                   "resource:///modules/offlineAppCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
+                                   "@mozilla.org/serviceworkers/manager;1",
+                                   "nsIServiceWorkerManager");
 
 this.EXPORTED_SYMBOLS = [
   "SiteDataManager"
@@ -217,6 +220,19 @@ this.SiteDataManager = {
     }
   },
 
+  _removeServiceWorkers(site) {
+    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+    for (let i = 0; i < serviceWorkers.length; i++) {
+      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      for (let principal of site.principals) {
+        if (sw.principal.equals(principal)) {
+          serviceWorkerManager.removeAndPropagate(sw.principal.URI.host);
+          break;
+        }
+      }
+    }
+  },
+
   remove(hosts) {
     let promises = [];
     let unknownHost = "";
@@ -226,6 +242,7 @@ this.SiteDataManager = {
         this._removePermission(site);
         this._removeAppCache(site);
         this._removeCookie(site);
+        this._removeServiceWorkers(site);
         promises.push(this._removeQuotaUsage(site));
       } else {
         unknownHost = host;
@@ -244,6 +261,15 @@ this.SiteDataManager = {
     Services.cache2.clear();
     Services.cookies.removeAll();
     OfflineAppCacheHelper.clear();
+
+    // Iterate through the service workers and remove them.
+    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+    for (let i = 0; i < serviceWorkers.length; i++) {
+      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      let host = sw.principal.URI.host;
+      serviceWorkerManager.removeAndPropagate(host);
+    }
+
     // Refresh sites using quota usage again.
     // This is for the case:
     //   1. User goes to the about:preferences Site Data section.
