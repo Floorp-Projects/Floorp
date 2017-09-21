@@ -300,7 +300,8 @@ toolbarpaletteitem {
 %endif
 
 %if !defined(MOZ_WIDGET_GTK)
-#TabsToolbar > .private-browsing-indicator {
+#TabsToolbar > .private-browsing-indicator,
+#TabsToolbar > .accessibility-indicator {
   -moz-box-ordinal-group: 1000;
 }
 %endif

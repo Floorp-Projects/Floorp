@@ -208,7 +208,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     DumpLayerInfo("Image Layer async", rect);
 
     wr::LayoutRect r = aSc.ToRelativeLayoutRect(rect);
-    aBuilder.PushIFrame(r, mPipelineId.ref());
+    aBuilder.PushIFrame(r, true, mPipelineId.ref());
 
     gfx::Matrix4x4 scTransform = GetTransform();
     // Translate is applied as part of PushIFrame()
@@ -273,7 +273,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                   Stringify(filter).c_str());
   }
   wr::LayoutRect r = sc.ToRelativeLayoutRect(rect);
-  aBuilder.PushImage(r, r, filter, mKey.value());
+  aBuilder.PushImage(r, r, true, filter, mKey.value());
 }
 
 Maybe<wr::WrImageMask>

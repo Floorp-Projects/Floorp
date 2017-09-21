@@ -116,7 +116,8 @@ public:
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<gfx::Glyph>& aGlyphs,
                   gfx::ScaledFont* aFont, const gfx::Color& aColor,
                   const StackingContextHelper& aSc,
-                  const LayerRect& aBounds, const LayerRect& aClip);
+                  const LayerRect& aBounds, const LayerRect& aClip,
+                  bool aBackfaceVisible);
 
   wr::FontInstanceKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
 

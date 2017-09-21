@@ -2006,10 +2006,7 @@ let webViewerFileInputChange;
 function webViewerPresentationMode() {
   PDFViewerApplication.requestPresentationMode();
 }
-function webViewerOpenFile() {
-  let openFileInputName = PDFViewerApplication.appConfig.openFileInputName;
-  document.getElementById(openFileInputName).click();
-}
+function webViewerOpenFile() {}
 function webViewerPrint() {
   window.print();
 }

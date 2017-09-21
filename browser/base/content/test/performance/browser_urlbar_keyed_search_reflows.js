@@ -25,6 +25,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "_appendCurrentResult/<@chrome://global/content/bindings/autocomplete.xml",
     ],
     times: 18, // This number should only ever go down - never up.
+    minTimes: 12,
   },
 
   {
