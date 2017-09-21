@@ -47,9 +47,9 @@ PaintCheckboxControl(nsIFrame* aFrame,
     return;
   }
 
-  if (aState.HasState(NS_EVENT_STATE_HOVER)) {
+  if (aState.HasState(NS_EVENT_STATE_ACTIVE)) {
     aDrawTarget->Fill(roundedRect,
-      ColorPattern(ToDeviceColor(mozilla::widget::sAndroidHoverColor)));
+      ColorPattern(ToDeviceColor(mozilla::widget::sAndroidActiveColor)));
   }
 }
 
@@ -136,9 +136,9 @@ PaintRadioControl(nsIFrame* aFrame,
     return;
   }
 
-  if (aState.HasState(NS_EVENT_STATE_HOVER)) {
+  if (aState.HasState(NS_EVENT_STATE_ACTIVE)) {
     aDrawTarget->Fill(ellipse,
-      ColorPattern(ToDeviceColor(mozilla::widget::sAndroidHoverColor)));
+      ColorPattern(ToDeviceColor(mozilla::widget::sAndroidActiveColor)));
   }
 }
 
