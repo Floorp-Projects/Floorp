@@ -218,7 +218,9 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void finish() {
-        mGeckoView.loadUri("about:blank");
+        if (mGeckoView != null) {
+            mGeckoView.loadUri("about:blank");
+        }
 
         super.finish();
 
