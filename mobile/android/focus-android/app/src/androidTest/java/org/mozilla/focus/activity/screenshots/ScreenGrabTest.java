@@ -349,6 +349,7 @@ public class ScreenGrabTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.pressEnterKey();
         TestHelper.webView.waitForExists(waitingTime);
+        titleMsg.waitForExists(waitingTime);
         assertTrue("Website title loaded", titleMsg.exists());
         Assert.assertTrue(mozillaImage.exists());
         mozillaImage.dragTo(mozillaImage,7);
