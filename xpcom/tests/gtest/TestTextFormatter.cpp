@@ -42,6 +42,10 @@ TEST(TextFormatter, Tests)
 
   nsTextFormatter::ssprintf(out2, u"%lld", INT64_MIN);
   EXPECT_STREQ("-9223372036854775808", NS_ConvertUTF16toUTF8(out2).get());
+
+  // Regression test for bug 1401821.
+  nsTextFormatter::ssprintf(out2, u"%*.f", 0, 23.2);
+  EXPECT_STREQ("23", NS_ConvertUTF16toUTF8(out2).get());
 }
 
 /*
