@@ -116,6 +116,8 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
         return "recording";
       case mozilla::gfx::BackendType::DIRECT2D1_1:
         return "direct2d 1.1";
+      case mozilla::gfx::BackendType::WEBRENDER_TEXT:
+        return "webrender text";
       case mozilla::gfx::BackendType::NONE:
         return "none";
       case mozilla::gfx::BackendType::BACKEND_LAST:
