@@ -25,6 +25,19 @@ static inline int ParsingFailed(struct list_state *state)
   return '"';        /* its part of a comment or error message */
 }
 
+void
+FixupYear(PRExplodedTime* aTime)
+{
+  /* if year has only two digits then assume that
+     00-79 is 2000-2079
+     80-99 is 1980-1999 */
+  if (aTime->tm_year < 80) {
+    aTime->tm_year += 2000;
+  } else if (aTime->tm_year < 100) {
+    aTime->tm_year += 1900;
+  }
+}
+
 int ParseFTPList(const char *line, struct list_state *state,
                  struct list_result *result )
 {
@@ -655,7 +668,7 @@ int ParseFTPList(const char *line, struct list_state *state,
         p = tokens[tokmarker+4];
         if (toklen[tokmarker+4] == 10) /* newstyle: YYYY-MM-DD format */
         {
-          result->fe_time.tm_year = atoi(p+0) - 1900;
+          result->fe_time.tm_year = atoi(p+0);
           result->fe_time.tm_month  = atoi(p+5) - 1;
           result->fe_time.tm_mday = atoi(p+8);
         }
@@ -665,8 +678,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           result->fe_time.tm_month  = atoi(p) - 1;
           result->fe_time.tm_mday = atoi((p+pos)-5);
           result->fe_time.tm_year = atoi((p+pos)-2);
-          if (result->fe_time.tm_year < 70)
-            result->fe_time.tm_year += 100;
+          FixupYear(&result->fe_time);
         }
 
         p = tokens[tokmarker+5];
@@ -829,13 +841,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           result->fe_time.tm_month--;
           result->fe_time.tm_mday = atoi(tokens[0]+3);
           result->fe_time.tm_year = atoi(tokens[0]+6);
-          /* if year has only two digits then assume that
-               00-79 is 2000-2079
-               80-99 is 1980-1999 */
-          if (result->fe_time.tm_year < 80)
-            result->fe_time.tm_year += 2000;
-          else if (result->fe_time.tm_year < 100)
-            result->fe_time.tm_year += 1900;
+          FixupYear(&result->fe_time);
         }
 
         result->fe_time.tm_hour = atoi(tokens[1]+0);
@@ -947,8 +953,7 @@ int ParseFTPList(const char *line, struct list_state *state,
         result->fe_time.tm_month = atoi(&p[35-18]) - 1;
         result->fe_time.tm_mday = atoi(&p[38-18]);
         result->fe_time.tm_year = atoi(&p[41-18]);
-        if (result->fe_time.tm_year < 80)
-          result->fe_time.tm_year += 100;
+        FixupYear(&result->fe_time);
         result->fe_time.tm_hour = atoi(&p[46-18]);
         result->fe_time.tm_min = atoi(&p[49-18]);
 
@@ -1374,7 +1379,7 @@ int ParseFTPList(const char *line, struct list_state *state,
             {
               result->fe_time.tm_month = pos/3;
               result->fe_time.tm_mday = atoi(tokens[3]);
-              result->fe_time.tm_year = atoi(tokens[4]) - 1900;
+              result->fe_time.tm_year = atoi(tokens[4]);
               break;
             }
           }
@@ -1385,8 +1390,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           result->fe_time.tm_month = atoi(p+0)-1;
           result->fe_time.tm_mday = atoi(p+3);
           result->fe_time.tm_year = atoi(p+6);
-          if (result->fe_time.tm_year < 80) /* SuperTCP */
-            result->fe_time.tm_year += 100;
+          FixupYear(&result->fe_time); /* SuperTCP */
 
           pos = 3; /* SuperTCP toknum of date field */
         }
@@ -1631,7 +1635,7 @@ int ParseFTPList(const char *line, struct list_state *state,
 
               pos = atoi(p);
               if (pos > 24)
-                result->fe_time.tm_year = pos-1900;
+                result->fe_time.tm_year = pos;
               else
               {
                 if (p[1] == ':')
