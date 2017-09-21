@@ -255,7 +255,7 @@
   display: block;
 }
 
-.tree .tree-node {
+.tree .tree-node[data-expandable="true"] {
   cursor: pointer;
 }
 
