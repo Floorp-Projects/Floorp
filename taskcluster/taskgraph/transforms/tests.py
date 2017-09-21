@@ -22,7 +22,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.treeherder import split_symbol, join_symbol
-from taskgraph.util.platforms import platform_family
 from taskgraph.util.schema import (
     validate_schema,
     optionally_keyed_by,
@@ -760,11 +759,8 @@ def set_retry_exit_status(config, tests):
 @transforms.add
 def set_profile(config, tests):
     """Set profiling mode for tests."""
-    profile = None
-    if config.params['try_mode'] == 'try_option_syntax':
-        profile = config.params['try_options']['profile']
     for test in tests:
-        if profile and test['suite'] == 'talos':
+        if config.config['args'].profile and test['suite'] == 'talos':
             test['mozharness']['extra-options'].append('--geckoProfile')
         yield test
 
@@ -772,10 +768,8 @@ def set_profile(config, tests):
 @transforms.add
 def set_tag(config, tests):
     """Set test for a specific tag."""
-    tag = None
-    if config.params['try_mode'] == 'try_option_syntax':
-        tag = config.params['try_options']['tag']
     for test in tests:
+        tag = config.config['args'].tag
         if tag:
             test['mozharness']['extra-options'].extend(['--tag', tag])
         yield test
@@ -827,7 +821,6 @@ def set_worker_type(config, tests):
         # during the taskcluster migration, this is a bit tortured, but it
         # will get simpler eventually!
         test_platform = test['test-platform']
-        try_options = config.params['try_options'] if config.params['try_options'] else {}
         if test.get('worker-type'):
             # This test already has its worker type defined, so just use that (yields below)
             pass
@@ -842,7 +835,7 @@ def set_worker_type(config, tests):
                     WINDOWS_WORKER_TYPES[test_platform.split('/')[0]][test['virtualization']]
         elif test_platform.startswith('linux') or test_platform.startswith('android'):
             if test.get('suite', '') == 'talos' and test['build-platform'] != 'linux64-ccov/opt':
-                if try_options.get('taskcluster_worker'):
+                if config.config['args'].taskcluster_worker:
                     test['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
                 else:
                     test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
@@ -908,6 +901,7 @@ def make_job_description(config, tests):
         jobdesc['name'] = name
         jobdesc['label'] = label
         jobdesc['description'] = test['description']
+        jobdesc['when'] = test.get('when', {})
         jobdesc['attributes'] = attributes
         jobdesc['dependencies'] = {'build': build_label}
 
@@ -936,16 +930,10 @@ def make_job_description(config, tests):
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
 
-        if test.get('when'):
-            jobdesc['when'] = test['when']
-        else:
-            schedules = [platform_family(test['build-platform'])]
-            if config.params['project'] != 'try':
-                # for non-try branches, include SETA
-                jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
-            else:
-                # otherwise just use skip-unless-schedules
-                jobdesc['optimization'] = {'skip-unless-schedules': schedules}
+        # run SETA unless this is a try push
+        jobdesc['optimizations'] = optimizations = []
+        if config.params['project'] != 'try':
+            optimizations.append(['seta'])
 
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
