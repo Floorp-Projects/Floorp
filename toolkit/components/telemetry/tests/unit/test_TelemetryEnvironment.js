@@ -450,7 +450,7 @@ function checkSettingsSection(data) {
     Assert.equal(typeof data.settings.defaultSearchEngineData, "object");
   }
 
-  if ("attribution" in data.settings) {
+  if (gIsWindows) {
     Assert.equal(typeof data.settings.attribution, "object");
     Assert.equal(data.settings.attribution.source, "google.com");
   }

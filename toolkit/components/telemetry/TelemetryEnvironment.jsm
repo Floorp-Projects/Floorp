@@ -1363,7 +1363,13 @@ EnvironmentCache.prototype = {
       updateChannel = UpdateUtils.getUpdateChannel(false);
     } catch (e) {}
 
+    // Make sure to retain the attribution code across environment changes.
+    const attributionCode =
+      (this._currentEnvironment.settings &&
+       this._currentEnvironment.settings.attribution) || {};
+
     this._currentEnvironment.settings = {
+      attribution: attributionCode,
       blocklistEnabled: Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true),
       e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
       e10sMultiProcesses: Services.appinfo.maxWebProcessCount,
