@@ -45,7 +45,8 @@ uint64_t rust_u2f_mgr_register(rust_u2f_manager* mgr,
                                const uint8_t* challenge_ptr,
                                size_t challenge_len,
                                const uint8_t* application_ptr,
-                               size_t application_len);
+                               size_t application_len,
+                               const rust_u2f_key_handles* khs);
 
 uint64_t rust_u2f_mgr_sign(rust_u2f_manager* mgr,
                            uint64_t timeout,

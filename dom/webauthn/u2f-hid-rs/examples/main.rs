@@ -52,9 +52,13 @@ fn main() {
 
     let (tx, rx) = channel();
     manager
-        .register(15_000, chall_bytes.clone(), app_bytes.clone(), move |rv| {
-            tx.send(rv.unwrap()).unwrap();
-        })
+        .register(
+            15_000,
+            chall_bytes.clone(),
+            app_bytes.clone(),
+            vec![],
+            move |rv| { tx.send(rv.unwrap()).unwrap(); },
+        )
         .unwrap();
 
     let register_data = rx.recv().unwrap();
