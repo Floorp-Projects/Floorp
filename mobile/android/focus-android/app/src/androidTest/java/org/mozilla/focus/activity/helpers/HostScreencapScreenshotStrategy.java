@@ -31,8 +31,8 @@ import tools.fastlane.screengrab.ScreenshotStrategy;
  * from the internal app storage and passed back to fastlane/screengrab using the provided callback.
  */
 public class HostScreencapScreenshotStrategy implements ScreenshotStrategy {
-    private static final int CONNECT_TIMEOUT = 500;
-    private static final int READ_TIMEOUT = 2000;
+    private static final int CONNECT_TIMEOUT = 1000;
+    private static final int READ_TIMEOUT = 5000;
     private static final String HOST_LOOPBACK = "10.0.2.2";
     private static final int PORT = 9771;
 
