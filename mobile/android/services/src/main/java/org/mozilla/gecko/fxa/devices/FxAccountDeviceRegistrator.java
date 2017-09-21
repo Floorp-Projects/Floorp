@@ -380,7 +380,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
           final FxAccountDevice updatedDevice = new FxAccountDevice(device.name, fxaDevice.id, device.type,
                                                                     null, null,
                                                                     device.pushCallback, device.pushPublicKey,
-                                                                    device.pushAuthKey);
+                                                                    device.pushAuthKey, null);
           doFxaRegistration(context, fxAccount, updatedDevice, false);
           return;
         }

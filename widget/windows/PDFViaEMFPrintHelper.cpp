@@ -11,22 +11,16 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/Unused.h"
 
+/* Scale DC by keeping aspect ratio */
 static
 float ComputeScaleFactor(int aDCWidth, int aDCHeight,
                          int aPageWidth, int aPageHeight)
 {
   MOZ_ASSERT(aPageWidth !=0 && aPageWidth != 0);
 
-  float scaleFactor = 1.0;
-  // If page fits DC - no scaling needed.
-  if (aDCWidth < aPageWidth || aDCHeight < aPageHeight) {
-    float xFactor =
-      static_cast<float>(aDCWidth) / static_cast <float>(aPageWidth);
-    float yFactor =
-      static_cast<float>(aDCHeight) / static_cast <float>(aPageHeight);
-    scaleFactor = std::min(xFactor, yFactor);
-  }
-  return scaleFactor;
+  return (aDCWidth >= aPageWidth && aDCHeight >= aPageHeight)
+    ? 1.0 /* If page fits DC - no scaling needed. */
+    : std::min(static_cast<float>(aDCWidth) / static_cast<float>(aPageWidth),         static_cast<float>(aDCHeight) / static_cast<float>(aPageHeight));
 }
 
 PDFViaEMFPrintHelper::PDFViaEMFPrintHelper()
@@ -43,8 +37,11 @@ nsresult
 PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
 {
   MOZ_ASSERT(aFile);
+
   if (mPDFDoc) {
-    MOZ_ASSERT_UNREACHABLE("We can only open one PDF at a time");
+    MOZ_ASSERT_UNREACHABLE("We can only open one PDF at a time,"
+                           "Use CloseDocument() to close the opened file"
+                           "before calling OpenDocument()");
     return NS_ERROR_FAILURE;
   }
 
@@ -87,9 +84,8 @@ PDFViaEMFPrintHelper::RenderPageToDC(HDC aDC, unsigned int aPageIndex,
   FPDF_PAGE pdfPage = mPDFiumEngine->LoadPage(mPDFDoc, aPageIndex);
   NS_ENSURE_TRUE(pdfPage, false);
 
-  int dcWidth = ::GetDeviceCaps(aDC, HORZRES);
-  int dcHeight = ::GetDeviceCaps(aDC, VERTRES);
-  float scaleFactor = ComputeScaleFactor(dcWidth,dcHeight,
+  float scaleFactor = ComputeScaleFactor(::GetDeviceCaps(aDC, HORZRES),
+                                         ::GetDeviceCaps(aDC, VERTRES),
                                          aPageWidth, aPageHeight);
   int savedState = ::SaveDC(aDC);
   ::SetGraphicsMode(aDC, GM_ADVANCED);
@@ -115,6 +111,15 @@ bool
 PDFViaEMFPrintHelper::DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
                                int aPageWidth, int aPageHeight)
 {
+  MOZ_ASSERT(aPrinterDC);
+
+  // OpenDocument might fail.
+  if (!mPDFDoc) {
+    MOZ_ASSERT_UNREACHABLE("Make sure OpenDocument return true before"
+                           "using DrawPage.");
+    return false;
+  }
+
   // There is a comment in Chromium.
   // https://cs.chromium.org/chromium/src/pdf/pdfium/pdfium_engine.cc?rcl=9ad9f6860b4d6a4ec7f7f975b2c99672e02d5d49&l=4008
   // Some PDFs seems to render very slowly if RenderPageToDC is directly used
@@ -125,7 +130,6 @@ PDFViaEMFPrintHelper::DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
   // whether our approach will avoid the performance issues though.  Bug
   // 1359298 covers investigating that.
 
-  MOZ_ASSERT(aPrinterDC);
   WindowsEMF emf;
   bool result = emf.InitForDrawing();
   NS_ENSURE_TRUE(result, false);
@@ -134,7 +138,7 @@ PDFViaEMFPrintHelper::DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
   NS_ENSURE_TRUE(result, false);
 
   RECT printRect = {0, 0, aPageWidth, aPageHeight};
-  result = emf.Playback(aPrinterDC, &printRect);
+  result = emf.Playback(aPrinterDC, printRect);
   return result;
 }
 
@@ -143,6 +147,13 @@ PDFViaEMFPrintHelper::DrawPageToFile(const wchar_t* aFilePath,
                                      unsigned int aPageIndex,
                                      int aPageWidth, int aPageHeight)
 {
+  // OpenDocument might fail.
+  if (!mPDFDoc) {
+    MOZ_ASSERT_UNREACHABLE("Make sure OpenDocument return true before"
+                           "using DrawPageToFile.");
+    return false;
+  }
+
   WindowsEMF emf;
   bool result = emf.InitForDrawing(aFilePath);
   NS_ENSURE_TRUE(result, false);

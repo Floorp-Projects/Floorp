@@ -33,7 +33,7 @@
 /* Style */
 
 .notificationbox .notification {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-toolbar-color);
   background-color: var(--theme-body-background);
   text-shadow: none;
   border-bottom: 1px solid var(--theme-splitter-color);

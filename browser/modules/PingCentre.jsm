@@ -114,12 +114,17 @@ class PingCentre {
     }
 
     let clientID = data.client_id || await this.telemetryClientId;
+    let locale = data.locale || Services.locale.getAppLocalesAsLangTags().pop();
     const payload = Object.assign({
+      locale,
       topic: this._topic,
       client_id: clientID,
-      shield_id: experimentsString,
+      version: AppConstants.MOZ_APP_VERSION,
       release_channel: AppConstants.MOZ_UPDATE_CHANNEL
     }, data);
+    if (experimentsString) {
+      payload.shield_id = experimentsString;
+    }
 
     if (this.logging) {
       // performance related pings cause a lot of logging, so we mute them

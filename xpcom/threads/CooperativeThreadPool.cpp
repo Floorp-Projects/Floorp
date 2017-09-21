@@ -8,6 +8,7 @@
 
 #include "base/message_loop.h"
 #include "mozilla/IOInterposer.h"
+#include "mozilla/ServoBindings.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
 

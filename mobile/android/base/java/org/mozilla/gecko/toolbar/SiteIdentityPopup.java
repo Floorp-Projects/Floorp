@@ -495,7 +495,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements BundleEventListe
             // favicon is the product icon, hence we'd be showing the same icon twice).
             mTitle.setText(R.string.moz_app_displayname);
         } else {
-            mTitle.setText(selectedTab.getBaseDomain());
+            mTitle.setText(mSiteIdentity.getHost());
 
             final Bitmap favicon = selectedTab.getFavicon();
             if (favicon != null) {

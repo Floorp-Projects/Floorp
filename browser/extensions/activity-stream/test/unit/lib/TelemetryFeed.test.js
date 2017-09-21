@@ -29,6 +29,7 @@ describe("TelemetryFeed", () => {
     getMostRecentAbsMarkStartByName() { return 1234; }
     mark() {}
     absNow() { return 123; }
+    get timeOrigin() { return 123456; }
   }
   const perfService = new PerfService();
   const {
@@ -114,7 +115,38 @@ describe("TelemetryFeed", () => {
 
       assert.propertyVal(session.perf, "load_trigger_type", "unexpected");
     });
+    it("should set load_trigger_type to first_window_opened on the first about:home seen", () => {
+      const session = instance.addSession("foo", "about:home");
+
+      assert.propertyVal(session.perf, "load_trigger_type",
+        "first_window_opened");
+    });
+    it("should not set load_trigger_type to first_window_opened on the second about:home seen", () => {
+      instance.addSession("foo", "about:home");
+
+      const session2 = instance.addSession("foo", "about:home");
+
+      assert.propertyNotVal(session2.perf, "load_trigger_type",
+        "first_window_opened");
+    });
+    it("should set load_trigger_ts to the value of perfService.timeOrigin", () => {
+      const session = instance.addSession("foo", "about:home");
+
+      assert.propertyVal(session.perf, "load_trigger_ts",
+        123456);
+    });
+    it("should a valid session ping on the first about:home seen", () => {
+      // Add a session
+      const portID = "foo";
+      const session = instance.addSession(portID, "about:home");
+
+      // Create a ping referencing the session
+      const ping = instance.createSessionEndEvent(session);
+      console.log("ping: ", JSON.stringify(ping));
+      assert.validate(ping, SessionPing);
+    });
   });
+
   describe("#browserOpenNewtabStart", () => {
     it("should call perfService.mark with browser-open-newtab-start", () => {
       sandbox.stub(perfService, "mark");
@@ -415,6 +447,16 @@ describe("TelemetryFeed", () => {
       instance.addSession("port123");
 
       instance.saveSessionPerfData("port123", {monkeys_ts: 444455});
+
+      assert.notCalled(instance.setLoadTriggerInfo);
+    });
+
+    it("should not call setLoadTriggerInfo when url is about:home", () => {
+      sandbox.stub(instance, "setLoadTriggerInfo");
+      instance.addSession("port123", "about:home");
+      const data = {visibility_event_rcvd_ts: 444455};
+
+      instance.saveSessionPerfData("port123", data);
 
       assert.notCalled(instance.setLoadTriggerInfo);
     });

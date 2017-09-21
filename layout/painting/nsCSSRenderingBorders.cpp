@@ -90,9 +90,6 @@ static Color ComputeColorForLine(uint32_t aLineIndex,
                                    nscolor aBorderColor,
                                    nscolor aBackgroundColor);
 
-static Color ComputeCompositeColorForLine(uint32_t aLineIndex,
-                                          const nsBorderColors* aBorderColors);
-
 // little helper function to check if the array of 4 floats given are
 // equal to the given value
 static bool
@@ -178,7 +175,7 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
                                          const Float* aBorderWidths,
                                          RectCornerRadii& aBorderRadii,
                                          const nscolor* aBorderColors,
-                                         nsBorderColors* const* aCompositeColors,
+                                         const nsBorderColors* aCompositeColors,
                                          nscolor aBackgroundColor,
                                          bool aBackfaceIsVisible)
   : mPresContext(aPresContext),
@@ -193,11 +190,12 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
   PodCopy(mBorderStyles, aBorderStyles, 4);
   PodCopy(mBorderWidths, aBorderWidths, 4);
   PodCopy(mBorderColors, aBorderColors, 4);
-  if (aCompositeColors) {
-    PodCopy(mCompositeColors, aCompositeColors, 4);
-  } else {
-    static nsBorderColors * const noColors[4] = { nullptr };
-    PodCopy(mCompositeColors, noColors, 4);
+  NS_FOR_CSS_SIDES(side) {
+    if (aCompositeColors && !(*aCompositeColors)[side].IsEmpty()) {
+      mCompositeColors[side] = &(*aCompositeColors)[side];
+    } else {
+      mCompositeColors[side] = nullptr;
+    }
   }
 
   mInnerRect = mOuterRect;
@@ -321,9 +319,11 @@ nsCSSBorderRenderer::AreBorderSideFinalStylesSame(uint8_t aSides)
 
     if (mBorderStyles[firstStyle] != mBorderStyles[i] ||
         mBorderColors[firstStyle] != mBorderColors[i] ||
-        !nsBorderColors::Equal(mCompositeColors[firstStyle],
-                               mCompositeColors[i]))
+        !mCompositeColors[firstStyle] != !mCompositeColors[i] ||
+        (mCompositeColors[firstStyle] &&
+         *mCompositeColors[firstStyle] != *mCompositeColors[i])) {
       return false;
+    }
   }
 
   /* Then if it's one of the two-tone styles and we're not
@@ -1267,18 +1267,9 @@ ComputeColorForLine(uint32_t aLineIndex,
                          aBorderColorStyle[aLineIndex]);
 }
 
-Color
-ComputeCompositeColorForLine(uint32_t aLineIndex,
-                             const nsBorderColors* aBorderColors)
-{
-  while (aLineIndex-- && aBorderColors->mNext)
-    aBorderColors = aBorderColors->mNext;
-
-  return Color::FromABGR(aBorderColors->mColor);
-}
-
 void
-nsCSSBorderRenderer::DrawBorderSidesCompositeColors(int aSides, const nsBorderColors *aCompositeColors)
+nsCSSBorderRenderer::DrawBorderSidesCompositeColors(
+  int aSides, const nsTArray<nscolor>& aCompositeColors)
 {
   RectCornerRadii radii = mBorderRadii;
 
@@ -1294,9 +1285,14 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(int aSides, const nsBorderCo
   Point itl = mInnerRect.TopLeft();
   Point ibr = mInnerRect.BottomRight();
 
+  MOZ_ASSERT(!aCompositeColors.IsEmpty());
+  Color compositeColor;
   for (uint32_t i = 0; i < uint32_t(maxBorderWidth); i++) {
-    ColorPattern color(ToDeviceColor(
-                         ComputeCompositeColorForLine(i, aCompositeColors)));
+    // advance to next color if exists.
+    if (i < aCompositeColors.Length()) {
+      compositeColor = ToDeviceColor(Color::FromABGR(aCompositeColors[i]));
+    }
+    ColorPattern color(compositeColor);
 
     Rect siRect = soRect;
     siRect.Deflate(1.0);
@@ -1336,7 +1332,7 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
 
   uint8_t borderRenderStyle = NS_STYLE_BORDER_STYLE_NONE;
   nscolor borderRenderColor;
-  const nsBorderColors *compositeColors = nullptr;
+  const nsTArray<nscolor>* compositeColors = nullptr;
 
   uint32_t borderColorStyleCount = 0;
   BorderColorStyle borderColorStyleTopLeft[3], borderColorStyleBottomRight[3];
@@ -1394,7 +1390,7 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
       maxBorderWidth = std::max(maxBorderWidth, mBorderWidths[i]);
     }
     if (maxBorderWidth <= MAX_COMPOSITE_BORDER_WIDTH) {
-      DrawBorderSidesCompositeColors(aSides, compositeColors);
+      DrawBorderSidesCompositeColors(aSides, *compositeColors);
       return;
     }
     NS_WARNING("DrawBorderSides: too large border width for composite colors");
@@ -3147,8 +3143,10 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
 void
 nsCSSBorderRenderer::DrawRectangularCompositeColors()
 {
-  nsBorderColors *currentColors[4];
-  memcpy(currentColors, mCompositeColors, sizeof(nsBorderColors*) * 4);
+  nscolor currentColors[4];
+  NS_FOR_CSS_SIDES(side) {
+    currentColors[side] = mBorderColors[side];
+  }
   Rect rect = mOuterRect;
   rect.Deflate(0.5);
 
@@ -3159,22 +3157,25 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
 
   for (int i = 0; i < mBorderWidths[0]; i++) {
     NS_FOR_CSS_SIDES(side) {
+      // advance to the next composite color if one exists
+      if (mCompositeColors[side] &&
+          uint32_t(i) < mCompositeColors[side]->Length()) {
+        currentColors[side] = (*mCompositeColors[side])[i];
+      }
+    }
+    NS_FOR_CSS_SIDES(side) {
       int sideNext = (side + 1) % 4;
 
       Point firstCorner = rect.CCWCorner(side) + cornerAdjusts[side];
       Point secondCorner = rect.CWCorner(side) - cornerAdjusts[side];
 
-      Color currentColor = Color::FromABGR(
-        currentColors[side] ? currentColors[side]->mColor
-                            : mBorderColors[side]);
+      Color currentColor = Color::FromABGR(currentColors[side]);
 
       mDrawTarget->StrokeLine(firstCorner, secondCorner,
                               ColorPattern(ToDeviceColor(currentColor)));
 
       Point cornerTopLeft = rect.CWCorner(side) - Point(0.5, 0.5);
-      Color nextColor = Color::FromABGR(
-        currentColors[sideNext] ? currentColors[sideNext]->mColor
-                                : mBorderColors[sideNext]);
+      Color nextColor = Color::FromABGR(currentColors[sideNext]);
 
       Color cornerColor((currentColor.r + nextColor.r) / 2.f,
                         (currentColor.g + nextColor.g) / 2.f,
@@ -3182,17 +3183,6 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
                         (currentColor.a + nextColor.a) / 2.f);
       mDrawTarget->FillRect(Rect(cornerTopLeft, Size(1, 1)),
                             ColorPattern(ToDeviceColor(cornerColor)));
-
-      if (side != 0) {
-        // We'll have to keep side 0 for the color averaging on side 3.
-        if (currentColors[side] && currentColors[side]->mNext) {
-          currentColors[side] = currentColors[side]->mNext;
-        }
-      }
-    }
-    // Now advance the color for side 0.
-    if (currentColors[0] && currentColors[0]->mNext) {
-      currentColors[0] = currentColors[0]->mNext;
     }
     rect.Deflate(1);
   }
@@ -3208,9 +3198,8 @@ nsCSSBorderRenderer::DrawBorders()
        (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
         mBorderStyles[0] == NS_STYLE_BORDER_STYLE_HIDDEN ||
         mBorderColors[0] == NS_RGBA(0,0,0,0))) ||
-       (mCompositeColors[0] &&
-        (mCompositeColors[0]->mColor == NS_RGBA(0,0,0,0) &&
-         !mCompositeColors[0]->mNext))))
+       (mCompositeColors[0] && mCompositeColors[0]->Length() == 1 &&
+        (*mCompositeColors[0])[0] == NS_RGBA(0,0,0,0))))
   {
     // All borders are the same style, and the style is either none or hidden, or the color
     // is transparent.

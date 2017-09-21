@@ -282,13 +282,6 @@ bool Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_
 
 // Border style
 void Gecko_EnsureMozBorderColors(nsStyleBorder* aBorder);
-void Gecko_ClearMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide);
-void Gecko_AppendMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide,
-                                 nscolor aColor);
-void Gecko_CopyMozBorderColors(nsStyleBorder* aDest, const nsStyleBorder* aSrc,
-                               mozilla::Side aSide);
-const nsBorderColors* Gecko_GetMozBorderColors(const nsStyleBorder* aBorder,
-                                               mozilla::Side aSide);
 
 // Font style
 void Gecko_FontFamilyList_Clear(FontFamilyList* aList);

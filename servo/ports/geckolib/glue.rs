@@ -1503,7 +1503,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(rule: RawServoStyleRule
         };
 
         let element = GeckoElement(element);
-        let mut ctx = MatchingContext::new(matching_mode, None, element.owner_document_quirks_mode());
+        let mut ctx = MatchingContext::new(matching_mode, None, None, element.owner_document_quirks_mode());
         matches_selector(selector, 0, None, &element, &mut ctx, &mut |_, _| {})
     })
 }
@@ -2218,9 +2218,13 @@ pub extern "C" fn Servo_MatrixTransform_Operate(matrix_operator: MatrixTransform
     };
 
     let output = unsafe { output.as_mut() }.expect("not a valid 'output' matrix");
-    if let Ok(result) =  result {
+    if let Ok(result) = result {
         *output = result.into();
-    };
+    } else if progress < 0.5 {
+        *output = from.clone().into();
+    } else {
+        *output = to.clone().into();
+    }
 }
 
 #[no_mangle]
@@ -3609,10 +3613,9 @@ pub extern "C" fn Servo_StyleSet_GetKeyframesForName(raw_data: RawServoStyleSetB
             },
             KeyframesStepValue::Declarations { ref block } => {
                 let guard = block.read_with(&guard);
-                // Filter out non-animatable properties.
+                // Filter out non-animatable properties and properties with !important.
                 let animatable =
-                    guard.declarations()
-                         .iter()
+                    guard.normal_declaration_iter()
                          .filter(|declaration| declaration.is_animatable());
 
                 for declaration in animatable {

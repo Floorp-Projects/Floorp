@@ -625,7 +625,11 @@ Sync11Service.prototype = {
                      + " Are we running tests?");
       return 256 * 1024;
     }
-    return config.max_record_payload_bytes;
+    let payloadMax = config.max_record_payload_bytes;
+    if (config.max_post_bytes && payloadMax <= config.max_post_bytes) {
+      return config.max_post_bytes - 4096;
+    }
+    return payloadMax;
   },
 
   async verifyLogin(allow40XRecovery = true) {

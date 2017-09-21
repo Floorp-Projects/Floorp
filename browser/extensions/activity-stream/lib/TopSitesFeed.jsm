@@ -14,6 +14,8 @@ const {shortURL} = Cu.import("resource://activity-stream/lib/ShortURL.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "filterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LinksCache",
+  "resource://activity-stream/lib/LinksCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
@@ -22,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
 const UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
 const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
-const FRECENCY_THRESHOLD = 100; // 1 visit (skip first-run/one-time pages)
+const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
 
 this.TopSitesFeed = class TopSitesFeed {
@@ -30,6 +32,12 @@ this.TopSitesFeed = class TopSitesFeed {
     this.lastUpdated = 0;
     this._tippyTopProvider = new TippyTopProvider();
     this.dedupe = new Dedupe(this._dedupeKey);
+    this.frecentCache = new LinksCache(NewTabUtils.activityStreamLinks,
+      "getTopSites", this.getLinkMigrator(), (oldOptions, newOptions) =>
+        // Refresh if no old options or requesting more items
+        !(oldOptions.numItems >= newOptions.numItems));
+    this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks,
+      "links", this.getLinkMigrator(["favicon", "faviconSize"]));
   }
   _dedupeKey(site) {
     return site && site.hostname;
@@ -50,34 +58,64 @@ this.TopSitesFeed = class TopSitesFeed {
       }
     }
   }
-  async getScreenshot(url) {
-    let screenshot = await Screenshots.getScreenshotForURL(url);
-    const action = {type: at.SCREENSHOT_UPDATED, data: {url, screenshot}};
-    this.store.dispatch(ac.BroadcastToContent(action));
+
+  /**
+   * Make a cached link data migrator by copying over screenshots and others.
+   *
+   * @param others {array} Optional extra properties to copy
+   */
+  getLinkMigrator(others = []) {
+    const properties = ["__fetchingScreenshot", "screenshot", ...others];
+    return (oldLink, newLink) => {
+      for (const property of properties) {
+        const oldValue = oldLink[property];
+        if (oldValue) {
+          newLink[property] = oldValue;
+        }
+      }
+    };
   }
   async getLinksWithDefaults(action) {
     // Get at least SHOWMORE amount so toggling between 1 and 2 rows has sites
     const numItems = Math.max(this.store.getState().Prefs.values.topSitesCount,
       TOP_SITES_SHOWMORE_LENGTH);
-    let frecent = await NewTabUtils.activityStreamLinks.getTopSites({numItems});
-    const notBlockedDefaultSites = DEFAULT_TOP_SITES.filter(site => !NewTabUtils.blockedLinks.isBlocked({url: site.url}));
-    const defaultUrls = notBlockedDefaultSites.map(site => site.url);
-    let pinned = this._getPinnedWithData(frecent);
-    pinned = pinned.map(site => site && Object.assign({}, site, {
-      isDefault: defaultUrls.indexOf(site.url) !== -1,
-      hostname: shortURL(site)
-    }));
+    const frecent = (await this.frecentCache.request({
+      numItems,
+      topsiteFrecency: FRECENCY_THRESHOLD
+    })).map(link => Object.assign({}, link, {hostname: shortURL(link)}));
 
-    if (!frecent) {
-      frecent = [];
-    } else {
-      // Get the best history links that pass the frecency threshold
-      frecent = frecent.filter(link => link && link.type !== "affiliate" &&
-        link.frecency > FRECENCY_THRESHOLD).map(site => {
-          site.hostname = shortURL(site);
-          return site;
-        });
-    }
+    // Remove any defaults that have been blocked
+    const notBlockedDefaultSites = DEFAULT_TOP_SITES.filter(link =>
+      !NewTabUtils.blockedLinks.isBlocked({url: link.url}));
+
+    // Get pinned links augmented with desired properties
+    const plainPinned = await this.pinnedCache.request();
+    const pinned = await Promise.all(plainPinned.map(async link => {
+      if (!link) {
+        return link;
+      }
+
+      // Copy all properties from a frecent link and add more
+      const finder = other => other.url === link.url;
+      const copy = Object.assign({}, frecent.find(finder) || {}, link, {
+        hostname: shortURL(link),
+        isDefault: !!notBlockedDefaultSites.find(finder)
+      });
+
+      // Add in favicons if we don't already have it
+      if (!copy.favicon) {
+        try {
+          NewTabUtils.activityStreamProvider._faviconBytesToDataURI(await
+            NewTabUtils.activityStreamProvider._addFavicons([copy]));
+          copy.__updateCache("favicon");
+          copy.__updateCache("faviconSize");
+        } catch (e) {
+          // Some issue with favicon, so just continue without one
+        }
+      }
+
+      return copy;
+    }));
 
     // Remove any duplicates from frecent and default sites
     const [, dedupedFrecent, dedupedDefaults] = this.dedupe.group(
@@ -89,30 +127,35 @@ this.TopSitesFeed = class TopSitesFeed {
       filterAdult(dedupedUnpinned) : dedupedUnpinned;
 
     // Insert the original pinned sites into the deduped frecent and defaults
-    return insertPinned(checkedAdult, pinned).slice(0, numItems);
+    const withPinned = insertPinned(checkedAdult, pinned).slice(0, numItems);
+
+    // Now, get a tippy top icon, a rich icon, or screenshot for every item
+    for (const link of withPinned) {
+      if (link) {
+        this._fetchIcon(link);
+
+        // Remove any internal properties
+        delete link.__fetchingScreenshot;
+        delete link.__updateCache;
+      }
+    }
+
+    return withPinned;
   }
+
+  /**
+   * Refresh the top sites data for content
+   *
+   * @param target Optional port/channel to receive the update. If not provided,
+   *               the update will be broadcasted.
+   */
   async refresh(target = null) {
     if (!this._tippyTopProvider.initialized) {
       await this._tippyTopProvider.init();
     }
 
     const links = await this.getLinksWithDefaults();
-
-    // First, cache existing screenshots in case we need to reuse them
-    const currentScreenshots = {};
-    for (const link of this.store.getState().TopSites.rows) {
-      if (link && link.screenshot) {
-        currentScreenshots[link.url] = link.screenshot;
-      }
-    }
-
-    // Now, get a tippy top icon, a rich icon, or screenshot for every item
-    for (let link of links) {
-      if (!link) { continue; }
-      this._fetchIcon(link, currentScreenshots);
-    }
     const newAction = {type: at.TOP_SITES_UPDATED, data: links};
-
     if (target) {
       // Send an update to content so the preloaded tab can get the updated content
       this.store.dispatch(ac.SendToContent(newAction, target));
@@ -122,43 +165,33 @@ this.TopSitesFeed = class TopSitesFeed {
     }
     this.lastUpdated = Date.now();
   }
-  _fetchIcon(link, screenshotCache = {}) {
+
+  /**
+   * Get an image for the link preferring tippy top, rich favicon, screenshots.
+   */
+  async _fetchIcon(link) {
     // Check for tippy top icon or a rich icon.
     this._tippyTopProvider.processSite(link);
-    if (!link.tippyTopIcon && (!link.favicon || link.faviconSize < MIN_FAVICON_SIZE)) {
-      // If no tippy top, then we get a screenshot.
-      if (screenshotCache[link.url]) {
-        link.screenshot = screenshotCache[link.url];
-      } else {
-        this.getScreenshot(link.url);
-      }
+    if (!link.tippyTopIcon &&
+        (!link.favicon || link.faviconSize < MIN_FAVICON_SIZE) &&
+        !link.screenshot) {
+      const {url} = link;
+      Screenshots.maybeGetAndSetScreenshot(link, url, "screenshot", screenshot => {
+        this.store.dispatch(ac.BroadcastToContent({
+          data: {screenshot, url},
+          type: at.SCREENSHOT_UPDATED
+        }));
+      });
     }
-  }
-  _getPinnedWithData(links) {
-    // Augment the pinned links with any other extra data we have for them already in the store.
-    // Alternatively you can pass in some links that you know have data you want the pinned links
-    // to also have. This is useful for start up to make sure pinned links have favicons
-    // (See github ticket #3428 fore more details)
-    const originalLinks = links || this.store.getState().TopSites.rows;
-    const pinned = NewTabUtils.pinnedLinks.links;
-    return pinned.map(pinnedLink => {
-      if (pinnedLink) {
-        const hostname = shortURL(pinnedLink);
-        const originalLink = originalLinks.find(link => link && link.url === pinnedLink.url);
-        // If it's a new link then it won't have an icon, so fetch one
-        if (!originalLink) {
-          this._fetchIcon(pinnedLink);
-        }
-        return Object.assign(originalLink || {hostname}, pinnedLink);
-      }
-      return pinnedLink;
-    });
   }
 
   /**
    * Inform others that top sites data has been updated due to pinned changes.
    */
   _broadcastPinnedSitesUpdated() {
+    // Pinned data changed, so make sure we get latest
+    this.pinnedCache.expire();
+
     // Refresh to update pinned sites with screenshots, trigger deduping, etc.
     this.refresh();
   }
@@ -233,6 +266,7 @@ this.TopSitesFeed = class TopSitesFeed {
       case at.PLACES_HISTORY_CLEARED:
       case at.PLACES_LINK_DELETED:
       case at.PLACES_LINK_BLOCKED:
+        this.frecentCache.expire();
         this.refresh();
         break;
       case at.PREF_CHANGED:

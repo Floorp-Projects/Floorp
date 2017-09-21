@@ -84,7 +84,7 @@ public class FxAccountPushHandler {
         }
         Log.i(LOG_TAG, "Received 'accountVerified' push event, requesting immediate sync");
         // This will trigger an email verification check and a sync.
-        fxAccount.requestImmediateSync(null, null);
+        fxAccount.requestImmediateSync(null, null, true);
     }
 
     private static void handleCollectionChanged(Context context, JSONObject data) throws JSONException {
@@ -98,7 +98,7 @@ public class FxAccountPushHandler {
                     return;
                 }
                 final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-                fxAccount.requestImmediateSync(new String[] { CLIENTS_COLLECTION }, null);
+                fxAccount.requestImmediateSync(new String[] { CLIENTS_COLLECTION }, null, true);
                 return;
             }
         }

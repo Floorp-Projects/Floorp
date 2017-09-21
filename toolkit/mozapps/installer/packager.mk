@@ -68,6 +68,9 @@ ifdef MOZ_ARTIFACT_BUILD_SYMBOLS
           zip -r5D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym' -i '*.txt'
 endif # MOZ_ARTIFACT_BUILD_SYMBOLS
 ifdef MOZ_CODE_COVERAGE
+	@echo 'Generating chrome-map for coverage data...'
+	$(topsrcdir)/mach build-backend -b ChromeMap
+	@echo 'Packaging code coverage data...'
 	# Package code coverage gcno tree
 	@echo 'Packaging code coverage data...'
 	$(RM) $(CODE_COVERAGE_ARCHIVE_BASENAME).zip

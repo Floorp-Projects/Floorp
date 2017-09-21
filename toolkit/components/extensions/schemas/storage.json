@@ -220,9 +220,14 @@
         }
       },
       "managed": {
-        "unsupported": true,
         "$ref": "StorageArea",
-        "description": "Items in the <code>managed</code> storage area are set by the domain administrator, and are read-only for the extension; trying to modify this namespace results in an error."
+        "description": "Items in the <code>managed</code> storage area are set by administrators or native applications, and are read-only for the extension; trying to modify this namespace results in an error.",
+        "properties": {
+          "QUOTA_BYTES": {
+            "value": 5242880,
+            "description": "The maximum size (in bytes) of the managed storage JSON manifest file. Files larger than this limit will fail to load."
+          }
+        }
       }
     }
   }

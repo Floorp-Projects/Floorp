@@ -133,6 +133,23 @@ this.storage = class extends ExtensionAPI {
           },
         },
 
+        managed: {
+          get(keys) {
+            return context.childManager.callParentAsyncFunction("storage.managed.get", [
+              serialize(keys),
+            ]).then(deserialize);
+          },
+          set(items) {
+            return Promise.reject({message: "storage.managed is read-only"});
+          },
+          remove(keys) {
+            return Promise.reject({message: "storage.managed is read-only"});
+          },
+          clear() {
+            return Promise.reject({message: "storage.managed is read-only"});
+          },
+        },
+
         onChanged: new EventManager(context, "storage.onChanged", fire => {
           let onChanged = (data, area) => {
             let changes = new context.cloneScope.Object();
