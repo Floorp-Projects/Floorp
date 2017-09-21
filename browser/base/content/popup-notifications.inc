@@ -81,12 +81,6 @@
       </popupnotificationcontent>
     </popupnotification>
 
-    <popupnotification id="addon-webext-defaultsearch-notification" hidden="true">
-      <popupnotificationcontent class="addon-webext-defaultsearch-notification-content" orient="vertical">
-        <description id="addon-webext-defaultsearch-text" class="addon-webext-perm-header"/>
-      </popupnotificationcontent>
-    </popupnotification>
-
     <popupnotification id="addon-installed-notification" hidden="true">
       <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
         <description id="addon-installed-notification-header"/>
