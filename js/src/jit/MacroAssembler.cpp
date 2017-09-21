@@ -852,7 +852,7 @@ MacroAssembler::callMallocStub(size_t nbytes, Register result, Label* fail)
     if (regNBytes != result)
         push(regNBytes);
     move32(Imm32(nbytes), regNBytes);
-    call(GetJitContext()->compartment->zone()->mallocStub());
+    call(GetJitContext()->runtime->jitRuntime()->mallocStub());
     if (regNBytes != result) {
         movePtr(regNBytes, result);
         pop(regNBytes);

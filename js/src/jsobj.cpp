@@ -2976,7 +2976,7 @@ js::WatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id, JS::Hand
 
     WatchpointMap* wpmap = cx->compartment()->watchpointMap;
     if (!wpmap) {
-        wpmap = cx->zone()->new_<WatchpointMap>();
+        wpmap = cx->runtime()->new_<WatchpointMap>();
         if (!wpmap || !wpmap->init()) {
             ReportOutOfMemory(cx);
             js_delete(wpmap);

@@ -252,7 +252,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     bool isCollecting() const {
-        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
         return isCollectingFromAnyThread();
     }
 
@@ -435,7 +435,7 @@ struct Zone : public JS::shadow::Zone,
     bool triggerGCForTooMuchMalloc() {
         JSRuntime* rt = runtimeFromAnyThread();
 
-        if (js::CurrentThreadCanAccessRuntime(rt)) {
+        if (CurrentThreadCanAccessRuntime(rt)) {
             return rt->gc.triggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC,
                                         gcMallocCounter.bytes(), gcMallocCounter.maxBytes());
         }
@@ -620,7 +620,7 @@ struct Zone : public JS::shadow::Zone,
     void transferUniqueId(js::gc::Cell* tgt, js::gc::Cell* src) {
         MOZ_ASSERT(src != tgt);
         MOZ_ASSERT(!IsInsideNursery(tgt));
-        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
         MOZ_ASSERT(!uniqueIds().has(tgt));
         uniqueIds().rekeyIfMoved(src, tgt);
@@ -658,28 +658,6 @@ struct Zone : public JS::shadow::Zone,
 
     // Delete an empty compartment after its contents have been merged.
     void deleteEmptyCompartment(JSCompartment* comp);
-
-    /*
-     * This variation of calloc will call the large-allocation-failure callback
-     * on OOM and retry the allocation.
-     */
-    template <typename T>
-    T* pod_callocCanGC(size_t numElems) {
-        T* p = pod_calloc<T>(numElems);
-        if (MOZ_LIKELY(!!p))
-            return p;
-        size_t bytes;
-        if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes))) {
-            reportAllocationOverflow();
-            return nullptr;
-        }
-        JSRuntime* rt = runtimeFromActiveCooperatingThread();
-        p = static_cast<T*>(rt->onOutOfMemoryCanGC(js::AllocFunction::Calloc, bytes));
-        if (!p)
-            return nullptr;
-        updateMallocCounter(bytes);
-        return p;
-    }
 
   private:
     js::ZoneGroupData<js::jit::JitZone*> jitZone_;

@@ -7912,7 +7912,7 @@ JitCompartment::generateStringConcatStub(JSContext* cx)
 }
 
 JitCode*
-JitZone::generateMallocStub(JSContext* cx)
+JitRuntime::generateMallocStub(JSContext* cx)
 {
     const Register regReturn = CallTempReg0;
     const Register regNBytes = CallTempReg0;
@@ -7928,12 +7928,12 @@ JitZone::generateMallocStub(JSContext* cx)
     masm.PushRegsInMask(save);
 
     const Register regTemp = regs.takeAnyGeneral();
-    const Register regZone = regTemp;
+    const Register regRuntime = regTemp;
     MOZ_ASSERT(regTemp != regNBytes);
 
     masm.setupUnalignedABICall(regTemp);
-    masm.movePtr(ImmPtr(cx->zone()), regZone);
-    masm.passABIArg(regZone);
+    masm.movePtr(ImmPtr(cx->runtime()), regRuntime);
+    masm.passABIArg(regRuntime);
     masm.passABIArg(regNBytes);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, MallocWrapper));
     masm.storeCallWordResult(regReturn);

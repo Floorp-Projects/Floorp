@@ -316,7 +316,7 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
     ZoneStats& zStats = rtStats->zoneStatsVector.back();
-    if (!zStats.initStrings())
+    if (!zStats.initStrings(rt))
         MOZ_CRASH("oom");
     rtStats->initExtraZoneStats(zone, &zStats);
     rtStats->currZoneStats = &zStats;
@@ -341,7 +341,7 @@ StatsCompartmentCallback(JSContext* cx, void* data, JSCompartment* compartment)
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->compartmentStatsVector.growBy(1));
     CompartmentStats& cStats = rtStats->compartmentStatsVector.back();
-    if (!cStats.initClasses())
+    if (!cStats.initClasses(cx->runtime()))
         MOZ_CRASH("oom");
     rtStats->initExtraCompartmentStats(compartment, &cStats);
 
@@ -620,10 +620,10 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
 }
 
 bool
-ZoneStats::initStrings()
+ZoneStats::initStrings(JSRuntime* rt)
 {
     isTotals = false;
-    allStrings = js_new<StringsHashMap>();
+    allStrings = rt->new_<StringsHashMap>();
     if (!allStrings || !allStrings->init()) {
         js_delete(allStrings);
         allStrings = nullptr;
@@ -633,10 +633,10 @@ ZoneStats::initStrings()
 }
 
 bool
-CompartmentStats::initClasses()
+CompartmentStats::initClasses(JSRuntime* rt)
 {
     isTotals = false;
-    allClasses = js_new<ClassesHashMap>();
+    allClasses = rt->new_<ClassesHashMap>();
     if (!allClasses || !allClasses->init()) {
         js_delete(allClasses);
         allClasses = nullptr;

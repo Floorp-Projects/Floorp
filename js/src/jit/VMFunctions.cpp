@@ -542,10 +542,10 @@ InterruptCheck(JSContext* cx)
 }
 
 void*
-MallocWrapper(JS::Zone* zone, size_t nbytes)
+MallocWrapper(JSRuntime* rt, size_t nbytes)
 {
     AutoUnsafeCallWithABI unsafe;
-    return zone->pod_malloc<uint8_t>(nbytes);
+    return rt->pod_malloc<uint8_t>(nbytes);
 }
 
 JSObject*
