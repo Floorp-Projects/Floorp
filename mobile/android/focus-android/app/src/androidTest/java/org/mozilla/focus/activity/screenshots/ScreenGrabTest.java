@@ -153,6 +153,7 @@ public class ScreenGrabTest {
         // a screenshot of this dialog.
         // takeScreenshotOfGooglePlayDialog(device);
 
+        takeScreenshotOfContextMenu(device);
         takeScreenshotOfErrorPages(device);
     }
 
@@ -270,8 +271,7 @@ public class ScreenGrabTest {
     }
 
     private void takeScreenshotOfEraseSnackbar(UiDevice device) {
-                /* History Erase Notification */
-
+        TestHelper.webView.waitForExists(waitingTime);
         TestHelper.floatingEraseButton.perform(click());
         device.wait(Until.findObject(By.res("org.mozilla.focus.debug","snackbar_text")), waitingTime);
         Screengrab.screenshot("YourBrowingHistoryHasBeenErased");
