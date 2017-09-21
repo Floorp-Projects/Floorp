@@ -194,6 +194,30 @@ var supported_properties = {
     "margin-top": [ test_length_transition, test_percent_transition,
                     test_length_percent_calc_transition,
                     test_length_unclamped, test_percent_unclamped ],
+    "mask-position": [ test_background_position_transition,
+                       // FIXME: We don't currently test clamping,
+                       // since mask-position uses calc() as
+                       // an intermediate form.
+                       /* test_length_percent_pair_unclamped */ ],
+    "mask-position-x": [ test_background_position_coord_transition,
+                         test_length_transition,
+                         test_percent_transition,
+                         // FIXME: We don't currently test clamping,
+                         // since background-position-x uses calc() as
+                         // an intermediate form.
+                         /* test_length_percent_pair_unclamped */ ],
+    "mask-position-y": [ test_background_position_coord_transition,
+                         test_length_transition,
+                         test_percent_transition,
+                         // FIXME: We don't currently test clamping,
+                         // since background-position-y uses calc() as
+                         // an intermediate form.
+                         /* test_length_percent_pair_unclamped */ ],
+    "mask-size": [ test_background_size_transition,
+                   // FIXME: We don't currently test clamping,
+                   // since mask-size uses calc() as an
+                   // intermediate form.
+                   /* test_length_percent_pair_clamped */ ],
     "max-height": [ test_length_transition, test_percent_transition,
                     test_length_clamped, test_percent_clamped ],
     "max-width": [ test_length_transition, test_percent_transition,
@@ -289,33 +313,6 @@ var supported_properties = {
 if (SpecialPowers.getBoolPref("layout.css.shape-outside.enabled")) {
   supported_properties["shape-outside"] =
     [ test_basic_shape_or_url_transition ];
-}
-
-if (SupportsMaskShorthand()) {
-  supported_properties["mask-position"] = [ test_background_position_transition,
-                                     // FIXME: We don't currently test clamping,
-                                     // since mask-position uses calc() as
-                                     // an intermediate form.
-                                     /* test_length_percent_pair_unclamped */ ];
-  supported_properties["mask-position-x"] = [ test_background_position_coord_transition,
-                                              test_length_transition,
-                                              test_percent_transition,
-                                            // FIXME: We don't currently test clamping,
-                                            // since background-position-x uses calc() as
-                                            // an intermediate form.
-                                            /* test_length_percent_pair_unclamped */ ];
-  supported_properties["mask-position-y"] = [ test_background_position_coord_transition,
-                                              test_length_transition,
-                                              test_percent_transition,
-                                            // FIXME: We don't currently test clamping,
-                                            // since background-position-y uses calc() as
-                                            // an intermediate form.
-                                            /* test_length_percent_pair_unclamped */ ];
-  supported_properties["mask-size"] = [ test_background_size_transition,
-                                     // FIXME: We don't currently test clamping,
-                                     // since mask-size uses calc() as an
-                                     // intermediate form.
-                                     /* test_length_percent_pair_clamped */ ];
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
