@@ -282,7 +282,9 @@ private:
           frame->RemoveProperty(nsIFrame::WebRenderUserDataProperty());
         }
         iter.Remove();
+        continue;
       }
+
       data->SetUsed(false);
     }
   }
