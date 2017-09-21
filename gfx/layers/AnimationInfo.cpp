@@ -43,6 +43,11 @@ AnimationInfo::AddAnimation()
 
   Animation* anim = mAnimations.AppendElement();
 
+  if (mManager->AsWebRenderLayerManager()) {
+    mManager->AsWebRenderLayerManager()->
+      KeepCompositorAnimationsIdAlive(mCompositorAnimationsId);
+  }
+
   mMutated = true;
 
   return anim;
