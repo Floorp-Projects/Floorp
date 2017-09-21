@@ -568,10 +568,12 @@ ResourceUpdateQueue::AddFontInstance(wr::FontInstanceKey aKey,
                                      wr::FontKey aFontKey,
                                      float aGlyphSize,
                                      const wr::FontInstanceOptions* aOptions,
-                                     const wr::FontInstancePlatformOptions* aPlatformOptions)
+                                     const wr::FontInstancePlatformOptions* aPlatformOptions,
+                                     wr::Vec_u8& aVariations)
 {
   wr_resource_updates_add_font_instance(mUpdates, aKey, aFontKey, aGlyphSize,
-                                        aOptions, aPlatformOptions);
+                                        aOptions, aPlatformOptions,
+                                        &aVariations.inner);
 }
 
 void

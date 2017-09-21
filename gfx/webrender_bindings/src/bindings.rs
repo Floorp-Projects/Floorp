@@ -89,11 +89,22 @@ impl WrVecU8 {
 
     // Equivalent to `to_vec` but clears self instead of consuming the value.
     fn flush_into_vec(&mut self) -> Vec<u8> {
-        let vec = unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) };
+        self.convert_into_vec::<u8>()
+    }
+
+    // Like flush_into_vec, but also does an unsafe conversion to the desired type.
+    fn convert_into_vec<T>(&mut self) -> Vec<T> {
+        let vec = unsafe {
+            Vec::from_raw_parts(
+                self.data as *mut T,
+                self.length / mem::size_of::<T>(),
+                self.capacity / mem::size_of::<T>(),
+            )
+        };
         self.data = ptr::null_mut();
         self.length = 0;
         self.capacity = 0;
-        return vec;
+        vec
     }
 
     fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
@@ -963,14 +974,16 @@ pub extern "C" fn wr_resource_updates_add_font_instance(
     font_key: WrFontKey,
     glyph_size: f32,
     options: *const FontInstanceOptions,
-    platform_options: *const FontInstancePlatformOptions
+    platform_options: *const FontInstancePlatformOptions,
+    variations: &mut WrVecU8,
 ) {
     resources.add_font_instance(
         key,
         font_key,
         Au::from_f32_px(glyph_size),
         unsafe { options.as_ref().cloned() },
-        unsafe { platform_options.as_ref().cloned() }
+        unsafe { platform_options.as_ref().cloned() },
+        variations.convert_into_vec::<FontVariation>(),
     );
 }
 
