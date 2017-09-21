@@ -71,14 +71,10 @@ nrappkit_non_unified_sources = [
 
 GYP_DIRS['nICEr'].input = 'nICEr/nicer.gyp'
 GYP_DIRS['nICEr'].variables = gyp_vars_copy
-# We allow warnings for third-party code that can be updated from upstream.
-GYP_DIRS['nICEr'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
 GYP_DIRS['nICEr'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 GYP_DIRS['nICEr'].non_unified_sources += nICEr_non_unified_sources
 
 GYP_DIRS['nrappkit'].input = 'nrappkit/nrappkit.gyp'
 GYP_DIRS['nrappkit'].variables = gyp_vars_copy
-# We allow warnings for third-party code that can be updated from upstream.
-GYP_DIRS['nrappkit'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
 GYP_DIRS['nrappkit'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 GYP_DIRS['nrappkit'].non_unified_sources += nrappkit_non_unified_sources
