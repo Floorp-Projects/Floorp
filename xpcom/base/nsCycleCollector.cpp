@@ -1080,7 +1080,7 @@ public:
     }
 
     uint32_t oldLength = mEntries.Length();
-    uint32_t newLength = 0;
+    uint32_t keptLength = 0;
     auto revIter = mEntries.IterFromLast();
     auto iter = mEntries.Iter();
      // After iteration this points to the first empty entry.
@@ -1121,7 +1121,7 @@ public:
       // in mEntries.
       if (e.mObject) {
         firstEmptyIter.Next();
-        ++newLength;
+        ++keptLength;
       }
 
       if (&e == &revIter.Get()) {
@@ -1130,7 +1130,7 @@ public:
     }
 
     // There were some empty entries.
-    if (oldLength != newLength) {
+    if (oldLength != keptLength) {
 
       // While visiting entries, some new ones were possibly added. This can
       // happen during CanSkip. Move all such new entries to be after other
@@ -1144,11 +1144,10 @@ public:
           firstEmptyIter.Get().Swap(iterForNewEntries.Get());
           firstEmptyIter.Next();
           iterForNewEntries.Next();
-          ++newLength; // We keep all the new entries.
         }
       }
 
-      mEntries.PopLastN(oldLength - newLength);
+      mEntries.PopLastN(oldLength - keptLength);
     }
   }
 

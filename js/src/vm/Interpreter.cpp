@@ -1630,10 +1630,10 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleVa
     if (obj->isNative() &&
         JSID_IS_ATOM(id) &&
         !obj->as<NativeObject>().inDictionaryMode() &&
-        !obj->hadElementsAccess() &&
+        !obj->as<NativeObject>().hadElementsAccess() &&
         obj->as<NativeObject>().slotSpan() > PropertyTree::MAX_HEIGHT_WITH_ELEMENTS_ACCESS / 3)
     {
-        if (!JSObject::setHadElementsAccess(cx, obj))
+        if (!NativeObject::setHadElementsAccess(cx, obj.as<NativeObject>()))
             return false;
     }
 

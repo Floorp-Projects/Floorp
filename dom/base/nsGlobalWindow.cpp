@@ -2948,8 +2948,8 @@ CreateNativeGlobalForInner(JSContext* aCx,
   // Determine if we need the Components object.
   bool needComponents = nsContentUtils::IsSystemPrincipal(aPrincipal) ||
                         TreatAsRemoteXUL(aPrincipal);
-  uint32_t flags = needComponents ? 0 : nsIXPConnect::OMIT_COMPONENTS_OBJECT;
-  flags |= nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK;
+  uint32_t flags = needComponents ? 0 : xpc::OMIT_COMPONENTS_OBJECT;
+  flags |= xpc::DONT_FIRE_ONNEWGLOBALHOOK;
 
   if (!WindowBinding::Wrap(aCx, aNewInner, aNewInner, options,
                            nsJSPrincipals::get(aPrincipal), false, aGlobal) ||

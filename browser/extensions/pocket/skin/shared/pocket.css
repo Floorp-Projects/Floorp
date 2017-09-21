@@ -207,16 +207,12 @@
   list-style-image: url("chrome://pocket-shared/skin/pocket.svg");
 }
 
-#panelMenu_pocket,
-#menu_pocket,
-#BMB_pocket {
+#panelMenu_pocket {
   list-style-image: url("chrome://pocket/content/panels/img/pocketmenuitem16.png");
 }
 
 @media (min-resolution: 2dppx) {
-  #panelMenu_pocket,
-  #menu_pocket,
-  #BMB_pocket {
+  #panelMenu_pocket {
     list-style-image: url("chrome://pocket/content/panels/img/pocketmenuitem16@2x.png");
   }
 

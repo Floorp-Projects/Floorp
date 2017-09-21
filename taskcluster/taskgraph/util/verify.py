@@ -9,7 +9,9 @@ import re
 import os
 import sys
 
-base_path = os.path.join(os.getcwd(), "taskcluster/docs/")
+from .. import GECKO
+
+base_path = os.path.join(GECKO, 'taskcluster', 'docs')
 
 
 class VerificationSequence(object):

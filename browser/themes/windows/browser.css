@@ -103,6 +103,37 @@
   color: var(--titlebar-text-color);
 }
 
+/*
+ * Windows 7 draws the chrome background color as the tab background
+ * instead of in the tabs toolbar.
+ */
+@media (-moz-os-version: windows-win7) {
+  @media (-moz-windows-default-theme) {
+    :root:not(:-moz-lwtheme) {
+      --tabs-border: #4A4A4F;
+    }
+
+    #TabsToolbar:not(:-moz-lwtheme) {
+      color: hsl(240,9%,98%);
+    }
+
+    /* Always show full-height tab separators on tabs with borders. */
+    .tabbrowser-tab:not(:-moz-lwtheme)::before {
+      border-image: none !important;
+    }
+
+    /* Show the tabs toolbar background color inside tabs on Win 7. */
+    .tab-background:not(:-moz-lwtheme):not([selected=true]) {
+      background-color: hsl(235,33%,19%) !important;
+    }
+
+    /* Show border on tabs with background colors in Windows 7. */
+    .tab-background:not(:-moz-lwtheme) {
+      border-top: 1px solid var(--tabs-border);
+    }
+  }
+}
+
 @media (-moz-windows-compositor: 0),
        (-moz-windows-default-theme: 0) {
   /* Please keep the menu text colors in this media block in sync with
@@ -1080,14 +1111,6 @@ notification[value="translation"] {
  */
 #main-window:-moz-any([customize-entering],[customize-exiting]) label {
   transform: perspective(0.01px);
-}
-
-#customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"] {
-  margin-right: -2px;
-}
-
-#customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="right"] {
-  margin-left: -2px;
 }
 
 /* End customization mode */

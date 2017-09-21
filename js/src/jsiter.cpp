@@ -9,6 +9,7 @@
 #include "jsiter.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -46,6 +47,7 @@ using namespace js::gc;
 using JS::ForOfIterator;
 
 using mozilla::ArrayLength;
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
@@ -982,23 +984,76 @@ js::CreateIterResultObject(JSContext* cx, HandleValue value, bool done)
     // Step 1 (implicit).
 
     // Step 2.
-    RootedObject resultObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    if (!resultObj)
+    RootedObject templateObject(cx, cx->compartment()->getOrCreateIterResultTemplateObject(cx));
+    if (!templateObject)
         return nullptr;
+
+    NativeObject* resultObj;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, resultObj, NativeObject::createWithTemplate(cx, gc::DefaultHeap,
+                                                                              templateObject));
 
     // Step 3.
-    if (!DefineDataProperty(cx, resultObj, cx->names().value, value))
-        return nullptr;
+    resultObj->setSlot(JSCompartment::IterResultObjectValueSlot, value);
 
     // Step 4.
-    if (!DefineDataProperty(cx, resultObj, cx->names().done,
-                            done ? TrueHandleValue : FalseHandleValue))
-    {
-        return nullptr;
-    }
+    resultObj->setSlot(JSCompartment::IterResultObjectDoneSlot,
+                       done ? TrueHandleValue : FalseHandleValue);
 
     // Step 5.
     return resultObj;
+}
+
+NativeObject*
+JSCompartment::getOrCreateIterResultTemplateObject(JSContext* cx)
+{
+    if (iterResultTemplate_)
+        return iterResultTemplate_;
+
+    // Create template plain object
+    RootedNativeObject templateObject(cx, NewBuiltinClassInstance<PlainObject>(cx, TenuredObject));
+    if (!templateObject)
+        return iterResultTemplate_; // = nullptr
+
+    // Create a new group for the template.
+    Rooted<TaggedProto> proto(cx, templateObject->taggedProto());
+    RootedObjectGroup group(cx, ObjectGroupCompartment::makeGroup(cx, templateObject->getClass(),
+                                                                  proto));
+    if (!group)
+        return iterResultTemplate_; // = nullptr
+    templateObject->setGroup(group);
+
+    // Set dummy `value` property
+    if (!NativeDefineDataProperty(cx, templateObject, cx->names().value, UndefinedHandleValue,
+                                  JSPROP_ENUMERATE))
+    {
+        return iterResultTemplate_; // = nullptr
+    }
+
+    // Set dummy `done` property
+    if (!NativeDefineDataProperty(cx, templateObject, cx->names().done, TrueHandleValue,
+                                  JSPROP_ENUMERATE))
+    {
+        return iterResultTemplate_; // = nullptr
+    }
+
+    // Update `value` property typeset, since it can be any value.
+    HeapTypeSet* types = group->maybeGetProperty(NameToId(cx->names().value));
+    MOZ_ASSERT(types);
+    {
+        AutoEnterAnalysis enter(cx);
+        types->makeUnknown(cx);
+    }
+
+    // Make sure that the properties are in the right slots.
+    DebugOnly<Shape*> shape = templateObject->lastProperty();
+    MOZ_ASSERT(shape->previous()->slot() == JSCompartment::IterResultObjectValueSlot &&
+               shape->previous()->propidRef() == NameToId(cx->names().value));
+    MOZ_ASSERT(shape->slot() == JSCompartment::IterResultObjectDoneSlot &&
+               shape->propidRef() == NameToId(cx->names().done));
+
+    iterResultTemplate_.set(templateObject);
+
+    return iterResultTemplate_;
 }
 
 bool

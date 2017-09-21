@@ -64,6 +64,7 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   : mMessageLoop(aLoop)
   , mSetChildThreadPriority(false)
   , mClosed(false)
+  , mCompositorThreadHolder(CompositorThreadHolder::GetSingleton())
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -363,13 +364,6 @@ ImageBridgeParent::GetInstance(ProcessId aId)
   NS_ASSERTION(sImageBridges.count(aId) == 1, "ImageBridgeParent for the process");
   return sImageBridges[aId];
 }
-
-void
-ImageBridgeParent::OnChannelConnected(int32_t aPid)
-{
-  mCompositorThreadHolder = GetCompositorThreadHolder();
-}
-
 
 bool
 ImageBridgeParent::AllocShmem(size_t aSize,

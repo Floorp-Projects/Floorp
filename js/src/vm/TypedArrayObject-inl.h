@@ -19,6 +19,8 @@
 #include "jscntxt.h"
 #include "jsnum.h"
 
+#include "gc/Zone.h"
+
 #include "jit/AtomicOperations.h"
 
 #include "js/Conversions.h"

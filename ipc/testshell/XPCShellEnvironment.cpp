@@ -423,13 +423,6 @@ XPCShellEnvironment::Init()
 
     mGlobalHolder.init(cx);
 
-    nsCOMPtr<nsIXPConnect> xpc =
-      do_GetService(nsIXPConnect::GetCID());
-    if (!xpc) {
-        NS_ERROR("failed to get nsXPConnect service!");
-        return false;
-    }
-
     nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIScriptSecurityManager> securityManager =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -455,18 +448,17 @@ XPCShellEnvironment::Init()
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
 
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = xpc->InitClassesWithNewWrappedGlobal(cx,
+    JS::Rooted<JSObject*> globalObj(cx);
+    rv = xpc::InitClassesWithNewWrappedGlobal(cx,
                                               static_cast<nsIGlobalObject *>(backstagePass),
                                               principal, 0,
                                               options,
-                                              getter_AddRefs(holder));
+                                              &globalObj);
     if (NS_FAILED(rv)) {
         NS_ERROR("InitClassesWithNewWrappedGlobal failed!");
         return false;
     }
 
-    JS::Rooted<JSObject*> globalObj(cx, holder->GetJSObject());
     if (!globalObj) {
         NS_ERROR("Failed to get global JSObject!");
         return false;

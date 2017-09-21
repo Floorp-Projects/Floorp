@@ -153,7 +153,7 @@ final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild 
     @WrapForJNI(calledFrom = "gecko")
     private void notifyIMEContext(final int state, final String typeHint,
                                   final String modeHint, final String actionHint,
-                                  final boolean inPrivateBrowsing) {
+                                  final boolean inPrivateBrowsing, final boolean isUserAction) {
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "notifyIMEContext(" + GeckoEditable.getConstantName(
@@ -163,7 +163,7 @@ final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild 
         }
 
         try {
-            mEditableParent.notifyIMEContext(state, typeHint, modeHint, actionHint, inPrivateBrowsing);
+            mEditableParent.notifyIMEContext(state, typeHint, modeHint, actionHint, inPrivateBrowsing, isUserAction);
         } catch (final RemoteException e) {
             Log.e(LOGTAG, "Remote call failed", e);
         }

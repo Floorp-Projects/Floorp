@@ -548,6 +548,16 @@ ServoStyleSet::ResolveStyleForPlaceholder()
   return computedValues.forget();
 }
 
+static inline bool
+LazyPseudoIsCacheable(CSSPseudoElementType aType,
+                      Element* aOriginatingElement,
+                      ServoStyleContext* aParentContext)
+{
+  return aParentContext &&
+         !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) &&
+         !Servo_Element_IsPrimaryStyleReusedViaRuleNode(aOriginatingElement);
+}
+
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                                          CSSPseudoElementType aType,
@@ -566,7 +576,7 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
       Servo_ResolveStyle(aPseudoElement, mRawSet.get()).Consume();
   } else {
     bool cacheable =
-      !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) && aParentContext;
+      LazyPseudoIsCacheable(aType, aOriginatingElement, aParentContext);
     computedValues =
       cacheable ? aParentContext->GetCachedLazyPseudoStyle(aType) : nullptr;
 
@@ -895,7 +905,7 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
 
   bool cacheable =
-    !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) && aParentContext;
+    LazyPseudoIsCacheable(aType, aOriginatingElement, aParentContext);
 
   RefPtr<ServoStyleContext> computedValues =
     cacheable ? aParentContext->GetCachedLazyPseudoStyle(aType) : nullptr;

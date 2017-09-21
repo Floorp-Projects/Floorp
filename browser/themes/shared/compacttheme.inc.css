@@ -87,10 +87,8 @@ toolbar[brighttext] .toolbarbutton-1 {
   color: inherit;
 }
 
-#navigator-toolbox .toolbarbutton-1,
 .browserContainer > findbar .findbar-button,
 #PlacesToolbar toolbarbutton.bookmark-item {
-  color: var(--chrome-color);
   text-shadow: none;
 }
 

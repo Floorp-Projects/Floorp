@@ -246,7 +246,7 @@ function getDuplicateVariantRE() {
         // Match everything in a langtag prior to any variants, and maybe some
         // of the variants as well (which makes this pattern inefficient but
         // not wrong, for our purposes);
-        "(?:" + alphanum + "{2,8}-)+" +
+        "^(?:" + alphanum + "{2,8}-)+" +
         // a variant, parenthesised so that we can refer back to it later;
         "(" + variant + ")-" +
         // zero or more subtags at least two characters long (thus stopping
