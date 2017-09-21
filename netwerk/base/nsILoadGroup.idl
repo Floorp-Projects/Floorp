@@ -81,7 +81,7 @@ interface nsILoadGroup : nsIRequest
      * Context for managing things like js/css connection blocking,
      * and per-tab connection grouping.
      */
-    [noscript] readonly attribute unsigned long long requestContextID;
+    readonly attribute unsigned long long requestContextID;
 
     /**
      * The set of load flags that will be added to all new requests added to

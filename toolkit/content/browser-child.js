@@ -186,6 +186,9 @@ var WebProgressListener = {
       json.principal = content.document.nodePrincipal;
       json.synthetic = content.document.mozSyntheticDocument;
       json.inLoadURI = WebNavigation.inLoadURI;
+      json.requestContextID = content.document.documentLoadGroup
+        ? content.document.documentLoadGroup.requestContextID
+        : null;
 
       if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
         let uri = aLocationURI.clone();
