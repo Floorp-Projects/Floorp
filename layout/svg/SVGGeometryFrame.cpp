@@ -191,15 +191,6 @@ SVGGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   nsFrame::DidSetStyleContext(aOldStyleContext);
 
   if (aOldStyleContext) {
-    auto oldStyleEffects = aOldStyleContext->PeekStyleEffects();
-    if (oldStyleEffects &&
-        StyleEffects()->mOpacity != oldStyleEffects->mOpacity &&
-        nsSVGUtils::CanOptimizeOpacity(this)) {
-      // nsIFrame::BuildDisplayListForStackingContext() is not going to create an
-      // nsDisplayOpacity display list item, so DLBI won't invalidate for us.
-      InvalidateFrame();
-    }
-
     SVGGeometryElement* element =
       static_cast<SVGGeometryElement*>(GetContent());
 

@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <style></style>
+    <script>
+      o1 = document.createElement('t');
+      document.documentElement.appendChild(o1);
+      document.styleSheets[0].insertRule('* { will-change:an }', 0);
+      k = new KeyframeEffect(o1, [{'willChange':'s'}], {'':''});
+      k = null;
+      SpecialPowers.forceGC();
+      SpecialPowers.forceCC();
+    </script>
+  </head>
+</html>

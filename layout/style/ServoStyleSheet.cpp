@@ -225,6 +225,10 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   Servo_StyleSheet_GetSourceMapURL(Inner()->mContents, &sourceMapURL);
   SetSourceMapURLFromComment(sourceMapURL);
 
+  nsString sourceURL;
+  Servo_StyleSheet_GetSourceURL(Inner()->mContents, &sourceURL);
+  SetSourceURL(sourceURL);
+
   Inner()->mURLData = extraData.forget();
   return NS_OK;
 }

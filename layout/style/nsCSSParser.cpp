@@ -1648,6 +1648,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   }
 
   mSheet->SetSourceMapURLFromComment(scanner.GetSourceMapURL());
+  mSheet->SetSourceURL(scanner.GetSourceURL());
   ReleaseScanner();
 
   mParsingMode = css::eAuthorSheetFeatures;

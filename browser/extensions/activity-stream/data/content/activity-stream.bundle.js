@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -333,7 +333,7 @@ module.exports = g;
 
 module.exports = {
   TOP_SITES_SOURCE: "TOP_SITES",
-  TOP_SITES_CONTEXT_MENU_OPTIONS: ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
+  TOP_SITES_CONTEXT_MENU_OPTIONS: ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
   // minimum size necessary to show a rich icon instead of a screenshot
   MIN_RICH_FAVICON_SIZE: 96,
   // minimum size necessary to show any icon in the top left corner with a screenshot
@@ -376,7 +376,13 @@ const INITIAL_STATE = {
     // Have we received real data from history yet?
     initialized: false,
     // The history (and possibly default) links
-    rows: []
+    rows: [],
+    // Used in content only to dispatch action from
+    // context menu to TopSitesEdit.
+    editForm: {
+      visible: false,
+      site: null
+    }
   },
   Prefs: {
     initialized: false,
@@ -454,6 +460,10 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return prevState;
       }
       return Object.assign({}, prevState, { initialized: true, rows: action.data });
+    case at.TOP_SITES_EDIT:
+      return Object.assign({}, prevState, { editForm: { visible: true, site: action.data } });
+    case at.TOP_SITES_CANCEL_EDIT:
+      return Object.assign({}, prevState, { editForm: { visible: false } });
     case at.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row && row.url === action.data.url) {
@@ -731,6 +741,14 @@ _PerfService.prototype = {
    * Used to ensure that timestamps from the add-on code and the content code
    * are comparable.
    *
+   * @note If this is called from a context without a window
+   * (eg a JSM in chrome), it will return the timeOrigin of the XUL hidden
+   * window, which appears to be the first created window (and thus
+   * timeOrigin) in the browser.  Note also, however, there is also a private
+   * hidden window, presumably for private browsing, which appears to be
+   * created dynamically later.  Exactly how/when that shows up needs to be
+   * investigated.
+   *
    * @return {Number} A double of milliseconds with a precision of 0.5us.
    */
   get timeOrigin() {
@@ -739,7 +757,8 @@ _PerfService.prototype = {
 
   /**
    * Returns the "absolute" version of performance.now(), i.e. one that
-   * based on the timeOrigin of the XUL hiddenwindow.
+   * should ([bug 1401406](https://bugzilla.mozilla.org/show_bug.cgi?id=1401406)
+   * be comparable across both chrome and content.
    *
    * @return {Number}
    */
@@ -1422,6 +1441,7 @@ class TopSitesEdit extends React.PureComponent {
       source: TOP_SITES_SOURCE,
       event: "TOP_SITES_EDIT_CLOSE"
     }));
+    this.props.dispatch({ type: at.TOP_SITES_CANCEL_EDIT });
   }
   onShowMoreLessClick() {
     const prefIsSetToDefault = this.props.TopSitesCount === TOP_SITES_DEFAULT_LENGTH;
@@ -1443,6 +1463,7 @@ class TopSitesEdit extends React.PureComponent {
   }
   onFormClose() {
     this.setState({ showAddForm: false, showEditForm: false });
+    this.props.dispatch({ type: at.TOP_SITES_CANCEL_EDIT });
   }
   onEdit(index) {
     this.setState({ showEditForm: true, editIndex: index });
@@ -1454,6 +1475,12 @@ class TopSitesEdit extends React.PureComponent {
   render() {
     const realTopSites = this.props.TopSites.rows.slice(0, this.props.TopSitesCount);
     const placeholderCount = this.props.TopSitesCount - realTopSites.length;
+    const showEditForm = this.props.TopSites.editForm && this.props.TopSites.editForm.visible || this.state.showEditModal && this.state.showEditForm;
+    let editIndex = this.state.editIndex;
+    if (showEditForm && this.props.TopSites.editForm.visible) {
+      const targetURL = this.props.TopSites.editForm.site.url;
+      editIndex = this.props.TopSites.rows.findIndex(s => s.url === targetURL);
+    }
     return React.createElement(
       "div",
       { className: "edit-topsites-wrapper" },
@@ -1530,7 +1557,7 @@ class TopSitesEdit extends React.PureComponent {
           React.createElement(TopSiteForm, { onClose: this.onFormClose, dispatch: this.props.dispatch, intl: this.props.intl })
         )
       ),
-      this.state.showEditModal && this.state.showEditForm && React.createElement(
+      showEditForm && React.createElement(
         "div",
         { className: "edit-topsites" },
         React.createElement("div", { className: "modal-overlay", onClick: this.onModalOverlayClick }),
@@ -1538,9 +1565,9 @@ class TopSitesEdit extends React.PureComponent {
           "div",
           { className: "modal" },
           React.createElement(TopSiteForm, {
-            label: this.props.TopSites.rows[this.state.editIndex].label || this.props.TopSites.rows[this.state.editIndex].hostname,
-            url: this.props.TopSites.rows[this.state.editIndex].url,
-            index: this.state.editIndex,
+            label: this.props.TopSites.rows[editIndex].label || this.props.TopSites.rows[editIndex].hostname,
+            url: this.props.TopSites.rows[editIndex].url,
+            index: editIndex,
             editMode: true,
             onClose: this.onFormClose,
             dispatch: this.props.dispatch,
@@ -1932,6 +1959,14 @@ module.exports = {
       tiles: [{ id: site.guid, pos: index }]
     }),
     userEvent: "SAVE_TO_POCKET"
+  }),
+  EditTopSite: site => ({
+    id: "edit_topsites_button_text",
+    icon: "edit",
+    action: {
+      type: at.TOP_SITES_EDIT,
+      data: { url: site.url, label: site.label }
+    }
   })
 };
 

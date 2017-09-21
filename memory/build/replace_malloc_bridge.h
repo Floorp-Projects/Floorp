@@ -72,6 +72,9 @@ typedef struct {
 #include "malloc_decls.h"
 } malloc_table_t;
 
+MOZ_END_EXTERN_C
+
+#ifdef __cplusplus
 
 /* Table of malloc hook functions.
  * Those functions are called with the arguments and results of malloc
@@ -85,10 +88,25 @@ typedef struct {
  * functions. They will be used as fallback if no pointer is given for
  * other allocation functions, like calloc_hook.
  */
+namespace mozilla {
+namespace detail {
+template <typename R, typename... Args>
+struct AllocHookType {
+  using Type = R (*)(R, Args...);
+};
+
+template <typename... Args>
+struct AllocHookType<void, Args...>
+{
+  using Type = void (*)(Args...);
+};
+
+} // namespace detail
+} // namespace mozilla
+
 #define MALLOC_DECL(name, return_type, ...) \
-  return_type (*name ## _hook)(return_type, __VA_ARGS__);
-#define MALLOC_DECL_VOID(name, ...) \
-  void (*name ## _hook)(__VA_ARGS__);
+  typename mozilla::detail::AllocHookType<return_type, ##__VA_ARGS__>::Type \
+    name ## _hook;
 
 typedef struct {
 #include "malloc_decls.h"
@@ -96,10 +114,6 @@ typedef struct {
    * instead of not given. */
   void (*realloc_hook_before)(void* aPtr);
 } malloc_hook_table_t;
-
-MOZ_END_EXTERN_C
-
-#ifdef __cplusplus
 
 namespace mozilla {
 namespace dmd {

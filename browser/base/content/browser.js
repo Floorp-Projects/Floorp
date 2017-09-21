@@ -5433,7 +5433,8 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   } else if (toolbarItem && toolbarItem.localName != "toolbar") {
     while (toolbarItem && toolbarItem.parentNode) {
       let parent = toolbarItem.parentNode;
-      if ((parent.classList && parent.classList.contains("customization-target")) ||
+      if (parent.nodeType !== Node.ELEMENT_NODE ||
+          (parent.classList && parent.classList.contains("customization-target")) ||
           parent.getAttribute("overflowfortoolbar") || // Needs to work in the overflow list as well.
           parent.localName == "toolbarpaletteitem" ||
           parent.localName == "toolbar")

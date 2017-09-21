@@ -160,17 +160,3 @@ topsrcdir
    The path to the source directory the build came from.
 
    Always defined.
-
-wave
-   Whether Wave audio support is enabled.
-
-   Values are ``true`` and ``false``.
-
-   Always defined.
-
-webm
-   Whether WebM support is enabled.
-
-   Values are ``true`` and ``false``.
-
-   Always defined.

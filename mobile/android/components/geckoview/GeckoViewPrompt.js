@@ -668,7 +668,7 @@ PromptDelegate.prototype = {
       mode: aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD ? "password" : "auth",
       options: {
         flags: aAuthInfo.flags,
-        uri: aChannel && aChannel.URI.spec,
+        uri: aChannel && aChannel.URI.displaySpec,
         level: aLevel,
         username: username,
         password: aAuthInfo.password,
@@ -801,7 +801,7 @@ PromptDelegate.prototype = {
       return [hostname, realm];
     }
 
-    let hostname = aChannel.URI.scheme + "://" + aChannel.URI.hostPort;
+    let hostname = aChannel.URI.scheme + "://" + aChannel.URI.displayHostPort;
     // If a HTTP WWW-Authenticate header specified a realm, that value
     // will be available here. If it wasn't set or wasn't HTTP, we'll use
     // the formatted hostname instead.

@@ -83,7 +83,12 @@ def get_index_url(index_path, use_proxy=False):
 
 
 def find_task_id(index_path, use_proxy=False):
-    response = _do_request(get_index_url(index_path, use_proxy))
+    try:
+        response = _do_request(get_index_url(index_path, use_proxy))
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            raise KeyError("index path {} not found".format(index_path))
+        raise
     return response.json()['taskId']
 
 

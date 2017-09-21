@@ -15,7 +15,8 @@ public class FxAccountDevice {
   private static final String JSON_KEY_PUSH_CALLBACK = "pushCallback";
   private static final String JSON_KEY_PUSH_PUBLICKEY = "pushPublicKey";
   private static final String JSON_KEY_PUSH_AUTHKEY = "pushAuthKey";
-  private static final String JSON_LAST_ACCESS_TIME = "lastAccessTime";
+  private static final String JSON_KEY_LAST_ACCESS_TIME = "lastAccessTime";
+  private static final String JSON_KEY_PUSH_ENDPOINT_EXPIRED = "pushEndpointExpired";
 
   public final String id;
   public final String name;
@@ -25,10 +26,11 @@ public class FxAccountDevice {
   public final String pushCallback;
   public final String pushPublicKey;
   public final String pushAuthKey;
+  public final Boolean pushEndpointExpired;
 
   public FxAccountDevice(String name, String id, String type, Boolean isCurrentDevice,
                          Long lastAccessTime, String pushCallback, String pushPublicKey,
-                         String pushAuthKey) {
+                         String pushAuthKey, Boolean pushEndpointExpired) {
     this.name = name;
     this.id = id;
     this.type = type;
@@ -37,6 +39,7 @@ public class FxAccountDevice {
     this.pushCallback = pushCallback;
     this.pushPublicKey = pushPublicKey;
     this.pushAuthKey = pushAuthKey;
+    this.pushEndpointExpired = pushEndpointExpired;
   }
 
   public static FxAccountDevice fromJson(ExtendedJSONObject json) {
@@ -44,12 +47,24 @@ public class FxAccountDevice {
     final String id = json.getString(JSON_KEY_ID);
     final String type = json.getString(JSON_KEY_TYPE);
     final Boolean isCurrentDevice = json.getBoolean(JSON_KEY_ISCURRENTDEVICE);
-    final Long lastAccessTime = json.getLong(JSON_LAST_ACCESS_TIME);
+    final Long lastAccessTime = json.getLong(JSON_KEY_LAST_ACCESS_TIME);
     final String pushCallback = json.getString(JSON_KEY_PUSH_CALLBACK);
     final String pushPublicKey = json.getString(JSON_KEY_PUSH_PUBLICKEY);
     final String pushAuthKey = json.getString(JSON_KEY_PUSH_AUTHKEY);
+    // The FxA server sends this boolean as a number (bug):
+    // https://github.com/mozilla/fxa-auth-server/pull/2122
+    // Use getBoolean directly once the fix is deployed (probably ~Oct-Nov 2017).
+    final Object pushEndpointExpiredRaw = json.get(JSON_KEY_PUSH_ENDPOINT_EXPIRED);
+    final Boolean pushEndpointExpired;
+    if (pushEndpointExpiredRaw instanceof Number) {
+      pushEndpointExpired = ((Number) pushEndpointExpiredRaw).intValue() == 1;
+    } else if (pushEndpointExpiredRaw instanceof Boolean) {
+      pushEndpointExpired = (Boolean) pushEndpointExpiredRaw;
+    } else {
+      pushEndpointExpired = false;
+    }
     return new FxAccountDevice(name, id, type, isCurrentDevice, lastAccessTime, pushCallback,
-                               pushPublicKey, pushAuthKey);
+                               pushPublicKey, pushAuthKey, pushEndpointExpired);
   }
 
   public ExtendedJSONObject toJson() {
@@ -109,7 +124,7 @@ public class FxAccountDevice {
 
     public FxAccountDevice build() {
       return new FxAccountDevice(this.name, this.id, this.type, null, null,
-                                 this.pushCallback, this.pushPublicKey, this.pushAuthKey);
+                                 this.pushCallback, this.pushPublicKey, this.pushAuthKey, null);
     }
   }
 }
