@@ -235,6 +235,9 @@ pref("general.autoScroll", true);
 #endif
 
 pref("browser.stopReloadAnimation.enabled", true);
+pref("browser.schedulePressure.enabled", true);
+pref("browser.schedulePressure.defaultCount", 3);
+pref("browser.schedulePressure.timeoutMs", 1000);
 
 // UI density of the browser chrome. This mostly affects toolbarbutton
 // and urlbar spacing. The possible values are 0=normal, 1=compact, 2=touch.
