@@ -3334,26 +3334,15 @@ arena_t::Malloc(size_t aSize, bool aZero)
                                  : MallocLarge(aSize, aZero);
 }
 
-static inline void *
-imalloc(size_t size)
+static inline void*
+imalloc(size_t aSize, bool aZero)
 {
+  MOZ_ASSERT(aSize != 0);
 
-	MOZ_ASSERT(size != 0);
-
-	if (size <= arena_maxclass)
-		return choose_arena(size)->Malloc(size, false);
-	else
-		return (huge_malloc(size, false));
-}
-
-static inline void *
-icalloc(size_t size)
-{
-
-	if (size <= arena_maxclass)
-		return choose_arena(size)->Malloc(size, true);
-	else
-		return (huge_malloc(size, true));
+  if (aSize <= arena_maxclass) {
+    return choose_arena(aSize)->Malloc(aSize, aZero);
+  }
+  return huge_malloc(aSize, aZero);
 }
 
 /* Only handles large allocations that require more than page alignment. */
@@ -4692,7 +4681,7 @@ MozJemalloc::malloc(size_t aSize)
     aSize = 1;
   }
 
-  ret = imalloc(aSize);
+  ret = imalloc(aSize, /* zero = */ false);
 
 RETURN:
   if (!ret) {
@@ -4750,7 +4739,7 @@ MozJemalloc::calloc(size_t aNum, size_t aSize)
     goto RETURN;
   }
 
-  ret = icalloc(num_size);
+  ret = imalloc(num_size, /* zero = */ true);
 
 RETURN:
   if (!ret) {
@@ -4781,7 +4770,7 @@ MozJemalloc::realloc(void* aPtr, size_t aSize)
     if (malloc_init()) {
       ret = nullptr;
     } else {
-      ret = imalloc(aSize);
+      ret = imalloc(aSize, /* zero = */ false);
     }
 
     if (!ret) {
