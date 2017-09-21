@@ -29,6 +29,7 @@ class MOZ_RAII ScrollingLayersHelper
 public:
   ScrollingLayersHelper(WebRenderLayer* aLayer,
                         wr::DisplayListBuilder& aBuilder,
+                        wr::IpcResourceUpdateQueue& aResources,
                         const StackingContextHelper& aSc);
   ScrollingLayersHelper(nsDisplayItem* aItem,
                         wr::DisplayListBuilder& aBuilder,
@@ -52,9 +53,11 @@ private:
                           WebRenderLayerManager::ClipIdMap& aCache);
   bool DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
                                 const StackingContextHelper& aStackingContext);
-  void PushLayerLocalClip(const StackingContextHelper& aStackingContext);
+  void PushLayerLocalClip(const StackingContextHelper& aStackingContext,
+                          wr::IpcResourceUpdateQueue& aResources);
   void PushLayerClip(const LayerClip& aClip,
-                     const StackingContextHelper& aSc);
+                     const StackingContextHelper& aSc,
+                     wr::IpcResourceUpdateQueue& aResources);
 
   WebRenderLayer* mLayer;
   wr::DisplayListBuilder* mBuilder;

@@ -458,6 +458,7 @@ class HeapCheckTracerBase : public JS::CallbackTracer
     virtual void checkCell(Cell* cell) = 0;
 
   protected:
+    void dumpCellInfo(Cell* cell);
     void dumpCellPath();
 
     Cell* parentCell() {
@@ -556,14 +557,25 @@ HeapCheckTracerBase::traceHeap(AutoLockForExclusiveAccess& lock)
 }
 
 void
+HeapCheckTracerBase::dumpCellInfo(Cell* cell)
+{
+    auto kind = cell->getTraceKind();
+    fprintf(stderr, "%s", GCTraceKindToAscii(kind));
+    if (kind == JS::TraceKind::Object)
+        fprintf(stderr, " %s", static_cast<JSObject*>(cell)->getClass()->name);
+    fprintf(stderr, " %p", cell);
+}
+
+void
 HeapCheckTracerBase::dumpCellPath()
 {
     const char* name = contextName();
     for (int index = parentIndex; index != -1; index = stack[index].parentIndex) {
         const WorkItem& parent = stack[index];
         Cell* cell = parent.thing.asCell();
-        fprintf(stderr, "  from %s %p %s edge\n",
-                GCTraceKindToAscii(cell->getTraceKind()), cell, name);
+        fprintf(stderr, "  from ");
+        dumpCellInfo(cell);
+        fprintf(stderr, " %s edge\n", name);
         name = parent.name;
     }
     fprintf(stderr, "  from root %s\n", name);
@@ -648,16 +660,14 @@ void
 CheckGrayMarkingTracer::checkCell(Cell* cell)
 {
     Cell* parent = parentCell();
-    if (!cell->isTenured() || !parent || !parent->isTenured())
+    if (!parent)
         return;
 
-    TenuredCell* tenuredCell = &cell->asTenured();
-    TenuredCell* tenuredParent = &parent->asTenured();
-    if (tenuredParent->isMarkedBlack() && tenuredCell->isMarkedGray())
-    {
+    if (parent->isMarkedBlack() && cell->isMarkedGray()) {
         failures++;
-        fprintf(stderr, "Found black to gray edge to %s %p\n",
-                GCTraceKindToAscii(cell->getTraceKind()), cell);
+        fprintf(stderr, "Found black to gray edge to ");
+        dumpCellInfo(cell);
+        fprintf(stderr, "\n");
         dumpCellPath();
     }
 }

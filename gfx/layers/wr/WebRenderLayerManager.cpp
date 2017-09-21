@@ -341,7 +341,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
 
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function if the |item| is a wrapper for a sublist.
-      if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mParentCommands, this,
+      if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, this,
                                          aDisplayListBuilder)) {
         PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
       }
@@ -391,6 +391,7 @@ Maybe<wr::ImageKey>
 WebRenderLayerManager::CreateImageKey(nsDisplayItem* aItem,
                                       ImageContainer* aContainer,
                                       mozilla::wr::DisplayListBuilder& aBuilder,
+                                      mozilla::wr::IpcResourceUpdateQueue& aResources,
                                       const StackingContextHelper& aSc,
                                       gfx::IntSize& aSize)
 {
@@ -409,6 +410,9 @@ WebRenderLayerManager::CreateImageKey(nsDisplayItem* aItem,
     if (!aContainer->GetScaleHint().IsEmpty()) {
       scaleToSize = Some(aContainer->GetScaleHint());
     }
+    // TODO!
+    // We appear to be using the image bridge for a lot (most/all?) of
+    // layers-free image handling and that breaks frame consistency.
     imageData->CreateAsyncImageWebRenderCommands(aBuilder,
                                                  aContainer,
                                                  aSc,
@@ -428,18 +432,21 @@ WebRenderLayerManager::CreateImageKey(nsDisplayItem* aItem,
   mozilla::layers::Image* image = autoLock.GetImage();
   aSize = image->GetSize();
 
-  return imageData->UpdateImageKey(aContainer);
+  return imageData->UpdateImageKey(aContainer, aResources);
 }
 
 bool
 WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
                                  ImageContainer* aContainer,
                                  mozilla::wr::DisplayListBuilder& aBuilder,
+                                 mozilla::wr::IpcResourceUpdateQueue& aResources,
                                  const StackingContextHelper& aSc,
                                  const LayerRect& aRect)
 {
   gfx::IntSize size;
-  Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer, aBuilder, aSc, size);
+  Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer,
+                                          aBuilder, aResources,
+                                          aSc, size);
   if (aContainer->IsAsync()) {
     // Async ImageContainer does not create ImageKey, instead it uses Pipeline.
     MOZ_ASSERT(key.isNothing());
@@ -615,7 +622,7 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       // Force update the key in fallback data since we repaint the image in this path.
       // If not force update, fallbackData may reuse the original key because it
       // doesn't know UpdateImageHelper already updated the image container.
-      if (!fallbackData->UpdateImageKey(imageContainer, true)) {
+      if (!fallbackData->UpdateImageKey(imageContainer, aResources, true)) {
         return nullptr;
       }
     }

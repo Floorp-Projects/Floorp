@@ -2442,8 +2442,7 @@ Gecko_XBLBinding_InheritsStyle(RawGeckoXBLBindingBorrowed aXBLBinding)
   return aXBLBinding->InheritsStyle();
 }
 
-// XXX: temporarily disabled due to a leak, see bug 1401427
-//static StaticRefPtr<UACacheReporter> gUACacheReporter;
+static StaticRefPtr<UACacheReporter> gUACacheReporter;
 
 void
 InitializeServo()
@@ -2451,9 +2450,8 @@ InitializeServo()
   URLExtraData::InitDummy();
   Servo_Initialize(URLExtraData::Dummy());
 
-  // XXX: temporarily disabled due to a leak, see bug 1401427
-  //gUACacheReporter = new UACacheReporter();
-  //RegisterWeakMemoryReporter(gUACacheReporter);
+  gUACacheReporter = new UACacheReporter();
+  RegisterWeakMemoryReporter(gUACacheReporter);
 
   sServoFontMetricsLock = new Mutex("Gecko_GetFontMetrics");
   sServoWidgetLock = new Mutex("Servo::WidgetLock");
@@ -2467,8 +2465,8 @@ ShutdownServo()
   MOZ_ASSERT(sServoWidgetLock);
   MOZ_ASSERT(sServoLangFontPrefsLock);
 
-  // XXX: temporarily disabled due to a leak, see bug 1401427
-  //UnregisterWeakMemoryReporter(gUACacheReporter);
+  UnregisterWeakMemoryReporter(gUACacheReporter);
+  gUACacheReporter = nullptr;
 
   delete sServoFontMetricsLock;
   delete sServoWidgetLock;

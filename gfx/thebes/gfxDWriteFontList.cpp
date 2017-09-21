@@ -699,11 +699,17 @@ gfxDWriteFontEntry::IsCJKFont()
     mIsCJK = false;
 
     const uint32_t kOS2Tag = TRUETYPE_TAG('O','S','/','2');
-    AutoTArray<uint8_t, 128> buffer;
-    if (CopyFontTable(kOS2Tag, buffer) != NS_OK) {
+    hb_blob_t* blob = GetFontTable(kOS2Tag);
+    if (!blob) {
         return mIsCJK;
     }
+    // |blob| is an owning reference, but is not RAII-managed, so it must be
+    // explicitly freed using |hb_blob_destroy| before we return. (Beware of
+    // adding any early-return codepaths!)
 
+    uint32_t len;
+    const OS2Table* os2 =
+        reinterpret_cast<const OS2Table*>(hb_blob_get_data(blob, &len));
     // ulCodePageRange bit definitions for the CJK codepages,
     // from http://www.microsoft.com/typography/otspec/os2.htm#cpr
     const uint32_t CJK_CODEPAGE_BITS =
@@ -712,14 +718,12 @@ gfxDWriteFontEntry::IsCJKFont()
         (1 << 19) | // codepage 949 - Korean Wansung
         (1 << 20) | // codepage 950 - Chinese (traditional)
         (1 << 21);  // codepage 1361 - Korean Johab
-
-    if (buffer.Length() >= offsetof(OS2Table, sxHeight)) {
-        const OS2Table* os2 =
-            reinterpret_cast<const OS2Table*>(buffer.Elements());
+    if (len >= offsetof(OS2Table, sxHeight)) {
         if ((uint32_t(os2->codePageRange1) & CJK_CODEPAGE_BITS) != 0) {
             mIsCJK = true;
         }
     }
+    hb_blob_destroy(blob);
 
     return mIsCJK;
 }

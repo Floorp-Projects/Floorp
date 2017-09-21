@@ -543,6 +543,9 @@ class NativeObject : public ShapedObject
     create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
            js::HandleShape shape, js::HandleObjectGroup group);
 
+    static inline JS::Result<NativeObject*, JS::OOM&>
+    createWithTemplate(JSContext* cx, js::gc::InitialHeap heap, HandleObject templateObject);
+
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();
@@ -715,6 +718,53 @@ class NativeObject : public ShapedObject
     size_t dynamicSlotIndex(size_t slot) {
         MOZ_ASSERT(slot >= numFixedSlots());
         return slot - numFixedSlots();
+    }
+
+    /*
+     * The methods below shadow methods on JSObject and are more efficient for
+     * known-native objects.
+     */
+    bool hasAllFlags(js::BaseShape::Flag flags) const {
+        MOZ_ASSERT(flags);
+        return shape_->hasAllObjectFlags(flags);
+    }
+    bool watched() const {
+        return hasAllFlags(js::BaseShape::WATCHED);
+    }
+    bool nonProxyIsExtensible() const {
+        return !hasAllFlags(js::BaseShape::NOT_EXTENSIBLE);
+    }
+
+    /*
+     * Whether there may be indexed properties on this object, excluding any in
+     * the object's elements.
+     */
+    bool isIndexed() const {
+        return hasAllFlags(js::BaseShape::INDEXED);
+    }
+
+    static bool setHadElementsAccess(JSContext* cx, HandleNativeObject obj) {
+        return setFlags(cx, obj, js::BaseShape::HAD_ELEMENTS_ACCESS);
+    }
+
+    /*
+     * Whether SETLELEM was used to access this object. See also the comment near
+     * PropertyTree::MAX_HEIGHT.
+     */
+    bool hadElementsAccess() const {
+        return hasAllFlags(js::BaseShape::HAD_ELEMENTS_ACCESS);
+    }
+
+    // Mark an object as having its 'new' script information cleared.
+    bool wasNewScriptCleared() const {
+        return hasAllFlags(js::BaseShape::NEW_SCRIPT_CLEARED);
+    }
+    static bool setNewScriptCleared(JSContext* cx, HandleNativeObject obj) {
+        return setFlags(cx, obj, js::BaseShape::NEW_SCRIPT_CLEARED);
+    }
+
+    bool hasInterestingSymbol() const {
+        return hasAllFlags(js::BaseShape::HAS_INTERESTING_SYMBOL);
     }
 
     /*
