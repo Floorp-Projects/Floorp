@@ -138,6 +138,13 @@ public:
                                                     uint32_t aAdditionalFlags,
                                                     nsIObserver* aObserver) override;
 
+  virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                              TouchPointerState aPointerState,
+                                              LayoutDeviceIntPoint aPoint,
+                                              double aPointerPressure,
+                                              uint32_t aPointerOrientation,
+                                              nsIObserver* aObserver) override;
+
 private:
   ~HeadlessWidget();
   bool mEnabled;
@@ -150,6 +157,7 @@ private:
   // The last size mode set while the window was visible.
   nsSizeMode mEffectiveSizeMode;
   InputContext mInputContext;
+  mozilla::UniquePtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
   // In headless there is no window manager to track window bounds
   // across size mode changes, so we must track it to emulate.
   LayoutDeviceIntRect mRestoreBounds;

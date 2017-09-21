@@ -502,5 +502,33 @@ HeadlessWidget::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint a
   return NS_OK;
 }
 
+nsresult
+HeadlessWidget::SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                           TouchPointerState aPointerState,
+                                           LayoutDeviceIntPoint aPoint,
+                                           double aPointerPressure,
+                                           uint32_t aPointerOrientation,
+                                           nsIObserver* aObserver)
+{
+  AutoObserverNotifier notifier(aObserver, "touchpoint");
+
+  MOZ_ASSERT(NS_IsMainThread());
+  if (aPointerState == TOUCH_HOVER) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!mSynthesizedTouchInput) {
+    mSynthesizedTouchInput = MakeUnique<MultiTouchInput>();
+  }
+
+  LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
+  MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
+      mSynthesizedTouchInput.get(), PR_IntervalNow(), TimeStamp::Now(),
+      aPointerId, aPointerState, pointInWindow, aPointerPressure,
+      aPointerOrientation);
+  DispatchTouchInput(inputToDispatch);
+  return NS_OK;
+}
+
 } // namespace widget
 } // namespace mozilla
