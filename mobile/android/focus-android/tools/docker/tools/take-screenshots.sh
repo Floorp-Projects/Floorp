@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# If a command fails then do not proceed and fail this script too.
+set -e
+
 # Start emulator (in background)
 emulator64-arm -avd test -noaudio -no-window -no-accel -gpu off -verbose &
 
