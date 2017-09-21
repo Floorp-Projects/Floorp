@@ -116,14 +116,11 @@ add_UITour_task(async function test_availableTargets_addUrlbarPageActionsAll() {
 
 function ok_targets(actualData, expectedTargets) {
   // Depending on how soon after page load this is called, the selected tab icon
-  // may or may not be showing the loading throbber.  Check for its presence and
-  // insert it into expectedTargets if it's visible.
-  let selectedTabIcon =
-    document.getAnonymousElementByAttribute(gBrowser.selectedTab,
-                                            "anonid",
-                                            "tab-icon-image");
-  if (selectedTabIcon && UITour.isElementVisible(selectedTabIcon))
-    expectedTargets.push("selectedTabIcon");
+  // may or may not be showing the loading throbber.  We can't be sure whether
+  // it appears in the list of targets, so remove it.
+  let index = actualData.targets.indexOf("selectedTabIcon");
+  if (index != -1)
+    actualData.targets.splice(index, 1);
 
   ok(Array.isArray(actualData.targets), "data.targets should be an array");
   is(actualData.targets.sort().toString(), expectedTargets.sort().toString(),
