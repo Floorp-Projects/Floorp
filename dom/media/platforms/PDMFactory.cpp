@@ -297,8 +297,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
       // or there wasn't enough AVCC data to do so. Otherwise, there was some
       // problem, for example WMF DLLs were missing.
       m = h.forget();
-    }
-    if (NS_FAILED(result) && aParams.mError) {
+    } else if (aParams.mError) {
       *aParams.mError = result;
     }
   } else {
