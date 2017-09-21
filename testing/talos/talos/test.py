@@ -807,14 +807,14 @@ class a11yr(PageloaderTest):
 
 
 @register_test()
-class perf_reftest(PageloaderTest):
+class bloom_basic(PageloaderTest):
     """
-    Style perf-reftest a set of tests where the result is the difference of base vs ref pages
+    Stylo bloom_basic: runs bloom_basic and bloom_basic_ref and reports difference
     """
     base_vs_ref = True  # compare the two test pages with eachother and report comparison
-    tpmanifest = '${talos}/tests/perf-reftest/perf_reftest.manifest'
+    tpmanifest = '${talos}/tests/perf-reftest/bloom_basic.manifest'
     tpcycles = 1
-    tppagecycles = 10
+    tppagecycles = 25
     gecko_profile_interval = 1
     gecko_profile_entries = 2000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()

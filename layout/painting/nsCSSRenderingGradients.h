@@ -87,6 +87,7 @@ public:
                                   const nsRect& aFill,
                                   const nsSize& aRepeatSize,
                                   const mozilla::CSSIntRect& aSrc,
+                                  bool aIsBackfaceVisible,
                                   float aOpacity = 1.0);
 
 private:

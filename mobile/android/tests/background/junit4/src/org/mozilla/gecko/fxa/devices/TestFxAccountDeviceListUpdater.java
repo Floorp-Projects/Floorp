@@ -81,9 +81,9 @@ public class TestFxAccountDeviceListUpdater {
     public void testSuccessHandler() throws Throwable {
         FxAccountDevice[] result = new FxAccountDevice[2];
         FxAccountDevice device1 = new FxAccountDevice("Current device", "deviceid1", "mobile", true, System.currentTimeMillis(),
-                "https://localhost/push/callback1", "abc123", "321cba");
+                "https://localhost/push/callback1", "abc123", "321cba", false);
         FxAccountDevice device2 = new FxAccountDevice("Desktop PC", "deviceid2", "desktop", true, System.currentTimeMillis(),
-                "https://localhost/push/callback2", "abc123", "321cba");
+                "https://localhost/push/callback2", "abc123", "321cba", false);
         result[0] = device1;
         result[1] = device2;
 

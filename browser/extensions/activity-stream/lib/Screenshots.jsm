@@ -61,5 +61,40 @@ this.Screenshots = {
       Cu.reportError(`getScreenshot error: ${err}`);
     }
     return screenshot;
+  },
+
+  /**
+   * Conditionally get a screenshot for a link if there's no existing pending
+   * screenshot. Updates the link object's desired property with the result.
+   *
+   * @param link {object} Link object to update
+   * @param url {string} Url to get a screenshot of
+   * @param property {string} Name of property on object to set
+   @ @param onScreenshot {function} Callback for when the screenshot loads
+   */
+  async maybeGetAndSetScreenshot(link, url, property, onScreenshot) {
+    // Make a link copy so we can stash internal properties to cache
+    const updateCache = link.__updateCache ? link.__updateCache.bind(link) :
+      () => {};
+
+    // Request a screenshot if we don't already have one pending
+    if (!link.__fetchingScreenshot) {
+      link.__fetchingScreenshot = this.getScreenshotForURL(url);
+      updateCache("__fetchingScreenshot");
+
+      // Trigger this callback only when first requesting
+      link.__fetchingScreenshot.then(onScreenshot).catch();
+    }
+
+    // Clean up now that we got the screenshot
+    const screenshot = await link.__fetchingScreenshot;
+    delete link.__fetchingScreenshot;
+    updateCache("__fetchingScreenshot");
+
+    // Update the link so the screenshot is in the cache
+    if (screenshot) {
+      link[property] = screenshot;
+      updateCache(property);
+    }
   }
 };

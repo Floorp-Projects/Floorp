@@ -2,6 +2,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- The width and height of this view are always overridden in onBindViewHolder because
+     this view is dynamically shown/hidden.
+
+     See StreamRecyclerAdapter.setViewVisible . -->
+
 <TextView
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"

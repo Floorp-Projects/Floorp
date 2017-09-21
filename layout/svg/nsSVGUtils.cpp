@@ -1309,6 +1309,11 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   if (style->HasMarker()) {
     return false;
   }
+
+  if (nsLayoutUtils::HasAnimationOfProperty(aFrame, eCSSProperty_opacity)) {
+    return false;
+  }
+
   if (!style->HasFill() || !HasStroke(aFrame)) {
     return true;
   }

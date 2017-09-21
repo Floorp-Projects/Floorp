@@ -44,7 +44,6 @@ ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
 
 if [ -z "$NO_NDK" ]; then
     ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
-    ac_add_options --with-android-gnu-compiler-version=4.9
 fi
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
@@ -107,8 +106,5 @@ export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
 export MOZ_PACKAGE_JSSHELL=1
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
-
-# Use libc++ as our C++ standard library
-ac_add_options --with-android-cxx-stl=libc++
 
 JS_BINARY="$topsrcdir/mobile/android/config/js_wrapper.sh"

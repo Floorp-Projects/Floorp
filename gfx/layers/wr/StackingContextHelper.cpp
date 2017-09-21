@@ -35,7 +35,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 wr::TransformStyle::Flat,
                                 nullptr,
                                 wr::ToMixBlendMode(layer->GetMixBlendMode()),
-                                aFilters);
+                                aFilters,
+                                true);
   mOrigin = aLayer->Bounds().TopLeft();
 }
 
@@ -60,7 +61,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 wr::TransformStyle::Flat,
                                 nullptr,
                                 wr::ToMixBlendMode(aLayer->GetLayer()->GetMixBlendMode()),
-                                aFilters);
+                                aFilters,
+                                true);
   mOrigin = aLayer->Bounds().TopLeft();
 }
 
@@ -75,7 +77,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              gfx::Matrix4x4* aTransformPtr,
                                              gfx::Matrix4x4* aPerspectivePtr,
                                              const nsTArray<wr::WrFilterOp>& aFilters,
-                                             const gfx::CompositionOp& aMixBlendMode)
+                                             const gfx::CompositionOp& aMixBlendMode,
+                                             bool aBackfaceVisible)
   : mBuilder(&aBuilder)
 {
   bool is2d = !aTransformPtr || (aTransformPtr->Is2D() && !aPerspectivePtr);
@@ -90,7 +93,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 is2d ? wr::TransformStyle::Flat : wr::TransformStyle::Preserve3D,
                                 aPerspectivePtr,
                                 wr::ToMixBlendMode(aMixBlendMode),
-                                aFilters);
+                                aFilters,
+                                aBackfaceVisible);
 }
 
 StackingContextHelper::~StackingContextHelper()

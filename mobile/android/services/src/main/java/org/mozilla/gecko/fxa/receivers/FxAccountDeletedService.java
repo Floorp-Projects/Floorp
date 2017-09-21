@@ -49,11 +49,6 @@ public class FxAccountDeletedService extends IntentService {
 
   @Override
   protected void onHandleIntent(final Intent intent) {
-    // We have an in-memory accounts cache which we use for a variety of tasks; it needs to be cleared.
-    // It should be fine to invalidate it before doing anything else, as the tasks below do not rely
-    // on this data.
-    AndroidFxAccount.invalidateCaches();
-
     // Intent can, in theory, be null. Bug 1025937.
     if (intent == null) {
       Logger.debug(LOG_TAG, "Short-circuiting on null intent.");

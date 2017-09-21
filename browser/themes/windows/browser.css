@@ -282,6 +282,17 @@
   z-index: 1;
 }
 
+#titlebar-buttonbox-container {
+  -moz-box-align: center;
+}
+
+@media (-moz-os-version: windows-win7) {
+  /* Preserve window control buttons position at the top of the button box. */
+  #titlebar-buttonbox-container {
+    -moz-box-align: start;
+  }
+}
+
 .titlebar-placeholder[type="caption-buttons"] {
   margin-left: 22px; /* space needed for Aero Snap */
 }
@@ -1115,92 +1126,39 @@ notification[value="translation"] {
 
 /* End customization mode */
 
-/* Private browsing indicators */
-
-/**
- * Currently, we have two places where we put private browsing indicators on
- * Windows. When tabsintitlebar is enabled, we draw the indicator in the titlebar.
- * When tabsintitlebar is disabled, we draw the indicator at the end of the
- * tabstrip. The titlebar indicator is the fiddliest of the bunch, since we
- * want the bottom border of the image to line up with the bottom of the window
- * caption buttons. That's why there's so much special-casing going on in here.
- */
-.private-browsing-indicator {
-  display: none;
-  pointer-events: none;
-}
-
-#private-browsing-indicator-titlebar {
-  display: block;
-  position: absolute;
-  /* Need to ensure this gets positioned on top of the position:relative #navigator-toolbox
-   * in case the dark/light themes give that item a background. */
-  z-index: 1;
-}
-
-#main-window[privatebrowsingmode=temporary][tabsintitlebar] #private-browsing-indicator-titlebar > .private-browsing-indicator {
-  display: block;
-}
-
-#main-window[privatebrowsingmode=temporary]:-moz-any([inFullscreen],:not([tabsintitlebar])) #TabsToolbar > .private-browsing-indicator {
-  display: -moz-box;
-}
-
-#TabsToolbar > .private-browsing-indicator {
-  background: url("chrome://browser/skin/privatebrowsing-mask-tabstrip.png") no-repeat center -3px;
-  margin-inline-start: 4px;
-  width: 48px;
-}
-
-/* Bug 1008183: We're intentionally using the titlebar asset here for fullscreen
- * mode, since the tabstrip "mimics" the titlebar in that case with its own
- * min/max/close window buttons.
- */
-#private-browsing-indicator-titlebar > .private-browsing-indicator,
-#main-window[inFullscreen] #TabsToolbar > .private-browsing-indicator {
-  background: url("chrome://browser/skin/privatebrowsing-mask-titlebar.png") no-repeat center 0px;
-  margin-inline-end: 4px;
-  width: 40px;
-  height: 20px;
-  position: relative;
-}
-
-@media (-moz-windows-classic) {
-  /**
-   * We have to use top instead of background-position in this case, otherwise
-   * the bottom of the indicator would get cut off by the bounds of the
-   * private-browsing-indicator element.
-   */
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
-    top: 4px;
-  }
-}
+/* Private browsing and accessibility indicators */
 
 @media (-moz-os-version: windows-win7) {
-  @media (-moz-windows-glass) {
-    #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
-      top: 1px;
-    }
-    #main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
-      top: -1px;
-    }
+  /* Making sure that indicators take up all available vertical space. */
+  :root[tabsintitlebar]:not([inFullscreen]) .private-browsing-indicator,
+  :root[tabsintitlebar]:not([inFullscreen]) .accessibility-indicator {
+    height: var(--tab-min-height);
   }
 
-  /**
-   * This next block targets Aero Basic, which has different positioning for the
-   * window caption buttons, and therefore needs to be special-cased.
-   */
-  @media (-moz-windows-default-theme) {
-    @media (-moz-windows-compositor: 0) {
-      #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
-        background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-win7-tall.png");
-        height: 28px;
-      }
-    }
+  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) .private-browsing-indicator,
+  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) .accessibility-indicator {
+    height: calc(var(--tab-min-height) + 4px);
   }
 }
 
-/* End private browsing indicators */
+:root:-moz-any([tabsintitlebar], [inFullscreen]):not([privatebrowsingmode=temporary]) .accessibility-indicator,
+:root:-moz-any([tabsintitlebar], [inFullscreen]) .private-browsing-indicator {
+  margin-inline-end: 12px;
+}
+
+:root:not([accessibilitymode]) .private-browsing-indicator,
+.accessibility-indicator {
+  margin-inline-start: 12px;
+}
+
+:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .accessibility-indicator,
+:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator,
+:root[accessibilitymode]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .accessibility-indicator,
+:root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
+  display: none;
+}
+
+/* End private browsing and accessibility indicators */
 
 %include ../shared/UITour.inc.css
 

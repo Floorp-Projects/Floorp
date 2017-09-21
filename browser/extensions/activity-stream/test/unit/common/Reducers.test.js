@@ -56,6 +56,19 @@ describe("Reducers", () => {
       const nextState = TopSites(undefined, {type: at.TOP_SITES_UPDATED});
       assert.equal(nextState, INITIAL_STATE.TopSites);
     });
+    it("should set editForm.visible to true on TOP_SITES_EDIT", () => {
+      const nextState = TopSites(undefined, {type: at.TOP_SITES_EDIT});
+      assert.isTrue(nextState.editForm.visible);
+    });
+    it("should set editForm.site to action.data on TOP_SITES_EDIT", () => {
+      const data = {url: "foo", label: "label"};
+      const nextState = TopSites(undefined, {type: at.TOP_SITES_EDIT, data});
+      assert.equal(nextState.editForm.site, data);
+    });
+    it("should set editForm.visible to false on TOP_SITES_CANCEL_EDIT", () => {
+      const nextState = TopSites(undefined, {type: at.TOP_SITES_CANCEL_EDIT});
+      assert.isFalse(nextState.editForm.visible);
+    });
     it("should add screenshots for SCREENSHOT_UPDATED", () => {
       const oldState = {rows: [{url: "foo.com"}, {url: "bar.com"}]};
       const action = {type: at.SCREENSHOT_UPDATED, data: {url: "bar.com", screenshot: "data:123"}};
@@ -474,6 +487,13 @@ describe("Reducers", () => {
       const pinned = [links[7]];
       const result = insertPinned(links, pinned);
       assert.equal(links.length, result.length);
+    });
+    it("should not modify the original data", () => {
+      const pinned = [{url: "http://example.com"}];
+
+      insertPinned(links, pinned);
+
+      assert.equal(typeof pinned[0].isPinned, "undefined");
     });
   });
   describe("Snippets", () => {

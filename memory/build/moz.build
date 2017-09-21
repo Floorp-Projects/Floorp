@@ -33,17 +33,12 @@ if CONFIG['OS_TARGET'] == 'Darwin' and (CONFIG['MOZ_REPLACE_MALLOC'] or
 
 Library('memory')
 
-if CONFIG['MOZ_GLUE_IN_PROGRAM']:
-    DIST_INSTALL = True
-
 if CONFIG['OS_TARGET'] == 'Android' and CONFIG['CC_TYPE'] == 'clang':
     CFLAGS += [
         '-Wno-tautological-pointer-compare',
     ]
 
-# Keep jemalloc separated when mozglue is statically linked
-if CONFIG['MOZ_MEMORY'] and CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
-    FINAL_LIBRARY = 'mozglue'
+FINAL_LIBRARY = 'mozglue'
 
 if CONFIG['GNU_CXX']:
     # too many warnings from functions generated through rb_wrab from rb.h.

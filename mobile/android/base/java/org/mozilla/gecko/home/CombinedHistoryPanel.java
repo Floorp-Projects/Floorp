@@ -634,7 +634,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         public void onRefresh() {
             if (FirefoxAccounts.firefoxAccountsExist(getActivity())) {
                 final Account account = FirefoxAccounts.getFirefoxAccount(getActivity());
-                FirefoxAccounts.requestImmediateSync(account, STAGES_TO_SYNC_ON_REFRESH, null);
+                FirefoxAccounts.requestImmediateSync(account, STAGES_TO_SYNC_ON_REFRESH, null, true);
             } else {
                 Log.wtf(LOGTAG, "No Firefox Account found; this should never happen. Ignoring.");
                 mRefreshLayout.setRefreshing(false);

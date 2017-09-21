@@ -26,17 +26,17 @@ add_task(async function test_default_paths() {
   switch (AppConstants.platform) {
     case "macosx": {
       expectUser = OS.Path.join(OS.Constants.Path.homeDir,
-                                "Library/Application Support/Mozilla/NativeMessagingHosts");
-      expectGlobal = "/Library/Application Support/Mozilla/NativeMessagingHosts";
+                                "Library/Application Support/Mozilla");
+      expectGlobal = "/Library/Application Support/Mozilla";
 
       break;
     }
 
     case "linux": {
-      expectUser = OS.Path.join(OS.Constants.Path.homeDir, ".mozilla/native-messaging-hosts");
+      expectUser = OS.Path.join(OS.Constants.Path.homeDir, ".mozilla");
 
       const libdir = AppConstants.HAVE_USR_LIB64_DIR ? "lib64" : "lib";
-      expectGlobal = OS.Path.join("/usr", libdir, "mozilla/native-messaging-hosts");
+      expectGlobal = OS.Path.join("/usr", libdir, "mozilla");
       break;
     }
 
@@ -47,10 +47,10 @@ add_task(async function test_default_paths() {
       break;
   }
 
-  let userDir = Services.dirsvc.get("XREUserNativeMessaging", Ci.nsIFile).path;
+  let userDir = Services.dirsvc.get("XREUserNativeManifests", Ci.nsIFile).path;
   is(userDir, expectUser, "user-specific native messaging directory is correct");
 
-  let globalDir = Services.dirsvc.get("XRESysNativeMessaging", Ci.nsIFile).path;
+  let globalDir = Services.dirsvc.get("XRESysNativeManifests", Ci.nsIFile).path;
   is(globalDir, expectGlobal, "system-wide native messaing directory is correct");
 });
 

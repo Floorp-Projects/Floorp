@@ -16,7 +16,7 @@ InputEventStatistics::TimeDurationCircularBuffer::GetMean()
   return mTotal / (int64_t)mSize;
 }
 
-InputEventStatistics::InputEventStatistics()
+InputEventStatistics::InputEventStatistics(ConstructorCookie&&)
   : mEnable(false)
 {
   MOZ_ASSERT(Preferences::IsServiceAvailable());
