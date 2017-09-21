@@ -5354,6 +5354,8 @@ float
 AnimationValue::GetOpacity() const
 {
   MOZ_ASSERT(!mServo != mGecko.IsNull());
+  MOZ_ASSERT(mServo || mGecko.GetUnit() == StyleAnimationValue::eUnit_Float,
+             "Should have the correct unit on Gecko backend");
   return mServo ? Servo_AnimationValue_GetOpacity(mServo)
                 : mGecko.GetFloatValue();
 }
