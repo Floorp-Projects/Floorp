@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["CustomizeMode"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
-const kPrefCustomizationAnimation = "browser.uiCustomization.disableAnimation";
 const kPaletteId = "customization-palette";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
@@ -59,8 +58,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new scope.ConsoleAPI(consoleOptions);
 });
 
-var gDisableAnimation = null;
-
 var gDraggingInToolbars;
 
 var gTab;
@@ -96,10 +93,6 @@ function unregisterGlobalTab() {
 }
 
 function CustomizeMode(aWindow) {
-  if (gDisableAnimation === null) {
-    gDisableAnimation = Services.prefs.getPrefType(kPrefCustomizationAnimation) == Ci.nsIPrefBranch.PREF_BOOL &&
-                        Services.prefs.getBoolPref(kPrefCustomizationAnimation);
-  }
   this.window = aWindow;
   this.document = aWindow.document;
   this.browser = aWindow.gBrowser;
@@ -111,7 +104,6 @@ function CustomizeMode(aWindow) {
   // to the user when in customizing mode.
   this.visiblePalette = this.document.getElementById(kPaletteId);
   this.paletteEmptyNotice = this.document.getElementById("customization-empty");
-  this.tipPanel = this.document.getElementById("customization-tipPanel");
   if (Services.prefs.getCharPref("general.skins.selectedSkin") != "classic/1.0") {
     let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
     lwthemeButton.setAttribute("hidden", "true");
@@ -399,8 +391,6 @@ CustomizeMode.prototype = {
       return;
     }
 
-    this.hideTip();
-
     this._handler.isExitingCustomizeMode = true;
 
     this._removeExtraToolbarsIfEmpty();
@@ -554,44 +544,6 @@ CustomizeMode.prototype = {
     let height = toolboxRect.bottom;
     deck.style.setProperty("--toolbox-rect-height", `${height}`);
     deck.style.setProperty("--toolbox-rect-height-with-unit", `${height}px`);
-  },
-
-  maybeShowTip(aAnchor) {
-    const kShownPref = "browser.customizemode.tip0.shown";
-    let shown = Services.prefs.getBoolPref(kShownPref, false);
-    if (shown)
-      return;
-
-    let anchorNode = aAnchor || this.document.getElementById("customization-panelHolder");
-    let messageNode = this.tipPanel.querySelector(".customization-tipPanel-contentMessage");
-    if (!messageNode.childElementCount) {
-      // Put the tip contents in the popup.
-      let bundle = this.document.getElementById("bundle_browser");
-      const kLabelClass = "customization-tipPanel-link";
-      // eslint-disable-next-line no-unsanitized/property
-      messageNode.innerHTML = bundle.getFormattedString("customizeTips.tip0", [
-        "<label class=\"customization-tipPanel-em\" value=\"" +
-          bundle.getString("customizeTips.tip0.hint") + "\"/>",
-        this.document.getElementById("bundle_brand").getString("brandShortName"),
-        "<label class=\"" + kLabelClass + " text-link\" value=\"" +
-        bundle.getString("customizeTips.tip0.learnMore") + "\"/>"
-      ]);
-
-      messageNode.querySelector("." + kLabelClass).addEventListener("click", () => {
-        let url = Services.urlFormatter.formatURLPref("browser.customizemode.tip0.learnMoreUrl");
-        let browser = this.browser;
-        browser.selectedTab = browser.addTab(url);
-        this.hideTip();
-      });
-    }
-
-    this.tipPanel.hidden = false;
-    this.tipPanel.openPopup(anchorNode);
-    Services.prefs.setBoolPref(kShownPref, true);
-  },
-
-  hideTip() {
-    this.tipPanel.hidePopup();
   },
 
   _getCustomizableChildForNode(aNode) {

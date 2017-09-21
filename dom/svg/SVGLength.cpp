@@ -23,11 +23,7 @@ static uint16_t GetUnitTypeForString(const nsAString& unitStr);
 void
 SVGLength::GetValueAsString(nsAString &aValue) const
 {
-  char16_t buf[24];
-  nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
-                            u"%g",
-                            (double)mValue);
-  aValue.Assign(buf);
+  nsTextFormatter::ssprintf(aValue, u"%g", (double)mValue);
 
   nsAutoString unitString;
   GetUnitString(unitString, mUnit);

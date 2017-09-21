@@ -127,13 +127,16 @@ const ProxyInfoData = {
     }
   },
 
-  createProxyInfoFromData(proxyDataList, defaultProxyInfo) {
+  createProxyInfoFromData(proxyDataList, defaultProxyInfo, proxyDataListIndex = 0) {
+    if (proxyDataListIndex >= proxyDataList.length) {
+      return defaultProxyInfo;
+    }
     let {type, host, port, username, password, proxyDNS, failoverTimeout} =
-        ProxyInfoData.validate(proxyDataList.shift());
+        ProxyInfoData.validate(proxyDataList[proxyDataListIndex]);
     if (type === PROXY_TYPES.DIRECT) {
       return defaultProxyInfo;
     }
-    let failoverProxy = proxyDataList.length > 0 ? this.createProxyInfoFromData(proxyDataList, defaultProxyInfo) : defaultProxyInfo;
+    let failoverProxy = this.createProxyInfoFromData(proxyDataList, defaultProxyInfo, proxyDataListIndex + 1);
     // When Bug 1360404 is fixed use ProxyService.newProxyInfoWithAuth() for all types.
     if (type === PROXY_TYPES.SOCKS || type === PROXY_TYPES.SOCKS4) {
       return ProxyService.newProxyInfoWithAuth(
