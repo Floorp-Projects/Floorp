@@ -230,6 +230,37 @@
    fun:_ZN7mozilla3dom*Content*
 }
 
+# False positives triggered by rust 1.20.0 (at least) builds of stylo.
+# See bug 1394696. The diagnosis is an llvm optimization transforming
+# `if A && B` to `if B && A` if is can be proven that A is false
+# whenever B is uninitialized. Confusing, but valid.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x113ED01E: selectors::matching::matches_complex_selector_internal (option.rs:421)
+#    by 0x113ECF19: selectors::matching::matches_complex_selector (matching.rs:501)
+#    by 0x113EBAC0: <style::selector_map::SelectorMap<style::stylist::Rule>>::get_matching_rules (matching.rs:397)
+{
+  Bug 1394696 Stylo selector, Sept 2017, part 1
+  Memcheck:Cond
+  fun:_ZN9selectors8matching33matches_complex_selector_internal*
+  fun:_ZN9selectors8matching24matches_complex_selector*
+  ...
+  fun:_ZN69_$LT$style..selector_map..SelectorMap$LT$style..stylist..Rule$GT$$GT$18get_matching_rules*
+}
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x113EFFDE: selectors::matching::matches_complex_selector_internal (option.rs:421)
+#    by 0x113EFED9: selectors::matching::matches_complex_selector (matching.rs:501)
+#    by 0x113DFE55: style::stylist::Stylist::match_revalidation_selectors::{{closure}} (matching.rs:397)
+{
+  Bug 1394696 Stylo selector, Sept 2017, part 2
+  Memcheck:Cond
+  fun:_ZN9selectors8matching33matches_complex_selector_internal*
+  fun:_ZN9selectors8matching24matches_complex_selector*
+  ...
+  fun:_ZN5style9traversal13compute_style*
+  fun:recalc_style_at<style::gecko::wrapper::GeckoElement,style::gecko::traversal::RecalcStyleOnly,closure>
+}
 
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.

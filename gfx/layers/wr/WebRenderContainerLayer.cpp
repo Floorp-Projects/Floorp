@@ -107,7 +107,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     filters.AppendElement(wr::ToWrFilterOp(filter));
   }
 
-  ScrollingLayersHelper scroller(this, aBuilder, aSc);
+  ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
   StackingContextHelper sc(aSc, aBuilder, this, animationsId, opacityForSC, transformForSC, filters);
 
   LayerRect rect = Bounds();
@@ -126,7 +126,7 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                wr::IpcResourceUpdateQueue& aResources,
                                const StackingContextHelper& aSc)
 {
-  ScrollingLayersHelper scroller(this, aBuilder, aSc);
+  ScrollingLayersHelper scroller(this, aBuilder, aResources, aSc);
 
   ParentLayerRect bounds = GetLocalTransformTyped().TransformBounds(Bounds());
   // As with WebRenderTextLayer, because we don't push a stacking context for

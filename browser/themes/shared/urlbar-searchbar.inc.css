@@ -220,7 +220,7 @@
   transition: none;
 }
 
-#navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
   opacity: 0;
 }
 
