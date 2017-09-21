@@ -579,30 +579,29 @@ ApplyAnimatedValue(Layer* aLayer,
                    CompositorAnimationStorage* aStorage,
                    nsCSSPropertyID aProperty,
                    const AnimationData& aAnimationData,
-                   const StyleAnimationValue& aValue)
+                   const AnimationValue& aValue)
 {
   if (aValue.IsNull()) {
-    // Return gracefully if we have no valid StyleAnimationValue.
+    // Return gracefully if we have no valid AnimationValue.
     return;
   }
 
   HostLayer* layerCompositor = aLayer->AsHostLayer();
   switch (aProperty) {
     case eCSSProperty_opacity: {
-      MOZ_ASSERT(aValue.GetUnit() == StyleAnimationValue::eUnit_Float,
-                 "Interpolated value for opacity should be float");
-      layerCompositor->SetShadowOpacity(aValue.GetFloatValue());
+      layerCompositor->SetShadowOpacity(aValue.GetOpacity());
       layerCompositor->SetShadowOpacitySetByAnimation(true);
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
-                                 aValue.GetFloatValue());
+                                 aValue.GetOpacity());
 
       break;
     }
     case eCSSProperty_transform: {
-      MOZ_ASSERT(aValue.GetUnit() == StyleAnimationValue::eUnit_Transform,
+      MOZ_ASSERT(aValue.mGecko.GetUnit() == StyleAnimationValue::eUnit_Transform,
                  "The unit of interpolated value for transform should be "
                  "transform");
-      nsCSSValueSharedList* list = aValue.GetCSSValueSharedListValue();
+      // TODO: Convert AnimationValue into css shared list.
+      nsCSSValueSharedList* list = aValue.mGecko.GetCSSValueSharedListValue();
 
       const TransformData& transformData = aAnimationData.get_TransformData();
       nsPoint origin = transformData.origin();
@@ -669,7 +668,7 @@ SampleAnimations(Layer* aLayer,
         }
 
         bool hasInEffectAnimations = false;
-        StyleAnimationValue animationValue = layer->GetBaseAnimationStyle();
+        AnimationValue animationValue = layer->GetBaseAnimationStyle();
         if (AnimationHelper::SampleAnimationForEachNode(aTime,
                                                         layer->GetAnimations(),
                                                         layer->GetAnimationData(),

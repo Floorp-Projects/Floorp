@@ -195,11 +195,12 @@ SampleValue(double aPortion, const layers::Animation& aAnimation,
 }
 
 bool
-AnimationHelper::SampleAnimationForEachNode(TimeStamp aTime,
-                           AnimationArray& aAnimations,
-                           InfallibleTArray<AnimData>& aAnimationData,
-                           StyleAnimationValue& aAnimationValue,
-                           bool& aHasInEffectAnimations)
+AnimationHelper::SampleAnimationForEachNode(
+  TimeStamp aTime,
+  AnimationArray& aAnimations,
+  InfallibleTArray<AnimData>& aAnimationData,
+  AnimationValue& aAnimationValue,
+  bool& aHasInEffectAnimations)
 {
   bool activeAnimations = false;
 
@@ -269,20 +270,21 @@ AnimationHelper::SampleAnimationForEachNode(TimeStamp aTime,
                                      computedTiming.mBeforeFlag);
 
     StyleAnimationValueCompositePair from {
-      animData.mStartValues[segmentIndex],
+      animData.mStartValues[segmentIndex].mGecko,
       static_cast<dom::CompositeOperation>(segment->startComposite())
     };
     StyleAnimationValueCompositePair to {
-      animData.mEndValues[segmentIndex],
+      animData.mEndValues[segmentIndex].mGecko,
       static_cast<dom::CompositeOperation>(segment->endComposite())
     };
     // interpolate the property
-    aAnimationValue = SampleValue(portion,
-                                 animation,
-                                 from, to,
-                                 animData.mEndValues.LastElement(),
-                                 computedTiming.mCurrentIteration,
-                                 aAnimationValue);
+    aAnimationValue.mGecko =
+      SampleValue(portion,
+                  animation,
+                  from, to,
+                  animData.mEndValues.LastElement().mGecko,
+                  computedTiming.mCurrentIteration,
+                  aAnimationValue.mGecko);
     aHasInEffectAnimations = true;
   }
 
@@ -493,7 +495,7 @@ ToAnimationValue(const Animatable& aAnimatable)
 void
 AnimationHelper::SetAnimations(AnimationArray& aAnimations,
                                InfallibleTArray<AnimData>& aAnimData,
-                               StyleAnimationValue& aBaseAnimationStyle)
+                               AnimationValue& aBaseAnimationStyle)
 {
   for (uint32_t i = 0; i < aAnimations.Length(); i++) {
     Animation& animation = aAnimations[i];
@@ -512,19 +514,19 @@ AnimationHelper::SetAnimations(AnimationArray& aAnimations,
     }
 
     if (animation.baseStyle().type() != Animatable::Tnull_t) {
-      aBaseAnimationStyle = ToAnimationValue(animation.baseStyle()).mGecko;
+      aBaseAnimationStyle = ToAnimationValue(animation.baseStyle());
     }
 
     AnimData* data = aAnimData.AppendElement();
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
-    InfallibleTArray<StyleAnimationValue>& startValues = data->mStartValues;
-    InfallibleTArray<StyleAnimationValue>& endValues = data->mEndValues;
+    InfallibleTArray<AnimationValue>& startValues = data->mStartValues;
+    InfallibleTArray<AnimationValue>& endValues = data->mEndValues;
 
     const InfallibleTArray<AnimationSegment>& segments = animation.segments();
     for (const AnimationSegment& segment : segments) {
-      startValues.AppendElement(ToAnimationValue(segment.startState()).mGecko);
-      endValues.AppendElement(ToAnimationValue(segment.endState()).mGecko);
+      startValues.AppendElement(ToAnimationValue(segment.startState()));
+      endValues.AppendElement(ToAnimationValue(segment.endState()));
 
       TimingFunction tf = segment.sampleFn();
       Maybe<ComputedTimingFunction> ctf =
@@ -562,7 +564,7 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
        !iter.Done(); iter.Next()) {
     bool hasInEffectAnimations = false;
     AnimationArray* animations = iter.UserData();
-    StyleAnimationValue animationValue;
+    AnimationValue animationValue;
     InfallibleTArray<AnimData> animationData;
     AnimationHelper::SetAnimations(*animations,
                                    animationData,
@@ -581,12 +583,12 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
     Animation& animation = animations->LastElement();
     switch (animation.property()) {
       case eCSSProperty_opacity: {
-        aStorage->SetAnimatedValue(iter.Key(),
-                                   animationValue.GetFloatValue());
+        aStorage->SetAnimatedValue(iter.Key(), animationValue.GetOpacity());
         break;
       }
       case eCSSProperty_transform: {
-        nsCSSValueSharedList* list = animationValue.GetCSSValueSharedListValue();
+        // TODO: Convert AnimationValue into css shared list.
+        nsCSSValueSharedList* list = animationValue.mGecko.GetCSSValueSharedListValue();
         const TransformData& transformData = animation.data().get_TransformData();
         nsPoint origin = transformData.origin();
         // we expect all our transform data to arrive in device pixels
