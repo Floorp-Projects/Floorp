@@ -32,7 +32,7 @@ skip-if(!asyncPan) == split-layers-multi-scrolling-1.html split-layers-multi-scr
 fuzzy-if(skiaContent,2,240000) fuzzy-if(browserIsRemote&&!skiaContent&&(cocoaWidget||winWidget),1,240000) skip-if(!asyncPan) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 fails-if(webrender) skip-if(!asyncPan) == sticky-pos-scrollable-2.html sticky-pos-scrollable-2-ref.html # bug 1366295 for webrender
-fails-if(webrender) skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3-ref.html # bug 1366295 for webrender
+skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3-ref.html
 skip-if(!asyncPan) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
@@ -59,7 +59,7 @@ fuzzy-if(Android,6,4) fails-if(webrender) skip-if(!asyncPan) == fixed-pos-scroll
 fuzzy-if(Android,6,8) fails-if(webrender) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html   # bug 1373802 for webrender
 fuzzy-if(Android,6,8) fails-if(webrender) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html   # bug 1373802 for webrender
 fuzzy-if(Android,6,8) fails-if(webrender) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html   # bug 1373802 for webrender
-fuzzy-if(Android,6,4) fails-if(webrender) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html # bug 1366295 for webrender
+fuzzy-if(Android,6,4) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html
 fuzzy-if(Android,6,4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 
 # for the following tests, we want to disable the low-precision buffer
