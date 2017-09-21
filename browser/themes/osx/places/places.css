@@ -56,6 +56,12 @@
   display: none;
 }
 
+#sidebar-search-container {
+  /* Native searchbar styling already adds 4px margin on Mac, so
+   * adding 4px padding results in 8px of total whitespace. */
+  padding: 4px;
+}
+
 .sidebar-placesTreechildren::-moz-tree-twisty {
   -moz-appearance: none;
   padding: 0 2px;
