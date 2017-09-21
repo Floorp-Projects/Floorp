@@ -1186,12 +1186,28 @@ var gMainPane = {
       let processCountPref = document.getElementById("dom.ipc.processCount");
       let defaultProcessCount = processCountPref.defaultValue;
       let bundlePreferences = document.getElementById("bundlePreferences");
-      let label = bundlePreferences.getFormattedString("defaultContentProcessCount",
-        [defaultProcessCount]);
+
       let contentProcessCount =
         document.querySelector(`#contentProcessCount > menupopup >
                                 menuitem[value="${defaultProcessCount}"]`);
-      contentProcessCount.label = label;
+
+      // New localization API experiment (October 2017).
+      // See bug 1402061 for details.
+      //
+      // The `intl.l10n.fluent.disabled` pref can be used
+      // to opt-out of the experiment in case of any
+      // unforseen problems. The legacy API will then
+      // be used.
+      if (Services.prefs.getBoolPref("intl.l10n.fluent.disabled", false)) {
+        let label = bundlePreferences.getFormattedString("defaultContentProcessCount",
+          [defaultProcessCount]);
+        contentProcessCount.label = label;
+      } else {
+        document.l10n.setAttributes(
+          contentProcessCount,
+          "default-content-process-count",
+          { num: defaultProcessCount });
+      }
 
       document.getElementById("limitContentProcess").disabled = false;
       document.getElementById("contentProcessCount").disabled = false;
