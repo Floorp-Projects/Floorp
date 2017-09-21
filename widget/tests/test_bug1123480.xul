@@ -13,38 +13,45 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
 
   <script type="application/javascript">
   <![CDATA[
-  // Boilerplate constructs
-  var SmallDataset = 100000; // Hundred thousand bytes
-
   // Create 1 Mo of sample garbage text
-  var Ipsum = ""; // Select text from this
-  for (var Iter = 0; Iter < SmallDataset; Iter++) {
-      Ipsum += Math.random().toString(36) + ' ';
+  // Since JS strings are saved as UTF16 strings, the string size is 2 MB,
+  // which is well above the kLargeDatasetSize threshold in nsTransferable.h
+  var Ipsum = "0123456789".repeat(100000);
+  var SHORT_STRING_NO_CACHE = "short string that will never be cached to the disk";
+
+  // Get a list of open file descriptors, and ASSUME that any mutations in file
+  // descriptor counts are caused by our test. This is a bold assumption,
+  // but better than the alternatives (spawning lsof as a subprocess and parsing
+  // its output, or adding test-only code to nsAnonymousTemporaryFile).
+  function getOpenFileDescriptorCount() {
+    // Note: /dev/fd is only available on Linux and macOS, not Windows.
+    var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
+    file.initWithPath("/dev/fd");
+    var count = 0;
+    for (var de = file.directoryEntries; de.hasMoreElements(); de.getNext()) {
+      ++count;
+    }
+    return count;
   }
 
   function RunTest() {
-    // Construct a nsIFile object for access to file methods
-    Components.utils.import("resource://gre/modules/FileUtils.jsm");
-    var clipboardFile = FileUtils.getFile("TmpD", ["clipboardcache"]);
+    const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
 
     // Sanitize environment
-    if (clipboardFile.exists()) {
-        clipboardFile.remove(false);
-    }
-    ok(!clipboardFile.exists(), "failed to presanitize the environment");
+    gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);
+
+    var initialFdCount = getOpenFileDescriptorCount();
+    var expectedFdCount = initialFdCount + 1;
 
     // Overflow a nsTransferable region by using the clipboard helper
-    const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
     gClipboardHelper.copyString(Ipsum);
 
     // Disabled private browsing mode should cache large selections to disk
-    ok(clipboardFile.exists(), "correctly saved memory by caching to disk");
+    is(getOpenFileDescriptorCount(), expectedFdCount, "correctly saved memory by caching to disk");
 
     // Sanitize environment again
-    if (clipboardFile.exists()) {
-        clipboardFile.remove(false);
-    }
-    ok(!clipboardFile.exists(), "failed to postsanitize the environment");
+    gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);
+    is(getOpenFileDescriptorCount(), initialFdCount, "failed to evict the file descriptor of the clipboard cache");
 
     // Repeat procedure of plain text selection with private browsing enabled
     Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -66,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
     Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
 
     // Enabled private browsing mode should not cache any selection to disk
-    ok(!clipboardFile.exists(), "did not violate private browsing mode");
+    is(getOpenFileDescriptorCount(), initialFdCount, "did not violate private browsing mode");
   }
   ]]>
   </script>
