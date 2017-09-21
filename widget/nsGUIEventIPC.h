@@ -265,7 +265,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<const mozilla::WidgetMouseEventBase&>(aParam));
-    WriteParam(aMsg, static_cast<mozilla::WidgetPointerHelper>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetPointerHelper&>(aParam));
     WriteParam(aMsg, aParam.mIgnoreRootScrollFrame);
     WriteParam(aMsg, static_cast<paramType::ReasonType>(aParam.mReason));
     WriteParam(aMsg, static_cast<paramType::ContextMenuTriggerType>(
