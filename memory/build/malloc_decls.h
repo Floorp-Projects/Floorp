@@ -15,10 +15,13 @@
 
 #  include "mozjemalloc_types.h"
 
-#  define MALLOC_FUNCS_MALLOC 1
-#  define MALLOC_FUNCS_JEMALLOC 2
-#  define MALLOC_FUNCS_INIT 4
-#  define MALLOC_FUNCS_BRIDGE 8
+#  define MALLOC_FUNCS_MALLOC_BASE 1
+#  define MALLOC_FUNCS_MALLOC_EXTRA 2
+#  define MALLOC_FUNCS_MALLOC (MALLOC_FUNCS_MALLOC_BASE | \
+                               MALLOC_FUNCS_MALLOC_EXTRA)
+#  define MALLOC_FUNCS_JEMALLOC 4
+#  define MALLOC_FUNCS_INIT 8
+#  define MALLOC_FUNCS_BRIDGE 16
 #  define MALLOC_FUNCS_ALL (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE | \
                             MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
 
@@ -35,14 +38,16 @@ MALLOC_DECL(init, void, const malloc_table_t *)
 #  if MALLOC_FUNCS & MALLOC_FUNCS_BRIDGE
 MALLOC_DECL(get_bridge, struct ReplaceMallocBridge*)
 #  endif
-#  if MALLOC_FUNCS & MALLOC_FUNCS_MALLOC
+#  if MALLOC_FUNCS & MALLOC_FUNCS_MALLOC_BASE
 MALLOC_DECL(malloc, void *, size_t)
-MALLOC_DECL(posix_memalign, int, void **, size_t, size_t)
-MALLOC_DECL(aligned_alloc, void *, size_t, size_t)
 MALLOC_DECL(calloc, void *, size_t, size_t)
 MALLOC_DECL(realloc, void *, void *, size_t)
 MALLOC_DECL(free, void, void *)
 MALLOC_DECL(memalign, void *, size_t, size_t)
+#  endif
+#  if MALLOC_FUNCS & MALLOC_FUNCS_MALLOC_EXTRA
+MALLOC_DECL(posix_memalign, int, void **, size_t, size_t)
+MALLOC_DECL(aligned_alloc, void *, size_t, size_t)
 MALLOC_DECL(valloc, void *, size_t)
 MALLOC_DECL(malloc_usable_size, size_t, usable_ptr_t)
 MALLOC_DECL(malloc_good_size, size_t, size_t)
