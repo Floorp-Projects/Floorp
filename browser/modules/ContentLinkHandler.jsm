@@ -112,7 +112,9 @@ function getLinkIconURI(aLink) {
 function setIconForLink(aIconInfo, aChromeGlobal) {
   aChromeGlobal.sendAsyncMessage(
     "Link:SetIcon",
-    { url: aIconInfo.iconUri.spec, loadingPrincipal: aIconInfo.loadingPrincipal });
+    { url: aIconInfo.iconUri.spec,
+      loadingPrincipal: aIconInfo.loadingPrincipal,
+      requestContextID: aIconInfo.requestContextID });
 }
 
 /*
@@ -173,6 +175,21 @@ function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
 }
 
 /*
+ * Get request context ID of the link dom node's document.
+ *
+ * @param {DOMNode} aLink A link dom node.
+ * @return {Number} The request context ID.
+ *                  Return null when document's load group is not available.
+ */
+function getLinkRequestContextID(aLink) {
+  try {
+    return aLink.ownerDocument.documentLoadGroup.requestContextID;
+  } catch (e) {
+    return null;
+  }
+}
+
+/*
  * Favicon link handler.
  *
  * @param {DOMNode} aLink A link dom node.
@@ -198,7 +215,8 @@ function handleFaviconLink(aLink, aIsRichIcon, aChromeGlobal, aFaviconLoads) {
     width,
     isRichIcon: aIsRichIcon,
     type: aLink.type,
-    loadingPrincipal: aLink.ownerDocument.nodePrincipal
+    loadingPrincipal: aLink.ownerDocument.nodePrincipal,
+    requestContextID: getLinkRequestContextID(aLink)
   };
 
   if (aFaviconLoads.has(pageUrl)) {
