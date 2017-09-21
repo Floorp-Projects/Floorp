@@ -122,10 +122,6 @@ AppendToString(std::stringstream& aStream, const wr::LayoutSize& s,
                const char* pfx="", const char* sfx="");
 
 void
-AppendToString(std::stringstream& aStream, const wr::StickySideConstraint& s,
-               const char* pfx="", const char* sfx="");
-
-void
 AppendToString(std::stringstream& aStream, const nsRegion& r,
                const char* pfx="", const char* sfx="");
 
