@@ -890,10 +890,10 @@ PlacesController.prototype = {
         if (PlacesUIUtils.useAsyncTransactions) {
           let tag = node.parent.title;
           if (!tag) {
-            let tagGuid = PlacesUtils.getConcreteItemGuid(node.parent);
+            let tagGuid = await PlacesUtils.promiseItemGuid(tagItemId);
             tag = (await PlacesUtils.bookmarks.fetch(tagGuid)).title;
           }
-          transactions.push(PlacesTransactions.Untag({ uri, tag }));
+          transactions.push(PlacesTransactions.Untag({ urls: [uri], tag }));
         } else {
           let txn = new PlacesUntagURITransaction(uri, [tagItemId]);
           transactions.push(txn);
