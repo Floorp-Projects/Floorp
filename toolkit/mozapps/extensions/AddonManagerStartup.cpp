@@ -745,6 +745,15 @@ AddonManagerStartup::Reset()
   return NS_OK;
 }
 
+nsresult
+AddonManagerStartup::InitializeURLPreloader()
+{
+  MOZ_RELEASE_ASSERT(xpc::IsInAutomation());
+
+  URLPreloader::ReInitialize();
+
+  return NS_OK;
+}
 
 /******************************************************************************
  * RegisterChrome
