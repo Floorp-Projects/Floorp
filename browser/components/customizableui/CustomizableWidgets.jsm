@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CharsetMenu: "resource://gre/modules/CharsetMenu.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
-  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
@@ -914,89 +913,6 @@ const CustomizableWidgets = [
       let win = aEvent.view;
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser)
     }
-  }, {
-    id: "containers-panelmenu",
-    type: "view",
-    viewId: "PanelUI-containers",
-    hasObserver: false,
-    onCreated(aNode) {
-      let doc = aNode.ownerDocument;
-      let win = doc.defaultView;
-      let items = doc.getElementById("PanelUI-containersItems");
-
-      let onItemCommand = function(aEvent) {
-        let item = aEvent.target;
-        if (item.hasAttribute("usercontextid")) {
-          let userContextId = parseInt(item.getAttribute("usercontextid"));
-          win.openUILinkIn(win.BROWSER_NEW_TAB_URL, "tab", {userContextId});
-        }
-      };
-      items.addEventListener("command", onItemCommand);
-
-      if (PrivateBrowsingUtils.isWindowPrivate(win)) {
-        aNode.setAttribute("disabled", "true");
-      }
-
-      this.updateVisibility(aNode);
-
-      if (!this.hasObserver) {
-        Services.prefs.addObserver("privacy.userContext.enabled", this, true);
-        this.hasObserver = true;
-      }
-    },
-    onViewShowing(aEvent) {
-      let doc = aEvent.target.ownerDocument;
-
-      let items = doc.getElementById("PanelUI-containersItems");
-
-      while (items.firstChild) {
-        items.firstChild.remove();
-      }
-
-      let fragment = doc.createDocumentFragment();
-      let bundle = doc.getElementById("bundle_browser");
-
-      ContextualIdentityService.getPublicIdentities().forEach(identity => {
-        let label = ContextualIdentityService.getUserContextLabel(identity.userContextId);
-
-        let item = doc.createElementNS(kNSXUL, "toolbarbutton");
-        item.setAttribute("label", label);
-        item.setAttribute("usercontextid", identity.userContextId);
-        item.setAttribute("class", "subviewbutton");
-        item.setAttribute("data-identity-color", identity.color);
-        item.setAttribute("data-identity-icon", identity.icon);
-
-        fragment.appendChild(item);
-      });
-
-      fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
-
-      let item = doc.createElementNS(kNSXUL, "toolbarbutton");
-      item.setAttribute("label", bundle.getString("userContext.aboutPage.label"));
-      item.setAttribute("command", "Browser:OpenAboutContainers");
-      item.setAttribute("class", "subviewbutton");
-      fragment.appendChild(item);
-
-      items.appendChild(fragment);
-    },
-
-    updateVisibility(aNode) {
-      aNode.hidden = !Services.prefs.getBoolPref("privacy.userContext.enabled");
-    },
-
-    observe(aSubject, aTopic, aData) {
-      let {instances} = CustomizableUI.getWidget("containers-panelmenu");
-      for (let {node} of instances) {
-        if (node) {
-          this.updateVisibility(node);
-        }
-      }
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsISupportsWeakReference,
-      Ci.nsIObserver
-    ]),
   }];
 
 let preferencesButton = {

@@ -217,10 +217,6 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/synced-tabs.svg");
 }
 
-#containers-panelmenu {
-  list-style-image: url("chrome://browser/skin/containers.svg");
-}
-
 #feed-button {
   list-style-image: url("chrome://browser/skin/feed.svg");
 }
