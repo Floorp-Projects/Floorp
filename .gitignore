@@ -126,6 +126,10 @@ testing/talos/talos/tests/tp5n.zip
 testing/talos/talos/tests/tp5n
 testing/talos/talos/tests/devtools/damp.manifest.develop
 
+# Ignore sync tps logs and reports
+tps.log
+tps_result.json
+
 # Ignore files created when running a reftest.
 lextab.py
 
