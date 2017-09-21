@@ -18,59 +18,55 @@ namespace mozilla {
 void
 nsSVGTransform::GetValueAsString(nsAString& aValue) const
 {
-  char16_t buf[256];
-
   switch (mType) {
     case SVG_TRANSFORM_TRANSLATE:
       // The spec say that if Y is not provided, it is assumed to be zero.
       if (mMatrix._32 != 0)
-        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+        nsTextFormatter::ssprintf(aValue,
             u"translate(%g, %g)",
             mMatrix._31, mMatrix._32);
       else
-        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+        nsTextFormatter::ssprintf(aValue,
             u"translate(%g)",
             mMatrix._31);
       break;
     case SVG_TRANSFORM_ROTATE:
       if (mOriginX != 0.0f || mOriginY != 0.0f)
-        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+        nsTextFormatter::ssprintf(aValue,
             u"rotate(%g, %g, %g)",
             mAngle, mOriginX, mOriginY);
       else
-        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+        nsTextFormatter::ssprintf(aValue,
             u"rotate(%g)", mAngle);
       break;
     case SVG_TRANSFORM_SCALE:
       if (mMatrix._11 != mMatrix._22)
-        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+        nsTextFormatter::ssprintf(aValue,
             u"scale(%g, %g)", mMatrix._11, mMatrix._22);
       else
-        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+        nsTextFormatter::ssprintf(aValue,
             u"scale(%g)", mMatrix._11);
       break;
     case SVG_TRANSFORM_SKEWX:
-      nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+      nsTextFormatter::ssprintf(aValue,
                                 u"skewX(%g)", mAngle);
       break;
     case SVG_TRANSFORM_SKEWY:
-      nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+      nsTextFormatter::ssprintf(aValue,
                                 u"skewY(%g)", mAngle);
       break;
     case SVG_TRANSFORM_MATRIX:
-      nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
+      nsTextFormatter::ssprintf(aValue,
           u"matrix(%g, %g, %g, %g, %g, %g)",
                             mMatrix._11, mMatrix._12,
                             mMatrix._21, mMatrix._22,
                             mMatrix._31, mMatrix._32);
       break;
     default:
-      buf[0] = '\0';
+      aValue.Truncate();
       NS_ERROR("unknown transformation type");
       break;
   }
-
-  aValue.Assign(buf);
 }
 
 void

@@ -58,8 +58,10 @@ protected:
     nscolor sMenuTextInactive;
     nscolor sMenuHover;
     nscolor sMenuHoverText;
+    nscolor sButtonDefault;
     nscolor sButtonText;
     nscolor sButtonHoverText;
+    nscolor sButtonHoverFace;
     nscolor sFrameOuterLightBorder;
     nscolor sFrameInnerDarkBorder;
     nscolor sOddCellBackground;
@@ -70,6 +72,9 @@ protected:
     nscolor sMozFieldBackground;
     nscolor sMozWindowText;
     nscolor sMozWindowBackground;
+    nscolor sMozWindowActiveBorder;
+    nscolor sMozWindowInactiveBorder;
+    nscolor sMozWindowInactiveCaption;
     nscolor sTextSelectedText;
     nscolor sTextSelectedBackground;
     nscolor sMozScrollbar;

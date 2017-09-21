@@ -107,10 +107,11 @@ WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources)
   }
 
   nsTArray<OpUpdateResource> resourceUpdates;
-  nsTArray<ipc::Shmem> resourceData;
-  aResources.Flush(resourceUpdates, resourceData);
+  nsTArray<ipc::Shmem> smallShmems;
+  nsTArray<ipc::Shmem> largeShmems;
+  aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
-  this->SendUpdateResources(resourceUpdates, resourceData);
+  this->SendUpdateResources(resourceUpdates, Move(smallShmems), Move(largeShmems));
 }
 
 void
@@ -136,20 +137,21 @@ WebRenderBridgeChild::EndTransaction(wr::DisplayListBuilder &aBuilder,
 #endif
 
   nsTArray<OpUpdateResource> resourceUpdates;
-  nsTArray<ipc::Shmem> resourceData;
-  aResources.Flush(resourceUpdates, resourceData);
+  nsTArray<ipc::Shmem> smallShmems;
+  nsTArray<ipc::Shmem> largeShmems;
+  aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
   if (aIsSync) {
     this->SendSetDisplayListSync(aSize, mParentCommands, mDestroyedActors,
                                  GetFwdTransactionId(), aTransactionId,
                                  contentSize, dlData, dl.dl_desc, aScrollData,
-                                 Move(resourceUpdates), Move(resourceData),
+                                 Move(resourceUpdates), Move(smallShmems), Move(largeShmems),
                                  mIdNamespace, aTxnStartTime, fwdTime);
   } else {
     this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
                              GetFwdTransactionId(), aTransactionId,
                              contentSize, dlData, dl.dl_desc, aScrollData,
-                             Move(resourceUpdates), Move(resourceData),
+                             Move(resourceUpdates), Move(smallShmems), Move(largeShmems),
                              mIdNamespace, aTxnStartTime, fwdTime);
   }
 

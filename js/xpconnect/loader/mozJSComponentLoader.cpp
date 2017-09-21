@@ -513,17 +513,15 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     // Defer firing OnNewGlobalObject until after the __URI__ property has
     // been defined so the JS debugger can tell what module the global is
     // for
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = nsXPConnect::XPConnect()->
-        InitClassesWithNewWrappedGlobal(aCx,
-                                        static_cast<nsIGlobalObject*>(backstagePass),
-                                        nsContentUtils::GetSystemPrincipal(),
-                                        nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
-                                        options,
-                                        getter_AddRefs(holder));
+    RootedObject global(aCx);
+    rv = xpc::InitClassesWithNewWrappedGlobal(aCx,
+                                              static_cast<nsIGlobalObject*>(backstagePass),
+                                              nsContentUtils::GetSystemPrincipal(),
+                                              xpc::DONT_FIRE_ONNEWGLOBALHOOK,
+                                              options,
+                                              &global);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    RootedObject global(aCx, holder->GetJSObject());
     NS_ENSURE_TRUE_VOID(global);
 
     backstagePass->SetGlobalObject(global);

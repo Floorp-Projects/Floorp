@@ -393,25 +393,7 @@
 #include browser-context.inc
     </menupopup>
 
-    <menupopup id="placesContext">
-      <menuseparator id="placesContext_recentlyBookmarkedSeparator"
-                     ignoreitem="true"
-                     hidden="true"/>
-      <menuitem id="placesContext_hideRecentlyBookmarked"
-                label="&hideRecentlyBookmarked.label;"
-                accesskey="&hideRecentlyBookmarked.accesskey;"
-                oncommand="RecentBookmarksMenuUI.visible = false;"
-                closemenu="single"
-                ignoreitem="true"
-                hidden="true"/>
-      <menuitem id="placesContext_showRecentlyBookmarked"
-                label="&showRecentlyBookmarked.label;"
-                accesskey="&showRecentlyBookmarked.accesskey;"
-                oncommand="RecentBookmarksMenuUI.visible = true;"
-                closemenu="single"
-                ignoreitem="true"
-                hidden="true"/>
-    </menupopup>
+    <menupopup id="placesContext"/>
 
     <panel id="ctrlTab-panel" hidden="true" norestorefocus="true" level="top">
       <hbox>
@@ -1114,11 +1096,6 @@
                     label="&showAllBookmarks2.label;"
                     command="Browser:ShowAllBookmarks"
                     key="manBookmarkKb"/>
-          <menuseparator/>
-          <menuitem label="&recentBookmarks.label;"
-                    id="BMB_recentBookmarks"
-                    disabled="true"
-                    class="menuitem-iconic subviewbutton"/>
           <menuseparator/>
           <menu id="BMB_bookmarksToolbar"
                 class="menu-iconic bookmark-item subviewbutton"

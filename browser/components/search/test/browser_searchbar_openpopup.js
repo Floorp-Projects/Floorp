@@ -42,7 +42,6 @@ async function endCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.getAttribute("customizing") != "true") {
     return true;
   }
-  await SpecialPowers.pushPrefEnv({set: [["browser.uiCustomization.disableAnimation", true]]});
   let eventPromise = BrowserTestUtils.waitForEvent(aWindow.gNavToolbox, "aftercustomization");
   aWindow.gCustomizeMode.exit();
   return eventPromise;
@@ -52,7 +51,6 @@ async function startCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.getAttribute("customizing") == "true") {
     return true;
   }
-  await SpecialPowers.pushPrefEnv({set: [["browser.uiCustomization.disableAnimation", true]]});
   let eventPromise = BrowserTestUtils.waitForEvent(aWindow.gNavToolbox, "customizationready");
   aWindow.gCustomizeMode.enter();
   return eventPromise;

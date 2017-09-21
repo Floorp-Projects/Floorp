@@ -865,6 +865,11 @@ var MessageQueue = {
    *        An IdleDeadline object passed by requestIdleCallback().
    */
   sendWhenIdle(deadline) {
+    if (!content) {
+      // The frameloader is being torn down. Nothing more to do.
+      return;
+    }
+
     if (deadline) {
       if (deadline.didTimeout || deadline.timeRemaining() > MessageQueue.NEEDED_IDLE_PERIOD_MS) {
         MessageQueue.send();

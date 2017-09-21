@@ -25,6 +25,8 @@
   letter-spacing: initial;
   word-spacing: initial;
   color: initial;
+  direction: initial;
+  writing-mode: initial;
 }
 
 :-moz-native-anonymous .highlighter-container {

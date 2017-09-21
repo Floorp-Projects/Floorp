@@ -3759,45 +3759,53 @@ HTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
   return nullptr;
 }
 
-class HTMLMediaElement::ShutdownObserver : public nsIObserver {
-  enum class Phase : int8_t {
+class HTMLMediaElement::ShutdownObserver : public nsIObserver
+{
+  enum class Phase : int8_t
+  {
     Init,
     Subscribed,
     Unsubscribed
   };
+
 public:
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override {
-    MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Subscribed);
+  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override
+  {
+    if (mPhase != Phase::Subscribed) {
+      // Bail out if we are not subscribed for this might be called even after
+      // |nsContentUtils::UnregisterShutdownObserver(this)|.
+      return NS_OK;
+    }
     MOZ_DIAGNOSTIC_ASSERT(mWeak);
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
       mWeak->NotifyShutdownEvent();
     }
     return NS_OK;
   }
-  void Subscribe(HTMLMediaElement* aPtr) {
+  void Subscribe(HTMLMediaElement* aPtr)
+  {
     MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Init);
     MOZ_DIAGNOSTIC_ASSERT(!mWeak);
     mWeak = aPtr;
     nsContentUtils::RegisterShutdownObserver(this);
     mPhase = Phase::Subscribed;
   }
-  void Unsubscribe() {
+  void Unsubscribe()
+  {
     MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Subscribed);
     MOZ_DIAGNOSTIC_ASSERT(mWeak);
     mWeak = nullptr;
     nsContentUtils::UnregisterShutdownObserver(this);
     mPhase = Phase::Unsubscribed;
   }
-  void AddRefMediaElement() {
-    mWeak->AddRef();
-  }
-  void ReleaseMediaElement() {
-    mWeak->Release();
-  }
+  void AddRefMediaElement() { mWeak->AddRef(); }
+  void ReleaseMediaElement() { mWeak->Release(); }
+
 private:
-  virtual ~ShutdownObserver() {
+  virtual ~ShutdownObserver()
+  {
     MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Unsubscribed);
     MOZ_DIAGNOSTIC_ASSERT(!mWeak);
   }

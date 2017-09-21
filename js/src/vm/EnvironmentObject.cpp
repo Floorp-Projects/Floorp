@@ -2422,8 +2422,8 @@ DebugEnvironmentProxy::isOptimizedOut() const
 DebugEnvironments::DebugEnvironments(JSContext* cx, Zone* zone)
  : zone_(zone),
    proxiedEnvs(cx),
-   missingEnvs(cx->runtime()),
-   liveEnvs(cx->runtime())
+   missingEnvs(cx->zone()),
+   liveEnvs(cx->zone())
 {}
 
 DebugEnvironments::~DebugEnvironments()

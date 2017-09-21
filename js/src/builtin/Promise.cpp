@@ -3056,7 +3056,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         if (!GetBuiltinConstructor(cx, JSProto_Promise, &PromiseCtor))
             return false;
 
-        RootedObject C(cx, SpeciesConstructor(cx, PromiseCtor, JSProto_Promise, IsPromiseSpecies));
+        RootedObject C(cx, SpeciesConstructor(cx, promiseObj, JSProto_Promise, IsPromiseSpecies));
         if (!C)
             return false;
 

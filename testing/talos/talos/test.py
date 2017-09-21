@@ -412,8 +412,9 @@ class damp(PageloaderTest):
     """
     tpmanifest = '${talos}/tests/devtools/damp.manifest'
     extensions = '${talos}/tests/devtools/addon/devtools-signed.xpi'
+    cycles = 5
     tpcycles = 1
-    tppagecycles = 25
+    tppagecycles = 5
     tploadnocache = True
     tpmozafterpaint = False
     gecko_profile_interval = 10
@@ -806,14 +807,14 @@ class a11yr(PageloaderTest):
 
 
 @register_test()
-class bloom_basic(PageloaderTest):
+class perf_reftest(PageloaderTest):
     """
-    Stylo bloom_basic: runs bloom_basic and bloom_basic_ref and reports difference
+    Style perf-reftest a set of tests where the result is the difference of base vs ref pages
     """
     base_vs_ref = True  # compare the two test pages with eachother and report comparison
-    tpmanifest = '${talos}/tests/perf-reftest/bloom_basic.manifest'
+    tpmanifest = '${talos}/tests/perf-reftest/perf_reftest.manifest'
     tpcycles = 1
-    tppagecycles = 25
+    tppagecycles = 10
     gecko_profile_interval = 1
     gecko_profile_entries = 2000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()

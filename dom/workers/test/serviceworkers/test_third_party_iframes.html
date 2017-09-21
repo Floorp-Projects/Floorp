@@ -80,58 +80,128 @@ function runTest(aExpectedResponses) {
   };
 }
 
-function testShouldIntercept(done) {
-  runTest([{
-    status: "ok"
-  }, {
-    status: "registrationdone",
-    next: function() {
-      iframe.addEventListener("load", testIframeLoaded);
-      iframe.src = origin + basePath + "iframe1.html";
-    }
-  }, {
-    status: "networkresponse",
-    next: loadThirdPartyIframe
-  }, {
-    status: "swresponse",
-    next: function() {
-      iframe.src = thirdPartyOrigin + basePath + "unregister.html";
-    }
-  }, {
-    status: "unregistrationdone",
-    next: function() {
-      window.onmessage = null;
-      ok(true, "Test finished successfully");
-      done();
-    }
-  }]);
+// Verify that we can register and intercept a 3rd party iframe with
+// the given cookie policy.
+function testShouldIntercept(policy, done) {
+  SpecialPowers.pushPrefEnv({"set": [
+      ["network.cookie.cookieBehavior", policy]
+  ]}, function() {
+    runTest([{
+      status: "ok"
+    }, {
+      status: "registrationdone",
+      next: function() {
+        iframe.addEventListener("load", testIframeLoaded);
+        iframe.src = origin + basePath + "iframe1.html";
+      }
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: loadThirdPartyIframe
+    }, {
+      status: "swresponse",
+    }, {
+      status: "worker-swresponse",
+      next: function() {
+        iframe.src = thirdPartyOrigin + basePath + "unregister.html";
+      }
+    }, {
+      status: "controlled",
+    }, {
+      status: "unregistrationdone",
+      next: function() {
+        window.onmessage = null;
+        ok(true, "Test finished successfully");
+        done();
+      }
+    }]);
+  });
 }
 
-function testShouldNotIntercept(done) {
-  runTest([{
-    status: "ok"
-  }, {
-    status: "registrationdone",
-    next: function() {
-      iframe.addEventListener("load", testIframeLoaded);
-      iframe.src = origin + basePath + "iframe1.html";
-    }
-  }, {
-    status: "networkresponse",
-    next: loadThirdPartyIframe
-  }, {
-    status: "networkresponse",
-    next: function() {
-      iframe.src = thirdPartyOrigin + basePath + "unregister.html";
-    }
-  }, {
-    status: "unregistrationdone",
-    next: function() {
-      window.onmessage = null;
-      ok(true, "Test finished successfully");
-      done();
-    }
-  }]);
+// Verify that we cannot register a service worker in a 3rd party
+// iframe with the given cookie policy.
+function testShouldNotRegister(policy, done) {
+  SpecialPowers.pushPrefEnv({"set": [
+      ["network.cookie.cookieBehavior", policy]
+  ]}, function() {
+    runTest([{
+      status: "registrationfailed",
+      next: function() {
+        iframe.addEventListener("load", testIframeLoaded);
+        iframe.src = origin + basePath + "iframe1.html";
+      }
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: loadThirdPartyIframe
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: function() {
+        window.onmessage = null;
+        ok(true, "Test finished successfully");
+        done();
+      }
+    }]);
+  });
+}
+
+// Verify that if a service worker is already registered a 3rd
+// party iframe will still not be intercepted with the given cookie
+// policy.
+function testShouldNotIntercept(policy, done) {
+  SpecialPowers.pushPrefEnv({"set": [
+      ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT]
+  ]}, function() {
+    runTest([{
+      status: "ok"
+    }, {
+      status: "registrationdone",
+      next: function() {
+        iframe.addEventListener("load", testIframeLoaded);
+        SpecialPowers.pushPrefEnv({"set": [
+            ["network.cookie.cookieBehavior", policy],
+          ]}, function() {
+            iframe.src = origin + basePath + "iframe1.html";
+          });
+      }
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: loadThirdPartyIframe
+    }, {
+      status: "networkresponse",
+    }, {
+      status: "worker-networkresponse",
+      next: function() {
+        iframe.src = thirdPartyOrigin + basePath + "unregister.html";
+      }
+    }, {
+      status: "uncontrolled",
+    }, {
+      status: "getregistrationfailed",
+      next: function() {
+        SpecialPowers.pushPrefEnv({"set": [
+            ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT],
+          ]}, function() {
+            iframe.src = thirdPartyOrigin + basePath + "unregister.html";
+          });
+      }
+    }, {
+      status: "controlled",
+    }, {
+      status: "unregistrationdone",
+      next: function() {
+        window.onmessage = null;
+        ok(true, "Test finished successfully");
+        done();
+      }
+    }]);
+  });
 }
 
 const COOKIE_BEHAVIOR_ACCEPT        = 0;
@@ -148,25 +218,19 @@ let steps = [() => {
     ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT]
   ]}, next);
 }, () => {
-  testShouldIntercept(next);
+  testShouldIntercept(COOKIE_BEHAVIOR_ACCEPT, next);
 }, () => {
-  SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECTFOREIGN]
-  ]}, next);
+  testShouldNotRegister(COOKIE_BEHAVIOR_REJECTFOREIGN, next);
 }, () => {
-  testShouldNotIntercept(next);
+  testShouldNotIntercept(COOKIE_BEHAVIOR_REJECTFOREIGN, next);
 }, () => {
-  SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECT]
-  ]}, next);
+  testShouldNotRegister(COOKIE_BEHAVIOR_REJECT, next);
 }, () => {
-  testShouldIntercept(next);
+  testShouldNotIntercept(COOKIE_BEHAVIOR_REJECT, next);
 }, () => {
-  SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_LIMITFOREIGN]
-  ]}, next);
+  testShouldNotRegister(COOKIE_BEHAVIOR_LIMITFOREIGN, next);
 }, () => {
-  testShouldIntercept(next);
+  testShouldNotIntercept(COOKIE_BEHAVIOR_LIMITFOREIGN, next);
 }];
 
 </script>

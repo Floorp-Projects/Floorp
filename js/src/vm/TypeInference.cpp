@@ -1316,10 +1316,8 @@ js::EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id)
         if (obj->hasLazyGroup()) {
             AutoEnterOOMUnsafeRegion oomUnsafe;
             RootedObject objRoot(cx, obj);
-            if (!JSObject::getGroup(cx, objRoot)) {
+            if (!JSObject::getGroup(cx, objRoot))
                 oomUnsafe.crash("Could not allocate ObjectGroup in EnsureTrackPropertyTypes");
-                return;
-            }
         }
         if (!obj->group()->unknownProperties() && !obj->group()->getProperty(cx, obj, id)) {
             MOZ_ASSERT(obj->group()->unknownProperties());
@@ -3046,7 +3044,7 @@ ObjectGroup::clearNewScript(JSContext* cx, ObjectGroup* replacement /* = nullptr
         // Mark the constructing function as having its 'new' script cleared, so we
         // will not try to construct another one later.
         RootedFunction fun(cx, newScript->function());
-        if (!JSObject::setNewScriptCleared(cx, fun))
+        if (!NativeObject::setNewScriptCleared(cx, fun))
             cx->recoverFromOutOfMemory();
     }
 
@@ -4428,6 +4426,8 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
 /* static */ void
 JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
 {
+    MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
+
     if (!types_ || typesGeneration() == zone()->types.generation)
         return;
 
@@ -4611,6 +4611,7 @@ AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
   : zone(zone), oom(false)
 {
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
+    MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
     zone->types.setSweepingTypes(true);
 }
 

@@ -21,7 +21,7 @@
         android:scaleType="centerInside"
         tools:src="@drawable/toolbar_favicon_default"/>
 
-    <org.mozilla.gecko.widget.FadedSingleColorTextView
+    <org.mozilla.gecko.widget.CheckableFadedSingleColorTextView
         android:id="@+id/title"
         android:layout_width="0dip"
         android:layout_height="match_parent"

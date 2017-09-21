@@ -209,6 +209,7 @@
   background-size: 20px;
   font-size: 16px;
   cursor: pointer;
+  max-height: 54px;
 }
 
 #onboarding-tour-list .onboarding-tour-item:dir(rtl) {
@@ -530,7 +531,7 @@ a#onboarding-tour-screenshots-button:visited {
   margin: 0 18px;
   color: #0c0c0d;
   display: inline-block;
-  max-height: 100%;
+  max-height: 120px;
   overflow: auto;
   padding: 15px 0;
   box-sizing: border-box;

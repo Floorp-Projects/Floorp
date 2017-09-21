@@ -18,6 +18,7 @@ toolkit.jar:
   skin/classic/global/aboutReader.css                      (../../shared/aboutReader.css)
   skin/classic/global/aboutReaderContent.css               (../../shared/aboutReaderContent.css)
 * skin/classic/global/aboutReaderControls.css              (../../shared/aboutReaderControls.css)
+  skin/classic/global/aboutRights.css                      (../../shared/aboutRights.css)
   skin/classic/global/aboutSupport.css                     (../../shared/aboutSupport.css)
   skin/classic/global/appPicker.css                        (../../shared/appPicker.css)
   skin/classic/global/config.css                           (../../shared/config.css)

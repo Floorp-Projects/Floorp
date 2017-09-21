@@ -52,12 +52,14 @@ add_task(async function setup() {
   await extension.awaitMessage("ready");
 });
 
-async function testProxyScript(test) {
-  let {proxy, expected} = test;
+async function setupProxyScript(proxy) {
   extension.sendMessage("set-proxy", {proxy});
   let proxyInfoSent = await extension.awaitMessage("proxy-set");
   deepEqual(proxyInfoSent, proxy, "got back proxy data from proxy script");
+}
 
+async function testProxyResolution(test) {
+  let {proxy, expected} = test;
   let errorMsg;
   if (expected.error) {
     errorMsg = extension.awaitMessage("proxy-error-received");
@@ -329,7 +331,11 @@ add_task(async function test_pac_results() {
     },
   ];
   for (let test of tests) {
-    await testProxyScript(test);
+    await setupProxyScript(test.proxy);
+    await testProxyResolution(test);
+    // Our proxy script for testing is stateless, so repeating the test should
+    // yield exactly the same results.
+    await testProxyResolution(test);
   }
 });
 
