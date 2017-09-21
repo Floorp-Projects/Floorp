@@ -5122,19 +5122,6 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
   mBounds = mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
     // Bug 748228
   mBounds.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
-
-  if (gfxPrefs::LayersAllowTextLayers() &&
-      CanUseAdvancedLayer(aBuilder->GetWidgetLayerManager())) {
-    mTextDrawer = new TextDrawTarget();
-    RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(mTextDrawer);
-
-    // TODO: Paint() checks mDisableSubpixelAA, we should too.
-    RenderToContext(captureCtx, mTextDrawer, aBuilder, true);
-
-    if (!mTextDrawer->CanSerializeFonts()) {
-      mTextDrawer = nullptr;
-    }
-  }
 }
 
 LayerState
@@ -5142,8 +5129,24 @@ nsDisplayText::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerLayerParameters& aParameters)
 {
-  // Basic things that all advanced backends need
+
+  // Are we doing text layers or webrender?
+  if (!(gfxPrefs::LayersAllowTextLayers() &&
+      CanUseAdvancedLayer(aBuilder->GetWidgetLayerManager()))) {
+    return mozilla::LAYER_NONE;
+  }
+
+  // If we haven't yet, compute the layout/style of the text by running
+  // the painting algorithm with a TextDrawTarget (doesn't actually paint).
   if (!mTextDrawer) {
+    mTextDrawer = new TextDrawTarget();
+    RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(mTextDrawer);
+
+    // TODO: Paint() checks mDisableSubpixelAA, we should too.
+    RenderToContext(captureCtx, mTextDrawer, aBuilder, true);
+  }
+
+  if (!mTextDrawer->CanSerializeFonts()) {
     return mozilla::LAYER_NONE;
   }
 
@@ -5228,14 +5231,8 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     }
 
     for (const mozilla::layout::TextRunFragment& text : part.text) {
-      // mOpacity is set after we do our analysis, so we need to apply it here.
-      // mOpacity is only non-trivial when we have "pure" text, so we don't
-      // ever need to apply it to shadows or decorations.
-      auto color = text.color;
-      color.a *= mOpacity;
-
       aManager->WrBridge()->PushGlyphs(aBuilder, text.glyphs, text.font,
-                                       color, aSc, boundsRect, clipRect,
+                                       text.color, aSc, boundsRect, clipRect,
                                        backfaceVisible);
     }
 
@@ -5289,11 +5286,7 @@ nsDisplayText::BuildLayer(nsDisplayListBuilder* aBuilder,
 
       GlyphArray* glyphs = allGlyphs.AppendElement();
       glyphs->glyphs() = text.glyphs;
-
-      // Apply folded alpha (only applies to glyphs)
-      auto color = text.color;
-      color.a *= mOpacity;
-      glyphs->color() = color;
+      glyphs->color() = text.color;
     }
   }
 
