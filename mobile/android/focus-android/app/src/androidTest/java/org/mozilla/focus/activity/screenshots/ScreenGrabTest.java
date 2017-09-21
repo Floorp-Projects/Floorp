@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.activity.TestHelper;
+import org.mozilla.focus.activity.helpers.HostScreencapScreenshotStrategy;
 
 import java.io.IOException;
 
@@ -137,7 +138,7 @@ public class ScreenGrabTest {
 
         // Initialize UiDevice instance
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        Screengrab.setDefaultScreenshotStrategy(new UiAutomatorScreenshotStrategy());
+        Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy());
         Screengrab.screenshot("IGNORE");
 
         /* Wait for app to load, and take the First View screenshot */
