@@ -104,6 +104,12 @@ StackingContextHelper::~StackingContextHelper()
   }
 }
 
+void
+StackingContextHelper::AdjustOrigin(const LayerPoint& aDelta)
+{
+  mOrigin += aDelta;
+}
+
 wr::LayoutRect
 StackingContextHelper::ToRelativeLayoutRect(const LayerRect& aRect) const
 {
