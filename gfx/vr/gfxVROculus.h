@@ -108,6 +108,8 @@ protected:
   RefPtr<VROculusSession> mSession;
   ovrFovPort mFOVPort[2];
 
+  RefPtr<ID3D11Device> mDevice;
+  RefPtr<ID3D11DeviceContext> mContext;
   ID3D11VertexShader* mQuadVS;
   ID3D11PixelShader* mQuadPS;
   RefPtr<ID3D11SamplerState> mLinearSamplerState;
