@@ -2276,6 +2276,11 @@ CustomizeMode.prototype = {
     return aReferenceNode;
   },
 
+  onPaletteContextMenuShowing(event) {
+   let isFlexibleSpace = event.target.triggerNode.id.includes("wrapper-customizableui-special-spring");
+   event.target.querySelector(".customize-context-addToPanel").disabled = isFlexibleSpace;
+ },
+
   onPanelContextMenuShowing(event) {
     let inPermanentArea = !!event.target.triggerNode.closest("#widget-overflow-fixed-list");
     let doc = event.target.ownerDocument;
