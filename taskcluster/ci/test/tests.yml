@@ -1999,7 +1999,8 @@ test-verify:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            linux64-ccov/.*: [] # don't run on ccov
+            # do not run on ccov; see also the enable_code_coverage transform
+            linux64-ccov/.*: []
             default: built-projects
     tier: 3
     mozharness:
