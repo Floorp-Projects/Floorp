@@ -308,6 +308,16 @@ toolbarbutton.bookmark-item {
   margin-inline-end: 4px;
 }
 
+/* The bookmarks toolbar is smaller than the other toolbars, so we
+ * need to override the badge position to not be cut off. */
+#PersonalToolbar .toolbarbutton-badge {
+  margin-top: -1px !important;
+}
+
+:root[uidensity=touch] #PersonalToolbar .toolbarbutton-badge {
+  margin-top: -4px !important;
+}
+
 /* Remove a pixel of margin on the end so that the badge doesn't
  * overflow the toolbar and push the button into the overflow menu. */
 :root[uidensity=compact] .toolbarbutton-badge {

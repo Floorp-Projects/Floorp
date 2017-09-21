@@ -371,6 +371,10 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   text-align: start;
 }
 
+.customization-uidensity-menuitem > .menu-iconic-text {
+  font: menu;
+}
+
 #customization-lwtheme-menu-header,
 #customization-lwtheme-menu-recommended {
   padding: 10px;

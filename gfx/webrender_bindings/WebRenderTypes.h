@@ -736,6 +736,16 @@ struct WrClipId {
   }
 };
 
+// Corresponds to a clip id for a position:sticky clip in webrender. Similar
+// to WrClipId but a separate struct so we don't get them mixed up in C++.
+struct WrStickyId {
+  uint64_t id;
+
+  bool operator==(const WrClipId& other) const {
+    return id == other.id;
+  }
+};
+
 typedef Variant<layers::FrameMetrics::ViewID, WrClipId> ScrollOrClipId;
 
 enum class WebRenderError : int8_t {

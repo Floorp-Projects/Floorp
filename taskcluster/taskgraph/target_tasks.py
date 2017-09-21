@@ -6,12 +6,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
-
 from taskgraph import try_option_syntax
 from taskgraph.util.attributes import match_run_on_projects
 
-here = os.path.abspath(os.path.dirname(__file__))
 _target_task_methods = {}
 
 
@@ -53,17 +50,14 @@ def standard_filter(task, parameters):
 
 
 def _try_task_config(full_task_graph, parameters):
-    if not parameters.get('target_task_labels'):
-        return []
-
-    return [t.label for t in full_task_graph.tasks.itervalues()
-            if t.label in parameters['target_task_labels']]
+    requested_tasks = parameters['try_task_config']['tasks']
+    return list(set(requested_tasks) & full_task_graph.graph.nodes)
 
 
 def _try_option_syntax(full_task_graph, parameters):
     """Generate a list of target tasks based on try syntax in
     parameters['message'] and, for context, the full task graph."""
-    options = try_option_syntax.TryOptionSyntax(parameters['message'], full_task_graph)
+    options = try_option_syntax.TryOptionSyntax(parameters, full_task_graph)
     target_tasks_labels = [t.label for t in full_task_graph.tasks.itervalues()
                            if options.task_matches(t)]
 
@@ -110,19 +104,23 @@ def _try_option_syntax(full_task_graph, parameters):
 
 @_target_task('try_tasks')
 def target_tasks_try(full_task_graph, parameters):
-    labels = _try_task_config(full_task_graph, parameters)
-
-    if 'try:' in parameters['message'] or not labels:
-        labels.extend(_try_option_syntax(full_task_graph, parameters))
-
-    return labels
+    try_mode = parameters['try_mode']
+    if try_mode == 'try_task_config':
+        return _try_task_config(full_task_graph, parameters)
+    elif try_mode == 'try_option_syntax':
+        return _try_option_syntax(full_task_graph, parameters)
+    else:
+        # With no try mode, we would like to schedule everything (following
+        # run_on_projects) and let optimization trim it down.  But optimization
+        # isn't yet up to the task, so instead we use try_option_syntax with
+        # an empty message (which basically just schedules `-j`objs)
+        return _try_option_syntax(full_task_graph, parameters)
 
 
 @_target_task('default')
 def target_tasks_default(full_task_graph, parameters):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
-
     return [l for l, t in full_task_graph.tasks.iteritems()
             if standard_filter(t, parameters)]
 

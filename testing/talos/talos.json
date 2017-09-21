@@ -70,10 +70,10 @@
             "talos_options": ["--disable-stylo"]
         },
         "perf-reftest-e10s": {
-            "tests": ["bloom_basic"]
+            "tests": ["perf_reftest"]
         },
         "perf-reftest-stylo-disabled-e10s": {
-            "tests": ["bloom_basic"],
+            "tests": ["perf_reftest"],
             "talos_options": ["--disable-stylo"]
         },
         "perf-reftest-singletons-e10s": {

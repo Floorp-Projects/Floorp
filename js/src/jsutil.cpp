@@ -45,6 +45,11 @@ JS_PUBLIC_DATA(uint64_t) maxAllocations = UINT64_MAX;
 JS_PUBLIC_DATA(uint64_t) counter = 0;
 JS_PUBLIC_DATA(bool) failAlways = true;
 
+JS_PUBLIC_DATA(uint32_t) stackTargetThread = 0;
+JS_PUBLIC_DATA(uint64_t) maxStackChecks = UINT64_MAX;
+JS_PUBLIC_DATA(uint64_t) stackCheckCounter = 0;
+JS_PUBLIC_DATA(bool) stackCheckFailAlways = true;
+
 bool
 InitThreadType(void) {
     return threadType.init();
@@ -67,7 +72,8 @@ IsHelperThreadType(uint32_t thread)
 }
 
 void
-SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
+SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always)
+{
     Maybe<AutoLockHelperThreadState> lock;
     if (IsHelperThreadType(targetThread) || IsHelperThreadType(thread)) {
         lock.emplace();
@@ -82,7 +88,8 @@ SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
 }
 
 void
-ResetSimulatedOOM() {
+ResetSimulatedOOM()
+{
     Maybe<AutoLockHelperThreadState> lock;
     if (IsHelperThreadType(targetThread)) {
         lock.emplace();
@@ -92,6 +99,36 @@ ResetSimulatedOOM() {
     targetThread = THREAD_TYPE_NONE;
     maxAllocations = UINT64_MAX;
     failAlways = false;
+}
+
+void
+SimulateStackOOMAfter(uint64_t checks, uint32_t thread, bool always)
+{
+    Maybe<AutoLockHelperThreadState> lock;
+    if (IsHelperThreadType(stackTargetThread) || IsHelperThreadType(thread)) {
+        lock.emplace();
+        HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    }
+
+    MOZ_ASSERT(stackCheckCounter + checks > stackCheckCounter);
+    MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
+    stackTargetThread = thread;
+    maxStackChecks = stackCheckCounter + checks;
+    stackCheckFailAlways = always;
+}
+
+void
+ResetSimulatedStackOOM()
+{
+    Maybe<AutoLockHelperThreadState> lock;
+    if (IsHelperThreadType(stackTargetThread)) {
+        lock.emplace();
+        HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    }
+
+    stackTargetThread = THREAD_TYPE_NONE;
+    maxStackChecks = UINT64_MAX;
+    stackCheckFailAlways = false;
 }
 
 

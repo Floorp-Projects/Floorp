@@ -1215,6 +1215,31 @@ pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
+                                            content_rect: LayoutRect,
+                                            top_range: *const StickySideConstraint,
+                                            right_range: *const StickySideConstraint,
+                                            bottom_range: *const StickySideConstraint,
+                                            left_range: *const StickySideConstraint)
+                                            -> u64 {
+    assert!(unsafe { is_in_main_thread() });
+    let clip_id = state.frame_builder.dl_builder.define_sticky_frame(
+        None, content_rect, StickyFrameInfo::new(
+            unsafe { top_range.as_ref() }.cloned(),
+            unsafe { right_range.as_ref() }.cloned(),
+            unsafe { bottom_range.as_ref() }.cloned(),
+            unsafe { left_range.as_ref() }.cloned()));
+    match clip_id {
+        ClipId::Clip(id, nesting_index, pipeline_id) => {
+            assert!(pipeline_id == state.pipeline_id);
+            assert!(nesting_index == 0);
+            id
+        },
+        _ => panic!("Got unexpected clip id type"),
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
                                             scroll_id: u64,
                                             content_rect: LayoutRect,

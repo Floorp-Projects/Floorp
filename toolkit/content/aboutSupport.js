@@ -606,6 +606,7 @@ var snapshotFormatters = {
         let th = $.new("th", strings.GetStringFromName(key), "column");
         let td = $.new("td", value);
         td.style["white-space"] = "pre-wrap";
+        td.colSpan = 8;
         return $.new("tr", [th, td]);
       }
       $.append($("media-info-tbody"), [createRow(key, value)]);

@@ -37,8 +37,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   Feeds: "resource:///modules/Feeds.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  FileSource: "resource://gre/modules/L10nRegistry.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
+  L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
@@ -629,6 +631,14 @@ BrowserGlue.prototype = {
         author: vendorShortName,
       });
     }
+
+
+    // Initialize the default l10n resource sources for L10nRegistry.
+    const locales = [AppConstants.INSTALL_LOCALE];
+    const toolkitSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
+    L10nRegistry.registerSource(toolkitSource);
+    const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
+    L10nRegistry.registerSource(appSource);
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },

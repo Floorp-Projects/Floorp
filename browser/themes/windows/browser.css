@@ -13,6 +13,7 @@
   --titlebar-text-color: currentColor;
 
   --tabs-border: threedshadow;
+  --tab-line-color: highlight;
 
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
@@ -37,6 +38,7 @@
 @media (-moz-windows-default-theme) {
   :root {
     --tabs-border: rgba(0,0,0,.3);
+    --tab-line-color: #0a84ff;
 
     --toolbar-non-lwt-bgcolor: #f9f9fa;
     --toolbar-non-lwt-textcolor: #0c0c0d;
@@ -407,16 +409,6 @@ menuitem.bookmark-item {
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
-
-.unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
-.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/menu-back.png") !important;
-}
-
-.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
-.unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
-}
 
 /* ::::: fullscreen window controls ::::: */
 

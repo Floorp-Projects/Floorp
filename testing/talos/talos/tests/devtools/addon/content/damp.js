@@ -65,17 +65,27 @@ Damp.prototype = {
     return this._win.gBrowser.selectedTab;
   },
 
-  reloadPage() {
+  reloadPage(onReload) {
     let startReloadTimestamp = performance.now();
     return new Promise((resolve, reject) => {
       let browser = gBrowser.selectedBrowser;
-      browser.addEventListener("load", function onload() {
-        let stopReloadTimestamp = performance.now();
-        resolve({
-          time: stopReloadTimestamp - startReloadTimestamp
+      if (typeof (onReload) == "function") {
+        onReload().then(function() {
+          let stopReloadTimestamp = performance.now();
+          resolve({
+            time: stopReloadTimestamp - startReloadTimestamp
+          });
         });
-      }, {capture: true, once: true});
+      } else {
+        browser.addEventListener("load", function onload() {
+          let stopReloadTimestamp = performance.now();
+          resolve({
+            time: stopReloadTimestamp - startReloadTimestamp
+          });
+        }, {capture: true, once: true});
+      }
       browser.reload();
+
     });
   },
 
@@ -290,8 +300,8 @@ Damp.prototype = {
     this._results.push({name: name + ".close.DAMP", value: time });
   },
 
-  async reloadPageAndLog(name) {
-    let {time} = await this.reloadPage();
+  async reloadPageAndLog(name, onReload) {
+    let {time} = await this.reloadPage(onReload);
     this._results.push({name: name + ".reload.DAMP", value: time });
   },
 
@@ -302,28 +312,63 @@ Damp.prototype = {
     await this.testTeardown();
   },
 
-  _getToolLoadingTests(url, label) {
+  _getToolLoadingTests(url, label, { expectedMessages, expectedSources }) {
     let subtests = {
       inspectorOpen: Task.async(function* () {
         yield this.testSetup(url);
-        yield this.openToolboxAndLog(label + ".inspector", "inspector");
-        yield this.reloadPageAndLog(label + ".inspector");
+        let toolbox = yield this.openToolboxAndLog(label + ".inspector", "inspector");
+        let onReload = async function() {
+          let inspector = toolbox.getPanel("inspector");
+          // First wait for markup view to be loaded against the new root node
+          await inspector.once("new-root");
+          // Then wait for inspector to be updated
+          await inspector.once("inspector-updated");
+        };
+        yield this.reloadPageAndLog(label + ".inspector", onReload);
         yield this.closeToolboxAndLog(label + ".inspector");
         yield this.testTeardown();
       }),
 
       webconsoleOpen: Task.async(function* () {
         yield this.testSetup(url);
-        yield this.openToolboxAndLog(label + ".webconsole", "webconsole");
-        yield this.reloadPageAndLog(label + ".webconsole");
+        let toolbox = yield this.openToolboxAndLog(label + ".webconsole", "webconsole");
+        let onReload = async function() {
+          let webconsole = toolbox.getPanel("webconsole");
+          await new Promise(done => {
+            let messages = 0;
+            let receiveMessages = () => {
+              if (++messages == expectedMessages) {
+                webconsole.hud.ui.off("new-messages", receiveMessages);
+                done();
+              }
+            };
+            webconsole.hud.ui.on("new-messages", receiveMessages);
+          });
+        };
+        yield this.reloadPageAndLog(label + ".webconsole", onReload);
         yield this.closeToolboxAndLog(label + ".webconsole");
         yield this.testTeardown();
       }),
 
       debuggerOpen: Task.async(function* () {
         yield this.testSetup(url);
-        yield this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger");
-        yield this.reloadPageAndLog(label + ".jsdebugger");
+        let toolbox = yield this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger");
+        let onReload = async function() {
+          let dbg = toolbox.getPanel("jsdebugger");
+          await new Promise(done => {
+            let { selectors, store } = dbg.panelWin.getGlobalsForTesting();
+            let unsubscribe;
+            function countSources() {
+              const sources = selectors.getSources(store.getState());
+              if (sources.size == expectedSources) {
+                unsubscribe();
+                done();
+              }
+            }
+            unsubscribe = store.subscribe(countSources);
+          });
+        };
+        yield this.reloadPageAndLog(label + ".jsdebugger", onReload);
         yield this.closeToolboxAndLog(label + ".jsdebugger");
         yield this.testTeardown();
       }),
@@ -547,8 +592,9 @@ Damp.prototype = {
       }
     }
 
-    tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple"));
-    tests = tests.concat(this._getToolLoadingTests(COMPLICATED_URL, "complicated"));
+    tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple", { expectedMessages: 1, expectedSources: 1 }));
+
+    tests = tests.concat(this._getToolLoadingTests(COMPLICATED_URL, "complicated", { expectedMessages: 7, expectedSources: 32 }));
 
     if (config.subtests.indexOf("consoleBulkLogging") > -1) {
       tests = tests.concat(this._consoleBulkLoggingTest);

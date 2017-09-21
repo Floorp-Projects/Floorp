@@ -42,12 +42,6 @@ class Kind(object):
         loader = self._get_loader()
         config = copy.deepcopy(self.config)
 
-        if 'parse-commit' in self.config:
-            parse_commit = find_object(config['parse-commit'])
-            config['args'] = parse_commit(parameters['message'])
-        else:
-            config['args'] = None
-
         kind_dependencies = config.get('kind-dependencies', [])
         kind_dependencies_tasks = [task for task in loaded_tasks
                                    if task.kind in kind_dependencies]
@@ -66,7 +60,7 @@ class Kind(object):
                       label=task_dict['label'],
                       attributes=task_dict['attributes'],
                       task=task_dict['task'],
-                      optimizations=task_dict.get('optimizations'),
+                      optimization=task_dict.get('optimization'),
                       dependencies=task_dict.get('dependencies'))
                  for task_dict in transforms(trans_config, inputs)]
         return tasks

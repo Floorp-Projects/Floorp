@@ -57,6 +57,17 @@ class CachedIterable {
       }
     };
   }
+
+  /**
+   * This method allows user to consume the next element from the iterator
+   * into the cache.
+   */
+  touchNext() {
+    const { seen, iterator } = this;
+    if (seen.length === 0 || seen[seen.length - 1].done === false) {
+      seen.push(iterator.next());
+    }
+  }
 }
 
 /**

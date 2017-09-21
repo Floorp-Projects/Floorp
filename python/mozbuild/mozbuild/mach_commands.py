@@ -1784,7 +1784,6 @@ class PackageFrontend(MachCommandBase):
         import shutil
 
         from taskgraph.generator import Kind
-        from taskgraph.optimize import optimize_task
         from taskgraph.util.taskcluster import (
             get_artifact_url,
             list_artifacts,
@@ -1883,6 +1882,12 @@ class PackageFrontend(MachCommandBase):
                     setup=record.setup)
 
         if from_build:
+            if 'TASK_ID' in os.environ:
+                self.log(logging.ERROR, 'artifact', {},
+                         'Do not use --from-build in automation; all dependencies '
+                         'should be determined in the decision task.')
+                return 1
+            from taskgraph.optimize import IndexSearch
             params = {
                 'message': '',
                 'project': '',
@@ -1928,7 +1933,8 @@ class PackageFrontend(MachCommandBase):
                              'Could not find a toolchain build named `{build}`')
                     return 1
 
-                task_id = optimize_task(task, {})
+                task_id = IndexSearch().should_replace_task(
+                    task, {}, task.optimization.get('index-search', []))
                 artifact_name = task.attributes.get('toolchain-artifact')
                 if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},

@@ -78,7 +78,7 @@ const Message = createClass({
       // did not emit for them.
       if (this.props.serviceContainer) {
         this.props.serviceContainer.emitNewMessage(
-          this.messageNode, this.props.messageId);
+          this.messageNode, this.props.messageId, this.props.timeStamp);
       }
     }
   },
