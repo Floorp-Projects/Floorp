@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+"use strict";
+
+const objectStoreName = "Objects";
+
+let test = {key: 0, value: "test"};
+
+let request = indexedDB.open("WebExtensionTest", 1);
+request.onupgradeneeded = event => {
+  let db = event.target.result;
+  let objectStore = db.createObjectStore(objectStoreName,
+                                         {autoIncrement: 0});
+  request = objectStore.add(test.value, test.key);
+  request.onsuccess = event => {
+    db.close();
+    window.postMessage("indexedDBCreated", "*");
+  };
+};
+    </script>
+  </head>
+  <body>
+    This is a test page.
+  </body>
+<html>
