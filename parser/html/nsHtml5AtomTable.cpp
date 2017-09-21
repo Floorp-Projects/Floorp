@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHtml5AtomTable.h"
-#include "nsHtml5Atom.h"
 #include "nsThreadUtils.h"
 
 nsHtml5AtomEntry::nsHtml5AtomEntry(KeyTypePointer aStr)
   : nsStringHashKey(aStr)
-  , mAtom(new nsHtml5Atom(*aStr))
+  , mAtom(new nsAtom(nsAtom::AtomKind::HTML5Atom, *aStr, 0))
 {
 }
 
@@ -21,6 +20,7 @@ nsHtml5AtomEntry::nsHtml5AtomEntry(const nsHtml5AtomEntry& aOther)
 
 nsHtml5AtomEntry::~nsHtml5AtomEntry()
 {
+  delete mAtom;
 }
 
 nsHtml5AtomTable::nsHtml5AtomTable()

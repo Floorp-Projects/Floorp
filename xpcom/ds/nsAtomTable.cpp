@@ -135,12 +135,13 @@ private:
 UniquePtr<nsTArray<FakeBufferRefcountHelper>> gFakeBuffers;
 #endif
 
-// This constructor is for dynamic atoms.
-nsAtom::nsAtom(const nsAString& aString, uint32_t aHash)
+// This constructor is for dynamic atoms and HTML5 atoms.
+nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
   : mRefCnt(1)
 {
   mLength = aString.Length();
-  SetKind(AtomKind::DynamicAtom);
+  SetKind(aKind);
+  MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
   RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
   if (buf) {
     mString = static_cast<char16_t*>(buf->Data());
@@ -158,7 +159,7 @@ nsAtom::nsAtom(const nsAString& aString, uint32_t aHash)
   }
 
   mHash = aHash;
-  MOZ_ASSERT(mHash == HashString(mString, mLength));
+  MOZ_ASSERT_IF(IsDynamicAtom(), mHash == HashString(mString, mLength));
 
   NS_ASSERTION(mString[mLength] == char16_t(0), "null terminated");
   NS_ASSERTION(buf && buf->StorageSize() >= (mLength + 1) * sizeof(char16_t),
@@ -202,10 +203,9 @@ nsAtom::nsAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
 // GCAtomTableLocked() for dynamic atoms), not an nsIAtom* pointer.
 nsAtom::~nsAtom()
 {
-  if (IsDynamicAtom()) {
+  if (!IsStaticAtom()) {
+    MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
     nsStringBuffer::FromData(mString)->Release();
-  } else {
-    MOZ_ASSERT(IsStaticAtom());
   }
 }
 
@@ -214,6 +214,7 @@ NS_IMPL_QUERY_INTERFACE(nsAtom, nsIAtom);
 NS_IMETHODIMP
 nsAtom::ToUTF8String(nsACString& aBuf)
 {
+  MOZ_ASSERT(!IsHTML5Atom(), "Called ToUTF8String() on an HTML5 atom");
   CopyUTF16toUTF8(nsDependentString(mString, mLength), aBuf);
   return NS_OK;
 }
@@ -221,6 +222,7 @@ nsAtom::ToUTF8String(nsACString& aBuf)
 NS_IMETHODIMP_(size_t)
 nsAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
+  MOZ_ASSERT(!IsHTML5Atom(), "Called SizeOfIncludingThis() on an HTML5 atom");
   size_t n = aMallocSizeOf(this);
   // String buffers pointed to by static atoms are in static memory, and so
   // are not measured here.
@@ -238,7 +240,7 @@ nsAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsIAtom::AddRef()
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to AddRef an nsHtml5Atom");
+  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to AddRef an HTML5 atom");
   if (!IsDynamicAtom()) {
     MOZ_ASSERT(IsStaticAtom());
     return 2;
@@ -249,7 +251,7 @@ nsIAtom::AddRef()
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsIAtom::Release()
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to Release an nsHtml5Atom");
+  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to Release an HTML5 atom");
   if (!IsDynamicAtom()) {
     MOZ_ASSERT(IsStaticAtom());
     return 1;
@@ -721,7 +723,8 @@ nsAtomFriend::Atomize(const nsACString& aUTF8String)
   // Actually, now there is, sort of: ForgetSharedBuffer.
   nsString str;
   CopyUTF8toUTF16(aUTF8String, str);
-  RefPtr<nsAtom> atom = dont_AddRef(new nsAtom(str, hash));
+  RefPtr<nsAtom> atom =
+    dont_AddRef(new nsAtom(nsAtom::AtomKind::DynamicAtom, str, hash));
 
   he->mAtom = atom;
 
@@ -755,7 +758,8 @@ nsAtomFriend::Atomize(const nsAString& aUTF16String)
     return atom.forget();
   }
 
-  RefPtr<nsAtom> atom = dont_AddRef(new nsAtom(aUTF16String, hash));
+  RefPtr<nsAtom> atom =
+    dont_AddRef(new nsAtom(nsAtom::AtomKind::DynamicAtom, aUTF16String, hash));
   he->mAtom = atom;
 
   return atom.forget();
@@ -792,7 +796,8 @@ nsAtomFriend::AtomizeMainThread(const nsAString& aUTF16String)
   if (he->mAtom) {
     retVal = he->mAtom;
   } else {
-    RefPtr<nsAtom> newAtom = dont_AddRef(new nsAtom(aUTF16String, hash));
+    RefPtr<nsAtom> newAtom = dont_AddRef(
+      new nsAtom(nsAtom::AtomKind::DynamicAtom, aUTF16String, hash));
     he->mAtom = newAtom;
     retVal = newAtom.forget();
   }
