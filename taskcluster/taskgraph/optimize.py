@@ -15,7 +15,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
-import requests
 from collections import defaultdict
 
 from .graph import Graph
@@ -307,7 +306,7 @@ class IndexSearch(OptimizationStrategy):
                     index_path,
                     use_proxy=bool(os.environ.get('TASK_ID')))
                 return task_id
-            except requests.exceptions.HTTPError:
+            except KeyError:
                 # 404 will end up here and go on to the next index path
                 pass
 
