@@ -16,6 +16,7 @@ pub enum QueueAction {
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
+        key_handles: Vec<Vec<u8>>,
         callback: OnceCallback<Vec<u8>>,
     },
     Sign {
@@ -47,10 +48,11 @@ impl U2FManager {
                            timeout,
                            challenge,
                            application,
+                           key_handles,
                            callback,
                        }) => {
                         // This must not block, otherwise we can't cancel.
-                        pm.register(timeout, challenge, application, callback);
+                        pm.register(timeout, challenge, application, key_handles, callback);
                     }
                     Ok(QueueAction::Sign {
                            timeout,
@@ -89,6 +91,7 @@ impl U2FManager {
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
+        key_handles: Vec<Vec<u8>>,
         callback: F,
     ) -> io::Result<()>
     where
@@ -102,12 +105,22 @@ impl U2FManager {
             ));
         }
 
+        for key_handle in &key_handles {
+            if key_handle.len() > 256 {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Key handle too large",
+                ));
+            }
+        }
+
         let callback = OnceCallback::new(callback);
         let action = QueueAction::Register {
-            timeout: timeout,
-            challenge: challenge,
-            application: application,
-            callback: callback,
+            timeout,
+            challenge,
+            application,
+            key_handles,
+            callback,
         };
         self.tx.send(action).map_err(to_io_err)
     }
@@ -149,11 +162,11 @@ impl U2FManager {
 
         let callback = OnceCallback::new(callback);
         let action = QueueAction::Sign {
-            timeout: timeout,
-            challenge: challenge,
-            application: application,
-            key_handles: key_handles,
-            callback: callback,
+            timeout,
+            challenge,
+            application,
+            key_handles,
+            callback,
         };
         self.tx.send(action).map_err(to_io_err)
     }

@@ -114,7 +114,8 @@ U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>&
                                          aChallenge.Elements(),
                                          aChallenge.Length(),
                                          aApplication.Elements(),
-                                         aApplication.Length());
+                                         aApplication.Length(),
+                                         U2FKeyHandles(aDescriptors).Get());
 
   if (mTransactionId == 0) {
     return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
