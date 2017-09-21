@@ -1,6 +1,0 @@
-# base_vs_ref is set in test.py for this test, so each of these lines is the base vs ref test pag
-# both pages are run and then the results compared, the ultimate reported results are the comparisons.
-# Each line is reported as a subtest like the other talos tests that have multiple lines of URLs.
-& http://localhost/tests/perf-reftest/bloom-basic.html, http://localhost/tests/perf-reftest/bloom-basic-ref.html
-& http://localhost/tests/perf-reftest/bloom-basic-2.html, http://localhost/tests/perf-reftest/bloom-basic-ref.html
-& http://localhost/tests/perf-reftest/coalesce-1.html, http://localhost/tests/perf-reftest/coalesce-ref.html
