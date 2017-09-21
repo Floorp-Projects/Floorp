@@ -1266,7 +1266,9 @@ nsLabelsNodeList::MaybeResetRoot(nsINode* aRootNode)
 void
 nsLabelsNodeList::PopulateSelf(uint32_t aNeededLength)
 {
-  MOZ_ASSERT(mRootNode, "Must have root");
+  if (!mRootNode) {
+    return;
+  }
 
   // Start searching at the root.
   nsINode* cur = mRootNode;
