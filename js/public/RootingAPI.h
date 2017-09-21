@@ -142,6 +142,12 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
 template <typename T, typename Wrapper>
 class PersistentRootedBase : public MutableWrappedPtrOperations<T, Wrapper> {};
 
+template <typename T>
+class FakeRooted;
+
+template <typename T>
+class FakeMutableHandle;
+
 namespace gc {
 struct Cell;
 template<typename T>
@@ -904,64 +910,6 @@ class HandleBase<JSObject*, Container> : public WrappedPtrOperations<JSObject*, 
     JS::Handle<U*> as() const;
 };
 
-/** Interface substitute for Rooted<T> which does not root the variable's memory. */
-template <typename T>
-class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>>
-{
-  public:
-    using ElementType = T;
-
-    template <typename CX>
-    explicit FakeRooted(CX* cx) : ptr(JS::GCPolicy<T>::initial()) {}
-
-    template <typename CX>
-    FakeRooted(CX* cx, T initial) : ptr(initial) {}
-
-    DECLARE_POINTER_CONSTREF_OPS(T);
-    DECLARE_POINTER_ASSIGN_OPS(FakeRooted, T);
-    DECLARE_NONPOINTER_ACCESSOR_METHODS(ptr);
-    DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(ptr);
-
-  private:
-    T ptr;
-
-    void set(const T& value) {
-        ptr = value;
-    }
-
-    FakeRooted(const FakeRooted&) = delete;
-};
-
-/** Interface substitute for MutableHandle<T> which is not required to point to rooted memory. */
-template <typename T>
-class FakeMutableHandle : public js::MutableHandleBase<T, FakeMutableHandle<T>>
-{
-  public:
-    using ElementType = T;
-
-    MOZ_IMPLICIT FakeMutableHandle(T* t) {
-        ptr = t;
-    }
-
-    MOZ_IMPLICIT FakeMutableHandle(FakeRooted<T>* root) {
-        ptr = root->address();
-    }
-
-    void set(const T& v) {
-        *ptr = v;
-    }
-
-    DECLARE_POINTER_CONSTREF_OPS(T);
-    DECLARE_NONPOINTER_ACCESSOR_METHODS(*ptr);
-    DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(*ptr);
-
-  private:
-    FakeMutableHandle() {}
-    DELETE_ASSIGNMENT_OPS(FakeMutableHandle, T);
-
-    T* ptr;
-};
-
 /**
  * Types for a variable that either should or shouldn't be rooted, depending on
  * the template parameter allowGC. Used for implementing functions that can
@@ -998,27 +946,6 @@ template <typename T> class MaybeRooted<T, CanGC>
     template <typename T2>
     static inline JS::Handle<T2*> downcastHandle(HandleType v) {
         return v.template as<T2>();
-    }
-};
-
-template <typename T> class MaybeRooted<T, NoGC>
-{
-  public:
-    typedef const T& HandleType;
-    typedef FakeRooted<T> RootType;
-    typedef FakeMutableHandle<T> MutableHandleType;
-
-    static JS::Handle<T> toHandle(HandleType v) {
-        MOZ_CRASH("Bad conversion");
-    }
-
-    static JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
-        MOZ_CRASH("Bad conversion");
-    }
-
-    template <typename T2>
-    static inline T2* downcastHandle(HandleType v) {
-        return &v->template as<T2>();
     }
 };
 
@@ -1518,7 +1445,5 @@ typename mozilla::EnableIf<js::detail::DefineComparisonOps<T>::value &&
 operator!=(const T& a, std::nullptr_t b) {
     return !(a == b);
 }
-
-#undef DELETE_ASSIGNMENT_OPS
 
 #endif  /* js_RootingAPI_h */
