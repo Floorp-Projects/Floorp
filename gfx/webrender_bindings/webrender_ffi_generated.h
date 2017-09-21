@@ -1222,7 +1222,8 @@ void wr_resource_updates_add_font_instance(ResourceUpdates *aResources,
                                            WrFontKey aFontKey,
                                            float aGlyphSize,
                                            const FontInstanceOptions *aOptions,
-                                           const FontInstancePlatformOptions *aPlatformOptions)
+                                           const FontInstancePlatformOptions *aPlatformOptions,
+                                           WrVecU8 *aVariations)
 WR_FUNC;
 
 WR_INLINE

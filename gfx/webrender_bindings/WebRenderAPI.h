@@ -101,7 +101,8 @@ public:
                        wr::FontKey aFontKey,
                        float aGlyphSize,
                        const wr::FontInstanceOptions* aOptions,
-                       const wr::FontInstancePlatformOptions* aPlatformOptions);
+                       const wr::FontInstancePlatformOptions* aPlatformOptions,
+                       wr::Vec_u8& aVariations);
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
 
