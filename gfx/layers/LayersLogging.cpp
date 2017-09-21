@@ -103,6 +103,16 @@ AppendToString(std::stringstream& aStream, const wr::LayoutSize& s,
 }
 
 void
+AppendToString(std::stringstream& aStream, const wr::StickySideConstraint& s,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString("(margin=%f max=%f)",
+      s.margin, s.max_offset).get();
+  aStream << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const nsRegion& r,
                const char* pfx, const char* sfx)
 {

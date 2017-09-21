@@ -549,22 +549,6 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
       }
     }
 
-    if (thisArg == nullptr) {
-      // Mixing numbered arguments and implicit arguments is
-      // disallowed.
-      if (sawNumberedArg) {
-        return -1;
-      }
-
-      if (nextNaturalArg >= aValues.Length()) {
-        // A correctness issue but not a safety issue.
-        MOZ_ASSERT(false);
-        thisArg = &emptyString;
-      } else {
-        thisArg = &aValues[nextNaturalArg++];
-      }
-    }
-
     if (!sawWidth) {
       /*
        * Examine optional flags.  Note that we do not implement the
@@ -642,6 +626,24 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
           prec = (prec * 10) + (c - '0');
           c = *aFmt++;
         }
+      }
+    }
+
+    // If the argument isn't known yet, find it now.  This is done
+    // after the width and precision code, in case '*' was used.
+    if (thisArg == nullptr) {
+      // Mixing numbered arguments and implicit arguments is
+      // disallowed.
+      if (sawNumberedArg) {
+        return -1;
+      }
+
+      if (nextNaturalArg >= aValues.Length()) {
+        // A correctness issue but not a safety issue.
+        MOZ_ASSERT(false);
+        thisArg = &emptyString;
+      } else {
+        thisArg = &aValues[nextNaturalArg++];
       }
     }
 

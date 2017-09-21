@@ -624,7 +624,21 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
             // Our injected code is likely not to be allowed to write there.
             new_rels.push_back(*i);
         } else {
-            // TODO: check that i->r_addend == *i->r_offset
+            // With Elf_Rel, the value pointed by the relocation offset is the addend.
+            // With Elf_Rela, the addend is in the relocation entry, but the elfhacked
+            // relocation info doesn't contain it. Elfhack relies on the value pointed
+            // by the relocation offset to also contain the addend. Which is true with
+            // BFD ld and gold, but not lld, which leaves that nulled out. So if that
+            // value is nulled out, we update it to the addend.
+            Elf_Addr addr(loc.getBuffer(), entry_sz, elf->getClass(), elf->getData());
+            unsigned int addend = get_addend(&*i, elf);
+            if (addr.value == 0) {
+                addr.value = addend;
+                addr.serialize(const_cast<char*>(loc.getBuffer()), entry_sz, elf->getClass(), elf->getData());
+            } else if (addr.value != addend) {
+                fprintf(stderr, "Relocation addend inconsistent with content. Skipping\n");
+                return -1;
+            }
             if (i->r_offset == relhack_entry.r_offset + relhack_entry.r_info * entry_sz) {
                 relhack_entry.r_info++;
             } else {

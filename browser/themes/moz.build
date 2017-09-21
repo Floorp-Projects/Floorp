@@ -15,3 +15,12 @@ elif toolkit in ('gtk2', 'gtk3'):
     DIRS += ['linux']
 else:
     DIRS += ['windows']
+
+with Files('osx/**'):
+    SCHEDULES.exclusive = ['macosx']
+
+with Files('linux/**'):
+    SCHEDULES.exclusive = ['linux']
+
+with Files('windows/**'):
+    SCHEDULES.exclusive = ['windows']

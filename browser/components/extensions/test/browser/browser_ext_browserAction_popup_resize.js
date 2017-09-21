@@ -156,9 +156,14 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   let widget = getBrowserActionWidget(extension);
   CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
 
-  let browser = await openPanel(extension, browserWin);
-
   let panel = browserWin.PanelUI.overflowPanel;
+  let panelMultiView = panel.firstChild;
+  let widgetId = makeWidgetId(extension.id);
+  // The 'ViewShown' event is the only way to correctly determine when the extensions'
+  // panelview has finished transitioning and is fully in view.
+  let shownPromise = BrowserTestUtils.waitForEvent(panelMultiView, "ViewShown",
+    e => (e.originalTarget.id || "").includes(widgetId));
+  let browser = await openPanel(extension, browserWin);
   let origPanelRect = panel.getBoundingClientRect();
 
   // Check that the panel is still positioned as expected.
@@ -183,16 +188,10 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   };
 
   await awaitBrowserLoaded(browser);
-
-  let panelview = browser.closest("panelview");
-  // Need to wait first for the forced panel width and for the panelview's border to be gone,
-  // then for layout to happen again. Otherwise the removal of the border between views in the
-  // panelmultiview trips up our width checking causing it to be off-by-one.
-  await BrowserTestUtils.waitForCondition(() => (!panel.hasAttribute("width") && (!panelview || !panelview.style.borderInlineStart)));
-  await promiseAnimationFrame(browserWin);
+  await shownPromise;
   // Wait long enough to make sure the initial resize debouncing timer has
   // expired.
-  await delay(100);
+  await delay(500);
 
   let dims = await promiseContentDimensions(browser);
 

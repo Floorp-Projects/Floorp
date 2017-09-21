@@ -283,8 +283,10 @@ def morph(taskgraph, label_to_taskid, parameters):
     morphs = [
         add_index_tasks,
         add_s3_uploader_task,
-        apply_jsone_templates(parameters.get('morph_templates')),
     ]
+    if parameters['try_mode'] == 'try_task_config':
+        morphs.append(apply_jsone_templates(parameters['try_task_config'].get('templates')))
+
     for m in morphs:
         taskgraph, label_to_taskid = m(taskgraph, label_to_taskid)
     return taskgraph, label_to_taskid

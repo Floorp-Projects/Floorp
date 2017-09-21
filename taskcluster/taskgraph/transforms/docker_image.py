@@ -61,9 +61,9 @@ def fill_template(config, tasks):
         # up on level 3 at some point if most tasks use this as a common image
         # for a given context hash, a worker within Taskcluster does not need to contain
         # the same image per branch.
-        optimizations = [['index-search', '{}.level-{}.{}.hash.{}'.format(
-            INDEX_PREFIX, level, image_name, context_hash)]
-            for level in reversed(range(int(config.params['level']), 4))]
+        optimization = {'index-search': ['{}.level-{}.{}.hash.{}'.format(
+            INDEX_PREFIX, level, image_name, context_hash)
+            for level in reversed(range(int(config.params['level']), 4))]}
 
         # Adjust the zstandard compression level based on the execution level.
         # We use faster compression for level 1 because we care more about
@@ -80,7 +80,7 @@ def fill_template(config, tasks):
             'attributes': {'image_name': image_name},
             'expires-after': '1 year',
             'routes': routes,
-            'optimizations': optimizations,
+            'optimization': optimization,
             'scopes': ['secrets:get:project/taskcluster/gecko/hgfingerprint'],
             'treeherder': {
                 'symbol': job_symbol,

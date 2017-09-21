@@ -18,6 +18,7 @@ import time
 from copy import deepcopy
 
 from mozbuild.util import memoize
+from mozbuild import schedules
 from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
@@ -167,17 +168,26 @@ task_description_schema = Schema({
         'size': int,
     },
 
-    # Optimizations to perform on this task during the optimization phase,
-    # specified in order.  These optimizations are defined in
-    # taskcluster/taskgraph/optimize.py.
-    Optional('optimizations'): [Any(
-        # search the index for the given index namespace, and replace this task if found
-        ['index-search', basestring],
+    # Optimization to perform on this task during the optimization phase.
+    # Optimizations are defined in taskcluster/taskgraph/optimize.py.
+    Required('optimization', default=None): Any(
+        # always run this task (default)
+        None,
+        # search the index for the given index namespaces, and replace this task if found
+        # the search occurs in order, with the first match winning
+        {'index-search': [basestring]},
         # consult SETA and skip this task if it is low-value
-        ['seta'],
+        {'seta': None},
         # skip this task if none of the given file patterns match
-        ['skip-unless-changed', [basestring]],
-    )],
+        {'skip-unless-changed': [basestring]},
+        # skip this task if unless the change files' SCHEDULES contains any of these components
+        {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
+        # skip if SETA or skip-unless-schedules says to
+        {'skip-unless-schedules-or-seta': list(schedules.ALL_COMPONENTS)},
+        # only run this task if its dependencies will run (useful for follow-on tasks that
+        # are unnecessary if the parent tasks are not run)
+        {'only-if-dependencies-run': None}
+    ),
 
     # the provisioner-id/worker-type for the task.  The following parameters will
     # be substituted in this string:
@@ -1232,7 +1242,7 @@ def build_task(config, tasks):
             'task': task_def,
             'dependencies': task.get('dependencies', {}),
             'attributes': attributes,
-            'optimizations': task.get('optimizations', []),
+            'optimization': task.get('optimization', None),
         }
 
 

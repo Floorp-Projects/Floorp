@@ -240,14 +240,6 @@ SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
   return NS_OK;
 }
 
-// static
-
-nsISupports *
-nsDOMClassInfo::GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
-{
-  return wrapper ? wrapper->Native() : static_cast<nsISupports*>(js::GetObjectPrivate(obj));
-}
-
 nsresult
 nsDOMClassInfo::DefineStaticJSVals()
 {
