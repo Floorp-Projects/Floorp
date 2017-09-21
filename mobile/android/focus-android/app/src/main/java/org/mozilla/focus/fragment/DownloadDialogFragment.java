@@ -57,7 +57,7 @@ public class DownloadDialogFragment extends DialogFragment {
         final Button downloadDialogDownloadButton = (Button) dialogView.findViewById(R.id.download_dialog_download);
         final TextView downloadDialogWarningMessage = (TextView) dialogView.findViewById(R.id.download_dialog_warning);
 
-        downloadDialogIcon.setImageResource(R.drawable.ic_insert_drive_file_white_24px);
+        downloadDialogIcon.setImageResource(R.drawable.ic_download);
         downloadDialogMessage.setText(fileName);
         downloadDialogCancelButton.setText(getString(R.string.download_dialog_action_cancel));
         downloadDialogDownloadButton.setText(getString(R.string.download_dialog_action_download));
