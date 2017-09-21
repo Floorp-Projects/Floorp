@@ -128,7 +128,7 @@ public class DownloadTest {
         Assert.assertTrue("Website title loaded", titleMsg.exists());
 
         // Find download icon tap it
-        Assert.assertTrue(downloadIcon.exists());
+        Assert.assertTrue(downloadIcon.isClickable());
         downloadIcon.click();
         downloadTitle.waitForExists(waitingTime);
         Assert.assertTrue(downloadTitle.isEnabled());
@@ -141,5 +141,10 @@ public class DownloadTest {
         completedMsg.waitForExists(waitingTime);
         Assert.assertTrue(completedMsg.isEnabled());
         Assert.assertTrue(completedMsg.getText().contains("finished"));
+        TestHelper.mDevice.openNotification();
+
+        TestHelper.savedNotification.waitForExists(waitingTime);
+        TestHelper.savedNotification.swipeRight(600);
+        TestHelper.pressBackKey();
     }
 }

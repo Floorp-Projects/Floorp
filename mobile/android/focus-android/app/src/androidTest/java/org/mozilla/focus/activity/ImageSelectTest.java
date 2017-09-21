@@ -223,12 +223,8 @@ public class ImageSelectTest {
         saveMenu.click();
 
         TestHelper.mDevice.openNotification();
-        UiObject savedNotification = TestHelper.mDevice.findObject(new UiSelector()
-                .text("Download complete.")
-                .resourceId("android:id/text")
-                .enabled(true));
-        savedNotification.waitForExists(waitingTime);
-        Assert.assertTrue(savedNotification.exists());
+        TestHelper.savedNotification.waitForExists(waitingTime);
+        TestHelper.savedNotification.swipeRight(600);
         TestHelper.pressBackKey();
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
