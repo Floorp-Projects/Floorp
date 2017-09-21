@@ -55,7 +55,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'nsHtml5Atom.cpp',
     'nsHtml5AtomTable.cpp',
     'nsHtml5AttributeName.cpp',
     'nsHtml5DependentUTF16Buffer.cpp',
