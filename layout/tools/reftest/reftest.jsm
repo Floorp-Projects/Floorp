@@ -289,7 +289,7 @@ function getTestPlugin(aName) {
   return null;
 }
 
-this.OnRefTestLoad = function OnRefTestLoad(win)
+function OnRefTestLoad(win)
 {
     gCrashDumpDir = CC[NS_DIRECTORY_SERVICE_CONTRACTID]
                     .getService(CI.nsIProperties)
