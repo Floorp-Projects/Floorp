@@ -688,7 +688,7 @@ struct ZoneStats
         js_delete(allStrings);
     }
 
-    bool initStrings();
+    bool initStrings(JSRuntime* rt);
 
     void addSizes(const ZoneStats& other) {
         MOZ_ASSERT(isTotals);
@@ -808,7 +808,7 @@ struct CompartmentStats
         js_delete(allClasses);
     }
 
-    bool initClasses();
+    bool initClasses(JSRuntime* rt);
 
     void addSizes(const CompartmentStats& other) {
         MOZ_ASSERT(isTotals);

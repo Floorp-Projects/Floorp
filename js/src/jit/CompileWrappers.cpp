@@ -143,12 +143,6 @@ CompileZone::runtime()
     return CompileRuntime::get(zone()->runtimeFromAnyThread());
 }
 
-JitCode*
-CompileZone::mallocStub()
-{
-    return zone()->jitZone()->mallocStub();
-}
-
 bool
 CompileZone::isAtomsZone()
 {
