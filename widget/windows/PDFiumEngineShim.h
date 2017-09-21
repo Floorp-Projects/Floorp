@@ -48,6 +48,10 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PDFiumEngineShim)
 
   static already_AddRefed<PDFiumEngineShim> GetInstanceOrNull();
+  // This function is used for testing purpose only, do not call it in regular
+  // code.
+  static already_AddRefed<PDFiumEngineShim>
+  GetInstanceOrNull(const nsCString& aLibrary);
 
   FPDF_DOCUMENT LoadDocument(FPDF_STRING file_path,
                              FPDF_BYTESTRING aPassword);
@@ -66,7 +70,7 @@ public:
 private:
   PDFiumEngineShim();
   ~PDFiumEngineShim();
-  bool Init();
+  bool Init(const nsCString& aLibrary);
 
   bool        mInitialized ;
 
