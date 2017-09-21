@@ -51,6 +51,8 @@ class TestMemoryUsage(MarionetteTestCase):
             os.unlink(f)
         for f in glob.glob(os.path.join(self._resultsDir, 'perfherder_data.json')):
             os.unlink(f)
+        for f in glob.glob(os.path.join(self._resultsDir, 'dmd-*.json.gz')):
+            os.unlink(f)
 
         self._urls = []
 
@@ -98,7 +100,8 @@ class TestMemoryUsage(MarionetteTestCase):
             json.dump(perf_blob, fp, indent=2)
         self.logger.info("Perfherder data written to %s" % perf_file)
 
-        # TODO(erahm): copy DMD files from temp dir to resultsDir.
+        if self._dmd:
+            self.cleanup_dmd()
 
         # copy it to moz upload dir if set
         if 'MOZ_UPLOAD_DIR' in os.environ:
@@ -108,6 +111,24 @@ class TestMemoryUsage(MarionetteTestCase):
                     shutil.copy2(file, os.environ["MOZ_UPLOAD_DIR"])
 
         self.logger.info("done tearing down!")
+
+    def cleanup_dmd(self):
+        """
+        Handles moving DMD reports from the temp dir to our resultsDir.
+        """
+        # Move DMD files from temp dir to resultsDir.
+        tmpdir = tempfile.gettempdir()
+        tmp_files = os.listdir(tmpdir)
+        for f in fnmatch.filter(tmp_files, "dmd-*.json.gz"):
+            f = os.path.join(tmpdir, f)
+            shutil.move(f, self._resultsDir)
+
+        # Also attempt to cleanup the unified memory reports.
+        for f in fnmatch.filter(tmp_files, "unified-memory-report-*.json.gz"):
+            try:
+                os.remove(f)
+            except OSError:
+                self.logger.info("Unable to remove %s" % f)
 
     def reset_state(self):
         self._pages_loaded = 0
