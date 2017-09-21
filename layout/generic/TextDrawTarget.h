@@ -7,7 +7,10 @@
 #define TextDrawTarget_h
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/webrender/WebRenderApi.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/layers/StackingContextHelper.h"
 
 namespace mozilla {
 namespace layout {
@@ -299,6 +302,74 @@ public:
 
     return true;
   }
+
+  void
+  CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                          const layers::StackingContextHelper& aSc,
+                          layers::WebRenderLayerManager* aManager,
+                          nsDisplayItem* aItem,
+                          nsRect& aBounds) {
+
+  // Drawing order: selections,
+  //                shadows,
+  //                underline, overline, [grouped in one array]
+  //                text, emphasisText,  [grouped in one array]
+  //                lineThrough
+
+  // Compute clip/bounds
+  auto appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  LayoutDeviceRect layoutBoundsRect = LayoutDeviceRect::FromAppUnits(
+      aBounds, appUnitsPerDevPixel);
+  LayoutDeviceRect layoutClipRect = layoutBoundsRect;
+  auto clip = aItem->GetClip();
+  if (clip.HasClip()) {
+    layoutClipRect = LayoutDeviceRect::FromAppUnits(
+                clip.GetClipRect(), appUnitsPerDevPixel);
+  }
+
+  LayerRect boundsRect = LayerRect::FromUnknownRect(layoutBoundsRect.ToUnknownRect());
+  LayerRect clipRect = LayerRect::FromUnknownRect(layoutClipRect.ToUnknownRect());
+
+  bool backfaceVisible = !aItem->BackfaceIsHidden();
+
+  wr::LayoutRect wrBoundsRect = aSc.ToRelativeLayoutRect(boundsRect);
+  wr::LayoutRect wrClipRect = aSc.ToRelativeLayoutRect(clipRect);
+
+
+  // Create commands
+  for (auto& part : GetParts()) {
+    if (part.selection) {
+      auto selection = part.selection.value();
+      aBuilder.PushRect(selection.rect, wrClipRect, backfaceVisible, selection.color);
+    }
+  }
+
+  for (auto& part : GetParts()) {
+    // WR takes the shadows in CSS-order (reverse of rendering order),
+    // because the drawing of a shadow actually occurs when it's popped.
+    for (const wr::TextShadow& shadow : part.shadows) {
+      aBuilder.PushTextShadow(wrBoundsRect, wrClipRect, backfaceVisible, shadow);
+    }
+
+    for (const wr::Line& decoration : part.beforeDecorations) {
+      aBuilder.PushLine(wrClipRect, backfaceVisible, decoration);
+    }
+
+    for (const mozilla::layout::TextRunFragment& text : part.text) {
+      aManager->WrBridge()->PushGlyphs(aBuilder, text.glyphs, text.font,
+                                       text.color, aSc, boundsRect, clipRect,
+                                       backfaceVisible);
+    }
+
+    for (const wr::Line& decoration : part.afterDecorations) {
+      aBuilder.PushLine(wrClipRect, backfaceVisible, decoration);
+    }
+
+    for (size_t i = 0; i < part.shadows.Length(); ++i) {
+      aBuilder.PopTextShadow();
+    }
+  }
+}
 
 
 private:
