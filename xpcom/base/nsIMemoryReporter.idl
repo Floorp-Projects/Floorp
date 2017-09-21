@@ -22,7 +22,7 @@ interface nsISimpleEnumerator;
  */
 
 [scriptable, function, uuid(62ef0e1c-dbd6-11e3-aa75-3c970e9f4238)]
-interface nsIMemoryReporterCallback : nsISupports
+interface nsIHandleReportCallback : nsISupports
 {
   /*
    * The arguments to the callback are as follows.
@@ -179,19 +179,19 @@ interface nsIMemoryReporter : nsISupports
    * - Chrome domains and URLs.
    * - Information about installed extensions.
    */
-  void collectReports(in nsIMemoryReporterCallback callback,
+  void collectReports(in nsIHandleReportCallback callback,
                       in nsISupports data,
                       in boolean anonymize);
 
   /*
-   * Kinds. See the |kind| comment in nsIMemoryReporterCallback.
+   * Kinds. See the |kind| comment in nsIHandleReportCallback.
    */
   const int32_t KIND_NONHEAP = 0;
   const int32_t KIND_HEAP    = 1;
   const int32_t KIND_OTHER   = 2;
 
   /*
-   * Units. See the |units| comment in nsIMemoryReporterCallback.
+   * Units. See the |units| comment in nsIHandleReportCallback.
    */
   const int32_t UNITS_BYTES = 0;
   const int32_t UNITS_COUNT = 1;
@@ -275,7 +275,7 @@ interface nsIMemoryReporterManager : nsISupports
    * If |anonymize| is true, it indicates that the memory reporters should
    * anonymize any privacy-sensitive data (see above).
    */
-  void getReports(in nsIMemoryReporterCallback handleReport,
+  void getReports(in nsIHandleReportCallback handleReport,
                   in nsISupports handleReportData,
                   in nsIFinishReportingCallback finishReporting,
                   in nsISupports finishReportingData,
@@ -289,7 +289,7 @@ interface nsIMemoryReporterManager : nsISupports
    * |dumpMemoryInfoToTempDir| in |nsIMemoryInfoDumper|.)
    */
   [noscript] void
-    getReportsExtended(in nsIMemoryReporterCallback handleReport,
+    getReportsExtended(in nsIHandleReportCallback handleReport,
                        in nsISupports handleReportData,
                        in nsIFinishReportingCallback finishReporting,
                        in nsISupports finishReportingData,
@@ -302,7 +302,7 @@ interface nsIMemoryReporterManager : nsISupports
    * write a DMD report to that file and close it.
    */
   [noscript] void
-    getReportsForThisProcessExtended(in nsIMemoryReporterCallback handleReport,
+    getReportsForThisProcessExtended(in nsIHandleReportCallback handleReport,
                                      in nsISupports handleReportData,
                                      in boolean anonymize,
                                      in FILE DMDFile,
@@ -457,10 +457,6 @@ interface nsIMemoryReporterManager : nsISupports
 #include "nsTArray.h"
 
 class nsPIDOMWindowOuter;
-
-// nsIHandleReportCallback is a better name, but keep nsIMemoryReporterCallback
-// around for backwards compatibility.
-typedef nsIMemoryReporterCallback nsIHandleReportCallback;
 
 namespace mozilla {
 
