@@ -17,7 +17,6 @@
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
-#include "mozilla/layers/PaintThread.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for TextureDumpMode
@@ -94,8 +93,7 @@ public:
 
   virtual void Clear() = 0;
   virtual RotatedContentBuffer::PaintState BeginPaintBuffer(PaintedLayer* aLayer,
-                                                            uint32_t aFlags,
-                                                            bool aCopyFrontToBack = true) = 0;
+                                                            uint32_t aFlags) = 0;
   virtual gfx::DrawTarget* BorrowDrawTargetForPainting(RotatedContentBuffer::PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) = 0;
   virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) = 0;
@@ -112,7 +110,6 @@ public:
   virtual void BeginPaint() {}
   virtual void BeginAsyncPaint();
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
-  virtual bool IsRemoteBuffer() { return false; }
 
 protected:
   bool mInAsyncPaint;
@@ -149,10 +146,9 @@ public:
 
   virtual void Clear() override { RotatedContentBuffer::Clear(); }
   virtual PaintState BeginPaintBuffer(PaintedLayer* aLayer,
-                                      uint32_t aFlags,
-                                      bool aCopyFrontToBack = true) override
+                                      uint32_t aFlags) override
   {
-    return RotatedContentBuffer::BeginPaint(aLayer, aFlags, aCopyFrontToBack);
+    return RotatedContentBuffer::BeginPaint(aLayer, aFlags);
   }
   virtual gfx::DrawTarget* BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) override
@@ -236,10 +232,9 @@ public:
                     TextureDumpMode aCompress=TextureDumpMode::Compress) override;
 
   virtual PaintState BeginPaintBuffer(PaintedLayer* aLayer,
-                                      uint32_t aFlags,
-                                      bool aCopyFrontToBack = true) override
+                                      uint32_t aFlags) override
   {
-    return RotatedContentBuffer::BeginPaint(aLayer, aFlags, aCopyFrontToBack);
+    return RotatedContentBuffer::BeginPaint(aLayer, aFlags);
   }
   virtual gfx::DrawTarget* BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                        RotatedContentBuffer::DrawIterator* aIter = nullptr) override
@@ -288,12 +283,6 @@ public:
   virtual TextureFlags ExtraTextureFlags() const
   {
     return TextureFlags::IMMEDIATE_UPLOAD;
-  }
-
-  virtual bool IsRemoteBuffer() override { return true; }
-  virtual void FinalizeFrameOnPaintThread(nsIntRegion aRegionToDraw) {
-    MOZ_ASSERT(PaintThread::IsOnPaintThread());
-    FinalizeFrame(aRegionToDraw);
   }
 
 protected:
@@ -395,8 +384,6 @@ protected:
 private:
   void UpdateDestinationFrom(const RotatedBuffer& aSource,
                              const nsIntRegion& aUpdateRegion);
-
-  void CopyFrontBufferToBackBuffer(nsIntRegion& aUpdateRegion);
 
   virtual void AbortTextureClientCreation() override
   {
