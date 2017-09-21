@@ -48,9 +48,14 @@ def generate_tasks(params=None, full=False):
     params = load_parameters_file(params)
     params.check()
 
+    cwd = os.getcwd()
+    os.chdir(build.topsrcdir)
+
     root = os.path.join(build.topsrcdir, 'taskcluster', 'ci')
     tg = getattr(TaskGraphGenerator(root_dir=root, parameters=params), attr)
     labels = [label for label in tg.graph.visit_postorder()]
+
+    os.chdir(cwd)
 
     with open(cache, 'w') as fh:
         fh.write('\n'.join(labels))

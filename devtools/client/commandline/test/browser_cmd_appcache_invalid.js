@@ -54,7 +54,7 @@ function* spawnTest() {
       "This will prevent the application cache from storing the file at line 39.",
     "http://example.com/logo.png points to a resource that is not available at line 40.",
     "http://example.com/check.png points to a resource that is not available at line 41.",
-    "Spaces in URIs need to be replaced with % at line 42.",
+    "Spaces in URIs need to be replaced with %20 at line 42.",
     "http://example.com/cr oss.png points to a resource that is not available at line 42.",
     "Asterisk (*) incorrectly used in the CACHE section at line 43. If a line " +
       "in the NETWORK section contains only a single asterisk character, then " +

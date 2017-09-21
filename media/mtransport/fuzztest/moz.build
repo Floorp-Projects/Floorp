@@ -1,0 +1,29 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library('FuzzingStun')
+
+DEFINES['HAVE_STRDUP'] = True
+
+LOCAL_INCLUDES += [
+  '/ipc/chromium/src',
+  '/media/mtransport',
+  '/media/mtransport/third_party/nICEr/src/net',
+  '/media/mtransport/third_party/nICEr/src/stun',
+  '/media/mtransport/third_party/nrappkit/src/event',
+  '/media/mtransport/third_party/nrappkit/src/log',
+  '/media/mtransport/third_party/nrappkit/src/plugin',
+  '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+  '/media/mtransport/third_party/nrappkit/src/share',
+  '/media/mtransport/third_party/nrappkit/src/stats',
+  '/media/mtransport/third_party/nrappkit/src/util/libekr',
+]
+
+SOURCES += [
+    'stun_parser_libfuzz.cpp',
+]
+
+FINAL_LIBRARY = 'xul-gtest'

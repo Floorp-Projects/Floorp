@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-    <rect fill="#fff" x="1" y="1" width="30" height="30" rx="2" ry="2"/>
-    <path fill="#e3e3e3" d="M3 1h26a2 2 0 0 1 2 2v18H1V3a2 2 0 0 1 2-2z"/>
-    <rect stroke="gray" fill="#fff" x="10.5" y="5.5" width="18" height="11" rx="1" ry="1"/>
-    <circle fill="#fcfcfc" stroke="gray" stroke-width="1.2px" cx="11" cy="11" r="7.5"/>
-    <path fill="#595959" d="M14 10h-3.6l1.3-1.3a1 1 0 0 0-1.4-1.4l-3 3a1 1 0 0 0 0 1.4l3 3a1 1 0 0 0 1.4-1.4L10.4 12H14a1 1 0 0 0 0-2z"/>
-    <path fill="none" stroke="#999" d="M1.5 20.5h29"/>
-    <rect fill="none" stroke="#999" stroke-width="2" x="1" y="1" width="30" height="30" rx="2" ry="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <path fill="#202340" d="M2 2h14v13H2z"/>
+  <path fill="#f9f9fa" d="M16 2v13H2v15h28V2H16z"/>
+  <rect x="1" y="1" width="30" height="30" rx="2" ry="2" fill="none" stroke="#08091a" stroke-opacity=".35" stroke-width="2"/>
+  <circle cx="9.5" cy="22.5" r="6" fill="#fff" stroke="#adadb3"/>
+  <path d="M12.5 22H7.707l2.146-2.146a.5.5 0 0 0-.707-.707l-3 3a.5.5 0 0 0 0 .708l3 3a.5.5 0 1 0 .707-.707L7.707 23H12.5a.5.5 0 0 0 0-1z" fill="#0c0c0d" fill-opacity=".8"/>
+  <path d="M20.5 20h4a.5.5 0 0 0 0-1h-4a.5.5 0 0 0 0 1zm4 2h-4a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm0 3h-4a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1z" fill="#0c0c0d" fill-opacity=".8"/>
+  <path fill="#0a84ff" d="M16 2h14v1H16z"/>
+  <path d="M26.354 8.646l-3.5-3.5a.5.5 0 0 0-.707 0l-3.5 3.5a.5.5 0 0 0 .707.707L20 8.707V11.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5V8.707l.646.646a.5.5 0 1 0 .707-.707zM24 11h-1V9h-1v2h-1V7.707l1.5-1.5 1.5 1.5z" fill="#0c0c0d" fill-opacity=".8"/>
+  <path fill="#08091a" d="M15 2v12H2v1h14V2h-1z"/>
 </svg>

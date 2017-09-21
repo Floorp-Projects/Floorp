@@ -45,7 +45,7 @@ add_task(async function check_storage_after_form_submitted() {
   clickOnElement("input[type=submit]");
 
   let expectedAddresses = TEST_ADDRESSES.slice(0, 1);
-  await onStorageChanged("add");
+  await onAddressChanged("add");
   // Check if timesUsed is set correctly
   expectedAddresses[0].timesUsed = 1;
   let matching = await checkAddresses(expectedAddresses);
@@ -67,7 +67,7 @@ add_task(async function check_storage_after_another_address_submitted() {
   addressesInMenu.push(TEST_ADDRESSES[0]);
 
   // let expectedAddresses = TEST_ADDRESSES.slice(0);
-  await onStorageChanged("add");
+  await onAddressChanged("add");
   let matching = await checkAddresses(TEST_ADDRESSES);
   ok(matching, "New address saved as expected");
 
@@ -93,7 +93,7 @@ add_task(async function new_address_submitted_and_merged() {
   let expectedAddresses = TEST_ADDRESSES.slice(0);
   // Check if timesUsed is set correctly
   expectedAddresses[0].timesUsed = 2;
-  await onStorageChanged("merge");
+  await onAddressChanged("merge");
   let matching = await checkAddresses(expectedAddresses);
   ok(matching, "Address merged as expected");
   delete expectedAddresses[0].timesUsed;
@@ -114,7 +114,7 @@ add_task(async function check_storage_after_form_submitted() {
   clickOnElement("input[type=submit]");
 
   let expectedAddresses = TEST_ADDRESSES.slice(0);
-  await onStorageChanged("merge");
+  await onAddressChanged("merge");
   let matching = await checkAddresses(expectedAddresses);
   ok(matching, "Updated address merged as expected");
 });

@@ -1306,14 +1306,13 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         if (xpc::SharedMemoryEnabled())
             options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
         options.behaviors().setVersion(JSVERSION_DEFAULT);
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        rv = nsXPConnect::XPConnect()->
-            InitClassesWithNewWrappedGlobal(cx,
-                                            static_cast<nsIGlobalObject*>(backstagePass),
-                                            systemprincipal,
-                                            0,
-                                            options,
-                                            getter_AddRefs(holder));
+        JS::Rooted<JSObject*> glob(cx);
+        rv = xpc::InitClassesWithNewWrappedGlobal(cx,
+                                                  static_cast<nsIGlobalObject*>(backstagePass),
+                                                  systemprincipal,
+                                                  0,
+                                                  options,
+                                                  &glob);
         if (NS_FAILED(rv))
             return 1;
 
@@ -1343,7 +1342,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 #endif
 
         {
-            JS::Rooted<JSObject*> glob(cx, holder->GetJSObject());
             if (!glob) {
                 return 1;
             }

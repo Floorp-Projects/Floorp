@@ -3751,12 +3751,13 @@ CSS_PROP_DISPLAY(
     ShapeOutside,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_STORES_CALC,
     "layout.css.shape-outside.enabled",
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Discrete) // FIXME: Bug 1289049 for adding animation support
+    eStyleAnimType_Custom)
 CSS_PROP_SVG(
     shape-rendering,
     shape_rendering,

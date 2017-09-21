@@ -18,10 +18,6 @@
   #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
     visibility: visible;
   }
-
-  #main-window {
-    background: var(--chrome-background-color) !important;
-  }
 }
 
 @media (-moz-windows-compositor) {
@@ -35,59 +31,55 @@
 }
 
 @media (-moz-windows-glass) {
+  /* Always show light toolbar elements on aero glass surface. */
+  #TabsToolbar {
+    color: hsl(240,9%,98%);
+  }
+
+  /* Keep showing the correct color inside the tabs. */
   .tabbrowser-tab {
-    background-color: var(--chrome-background-color);
+    color: var(--chrome-color) !important;
+  }
+
+  /* Make the menubar text readable on aero glass (copied from browser-aero.css). */
+  #toolbar-menubar {
+    text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
+  }
+
+  #main-menubar:not(:-moz-window-inactive) {
+    background-color: rgba(255,255,255,.5);
+    color: black;
+    border-radius: 4px;
+  }
+}
+
+/* Windows 7 specific tab styles that apply to default, dark and light themes
+ * (the default theme counterpart lives in browser.css) */
+@media (-moz-os-version: windows-win7) {
+  /* Always show full-height tab separators on tabs with borders. */
+  .tabbrowser-tab::before {
+    border-image: none !important;
+  }
+
+  /* Show the tabs toolbar background color inside tabs on Win 7. */
+  .tab-background:not([selected=true]) {
+    background-color: var(--chrome-background-color) !important;
+  }
+
+  /* Show border on tabs with background colors in Windows 7. */
+  .tab-background {
+    border-top: 1px solid var(--tabs-border);
   }
 }
 
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
-  /* It'd be nice if there was an element in the scrollbox's inner content
-     that collapsed to the current width of the tabs. Since there isn't we
-     need to handle overflowing and non-overflowing tabs separately.
-
-     In the case of overflowing tabs, set a border-top on the entire container,
-     otherwise we need to set it on each element individually */
-  #main-window[sizemode=normal] .tabbrowser-tabs[overflow="true"] {
-    background-clip: padding-box;
-    border-top: 1px solid var(--chrome-nav-bar-separator-color);
-    border-inline-end: 1px solid var(--chrome-nav-bar-separator-color);
-  }
-
-  /* Add a border to the left of the first tab (or scroll arrow).  Using .tabbrowser-tabs
-     instead of #TabsToolbar because it will work even in customize mode. */
-  #main-window[sizemode=normal] .tabbrowser-tabs {
-    background-clip: padding-box;
-    border-inline-start: 1px solid var(--chrome-nav-bar-separator-color);
-    border-inline-end: 1px solid transparent;
-  }
-
-  #main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .closing-tabs-spacer {
-    background-clip: padding-box;
-    border-inline-start: 1px solid var(--chrome-nav-bar-separator-color);
-  }
-
   /* Use default window colors when in non-maximized mode */
   #tabbrowser-tabs,
   #TabsToolbar,
   #browser-panel,
   #titlebar-content {
     background: transparent;
-  }
-
-  /* Ensure that the entire background is styled when maximized/fullscreen */
-  #main-window:not([sizemode="normal"]):not([customizing]) #browser-panel {
-    background: var(--chrome-background-color) !important;
-  }
-
-  /* The menu items need to be visible when the entire background is styled */
-  #main-window:not([sizemode="normal"]) #main-menubar {
-    color: var(--chrome-color);
-    background-color: transparent;
-  }
-
-  #main-window[sizemode="maximized"] #main-menubar > menu:not(:-moz-window-inactive) {
-    color: inherit;
   }
 
   /* Use proper menu text styling in Win7 classic mode (copied from browser.css) */

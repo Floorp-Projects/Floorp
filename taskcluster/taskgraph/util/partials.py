@@ -22,6 +22,9 @@ BALROG_PLATFORM_MAP = {
     "linux": [
         "Linux_x86-gcc3"
     ],
+    "linux32": [
+        "Linux_x86-gcc3"
+    ],
     "linux64": [
         "Linux_x86_64-gcc3"
     ],

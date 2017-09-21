@@ -184,6 +184,14 @@ span#hostname {
   background-size: 38%;
 }
 
+.connectionFailure #errorPageContainer,
+.netInterrupt #errorPageContainer,
+.netTimeout #errorPageContainer,
+.netReset #errorPageContainer,
+.netOffline #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/error-connection-failure.svg");
+}
+
 .dnsNotFound #errorPageContainer {
   background-image: url("chrome://browser/content/illustrations/error-server-not-found.svg");
 }

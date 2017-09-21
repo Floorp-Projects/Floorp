@@ -25,6 +25,8 @@ JSJitFrameIter::JSJitFrameIter(const JitActivation* activation)
         current_ = activation_->bailoutData()->fp();
         frameSize_ = activation_->bailoutData()->topFrameSize();
         type_ = JitFrame_Bailout;
+    } else {
+        MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
     }
 }
 
