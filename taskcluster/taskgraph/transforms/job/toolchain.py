@@ -106,7 +106,7 @@ def docker_worker_toolchain(config, job, taskdesc):
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
-    support_vcs_checkout(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc, sparse=True)
 
     env = worker['env']
     env.update({
@@ -123,6 +123,7 @@ def docker_worker_toolchain(config, job, taskdesc):
     worker['command'] = [
         '/builds/worker/bin/run-task',
         '--vcs-checkout=/builds/worker/workspace/build/src',
+        '--sparse-profile', 'build/sparse-profiles/toolchain-build',
         '--',
         'bash',
         '-c',
