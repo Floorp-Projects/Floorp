@@ -3,36 +3,28 @@ Optimization
 
 The objective of optimization to remove as many tasks from the graph as
 possible, as efficiently as possible, thereby delivering useful results as
-quickly as possible.  For example, ideally if only a test script is modified in
+quickly as possible. For example, ideally if only a test script is modified in
 a push, then the resulting graph contains only the corresponding test suite
 task.
 
 A task is said to be "optimized" when it is either replaced with an equivalent,
 already-existing task, or dropped from the graph entirely.
 
-Optimization Functions
-----------------------
+Optimization Strategies
+-----------------------
 
-During the optimization phase of task-graph generation, each task is optimized
-in post-order, meaning that each task's dependencies will be optimized before
-the task itself is optimized.
+Each task has a single named optimization strategy, and can provide an argument
+to that strategy. Each strategy is defined as an ``OptimizationStrategy``
+instance in ``taskcluster/taskgraph/optimization.py``.
 
-Each task has a ``task.optimizations`` property describing the optimization
-methods that apply.  Each is specified as a list of method and arguments. For
+Each task has a ``task.optimization`` property describing the optimization
+strategy that applies, specified as a dictionary mapping strategy to argument. For
 example::
 
-    task.optimizations = [
-        ['seta'],
-        ['skip-unless-changed', ['js/**', 'tests/**']],
-    ]
+    task.optimization = {'skip-unless-changed': ['js/**', 'tests/**']}
 
-These methods are defined in ``taskcluster/taskgraph/optimize.py``.  They are
-applied in order, and the first to return a success value causes the task to
-be optimized.
-
-Each method can return either a taskId (indicating that the given task can be
-replaced) or indicate that the task can be optimized away. If a task on which
-others depend is optimized away, task-graph generation will fail.
+Strategy implementations are shared across all tasks, so they may cache
+commonly-used information as instance variables.
 
 Optimizing Target Tasks
 -----------------------
@@ -40,5 +32,88 @@ Optimizing Target Tasks
 In some cases, such as try pushes, tasks in the target task set have been
 explicitly requested and are thus excluded from optimization. In other cases,
 the target task set is almost the entire task graph, so targetted tasks are
-considered for optimization.  This behavior is controlled with the
+considered for optimization. This behavior is controlled with the
 ``optimize_target_tasks`` parameter.
+
+.. note:
+
+    Because it is a mix of "what the push author wanted" and "what should run
+    when necessary", try pushes with the old option syntax (``-b do -p all``,
+    etc.) *do* optimize target tasks.  This can cause unexpected results when
+    requested jobs are optimized away.  If those jobs were actually necessary,
+    then a try push with ``try_task_config.json`` is the solution.
+
+Optimization Process
+--------------------
+
+Optimization proceeds in three phases: removing tasks, replacing tasks,
+and finally generating a subgraph containing only the remaining tasks.
+
+Assume the following task graph as context for these examples::
+
+    TC1 <--\     ,- UP1
+          , B1 <--- T1a
+    I1 <-|       `- T1b
+          ` B2 <--- T2a
+    TC2 <--/     |- T2b
+                 `- UP2
+
+Removing Tasks
+::::::::::::::
+
+This phase begins with tasks on which nothing depends and follows the
+dependency graph backward from there -- right to left in the diagram above. If
+a task is not removed, then nothing it depends on will be removed either.
+Thus if T1a and T1b are both removed, B1 may be removed as well. But if T2b is
+not removed, then B2 may not be removed either.
+
+For each task with no remaining dependencies, the decision whether to remove is
+made by calling the optimization strategy's ``should_remove_task`` method. If
+this method returns True, the task is removed.
+
+The optimization process takes a ``do_not_optimize`` argument containing a list
+of tasks that cannot be removed under any circumstances. This is used to
+"force" running specific tasks.
+
+Replacing Tasks
+:::::::::::::::
+
+This phase begins with tasks having no dependencies and follows the reversed
+dependency graph from there -- left to right in the diagram above. If a task is
+not replaced, then anything depending on that task cannot be replaced.
+Replacement is generally done on the basis of some hash of the inputs to the
+task. In the diagram above, if both TC1 and I1 are replaced with existing
+tasks, then B1 is a candidate for replacement. But if TC2 has no replacement,
+then replacement of B2 will not be considered.
+
+It is possible to replace a task with nothing.  This is similar to optimzing
+away, but is useful for utility tasks like UP1. If such a task is considered
+for replacement, then all of its dependencies (here, B1) have already been
+replaced and there is no utility in running the task and no need for a
+replacement task.  It is an error for a task on which others depend to be
+replaced with nothing.
+
+The ``do_not_optimize`` set applies to task replacement, as does an additional
+``existing_tasks`` dictionary which allows the caller to supply as set of
+known, pre-existing tasks. This is used for action tasks, for example, where it
+contains the entire task-graph generated by the original decision task.
+
+Subgraph Generation
+:::::::::::::::::::
+
+The first two phases annotate each task in the existing taskgraph with their
+fate: removed, replaced, or retained. The tasks that are replaced also have a
+replacement taskId.
+
+The last phase constructs a subgraph containing the retained tasks, and
+simultaneously rewrites all dependencies to refer to taskIds instead of labels.
+To do so, it assigns a taskId to each retained task and uses the replacement
+taskId for all replaced tasks.
+
+The result is an optimized taskgraph with tasks named by taskId instead of
+label. At this phase, the edges in the task graph diverge from the
+``task.dependencies`` attributes, as the latter may contain dependencies
+outside of the taskgraph (for replacement tasks).
+
+As a side-effect, this phase also expands all ``{"task-reference": ".."}``
+objects within the task definitions.
