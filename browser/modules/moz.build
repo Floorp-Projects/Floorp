@@ -153,6 +153,7 @@ EXTRA_JS_MODULES += [
     'RecentWindow.jsm',
     'RemotePrompt.jsm',
     'Sanitizer.jsm',
+    'SchedulePressure.jsm',
     'SitePermissions.jsm',
     'TransientPrefs.jsm',
     'UpdateTopLevelContentWindowIDHelper.jsm',

@@ -169,6 +169,7 @@ tabbrowser {
 
 .tab-label:not([fadein]),
 .tab-throbber:not([fadein]),
+.tab-throbber-fallback:not([fadein]),
 .tab-icon-image:not([fadein]) {
   display: none;
 }
