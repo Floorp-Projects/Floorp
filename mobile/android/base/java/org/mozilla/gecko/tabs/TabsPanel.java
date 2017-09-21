@@ -70,7 +70,7 @@ public class TabsPanel extends LinearLayout
     }
 
     public interface CloseAllPanelView extends PanelView {
-        void closeAll();
+        void onCloseAll();
     }
 
     public interface TabsLayout extends CloseAllPanelView {
@@ -247,7 +247,7 @@ public class TabsPanel extends LinearLayout
 
                 // Disable the menu button so that the menu won't interfere with the tab close animation.
                 mMenuButton.setEnabled(false);
-                ((CloseAllPanelView) mPanelNormal).closeAll();
+                ((CloseAllPanelView) mPanelNormal).onCloseAll();
             } else {
                 Log.e(LOGTAG, "Close all tabs menu item should only be visible for normal tabs panel");
             }
@@ -259,7 +259,7 @@ public class TabsPanel extends LinearLayout
                 // Mask private browsing
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "close_all_tabs");
 
-                ((CloseAllPanelView) mPanelPrivate).closeAll();
+                ((CloseAllPanelView) mPanelPrivate).onCloseAll();
             } else {
                 Log.e(LOGTAG, "Close private tabs menu item should only be visible for private tabs panel");
             }

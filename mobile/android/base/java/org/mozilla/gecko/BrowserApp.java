@@ -2044,7 +2044,7 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "Sanitize:OpenTabs":
-                Tabs.getInstance().closeAll();
+                Tabs.getInstance().closeAllTabs();
                 callback.sendSuccess(null);
                 break;
 
