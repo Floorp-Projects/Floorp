@@ -443,7 +443,6 @@ public:
   struct PaintTextParams
   {
     gfxContext* context;
-    TextDrawTarget* textDrawer;
     gfxPoint framePt;
     LayoutDeviceRect dirtyRect;
     mozilla::SVGContextPaint* contextPaint = nullptr;
@@ -460,7 +459,7 @@ public:
     };
     uint8_t state = PaintText;
     explicit PaintTextParams(gfxContext* aContext)
-      : context(aContext), textDrawer(nullptr)
+      : context(aContext)
     {
     }
 
@@ -483,7 +482,6 @@ public:
   struct DrawTextRunParams
   {
     gfxContext* context;
-    TextDrawTarget* textDrawer;
     PropertyProvider* provider = nullptr;
     gfxFloat* advanceWidth = nullptr;
     mozilla::SVGContextPaint* contextPaint = nullptr;
@@ -493,7 +491,7 @@ public:
     float textStrokeWidth = 0.0f;
     bool drawSoftHyphen = false;
     explicit DrawTextRunParams(gfxContext* aContext)
-      : context(aContext), textDrawer(nullptr)
+      : context(aContext)
     {}
   };
 
@@ -538,7 +536,6 @@ public:
                                      SelectionType aSelectionType);
 
   void DrawEmphasisMarks(gfxContext* aContext,
-                         TextDrawTarget* aTextDrawer,
                          mozilla::WritingMode aWM,
                          const gfxPoint& aTextBaselinePt,
                          const gfxPoint& aFramePt,
@@ -711,7 +708,6 @@ protected:
     gfxPoint framePt;
     gfxPoint textBaselinePt;
     gfxContext* context;
-    TextDrawTarget* textDrawer;
     nscolor foregroundColor = NS_RGBA(0, 0, 0, 0);
     const nsCharClipDisplayItem::ClipEdges* clipEdges = nullptr;
     PropertyProvider* provider = nullptr;
@@ -720,7 +716,6 @@ protected:
       : dirtyRect(aParams.dirtyRect)
       , framePt(aParams.framePt)
       , context(aParams.context)
-      , textDrawer(aParams.textDrawer)
     {
     }
   };
@@ -829,7 +824,6 @@ protected:
    * Utility methods to paint selection.
    */
   void DrawSelectionDecorations(gfxContext* aContext,
-                                TextDrawTarget* aTextDrawer,
                                 const LayoutDeviceRect& aDirtyRect,
                                 mozilla::SelectionType aSelectionType,
                                 nsTextPaintStyle& aTextPaintStyle,
