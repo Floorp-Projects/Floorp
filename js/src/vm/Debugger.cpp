@@ -6527,7 +6527,7 @@ struct DebuggerScriptSetBreakpointMatcher
         if (!site)
             return false;
         site->inc(cx_->runtime()->defaultFreeOp());
-        if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_))
+        if (cx_->runtime()->new_<Breakpoint>(dbg_, site, handler_))
             return true;
         site->dec(cx_->runtime()->defaultFreeOp());
         site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
@@ -6544,7 +6544,7 @@ struct DebuggerScriptSetBreakpointMatcher
         if (!site)
             return false;
         site->inc(cx_->runtime()->defaultFreeOp());
-        if (cx_->zone()->new_<WasmBreakpoint>(dbg_, site, handler_, instance.object()))
+        if (cx_->runtime()->new_<WasmBreakpoint>(dbg_, site, handler_, instance.object()))
             return true;
         site->dec(cx_->runtime()->defaultFreeOp());
         site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
@@ -11651,7 +11651,7 @@ namespace dbg {
 /* static */ GarbageCollectionEvent::Ptr
 GarbageCollectionEvent::Create(JSRuntime* rt, ::js::gcstats::Statistics& stats, uint64_t gcNumber)
 {
-    auto data = MakeUnique<GarbageCollectionEvent>(gcNumber);
+    auto data = rt->make_unique<GarbageCollectionEvent>(gcNumber);
     if (!data)
         return nullptr;
 
