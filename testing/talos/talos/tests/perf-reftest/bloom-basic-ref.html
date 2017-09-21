@@ -2,30 +2,16 @@
 <html>
   <head>
     <script src="util.js"></script>
-    <script src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
     <script>
-/* import-globals-from util.js */
 window.onload = function() {
-  document.head.appendChild(build_rule("span > div", 10000, "{ color: blue; } "));
+  document.head.appendChild(build_rule("caption > div, caption > span", 20000, "{ color: blue; } "));
   let dom = build_dom(5000, "div");
 
-  TalosContentProfiler.resume("bloom_basic_ref start", true).then(() => {
-    let start = performance.now();
-    document.body.appendChild(dom);
-    window.foo = window.getComputedStyle(document.body).color;
-    let end = performance.now();
-
-    TalosContentProfiler.pause("bloom_basic_ref finish", true).then(() => {
-      // when running in talos report results; when running outside talos just alert
-      if (window.tpRecordTime) {
-        window.tpRecordTime(end - start, start);
-      } else {
-        console.log(end);
-        console.log(start);
-        alert("Result: " + (end - start).toFixed(2) + " (ms)");
-      }
-    });
-  });
+  flush_style();
+  perf_start();
+  document.body.appendChild(dom);
+  flush_style(dom);
+  perf_finish();
 }
     </script>
   </head>
