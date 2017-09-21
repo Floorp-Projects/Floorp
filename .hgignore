@@ -150,6 +150,10 @@ GPATH
 # tup database
 ^\.tup
 
+# Ignore sync tps logs and reports
+tps\.log
+tps_result\.json
+
 # Ignore Visual Studio Code workspace files.
 \.vscode/(?!extensions\.json|tasks\.json)
 
