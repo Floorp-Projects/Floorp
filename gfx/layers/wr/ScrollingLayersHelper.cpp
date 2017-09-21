@@ -17,6 +17,7 @@ namespace layers {
 
 ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
                                              wr::DisplayListBuilder& aBuilder,
+                                             wr::IpcResourceUpdateQueue& aResources,
                                              const StackingContextHelper& aStackingContext)
   : mLayer(aLayer)
   , mBuilder(&aBuilder)
@@ -26,7 +27,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
     // If APZ is disabled then we don't need to push the scrolling clips. We
     // still want to push the layer's local clip though.
-    PushLayerLocalClip(aStackingContext);
+    PushLayerLocalClip(aStackingContext, aResources);
     return;
   }
 
@@ -39,7 +40,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     // corresponding scroll layer, so that when we set an async scroll position
     // on the scroll layer, the clip isn't affected by it.
     if (const Maybe<LayerClip>& clip = metadata.GetScrollClip()) {
-      PushLayerClip(clip.ref(), aStackingContext);
+      PushLayerClip(clip.ref(), aStackingContext, aResources);
     }
 
     const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
@@ -48,7 +49,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
       // If the layer contents are fixed for this metadata onwards, we need
       // to insert the layer's local clip at this point in the clip tree,
       // as a child of whatever's on the stack.
-      PushLayerLocalClip(aStackingContext);
+      PushLayerLocalClip(aStackingContext, aResources);
     }
 
     DefineAndPushScrollLayer(fm, aStackingContext);
@@ -59,7 +60,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
   // child layers. So we need to apply this after pushing all the scroll layers,
   // which we do above.
   if (const Maybe<LayerClip>& scrolledClip = layer->GetScrolledClip()) {
-    PushLayerClip(scrolledClip.ref(), aStackingContext);
+    PushLayerClip(scrolledClip.ref(), aStackingContext, aResources);
   }
 
   // If the layer is marked as fixed-position, it is fixed relative to something
@@ -82,7 +83,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     // Default to 0 if there is no ancestor, because 0 refers to the root scrollframe.
     mBuilder->PushClipAndScrollInfo(scrollsWith.valueOr(0), clipId.ptrOr(nullptr));
   } else {
-    PushLayerLocalClip(aStackingContext);
+    PushLayerLocalClip(aStackingContext, aResources);
   }
 }
 
@@ -273,7 +274,8 @@ ScrollingLayersHelper::DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
 }
 
 void
-ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStackingContext)
+ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStackingContext,
+                                          wr::IpcResourceUpdateQueue& aResources)
 {
   Layer* layer = mLayer->GetLayer();
   Maybe<ParentLayerRect> clip;
@@ -285,7 +287,7 @@ ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStacking
     clip = Some(layer->GetLocalTransformTyped().TransformBounds(mLayer->Bounds()));
   }
   if (clip) {
-    Maybe<wr::WrImageMask> mask = mLayer->BuildWrMaskLayer(aStackingContext);
+    Maybe<wr::WrImageMask> mask = mLayer->BuildWrMaskLayer(aStackingContext, aResources);
     LayerRect clipRect = ViewAs<LayerPixel>(clip.ref(),
         PixelCastJustification::MovingDownToChildren);
     mBuilder->PushClip(mBuilder->DefineClip(
@@ -296,7 +298,8 @@ ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStacking
 
 void
 ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
-                                     const StackingContextHelper& aSc)
+                                     const StackingContextHelper& aSc,
+                                     wr::IpcResourceUpdateQueue& aResources)
 {
   LayerRect clipRect = IntRectToRect(ViewAs<LayerPixel>(aClip.GetClipRect(),
         PixelCastJustification::MovingDownToChildren));
@@ -305,7 +308,7 @@ ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
     Layer* maskLayer = mLayer->GetLayer()->GetAncestorMaskLayerAt(maskLayerIndex.value());
     WebRenderLayer* maskWrLayer = WebRenderLayer::ToWebRenderLayer(maskLayer);
     // TODO: check this transform is correct in all cases
-    mask = maskWrLayer->RenderMaskLayer(aSc, maskLayer->GetTransform());
+    mask = maskWrLayer->RenderMaskLayer(aSc, maskLayer->GetTransform(), aResources);
   }
   mBuilder->PushClip(mBuilder->DefineClip(
       aSc.ToRelativeLayoutRect(clipRect), nullptr, mask.ptrOr(nullptr)));

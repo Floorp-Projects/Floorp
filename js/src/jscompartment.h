@@ -662,7 +662,7 @@ struct JSCompartment
     const JS::CompartmentBehaviors& behaviors() const { return behaviors_; }
 
     JSRuntime* runtimeFromActiveCooperatingThread() const {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
         return runtime_;
     }
 
@@ -1198,6 +1198,7 @@ struct JSCompartment
 
     js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_;
     js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_;
+    js::ReadBarriered<js::NativeObject*> iterResultTemplate_;
 
   public:
     bool ensureJitCompartmentExists(JSContext* cx);
@@ -1208,6 +1209,10 @@ struct JSCompartment
     js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
 
     js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
+
+    static const size_t IterResultObjectValueSlot = 0;
+    static const size_t IterResultObjectDoneSlot = 1;
+    js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
 
   private:
     // Used for collecting telemetry on SpiderMonkey's deprecated language extensions.

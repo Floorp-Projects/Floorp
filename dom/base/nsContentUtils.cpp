@@ -9062,6 +9062,20 @@ nsContentUtils::StorageAllowedForWindow(nsPIDOMWindowInner* aWindow)
 
 // static, public
 nsContentUtils::StorageAccess
+nsContentUtils::StorageAllowedForDocument(nsIDocument* aDoc)
+{
+  MOZ_ASSERT(aDoc);
+
+  if (nsPIDOMWindowInner* inner = aDoc->GetInnerWindow()) {
+    nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
+    return InternalStorageAllowedForPrincipal(principal, inner);
+  }
+
+  return StorageAccess::eDeny;
+}
+
+// static, public
+nsContentUtils::StorageAccess
 nsContentUtils::StorageAllowedForPrincipal(nsIPrincipal* aPrincipal)
 {
   return InternalStorageAllowedForPrincipal(aPrincipal, nullptr);
@@ -9139,7 +9153,7 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
   if (aWindow) {
     // If the document is sandboxed, then it is not permitted to use storage
     nsIDocument* document = aWindow->GetExtantDoc();
-    if (document->GetSandboxFlags() & SANDBOXED_ORIGIN) {
+    if (document && document->GetSandboxFlags() & SANDBOXED_ORIGIN) {
       return StorageAccess::eDeny;
     }
 

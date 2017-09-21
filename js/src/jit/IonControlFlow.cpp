@@ -255,8 +255,6 @@ ControlFlowGenerator::traverseBytecode()
         JSOp op = JSOp(*pc);
         pc += CodeSpec[op].length;
     }
-
-    return true;
 }
 
 ControlFlowGenerator::ControlStatus
