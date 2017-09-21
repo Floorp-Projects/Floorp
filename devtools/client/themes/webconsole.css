@@ -721,7 +721,7 @@ a.learn-more-link.webconsole-learn-more-link {
   color: var(--console-output-color);
   --console-output-indent-width: 1rem;
   --console-output-indent-border-color: var(--theme-selection-background);
-  --icon-top-margin: 4px;
+  --icon-top-margin: 3px;
   --object-inspector-hover-background: transparent;
   --attachment-margin-block-end: 3px;
 }
@@ -836,7 +836,6 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-output {
   flex: 1;
   overflow: auto;
-  font-size: 13px;
 }
 
 .webconsole-output-wrapper .message {
@@ -850,16 +849,19 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-output-wrapper .message.warn.warn {
   background-color: var(--warning-background-color);
+}
+
+.webconsole-output-wrapper .message.error .message-body {
+  color: var(--error-color);
+}
+
+.webconsole-output-wrapper .message.warn .message-body {
   color: var(--warning-color);
 }
 
-/* Special casing error and warning String reps so they are legible */
-.webconsole-output-wrapper .message.error .message-body,
-.webconsole-output-wrapper .message.error .message-body > .objectBox-string {
-  color: var(--error-color);
-}
-.webconsole-output-wrapper .message.warn .message-body > .objectBox-string {
-  color: var(--warning-color);
+/* Special casing String reps so they are legible */
+.webconsole-output-wrapper .message .message-body > .objectBox-string {
+  color: currentColor;
 }
 
 /* Special casing dark-theme error and warning ObjectInspector colors */
@@ -914,7 +916,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .webconsole-output-wrapper .message .theme-twisty {
-  margin: var(--icon-top-margin) 0 0 0;
+  margin: calc(var(--icon-top-margin) - 1px) 0 0 0;
 }
 
 .message.error > .icon::before {
