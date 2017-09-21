@@ -241,7 +241,10 @@ function str_edge(edge, env) {
 }
 
 function str(unknown) {
-  if ("Index" in unknown) {
+  if ("Name" in unknown) {
+    return str_Variable(unknown);
+  } else if ("Index" in unknown) {
+    // Note: Variable also has .Index, with a different meaning.
     return str_edge(unknown);
   } else if ("Kind" in unknown) {
     if ("BlockId" in unknown)
