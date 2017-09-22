@@ -28,6 +28,7 @@ import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.process.GeckoProcessManager;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
@@ -221,7 +222,20 @@ public class GeckoAppShell
     @WrapForJNI(dispatchTo = "gecko")
     public static native void notifyUriVisited(String uri);
 
+    private static LayerView sLayerView;
     private static Rect sScreenSize;
+
+    public static void setLayerView(LayerView lv) {
+        if (sLayerView == lv) {
+            return;
+        }
+        sLayerView = lv;
+    }
+
+    @RobocopTarget
+    public static LayerView getLayerView() {
+        return sLayerView;
+    }
 
     @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "gecko")
     private static native void nativeNotifyObservers(String topic, String data);
