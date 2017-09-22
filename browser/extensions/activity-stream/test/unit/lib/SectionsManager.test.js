@@ -376,6 +376,13 @@ describe("SectionsFeed", () => {
       assert.calledOnce(SectionsManager.addBuiltInSection);
       assert.calledWith(SectionsManager.addBuiltInSection, "feeds.section.topstories", "foo");
     });
+    it("should fire SECTION_OPTIONS_UPDATED on suitable PREF_CHANGED events", () => {
+      feed.onAction({type: "PREF_CHANGED", data: {name: "feeds.section.topstories.options", value: "foo"}});
+      assert.calledOnce(feed.store.dispatch);
+      const action = feed.store.dispatch.firstCall.args[0];
+      assert.equal(action.type, "SECTION_OPTIONS_CHANGED");
+      assert.equal(action.data, "topstories");
+    });
     it("should call SectionsManager.disableSection on SECTION_DISABLE", () => {
       sinon.spy(SectionsManager, "disableSection");
       feed.onAction({type: "SECTION_DISABLE", data: 1234});
