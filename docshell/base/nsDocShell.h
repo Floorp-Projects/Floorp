@@ -210,6 +210,7 @@ public:
                          const char16_t* aTargetSpec,
                          const nsAString& aFileName,
                          nsIInputStream* aPostDataStream,
+                         int64_t aPostDataStreamLength,
                          nsIInputStream* aHeadersDataStream,
                          bool aIsTrusted,
                          nsIPrincipal* aTriggeringPrincipal) override;
@@ -218,6 +219,7 @@ public:
                              const char16_t* aTargetSpec,
                              const nsAString& aFileName,
                              nsIInputStream* aPostDataStream = 0,
+                             int64_t aPostDataStreamLength = -1,
                              nsIInputStream* aHeadersDataStream = 0,
                              bool aNoOpenerImplied = false,
                              nsIDocShell** aDocShell = 0,
