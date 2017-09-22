@@ -7659,16 +7659,6 @@ JS::SetProcessLargeAllocationFailureCallback(JS::LargeAllocationFailureCallback 
     OnLargeAllocationFailure = lafc;
 }
 
-namespace js {
-    JS::SystemInformation gSysinfo;
-}
-
-JS_PUBLIC_API(void)
-JS::SetSystemInformation(const JS::SystemInformation* info)
-{
-    gSysinfo = *info;
-}
-
 JS_PUBLIC_API(void)
 JS::SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data)
 {
