@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: check buffered status after removed all source buffer</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+var videoURL = "seek.webm";
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async function(ms, el) {
+  info("- wait for sourceopen -");
+  await once(ms, 'sourceopen');
+
+  info("- wait for fetching data -");
+  var arrayBuffer = await fetchWithXHR(videoURL);
+
+  info("- create source buffer and append data -");
+  var sourceBuffer = ms.addSourceBuffer("video/webm");
+  sourceBuffer.appendBuffer(arrayBuffer);
+  await once(sourceBuffer, "updateend");
+  is(ms.sourceBuffers.length, 1,
+     "the length of source buffers list is 1.");
+  is(ms.activeSourceBuffers.length, 1,
+     "the length of active source buffers list is 1.");
+  ok(ms.duration != 0, "duration is not 0.");
+  is(el.buffered.length, 1, "buffered range is 1.");
+
+  info("- remove source buffer from media source -");
+  ms.removeSourceBuffer(sourceBuffer);
+  await once(ms.sourceBuffers, "removesourcebuffer");
+  is(ms.sourceBuffers.length, 0, "source buffers list is empty.");
+  is(ms.activeSourceBuffers.length, 0, "active source buffers list is empty.");
+  ok(ms.duration != 0, "duration is not 0.");
+  is(el.buffered.length, 0,
+     "buffered range is empty since we don't have any source buffer.");
+
+  info("- call endOfStream -");
+  ms.endOfStream();
+  is(ms.duration, 0, "duraton is 0 since we don't have any source buffer.");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
