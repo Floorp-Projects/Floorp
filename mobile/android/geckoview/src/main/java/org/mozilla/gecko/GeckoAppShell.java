@@ -381,8 +381,7 @@ public class GeckoAppShell
                                                      LocationListener,
                                                      NotificationListener,
                                                      ScreenOrientationDelegate,
-                                                     WakeLockDelegate,
-                                                     HapticFeedbackDelegate {
+                                                     WakeLockDelegate {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
@@ -562,22 +561,6 @@ public class GeckoAppShell
                 mWakeLocks.remove(lock);
             }
         }
-
-        @Override
-        public void performHapticFeedback(final int effect) {
-            final int[] pattern;
-            // Use default platform values.
-            if (effect == HapticFeedbackConstants.KEYBOARD_TAP) {
-                pattern = new int[] { 40 };
-            } else if (effect == HapticFeedbackConstants.LONG_PRESS) {
-                pattern = new int[] { 0, 1, 20, 21 };
-            } else if (effect == HapticFeedbackConstants.VIRTUAL_KEY) {
-                pattern = new int[] { 0, 10, 20, 30 };
-            } else {
-                return;
-            }
-            vibrateOnHapticFeedbackEnabled(pattern);
-        }
     }
 
     private static final DefaultListeners DEFAULT_LISTENERS = new DefaultListeners();
@@ -585,7 +568,6 @@ public class GeckoAppShell
     private static LocationListener sLocationListener = DEFAULT_LISTENERS;
     private static NotificationListener sNotificationListener = DEFAULT_LISTENERS;
     private static WakeLockDelegate sWakeLockDelegate = DEFAULT_LISTENERS;
-    private static HapticFeedbackDelegate sHapticFeedbackDelegate = DEFAULT_LISTENERS;
 
     /**
      * A delegate for supporting the Screen Orientation API.
@@ -630,14 +612,6 @@ public class GeckoAppShell
 
     public void setWakeLockDelegate(final WakeLockDelegate delegate) {
         sWakeLockDelegate = (delegate != null) ? delegate : DEFAULT_LISTENERS;
-    }
-
-    public static HapticFeedbackDelegate getHapticFeedbackDelegate() {
-        return sHapticFeedbackDelegate;
-    }
-
-    public static void setHapticFeedbackDelegate(final HapticFeedbackDelegate delegate) {
-        sHapticFeedbackDelegate = (delegate != null) ? delegate : DEFAULT_LISTENERS;
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -1028,11 +1002,10 @@ public class GeckoAppShell
         // Don't perform haptic feedback if a vibration is currently playing,
         // because the haptic feedback will nuke the vibration.
         if (!sVibrationMaybePlaying || System.nanoTime() >= sVibrationEndTime) {
-            getHapticFeedbackDelegate().performHapticFeedback(
-                    aIsLongPress ? HapticFeedbackConstants.LONG_PRESS
-                                 : HapticFeedbackConstants.VIRTUAL_KEY);
-            sVibrationMaybePlaying = false;
-            sVibrationEndTime = 0;
+            LayerView layerView = getLayerView();
+            layerView.performHapticFeedback(aIsLongPress ?
+                                            HapticFeedbackConstants.LONG_PRESS :
+                                            HapticFeedbackConstants.VIRTUAL_KEY);
         }
     }
 
@@ -1050,14 +1023,10 @@ public class GeckoAppShell
     }
 
     // Vibrate only if haptic feedback is enabled.
-    private static void vibrateOnHapticFeedbackEnabled(int[] milliseconds) {
+    public static void vibrateOnHapticFeedbackEnabled(int[] milliseconds) {
         if (Settings.System.getInt(getApplicationContext().getContentResolver(),
                                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) > 0) {
-            if (milliseconds.length == 1) {
-                vibrate(milliseconds[0]);
-            } else {
-                vibrate(convertIntToLongArray(milliseconds), -1);
-            }
+            vibrate(convertIntToLongArray(milliseconds), -1);
         }
     }
 
@@ -1070,10 +1039,10 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void vibrate(long[] pattern, int repeat) {
-        // If pattern.length is odd, the last element in the pattern is a
+        // If pattern.length is even, the last element in the pattern is a
         // meaningless delay, so don't include it in vibrationDuration.
         long vibrationDuration = 0;
-        int iterLen = pattern.length & ~1;
+        int iterLen = pattern.length - (pattern.length % 2 == 0 ? 1 : 0);
         for (int i = 0; i < iterLen; i++) {
           vibrationDuration += pattern[i];
         }
