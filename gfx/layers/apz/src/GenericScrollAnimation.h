@@ -8,7 +8,7 @@
 #define mozilla_layers_GenericScrollAnimation_h_
 
 #include "AsyncPanZoomAnimation.h"
-#include "AsyncScrollBase.h"
+#include "ScrollAnimationPhysics.h"
 
 namespace mozilla {
 namespace layers {
@@ -16,8 +16,7 @@ namespace layers {
 class AsyncPanZoomController;
 
 class GenericScrollAnimation
-  : public AsyncPanZoomAnimation,
-    public AsyncScrollBase
+  : public AsyncPanZoomAnimation
 {
 public:
   GenericScrollAnimation(AsyncPanZoomController& aApzc,
@@ -34,9 +33,10 @@ public:
 
 private:
   void Update(TimeStamp aTime, const nsSize& aCurrentVelocity);
-
+ 
 protected:
   AsyncPanZoomController& mApzc;
+  ScrollAnimationPhysics mAnimationPhysics;
   nsPoint mFinalDestination;
   bool mForceVerticalOverscroll;
 };
