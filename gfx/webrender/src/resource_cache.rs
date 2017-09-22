@@ -337,22 +337,25 @@ impl ResourceCache {
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
     ) {
-        let mut render_mode = FontRenderMode::Subpixel;
+        let mut requested_render_mode = FontRenderMode::Subpixel;
         let mut subpx_dir = SubpixelDirection::Horizontal;
         if let Some(options) = options {
-            render_mode = options.render_mode;
-            if render_mode == FontRenderMode::Mono {
-                subpx_dir = SubpixelDirection::None;
+            if let Some(render_mode) = options.render_mode {
+                requested_render_mode = render_mode;
             }
+        }
+        if requested_render_mode == FontRenderMode::Mono {
+            subpx_dir = SubpixelDirection::None;
         }
         let instance = FontInstance::new(
             font_key,
             glyph_size,
             ColorF::new(0.0, 0.0, 0.0, 1.0),
-            render_mode,
+            requested_render_mode,
             subpx_dir,
             platform_options,
             variations,
+            options.map_or(false, |opts| opts.synthetic_italics),
         );
         self.resources.font_instances.insert(instance_key, instance);
     }
