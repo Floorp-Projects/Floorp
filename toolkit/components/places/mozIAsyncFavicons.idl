@@ -53,6 +53,9 @@ interface mozIAsyncFavicons : nsISupports
    * @param [optional] aLoadingPrincipal
    *        Principal of the page whose favicon is being set. If this argument
    *        is omitted, the loadingPrincipal defaults to the nullPrincipal.
+   * @param [optional] aRequestContextID
+   *        used to inform Necko of how to link the
+   *        favicon request with other requests in the same tab.
    *
    * @see nsIFaviconDataCallback in nsIFaviconService.idl.
    */
@@ -62,7 +65,8 @@ interface mozIAsyncFavicons : nsISupports
     in boolean aForceReload,
     in unsigned long aFaviconLoadType,
     [optional] in nsIFaviconDataCallback aCallback,
-    [optional] in nsIPrincipal aLoadingPrincipal);
+    [optional] in nsIPrincipal aLoadingPrincipal,
+    [optional] in unsigned long long aRequestContextID);
 
   /**
    * Sets the data for a given favicon URI either by replacing existing data in

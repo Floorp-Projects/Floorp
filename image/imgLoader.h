@@ -291,6 +291,7 @@ public:
                                   nsIURI* aReferrerURI,
                                   ReferrerPolicy aReferrerPolicy,
                                   nsIPrincipal* aLoadingPrincipal,
+                                  uint64_t aRequestContextID,
                                   nsILoadGroup* aLoadGroup,
                                   imgINotificationObserver* aObserver,
                                   nsINode* aContext,

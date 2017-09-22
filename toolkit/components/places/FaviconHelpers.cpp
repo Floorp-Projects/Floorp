@@ -505,6 +505,7 @@ AsyncFetchAndSetIconForPage::AsyncFetchAndSetIconForPage(
 , bool aFaviconLoadPrivate
 , nsIFaviconDataCallback* aCallback
 , nsIPrincipal* aLoadingPrincipal
+, uint64_t aRequestContextID
 ) : Runnable("places::AsyncFetchAndSetIconForPage")
   , mCallback(new nsMainThreadPtrHolder<nsIFaviconDataCallback>(
       "AsyncFetchAndSetIconForPage::mCallback", aCallback))
@@ -514,6 +515,7 @@ AsyncFetchAndSetIconForPage::AsyncFetchAndSetIconForPage(
   , mLoadingPrincipal(new nsMainThreadPtrHolder<nsIPrincipal>(
       "AsyncFetchAndSetIconForPage::mLoadingPrincipal", aLoadingPrincipal))
   , mCanceled(false)
+  , mRequestContextID(aRequestContextID)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -599,6 +601,11 @@ AsyncFetchAndSetIconForPage::FetchFromNetwork() {
     if (cos) {
       cos->AddClassFlags(nsIClassOfService::Tail |
                          nsIClassOfService::Throttleable);
+    }
+
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+    if (httpChannel) {
+      Unused << httpChannel->SetRequestContextID(mRequestContextID);
     }
   }
 

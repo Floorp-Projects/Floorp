@@ -3714,7 +3714,9 @@ nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
 nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
                           nsIDocument* aLoadingDocument,
-                          nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
+                          nsIPrincipal* aLoadingPrincipal,
+                          uint64_t aRequestContextID,
+                          nsIURI* aReferrer,
                           net::ReferrerPolicy aReferrerPolicy,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
                           const nsAString& initiatorType,
@@ -3751,6 +3753,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
                               aReferrer,            /* referrer */
                               aReferrerPolicy,      /* referrer policy */
                               aLoadingPrincipal,    /* loading principal */
+                              aRequestContextID,    /* request context ID */
                               loadGroup,            /* loadgroup */
                               aObserver,            /* imgINotificationObserver */
                               aContext,             /* loading context */
@@ -10421,8 +10424,11 @@ nsContentUtils::AppendNativeAnonymousChildren(
 /* static */ void
 nsContentUtils::GetContentPolicyTypeForUIImageLoading(nsIContent* aLoadingNode,
                                                       nsIPrincipal** aLoadingPrincipal,
-                                                      nsContentPolicyType& aContentPolicyType)
+                                                      nsContentPolicyType& aContentPolicyType,
+                                                      uint64_t* aRequestContextID)
 {
+  MOZ_ASSERT(aRequestContextID);
+
   // Use the serialized loadingPrincipal from the image element. Fall back
   // to mContent's principal (SystemPrincipal) if not available.
   aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
@@ -10440,6 +10446,15 @@ nsContentUtils::GetContentPolicyTypeForUIImageLoading(nsIContent* aLoadingNode,
       // Set the content policy type to TYPE_INTERNAL_IMAGE_FAVICON for
       // indicating it's a favicon loading.
       aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON;
+
+      nsAutoString requestContextID;
+      aLoadingNode->GetAttr(kNameSpaceID_None, nsGkAtoms::requestcontextid,
+                            requestContextID);
+      nsresult rv;
+      int64_t val  = requestContextID.ToInteger64(&rv);
+      *aRequestContextID = NS_SUCCEEDED(rv)
+        ? val
+        : 0;
     } else {
       // Fallback if the deserialization is failed.
       loadingPrincipal = aLoadingNode->NodePrincipal();

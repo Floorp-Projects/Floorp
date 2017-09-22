@@ -268,7 +268,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
 
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(aURI, mDocument, mDocument,
-                                          aOriginPrincipal, aReferrer,
+                                          aOriginPrincipal, 0, aReferrer,
                                           mDocument->GetReferrerPolicy(),
                                           nullptr, nsIRequest::LOAD_NORMAL,
                                           NS_LITERAL_STRING("css"),

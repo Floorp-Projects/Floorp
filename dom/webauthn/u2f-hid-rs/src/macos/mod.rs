@@ -18,6 +18,7 @@ use self::devicemap::DeviceMap;
 use self::monitor::Monitor;
 
 use consts::PARAMETER_SIZE;
+use khmatcher::KeyHandleMatcher;
 use runloop::RunLoop;
 use util::{io_err, OnceCallback};
 use u2fprotocol::{u2f_register, u2f_sign, u2f_is_keyhandle_valid};
@@ -38,6 +39,7 @@ impl PlatformManager {
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
+        key_handles: Vec<Vec<u8>>,
         callback: OnceCallback<Vec<u8>>,
     ) {
         // Abort any prior register/sign calls.
@@ -48,18 +50,28 @@ impl PlatformManager {
         let thread = RunLoop::new_with_timeout(
             move |alive| {
                 let mut devices = DeviceMap::new();
-                let monitor = try_or!(Monitor::new(), |e| { callback.call(Err(e)); });
+                let monitor = try_or!(Monitor::new(), |e| callback.call(Err(e)));
+                let mut matches = KeyHandleMatcher::new(&key_handles);
 
                 'top: while alive() && monitor.alive() {
                     for event in monitor.events() {
                         devices.process_event(event);
                     }
 
-                    for device in devices.values_mut() {
-                        // Caller asked us to register, so the first token that does wins
-                        if let Ok(bytes) = u2f_register(device, &challenge, &application) {
-                            callback.call(Ok(bytes));
-                            return;
+                    // Query newly added devices.
+                    matches.update(devices.iter_mut(), |device, key_handle| {
+                        u2f_is_keyhandle_valid(device, &challenge, &application, key_handle)
+                            .unwrap_or(false /* no match on failure */)
+                    });
+
+                    // Iterate all devices that don't match any of the handles
+                    // in the exclusion list and try to register.
+                    for (path, device) in devices.iter_mut() {
+                        if matches.get(path).is_empty() {
+                            if let Ok(bytes) = u2f_register(device, &challenge, &application) {
+                                callback.call(Ok(bytes));
+                                return;
+                            }
                         }
 
                         // Check to see if monitor.events has any hotplug events that we'll need
@@ -101,56 +113,55 @@ impl PlatformManager {
         let thread = RunLoop::new_with_timeout(
             move |alive| {
                 let mut devices = DeviceMap::new();
-                let monitor = try_or!(Monitor::new(), |e| { callback.call(Err(e)); });
+                let monitor = try_or!(Monitor::new(), |e| callback.call(Err(e)));
+                let mut matches = KeyHandleMatcher::new(&key_handles);
 
                 'top: while alive() && monitor.alive() {
                     for event in monitor.events() {
                         devices.process_event(event);
                     }
 
-                    for key_handle in &key_handles {
-                        for device in devices.values_mut() {
-                            // Determine if this key handle belongs to this token
-                            let is_valid = match u2f_is_keyhandle_valid(
+                    // Query newly added devices.
+                    matches.update(devices.iter_mut(), |device, key_handle| {
+                        u2f_is_keyhandle_valid(device, &challenge, &application, key_handle)
+                            .unwrap_or(false /* no match on failure */)
+                    });
+
+                    // Iterate all devices.
+                    for (path, device) in devices.iter_mut() {
+                        let key_handles = matches.get(path);
+
+                        // If the device matches none of the given key handles
+                        // then just make it blink with bogus data.
+                        if key_handles.is_empty() {
+                            let blank = vec![0u8; PARAMETER_SIZE];
+                            if let Ok(_) = u2f_register(device, &blank, &blank) {
+                                callback.call(Err(io_err("invalid key")));
+                                return;
+                            }
+
+                            continue;
+                        }
+
+                        // Otherwise, try to sign.
+                        for key_handle in key_handles {
+                            if let Ok(bytes) = u2f_sign(
                                 device,
                                 &challenge,
                                 &application,
                                 key_handle,
-                            ) {
-                                Ok(result) => result,
-                                Err(_) => continue, // Skip this device for now.
-                            };
-
-                            if is_valid {
-                                // It does, we can sign
-                                if let Ok(bytes) = u2f_sign(
-                                    device,
-                                    &challenge,
-                                    &application,
-                                    key_handle,
-                                )
-                                {
-                                    callback.call(Ok((key_handle.clone(), bytes)));
-                                    return;
-                                }
-                            } else {
-                                // If doesn't, so blink anyway (using bogus data)
-                                let blank = vec![0u8; PARAMETER_SIZE];
-
-                                if u2f_register(device, &blank, &blank).is_ok() {
-                                    // If the user selects this token that can't satisfy, it's an
-                                    // error
-                                    callback.call(Err(io_err("invalid key")));
-                                    return;
-                                }
+                            )
+                            {
+                                callback.call(Ok((key_handle.to_vec(), bytes)));
+                                return;
                             }
+                        }
 
-                            // Check to see if monitor.events has any hotplug events that we'll
-                            // need to handle
-                            if monitor.events().size_hint().0 > 0 {
-                                debug!("Hotplug event; restarting loop");
-                                continue 'top;
-                            }
+                        // Check to see if monitor.events has any hotplug events that we'll
+                        // need to handle
+                        if monitor.events().size_hint().0 > 0 {
+                            debug!("Hotplug event; restarting loop");
+                            continue 'top;
                         }
                     }
 
