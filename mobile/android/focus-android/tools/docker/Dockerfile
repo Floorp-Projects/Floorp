@@ -23,8 +23,11 @@ RUN apt-get install -y openjdk-8-jdk \
 					   ruby-build \
 					   python \
 					   optipng \
-					   imagemagick
+					   imagemagick \
+					   locales
 RUN gem install fastlane
+
+RUN locale-gen en_US.UTF-8
 
 # -- Android SDK ------------------------------------------------------------------------
 
