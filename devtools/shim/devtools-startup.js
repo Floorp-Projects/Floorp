@@ -623,19 +623,19 @@ const JsonView = {
   onSave: function (message) {
     let chrome = Services.wm.getMostRecentWindow("navigator:browser");
     let browser = chrome.gBrowser.selectedBrowser;
-    if (message.data.url === null) {
+    if (message.data === null) {
       // Save original contents
-      chrome.saveBrowser(browser, false, message.data.windowID);
+      chrome.saveBrowser(browser);
     } else {
       // The following code emulates saveBrowser, but:
       // - Uses the given blob URL containing the custom contents to save.
       // - Obtains the file name from the URL of the document, not the blob.
       let persistable = browser.frameLoader;
-      persistable.startPersistence(message.data.windowID, {
+      persistable.startPersistence(0, {
         onDocumentReady(doc) {
           let uri = chrome.makeURI(doc.documentURI, doc.characterSet);
           let filename = chrome.getDefaultFileName(undefined, uri, doc, null);
-          chrome.internalSave(message.data.url, doc, filename, null, doc.contentType,
+          chrome.internalSave(message.data, doc, filename, null, doc.contentType,
             false, null, null, null, doc, false, null, undefined);
         },
         onError(status) {

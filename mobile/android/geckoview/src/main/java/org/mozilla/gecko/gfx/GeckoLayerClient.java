@@ -33,6 +33,7 @@ class GeckoLayerClient implements LayerView.Listener
     private IntSize mWindowSize;
 
     private boolean mForceRedraw;
+    private boolean mImeWasEnabledOnLastResize;
 
     /* The current viewport metrics.
      * This is volatile so that we can read and write to it from different threads.
@@ -153,7 +154,13 @@ class GeckoLayerClient implements LayerView.Listener
             // the following call also sends gecko a message, which will be processed after the resize
             // message above has updated the viewport. this message ensures that if we have just put
             // focus in a text field, we scroll the content so that the text field is in view.
-            GeckoAppShell.viewSizeChanged();
+            final boolean imeIsEnabled = mView.isIMEEnabled();
+            if (imeIsEnabled && !mImeWasEnabledOnLastResize) {
+                // The IME just came up after not being up, so let's scroll
+                // to the focused input.
+                EventDispatcher.getInstance().dispatch("ScrollTo:FocusedInput", null);
+            }
+            mImeWasEnabledOnLastResize = imeIsEnabled;
         }
         return true;
     }

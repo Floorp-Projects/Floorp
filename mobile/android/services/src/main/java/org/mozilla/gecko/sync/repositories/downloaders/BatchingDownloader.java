@@ -12,7 +12,6 @@ import android.support.annotation.VisibleForTesting;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.DelayedWorkTracker;
 import org.mozilla.gecko.sync.SyncDeadlineReachedException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -29,6 +28,8 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -58,7 +59,6 @@ public class BatchingDownloader {
     private static final String DEFAULT_SORT_ORDER = "index";
 
     private final RepositorySession repositorySession;
-    private final DelayedWorkTracker workTracker = new DelayedWorkTracker();
     private final Uri baseCollectionUri;
     private final long fetchDeadline;
     private final boolean allowMultipleBatches;
@@ -72,6 +72,8 @@ public class BatchingDownloader {
     @VisibleForTesting
     protected final Set<SyncStorageCollectionRequest> pending = Collections.synchronizedSet(new HashSet<SyncStorageCollectionRequest>());
     /* @GuardedBy("this") */ private String lastModified;
+
+    private final ExecutorService taskQueue = Executors.newSingleThreadExecutor();
 
     public BatchingDownloader(
             AuthHeaderProvider authHeaderProvider,
@@ -91,7 +93,7 @@ public class BatchingDownloader {
     }
 
     @VisibleForTesting
-    protected static String flattenIDs(String[] guids) {
+    /* package-private */ static String flattenIDs(String[] guids) {
         // Consider using Utils.toDelimitedString if and when the signature changes
         // to Collection<String> guids.
         if (guids.length == 0) {
@@ -110,18 +112,23 @@ public class BatchingDownloader {
     }
 
     @VisibleForTesting
-    protected void fetchWithParameters(long newer,
-                                    long batchLimit,
-                                    boolean full,
-                                    String sort,
-                                    String ids,
-                                    SyncStorageCollectionRequest request,
-                                    RepositorySessionFetchRecordsDelegate fetchRecordsDelegate)
+    protected void fetchWithParameters(final long newer,
+                                    final long batchLimit,
+                                    final boolean full,
+                                    final String sort,
+                                    final String ids,
+                                    final SyncStorageCollectionRequest request,
+                                    final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate)
             throws URISyntaxException, UnsupportedEncodingException {
-        request.delegate = new BatchingDownloaderDelegate(this, fetchRecordsDelegate, request,
-                newer, batchLimit, full, sort, ids);
-        this.pending.add(request);
-        request.get();
+        runTaskOnQueue(new Runnable() {
+            @Override
+            public void run() {
+                request.delegate = new BatchingDownloaderDelegate(BatchingDownloader.this, fetchRecordsDelegate, request,
+                        newer, batchLimit, full, sort, ids);
+                pending.add(request);
+                request.get();
+            }
+        });
     }
 
     @VisibleForTesting
@@ -215,10 +222,10 @@ public class BatchingDownloader {
                 Logger.warn(LOG_TAG, "Failed to reset resume context while completing a batch");
             }
 
-            this.workTracker.delayWorkItem(new Runnable() {
+            runTaskOnQueue(new Runnable() {
                 @Override
                 public void run() {
-                    Logger.debug(LOG_TAG, "Delayed onFetchCompleted running.");
+                    Logger.debug(LOG_TAG, "onFetchCompleted running.");
                     fetchRecordsDelegate.onFetchCompleted();
                 }
             });
@@ -240,9 +247,10 @@ public class BatchingDownloader {
 
         // We need to make another batching request!
         // Let the delegate know that a batch fetch just completed before we proceed.
-        // This operation needs to run after every call to onFetchedRecord for this batch has been
-        // processed, hence the delayWorkItem call.
-        this.workTracker.delayWorkItem(new Runnable() {
+        // Beware that while this operation will run after every call to onFetchedRecord returned,
+        // it's not guaranteed that the 'sink' session actually processed all of the fetched records.
+        // See Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1351673#c28 for details.
+        runTaskOnQueue(new Runnable() {
             @Override
             public void run() {
                 Logger.debug(LOG_TAG, "Running onBatchCompleted.");
@@ -265,14 +273,19 @@ public class BatchingDownloader {
             if (!this.stateProvider.commit()) {
                 Logger.warn(LOG_TAG, "Failed to commit repository state while handling request creation error");
             }
-            this.workTracker.delayWorkItem(new Runnable() {
+            runTaskOnQueue(new Runnable() {
                 @Override
                 public void run() {
-                    Logger.debug(LOG_TAG, "Delayed onFetchCompleted running.");
+                    Logger.debug(LOG_TAG, "onFetchCompleted running.");
                     fetchRecordsDelegate.onFetchFailed(e);
                 }
             });
         }
+    }
+
+    @VisibleForTesting
+    /* package-private */ void runTaskOnQueue(Runnable task) {
+        taskQueue.execute(task);
     }
 
     private void handleFetchFailed(final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
@@ -304,7 +317,7 @@ public class BatchingDownloader {
             }
         }
 
-        this.workTracker.delayWorkItem(new Runnable() {
+        runTaskOnQueue(new Runnable() {
             @Override
             public void run() {
                 Logger.debug(LOG_TAG, "Running onFetchFailed.");
@@ -315,8 +328,6 @@ public class BatchingDownloader {
 
     public void onFetchedRecord(CryptoRecord record,
                                 RepositorySessionFetchRecordsDelegate fetchRecordsDelegate) {
-        this.workTracker.incrementOutstanding();
-
         try {
             fetchRecordsDelegate.onFetchedRecord(record);
             // NB: changes to stateProvider are committed in either onFetchCompleted or handleFetchFailed.
@@ -326,8 +337,6 @@ public class BatchingDownloader {
         } catch (Exception ex) {
             Logger.warn(LOG_TAG, "Got exception calling onFetchedRecord with WBO.", ex);
             throw new RuntimeException(ex);
-        } finally {
-            this.workTracker.decrementOutstanding();
         }
     }
 
@@ -362,7 +371,7 @@ public class BatchingDownloader {
     }
 
     @VisibleForTesting
-    public static URI buildCollectionURI(Uri baseCollectionUri, boolean full, long newer, long limit, String sort, String ids, String offset) throws URISyntaxException {
+    /* package-private */ static URI buildCollectionURI(Uri baseCollectionUri, boolean full, long newer, long limit, String sort, String ids, String offset) throws URISyntaxException {
         Uri.Builder uriBuilder = baseCollectionUri.buildUpon();
 
         if (full) {

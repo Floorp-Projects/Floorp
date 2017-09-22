@@ -6,7 +6,7 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 // eslint-disable-next-line no-unused-vars
-const DIALOG_URL = "chrome://payments/content/paymentRequest.xhtml";
+const DIALOG_URL = "chrome://payments/content/paymentDialog.xhtml";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -27,8 +27,8 @@ function defineLazyLogGetter(scope, logPrefix) {
 }
 
 function PaymentUIService() {
+  this.wrappedJSObject = this;
   defineLazyLogGetter(this, "Payment UI Service");
-  paymentSrv.setTestingUIService(this);
   this.log.debug("constructor");
 }
 
@@ -42,14 +42,14 @@ PaymentUIService.prototype = {
     let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
     chromeWindow.openDialog(DIALOG_URL,
                             `${this.REQUEST_ID_PREFIX}${requestId}`,
-                            "modal,dialog,centerscreen");
+                            "modal,dialog,centerscreen",
+                            {requestId});
   },
 
   abortPayment(requestId) {
     this.log.debug(`abortPayment: ${requestId}`);
     let abortResponse = Cc["@mozilla.org/dom/payments/payment-abort-action-response;1"]
                           .createInstance(Ci.nsIPaymentAbortActionResponse);
-    abortResponse.init(requestId, Ci.nsIPaymentActionResponse.ABORT_SUCCEEDED);
 
     let enu = Services.wm.getEnumerator(null);
     let win;
@@ -60,7 +60,15 @@ PaymentUIService.prototype = {
         break;
       }
     }
-    paymentSrv.respondPayment(abortResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+
+    // if `win` is falsy, then we haven't found the dialog, so the abort fails
+    // otherwise, the abort is successful
+    let response = win ?
+      Ci.nsIPaymentActionResponse.ABORT_SUCCEEDED :
+      Ci.nsIPaymentActionResponse.ABORT_FAILED;
+
+    abortResponse.init(requestId, response);
+    paymentSrv.respondPayment(abortResponse);
   },
 
   completePayment(requestId) {
@@ -71,6 +79,16 @@ PaymentUIService.prototype = {
   },
 
   updatePayment(requestId) {
+  },
+
+  // other helper methods
+
+  requestIdForWindow(window) {
+    let windowName = window.name;
+
+    return windowName.startsWith(this.REQUEST_ID_PREFIX) ?
+      windowName.replace(this.REQUEST_ID_PREFIX, "") : // returns suffix, which is the requestId
+      null;
   },
 };
 

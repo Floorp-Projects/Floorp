@@ -214,6 +214,11 @@ public class BatchingDownloaderTest {
             this.offset = offset;
             return super.makeSyncStorageCollectionRequest(newer, batchLimit, full, sort, ids, offset);
         }
+
+        @Override
+        void runTaskOnQueue(Runnable task) {
+            task.run();
+        }
     }
 
     static class MockSever15Repository extends Server15Repository {

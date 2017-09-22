@@ -135,5 +135,6 @@ Good=other string
         self._test('\n\n', (('Whitespace', '\n\n'),))
         self._test(' \n\n', (('Whitespace', ' \n\n'),))
 
+
 if __name__ == '__main__':
     unittest.main()

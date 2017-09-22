@@ -55,32 +55,6 @@ add_task(async function test_extension_setting_default_engine() {
   is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
 });
 
-/* This tests that using an invalid engine does nothing. */
-add_task(async function test_extension_setting_invalid_name_default_engine() {
-  let defaultEngineName = Services.search.currentEngine.name;
-
-  let ext1 = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "InvalidName",
-          "search_url": "https://example.com/?q={searchTerms}",
-          "is_default": true,
-        },
-      },
-    },
-    useAddonManager: "temporary",
-  });
-
-  await ext1.startup();
-
-  is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
-
-  await ext1.unload();
-
-  is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
-});
-
 /* This tests that uninstalling add-ons maintains the proper
  * search default. */
 add_task(async function test_extension_setting_multiple_default_engine() {
@@ -171,56 +145,6 @@ add_task(async function test_extension_setting_multiple_default_engine_reversed(
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
 
   await ext2.unload();
-
-  is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
-});
-
-/* This tests adding an engine with one add-on and trying to make it the
- *default with anoth. */
-add_task(async function test_extension_setting_invalid_default_engine() {
-  let defaultEngineName = Services.search.currentEngine.name;
-  let ext1 = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": "https://example.com/?q={searchTerms}",
-        },
-      },
-    },
-    useAddonManager: "temporary",
-  });
-
-  let ext2 = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "search_url": "https://example.com/?q={searchTerms}",
-          "is_default": true,
-        },
-      },
-    },
-    useAddonManager: "temporary",
-  });
-
-  await ext1.startup();
-
-  is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
-
-  let engine = Services.search.getEngineByName("MozSearch");
-  ok(engine, "Engine should exist.");
-
-  await ext2.startup();
-
-  is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
-
-  await ext2.unload();
-
-  is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
-
-  await ext1.unload();
 
   is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
 });

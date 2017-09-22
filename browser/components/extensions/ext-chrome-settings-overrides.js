@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ /* globals windowTracker */
+
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -15,10 +17,10 @@ const DEFAULT_SEARCH_STORE_TYPE = "default_search";
 const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
 
 const searchInitialized = () => {
+  if (Services.search.isInitialized) {
+    return;
+  }
   return new Promise(resolve => {
-    if (Services.search.isInitialized) {
-      resolve();
-    }
     const SEARCH_SERVICE_TOPIC = "browser-search-service";
     Services.obs.addObserver(function observer(subject, topic, data) {
       if (data != "init-complete") {
@@ -70,103 +72,134 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     }
     if (manifest.chrome_settings_overrides.search_provider) {
       await searchInitialized();
+      extension.callOnClose({
+        close: () => {
+          if (extension.shutdownReason == "ADDON_DISABLE" ||
+              extension.shutdownReason == "ADDON_UNINSTALL") {
+            switch (extension.shutdownReason) {
+              case "ADDON_DISABLE":
+                this.processDefaultSearchSetting("disable");
+                break;
+
+              case "ADDON_UNINSTALL":
+                this.processDefaultSearchSetting("removeSetting");
+                break;
+            }
+            // We shouldn't need to wait for search initialized here
+            // because the search service should be ready to go.
+            let engines = Services.search.getEnginesByExtensionID(extension.id);
+            for (let engine of engines) {
+              try {
+                Services.search.removeEngine(engine);
+              } catch (e) {
+                Components.utils.reportError(e);
+              }
+            }
+          }
+        },
+      });
+
       let searchProvider = manifest.chrome_settings_overrides.search_provider;
+      let engineName = searchProvider.name.trim();
       if (searchProvider.is_default) {
-        let engineName = searchProvider.name.trim();
         let engine = Services.search.getEngineByName(engineName);
         if (engine && Services.search.getDefaultEngines().includes(engine)) {
-          // Only add onclose handlers if we would definitely
-          // be setting the default engine.
-          extension.callOnClose({
-            close: () => {
-              switch (extension.shutdownReason) {
-                case "ADDON_DISABLE":
-                  this.processDefaultSearchSetting("disable");
-                  break;
-
-                case "ADDON_UNINSTALL":
-                  this.processDefaultSearchSetting("removeSetting");
-                  break;
-              }
-            },
-          });
-          if (extension.startupReason === "ADDON_INSTALL") {
-            let item = await ExtensionSettingsStore.addSetting(
-              extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => {
-                return Services.search.currentEngine.name;
-              });
-            Services.search.currentEngine = Services.search.getEngineByName(item.value);
-          } else if (extension.startupReason === "ADDON_ENABLE") {
-            this.processDefaultSearchSetting("enable");
-          }
-          // If we would have set the default engine,
-          // we don't allow a search provider to be added.
+          // Needs to be called every time to handle reenabling, but
+          // only sets default for install or enable.
+          await this.setDefault(engineName);
+          // For built in search engines, we don't do anything further
           return;
         }
-        Components.utils.reportError("is_default can only be used for built-in engines.");
       }
-      let isCurrent = false;
-      let index = -1;
-      if (extension.startupReason === "ADDON_UPGRADE") {
-        let engines = Services.search.getEnginesByExtensionID(extension.id);
-        if (engines.length > 0) {
-          // There can be only one engine right now
-          isCurrent = Services.search.currentEngine == engines[0];
-          // Get position of engine and store it
-          index = Services.search.getEngines().indexOf(engines[0]);
-          Services.search.removeEngine(engines[0]);
-        }
-      }
-      try {
-        let params = {
-          template: searchProvider.search_url,
-          iconURL: searchProvider.favicon_url,
-          alias: searchProvider.keyword,
-          extensionID: extension.id,
-          suggestURL: searchProvider.suggest_url,
-        };
-        Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
-        if (extension.startupReason === "ADDON_UPGRADE") {
-          let engine = Services.search.getEngineByName(searchProvider.name.trim());
-          if (isCurrent) {
-            Services.search.currentEngine = engine;
-          }
-          if (index != -1) {
-            Services.search.moveEngine(engine, index);
+      this.addSearchEngine(searchProvider);
+      if (searchProvider.is_default) {
+        if (extension.startupReason === "ADDON_INSTALL") {
+          // Don't ask if it already the current engine
+          let engine = Services.search.getEngineByName(engineName);
+          if (Services.search.currentEngine != engine) {
+            let allow = await new Promise(resolve => {
+              let subject = {
+                wrappedJSObject: {
+                  // This is a hack because we don't have the browser of
+                  // the actual install. This means the popup might show
+                  // in a different window. Will be addressed in a followup bug.
+                  browser: windowTracker.topWindow.gBrowser.selectedBrowser,
+                  name: this.extension.name,
+                  icon: this.extension.iconURL,
+                  currentEngine: Services.search.currentEngine.name,
+                  newEngine: engineName,
+                  resolve,
+                },
+              };
+              Services.obs.notifyObservers(subject, "webextension-defaultsearch-prompt");
+            });
+            if (!allow) {
+              return;
+            }
           }
         }
-      } catch (e) {
-        Components.utils.reportError(e);
+        // Needs to be called every time to handle reenabling, but
+        // only sets default for install or enable.
+        await this.setDefault(engineName);
+      } else if (ExtensionSettingsStore.hasSetting(
+                extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME)) {
+        // is_default has been removed, but we still have a setting. Remove it.
+        // This won't cover the case where the entire search_provider is removed.
+        this.processDefaultSearchSetting("removeSetting");
       }
-    }
-    // If the setting exists for the extension, but is missing from the manifest,
-    // remove it. This can happen if the extension removes is_default.
-    // There's really no good place to put this, because the entire search section
-    // could be removed.
-    // We'll never get here in the normal case because we always return early
-    // if we have an is_default value that we use.
-    if (ExtensionSettingsStore.hasSetting(
-               extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME)) {
-      await searchInitialized();
-      this.processDefaultSearchSetting("removeSetting");
     }
   }
-  async onShutdown(reason) {
+
+  async setDefault(engineName) {
     let {extension} = this;
-    if (reason == "ADDON_DISABLE" ||
-        reason == "ADDON_UNINSTALL") {
-      if (extension.manifest.chrome_settings_overrides.search_provider) {
-        await searchInitialized();
-        let engines = Services.search.getEnginesByExtensionID(extension.id);
-        for (let engine of engines) {
-          try {
-            Services.search.removeEngine(engine);
-          } catch (e) {
-            Components.utils.reportError(e);
-          }
-        }
+    if (extension.startupReason === "ADDON_INSTALL") {
+      let item = await ExtensionSettingsStore.addSetting(
+        extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => {
+          return Services.search.currentEngine.name;
+        });
+      Services.search.currentEngine = Services.search.getEngineByName(item.value);
+    } else if (extension.startupReason === "ADDON_ENABLE") {
+      this.processDefaultSearchSetting("enable");
+    }
+  }
+
+  addSearchEngine(searchProvider) {
+    let {extension} = this;
+    let isCurrent = false;
+    let index = -1;
+    if (extension.startupReason === "ADDON_UPGRADE") {
+      let engines = Services.search.getEnginesByExtensionID(extension.id);
+      if (engines.length > 0) {
+        // There can be only one engine right now
+        isCurrent = Services.search.currentEngine == engines[0];
+        // Get position of engine and store it
+        index = Services.search.getEngines().indexOf(engines[0]);
+        Services.search.removeEngine(engines[0]);
       }
     }
+    try {
+      let params = {
+        template: searchProvider.search_url,
+        iconURL: searchProvider.favicon_url,
+        alias: searchProvider.keyword,
+        extensionID: extension.id,
+        suggestURL: searchProvider.suggest_url,
+      };
+      Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
+      if (extension.startupReason === "ADDON_UPGRADE") {
+        let engine = Services.search.getEngineByName(searchProvider.name.trim());
+        if (isCurrent) {
+          Services.search.currentEngine = engine;
+        }
+        if (index != -1) {
+          Services.search.moveEngine(engine, index);
+        }
+      }
+    } catch (e) {
+      Components.utils.reportError(e);
+      return false;
+    }
+    return true;
   }
 };
 
