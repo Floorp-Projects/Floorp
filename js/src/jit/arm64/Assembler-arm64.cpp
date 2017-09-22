@@ -632,12 +632,6 @@ Assembler::FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader
 }
 
 void
-Assembler::PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm)
-{
-    MOZ_CRASH("PatchInstructionImmediate()");
-}
-
-void
 Assembler::retarget(Label* label, Label* target)
 {
     if (label->used()) {

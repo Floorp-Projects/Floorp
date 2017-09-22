@@ -1786,7 +1786,7 @@ WasmActivation::interrupted() const
         return false;
 
     DebugOnly<wasm::Frame*> fp = act->asWasm()->exitFP();
-    MOZ_ASSERT(fp && fp->instance()->code().containsFunctionPC(pc));
+    MOZ_ASSERT(fp && fp->instance()->code().containsCodePC(pc));
     return true;
 }
 
