@@ -820,7 +820,8 @@ pub extern "C" fn wr_api_set_window_parameters(dh: &mut DocumentHandle,
     let size = DeviceUintSize::new(width as u32, height as u32);
     dh.api.set_window_parameters(dh.document_id,
                                  size,
-                                 DeviceUintRect::new(DeviceUintPoint::new(0, 0), size));
+                                 DeviceUintRect::new(DeviceUintPoint::new(0, 0), size),
+                                 1.0);
 }
 
 #[no_mangle]
