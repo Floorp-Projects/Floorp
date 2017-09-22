@@ -379,7 +379,8 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
     explicit Metadata(UniqueMetadataTier tier, ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind),
         metadata1_(Move(tier)),
-        debugEnabled(false)
+        debugEnabled(false),
+        debugHash()
     {}
     virtual ~Metadata() {}
 
@@ -406,12 +407,12 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
     NameInBytecodeVector  funcNames;
     CustomSectionVector   customSections;
     CacheableChars        filename;
-    ModuleHash            hash;
 
     // Debug-enabled code is not serialized.
     bool                  debugEnabled;
     FuncArgTypesVector    debugFuncArgTypes;
     FuncReturnTypesVector debugFuncReturnTypes;
+    ModuleHash            debugHash;
 
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
