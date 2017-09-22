@@ -824,9 +824,5 @@ public class LayerView extends FrameLayout {
         if (isCompositorReady()) {
             mCompositor.setDefaultClearColor(mDefaultClearColor);
         }
-    }
-
-    public boolean isIMEEnabled() {
-        return false;
-    }
+   }
 }
