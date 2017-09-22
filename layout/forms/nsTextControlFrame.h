@@ -392,10 +392,6 @@ private:
   // these packed bools could instead use the high order bits on mState, saving 4 bytes
   bool mEditorHasBeenInitialized;
   bool mIsProcessing;
-  // Keep track if we have asked a placeholder node creation.
-  bool mUsePlaceholder;
-  // Similarly for preview node creation.
-  bool mUsePreview;
 
 #ifdef DEBUG
   bool mInEditorInitialization;
