@@ -80,6 +80,13 @@ var gEasingTests = [
   }
 ];
 
+const gEasingParsingTests = [
+  ['linear', 'linear'],
+  ['ease-in-out', 'ease-in-out'],
+  ['Ease\\2d in-out', 'ease-in-out'],
+  ['ease /**/', 'ease'],
+];
+
 const gInvalidEasings = [
   '',
   '7',
