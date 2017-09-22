@@ -81,6 +81,15 @@ test(function(t) {
 test(function(t) {
   gInvalidEasings.forEach(invalidEasing => {
     assert_throws(new TypeError, () => {
+      new KeyframeEffectReadOnly(target, [{ easing: invalidEasing }]);
+    }, `TypeError is thrown for easing '${invalidEasing}'`);
+  });
+}, 'invalid easing values are correctly rejected when passed to the ' +
+   'KeyframeEffectReadOnly constructor in a keyframe sequence');
+
+test(function(t) {
+  gInvalidEasings.forEach(invalidEasing => {
+    assert_throws(new TypeError, () => {
       new KeyframeEffectReadOnly(target, null, { easing: invalidEasing });
     }, `TypeError is thrown for easing '${invalidEasing}'`);
   });
@@ -180,15 +189,6 @@ gInvalidKeyframesTests.forEach(function(subtest) {
       new KeyframeEffectReadOnly(target, subtest.input);
     });
   }, "KeyframeEffectReadOnly constructor throws with " + subtest.desc);
-});
-
-gInvalidEasingInKeyframeSequenceTests.forEach(function(subtest) {
-  test(function(t) {
-    assert_throws(new TypeError, function() {
-      new KeyframeEffectReadOnly(target, subtest.input);
-    });
-  }, "Invalid easing [" + subtest.desc + "] in keyframe sequence " +
-     "should be thrown");
 });
 
 test(function(t) {
