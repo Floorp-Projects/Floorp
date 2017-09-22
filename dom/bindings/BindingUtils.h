@@ -1918,9 +1918,9 @@ GetOrCreateDOMReflectorNoWrap(JSContext* cx, T& value,
 
 template <class T>
 inline JSObject*
-GetCallbackFromCallbackObject(T* aObj)
+GetCallbackFromCallbackObject(JSContext* aCx, T* aObj)
 {
-  return aObj->CallbackOrNull();
+  return aObj->Callback(aCx);
 }
 
 // Helper for getting the callback JSObject* of a smart ptr around a
@@ -1929,26 +1929,26 @@ GetCallbackFromCallbackObject(T* aObj)
 template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetCallbackFromCallbackObjectHelper
 {
-  static inline JSObject* Get(const T& aObj)
+  static inline JSObject* Get(JSContext* aCx, const T& aObj)
   {
-    return GetCallbackFromCallbackObject(aObj.get());
+    return GetCallbackFromCallbackObject(aCx, aObj.get());
   }
 };
 
 template <class T>
 struct GetCallbackFromCallbackObjectHelper<T, false>
 {
-  static inline JSObject* Get(T& aObj)
+  static inline JSObject* Get(JSContext* aCx, T& aObj)
   {
-    return GetCallbackFromCallbackObject(&aObj);
+    return GetCallbackFromCallbackObject(aCx, &aObj);
   }
 };
 
 template<class T>
 inline JSObject*
-GetCallbackFromCallbackObject(T& aObj)
+GetCallbackFromCallbackObject(JSContext* aCx, T& aObj)
 {
-  return GetCallbackFromCallbackObjectHelper<T>::Get(aObj);
+  return GetCallbackFromCallbackObjectHelper<T>::Get(aCx, aObj);
 }
 
 static inline bool

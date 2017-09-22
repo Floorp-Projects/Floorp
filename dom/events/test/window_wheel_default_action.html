@@ -52,12 +52,20 @@
 // browser to 0 using the 'blank' attribute.
 // Until the blank attribute is removed, we can't send scroll events.
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.loadChromeScript(_ => {
+  let chromeScript = SpecialPowers.loadChromeScript(_ => {
     Components.utils.import("resource://gre/modules/Services.jsm");
-    Services.wm.getMostRecentWindow("navigator:browser")
-            .gBrowser.selectedBrowser.removeAttribute("blank");
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    win.requestAnimationFrame(() => {
+      win.gBrowser.selectedBrowser.removeAttribute("blank");
+      win.requestAnimationFrame(() => {
+        sendAsyncMessage("blank-attribute-removed");
+      });
+    });
   });
-  runTests();
+  chromeScript.promiseOneMessage("blank-attribute-removed").then(() => {
+    chromeScript.destroy();
+    runTests();
+  });
 }, window);
 
 SimpleTest.requestFlakyTimeout("untriaged");

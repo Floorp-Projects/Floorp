@@ -43,7 +43,7 @@ PendingIPCBlobChild::SetPendingInfoAndDeleteActor(const nsString& aContentType,
   RefPtr<BlobImpl> blobImpl;
   blobImpl.swap(mBlobImpl);
 
-  blobImpl->SetLazyData(NullString(), aContentType, aLength, INT64_MAX);
+  blobImpl->SetLazyData(VoidString(), aContentType, aLength, INT64_MAX);
 
   PendingIPCBlobData data(nsString(aContentType), aLength, void_t());
   Unused << Send__delete__(this, data);

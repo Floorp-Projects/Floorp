@@ -1599,8 +1599,8 @@ TabChild::MaybeDispatchCoalescedMouseMoveEvents()
   // Dispatch the coalesced mousemove event. Using RecvRealMouseButtonEvent to
   // bypass the coalesce handling in RecvRealMouseMoveEvent.
   RecvRealMouseButtonEvent(*event,
-                           mCoalescedWheelData.GetScrollableLayerGuid(),
-                           mCoalescedWheelData.GetInputBlockId());
+                           mCoalescedMouseData.GetScrollableLayerGuid(),
+                           mCoalescedMouseData.GetInputBlockId());
   if (mCoalescedMouseEventFlusher) {
     mCoalescedMouseData.Reset();
     mCoalescedMouseEventFlusher->RemoveObserver();

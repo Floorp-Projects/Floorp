@@ -17378,7 +17378,7 @@ FileManager::InitDirectory(nsIFile* aDirectory,
       nsCOMPtr<mozIStorageConnection> connection;
       rv = CreateStorageConnection(aDatabaseFile,
                                    aDirectory,
-                                   NullString(),
+                                   VoidString(),
                                    aPersistenceType,
                                    aGroup,
                                    aOrigin,

@@ -8,15 +8,13 @@ def main(request, response):
             response.headers.set("Access-Control-Allow-Origin", request.GET["origin"])
 
     if "headers" in request.GET:
-        response.headers.set("Access-Control-Allow-Headers", '{'+request.GET["headers"]+'}')
+        response.headers.set("Access-Control-Allow-Headers", request.GET["headers"])
     if "methods" in request.GET:
-        response.headers.set("Access-Control-Allow-Methods", '{'+request.GET["methods"]+'}')
+        response.headers.set("Access-Control-Allow-Methods", request.GET["methods"])
 
     headers = dict(request.headers)
 
     for header in headers:
         headers[header] = headers[header][0]
-
-    headers["get_value"] = "" if "get_value" not in request.GET else request.GET["get_value"]
 
     return json.dumps(headers)
