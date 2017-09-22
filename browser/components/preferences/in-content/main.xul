@@ -339,12 +339,6 @@
              value="3"
              id="browserStartupLastSession"/>
     </radiogroup>
-    <hbox id="browserNewTabExtensionContent" align="center" hidden="true">
-      <description control="disableNewTabExtension" flex="1" />
-      <button id="disableNewTabExtension"
-              class="extension-controlled-button accessory-button"
-              label="&disableExtension.label;" />
-    </hbox>
   </vbox>
 </groupbox>
 
@@ -354,7 +348,7 @@
           hidden="true">
   <caption><label>&homepage2.label;</label></caption>
 
-  <hbox id="browserHomePageExtensionContent" align="center" hidden="true">
+  <hbox id="browserHomePageExtensionContent" align="center">
     <description control="disableHomePageExtension" flex="1" />
     <button id="disableHomePageExtension"
             class="extension-controlled-button accessory-button"

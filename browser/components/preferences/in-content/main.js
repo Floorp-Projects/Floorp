@@ -6,8 +6,8 @@
 /* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 /* import-globals-from ../../../base/content/aboutDialog-appUpdater.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
-                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPreferencesManager",
+                                  "resource://gre/modules/ExtensionPreferencesManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
@@ -216,13 +216,6 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
-    handleControllingExtension("url_overrides", "newTabURL");
-    Services.obs.addObserver({
-      observe(subject, topic, data) {
-          handleControllingExtension("url_overrides", "newTabURL");
-      },
-    }, "newtab-url-changed");
-
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
       try {
@@ -256,11 +249,9 @@ var gMainPane = {
     setEventListener("restoreDefaultHomePage", "command",
       gMainPane.restoreDefaultHomePage);
     setEventListener("disableHomePageExtension", "command",
-                     gMainPane.makeDisableControllingExtension("prefs", "homepage_override"));
+                     gMainPane.makeDisableControllingExtension("homepage_override"));
     setEventListener("disableContainersExtension", "command",
-                     gMainPane.makeDisableControllingExtension("prefs", "privacy.containers"));
-    setEventListener("disableNewTabExtension", "command",
-                     gMainPane.makeDisableControllingExtension("url_overrides", "newTabURL"));
+                     gMainPane.makeDisableControllingExtension("privacy.containers"));
     setEventListener("chooseLanguage", "command",
       gMainPane.showLanguages);
     setEventListener("translationAttributionImage", "click",
@@ -504,7 +495,7 @@ var gMainPane = {
     const containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
     const containersCheckbox = document.getElementById("browserContainersCheckbox");
     containersCheckbox.checked = containersEnabled;
-    handleControllingExtension("prefs", "privacy.containers")
+    handleControllingExtension("privacy.containers")
       .then((isControlled) => {
         containersCheckbox.disabled = isControlled;
       });
@@ -676,7 +667,7 @@ var gMainPane = {
     this._updateUseCurrentButton();
 
     // This is an async task.
-    handleControllingExtension("prefs", "homepage_override")
+    handleControllingExtension("homepage_override")
       .then((isControlled) => {
         // Disable or enable the inputs based on if this is controlled by an extension.
         document.querySelectorAll("#browserHomePage, .homepage-button")
@@ -770,7 +761,7 @@ var gMainPane = {
       useCurrent.label = useCurrent.getAttribute("label1");
 
     // If the homepage is controlled by an extension then you can't use this.
-    if (await getControllingExtensionId("prefs", "homepage_override")) {
+    if (await getControllingExtensionId("homepage_override")) {
       useCurrent.disabled = true;
       return;
     }
@@ -818,9 +809,9 @@ var gMainPane = {
     homePage.value = homePage.defaultValue;
   },
 
-  makeDisableControllingExtension(type, settingName) {
+  makeDisableControllingExtension(pref) {
     return async function disableExtension() {
-      let id = await getControllingExtensionId(type, settingName);
+      let id = await getControllingExtensionId(pref);
       let addon = await AddonManager.getAddonByID(id);
       addon.userDisabled = true;
     };
@@ -2662,28 +2653,26 @@ function getLocalHandlerApp(aFile) {
 let extensionControlledContentIds = {
   "privacy.containers": "browserContainersExtensionContent",
   "homepage_override": "browserHomePageExtensionContent",
-  "newTabURL": "browserNewTabExtensionContent",
 };
 
 /**
   * Check if a pref is being managed by an extension.
   */
-async function getControllingExtensionId(type, settingName) {
-  await ExtensionSettingsStore.initialize();
-  return ExtensionSettingsStore.getTopExtensionId(type, settingName);
+function getControllingExtensionId(settingName) {
+  return ExtensionPreferencesManager.getControllingExtensionId(settingName);
 }
 
 function getControllingExtensionEl(settingName) {
   return document.getElementById(extensionControlledContentIds[settingName]);
 }
 
-async function handleControllingExtension(type, settingName) {
-  let controllingExtensionId = await getControllingExtensionId(type, settingName);
+async function handleControllingExtension(prefName) {
+  let controllingExtensionId = await getControllingExtensionId(prefName);
 
   if (controllingExtensionId) {
-    showControllingExtension(settingName, controllingExtensionId);
+    showControllingExtension(prefName, controllingExtensionId);
   } else {
-    hideControllingExtension(settingName);
+    hideControllingExtension(prefName);
   }
 
   return !!controllingExtensionId;
