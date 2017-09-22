@@ -1,5 +1,6 @@
 package org.mozilla.focus.activity.screenshots;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.res.Resources;
 import android.preference.PreferenceManager;
@@ -33,7 +34,13 @@ import okhttp3.mockwebserver.MockWebServer;
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
 
+import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.view.KeyEvent.KEYCODE_ENTER;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.browserURLbar;
@@ -133,11 +140,14 @@ public class ScreenGrabTest {
 
     @Test
     public void screenGrabTest() throws InterruptedException, UiObjectNotFoundException {
-        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        final Context context = instrumentation.getTargetContext();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
 
         Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy());
 
         takeScreenshotsOfFirstrun();
+
         takeScreenshotOfHomeScreen();
         takeScreenshotOfMenuAndYourRightsPage(device);
         takeScreenshotOfAboutPage(device);
@@ -146,7 +156,7 @@ public class ScreenGrabTest {
         takeScreenshotOfUrlBarAndBrowserView(device);
         takeScreenshotOfOpenWithAndShareViews(device);
         takeAddToHomeScreenScreenshot();
-        takeScreenshotOfNotification(device);
+        takeScreenshotOfNotification(context, device);
         takeScreenshotOfEraseSnackbar(device);
 
         takeScreenshotOfSettings(device);
@@ -216,8 +226,11 @@ public class ScreenGrabTest {
         Screengrab.screenshot("LocationBarEmptyState");
 
         /* Autocomplete View */
-        TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        onView(withId(R.id.url_edit))
+                .check(matches(isDisplayed()))
+                .check(matches(hasFocus()))
+                .perform(click(), replaceText("mozilla"));
+
         TestHelper.hint.waitForExists(waitingTime);
         Screengrab.screenshot("SearchFor");
 
@@ -269,10 +282,17 @@ public class ScreenGrabTest {
         }
     }
 
-    private void takeScreenshotOfNotification(UiDevice device) {
+    private void takeScreenshotOfNotification(Context context, UiDevice device) {
         device.openNotification();
-        Assert.assertTrue(TestHelper.notificationBarDeleteItem.waitForExists(waitingTime));
+
+        assertTrue(device.findObject(new UiSelector()
+                .text(context.getString(R.string.notification_erase_text))
+                .resourceId("android:id/text")
+                .enabled(true))
+                .waitForExists(waitingTime));
+
         Screengrab.screenshot("DeleteHistory_NotificationBar");
+
         device.pressBack();
     }
 
