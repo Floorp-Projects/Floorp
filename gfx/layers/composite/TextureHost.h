@@ -621,17 +621,9 @@ public:
     MOZ_RELEASE_ASSERT(false, "No CreateRenderTexture() implementation for this TextureHost type.");
   }
 
-  // Create all necessary image keys for this textureHost rendering.
-  // @param aImageKeys - [out] The set of ImageKeys used for this textureHost
-  // composing.
-  // @param aImageKeyAllocator - [in] The function which is used for creating
-  // the new ImageKey.
-  virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                              const std::function<wr::ImageKey()>& aImageKeyAllocator)
-  {
-    MOZ_ASSERT(aImageKeys.IsEmpty());
-    MOZ_ASSERT_UNREACHABLE("No GetWRImageKeys() implementation for this TextureHost type.");
-  }
+  /// Returns the number of actual textures that will be used to render this.
+  /// For example in a lot of YUV cases it will be 3
+  virtual uint32_t NumSubTextures() const { return 1; }
 
   // Add all necessary TextureHost informations to the resource update queue.
   // Then, WR will use this informations to read from the TextureHost.
@@ -747,8 +739,7 @@ public:
 
   virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
 
-  virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                              const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
+  virtual uint32_t NumSubTextures() const override;
 
   virtual void AddWRImage(wr::ResourceUpdateQueue& aResources,
                           Range<const wr::ImageKey>& aImageKeys,
