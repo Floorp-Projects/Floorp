@@ -125,17 +125,6 @@ const gEquivalentSyntaxTests = [
     ],
   },
   {
-    description: 'same offset applied to all keyframes',
-    indexedKeyframes: {
-      left: ['0px', '100px'],
-      offset: 0.5,
-    },
-    sequencedKeyframes: [
-      {left: '0px', offset: 0.5},
-      {left: '100px', offset: 0.5},
-    ],
-  },
-  {
     description: 'same easing applied to all keyframes',
     indexedKeyframes: {
       left: ['10px', '100px', '150px'],
