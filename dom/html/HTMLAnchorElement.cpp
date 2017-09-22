@@ -58,10 +58,13 @@ HTMLAnchorElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
          nsGenericHTMLElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement,
-                                             nsGenericHTMLElement,
-                                             nsIDOMHTMLAnchorElement,
-                                             Link)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement)
+  NS_INTERFACE_TABLE_INHERITED(HTMLAnchorElement,
+                               Link)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
+
+NS_IMPL_ADDREF_INHERITED(HTMLAnchorElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLAnchorElement, Element)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAnchorElement)
 
@@ -82,17 +85,6 @@ HTMLAnchorElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return HTMLAnchorElementBinding::Wrap(aCx, this, aGivenProto);
 }
-
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Charset, charset)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Coords, coords)
-NS_IMPL_URI_ATTR(HTMLAnchorElement, Href, href)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Hreflang, hreflang)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Name, name)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Rel, rel)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Rev, rev)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Shape, shape)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Type, type)
-NS_IMPL_STRING_ATTR(HTMLAnchorElement, Download, download)
 
 int32_t
 HTMLAnchorElement::TabIndexDefault()
@@ -268,19 +260,12 @@ HTMLAnchorElement::GetLinkTarget(nsAString& aTarget)
   }
 }
 
-NS_IMETHODIMP
+void
 HTMLAnchorElement::GetTarget(nsAString& aValue)
 {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAnchorElement::SetTarget(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, true);
 }
 
 nsDOMTokenList*
@@ -292,62 +277,24 @@ HTMLAnchorElement::RelList()
   return mRelList;
 }
 
-#define IMPL_URI_PART(_part)                                 \
-  NS_IMETHODIMP                                              \
-  HTMLAnchorElement::Get##_part(nsAString& a##_part)         \
-  {                                                          \
-    Link::Get##_part(a##_part);                              \
-    return NS_OK;                                            \
-  }                                                          \
-  NS_IMETHODIMP                                              \
-  HTMLAnchorElement::Set##_part(const nsAString& a##_part)   \
-  {                                                          \
-    Link::Set##_part(a##_part);                              \
-    return NS_OK;                                            \
-  }
-
-IMPL_URI_PART(Protocol)
-IMPL_URI_PART(Host)
-IMPL_URI_PART(Hostname)
-IMPL_URI_PART(Pathname)
-IMPL_URI_PART(Search)
-IMPL_URI_PART(Port)
-IMPL_URI_PART(Hash)
-
-#undef IMPL_URI_PART
-
-NS_IMETHODIMP
-HTMLAnchorElement::GetText(nsAString& aText)
+void
+HTMLAnchorElement::GetText(nsAString& aText, mozilla::ErrorResult& aRv)
 {
-  if(!nsContentUtils::GetNodeTextContent(this, true, aText, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_WARN_IF(!nsContentUtils::GetNodeTextContent(this, true, aText, fallible))) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLAnchorElement::SetText(const nsAString& aText)
+void
+HTMLAnchorElement::SetText(const nsAString& aText, ErrorResult& aRv)
 {
-  return nsContentUtils::SetNodeTextContent(this, aText, false);
+  aRv = nsContentUtils::SetNodeTextContent(this, aText, false);
 }
 
-NS_IMETHODIMP
+void
 HTMLAnchorElement::ToString(nsAString& aSource)
 {
   return GetHref(aSource);
-}
-
-NS_IMETHODIMP
-HTMLAnchorElement::GetPing(nsAString& aValue)
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAnchorElement::SetPing(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, true);
 }
 
 already_AddRefed<nsIURI>
