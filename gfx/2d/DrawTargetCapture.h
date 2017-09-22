@@ -170,7 +170,7 @@ private:
 
   struct PushedLayer
   {
-    PushedLayer(bool aOldPermitSubpixelAA)
+    explicit PushedLayer(bool aOldPermitSubpixelAA)
       : mOldPermitSubpixelAA(aOldPermitSubpixelAA)
     {}
     bool mOldPermitSubpixelAA;
