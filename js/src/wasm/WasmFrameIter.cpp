@@ -606,7 +606,8 @@ ProfilingFrameIterator::initFromExitFP()
       case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
-      case CodeRange::Inline:
+      case CodeRange::OutOfBoundsExit:
+      case CodeRange::UnalignedExit:
       case CodeRange::Throw:
       case CodeRange::Interrupt:
       case CodeRange::FarJumpIsland:
@@ -678,6 +679,7 @@ js::wasm::StartUnwinding(const WasmActivation& activation, const RegisterState& 
       case CodeRange::ImportInterpExit:
       case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
+      case CodeRange::DebugTrap:
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if (offsetFromEntry == BeforePushRetAddr || codeRange->isThunk()) {
             // The return address is still in lr and fp holds the caller's fp.
@@ -737,9 +739,9 @@ js::wasm::StartUnwinding(const WasmActivation& activation, const RegisterState& 
             break;
         }
         break;
-      case CodeRange::DebugTrap:
-      case CodeRange::Inline:
-        // Inline code stubs execute after the prologue/epilogue have completed
+      case CodeRange::OutOfBoundsExit:
+      case CodeRange::UnalignedExit:
+        // These code stubs execute after the prologue/epilogue have completed
         // so pc/fp contains the right values here.
         fixedPC = pc;
         fixedFP = fp;
@@ -846,7 +848,8 @@ ProfilingFrameIterator::operator++()
       case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
-      case CodeRange::Inline:
+      case CodeRange::OutOfBoundsExit:
+      case CodeRange::UnalignedExit:
       case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
         callerPC_ = callerFP_->returnAddress;
@@ -1014,7 +1017,8 @@ ProfilingFrameIterator::label() const
       case CodeRange::ImportInterpExit:  return importInterpDescription;
       case CodeRange::TrapExit:          return trapDescription;
       case CodeRange::DebugTrap:         return debugTrapDescription;
-      case CodeRange::Inline:            return "inline stub (in wasm)";
+      case CodeRange::OutOfBoundsExit:   return "out-of-bounds stub (in wasm)";
+      case CodeRange::UnalignedExit:     return "unaligned trap stub (in wasm)";
       case CodeRange::FarJumpIsland:     return "interstitial (in wasm)";
       case CodeRange::Throw:             MOZ_FALLTHROUGH;
       case CodeRange::Interrupt:         MOZ_CRASH("does not have a frame");

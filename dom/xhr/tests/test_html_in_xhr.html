@@ -74,26 +74,11 @@ function testNonParsingText() {
     if (this.readyState == 4) {
       is(this.responseText.indexOf("\u042E"), -1, "Honored meta in text mode.");
       is(this.responseText.indexOf("\uFFFD"), 29, "Honored meta in text mode 2.");
-      testChunkedText();
-    }
-  }
-  xhr.open("GET", "file_html_in_xhr2.html");
-  xhr.responseType = "text";
-  xhr.send();   
-}
-
-function testChunkedText() {
-  xhr = new XMLHttpRequest();
-  xhr.onprogress = function() {
-    is(this.responseText.indexOf("\u042E"), -1, "Honored meta in chunked text mode.");
-  }
-  xhr.onreadystatechange = function() {
-    if (this.readyState == 4) {
       testSyncXHR();
     }
   }
   xhr.open("GET", "file_html_in_xhr2.html");
-  xhr.responseType = "moz-chunked-text";
+  xhr.responseType = "text";
   xhr.send();   
 }
 

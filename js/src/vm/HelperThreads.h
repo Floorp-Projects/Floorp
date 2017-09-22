@@ -56,7 +56,7 @@ enum class ParseTaskKind
 
 namespace wasm {
 
-class CompileTask;
+struct CompileTask;
 typedef Vector<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrVector;
 
 struct Tier2GeneratorTask

@@ -89,12 +89,9 @@ static bool
 StaticallyLink(const CodeSegment& cs, const LinkDataTier& linkData)
 {
     for (LinkDataTier::InternalLink link : linkData.internalLinks) {
-        uint8_t* patchAt = cs.base() + link.patchAtOffset;
-        void* target = cs.base() + link.targetOffset;
-        if (link.isRawPointerPatch())
-            *(void**)(patchAt) = target;
-        else
-            Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
+        CodeOffset patchAt(link.patchAtOffset);
+        CodeOffset target(link.targetOffset);
+        Assembler::Bind(cs.base(), patchAt, target);
     }
 
     if (!EnsureBuiltinThunksInitialized())
@@ -121,12 +118,9 @@ static void
 StaticallyUnlink(uint8_t* base, const LinkDataTier& linkData)
 {
     for (LinkDataTier::InternalLink link : linkData.internalLinks) {
-        uint8_t* patchAt = base + link.patchAtOffset;
-        void* target = 0;
-        if (link.isRawPointerPatch())
-            *(void**)(patchAt) = target;
-        else
-            Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
+        CodeOffset patchAt(link.patchAtOffset);
+        CodeOffset target(-size_t(base));  // to reset immediate to null
+        Assembler::Bind(base, patchAt, target);
     }
 
     for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
@@ -203,8 +197,6 @@ CodeSegment::create(Tier tier,
     uint32_t padding = ComputeByteAlignment(bytesNeeded, gc::SystemPageSize());
     uint32_t codeLength = bytesNeeded + padding;
 
-    MOZ_ASSERT(linkData.functionCodeLength < codeLength);
-
     UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
     if (!codeBytes)
         return nullptr;
@@ -272,10 +264,12 @@ CodeSegment::initialize(Tier tier,
                         const Metadata& metadata)
 {
     MOZ_ASSERT(bytes_ == nullptr);
+    MOZ_ASSERT(linkData.interruptOffset);
+    MOZ_ASSERT(linkData.outOfBoundsOffset);
+    MOZ_ASSERT(linkData.unalignedAccessOffset);
 
     tier_ = tier;
     bytes_ = Move(codeBytes);
-    functionLength_ = linkData.functionCodeLength;
     length_ = codeLength;
     interruptCode_ = bytes_.get() + linkData.interruptOffset;
     outOfBoundsCode_ = bytes_.get() + linkData.outOfBoundsOffset;
@@ -565,8 +559,7 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(funcNames) +
            SerializedPodVectorSize(customSections) +
-           filename.serializedSize() +
-           sizeof(hash);
+           filename.serializedSize();
 }
 
 size_t
@@ -598,7 +591,6 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, funcNames);
     cursor = SerializePodVector(cursor, customSections);
     cursor = filename.serialize(cursor);
-    cursor = WriteBytes(cursor, hash, sizeof(hash));
     return cursor;
 }
 
@@ -612,8 +604,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
     (cursor = DeserializePodVector(cursor, &customSections)) &&
-    (cursor = filename.deserialize(cursor)) &&
-    (cursor = ReadBytes(cursor, hash, sizeof(hash)));
+    (cursor = filename.deserialize(cursor));
     debugEnabled = false;
     debugFuncArgTypes.clear();
     debugFuncReturnTypes.clear();
@@ -632,14 +623,20 @@ struct ProjectFuncIndex
     }
 };
 
-const FuncExport&
-MetadataTier::lookupFuncExport(uint32_t funcIndex) const
+FuncExport&
+MetadataTier::lookupFuncExport(uint32_t funcIndex)
 {
     size_t match;
     if (!BinarySearch(ProjectFuncIndex(funcExports), 0, funcExports.length(), funcIndex, &match))
         MOZ_CRASH("missing function export");
 
     return funcExports[match];
+}
+
+const FuncExport&
+MetadataTier::lookupFuncExport(uint32_t funcIndex) const
+{
+    return const_cast<MetadataTier*>(this)->lookupFuncExport(funcIndex);
 }
 
 bool
@@ -737,20 +734,6 @@ Code::segment(Tier tier) const
       default:
         MOZ_CRASH();
     }
-}
-
-bool
-Code::containsFunctionPC(const void* pc, const CodeSegment** segmentp) const
-{
-    for (auto t : tiers()) {
-        const CodeSegment& cs = segment(t);
-        if (cs.containsFunctionPC(pc)) {
-            if (segmentp)
-                *segmentp = &cs;
-            return true;
-        }
-    }
-    return false;
 }
 
 bool
@@ -875,7 +858,7 @@ Code::lookupMemoryAccess(void* pc, const CodeSegment** segmentp) const
         if (BinarySearch(MemoryAccessOffset(memoryAccesses), lowerBound, upperBound, target,
                          &match))
         {
-            MOZ_ASSERT(segment(t).containsFunctionPC(pc));
+            MOZ_ASSERT(segment(t).containsCodePC(pc));
             if (segmentp)
                 *segmentp = &segment(t);
             return &memoryAccesses[match];
