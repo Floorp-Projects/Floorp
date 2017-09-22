@@ -5,8 +5,9 @@
 // This test makes sure that the items in the bookmarks and history sidebar
 // panels are clickable in both LTR and RTL modes.
 
-function test() {
-  waitForExplicitFinish();
+var sidebar;
+
+add_task(async function test_sidebarpanels_click() {
   ignoreAllUncaughtExceptions();
 
   const BOOKMARKS_SIDEBAR_ID = "viewBookmarksSidebar";
@@ -21,28 +22,31 @@ function test() {
     SidebarUI.hide();
   }
 
-  let sidebar = document.getElementById("sidebar");
+  // Ensure history is clean before starting the test.
+  await PlacesUtils.history.clear();
+
+  sidebar = document.getElementById("sidebar");
   let tests = [];
-  let currentTest;
 
   tests.push({
-    _itemID: null,
-    init(aCallback) {
+    _bookmark: null,
+    async init() {
       // Add a bookmark to the Unfiled Bookmarks folder.
-      this._itemID = PlacesUtils.bookmarks.insertBookmark(
-        PlacesUtils.unfiledBookmarksFolderId, PlacesUtils._uri(TEST_URL),
-        PlacesUtils.bookmarks.DEFAULT_INDEX, "test"
-      );
-      aCallback();
+      this._bookmark = await PlacesUtils.bookmarks.insert({
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        title: "test",
+        url: TEST_URL,
+      });
+
     },
     prepare() {
     },
-    selectNode(tree) {
-      tree.selectItems([this._itemID]);
+    async selectNode(tree) {
+      let bookmarkId = await PlacesUtils.promiseItemId(this._bookmark.guid);
+      tree.selectItems([bookmarkId]);
     },
     cleanup(aCallback) {
-      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
-      executeSoon(aCallback);
+      return PlacesUtils.bookmarks.remove(this._bookmark);
     },
     sidebarName: BOOKMARKS_SIDEBAR_ID,
     treeName: BOOKMARKS_SIDEBAR_TREE_ID,
@@ -50,13 +54,13 @@ function test() {
   });
 
   tests.push({
-    init(aCallback) {
+    async init() {
       // Add a history entry.
       let uri = PlacesUtils._uri(TEST_URL);
-      PlacesTestUtils.addVisits({
+      await PlacesTestUtils.addVisits({
         uri, visitDate: Date.now() * 1000,
         transition: PlacesUtils.history.TRANSITION_TYPED
-      }).then(aCallback);
+      });
     },
     prepare() {
       sidebar.contentDocument.getElementById("byvisited").doCommand();
@@ -67,44 +71,48 @@ function test() {
       is(tree.selectedNode.itemId, -1, "The selected node is not bookmarked");
     },
     cleanup(aCallback) {
-      PlacesTestUtils.clearHistory().then(aCallback);
+      return PlacesTestUtils.clearHistory();
     },
     sidebarName: HISTORY_SIDEBAR_ID,
     treeName: HISTORY_SIDEBAR_TREE_ID,
     desc: "History sidebar test"
   });
 
-  function testPlacesPanel(preFunc, postFunc) {
-    currentTest.init(function() {
-      SidebarUI.show(currentTest.sidebarName);
+  for (let test of tests) {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+    await testPlacesPanel(test, () => {
+      changeSidebarDirection("ltr");
+      info("Running " + test.desc + " in LTR mode");
     });
 
+    await testPlacesPanel(test, () => {
+      changeSidebarDirection("rtl");
+      info("Running " + test.desc + " in RTL mode");
+    });
+
+    // Remove tabs created by sub-tests.
+    while (gBrowser.tabs.length > 1) {
+      gBrowser.removeTab(gBrowser.tabContainer.lastChild);
+    }
+  }
+});
+
+async function testPlacesPanel(testInfo, preFunc) {
+  await testInfo.init();
+
+  let promise = new Promise(resolve => {
     sidebar.addEventListener("load", function() {
-      executeSoon(function() {
-        currentTest.prepare();
+      executeSoon(async function() {
+        testInfo.prepare();
 
-        if (preFunc)
-          preFunc();
+        preFunc();
 
-        function observer(aSubject, aTopic, aData) {
-          info("alert dialog observed as expected");
-          Services.obs.removeObserver(observer, "common-dialog-loaded");
-          Services.obs.removeObserver(observer, "tabmodal-dialog-loaded");
-
-          aSubject.Dialog.ui.button0.click();
-
-          executeSoon(function() {
-              SidebarUI.hide();
-              currentTest.cleanup(postFunc);
-            });
-        }
-        Services.obs.addObserver(observer, "common-dialog-loaded");
-        Services.obs.addObserver(observer, "tabmodal-dialog-loaded");
-
-        let tree = sidebar.contentDocument.getElementById(currentTest.treeName);
+        let tree = sidebar.contentDocument.getElementById(testInfo.treeName);
 
         // Select the inserted places item.
-        currentTest.selectNode(tree);
+        await testInfo.selectNode(tree);
+
+        let promiseAlert = promiseAlertDialogObserved();
 
         synthesizeClickOnSelectedTreeCell(tree);
         // Now, wait for the observer to catch the alert dialog.
@@ -113,43 +121,38 @@ function test() {
         // and Places will show the load-js-data-url-error prompt as an alert
         // box, which means that the click actually worked, so it's good enough
         // for the purpose of this test.
+
+        await promiseAlert;
+
+        executeSoon(async function() {
+          SidebarUI.hide();
+          await testInfo.cleanup();
+          resolve();
+        });
       });
     }, {capture: true, once: true});
-  }
+  });
 
-  function changeSidebarDirection(aDirection) {
-    sidebar.contentDocument.documentElement.style.direction = aDirection;
-  }
+  SidebarUI.show(testInfo.sidebarName);
 
-  function runNextTest() {
-    // Remove eventual tabs created by previous sub-tests.
-    while (gBrowser.tabs.length > 1) {
-      gBrowser.removeTab(gBrowser.tabContainer.lastChild);
+  return promise;
+}
+
+function promiseAlertDialogObserved() {
+  return new Promise(resolve => {
+    function observer(subject) {
+      info("alert dialog observed as expected");
+      Services.obs.removeObserver(observer, "common-dialog-loaded");
+      Services.obs.removeObserver(observer, "tabmodal-dialog-loaded");
+
+      subject.Dialog.ui.button0.click();
+      resolve();
     }
+    Services.obs.addObserver(observer, "common-dialog-loaded");
+    Services.obs.addObserver(observer, "tabmodal-dialog-loaded");
+  });
+}
 
-    if (tests.length == 0) {
-      finish();
-    } else {
-      // Create a new tab and run the test.
-      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-      currentTest = tests.shift();
-      testPlacesPanel(function() {
-                        changeSidebarDirection("ltr");
-                        info("Running " + currentTest.desc + " in LTR mode");
-                      },
-                      function() {
-                        testPlacesPanel(function() {
-                          // Run the test in RTL mode.
-                          changeSidebarDirection("rtl");
-                          info("Running " + currentTest.desc + " in RTL mode");
-                        },
-                        function() {
-                          runNextTest();
-                        });
-                      });
-    }
-  }
-
-  // Ensure history is clean before starting the test.
-  PlacesTestUtils.clearHistory().then(runNextTest);
+function changeSidebarDirection(aDirection) {
+  sidebar.contentDocument.documentElement.style.direction = aDirection;
 }

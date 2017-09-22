@@ -13,11 +13,10 @@
  * and finishes.
  */
 
-function test() {
-  waitForExplicitFinish();
-  openLibrary(function(win) {
-    ok(true, "Library has been correctly opened");
-    win.close();
-    finish();
-  });
-}
+add_task(async function test_open_and_close() {
+  let library = await promiseLibrary();
+
+  Assert.ok(true, "Library has been correctly opened");
+
+  await promiseLibraryClosed(library);
+});
