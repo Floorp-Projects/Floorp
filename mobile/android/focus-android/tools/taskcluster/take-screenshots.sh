@@ -15,10 +15,10 @@ emulator64-arm -avd test -noaudio -no-window -no-accel -gpu off -verbose &
 ./gradlew assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest
 
 # Start our server for running screencap on the emulator host (via HTTP)
-python /opt/tools/screencap-server.py &
+python /opt/focus-android/tools/taskcluster/screencap-server.py &
 
 # Wait for emulator to finish booting
-/opt/tools/android-wait-for-emulator.sh
+/opt/focus-android/tools/taskcluster/android-wait-for-emulator.sh
 
 # Install app and make sure directory for taking screenshot exists.
 adb install -r app/build/outputs/apk/app-focus-webview-debug.apk
