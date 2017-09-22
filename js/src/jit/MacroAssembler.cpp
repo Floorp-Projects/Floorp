@@ -3136,7 +3136,7 @@ MacroAssembler::wasmEmitTrapOutOfLineCode()
     // iterator to find the right CodeRange while walking the stack.
     breakpoint();
 
-    clearTrapSites();
+    trapSites().clear();
 }
 
 void

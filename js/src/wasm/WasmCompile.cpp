@@ -134,7 +134,7 @@ enum class SystemClass
 };
 
 static SystemClass
-Classify()
+ClassifySystem()
 {
     bool isDesktop;
 
@@ -168,8 +168,6 @@ Classify()
 #endif
     }
 }
-
-#ifndef JS_64BIT
 
 // Code sizes in machine code bytes per bytecode byte, again empirical except
 // where marked as "Guess".
@@ -230,7 +228,18 @@ BaselineBytesPerBytecode(SystemClass cls)
     }
 }
 
-#endif // !JS_64BIT
+double
+wasm::EstimateCompiledCodeSize(Tier tier, size_t bytecodeSize)
+{
+    SystemClass cls = ClassifySystem();
+    switch (tier) {
+      case Tier::Baseline:
+        return double(bytecodeSize) * BaselineBytesPerBytecode(cls);
+      case Tier::Ion:
+        return double(bytecodeSize) * IonBytesPerBytecode(cls);
+    }
+    MOZ_CRASH("bad tier");
+}
 
 // If parallel Ion compilation is going to take longer than this, we should tier.
 
@@ -337,7 +346,7 @@ GetTieringEnabled(uint32_t codeSize)
 
     uint32_t cores = Min(cpuCount, workers);
 
-    SystemClass cls = Classify();
+    SystemClass cls = ClassifySystem();
 
     // Ion compilation on available cores must take long enough to be worth the
     // bother.
@@ -411,7 +420,7 @@ wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args
     env.setModeAndTier(mode, tier);
 
     ModuleGenerator mg(args, &env, nullptr, error);
-    if (!mg.init())
+    if (!mg.init(bytecode.length()))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg, &env))
@@ -436,7 +445,7 @@ wasm::CompileTier2(Module& module, const CompileArgs& args, Atomic<bool>* cancel
         return false;
 
     ModuleGenerator mg(args, &env, cancelled, &error);
-    if (!mg.init())
+    if (!mg.init(module.bytecode().length()))
         return false;
 
     if (!DecodeCodeSection(d, mg, &env))
