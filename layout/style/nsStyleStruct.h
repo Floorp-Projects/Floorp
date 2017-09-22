@@ -640,8 +640,6 @@ struct nsStyleImageLayers {
 
   static bool IsInitialPositionForLayerType(mozilla::Position aPosition, LayerType aType);
 
-  struct Size;
-  friend struct Size;
   struct Size {
     struct Dimension : public nsStyleCoord::CalcValue {
       nscoord ResolveLengthPercentage(nscoord aAvailable) const {
@@ -703,8 +701,6 @@ struct nsStyleImageLayers {
     }
   };
 
-  struct Repeat;
-  friend struct Repeat;
   struct Repeat {
     mozilla::StyleImageLayerRepeat mXRepeat, mYRepeat;
 
@@ -736,8 +732,6 @@ struct nsStyleImageLayers {
     }
   };
 
-  struct Layer;
-  friend struct Layer;
   struct Layer {
     typedef mozilla::StyleGeometryBox StyleGeometryBox;
 
