@@ -93,6 +93,7 @@ UNIFIED_SOURCES += [
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
     'MobileViewportManager.cpp',
+    'nsBidi.cpp',
     'nsBidiPresUtils.cpp',
     'nsCaret.cpp',
     'nsCounterManager.cpp',
@@ -122,21 +123,6 @@ UNIFIED_SOURCES += [
     'TouchManager.cpp',
     'ZoomConstraintsClient.cpp',
 ]
-
-if CONFIG['ENABLE_INTL_API']:
-    EXPORTS += [
-        'nsBidi_ICU.h',
-    ]
-    UNIFIED_SOURCES += [
-        'nsBidi_ICU.cpp',
-    ]
-else:
-    EXPORTS += [
-        'nsBidi_noICU.h',
-    ]
-    UNIFIED_SOURCES += [
-        'nsBidi_noICU.cpp',
-    ]
 
 # nsRefreshDriver.cpp needs to be built separately because of name clashes in the OS X headers
 SOURCES += [
