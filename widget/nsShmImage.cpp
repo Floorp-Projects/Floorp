@@ -14,6 +14,7 @@
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/ipc.h>
@@ -118,6 +119,17 @@ nsShmImage::InitExtension()
   }
 
   gShmInitialized = true;
+
+  // Bugs 1397918, 1293474 - race condition in libxcb fixed upstream as of
+  // version 1.11. Since we can't query libxcb's version directly, the only
+  // other option is to check for symbols that were added after 1.11.
+  // xcb_discard_reply64 was added in 1.11.1, so check for existence of
+  // that to verify we are using a version of libxcb with the bug fixed.
+  // Otherwise, we can't risk using libxcb due to aforementioned crashes.
+  if (!dlsym(RTLD_DEFAULT, "xcb_discard_reply64")) {
+    gShmAvailable = false;
+    return false;
+  }
 
   const xcb_query_extension_reply_t* extReply;
   extReply = xcb_get_extension_data(mConnection, &xcb_shm_id);
