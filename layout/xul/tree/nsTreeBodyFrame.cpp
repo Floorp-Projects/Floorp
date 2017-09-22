@@ -2199,6 +2199,7 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
                                               mContent,
                                               doc,
                                               mContent->NodePrincipal(),
+                                              0,
                                               doc->GetDocumentURI(),
                                               doc->GetReferrerPolicy(),
                                               imgNotificationObserver,

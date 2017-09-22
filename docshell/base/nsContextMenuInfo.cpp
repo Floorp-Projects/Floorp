@@ -299,7 +299,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode* aDOMNode,
           NS_ENSURE_TRUE(il, NS_ERROR_FAILURE);
 
           return il->LoadImage(bgUri, nullptr, nullptr,
-                               doc->GetReferrerPolicy(), principal, nullptr,
+                               doc->GetReferrerPolicy(), principal, 0, nullptr,
                                nullptr, nullptr, nullptr, nsIRequest::LOAD_NORMAL,
                                nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
                                EmptyString(),

@@ -218,7 +218,7 @@ let InternalFaviconLoader = {
     });
   },
 
-  loadFavicon(browser, principal, uri) {
+  loadFavicon(browser, principal, uri, requestContextID) {
     this.ensureInitialized();
     let win = browser.ownerGlobal;
     if (!gFaviconLoadDataMap.has(win)) {
@@ -242,7 +242,8 @@ let InternalFaviconLoader = {
       : PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE;
     let callback = this._makeCompletionCallback(win, innerWindowID);
     let request = PlacesUtils.favicons.setAndFetchFaviconForPage(currentURI, uri, false,
-                                                                 loadType, callback, principal);
+                                                                 loadType, callback, principal,
+                                                                 requestContextID);
 
     // Now register the result so we can cancel it if/when necessary.
     if (!request) {
@@ -685,11 +686,11 @@ this.PlacesUIUtils = {
    * @param principal {Principal} The loading principal to use for the fetch.
    * @param uri       {URI}       The URI to fetch.
    */
-  loadFavicon(browser, principal, uri) {
+  loadFavicon(browser, principal, uri, requestContextID) {
     if (gInContentProcess) {
       throw new Error("Can't track loads from within the child process!");
     }
-    InternalFaviconLoader.loadFavicon(browser, principal, uri);
+    InternalFaviconLoader.loadFavicon(browser, principal, uri, requestContextID);
   },
 
   /**

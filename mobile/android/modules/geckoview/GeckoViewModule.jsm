@@ -20,6 +20,7 @@ function debug(aMsg) {
 
 class GeckoViewModule {
   constructor(aModuleName, aWindow, aBrowser, aEventDispatcher) {
+    this.isRegistered = false;
     this.window = aWindow;
     this.browser = aBrowser;
     this.eventDispatcher = aEventDispatcher;
@@ -32,7 +33,7 @@ class GeckoViewModule {
     this.eventDispatcher.registerListener(
       (aEvent, aData, aCallback) => {
         if (aData.module == this.moduleName) {
-          this.register();
+          this._register();
           this.messageManager.sendAsyncMessage("GeckoView:Register", aData);
         }
       }, "GeckoView:Register"
@@ -42,7 +43,7 @@ class GeckoViewModule {
       (aEvent, aData, aCallback) => {
         if (aData.module == this.moduleName) {
           this.messageManager.sendAsyncMessage("GeckoView:Unregister", aData);
-          this.unregister();
+          this._unregister();
         }
       }, "GeckoView:Unregister"
     );
@@ -57,7 +58,24 @@ class GeckoViewModule {
   // Called when settings have changed. Access settings via this.settings.
   onSettingsUpdate() {}
 
+  _register() {
+    if (this.isRegistered) {
+      return;
+    }
+    this.register();
+    this.isRegistered = true;
+  }
+
   register() {}
+
+  _unregister() {
+    if (!this.isRegistered) {
+      return;
+    }
+    this.unregister();
+    this.isRegistered = false;
+  }
+
   unregister() {}
 
   get settings() {
