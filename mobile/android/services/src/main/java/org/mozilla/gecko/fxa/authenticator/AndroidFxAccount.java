@@ -147,6 +147,7 @@ public class AndroidFxAccount {
 
   protected final Context context;
   private final AccountManager accountManager;
+  private final long neverSynced = -1;
 
   // This is really, really meant to be final. Only changed when account name changes.
   // See Bug 1368147.
@@ -647,7 +648,7 @@ public class AndroidFxAccount {
    *
    * @param stagesToSync stage names to sync; can be null to sync <b>all</b> known stages.
    * @param stagesToSkip stage names to skip; can be null to skip <b>no</b> known stages.
-   * @param ignoreSettings whether we should check preferences for syncing over metered connections.
+   * @param ignoreSettings whether we should check if syncing is allowed via in-app or system settings.
    */
   public void requestImmediateSync(String[] stagesToSync, String[] stagesToSkip, boolean ignoreSettings) {
     FirefoxAccounts.requestImmediateSync(getAndroidAccount(), stagesToSync, stagesToSkip, ignoreSettings);
@@ -799,12 +800,20 @@ public class AndroidFxAccount {
   }
 
   public long getLastSyncedTimestamp() {
-    final long neverSynced = -1L;
     try {
       return getSyncPrefs().getLong(PREF_KEY_LAST_SYNCED_TIMESTAMP, neverSynced);
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Got exception getting last synced time; ignoring.", e);
       return neverSynced;
+    }
+  }
+
+  public boolean neverSynced() {
+    try {
+      return getSyncPrefs().getLong(PREF_KEY_LAST_SYNCED_TIMESTAMP, neverSynced) == -1;
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception getting last synced time; ignoring.", e);
+      return false;
     }
   }
 
