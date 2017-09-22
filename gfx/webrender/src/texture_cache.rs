@@ -670,7 +670,7 @@ impl TextureCache {
 
         // If the cache entry is new, update it in the cache handle.
         if let Some(new_entry_handle) = new_entry_handle {
-            handle.entry = Some(self.entries.create_weak_handle(&new_entry_handle));
+            handle.entry = Some(new_entry_handle.weak());
             // Store the strong handle in the list that we scan for
             // cache evictions.
             if allocated_in_shared_cache {

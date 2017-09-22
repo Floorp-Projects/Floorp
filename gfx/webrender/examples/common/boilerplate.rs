@@ -216,6 +216,28 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
                 glutin::Event::KeyboardInput(
                     glutin::ElementState::Pressed,
                     _,
+                    Some(glutin::VirtualKeyCode::Key1),
+                ) => {
+                    api.set_window_parameters(document_id,
+                        size,
+                        DeviceUintRect::new(DeviceUintPoint::zero(), size),
+                        1.0
+                    );
+                }
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::Key2),
+                ) => {
+                    api.set_window_parameters(document_id,
+                        size,
+                        DeviceUintRect::new(DeviceUintPoint::zero(), size),
+                        2.0
+                    );
+                }
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
                     Some(glutin::VirtualKeyCode::M),
                 ) => {
                     api.notify_memory_pressure();

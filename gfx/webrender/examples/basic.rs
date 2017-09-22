@@ -256,7 +256,7 @@ impl Example for App {
             resources.add_raw_font(font_key, font_bytes, 0);
 
             let font_instance_key = api.generate_font_instance_key();
-            resources.add_font_instance(font_instance_key, font_key, Au::from_px(32), None, None);
+            resources.add_font_instance(font_instance_key, font_key, Au::from_px(32), None, None, Vec::new());
 
             let text_bounds = (100, 200).by(700, 300);
             let glyphs = vec![
