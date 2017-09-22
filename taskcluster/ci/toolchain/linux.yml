@@ -228,3 +228,89 @@ linux64-gn:
         toolchain-artifact: public/build/gn.tar.xz
     toolchains:
         - linux64-gcc-4.9
+
+linux64-upx:
+    description: "UPX build for MinGW32 Cross Compile"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TMW(upx)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 3600
+    run:
+        using: toolchain-script
+        script: build-upx.sh
+        toolchain-artifact: public/build/upx.tar.xz
+
+linux64-wine:
+    description: "Wine build for MinGW32 Cross Compile"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TMW(wine)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 10800
+    run:
+        using: toolchain-script
+        script: build-wine.sh
+        toolchain-artifact: public/build/wine.tar.xz
+
+linux64-mingw32-gcc:
+    description: "GCC toolchain build for MinGW32 Cross Compile"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TMW(mingw32-gcc)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 10800
+    run:
+        using: toolchain-script
+        script: build-gcc-mingw32.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+        toolchain-artifact: public/build/mingw32.tar.xz
+
+linux64-mingw32-nsis:
+    description: "NSIS build for MinGW32 Cross Compile"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TMW(mingw32-nsis)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 3600
+    run:
+        using: toolchain-script
+        script: build-mingw32-nsis.sh
+        toolchain-artifact: public/build/nsis.tar.xz
+    toolchains:
+        - linux64-mingw32-gcc
+
+linux64-mingw32-fxc2:
+    description: "fxc2.exe build for MinGW32 Cross Compile"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TMW(mingw32-fxc2)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-mingw32-fxc2.sh
+        toolchain-artifact: public/build/fxc2.tar.xz
+    toolchains:
+        - linux64-mingw32-gcc
