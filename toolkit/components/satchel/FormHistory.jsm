@@ -676,7 +676,9 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
         break;
       case "add":
         log("Add to form history " + change);
-        change.guid = generateGUID();
+        if (!change.guid) {
+          change.guid = generateGUID();
+        }
         stmt = makeAddStatement(change, now, bindingArrays);
         notifications.push(["formhistory-add", change.guid]);
         break;
@@ -922,13 +924,12 @@ this.FormHistory = {
           }
           break;
         case "add":
-          if (change.guid) {
-            throw Components.Exception(
-              "op='add' cannot contain field 'guid'. Either use op='update' " +
-                "explicitly or make 'guid' undefined.",
-              Cr.NS_ERROR_ILLEGAL_VALUE);
-          } else if (change.fieldname && change.value) {
+          if (change.fieldname && change.value) {
             validateOpData(change, "Add");
+          } else {
+            throw Components.Exception(
+              "update op='add' must have a fieldname and a value.",
+              Cr.NS_ERROR_ILLEGAL_VALUE);
           }
           break;
         default:
