@@ -461,11 +461,15 @@ class CodeLabel
     CodeOffset* target() {
         return &target_;
     }
-    void offsetBy(size_t delta) {
-        patchAt_.offsetBy(delta);
-        target_.offsetBy(delta);
+    CodeOffset patchAt() const {
+        return patchAt_;
+    }
+    CodeOffset target() const {
+        return target_;
     }
 };
+
+typedef Vector<CodeLabel, 0, SystemAllocPolicy> CodeLabelVector;
 
 // Location of a jump or label in a generated JitCode block, relative to the
 // start of the block.
@@ -807,15 +811,16 @@ namespace jit {
 // The base class of all Assemblers for all archs.
 class AssemblerShared
 {
-    wasm::CallSiteAndTargetVector callSites_;
-    wasm::CallFarJumpVector callFarJumps_;
+    wasm::CallSiteVector callSites_;
+    wasm::CallSiteTargetVector callSiteTargets_;
     wasm::TrapSiteVector trapSites_;
     wasm::TrapFarJumpVector trapFarJumps_;
+    wasm::CallFarJumpVector callFarJumps_;
     wasm::MemoryAccessVector memoryAccesses_;
     wasm::SymbolicAccessVector symbolicAccesses_;
 
   protected:
-    Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
+    CodeLabelVector codeLabels_;
 
     bool enoughMemory_;
     bool embedsNurseryPointers_;
@@ -842,33 +847,43 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
+    static bool canUseInSingleByteInstruction(Register reg) {
+        return true;
+    }
+
+    void addCodeLabel(CodeLabel label) {
+        propagateOOM(codeLabels_.append(label));
+    }
+    size_t numCodeLabels() const {
+        return codeLabels_.length();
+    }
+    CodeLabel codeLabel(size_t i) {
+        return codeLabels_[i];
+    }
+    CodeLabelVector& codeLabels() {
+        return codeLabels_;
+    }
+
+    // WebAssembly metadata emitted by masm operations accumulated on the
+    // MacroAssembler, and swapped into a wasm::CompiledCode after finish().
+
     template <typename... Args>
-    void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, Args&&... args)
-    {
-        wasm::CallSite cs(desc, retAddr.offset());
-        enoughMemory_ &= callSites_.emplaceBack(cs, mozilla::Forward<Args>(args)...);
+    void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, Args&&... args) {
+        enoughMemory_ &= callSites_.emplaceBack(desc, retAddr.offset());
+        enoughMemory_ &= callSiteTargets_.emplaceBack(mozilla::Forward<Args>(args)...);
     }
-    wasm::CallSiteAndTargetVector& callSites() { return callSites_; }
-
-    void append(wasm::CallFarJump jmp) {
-        enoughMemory_ &= callFarJumps_.append(jmp);
-    }
-    const wasm::CallFarJumpVector& callFarJumps() const { return callFarJumps_; }
-
     void append(wasm::TrapSite trapSite) {
         enoughMemory_ &= trapSites_.append(trapSite);
     }
-    const wasm::TrapSiteVector& trapSites() const { return trapSites_; }
-    void clearTrapSites() { trapSites_.clear(); }
-
     void append(wasm::TrapFarJump jmp) {
         enoughMemory_ &= trapFarJumps_.append(jmp);
     }
-    const wasm::TrapFarJumpVector& trapFarJumps() const { return trapFarJumps_; }
-
-    void append(wasm::MemoryAccess access) { enoughMemory_ &= memoryAccesses_.append(access); }
-    wasm::MemoryAccessVector&& extractMemoryAccesses() { return Move(memoryAccesses_); }
-
+    void append(wasm::CallFarJump jmp) {
+        enoughMemory_ &= callFarJumps_.append(jmp);
+    }
+    void append(wasm::MemoryAccess access) {
+        enoughMemory_ &= memoryAccesses_.append(access);
+    }
     void append(const wasm::MemoryAccessDesc& access, size_t codeOffset, size_t framePushed) {
         if (access.hasTrap()) {
             // If a memory access is trapping (wasm, SIMD.js, Atomics), create a
@@ -887,60 +902,17 @@ class AssemblerShared
 #endif
         }
     }
-
-    void append(wasm::SymbolicAccess access) { enoughMemory_ &= symbolicAccesses_.append(access); }
-    size_t numSymbolicAccesses() const { return symbolicAccesses_.length(); }
-    wasm::SymbolicAccess symbolicAccess(size_t i) const { return symbolicAccesses_[i]; }
-
-    static bool canUseInSingleByteInstruction(Register reg) { return true; }
-
-    void addCodeLabel(CodeLabel label) {
-        propagateOOM(codeLabels_.append(label));
-    }
-    size_t numCodeLabels() const {
-        return codeLabels_.length();
-    }
-    CodeLabel codeLabel(size_t i) {
-        return codeLabels_[i];
+    void append(wasm::SymbolicAccess access) {
+        enoughMemory_ &= symbolicAccesses_.append(access);
     }
 
-    // Merge this assembler with the other one, invalidating it, by shifting all
-    // offsets by a delta.
-    bool asmMergeWith(size_t delta, const AssemblerShared& other) {
-        size_t i = callSites_.length();
-        enoughMemory_ &= callSites_.appendAll(other.callSites_);
-        for (; i < callSites_.length(); i++)
-            callSites_[i].offsetReturnAddressBy(delta);
-
-        MOZ_ASSERT(other.trapSites_.empty(), "should have been cleared by wasmEmitTrapOutOfLineCode");
-
-        i = callFarJumps_.length();
-        enoughMemory_ &= callFarJumps_.appendAll(other.callFarJumps_);
-        for (; i < callFarJumps_.length(); i++)
-            callFarJumps_[i].offsetBy(delta);
-
-        i = trapFarJumps_.length();
-        enoughMemory_ &= trapFarJumps_.appendAll(other.trapFarJumps_);
-        for (; i < trapFarJumps_.length(); i++)
-            trapFarJumps_[i].offsetBy(delta);
-
-        i = memoryAccesses_.length();
-        enoughMemory_ &= memoryAccesses_.appendAll(other.memoryAccesses_);
-        for (; i < memoryAccesses_.length(); i++)
-            memoryAccesses_[i].offsetBy(delta);
-
-        i = symbolicAccesses_.length();
-        enoughMemory_ &= symbolicAccesses_.appendAll(other.symbolicAccesses_);
-        for (; i < symbolicAccesses_.length(); i++)
-            symbolicAccesses_[i].patchAt.offsetBy(delta);
-
-        i = codeLabels_.length();
-        enoughMemory_ &= codeLabels_.appendAll(other.codeLabels_);
-        for (; i < codeLabels_.length(); i++)
-            codeLabels_[i].offsetBy(delta);
-
-        return !oom();
-    }
+    wasm::CallSiteVector& callSites() { return callSites_; }
+    wasm::CallSiteTargetVector& callSiteTargets() { return callSiteTargets_; }
+    wasm::TrapSiteVector& trapSites() { return trapSites_; }
+    wasm::TrapFarJumpVector& trapFarJumps() { return trapFarJumps_; }
+    wasm::CallFarJumpVector& callFarJumps() { return callFarJumps_; }
+    wasm::MemoryAccessVector& memoryAccesses() { return memoryAccesses_; }
+    wasm::SymbolicAccessVector& symbolicAccesses() { return symbolicAccesses_; }
 };
 
 } // namespace jit

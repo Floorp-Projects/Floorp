@@ -217,7 +217,6 @@ pref(clipboard.autocopy,true) load 1370737.html
 pref(dom.IntersectionObserver.enabled,true) load 1370968.html
 load 1377826.html
 skip-if(stylo&&isDebugBuild&&winWidget) load structured_clone_container_throws.html # Bug 1383845
-HTTP(..) load xhr_abortinprogress.html
 load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
 load 1383478.html

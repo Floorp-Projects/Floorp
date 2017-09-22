@@ -162,20 +162,12 @@ IPCBlobInputStream::Available(uint64_t* aLength)
 {
   // We don't have a remoteStream yet. Let's return the full known size.
   if (mState == eInit || mState == ePending) {
-    *aLength = mLength;
+    *aLength = 0;
     return NS_OK;
   }
 
   if (mState == eRunning) {
     MOZ_ASSERT(mRemoteStream || mAsyncRemoteStream);
-
-    // This will go away eventually: an async input stream can return 0 in
-    // Available(), but this is not currently fully supported in the rest of
-    // gecko.
-    if (!mAsyncRemoteStream) {
-      *aLength = mLength;
-      return NS_OK;
-    }
 
     nsresult rv = EnsureAsyncRemoteStream();
     if (NS_WARN_IF(NS_FAILED(rv))) {
