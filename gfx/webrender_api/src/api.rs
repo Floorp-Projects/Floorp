@@ -4,7 +4,8 @@
 
 use {BuiltDisplayList, BuiltDisplayListDescriptor, ClipId, ColorF, DeviceIntPoint};
 use {DeviceUintRect, DeviceUintSize, FontInstanceKey, FontKey, GlyphDimensions, GlyphKey};
-use {FontInstance, FontInstanceOptions, FontInstancePlatformOptions, NativeFontHandle, WorldPoint};
+use {FontInstance, FontInstanceOptions, FontInstancePlatformOptions, FontVariation,
+     NativeFontHandle, WorldPoint};
 use {ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutSize, LayoutTransform,
      LayoutVector2D};
 use app_units::Au;
@@ -94,6 +95,7 @@ impl ResourceUpdates {
         glyph_size: Au,
         options: Option<FontInstanceOptions>,
         platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
     ) {
         self.updates
             .push(ResourceUpdate::AddFontInstance(AddFontInstance {
@@ -102,6 +104,7 @@ impl ResourceUpdates {
                 glyph_size,
                 options,
                 platform_options,
+                variations,
             }));
     }
 
@@ -147,6 +150,7 @@ pub struct AddFontInstance {
     pub glyph_size: Au,
     pub options: Option<FontInstanceOptions>,
     pub platform_options: Option<FontInstancePlatformOptions>,
+    pub variations: Vec<FontVariation>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -170,6 +174,7 @@ pub enum DocumentMsg {
     SetWindowParameters {
         window_size: DeviceUintSize,
         inner_rect: DeviceUintRect,
+        device_pixel_ratio: f32,
     },
     Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
     ScrollNodeWithId(LayoutPoint, ClipId, ScrollClamping),
@@ -624,12 +629,14 @@ impl RenderApi {
         document_id: DocumentId,
         window_size: DeviceUintSize,
         inner_rect: DeviceUintRect,
+        device_pixel_ratio: f32,
     ) {
         self.send(
             document_id,
             DocumentMsg::SetWindowParameters {
                 window_size,
                 inner_rect,
+                device_pixel_ratio,
             },
         );
     }

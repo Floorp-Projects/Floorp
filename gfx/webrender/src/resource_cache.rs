@@ -8,7 +8,7 @@ use api::{ColorF, FontRenderMode, SubpixelDirection};
 use api::{DevicePoint, DeviceUintRect, DeviceUintSize};
 use api::{Epoch, FontInstance, FontInstanceKey, FontKey, FontTemplate};
 use api::{ExternalImageData, ExternalImageType};
-use api::{FontInstanceOptions, FontInstancePlatformOptions};
+use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use api::{GlyphDimensions, GlyphKey, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
 use api::{TileOffset, TileSize};
@@ -303,6 +303,7 @@ impl ResourceCache {
                         instance.glyph_size,
                         instance.options,
                         instance.platform_options,
+                        instance.variations,
                     );
                 }
                 ResourceUpdate::DeleteFontInstance(instance) => {
@@ -334,6 +335,7 @@ impl ResourceCache {
         glyph_size: Au,
         options: Option<FontInstanceOptions>,
         platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
     ) {
         let mut render_mode = FontRenderMode::Subpixel;
         let mut subpx_dir = SubpixelDirection::Horizontal;
@@ -350,6 +352,7 @@ impl ResourceCache {
             render_mode,
             subpx_dir,
             platform_options,
+            variations,
         );
         self.resources.font_instances.insert(instance_key, instance);
     }
