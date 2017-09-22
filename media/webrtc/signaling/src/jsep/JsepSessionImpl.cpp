@@ -17,6 +17,7 @@
 
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Telemetry.h"
 
 #include "webrtc/config.h"
 
@@ -1532,6 +1533,11 @@ JsepSessionImpl::MakeNegotiatedTrackPair(const SdpMediaSection& remote,
     // TODO(bug 1095743): verify that the PTs are consistent with mux.
     MOZ_MTLOG(ML_DEBUG, "RTCP-MUX is off");
     trackPairOut->mRtcpTransport = transport;
+  }
+
+  if (local.GetMediaType() != SdpMediaSection::kApplication) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_RTCP_MUX,
+        transport->mComponents == 1);
   }
 
   return NS_OK;
