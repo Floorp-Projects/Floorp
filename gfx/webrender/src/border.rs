@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF, LayerPoint, LayerRect};
-use api::{LayerPrimitiveInfo, LayerSize, NormalBorder};
+use api::{LayerPrimitiveInfo, LayerSize, NormalBorder, RepeatMode};
 use clip::ClipSource;
 use ellipse::Ellipse;
 use frame_builder::FrameBuilder;
 use gpu_cache::GpuDataRequest;
-use prim_store::{BorderPrimitiveCpu, PrimitiveContainer};
+use prim_store::{BorderPrimitiveCpu, PrimitiveContainer, TexelRect};
 use tiling::PrimitiveFlags;
 use util::{lerp, pack_as_float};
 
@@ -793,5 +793,57 @@ struct DotInfo {
 impl DotInfo {
     fn new(arc_pos: f32, diameter: f32) -> DotInfo {
         DotInfo { arc_pos, diameter }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ImageBorderSegment {
+    pub geom_rect: LayerRect,
+    pub sub_rect: TexelRect,
+    pub stretch_size: LayerSize,
+    pub tile_spacing: LayerSize,
+}
+
+impl ImageBorderSegment {
+    pub fn new(
+        rect: LayerRect,
+        sub_rect: TexelRect,
+        repeat_horizontal: RepeatMode,
+        repeat_vertical: RepeatMode,
+    ) -> ImageBorderSegment {
+        let tile_spacing = LayerSize::zero();
+
+        debug_assert!(sub_rect.uv1.x >= sub_rect.uv0.x);
+        debug_assert!(sub_rect.uv1.y >= sub_rect.uv0.y);
+
+        let image_size = LayerSize::new(
+            sub_rect.uv1.x - sub_rect.uv0.x,
+            sub_rect.uv1.y - sub_rect.uv0.y,
+        );
+
+        let stretch_size_x = match repeat_horizontal {
+            RepeatMode::Stretch => rect.size.width,
+            RepeatMode::Repeat => image_size.width,
+            RepeatMode::Round | RepeatMode::Space => {
+                error!("Round/Space not supported yet!");
+                rect.size.width
+            }
+        };
+
+        let stretch_size_y = match repeat_vertical {
+            RepeatMode::Stretch => rect.size.height,
+            RepeatMode::Repeat => image_size.height,
+            RepeatMode::Round | RepeatMode::Space => {
+                error!("Round/Space not supported yet!");
+                rect.size.height
+            }
+        };
+
+        ImageBorderSegment {
+            geom_rect: rect,
+            sub_rect,
+            stretch_size: LayerSize::new(stretch_size_x, stretch_size_y),
+            tile_spacing,
+        }
     }
 }

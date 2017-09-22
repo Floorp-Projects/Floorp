@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BuiltDisplayList, BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF};
+use api::{BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF};
 use api::{ComplexClipRegion, DeviceUintRect, DeviceUintSize, DisplayItemRef, Epoch, FilterOp};
 use api::{ImageDisplayItem, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize,
           LayerToScrollTransform};
-use api::{LayerVector2D, LayoutSize, LayoutTransform, LocalClip, MixBlendMode, PipelineId};
-use api::{PropertyBinding, ScrollClamping, ScrollEventPhase, ScrollLayerState, ScrollLocation};
+use api::{LayerVector2D, LayoutSize, LayoutTransform, LocalClip, PipelineId};
+use api::{ScrollClamping, ScrollEventPhase, ScrollLayerState, ScrollLocation};
 use api::{ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext, TileOffset};
 use api::{TransformStyle, WorldPoint};
 use clip::ClipRegion;
@@ -18,8 +18,8 @@ use gpu_cache::GpuCache;
 use internal_types::{FastHashMap, FastHashSet, RendererFrame};
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{ResourceCache, TiledImageMap};
-use scene::{Scene, SceneProperties};
-use tiling::{CompositeOps, DisplayListMap, PrimitiveFlags};
+use scene::{Scene, StackingContextHelpers, ScenePipeline};
+use tiling::{CompositeOps, PrimitiveFlags};
 use util::{subtract_rect, ComplexClipRegionHelpers};
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Eq, Ord)]
@@ -184,9 +184,10 @@ impl<'a> FlattenContext<'a> {
         }
 
         self.scene
-            .display_lists
+            .pipelines
             .get(&pipeline_id)
             .expect("No display list?")
+            .display_list
             .get(complex_clips)
             .collect()
     }
@@ -199,78 +200,6 @@ pub struct Frame {
     id: FrameId,
     frame_builder_config: FrameBuilderConfig,
     pub frame_builder: Option<FrameBuilder>,
-}
-
-trait FilterOpHelpers {
-    fn resolve(self, properties: &SceneProperties) -> FilterOp;
-    fn is_noop(&self) -> bool;
-}
-
-impl FilterOpHelpers for FilterOp {
-    fn resolve(self, properties: &SceneProperties) -> FilterOp {
-        match self {
-            FilterOp::Opacity(ref value) => {
-                let amount = properties.resolve_float(value, 1.0);
-                FilterOp::Opacity(PropertyBinding::Value(amount))
-            }
-            _ => self,
-        }
-    }
-
-    fn is_noop(&self) -> bool {
-        match *self {
-            FilterOp::Blur(length) => length == 0.0,
-            FilterOp::Brightness(amount) => amount == 1.0,
-            FilterOp::Contrast(amount) => amount == 1.0,
-            FilterOp::Grayscale(amount) => amount == 0.0,
-            FilterOp::HueRotate(amount) => amount == 0.0,
-            FilterOp::Invert(amount) => amount == 0.0,
-            FilterOp::Opacity(value) => match value {
-                PropertyBinding::Value(amount) => amount == 1.0,
-                PropertyBinding::Binding(..) => {
-                    panic!("bug: binding value should be resolved");
-                }
-            },
-            FilterOp::Saturate(amount) => amount == 1.0,
-            FilterOp::Sepia(amount) => amount == 0.0,
-        }
-    }
-}
-
-trait StackingContextHelpers {
-    fn mix_blend_mode_for_compositing(&self) -> Option<MixBlendMode>;
-    fn filter_ops_for_compositing(
-        &self,
-        display_list: &BuiltDisplayList,
-        input_filters: ItemRange<FilterOp>,
-        properties: &SceneProperties,
-    ) -> Vec<FilterOp>;
-}
-
-impl StackingContextHelpers for StackingContext {
-    fn mix_blend_mode_for_compositing(&self) -> Option<MixBlendMode> {
-        match self.mix_blend_mode {
-            MixBlendMode::Normal => None,
-            _ => Some(self.mix_blend_mode),
-        }
-    }
-
-    fn filter_ops_for_compositing(
-        &self,
-        display_list: &BuiltDisplayList,
-        input_filters: ItemRange<FilterOp>,
-        properties: &SceneProperties,
-    ) -> Vec<FilterOp> {
-        let mut filters = vec![];
-        for filter in display_list.get(input_filters) {
-            let filter = filter.resolve(properties);
-            if filter.is_noop() {
-                continue;
-            }
-            filters.push(filter);
-        }
-        filters
-    }
 }
 
 impl Frame {
@@ -334,13 +263,8 @@ impl Frame {
             None => return,
         };
 
-        let root_pipeline = match scene.pipeline_map.get(&root_pipeline_id) {
+        let root_pipeline = match scene.pipelines.get(&root_pipeline_id) {
             Some(root_pipeline) => root_pipeline,
-            None => return,
-        };
-
-        let display_list = match scene.display_lists.get(&root_pipeline_id) {
-            Some(display_list) => display_list,
             None => return,
         };
 
@@ -382,7 +306,7 @@ impl Frame {
             );
 
             self.flatten_root(
-                &mut display_list.iter(),
+                &mut root_pipeline.display_list.iter(),
                 root_pipeline_id,
                 &mut context,
                 &root_pipeline.content_size,
@@ -464,11 +388,12 @@ impl Frame {
 
         let composition_operations = {
             // TODO(optimization?): self.traversal.display_list()
-            let display_list = context
+            let display_list = &context
                 .scene
-                .display_lists
+                .pipelines
                 .get(&pipeline_id)
-                .expect("No display list?!");
+                .expect("No display list?!")
+                .display_list;
             CompositeOps::new(
                 stacking_context.filter_ops_for_compositing(
                     display_list,
@@ -557,13 +482,8 @@ impl Frame {
         context: &mut FlattenContext,
         reference_frame_relative_offset: LayerVector2D,
     ) {
-        let pipeline = match context.scene.pipeline_map.get(&pipeline_id) {
+        let pipeline = match context.scene.pipelines.get(&pipeline_id) {
             Some(pipeline) => pipeline,
-            None => return,
-        };
-
-        let display_list = match context.scene.display_lists.get(&pipeline_id) {
-            Some(display_list) => display_list,
             None => return,
         };
 
@@ -605,7 +525,7 @@ impl Frame {
         );
 
         self.flatten_root(
-            &mut display_list.iter(),
+            &mut pipeline.display_list.iter(),
             pipeline_id,
             context,
             &pipeline.content_size,
@@ -684,7 +604,7 @@ impl Frame {
                 }
             }
             SpecificDisplayItem::Rectangle(ref info) => {
-                if !self.try_to_add_rectangle_splitting_on_clip(
+                if !try_to_add_rectangle_splitting_on_clip(
                     context,
                     &prim_info,
                     &info.color,
@@ -880,65 +800,6 @@ impl Frame {
         None
     }
 
-    /// Try to optimize the rendering of a solid rectangle that is clipped by a single
-    /// rounded rectangle, by only masking the parts of the rectangle that intersect
-    /// the rounded parts of the clip. This is pretty simple now, so has a lot of
-    /// potential for further optimizations.
-    fn try_to_add_rectangle_splitting_on_clip(
-        &mut self,
-        context: &mut FlattenContext,
-        info: &LayerPrimitiveInfo,
-        color: &ColorF,
-        clip_and_scroll: &ClipAndScrollInfo,
-    ) -> bool {
-        // If this rectangle is not opaque, splitting the rectangle up
-        // into an inner opaque region just ends up hurting batching and
-        // doing more work than necessary.
-        if color.a != 1.0 {
-            return false;
-        }
-
-        let inner_unclipped_rect = match &info.local_clip {
-            &LocalClip::Rect(_) => return false,
-            &LocalClip::RoundedRect(_, ref region) => region.get_inner_rect_full(),
-        };
-        let inner_unclipped_rect = match inner_unclipped_rect {
-            Some(rect) => rect,
-            None => return false,
-        };
-
-        // The inner rectangle is not clipped by its assigned clipping node, so we can
-        // let it be clipped by the parent of the clipping node, which may result in
-        // less masking some cases.
-        let mut clipped_rects = Vec::new();
-        subtract_rect(&info.rect, &inner_unclipped_rect, &mut clipped_rects);
-
-        let prim_info = LayerPrimitiveInfo {
-            rect: inner_unclipped_rect,
-            local_clip: LocalClip::from(*info.local_clip.clip_rect()),
-            is_backface_visible: info.is_backface_visible,
-        };
-
-        context.builder.add_solid_rectangle(
-            *clip_and_scroll,
-            &prim_info,
-            color,
-            PrimitiveFlags::None,
-        );
-
-        for clipped_rect in &clipped_rects {
-            let mut info = info.clone();
-            info.rect = *clipped_rect;
-            context.builder.add_solid_rectangle(
-                *clip_and_scroll,
-                &info,
-                color,
-                PrimitiveFlags::None,
-            );
-        }
-        true
-    }
-
     fn flatten_root<'a>(
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
@@ -965,7 +826,7 @@ impl Frame {
         // here, as it's handled by the framebuffer clear.
         let clip_id = ClipId::root_scroll_node(pipeline_id);
         if context.scene.root_pipeline_id != Some(pipeline_id) {
-            if let Some(pipeline) = context.scene.pipeline_map.get(&pipeline_id) {
+            if let Some(pipeline) = context.scene.pipelines.get(&pipeline_id) {
                 if let Some(bg_color) = pipeline.background_color {
                     let root_bounds = LayerRect::new(LayerPoint::zero(), *content_size);
                     let info = LayerPrimitiveInfo::new(root_bounds);
@@ -1343,7 +1204,7 @@ impl Frame {
         &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        display_lists: &DisplayListMap,
+        pipelines: &FastHashMap<PipelineId, ScenePipeline>,
         device_pixel_ratio: f32,
         pan: LayerPoint,
         output_pipelines: &FastHashSet<PipelineId>,
@@ -1354,7 +1215,7 @@ impl Frame {
         let frame = self.build_frame(
             resource_cache,
             gpu_cache,
-            display_lists,
+            pipelines,
             device_pixel_ratio,
             output_pipelines,
             texture_cache_profile,
@@ -1367,7 +1228,7 @@ impl Frame {
         &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        display_lists: &DisplayListMap,
+        pipelines: &FastHashMap<PipelineId, ScenePipeline>,
         device_pixel_ratio: f32,
         output_pipelines: &FastHashSet<PipelineId>,
         texture_cache_profile: &mut TextureCacheProfileCounters,
@@ -1380,7 +1241,7 @@ impl Frame {
                 gpu_cache,
                 self.id,
                 &mut self.clip_scroll_tree,
-                display_lists,
+                pipelines,
                 device_pixel_ratio,
                 output_pipelines,
                 texture_cache_profile,
@@ -1392,4 +1253,62 @@ impl Frame {
         let nodes_bouncing_back = self.clip_scroll_tree.collect_nodes_bouncing_back();
         RendererFrame::new(self.pipeline_epoch_map.clone(), nodes_bouncing_back, frame)
     }
+}
+
+/// Try to optimize the rendering of a solid rectangle that is clipped by a single
+/// rounded rectangle, by only masking the parts of the rectangle that intersect
+/// the rounded parts of the clip. This is pretty simple now, so has a lot of
+/// potential for further optimizations.
+fn try_to_add_rectangle_splitting_on_clip(
+    context: &mut FlattenContext,
+    info: &LayerPrimitiveInfo,
+    color: &ColorF,
+    clip_and_scroll: &ClipAndScrollInfo,
+) -> bool {
+    // If this rectangle is not opaque, splitting the rectangle up
+    // into an inner opaque region just ends up hurting batching and
+    // doing more work than necessary.
+    if color.a != 1.0 {
+        return false;
+    }
+
+    let inner_unclipped_rect = match &info.local_clip {
+        &LocalClip::Rect(_) => return false,
+        &LocalClip::RoundedRect(_, ref region) => region.get_inner_rect_full(),
+    };
+    let inner_unclipped_rect = match inner_unclipped_rect {
+        Some(rect) => rect,
+        None => return false,
+    };
+
+    // The inner rectangle is not clipped by its assigned clipping node, so we can
+    // let it be clipped by the parent of the clipping node, which may result in
+    // less masking some cases.
+    let mut clipped_rects = Vec::new();
+    subtract_rect(&info.rect, &inner_unclipped_rect, &mut clipped_rects);
+
+    let prim_info = LayerPrimitiveInfo {
+        rect: inner_unclipped_rect,
+        local_clip: LocalClip::from(*info.local_clip.clip_rect()),
+        is_backface_visible: info.is_backface_visible,
+    };
+
+    context.builder.add_solid_rectangle(
+        *clip_and_scroll,
+        &prim_info,
+        color,
+        PrimitiveFlags::None,
+    );
+
+    for clipped_rect in &clipped_rects {
+        let mut info = info.clone();
+        info.rect = *clipped_rect;
+        context.builder.add_solid_rectangle(
+            *clip_and_scroll,
+            &info,
+            color,
+            PrimitiveFlags::None,
+        );
+    }
+    true
 }

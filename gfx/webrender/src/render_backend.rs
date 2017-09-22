@@ -106,7 +106,7 @@ impl Document {
         self.frame.build(
             resource_cache,
             gpu_cache,
-            &self.scene.display_lists,
+            &self.scene.pipelines,
             accumulated_scale_factor,
             pan,
             &self.output_pipelines,
@@ -301,7 +301,7 @@ impl RenderBackend {
                 profile_scope!("SetRootPipeline");
 
                 doc.scene.set_root_pipeline_id(pipeline_id);
-                if doc.scene.display_lists.get(&pipeline_id).is_some() {
+                if doc.scene.pipelines.get(&pipeline_id).is_some() {
                     let _timer = profile_counters.total_time.timer();
                     doc.build_scene(&mut self.resource_cache);
                     DocumentOp::Built
@@ -645,9 +645,9 @@ impl RenderBackend {
         for (_, doc) in &self.documents {
             let mut debug_doc = debug_server::TreeNode::new("document");
 
-            for (_, display_list) in &doc.scene.display_lists {
+            for (_, pipeline) in &doc.scene.pipelines {
                 let mut debug_dl = debug_server::TreeNode::new("display_list");
-                self.traverse_items(&mut display_list.iter(), &mut debug_dl);
+                self.traverse_items(&mut pipeline.display_list.iter(), &mut debug_dl);
                 debug_doc.add_child(debug_dl);
             }
 

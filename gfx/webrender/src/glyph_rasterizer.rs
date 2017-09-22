@@ -411,6 +411,7 @@ fn raterize_200_glyphs() {
         SubpixelDirection::Horizontal,
         None,
         Vec::new(),
+        false,
     );
 
     let mut glyph_keys = Vec::with_capacity(200);
