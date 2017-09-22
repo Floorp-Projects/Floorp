@@ -20,7 +20,9 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
 import org.mozilla.gecko.activitystream.homepanel.topstories.PocketStoriesLoader;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.util.Clipboard;
@@ -90,11 +92,10 @@ public abstract class ActivityStreamContextMenu
             pinItem.setTitle(R.string.contextmenu_top_sites_unpin);
         }
 
-        // Disable "dismiss" for topsites and topstories until we have decided on its behaviour
-        // (currently "dismiss" adds the URL to a highlights-specific blocklist, which the topsites
-        // query has no knowledge of).
-        if (mode == MenuMode.TOPSITE || mode == MenuMode.TOPSTORY) {
-            final MenuItem dismissItem = getItemByID(R.id.dismiss);
+        // Disable "dismiss" for topsites and topstories here. Later when we know whether this item
+        // has history we might re-enable this item (See AsyncTask below).
+        final MenuItem dismissItem = getItemByID(R.id.dismiss);
+        if (mode == MenuMode.TOPSTORY || mode == MenuMode.TOPSITE) {
             dismissItem.setVisible(false);
         }
 
@@ -143,8 +144,8 @@ public abstract class ActivityStreamContextMenu
             }).execute();
         }
 
-        // Only show the "remove from history" item if a page actually has history
         final MenuItem deleteHistoryItem = getItemByID(R.id.delete);
+        // Only show the "remove from history" item if a page actually has history
         deleteHistoryItem.setVisible(false);
 
         (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
@@ -168,6 +169,12 @@ public abstract class ActivityStreamContextMenu
             @Override
             protected void onPostExecute(Boolean hasHistory) {
                 deleteHistoryItem.setVisible(hasHistory);
+
+                if (!hasHistory && mode == MenuMode.TOPSITE) {
+                    // For top sites items without history (suggested items) we show the dismiss
+                    // item. This will allow users to remove a suggested site.
+                    dismissItem.setVisible(true);
+                }
             }
         }).execute();
     }
@@ -284,8 +291,12 @@ public abstract class ActivityStreamContextMenu
                 ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
-                        BrowserDB.from(context)
-                                .blockActivityStreamSite(context.getContentResolver(), item.getUrl());
+                        BrowserDB db = BrowserDB.from(context);
+                        if (db.hideSuggestedSite(item.getUrl())) {
+                            context.getContentResolver().notifyChange(BrowserContract.SuggestedSites.CONTENT_URI, null);
+                        } else {
+                            db.blockActivityStreamSite(context.getContentResolver(), item.getUrl());
+                        }
                     }
                 });
                 break;
