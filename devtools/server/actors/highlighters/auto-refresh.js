@@ -12,28 +12,29 @@ const { getAdjustedQuads, getWindowDimensions } = require("devtools/shared/layou
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
 const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
-const QUADS_PROPS = ["p1", "p2", "p3", "p4", "bounds"];
+const QUADS_PROPS = ["p1", "p2", "p3", "p4"];
 
-function areValuesDifferent(oldValue, newValue) {
-  let delta = Math.abs(oldValue.toFixed(4) - newValue.toFixed(4));
-  return delta >= .5;
+function arePointsDifferent(pointA, pointB) {
+  return (Math.abs(pointA.x - pointB.x) >= .5) ||
+         (Math.abs(pointA.y - pointB.y) >= .5) ||
+         (Math.abs(pointA.w - pointB.w) >= .5);
 }
 
 function areQuadsDifferent(oldQuads, newQuads) {
   for (let region of BOX_MODEL_REGIONS) {
-    if (oldQuads[region].length !== newQuads[region].length) {
+    let { length } = oldQuads[region];
+
+    if (length !== newQuads[region].length) {
       return true;
     }
 
-    for (let i = 0; i < oldQuads[region].length; i++) {
+    for (let i = 0; i < length; i++) {
       for (let prop of QUADS_PROPS) {
-        let oldProp = oldQuads[region][i][prop];
-        let newProp = newQuads[region][i][prop];
+        let oldPoint = oldQuads[region][i][prop];
+        let newPoint = newQuads[region][i][prop];
 
-        for (let key of Object.keys(oldProp)) {
-          if (areValuesDifferent(oldProp[key], newProp[key])) {
-            return true;
-          }
+        if (arePointsDifferent(oldPoint, newPoint)) {
+          return true;
         }
       }
     }
