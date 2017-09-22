@@ -121,9 +121,11 @@ class Instance
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     WasmMemoryObject* memory() const;
-    size_t memoryLength() const;
     size_t memoryMappedSize() const;
+    SharedArrayRawBuffer* sharedMemoryBuffer() const; // never null
+#ifdef JS_SIMULATOR
     bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
+#endif
     TlsData* tlsData() const { return globals_->tlsData(); }
 
     static size_t offsetOfJSJitArgsRectifier() { return offsetof(Instance, jsJitArgsRectifier_); }
