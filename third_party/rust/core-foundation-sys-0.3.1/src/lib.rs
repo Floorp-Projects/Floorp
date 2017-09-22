@@ -6,9 +6,21 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+#![allow(non_snake_case, non_camel_case_types, non_upper_case_globals, improper_ctypes)]
 
-fn main() {
-    if std::env::var("TARGET").unwrap().contains("-apple") {
-        println!("cargo:rustc-link-lib=framework=CoreFoundation");
-    }
-}
+extern crate libc;
+
+pub mod array;
+pub mod base;
+pub mod bundle;
+pub mod data;
+pub mod date;
+pub mod dictionary;
+pub mod error;
+pub mod messageport;
+pub mod number;
+pub mod propertylist;
+pub mod runloop;
+pub mod set;
+pub mod string;
+pub mod url;

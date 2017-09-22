@@ -8,9 +8,8 @@
 // except according to those terms.
 use libc::c_void;
 
-use base::{CFOptionFlags, CFIndex, CFAllocatorRef, Boolean, CFTypeID, CFTypeRef, SInt32};
-use string::{CFStringRef, CFStringEncoding};
-use error::CFErrorRef;
+use base::{CFOptionFlags, CFIndex, CFAllocatorRef, Boolean, CFTypeID, SInt32};
+use string::CFStringRef;
 
 #[repr(C)]
 pub struct __CFURL(c_void);
@@ -45,57 +44,58 @@ extern {
      */
 
     /* Common File System Resource Keys */
-    pub static kCFURLAttributeModificationDateKey: CFStringRef;
-    pub static kCFURLContentAccessDateKey: CFStringRef;
-    pub static kCFURLContentModificationDateKey: CFStringRef;
-    pub static kCFURLCreationDateKey: CFStringRef;
-    pub static kCFURLFileResourceIdentifierKey: CFStringRef;
-    pub static kCFURLFileSecurityKey: CFStringRef;
-    pub static kCFURLHasHiddenExtensionKey: CFStringRef;
-    pub static kCFURLIsDirectoryKey: CFStringRef;
-    pub static kCFURLIsExecutableKey: CFStringRef;
-    pub static kCFURLIsHiddenKey: CFStringRef;
-    pub static kCFURLIsPackageKey: CFStringRef;
-    pub static kCFURLIsReadableKey: CFStringRef;
-    pub static kCFURLIsRegularFileKey: CFStringRef;
-    pub static kCFURLIsSymbolicLinkKey: CFStringRef;
-    pub static kCFURLIsSystemImmutableKey: CFStringRef;
-    pub static kCFURLIsUserImmutableKey: CFStringRef;
-    pub static kCFURLIsVolumeKey: CFStringRef;
-    pub static kCFURLIsWritableKey: CFStringRef;
-    pub static kCFURLLabelNumberKey: CFStringRef;
-    pub static kCFURLLinkCountKey: CFStringRef;
-    pub static kCFURLLocalizedLabelKey: CFStringRef;
-    pub static kCFURLLocalizedNameKey: CFStringRef;
-    pub static kCFURLLocalizedTypeDescriptionKey: CFStringRef;
-    pub static kCFURLNameKey: CFStringRef;
-    pub static kCFURLParentDirectoryURLKey: CFStringRef;
-    pub static kCFURLPreferredIOBlockSizeKey: CFStringRef;
-    pub static kCFURLTypeIdentifierKey: CFStringRef;
-    pub static kCFURLVolumeIdentifierKey: CFStringRef;
-    pub static kCFURLVolumeURLKey: CFStringRef;
-
-    #[cfg(feature="mac_os_10_8_features")]
-    #[cfg_attr(feature = "mac_os_10_7_support", linkage = "extern_weak")]
-    pub static kCFURLIsExcludedFromBackupKey: CFStringRef;
-    pub static kCFURLFileResourceTypeKey: CFStringRef;
+    // static kCFURLAttributeModificationDateKey: CFStringRef;
+    // static kCFURLContentAccessDateKey: CFStringRef;
+    // static kCFURLContentModificationDateKey: CFStringRef;
+    // static kCFURLCreationDateKey: CFStringRef;
+    // static kCFURLCustomIconKey: CFStringRef;
+    // static kCFURLEffectiveIconKey: CFStringRef;
+    // static kCFURLFileResourceIdentifierKey: CFStringRef;
+    // static kCFURLFileSecurityKey: CFStringRef;
+    // static kCFURLHasHiddenExtensionKey: CFStringRef;
+    // static kCFURLIsDirectoryKey: CFStringRef;
+    // static kCFURLIsExecutableKey: CFStringRef;
+    // static kCFURLIsHiddenKey: CFStringRef;
+    // static kCFURLIsPackageKey: CFStringRef;
+    // static kCFURLIsReadableKey: CFStringRef;
+    // static kCFURLIsRegularFileKey: CFStringRef;
+    // static kCFURLIsSymbolicLinkKey: CFStringRef;
+    // static kCFURLIsSystemImmutableKey: CFStringRef;
+    // static kCFURLIsUserImmutableKey: CFStringRef;
+    // static kCFURLIsVolumeKey: CFStringRef;
+    // static kCFURLIsWritableKey: CFStringRef;
+    // static kCFURLLabelColorKey: CFStringRef;
+    // static kCFURLLabelNumberKey: CFStringRef;
+    // static kCFURLLinkCountKey: CFStringRef;
+    // static kCFURLLocalizedLabelKey: CFStringRef;
+    // static kCFURLLocalizedNameKey: CFStringRef;
+    // static kCFURLLocalizedTypeDescriptionKey: CFStringRef;
+    // static kCFURLNameKey: CFStringRef;
+    // static kCFURLParentDirectoryURLKey: CFStringRef;
+    // static kCFURLPreferredIOBlockSizeKey: CFStringRef;
+    // static kCFURLTypeIdentifierKey: CFStringRef;
+    // static kCFURLVolumeIdentifierKey: CFStringRef;
+    // static kCFURLVolumeURLKey: CFStringRef;
+    // static kCFURLIsExcludedFromBackupKey: CFStringRef;
+    // static kCFURLFileResourceTypeKey: CFStringRef;
 
     /* Creating a CFURL */
-    pub fn CFURLCopyAbsoluteURL(anURL: CFURLRef) -> CFURLRef;
+    //fn CFURLCopyAbsoluteURL
     //fn CFURLCreateAbsoluteURLWithBytes
     //fn CFURLCreateByResolvingBookmarkData
     //fn CFURLCreateCopyAppendingPathComponent
     //fn CFURLCreateCopyAppendingPathExtension
     //fn CFURLCreateCopyDeletingLastPathComponent
     //fn CFURLCreateCopyDeletingPathExtension
-    pub fn CFURLCreateFilePathURL(allocator: CFAllocatorRef, url: CFURLRef, error: *mut CFErrorRef) -> CFURLRef;
+    //fn CFURLCreateFilePathURL
     //fn CFURLCreateFileReferenceURL
-    pub fn CFURLCreateFromFileSystemRepresentation(allocator: CFAllocatorRef, buffer: *const u8, bufLen: CFIndex, isDirectory: Boolean) -> CFURLRef;
+    //fn CFURLCreateFromFileSystemRepresentation
     //fn CFURLCreateFromFileSystemRepresentationRelativeToBase
     //fn CFURLCreateFromFSRef
-    pub fn CFURLCreateWithBytes(allocator: CFAllocatorRef, URLBytes: *const u8, length: CFIndex, encoding: CFStringEncoding, baseURL: CFURLRef) -> CFURLRef;
+    //fn CFURLCreateWithBytes
+    //fn CFURLCreateWithFileSystemPath
     pub fn CFURLCreateWithFileSystemPath(allocator: CFAllocatorRef, filePath: CFStringRef, pathStyle: CFURLPathStyle, isDirectory: Boolean) -> CFURLRef;
-    pub fn CFURLCreateWithFileSystemPathRelativeToBase(allocator: CFAllocatorRef, filePath: CFStringRef, pathStyle: CFURLPathStyle, isDirectory: Boolean, baseURL: CFURLRef) -> CFURLRef;
+    //fn CFURLCreateWithFileSystemPathRelativeToBase
     //fn CFURLCreateWithString(allocator: CFAllocatorRef, urlString: CFStringRef,
     //                         baseURL: CFURLRef) -> CFURLRef;
 
@@ -136,14 +136,14 @@ extern {
     //fn CFURLResourceIsReachable
 
     /* Getting and Setting File System Resource Properties */
-    pub fn CFURLClearResourcePropertyCache(url: CFURLRef);
+    //fn CFURLClearResourcePropertyCache
     //fn CFURLClearResourcePropertyCacheForKey
     //fn CFURLCopyResourcePropertiesForKeys
     //fn CFURLCopyResourcePropertyForKey
     //fn CFURLCreateResourcePropertiesForKeysFromBookmarkData
     //fn CFURLCreateResourcePropertyForKeyFromBookmarkData
     //fn CFURLSetResourcePropertiesForKeys
-    pub fn CFURLSetResourcePropertyForKey(url: CFURLRef, key: CFStringRef, value: CFTypeRef, error: *mut CFErrorRef) -> Boolean;
+    //fn CFURLSetResourcePropertyForKey
     //fn CFURLSetTemporaryResourcePropertyForKey
 
     /* Working with Bookmark Data */
@@ -153,10 +153,4 @@ extern {
     //fn CFURLWriteBookmarkDataToFile
     //fn CFURLStartAccessingSecurityScopedResource
     //fn CFURLStopAccessingSecurityScopedResource
-}
-
-#[test]
-#[cfg(feature="mac_os_10_8_features")]
-fn can_see_excluded_from_backup_key() {
-    let _ = unsafe { kCFURLIsExcludedFromBackupKey };
 }

@@ -11,8 +11,6 @@ use libc::c_void;
 
 use base::{CFAllocatorRef, CFIndex, CFTypeID};
 
-pub type CFSetApplierFunction = extern "C" fn (value: *const c_void,
-                                               context: *const c_void);
 pub type CFSetRetainCallBack = *const u8;
 pub type CFSetReleaseCallBack = *const u8;
 pub type CFSetCopyDescriptionCallBack = *const u8;
@@ -47,11 +45,7 @@ extern {
                        callBacks: *const CFSetCallBacks) -> CFSetRef;
 
     /* Applying a Function to Set Members */
-    pub fn CFSetApplyFunction(theSet: CFSetRef,
-                              applier: CFSetApplierFunction,
-                              context: *const c_void);
-
-    pub fn CFSetGetCount(theSet: CFSetRef) -> CFIndex;
+    //fn CFSetApplyFunction
 
     pub fn CFSetGetTypeID() -> CFTypeID;
 }
