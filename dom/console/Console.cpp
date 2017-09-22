@@ -1844,7 +1844,7 @@ Console::ProcessArguments(JSContext* aCx,
           int32_t diff = aSequence.Length() - aStyles.Length();
           if (diff > 0) {
             for (int32_t i = 0; i < diff; i++) {
-              if (NS_WARN_IF(!aStyles.AppendElement(NullString(), fallible))) {
+              if (NS_WARN_IF(!aStyles.AppendElement(VoidString(), fallible))) {
                 return false;
               }
             }

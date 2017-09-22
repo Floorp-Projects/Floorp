@@ -1862,7 +1862,14 @@ nsCocoaWindow::SetTitle(const nsAString& aTitle)
   const unichar* uniTitle = reinterpret_cast<const unichar*>(strTitle.get());
   NSString* title = [NSString stringWithCharacters:uniTitle
                                             length:strTitle.Length()];
-  [mWindow setTitle:title];
+  if ([mWindow drawsContentsIntoWindowFrame] && ![mWindow wantsTitleDrawn]) {
+    // Don't cause invalidations when the title isn't displayed.
+    [mWindow disableSetNeedsDisplay];
+    [mWindow setTitle:title];
+    [mWindow enableSetNeedsDisplay];
+  } else {
+    [mWindow setTitle:title];
+  }
 
   return NS_OK;
 

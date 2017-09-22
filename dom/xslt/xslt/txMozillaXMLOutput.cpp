@@ -904,7 +904,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
                                        doctypeName,
                                        mOutputFormat.mPublicId,
                                        mOutputFormat.mSystemId,
-                                       NullString());
+                                       VoidString());
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCOMPtr<nsIContent> docType = do_QueryInterface(documentType);

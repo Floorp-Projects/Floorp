@@ -491,7 +491,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
     triggeringPrincipal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
   }
 
-  rv = lh->OnLinkClick(content, uri, unitarget.get(), NullString(),
+  rv = lh->OnLinkClick(content, uri, unitarget.get(), VoidString(),
                        aPostStream, headersDataStream, true, triggeringPrincipal);
 
   return rv;
