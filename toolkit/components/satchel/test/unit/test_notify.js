@@ -7,6 +7,8 @@
 
 let expectedNotification;
 let expectedData;
+let subjectIsGuid = false;
+let lastGUID;
 
 let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
@@ -15,14 +17,23 @@ let TestObserver = {
     do_check_eq(topic, "satchel-storage-changed");
     do_check_eq(data, expectedNotification);
 
+    let verifySubjectIsGuid = () => {
+      do_check_true(subject instanceof Ci.nsISupportsString);
+      do_check_true(isGUID.test(subject.toString()));
+      lastGUID = subject.toString();
+    };
+
     switch (data) {
       case "formhistory-add":
       case "formhistory-update":
-        do_check_true(subject instanceof Ci.nsISupportsString);
-        do_check_true(isGUID.test(subject.toString()));
+        verifySubjectIsGuid();
         break;
       case "formhistory-remove":
-        do_check_eq(null, subject);
+        if (subjectIsGuid) {
+          verifySubjectIsGuid();
+        } else {
+          do_check_eq(null, subject);
+        }
         break;
       default:
         do_throw("Unhandled notification: " + data + " / " + topic);
@@ -102,7 +113,24 @@ function* run_test_steps() {
 
     expectedNotification = "formhistory-remove";
     expectedData = entry1;
-    yield updateEntry("remove", entry1[0], entry1[1], next_test);
+
+    subjectIsGuid = true;
+    yield FormHistory.update({
+      op: "remove",
+      fieldname: entry1[0],
+      value: entry1[1],
+      guid: lastGUID,
+    }, {
+      handleError(error) {
+        do_throw("Error occurred updating form history: " + error);
+      },
+      handleCompletion(reason) {
+        if (!reason) {
+          next_test();
+        }
+      },
+    });
+    subjectIsGuid = false;
 
     do_check_eq(expectedNotification, null);
     yield countEntries(entry1[0], entry1[1], function(num) {
