@@ -111,11 +111,6 @@ nsDOMDataChannel::Init(nsPIDOMWindowInner* aDOMWindow)
   return rv;
 }
 
-NS_IMPL_EVENT_HANDLER(nsDOMDataChannel, open)
-NS_IMPL_EVENT_HANDLER(nsDOMDataChannel, error)
-NS_IMPL_EVENT_HANDLER(nsDOMDataChannel, close)
-NS_IMPL_EVENT_HANDLER(nsDOMDataChannel, message)
-
 // Most of the GetFoo()/SetFoo()s don't need to touch shared resources and
 // are safe after Close()
 NS_IMETHODIMP
