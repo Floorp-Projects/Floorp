@@ -247,9 +247,7 @@ public:
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) override;
   NS_IMETHOD CreateEditor() override;
   NS_IMETHOD_(Element*) GetRootEditorNode() override;
-  NS_IMETHOD_(Element*) CreatePlaceholderNode() override;
   NS_IMETHOD_(Element*) GetPlaceholderNode() override;
-  NS_IMETHOD_(Element*) CreatePreviewNode() override;
   NS_IMETHOD_(Element*) GetPreviewNode() override;
   NS_IMETHOD_(void) UpdateOverlayTextVisibility(bool aNotify) override;
   NS_IMETHOD_(void) SetPreviewValue(const nsAString& aValue) override;
