@@ -10,6 +10,7 @@ path:build/
 # TODO remove once bug 1402010 is resolved and test manifests aren't
 # processed in Files() reading mode in moz.build files.
 path:layout/tools/reftest/
+path:testing/web-platform/tests/tools/
 
 # This file is read as part of validating the taskgraph.
 path:mobile/locales/l10n-changesets.json
