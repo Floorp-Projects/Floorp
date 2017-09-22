@@ -79,6 +79,22 @@
   display: -moz-box;
 }
 
+/* Back / Forward context menu */
+
+.unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
+.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/back.svg") !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
+.unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/forward.svg") !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 /* Private browsing and accessibility indicators */
 
 .accessibility-indicator,

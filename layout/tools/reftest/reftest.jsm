@@ -1945,7 +1945,8 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
                 var failureString = failures.join(", ");
                 logger.testEnd(gURLs[0].identifier, output.s[0], output.s[1], failureString, null, extra);
             } else {
-                var message = "image comparison";
+                var message = "image comparison, max difference: " + maxDifference.value +
+                              ", number of differing pixels: " + differences;
                 if (!test_passed && expected == EXPECTED_PASS ||
                     !test_passed && expected == EXPECTED_FUZZY ||
                     test_passed && expected == EXPECTED_FAIL) {
@@ -1963,8 +1964,6 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
                         ];
                         extra.image1 = image1;
                         extra.image2 = image2;
-                        message += (", max difference: " + extra.max_difference +
-                                    ", number of differing pixels: " + differences);
                     } else {
                         var image1 = gCanvas1.toDataURL();
                         extra.reftest_screenshots = [

@@ -201,12 +201,11 @@
 
 .urlbar-go-button,
 .search-go-button {
-  list-style-image: url("chrome://browser/skin/back.svg");
-  width: 26px;
+  list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
-.urlbar-go-button:-moz-locale-dir(ltr),
-.search-go-button:-moz-locale-dir(ltr) {
+.urlbar-go-button:-moz-locale-dir(rtl),
+.search-go-button:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 

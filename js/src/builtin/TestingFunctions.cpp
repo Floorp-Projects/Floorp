@@ -1627,7 +1627,7 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
             // Some tests create a new compartment or zone on every
             // iteration. Our GC is triggered by GC allocations and not by
-            // number of copmartments or zones, so these won't normally get
+            // number of compartments or zones, so these won't normally get
             // cleaned up. The check here stops some tests running out of
             // memory.
             if (CountCompartments(cx) > compartmentCount + 100) {
@@ -1650,6 +1650,146 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
         if (verbose) {
             fprintf(stderr, "  finished after %d allocations\n", allocation - 2);
+        }
+    }
+
+    cx->runningOOMTest = false;
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+StackTest(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1 || args.length() > 2) {
+        JS_ReportErrorASCII(cx, "stackTest() takes between 1 and 2 arguments.");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+        JS_ReportErrorASCII(cx, "The first argument to stackTest() must be a function.");
+        return false;
+    }
+
+    if (args.length() == 2 && !args[1].isBoolean()) {
+        JS_ReportErrorASCII(cx, "The optional second argument to stackTest() must be a boolean.");
+        return false;
+    }
+
+    bool expectExceptionOnFailure = true;
+    if (args.length() == 2)
+        expectExceptionOnFailure = args[1].toBoolean();
+
+    // There are some places where we do fail without raising an exception, so
+    // we can't expose this to the fuzzers by default.
+    if (fuzzingSafe)
+        expectExceptionOnFailure = false;
+
+    if (disableOOMFunctions) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    RootedFunction function(cx, &args[0].toObject().as<JSFunction>());
+
+    bool verbose = EnvVarIsDefined("OOM_VERBOSE");
+
+    unsigned threadStart = THREAD_TYPE_COOPERATING;
+    unsigned threadEnd = THREAD_TYPE_MAX;
+
+    // Test a single thread type if specified by the OOM_THREAD environment variable.
+    int threadOption = 0;
+    if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
+        if (threadOption < THREAD_TYPE_COOPERATING || threadOption > THREAD_TYPE_MAX) {
+            JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
+            return false;
+        }
+
+        threadStart = threadOption;
+        threadEnd = threadOption + 1;
+    }
+
+    if (cx->runningOOMTest) {
+        JS_ReportErrorASCII(cx, "Nested call to oomTest() or stackTest() is not allowed.");
+        return false;
+    }
+    cx->runningOOMTest = true;
+
+    MOZ_ASSERT(!cx->isExceptionPending());
+
+    size_t compartmentCount = CountCompartments(cx);
+
+#ifdef JS_GC_ZEAL
+    JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
+#endif
+
+    for (unsigned thread = threadStart; thread < threadEnd; thread++) {
+        if (verbose)
+            fprintf(stderr, "thread %d\n", thread);
+
+        unsigned check = 1;
+        bool handledOOM;
+        do {
+            if (verbose)
+                fprintf(stderr, "  check %d\n", check);
+
+            MOZ_ASSERT(!cx->isExceptionPending());
+
+            js::oom::SimulateStackOOMAfter(check, thread, false);
+
+            RootedValue result(cx);
+            bool ok = JS_CallFunction(cx, cx->global(), function,
+                                      HandleValueArray::empty(), &result);
+
+            handledOOM = js::oom::HadSimulatedStackOOM();
+            js::oom::ResetSimulatedStackOOM();
+
+            MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
+
+            if (ok) {
+                MOZ_ASSERT(!cx->isExceptionPending(),
+                           "Thunk execution succeeded but an exception was raised - "
+                           "missing error check?");
+            } else if (expectExceptionOnFailure) {
+                MOZ_ASSERT(cx->isExceptionPending(),
+                           "Thunk execution failed but no exception was raised - "
+                           "missing call to js::ReportOutOfMemory()?");
+            }
+
+            // Note that it is possible that the function throws an exception
+            // unconnected to OOM, in which case we ignore it. More correct
+            // would be to have the caller pass some kind of exception
+            // specification and to check the exception against it.
+
+            cx->clearPendingException();
+
+            // Some tests create a new compartment or zone on every
+            // iteration. Our GC is triggered by GC allocations and not by
+            // number of compartments or zones, so these won't normally get
+            // cleaned up. The check here stops some tests running out of
+            // memory.
+            if (CountCompartments(cx) > compartmentCount + 100) {
+                JS_GC(cx);
+                compartmentCount = CountCompartments(cx);
+            }
+
+#ifdef JS_TRACE_LOGGING
+            // Reset the TraceLogger state if enabled.
+            TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+            if (logger->enabled()) {
+                while (logger->enabled())
+                    logger->disable();
+                logger->enable(cx);
+            }
+#endif
+
+            check++;
+        } while (handledOOM);
+
+        if (verbose) {
+            fprintf(stderr, "  finished after %d checks\n", check - 2);
         }
     }
 
@@ -4621,6 +4761,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  By default this tests that an exception is raised if execution fails, but\n"
 "  this can be disabled by passing false as the optional second parameter.\n"
 "  This is also disabled when --fuzzing-safe is specified."),
+
+    JS_FN_HELP("stackTest", StackTest, 0, 0,
+"stackTest(function, [expectExceptionOnFailure = true])",
+"  This function behaves exactly like oomTest with the difference that\n"
+"  instead of simulating regular OOM conditions, it simulates the engine\n"
+"  running out of stack space (failing recursion check)."),
 #endif
 
     JS_FN_HELP("settlePromiseNow", SettlePromiseNow, 1, 0,

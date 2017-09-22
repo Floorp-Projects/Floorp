@@ -60,9 +60,11 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       contextMenu.setAttribute("onpopupshowing",
         "DownloadsSubview.updateContextMenu(document.popupNode, this);");
       contextMenu.setAttribute("onpopuphidden", "DownloadsSubview.onContextMenuHidden(this);")
-      let clearButton = contextMenu.querySelector("menuitem[command='downloadsCmd_clearDownloads'");
+      let clearButton = contextMenu.querySelector("menuitem[command='downloadsCmd_clearDownloads']");
       clearButton.hidden = false;
       clearButton.previousSibling.hidden = true;
+      contextMenu.querySelector("menuitem[command='cmd_delete']")
+        .setAttribute("command", "downloadsCmd_delete");
     }
     this.panelview.appendChild(contextMenu);
     this.container.setAttribute("context", this.context);
@@ -230,8 +232,17 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     else
       menu.removeAttribute("exists");
     menu.classList.toggle("temporary-block", button.classList.contains("temporary-block"));
-    menu.querySelector("menuitem[command='downloadsCmd_clearDownloads'").disabled =
-      !DownloadsSubview.canClearDownloads(button);
+    for (let menuitem of menu.getElementsByTagName("menuitem")) {
+      let command = menuitem.getAttribute("command");
+      if (!command)
+        continue;
+      if (command == "downloadsCmd_clearDownloads") {
+        menuitem.disabled = !DownloadsSubview.canClearDownloads(button);
+      } else {
+        menuitem.disabled = !button._shell.isCommandEnabled(command);
+      }
+    }
+
     // The menu anchorNode property is not available long enough to be used elsewhere,
     // so tack it another property name.
     menu._anchorNode = button;

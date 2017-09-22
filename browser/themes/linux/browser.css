@@ -13,6 +13,7 @@
 
 :root {
   --tabs-border: rgba(0,0,0,.3);
+  --tab-line-color: highlight;
 
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
@@ -176,20 +177,6 @@ menuitem.bookmark-item {
 }
 
 %include ../shared/bookmarked-notification.inc.css
-
-.unified-nav-back[_moz-menuactive] {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu") !important;
-}
-.unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu") !important;
-}
-.unified-nav-forward[_moz-menuactive] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu") !important;
-}
-.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu") !important;
-}
-
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css

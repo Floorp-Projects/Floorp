@@ -1634,28 +1634,39 @@ var PlacesControllerDragHelper = {
       for (let unwrapped of nodes) {
         let index = await insertionPoint.getIndex();
 
-        // Adjust insertion index to prevent reversal of dragged items. When you
-        // drag multiple elts upward: need to increment index or each successive
-        // elt will be inserted at the same index, each above the previous.
         if (index != -1 && unwrapped.itemGuid) {
           // Note: we use the parent from the existing bookmark as the sidebar
           // gives us an unwrapped.parent that is actually a query and not the real
           // parent.
           let existingBookmark = await PlacesUtils.bookmarks.fetch(unwrapped.itemGuid);
-          let dragginUp = parentGuid == existingBookmark.parentGuid &&
-                          index < existingBookmark.index;
 
-          if (dragginUp) {
-            index += movedCount++;
-          } else if (PlacesUIUtils.useAsyncTransactions) {
-            if (index == existingBookmark.index) {
-              // We're moving to the same index, so there's nothing for us to do.
-              continue;
+          // If we're dropping on the same folder, then we may need to adjust
+          // the index to insert at the correct place.
+          if (existingBookmark && parentGuid == existingBookmark.parentGuid) {
+            if (PlacesUIUtils.useAsyncTransactions) {
+              if (index < existingBookmark.index) {
+                // When you drag multiple elts upward: need to increment index or
+                // each successive elt will be inserted at the same index, each
+                // above the previous.
+                index += movedCount++;
+              } else if (index > existingBookmark.index) {
+                // If we're dragging down, we need to go one lower to insert at
+                // the real point as moving the element changes the index of
+                // everything below by 1.
+                index--;
+              } else {
+                // This isn't moving so we skip it.
+                continue;
+              }
+            } else {
+              // Sync Transactions. Adjust insertion index to prevent reversal
+              // of dragged items. When you drag multiple elts upward: need to
+              // increment index or each successive elt will be inserted at the
+              // same index, each above the previous.
+              if (index < existingBookmark.index) { // eslint-disable-line no-lonely-if
+                index += movedCount++;
+              }
             }
-            // If we're dragging down, we need to go one lower to insert at
-            // the real point as moving the element changes the index of
-            // everything below by 1.
-            index--;
           }
         }
 

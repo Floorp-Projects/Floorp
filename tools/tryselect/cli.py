@@ -4,6 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+import subprocess
+import tempfile
 from argparse import ArgumentParser
 
 from .templates import all_templates
@@ -12,6 +15,13 @@ from .templates import all_templates
 class BaseTryParser(ArgumentParser):
     name = 'try'
     common_arguments = [
+        [['-m', '--message'],
+         {'const': 'editor',
+          'default': '{msg}',
+          'nargs': '?',
+          'help': 'Use the specified commit message, or create it in your '
+                  '$EDITOR if blank. Defaults to computed message.',
+          }],
         [['--no-push'],
          {'dest': 'push',
           'action': 'store_false',
@@ -52,8 +62,21 @@ class BaseTryParser(ArgumentParser):
         for template in self.templates.values():
             template.add_arguments(group)
 
+    def validate(self, args):
+        if args.message == 'editor':
+            if 'EDITOR' not in os.environ:
+                self.error("must set the $EDITOR environment variable to use blank --message")
+
+            with tempfile.NamedTemporaryFile(mode='r') as fh:
+                subprocess.call([os.environ['EDITOR'], fh.name])
+                args.message = fh.read().strip()
+
+        if '{msg}' not in args.message:
+            args.message = '{}\n\n{}'.format(args.message, '{msg}')
+
     def parse_known_args(self, *args, **kwargs):
         args, remainder = ArgumentParser.parse_known_args(self, *args, **kwargs)
+        self.validate(args)
 
         if self.templates:
             args.templates = {}

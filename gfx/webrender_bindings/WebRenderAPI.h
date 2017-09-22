@@ -229,6 +229,14 @@ public:
   void PushClip(const wr::WrClipId& aClipId, bool aRecordInStack = true);
   void PopClip(bool aRecordInStack = true);
 
+  wr::WrStickyId DefineStickyFrame(const wr::LayoutRect& aContentRect,
+                                   const wr::StickySideConstraint* aTop,
+                                   const wr::StickySideConstraint* aRight,
+                                   const wr::StickySideConstraint* aBottom,
+                                   const wr::StickySideConstraint* aLeft);
+  void PushStickyFrame(const wr::WrStickyId& aStickyId);
+  void PopStickyFrame();
+
   void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
 
   bool IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const;

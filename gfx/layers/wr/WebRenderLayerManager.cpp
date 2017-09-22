@@ -962,6 +962,12 @@ WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 }
 
 void
+WebRenderLayerManager::KeepCompositorAnimationsIdAlive(uint64_t aId)
+{
+  mDiscardedCompositorAnimationsIds.RemoveElement(aId);
+}
+
+void
 WebRenderLayerManager::DiscardCompositorAnimations()
 {
   if (WrBridge()->IPCOpen() &&
