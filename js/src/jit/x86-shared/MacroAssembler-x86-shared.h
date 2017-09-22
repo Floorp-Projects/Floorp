@@ -100,7 +100,9 @@ class MacroAssemblerX86Shared : public Assembler
     MacroAssemblerX86Shared()
     { }
 
-    bool asmMergeWith(const MacroAssemblerX86Shared& other);
+    bool appendRawCode(const uint8_t* code, size_t numBytes) {
+        return masm.appendRawCode(code, numBytes);
+    }
 
     // Evaluate srcDest = minmax<isMax>{Float32,Double}(srcDest, second).
     // Checks for NaN if canBeNaN is true.
