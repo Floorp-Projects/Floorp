@@ -39,7 +39,7 @@
   </vbox>
   <vbox>
     <hbox flex="1">
-      <button onclick="gContainersPane.onAddButtonClick();" accesskey="&addButton.accesskey;" label="&addButton.label;"/>
+      <button id="containersAdd" onclick="gContainersPane.onAddButtonClick();" accesskey="&addButton.accesskey;" label="&addButton.label;"/>
     </hbox>
   </vbox>
 </groupbox>
