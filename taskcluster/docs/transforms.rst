@@ -137,6 +137,7 @@ part of the documentation.
 
 following ``run-using`` are available
 
+  * ``buildbot``
   * ``hazard``
   * ``mach``
   * ``mozharness``
