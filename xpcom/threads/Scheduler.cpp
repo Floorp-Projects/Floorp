@@ -558,7 +558,9 @@ SchedulerImpl::SystemZoneResource::IsAvailable(const MutexAutoLock& aProofOfLock
 {
   mScheduler->mLock.AssertCurrentThreadOwns();
 
-  JSContext* cx = dom::danger::GetJSContext();
+  // It doesn't matter which context we pick; we really just some main-thread
+  // JSContext.
+  JSContext* cx = mScheduler->mContexts[0];
   return js::SystemZoneAvailable(cx);
 }
 
