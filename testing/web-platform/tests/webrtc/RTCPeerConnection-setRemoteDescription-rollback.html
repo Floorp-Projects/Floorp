@@ -100,7 +100,7 @@
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    return pc.createOffer({ offerToReceiveAudio: true })
+    return generateOffer({ audio: true })
     .then(offer => pc.setRemoteDescription(offer))
     .then(() => pc.setRemoteDescription({
       type: 'rollback',

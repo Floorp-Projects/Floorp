@@ -100,7 +100,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    return generateOffer({ pc, data: true })
+    return generateOffer({ data: true })
     .then(offer =>
       promise_rejects(t, 'InvalidModificationError',
         pc.setLocalDescription(offer)));

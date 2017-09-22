@@ -63,7 +63,7 @@
     const pc = new RTCPeerConnection();
     test_state_change_event(t, pc, ['have-remote-offer', 'stable']);
 
-    return pc.createOffer({ offerToReceiveVideo: true })
+    return generateOffer({ video: true })
     .then(offer =>
       pc.setRemoteDescription(offer)
       .then(() => pc.createAnswer())
@@ -91,7 +91,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    return pc.createOffer({ offerToReceiveVideo: true })
+    return generateOffer({ video: true })
     .then(offer =>
       pc.setRemoteDescription(offer)
       .then(() => pc.createAnswer())
@@ -120,7 +120,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    return pc.createOffer({ offerToReceiveVideo: true })
+    return generateOffer({ video: true })
     .then(offer =>
       pc.setRemoteDescription(offer)
       .then(() => generateAnswer(offer))
@@ -142,7 +142,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    return pc.createOffer()
+    return generateOffer()
     .then(offer =>
       promise_rejects(t, 'InvalidStateError',
         pc.setLocalDescription({ type: 'answer', sdp: offer.sdp })));
