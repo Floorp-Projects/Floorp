@@ -136,6 +136,13 @@
         <item>wifi</item>
         <item>disabled</item>
     </string-array>
+    <!-- This value is similar to config_longPressVibePattern in android frameworks/base/core/res/res/values/config.xml-->
+    <integer-array name="long_press_vibrate_msec">
+        <item>0</item>
+        <item>1</item>
+        <item>20</item>
+        <item>21</item>
+    </integer-array>
     <!-- browser.image_blocking -->
     <string-array name="pref_browser_image_blocking_entries">
         <item>@string/pref_tap_to_load_images_enabled</item>

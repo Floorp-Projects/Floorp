@@ -57,8 +57,7 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-public class GeckoApplication extends Application
-                              implements HapticFeedbackDelegate {
+public class GeckoApplication extends Application {
     private static final String LOG_TAG = "GeckoApplication";
     private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
 
@@ -230,7 +229,6 @@ public class GeckoApplication extends Application
 
         final Context context = getApplicationContext();
         GeckoAppShell.setApplicationContext(context);
-        GeckoAppShell.setHapticFeedbackDelegate(this);
         GeckoAppShell.setGeckoInterface(new GeckoAppShell.GeckoInterface() {
             @Override
             public boolean openUriExternal(final String targetURI, final String mimeType,
@@ -635,14 +633,5 @@ public class GeckoApplication extends Application
                 null);
 
         return bitmap;
-    }
-
-    @Override // HapticFeedbackDelegate
-    public void performHapticFeedback(final int effect) {
-        final Activity currentActivity =
-                GeckoActivityMonitor.getInstance().getCurrentActivity();
-        if (currentActivity != null) {
-            currentActivity.getWindow().getDecorView().performHapticFeedback(effect);
-        }
     }
 }
