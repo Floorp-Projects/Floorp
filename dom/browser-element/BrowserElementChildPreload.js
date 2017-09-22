@@ -666,9 +666,9 @@ BrowserElementChild.prototype = {
   _ClickHandler: function(e) {
 
     let isHTMLLink = node =>
-      ((ChromeUtils.getClassName(node) === "HTMLAnchorElement" && node.href) ||
-       (node instanceof Ci.nsIDOMHTMLAreaElement && node.href) ||
-        node instanceof Ci.nsIDOMHTMLLinkElement);
+        ((ChromeUtils.getClassName(node) === "HTMLAnchorElement" && node.href) ||
+         (ChromeUtils.getClassName(node) === "HTMLAreaElement" && node.href) ||
+         node instanceof Ci.nsIDOMHTMLLinkElement);
 
     // Open in a new tab if middle click or ctrl/cmd-click,
     // and e.target is a link or inside a link.
@@ -855,8 +855,9 @@ BrowserElementChild.prototype = {
   _getSystemCtxMenuData: function(elem) {
     let documentURI =
       docShell.QueryInterface(Ci.nsIWebNavigation).currentURI.spec;
+
     if ((ChromeUtils.getClassName(elem) === "HTMLAnchorElement" && elem.href) ||
-        (elem instanceof Ci.nsIDOMHTMLAreaElement && elem.href)) {
+        (ChromeUtils.getClassName(elem) === "HTMLAreaElement" && elem.href)) {
       return {uri: elem.href,
               documentURI: documentURI,
               text: elem.textContent.substring(0, kLongestReturnedString)};
