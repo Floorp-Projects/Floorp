@@ -617,9 +617,6 @@ size_t RtpPacketizerVp8::PictureIdLength() const {
   if (hdr_info_.pictureId == kNoPictureId) {
     return 0;
   }
-  if (hdr_info_.pictureId <= 0x7F) {
-    return 1;
-  }
   return 2;
 }
 
