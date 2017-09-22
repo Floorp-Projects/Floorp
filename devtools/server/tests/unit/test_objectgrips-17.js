@@ -6,10 +6,13 @@
 
 var gServer;
 var gDebuggee;
+var gDebuggeeHasXrays;
 var gClient;
 var gThreadClient;
 var gGlobal;
-var gHasXrays;
+var gGlobalIsInvisible;
+var gSubsumes;
+var gIsOpaque;
 
 function run_test() {
   run_test_with_server(DebuggerServer, function () {
@@ -31,63 +34,95 @@ async function run_test_with_server(server, callback) {
   callback();
 }
 
-async function run_tests_in_principal(principal, title) {
-  // Prepare the debuggee.
-  gDebuggee = Cu.Sandbox(principal);
-  gDebuggee.__name = title;
-  gServer.addTestGlobal(gDebuggee);
-  gDebuggee.eval(function stopMe(arg1, arg2) {
-    debugger;
-  }.toString());
-  gClient = new DebuggerClient(gServer.connectPipe());
-  await gClient.connect();
-  const [,, threadClient] = await attachTestTabAndResume(gClient, title);
-  gThreadClient = threadClient;
+async function run_tests_in_principal(debuggeePrincipal, title) {
+  for (gDebuggeeHasXrays of [true, false]) {
+    // Prepare the debuggee.
+    let fullTitle = gDebuggeeHasXrays ? title + "-with-xrays" : title;
+    gDebuggee = Cu.Sandbox(debuggeePrincipal, {wantXrays: gDebuggeeHasXrays});
+    gDebuggee.__name = fullTitle;
+    gServer.addTestGlobal(gDebuggee);
+    gDebuggee.eval(function stopMe() {
+      debugger;
+    }.toString());
+    gClient = new DebuggerClient(gServer.connectPipe());
+    await gClient.connect();
+    const [,, threadClient] = await attachTestTabAndResume(gClient, fullTitle);
+    gThreadClient = threadClient;
 
-  // Test objects created in the debuggee.
-  await testPrincipal(undefined, false);
+    // Test objects created in the debuggee.
+    await testPrincipal(undefined);
 
-  // Test objects created in a new system principal with Xrays.
-  await testPrincipal(systemPrincipal, true);
+    // Test objects created in a system principal new global.
+    await testPrincipal(systemPrincipal);
 
-  // Test objects created in a new system principal without Xrays.
-  await testPrincipal(systemPrincipal, false);
+    // Test objects created in a cross-origin null principal new global.
+    await testPrincipal(null);
 
-  // Test objects created in a new null principal with Xrays.
-  await testPrincipal(null, true);
+    if (debuggeePrincipal === null) {
+      // Test objects created in a same-origin null principal new global.
+      await testPrincipal(Cu.getObjectPrincipal(gDebuggee));
+    }
 
-  // Test objects created in a new null principal without Xrays.
-  await testPrincipal(null, false);
-
-  // Finish.
-  await gClient.close();
+    // Finish.
+    await gClient.close();
+  }
 }
 
-function testPrincipal(principal, wantXrays = true) {
+async function testPrincipal(globalPrincipal) {
   // Create a global object with the specified security principal.
   // If none is specified, use the debuggee.
-  if (principal !== undefined) {
-    gGlobal = Cu.Sandbox(principal, {wantXrays});
-    gHasXrays = wantXrays;
-  } else {
+  if (globalPrincipal === undefined) {
     gGlobal = gDebuggee;
-    gHasXrays = false;
+    gSubsumes = true;
+    gIsOpaque = false;
+    gGlobalIsInvisible = false;
+    await test();
+    return;
   }
 
+  let debuggeePrincipal = Cu.getObjectPrincipal(gDebuggee);
+  let sameOrigin = debuggeePrincipal === globalPrincipal;
+  gSubsumes = sameOrigin || debuggeePrincipal === systemPrincipal;
+  for (let globalHasXrays of [true, false]) {
+    gIsOpaque = gSubsumes && globalPrincipal !== systemPrincipal
+                && (sameOrigin && gDebuggeeHasXrays || globalHasXrays);
+    for (gGlobalIsInvisible of [true, false]) {
+      gGlobal = Cu.Sandbox(globalPrincipal, {
+        wantXrays: globalHasXrays,
+        invisibleToDebugger: gGlobalIsInvisible
+      });
+      await test();
+    }
+  }
+}
+
+function test() {
   return new Promise(function (resolve) {
     gThreadClient.addOneTimeListener("paused", async function (event, packet) {
       // Get the grips.
-      let [proxyGrip, inheritsProxyGrip] = packet.frame.arguments;
+      let [proxyGrip, inheritsProxyGrip, inheritsProxy2Grip] = packet.frame.arguments;
 
       // Check the grip of the proxy object.
       check_proxy_grip(proxyGrip);
 
-      // Retrieve the properties of the object which inherits from a proxy,
-      // and check the grip of its prototype.
-      let objClient = gThreadClient.pauseGrip(inheritsProxyGrip);
-      let response = await objClient.getPrototypeAndProperties();
-      check_properties(response.ownProperties);
-      check_prototype(response.prototype);
+      // Check the prototype and properties of the proxy object.
+      let proxyClient = gThreadClient.pauseGrip(proxyGrip);
+      let proxyResponse = await proxyClient.getPrototypeAndProperties();
+      check_properties(proxyResponse.ownProperties, true, false);
+      check_prototype(proxyResponse.prototype, true, false);
+
+      // Check the prototype and properties of the object which inherits from the proxy.
+      let inheritsProxyClient = gThreadClient.pauseGrip(inheritsProxyGrip);
+      let inheritsProxyResponse = await inheritsProxyClient.getPrototypeAndProperties();
+      check_properties(inheritsProxyResponse.ownProperties, false, false);
+      check_prototype(inheritsProxyResponse.prototype, false, false);
+
+      // The prototype chain was not iterated if the object was inaccessible, so now check
+      // another object which inherits from the proxy, but was created in the debuggee.
+      let inheritsProxy2Client = gThreadClient.pauseGrip(inheritsProxy2Grip);
+      let inheritsProxy2Response = await inheritsProxy2Client.getPrototypeAndProperties();
+      check_properties(inheritsProxy2Response.ownProperties, false, true);
+      check_prototype(inheritsProxy2Response.prototype, false, true);
 
       // Check that none of the above ran proxy traps.
       strictEqual(gGlobal.trapDidRun, false, "No proxy trap did run.");
@@ -105,22 +140,19 @@ function testPrincipal(principal, wantXrays = true) {
     gGlobal.eval(`
       var trapDidRun = false;
       var proxy = new Proxy({}, new Proxy({}, {get: (_, trap) => {
-        return function(_, arg) {
-          trapDidRun = true;
-          throw new Error("proxy trap '" + trap + "' was called.");
-        }
+        trapDidRun = true;
+        throw new Error("proxy trap '" + trap + "' was called.");
       }}));
       var inheritsProxy = Object.create(proxy, {x:{value:1}});
     `);
     let data = Cu.createObjectIn(gDebuggee, {defineAs: "data"});
     data.proxy = gGlobal.proxy;
     data.inheritsProxy = gGlobal.inheritsProxy;
-    gDebuggee.eval("stopMe(data.proxy, data.inheritsProxy);");
+    gDebuggee.eval(`
+      var inheritsProxy2 = Object.create(data.proxy, {x:{value:1}});
+      stopMe(data.proxy, data.inheritsProxy, inheritsProxy2);
+    `);
   });
-}
-
-function isSystemPrincipal(obj) {
-  return Cu.getObjectPrincipal(obj) === systemPrincipal;
 }
 
 function check_proxy_grip(grip) {
@@ -136,11 +168,11 @@ function check_proxy_grip(grip) {
     strictEqual(target, grip.proxyTarget, "<target> contains the [[ProxyTarget]].");
     let handler = preview.ownProperties["<handler>"].value;
     strictEqual(handler, grip.proxyHandler, "<handler> contains the [[ProxyHandler]].");
-  } else if (!isSystemPrincipal(gDebuggee)) {
-    // The debuggee is not allowed to remove the security wrappers.
-    strictEqual(grip.class, "Object", "The grip has an Object class.");
-    ok(!("ownPropertyLength" in grip), "The grip doesn't know the number of properties.");
-  } else if (!gHasXrays || isSystemPrincipal(gGlobal)) {
+  } else if (gIsOpaque) {
+    // The proxy has opaque security wrappers.
+    strictEqual(grip.class, "Opaque", "The grip has an Opaque class.");
+    strictEqual(grip.ownPropertyLength, 0, "The grip has no properties.");
+  } else if (gSubsumes && !gGlobalIsInvisible) {
     // The proxy has non-opaque security wrappers.
     strictEqual(grip.class, "Proxy", "The grip has a Proxy class.");
     ok(!("proxyTarget" in grip), "There is no [[ProxyTarget]] grip.");
@@ -149,37 +181,40 @@ function check_proxy_grip(grip) {
     ok(!("<target>" in preview), "The preview has no <target> property.");
     ok(!("<handler>" in preview), "The preview has no <handler> property.");
   } else {
-    // The proxy has opaque security wrappers.
-    strictEqual(grip.class, "Opaque", "The grip has an Opaque class.");
-    strictEqual(grip.ownPropertyLength, 0, "The grip has no properties.");
+    // The debuggee is not allowed to remove the security wrappers.
+    strictEqual(grip.class, "Inaccessible", "The grip has an Inaccessible class.");
+    ok(!("ownPropertyLength" in grip), "The grip doesn't know the number of properties.");
   }
 }
 
-function check_properties(props) {
+function check_properties(props, isProxy, createdInDebuggee) {
   let ownPropertiesLength = Reflect.ownKeys(props).length;
 
-  if (!isSystemPrincipal(gDebuggee) && gDebuggee !== gGlobal) {
-    // The debuggee is not allowed to access the object.
-    strictEqual(ownPropertiesLength, 0, "No own property could be retrieved.");
-  } else {
+  if (createdInDebuggee || !isProxy && gSubsumes && !gGlobalIsInvisible) {
     // The debuggee can access the properties.
     strictEqual(ownPropertiesLength, 1, "1 own property was retrieved.");
     strictEqual(props.x.value, 1, "The property has the right value.");
+  } else {
+    // The debuggee is not allowed to access the object.
+    strictEqual(ownPropertiesLength, 0, "No own property could be retrieved.");
   }
 }
 
-function check_prototype(proto) {
-  if (!isSystemPrincipal(gDebuggee) && gDebuggee !== gGlobal) {
-    // The debuggee is not allowed to access the object. It sees a null prototype.
-    strictEqual(proto.type, "null", "The prototype is null.");
-  } else if (!gHasXrays || isSystemPrincipal(gGlobal)) {
-    // The object has no security wrappers or non-opaque ones.
+function check_prototype(proto, isProxy, createdInDebuggee) {
+  if (gIsOpaque && !gGlobalIsInvisible && !createdInDebuggee) {
+    // The object is or inherits from a proxy with opaque security wrappers.
+    // The debuggee sees `Object.prototype` when retrieving the prototype.
+    strictEqual(proto.class, "Object", "The prototype has a Object class.");
+  } else if (isProxy && gIsOpaque && gGlobalIsInvisible) {
+    // The object is a proxy with opaque security wrappers in an invisible global.
+    // The debuggee sees an inaccessible `Object.prototype` when retrieving the prototype.
+    strictEqual(proto.class, "Inaccessible", "The prototype has an Inaccessible class.");
+  } else if (createdInDebuggee || !isProxy && gSubsumes && !gGlobalIsInvisible) {
+    // The object inherits from a proxy and has no security wrappers or non-opaque ones.
     // The debuggee sees the proxy when retrieving the prototype.
     check_proxy_grip(proto);
   } else {
-    // The object has opaque security wrappers.
-    // The debuggee sees `Object.prototype` when retrieving the prototype.
-    strictEqual(proto.class, "Object", "The prototype has a Object class.");
+    // The debuggee is not allowed to access the object. It sees a null prototype.
+    strictEqual(proto.type, "null", "The prototype is null.");
   }
 }
-
