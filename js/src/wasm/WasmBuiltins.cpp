@@ -833,9 +833,13 @@ wasm::EnsureBuiltinThunksInitialized()
 
         ABIFunctionType abiType;
         void* funcPtr = AddressOf(sym, &abiType);
+
         ExitReason exitReason(sym);
-        CallableOffsets offset = GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr);
-        if (masm.oom() || !thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offset))
+
+        CallableOffsets offsets;
+        if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets))
+            return false;
+        if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets))
             return false;
     }
 
@@ -855,9 +859,13 @@ wasm::EnsureBuiltinThunksInitialized()
 
         ABIFunctionType abiType = typedNative.abiType;
         void* funcPtr = r.front().value();
+
         ExitReason exitReason = ExitReason::Fixed::BuiltinNative;
-        CallableOffsets offset = GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr);
-        if (masm.oom() || !thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offset))
+
+        CallableOffsets offsets;
+        if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets))
+            return false;
+        if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets))
             return false;
     }
 
@@ -878,11 +886,13 @@ wasm::EnsureBuiltinThunksInitialized()
     masm.processCodeLabels(thunks->codeBase);
 #ifdef DEBUG
     MOZ_ASSERT(masm.callSites().empty());
+    MOZ_ASSERT(masm.callSiteTargets().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
     MOZ_ASSERT(masm.trapSites().empty());
     MOZ_ASSERT(masm.trapFarJumps().empty());
-    MOZ_ASSERT(masm.extractMemoryAccesses().empty());
-    MOZ_ASSERT(!masm.numSymbolicAccesses());
+    MOZ_ASSERT(masm.callFarJumps().empty());
+    MOZ_ASSERT(masm.memoryAccesses().empty());
+    MOZ_ASSERT(masm.symbolicAccesses().empty());
 #endif
 
     ExecutableAllocator::cacheFlush(thunks->codeBase, thunks->codeSize);

@@ -659,15 +659,31 @@ Assembler::finish()
 }
 
 bool
-Assembler::asmMergeWith(Assembler& other)
+Assembler::appendRawCode(const uint8_t* code, size_t numBytes)
 {
     flush();
-    other.flush();
-    if (other.oom())
+    return m_buffer.appendRawCode(code, numBytes);
+}
+
+bool
+Assembler::reserve(size_t size)
+{
+    // This buffer uses fixed-size chunks so there's no point in reserving
+    // now vs. on-demand.
+    return !oom();
+}
+
+bool
+Assembler::swapBuffer(wasm::Bytes& bytes)
+{
+    // For now, specialize to the one use case. As long as wasm::Bytes is a
+    // Vector, not a linked-list of chunks, there's not much we can do other
+    // than copy.
+    MOZ_ASSERT(bytes.empty());
+    if (!bytes.resize(bytesNeeded()))
         return false;
-    if (!AssemblerShared::asmMergeWith(size(), other))
-        return false;
-    return m_buffer.appendBuffer(other.m_buffer);
+    m_buffer.executableCopy(bytes.begin());
+    return true;
 }
 
 void
@@ -948,7 +964,7 @@ Assembler::processCodeLabels(uint8_t* rawCode)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
         CodeLabel label = codeLabels_[i];
-        Bind(rawCode, label.patchAt(), rawCode + label.target()->offset());
+        Bind(rawCode, *label.patchAt(), *label.target());
     }
 }
 
@@ -960,9 +976,9 @@ Assembler::writeCodePointer(CodeOffset* label)
 }
 
 void
-Assembler::Bind(uint8_t* rawCode, CodeOffset* label, const void* address)
+Assembler::Bind(uint8_t* rawCode, CodeOffset label, CodeOffset target)
 {
-    *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
+    *reinterpret_cast<const void**>(rawCode + label.offset()) = rawCode + target.offset();
 }
 
 Assembler::Condition

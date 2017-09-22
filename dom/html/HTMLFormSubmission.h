@@ -84,9 +84,11 @@ public:
    *
    * @param aURI the URI being submitted to [INOUT]
    * @param aPostDataStream a data stream for POST data [OUT]
+   * @param aPostDataStreamLength a data stream for POST data length [OUT]
    */
   virtual nsresult
-  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) = 0;
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
+                       int64_t* aPostDataStreamLength) = 0;
 
   /**
    * Get the charset that will be used for submission.
@@ -165,7 +167,8 @@ public:
   AddNameDirectoryPair(const nsAString& aName, Directory* aDirectory) override;
 
   virtual nsresult
-  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
+                       int64_t* aPostDataStreamLength) override;
 
   void GetContentType(nsACString& aContentType)
   {

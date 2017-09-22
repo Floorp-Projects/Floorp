@@ -1126,17 +1126,18 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         }
     }
 
-    bool appendBuffer(const AssemblerBufferWithConstantPools& other) {
+    bool appendRawCode(const uint8_t* code, size_t numBytes) {
         if (this->oom())
             return false;
         // The pools should have all been flushed, check.
         MOZ_ASSERT(pool_.numEntries() == 0);
-        for (Slice* cur = other.getHead(); cur != nullptr; cur = cur->getNext()) {
-            this->putBytes(cur->length(), &cur->instructions[0]);
-            if (this->oom())
-                return false;
+        while (numBytes > SliceSize) {
+            this->putBytes(SliceSize, code);
+            numBytes -= SliceSize;
+            code += SliceSize;
         }
-        return true;
+        this->putBytes(numBytes, code);
+        return !this->oom();
     }
 
   public:
