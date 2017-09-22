@@ -147,16 +147,11 @@ MacIOSurfaceTextureHostOGL::NumSubTextures() const
 }
 
 void
-MacIOSurfaceTextureHostOGL::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
-                                                ResourceUpdateOp aOp,
-                                                const Range<wr::ImageKey>& aImageKeys,
-                                                const wr::ExternalImageId& aExtID) override;
+MacIOSurfaceTextureHostOGL::AddWRImage(wr::ResourceUpdateQueue& aResources,
+                                       Range<const wr::ImageKey>& aImageKeys,
+                                       const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mSurface);
-
-  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
-                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
-  auto bufferType = wr::WrExternalImageBufferType::TextureRectHandle;
 
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
@@ -166,7 +161,11 @@ MacIOSurfaceTextureHostOGL::PushResourceUpdates(wr::ResourceUpdateQueue& aResour
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
       wr::ImageDescriptor descriptor(GetSize(), GetFormat());
-      (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  0);
       break;
     }
     case gfx::SurfaceFormat::YUV422: {
@@ -177,7 +176,11 @@ MacIOSurfaceTextureHostOGL::PushResourceUpdates(wr::ResourceUpdateQueue& aResour
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
       wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::R8G8B8X8);
-      (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  0);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
@@ -187,8 +190,16 @@ MacIOSurfaceTextureHostOGL::PushResourceUpdates(wr::ResourceUpdateQueue& aResour
                                       gfx::SurfaceFormat::A8);
       wr::ImageDescriptor descriptor1(gfx::IntSize(mSurface->GetDevicePixelWidth(1), mSurface->GetDevicePixelHeight(1)),
                                       gfx::SurfaceFormat::R8G8);
-      (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
-      (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor0,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  0);
+      aResources.AddExternalImage(aImageKeys[1],
+                                  descriptor1,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  1);
       break;
     }
     default: {
