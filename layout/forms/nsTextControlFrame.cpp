@@ -483,7 +483,7 @@ nsTextControlFrame::CreateRootNode()
                                    classValue, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return UpdateValueDisplay(false);
+  return NS_OK;
 }
 
 void
