@@ -883,7 +883,6 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'sync/crypto/PersistedCrypto5Keys.java',
     'sync/CryptoKeysChangedException.java',
     'sync/CryptoRecord.java',
-    'sync/DelayedWorkTracker.java',
     'sync/delegates/ClientsDataDelegate.java',
     'sync/delegates/FreshStartDelegate.java',
     'sync/delegates/GlobalSessionCallback.java',

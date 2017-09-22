@@ -73,6 +73,9 @@ JsonViewSniffer.prototype = {
     if (request instanceof Ci.nsIChannel) {
       // JSON View is enabled only for top level loads only.
       if (!this.isTopLevelLoad(request)) {
+        if (request.contentType === JSON_VIEW_MIME_TYPE) {
+          return "application/json";
+        }
         return "";
       }
       try {

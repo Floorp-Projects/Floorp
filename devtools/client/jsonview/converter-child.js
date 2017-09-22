@@ -254,11 +254,8 @@ function onContentMessage(e) {
       break;
 
     case "save":
-      // The window ID is needed when the JSON Viewer is inside an iframe.
-      let windowID = win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
       childProcessMessageManager.sendAsyncMessage(
-        "devtools:jsonview:save", {url: value, windowID: windowID});
+        "devtools:jsonview:save", value);
   }
 }
 
