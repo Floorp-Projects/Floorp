@@ -21,8 +21,8 @@ test(function() {
     assert_equals(effect.getKeyframes()[0].easing, expected,
                   `resulting easing for '${easing}'`);
   }
-}, 'easing values are parsed correctly when passed to the ' +
-   'KeyframeEffect constructor in a property-indexed keyframe');
+}, 'easing values are parsed correctly when set on a property-indexed'
+   + ' keyframe');
 
 test(function() {
   for (const [easing, expected] of gEasingParsingTests) {
@@ -33,8 +33,7 @@ test(function() {
     assert_equals(effect.getKeyframes()[0].easing, expected,
                   `resulting easing for '${easing}'`);
   }
-}, 'easing values are parsed correctly when passed to the ' +
-   'KeyframeEffect constructor in regular keyframes');
+}, 'easing values are parsed correctly when using a keyframe sequence');
 
 test(function() {
   for (const invalidEasing of gInvalidEasings) {
@@ -42,8 +41,8 @@ test(function() {
       new KeyframeEffect(target, { easing: invalidEasing });
     }, `TypeError is thrown for easing '${invalidEasing}'`);
   }
-}, 'Invalid easing values are correctly rejected when passed to the ' +
-   'KeyframeEffect constructor in regular keyframes');
+}, 'Invalid easing values are correctly rejected when set on a property-'
+   + 'indexed keyframe');
 
 test(function() {
   for (const invalidEasing of gInvalidEasings) {
@@ -51,7 +50,7 @@ test(function() {
       new KeyframeEffect(target, [{ easing: invalidEasing }]);
     }, `TypeError is thrown for easing '${invalidEasing}'`);
   }
-}, 'Invalid easing values are correctly rejected when passed to the ' +
-   'KeyframeEffectReadOnly constructor in a keyframe sequence');
+}, 'Invalid easing values are correctly rejected when using a keyframe'
+   + ' sequence');
 
 </script>
