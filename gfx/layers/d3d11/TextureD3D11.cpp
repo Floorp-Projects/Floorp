@@ -1063,11 +1063,15 @@ DXGITextureHostD3D11::NumSubTextures() const
 }
 
 void
-DXGITextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
-                                 Range<const wr::ImageKey>& aImageKeys,
-                                 const wr::ExternalImageId& aExtID)
+DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+                                          ResourceUpdateOp aOp,
+                                          const Range<wr::ImageKey>& aImageKeys,
+                                          const wr::ExternalImageId& aExtID) override;
 {
   MOZ_ASSERT(mHandle);
+  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
+                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
+  auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
 
   switch (mFormat) {
     case gfx::SurfaceFormat::R8G8B8X8:
@@ -1077,11 +1081,7 @@ DXGITextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
       MOZ_ASSERT(aImageKeys.length() == 1);
 
       wr::ImageDescriptor descriptor(GetSize(), GetFormat());
-      aResources.AddExternalImage(aImageKeys[0],
-                                  descriptor,
-                                  aExtID,
-                                  wr::WrExternalImageBufferType::Texture2DHandle,
-                                  0);
+      (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
@@ -1089,16 +1089,8 @@ DXGITextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
 
       wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
       wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::R8G8);
-      aResources.AddExternalImage(aImageKeys[0],
-                                  descriptor0,
-                                  aExtID,
-                                  wr::WrExternalImageBufferType::TextureExternalHandle,
-                                  0);
-      aResources.AddExternalImage(aImageKeys[1],
-                                  descriptor1,
-                                  aExtID,
-                                  wr::WrExternalImageBufferType::TextureExternalHandle,
-                                  1);
+      (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
+      (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
       break;
     }
     default: {
@@ -1303,9 +1295,10 @@ DXGIYCbCrTextureHostD3D11::CreateRenderTexture(const wr::ExternalImageId& aExter
 }
 
 void
-DXGIYCbCrTextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
-                                      Range<const wr::ImageKey>& aImageKeys,
-                                      const wr::ExternalImageId& aExtID)
+DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+                                               ResourceUpdateOp aOp,
+                                               const Range<wr::ImageKey>& aImageKeys,
+                                               const wr::ExternalImageId& aExtID) override;
 {
   // TODO - This implementation is very slow (read-back, copy on the copy and re-upload).
 
@@ -1331,7 +1324,11 @@ DXGIYCbCrTextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
   wr::ImageDescriptor descriptor(size, map.mStride, dataSourceSurface->GetFormat());
   wr::Vec_u8 imgBytes;
   imgBytes.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
-  aResources.AddImage(aImageKeys[0], descriptor, imgBytes);
+  if (aOp == TextureHost::ADD_IMAGE) {
+    aResources.AddImage(aImageKeys[0], descriptor, imgBytes);
+  } else {
+    aResource.UpdateImage(aImageKeys[0], descriptor, imgBytes);
+  }
 
   dataSourceSurface->Unmap();
 }
