@@ -321,9 +321,23 @@ test(function(t) {
   ]);
 }, 'Only properties defined directly on property-indexed keyframes are read');
 
-// FIXME: Test that properties are accessed in ascending order by Unicode
-//        codepoint
-//        (There is an existing test for this in
-//        keyframe-effect/constructor.html that should be moved here.)
+test(function(t) {
+  var expectedOrder = ['composite', 'easing', 'offset', 'left', 'marginLeft'];
+  var actualOrder = [];
+  var kf1 = {};
+  var kf2 = { marginLeft: '10px', left: '20px', offset: 1 };
+  [ { p: 'marginLeft', v: '10px' },
+    { p: 'left',       v: '20px' },
+    { p: 'offset',     v: '0' },
+    { p: 'easing',     v: 'linear' },
+    { p: 'composite',  v: 'replace' } ].forEach(function(e) {
+    Object.defineProperty(kf1, e.p, {
+      enumerable: true,
+      get: function() { actualOrder.push(e.p); return e.v; }
+    });
+  });
+  new KeyframeEffect(target, [kf1, kf2]);
+  assert_array_equals(actualOrder, expectedOrder, 'property access order');
+}, 'Properties are read in ascending order by Unicode codepoint');
 
 </script>
