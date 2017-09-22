@@ -31,7 +31,7 @@ interface HTMLAnchorElement : HTMLElement {
            [CEReactions, SetterThrows]
            attribute DOMString type;
 
-           [CEReactions, SetterThrows]
+           [CEReactions, Throws]
            attribute DOMString text;
 };
 
