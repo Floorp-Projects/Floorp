@@ -20,7 +20,8 @@ class GenericScrollAnimation
 {
 public:
   GenericScrollAnimation(AsyncPanZoomController& aApzc,
-                         const nsPoint& aInitialPosition);
+                         const nsPoint& aInitialPosition,
+                         const ScrollAnimationPhysicsSettings& aSettings);
 
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
 
@@ -33,10 +34,10 @@ public:
 
 private:
   void Update(TimeStamp aTime, const nsSize& aCurrentVelocity);
- 
+
 protected:
   AsyncPanZoomController& mApzc;
-  ScrollAnimationPhysics mAnimationPhysics;
+  UniquePtr<ScrollAnimationPhysics> mAnimationPhysics;
   nsPoint mFinalDestination;
   bool mForceVerticalOverscroll;
 };

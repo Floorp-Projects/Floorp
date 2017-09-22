@@ -13,31 +13,39 @@
 namespace mozilla {
 namespace layers {
 
-WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc,
-                                           const nsPoint& aInitialPosition,
-                                           ScrollWheelInput::ScrollDeltaType aDeltaType)
-  : GenericScrollAnimation(aApzc, aInitialPosition)
+static ScrollAnimationPhysicsSettings
+SettingsForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
 {
-  mForceVerticalOverscroll = !mApzc.mScrollMetadata.AllowVerticalScrollWithWheel();
+  int32_t minMS = 0;
+  int32_t maxMS = 0;
 
   switch (aDeltaType) {
-  case ScrollWheelInput::SCROLLDELTA_PAGE:
-    mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
-    mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
-    break;
-  case ScrollWheelInput::SCROLLDELTA_PIXEL:
-    mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
-    mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::PixelSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
-    break;
-  case ScrollWheelInput::SCROLLDELTA_LINE:
-    mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
-    mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
-    break;
+    case ScrollWheelInput::SCROLLDELTA_PAGE:
+      maxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, maxMS);
+      break;
+    case ScrollWheelInput::SCROLLDELTA_PIXEL:
+      maxMS = clamped(gfxPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(gfxPrefs::PixelSmoothScrollMinDurationMs(), 0, maxMS);
+      break;
+    case ScrollWheelInput::SCROLLDELTA_LINE:
+      maxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, maxMS);
+      break;
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
-  mAnimationPhysics.mIntervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
-  mAnimationPhysics.mIntervalRatio = std::max(1.0, mAnimationPhysics.mIntervalRatio);
+  double intervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+  intervalRatio = std::max(1.0, intervalRatio);
+  return ScrollAnimationPhysicsSettings { minMS, maxMS, intervalRatio };
+}
+
+WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc,
+                                           const nsPoint& aInitialPosition,
+                                           ScrollWheelInput::ScrollDeltaType aDeltaType)
+  : GenericScrollAnimation(aApzc, aInitialPosition, SettingsForDeltaType(aDeltaType))
+{
+  mForceVerticalOverscroll = !mApzc.mScrollMetadata.AllowVerticalScrollWithWheel();
 }
 
 } // namespace layers

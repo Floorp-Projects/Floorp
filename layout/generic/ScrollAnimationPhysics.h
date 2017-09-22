@@ -12,6 +12,17 @@
 
 namespace mozilla {
 
+struct ScrollAnimationPhysicsSettings
+{
+  // These values are minimum and maximum animation duration per event,
+  // and a global ratio which defines how longer is the animation's duration
+  // compared to the average recent events intervals (such that for a relatively
+  // consistent events rate, the next event arrives before current animation ends)
+  int32_t mMinMS;
+  int32_t mMaxMS;
+  double mIntervalRatio;
+};
+
 // This is the base class for driving scroll wheel animation on both the
 // compositor and main thread.
 class ScrollAnimationPhysics
@@ -20,37 +31,23 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  explicit ScrollAnimationPhysics(nsPoint aStartPos);
+  explicit ScrollAnimationPhysics(nsPoint aStartPos,
+                                  const ScrollAnimationPhysicsSettings& aSettings);
 
   void Update(TimeStamp aTime,
               nsPoint aDestination,
               const nsSize& aCurrentVelocity);
 
   // Get the velocity at a point in time in nscoords/sec.
-  nsSize VelocityAt(TimeStamp aTime) const;
+  nsSize VelocityAt(TimeStamp aTime);
 
   // Returns the expected scroll position at a given point in time, in app
   // units, relative to the scroll frame.
-  nsPoint PositionAt(TimeStamp aTime) const;
+  nsPoint PositionAt(TimeStamp aTime);
 
   bool IsFinished(TimeStamp aTime) {
     return aTime > mStartTime + mDuration;
   }
-
-  // Initialize event history.
-  void InitializeHistory(TimeStamp aTime);
-
-  // Cached Preferences value.
-  //
-  // These values are minimum and maximum animation duration per event origin,
-  // and a global ratio which defines how longer is the animation's duration
-  // compared to the average recent events intervals (such that for a relatively
-  // consistent events rate, the next event arrives before current animation ends)
-  int32_t mOriginMinMS;
-  int32_t mOriginMaxMS;
-  double mIntervalRatio;
-  nsPoint mDestination;
-  bool mIsFirstIteration;
 
 protected:
   double ProgressAt(TimeStamp aTime) const {
@@ -72,6 +69,12 @@ protected:
                           nscoord aCurrentPos, nscoord aCurrentVelocity,
                           nscoord aDestination);
 
+  // Initialize event history.
+  void InitializeHistory(TimeStamp aTime);
+
+  // Cached Preferences values.
+  ScrollAnimationPhysicsSettings mSettings;
+
   // mPrevEventTime holds previous 3 timestamps for intervals averaging (to
   // reduce duration fluctuations). When AsyncScroll is constructed and no
   // previous timestamps are available (indicated with mIsFirstIteration),
@@ -82,9 +85,11 @@ protected:
   TimeStamp mStartTime;
 
   nsPoint mStartPos;
+  nsPoint mDestination;
   TimeDuration mDuration;
   nsSMILKeySpline mTimingFunctionX;
   nsSMILKeySpline mTimingFunctionY;
+  bool mIsFirstIteration;
 };
 
 // Helper for accelerated wheel deltas. This can be called from the main thread

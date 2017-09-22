@@ -8,9 +8,11 @@
 
 using namespace mozilla;
 
-ScrollAnimationPhysics::ScrollAnimationPhysics(nsPoint aStartPos)
- : mIsFirstIteration(true)
+ScrollAnimationPhysics::ScrollAnimationPhysics(nsPoint aStartPos,
+                                const ScrollAnimationPhysicsSettings& aSettings)
+ : mSettings(aSettings)
  , mStartPos(aStartPos)
+ , mIsFirstIteration(true)
 {
 }
 
@@ -19,6 +21,10 @@ ScrollAnimationPhysics::Update(TimeStamp aTime,
                                nsPoint aDestination,
                                const nsSize& aCurrentVelocity)
 {
+  if (mIsFirstIteration) {
+    InitializeHistory(aTime);
+  }
+
   TimeDuration duration = ComputeDuration(aTime);
   nsSize currentVelocity = aCurrentVelocity;
 
@@ -60,7 +66,9 @@ ScrollAnimationPhysics::ComputeDuration(TimeStamp aTime)
   // it's easier to follow, but reduce the duration to make it feel more snappy when
   // scrolling quickly. To reduce fluctuations of the duration, we average event
   // intervals using the recent 4 timestamps (now + three prev -> 3 intervals).
-  int32_t durationMS = clamped<int32_t>(eventsDeltaMs * mIntervalRatio, mOriginMinMS, mOriginMaxMS);
+  int32_t durationMS =
+    clamped<int32_t>(eventsDeltaMs * mSettings.mIntervalRatio,
+                     mSettings.mMinMS, mSettings.mMaxMS);
 
   return TimeDuration::FromMilliseconds(durationMS);
 }
@@ -72,7 +80,8 @@ ScrollAnimationPhysics::InitializeHistory(TimeStamp aTime)
   // create imaginary prev timestamps with maximum relevant intervals between them.
 
   // Longest relevant interval (which results in maximum duration)
-  TimeDuration maxDelta = TimeDuration::FromMilliseconds(mOriginMaxMS / mIntervalRatio);
+  TimeDuration maxDelta =
+    TimeDuration::FromMilliseconds(mSettings.mMaxMS / mSettings.mIntervalRatio);
   mPrevEventTime[0] = aTime              - maxDelta;
   mPrevEventTime[1] = mPrevEventTime[0]  - maxDelta;
   mPrevEventTime[2] = mPrevEventTime[1]  - maxDelta;
@@ -98,8 +107,12 @@ ScrollAnimationPhysics::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
 }
 
 nsPoint
-ScrollAnimationPhysics::PositionAt(TimeStamp aTime) const
+ScrollAnimationPhysics::PositionAt(TimeStamp aTime)
 {
+  if (IsFinished(aTime)) {
+    return mDestination;
+  }
+
   double progressX = mTimingFunctionX.GetSplineValue(ProgressAt(aTime));
   double progressY = mTimingFunctionY.GetSplineValue(ProgressAt(aTime));
   return nsPoint(NSToCoordRound((1 - progressX) * mStartPos.x + progressX * mDestination.x),
@@ -107,8 +120,12 @@ ScrollAnimationPhysics::PositionAt(TimeStamp aTime) const
 }
 
 nsSize
-ScrollAnimationPhysics::VelocityAt(TimeStamp aTime) const
+ScrollAnimationPhysics::VelocityAt(TimeStamp aTime)
 {
+  if (IsFinished(aTime)) {
+    return nsSize(0, 0);
+  }
+
   double timeProgress = ProgressAt(aTime);
   return nsSize(VelocityComponent(timeProgress, mTimingFunctionX,
                                   mStartPos.x, mDestination.x),

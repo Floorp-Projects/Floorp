@@ -11,33 +11,42 @@
 namespace mozilla {
 namespace layers {
 
-KeyboardScrollAnimation::KeyboardScrollAnimation(AsyncPanZoomController& aApzc,
-                                                 const nsPoint& aInitialPosition,
-                                                 KeyboardScrollAction::KeyboardScrollActionType aType)
-  : GenericScrollAnimation(aApzc, aInitialPosition)
+static ScrollAnimationPhysicsSettings
+SettingsForType(KeyboardScrollAction::KeyboardScrollActionType aType)
 {
+  int32_t minMS = 0;
+  int32_t maxMS = 0;
+
   switch (aType) {
     case KeyboardScrollAction::eScrollCharacter:
     case KeyboardScrollAction::eScrollLine: {
-      mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::LineSmoothScrollMaxDurationMs(), 0, 10000);
-      mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::LineSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
+      maxMS = clamped(gfxPrefs::LineSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(gfxPrefs::LineSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     }
     case KeyboardScrollAction::eScrollPage: {
-      mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
-      mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
+      maxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     }
     case KeyboardScrollAction::eScrollComplete: {
-      mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::OtherSmoothScrollMaxDurationMs(), 0, 10000);
-      mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::OtherSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
+      maxMS = clamped(gfxPrefs::OtherSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(gfxPrefs::OtherSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     }
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
-  mAnimationPhysics.mIntervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
-  mAnimationPhysics.mIntervalRatio = std::max(1.0, mAnimationPhysics.mIntervalRatio);
+  double intervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+  intervalRatio = std::max(1.0, intervalRatio);
+  return ScrollAnimationPhysicsSettings { minMS, maxMS, intervalRatio };
+}
+
+KeyboardScrollAnimation::KeyboardScrollAnimation(AsyncPanZoomController& aApzc,
+                                                 const nsPoint& aInitialPosition,
+                                                 KeyboardScrollAction::KeyboardScrollActionType aType)
+  : GenericScrollAnimation(aApzc, aInitialPosition, SettingsForType(aType))
+{
 }
 
 } // namespace layers
