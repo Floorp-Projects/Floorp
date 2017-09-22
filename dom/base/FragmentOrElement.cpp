@@ -1331,20 +1331,23 @@ FragmentOrElement::GetExistingDestInsertionPoints() const
 void
 FragmentOrElement::SetXBLInsertionParent(nsIContent* aContent)
 {
+  nsCOMPtr<nsIContent> oldInsertionParent = nullptr;
   if (aContent) {
     nsExtendedDOMSlots* slots = ExtendedDOMSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
+    oldInsertionParent = slots->mXBLInsertionParent.forget();
     slots->mXBLInsertionParent = aContent;
   } else {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (slots) {
+    if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
+      oldInsertionParent = slots->mXBLInsertionParent.forget();
       slots->mXBLInsertionParent = nullptr;
     }
   }
 
   // We just changed the flattened tree, so any Servo style data is now invalid.
   // We rely on nsXBLService::LoadBindings to re-traverse the subtree afterwards.
-  if (IsStyledByServo() && IsElement() && AsElement()->HasServoData()) {
+  if (oldInsertionParent != aContent &&
+      IsStyledByServo() && IsElement() && AsElement()->HasServoData()) {
     ServoRestyleManager::ClearServoDataFromSubtree(AsElement());
   }
 }
