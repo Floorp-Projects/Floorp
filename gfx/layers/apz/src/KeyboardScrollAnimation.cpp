@@ -19,25 +19,25 @@ KeyboardScrollAnimation::KeyboardScrollAnimation(AsyncPanZoomController& aApzc,
   switch (aType) {
     case KeyboardScrollAction::eScrollCharacter:
     case KeyboardScrollAction::eScrollLine: {
-      mOriginMaxMS = clamped(gfxPrefs::LineSmoothScrollMaxDurationMs(), 0, 10000);
-      mOriginMinMS = clamped(gfxPrefs::LineSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+      mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::LineSmoothScrollMaxDurationMs(), 0, 10000);
+      mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::LineSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
       break;
     }
     case KeyboardScrollAction::eScrollPage: {
-      mOriginMaxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
-      mOriginMinMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+      mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
+      mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
       break;
     }
     case KeyboardScrollAction::eScrollComplete: {
-      mOriginMaxMS = clamped(gfxPrefs::OtherSmoothScrollMaxDurationMs(), 0, 10000);
-      mOriginMinMS = clamped(gfxPrefs::OtherSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+      mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::OtherSmoothScrollMaxDurationMs(), 0, 10000);
+      mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::OtherSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
       break;
     }
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
-  mIntervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
-  mIntervalRatio = std::max(1.0, mIntervalRatio);
+  mAnimationPhysics.mIntervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+  mAnimationPhysics.mIntervalRatio = std::max(1.0, mAnimationPhysics.mIntervalRatio);
 }
 
 } // namespace layers

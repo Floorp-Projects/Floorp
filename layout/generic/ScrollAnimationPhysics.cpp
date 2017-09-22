@@ -3,21 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AsyncScrollBase.h"
+#include "ScrollAnimationPhysics.h"
 #include "gfxPrefs.h"
 
 using namespace mozilla;
 
-AsyncScrollBase::AsyncScrollBase(nsPoint aStartPos)
+ScrollAnimationPhysics::ScrollAnimationPhysics(nsPoint aStartPos)
  : mIsFirstIteration(true)
  , mStartPos(aStartPos)
 {
 }
 
 void
-AsyncScrollBase::Update(TimeStamp aTime,
-                        nsPoint aDestination,
-                        const nsSize& aCurrentVelocity)
+ScrollAnimationPhysics::Update(TimeStamp aTime,
+                               nsPoint aDestination,
+                               const nsSize& aCurrentVelocity)
 {
   TimeDuration duration = ComputeDuration(aTime);
   nsSize currentVelocity = aCurrentVelocity;
@@ -47,7 +47,7 @@ AsyncScrollBase::Update(TimeStamp aTime,
 }
 
 TimeDuration
-AsyncScrollBase::ComputeDuration(TimeStamp aTime)
+ScrollAnimationPhysics::ComputeDuration(TimeStamp aTime)
 {
   // Average last 3 delta durations (rounding errors up to 2ms are negligible for us)
   int32_t eventsDeltaMs = (aTime - mPrevEventTime[2]).ToMilliseconds() / 3;
@@ -66,7 +66,7 @@ AsyncScrollBase::ComputeDuration(TimeStamp aTime)
 }
 
 void
-AsyncScrollBase::InitializeHistory(TimeStamp aTime)
+ScrollAnimationPhysics::InitializeHistory(TimeStamp aTime)
 {
   // Starting a new scroll (i.e. not when extending an existing scroll animation),
   // create imaginary prev timestamps with maximum relevant intervals between them.
@@ -79,10 +79,10 @@ AsyncScrollBase::InitializeHistory(TimeStamp aTime)
 }
 
 void
-AsyncScrollBase::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
-                                    nscoord aCurrentPos,
-                                    nscoord aCurrentVelocity,
-                                    nscoord aDestination)
+ScrollAnimationPhysics::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
+                                           nscoord aCurrentPos,
+                                           nscoord aCurrentVelocity,
+                                           nscoord aDestination)
 {
   if (aDestination == aCurrentPos || gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
     aTimingFunction.Init(0, 0, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
@@ -98,7 +98,7 @@ AsyncScrollBase::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
 }
 
 nsPoint
-AsyncScrollBase::PositionAt(TimeStamp aTime) const
+ScrollAnimationPhysics::PositionAt(TimeStamp aTime) const
 {
   double progressX = mTimingFunctionX.GetSplineValue(ProgressAt(aTime));
   double progressY = mTimingFunctionY.GetSplineValue(ProgressAt(aTime));
@@ -107,7 +107,7 @@ AsyncScrollBase::PositionAt(TimeStamp aTime) const
 }
 
 nsSize
-AsyncScrollBase::VelocityAt(TimeStamp aTime) const
+ScrollAnimationPhysics::VelocityAt(TimeStamp aTime) const
 {
   double timeProgress = ProgressAt(aTime);
   return nsSize(VelocityComponent(timeProgress, mTimingFunctionX,
@@ -117,10 +117,10 @@ AsyncScrollBase::VelocityAt(TimeStamp aTime) const
 }
 
 nscoord
-AsyncScrollBase::VelocityComponent(double aTimeProgress,
-                                   const nsSMILKeySpline& aTimingFunction,
-                                   nscoord aStart,
-                                   nscoord aDestination) const
+ScrollAnimationPhysics::VelocityComponent(double aTimeProgress,
+                                          const nsSMILKeySpline& aTimingFunction,
+                                          nscoord aStart,
+                                          nscoord aDestination) const
 {
   double dt, dxy;
   aTimingFunction.GetSplineDerivativeValues(aTimeProgress, dt, dxy);
