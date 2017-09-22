@@ -276,14 +276,6 @@ AnimationTimeBlock.prototype = {
       text += "\n";
     }
 
-    // Adding the animation-timing-function
-    // if it is not "ease" which is default value for CSS Animations.
-    if (state.animationTimingFunction && state.animationTimingFunction !== "ease") {
-      text += L10N.getStr("player.animationTimingFunctionLabel") + " ";
-      text += state.animationTimingFunction;
-      text += "\n";
-    }
-
     // Adding a note that the animation is running on the compositor thread if
     // needed.
     if (state.propertyState) {

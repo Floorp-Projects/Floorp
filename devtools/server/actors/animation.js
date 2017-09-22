@@ -262,25 +262,6 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     return this.player.effect.getComputedTiming().direction;
   },
 
-  /**
-   * Get animation-timing-function from animated element if CSS Animations.
-   * @return {String}
-   */
-  getAnimationTimingFunction: function () {
-    if (!this.isCssAnimation()) {
-      return null;
-    }
-
-    let pseudo = null;
-    let target = this.player.effect.target;
-    if (target.type) {
-      // Animated element is a pseudo element.
-      pseudo = target.type;
-      target = target.parentElement;
-    }
-    return this.window.getComputedStyle(target, pseudo).animationTimingFunction;
-  },
-
   getPropertiesCompositorStatus: function () {
     let properties = this.player.effect.getProperties();
     return properties.map(prop => {
@@ -326,7 +307,6 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       fill: this.getFill(),
       easing: this.getEasing(),
       direction: this.getDirection(),
-      animationTimingFunction: this.getAnimationTimingFunction(),
       // animation is hitting the fast path or not. Returns false whenever the
       // animation is paused as it is taken off the compositor then.
       isRunningOnCompositor:
