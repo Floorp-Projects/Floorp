@@ -23,7 +23,6 @@ enum XMLHttpRequestResponseType {
   "text",
 
   // Mozilla-specific stuff
-  "moz-chunked-text",
   "moz-chunked-arraybuffer",
 };
 
