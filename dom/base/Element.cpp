@@ -1898,19 +1898,6 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     DeleteProperty(nsGkAtoms::animationsProperty);
   }
 
-  // Computed style data isn't useful for detached nodes, and we'll need to
-  // recompute it anyway if we ever insert the nodes back into a document.
-  if (IsStyledByServo()) {
-    if (document) {
-      ClearServoData(document);
-    } else {
-      MOZ_ASSERT(!HasServoData());
-      MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits | NODE_NEEDS_FRAME));
-    }
-  } else {
-    MOZ_ASSERT(!HasServoData());
-  }
-
   // Editable descendant count only counts descendants that
   // are in the uncomposed document.
   ResetEditableDescendantCount();
@@ -2003,6 +1990,19 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     }
 
     shadowRoot->SetIsComposedDocParticipant(false);
+  }
+
+  // Computed style data isn't useful for detached nodes, and we'll need to
+  // recompute it anyway if we ever insert the nodes back into a document.
+  if (IsStyledByServo()) {
+    if (document) {
+      ClearServoData(document);
+    } else {
+      MOZ_ASSERT(!HasServoData());
+      MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits | NODE_NEEDS_FRAME));
+    }
+  } else {
+    MOZ_ASSERT(!HasServoData());
   }
 }
 
