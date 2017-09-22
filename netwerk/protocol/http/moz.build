@@ -123,6 +123,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/netwerk/base',
     '/netwerk/cookie',
+    '/security/pkix/include',
 ]
 
 EXTRA_COMPONENTS += [

@@ -31,5 +31,7 @@ job-template:
     command: >
             cd /builds/worker/checkouts/gecko &&
             ./mach python build/upload_generated_sources.py ${ARTIFACT_URL}
+  optimization:
+    only-if-dependencies-run: null
   scopes:
       - secrets:get:project/releng/gecko/build/level-{level}/gecko-generated-sources-upload

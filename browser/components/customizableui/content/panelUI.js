@@ -532,7 +532,12 @@ const PanelUI = {
       return;
     }
 
-    let highlights = await NewTabUtils.activityStreamLinks.getHighlights({ withFavicons: true });
+    let highlights = await NewTabUtils.activityStreamLinks.getHighlights({
+      // As per bug 1402023, hard-coded limit, until Activity Stream develops a
+      // richer list.
+      numItems: 6,
+      withFavicons: true
+    });
     // If there's nothing to display, or the panel is already hidden, get out.
     if (!highlights.length || viewNode.panelMultiView.getAttribute("panelopen") != "true") {
       this._loadingRecentHighlights = false;

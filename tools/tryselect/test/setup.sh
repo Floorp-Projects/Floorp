@@ -1,6 +1,12 @@
 export topsrcdir=$TESTDIR/../../../
 export MOZBUILD_STATE_PATH=$TMP/mozbuild
 
+export MACHRC=$TMP/machrc
+cat > $MACHRC << EOF
+[try]
+default=syntax
+EOF
+
 cachedir=$MOZBUILD_STATE_PATH/cache/taskgraph
 mkdir -p $cachedir
 

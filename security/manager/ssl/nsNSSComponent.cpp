@@ -1139,6 +1139,61 @@ LoadLoadableRootsTask::Run()
 }
 
 nsresult
+nsNSSComponent::HasActiveSmartCards(bool& result)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+#ifndef MOZ_NO_SMART_CARDS
+  nsNSSShutDownPreventionLock lock;
+  MutexAutoLock nsNSSComponentLock(mMutex);
+
+  // A non-null list means at least one smart card thread was active
+  if (mThreadList) {
+    result = true;
+    return NS_OK;
+  }
+#endif
+  result = false;
+  return NS_OK;
+}
+
+nsresult
+nsNSSComponent::HasUserCertsInstalled(bool& result)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  nsNSSShutDownPreventionLock lock;
+  MutexAutoLock nsNSSComponentLock(mMutex);
+
+  if (!mNSSInitialized) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  result = false;
+  UniqueCERTCertList certList(
+    CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), certUsageSSLClient,
+                              false, true, nullptr));
+  if (!certList) {
+    return NS_OK;
+  }
+
+  // check if the list is empty
+  if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
+    return NS_OK;
+  }
+
+  // The list is not empty, meaning at least one cert is installed
+  result = true;
+  return NS_OK;
+}
+
+nsresult
 nsNSSComponent::BlockUntilLoadableRootsLoaded()
 {
   MonitorAutoLock rootsLoadedLock(mLoadableRootsLoadedMonitor);
