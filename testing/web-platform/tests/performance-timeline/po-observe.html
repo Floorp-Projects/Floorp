@@ -36,8 +36,7 @@ PerformanceObserverInit.buffered should retrieve previously buffered entries
     }
     function shouldExclude(entry) {
       // exclude all `resource` entries that aren't for "square.png"
-      return entry.entryType === "resource" &&
-             entry.name.indexOf("square.png") === -1;
+      return entry.type === "resource" && entry.name.indexOf("square.png") === -1
     }
     function runTest() {
       // this PerformanceObserver is a nop because we've already been notified about all of our `entryTypes`

@@ -350,18 +350,10 @@ test(() => {
     const details = Object.assign({}, defaultDetails, {
       shippingOptions: [invalidShippingOption],
     });
-    const request = new PaymentRequest(defaultMethods, details, {
-      requestShipping: false,
-    });
-    assert_equals(
-      request.shippingOption,
-      null,
-      "shippingOption must be null, because requestShipping is false"
-    );
     assert_throws(
       new TypeError(),
       () => {
-        new PaymentRequest(defaultMethods, details, { requestShipping: true });
+        new PaymentRequest(defaultMethods, details);
       },
       `Expected TypeError for option.amount.value: "${amount}"`
     );
@@ -376,16 +368,7 @@ test(() => {
   assert_equals(
     request.shippingOption,
     null,
-    "shippingOption must be null, as requestShipping is missing"
-  );
-  // defaultDetails lacks shipping options
-  const request2 = new PaymentRequest(defaultMethods, defaultDetails, {
-    requestShipping: true,
-  });
-  assert_equals(
-    request2.shippingOption,
-    null,
-    `request2.shippingOption must be null`
+    "request.shippingOption must be null"
   );
 }, "If there is no selected shipping option, then PaymentRequest.shippingOption remains null");
 
@@ -393,38 +376,13 @@ test(() => {
   smokeTest();
   const selectedOption = Object.assign({}, defaultShippingOption, {
     selected: true,
-    id: "the-id",
+    id: "PASS",
   });
   const shippingOptions = [selectedOption];
   const details = Object.assign({}, defaultDetails, { shippingOptions });
-  const requestNoShippingRequested1 = new PaymentRequest(
-    defaultMethods,
-    details
-  );
-  assert_equals(
-    requestNoShippingRequested1.shippingOption,
-    null,
-    "Must be null when no shipping is requested (defaults to false)"
-  );
-  const requestNoShippingRequested2 = new PaymentRequest(
-    defaultMethods,
-    details,
-    { requestShipping: false }
-  );
-  assert_equals(
-    requestNoShippingRequested2.shippingOption,
-    null,
-    "Must be null when requestShipping is false"
-  );
-  const requestWithShipping = new PaymentRequest(defaultMethods, details, {
-    requestShipping: "truthy value",
-  });
-  assert_equals(
-    requestWithShipping.shippingOption,
-    "the-id",
-    "Selected option must be 'the-id'"
-  );
-}, "If there is a selected shipping option, and requestShipping is set, then that option becomes synchronously selected");
+  const request = new PaymentRequest(defaultMethods, details);
+  assert_equals(request.shippingOption, "PASS", "selected option must be PASS");
+}, "If there is a selected shipping option, then it becomes synchronously selected");
 
 test(() => {
   smokeTest();
@@ -438,27 +396,13 @@ test(() => {
   });
   const passOption = Object.assign({}, defaultShippingOption, {
     selected: true,
-    id: "the-id",
+    id: "PASS",
   });
   const shippingOptions = [failOption1, failOption2, passOption];
   const details = Object.assign({}, defaultDetails, { shippingOptions });
-  const requestNoShipping = new PaymentRequest(defaultMethods, details, {
-    requestShipping: false,
-  });
-  assert_equals(
-    requestNoShipping.shippingOption,
-    null,
-    "shippingOption must be null, as requestShipping is false"
-  );
-  const requestWithShipping = new PaymentRequest(defaultMethods, details, {
-    requestShipping: true,
-  });
-  assert_equals(
-    requestWithShipping.shippingOption,
-    "the-id",
-    "selected option must 'the-id"
-  );
-}, "If requestShipping is set, and if there is a multiple selected shipping options, only the last is selected.");
+  const request = new PaymentRequest(defaultMethods, details);
+  assert_equals(request.shippingOption, "PASS", "selected option must PASS");
+}, "If there is a multiple selected shipping options, only the last is selected");
 
 test(() => {
   smokeTest();
@@ -470,49 +414,9 @@ test(() => {
   });
   const shippingOptions = [selectedOption, unselectedOption];
   const details = Object.assign({}, defaultDetails, { shippingOptions });
-  const requestNoShipping = new PaymentRequest(defaultMethods, details);
-  assert_equals(
-    requestNoShipping.shippingOption,
-    null,
-    "shippingOption must be null, because requestShipping is false"
-  );
-  assert_throws(
-    new TypeError(),
-    () => {
-      new PaymentRequest(defaultMethods, details, { requestShipping: true });
-    },
-    "Expected to throw a TypeError because duplicate IDs"
-  );
-}, "If there are any duplicate shipping option ids, and shipping is requested, then throw a TypeError");
-
-test(() => {
-  smokeTest();
-  const dupShipping1 = Object.assign({}, defaultShippingOption, {
-    selected: true,
-    id: "DUPLICATE",
-    label: "Fail 1",
-  });
-  const dupShipping2 = Object.assign({}, defaultShippingOption, {
-    selected: false,
-    id: "DUPLICATE",
-    label: "Fail 2",
-  });
-  const shippingOptions = [dupShipping1, defaultShippingOption, dupShipping2];
-  const details = Object.assign({}, defaultDetails, { shippingOptions });
-  const requestNoShipping = new PaymentRequest(defaultMethods, details);
-  assert_equals(
-    requestNoShipping.shippingOption,
-    null,
-    "shippingOption must be null, because requestShipping is false"
-  );
-  assert_throws(
-    new TypeError(),
-    () => {
-      new PaymentRequest(defaultMethods, details, { requestShipping: true });
-    },
-    "Expected to throw a TypeError because duplicate IDs"
-  );
-}, "Throw when there are duplicate shippingOption ids, even if other values are different");
+  const request = new PaymentRequest(defaultMethods, details);
+  assert_equals(request.shippingOption, null, "selected option must be null");
+}, "If there are any duplicate shipping option ids, then there are no shipping options");
 
 // Process payment details modifiers:
 test(() => {

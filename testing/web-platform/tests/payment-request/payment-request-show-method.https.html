@@ -19,16 +19,6 @@ const defaultDetails = Object.freeze({
   },
 });
 
-test(() => {
-  try {
-    new PaymentRequest(defaultMethods, defaultDetails);
-  } catch (err) {
-    done();
-    throw err;
-  }
-}, "Must be possible to construct a payment request");
-
-
 promise_test(async t => {
   const request = new PaymentRequest(defaultMethods, defaultDetails);
   const acceptPromise = request.show(); // Sets state to "interactive"

@@ -72,7 +72,7 @@ class GeckoInputConnection
 
     private String mCurrentInputMethod = "";
 
-    private final GeckoView mView;
+    private final View mView;
     private final GeckoEditableClient mEditableClient;
     protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
@@ -83,7 +83,7 @@ class GeckoInputConnection
     // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
     private volatile boolean mSoftInputReentrancyGuard;
 
-    public static GeckoEditableListener create(GeckoView targetView,
+    public static GeckoEditableListener create(View targetView,
                                                GeckoEditableClient editable) {
         if (DEBUG)
             return DebugGeckoInputConnection.create(targetView, editable);
@@ -91,7 +91,7 @@ class GeckoInputConnection
             return new GeckoInputConnection(targetView, editable);
     }
 
-    protected GeckoInputConnection(GeckoView targetView,
+    protected GeckoInputConnection(View targetView,
                                    GeckoEditableClient editable) {
         super(targetView, true);
         mView = targetView;
@@ -204,7 +204,7 @@ class GeckoInputConnection
         return extract;
     }
 
-    private GeckoView getView() {
+    private View getView() {
         return mView;
     }
 
@@ -236,10 +236,7 @@ class GeckoInputConnection
                     v.clearFocus();
                     v.requestFocus();
                 }
-                final GeckoView view = getView();
-                if (view != null) {
-                    view.getDynamicToolbarAnimator().showToolbar(/*immediately*/ true);
-                }
+                GeckoAppShell.getLayerView().getDynamicToolbarAnimator().showToolbar(/*immediately*/true);
                 mSoftInputReentrancyGuard = true;
                 imm.showSoftInput(v, 0);
                 mSoftInputReentrancyGuard = false;
@@ -362,18 +359,18 @@ class GeckoInputConnection
         mCursorAnchorInfoBuilder.reset();
 
         // Calculate Gecko logical coords to screen coords
-        final GeckoView view = getView();
-        if (view == null) {
+        final View v = getView();
+        if (v == null) {
             return;
         }
 
         int[] viewCoords = new int[2];
-        view.getLocationOnScreen(viewCoords);
+        v.getLocationOnScreen(viewCoords);
 
-        DynamicToolbarAnimator animator = view.getDynamicToolbarAnimator();
-        float toolbarHeight = (float) animator.getCurrentToolbarHeight();
+        DynamicToolbarAnimator animator = GeckoAppShell.getLayerView().getDynamicToolbarAnimator();
+        float toolbarHeight = (float)animator.getCurrentToolbarHeight();
 
-        Matrix matrix = view.getMatrixForLayerRectToViewRect();
+        Matrix matrix = GeckoAppShell.getLayerView().getMatrixForLayerRectToViewRect();
         if (matrix == null) {
             if (DEBUG) {
                 Log.d(LOGTAG, "Cannot get Matrix to convert from Gecko coords to layer view coords");
@@ -1037,13 +1034,13 @@ final class DebugGeckoInputConnection
     private InputConnection mProxy;
     private final StringBuilder mCallLevel;
 
-    private DebugGeckoInputConnection(GeckoView targetView,
+    private DebugGeckoInputConnection(View targetView,
                                       GeckoEditableClient editable) {
         super(targetView, editable);
         mCallLevel = new StringBuilder();
     }
 
-    public static GeckoEditableListener create(GeckoView targetView,
+    public static GeckoEditableListener create(View targetView,
                                                GeckoEditableClient editable) {
         final Class<?>[] PROXY_INTERFACES = { InputConnection.class,
                 InputConnectionListener.class,

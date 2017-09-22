@@ -5,7 +5,7 @@
 <link rel="help" href="http://www.w3.org/TR/css-grid-1/#min-size-auto" title="6.6. Implied Minimum Size of Grid Items">
 <link rel="match" href="ref-filled-green-100px-square-image.html">
 <meta name="flags" content="image">
-<meta name="assert" content="Checks that minimum size for grid items is the specified size for width (regardless the content size) and the transferred size of the image for height (even when content size is smaller).">
+<meta name="assert" content="Checks that minimum size for grid items is the specified size for width (regardless the content size) and the content size for height (as it's smaller than the transferred size of the image).">
 <style>
   #reference-overlapped-red {
     position: absolute;
@@ -17,13 +17,12 @@
 
   #constrained-grid {
     display: grid;
-    grid-template-columns: auto auto;
     width: 10px;
     height: 10px;
   }
 
-  .test-grid-item-overlapping-green {
-    width: 50px;
+  #test-grid-item-overlapping-green {
+    width: 100px;
     justify-self: stretch;
     align-self: stretch;
   }
@@ -32,7 +31,6 @@
 
 <div id="reference-overlapped-red"></div>
 <div id="constrained-grid">
-  <img class="test-grid-item-overlapping-green" src="support/25x50-green.png" alt="Image download support must be enabled" />
-  <img class="test-grid-item-overlapping-green" src="support/25x50-green.png" alt="Image download support must be enabled" />
+  <img id="test-grid-item-overlapping-green" src="support/50x100-green.png" alt="Image download support must be enabled" />
 </div>
 
