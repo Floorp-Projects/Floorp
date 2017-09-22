@@ -182,6 +182,7 @@ FormStore.prototype = {
     this._log.trace("Adding form record for " + record.name);
     let change = {
       op: "add",
+      guid: record.id,
       fieldname: record.name,
       value: record.value
     };
