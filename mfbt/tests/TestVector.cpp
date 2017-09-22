@@ -22,6 +22,7 @@ struct mozilla::detail::VectorTesting
   static void testReverse();
   static void testExtractRawBuffer();
   static void testExtractOrCopyRawBuffer();
+  static void testReplaceRawBuffer();
   static void testInsert();
   static void testPodResizeToFit();
 };
@@ -358,6 +359,74 @@ mozilla::detail::VectorTesting::testExtractOrCopyRawBuffer()
 }
 
 void
+mozilla::detail::VectorTesting::testReplaceRawBuffer()
+{
+  S::resetCounts();
+
+  S* s = nullptr;
+
+  {
+    Vector<S> v;
+    MOZ_RELEASE_ASSERT(v.reserve(4));
+    v.infallibleEmplaceBack(1, 2);
+    v.infallibleEmplaceBack(3, 4);
+    MOZ_ASSERT(S::constructCount == 2);
+    s = v.extractRawBuffer();
+  }
+
+  MOZ_ASSERT(S::constructCount == 2);
+  MOZ_ASSERT(S::moveCount == 0);
+  MOZ_ASSERT(S::destructCount == 0);
+
+  {
+    Vector<S, 10> v;
+    v.replaceRawBuffer(s, 2);
+    MOZ_ASSERT(v.length() == 2);
+    MOZ_ASSERT(v.reserved() == 2);
+    MOZ_ASSERT(v.capacity() == 10);
+    MOZ_ASSERT(v[0].j == 1);
+    MOZ_ASSERT(v[1].j == 3);
+    MOZ_ASSERT(S::destructCount == 2);
+  }
+
+  MOZ_ASSERT(S::constructCount == 2);
+  MOZ_ASSERT(S::moveCount == 2);
+  MOZ_ASSERT(S::destructCount == 4);
+
+  S::resetCounts();
+
+  {
+    Vector<S, 2> v;
+    MOZ_RELEASE_ASSERT(v.reserve(4));
+    v.infallibleEmplaceBack(9, 10);
+    MOZ_ASSERT(S::constructCount == 1);
+    s = v.extractRawBuffer();
+    MOZ_ASSERT(S::constructCount == 1);
+    MOZ_ASSERT(S::moveCount == 0);
+  }
+
+  MOZ_ASSERT(S::destructCount == 0);
+
+  {
+    Vector<S> v;
+    v.replaceRawBuffer(s, 1, 4);
+    MOZ_ASSERT(v.length() == 1);
+    MOZ_ASSERT(v.reserved() == 4);
+    MOZ_ASSERT(v.capacity() == 4);
+    MOZ_ASSERT(v[0].j == 9);
+    for (size_t i = 0; i < 5; i++)
+      MOZ_RELEASE_ASSERT(v.emplaceBack(i, i));
+    MOZ_ASSERT(v.length() == 6);
+    MOZ_ASSERT(v.reserved() == 6);
+    MOZ_ASSERT(S::constructCount == 6);
+    MOZ_ASSERT(S::moveCount == 4);
+    MOZ_ASSERT(S::destructCount == 4);
+  }
+
+  MOZ_ASSERT(S::destructCount == 10);
+}
+
+void
 mozilla::detail::VectorTesting::testInsert()
 {
   S::resetCounts();
@@ -478,6 +547,7 @@ main()
   VectorTesting::testReverse();
   VectorTesting::testExtractRawBuffer();
   VectorTesting::testExtractOrCopyRawBuffer();
+  VectorTesting::testReplaceRawBuffer();
   VectorTesting::testInsert();
   VectorTesting::testPodResizeToFit();
 }
