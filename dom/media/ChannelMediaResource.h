@@ -116,7 +116,8 @@ public:
     ~Listener() {}
   public:
     Listener(ChannelMediaResource* aResource, int64_t aOffset, uint32_t aLoadID)
-      : mResource(aResource)
+      : mMutex("Listener.mMutex")
+      , mResource(aResource)
       , mOffset(aOffset)
       , mLoadID(aLoadID)
     {}
@@ -128,9 +129,13 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-    void Revoke() { mResource = nullptr; }
+    void Revoke();
 
   private:
+    Mutex mMutex;
+    // mResource should only be modified on the main thread with the lock.
+    // So it can be read without lock on the main thread or on other threads
+    // with the lock.
     RefPtr<ChannelMediaResource> mResource;
     const int64_t mOffset;
     const uint32_t mLoadID;

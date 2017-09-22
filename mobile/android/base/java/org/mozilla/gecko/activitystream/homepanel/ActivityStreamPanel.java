@@ -54,6 +54,8 @@ public class ActivityStreamPanel extends FrameLayout {
     public static final String PREF_VISITED_ENABLED = "pref_activitystream_visited_enabled";
     public static final String PREF_BOOKMARKS_ENABLED = "pref_activitystream_recentbookmarks_enabled";
 
+    private final RecyclerView contentRecyclerView;
+
     private int desiredTileWidth;
     private int tileMargin;
     private final SharedPreferences sharedPreferences;
@@ -68,16 +70,15 @@ public class ActivityStreamPanel extends FrameLayout {
         adapter = new StreamRecyclerAdapter();
         sharedPreferences = GeckoSharedPrefs.forProfile(context);
 
-        final RecyclerView rv = (RecyclerView) findViewById(R.id.activity_stream_main_recyclerview);
-
-        rv.setAdapter(adapter);
-        rv.setLayoutManager(new LinearLayoutManager(getContext()));
-        rv.setHasFixedSize(true);
+        contentRecyclerView = (RecyclerView) findViewById(R.id.activity_stream_main_recyclerview);
+        contentRecyclerView.setAdapter(adapter);
+        contentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        contentRecyclerView.setHasFixedSize(true);
         // Override item animations to avoid horrible topsites refreshing
-        rv.setItemAnimator(new StreamItemAnimator());
-        rv.addItemDecoration(new HighlightsDividerItemDecoration(context));
+        contentRecyclerView.setItemAnimator(new StreamItemAnimator());
+        contentRecyclerView.addItemDecoration(new HighlightsDividerItemDecoration(context));
 
-        RecyclerViewClickSupport.addTo(rv)
+        RecyclerViewClickSupport.addTo(contentRecyclerView)
                 .setOnItemClickListener(adapter)
                 .setOnItemLongClickListener(adapter);
 
@@ -150,7 +151,7 @@ public class ActivityStreamPanel extends FrameLayout {
         if (fittingTiles <= TopSitesPage.NUM_COLUMNS) {
             // We can't fit all tiles (or they fit exactly) if we are using the desired tiles width.
             // We will still show all tiles but they might be smaller than what we would like them to be.
-            setPadding(0, 0, 0, 0);
+            contentRecyclerView.setPadding(0, 0, 0, 0);
         } else if (fittingTiles > TopSitesPage.NUM_COLUMNS) {
             // We can fit more tiles than we want to display. Calculate how much space we need and
             // use the remaining space as padding on the left and right.
@@ -160,7 +161,7 @@ public class ActivityStreamPanel extends FrameLayout {
             // With the padding applied we have less space available for the tiles
             w = needed;
 
-            setPadding(padding, 0, padding, 0);
+            contentRecyclerView.setPadding(padding, 0, padding, 0);
         }
 
         // Now calculate how large an individual tile is

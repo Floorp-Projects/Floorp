@@ -376,8 +376,20 @@ private:
       mLastFrameDuration.reset();
       mHighestEndTimestamp.reset();
       mNeedRandomAccessPoint = true;
-
       mNextInsertionIndex.reset();
+    }
+
+    void Reset()
+    {
+      ResetAppendState();
+      mEvictionIndex.Reset();
+      for (auto& buffer : mBuffers) {
+        buffer.Clear();
+      }
+      mSizeBuffer = 0;
+      mNextGetSampleIndex.reset();
+      mBufferedRanges.Clear();
+      mSanitizedBufferedRanges.Clear();
     }
 
     void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const;

@@ -227,14 +227,16 @@ ScaledFontFontconfig::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBat
 {
   InstanceData instance(GetCairoScaledFont(), mPattern);
 
-  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance), aBaton);
+  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance), nullptr, 0, aBaton);
   return true;
 }
 
 already_AddRefed<ScaledFont>
 UnscaledFontFontconfig::CreateScaledFont(Float aGlyphSize,
                                          const uint8_t* aInstanceData,
-                                         uint32_t aInstanceDataLength)
+                                         uint32_t aInstanceDataLength,
+                                         const FontVariation* aVariations,
+                                         uint32_t aNumVariations)
 {
   if (aInstanceDataLength < sizeof(ScaledFontFontconfig::InstanceData)) {
     gfxWarning() << "Fontconfig scaled font instance data is truncated.";
