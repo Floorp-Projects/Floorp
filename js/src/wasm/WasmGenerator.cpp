@@ -1100,11 +1100,14 @@ static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
 void
 ModuleGenerator::generateBytecodeHash(const ShareableBytes& bytecode)
 {
+    if (!env_->debugEnabled())
+        return;
+
     mozilla::SHA1Sum::Hash hash;
     mozilla::SHA1Sum sha1Sum;
     sha1Sum.update(bytecode.begin(), bytecode.length());
     sha1Sum.finish(hash);
-    memcpy(metadata_->hash, hash, sizeof(ModuleHash));
+    memcpy(metadata_->debugHash, hash, sizeof(ModuleHash));
 }
 
 bool
