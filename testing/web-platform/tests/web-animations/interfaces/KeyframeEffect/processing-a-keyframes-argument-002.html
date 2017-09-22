@@ -5,7 +5,6 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="../../testcommon.js"></script>
-<script src="../../resources/keyframe-utils.js"></script>
 <script src="../../resources/easing-tests.js"></script>
 <body>
 <div id="log"></div>
@@ -14,7 +13,7 @@
 'use strict';
 
 test(function() {
-  for (const [easing, expected] of gEasingValueTests) {
+  for (const [easing, expected] of gEasingParsingTests) {
     const effect = new KeyframeEffectReadOnly(target, {
       left: ['10px', '20px'],
       easing: easing
@@ -26,7 +25,7 @@ test(function() {
    'KeyframeEffectReadOnly constructor in a property-indexed keyframe');
 
 test(function() {
-  for (const [easing, expected] of gEasingValueTests) {
+  for (const [easing, expected] of gEasingParsingTests) {
     const effect = new KeyframeEffectReadOnly(target, [
       { offset: 0, left: '10px', easing: easing },
       { offset: 1, left: '20px' }

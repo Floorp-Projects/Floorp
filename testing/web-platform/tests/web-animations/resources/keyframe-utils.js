@@ -29,18 +29,6 @@ function assert_frames_equal(a, b, name) {
 }
 
 // ------------------------------
-//  Easing values
-// ------------------------------
-
-// [specified easing value, expected easing value]
-var gEasingValueTests = [
-  ["linear", "linear"],
-  ["ease-in-out", "ease-in-out"],
-  ["Ease\\2d in-out", "ease-in-out"],
-  ["ease /**/", "ease"],
-];
-
-// ------------------------------
 //  Composite values
 // ------------------------------
 

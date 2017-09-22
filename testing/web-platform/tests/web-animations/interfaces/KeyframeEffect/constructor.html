@@ -29,7 +29,7 @@ test(function(t) {
 }, "a KeyframeEffectReadOnly can be constructed with no frames");
 
 test(function(t) {
-  gEasingValueTests.forEach(function(subtest) {
+  gEasingParsingTests.forEach(function(subtest) {
     var easing = subtest[0];
     var expected = subtest[1];
     var effect = new KeyframeEffectReadOnly(target, {
