@@ -666,7 +666,7 @@ BrowserElementChild.prototype = {
   _ClickHandler: function(e) {
 
     let isHTMLLink = node =>
-      ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
+      ((ChromeUtils.getClassName(node) === "HTMLAnchorElement" && node.href) ||
        (node instanceof Ci.nsIDOMHTMLAreaElement && node.href) ||
         node instanceof Ci.nsIDOMHTMLLinkElement);
 
@@ -855,7 +855,7 @@ BrowserElementChild.prototype = {
   _getSystemCtxMenuData: function(elem) {
     let documentURI =
       docShell.QueryInterface(Ci.nsIWebNavigation).currentURI.spec;
-    if ((elem instanceof Ci.nsIDOMHTMLAnchorElement && elem.href) ||
+    if ((ChromeUtils.getClassName(elem) === "HTMLAnchorElement" && elem.href) ||
         (elem instanceof Ci.nsIDOMHTMLAreaElement && elem.href)) {
       return {uri: elem.href,
               documentURI: documentURI,
