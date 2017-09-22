@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -108,8 +110,7 @@ public class GeckoAccessibility {
         return sEnabled;
     }
 
-    public static void sendAccessibilityEvent(final GeckoView view,
-                                              final GeckoBundle message) {
+    public static void sendAccessibilityEvent(final GeckoBundle message) {
         if (!sEnabled)
             return;
 
@@ -119,11 +120,10 @@ public class GeckoAccessibility {
             return;
         }
 
-        sendAccessibilityEvent(view, message, eventType);
+        sendAccessibilityEvent(message, eventType);
     }
 
-    public static void sendAccessibilityEvent(final GeckoView view, final GeckoBundle message,
-                                              final int eventType) {
+    public static void sendAccessibilityEvent(final GeckoBundle message, final int eventType) {
         if (!sEnabled)
             return;
 
@@ -148,6 +148,10 @@ public class GeckoAccessibility {
         } else {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
+            final LayerView view = GeckoAppShell.getLayerView();
+            if (view == null)
+                return;
+
             if (sVirtualCursorNode == null) {
                 sVirtualCursorNode = AccessibilityNodeInfo.obtain(view, VIRTUAL_CURSOR_POSITION);
             }
@@ -262,12 +266,7 @@ public class GeckoAccessibility {
         AccessibilityNodeProvider mAccessibilityNodeProvider;
 
         @Override
-        public AccessibilityNodeProvider getAccessibilityNodeProvider(final View hostView) {
-            if (!(hostView instanceof GeckoView)) {
-                return super.getAccessibilityNodeProvider(hostView);
-            }
-            final GeckoView host = (GeckoView) hostView;
-
+        public AccessibilityNodeProvider getAccessibilityNodeProvider(final View host) {
             if (mAccessibilityNodeProvider == null)
                 // The accessibility node structure for web content consists of 3 LayerView child nodes:
                 // 1. VIRTUAL_ENTRY_POINT_BEFORE: Represents the entry point before the LayerView.
@@ -320,7 +319,7 @@ public class GeckoAccessibility {
                                 // The accessibility focus is permanently on the middle node, VIRTUAL_CURSOR_POSITION.
                                 // When we enter the view forward or backward we just ask Gecko to get focus, keeping the current position.
                                 if (virtualViewId == VIRTUAL_CURSOR_POSITION && sHoverEnter != null) {
-                                    GeckoAccessibility.sendAccessibilityEvent(host, sHoverEnter, AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+                                    GeckoAccessibility.sendAccessibilityEvent(sHoverEnter, AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
                                 } else {
                                     final GeckoBundle data = new GeckoBundle(1);
                                     data.putBoolean("gainFocus", true);

@@ -29,6 +29,8 @@ add_task(async function() {
   let sandbox = Cu.Sandbox(window, {sandboxPrototype: window});
 
   function sandboxContent() {
+    window.onload = function SandboxOnLoad() {};
+
     window.addEventListener("FromTest", () => {
       window.dispatchEvent(new CustomEvent("FromSandbox"));
     }, true);
@@ -39,6 +41,11 @@ add_task(async function() {
 
   let fromTestPromise = promiseEvent(window, "FromTest");
   let fromSandboxPromise = promiseEvent(window, "FromSandbox");
+
+  equal(typeof window.onload, "function",
+        "window.onload should contain sandbox event listener");
+  equal(window.onload.name, "SandboxOnLoad",
+        "window.onload have the correct function name");
 
   do_print("Dispatch FromTest event");
   window.dispatchEvent(new window.CustomEvent("FromTest"));
@@ -70,6 +77,8 @@ add_task(async function() {
   Cu.forceGC();
   Cu.forceCC();
 
+  ok(Cu.isDeadWrapper(window.onload),
+     "window.onload should contain a dead wrapper after sandbox is nuked");
 
   do_print("Dispatch FromTest event");
   fromTestPromise = promiseEvent(window, "FromTest");

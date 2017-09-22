@@ -84,6 +84,4 @@ private:
   static PLHashTable* gTagAtomTable;
 };
 
-#define eHTMLTags nsHTMLTag
-
 #endif /* nsHTMLTags_h___ */

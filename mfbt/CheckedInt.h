@@ -14,6 +14,23 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerTypeTraits.h"
 
+// Probe for builtin math overflow support.  Disabled for 32-bit builds for now
+// since "gcc -m32" claims to support these but its implementation is buggy.
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82274
+#if defined(HAVE_64BIT_BUILD)
+#if defined(__has_builtin)
+#define MOZ_HAS_BUILTIN_OP_OVERFLOW (__has_builtin(__builtin_add_overflow))
+#elif defined(__GNUC__)
+// (clang also defines __GNUC__ but it supports __has_builtin since at least
+//  v3.1 (released in 2012) so it won't get here.)
+#define MOZ_HAS_BUILTIN_OP_OVERFLOW (__GNUC__ >= 5)
+#else
+#define MOZ_HAS_BUILTIN_OP_OVERFLOW (0)
+#endif
+#else
+#define MOZ_HAS_BUILTIN_OP_OVERFLOW (0)
+#endif
+
 namespace mozilla {
 
 template<typename T> class CheckedInt;
@@ -255,6 +272,10 @@ template<typename T>
 inline bool
 IsAddValid(T aX, T aY)
 {
+#if MOZ_HAS_BUILTIN_OP_OVERFLOW
+  T dummy;
+  return !__builtin_add_overflow(aX, aY, &dummy);
+#else
   // Addition is valid if the sign of aX+aY is equal to either that of aX or
   // that of aY. Since the value of aX+aY is undefined if we have a signed
   // type, we compute it using the unsigned type of the same size.  Beware!
@@ -267,12 +288,17 @@ IsAddValid(T aX, T aY)
   return IsSigned<T>::value
          ? HasSignBit(BinaryComplement(T((result ^ aX) & (result ^ aY))))
          : BinaryComplement(aX) >= aY;
+#endif
 }
 
 template<typename T>
 inline bool
 IsSubValid(T aX, T aY)
 {
+#if MOZ_HAS_BUILTIN_OP_OVERFLOW
+  T dummy;
+  return !__builtin_sub_overflow(aX, aY, &dummy);
+#else
   // Subtraction is valid if either aX and aY have same sign, or aX-aY and aX
   // have same sign. Since the value of aX-aY is undefined if we have a signed
   // type, we compute it using the unsigned type of the same size.
@@ -283,6 +309,7 @@ IsSubValid(T aX, T aY)
   return IsSigned<T>::value
          ? HasSignBit(BinaryComplement(T((result ^ aX) & (aX ^ aY))))
          : aX >= aY;
+#endif
 }
 
 template<typename T,
@@ -339,7 +366,12 @@ template<typename T>
 inline bool
 IsMulValid(T aX, T aY)
 {
+#if MOZ_HAS_BUILTIN_OP_OVERFLOW
+  T dummy;
+  return !__builtin_mul_overflow(aX, aY, &dummy);
+#else
   return IsMulValidImpl<T>::run(aX, aY);
+#endif
 }
 
 template<typename T>
@@ -687,12 +719,30 @@ private:
                          aLhs.mIsValid && aRhs.mIsValid);                     \
   }
 
+#if MOZ_HAS_BUILTIN_OP_OVERFLOW
+#define MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(NAME, OP, FUN)                  \
+  template<typename T>                                                        \
+  inline CheckedInt<T>                                                        \
+  operator OP(const CheckedInt<T>& aLhs, const CheckedInt<T>& aRhs)           \
+  {                                                                           \
+    T result;                                                                 \
+    if (FUN(aLhs.mValue, aRhs.mValue, &result)) {                             \
+      return CheckedInt<T>(0, false);                                         \
+    }                                                                         \
+    return CheckedInt<T>(result, aLhs.mIsValid && aRhs.mIsValid);             \
+  }
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Add, +, __builtin_add_overflow)
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Sub, -, __builtin_sub_overflow)
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Mul, *, __builtin_mul_overflow)
+#undef MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2
+#else
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Add, +)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Sub, -)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Mul, *)
+#endif
+
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Div, /)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Mod, %)
-
 #undef MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR
 
 // Implement castToCheckedInt<T>(x), making sure that
