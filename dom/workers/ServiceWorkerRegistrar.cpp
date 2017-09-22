@@ -985,6 +985,11 @@ ServiceWorkerRegistrar::ProfileStopped()
     }
   }
 
+  // We must set the pointer before potentially entering the fast-path shutdown
+  // below.
+  bool completed = false;
+  mShutdownCompleteFlag = &completed;
+
   PBackgroundChild* child = BackgroundChild::GetForCurrentThread();
   if (!child) {
     // Mutations to the ServiceWorkerRegistrar happen on the PBackground thread,
@@ -1017,9 +1022,6 @@ ServiceWorkerRegistrar::ProfileStopped()
     ShutdownCompleted();
     return;
   }
-
-  bool completed = false;
-  mShutdownCompleteFlag = &completed;
 
   child->SendShutdownServiceWorkerRegistrar();
 
@@ -1055,6 +1057,12 @@ ServiceWorkerRegistrar::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (!strcmp(aTopic, "profile-before-change")) {
+    // Hygiene; gServiceWorkerRegistrar should still be keeping a reference
+    // alive well past this phase of shutdown, but it's bad form to drop your
+    // last potentially owning reference and then make a call that requires you
+    // to still be alive, especially when you spin a nested event loop.
+    RefPtr<ServiceWorkerRegistrar> kungFuDeathGrip(this);
+
     nsCOMPtr<nsIObserverService> observerService =
       services::GetObserverService();
     observerService->RemoveObserver(this, "profile-before-change");
