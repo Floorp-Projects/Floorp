@@ -44,9 +44,6 @@
 # include <sys/wait.h>
 # include <unistd.h>
 #endif
-#ifdef XP_DARWIN
-# include <sys/sysctl.h>
-#endif
 
 #include "jsapi.h"
 #include "jsarray.h"
@@ -1331,70 +1328,6 @@ my_LargeAllocFailCallback()
 
     JS::PrepareForFullGC(cx);
     cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::SHARED_MEMORY_LIMIT);
-}
-
-// Most of the GetCPUSpeed code was pilfered from xpcom/base/nsSystemInfo.cpp.
-// Returns 0 if no information is available.
-
-static uint32_t
-GetCPUSpeed()
-{
-    uint32_t cpuSpeed = 0;
-
-    if (getenv("JS_CPU_MHZ"))
-        return atoi(getenv("JS_CPU_MHZ"));
-
-#if defined(XP_WIN)
-
-    HKEY key;
-    static const WCHAR keyName[] = L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName , 0, KEY_QUERY_VALUE, &key) == ERROR_SUCCESS) {
-        DWORD len = sizeof(data);
-        DWORD data;
-        if (RegQueryValueEx(key, L"~Mhz", 0, 0, reinterpret_cast<LPBYTE>(&data),
-                            &len) == ERROR_SUCCESS)
-        {
-            cpuSpeed = static_cast<uint32_t>(data);
-        }
-        RegCloseKey(key);
-    }
-
-#elif defined(XP_DARWIN)
-
-    uint64_t sysctlValue64 = 0;
-    size_t len = sizeof(sysctlValue64);
-    if (!sysctlbyname("hw.cpufrequency_max", &sysctlValue64, &len, NULL, 0))
-        cpuSpeed = static_cast<uint32_t>(sysctlValue64 / 1000000);
-
-#elif defined(XP_UNIX)          // Including Android
-
-    // A known file contains the CPU frequency in KHz.
-    //
-    // This file should be present also on Android, it is on all of lth's
-    // Android devices (none of which are rooted), and on those devices it can
-    // be read by an app using stdio from C++ code.  (Not sure if that's
-    // conclusive; the app was installed over adb, so what about permissions?)
-    //
-    // On multicore devices where the cores are not all equal this may actually
-    // be the wrong value: lth sees some other cpuN values that are higher than
-    // the cpu0 values.  But it's unclear if those are the "little" CPUs in a
-    // BIG.little configuration, for example.
-
-    FILE* fp = fopen("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", "r");
-    if (fp) {
-        char buf[128];
-        if (fgets(buf, sizeof(buf), fp))
-            cpuSpeed = uint32_t(atol(buf)/1000);
-        fclose(fp);
-    }
-
-#else
-
-# error "What OS is this?"
-
-#endif
-
-    return cpuSpeed;
 }
 
 static const uint32_t CacheEntry_SOURCE = 0;
@@ -8694,11 +8627,6 @@ main(int argc, char** argv, char** envp)
     JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
 
     JS::SetProcessLargeAllocationFailureCallback(my_LargeAllocFailCallback);
-
-    JS::SystemInformation info;
-    info.maxCpuClockMHz = GetCPUSpeed();
-
-    JS::SetSystemInformation(&info);
 
     // Set some parameters to allow incremental GC in low memory conditions,
     // as is done for the browser, except in more-deterministic builds or when
