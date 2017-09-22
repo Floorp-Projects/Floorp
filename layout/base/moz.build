@@ -93,7 +93,6 @@ UNIFIED_SOURCES += [
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
     'MobileViewportManager.cpp',
-    'nsBidi.cpp',
     'nsBidiPresUtils.cpp',
     'nsCaret.cpp',
     'nsCounterManager.cpp',
