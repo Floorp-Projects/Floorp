@@ -123,8 +123,6 @@ nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
   , mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
-  , mUsePlaceholder(false)
-  , mUsePreview(false)
 #ifdef DEBUG
   , mInEditorInitialization(false)
 #endif
@@ -497,28 +495,28 @@ nsTextControlFrame::CreatePlaceholderIfNeeded()
   nsAutoString placeholderTxt;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholderTxt);
   nsContentUtils::RemoveNewlines(placeholderTxt);
-  mUsePlaceholder = !placeholderTxt.IsEmpty();
 
-  // Create the placeholder anonymous content if needed.
-  if (mUsePlaceholder) {
-    mPlaceholderDiv = CreateEmptyDivWithTextNode(*this);
-    // Associate ::placeholder pseudo-element with the placeholder node.
-    mPlaceholderDiv->SetPseudoElementType(CSSPseudoElementType::placeholder);
-    mPlaceholderDiv->GetFirstChild()->SetText(placeholderTxt, false);
+  if (placeholderTxt.IsEmpty()) {
+    return;
   }
+
+  mPlaceholderDiv = CreateEmptyDivWithTextNode(*this);
+  // Associate ::placeholder pseudo-element with the placeholder node.
+  mPlaceholderDiv->SetPseudoElementType(CSSPseudoElementType::placeholder);
+  mPlaceholderDiv->GetFirstChild()->SetText(placeholderTxt, false);
 }
 
 void
 nsTextControlFrame::CreatePreviewIfNeeded()
 {
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  mUsePreview = txtCtrl->IsPreviewEnabled();
-
-  if (mUsePreview) {
-    mPreviewDiv = CreateEmptyDivWithTextNode(*this);
-    mPreviewDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                         NS_LITERAL_STRING("preview-div"), false);
+  if (!txtCtrl->IsPreviewEnabled()) {
+    return;
   }
+
+  mPreviewDiv = CreateEmptyDivWithTextNode(*this);
+  mPreviewDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                       NS_LITERAL_STRING("preview-div"), false);
 }
 
 void
@@ -742,7 +740,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
 
   // If 'dom.placeholeder.show_on_focus' preference is 'false', focusing or
   // blurring the frame can have an impact on the placeholder visibility.
-  if (mUsePlaceholder) {
+  if (mPlaceholderDiv) {
     txtCtrl->UpdateOverlayTextVisibility(true);
   }
 
@@ -1245,7 +1243,7 @@ nsTextControlFrame::SetValueChanged(bool aValueChanged)
     GetContent()->GetAsTextControlElement();
   MOZ_ASSERT(txtCtrl, "Content not a text control element");
 
-  if (mUsePlaceholder) {
+  if (mPlaceholderDiv) {
     AutoWeakFrame weakFrame(this);
     txtCtrl->UpdateOverlayTextVisibility(true);
     if (!weakFrame.IsAlive()) {
@@ -1268,8 +1266,6 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   NS_PRECONDITION(mRootNode, "Must have a div content\n");
   NS_PRECONDITION(!mEditorHasBeenInitialized,
                   "Do not call this after editor has been initialized");
-  NS_ASSERTION(!mUsePlaceholder || mPlaceholderDiv,
-               "A placeholder div must exist");
 
   nsIContent* textContent = mRootNode->GetChildAt(0);
   if (!textContent) {
@@ -1298,8 +1294,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   // Update the display of the placeholder value and preview text if needed.
   // We don't need to do this if we're about to initialize the editor, since
   // EnsureEditorInitialized takes care of this.
-  if ((mUsePlaceholder || mUsePreview) && !aBeforeEditorInit)
-  {
+  if ((mPlaceholderDiv || mPreviewDiv) && !aBeforeEditorInit) {
     AutoWeakFrame weakFrame(this);
     txtCtrl->UpdateOverlayTextVisibility(aNotify);
     NS_ENSURE_STATE(weakFrame.IsAlive());
