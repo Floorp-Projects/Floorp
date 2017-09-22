@@ -184,7 +184,7 @@ test(() => {
     {offset: null, computedOffset: 0.5, easing: 'linear', left: '300px'},
     {offset: null, computedOffset: 1, easing: 'linear', left: '200px'},
   ]);
-}, 'Custom iterator with basic keyframes.');
+}, 'Keyframes are read from a custom iterator');
 
 test(() => {
   const keyframes = createIterable([
@@ -201,7 +201,7 @@ test(() => {
     {offset: null, computedOffset: 0.5, easing: 'linear', left: '300px'},
     {offset: null, computedOffset: 1, easing: 'linear', left: '200px'},
   ]);
-}, 'easing and offset are ignored on iterable objects.');
+}, "'easing' and 'offset' are ignored on iterable objects");
 
 test(() => {
   const effect = new KeyframeEffect(null, createIterable([
@@ -215,7 +215,8 @@ test(() => {
     {offset: null, computedOffset: 0.5, easing: 'linear', left: '300px'},
     {offset: null, computedOffset: 1, easing: 'linear', left: '200px', top: '100px'},
   ]);
-}, 'Custom iterator with multiple properties specified.');
+}, 'Keyframes are read from a custom iterator with multiple properties'
+   + ' specified');
 
 test(() => {
   const effect = new KeyframeEffect(null, createIterable([
@@ -229,7 +230,8 @@ test(() => {
     {offset: 0.75, computedOffset: 0.75, easing: 'linear', left: '250px'},
     {offset: null, computedOffset: 1, easing: 'linear', left: '200px'},
   ]);
-}, 'Custom iterator with offset specified.');
+}, 'Keyframes are read from a custom iterator with where an offset is'
+   + ' specified');
 
 test(() => {
   assert_throws({name: 'TypeError'}, function() {
@@ -240,7 +242,8 @@ test(() => {
       {done: true},
     ]));
   });
-}, 'Custom iterator with non object keyframe should throw.');
+}, 'Reading from a custom iterator that returns a non-object keyframe'
+   + ' should throw');
 
 test(() => {
   const effect = new KeyframeEffect(null, createIterable([
@@ -250,8 +253,7 @@ test(() => {
   assert_frame_lists_equal(effect.getKeyframes(), [
     {offset: null, computedOffset: 1, easing: 'linear'}
   ]);
-}, 'Custom iterator with value list in keyframe should not contain invalid ' +
-   'property value pair of list.');
+}, 'A list of values returned from a custom iterator should be ignored');
 
 test(function(t) {
   const keyframe = {};
