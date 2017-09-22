@@ -435,6 +435,7 @@ protected:
                      const char* aTypeHint,
                      const nsAString& aFileName,
                      nsIInputStream* aPostData,
+                     int64_t aPostDataLength,
                      nsIInputStream* aHeadersData,
                      bool aFirstParty,
                      nsIDocShell** aDocShell,
