@@ -803,7 +803,8 @@ HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
     rv = linkHandler->OnLinkClickSync(this, actionURI,
                                       target.get(),
                                       VoidString(),
-                                      postDataStream, nullptr, false,
+                                      postDataStream, -1 /* XXXbaku */,
+                                      nullptr, false,
                                       getter_AddRefs(docShell),
                                       getter_AddRefs(mSubmittingRequest));
     NS_ENSURE_SUBMIT_SUCCESS(rv);

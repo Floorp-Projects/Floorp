@@ -14185,6 +14185,7 @@ public:
                    const char16_t* aTargetSpec,
                    const nsAString& aFileName,
                    nsIInputStream* aPostDataStream,
+                   int64_t aPostDataStreamLength,
                    nsIInputStream* aHeadersDataStream,
                    bool aNoOpenerImplied,
                    bool aIsTrusted,
@@ -14203,8 +14204,8 @@ public:
     if (mIsTrusted || jsapi.Init(mContent->OwnerDoc()->GetScopeObject())) {
       mHandler->OnLinkClickSync(mContent, mURI,
                                 mTargetSpec.get(), mFileName,
-                                mPostDataStream, mHeadersDataStream,
-                                mNoOpenerImplied,
+                                mPostDataStream, mPostDataStreamLength,
+                                mHeadersDataStream, mNoOpenerImplied,
                                 nullptr, nullptr, mTriggeringPrincipal);
     }
     return NS_OK;
@@ -14216,6 +14217,7 @@ private:
   nsString mTargetSpec;
   nsString mFileName;
   nsCOMPtr<nsIInputStream> mPostDataStream;
+  int64_t mPostDataStreamLength;
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent> mContent;
   PopupControlState mPopupState;
@@ -14230,6 +14232,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
                                    const char16_t* aTargetSpec,
                                    const nsAString& aFileName,
                                    nsIInputStream* aPostDataStream,
+                                   int64_t aPostDataStreamLength,
                                    nsIInputStream* aHeadersDataStream,
                                    bool aNoOpenerImplied,
                                    bool aIsTrusted,
@@ -14240,6 +14243,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
   , mTargetSpec(aTargetSpec)
   , mFileName(aFileName)
   , mPostDataStream(aPostDataStream)
+  , mPostDataStreamLength(aPostDataStreamLength)
   , mHeadersDataStream(aHeadersDataStream)
   , mContent(aContent)
   , mPopupState(mHandler->mScriptGlobal->GetPopupControlState())
@@ -14255,6 +14259,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         const char16_t* aTargetSpec,
                         const nsAString& aFileName,
                         nsIInputStream* aPostDataStream,
+                        int64_t aPostDataStreamLength,
                         nsIInputStream* aHeadersDataStream,
                         bool aIsTrusted,
                         nsIPrincipal* aTriggeringPrincipal)
@@ -14300,7 +14305,8 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
 
   nsCOMPtr<nsIRunnable> ev =
     new OnLinkClickEvent(this, aContent, aURI, target.get(), aFileName,
-                         aPostDataStream, aHeadersDataStream, noOpenerImplied,
+                         aPostDataStream, aPostDataStreamLength,
+                         aHeadersDataStream, noOpenerImplied,
                          aIsTrusted, aTriggeringPrincipal);
   return DispatchToTabGroup(TaskCategory::UI, ev.forget());
 }
@@ -14311,6 +14317,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                             const char16_t* aTargetSpec,
                             const nsAString& aFileName,
                             nsIInputStream* aPostDataStream,
+                            int64_t aPostDataStreamLength,
                             nsIInputStream* aHeadersDataStream,
                             bool aNoOpenerImplied,
                             nsIDocShell** aDocShell,
@@ -14460,7 +14467,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              NS_LossyConvertUTF16toASCII(typeHint).get(),
                              aFileName,                 // Download as file
                              aPostDataStream,           // Post data stream
-                             -1,                        // Post data stream length XXXbaku
+                             aPostDataStreamLength,     // Post data stream length
                              aHeadersDataStream,        // Headers stream
                              LOAD_LINK,                 // Load type
                              nullptr,                   // No SHEntry
