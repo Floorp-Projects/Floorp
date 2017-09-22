@@ -22,22 +22,22 @@ WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc,
 
   switch (aDeltaType) {
   case ScrollWheelInput::SCROLLDELTA_PAGE:
-    mOriginMaxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
-    mOriginMinMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+    mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
+    mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
     break;
   case ScrollWheelInput::SCROLLDELTA_PIXEL:
-    mOriginMaxMS = clamped(gfxPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
-    mOriginMinMS = clamped(gfxPrefs::PixelSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+    mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
+    mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::PixelSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
     break;
   case ScrollWheelInput::SCROLLDELTA_LINE:
-    mOriginMaxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
-    mOriginMinMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+    mAnimationPhysics.mOriginMaxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
+    mAnimationPhysics.mOriginMinMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, mAnimationPhysics.mOriginMaxMS);
     break;
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
-  mIntervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
-  mIntervalRatio = std::max(1.0, mIntervalRatio);
+  mAnimationPhysics.mIntervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+  mAnimationPhysics.mIntervalRatio = std::max(1.0, mAnimationPhysics.mIntervalRatio);
 }
 
 } // namespace layers
