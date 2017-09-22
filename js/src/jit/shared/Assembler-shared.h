@@ -807,7 +807,8 @@ namespace jit {
 // The base class of all Assemblers for all archs.
 class AssemblerShared
 {
-    wasm::CallSiteAndTargetVector callSites_;
+    wasm::CallSiteVector callSites_;
+    wasm::CallSiteTargetVector callSiteTargets_;
     wasm::CallFarJumpVector callFarJumps_;
     wasm::TrapSiteVector trapSites_;
     wasm::TrapFarJumpVector trapFarJumps_;
@@ -843,31 +844,48 @@ class AssemblerShared
     }
 
     template <typename... Args>
-    void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, Args&&... args)
-    {
-        wasm::CallSite cs(desc, retAddr.offset());
-        enoughMemory_ &= callSites_.emplaceBack(cs, mozilla::Forward<Args>(args)...);
+    void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, Args&&... args) {
+        enoughMemory_ &= callSites_.emplaceBack(desc, retAddr.offset());
+        enoughMemory_ &= callSiteTargets_.emplaceBack(mozilla::Forward<Args>(args)...);
     }
-    wasm::CallSiteAndTargetVector& callSites() { return callSites_; }
+    const wasm::CallSiteVector& callSites() const {
+        return callSites_;
+    }
+    const wasm::CallSiteTargetVector& callSiteTargets() const {
+        return callSiteTargets_;
+    }
+    wasm::CallSiteVector&& extractCallSites() {
+        return Move(callSites_);
+    }
 
     void append(wasm::CallFarJump jmp) {
         enoughMemory_ &= callFarJumps_.append(jmp);
     }
-    const wasm::CallFarJumpVector& callFarJumps() const { return callFarJumps_; }
+    const wasm::CallFarJumpVector& callFarJumps() const {
+        return callFarJumps_;
+    }
 
     void append(wasm::TrapSite trapSite) {
         enoughMemory_ &= trapSites_.append(trapSite);
     }
-    const wasm::TrapSiteVector& trapSites() const { return trapSites_; }
+    const wasm::TrapSiteVector& trapSites() const {
+        return trapSites_;
+    }
     void clearTrapSites() { trapSites_.clear(); }
 
     void append(wasm::TrapFarJump jmp) {
         enoughMemory_ &= trapFarJumps_.append(jmp);
     }
-    const wasm::TrapFarJumpVector& trapFarJumps() const { return trapFarJumps_; }
+    const wasm::TrapFarJumpVector& trapFarJumps() const {
+        return trapFarJumps_;
+    }
 
-    void append(wasm::MemoryAccess access) { enoughMemory_ &= memoryAccesses_.append(access); }
-    wasm::MemoryAccessVector&& extractMemoryAccesses() { return Move(memoryAccesses_); }
+    void append(wasm::MemoryAccess access) {
+        enoughMemory_ &= memoryAccesses_.append(access);
+    }
+    wasm::MemoryAccessVector&& extractMemoryAccesses() {
+        return Move(memoryAccesses_);
+    }
 
     void append(const wasm::MemoryAccessDesc& access, size_t codeOffset, size_t framePushed) {
         if (access.hasTrap()) {
@@ -911,6 +929,9 @@ class AssemblerShared
         enoughMemory_ &= callSites_.appendAll(other.callSites_);
         for (; i < callSites_.length(); i++)
             callSites_[i].offsetReturnAddressBy(delta);
+
+        enoughMemory_ &= callSiteTargets_.appendAll(other.callSiteTargets_);
+        // Nothing to offset.
 
         MOZ_ASSERT(other.trapSites_.empty(), "should have been cleared by wasmEmitTrapOutOfLineCode");
 
