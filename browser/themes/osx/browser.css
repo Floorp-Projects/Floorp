@@ -1266,12 +1266,6 @@ html|*.addon-webext-perm-list {
   margin-top: -14px;
 }
 
-@media (min-resolution: 2dppx) {
-  #UITourTooltipClose > .toolbarbutton-icon {
-    width: 16px;
-  }
-}
-
 %include ../shared/contextmenu.inc.css
 
 #context-navigation > .menuitem-iconic {
