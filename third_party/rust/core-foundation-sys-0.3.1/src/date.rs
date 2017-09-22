@@ -7,8 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-fn main() {
-    if std::env::var("TARGET").unwrap().contains("-apple") {
-        println!("cargo:rustc-link-lib=framework=CoreFoundation");
-    }
+pub type CFTimeInterval = f64;
+pub type CFAbsoluteTime = CFTimeInterval;
+
+extern {
+    pub fn CFAbsoluteTimeGetCurrent() -> CFAbsoluteTime;
 }
