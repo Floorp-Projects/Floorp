@@ -24,8 +24,6 @@ const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
 const PREF_ALLOW_NON_MPC              = "extensions.allow-non-mpc-extensions";
-const PREF_DISABLE_SECURITY = ("security.turn_off_all_security_so_that_" +
-                               "viruses_can_take_over_this_computer");
 
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
@@ -161,7 +159,6 @@ const promiseAddonByID = AddonManager.getAddonByID;
 const promiseAddonsByIDs = AddonManager.getAddonsByIDs;
 const promiseAddonsWithOperationsByTypes = AddonManager.getAddonsWithOperationsByTypes;
 
-let gStartup = null;
 var gPort = null;
 var gUrlToFileMap = {};
 
@@ -1532,14 +1529,12 @@ async function setupSystemAddonConditions(setup, distroDir) {
   do_print("Clearing existing database.");
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
   distroDir.leafName = "empty";
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system4@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
   await promiseShutdownManager();
 
   do_print("Setting up conditions.");
   await setup.setup();
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system4@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   // Make sure the initial state is correct
@@ -1585,9 +1580,7 @@ async function verifySystemAddonState(initialState, finalState = undefined, alre
   await checkInstalledSystemAddons(...finalState, distroDir);
 
   // Check that the new state is active after a restart
-  shutdownManager();
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system4@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  await promiseStartupManager();
+  await promiseRestartManager();
   await checkInstalledSystemAddons(finalState, distroDir);
 }
 
@@ -1641,26 +1634,4 @@ async function execSystemAddonTest(setupName, setup, test, distroDir, root, test
   }
 
   await promiseShutdownManager();
-}
-
-/**
- * Override chrome URL for specifying allowed built-in add-ons.
- *
- * @param {object} data - An object specifying which add-on IDs are permitted
- *                        to load, for instance: { "system": ["id1", "..."] }
- */
-async function overrideBuiltIns(data) {
-  // We need to set this in order load the URL preloader service, which
-  // is only possible when running in automation.
-  Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
-  aomStartup.initializeURLPreloader();
-
-  let file = FileUtils.getFile("TmpD", "override.txt");
-  let manifest = Services.io.newFileURI(file);
-  await OS.File.writeAtomic(file.path,
-    new TextEncoder().encode(JSON.stringify(data)));
-  gStartup = aomStartup.registerChrome(manifest, [
-    ["override", "chrome://browser/content/built_in_addons.json",
-     Services.io.newFileURI(file).spec],
-  ]);
 }
