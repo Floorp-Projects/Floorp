@@ -68,6 +68,9 @@ ADD           buildprops.json /builds/worker/
 # Install bison to build binutils.
 RUN yum install -y bison screen
 
+# For the mingw toolchain & job (scons: nsis, flex: wine, p7zip: ff installer)
+RUN yum install -y scons flex p7zip
+
 # Install libtool.
 RUN yum install -y libtool
 
