@@ -16,7 +16,7 @@ nsresult NS_NewUnicodeNormalizer(nsISupports** oResult);
 
 class nsUnicodeNormalizer : public nsIUnicodeNormalizer {
 public:
-   nsUnicodeNormalizer();
+   nsUnicodeNormalizer() { }
 
    NS_DECL_ISUPPORTS
 
@@ -25,15 +25,8 @@ public:
    NS_IMETHOD NormalizeUnicodeNFKD( const nsAString& aSrc, nsAString& aDest) override;
    NS_IMETHOD NormalizeUnicodeNFKC( const nsAString& aSrc, nsAString& aDest) override;
 
-#if !ENABLE_INTL_API
-   // Low-level access to the composition data needed for HarfBuzz callbacks;
-   // only required when ICU is not available in the build.
-   static bool Compose(uint32_t a, uint32_t b, uint32_t *ab);
-   static bool DecomposeNonRecursively(uint32_t comp, uint32_t *c1, uint32_t *c2);
-#endif
-
 private:
-   virtual ~nsUnicodeNormalizer();
+   virtual ~nsUnicodeNormalizer() { }
 };
 
 #endif //nsUnicodeNormalizer_h__
