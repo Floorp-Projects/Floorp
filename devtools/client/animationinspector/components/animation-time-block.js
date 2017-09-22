@@ -462,7 +462,7 @@ function renderGraph(parentEl, state, totalDisplayedDuration, className, graphHe
 function renderDelay(parentEl, state, graphHelper) {
   const startSegment = graphHelper.getSegment(0);
   const endSegment = { x: state.delay, y: startSegment.y };
-  graphHelper.appendShapePath(parentEl, [startSegment, endSegment], "delay-path");
+  graphHelper.appendPathElement(parentEl, [startSegment, endSegment], "delay-path");
 }
 
 /**
@@ -478,7 +478,7 @@ function renderFirstIteration(parentEl, state, mainIterationStartTime,
   const startTime = mainIterationStartTime;
   const endTime = startTime + firstSectionCount * state.duration;
   const segments = graphHelper.createPathSegments(startTime, endTime);
-  graphHelper.appendShapePath(parentEl, segments, "iteration-path");
+  graphHelper.appendPathElement(parentEl, segments, "iteration-path");
 }
 
 /**
@@ -499,7 +499,7 @@ function renderMiddleIterations(parentEl, state, mainIterationStartTime,
     const startTime = offset + i * state.duration;
     const endTime = startTime + state.duration;
     const segments = graphHelper.createPathSegments(startTime, endTime);
-    graphHelper.appendShapePath(parentEl, segments, "iteration-path");
+    graphHelper.appendPathElement(parentEl, segments, "iteration-path");
   }
 }
 
@@ -520,7 +520,7 @@ function renderLastIteration(parentEl, state, mainIterationStartTime,
                       (firstSectionCount + middleSectionCount) * state.duration;
   const endTime = startTime + lastSectionCount * state.duration;
   const segments = graphHelper.createPathSegments(startTime, endTime);
-  graphHelper.appendShapePath(parentEl, segments, "iteration-path");
+  graphHelper.appendPathElement(parentEl, segments, "iteration-path");
 }
 
 /**
@@ -552,7 +552,7 @@ function renderInfinity(parentEl, state, mainIterationStartTime,
   const firstEndTime = firstStartTime + state.duration;
   const firstSegments =
     graphHelper.createPathSegments(firstStartTime, firstEndTime);
-  graphHelper.appendShapePath(parentEl, firstSegments, "iteration-path infinity");
+  graphHelper.appendPathElement(parentEl, firstSegments, "iteration-path infinity");
 
   // Append other iterations. We can copy first segments.
   const isAlternate = state.direction.match(/alternate/);
@@ -570,7 +570,7 @@ function renderInfinity(parentEl, state, mainIterationStartTime,
         return { x: segment.x - firstStartTime + startTime, y: segment.y };
       });
     }
-    graphHelper.appendShapePath(parentEl, segments, "iteration-path infinity copied");
+    graphHelper.appendPathElement(parentEl, segments, "iteration-path infinity copied");
   }
 }
 
@@ -587,7 +587,7 @@ function renderEndDelay(parentEl, state,
   const startTime = mainIterationStartTime + iterationCount * state.duration;
   const startSegment = graphHelper.getSegment(startTime);
   const endSegment = { x: startTime + state.endDelay, y: startSegment.y };
-  graphHelper.appendShapePath(parentEl, [startSegment, endSegment], "enddelay-path");
+  graphHelper.appendPathElement(parentEl, [startSegment, endSegment], "enddelay-path");
 }
 
 /**
@@ -605,7 +605,8 @@ function renderForwardsFill(parentEl, state, mainIterationStartTime,
                       (state.endDelay > 0 ? state.endDelay : 0);
   const startSegment = graphHelper.getSegment(startTime);
   const endSegment = { x: totalDuration, y: startSegment.y };
-  graphHelper.appendShapePath(parentEl, [startSegment, endSegment], "fill-forwards-path");
+  graphHelper.appendPathElement(parentEl, [startSegment, endSegment],
+                                "fill-forwards-path");
 }
 
 /**
@@ -619,7 +620,7 @@ function renderNegativeDelayHiddenProgress(parentEl, state, graphHelper) {
   const endTime = 0;
   const segments =
     graphHelper.createPathSegments(startTime, endTime);
-  graphHelper.appendShapePath(parentEl, segments, "delay-path negative");
+  graphHelper.appendPathElement(parentEl, segments, "delay-path negative");
 }
 
 /**
@@ -632,7 +633,7 @@ function renderNegativeEndDelayHiddenProgress(parentEl, state, graphHelper) {
   const endTime = state.delay + state.iterationCount * state.duration;
   const startTime = endTime + state.endDelay;
   const segments = graphHelper.createPathSegments(startTime, endTime);
-  graphHelper.appendShapePath(parentEl, segments, "enddelay-path negative");
+  graphHelper.appendPathElement(parentEl, segments, "enddelay-path negative");
 }
 
 /**
