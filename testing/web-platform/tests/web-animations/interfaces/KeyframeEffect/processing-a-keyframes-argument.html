@@ -19,7 +19,7 @@
 
 // Test that only animatable properties are accessed
 
-var gNonAnimatableProps = [
+const gNonAnimatableProps = [
   'animation', // Shorthands where all the longhand sub-properties are not
                // animatable, are also not animatable.
   'animationDelay',
@@ -41,7 +41,7 @@ var gNonAnimatableProps = [
 ];
 
 function TestKeyframe(testProp) {
-  var _propAccessCount = 0;
+  let _propAccessCount = 0;
 
   Object.defineProperty(this, testProp, {
     get: function() { _propAccessCount++; },
@@ -59,7 +59,7 @@ function GetTestKeyframeSequence(testProp) {
 
 gNonAnimatableProps.forEach(function(prop) {
   test(function(t) {
-    var testKeyframe = new TestKeyframe(prop);
+    const testKeyframe = new TestKeyframe(prop);
 
     new KeyframeEffect(null, testKeyframe);
 
@@ -70,7 +70,7 @@ gNonAnimatableProps.forEach(function(prop) {
 
 gNonAnimatableProps.forEach(function(prop) {
   test(function(t) {
-    var testKeyframes = GetTestKeyframeSequence(prop);
+    const testKeyframes = GetTestKeyframeSequence(prop);
 
     new KeyframeEffect(null, testKeyframes);
 
@@ -82,12 +82,14 @@ gNonAnimatableProps.forEach(function(prop) {
 // Test equivalent forms of property indexed and sequenced keyframe syntax
 
 function assertEquivalentKeyframeSyntax(keyframesA, keyframesB) {
-  var processedKeyframesA = new KeyframeEffect(null, keyframesA).getKeyframes();
-  var processedKeyframesB = new KeyframeEffect(null, keyframesB).getKeyframes();
+  const processedKeyframesA =
+    new KeyframeEffect(null, keyframesA).getKeyframes();
+  const processedKeyframesB =
+    new KeyframeEffect(null, keyframesB).getKeyframes();
   assert_frame_lists_equal(processedKeyframesA, processedKeyframesB);
 }
 
-var gEquivalentSyntaxTests = [
+const gEquivalentSyntaxTests = [
   {
     description: 'two properties with one value',
     indexedKeyframes: {
@@ -170,7 +172,7 @@ gEquivalentSyntaxTests.forEach(function({description, indexedKeyframes, sequence
 function createIterable(iterations) {
   return {
     [Symbol.iterator]() {
-      var i = 0;
+      let i = 0;
       return {
         next() {
           return iterations[i++];
@@ -181,7 +183,7 @@ function createIterable(iterations) {
 }
 
 test(() => {
-  var effect = new KeyframeEffect(null, createIterable([
+  const effect = new KeyframeEffect(null, createIterable([
     {done: false, value: {left: '100px'}},
     {done: false, value: {left: '300px'}},
     {done: false, value: {left: '200px'}},
@@ -195,7 +197,7 @@ test(() => {
 }, 'Custom iterator with basic keyframes.');
 
 test(() => {
-  var keyframes = createIterable([
+  const keyframes = createIterable([
     {done: false, value: {left: '100px'}},
     {done: false, value: {left: '300px'}},
     {done: false, value: {left: '200px'}},
@@ -203,7 +205,7 @@ test(() => {
   ]);
   keyframes.easing = 'ease-in-out';
   keyframes.offset = '0.1';
-  var effect = new KeyframeEffect(null, keyframes);
+  const effect = new KeyframeEffect(null, keyframes);
   assert_frame_lists_equal(effect.getKeyframes(), [
     {offset: null, computedOffset: 0, easing: 'linear', left: '100px'},
     {offset: null, computedOffset: 0.5, easing: 'linear', left: '300px'},
@@ -212,7 +214,7 @@ test(() => {
 }, 'easing and offset are ignored on iterable objects.');
 
 test(() => {
-  var effect = new KeyframeEffect(null, createIterable([
+  const effect = new KeyframeEffect(null, createIterable([
     {done: false, value: {left: '100px', top: '200px'}},
     {done: false, value: {left: '300px'}},
     {done: false, value: {left: '200px', top: '100px'}},
@@ -226,7 +228,7 @@ test(() => {
 }, 'Custom iterator with multiple properties specified.');
 
 test(() => {
-  var effect = new KeyframeEffect(null, createIterable([
+  const effect = new KeyframeEffect(null, createIterable([
     {done: false, value: {left: '100px'}},
     {done: false, value: {left: '250px', offset: 0.75}},
     {done: false, value: {left: '200px'}},
@@ -251,7 +253,7 @@ test(() => {
 }, 'Custom iterator with non object keyframe should throw.');
 
 test(() => {
-  var effect = new KeyframeEffect(null, createIterable([
+  const effect = new KeyframeEffect(null, createIterable([
     {done: false, value: {left: ['100px', '200px']}},
     {done: true},
   ]));
@@ -262,7 +264,7 @@ test(() => {
    'property value pair of list.');
 
 test(function(t) {
-  var keyframe = {};
+  const keyframe = {};
   Object.defineProperty(keyframe, 'width', {value: '200px'});
   Object.defineProperty(keyframe, 'height', {
     value: '100px',
@@ -279,14 +281,14 @@ test(function(t) {
 }, 'Only enumerable properties on keyframes are considered');
 
 test(function(t) {
-  var KeyframeParent = function() { this.width = '100px'; };
+  const KeyframeParent = function() { this.width = '100px'; };
   KeyframeParent.prototype = { height: '100px' };
-  var Keyframe = function() { this.top = '100px'; };
+  const Keyframe = function() { this.top = '100px'; };
   Keyframe.prototype = Object.create(KeyframeParent.prototype);
   Object.defineProperty(Keyframe.prototype, 'left', {
     value: '100px',
     enumerable: 'true'});
-  var keyframe = new Keyframe();
+  const keyframe = new Keyframe();
 
   const effect = new KeyframeEffect(null, [keyframe, {top: '200px'}]);
 
@@ -297,7 +299,7 @@ test(function(t) {
 }, 'Only properties defined directly on keyframes are considered');
 
 test(function(t) {
-  var keyframes = {};
+  const keyframes = {};
   Object.defineProperty(keyframes, 'width', ['100px', '200px']);
   Object.defineProperty(keyframes, 'height', {
     value: ['100px', '200px'],
@@ -312,14 +314,14 @@ test(function(t) {
 }, 'Only enumerable properties on property indexed keyframes are considered');
 
 test(function(t) {
-  var KeyframesParent = function() { this.width = '100px'; };
+  const KeyframesParent = function() { this.width = '100px'; };
   KeyframesParent.prototype = { height: '100px' };
-  var Keyframes = function() { this.top = ['100px', '200px']; };
+  const Keyframes = function() { this.top = ['100px', '200px']; };
   Keyframes.prototype = Object.create(KeyframesParent.prototype);
   Object.defineProperty(Keyframes.prototype, 'left', {
     value: ['100px', '200px'],
     enumerable: 'true'});
-  var keyframes = new Keyframes();
+  const keyframes = new Keyframes();
 
   const effect = new KeyframeEffect(null, keyframes);
 
