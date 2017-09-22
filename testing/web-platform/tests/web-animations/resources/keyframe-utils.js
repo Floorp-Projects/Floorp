@@ -40,21 +40,6 @@ var gEasingValueTests = [
   ["ease /**/", "ease"],
 ];
 
-var gInvalidEasingInKeyframeSequenceTests = [
-  { desc:   "a blank easing",
-    input:  [{ easing: "" }] },
-  { desc:   "an unrecognized easing",
-    input:  [{ easing: "unrecognized" }] },
-  { desc:   "an 'initial' easing",
-    input:  [{ easing: "initial" }] },
-  { desc:   "an 'inherit' easing",
-    input:  [{ easing: "inherit" }] },
-  { desc:   "a variable easing",
-    input:  [{ easing: "var(--x)" }] },
-  { desc:   "a multi-value easing",
-    input:  [{ easing: "ease-in-out, ease-out" }] }
-];
-
 // ------------------------------
 //  Composite values
 // ------------------------------
