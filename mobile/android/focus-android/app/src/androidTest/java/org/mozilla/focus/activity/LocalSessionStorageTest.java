@@ -154,7 +154,7 @@ public class LocalSessionStorageTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(url).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
     }
 
     private void goToUrlFromBrowserScreen(String url) throws Exception {
@@ -166,6 +166,6 @@ public class LocalSessionStorageTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(url).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
     }
 }

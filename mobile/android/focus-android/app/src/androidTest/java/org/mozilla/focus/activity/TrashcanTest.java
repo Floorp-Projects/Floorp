@@ -68,7 +68,7 @@ public class TrashcanTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Press erase button, and check for message and return to the main page
         TestHelper.floatingEraseButton.perform(click());
@@ -85,7 +85,7 @@ public class TrashcanTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         TestHelper.menuButton.perform(click());
         TestHelper.blockCounterItem.waitForExists(waitingTime);
 
@@ -112,7 +112,7 @@ public class TrashcanTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Switch out of Focus, pull down system bar and select delete browsing history
         TestHelper.pressHomeKey();

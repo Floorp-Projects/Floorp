@@ -73,7 +73,7 @@ public class AdBlockingTest {
         TestHelper.inlineAutocompleteEditText.setText("ads-blocker.com/testing/");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         int dHeight = TestHelper.mDevice.getDisplayHeight();
         int dWidth = TestHelper.mDevice.getDisplayWidth();
@@ -111,7 +111,7 @@ public class AdBlockingTest {
         TestHelper.inlineAutocompleteEditText.setText("ads-blocker.com/testing/");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         TestHelper.mDevice.swipe(
                 xScrollPosition,
                 yScrollStop,
@@ -135,7 +135,7 @@ public class AdBlockingTest {
         blockAdTrackerEntry.click();
         assertTrue(blockAdTrackerValue.getText().equals("ON"));
         TestHelper.navigateUp.click();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         TestHelper.floatingEraseButton.perform(click());
    }
 }

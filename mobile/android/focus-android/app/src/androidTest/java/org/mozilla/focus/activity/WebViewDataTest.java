@@ -146,7 +146,7 @@ public class WebViewDataTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Assert website is loaded
 

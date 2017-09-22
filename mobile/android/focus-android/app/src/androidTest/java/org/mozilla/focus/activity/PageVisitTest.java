@@ -81,7 +81,7 @@ public class PageVisitTest {
 
         /* Go to Your Rights Page */
         TestHelper.RightsItem.click();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         assertTrue(rightsHeading.exists());
         assertTrue(rightsPartialText.exists());
 
@@ -90,7 +90,7 @@ public class PageVisitTest {
         TestHelper.waitForIdle();
         TestHelper.menuButton.perform(click());
         TestHelper.AboutItem.click();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         assertTrue(aboutHeading.exists());
         assertTrue(aboutPartialText.exists());
 

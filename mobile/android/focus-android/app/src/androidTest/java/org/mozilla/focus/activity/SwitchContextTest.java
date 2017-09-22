@@ -111,7 +111,7 @@ public class SwitchContextTest {
         TestHelper.pressEnterKey();
 
         // Assert website is loaded
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         Assert.assertTrue("Website title loaded", titleMsg.exists());
         assertTrue(rabbitImage.exists());
 
@@ -145,7 +145,7 @@ public class SwitchContextTest {
         TestHelper.pressEnterKey();
 
         // Assert website is loaded
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         Assert.assertTrue("Website title loaded", titleMsg.exists());
         assertTrue(rabbitImage.exists());
 
@@ -187,7 +187,8 @@ public class SwitchContextTest {
         TestHelper.pressEnterKey();
 
         // Assert website is loaded
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        assertTrue(titleMsg.waitForExists(waitingTime));
         Assert.assertTrue("Website title loaded", titleMsg.exists());
         junit.framework.Assert.assertTrue(rabbitImage.exists());
 

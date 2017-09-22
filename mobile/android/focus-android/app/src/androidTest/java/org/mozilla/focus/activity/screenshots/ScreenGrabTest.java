@@ -3,6 +3,7 @@ package org.mozilla.focus.activity.screenshots;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.web.webdriver.Locator;
@@ -141,6 +142,8 @@ public class ScreenGrabTest {
         final Context context = instrumentation.getTargetContext();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
+        // Use this to switch between default strategy and HostScreencap strategy
+        //Screengrab.setDefaultScreenshotStrategy(new UiAutomatorScreenshotStrategy());
         Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy(device));
 
         takeScreenshotsOfFirstrun(context, device);
@@ -162,7 +165,7 @@ public class ScreenGrabTest {
         // takeScreenshotOfGooglePlayDialog(device);
 
         takeScreenshotOfContextMenu(context, device);
-        takeScreenshotOfErrorPages(device);
+        takeScreenshotOfErrorPages(context, device);
     }
 
     private void takeScreenshotsOfFirstrun(Context context, UiDevice device) throws UiObjectNotFoundException {
@@ -214,7 +217,7 @@ public class ScreenGrabTest {
         Screengrab.screenshot("MainViewMenu");
 
         TestHelper.RightsItem.click();
-
+       assertTrue(TestHelper.webView.waitForExists(waitingTime));
         onWebView()
                 .withElement(findElement(Locator.ID, "first"))
                 .perform(webClick());
@@ -227,7 +230,7 @@ public class ScreenGrabTest {
     private void takeScreenshotOfAboutPage(Context context, UiDevice device) throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
         TestHelper.AboutItem.click();
-
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         onWebView()
                 .withElement(findElement(Locator.ID, "wordmark"))
                 .perform(webClick());
@@ -269,7 +272,7 @@ public class ScreenGrabTest {
     }
 
     private void takeScreenshotOfOpenWithAndShareViews(UiDevice device) throws UiObjectNotFoundException {
-                /* Open_With View */
+        /* Open_With View */
         UiObject openWithBtn = device.findObject(new UiSelector()
                 .resourceId("org.mozilla.focus.debug:id/open_select_browser")
                 .enabled(true));
@@ -305,16 +308,16 @@ public class ScreenGrabTest {
         Screengrab.screenshot("AddtoHSDialog");
 
         TestHelper.AddtoHSCancelBtn.click();
+        Assert.assertTrue(TestHelper.browserURLbar.waitForExists(waitingTime));
     }
 
     private void takeScreenshotOfNotification(Context context, UiDevice device) throws UiObjectNotFoundException {
         device.openNotification();
 
-        assertTrue(device.findObject(new UiSelector()
-                .text(context.getString(R.string.notification_erase_text))
+        final UiObject eraseNotification = device.findObject(new UiSelector()
+                .descriptionContains(context.getString(R.string.notification_erase_text))
                 .resourceId("android:id/text")
-                .enabled(true))
-                .waitForExists(waitingTime));
+                .enabled(true));
 
         final UiObject openAction = device.findObject(new UiSelector()
                 .descriptionContains(context.getString(R.string.notification_action_open))
@@ -323,13 +326,11 @@ public class ScreenGrabTest {
 
         if (!openAction.waitForExists(waitingTime)) {
             // The notification is not expanded. Let's expand it now.
-
+            assertTrue(eraseNotification.exists());
             TestHelper.notificationExpandSwitch.click();
             assertTrue(openAction.waitForExists(waitingTime));
         }
-
         Screengrab.screenshot("DeleteHistory_NotificationBar");
-
         device.pressBack();
     }
 
@@ -408,10 +409,6 @@ public class ScreenGrabTest {
         UiObject multiTabBtn = device.findObject(new UiSelector()
                 .resourceId("org.mozilla.focus.debug:id/tabs")
                 .enabled(true));
-        UiObject eraseHistoryBtn = device.findObject(new UiSelector()
-                .className("android.widget.TextView")
-                .index(2)
-                .enabled(true));
 
         assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         TestHelper.inlineAutocompleteEditText.clearTextField();
@@ -437,7 +434,6 @@ public class ScreenGrabTest {
         openNewTabTitle.click();
         assertTrue(multiTabBtn.waitForExists(waitingTime));
         multiTabBtn.click();
-        assertTrue(eraseHistoryBtn.waitForExists(waitingTime));
         Screengrab.screenshot("Multi_Tab_Menu");
         TestHelper.pressBackKey();
         device.openNotification();
@@ -462,7 +458,7 @@ public class ScreenGrabTest {
         UiObject cancelBtn = device.findObject(new UiSelector()
                 .resourceId("android:id/button2"));
         UiObject alert = device.findObject(new UiSelector()
-                .resourceId("android:id/alertTitle"));
+                .resourceId("org.mozilla.focus.debug:id/alertTitle"));
 
         assertTrue(alert.waitForExists(waitingTime));
         assertTrue(cancelBtn.waitForExists(waitingTime));
@@ -473,7 +469,7 @@ public class ScreenGrabTest {
         device.pressBack();
     }
 
-    private void takeScreenshotOfErrorPages(UiDevice device) throws UiObjectNotFoundException {
+    private void takeScreenshotOfErrorPages(Context context, UiDevice device) throws UiObjectNotFoundException {
         for (ScreenGrabTest.ErrorTypes error: ScreenGrabTest.ErrorTypes.values()) {
             assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
 
@@ -482,16 +478,21 @@ public class ScreenGrabTest {
 
             assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
-            onWebView()
-                    .withTimeout(loadingWaitingTime, TimeUnit.MILLISECONDS)
-                    .withElement(findElement(Locator.ID, "errorTitle"))
-                    .perform(webClick());
+            // Android O has an issue with using Locator.ID
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                UiObject tryAgainBtn = device.findObject(new UiSelector()
+                        .descriptionContains(context.getString(R.string.errorpage_refresh))
+                        .clickable(true));
+                assertTrue(tryAgainBtn.waitForExists(waitingTime));
+            } else {
+                onWebView()
+                        .withElement(findElement(Locator.ID, "errorTitle"))
+                        .perform(webClick());
 
-            onWebView()
-                    .withTimeout(loadingWaitingTime, TimeUnit.MILLISECONDS)
-                    .withElement(findElement(Locator.ID, "errorTryAgain"))
-                    .perform(webScrollIntoView());
-
+                onWebView()
+                        .withElement(findElement(Locator.ID, "errorTryAgain"))
+                        .perform(webScrollIntoView());
+            }
             Screengrab.screenshot(error.name());
             browserURLbar.click();
         }

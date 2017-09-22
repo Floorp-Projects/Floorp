@@ -72,7 +72,7 @@ public class OpenwithDialogTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         /* Select Open with from menu, check appearance */
         TestHelper.menuButton.perform(click());

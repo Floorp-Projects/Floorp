@@ -77,7 +77,7 @@ public class TypicalUseScenarioTest {
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue(TestHelper.hint.getText().equals("Search for mozilla focus"));
         TestHelper.hint.click();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
         assertTrue (TestHelper.browserURLbar.getText().contains("focus"));
 
@@ -93,7 +93,7 @@ public class TypicalUseScenarioTest {
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue(TestHelper.hint.getText().equals("Search for https://www.google.com"));
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         assertTrue (TestHelper.browserURLbar.getText().contains("https://www.google"));
 
         // The DOM for lockicon is not detected consistenly, even when it is visible.
@@ -113,7 +113,7 @@ public class TypicalUseScenarioTest {
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue(TestHelper.hint.getText().equals("Search for http://www.example.com"));
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         assertTrue (TestHelper.browserURLbar.getText().contains("http://www.example.com"));
         assertTrue (!TestHelper.lockIcon.exists());
 
@@ -133,7 +133,7 @@ public class TypicalUseScenarioTest {
 
         //Back to the webpage
         TestHelper.navigateUp.click();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
         assertTrue (TestHelper.browserURLbar.getText().contains("http://www.example.com"));
         assertTrue (!TestHelper.lockIcon.exists());
     }

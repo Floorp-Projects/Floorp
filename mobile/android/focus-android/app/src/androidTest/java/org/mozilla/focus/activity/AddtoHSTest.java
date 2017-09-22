@@ -28,6 +28,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static android.support.test.espresso.action.ViewActions.click;
+import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.activity.TestHelper.webPageLoadwaitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
@@ -261,7 +262,7 @@ public class AddtoHSTest {
         Assert.assertTrue(shortcutIcon.isEnabled());
         shortcutIcon.click();
         TestHelper.waitForIdle();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         //Tap URL bar and check the search term is still shown
         TestHelper.browserURLbar.waitForExists(waitingTime);

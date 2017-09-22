@@ -65,7 +65,7 @@ public class ShareDialogTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         /* Select share */
         TestHelper.menuButton.perform(click());

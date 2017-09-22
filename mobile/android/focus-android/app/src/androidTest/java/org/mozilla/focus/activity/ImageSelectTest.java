@@ -133,7 +133,8 @@ public class ImageSelectTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        assertTrue(titleMsg.waitForExists(waitingTime));
 
         // Assert website is loaded
         assertTrue("Website title loaded", titleMsg.exists());
@@ -177,7 +178,7 @@ public class ImageSelectTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Assert website is loaded
         assertTrue("Website title loaded", titleMsg.exists());
@@ -209,7 +210,7 @@ public class ImageSelectTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Find image and long tap it
         rabbitImage.waitForExists(waitingTime);

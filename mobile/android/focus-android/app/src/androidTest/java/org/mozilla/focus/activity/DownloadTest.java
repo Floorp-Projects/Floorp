@@ -25,6 +25,7 @@ import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
+import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
@@ -122,7 +123,7 @@ public class DownloadTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Assert website is loaded
         Assert.assertTrue("Website title loaded", titleMsg.exists());
