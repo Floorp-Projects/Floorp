@@ -96,15 +96,9 @@ AssemblerMIPSShared::finish()
 }
 
 bool
-AssemblerMIPSShared::asmMergeWith(const AssemblerMIPSShared& other)
+AssemblerMIPSShared::appendRawCode(const uint8_t* code, size_t numBytes)
 {
-    if (!AssemblerShared::asmMergeWith(size(), other))
-        return false;
-    for (size_t i = 0; i < other.numLongJumps(); i++) {
-        size_t off = other.longJumps_[i];
-        addLongJump(BufferOffset(size() + off));
-    }
-    return m_buffer.appendBuffer(other.m_buffer);
+    return m_buffer.appendRawCode(code, numBytes);
 }
 
 uint32_t

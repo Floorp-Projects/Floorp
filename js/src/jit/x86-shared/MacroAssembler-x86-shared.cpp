@@ -271,50 +271,6 @@ MacroAssemblerX86Shared::getSimdData(const SimdConstant& v)
     return getConstant<SimdData, SimdMap>(v, simdMap_, simds_);
 }
 
-template<class T, class Map>
-static bool
-MergeConstants(size_t delta, const Vector<T, 0, SystemAllocPolicy>& other,
-               Map& map, Vector<T, 0, SystemAllocPolicy>& vec)
-{
-    typedef typename Map::AddPtr AddPtr;
-    if (!map.initialized() && !map.init())
-        return false;
-
-    for (const T& c : other) {
-        size_t index;
-        if (AddPtr p = map.lookupForAdd(c.value)) {
-            index = p->value();
-        } else {
-            index = vec.length();
-            if (!vec.append(T(c.value)) || !map.add(p, c.value, index))
-                return false;
-        }
-        MacroAssemblerX86Shared::UsesVector& uses = vec[index].uses;
-        for (CodeOffset use : c.uses) {
-            use.offsetBy(delta);
-            if (!uses.append(use))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
-MacroAssemblerX86Shared::asmMergeWith(const MacroAssemblerX86Shared& other)
-{
-    size_t sizeBefore = masm.size();
-    if (!Assembler::asmMergeWith(other))
-        return false;
-    if (!MergeConstants<Double, DoubleMap>(sizeBefore, other.doubles_, doubleMap_, doubles_))
-        return false;
-    if (!MergeConstants<Float, FloatMap>(sizeBefore, other.floats_, floatMap_, floats_))
-        return false;
-    if (!MergeConstants<SimdData, SimdMap>(sizeBefore, other.simds_, simdMap_, simds_))
-        return false;
-    return true;
-}
-
 void
 MacroAssemblerX86Shared::minMaxDouble(FloatRegister first, FloatRegister second, bool canBeNaN,
                                       bool isMax)

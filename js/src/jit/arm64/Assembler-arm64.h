@@ -189,7 +189,13 @@ class Assembler : public vixl::Assembler
     typedef vixl::Condition Condition;
 
     void finish();
-    bool asmMergeWith(const Assembler& other) {
+    bool appendRawCode(const uint8_t* code, size_t numBytes) {
+        MOZ_CRASH("NYI");
+    }
+    bool reserve(size_t size) {
+        MOZ_CRASH("NYI");
+    }
+    bool swapBuffer(wasm::Bytes& bytes) {
         MOZ_CRASH("NYI");
     }
     void trace(JSTracer* trc);

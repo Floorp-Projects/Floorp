@@ -1402,7 +1402,9 @@ class Assembler : public AssemblerShared
     bool isFinished;
   public:
     void finish();
-    bool asmMergeWith(Assembler& other);
+    bool appendRawCode(const uint8_t* code, size_t numBytes);
+    bool reserve(size_t size);
+    bool swapBuffer(wasm::Bytes& bytes);
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);
 
