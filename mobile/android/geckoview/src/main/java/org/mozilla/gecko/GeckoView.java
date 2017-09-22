@@ -751,8 +751,7 @@ public class GeckoView extends LayerView {
                 mInputConnectionListener.onKeyMultiple(keyCode, repeatCount, event);
     }
 
-    @Override
-    public boolean isIMEEnabled() {
+    /* package */ boolean isIMEEnabled() {
         return mInputConnectionListener != null &&
                 mInputConnectionListener.isIMEEnabled();
     }
