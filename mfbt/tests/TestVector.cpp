@@ -23,6 +23,7 @@ struct mozilla::detail::VectorTesting
   static void testExtractRawBuffer();
   static void testExtractOrCopyRawBuffer();
   static void testInsert();
+  static void testPodResizeToFit();
 };
 
 void
@@ -397,6 +398,34 @@ mozilla::detail::VectorTesting::testInsert()
   MOZ_RELEASE_ASSERT(S::destructCount == 1);
 }
 
+void
+mozilla::detail::VectorTesting::testPodResizeToFit()
+{
+  // Vectors not using inline storage realloc capacity to exact length.
+  Vector<int, 0> v1;
+  MOZ_RELEASE_ASSERT(v1.reserve(10));
+  v1.infallibleAppend(1);
+  MOZ_ASSERT(v1.length() == 1);
+  MOZ_ASSERT(v1.reserved() == 10);
+  MOZ_ASSERT(v1.capacity() >= 10);
+  v1.podResizeToFit();
+  MOZ_ASSERT(v1.length() == 1);
+  MOZ_ASSERT(v1.reserved() == 1);
+  MOZ_ASSERT(v1.capacity() == 1);
+
+  // Vectors using inline storage do nothing.
+  Vector<int, 2> v2;
+  MOZ_RELEASE_ASSERT(v2.reserve(2));
+  v2.infallibleAppend(1);
+  MOZ_ASSERT(v2.length() == 1);
+  MOZ_ASSERT(v2.reserved() == 2);
+  MOZ_ASSERT(v2.capacity() == 2);
+  v2.podResizeToFit();
+  MOZ_ASSERT(v2.length() == 1);
+  MOZ_ASSERT(v2.reserved() == 2);
+  MOZ_ASSERT(v2.capacity() == 2);
+}
+
 // Declare but leave (permanently) incomplete.
 struct Incomplete;
 
@@ -450,4 +479,5 @@ main()
   VectorTesting::testExtractRawBuffer();
   VectorTesting::testExtractOrCopyRawBuffer();
   VectorTesting::testInsert();
+  VectorTesting::testPodResizeToFit();
 }
