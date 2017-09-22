@@ -58,6 +58,7 @@ this.newAppInfo = function(options = {}) {
     OS,
     XPCOMABI: "noarch-spidermonkey",
     invalidateCachesOnRestart() {},
+    shouldBlockIncompatJaws: false,
 
     // nsIWinAppHelper
     get userCanElevate() {
