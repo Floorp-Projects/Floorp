@@ -1429,8 +1429,8 @@ OpenRunnable::MainThreadRunInternal()
 
   ErrorResult rv2;
   mProxy->mXHR->Open(mMethod, mURL, true,
-                     mUser.WasPassed() ? mUser.Value() : NullString(),
-                     mPassword.WasPassed() ? mPassword.Value() : NullString(),
+                     mUser.WasPassed() ? mUser.Value() : VoidString(),
+                     mPassword.WasPassed() ? mPassword.Value() : VoidString(),
                      rv2);
 
   MOZ_ASSERT(mProxy->mInOpen);
@@ -2046,7 +2046,7 @@ XMLHttpRequestWorker::Send(JSContext* aCx,
   RefPtr<SendRunnable> sendRunnable;
 
   if (aData.IsNull()) {
-    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, NullString());
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, VoidString());
     // Nothing to clone.
   }
 

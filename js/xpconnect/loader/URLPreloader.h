@@ -224,7 +224,7 @@ private:
     {
         MOZ_IMPLICIT URLEntry(const CacheKey& key)
             : CacheKey(key)
-            , mData(NullCString())
+            , mData(VoidCString())
         {}
 
         explicit URLEntry(nsIFile* file)

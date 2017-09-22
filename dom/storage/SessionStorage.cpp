@@ -155,7 +155,7 @@ SessionStorage::RemoveItem(const nsAString& aKey,
     return;
   }
 
-  BroadcastChangeNotification(aKey, oldValue, NullString());
+  BroadcastChangeNotification(aKey, oldValue, VoidString());
 }
 
 void
@@ -168,7 +168,7 @@ SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal,
   }
 
   mCache->Clear(DATASET);
-  BroadcastChangeNotification(NullString(), NullString(), NullString());
+  BroadcastChangeNotification(VoidString(), VoidString(), VoidString());
 }
 
 void

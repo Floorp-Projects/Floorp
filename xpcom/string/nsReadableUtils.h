@@ -426,8 +426,8 @@ bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
 const nsString& EmptyString();
 const nsCString& EmptyCString();
 
-const nsString& NullString();
-const nsCString& NullCString();
+const nsString& VoidString();
+const nsCString& VoidCString();
 
 /**
 * Compare a UTF-8 string to an UTF-16 string.
