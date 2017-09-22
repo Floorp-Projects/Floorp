@@ -11,9 +11,7 @@
 #include "nsCollationFactory.h"
 #include "nsString.h"
 
-#ifdef ENABLE_INTL_API
 #include "unicode/ucol.h"
-#endif
 
 class nsCollation final : public nsICollation {
 
@@ -29,7 +27,6 @@ public:
 protected:
   ~nsCollation();
 
-#ifdef ENABLE_INTL_API
   nsresult ConvertStrength(const int32_t aStrength,
                            UCollationStrength* aStrengthOut,
                            UColAttributeValue* aCaseLevelOut);
@@ -42,7 +39,6 @@ private:
   nsCString mLocale;
   int32_t mLastStrength;
   UCollator* mCollatorICU;
-#endif
 };
 
 #endif  /* nsCollation_h_ */
