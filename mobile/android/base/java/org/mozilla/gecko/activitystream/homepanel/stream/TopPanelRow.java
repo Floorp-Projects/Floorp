@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPage;
 import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.home.HomePager;
 
@@ -60,10 +61,23 @@ public class TopPanelRow extends StreamViewHolder {
         final Resources resources = itemView.getResources();
         final int tilesMargin = resources.getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
-        final int rows = cursor == null || cursor.getCount() > 4 ? 2 : 1;
+        final int rows;
+
+        // The cursor is null when the view is first created. The view will layout with the number of rows we
+        // set initially (while we load the Cursor) and these rows (with no content) will be briefly visible
+        // to users. Since we expect 2 rows to be the most common for users, we show 2 rows at this point;
+        // the RecyclerView will gracefully animate a collapse if we display fewer.
+        if (cursor == null || cursor.getCount() > TopSitesPage.NUM_COLUMNS) {
+            rows = 2;
+        } else if (cursor.getCount() > 0) {
+            rows = 1;
+        } else {
+            // The user has deleted history and removed all suggested sites.
+            rows = 0;
+        }
 
         ViewGroup.LayoutParams layoutParams = topSitesPager.getLayoutParams();
-        layoutParams.height = (tilesSize * rows) + (tilesMargin * 2);
+        layoutParams.height = rows > 0 ? (tilesSize * rows) + (tilesMargin * 2) : 0;
         topSitesPager.setLayoutParams(layoutParams);
 
         // Reset the page position: binding a new Cursor means that topsites reverts to the first page,
