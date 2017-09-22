@@ -12,7 +12,7 @@
 
 [package]
 name = "dtoa-short"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Xidorn Quan <me@upsuper.org>"]
 include = ["src/*.rs", "Cargo.toml"]
 description = "Serialize float number and truncate to certain precision"
