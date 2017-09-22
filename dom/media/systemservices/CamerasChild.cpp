@@ -256,8 +256,8 @@ private:
   MonitorAutoLock mReplyLock;
   MutexAutoLock mRequestLock;
   bool mSuccess;
-  const T mFailureValue;
-  const T mSuccessValue;
+  const T& mFailureValue;
+  const T& mSuccessValue;
 };
 
 bool
