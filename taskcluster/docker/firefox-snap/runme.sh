@@ -24,16 +24,21 @@ CURL="curl --location --retry 10 --retry-delay 10"
 # Download and extract en-US linux64 binary
 $CURL -o "${WORKSPACE}/firefox.tar.bz2" \
     "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/en-US/firefox-${VERSION}.tar.bz2"
-
 tar -C "${WORKSPACE}/source/opt" -xf "${WORKSPACE}/firefox.tar.bz2"
-mkdir -p "${WORKSPACE}/source/opt/firefox/distribution/extensions"
-cp -v distribution.ini "${WORKSPACE}/source/opt/firefox/distribution/"
-cp -v firefox.desktop "${WORKSPACE}/source/opt/firefox/distribution/"
+
+# Get Ubuntu configuration
+PARTNER_CONFIG_DIR="$WORKSPACE/partner_config"
+git clone https://github.com/mozilla-partners/canonical.git "$PARTNER_CONFIG_DIR"
+
+DISTRIBUTION_DIR="$WORKSPACE/source/opt/firefox/distribution"
+mv "$PARTNER_CONFIG_DIR/desktop/ubuntu/distribution" "$DISTRIBUTION_DIR"
+cp -v "$SCRIPT_DIRECTORY/firefox.desktop" "$DISTRIBUTION_DIR"
 
 # Use release-specific list of locales to fetch L10N XPIs
 $CURL -o "${WORKSPACE}/l10n_changesets.txt" "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/l10n_changesets.txt"
 cat "${WORKSPACE}/l10n_changesets.txt"
 
+mkdir -p "$DISTRIBUTION_DIR/extensions"
 for locale in $(grep -v ja-JP-mac "${WORKSPACE}/l10n_changesets.txt" | awk '{print $1}'); do
     $CURL -o "${WORKSPACE}/source/opt/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi" \
         "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"

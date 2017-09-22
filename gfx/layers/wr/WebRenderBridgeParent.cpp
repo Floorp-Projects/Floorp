@@ -297,10 +297,15 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
       }
       case OpUpdateResource::TOpAddFontInstance: {
         const auto& op = cmd.get_OpAddFontInstance();
+        wr::Vec_u8 variations;
+        if (!reader.Read(op.variations(), variations)) {
+            return false;
+        }
         aUpdates.AddFontInstance(op.instanceKey(), op.fontKey(),
                                  op.glyphSize(),
                                  op.options().ptrOr(nullptr),
-                                 op.platformOptions().ptrOr(nullptr));
+                                 op.platformOptions().ptrOr(nullptr),
+                                 variations);
         break;
       }
       case OpUpdateResource::TOpDeleteImage: {

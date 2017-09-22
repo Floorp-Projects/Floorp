@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use {ColorF, ColorU, IdNamespace, LayoutPoint};
+use {ColorF, ColorU, IdNamespace, LayoutPoint, ToBits};
 use app_units::Au;
 #[cfg(target_os = "macos")]
 use core_foundation::string::CFString;
@@ -14,6 +14,8 @@ use dwrote::FontDescriptor;
 use serde::de::{self, Deserialize, Deserializer};
 #[cfg(target_os = "macos")]
 use serde::ser::{Serialize, Serializer};
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 
@@ -113,7 +115,7 @@ impl FontRenderMode {
         // [0.625, 0.875) -> ThreeQuarters,
         // [0.875, 1.0) -> Zero
         // The unit tests below check for this.
-        let apos = (pos.fract() * 8.0).abs() as i32;
+        let apos = ((pos - pos.floor()) * 8.0) as i32;
 
         match apos {
             0 | 7 => SubpixelOffset::Zero,
@@ -154,6 +156,36 @@ impl Into<f64> for SubpixelOffset {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy, Debug, PartialOrd, Deserialize, Serialize)]
+pub struct FontVariation {
+    pub tag: u32,
+    pub value: f32,
+}
+
+impl Ord for FontVariation {
+    fn cmp(&self, other: &FontVariation) -> Ordering {
+        self.tag.cmp(&other.tag)
+            .then(self.value._to_bits().cmp(&other.value._to_bits()))
+    }
+}
+
+impl PartialEq for FontVariation {
+    fn eq(&self, other: &FontVariation) -> bool {
+        self.tag == other.tag &&
+        self.value._to_bits() == other.value._to_bits()
+    }
+}
+
+impl Eq for FontVariation {}
+
+impl Hash for FontVariation {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.tag.hash(state);
+        self.value._to_bits().hash(state);
+    }
+}
+
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct GlyphOptions {
     pub render_mode: FontRenderMode,
@@ -162,7 +194,8 @@ pub struct GlyphOptions {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstanceOptions {
-    pub render_mode: FontRenderMode,
+    pub render_mode: Option<FontRenderMode>,
+    pub synthetic_italics: bool,
 }
 
 #[repr(C)]
@@ -186,6 +219,8 @@ pub struct FontInstance {
     pub render_mode: FontRenderMode,
     pub subpx_dir: SubpixelDirection,
     pub platform_options: Option<FontInstancePlatformOptions>,
+    pub variations: Vec<FontVariation>,
+    pub synthetic_italics: bool,
 }
 
 impl FontInstance {
@@ -196,6 +231,8 @@ impl FontInstance {
         render_mode: FontRenderMode,
         subpx_dir: SubpixelDirection,
         platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
+        synthetic_italics: bool,
     ) -> FontInstance {
         // In alpha/mono mode, the color of the font is irrelevant.
         // Forcing it to black in those cases saves rasterizing glyphs
@@ -211,6 +248,8 @@ impl FontInstance {
             render_mode,
             subpx_dir,
             platform_options,
+            variations,
+            synthetic_italics,
         }
     }
 
@@ -312,8 +351,8 @@ mod test {
         assert_eq!(rm.subpixel_quantize_offset(-1.0), SubpixelOffset::Zero);
         assert_eq!(rm.subpixel_quantize_offset(1.0), SubpixelOffset::Zero);
         assert_eq!(rm.subpixel_quantize_offset(1.5), SubpixelOffset::Half);
-        assert_eq!(rm.subpixel_quantize_offset(-1.625), SubpixelOffset::ThreeQuarters);
-        assert_eq!(rm.subpixel_quantize_offset(-4.33), SubpixelOffset::Quarter);
+        assert_eq!(rm.subpixel_quantize_offset(-1.625), SubpixelOffset::Half);
+        assert_eq!(rm.subpixel_quantize_offset(-4.33), SubpixelOffset::ThreeQuarters);
 
     }
 }

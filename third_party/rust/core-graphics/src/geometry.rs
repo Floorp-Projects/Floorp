@@ -85,6 +85,22 @@ impl CGRect {
             Some(rect)
         }
     }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        unsafe {
+            // I use one, as it seems that `YES` is not available from this crate.
+            ffi::CGRectIsEmpty(*self) == 1
+        }
+    }
+
+    #[inline]
+    pub fn is_intersects(&self, other: &CGRect) -> bool {
+        unsafe {
+            // I use one, as it seems that `YES` is not available from this crate.
+            ffi::CGRectIntersectsRect(*self, *other) == 1
+        }
+    }
 }
 
 mod ffi {
@@ -97,6 +113,8 @@ mod ffi {
         pub fn CGRectInset(rect: CGRect, dx: CGFloat, dy: CGFloat) -> CGRect;
         pub fn CGRectMakeWithDictionaryRepresentation(dict: CFDictionaryRef,
                                                       rect: *mut CGRect) -> boolean_t;
+        pub fn CGRectIsEmpty(rect: CGRect) -> boolean_t;
+        pub fn CGRectIntersectsRect(rect1: CGRect, rect2: CGRect) -> boolean_t;
     }
 }
 

@@ -28,7 +28,9 @@ pub type CGFloat = libc::c_float;
 
 pub type CGError = libc::int32_t;
 
-pub type CGAffineTransform = ();
+// This is an enum due to zero-sized types warnings.
+// For more details see https://github.com/rust-lang/rust/issues/27303
+pub enum CGAffineTransform {}
 
 pub const kCGImageAlphaNone: u32 = 0;
 pub const kCGImageAlphaPremultipliedLast: u32 = 1;

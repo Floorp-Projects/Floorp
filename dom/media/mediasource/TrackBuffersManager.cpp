@@ -211,6 +211,9 @@ TrackBuffersManager::ProcessTasks()
       mTaskQueue = nullptr;
       MOZ_DIAGNOSTIC_ASSERT(mQueue.Length() == 0,
                             "Detach task must be the last");
+      mVideoTracks.Reset();
+      mAudioTracks.Reset();
+      ShutdownDemuxers();
       return;
     default:
       NS_WARNING("Invalid Task");

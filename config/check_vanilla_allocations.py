@@ -129,9 +129,9 @@ def main():
 
         filename = m.group(1)
 
-        # mozalloc contains calls to memalign. These are ok, so we whitelist
-        # them.
-        if "mozalloc" in filename:
+        # The memory allocator code contains calls to memalign. These are ok, so
+        # we whitelist them.
+        if "_memory_" in filename:
             continue
 
         fn = m.group(2)

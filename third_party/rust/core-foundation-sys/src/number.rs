@@ -37,8 +37,9 @@ pub static kCFNumberFloat64Type:   CFNumberType = 6;
 // static kCFNumberCGFloatType:   CFNumberType = 16;
 // static kCFNumberMaxType:       CFNumberType = 16;
 
-#[repr(C)]
-pub struct __CFNumber;
+// This is an enum due to zero-sized types warnings.
+// For more details see https://github.com/rust-lang/rust/issues/27303
+pub enum __CFNumber {}
 
 pub type CFNumberRef = *const __CFNumber;
 

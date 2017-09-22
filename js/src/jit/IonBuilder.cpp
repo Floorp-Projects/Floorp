@@ -9035,15 +9035,8 @@ IonBuilder::setElemTryReferenceElemOfTypedObject(bool* emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset))
         return Ok();
 
-    MOZ_TRY_VAR(*emitted, storeReferenceTypedObjectValue(obj, indexAsByteOffset, elemType, value, nullptr));
-    if (!*emitted)
-        return Ok();
-
-    current->push(value);
-
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
+    return setPropTryReferenceTypedObjectValue(emitted, obj, indexAsByteOffset,
+                                               elemType, value, nullptr);
 }
 
 AbortReasonOr<Ok>
@@ -9063,14 +9056,7 @@ IonBuilder::setElemTryScalarElemOfTypedObject(bool* emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset))
         return Ok();
 
-    // Store the element
-    MOZ_TRY(storeScalarTypedObjectValue(obj, indexAsByteOffset, elemType, value));
-
-    current->push(value);
-
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
+    return setPropTryScalarTypedObjectValue(emitted, obj, indexAsByteOffset, elemType, value);
 }
 
 AbortReasonOr<Ok>
@@ -11756,15 +11742,7 @@ IonBuilder::setPropTryReferencePropOfTypedObject(bool* emitted,
     if (!byteOffset.add(fieldOffset))
         return abort(AbortReason::Disable, "Overflow of field offset.");
 
-    MOZ_TRY_VAR(*emitted, storeReferenceTypedObjectValue(obj, byteOffset, fieldType, value, name));
-    if (!*emitted)
-        return Ok();
-
-    current->push(value);
-
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
+    return setPropTryReferenceTypedObjectValue(emitted, obj, byteOffset, fieldType, value, name);
 }
 
 AbortReasonOr<Ok>
@@ -11786,13 +11764,7 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool* emitted,
     if (!byteOffset.add(fieldOffset))
         return abort(AbortReason::Disable, "Overflow of field offet.");
 
-    MOZ_TRY(storeScalarTypedObjectValue(obj, byteOffset, fieldType, value));
-
-    current->push(value);
-
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
+    return setPropTryScalarTypedObjectValue(emitted, obj, byteOffset, fieldType, value);
 }
 
 AbortReasonOr<Ok>
@@ -13480,11 +13452,14 @@ IonBuilder::typeObjectForFieldFromStructType(MDefinition* typeObj,
 }
 
 AbortReasonOr<Ok>
-IonBuilder::storeScalarTypedObjectValue(MDefinition* typedObj,
-                                        const LinearSum& byteOffset,
-                                        ScalarTypeDescr::Type type,
-                                        MDefinition* value)
+IonBuilder::setPropTryScalarTypedObjectValue(bool* emitted,
+                                             MDefinition* typedObj,
+                                             const LinearSum& byteOffset,
+                                             ScalarTypeDescr::Type type,
+                                             MDefinition* value)
 {
+    MOZ_ASSERT(!*emitted);
+
     // Find location within the owner object.
     MDefinition* elements;
     MDefinition* scaledOffset;
@@ -13505,17 +13480,23 @@ IonBuilder::storeScalarTypedObjectValue(MDefinition* typedObj,
                                  type, MStoreUnboxedScalar::TruncateInput,
                                  DoesNotRequireMemoryBarrier, adjustment);
     current->add(store);
+    current->push(value);
 
-    return Ok();
+    trackOptimizationSuccess();
+    *emitted = true;
+    return resumeAfter(store);
 }
 
-AbortReasonOr<bool>
-IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
-                                           const LinearSum& byteOffset,
-                                           ReferenceTypeDescr::Type type,
-                                           MDefinition* value,
-                                           PropertyName* name)
+AbortReasonOr<Ok>
+IonBuilder::setPropTryReferenceTypedObjectValue(bool* emitted,
+                                                MDefinition* typedObj,
+                                                const LinearSum& byteOffset,
+                                                ReferenceTypeDescr::Type type,
+                                                MDefinition* value,
+                                                PropertyName* name)
 {
+    MOZ_ASSERT(!*emitted);
+
     // Make sure we aren't adding new type information for writes of object and value
     // references.
     if (type != ReferenceTypeDescr::TYPE_STRING) {
@@ -13528,7 +13509,7 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
                                           /* canModify = */ true, implicitType))
         {
             trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
-            return false;
+            return Ok();
         }
     }
 
@@ -13563,7 +13544,11 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
     }
 
     current->add(store);
-    return true;
+    current->push(value);
+
+    trackOptimizationSuccess();
+    *emitted = true;
+    return resumeAfter(store);
 }
 
 JSObject*

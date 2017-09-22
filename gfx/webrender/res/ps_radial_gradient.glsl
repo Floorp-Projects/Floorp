@@ -52,7 +52,7 @@ void main(void) {
     vGradientAddress = prim.specific_prim_address + VECS_PER_GRADIENT;
 
     // Whether to repeat the gradient instead of clamping.
-    vGradientRepeat = float(int(gradient.start_end_radius_ratio_xy_extend_mode.w) == EXTEND_MODE_REPEAT);
+    vGradientRepeat = float(int(gradient.start_end_radius_ratio_xy_extend_mode.w) != EXTEND_MODE_CLAMP);
 }
 #endif
 

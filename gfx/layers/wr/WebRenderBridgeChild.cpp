@@ -313,7 +313,14 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
   instanceKey.mNamespace = GetNamespace();
   instanceKey.mHandle = GetNextResourceId();
 
-  resources.AddFontInstance(instanceKey, fontKey, aScaledFont->GetSize(), nullptr, nullptr);
+  Maybe<wr::FontInstanceOptions> options;
+  Maybe<wr::FontInstancePlatformOptions> platformOptions;
+  std::vector<FontVariation> variations;
+  aScaledFont->GetWRFontInstanceOptions(&options, &platformOptions, &variations);
+
+  resources.AddFontInstance(instanceKey, fontKey, aScaledFont->GetSize(),
+                            options.ptrOr(nullptr), platformOptions.ptrOr(nullptr),
+                            Range<const FontVariation>(variations.data(), variations.size()));
   UpdateResources(resources);
 
   mFontInstanceKeys.Put(aScaledFont, instanceKey);
