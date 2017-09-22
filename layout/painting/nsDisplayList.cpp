@@ -6265,10 +6265,12 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
                            this, eCSSProperty_opacity,
                            animationInfo, false);
   animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
-  uint64_t animationsId = 0;
+
+  // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
+  // are no active animations.
+  uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
 
   if (!animationInfo.GetAnimations().IsEmpty()) {
-    animationsId = animationInfo.GetCompositorAnimationsId();
     opacityForSC = nullptr;
     OptionalOpacity opacityForCompositor = mOpacity;
 
@@ -6276,6 +6278,9 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
       anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
            void_t(), opacityForCompositor);
     aManager->WrBridge()->AddWebRenderParentCommand(anim);
+    aManager->AddActiveCompositorAnimationId(animationsId);
+  } else if (animationsId) {
+    aManager->AddCompositorAnimationsIdForDiscard(animationsId);
   }
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
@@ -8028,11 +8033,12 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            this, eCSSProperty_transform,
                            animationInfo, false);
   animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
-  uint64_t animationsId = 0;
+
+  // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
+  // are no active animations.
+  uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
 
   if (!animationInfo.GetAnimations().IsEmpty()) {
-    animationsId = animationInfo.GetCompositorAnimationsId();
-
     // Update transfrom as nullptr in stacking context if there exists
     // transform animation, the transform value will be resolved
     // after animation sampling on the compositor
@@ -8046,6 +8052,9 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
       anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
            transformForCompositor, void_t());
     aManager->WrBridge()->AddWebRenderParentCommand(anim);
+    aManager->AddActiveCompositorAnimationId(animationsId);
+  } else if (animationsId) {
+    aManager->AddCompositorAnimationsIdForDiscard(animationsId);
   }
 
   gfx::Matrix4x4Typed<LayerPixel, LayerPixel> boundTransform = ViewAs<gfx::Matrix4x4Typed<LayerPixel, LayerPixel>>(newTransformMatrix);
