@@ -31,7 +31,9 @@ define(function (require, exports, module) {
       json: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object,
-        PropTypes.array
+        PropTypes.array,
+        PropTypes.bool,
+        PropTypes.number
       ])
     },
 
