@@ -21,6 +21,10 @@
   list-style-image: url("chrome://browser/skin/preferences/in-content/search-bar.svg");
 }
 
+.searchBarImage:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 #defaultEngine {
  margin-inline-start: 0;
 }
