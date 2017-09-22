@@ -15,17 +15,26 @@
 
 #  include "mozjemalloc_types.h"
 
-#  define MALLOC_FUNCS_MALLOC 1
-#  define MALLOC_FUNCS_JEMALLOC 2
-#  define MALLOC_FUNCS_INIT 4
-#  define MALLOC_FUNCS_BRIDGE 8
+#  define MALLOC_FUNCS_MALLOC_BASE 1
+#  define MALLOC_FUNCS_MALLOC_EXTRA 2
+#  define MALLOC_FUNCS_MALLOC (MALLOC_FUNCS_MALLOC_BASE | \
+                               MALLOC_FUNCS_MALLOC_EXTRA)
+#  define MALLOC_FUNCS_JEMALLOC 4
+#  define MALLOC_FUNCS_INIT 8
+#  define MALLOC_FUNCS_BRIDGE 16
+#  define MALLOC_FUNCS_ARENA_BASE 32
+#  define MALLOC_FUNCS_ARENA_ALLOC 64
+#  define MALLOC_FUNCS_ARENA (MALLOC_FUNCS_ARENA_BASE | \
+                              MALLOC_FUNCS_ARENA_ALLOC)
 #  define MALLOC_FUNCS_ALL (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE | \
-                            MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
+                            MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | \
+                            MALLOC_FUNCS_ARENA)
 
 #endif /* malloc_decls_h */
 
 #ifndef MALLOC_FUNCS
-#  define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
+#  define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | \
+                        MALLOC_FUNCS_ARENA)
 #endif
 
 #ifdef MALLOC_DECL
@@ -35,14 +44,16 @@ MALLOC_DECL(init, void, const malloc_table_t *)
 #  if MALLOC_FUNCS & MALLOC_FUNCS_BRIDGE
 MALLOC_DECL(get_bridge, struct ReplaceMallocBridge*)
 #  endif
-#  if MALLOC_FUNCS & MALLOC_FUNCS_MALLOC
+#  if MALLOC_FUNCS & MALLOC_FUNCS_MALLOC_BASE
 MALLOC_DECL(malloc, void *, size_t)
-MALLOC_DECL(posix_memalign, int, void **, size_t, size_t)
-MALLOC_DECL(aligned_alloc, void *, size_t, size_t)
 MALLOC_DECL(calloc, void *, size_t, size_t)
 MALLOC_DECL(realloc, void *, void *, size_t)
 MALLOC_DECL(free, void, void *)
 MALLOC_DECL(memalign, void *, size_t, size_t)
+#  endif
+#  if MALLOC_FUNCS & MALLOC_FUNCS_MALLOC_EXTRA
+MALLOC_DECL(posix_memalign, int, void **, size_t, size_t)
+MALLOC_DECL(aligned_alloc, void *, size_t, size_t)
 MALLOC_DECL(valloc, void *, size_t)
 MALLOC_DECL(malloc_usable_size, size_t, usable_ptr_t)
 MALLOC_DECL(malloc_good_size, size_t, size_t)
@@ -94,6 +105,37 @@ MALLOC_DECL(jemalloc_thread_local_arena, void, bool)
  * Provide information about any allocation enclosing the given address.
  */
 MALLOC_DECL(jemalloc_ptr_info, void, const void*, jemalloc_ptr_info_t*)
+#  endif
+
+#  if MALLOC_FUNCS & MALLOC_FUNCS_ARENA_BASE
+/*
+ * Creates a separate arena, and returns its id, valid to use with moz_arena_*
+ * functions.
+ */
+MALLOC_DECL(moz_create_arena, arena_id_t)
+
+/*
+ * Dispose of the given arena. Subsequent uses of the arena will fail.
+ */
+MALLOC_DECL(moz_dispose_arena, void, arena_id_t)
+#  endif
+
+#  if MALLOC_FUNCS & MALLOC_FUNCS_ARENA_ALLOC
+/*
+ * Same as the functions without the moz_arena_ prefix, but using arenas
+ * created with moz_create_arena.
+ * The contract, even if not enforced at runtime in some configurations,
+ * is that moz_arena_realloc and moz_arena_free will crash if the wrong
+ * arena id is given. All functions will crash if the arena id is invalid.
+ * Although discouraged, plain realloc and free can still be used on
+ * pointers allocated with these functions. Realloc will properly keep
+ * new pointers in the same arena as the original.
+ */
+MALLOC_DECL(moz_arena_malloc, void*, arena_id_t, size_t)
+MALLOC_DECL(moz_arena_calloc, void*, arena_id_t, size_t, size_t)
+MALLOC_DECL(moz_arena_realloc, void*, arena_id_t, void*, size_t)
+MALLOC_DECL(moz_arena_free, void, arena_id_t, void*)
+MALLOC_DECL(moz_arena_memalign, void*, arena_id_t, size_t, size_t)
 #  endif
 
 #endif /* MALLOC_DECL */

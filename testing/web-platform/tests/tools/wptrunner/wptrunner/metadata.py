@@ -29,9 +29,13 @@ def load_test_manifests(serve_root, test_paths):
 
 def update_expected(test_paths, serve_root, log_file_names,
                     rev_old=None, rev_new="HEAD", ignore_existing=False,
-                    sync_root=None, property_order=None, boolean_properties=None):
+                    sync_root=None, property_order=None, boolean_properties=None,
+                    stability=None):
     """Update the metadata files for web-platform-tests based on
-    the results obtained in a previous run"""
+    the results obtained in a previous run or runs
+
+    If stability is not None, assume log_file_names refers to logs from repeated
+    test jobs, disable tests that don't behave as expected on all runs"""
 
     manifests = load_test_manifests(serve_root, test_paths)
 
@@ -45,17 +49,25 @@ def update_expected(test_paths, serve_root, log_file_names,
         if rev_old is not None:
             change_data = load_change_data(rev_old, rev_new, repo=sync_root)
 
-
     expected_map_by_manifest = update_from_logs(manifests,
                                                 *log_file_names,
                                                 ignore_existing=ignore_existing,
                                                 property_order=property_order,
-                                                boolean_properties=boolean_properties)
+                                                boolean_properties=boolean_properties,
+                                                stability=stability)
 
     for test_manifest, expected_map in expected_map_by_manifest.iteritems():
         url_base = manifests[test_manifest]["url_base"]
         metadata_path = test_paths[url_base]["metadata_path"]
         write_changes(metadata_path, expected_map)
+        if stability is not None:
+            for tree in expected_map.itervalues():
+                for test in tree.iterchildren():
+                    for subtest in test.iterchildren():
+                        if subtest.new_disabled:
+                            print os.path.dirname(subtest.root.test_path) + "/" + subtest.name
+                    if test.new_disabled:
+                        print test.root.test_path
 
     results_changed = [item.test_path for item in expected_map.itervalues() if item.modified]
 
@@ -121,7 +133,9 @@ def unexpected_changes(manifests, change_data, files_changed):
 # For each test in the list of tests:
 #   for each conditional:
 #      If all the new values match (or there aren't any) retain that conditional
-#      If any new values mismatch mark the test as needing human attention
+#      If any new values mismatch:
+#           If stability and any repeated values don't match, disable the test
+#           else mark the test as needing human attention
 #   Check if all the RHS values are the same; if so collapse the conditionals
 
 
@@ -129,6 +143,7 @@ def update_from_logs(manifests, *log_filenames, **kwargs):
     ignore_existing = kwargs.get("ignore_existing", False)
     property_order = kwargs.get("property_order")
     boolean_properties = kwargs.get("boolean_properties")
+    stability = kwargs.get("stability")
 
     expected_map = {}
     id_test_map = {}
@@ -152,8 +167,8 @@ def update_from_logs(manifests, *log_filenames, **kwargs):
         for tree in manifest_expected.itervalues():
             for test in tree.iterchildren():
                 for subtest in test.iterchildren():
-                    subtest.coalesce_expected()
-                test.coalesce_expected()
+                    subtest.coalesce_expected(stability=stability)
+                test.coalesce_expected(stability=stability)
 
     return expected_map
 
@@ -283,7 +298,6 @@ class ExpectedUpdater(object):
         result = test_cls.result_cls(
             data["status"],
             data.get("message"))
-
         test.set_result(self.run_info, result)
         del self.test_cache[test_id]
 
