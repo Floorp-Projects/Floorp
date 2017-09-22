@@ -8,6 +8,7 @@
 #define nsBidi_h__
 
 #include "unicode/ubidi.h"
+#include "ICUUtils.h"
 #include "nsIFrame.h" // for nsBidiLevel/nsBidiDirection declarations
 
 // nsBidi implemented as a simple wrapper around the bidi reordering engine
@@ -23,11 +24,16 @@ public:
    * The nsBidi object is initially empty. It is assigned
    * the Bidi properties of a paragraph by <code>SetPara()</code>.
    */
-  explicit nsBidi();
+  nsBidi()
+  {
+    mBiDi = ubidi_open();
+  }
 
   /** @brief Destructor. */
-  virtual ~nsBidi();
-
+  ~nsBidi()
+  {
+    ubidi_close(mBiDi);
+  }
 
   /**
    * Perform the Unicode Bidi algorithm.
@@ -51,8 +57,14 @@ public:
    *      Any other value between 0 and <code>NSBIDI_MAX_EXPLICIT_LEVEL</code>
    *      is also valid, with odd levels indicating RTL.
    */
-  nsresult SetPara(const char16_t *aText, int32_t aLength,
-                   nsBidiLevel aParaLevel);
+  nsresult SetPara(const char16_t* aText, int32_t aLength,
+                   nsBidiLevel aParaLevel)
+  {
+    UErrorCode error = U_ZERO_ERROR;
+    ubidi_setPara(mBiDi, reinterpret_cast<const UChar*>(aText), aLength,
+                  aParaLevel, nullptr, &error);
+    return ICUUtils::UErrorToNsResult(error);
+  }
 
   /**
    * Get the directionality of the text.
@@ -63,7 +75,10 @@ public:
    *
    * @see nsBidiDirection
    */
-  nsresult GetDirection(nsBidiDirection* aDirection);
+  nsBidiDirection GetDirection()
+  {
+    return nsBidiDirection(ubidi_getDirection(mBiDi));
+  }
 
   /**
    * Get the paragraph level of the text.
@@ -73,7 +88,10 @@ public:
    *
    * @see nsBidiLevel
    */
-  nsresult GetParaLevel(nsBidiLevel* aParaLevel);
+  nsBidiLevel GetParaLevel()
+  {
+    return ubidi_getParaLevel(mBiDi);
+  }
 
   /**
    * Get a logical run.
@@ -94,8 +112,11 @@ public:
    *      This pointer can be <code>nullptr</code> if this
    *      value is not necessary.
    */
-  nsresult GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimit,
-                         nsBidiLevel* aLevel);
+  void GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimit,
+                     nsBidiLevel* aLevel)
+  {
+    ubidi_getLogicalRun(mBiDi, aLogicalStart, aLogicalLimit, aLevel);
+  }
 
   /**
    * Get the number of runs.
@@ -107,7 +128,12 @@ public:
    *
    * @param aRunCount will receive the number of runs.
    */
-  nsresult CountRuns(int32_t* aRunCount);
+  nsresult CountRuns(int32_t* aRunCount)
+  {
+    UErrorCode errorCode = U_ZERO_ERROR;
+    *aRunCount = ubidi_countRuns(mBiDi, &errorCode);
+    return ICUUtils::UErrorToNsResult(errorCode);
+  }
 
   /**
    * Get one run's logical start, length, and directionality,
@@ -127,7 +153,7 @@ public:
    * @param aLength is the number of characters (at least one) in the run.
    *      The pointer may be <code>nullptr</code> if this is not needed.
    *
-   * @param aDirection will receive the directionality of the run,
+   * @returns the directionality of the run,
    *       <code>NSBIDI_LTR==0</code> or <code>NSBIDI_RTL==1</code>,
    *       never <code>NSBIDI_MIXED</code>.
    *
@@ -139,7 +165,7 @@ public:
    *  nsBidiDirection dir;
    *  pBidi->CountRuns(&count);
    *  for(i=0; i<count; ++i) {
-   *    pBidi->GetVisualRun(i, &logicalStart, &length, &dir);
+   *    dir = pBidi->GetVisualRun(i, &logicalStart, &length);
    *    if(NSBIDI_LTR==dir) {
    *      do { // LTR
    *        show_char(text[logicalStart++], visualIndex++);
@@ -157,8 +183,12 @@ public:
    * modifier letters before base characters and second surrogates
    * before first ones.
    */
-  nsresult GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart,
-                        int32_t* aLength, nsBidiDirection* aDirection);
+  nsBidiDirection GetVisualRun(int32_t aRunIndex,
+                               int32_t* aLogicalStart, int32_t* aLength)
+  {
+    return nsBidiDirection(ubidi_getVisualRun(mBiDi, aRunIndex,
+                                              aLogicalStart, aLength));
+  }
 
   /**
    * This is a convenience function that does not use a nsBidi object.
@@ -180,14 +210,16 @@ public:
    *      The index map will result in
    *        <code>aIndexMap[aVisualIndex]==aLogicalIndex</code>.
    */
-  static nsresult ReorderVisual(const nsBidiLevel* aLevels, int32_t aLength,
-                                int32_t* aIndexMap);
+  static void ReorderVisual(const nsBidiLevel* aLevels, int32_t aLength,
+                            int32_t* aIndexMap)
+  {
+    ubidi_reorderVisual(aLevels, aLength, aIndexMap);
+  }
 
 private:
   nsBidi(const nsBidi&) = delete;
   void operator=(const nsBidi&) = delete;
 
-protected:
   UBiDi* mBiDi;
 };
 
