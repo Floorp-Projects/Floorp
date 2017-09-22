@@ -5598,7 +5598,8 @@ GetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
             // Shared memory is enabled globally in the shell: there can't be a worker
             // that does not enable it if the main thread has it.
             MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
-            newObj = SharedArrayBufferObject::New(cx, buf);
+            SharedArrayRawBuffer::Lock l(buf);
+            newObj = SharedArrayBufferObject::New(cx, buf, buf->byteLength(l));
             if (!newObj) {
                 buf->dropReference();
                 return false;

@@ -535,12 +535,10 @@ js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp)
 int32_t
 js::atomics_add_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset, int32_t value)
 {
-    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
-    size_t heapLength = instance->memoryLength();
-
-    if (size_t(offset) >= heapLength)
+    if (size_t(offset) >= instance->memory()->volatileMemoryLength())
         return 0;
 
+    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformAdd::operate(heap.cast<int8_t*>() + offset, value);
@@ -558,12 +556,10 @@ js::atomics_add_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset
 int32_t
 js::atomics_sub_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset, int32_t value)
 {
-    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
-    size_t heapLength = instance->memoryLength();
-
-    if (size_t(offset) >= heapLength)
+    if (size_t(offset) >= instance->memory()->volatileMemoryLength())
         return 0;
 
+    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformSub::operate(heap.cast<int8_t*>() + offset, value);
@@ -581,12 +577,10 @@ js::atomics_sub_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset
 int32_t
 js::atomics_and_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset, int32_t value)
 {
-    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
-    size_t heapLength = instance->memoryLength();
-
-    if (size_t(offset) >= heapLength)
+    if (size_t(offset) >= instance->memory()->volatileMemoryLength())
         return 0;
 
+    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformAnd::operate(heap.cast<int8_t*>() + offset, value);
@@ -604,12 +598,10 @@ js::atomics_and_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset
 int32_t
 js::atomics_or_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset, int32_t value)
 {
-    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
-    size_t heapLength = instance->memoryLength();
-
-    if (size_t(offset) >= heapLength)
+    if (size_t(offset) >= instance->memory()->volatileMemoryLength())
         return 0;
 
+    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformOr::operate(heap.cast<int8_t*>() + offset, value);
@@ -627,12 +619,10 @@ js::atomics_or_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset,
 int32_t
 js::atomics_xor_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset, int32_t value)
 {
-    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
-    size_t heapLength = instance->memoryLength();
-
-    if (size_t(offset) >= heapLength)
+    if (size_t(offset) >= instance->memory()->volatileMemoryLength())
         return 0;
 
+    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformXor::operate(heap.cast<int8_t*>() + offset, value);
@@ -650,12 +640,10 @@ js::atomics_xor_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset
 int32_t
 js::atomics_xchg_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset, int32_t value)
 {
-    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
-    size_t heapLength = instance->memoryLength();
-
-    if (size_t(offset) >= heapLength)
+    if (size_t(offset) >= instance->memory()->volatileMemoryLength())
         return 0;
 
+    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return ExchangeOrStore<DoExchange>(Scalar::Int8, value, heap, offset);
@@ -673,12 +661,10 @@ js::atomics_xchg_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offse
 int32_t
 js::atomics_cmpxchg_asm_callout(wasm::Instance* instance, int32_t vt, int32_t offset, int32_t oldval, int32_t newval)
 {
-    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
-    size_t heapLength = instance->memoryLength();
-
-    if (size_t(offset) >= heapLength)
+    if (size_t(offset) >= instance->memory()->volatileMemoryLength())
         return 0;
 
+    SharedMem<void*> heap = instance->memoryBase().cast<void*>();
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return CompareExchange(Scalar::Int8, oldval, newval, heap, offset);

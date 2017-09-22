@@ -304,7 +304,7 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta)
 /* static */ uint32_t
 Instance::currentMemory_i32(Instance* instance)
 {
-    uint32_t byteLength = instance->memoryLength();
+    uint32_t byteLength = instance->memory()->volatileMemoryLength();
     MOZ_ASSERT(byteLength % wasm::PageSize == 0);
     return byteLength / wasm::PageSize;
 }
@@ -476,6 +476,7 @@ Instance::memoryMappedSize() const
     return memory_->buffer().wasmMappedSize();
 }
 
+#ifdef JS_SIMULATOR
 bool
 Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
 {
@@ -489,8 +490,9 @@ Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
         return false;
 
     size_t lastByteOffset = addr - base + (numBytes - 1);
-    return lastByteOffset >= memoryLength() && lastByteOffset < memoryMappedSize();
+    return lastByteOffset >= memory()->volatileMemoryLength() && lastByteOffset < memoryMappedSize();
 }
+#endif
 
 void
 Instance::tracePrivate(JSTracer* trc)
@@ -538,10 +540,11 @@ Instance::memoryBase() const
     return memory_->buffer().dataPointerEither();
 }
 
-size_t
-Instance::memoryLength() const
+SharedArrayRawBuffer*
+Instance::sharedMemoryBuffer() const
 {
-    return memory_->buffer().byteLength();
+    MOZ_ASSERT(memory_->isShared());
+    return memory_->sharedArrayRawBuffer();
 }
 
 WasmInstanceObject*
@@ -765,6 +768,8 @@ void
 Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
 {
     MOZ_ASSERT(!isAsmJS());
+    MOZ_ASSERT(!memory_->isShared());
+
     ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
     tlsData()->memoryBase = buffer.dataPointer();
 #ifndef WASM_HUGE_MEMORY

@@ -361,6 +361,8 @@ MSG_DEF(JSMSG_WASM_BAD_IMPORT_TYPE,    2, JSEXN_WASMLINKERROR, "import object fi
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_SIG,     2, JSEXN_WASMLINKERROR, "imported function '{0}.{1}' signature mismatch")
 MSG_DEF(JSMSG_WASM_BAD_IMP_SIZE,       1, JSEXN_WASMLINKERROR, "imported {0} with incompatible size")
 MSG_DEF(JSMSG_WASM_BAD_IMP_MAX,        1, JSEXN_WASMLINKERROR, "imported {0} with incompatible maximum size")
+MSG_DEF(JSMSG_WASM_IMP_SHARED_REQD,    0, JSEXN_WASMLINKERROR, "imported unshared memory but shared required")
+MSG_DEF(JSMSG_WASM_IMP_SHARED_BANNED,  0, JSEXN_WASMLINKERROR, "imported shared memory but unshared required")
 MSG_DEF(JSMSG_WASM_BAD_FIT,            2, JSEXN_WASMLINKERROR, "{0} segment does not fit in {1}")
 MSG_DEF(JSMSG_WASM_BAD_I64_LINK,       0, JSEXN_WASMLINKERROR, "cannot pass i64 to or from JS")
 MSG_DEF(JSMSG_WASM_IND_CALL_TO_NULL,   0, JSEXN_WASMRUNTIMEERROR, "indirect call to null")

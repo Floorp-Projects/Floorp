@@ -1289,9 +1289,8 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (limits.maximum)
         limits.maximum = Some(*limits.maximum * PageSize);
 
-    RootedArrayBufferObject buffer(cx,
-        ArrayBufferObject::createForWasm(cx, limits.initial, limits.maximum));
-    if (!buffer)
+    RootedArrayBufferObjectMaybeShared buffer(cx);
+    if (!CreateWasmBuffer(cx, limits, &buffer))
         return false;
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
@@ -1312,7 +1311,30 @@ IsMemory(HandleValue v)
 /* static */ bool
 WasmMemoryObject::bufferGetterImpl(JSContext* cx, const CallArgs& args)
 {
-    args.rval().setObject(args.thisv().toObject().as<WasmMemoryObject>().buffer());
+    RootedWasmMemoryObject memoryObj(cx, &args.thisv().toObject().as<WasmMemoryObject>());
+    RootedArrayBufferObjectMaybeShared buffer(cx, &memoryObj->buffer());
+
+    if (memoryObj->isShared()) {
+        uint32_t memoryLength = memoryObj->volatileMemoryLength();
+        MOZ_ASSERT(memoryLength >= buffer->byteLength());
+
+        if (memoryLength > buffer->byteLength()) {
+            RootedSharedArrayBufferObject newBuffer(
+                cx, SharedArrayBufferObject::New(cx, memoryObj->sharedArrayRawBuffer(), memoryLength));
+            if (!newBuffer)
+                return false;
+            // OK to addReference after we try to allocate because the memoryObj
+            // keeps the rawBuffer alive.
+            if (!memoryObj->sharedArrayRawBuffer()->addReference()) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_SAB_REFCNT_OFLO);
+                return false;
+            }
+            buffer = newBuffer;
+            memoryObj->setReservedSlot(BUFFER_SLOT, ObjectValue(*newBuffer));
+        }
+    }
+
+    args.rval().setObject(*buffer);
     return true;
 }
 
@@ -1369,6 +1391,29 @@ ArrayBufferObjectMaybeShared&
 WasmMemoryObject::buffer() const
 {
     return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObjectMaybeShared>();
+}
+
+SharedArrayRawBuffer*
+WasmMemoryObject::sharedArrayRawBuffer() const
+{
+    MOZ_ASSERT(isShared());
+    return buffer().as<SharedArrayBufferObject>().rawBufferObject();
+}
+
+uint32_t
+WasmMemoryObject::volatileMemoryLength() const
+{
+    if (isShared()) {
+        SharedArrayRawBuffer::Lock lock(sharedArrayRawBuffer());
+        return sharedArrayRawBuffer()->byteLength(lock);
+    }
+    return buffer().byteLength();
+}
+
+bool
+WasmMemoryObject::isShared() const
+{
+    return buffer().is<SharedArrayBufferObject>();
 }
 
 bool
@@ -1428,8 +1473,38 @@ WasmMemoryObject::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* insta
 }
 
 /* static */ uint32_t
+WasmMemoryObject::growShared(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx)
+{
+    SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
+    SharedArrayRawBuffer::Lock lock(rawBuf);
+
+    MOZ_ASSERT(rawBuf->byteLength(lock) % PageSize == 0);
+    uint32_t oldNumPages = rawBuf->byteLength(lock) / PageSize;
+
+    CheckedInt<uint32_t> newSize = oldNumPages;
+    newSize += delta;
+    newSize *= PageSize;
+    if (!newSize.isValid())
+        return -1;
+
+    if (newSize.value() > rawBuf->maxSize())
+        return -1;
+
+    if (!rawBuf->wasmGrowToSizeInPlace(lock, newSize.value()))
+        return -1;
+
+    // New buffer objects will be created lazily in all agents (including in
+    // this agent) by bufferGetterImpl, above, so no more work to do here.
+
+    return oldNumPages;
+}
+
+/* static */ uint32_t
 WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx)
 {
+    if (memory->isShared())
+        return growShared(memory, delta, cx);
+
     RootedArrayBufferObject oldBuf(cx, &memory->buffer().as<ArrayBufferObject>());
 
     MOZ_ASSERT(oldBuf->byteLength() % PageSize == 0);
