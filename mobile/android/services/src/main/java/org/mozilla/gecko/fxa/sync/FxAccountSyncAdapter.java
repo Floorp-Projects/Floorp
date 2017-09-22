@@ -12,10 +12,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncResult;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.SkewHandler;
@@ -73,6 +75,8 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
   // Tracks the last seen storage hostname for backoff purposes.
   private static final String PREF_BACKOFF_STORAGE_HOST = "backoffStorageHost";
+  // Preference key for allowing sync over metered connections.
+  public static final String PREFS_SYNC_METERED = "sync.allow_metered";
 
   // Used to do cheap in-memory rate limiting. Don't sync again if we
   // successfully synced within this duration.
@@ -496,6 +500,22 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
    */
   @Override
   public void onPerformSync(final Account account, final Bundle extras, final String authority, ContentProviderClient provider, final SyncResult syncResult) {
+
+    // This flag is used to conclude whether we should ignore syncing
+    // based on user preference for syncing over metered connections.
+    boolean shouldRejectSyncViaSettings = false;
+    // Check whether we should ignore settings or not.
+    if (!extras.getBoolean(ContentResolver.SYNC_EXTRAS_IGNORE_SETTINGS, false)) {
+      // If it's not user-initiated, we should check if we are allowed to sync on metered connections.
+      final boolean isMeteredAllowed = GeckoSharedPrefs.forApp(getContext()).getBoolean(PREFS_SYNC_METERED, true);
+      // Check if the device is on a metered connection or not.
+      final ConnectivityManager manager = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+      final boolean isMetered = manager.isActiveNetworkMetered();
+      // If the connection is metered and syncing over metered connections is
+      // not permitted, we should bail.
+      shouldRejectSyncViaSettings = !isMeteredAllowed && isMetered;
+    }
+
     Logger.setThreadLogTag(FxAccountConstants.GLOBAL_LOG_TAG);
     Logger.resetLogging();
 
@@ -545,8 +565,25 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     Collection<String> knownStageNames = SyncConfiguration.validEngineNames();
     Collection<String> stageNamesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
 
+    // If syncing should be rejected due to metered connection preferences
+    // and we are doing the first sync ever, we should at least sync the
+    // 'clients' collection to ensure we upload our local client record.
+    // see {@link <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=802749">Bug 802749</a>}
+    // for more information.
+    if (shouldRejectSyncViaSettings && fxAccount.neverSynced()) {
+      stageNamesToSync.clear();
+      stageNamesToSync.add("clients");
+    }
+
     final SyncDelegate syncDelegate = new SyncDelegate(latch, syncResult, fxAccount, stageNamesToSync);
     Result offeredResult = null;
+
+    if (shouldRejectSyncViaSettings && !fxAccount.neverSynced()) {
+      // The user is on a metered connection and has disabled syncing over metered connections,
+      // we should reject the sync.
+      syncDelegate.rejectSync();
+      return;
+    }
 
     try {
       // This will be the same chunk of SharedPreferences that we pass through to GlobalSession/SyncConfiguration.
