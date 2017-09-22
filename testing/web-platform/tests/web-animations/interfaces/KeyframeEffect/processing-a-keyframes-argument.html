@@ -322,21 +322,23 @@ test(function(t) {
 }, 'Only properties defined directly on property-indexed keyframes are read');
 
 test(function(t) {
-  var expectedOrder = ['composite', 'easing', 'offset', 'left', 'marginLeft'];
-  var actualOrder = [];
-  var kf1 = {};
-  var kf2 = { marginLeft: '10px', left: '20px', offset: 1 };
-  [ { p: 'marginLeft', v: '10px' },
-    { p: 'left',       v: '20px' },
-    { p: 'offset',     v: '0' },
-    { p: 'easing',     v: 'linear' },
-    { p: 'composite',  v: 'replace' } ].forEach(function(e) {
-    Object.defineProperty(kf1, e.p, {
+  const expectedOrder = ['composite', 'easing', 'offset', 'left', 'marginLeft'];
+  const actualOrder = [];
+  const kf1 = {};
+  for (const {prop, value} of [{ prop: 'marginLeft', value: '10px' },
+                               { prop: 'left',       value: '20px' },
+                               { prop: 'offset',     value: '0' },
+                               { prop: 'easing',     value: 'linear' },
+                               { prop: 'composite',  value: 'replace' }]) {
+    Object.defineProperty(kf1, prop, {
       enumerable: true,
-      get: function() { actualOrder.push(e.p); return e.v; }
+      get: function() { actualOrder.push(prop); return value; }
     });
-  });
+  }
+  const kf2 = { marginLeft: '10px', left: '20px', offset: 1 };
+
   new KeyframeEffect(target, [kf1, kf2]);
+
   assert_array_equals(actualOrder, expectedOrder, 'property access order');
 }, 'Properties are read in ascending order by Unicode codepoint');
 
