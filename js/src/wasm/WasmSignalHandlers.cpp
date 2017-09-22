@@ -783,7 +783,7 @@ MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
                    const Instance& instance, WasmActivation* activation, uint8_t** ppc)
 {
-    MOZ_RELEASE_ASSERT(instance.code().containsFunctionPC(pc));
+    MOZ_RELEASE_ASSERT(instance.code().containsCodePC(pc));
 
     const CodeSegment* segment;
     const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc, &segment);
@@ -819,7 +819,7 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
     uint8_t* end = Disassembler::DisassembleHeapAccess(pc, &access);
     const Disassembler::ComplexAddress& address = access.address();
     MOZ_RELEASE_ASSERT(end > pc);
-    MOZ_RELEASE_ASSERT(segment->containsFunctionPC(end));
+    MOZ_RELEASE_ASSERT(segment->containsCodePC(end));
 
     // Check x64 asm.js heap access invariants.
     MOZ_RELEASE_ASSERT(address.disp() >= 0);
@@ -932,7 +932,7 @@ MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
                    const Instance& instance, WasmActivation* activation, uint8_t** ppc)
 {
-    MOZ_RELEASE_ASSERT(instance.code().containsFunctionPC(pc));
+    MOZ_RELEASE_ASSERT(instance.code().containsCodePC(pc));
 
     const CodeSegment* segment;
     const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc, &segment);
@@ -999,7 +999,8 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!code)
         return false;
 
-    if (!codeSegment->containsFunctionPC(pc)) {
+    const Instance* instance = LookupFaultingInstance(*code, pc, ContextToFP(context));
+    if (!instance) {
         // On Windows, it is possible for InterruptRunningJitCode to execute
         // between a faulting heap access and the handling of the fault due
         // to InterruptRunningJitCode's use of SuspendThread. When this happens,
@@ -1013,17 +1014,13 @@ HandleFault(PEXCEPTION_POINTERS exception)
         for (auto t : code->tiers()) {
             if (pc == code->segment(t).interruptCode() &&
                 activation->interrupted() &&
-                code->segment(t).containsFunctionPC(activation->resumePC()))
+                code->segment(t).containsCodePC(activation->resumePC()))
             {
                 return true;
             }
         }
         return false;
     }
-
-    const Instance* instance = LookupFaultingInstance(*code, pc, ContextToFP(context));
-    if (!instance)
-        return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(record->ExceptionInformation[1]);
 
@@ -1145,7 +1142,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         return false;
 
     const Instance* instance = LookupFaultingInstance(*code, pc, ContextToFP(&context));
-    if (!instance || !instance->code().containsFunctionPC(pc))
+    if (!instance)
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(request.body.code[1]);
@@ -1357,7 +1354,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
 
     const Instance* instance = LookupFaultingInstance(*code, pc, ContextToFP(context));
-    if (!instance || !instance->code().containsFunctionPC(pc, &segment))
+    if (!instance)
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
@@ -1457,11 +1454,16 @@ wasm::InInterruptibleCode(JSContext* cx, uint8_t* pc, const CodeSegment** cs)
     // Only interrupt in function code so that the frame iterators have the
     // invariant that resumePC always has a function CodeRange and we can't
     // get into any weird interrupt-during-interrupt-stub cases.
+
     if (!cx->compartment())
         return false;
 
-    const Code* code = cx->compartment()->wasm.lookupCode(pc, cs);
-    return code && (*cs)->containsFunctionPC(pc);
+    const Code* code = cx->compartment()->wasm.lookupCode(pc);
+    if (!code)
+        return false;
+
+    const CodeRange* codeRange = code->lookupRange(pc, cs);
+    return codeRange && codeRange->isFunction();
 }
 
 // The return value indicates whether the PC was changed, not whether there was

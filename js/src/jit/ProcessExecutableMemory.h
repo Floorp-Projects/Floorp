@@ -50,6 +50,11 @@ extern void DeallocateExecutableMemory(void* addr, size_t bytes);
 // function.
 extern bool CanLikelyAllocateMoreExecutableMemory();
 
+// Returns a rough guess of how much executable memory remains available,
+// rounded down to MB limit.  Note this can fluctuate as other threads within
+// the process allocate executable memory.
+extern size_t LikelyAvailableExecutableMemory();
+
 } // namespace jit
 } // namespace js
 

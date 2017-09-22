@@ -60,6 +60,12 @@ struct CompileArgs : ShareableBase<CompileArgs>
 typedef RefPtr<CompileArgs> MutableCompileArgs;
 typedef RefPtr<const CompileArgs> SharedCompileArgs;
 
+// Return the estimated compiled (machine) code size for the given bytecode size
+// compiled at the given tier.
+
+double
+EstimateCompiledCodeSize(Tier tier, size_t bytecodeSize);
+
 // Compile the given WebAssembly bytecode with the given arguments into a
 // wasm::Module. On success, the Module is returned. On failure, the returned
 // SharedModule pointer is null and either:

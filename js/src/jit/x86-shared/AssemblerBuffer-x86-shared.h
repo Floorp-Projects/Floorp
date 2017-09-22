@@ -125,6 +125,13 @@ namespace jit {
             return m_oom;
         }
 
+        bool reserve(size_t size)
+        {
+            return !m_oom && m_buffer.reserve(size);
+        }
+
+        bool swap(Vector<uint8_t, 0, SystemAllocPolicy>& bytes);
+
         const unsigned char* buffer() const
         {
             MOZ_RELEASE_ASSERT(!m_oom);

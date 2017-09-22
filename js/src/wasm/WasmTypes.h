@@ -864,193 +864,6 @@ struct SigWithId : Sig
 typedef Vector<SigWithId, 0, SystemAllocPolicy> SigWithIdVector;
 typedef Vector<const SigWithId*, 0, SystemAllocPolicy> SigWithIdPtrVector;
 
-// The (,Callable,Func)Offsets classes are used to record the offsets of
-// different key points in a CodeRange during compilation.
-
-struct Offsets
-{
-    explicit Offsets(uint32_t begin = 0, uint32_t end = 0)
-      : begin(begin), end(end)
-    {}
-
-    // These define a [begin, end) contiguous range of instructions compiled
-    // into a CodeRange.
-    uint32_t begin;
-    uint32_t end;
-
-    void offsetBy(uint32_t offset) {
-        begin += offset;
-        end += offset;
-    }
-};
-
-struct CallableOffsets : Offsets
-{
-    MOZ_IMPLICIT CallableOffsets(uint32_t ret = 0)
-      : Offsets(), ret(ret)
-    {}
-
-    // The offset of the return instruction precedes 'end' by a variable number
-    // of instructions due to out-of-line codegen.
-    uint32_t ret;
-
-    void offsetBy(uint32_t offset) {
-        Offsets::offsetBy(offset);
-        ret += offset;
-    }
-};
-
-struct FuncOffsets : CallableOffsets
-{
-    MOZ_IMPLICIT FuncOffsets()
-      : CallableOffsets(),
-        normalEntry(0),
-        tierEntry(0)
-    {}
-
-    // Function CodeRanges have a table entry which takes an extra signature
-    // argument which is checked against the callee's signature before falling
-    // through to the normal prologue. The table entry is thus at the beginning
-    // of the CodeRange and the normal entry is at some offset after the table
-    // entry.
-    uint32_t normalEntry;
-
-    // The tierEntry is the point within a function to which the patching code
-    // within a Tier-1 function jumps.  It could be the instruction following
-    // the jump in the Tier-1 function, or the point following the standard
-    // prologue within a Tier-2 function.
-    uint32_t tierEntry;
-
-    void offsetBy(uint32_t offset) {
-        CallableOffsets::offsetBy(offset);
-        normalEntry += offset;
-        tierEntry += offset;
-    }
-};
-
-// A CodeRange describes a single contiguous range of code within a wasm
-// module's code segment. A CodeRange describes what the code does and, for
-// function bodies, the name and source coordinates of the function.
-
-class CodeRange
-{
-  public:
-    enum Kind {
-        Function,          // function definition
-        Entry,             // calls into wasm from C++
-        ImportJitExit,     // fast-path calling from wasm into JIT code
-        ImportInterpExit,  // slow-path calling from wasm into C++ interp
-        BuiltinThunk,      // fast-path calling from wasm into a C++ native
-        TrapExit,          // calls C++ to report and jumps to throw stub
-        DebugTrap,         // calls C++ to handle debug event
-        FarJumpIsland,     // inserted to connect otherwise out-of-range insns
-        Inline,            // stub that is jumped-to within prologue/epilogue
-        Throw,             // special stack-unwinding stub
-        Interrupt          // stub executes asynchronously to interrupt wasm
-    };
-
-  private:
-    // All fields are treated as cacheable POD:
-    uint32_t begin_;
-    uint32_t ret_;
-    uint32_t end_;
-    uint32_t funcIndex_;
-    uint32_t funcLineOrBytecode_;
-    uint8_t funcBeginToNormalEntry_;
-    uint8_t funcBeginToTierEntry_;
-    Kind kind_ : 8;
-
-  public:
-    CodeRange() = default;
-    CodeRange(Kind kind, Offsets offsets);
-    CodeRange(Kind kind, CallableOffsets offsets);
-    CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
-
-    // All CodeRanges have a begin and end.
-
-    uint32_t begin() const {
-        return begin_;
-    }
-    uint32_t end() const {
-        return end_;
-    }
-
-    // Other fields are only available for certain CodeRange::Kinds.
-
-    Kind kind() const {
-        return kind_;
-    }
-
-    bool isFunction() const {
-        return kind() == Function;
-    }
-    bool isImportExit() const {
-        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinThunk;
-    }
-    bool isTrapExit() const {
-        return kind() == TrapExit;
-    }
-    bool isInline() const {
-        return kind() == Inline;
-    }
-    bool isThunk() const {
-        return kind() == FarJumpIsland;
-    }
-
-    // Every CodeRange except entry and inline stubs are callable and have a
-    // return statement. Asynchronous frame iteration needs to know the offset
-    // of the return instruction to calculate the frame pointer.
-
-    uint32_t ret() const {
-        MOZ_ASSERT(isFunction() || isImportExit() || isTrapExit());
-        return ret_;
-    }
-
-    // Function CodeRanges have two entry points: one for normal calls (with a
-    // known signature) and one for table calls (which involves dynamic
-    // signature checking).
-
-    uint32_t funcTableEntry() const {
-        MOZ_ASSERT(isFunction());
-        return begin_;
-    }
-    uint32_t funcNormalEntry() const {
-        MOZ_ASSERT(isFunction());
-        return begin_ + funcBeginToNormalEntry_;
-    }
-    uint32_t funcTierEntry() const {
-        MOZ_ASSERT(isFunction());
-        return begin_ + funcBeginToTierEntry_;
-    }
-    uint32_t funcIndex() const {
-        MOZ_ASSERT(isFunction());
-        return funcIndex_;
-    }
-    uint32_t funcLineOrBytecode() const {
-        MOZ_ASSERT(isFunction());
-        return funcLineOrBytecode_;
-    }
-
-    // A sorted array of CodeRanges can be looked up via BinarySearch and
-    // OffsetInCode.
-
-    struct OffsetInCode {
-        size_t offset;
-        explicit OffsetInCode(size_t offset) : offset(offset) {}
-        bool operator==(const CodeRange& rhs) const {
-            return offset >= rhs.begin() && offset < rhs.end();
-        }
-        bool operator<(const CodeRange& rhs) const {
-            return offset < rhs.begin();
-        }
-    };
-};
-
-WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
-
-extern const CodeRange*
-LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode target);
-
 // A wasm::Trap represents a wasm-defined trap that can occur during execution
 // which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
 // symbolically, passing the bytecode offset to report as the trap offset. The
@@ -1084,6 +897,207 @@ enum class Trap
 
     Limit
 };
+
+// The (,Callable,Func)Offsets classes are used to record the offsets of
+// different key points in a CodeRange during compilation.
+
+struct Offsets
+{
+    explicit Offsets(uint32_t begin = 0, uint32_t end = 0)
+      : begin(begin), end(end)
+    {}
+
+    // These define a [begin, end) contiguous range of instructions compiled
+    // into a CodeRange.
+    uint32_t begin;
+    uint32_t end;
+};
+
+struct CallableOffsets : Offsets
+{
+    MOZ_IMPLICIT CallableOffsets(uint32_t ret = 0)
+      : Offsets(), ret(ret)
+    {}
+
+    // The offset of the return instruction precedes 'end' by a variable number
+    // of instructions due to out-of-line codegen.
+    uint32_t ret;
+};
+
+struct FuncOffsets : CallableOffsets
+{
+    MOZ_IMPLICIT FuncOffsets()
+      : CallableOffsets(),
+        normalEntry(0),
+        tierEntry(0)
+    {}
+
+    // Function CodeRanges have a table entry which takes an extra signature
+    // argument which is checked against the callee's signature before falling
+    // through to the normal prologue. The table entry is thus at the beginning
+    // of the CodeRange and the normal entry is at some offset after the table
+    // entry.
+    uint32_t normalEntry;
+
+    // The tierEntry is the point within a function to which the patching code
+    // within a Tier-1 function jumps.  It could be the instruction following
+    // the jump in the Tier-1 function, or the point following the standard
+    // prologue within a Tier-2 function.
+    uint32_t tierEntry;
+};
+
+typedef Vector<FuncOffsets, 0, SystemAllocPolicy> FuncOffsetsVector;
+
+// A CodeRange describes a single contiguous range of code within a wasm
+// module's code segment. A CodeRange describes what the code does and, for
+// function bodies, the name and source coordinates of the function.
+
+class CodeRange
+{
+  public:
+    enum Kind {
+        Function,          // function definition
+        Entry,             // calls into wasm from C++
+        ImportJitExit,     // fast-path calling from wasm into JIT code
+        ImportInterpExit,  // slow-path calling from wasm into C++ interp
+        BuiltinThunk,      // fast-path calling from wasm into a C++ native
+        TrapExit,          // calls C++ to report and jumps to throw stub
+        DebugTrap,         // calls C++ to handle debug event
+        FarJumpIsland,     // inserted to connect otherwise out-of-range insns
+        OutOfBoundsExit,   // stub jumped to by non-standard asm.js SIMD/Atomics
+        UnalignedExit,     // stub jumped to by non-standard ARM unaligned trap
+        Interrupt,         // stub executes asynchronously to interrupt wasm
+        Throw              // special stack-unwinding stub jumped to by other stubs
+    };
+
+  private:
+    // All fields are treated as cacheable POD:
+    uint32_t begin_;
+    uint32_t ret_;
+    uint32_t end_;
+    union {
+        uint32_t funcIndex_;
+        Trap trap_;
+    };
+    uint32_t funcLineOrBytecode_;
+    uint8_t funcBeginToNormalEntry_;
+    uint8_t funcBeginToTierEntry_;
+    Kind kind_ : 8;
+
+  public:
+    CodeRange() = default;
+    CodeRange(Kind kind, Offsets offsets);
+    CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets);
+    CodeRange(Kind kind, CallableOffsets offsets);
+    CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets);
+    CodeRange(Trap trap, CallableOffsets offsets);
+    CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
+
+    void offsetBy(uint32_t offset) {
+        begin_ += offset;
+        end_ += offset;
+        if (hasReturn())
+            ret_ += offset;
+    }
+
+    // All CodeRanges have a begin and end.
+
+    uint32_t begin() const {
+        return begin_;
+    }
+    uint32_t end() const {
+        return end_;
+    }
+
+    // Other fields are only available for certain CodeRange::Kinds.
+
+    Kind kind() const {
+        return kind_;
+    }
+
+    bool isFunction() const {
+        return kind() == Function;
+    }
+    bool isImportExit() const {
+        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinThunk;
+    }
+    bool isTrapExit() const {
+        return kind() == TrapExit;
+    }
+    bool isThunk() const {
+        return kind() == FarJumpIsland;
+    }
+
+    // Function, import exits and trap exits have standard callable prologues
+    // and epilogues. Asynchronous frame iteration needs to know the offset of
+    // the return instruction to calculate the frame pointer.
+
+    bool hasReturn() const {
+        return isFunction() || isImportExit() || isTrapExit();
+    }
+    uint32_t ret() const {
+        MOZ_ASSERT(hasReturn());
+        return ret_;
+    }
+
+    // Functions, export stubs and import stubs all have an associated function
+    // index.
+
+    bool hasFuncIndex() const {
+        return isFunction() || isImportExit() || kind() == Entry;
+    }
+    uint32_t funcIndex() const {
+        MOZ_ASSERT(hasFuncIndex());
+        return funcIndex_;
+    }
+
+    // TrapExit CodeRanges have a Trap field.
+
+    Trap trap() const {
+        MOZ_ASSERT(isTrapExit());
+        return trap_;
+    }
+
+    // Function CodeRanges have two entry points: one for normal calls (with a
+    // known signature) and one for table calls (which involves dynamic
+    // signature checking).
+
+    uint32_t funcTableEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_;
+    }
+    uint32_t funcNormalEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToNormalEntry_;
+    }
+    uint32_t funcTierEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToTierEntry_;
+    }
+    uint32_t funcLineOrBytecode() const {
+        MOZ_ASSERT(isFunction());
+        return funcLineOrBytecode_;
+    }
+
+    // A sorted array of CodeRanges can be looked up via BinarySearch and
+    // OffsetInCode.
+
+    struct OffsetInCode {
+        size_t offset;
+        explicit OffsetInCode(size_t offset) : offset(offset) {}
+        bool operator==(const CodeRange& rhs) const {
+            return offset >= rhs.begin() && offset < rhs.end();
+        }
+        bool operator<(const CodeRange& rhs) const {
+            return offset < rhs.begin();
+        }
+    };
+};
+
+WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
+
+extern const CodeRange*
+LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode target);
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
 // module, used for trap offsets or call offsets. These offsets should refer to
@@ -1149,40 +1163,59 @@ class CallSite : public CallSiteDesc
         returnAddressOffset_(returnAddressOffset)
     { }
 
-    void setReturnAddressOffset(uint32_t r) { returnAddressOffset_ = r; }
-    void offsetReturnAddressBy(int32_t o) { returnAddressOffset_ += o; }
+    void offsetBy(int32_t delta) { returnAddressOffset_ += delta; }
     uint32_t returnAddressOffset() const { return returnAddressOffset_; }
 };
 
 WASM_DECLARE_POD_VECTOR(CallSite, CallSiteVector)
 
-class CallSiteAndTarget : public CallSite
+// A CallSiteTarget describes the callee of a CallSite, either a function or a
+// trap exit. Although checked in debug builds, a CallSiteTarget doesn't
+// officially know whether it targets a function or trap, relying on the Kind of
+// the CallSite to discriminate.
+
+class CallSiteTarget
 {
-    uint32_t index_;
+    uint32_t packed_;
+#ifdef DEBUG
+    enum Kind { None, FuncIndex, TrapExit } kind_;
+#endif
 
   public:
-    explicit CallSiteAndTarget(CallSite cs)
-      : CallSite(cs)
-    {
-        MOZ_ASSERT(cs.kind() != Func);
-    }
-    CallSiteAndTarget(CallSite cs, uint32_t funcIndex)
-      : CallSite(cs), index_(funcIndex)
-    {
-        MOZ_ASSERT(cs.kind() == Func);
-    }
-    CallSiteAndTarget(CallSite cs, Trap trap)
-      : CallSite(cs),
-        index_(uint32_t(trap))
-    {
-        MOZ_ASSERT(cs.kind() == TrapExit);
+    explicit CallSiteTarget()
+      : packed_(UINT32_MAX)
+#ifdef DEBUG
+      , kind_(None)
+#endif
+    {}
+
+    explicit CallSiteTarget(uint32_t funcIndex)
+      : packed_(funcIndex)
+#ifdef DEBUG
+      , kind_(FuncIndex)
+#endif
+    {}
+
+    explicit CallSiteTarget(Trap trap)
+      : packed_(uint32_t(trap))
+#ifdef DEBUG
+      , kind_(TrapExit)
+#endif
+    {}
+
+    uint32_t funcIndex() const {
+        MOZ_ASSERT(kind_ == FuncIndex);
+        return packed_;
     }
 
-    uint32_t funcIndex() const { MOZ_ASSERT(kind() == Func); return index_; }
-    Trap trap() const { MOZ_ASSERT(kind() == TrapExit); return Trap(index_); }
+    Trap trap() const {
+        MOZ_ASSERT(kind_ == TrapExit);
+        MOZ_ASSERT(packed_ < uint32_t(Trap::Limit));
+        return Trap(packed_);
+    }
 };
 
-typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
+typedef Vector<CallSiteTarget, 0, SystemAllocPolicy> CallSiteTargetVector;
 
 // A wasm::SymbolicAddress represents a pointer to a well-known function that is
 // embedded in wasm code. Since wasm code is serialized and later deserialized
