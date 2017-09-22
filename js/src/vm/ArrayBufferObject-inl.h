@@ -51,6 +51,14 @@ AnyArrayBufferIsPreparedForAsmJS(const ArrayBufferObjectMaybeShared* buf)
     return buf->as<SharedArrayBufferObject>().isPreparedForAsmJS();
 }
 
+inline bool
+AnyArrayBufferIsWasm(const ArrayBufferObjectMaybeShared* buf)
+{
+    if (buf->is<ArrayBufferObject>())
+        return buf->as<ArrayBufferObject>().isWasm();
+    return buf->as<SharedArrayBufferObject>().isWasm();
+}
+
 inline ArrayBufferObjectMaybeShared&
 AsAnyArrayBuffer(HandleValue val)
 {

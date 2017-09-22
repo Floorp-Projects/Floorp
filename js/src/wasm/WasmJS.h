@@ -192,6 +192,7 @@ class WasmMemoryObject : public NativeObject
     static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool growImpl(JSContext* cx, const CallArgs& args);
     static bool grow(JSContext* cx, unsigned argc, Value* vp);
+    static uint32_t growShared(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx);
 
     using InstanceSet = JS::WeakCache<GCHashSet<ReadBarrieredWasmInstanceObject,
                                                 MovableCellHasher<ReadBarrieredWasmInstanceObject>,
@@ -211,9 +212,27 @@ class WasmMemoryObject : public NativeObject
     static WasmMemoryObject* create(JSContext* cx,
                                     Handle<ArrayBufferObjectMaybeShared*> buffer,
                                     HandleObject proto);
+
+    // `buffer()` returns the current buffer object always.  If the buffer
+    // represents shared memory then `buffer().byteLength()` never changes, and
+    // in particular it may be a smaller value than that returned from
+    // `volatileMemoryLength()` below.
+    //
+    // Generally, you do not want to call `buffer().byteLength()`, but to call
+    // `volatileMemoryLength()`, instead.
     ArrayBufferObjectMaybeShared& buffer() const;
 
+    // The current length of the memory.  In the case of shared memory, the
+    // length can change at any time.  Also note that this will acquire a lock
+    // for shared memory, so do not call this from a signal handler.
+    uint32_t volatileMemoryLength() const;
+
+    bool isShared() const;
     bool movingGrowable() const;
+
+    // If isShared() is true then obtain the underlying buffer object.
+    SharedArrayRawBuffer* sharedArrayRawBuffer() const;
+
     bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);
     static uint32_t grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx);
 };

@@ -15,6 +15,7 @@
 #include "js/GCHashTable.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
+#include "wasm/WasmTypes.h"
 
 typedef struct JSProperty JSProperty;
 
@@ -106,6 +107,7 @@ mozilla::Maybe<uint32_t> WasmArrayBufferMaxSize(const ArrayBufferObjectMaybeShar
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 bool WasmArrayBufferGrowForWasm(ArrayBufferObjectMaybeShared* buf, uint32_t delta);
 bool AnyArrayBufferIsPreparedForAsmJS(const ArrayBufferObjectMaybeShared* buf);
+bool AnyArrayBufferIsWasm(const ArrayBufferObjectMaybeShared* buf);
 ArrayBufferObjectMaybeShared& AsAnyArrayBuffer(HandleValue val);
 
 class ArrayBufferObjectMaybeShared : public NativeObject
@@ -135,6 +137,10 @@ class ArrayBufferObjectMaybeShared : public NativeObject
 
     bool isPreparedForAsmJS() const {
         return AnyArrayBufferIsPreparedForAsmJS(this);
+    }
+
+    bool isWasm() const {
+        return AnyArrayBufferIsWasm(this);
     }
 };
 
@@ -172,6 +178,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static_assert(FLAGS_SLOT == JS_ARRAYBUFFER_FLAGS_SLOT,
                   "self-hosted code with burned-in constants must get the "
                   "right flags slot");
+
+    // The length of an ArrayBuffer or SharedArrayBuffer can be at most
+    // INT32_MAX, and much code must change if this changes.
+
+    static const size_t MaxBufferByteLength = INT32_MAX;
 
   public:
 
@@ -358,10 +369,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
 
     // WebAssembly support:
-    static ArrayBufferObject* createForWasm(JSContext* cx, uint32_t initialSize,
-                                            const mozilla::Maybe<uint32_t>& maxSize);
     static MOZ_MUST_USE bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                                              bool needGuard);
+    void initializeRawBuffer(JSContext* cx, WasmArrayRawBuffer* buffer, uint32_t byteLength);
     size_t wasmMappedSize() const;
     mozilla::Maybe<uint32_t> wasmMaxSize() const;
     static MOZ_MUST_USE bool wasmGrowToSizeInPlace(uint32_t newSize,
@@ -433,6 +443,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 typedef Rooted<ArrayBufferObject*> RootedArrayBufferObject;
 typedef Handle<ArrayBufferObject*> HandleArrayBufferObject;
 typedef MutableHandle<ArrayBufferObject*> MutableHandleArrayBufferObject;
+
+bool CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
+                      MutableHandleArrayBufferObjectMaybeShared buffer);
 
 /*
  * ArrayBufferViewObject
