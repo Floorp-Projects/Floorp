@@ -66,8 +66,27 @@ nsIDocument::SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits)
   MOZ_ASSERT((aDirtyBits & ~Element::kAllServoDescendantBits) == 0);
   MOZ_ASSERT((aDirtyBits & mServoRestyleRootDirtyBits) == mServoRestyleRootDirtyBits);
 
+  // NOTE(emilio): The !aRoot->IsElement() check allows us to handle cases where
+  // we change the restyle root during unbinding of a subtree where the root is
+  // not unbound yet (and thus hasn't cleared the restyle root yet).
+  //
+  // In that case the tree can be in a somewhat inconsistent state (with the
+  // document no longer being the subtree root of the current root, but the root
+  // not having being unbound first).
+  //
+  // In that case, given there's no common ancestor, aRoot should be the
+  // document, and we allow that, provided that the previous root will
+  // eventually be unbound and the dirty bits will be cleared.
+  //
+  // If we want to enforce calling into this method with the tree in a
+  // consistent state, we'd need to move all the state changes that happen on
+  // content unbinding for parents, like fieldset validity stuff and ancestor
+  // direction changes off script runners or, alternatively, nulling out the
+  // document and parent node _after_ nulling out the children's, and then
+  // remove that line.
   MOZ_ASSERT(!mServoRestyleRoot ||
              mServoRestyleRoot == aRoot ||
+             !aRoot->IsElement() ||
              nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(mServoRestyleRoot, aRoot));
   MOZ_ASSERT(aRoot == aRoot->OwnerDocAsNode() ||
              (aRoot->IsElement() && aRoot->IsInComposedDoc()));
