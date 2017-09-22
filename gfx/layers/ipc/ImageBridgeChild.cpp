@@ -726,7 +726,24 @@ MessageLoop * ImageBridgeChild::GetMessageLoop() const
 ImageBridgeChild::IdentifyCompositorTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   if (RefPtr<ImageBridgeChild> child = GetSingleton()) {
-    child->IdentifyTextureHost(aIdentifier);
+    child->UpdateTextureFactoryIdentifier(aIdentifier);
+  }
+}
+
+void
+ImageBridgeChild::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aIdentifier)
+{
+  bool disablingWebRender = GetCompositorBackendType() == LayersBackend::LAYERS_WR &&
+                            aIdentifier.mParentBackend != LayersBackend::LAYERS_WR;
+  IdentifyTextureHost(aIdentifier);
+  if (disablingWebRender) {
+    // ImageHost is incompatible between WebRender enabled and WebRender disabled.
+    // Then drop all ImageContainers' ImageClients during disabling WebRender.
+    MutexAutoLock lock(mContainerMapLock);
+    for (auto iter = mImageContainers.Iter(); !iter.Done(); iter.Next()) {
+      ImageContainer* container = iter.Data();
+      container->DropImageClient();
+    }
   }
 }
 

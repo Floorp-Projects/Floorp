@@ -39,7 +39,7 @@ public:
   typedef nsTArray<RefPtr<mozilla::dom::Animation>> AnimationArray;
 
   nsDOMMutationRecord(nsIAtom* aType, nsISupports* aOwner)
-  : mType(aType), mAttrNamespace(NullString()), mPrevValue(NullString()), mOwner(aOwner)
+  : mType(aType), mAttrNamespace(VoidString()), mPrevValue(VoidString()), mOwner(aOwner)
   {
   }
 

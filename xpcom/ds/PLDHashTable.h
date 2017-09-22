@@ -209,40 +209,45 @@ class PLDHashTable
 private:
   // This class maintains the invariant that every time the entry store is
   // changed, the generation is updated.
+  //
+  // Note: It would be natural to store the generation within this class, but
+  // we can't do that without bloating sizeof(PLDHashTable) on 64-bit machines.
+  // So instead we store it outside this class, and Set() takes a pointer to it
+  // and ensures it is updated as necessary.
   class EntryStore
   {
   private:
     char* mEntryStore;
-    uint32_t mGeneration;
 
   public:
-    EntryStore() : mEntryStore(nullptr), mGeneration(0) {}
+    EntryStore() : mEntryStore(nullptr) {}
 
     ~EntryStore()
     {
       free(mEntryStore);
       mEntryStore = nullptr;
-      mGeneration++;    // a little paranoid, but why not be extra safe?
     }
 
     char* Get() { return mEntryStore; }
     const char* Get() const { return mEntryStore; }
 
-    void Set(char* aEntryStore)
+    void Set(char* aEntryStore, uint16_t* aGeneration)
     {
       mEntryStore = aEntryStore;
-      mGeneration++;
+      *aGeneration += 1;
     }
-
-    uint32_t Generation() const { return mGeneration; }
   };
 
+  // These fields are packed carefully. On 32-bit platforms,
+  // sizeof(PLDHashTable) is 20. On 64-bit platforms, sizeof(PLDHashTable) is
+  // 32; 28 bytes of data followed by 4 bytes of padding for alignment.
   const PLDHashTableOps* const mOps;  // Virtual operations; see below.
-  int16_t             mHashShift;     // Multiplicative hash shift.
-  const uint32_t      mEntrySize;     // Number of bytes in an entry.
+  EntryStore          mEntryStore;    // (Lazy) entry storage and generation.
+  uint16_t            mGeneration;    // The storage generation.
+  uint8_t             mHashShift;     // Multiplicative hash shift.
+  const uint8_t       mEntrySize;     // Number of bytes in an entry.
   uint32_t            mEntryCount;    // Number of entries in table.
   uint32_t            mRemovedCount;  // Removed entry sentinels in table.
-  EntryStore          mEntryStore;    // (Lazy) entry storage and generation.
 
 #ifdef DEBUG
   mutable Checker mChecker;
@@ -278,13 +283,16 @@ public:
                uint32_t aLength = kDefaultInitialLength);
 
   PLDHashTable(PLDHashTable&& aOther)
-      // These two fields are |const|. Initialize them here because the
-      // move assignment operator cannot modify them.
+      // We initialize mOps and mEntrySize here because they are |const|, and
+      // the move assignment operator cannot modify them.
+      // We initialize mEntryStore because it is required for a safe call to
+      // the destructor, which the move assignment operator does.
+      // We initialize mGeneration because it is modified by the move
+      // assignment operator.
     : mOps(aOther.mOps)
-    , mEntrySize(aOther.mEntrySize)
-      // Initialize this field because it is required for a safe call to the
-      // destructor, which the move assignment operator does.
     , mEntryStore()
+    , mGeneration(0)
+    , mEntrySize(aOther.mEntrySize)
 #ifdef DEBUG
     , mChecker()
 #endif
@@ -309,7 +317,7 @@ public:
 
   uint32_t EntrySize()  const { return mEntrySize; }
   uint32_t EntryCount() const { return mEntryCount; }
-  uint32_t Generation() const { return mEntryStore.Generation(); }
+  uint32_t Generation() const { return mGeneration; }
 
   // To search for a |key| in |table|, call:
   //

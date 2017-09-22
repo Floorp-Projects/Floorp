@@ -11,6 +11,10 @@
 #include "mozilla/Move.h"
 #include "mozilla/Result.h"
 
+#if defined(MOZILLA_INTERNAL_API)
+#include "nsString.h"
+#endif // defined(MOZILLA_INTERNAL_API)
+
 #include <windows.h>
 
 namespace mozilla {
@@ -35,7 +39,10 @@ public:
     return mActCtx != INVALID_HANDLE_VALUE;
   }
 
+#if defined(MOZILLA_INTERNAL_API)
   static Result<uintptr_t,HRESULT> GetCurrent();
+  static HRESULT GetCurrentManifestPath(nsAString& aOutManifestPath);
+#endif // defined(MOZILLA_INTERNAL_API)
 
 private:
   void Init(ACTCTX& aActCtx);

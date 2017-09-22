@@ -684,7 +684,7 @@ nsHtml5TreeOperation::AppendDoctypeToDocument(nsIAtom* aName,
                         aName,
                         aPublicId,
                         aSystemId,
-                        NullString());
+                        VoidString());
   NS_ASSERTION(docType, "Doctype creation failed.");
   nsCOMPtr<nsIContent> asContent = do_QueryInterface(docType);
   return AppendToDocument(asContent, aBuilder);

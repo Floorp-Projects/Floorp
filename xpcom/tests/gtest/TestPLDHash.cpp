@@ -105,7 +105,14 @@ InitCapacityOk_InitialEntryStoreTooBig()
   // Try the smallest disallowed power-of-two entry store size, which is 2^32
   // bytes (which overflows to 0). (Note that the 2^23 *length* gets converted
   // to a 2^24 *capacity*.)
-  PLDHashTable t(PLDHashTable::StubOps(), (uint32_t)1 << 23, (uint32_t)1 << 8);
+  PLDHashTable t(PLDHashTable::StubOps(), (uint32_t)1 << 8, (uint32_t)1 << 23);
+}
+
+void
+InitCapacityOk_EntrySizeTooBig()
+{
+  // Try the smallest disallowed entry size, which is 256 bytes.
+  PLDHashTable t(PLDHashTable::StubOps(), 256);
 }
 
 TEST(PLDHashTableTest, InitCapacityOk)
@@ -118,7 +125,7 @@ TEST(PLDHashTableTest, InitCapacityOk)
 
   // Try the largest allowed power-of-two entry store size, which is 2^31 bytes
   // (Note that the 2^23 *length* gets converted to a 2^24 *capacity*.)
-  PLDHashTable t2(PLDHashTable::StubOps(), (uint32_t)1 << 23, (uint32_t)1 << 7);
+  PLDHashTable t2(PLDHashTable::StubOps(), (uint32_t)1 << 7, (uint32_t)1 << 23);
 
   // Try a too-large capacity (which aborts).
   TestCrashyOperation(InitCapacityOk_InitialLengthTooBig);
@@ -126,6 +133,12 @@ TEST(PLDHashTableTest, InitCapacityOk)
   // Try a large capacity combined with a large entry size that when multiplied
   // overflow (causing abort).
   TestCrashyOperation(InitCapacityOk_InitialEntryStoreTooBig);
+
+  // Try the largest allowed entry size.
+  PLDHashTable t3(PLDHashTable::StubOps(), 255);
+
+  // Try an overly large entry size.
+  TestCrashyOperation(InitCapacityOk_EntrySizeTooBig);
 
   // Ideally we'd also try a large-but-ok capacity that almost but doesn't
   // quite overflow, but that would result in allocating slightly less than 4

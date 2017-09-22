@@ -487,7 +487,7 @@ nsXULTemplateBuilder::HasGeneratedContent(nsIRDFResource* aResource,
                                           bool* aGenerated)
 {
     ErrorResult rv;
-    const nsAString& tag = aTag ? nsDependentAtomString(aTag) : NullString();
+    const nsAString& tag = aTag ? nsDependentAtomString(aTag) : VoidString();
     *aGenerated = HasGeneratedContent(aResource, tag, rv);
     return rv.StealNSResult();
 }

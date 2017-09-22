@@ -572,7 +572,7 @@ HTMLEditUtils::SupportsAlignAttr(nsINode& aNode)
 struct ElementInfo final
 {
 #ifdef DEBUG
-  eHTMLTags mTag;
+  nsHTMLTag mTag;
 #endif
   uint32_t mGroup;
   uint32_t mCanContainGroups;
@@ -787,7 +787,7 @@ HTMLEditUtils::CanContain(int32_t aParent, int32_t aChild)
 
   // Special-case button.
   if (aParent == eHTMLTag_button) {
-    static const eHTMLTags kButtonExcludeKids[] = {
+    static const nsHTMLTag kButtonExcludeKids[] = {
       eHTMLTag_a,
       eHTMLTag_fieldset,
       eHTMLTag_form,

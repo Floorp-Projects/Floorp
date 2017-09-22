@@ -250,6 +250,8 @@ private:
   void ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams);
   void ProxyDeallocShmemNow(SynchronousTask* aTask, Shmem* aShmem, bool* aResult);
 
+  void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aIdentifier);
+
 public:
   // CompositableForwarder
 

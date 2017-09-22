@@ -2642,9 +2642,9 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
         LifecycleCallbackArgs args = {
           nsDependentAtomString(aName),
           aModType == nsIDOMMutationEvent::ADDITION ?
-            NullString() : nsDependentAtomString(oldValueAtom),
+            VoidString() : nsDependentAtomString(oldValueAtom),
           nsDependentAtomString(newValueAtom),
-          (ns.IsEmpty() ? NullString() : ns)
+          (ns.IsEmpty() ? VoidString() : ns)
         };
 
         nsContentUtils::EnqueueLifecycleCallback(
@@ -2938,8 +2938,8 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         LifecycleCallbackArgs args = {
           nsDependentAtomString(aName),
           nsDependentAtomString(oldValueAtom),
-          NullString(),
-          (ns.IsEmpty() ? NullString() : ns)
+          VoidString(),
+          (ns.IsEmpty() ? VoidString() : ns)
         };
 
         nsContentUtils::EnqueueLifecycleCallback(

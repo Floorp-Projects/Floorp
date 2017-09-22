@@ -17,6 +17,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAppRunner.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
@@ -416,7 +417,7 @@ public:
         MOZ_RELEASE_ASSERT(aMessage.transaction_id() == mTransaction);
         MOZ_RELEASE_ASSERT(!mReply);
         IPC_LOG("Reply received on worker thread: seqno=%d", mSeqno);
-        mReply = new IPC::Message(Move(aMessage));
+        mReply = MakeUnique<IPC::Message>(Move(aMessage));
         MOZ_RELEASE_ASSERT(IsComplete());
     }
 
@@ -455,7 +456,7 @@ public:
         return mReply->is_reply_error();
     }
 
-    nsAutoPtr<IPC::Message> GetReply() {
+    UniquePtr<IPC::Message> GetReply() {
         return Move(mReply);
     }
 
@@ -480,7 +481,7 @@ private:
     AutoEnterTransaction *mNext;
 
     // Pointer the a reply received for this message, if one was received.
-    nsAutoPtr<IPC::Message> mReply;
+    UniquePtr<IPC::Message> mReply;
 };
 
 class PromiseReporter final : public nsIMemoryReporter
@@ -844,7 +845,7 @@ MessageChannel::CommonThreadOpenInit(MessageChannel *aTargetChan, Side aSide)
 bool
 MessageChannel::Echo(Message* aMsg)
 {
-    nsAutoPtr<Message> msg(aMsg);
+    UniquePtr<Message> msg(aMsg);
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
     if (MSG_ROUTING_NONE == msg->routing_id()) {
@@ -855,11 +856,11 @@ MessageChannel::Echo(Message* aMsg)
     MonitorAutoLock lock(*mMonitor);
 
     if (!Connected()) {
-        ReportConnectionError("MessageChannel", msg);
+        ReportConnectionError("MessageChannel", msg.get());
         return false;
     }
 
-    mLink->EchoMessage(msg.forget());
+    mLink->EchoMessage(msg.release());
     return true;
 }
 
@@ -887,7 +888,7 @@ MessageChannel::Send(Message* aMsg)
 
     CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
 
-    nsAutoPtr<Message> msg(aMsg);
+    UniquePtr<Message> msg(aMsg);
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
     if (MSG_ROUTING_NONE == msg->routing_id()) {
@@ -897,11 +898,10 @@ MessageChannel::Send(Message* aMsg)
 
     MonitorAutoLock lock(*mMonitor);
     if (!Connected()) {
-        ReportConnectionError("MessageChannel", msg);
+        ReportConnectionError("MessageChannel", msg.get());
         return false;
     }
-
-    SendMessageToLink(msg.forget());
+    SendMessageToLink(msg.release());
     return true;
 }
 
@@ -1353,7 +1353,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE2, aMsg->size());
     }
 
-    nsAutoPtr<Message> msg(aMsg);
+    UniquePtr<Message> msg(aMsg);
 
     // Sanity checks.
     AssertWorkerThread();
@@ -1367,7 +1367,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     AutoScopedLabel autolabel("sync message %s", aMsg->name());
 #endif
 
-    CxxStackFrame f(*this, OUT_MESSAGE, msg);
+    CxxStackFrame f(*this, OUT_MESSAGE, msg.get());
 
     MonitorAutoLock lock(*mMonitor);
 
@@ -1427,7 +1427,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
                "not allowed to send messages while dispatching urgent messages");
 
     if (!Connected()) {
-        ReportConnectionError("MessageChannel::SendAndWait", msg);
+        ReportConnectionError("MessageChannel::SendAndWait", msg.get());
         mLastSendError = SyncSendError::NotConnectedBeforeSend;
         return false;
     }
@@ -1456,7 +1456,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     // msg will be destroyed soon, but name() is not owned by msg.
     const char* msgName = msg->name();
 
-    SendMessageToLink(msg.forget());
+    SendMessageToLink(msg.release());
 
     while (true) {
         MOZ_RELEASE_ASSERT(!transact.IsCanceled());
@@ -1534,7 +1534,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     IPC_LOG("Got reply: seqno=%d, xid=%d, msgName=%s, latency=%ums",
             seqno, transaction, msgName, latencyMs);
 
-    nsAutoPtr<Message> reply = transact.GetReply();
+    UniquePtr<Message> reply = transact.GetReply();
 
     MOZ_RELEASE_ASSERT(reply);
     MOZ_RELEASE_ASSERT(reply->is_reply(), "expected reply");
@@ -1560,7 +1560,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 bool
 MessageChannel::Call(Message* aMsg, Message* aReply)
 {
-    nsAutoPtr<Message> msg(aMsg);
+    UniquePtr<Message> msg(aMsg);
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
 
@@ -1573,11 +1573,11 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 
     // This must come before MonitorAutoLock, as its destructor acquires the
     // monitor lock.
-    CxxStackFrame cxxframe(*this, OUT_MESSAGE, msg);
+    CxxStackFrame cxxframe(*this, OUT_MESSAGE, msg.get());
 
     MonitorAutoLock lock(*mMonitor);
     if (!Connected()) {
-        ReportConnectionError("MessageChannel::Call", msg);
+        ReportConnectionError("MessageChannel::Call", msg.get());
         return false;
     }
 
@@ -1593,7 +1593,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
     msg->set_interrupt_remote_stack_depth_guess(mRemoteStackDepthGuess);
     msg->set_interrupt_local_stack_depth(1 + InterruptStackDepth());
     mInterruptStack.push(MessageInfo(*msg));
-    mLink->SendMessage(msg.forget());
+    mLink->SendMessage(msg.release());
 
     while (true) {
         // if a handler invoked by *Dispatch*() spun a nested event

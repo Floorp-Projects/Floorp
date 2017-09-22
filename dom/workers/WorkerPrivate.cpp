@@ -4646,7 +4646,7 @@ WorkerPrivate::Constructor(const GlobalObject& aGlobal,
 {
   JSContext* cx = aGlobal.Context();
   return Constructor(cx, aScriptURL, aIsChromeWorker, aWorkerType,
-                     aWorkerName, NullCString(), aLoadInfo, aRv);
+                     aWorkerName, VoidCString(), aLoadInfo, aRv);
 }
 
 // static

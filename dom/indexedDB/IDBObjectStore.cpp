@@ -925,7 +925,7 @@ public:
 
     if (aData.tag == SCTAG_DOM_BLOB) {
       aFile.mBlob->Impl()->SetLazyData(
-        NullString(), aData.type, aData.size, INT64_MAX);
+        VoidString(), aData.type, aData.size, INT64_MAX);
       MOZ_ASSERT(!aFile.mBlob->IsFile());
 
       // ActorsParent sends here a kind of half blob and half file wrapped into

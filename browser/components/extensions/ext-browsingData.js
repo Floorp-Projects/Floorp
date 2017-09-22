@@ -17,6 +17,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
 XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
+XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
+                                   "@mozilla.org/dom/quota-manager-service;1",
+                                   "nsIQuotaManagerService");
 
 /**
 * A number of iterations after which to yield time back
@@ -78,6 +81,29 @@ const clearFormData = options => {
 
 const clearHistory = options => {
   return sanitizer.items.history.clear(makeRange(options));
+};
+
+const clearIndexedDB = async function(options) {
+  let promises = [];
+
+  await new Promise(resolve => {
+    quotaManagerService.getUsage(request => {
+      for (let item of request.result) {
+        let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+        let uri = principal.URI;
+        if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
+          promises.push(new Promise(r => {
+            let req = quotaManagerService.clearStoragesForPrincipal(principal, null, true);
+            req.callback = () => { r(); };
+          }));
+        }
+      }
+
+      resolve();
+    });
+  });
+
+  return Promise.all(promises);
 };
 
 const clearLocalStorage = async function(options) {
@@ -152,6 +178,9 @@ const doRemoval = (options, dataToRemove, extension) => {
           break;
         case "history":
           removalPromises.push(clearHistory(options));
+          break;
+        case "indexedDB":
+          removalPromises.push(clearIndexedDB(options));
           break;
         case "localStorage":
           removalPromises.push(clearLocalStorage(options));
@@ -228,6 +257,9 @@ this.browsingData = class extends ExtensionAPI {
         },
         removeHistory(options) {
           return doRemoval(options, {history: true});
+        },
+        removeIndexedDB(options) {
+          return doRemoval(options, {indexedDB: true});
         },
         removeLocalStorage(options) {
           return doRemoval(options, {localStorage: true});
