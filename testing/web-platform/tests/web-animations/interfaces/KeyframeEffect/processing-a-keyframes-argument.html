@@ -79,7 +79,7 @@ for (const prop of gNonAnimatableProps) {
      + ' a keyframe sequence');
 }
 
-// Test equivalent forms of property indexed and sequenced keyframe syntax
+// Test equivalent forms of property-indexed and sequenced keyframe syntax
 
 function assertEquivalentKeyframeSyntax(keyframesA, keyframesB) {
   const processedKeyframesA =
@@ -154,7 +154,7 @@ for (const {description, indexedKeyframes, sequencedKeyframes} of
      gEquivalentSyntaxTests) {
   test(function(t) {
     assertEquivalentKeyframeSyntax(indexedKeyframes, sequencedKeyframes);
-  }, `Equivalent property indexed and sequenced keyframes: ${description}`);
+  }, `Equivalent property-indexed and sequenced keyframes: ${description}`);
 }
 
 // Test handling of custom iterable objects.
@@ -268,7 +268,7 @@ test(function(t) {
     {offset: null, computedOffset: 0, easing: 'linear', height: '100px'},
     {offset: null, computedOffset: 1, easing: 'linear', height: '200px'},
   ]);
-}, 'Only enumerable properties on keyframes are considered');
+}, 'Only enumerable properties on keyframes are read');
 
 test(function(t) {
   const KeyframeParent = function() { this.width = '100px'; };
@@ -286,7 +286,7 @@ test(function(t) {
     {offset: null, computedOffset: 0, easing: 'linear', top: '100px'},
     {offset: null, computedOffset: 1, easing: 'linear', top: '200px'},
   ]);
-}, 'Only properties defined directly on keyframes are considered');
+}, 'Only properties defined directly on keyframes are read');
 
 test(function(t) {
   const keyframes = {};
@@ -301,7 +301,7 @@ test(function(t) {
     {offset: null, computedOffset: 0, easing: 'linear', height: '100px'},
     {offset: null, computedOffset: 1, easing: 'linear', height: '200px'},
   ]);
-}, 'Only enumerable properties on property indexed keyframes are considered');
+}, 'Only enumerable properties on property-indexed keyframes are read');
 
 test(function(t) {
   const KeyframesParent = function() { this.width = '100px'; };
@@ -319,7 +319,7 @@ test(function(t) {
     {offset: null, computedOffset: 0, easing: 'linear', top: '100px'},
     {offset: null, computedOffset: 1, easing: 'linear', top: '200px'},
   ]);
-}, 'Only properties defined directly on property indexed keyframes are considered');
+}, 'Only properties defined directly on property-indexed keyframes are read');
 
 // FIXME: Test that properties are accessed in ascending order by Unicode
 //        codepoint
