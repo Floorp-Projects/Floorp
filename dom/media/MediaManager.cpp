@@ -426,7 +426,7 @@ public:
       if (globalWindow) {
         RefPtr<GetUserMediaRequest> req =
           new GetUserMediaRequest(globalWindow->AsInner(),
-                                  NullString(), NullString());
+                                  VoidString(), VoidString());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
       return;
