@@ -281,7 +281,9 @@ Glyph fetch_glyph(int specific_prim_address,
                         glyph_index / 2;
     vec4 data = fetch_from_resource_cache_1(glyph_address);
     // Select XY or ZW based on glyph index.
-    vec2 glyph = mix(data.xy, data.zw, bvec2(glyph_index % 2 == 1));
+    // We use "!= 0" instead of "== 1" here in order to work around a driver
+    // bug with equality comparisons on integers.
+    vec2 glyph = mix(data.xy, data.zw, bvec2(glyph_index % 2 != 0));
 
     // In subpixel mode, the subpixel offset has already been
     // accounted for while rasterizing the glyph.
@@ -292,11 +294,11 @@ Glyph fetch_glyph(int specific_prim_address,
             // Glyphs positioned [-0.125, 0.125] get a
             // subpx position of zero. So include that
             // offset in the glyph position to ensure
-            // we truncate to the correct whole position.
-            glyph.x = trunc(glyph.x + 0.125);
+            // we round to the correct whole position.
+            glyph.x = floor(glyph.x + 0.125);
             break;
         case SUBPX_DIR_VERTICAL:
-            glyph.y = trunc(glyph.y + 0.125);
+            glyph.y = floor(glyph.y + 0.125);
             break;
     }
 
