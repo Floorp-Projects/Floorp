@@ -895,11 +895,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   mozilla::StyleComplexColor mBackgroundColor;       // [reset]
 };
 
-#define NS_SPACING_MARGIN   0
-#define NS_SPACING_PADDING  1
-#define NS_SPACING_BORDER   2
-
-
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
 {
   explicit nsStyleMargin(const nsPresContext* aContext);
