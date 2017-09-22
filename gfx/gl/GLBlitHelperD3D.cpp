@@ -261,7 +261,7 @@ GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
     if (format != gfx::SurfaceFormat::NV12) {
         gfxCriticalError() << "Non-NV12 format for SurfaceDescriptorD3D10: "
                            << uint32_t(format);
-        return nullptr;
+        return false;
     }
 
     const auto tex = OpenSharedTexture(d3d, handle);
