@@ -9,8 +9,7 @@
 
 use libc::c_void;
 
-use base::{CFTypeID, CFAllocatorRef};
-use url::CFURLRef;
+use base::CFTypeID;
 use dictionary::CFDictionaryRef;
 use string::CFStringRef;
 
@@ -23,14 +22,10 @@ extern {
     /*
      * CFBundle.h
      */
-    pub fn CFBundleCreate(allocator: CFAllocatorRef, bundleURL: CFURLRef) -> CFBundleRef;
-
     pub fn CFBundleGetBundleWithIdentifier(bundleID: CFStringRef) -> CFBundleRef;
     pub fn CFBundleGetFunctionPointerForName(bundle: CFBundleRef, function_name: CFStringRef) -> *const c_void;
     pub fn CFBundleGetMainBundle() -> CFBundleRef;
     pub fn CFBundleGetInfoDictionary(bundle: CFBundleRef) -> CFDictionaryRef;
 
     pub fn CFBundleGetTypeID() -> CFTypeID;
-    pub fn CFBundleCopyExecutableURL(bundle: CFBundleRef) -> CFURLRef;
-    pub fn CFBundleCopyPrivateFrameworksURL(bundle: CFBundleRef) -> CFURLRef;
 }
