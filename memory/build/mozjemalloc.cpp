@@ -4676,35 +4676,8 @@ MALLOC_OUT:
 /*
  * Begin malloc(3)-compatible functions.
  */
-
-/* The BaseAllocator class is a helper class that implements the base allocator
- * functions (malloc, calloc, realloc, free, memalign) for a given arena,
- * or an appropriately chosen arena (per choose_arena()) when none is given. */
-struct BaseAllocator {
-#define MALLOC_DECL(name, return_type, ...) \
-  inline return_type name(__VA_ARGS__);
-
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
-#include "malloc_decls.h"
-
-  explicit BaseAllocator(arena_t* aArena) : mArena(aArena) { }
-
-private:
-  arena_t* mArena;
-};
-
-#define MALLOC_DECL(name, return_type, ...) \
-  template<> inline return_type \
-  MozJemalloc::name(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
-  { \
-    BaseAllocator allocator(nullptr); \
-    return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
-  }
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
-#include "malloc_decls.h"
-
-inline void*
-BaseAllocator::malloc(size_t aSize)
+template<> inline void*
+MozJemalloc::malloc(size_t aSize)
 {
   void* ret;
 
@@ -4717,7 +4690,7 @@ BaseAllocator::malloc(size_t aSize)
     aSize = 1;
   }
 
-  ret = imalloc(aSize, /* zero = */ false, mArena);
+  ret = imalloc(aSize, /* zero = */ false, nullptr);
 
 RETURN:
   if (!ret) {
@@ -4727,8 +4700,8 @@ RETURN:
   return ret;
 }
 
-inline void*
-BaseAllocator::memalign(size_t aAlignment, size_t aSize)
+template<> inline void*
+MozJemalloc::memalign(size_t aAlignment, size_t aSize)
 {
   void* ret;
 
@@ -4743,13 +4716,13 @@ BaseAllocator::memalign(size_t aAlignment, size_t aSize)
   }
 
   aAlignment = aAlignment < sizeof(void*) ? sizeof(void*) : aAlignment;
-  ret = ipalloc(aAlignment, aSize, mArena);
+  ret = ipalloc(aAlignment, aSize, nullptr);
 
   return ret;
 }
 
-inline void*
-BaseAllocator::calloc(size_t aNum, size_t aSize)
+template<> inline void*
+MozJemalloc::calloc(size_t aNum, size_t aSize)
 {
   void *ret;
   size_t num_size;
@@ -4775,7 +4748,7 @@ BaseAllocator::calloc(size_t aNum, size_t aSize)
     goto RETURN;
   }
 
-  ret = imalloc(num_size, /* zero = */ true, mArena);
+  ret = imalloc(num_size, /* zero = */ true, nullptr);
 
 RETURN:
   if (!ret) {
@@ -4785,8 +4758,8 @@ RETURN:
   return ret;
 }
 
-inline void*
-BaseAllocator::realloc(void* aPtr, size_t aSize)
+template<> inline void*
+MozJemalloc::realloc(void* aPtr, size_t aSize)
 {
   void* ret;
 
@@ -4797,7 +4770,7 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
   if (aPtr) {
     MOZ_ASSERT(malloc_initialized);
 
-    ret = iralloc(aPtr, aSize, mArena);
+    ret = iralloc(aPtr, aSize, nullptr);
 
     if (!ret) {
       errno = ENOMEM;
@@ -4806,7 +4779,7 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
     if (malloc_init()) {
       ret = nullptr;
     } else {
-      ret = imalloc(aSize, /* zero = */ false, mArena);
+      ret = imalloc(aSize, /* zero = */ false, nullptr);
     }
 
     if (!ret) {
@@ -4817,8 +4790,8 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
   return ret;
 }
 
-inline void
-BaseAllocator::free(void* aPtr)
+template<> inline void
+MozJemalloc::free(void* aPtr)
 {
   size_t offset;
 
