@@ -61,18 +61,18 @@ public:
     return AsString();
   }
 
-  template<typename N> struct raw_type { typedef N* type; };
+  template<typename N, typename Dummy> struct raw_type { typedef N* type; };
 
 #ifdef MOZ_USE_CHAR16_WRAPPER
-  template<> struct raw_type<char16_t> { typedef char16ptr_t type; };
+  template<typename Dummy> struct raw_type<char16_t, Dummy> { typedef char16ptr_t type; };
 #endif
 
   /**
    * Prohibit get() on temporaries as in nsLiteralCString("x").get().
    * These should be written as just "x", using a string literal directly.
    */
-  const typename raw_type<T>::type get() const && = delete;
-  const typename raw_type<T>::type get() const &
+  const typename raw_type<T, int>::type get() const && = delete;
+  const typename raw_type<T, int>::type get() const &
   {
     return this->mData;
   }
