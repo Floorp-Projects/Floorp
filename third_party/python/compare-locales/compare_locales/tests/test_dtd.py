@@ -132,6 +132,19 @@ escaped value">
         a, b = list(self.parser)
         self.assertEqual(a.post, ' ')
 
+    def test_word_count(self):
+        self.parser.readContents('''\
+<!ENTITY a "one">
+<!ENTITY b "one<br>two">
+<!ENTITY c "one<span>word</span>">
+<!ENTITY d "one <a href='foo'>two</a> three">
+''')
+        a, b, c, d = list(self.parser)
+        self.assertEqual(a.count_words(), 1)
+        self.assertEqual(b.count_words(), 2)
+        self.assertEqual(c.count_words(), 1)
+        self.assertEqual(d.count_words(), 3)
+
 
 if __name__ == '__main__':
     unittest.main()

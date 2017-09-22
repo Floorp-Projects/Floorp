@@ -50,6 +50,7 @@ public class ActivityStreamTelemetry {
         public final static String ITEM_NEW_TAB = "newtab";
         public final static String ITEM_DISMISS = "dismiss";
         public final static String ITEM_DELETE_HISTORY = "delete";
+        public final static String ITEM_LINK_MORE = "link_more";
         public final static String INTERACTION_MENU_BUTTON = "menu_button";
         public final static String INTERACTION_LONG_CLICK = "long_click";
     }
@@ -143,9 +144,6 @@ public class ActivityStreamTelemetry {
                         break;
                     case BOOKMARKED:
                         this.set(Contract.SOURCE_SUBTYPE, Contract.SUBTYPE_BOOKMARKED);
-                        break;
-                    case POCKET:
-                        this.set(Contract.SOURCE_TYPE, Contract.TYPE_POCKET);
                         break;
                     default:
                         throw new IllegalStateException("Unknown highlight source: " + source);

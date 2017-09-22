@@ -356,7 +356,8 @@ abstract class BaseTest extends BaseRobocopTest {
 
             // If we don't see the item, scroll down once in case it's off-screen.
             // Hacky way to scroll down.  solo.scroll* does not work in dialogs.
-            MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+            MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mSolo,
+                                                          mDriver.getGeckoLeft(), mDriver.getGeckoTop());
             meh.dragSync(mScreenMidWidth, mScreenMidHeight+100, mScreenMidWidth, mScreenMidHeight-100);
 
             foundText = mSolo.waitForText(txt);

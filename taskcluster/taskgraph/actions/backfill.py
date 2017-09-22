@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 
 import requests
+from requests.exceptions import HTTPError
 
 from .registry import register_callback_action
 from .util import find_decision_task, create_tasks
@@ -70,17 +71,21 @@ def backfill_action(parameters, input, task_group_id, task_id, task):
     pushes = sorted(pushes)[-depth:]
 
     for push in pushes:
-        full_task_graph = get_artifact_from_index(
-                INDEX_TMPL.format(parameters['project'], push),
-                'public/full-task-graph.json')
-        _, full_task_graph = TaskGraph.from_json(full_task_graph)
-        label_to_taskid = get_artifact_from_index(
-                INDEX_TMPL.format(parameters['project'], push),
-                'public/label-to-taskid.json')
-        push_params = get_artifact_from_index(
-                INDEX_TMPL.format(parameters['project'], push),
-                'public/parameters.yml')
-        push_decision_task_id = find_decision_task(push_params)
+        try:
+            full_task_graph = get_artifact_from_index(
+                    INDEX_TMPL.format(parameters['project'], push),
+                    'public/full-task-graph.json')
+            _, full_task_graph = TaskGraph.from_json(full_task_graph)
+            label_to_taskid = get_artifact_from_index(
+                    INDEX_TMPL.format(parameters['project'], push),
+                    'public/label-to-taskid.json')
+            push_params = get_artifact_from_index(
+                    INDEX_TMPL.format(parameters['project'], push),
+                    'public/parameters.yml')
+            push_decision_task_id = find_decision_task(push_params)
+        except HTTPError as e:
+            logger.info('Skipping {} due to missing index artifacts! Error: {}'.format(push, e))
+            continue
 
         if label in full_task_graph.tasks.keys():
             create_tasks(
