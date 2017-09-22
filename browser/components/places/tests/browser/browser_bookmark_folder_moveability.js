@@ -4,11 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
-  // sanity check
-  ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
-  ok(PlacesUIUtils, "checking PlacesUIUtils, running in chrome context?");
-  ok(PlacesControllerDragHelper, "checking PlacesControllerDragHelper, running in chrome context?");
-
   const IDX = PlacesUtils.bookmarks.DEFAULT_INDEX;
 
   // setup
