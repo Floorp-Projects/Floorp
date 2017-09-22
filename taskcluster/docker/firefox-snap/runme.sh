@@ -28,6 +28,7 @@ $CURL -o "${WORKSPACE}/firefox.tar.bz2" \
 tar -C "${WORKSPACE}/source/opt" -xf "${WORKSPACE}/firefox.tar.bz2"
 mkdir -p "${WORKSPACE}/source/opt/firefox/distribution/extensions"
 cp -v distribution.ini "${WORKSPACE}/source/opt/firefox/distribution/"
+cp -v firefox.desktop "${WORKSPACE}/source/opt/firefox/distribution/"
 
 # Use release-specific list of locales to fetch L10N XPIs
 $CURL -o "${WORKSPACE}/l10n_changesets.txt" "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/l10n_changesets.txt"
