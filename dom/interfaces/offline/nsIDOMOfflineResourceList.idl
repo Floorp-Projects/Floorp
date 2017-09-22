@@ -88,14 +88,4 @@ interface nsIDOMOfflineResourceList : nsISupports
    * from the cache if the cache group is obsolete.
    */
   void swapCache();
-
-  /* Events */
-  [implicit_jscontext] attribute jsval onchecking;
-  [implicit_jscontext] attribute jsval onerror;
-  [implicit_jscontext] attribute jsval onnoupdate;
-  [implicit_jscontext] attribute jsval ondownloading;
-  [implicit_jscontext] attribute jsval onprogress;
-  [implicit_jscontext] attribute jsval onupdateready;
-  [implicit_jscontext] attribute jsval oncached;
-  [implicit_jscontext] attribute jsval onobsolete;
 };
