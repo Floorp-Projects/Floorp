@@ -116,7 +116,8 @@ if ((0, _devtoolsConfig.isFirefoxPanel)()) {
       var threadClient = _ref.threadClient,
           tabTarget = _ref.tabTarget,
           debuggerClient = _ref.debuggerClient,
-          sourceMaps = _ref.sourceMaps;
+          sourceMaps = _ref.sourceMaps,
+          toolboxActions = _ref.toolboxActions;
 
       return (0, _client.onConnect)({
         tab: { clientType: "firefox" },
@@ -126,7 +127,8 @@ if ((0, _devtoolsConfig.isFirefoxPanel)()) {
           debuggerClient
         }
       }, {
-        sourceMaps
+        services: { sourceMaps },
+        toolboxActions
       });
     },
     destroy: () => {
@@ -19309,13 +19311,30 @@ function evaluateExpression(expression, frameId) {
       return;
     }
 
+	const input = wrapExpression(expression.input);
     return dispatch({
       type: "EVALUATE_EXPRESSION",
       input: expression.input,
-      [_promise.PROMISE]: client.evaluate(expression.input, { frameId })
+      [_promise.PROMISE]: client.evaluate(input, { frameId })
     });
   };
 }
+
+function sanitizeInput(input) {
+  return input.replace(/\\/g, "\\\\").replace(/"/g, "\\$&");
+}
+
+function wrapExpression(input) {
+  return `eval(\`
+    try {
+      ${sanitizeInput(input)}
+    } catch (e) {
+      e.name + ": " + e.message
+    }
+  \`)`.trim();
+}
+
+
 
 /***/ }),
 /* 253 */
@@ -19596,6 +19615,7 @@ var checkPendingBreakpoints = (() => {
 exports.newSource = newSource;
 exports.newSources = newSources;
 exports.selectSourceURL = selectSourceURL;
+exports.openLink = openLink;
 exports.selectSource = selectSource;
 exports.jumpToMappedLocation = jumpToMappedLocation;
 exports.addTab = addTab;
@@ -19736,6 +19756,12 @@ function loadSourceMap(generatedSource) {
       return _ref8.apply(this, arguments);
     };
   })();
+}
+
+function openLink(url) {
+  return async function({ openLink }) {
+    openLink(url);
+  };
 }
 
 /**
@@ -27885,7 +27911,8 @@ class Expressions extends _react.PureComponent {
   renderExpression(expression) {
     var _props3 = this.props,
         loadObjectProperties = _props3.loadObjectProperties,
-        loadedObjects = _props3.loadedObjects;
+        loadedObjects = _props3.loadedObjects,
+        openLink = _props3.openLink;
     var editing = this.state.editing;
     var input = expression.input,
         updating = expression.updating;
@@ -27929,7 +27956,8 @@ class Expressions extends _react.PureComponent {
           loadObjectProperties: loadObjectProperties
           // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
           , getObjectEntries: actor => {},
-          loadObjectEntries: grip => {}
+          loadObjectEntries: grip => {},
+          openLink: openLink
         }),
         _react2.default.createElement(
           "div",
@@ -28701,7 +28729,8 @@ class Scopes extends _react.PureComponent {
     var _props2 = this.props,
         pauseInfo = _props2.pauseInfo,
         loadObjectProperties = _props2.loadObjectProperties,
-        loadedObjects = _props2.loadedObjects;
+        loadedObjects = _props2.loadedObjects,
+        openLink = _props2.openLink;
     var scopes = this.state.scopes;
 
 
@@ -28719,7 +28748,8 @@ class Scopes extends _react.PureComponent {
           dimTopLevelWindow: true
           // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
           , getObjectEntries: actor => {},
-          loadObjectEntries: grip => {}
+          loadObjectEntries: grip => {},
+          openLink: openLink
         })
       );
     }
@@ -29230,7 +29260,8 @@ function getKey(action) {
 }
 
 function getKeyForOS(os, action) {
-  return KEYS[os][action];
+  var osActions = KEYS[os] || KEYS.Linux;
+  return osActions[action];
 }
 
 function formatKey(action) {
@@ -30731,17 +30762,19 @@ class Popup extends _react.Component {
   }
 
   renderSimplePreview(value) {
+    var openLink = this.props.openLink;
     return _react2.default.createElement(
       "div",
       { className: "preview-popup" },
-      Rep({ object: value, mode: MODE.LONG })
+      Rep({ object: value, mode: MODE.LONG, openLink: openLink })
     );
   }
 
   renderObjectInspector(root) {
     var _props2 = this.props,
         loadObjectProperties = _props2.loadObjectProperties,
-        loadedObjects = _props2.loadedObjects;
+        loadedObjects = _props2.loadedObjects,
+        openLink = _props2.openLink;
 
 
     var getObjectProperties = id => loadedObjects[id];
@@ -30760,7 +30793,8 @@ class Popup extends _react.Component {
       loadObjectProperties: loadObjectProperties
       // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
       , getObjectEntries: actor => {},
-      loadObjectEntries: grip => {}
+      loadObjectEntries: grip => {},
+      openLink: openLink
     });
   }
 
@@ -32129,16 +32163,18 @@ Object.defineProperty(exports, "__esModule", {
 exports.onConnect = undefined;
 
 var onConnect = (() => {
-  var _ref = _asyncToGenerator(function* (connection, services) {
+  var _ref = _asyncToGenerator(function* (connection, options) {
     // NOTE: the landing page does not connect to a JS process
     if (!connection) {
       return;
     }
 
+	var services = options.services;
+	var toolboxActions = options.toolboxActions;
     var client = getClient(connection);
     var commands = client.clientCommands;
 
-    var _bootstrapStore = (0, _bootstrap.bootstrapStore)(commands, services),
+    var _bootstrapStore = (0, _bootstrap.bootstrapStore)(commands, options),
         store = _bootstrapStore.store,
         actions = _bootstrapStore.actions,
         selectors = _bootstrapStore.selectors;
@@ -33217,12 +33253,14 @@ var _prefs = __webpack_require__(226);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function bootstrapStore(client, services) {
+function bootstrapStore(client, options) {
+    var services = options.services;
+    var toolboxActions = options.toolboxActions;
   var createStore = (0, _createStore2.default)({
     log: (0, _devtoolsConfig.getValue)("logging.actions"),
     timing: (0, _devtoolsConfig.getValue)("performance.actions"),
     makeThunkArgs: (args, state) => {
-      return Object.assign({}, args, { client }, services);
+      return Object.assign({}, args, { client }, services, toolboxActions);
     }
   });
 

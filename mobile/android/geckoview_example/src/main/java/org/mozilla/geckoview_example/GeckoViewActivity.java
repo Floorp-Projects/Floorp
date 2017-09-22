@@ -61,6 +61,7 @@ public class GeckoViewActivity extends Activity {
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
         mGeckoView.setContentListener(new MyGeckoViewContent());
         mGeckoView.setProgressListener(new MyGeckoViewProgress());
+        mGeckoView.setNavigationListener(new Navigation());
 
         final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt();
         prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
@@ -70,6 +71,7 @@ public class GeckoViewActivity extends Activity {
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
         mGeckoView.setPermissionDelegate(permission);
 
+        loadSettings(getIntent());
         loadFromIntent(getIntent());
     }
 
@@ -78,18 +80,21 @@ public class GeckoViewActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
 
+        loadSettings(intent);
         if (intent.getData() != null) {
             loadFromIntent(intent);
         }
     }
 
     private void loadFromIntent(final Intent intent) {
+        final Uri uri = intent.getData();
+        mGeckoView.loadUri(uri != null ? uri.toString() : DEFAULT_URL);
+    }
+
+    private void loadSettings(final Intent intent) {
         mGeckoView.getSettings().setBoolean(
             GeckoViewSettings.USE_MULTIPROCESS,
             intent.getBooleanExtra(USE_MULTIPROCESS_EXTRA, true));
-
-        final Uri uri = intent.getData();
-        mGeckoView.loadUri(uri != null ? uri.toString() : DEFAULT_URL);
     }
 
     @Override
