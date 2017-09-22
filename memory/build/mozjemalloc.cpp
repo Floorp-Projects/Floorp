@@ -3335,13 +3335,12 @@ arena_t::Malloc(size_t aSize, bool aZero)
 }
 
 static inline void*
-imalloc(size_t aSize, bool aZero, arena_t* aArena)
+imalloc(size_t aSize, bool aZero)
 {
   MOZ_ASSERT(aSize != 0);
 
   if (aSize <= arena_maxclass) {
-    aArena = aArena ? aArena : choose_arena(aSize);
-    return aArena->Malloc(aSize, aZero);
+    return choose_arena(aSize)->Malloc(aSize, aZero);
   }
   return huge_malloc(aSize, aZero);
 }
@@ -3399,100 +3398,99 @@ arena_t::Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize)
   return ret;
 }
 
-static inline void*
-ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
+static inline void *
+ipalloc(size_t alignment, size_t size)
 {
-  void* ret;
-  size_t ceil_size;
+	void *ret;
+	size_t ceil_size;
 
-  /*
-   * Round size up to the nearest multiple of alignment.
-   *
-   * This done, we can take advantage of the fact that for each small
-   * size class, every object is aligned at the smallest power of two
-   * that is non-zero in the base two representation of the size.  For
-   * example:
-   *
-   *   Size |   Base 2 | Minimum alignment
-   *   -----+----------+------------------
-   *     96 |  1100000 |  32
-   *    144 | 10100000 |  32
-   *    192 | 11000000 |  64
-   *
-   * Depending on runtime settings, it is possible that arena_malloc()
-   * will further round up to a power of two, but that never causes
-   * correctness issues.
-   */
-  ceil_size = ALIGNMENT_CEILING(aSize, aAlignment);
-  /*
-   * (ceil_size < aSize) protects against the combination of maximal
-   * alignment and size greater than maximal alignment.
-   */
-  if (ceil_size < aSize) {
-    /* size_t overflow. */
-    return nullptr;
-  }
+	/*
+	 * Round size up to the nearest multiple of alignment.
+	 *
+	 * This done, we can take advantage of the fact that for each small
+	 * size class, every object is aligned at the smallest power of two
+	 * that is non-zero in the base two representation of the size.  For
+	 * example:
+	 *
+	 *   Size |   Base 2 | Minimum alignment
+	 *   -----+----------+------------------
+	 *     96 |  1100000 |  32
+	 *    144 | 10100000 |  32
+	 *    192 | 11000000 |  64
+	 *
+	 * Depending on runtime settings, it is possible that arena_malloc()
+	 * will further round up to a power of two, but that never causes
+	 * correctness issues.
+	 */
+	ceil_size = ALIGNMENT_CEILING(size, alignment);
+	/*
+	 * (ceil_size < size) protects against the combination of maximal
+	 * alignment and size greater than maximal alignment.
+	 */
+	if (ceil_size < size) {
+		/* size_t overflow. */
+		return nullptr;
+	}
 
-  if (ceil_size <= pagesize || (aAlignment <= pagesize
-      && ceil_size <= arena_maxclass)) {
-    aArena = aArena ? aArena : choose_arena(aSize);
-    ret = aArena->Malloc(ceil_size, false);
-  } else {
-    size_t run_size;
+	if (ceil_size <= pagesize || (alignment <= pagesize
+	    && ceil_size <= arena_maxclass))
+		ret = choose_arena(size)->Malloc(ceil_size, false);
+	else {
+		size_t run_size;
 
-    /*
-     * We can't achieve sub-page alignment, so round up alignment
-     * permanently; it makes later calculations simpler.
-     */
-    aAlignment = PAGE_CEILING(aAlignment);
-    ceil_size = PAGE_CEILING(aSize);
-    /*
-     * (ceil_size < aSize) protects against very large sizes within
-     * pagesize of SIZE_T_MAX.
-     *
-     * (ceil_size + aAlignment < ceil_size) protects against the
-     * combination of maximal alignment and ceil_size large enough
-     * to cause overflow.  This is similar to the first overflow
-     * check above, but it needs to be repeated due to the new
-     * ceil_size value, which may now be *equal* to maximal
-     * alignment, whereas before we only detected overflow if the
-     * original size was *greater* than maximal alignment.
-     */
-    if (ceil_size < aSize || ceil_size + aAlignment < ceil_size) {
-      /* size_t overflow. */
-      return nullptr;
-    }
+		/*
+		 * We can't achieve sub-page alignment, so round up alignment
+		 * permanently; it makes later calculations simpler.
+		 */
+		alignment = PAGE_CEILING(alignment);
+		ceil_size = PAGE_CEILING(size);
+		/*
+		 * (ceil_size < size) protects against very large sizes within
+		 * pagesize of SIZE_T_MAX.
+		 *
+		 * (ceil_size + alignment < ceil_size) protects against the
+		 * combination of maximal alignment and ceil_size large enough
+		 * to cause overflow.  This is similar to the first overflow
+		 * check above, but it needs to be repeated due to the new
+		 * ceil_size value, which may now be *equal* to maximal
+		 * alignment, whereas before we only detected overflow if the
+		 * original size was *greater* than maximal alignment.
+		 */
+		if (ceil_size < size || ceil_size + alignment < ceil_size) {
+			/* size_t overflow. */
+			return nullptr;
+		}
 
-    /*
-     * Calculate the size of the over-size run that arena_palloc()
-     * would need to allocate in order to guarantee the alignment.
-     */
-    if (ceil_size >= aAlignment) {
-      run_size = ceil_size + aAlignment - pagesize;
-    } else {
-      /*
-       * It is possible that (aAlignment << 1) will cause
-       * overflow, but it doesn't matter because we also
-       * subtract pagesize, which in the case of overflow
-       * leaves us with a very large run_size.  That causes
-       * the first conditional below to fail, which means
-       * that the bogus run_size value never gets used for
-       * anything important.
-       */
-      run_size = (aAlignment << 1) - pagesize;
-    }
+		/*
+		 * Calculate the size of the over-size run that arena_palloc()
+		 * would need to allocate in order to guarantee the alignment.
+		 */
+		if (ceil_size >= alignment)
+			run_size = ceil_size + alignment - pagesize;
+		else {
+			/*
+			 * It is possible that (alignment << 1) will cause
+			 * overflow, but it doesn't matter because we also
+			 * subtract pagesize, which in the case of overflow
+			 * leaves us with a very large run_size.  That causes
+			 * the first conditional below to fail, which means
+			 * that the bogus run_size value never gets used for
+			 * anything important.
+			 */
+			run_size = (alignment << 1) - pagesize;
+		}
 
-    if (run_size <= arena_maxclass) {
-      aArena = aArena ? aArena : choose_arena(aSize);
-      ret = aArena->Palloc(aAlignment, ceil_size, run_size);
-    } else if (aAlignment <= chunksize)
-      ret = huge_malloc(ceil_size, false);
-    else
-      ret = huge_palloc(ceil_size, aAlignment, false);
-  }
+		if (run_size <= arena_maxclass) {
+			ret = choose_arena(size)->Palloc(alignment, ceil_size,
+			    run_size);
+		} else if (alignment <= chunksize)
+			ret = huge_malloc(ceil_size, false);
+		else
+			ret = huge_palloc(ceil_size, alignment, false);
+	}
 
-  MOZ_ASSERT((uintptr_t(ret) & (aAlignment - 1)) == 0);
-  return ret;
+	MOZ_ASSERT(((uintptr_t)ret & (alignment - 1)) == 0);
+	return (ret);
 }
 
 /* Return the size of the allocation pointed to by ptr. */
@@ -3950,81 +3948,74 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 	}
 }
 
-static void*
-arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
+static void *
+arena_ralloc(void *ptr, size_t size, size_t oldsize)
 {
-  void* ret;
-  size_t copysize;
+	void *ret;
+	size_t copysize;
 
-  /* Try to avoid moving the allocation. */
-  if (aSize < small_min) {
-    if (aOldSize < small_min &&
-        ffs((int)(pow2_ceil(aSize) >> (TINY_MIN_2POW + 1))) ==
-        ffs((int)(pow2_ceil(aOldSize) >> (TINY_MIN_2POW + 1)))) {
-      goto IN_PLACE; /* Same size class. */
-    }
-  } else if (aSize <= small_max) {
-    if (aOldSize >= small_min && aOldSize <= small_max &&
-        (QUANTUM_CEILING(aSize) >> opt_quantum_2pow) ==
-        (QUANTUM_CEILING(aOldSize) >> opt_quantum_2pow)) {
-      goto IN_PLACE; /* Same size class. */
-    }
-  } else if (aSize <= bin_maxclass) {
-    if (aOldSize > small_max && aOldSize <= bin_maxclass &&
-        pow2_ceil(aSize) == pow2_ceil(aOldSize)) {
-      goto IN_PLACE; /* Same size class. */
-    }
-  } else if (aOldSize > bin_maxclass && aOldSize <= arena_maxclass) {
-    MOZ_ASSERT(aSize > bin_maxclass);
-    if (arena_ralloc_large(aPtr, aSize, aOldSize) == false) {
-      return aPtr;
-    }
-  }
+	/* Try to avoid moving the allocation. */
+	if (size < small_min) {
+		if (oldsize < small_min &&
+		    ffs((int)(pow2_ceil(size) >> (TINY_MIN_2POW + 1)))
+		    == ffs((int)(pow2_ceil(oldsize) >> (TINY_MIN_2POW + 1))))
+			goto IN_PLACE; /* Same size class. */
+	} else if (size <= small_max) {
+		if (oldsize >= small_min && oldsize <= small_max &&
+		    (QUANTUM_CEILING(size) >> opt_quantum_2pow)
+		    == (QUANTUM_CEILING(oldsize) >> opt_quantum_2pow))
+			goto IN_PLACE; /* Same size class. */
+	} else if (size <= bin_maxclass) {
+		if (oldsize > small_max && oldsize <= bin_maxclass &&
+		    pow2_ceil(size) == pow2_ceil(oldsize))
+			goto IN_PLACE; /* Same size class. */
+	} else if (oldsize > bin_maxclass && oldsize <= arena_maxclass) {
+		MOZ_ASSERT(size > bin_maxclass);
+		if (arena_ralloc_large(ptr, size, oldsize) == false)
+			return (ptr);
+	}
 
-  /*
-   * If we get here, then aSize and aOldSize are different enough that we
-   * need to move the object.  In that case, fall back to allocating new
-   * space and copying.
-   */
-  aArena = aArena ? aArena : choose_arena(aSize);
-  ret = aArena->Malloc(aSize, false);
-  if (!ret) {
-    return nullptr;
-  }
+	/*
+	 * If we get here, then size and oldsize are different enough that we
+	 * need to move the object.  In that case, fall back to allocating new
+	 * space and copying.
+	 */
+	ret = choose_arena(size)->Malloc(size, false);
+	if (!ret)
+		return nullptr;
 
-  /* Junk/zero-filling were already done by arena_t::Malloc(). */
-  copysize = (aSize < aOldSize) ? aSize : aOldSize;
+	/* Junk/zero-filling were already done by arena_t::Malloc(). */
+	copysize = (size < oldsize) ? size : oldsize;
 #ifdef VM_COPY_MIN
-  if (copysize >= VM_COPY_MIN) {
-    pages_copy(ret, aPtr, copysize);
-  } else
+	if (copysize >= VM_COPY_MIN)
+		pages_copy(ret, ptr, copysize);
+	else
 #endif
-  {
-    memcpy(ret, aPtr, copysize);
-  }
-  idalloc(aPtr);
-  return ret;
+		memcpy(ret, ptr, copysize);
+	idalloc(ptr);
+	return (ret);
 IN_PLACE:
-  if (aSize < aOldSize) {
-    memset((void *)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
-  } else if (opt_zero && aSize > aOldSize) {
-    memset((void *)(uintptr_t(aPtr) + aOldSize), 0, aSize - aOldSize);
-  }
-  return aPtr;
+	if (size < oldsize)
+		memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize - size);
+	else if (opt_zero && size > oldsize)
+		memset((void *)((uintptr_t)ptr + oldsize), 0, size - oldsize);
+	return (ptr);
 }
 
-static inline void*
-iralloc(void* aPtr, size_t aSize, arena_t* aArena)
+static inline void *
+iralloc(void *ptr, size_t size)
 {
-  size_t oldsize;
+	size_t oldsize;
 
-  MOZ_ASSERT(aPtr);
-  MOZ_ASSERT(aSize != 0);
+	MOZ_ASSERT(ptr);
+	MOZ_ASSERT(size != 0);
 
-  oldsize = isalloc(aPtr);
+	oldsize = isalloc(ptr);
 
-  return (aSize <= arena_maxclass) ? arena_ralloc(aPtr, aSize, oldsize, aArena)
-                                   : huge_ralloc(aPtr, aSize, oldsize);
+	if (size <= arena_maxclass)
+		return (arena_ralloc(ptr, size, oldsize));
+	else
+		return (huge_ralloc(ptr, size, oldsize));
 }
 
 bool
@@ -4690,7 +4681,7 @@ MozJemalloc::malloc(size_t aSize)
     aSize = 1;
   }
 
-  ret = imalloc(aSize, /* zero = */ false, nullptr);
+  ret = imalloc(aSize, /* zero = */ false);
 
 RETURN:
   if (!ret) {
@@ -4716,7 +4707,7 @@ MozJemalloc::memalign(size_t aAlignment, size_t aSize)
   }
 
   aAlignment = aAlignment < sizeof(void*) ? sizeof(void*) : aAlignment;
-  ret = ipalloc(aAlignment, aSize, nullptr);
+  ret = ipalloc(aAlignment, aSize);
 
   return ret;
 }
@@ -4748,7 +4739,7 @@ MozJemalloc::calloc(size_t aNum, size_t aSize)
     goto RETURN;
   }
 
-  ret = imalloc(num_size, /* zero = */ true, nullptr);
+  ret = imalloc(num_size, /* zero = */ true);
 
 RETURN:
   if (!ret) {
@@ -4770,7 +4761,7 @@ MozJemalloc::realloc(void* aPtr, size_t aSize)
   if (aPtr) {
     MOZ_ASSERT(malloc_initialized);
 
-    ret = iralloc(aPtr, aSize, nullptr);
+    ret = iralloc(aPtr, aSize);
 
     if (!ret) {
       errno = ENOMEM;
@@ -4779,7 +4770,7 @@ MozJemalloc::realloc(void* aPtr, size_t aSize)
     if (malloc_init()) {
       ret = nullptr;
     } else {
-      ret = imalloc(aSize, /* zero = */ false, nullptr);
+      ret = imalloc(aSize, /* zero = */ false);
     }
 
     if (!ret) {
