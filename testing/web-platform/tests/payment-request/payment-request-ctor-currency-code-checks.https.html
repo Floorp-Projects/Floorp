@@ -194,7 +194,7 @@ test(() => {
       shippingOptions: [shippingOption],
     };
     try {
-      new PaymentRequest(defaultMethods, details, { requestShipping: true });
+      new PaymentRequest(defaultMethods, details);
     } catch (err) {
       assert_unreached(
         `Unexpected exception with valid shippingOption currency code "${validCurrency}": ${err.message}.`
@@ -204,7 +204,7 @@ test(() => {
   }
   try {
     const details = Object.assign({}, defaultDetails, { shippingOptions });
-    new PaymentRequest(defaultMethods, details, { requestShipping: true });
+    new PaymentRequest(defaultMethods, details);
   } catch (err) {
     assert_unreached(
       `Unexpected error with multiple valid shppingOptions: ${err.message}.`
@@ -228,7 +228,7 @@ test(() => {
     assert_throws(
       RANGE_ERROR,
       () => {
-        new PaymentRequest(defaultMethods, details, { requestShipping: true });
+        new PaymentRequest(defaultMethods, details);
       },
       `Expected RangeError with invalid shippingOption currency code "${invalidCurrency}".`
     );

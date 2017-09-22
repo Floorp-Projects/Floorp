@@ -10,7 +10,6 @@ import testloader
 import wptcommandline
 import wptlogging
 import wpttest
-from font import FontInstaller
 from testrunner import ManagerGroup
 from browsers.base import NullBrowser
 
@@ -142,12 +141,6 @@ def run_tests(config, test_paths, product, **kwargs):
 
         check_args(**kwargs)
 
-        if kwargs["install_fonts"]:
-            env_extras.append(FontInstaller(
-                font_dir=kwargs["font_dir"],
-                ahem=os.path.join(kwargs["tests_root"], "fonts/Ahem.ttf")
-            ))
-
         if "test_loader" in kwargs:
             run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=None,
                                             extras=run_info_extras(**kwargs))
@@ -258,6 +251,7 @@ def run_tests(config, test_paths, product, **kwargs):
                 if repeat_until_unexpected and unexpected_total > 0:
                     break
                 logger.suite_end()
+
     return unexpected_total == 0
 
 def start(**kwargs):

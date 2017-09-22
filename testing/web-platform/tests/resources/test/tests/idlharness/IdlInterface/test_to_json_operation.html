@@ -13,15 +13,11 @@
 <script>
     "use strict";
     function wrap(obj) {
-        function F(obj) {
-            this._obj = obj;
+        return {
+            toJSON: function() {
+                return obj;
+            }
         }
-
-        F.prototype.toJSON = function() {
-            return this._obj;
-        }
-
-        return new F(obj);
     }
 
     var i, obj;
@@ -117,21 +113,21 @@
                 "status_string": "FAIL"
             },
             {
-                "message": "assert_unreached: property \"bar\" should not be present in the output of C.prototype.toJSON() Reached unreachable code",
+                "message": "assert_unreached: property bar should not be present in the output of C.prototype.toJSON() Reached unreachable code",
                 "name": "Test default toJSON operation of C",
                 "properties": {},
                 "stack": "(implementation-defined)",
                 "status_string": "FAIL"
             },
             {
-                "message": "assert_true: property \"foo\" should be present in the output of D.prototype.toJSON() expected true got false",
+                "message": "assert_true: property foo should be present in the output of D.prototype.toJSON() expected true got false",
                 "name": "Test default toJSON operation of D",
                 "properties": {},
                 "stack": "(implementation-defined)",
                 "status_string": "FAIL"
             },
             {
-                "message": "assert_unreached: property \"baz\" should not be present in the output of E.prototype.toJSON() Reached unreachable code",
+                "message": "assert_unreached: property baz should not be present in the output of E.prototype.toJSON() Reached unreachable code",
                 "name": "Test default toJSON operation of E",
                 "properties": {},
                 "stack": "(implementation-defined)",

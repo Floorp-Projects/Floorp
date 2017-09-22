@@ -529,8 +529,7 @@ sub build_test() {
   $fileName =~ s/\s*$//;
   $fileName =~ s/\///g;
   $fileName =~ s/\s+/_/g;
-  $fileName =~ s/[,=]/_/g;
-  $fileName =~ s/['"]//g;
+  $fileName =~ s/[",=]/_/g;
 
   my $count = 2;
   if ($testNames->{$fileName}) {
@@ -550,7 +549,6 @@ sub build_test() {
 <html>
   <head>
     <title>$title</title>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>

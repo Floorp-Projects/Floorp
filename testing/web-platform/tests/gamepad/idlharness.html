@@ -26,8 +26,8 @@ interface Gamepad {
     readonly    attribute boolean             connected;
     readonly    attribute DOMHighResTimeStamp timestamp;
     readonly    attribute GamepadMappingType  mapping;
-    readonly    attribute FrozenArray<double> axes;
-    readonly    attribute FrozenArray<GamepadButton> buttons;
+    readonly    attribute double[]            axes;
+    readonly    attribute GamepadButton[]     buttons;
 };
 
 enum GamepadMappingType {
