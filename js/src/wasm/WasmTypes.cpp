@@ -681,21 +681,30 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     MOZ_ASSERT(begin_ <= end_);
 #ifdef DEBUG
     switch (kind_) {
-      case Entry:
-      case DebugTrap:
       case FarJumpIsland:
-      case Inline:
+      case OutOfBoundsExit:
+      case UnalignedExit:
       case Throw:
       case Interrupt:
         break;
-      case Function:
-      case TrapExit:
-      case ImportJitExit:
-      case ImportInterpExit:
-      case BuiltinThunk:
+      default:
         MOZ_CRASH("should use more specific constructor");
     }
 #endif
+}
+
+CodeRange::CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets)
+  : begin_(offsets.begin),
+    ret_(0),
+    end_(offsets.end),
+    funcIndex_(funcIndex),
+    funcLineOrBytecode_(0),
+    funcBeginToNormalEntry_(0),
+    funcBeginToTierEntry_(0),
+    kind_(kind)
+{
+    MOZ_ASSERT(kind == Entry);
+    MOZ_ASSERT(begin_ <= end_);
 }
 
 CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
@@ -713,20 +722,42 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
 #ifdef DEBUG
     switch (kind_) {
       case TrapExit:
-      case ImportJitExit:
-      case ImportInterpExit:
+      case DebugTrap:
       case BuiltinThunk:
         break;
-      case Entry:
-      case DebugTrap:
-      case FarJumpIsland:
-      case Inline:
-      case Throw:
-      case Interrupt:
-      case Function:
+      default:
         MOZ_CRASH("should use more specific constructor");
     }
 #endif
+}
+
+CodeRange::CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets offsets)
+  : begin_(offsets.begin),
+    ret_(offsets.ret),
+    end_(offsets.end),
+    funcIndex_(funcIndex),
+    funcLineOrBytecode_(0),
+    funcBeginToNormalEntry_(0),
+    funcBeginToTierEntry_(0),
+    kind_(kind)
+{
+    MOZ_ASSERT(isImportExit());
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
+}
+
+CodeRange::CodeRange(Trap trap, CallableOffsets offsets)
+  : begin_(offsets.begin),
+    ret_(offsets.ret),
+    end_(offsets.end),
+    trap_(trap),
+    funcLineOrBytecode_(0),
+    funcBeginToNormalEntry_(0),
+    funcBeginToTierEntry_(0),
+    kind_(TrapExit)
+{
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)

@@ -187,7 +187,7 @@ class MacroAssemblerNone : public Assembler
     size_t numCodeLabels() const { MOZ_CRASH(); }
     CodeLabel codeLabel(size_t) { MOZ_CRASH(); }
 
-    bool asmMergeWith(const MacroAssemblerNone&) { MOZ_CRASH(); }
+    bool appendRawCode(const uint8_t* code, size_t numBytes) { MOZ_CRASH(); }
 
     void trace(JSTracer*) { MOZ_CRASH(); }
     static void TraceJumpRelocations(JSTracer*, JitCode*, CompactBufferReader&) { MOZ_CRASH(); }

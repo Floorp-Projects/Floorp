@@ -403,6 +403,12 @@ class AssemblerX86Shared : public AssemblerShared
                jumpRelocations_.oom() ||
                dataRelocations_.oom();
     }
+    bool reserve(size_t size) {
+        return masm.reserve(size);
+    }
+    bool swapBuffer(wasm::Bytes& other) {
+        return masm.swapBuffer(other);
+    }
 
     void setPrinter(Sprinter* sp) {
         masm.setPrinter(sp);
@@ -413,12 +419,6 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     void executableCopy(void* buffer);
-    bool asmMergeWith(const AssemblerX86Shared& other) {
-        MOZ_ASSERT(other.jumps_.length() == 0);
-        if (!AssemblerShared::asmMergeWith(masm.size(), other))
-            return false;
-        return masm.appendBuffer(other.masm);
-    }
     void processCodeLabels(uint8_t* rawCode);
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);

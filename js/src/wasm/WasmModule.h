@@ -35,12 +35,13 @@ struct CompileArgs;
 // LinkData contains all the metadata necessary to patch all the locations
 // that depend on the absolute address of a CodeSegment.
 //
-// LinkData is built incrementing by ModuleGenerator and then stored immutably
-// in Module.
+// LinkData is built incrementally by ModuleGenerator and then stored immutably
+// in Module. LinkData is distinct from Metadata in that LinkData is owned and
+// destroyed by the Module since it is not needed after instantiation; Metadata
+// is needed at runtime.
 
 struct LinkDataTierCacheablePod
 {
-    uint32_t functionCodeLength;
     uint32_t interruptOffset;
     uint32_t outOfBoundsOffset;
     uint32_t unalignedAccessOffset;

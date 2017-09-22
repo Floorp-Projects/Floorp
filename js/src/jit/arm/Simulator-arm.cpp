@@ -1565,21 +1565,19 @@ Simulator::startInterrupt(WasmActivation* activation)
 void
 Simulator::handleWasmInterrupt()
 {
-    void* pc = (void*)get_pc();
+    uint8_t* pc = (uint8_t*)get_pc();
     uint8_t* fp = (uint8_t*)get_register(r11);
 
-    WasmActivation* activation = wasm::ActivationIfInnermost(cx_);
-    const wasm::CodeSegment* segment;
-    const wasm::Code* code = activation->compartment()->wasm.lookupCode(pc, &segment);
-    if (!code || !segment->containsFunctionPC(pc))
+    const wasm::CodeSegment* cs = nullptr;
+    if (!wasm::InInterruptibleCode(cx_, pc, &cs))
         return;
 
     // fp can be null during the prologue/epilogue of the entry function.
     if (!fp)
         return;
 
-    startInterrupt(activation);
-    set_pc(int32_t(segment->interruptCode()));
+    startInterrupt(wasm::ActivationIfInnermost(cx_));
+    set_pc(int32_t(cs->interruptCode()));
 }
 
 // WebAssembly memories contain an extra region of guard pages (see

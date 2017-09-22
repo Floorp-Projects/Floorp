@@ -90,10 +90,10 @@ MacroAssembler::call(const wasm::CallSiteDesc& desc, const Register reg)
 }
 
 void
-MacroAssembler::call(const wasm::CallSiteDesc& desc, uint32_t funcDefIndex)
+MacroAssembler::call(const wasm::CallSiteDesc& desc, uint32_t funcIndex)
 {
     CodeOffset l = callWithPatch();
-    append(desc, l, funcDefIndex);
+    append(desc, l, funcIndex);
 }
 
 void
