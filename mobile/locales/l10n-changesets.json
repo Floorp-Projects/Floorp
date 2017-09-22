@@ -29,7 +29,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "d05e303b66a6"
+        "revision": "4da884789746"
     }, 
     "az": {
         "platforms": [
@@ -53,7 +53,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "f31373164df3"
+        "revision": "512e836e3e7c"
     }, 
     "bn-BD": {
         "platforms": [
