@@ -95,6 +95,8 @@ public class ScreenGrabTest {
                         .setBody(TestHelper.readTestAsset("rabbit.jpg")));
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("download.jpg")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("download.jpg")));
 
                 webServer.start();
             } catch (IOException e) {
@@ -260,12 +262,16 @@ public class ScreenGrabTest {
         TestHelper.AddtoHSCancelBtn.waitForExists(waitingTime);
         Screengrab.screenshot("AddtoHSDialog");
         TestHelper.pressBackKey();
-        TestHelper.pressBackKey();
+
+        // in certain cases, keyboard may not pop up in time. if it does, press back again
+        if (TestHelper.AddtoHSCancelBtn.exists()) {
+            TestHelper.pressBackKey();
+        }
     }
 
     private void takeScreenshotOfNotification(UiDevice device) {
         device.openNotification();
-        TestHelper.notificationBarDeleteItem.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.notificationBarDeleteItem.waitForExists(waitingTime));
         Screengrab.screenshot("DeleteHistory_NotificationBar");
         device.pressBack();
     }
@@ -363,7 +369,9 @@ public class ScreenGrabTest {
         multiTabBtn.click();
         eraseHistoryBtn.waitForExists(waitingTime);
         Screengrab.screenshot("Multi_Tab_Menu");
-        eraseHistoryBtn.click();
+        TestHelper.pressBackKey();
+        device.openNotification();
+        TestHelper.notificationBarDeleteItem.click();
     }
 
     private void takeScreenshotOfGooglePlayDialog(UiDevice device) throws UiObjectNotFoundException {
