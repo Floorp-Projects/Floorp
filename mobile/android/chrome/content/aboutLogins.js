@@ -408,6 +408,9 @@ var Logins = {
               case 0:
                 // Corresponds to "confirm" button.
                 Services.logins.removeLogin(login);
+
+                // Show a snackbar to notify the login record has been deleted.
+                Snackbars.show(gStringBundle.GetStringFromName("loginsDetails.deleted"), Snackbars.LENGTH_LONG);
             }
           });
       }
