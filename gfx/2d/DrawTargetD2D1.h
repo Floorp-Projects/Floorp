@@ -291,7 +291,7 @@ private:
   // this causes an infinite recursion inside D2D as it tries to resolve the bounds.
   // If we resolve the current command list before this happens
   // we can avoid the subsequent hang. (See bug 1293586)
-  bool mDidComplexBlendWithListInList;
+  uint32_t mComplexBlendsWithListInList;
 
   static StaticRefPtr<ID2D1Factory1> mFactory;
   // This value is uesed to verify if the DrawTarget is created by a stale device.
