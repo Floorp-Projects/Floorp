@@ -243,6 +243,15 @@ struct VectorImpl<T, N, AP, true>
     if (aV.usingInlineStorage() || aV.mLength == aV.mTail.mCapacity) {
       return;
     }
+    if (!aV.mLength) {
+      aV.free_(aV.mBegin);
+      aV.mBegin = aV.inlineStorage();
+      aV.mTail.mCapacity = aV.kInlineCapacity;
+#ifdef DEBUG
+      aV.mTail.mReserved = 0;
+#endif
+      return;
+    }
     T* newbuf =
       aV.template pod_realloc<T>(aV.mBegin, aV.mTail.mCapacity, aV.mLength);
     if (MOZ_UNLIKELY(!newbuf)) {
@@ -250,6 +259,9 @@ struct VectorImpl<T, N, AP, true>
     }
     aV.mBegin = newbuf;
     aV.mTail.mCapacity = aV.mLength;
+#ifdef DEBUG
+    aV.mTail.mReserved = aV.mLength;
+#endif
   }
 };
 
