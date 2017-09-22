@@ -15,10 +15,6 @@ function test() {
   // See Bug 525610.
   requestLongerTimeout(2);
 
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils in context");
-  ok(PlacesUIUtils, "PlacesUIUtils in context");
-
   // Open Library, we will check the left pane.
   openLibrary(function(library) {
     gLibrary = library;
