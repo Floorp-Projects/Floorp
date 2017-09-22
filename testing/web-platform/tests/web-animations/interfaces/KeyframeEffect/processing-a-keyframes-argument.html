@@ -57,7 +57,7 @@ function GetTestKeyframeSequence(testProp) {
   return [ new TestKeyframe(testProp) ]
 }
 
-gNonAnimatableProps.forEach(function(prop) {
+for (const prop of gNonAnimatableProps) {
   test(function(t) {
     const testKeyframe = new TestKeyframe(prop);
 
@@ -66,9 +66,9 @@ gNonAnimatableProps.forEach(function(prop) {
     assert_equals(testKeyframe.propAccessCount, 0, 'Accessor not called');
   }, 'non-animatable property \'' + prop + '\' is not accessed when using'
      + ' a property-indexed keyframe object');
-});
+}
 
-gNonAnimatableProps.forEach(function(prop) {
+for (const prop of gNonAnimatableProps) {
   test(function(t) {
     const testKeyframes = GetTestKeyframeSequence(prop);
 
@@ -77,7 +77,7 @@ gNonAnimatableProps.forEach(function(prop) {
     assert_equals(testKeyframes[0].propAccessCount, 0, 'Accessor not called');
   }, 'non-animatable property \'' + prop + '\' is not accessed when using'
      + ' a keyframe sequence');
-});
+}
 
 // Test equivalent forms of property indexed and sequenced keyframe syntax
 
@@ -161,11 +161,12 @@ const gEquivalentSyntaxTests = [
   },
 ];
 
-gEquivalentSyntaxTests.forEach(function({description, indexedKeyframes, sequencedKeyframes}) {
+for (const {description, indexedKeyframes, sequencedKeyframes} of
+     gEquivalentSyntaxTests) {
   test(function(t) {
     assertEquivalentKeyframeSyntax(indexedKeyframes, sequencedKeyframes);
-  }, 'Equivalent property indexed and sequenced keyframes: ' + description);
-});
+  }, `Equivalent property indexed and sequenced keyframes: ${description}`);
+}
 
 // Test handling of custom iterable objects.
 
