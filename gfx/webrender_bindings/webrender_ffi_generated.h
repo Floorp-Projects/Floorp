@@ -729,11 +729,13 @@ struct FontKey {
 
 typedef FontKey WrFontKey;
 
-struct FontInstanceOptions {
+struct WrFontInstanceOptions {
   FontRenderMode render_mode;
+  bool synthetic_italics;
 
-  bool operator==(const FontInstanceOptions& aOther) const {
-    return render_mode == aOther.render_mode;
+  bool operator==(const WrFontInstanceOptions& aOther) const {
+    return render_mode == aOther.render_mode &&
+           synthetic_italics == aOther.synthetic_italics;
   }
 };
 
@@ -1221,7 +1223,7 @@ void wr_resource_updates_add_font_instance(ResourceUpdates *aResources,
                                            WrFontInstanceKey aKey,
                                            WrFontKey aFontKey,
                                            float aGlyphSize,
-                                           const FontInstanceOptions *aOptions,
+                                           const WrFontInstanceOptions *aOptions,
                                            const FontInstancePlatformOptions *aPlatformOptions,
                                            WrVecU8 *aVariations)
 WR_FUNC;

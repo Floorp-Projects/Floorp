@@ -176,6 +176,22 @@ impl MutByteSlice {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
+pub struct WrFontInstanceOptions {
+    pub render_mode: FontRenderMode,
+    pub synthetic_italics: bool,
+}
+
+impl Into<FontInstanceOptions> for WrFontInstanceOptions {
+    fn into(self) -> FontInstanceOptions {
+        FontInstanceOptions {
+            render_mode: Some(self.render_mode),
+            synthetic_italics: self.synthetic_italics,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrImageMask {
     image: WrImageKey,
     rect: LayoutRect,
@@ -973,15 +989,18 @@ pub extern "C" fn wr_resource_updates_add_font_instance(
     key: WrFontInstanceKey,
     font_key: WrFontKey,
     glyph_size: f32,
-    options: *const FontInstanceOptions,
+    options: *const WrFontInstanceOptions,
     platform_options: *const FontInstancePlatformOptions,
     variations: &mut WrVecU8,
 ) {
+    let instance_options: Option<FontInstanceOptions> = unsafe {
+        options.as_ref().map(|opts|{ (*opts).into() })
+    };
     resources.add_font_instance(
         key,
         font_key,
         Au::from_f32_px(glyph_size),
-        unsafe { options.as_ref().cloned() },
+        instance_options,
         unsafe { platform_options.as_ref().cloned() },
         variations.convert_into_vec::<FontVariation>(),
     );
