@@ -1012,16 +1012,11 @@ class AssemblerX86Shared : public AssemblerShared
         label->reset();
     }
 
-    static void Bind(uint8_t* raw, CodeOffset* label, const void* address) {
-        if (label->bound()) {
-            intptr_t offset = label->offset();
-            X86Encoding::SetPointer(raw + offset, address);
+    static void Bind(uint8_t* raw, CodeOffset label, CodeOffset target) {
+        if (label.bound()) {
+            intptr_t offset = label.offset();
+            X86Encoding::SetPointer(raw + offset, raw + target.offset());
         }
-    }
-
-    // See Bind and X86Encoding::setPointer.
-    size_t labelToPatchOffset(CodeOffset label) {
-        return label.offset() - sizeof(void*);
     }
 
     void ret() {
@@ -3654,10 +3649,6 @@ class AssemblerX86Shared : public AssemblerShared
     }
     static void PatchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData, ImmPtr expectedData) {
         PatchDataWithValueCheck(data, PatchedImmPtr(newData.value), PatchedImmPtr(expectedData.value));
-    }
-
-    static void PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm) {
-        MOZ_CRASH("Unused.");
     }
 
     static uint32_t NopSize() {

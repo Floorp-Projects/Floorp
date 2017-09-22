@@ -58,17 +58,8 @@ struct LinkDataTier : LinkDataTierCacheablePod
     const LinkDataTierCacheablePod& pod() const { return *this; }
 
     struct InternalLink {
-        enum Kind {
-            RawPointer,
-            CodeLabel,
-            InstructionImmediate
-        };
-        MOZ_INIT_OUTSIDE_CTOR uint32_t patchAtOffset;
-        MOZ_INIT_OUTSIDE_CTOR uint32_t targetOffset;
-
-        InternalLink() = default;
-        explicit InternalLink(Kind kind);
-        bool isRawPointerPatch();
+        uint32_t patchAtOffset;
+        uint32_t targetOffset;
     };
     typedef Vector<InternalLink, 0, SystemAllocPolicy> InternalLinkVector;
 
