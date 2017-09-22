@@ -42,7 +42,7 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 @RunWith(AndroidJUnit4.class)
 public class ScreenGrabTest {
 
-    private static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 2;
+    private static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 10;
     private static final String TEST_PATH = "/";
 
     private enum ErrorTypes {
