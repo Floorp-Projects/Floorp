@@ -1805,9 +1805,8 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  explicit AsyncScroll(nsPoint aStartPos)
-    : mAnimationPhysics(aStartPos)
-    , mCallee(nullptr)
+  explicit AsyncScroll()
+    : mCallee(nullptr)
   {
     Telemetry::SetHistogramRecordingEnabled(
       Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, true);
@@ -1822,24 +1821,42 @@ private:
   }
 
 public:
-  void InitSmoothScroll(TimeStamp aTime, nsPoint aDestination,
+  void InitSmoothScroll(TimeStamp aTime,
+                        nsPoint aInitialPosition, nsPoint aDestination,
                         nsIAtom *aOrigin, const nsRect& aRange,
                         const nsSize& aCurrentVelocity);
   void Init(const nsRect& aRange) {
+    mAnimationPhysics = nullptr;
     mRange = aRange;
   }
 
-  ScrollAnimationPhysics mAnimationPhysics;
+  bool IsSmoothScroll() { return mAnimationPhysics != nullptr; }
+
+  bool IsFinished(const TimeStamp& aTime) const {
+    MOZ_RELEASE_ASSERT(mAnimationPhysics);
+    return mAnimationPhysics->IsFinished(aTime);
+  }
+
+  nsPoint PositionAt(const TimeStamp& aTime) const {
+    MOZ_RELEASE_ASSERT(mAnimationPhysics);
+    return mAnimationPhysics->PositionAt(aTime);
+  }
+
+  nsSize VelocityAt(const TimeStamp& aTime) const {
+    MOZ_RELEASE_ASSERT(mAnimationPhysics);
+    return mAnimationPhysics->VelocityAt(aTime);
+  }
 
   // Most recent scroll origin.
   RefPtr<nsIAtom> mOrigin;
 
   // Allowed destination positions around mDestination
   nsRect mRange;
-  bool mIsSmoothScroll;
 
 private:
   void InitPreferences(TimeStamp aTime, nsIAtom *aOrigin);
+
+  UniquePtr<ScrollAnimationPhysics> mAnimationPhysics;
 
 // The next section is observer/callback management
 // Bodies of WillRefresh and RefreshDriver contain ScrollFrameHelper specific code.
@@ -1893,28 +1910,13 @@ private:
  * Calculate duration, possibly dynamically according to events rate and event origin.
  * (also maintain previous timestamps - which are only used here).
  */
-void
-ScrollFrameHelper::AsyncScroll::InitPreferences(TimeStamp aTime, nsIAtom *aOrigin)
+static ScrollAnimationPhysicsSettings
+ComputeAnimationSettingsForOrigin(nsIAtom *aOrigin)
 {
-  if (!aOrigin || aOrigin == nsGkAtoms::restore) {
-    // We don't have special prefs for "restore", just treat it as "other".
-    // "restore" scrolls are (for now) always instant anyway so unless something
-    // changes we should never have aOrigin == nsGkAtoms::restore here.
-    aOrigin = nsGkAtoms::other;
-  }
-  // Likewise we should never get APZ-triggered scrolls here, and if that changes
-  // something is likely broken somewhere.
-  MOZ_ASSERT(aOrigin != nsGkAtoms::apz);
-
-  // Read preferences only on first iteration or for a different event origin.
-  if (!mAnimationPhysics.mIsFirstIteration && aOrigin == mOrigin) {
-    return;
-  }
-
-  mOrigin = aOrigin;
-  mAnimationPhysics.mOriginMinMS = mAnimationPhysics.mOriginMaxMS = 0;
+  int32_t minMS = 0;
+  int32_t maxMS = 0;
   bool isOriginSmoothnessEnabled = false;
-  mAnimationPhysics.mIntervalRatio = 1;
+  double intervalRatio = 1;
 
   // Default values for all preferences are defined in all.js
   static const int32_t kDefaultMinMS = 150, kDefaultMaxMS = 150;
@@ -1928,39 +1930,54 @@ ScrollFrameHelper::AsyncScroll::InitPreferences(TimeStamp aTime, nsIAtom *aOrigi
   if (isOriginSmoothnessEnabled) {
     nsAutoCString prefMin = prefBase + NS_LITERAL_CSTRING(".durationMinMS");
     nsAutoCString prefMax = prefBase + NS_LITERAL_CSTRING(".durationMaxMS");
-    mAnimationPhysics.mOriginMinMS = Preferences::GetInt(prefMin.get(), kDefaultMinMS);
-    mAnimationPhysics.mOriginMaxMS = Preferences::GetInt(prefMax.get(), kDefaultMaxMS);
+    minMS = Preferences::GetInt(prefMin.get(), kDefaultMinMS);
+    maxMS = Preferences::GetInt(prefMax.get(), kDefaultMaxMS);
 
     static const int32_t kSmoothScrollMaxAllowedAnimationDurationMS = 10000;
-    mAnimationPhysics.mOriginMaxMS = clamped(mAnimationPhysics.mOriginMaxMS, 0, kSmoothScrollMaxAllowedAnimationDurationMS);
-    mAnimationPhysics.mOriginMinMS = clamped(mAnimationPhysics.mOriginMinMS, 0, mAnimationPhysics.mOriginMaxMS);
+    maxMS = clamped(maxMS, 0, kSmoothScrollMaxAllowedAnimationDurationMS);
+    minMS = clamped(minMS, 0, maxMS);
   }
 
   // Keep the animation duration longer than the average event intervals
   //   (to "connect" consecutive scroll animations before the scroll comes to a stop).
   static const double kDefaultDurationToIntervalRatio = 2; // Duplicated at all.js
-  mAnimationPhysics.mIntervalRatio = Preferences::GetInt("general.smoothScroll.durationToIntervalRatio",
+  intervalRatio = Preferences::GetInt("general.smoothScroll.durationToIntervalRatio",
                                                       kDefaultDurationToIntervalRatio * 100) / 100.0;
 
   // Duration should be at least as long as the intervals -> ratio is at least 1
-  mAnimationPhysics.mIntervalRatio = std::max(1.0, mAnimationPhysics.mIntervalRatio);
+  intervalRatio = std::max(1.0, intervalRatio);
 
-  if (mAnimationPhysics.mIsFirstIteration) {
-    mAnimationPhysics.InitializeHistory(aTime);
-  }
+  return ScrollAnimationPhysicsSettings { minMS, maxMS, intervalRatio };
 }
 
 void
 ScrollFrameHelper::AsyncScroll::InitSmoothScroll(TimeStamp aTime,
+                                                 nsPoint aInitialPosition,
                                                  nsPoint aDestination,
                                                  nsIAtom *aOrigin,
                                                  const nsRect& aRange,
                                                  const nsSize& aCurrentVelocity)
 {
-  InitPreferences(aTime, aOrigin);
+  if (!aOrigin || aOrigin == nsGkAtoms::restore) {
+    // We don't have special prefs for "restore", just treat it as "other".
+    // "restore" scrolls are (for now) always instant anyway so unless something
+    // changes we should never have aOrigin == nsGkAtoms::restore here.
+    aOrigin = nsGkAtoms::other;
+  }
+  // Likewise we should never get APZ-triggered scrolls here, and if that changes
+  // something is likely broken somewhere.
+  MOZ_ASSERT(aOrigin != nsGkAtoms::apz);
+
+  // Read preferences only on first iteration or for a different event origin.
+  if (!mAnimationPhysics || aOrigin != mOrigin) {
+    mOrigin = aOrigin;
+    ScrollAnimationPhysicsSettings settings = ComputeAnimationSettingsForOrigin(mOrigin);
+    mAnimationPhysics = MakeUnique<ScrollAnimationPhysics>(aInitialPosition, settings);
+  }
+
   mRange = aRange;
 
-  mAnimationPhysics.Update(aTime, aDestination, aCurrentVelocity);
+  mAnimationPhysics->Update(aTime, aDestination, aCurrentVelocity);
 }
 
 bool
@@ -2128,9 +2145,9 @@ ScrollFrameHelper::AsyncScrollCallback(ScrollFrameHelper* aInstance,
   }
 
   nsRect range = aInstance->mAsyncScroll->mRange;
-  if (aInstance->mAsyncScroll->mIsSmoothScroll) {
-    if (!aInstance->mAsyncScroll->mAnimationPhysics.IsFinished(aTime)) {
-      nsPoint destination = aInstance->mAsyncScroll->mAnimationPhysics.PositionAt(aTime);
+  if (aInstance->mAsyncScroll->IsSmoothScroll()) {
+    if (!aInstance->mAsyncScroll->IsFinished(aTime)) {
+      nsPoint destination = aInstance->mAsyncScroll->PositionAt(aTime);
       // Allow this scroll operation to land on any pixel boundary between the
       // current position and the final allowed range.  (We don't want
       // intermediate steps to be more constrained than the final step!)
@@ -2292,8 +2309,8 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
         currentVelocity.width = sv.x;
         currentVelocity.height = sv.y;
         if (mAsyncScroll) {
-          if (mAsyncScroll->mIsSmoothScroll) {
-            currentVelocity = mAsyncScroll->mAnimationPhysics.VelocityAt(now);
+          if (mAsyncScroll->IsSmoothScroll()) {
+            currentVelocity = mAsyncScroll->VelocityAt(now);
           }
           mAsyncScroll = nullptr;
         }
@@ -2373,7 +2390,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   }
 
   if (!mAsyncScroll) {
-    mAsyncScroll = new AsyncScroll(GetScrollPosition());
+    mAsyncScroll = new AsyncScroll();
     if (!mAsyncScroll->SetRefreshObserver(this)) {
       // Observer setup failed. Scroll the normal way.
       CompleteAsyncScroll(range, aOrigin);
@@ -2381,10 +2398,9 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
     }
   }
 
-  mAsyncScroll->mIsSmoothScroll = isSmoothScroll;
-
   if (isSmoothScroll) {
-    mAsyncScroll->InitSmoothScroll(now, mDestination, aOrigin, range, currentVelocity);
+    mAsyncScroll->InitSmoothScroll(now, GetScrollPosition(), mDestination,
+                                   aOrigin, range, currentVelocity);
   } else {
     mAsyncScroll->Init(range);
   }
