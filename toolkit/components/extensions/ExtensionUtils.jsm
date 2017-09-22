@@ -67,9 +67,11 @@ function instanceOf(value, type) {
  * constructor if one is not present.
  */
 class DefaultWeakMap extends WeakMap {
-  constructor(defaultConstructor, init) {
+  constructor(defaultConstructor = undefined, init = undefined) {
     super(init);
-    this.defaultConstructor = defaultConstructor;
+    if (defaultConstructor) {
+      this.defaultConstructor = defaultConstructor;
+    }
   }
 
   get(key) {
@@ -83,9 +85,11 @@ class DefaultWeakMap extends WeakMap {
 }
 
 class DefaultMap extends Map {
-  constructor(defaultConstructor, init) {
+  constructor(defaultConstructor = undefined, init = undefined) {
     super(init);
-    this.defaultConstructor = defaultConstructor;
+    if (defaultConstructor) {
+      this.defaultConstructor = defaultConstructor;
+    }
   }
 
   get(key) {

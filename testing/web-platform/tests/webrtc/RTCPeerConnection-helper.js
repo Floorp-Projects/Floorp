@@ -61,7 +61,7 @@ function assert_is_session_description(sessionDesc) {
   }
 
   assert_not_equals(sessionDesc, undefined,
-    'Expect session description to be defined, but got undefined');
+    'Expect session description to be defined');
 
   assert_true(typeof(sessionDesc) === 'object',
     'Expect sessionDescription to be either a RTCSessionDescription or an object');
@@ -107,21 +107,27 @@ function assert_session_desc_not_equals(sessionDesc1, sessionDesc2) {
 // object with any audio, video, data media lines present
 function generateOffer(options={}) {
   const {
-    audio=false,
-    video=false,
-    data=false
+    audio = false,
+    video = false,
+    data = false,
+    pc,
   } = options;
 
-  const pc = new RTCPeerConnection();
-
-  if(data) {
+  if (data) {
     pc.createDataChannel('test');
   }
 
-  return pc.createOffer({
-    offerToReceiveAudio: audio,
-    offerToReceiveVideo: video
-  }).then(offer => {
+  const setup = {};
+
+  if (audio) {
+    setup.offerToReceiveAudio = true;
+  }
+
+  if (video) {
+    setup.offerToReceiveVideo = true;
+  }
+
+  return pc.createOffer(setup).then(offer => {
     // Guard here to ensure that the generated offer really
     // contain the number of media lines we want
     const { sdp } = offer;

@@ -340,7 +340,7 @@
         }
       }
     },
-    // nsIMemoryReporterCallback
+    // nsIHandleReportCallback
     callback: function(process, path, kind, units, amount, data) {
       if (path in this.tests) {
         this.seen++;

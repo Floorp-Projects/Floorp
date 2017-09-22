@@ -182,6 +182,10 @@ Alternatively, you may also use
 in the Windows 10 Anniversary Update build, then access your windows
 partition from there to launch `wpt` commands.
 
+Please make sure git and your text editor do not automatically convert
+line endings, as it will cause lint errors. For git, please set
+`git config core.autocrlf false` in your working tree.
+
 Certificates
 ============
 

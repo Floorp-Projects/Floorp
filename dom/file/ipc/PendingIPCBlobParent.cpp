@@ -44,7 +44,7 @@ IPCResult
 PendingIPCBlobParent::Recv__delete__(const PendingIPCBlobData& aData)
 {
   if (aData.file().type() == PendingIPCFileUnion::Tvoid_t) {
-    mBlobImpl->SetLazyData(NullString(), aData.type(), aData.size(), INT64_MAX);
+    mBlobImpl->SetLazyData(VoidString(), aData.type(), aData.size(), INT64_MAX);
   } else {
     const PendingIPCFileData& fileData =
       aData.file().get_PendingIPCFileData();

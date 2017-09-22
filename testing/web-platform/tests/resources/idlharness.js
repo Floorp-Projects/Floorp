@@ -332,7 +332,7 @@ IdlArray.prototype.is_json_type = function(type)
      */
 
     var idlType = type.idlType;
-    
+
     if (type.generic == "Promise") { return false; }
 
     //  nullable and annotated types don't need to be handled separately,
@@ -392,8 +392,11 @@ IdlArray.prototype.is_json_type = function(type)
        default:
            var thing = this.members[idlType];
            if (!thing) { throw new Error("Type " + idlType + " not found"); }
-
            if (thing instanceof IdlEnum) { return true; }
+
+           if (thing instanceof IdlTypedef) {
+               return this.is_json_type(thing.idlType);
+           }
 
            //  dictionaries where all of their members are JSON types
            if (thing instanceof IdlDictionary) {
@@ -407,7 +410,7 @@ IdlArray.prototype.is_json_type = function(type)
                }
                return Array.from(map.values()).every(this.is_json_type, this);
            }
-           
+
            //  interface types that have a toJSON operation declared on themselves or
            //  one of their inherited or consequential interfaces.
            if (thing instanceof IdlInterface) {
@@ -930,7 +933,7 @@ IdlInterface.prototype.get_inheritance_stack = function() {
      * and B.get_inheritance_stack() should return [B, C].
      *
      * Note: as dictionary inheritance is expressed identically by the AST,
-     * this works just as well for getting a stack of inherited dictionaries. 
+     * this works just as well for getting a stack of inherited dictionaries.
      */
 
     var stack = [this];
@@ -1788,10 +1791,6 @@ IdlInterface.prototype.do_member_operation_asserts = function(memberHolderObject
         })),
         "property has wrong .length");
 
-    if (member.is_to_json_regular_operation()) {
-        this.test_to_json_operation(memberHolderObject, member);
-    }
-
     // Make some suitable arguments
     var args = member.arguments.map(function(arg) {
         return create_suitable_object(arg.idlType);
@@ -1854,7 +1853,7 @@ IdlInterface.prototype.test_to_json_operation = function(memberHolderObject, mem
         test(function() {
             var json = memberHolderObject.toJSON();
             map.forEach(function(type, k) {
-                assert_true(k in json, "property " + k + " should be present in the output of " + this.name + ".prototype.toJSON()");
+                assert_true(k in json, "property " + JSON.stringify(k) + " should be present in the output of " + this.name + ".prototype.toJSON()");
                 var descriptor = Object.getOwnPropertyDescriptor(json, k);
                 assert_true(descriptor.writable, "property " + k + " should be writable");
                 assert_true(descriptor.configurable, "property " + k + " should be configurable");
@@ -1863,7 +1862,7 @@ IdlInterface.prototype.test_to_json_operation = function(memberHolderObject, mem
                 delete json[k];
             }, this);
             for (var k in json) {
-                assert_unreached("property " + k + " should not be present in the output of " + this.name + ".prototype.toJSON()");
+                assert_unreached("property " + JSON.stringify(k) + " should not be present in the output of " + this.name + ".prototype.toJSON()");
             }
         }.bind(this), "Test default toJSON operation of " + this.name);
     } else {
@@ -2065,6 +2064,7 @@ IdlInterface.prototype.test_object = function(desc)
         : "object";
 
     this.test_primary_interface_of(desc, obj, exception, expected_typeof);
+
     var current_interface = this;
     while (current_interface)
     {
@@ -2280,6 +2280,10 @@ IdlInterface.prototype.test_interface_of = function(desc, obj, exception, expect
                     cb();
                 }
             }.bind(this));
+        }
+
+        if (member.is_to_json_regular_operation()) {
+            this.test_to_json_operation(obj, member);
         }
     }
 };

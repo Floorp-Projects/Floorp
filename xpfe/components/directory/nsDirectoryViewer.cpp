@@ -931,7 +931,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           do_QueryElementAt(httpIndex->mConnectionList, 0);
       httpIndex->mConnectionList->RemoveElementAt(0);
 
-      nsCString uri = NullCString();
+      nsCString uri = VoidCString();
       if (source) {
         httpIndex->GetDestination(source, uri);
       }

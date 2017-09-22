@@ -618,6 +618,8 @@ public:
    */
   static ProducerID AllocateProducerID();
 
+  void DropImageClient();
+
 private:
   typedef mozilla::RecursiveMutex RecursiveMutex;
 
