@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -259,7 +260,8 @@ public class GeckoMenu extends ListView
                 @Override
                 public boolean onLongClick(View view) {
                     if (handleMenuItemLongClick(menuItem)) {
-                        GeckoAppShell.vibrateOnHapticFeedbackEnabled(getResources().getIntArray(R.array.long_press_vibrate_msec));
+                        GeckoAppShell.getHapticFeedbackDelegate().performHapticFeedback(
+                                HapticFeedbackConstants.LONG_PRESS);
                         return true;
                     }
                     return false;
@@ -276,7 +278,8 @@ public class GeckoMenu extends ListView
                 @Override
                 public boolean onLongClick(View view) {
                     if (handleMenuItemLongClick(menuItem)) {
-                        GeckoAppShell.vibrateOnHapticFeedbackEnabled(getResources().getIntArray(R.array.long_press_vibrate_msec));
+                        GeckoAppShell.getHapticFeedbackDelegate().performHapticFeedback(
+                                HapticFeedbackConstants.LONG_PRESS);
                         return true;
                     }
                     return false;
