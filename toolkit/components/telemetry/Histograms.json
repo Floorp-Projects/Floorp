@@ -7289,7 +7289,8 @@
       "eChannelOpen",
       "eRedirect",
       "abort",
-      "timeout"
+      "timeout",
+      "eTooLate"
     ],
     "description": "Counts of the different ways sending a Telemetry ping can fail."
   },
