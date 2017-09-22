@@ -115,7 +115,8 @@ struct OpDeleteFont {
 
 struct OpAddFontInstance {
   MaybeFontInstanceOptions options;
-  MaybeFontInstancePlatformOptions platformOptions ;
+  MaybeFontInstancePlatformOptions platformOptions;
+  OffsetRange variations;
   FontInstanceKey instanceKey;
   FontKey fontKey;
   float glyphSize;

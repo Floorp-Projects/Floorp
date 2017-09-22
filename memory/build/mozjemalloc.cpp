@@ -111,7 +111,6 @@
 #include "mozjemalloc.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Likely.h"
-#include "mozilla/MacroArgs.h"
 #include "mozilla/DoublyLinkedList.h"
 
 #ifdef ANDROID
@@ -5132,6 +5131,15 @@ MozJemalloc::jemalloc_free_dirty_pages(void)
   malloc_spin_unlock(&arenas_lock);
 }
 
+#define MALLOC_DECL(name, return_type, ...) \
+  template<> inline return_type \
+  MozJemalloc::name(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
+  { \
+    return DummyArenaAllocator<MozJemalloc>::name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+  }
+#define MALLOC_FUNCS MALLOC_FUNCS_ARENA
+#include "malloc_decls.h"
+
 /*
  * End non-standard functions.
  */
@@ -5209,26 +5217,6 @@ _malloc_postfork_child(void)
 /*
  * End library-private functions.
  */
-/******************************************************************************/
-/* Macro helpers */
-
-#define MACRO_CALL(a, b) a b
-/* Can't use macros recursively, so we need another one doing the same as above. */
-#define MACRO_CALL2(a, b) a b
-
-#define ARGS_HELPER(name, ...) MACRO_CALL2( \
-  MOZ_PASTE_PREFIX_AND_ARG_COUNT(name, ##__VA_ARGS__), \
-  (__VA_ARGS__))
-#define TYPED_ARGS0()
-#define TYPED_ARGS1(t1) t1 arg1
-#define TYPED_ARGS2(t1, t2) TYPED_ARGS1(t1), t2 arg2
-#define TYPED_ARGS3(t1, t2, t3) TYPED_ARGS2(t1, t2), t3 arg3
-
-#define ARGS0()
-#define ARGS1(t1) arg1
-#define ARGS2(t1, t2) ARGS1(t1), arg2
-#define ARGS3(t1, t2, t3) ARGS2(t1, t2), arg3
-
 /******************************************************************************/
 #ifdef MOZ_REPLACE_MALLOC
 
@@ -5348,7 +5336,6 @@ init()
     } \
     return replace_malloc_table.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
   }
-#define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
 #include "malloc_decls.h"
 
 MOZ_JEMALLOC_API struct ReplaceMallocBridge*
@@ -5395,6 +5382,13 @@ replace_malloc_init_funcs()
   if (!replace_malloc_table.valloc && replace_malloc_table.memalign) {
     replace_malloc_table.valloc = AlignedAllocator<ReplaceMalloc::memalign>::valloc;
   }
+  if (!replace_malloc_table.moz_create_arena && replace_malloc_table.malloc) {
+#define MALLOC_DECL(name, ...) \
+    replace_malloc_table.name = DummyArenaAllocator<ReplaceMalloc>::name;
+#define MALLOC_FUNCS MALLOC_FUNCS_ARENA
+#include "malloc_decls.h"
+  }
+
 #define MALLOC_DECL(name, ...) \
   if (!replace_malloc_table.name) { \
     replace_malloc_table.name = MozJemalloc::name; \
@@ -5424,7 +5418,7 @@ replace_malloc_init_funcs()
   GENERIC_MALLOC_DECL2(name, name, return_type, ##__VA_ARGS__)
 
 #define MALLOC_DECL(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
-#define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
+#define MALLOC_FUNCS (MALLOC_FUNCS_JEMALLOC | MALLOC_FUNCS_ARENA)
 #include "malloc_decls.h"
 /******************************************************************************/
 

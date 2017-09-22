@@ -342,9 +342,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsRubyTextContainerFrame* textContainer = textContainers[i];
     WritingMode rtcWM = textContainer->GetWritingMode();
-    nsLineLayout* baseLineLayout =
-        lineWM.IsOrthogonalTo(rtcWM) ? nullptr : aReflowInput.mLineLayout;
-        // Don't attach a base line layout in the inter-character case.
+    WritingMode reflowWM = lineWM.IsOrthogonalTo(rtcWM) ? rtcWM : lineWM;
     if (textContainer->IsSpanContainer()) {
       hasSpan = true;
     }
@@ -356,7 +354,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     nsLineLayout* lineLayout = new nsLineLayout(aPresContext,
                                                 reflowInput->mFloatManager,
                                                 reflowInput, nullptr,
-                                                baseLineLayout);
+                                                aReflowInput.mLineLayout);
     lineLayout->SetSuppressLineWrap(true);
     lineLayouts.AppendElement(lineLayout);
 
@@ -371,11 +369,9 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     // rt frames will be updated when reflowing this text container,
     // hence leave container size 0 here for now.
     lineLayout->BeginLineReflow(0, 0, reflowInput->ComputedISize(),
-                                NS_UNCONSTRAINEDSIZE, false, false,
-                                baseLineLayout ? lineWM : rtcWM, nsSize(0, 0));
-    if (baseLineLayout) {
-      lineLayout->AttachRootFrameToBaseLineLayout();
-    }
+                                NS_UNCONSTRAINEDSIZE,
+                                false, false, reflowWM, nsSize(0, 0));
+    lineLayout->AttachRootFrameToBaseLineLayout();
   }
 
   aReflowInput.mLineLayout->BeginSpan(this, &aReflowInput,

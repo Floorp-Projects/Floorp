@@ -28,6 +28,7 @@ typedef wr::WrPipelineId PipelineId;
 typedef wr::WrImageKey ImageKey;
 typedef wr::WrFontKey FontKey;
 typedef wr::WrFontInstanceKey FontInstanceKey;
+typedef wr::WrFontInstanceOptions FontInstanceOptions;
 typedef wr::WrEpoch Epoch;
 typedef wr::WrExternalImageId ExternalImageId;
 typedef wr::WrDebugFlags DebugFlags;

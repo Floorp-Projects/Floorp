@@ -13,6 +13,7 @@ use api::{LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation
 use api::{LocalClip, PipelineId, RepeatMode, ScrollSensitivity, SubpixelDirection, TextShadow};
 use api::{TileOffset, TransformStyle, WorldPixel, YuvColorSpace, YuvData};
 use app_units::Au;
+use border::ImageBorderSegment;
 use clip::{ClipMode, ClipRegion, ClipSource, ClipSources, ClipStore};
 use clip_scroll_node::{ClipInfo, ClipScrollNode, NodeType};
 use clip_scroll_tree::ClipScrollTree;
@@ -30,65 +31,14 @@ use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfil
 use render_task::{AlphaRenderItem, ClipWorkItem, RenderTask};
 use render_task::{RenderTaskId, RenderTaskLocation, RenderTaskTree};
 use resource_cache::ResourceCache;
+use scene::ScenePipeline;
 use std::{mem, usize, f32, i32};
-use tiling::{ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, DisplayListMap, Frame};
+use tiling::{ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, Frame};
 use tiling::{ContextIsolation, StackingContextIndex};
 use tiling::{PackedLayer, PackedLayerIndex, PrimitiveFlags, PrimitiveRunCmd, RenderPass};
 use tiling::{RenderTargetContext, ScrollbarPrimitive, StackingContext};
 use util::{self, pack_as_float, recycle_vec, subtract_rect};
 use util::{MatrixHelpers, RectHelpers};
-
-#[derive(Debug, Clone)]
-struct ImageBorderSegment {
-    geom_rect: LayerRect,
-    sub_rect: TexelRect,
-    stretch_size: LayerSize,
-    tile_spacing: LayerSize,
-}
-
-impl ImageBorderSegment {
-    fn new(
-        rect: LayerRect,
-        sub_rect: TexelRect,
-        repeat_horizontal: RepeatMode,
-        repeat_vertical: RepeatMode,
-    ) -> ImageBorderSegment {
-        let tile_spacing = LayerSize::zero();
-
-        debug_assert!(sub_rect.uv1.x >= sub_rect.uv0.x);
-        debug_assert!(sub_rect.uv1.y >= sub_rect.uv0.y);
-
-        let image_size = LayerSize::new(
-            sub_rect.uv1.x - sub_rect.uv0.x,
-            sub_rect.uv1.y - sub_rect.uv0.y,
-        );
-
-        let stretch_size_x = match repeat_horizontal {
-            RepeatMode::Stretch => rect.size.width,
-            RepeatMode::Repeat => image_size.width,
-            RepeatMode::Round | RepeatMode::Space => {
-                error!("Round/Space not supported yet!");
-                rect.size.width
-            }
-        };
-
-        let stretch_size_y = match repeat_vertical {
-            RepeatMode::Stretch => rect.size.height,
-            RepeatMode::Repeat => image_size.height,
-            RepeatMode::Round | RepeatMode::Space => {
-                error!("Round/Space not supported yet!");
-                rect.size.height
-            }
-        };
-
-        ImageBorderSegment {
-            geom_rect: rect,
-            sub_rect,
-            stretch_size: LayerSize::new(stretch_size_x, stretch_size_y),
-            tile_spacing,
-        }
-    }
-}
 
 /// Construct a polygon from stacking context boundaries.
 /// `anchor` here is an index that's going to be preserved in all the
@@ -1064,6 +1014,8 @@ impl FrameBuilder {
             normal_render_mode,
             subpx_dir,
             font.platform_options,
+            font.variations.clone(),
+            font.synthetic_italics,
         );
         let prim = TextRunPrimitiveCpu {
             font: prim_font,
@@ -1091,6 +1043,12 @@ impl FrameBuilder {
             if shadow_prim.shadow.blur_radius == 0.0 {
                 let mut text_prim = prim.clone();
                 text_prim.font.color = shadow_prim.shadow.color.into();
+                // If we have translucent text, we need to ensure it won't go
+                // through the subpixel blend mode, which doesn't work with
+                // traditional alpha blending.
+                if shadow_prim.shadow.color.a != 1.0 {
+                    text_prim.font.render_mode = text_prim.font.render_mode.limit_by(FontRenderMode::Alpha);
+                }
                 text_prim.color = shadow_prim.shadow.color;
                 text_prim.offset += shadow_prim.shadow.offset;
                 fast_text_shadow_prims.push(text_prim);
@@ -1432,7 +1390,7 @@ impl FrameBuilder {
         &mut self,
         screen_rect: &DeviceIntRect,
         clip_scroll_tree: &mut ClipScrollTree,
-        display_lists: &DisplayListMap,
+        pipelines: &FastHashMap<PipelineId, ScenePipeline>,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
@@ -1444,7 +1402,7 @@ impl FrameBuilder {
             self,
             screen_rect,
             clip_scroll_tree,
-            display_lists,
+            pipelines,
             resource_cache,
             gpu_cache,
             render_tasks,
@@ -1807,7 +1765,7 @@ impl FrameBuilder {
         gpu_cache: &mut GpuCache,
         frame_id: FrameId,
         clip_scroll_tree: &mut ClipScrollTree,
-        display_lists: &DisplayListMap,
+        pipelines: &FastHashMap<PipelineId, ScenePipeline>,
         device_pixel_ratio: f32,
         output_pipelines: &FastHashSet<PipelineId>,
         texture_cache_profile: &mut TextureCacheProfileCounters,
@@ -1838,7 +1796,7 @@ impl FrameBuilder {
         self.build_layer_screen_rects_and_cull_layers(
             &screen_rect,
             clip_scroll_tree,
-            display_lists,
+            pipelines,
             resource_cache,
             gpu_cache,
             &mut render_tasks,
@@ -1917,17 +1875,11 @@ impl FrameBuilder {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-struct LayerClipBounds {
-    outer: DeviceIntRect,
-    inner: DeviceIntRect,
-}
-
 struct LayerRectCalculationAndCullingPass<'a> {
     frame_builder: &'a mut FrameBuilder,
     screen_rect: &'a DeviceIntRect,
     clip_scroll_tree: &'a mut ClipScrollTree,
-    display_lists: &'a DisplayListMap,
+    pipelines: &'a FastHashMap<PipelineId, ScenePipeline>,
     resource_cache: &'a mut ResourceCache,
     gpu_cache: &'a mut GpuCache,
     profile_counters: &'a mut FrameProfileCounters,
@@ -1950,7 +1902,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
         frame_builder: &'a mut FrameBuilder,
         screen_rect: &'a DeviceIntRect,
         clip_scroll_tree: &'a mut ClipScrollTree,
-        display_lists: &'a DisplayListMap,
+        pipelines: &'a FastHashMap<PipelineId, ScenePipeline>,
         resource_cache: &'a mut ResourceCache,
         gpu_cache: &'a mut GpuCache,
         render_tasks: &'a mut RenderTaskTree,
@@ -1961,7 +1913,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             frame_builder,
             screen_rect,
             clip_scroll_tree,
-            display_lists,
+            pipelines,
             resource_cache,
             gpu_cache,
             profile_counters,
@@ -2186,9 +2138,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             //TODO-LCCR: bake a single LCCR instead of all aligned rects?
             self.current_clip_stack.push(ClipWorkItem {
                 layer_index: clip.packed_layer_index,
-                clip_sources: self.frame_builder
-                    .clip_store
-                    .create_weak_handle(&clip.clip_sources),
+                clip_sources: clip.clip_sources.weak(),
                 apply_rectangles: next_node_needs_region_mask,
             });
             next_node_needs_region_mask = false;
@@ -2253,9 +2203,10 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
         let stacking_context =
             &mut self.frame_builder.stacking_context_store[stacking_context_index.0];
         let packed_layer = &self.frame_builder.packed_layers[packed_layer_index.0];
-        let display_list = self.display_lists
+        let display_list = &self.pipelines
             .get(&pipeline_id)
-            .expect("No display list?");
+            .expect("No display list?")
+            .display_list;
         debug!(
             "\tclip_bounds {:?}, layer_local_clip {:?}",
             clip_bounds,
@@ -2317,9 +2268,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
 
                 let extra = ClipWorkItem {
                     layer_index: packed_layer_index,
-                    clip_sources: self.frame_builder
-                        .clip_store
-                        .create_weak_handle(&prim_metadata.clip_sources),
+                    clip_sources: prim_metadata.clip_sources.weak(),
                     apply_rectangles: false,
                 };
 

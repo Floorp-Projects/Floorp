@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.50.0"
+version = "0.52.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -36,7 +36,7 @@ serde_derive = { optional = true, version = "1.0" }
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
 rand = "0.3"                # for the benchmarks
-servo-glutin = "0.11"     # for the example apps
+servo-glutin = "0.12"     # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
 freetype = { version = "0.3", default-features = false }
@@ -46,6 +46,7 @@ dwrote = "0.4"
 gamma-lut = "0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-graphics = "0.8.0"
-core-text = { version = "6.1", default-features = false }
+core-foundation = "0.4"
+core-graphics = "0.9"
+core-text = { version = "7.0", default-features = false }
 gamma-lut = "0.2"

@@ -34,6 +34,8 @@ const whitelist = [
     file: "chrome://browser/skin/places/toolbarDropMarker.png",
     platforms: ["linux", "win", "macosx"],
   },
+
+  // Bug 1363040
   {
     file: "chrome://browser/skin/tracking-protection-16.svg#enabled",
     platforms: ["linux", "win", "macosx"],
@@ -70,6 +72,16 @@ const whitelist = [
   {
     file: "chrome://global/skin/icons/resizer.png",
     platforms: ["win"],
+  },
+
+  {
+    file: "chrome://browser/skin/window-controls/maximize.svg",
+    platforms: ["win"],
+    // This is to prevent perma-fails in case Windows machines
+    // go back to running tests in non-maximized windows.
+    intermittentShown: ["win"],
+    // This file is not loaded on Windows 7/8.
+    intermittentNotLoaded: ["win"],
   },
 ];
 

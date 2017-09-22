@@ -53,9 +53,8 @@
   }
 }
 
-/* Windows 7 specific tab styles that apply to default, dark and light themes
- * (the default theme counterpart lives in browser.css) */
-@media (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
   /* Always show full-height tab separators on tabs with borders. */
   .tabbrowser-tab::before {
     border-image: none !important;
@@ -70,10 +69,7 @@
   .tab-background {
     border-top: 1px solid var(--tabs-border);
   }
-}
 
-@media (-moz-os-version: windows-win7),
-       (-moz-os-version: windows-win8) {
   /* Use default window colors when in non-maximized mode */
   #tabbrowser-tabs,
   #TabsToolbar,

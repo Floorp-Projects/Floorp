@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Memory Allocator")
 
 DIRS += [
+    'build',
     'mozalloc',
     'fallible',
 ]
@@ -15,12 +16,8 @@ DIRS += [
 if not CONFIG['JS_STANDALONE']:
     DIRS += ['volatile']
 
-if CONFIG['MOZ_MEMORY']:
-    # NB: gtest dir is included in toolkit/toolkit.build due to its dependency
-    # on libxul.
-    DIRS += [
-        'build',
-    ]
+# NB: gtest dir is included in toolkit/toolkit.build due to its dependency
+# on libxul.
 
-    if CONFIG['MOZ_REPLACE_MALLOC']:
-        DIRS += ['replace']
+if CONFIG['MOZ_REPLACE_MALLOC']:
+    DIRS += ['replace']
