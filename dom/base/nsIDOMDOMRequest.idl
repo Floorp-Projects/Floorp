@@ -19,9 +19,6 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
 
   // DOMError
   readonly attribute nsISupports error;
-
-  [implicit_jscontext] attribute jsval onsuccess;
-  [implicit_jscontext] attribute jsval onerror;
 };
 
 [scriptable, builtinclass, uuid(9a57e5de-ce93-45fa-8145-755722834f7c)]
