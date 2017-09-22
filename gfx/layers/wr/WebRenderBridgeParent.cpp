@@ -329,7 +329,7 @@ bool
 WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                                         wr::ResourceUpdateQueue& aResources)
 {
-  Range<const wr::ImageKey> keys(&aKey, 1);
+  Range<wr::ImageKey> keys(&aKey, 1);
   // Check if key is obsoleted.
   if (keys[0].mNamespace != mIdNamespace) {
     return true;
@@ -349,7 +349,8 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
     }
     WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
     if (wrTexture) {
-      wrTexture->AddWRImage(aResources, keys, wrTexture->GetExternalImageKey());
+      wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE, keys,
+                                     wrTexture->GetExternalImageKey());
       return true;
     }
   }
