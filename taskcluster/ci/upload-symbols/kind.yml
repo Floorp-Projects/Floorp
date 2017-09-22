@@ -43,5 +43,7 @@ job-template:
            GECKO_HEAD_REPOSITORY: # see transforms
            GECKO_HEAD_REV: # see transforms
            ARTIFACT_TASKID: {"task-reference": "<build>"}
+   optimization:
+       only-if-dependencies-run: null
    scopes:
        - docker-worker:image:taskclusterprivate/upload_symbols:0.0.4

@@ -8,9 +8,9 @@ const SOURCE_MAP_PREF = "devtools.source-map.client-service.enabled";
 
 /**
  * A simple service to track source actors and keep a mapping between
- * original URLs and objects holding the source actor's ID (which is
- * used as a cookie by the devtools-source-map service) and the source
- * map URL.
+ * original URLs and objects holding the source or style actor's ID
+ * (which is used as a cookie by the devtools-source-map service) and
+ * the source map URL.
  *
  * @param {object} toolbox
  *        The toolbox.
@@ -21,8 +21,16 @@ function SourceMapURLService(toolbox, sourceMapService) {
   this._toolbox = toolbox;
   this._target = toolbox.target;
   this._sourceMapService = sourceMapService;
+  // Map from content URLs to descriptors.  Descriptors are later
+  // passed to the source map worker.
   this._urls = new Map();
+  // Map from (stringified) locations to callbacks that are called
+  // when the service decides a location should change (say, a source
+  // map is available or the user changes the pref).
   this._subscriptions = new Map();
+  // A backward map from actor IDs to the original URL.  This is used
+  // to support pretty-printing.
+  this._idMap = new Map();
 
   this._onSourceUpdated = this._onSourceUpdated.bind(this);
   this.reset = this.reset.bind(this);
@@ -80,6 +88,7 @@ SourceMapURLService.prototype.reset = function () {
   this._sourceMapService.clearSourceMaps();
   this._urls.clear();
   this._subscriptions.clear();
+  this._idMap.clear();
 };
 
 /**
@@ -95,7 +104,7 @@ SourceMapURLService.prototype.destroy = function () {
     this._stylesheetsFront.off("stylesheet-added", this._onNewStyleSheet);
   }
   Services.prefs.removeObserver(SOURCE_MAP_PREF, this._onPrefChanged);
-  this._target = this._urls = this._subscriptions = null;
+  this._target = this._urls = this._subscriptions = this._idMap = null;
 };
 
 /**
@@ -114,6 +123,7 @@ SourceMapURLService.prototype._onSourceUpdated = function (_, sourceEvent) {
   // source code by SpiderMonkey.
   let seenUrl = generatedUrl || url;
   this._urls.set(seenUrl, { id, url: seenUrl, sourceMapURL });
+  this._idMap.set(id, seenUrl);
 };
 
 /**
@@ -130,6 +140,43 @@ SourceMapURLService.prototype._onNewStyleSheet = function (sheet) {
 
   let {href: url, sourceMapURL, actor: id} = sheet._form;
   this._urls.set(url, { id, url, sourceMapURL});
+  this._idMap.set(id, url);
+};
+
+/**
+ * A callback that is called from the lower-level source map service
+ * proxy (see toolbox.js) when some tool has installed a new source
+ * map.  This happens when pretty-printing a source.
+ *
+ * @param {String} id
+ *        The actor ID (used as a cookie here as elsewhere in this file)
+ * @param {String} newUrl
+ *        The URL of the pretty-printed source
+ */
+SourceMapURLService.prototype.sourceMapChanged = function (id, newUrl) {
+  if (!this._urls) {
+    return;
+  }
+
+  let urlKey = this._idMap.get(id);
+  if (urlKey) {
+    // The source map URL here doesn't actually matter.
+    this._urls.set(urlKey, { id, url: newUrl, sourceMapURL: "" });
+
+    // Walk over all the location subscribers, looking for any that
+    // are subscribed to a location coming from |urlKey|.  Then,
+    // re-notify any such subscriber by clearing the stored promise
+    // and forcing a re-evaluation.
+    for (let [, subscriptionEntry] of this._subscriptions) {
+      if (subscriptionEntry.url === urlKey) {
+        // Force an update.
+        subscriptionEntry.promise = null;
+        for (let callback of subscriptionEntry.callbacks) {
+          this._callOneCallback(subscriptionEntry, callback);
+        }
+      }
+    }
+  }
 };
 
 /**

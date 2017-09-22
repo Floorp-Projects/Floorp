@@ -12,6 +12,11 @@
   display: flex;
   justify-content: space-between;
   --frame-link-line-color: var(--theme-highlight-blue);
+  --frame-link-source: var(--theme-highlight-purple);
+}
+
+.theme-dark .frame-link {
+  --frame-link-source: #6B89FF;
 }
 
 .frame-link-async-cause {
@@ -20,7 +25,7 @@
 
 .frame-link .frame-link-source {
   flex: initial;
-  color: var(--theme-highlight-purple);
+  color: var(--frame-link-source);
 }
 
 .frame-link a.frame-link-source {

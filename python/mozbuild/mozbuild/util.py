@@ -485,6 +485,25 @@ class StrictOrderingOnAppendList(ListMixin, StrictOrderingOnAppendListMixin,
     elements be ordered. This enforces cleaner style in moz.build files.
     """
 
+class ImmutableStrictOrderingOnAppendList(StrictOrderingOnAppendList):
+    """Like StrictOrderingOnAppendList, but not allowing mutations of the value.
+    """
+    def append(self, elt):
+        raise Exception("cannot use append on this type")
+
+    def extend(self, iterable):
+        raise Exception("cannot use extend on this type")
+
+    def __setslice__(self, i, j, iterable):
+        raise Exception("cannot assign to slices on this type")
+
+    def __setitem__(self, i, elt):
+        raise Exception("cannot assign to indexes on this type")
+
+    def __iadd__(self, other):
+        raise Exception("cannot use += on this type")
+
+
 class ListWithActionMixin(object):
     """Mixin to create lists with pre-processing. See ListWithAction."""
     def __init__(self, iterable=None, action=None):

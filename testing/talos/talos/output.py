@@ -92,6 +92,7 @@ class Output(object):
                         result.values(suite['name'],
                                       test.test_config['filters'])
                     vals.extend([[i['value'], j] for i, j in filtered_results])
+                    subtest_index = 0
                     for val, page in filtered_results:
                         if page == 'NULL':
                             # no real subtests
@@ -104,12 +105,15 @@ class Output(object):
                         # if results are from a comparison test i.e. perf-reftest, it will also
                         # contain replicates for 'base' and 'reference'; we wish to keep those
                         # to reference; actual results were calculated as the difference of those
-                        base_runs = result.results[0].get('base_runs', None)
-                        ref_runs = result.results[0].get('ref_runs', None)
+                        base_runs = result.results[subtest_index].get('base_runs', None)
+                        ref_runs = result.results[subtest_index].get('ref_runs', None)
                         if base_runs and ref_runs:
                             subtest['base_replicates'] = base_runs
                             subtest['ref_replicates'] = ref_runs
+
                         subtests.append(subtest)
+                        subtest_index += 1
+
                         if test.test_config.get('lower_is_better') is not None:
                             subtest['lowerIsBetter'] = \
                                 test.test_config['lower_is_better']

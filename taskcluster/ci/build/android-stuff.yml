@@ -39,9 +39,9 @@ android-dependencies/opt:
         custom-build-variant-cfg: api-16-gradle-dependencies
         tooltool-downloads: internal
         job-script: taskcluster/scripts/builder/build-android-dependencies.sh
-    optimizations:
-      - - skip-unless-changed
-        - - "mobile/android/config/**"
+    optimization:
+        skip-unless-changed:
+          - "mobile/android/config/**"
           - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
           - "**/*.gradle"
           - "taskcluster/docker/android-build/**"
@@ -82,9 +82,9 @@ android-test/opt:
         secrets: true
         custom-build-variant-cfg: android-test
         tooltool-downloads: internal
-    optimizations:
-      - - skip-unless-changed
-        - - "mobile/android/base/**"
+    optimization:
+        skip-unless-changed:
+          - "mobile/android/base/**"
           - "mobile/android/config/**"
           - "mobile/android/tests/background/junit4/**"
           - "**/*.gradle"
@@ -140,9 +140,9 @@ android-lint/opt:
         secrets: true
         custom-build-variant-cfg: android-lint
         tooltool-downloads: internal
-    optimizations:
-      - - skip-unless-changed
-        - - "mobile/android/**/*.java"
+    optimization:
+        skip-unless-changed:
+          - "mobile/android/**/*.java"
           - "mobile/android/**/*.jpeg"
           - "mobile/android/**/*.jpg"
           - "mobile/android/**/*.png"
@@ -192,9 +192,9 @@ android-checkstyle/opt:
         secrets: true
         custom-build-variant-cfg: android-checkstyle
         tooltool-downloads: internal
-    optimizations:
-      - - skip-unless-changed
-        - - "mobile/android/**/checkstyle.xml"
+    optimization:
+        skip-unless-changed:
+          - "mobile/android/**/checkstyle.xml"
           - "mobile/android/**/*.java"
           - "mobile/android/**/Makefile.in"
           - "mobile/android/config/**"
@@ -246,9 +246,9 @@ android-findbugs/opt:
         secrets: true
         custom-build-variant-cfg: android-findbugs
         tooltool-downloads: internal
-    optimizations:
-      - - skip-unless-changed
-        - - "mobile/android/**/*.java"
+    optimization:
+        skip-unless-changed:
+          - "mobile/android/**/*.java"
           - "mobile/android/**/Makefile.in"
           - "mobile/android/config/**"
           - "mobile/android/**/moz.build"

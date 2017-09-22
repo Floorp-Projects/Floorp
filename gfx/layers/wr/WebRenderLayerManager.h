@@ -174,6 +174,9 @@ public:
   // Before destroying a layer with animations, add its compositorAnimationsId
   // to a list of ids that will be discarded on the next transaction
   void AddCompositorAnimationsIdForDiscard(uint64_t aId);
+  // If the animations are valid and running on the compositor,
+  // we should keep the compositorAnimationsId alive on the compositor side.
+  void KeepCompositorAnimationsIdAlive(uint64_t aId);
   void DiscardCompositorAnimations();
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
@@ -279,7 +282,9 @@ private:
           frame->RemoveProperty(nsIFrame::WebRenderUserDataProperty());
         }
         iter.Remove();
+        continue;
       }
+
       data->SetUsed(false);
     }
   }

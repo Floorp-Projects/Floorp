@@ -407,6 +407,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
 
         // This property is false if the download did not succeed.
         return this.download.target.exists;
+      case "downloadsCmd_delete":
       case "cmd_delete":
         // We don't want in-progress downloads to be removed accidentally.
         return this.download.stopped;
@@ -466,6 +467,13 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     let targetPath = this.download.target.path ?
                      OS.Path.basename(this.download.target.path) : null;
     window.DownloadURL(this.download.source.url, targetPath, document);
+  },
+
+  downloadsCmd_delete() {
+    // Alias for the 'cmd_delete' command, because it may clash with another
+    // controller which causes unexpected behavior as different codepaths claim
+    // ownership.
+    this.cmd_delete();
   },
 
   cmd_delete() {
