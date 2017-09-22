@@ -120,6 +120,10 @@ apply_patches() {
     # Patch for compatibility with freetype 2.8
     echo "Applying patches/bug1364714_freetype28_compat.patch"
     patch -p3 < patches/bug1364714_freetype28_compat.patch
+
+    # Patch to remove __in and __out macros
+    echo "Applying patches/bug1402065_remove___in_and___out.patch"
+    patch -p3 < patches/bug1402065_remove___in_and___out.patch
 }
 
 update_readme() {
