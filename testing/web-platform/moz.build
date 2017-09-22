@@ -102,6 +102,9 @@ with Files("tests/apng/**"):
 with Files("tests/assumptions/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+with Files("tests/auxclick/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
 with Files("tests/background-fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
@@ -116,6 +119,9 @@ with Files("tests/bluetooth/**"):
 
 with Files("tests/clear-site-data/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/clipboard/**"):
+    BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/clipboard-apis/**"):
     BUG_COMPONENT = ("Core", "DOM")
@@ -150,6 +156,9 @@ with Files("tests/css/**"):
 
 with Files("tests/css-cascade/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css-font-display/**"):
+    BUG_COMPONENT = ("Core", "Layout: Text")
 
 with Files("tests/css-font-loading/**"):
     BUG_COMPONENT = ("Core", "Layout: Text")
@@ -321,6 +330,9 @@ with Files("tests/mediacapture-record/**"):
 
 with Files("tests/mediacapture-streams/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
+
+with Files("tests/microdata/**"):
+    BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/mixed-content/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")

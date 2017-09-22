@@ -61,7 +61,6 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
   MOZ_ASSERT(aDocument);
 
   if (aValue.GetUnit() == eCSSUnit_URL) {
-#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
     // The 'mask-image' property accepts local reference URIs.
     // For example,
     //   mask-image: url(#mask_id); // refer to a SVG mask element, whose id is
@@ -94,7 +93,7 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
         }
       }
     }
-#endif
+
     aValue.StartImageLoad(aDocument);
     if (aForTokenStream && aContext) {
       CSSVariableImageTable::Add(aContext, aProperty,

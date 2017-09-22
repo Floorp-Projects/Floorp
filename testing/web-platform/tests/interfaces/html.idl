@@ -1777,8 +1777,13 @@ interface NavigatorLanguage {
 
 [NoInterfaceObject]
 interface NavigatorContentUtils {
+  // content handler registration
   void registerProtocolHandler(DOMString scheme, USVString url, DOMString title);
+  void registerContentHandler(DOMString mimeType, USVString url, DOMString title);
+  DOMString isProtocolHandlerRegistered(DOMString scheme, USVString url);
+  DOMString isContentHandlerRegistered(DOMString mimeType, USVString url);
   void unregisterProtocolHandler(DOMString scheme, USVString url);
+  void unregisterContentHandler(DOMString mimeType, USVString url);
 };
 
 [NoInterfaceObject]
