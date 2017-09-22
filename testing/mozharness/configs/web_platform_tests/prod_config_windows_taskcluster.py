@@ -42,6 +42,31 @@ config = {
          "https://blobupload.elasticbeanstalk.com",
     ],
 
+    "run_cmd_checks_enabled": True,
+    "preflight_run_cmd_suites": [
+        {
+            'name': 'disable_screen_saver',
+            'cmd': ['xset', 's', 'off', 's', 'reset'],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': False,
+            'enabled': False
+        },
+        {
+            'name': 'run mouse & screen adjustment script',
+            'cmd': [
+                sys.executable,
+                os.path.join(os.getcwd(),
+                    'mozharness', 'external_tools', 'mouse_and_screen_resolution.py'),
+                '--configuration-file',
+                os.path.join(os.getcwd(),
+                    'mozharness', 'external_tools', 'machine-configuration.json')
+            ],
+            'architectures': ['32bit', '64bit'],
+            'halt_on_failure': True,
+            'enabled': True
+        }
+    ],
+
     "blob_uploader_auth_file" : 'C:/builds/oauth.txt',
 
     "download_minidump_stackwalk": True,
