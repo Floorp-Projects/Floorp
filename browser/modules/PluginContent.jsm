@@ -175,7 +175,7 @@ PluginContent.prototype = {
   },
 
   _getPluginInfo(pluginElement) {
-    if (pluginElement instanceof Ci.nsIDOMHTMLAnchorElement) {
+    if (ChromeUtils.getClassName(pluginElement) === "HTMLAnchorElement") {
       // Anchor elements are our place holders, and we only have them for Flash
       let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
       return {
@@ -649,7 +649,7 @@ PluginContent.prototype = {
     let doc = plugin.ownerDocument;
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     let permissionString;
-    if (plugin instanceof Ci.nsIDOMHTMLAnchorElement) {
+    if (ChromeUtils.getClassName(plugin) === "HTMLAnchorElement") {
       // We only have replacement content for Flash installs
       permissionString = pluginHost.getPermissionStringForType(FLASH_MIME_TYPE);
     } else {
@@ -681,10 +681,9 @@ PluginContent.prototype = {
   onOverlayClick(event) {
     let document = event.target.ownerDocument;
     let plugin = document.getBindingParent(event.target);
-    let contentWindow = plugin.ownerGlobal.top;
     let overlay = this.getPluginUI(plugin, "main");
     // Have to check that the target is not the link to update the plugin
-    if (!(event.originalTarget instanceof contentWindow.HTMLAnchorElement) &&
+    if (!(ChromeUtils.getClassName(event.originalTarget) === "HTMLAnchorElement") &&
         (event.originalTarget.getAttribute("anonid") != "closeIcon") &&
         !overlay.hasAttribute("dismissed") &&
         event.button == 0 &&
@@ -730,7 +729,7 @@ PluginContent.prototype = {
       }
       if (pluginInfo.permissionString == pluginHost.getPermissionStringForType(plugin.actualType)) {
         let overlay = this.getPluginUI(plugin, "main");
-        if (plugin instanceof Ci.nsIDOMHTMLAnchorElement) {
+        if (ChromeUtils.getClassName(plugin) === "HTMLAnchorElement") {
           placeHolderFound = true;
         } else {
           pluginFound = true;
