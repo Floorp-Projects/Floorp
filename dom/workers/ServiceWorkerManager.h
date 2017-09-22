@@ -336,6 +336,9 @@ public:
   void
   WorkerIsIdle(ServiceWorkerInfo* aWorker);
 
+  void
+  CheckPendingReadyPromises();
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
@@ -445,9 +448,6 @@ private:
   void
   StorePendingReadyPromise(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
                            Promise* aPromise);
-
-  void
-  CheckPendingReadyPromises();
 
   bool
   CheckReadyPromise(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
