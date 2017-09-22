@@ -30,7 +30,6 @@ HTMLAreaElement::~HTMLAreaElement()
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
                                              nsGenericHTMLElement,
-                                             nsIDOMHTMLAreaElement,
                                              Link)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
@@ -39,33 +38,18 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLAreaElement)
 
-
-NS_IMPL_STRING_ATTR(HTMLAreaElement, Alt, alt)
-NS_IMPL_STRING_ATTR(HTMLAreaElement, Coords, coords)
-NS_IMPL_URI_ATTR(HTMLAreaElement, Href, href)
-NS_IMPL_BOOL_ATTR(HTMLAreaElement, NoHref, nohref)
-NS_IMPL_STRING_ATTR(HTMLAreaElement, Shape, shape)
-NS_IMPL_STRING_ATTR(HTMLAreaElement, Download, download)
-
 int32_t
 HTMLAreaElement::TabIndexDefault()
 {
   return 0;
 }
 
-NS_IMETHODIMP
-HTMLAreaElement::GetTarget(nsAString& aValue)
+void
+HTMLAreaElement::GetTarget(DOMString& aValue)
 {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAreaElement::SetTarget(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, true);
 }
 
 nsresult
@@ -152,47 +136,10 @@ HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                             aOldValue, aNotify);
 }
 
-#define IMPL_URI_PART(_part)                                 \
-  NS_IMETHODIMP                                              \
-  HTMLAreaElement::Get##_part(nsAString& a##_part)           \
-  {                                                          \
-    Link::Get##_part(a##_part);                              \
-    return NS_OK;                                            \
-  }                                                          \
-  NS_IMETHODIMP                                              \
-  HTMLAreaElement::Set##_part(const nsAString& a##_part)     \
-  {                                                          \
-    Link::Set##_part(a##_part);                              \
-    return NS_OK;                                            \
-  }
-
-IMPL_URI_PART(Protocol)
-IMPL_URI_PART(Host)
-IMPL_URI_PART(Hostname)
-IMPL_URI_PART(Pathname)
-IMPL_URI_PART(Search)
-IMPL_URI_PART(Port)
-IMPL_URI_PART(Hash)
-
-#undef IMPL_URI_PART
-
-NS_IMETHODIMP
+void
 HTMLAreaElement::ToString(nsAString& aSource)
 {
-  return GetHref(aSource);
-}
-
-NS_IMETHODIMP
-HTMLAreaElement::GetPing(nsAString& aValue)
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAreaElement::SetPing(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, true);
+  GetHref(aSource);
 }
 
 already_AddRefed<nsIURI>

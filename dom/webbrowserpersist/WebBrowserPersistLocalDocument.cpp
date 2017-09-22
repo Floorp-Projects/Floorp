@@ -7,6 +7,7 @@
 #include "WebBrowserPersistDocumentParent.h"
 
 #include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
@@ -21,7 +22,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLDocument.h"
@@ -950,7 +950,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLAreaElement> nodeAsArea = do_QueryInterface(aNodeIn);
+    RefPtr<dom::HTMLAreaElement> nodeAsArea = dom::HTMLAreaElement::FromContent(content);
     if (nodeAsArea) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {

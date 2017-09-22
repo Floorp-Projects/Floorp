@@ -24,7 +24,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMRange.h"
 #include "nsIFormControl.h"
-#include "nsIDOMHTMLAreaElement.h"
 #include "nsITransferable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOM.h"
