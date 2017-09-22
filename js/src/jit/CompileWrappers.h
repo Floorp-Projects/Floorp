@@ -68,8 +68,6 @@ class CompileZone
     CompileRuntime* runtime();
     bool isAtomsZone();
 
-    JitCode* mallocStub();
-
 #ifdef DEBUG
     const void* addressOfIonBailAfter();
 #endif

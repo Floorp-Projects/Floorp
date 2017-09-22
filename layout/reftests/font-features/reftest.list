@@ -118,3 +118,6 @@ HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref1.html
 random-if(cocoaWidget) HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref2.html # bug 1139269
 HTTP(..) != subsuper-nofallback.html subsuper-nofallback-notref.html
 HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size-ref.html
+
+# GPOS spacing adjustments in vertical mode -- subsetted opentype/cff test font fails to load on Win7
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == 1376231-vertical-gpos-adjustments.html 1376231-vertical-gpos-adjustments-ref.html
