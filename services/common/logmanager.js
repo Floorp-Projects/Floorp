@@ -266,19 +266,18 @@ LogManager.prototype = {
       // logs are grouped in about:sync-log.
       let filename = reasonPrefix + "-" + this.logFilePrefix + "-" + Date.now() + ".txt";
       await this._fileAppender.flushToFile(this._logFileSubDirectoryEntries, filename, this._log);
-
       // It's not completely clear to markh why we only do log cleanups
       // for errors, but for now the Sync semantics have been copied...
       // (one theory is that only cleaning up on error makes it less
       // likely old error logs would be removed, but that's not true if
       // there are occasional errors - let's address this later!)
       if (reason == this.ERROR_LOG_WRITTEN && !this._cleaningUpFileLogs) {
-        this._log.trace("Scheduling cleanup.");
-        // Note we don't return/await or otherwise wait on this promise - it
-        // continues in the background
-        this.cleanupLogs().catch(err => {
+        this._log.trace("Running cleanup.");
+        try {
+          await this.cleanupLogs();
+        } catch (err) {
           this._log.error("Failed to cleanup logs", err);
-        });
+        }
       }
       return reason;
     } catch (ex) {
@@ -321,7 +320,13 @@ LogManager.prototype = {
                         + entry.name, ex);
       }
     });
-    iterator.close();
+    // Wait for this to close if we need to (but it might fail if OS.File has
+    // shut down)
+    try {
+      await iterator.close();
+    } catch (e) {
+      this._log.warn("Failed to close directory iterator", e);
+    }
     this._cleaningUpFileLogs = false;
     this._log.debug("Done deleting files.");
     // This notification is used only for tests.
