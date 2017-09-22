@@ -22,6 +22,9 @@ function debug(aMsg) {
 class GeckoViewContent extends GeckoViewModule {
   init() {
     this.frameScriptLoaded = false;
+    this.eventDispatcher.registerListener(this, [
+      "GeckoView:SetActive"
+    ]);
   }
 
   register() {
@@ -47,6 +50,9 @@ class GeckoViewContent extends GeckoViewModule {
     switch (aEvent) {
       case "GeckoViewContent:ExitFullScreen":
         this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenExited");
+        break;
+      case "GeckoView:SetActive":
+        this.browser.docShellIsActive = aData.active;
         break;
     }
   }

@@ -147,6 +147,18 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
+    public void onResume() {
+        mGeckoView.setActive(true);
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        mGeckoView.setActive(false);
+        super.onPause();
+    }
+
+    @Override
     public void onDestroy() {
         mTextSelection.destroy();
         mFormAssistPopup.destroy();
