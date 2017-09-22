@@ -10,7 +10,6 @@ browser.jar:
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
-  skin/classic/browser/livemark-folder.png
   skin/classic/browser/menuPanel-customize.png
   skin/classic/browser/menuPanel-customize@2x.png
   skin/classic/browser/menuPanel-exit.png
@@ -42,10 +41,8 @@ browser.jar:
   skin/classic/browser/notification-icons/geo.svg              (notification-icons/geo.svg)
 * skin/classic/browser/places/places.css                       (places/places.css)
 * skin/classic/browser/places/organizer.css                    (places/organizer.css)
-  skin/classic/browser/places/query.png                        (places/query.png)
   skin/classic/browser/places/bookmarksMenu.png                (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png             (places/bookmarksToolbar.png)
-  skin/classic/browser/places/calendar.png                     (places/calendar.png)
   skin/classic/browser/places/toolbarDropMarker.png            (places/toolbarDropMarker.png)
   skin/classic/browser/places/editBookmarkOverlay.css          (places/editBookmarkOverlay.css)
   skin/classic/browser/places/libraryToolbar.png               (places/libraryToolbar.png)
