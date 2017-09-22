@@ -699,10 +699,6 @@ struct arena_t {
 #  define ARENA_MAGIC 0x947d3d24
 #endif
 
-  arena_id_t mId;
-  /* Linkage for the tree of arenas by id. */
-  rb_node(arena_t) mLink;
-
   /* All operations on this arena require that lock be locked. */
   malloc_spinlock_t mLock;
 
@@ -778,8 +774,6 @@ public:
 
   bool Init();
 
-  static inline arena_t* GetById(arena_id_t aArenaId);
-
 private:
   void InitChunk(arena_chunk_t* aChunk, bool aZeroed);
 
@@ -822,8 +816,6 @@ public:
 
   void HardPurge();
 };
-
-typedef rb_tree(arena_t) arena_tree_t;
 
 /******************************************************************************/
 /*
@@ -1009,12 +1001,8 @@ static size_t		base_committed;
  * Arenas that are used to service external requests.  Not all elements of the
  * arenas array are necessarily used; arenas are created lazily as needed.
  */
-static arena_t** arenas;
-// A tree of arenas, arranged by id.
-// TODO: Move into arena_t as a static member when rb_tree doesn't depend on
-// the type being defined anymore.
-static arena_tree_t gArenaTree;
-static unsigned narenas;
+static arena_t		**arenas;
+static unsigned		narenas;
 static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
 
 #ifndef NO_TLS
@@ -2367,18 +2355,6 @@ choose_arena(size_t size)
   MOZ_DIAGNOSTIC_ASSERT(ret);
   return (ret);
 }
-
-static inline int
-arena_comp(arena_t *a, arena_t *b)
-{
-  MOZ_ASSERT(a);
-  MOZ_ASSERT(b);
-
-  return (a->mId > b->mId) - (a->mId < b->mId);
-}
-
-/* Wrap red-black tree macros in functions. */
-rb_wrap(static, arena_tree_, arena_tree_t, arena_t, mLink, arena_comp)
 
 static inline int
 arena_chunk_comp(arena_chunk_t *a, arena_chunk_t *b)
@@ -4061,9 +4037,6 @@ arena_t::Init()
   if (malloc_spin_init(&mLock))
     return true;
 
-  // TODO: Use random Ids.
-  mId = narenas;
-  memset(&mLink, 0, sizeof(mLink));
   memset(&mStats, 0, sizeof(arena_stats_t));
 
   /* Initialize chunks. */
@@ -4147,53 +4120,52 @@ arenas_fallback()
 }
 
 /* Create a new arena and return it. */
-static arena_t*
+static arena_t *
 arenas_extend()
 {
-  /*
-   * The list of arenas is first allocated to contain at most 16 elements,
-   * and when the limit is reached, the list is grown such that it can
-   * contain 16 more elements.
-   */
-  const size_t arenas_growth = 16;
-  arena_t* ret;
+	/*
+	 * The list of arenas is first allocated to contain at most 16 elements,
+	 * and when the limit is reached, the list is grown such that it can
+	 * contain 16 more elements.
+	 */
+	const size_t arenas_growth = 16;
+	arena_t *ret;
 
-  /* Allocate enough space for trailing bins. */
-  ret = (arena_t *)base_alloc(sizeof(arena_t)
-      + (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
-  if (!ret || ret->Init()) {
-    return arenas_fallback();
-  }
 
-  malloc_spin_lock(&arenas_lock);
+	/* Allocate enough space for trailing bins. */
+	ret = (arena_t *)base_alloc(sizeof(arena_t)
+	    + (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
+	if (!ret || ret->Init()) {
+		return arenas_fallback();
+        }
 
-  arena_tree_insert(&gArenaTree, ret);
+	malloc_spin_lock(&arenas_lock);
 
-  /* Allocate and initialize arenas. */
-  if (narenas % arenas_growth == 0) {
-    size_t max_arenas = ((narenas + arenas_growth) / arenas_growth) * arenas_growth;
-    /*
-     * We're unfortunately leaking the previous allocation ;
-     * the base allocator doesn't know how to free things
-     */
-    arena_t** new_arenas = (arena_t**)base_alloc(sizeof(arena_t*) * max_arenas);
-    if (!new_arenas) {
-      ret = arenas ? arenas_fallback() : nullptr;
-      malloc_spin_unlock(&arenas_lock);
-      return ret;
-    }
-    memcpy(new_arenas, arenas, narenas * sizeof(arena_t*));
-    /*
-     * Zero the array.  In practice, this should always be pre-zeroed,
-     * since it was just mmap()ed, but let's be sure.
-     */
-    memset(new_arenas + narenas, 0, sizeof(arena_t*) * (max_arenas - narenas));
-    arenas = new_arenas;
-  }
-  arenas[narenas++] = ret;
+	/* Allocate and initialize arenas. */
+	if (narenas % arenas_growth == 0) {
+		size_t max_arenas = ((narenas + arenas_growth) / arenas_growth) * arenas_growth;
+		/*
+		 * We're unfortunately leaking the previous allocation ;
+		 * the base allocator doesn't know how to free things
+		 */
+		arena_t** new_arenas = (arena_t **)base_alloc(sizeof(arena_t *) * max_arenas);
+		if (!new_arenas) {
+			ret = arenas ? arenas_fallback() : nullptr;
+			malloc_spin_unlock(&arenas_lock);
+			return (ret);
+		}
+		memcpy(new_arenas, arenas, narenas * sizeof(arena_t *));
+		/*
+		 * Zero the array.  In practice, this should always be pre-zeroed,
+		 * since it was just mmap()ed, but let's be sure.
+		 */
+		memset(new_arenas + narenas, 0, sizeof(arena_t *) * (max_arenas - narenas));
+		arenas = new_arenas;
+	}
+	arenas[narenas++] = ret;
 
-  malloc_spin_unlock(&arenas_lock);
-  return ret;
+	malloc_spin_unlock(&arenas_lock);
+	return (ret);
 }
 
 /*
@@ -4661,7 +4633,6 @@ MALLOC_OUT:
   /*
    * Initialize one arena here.
    */
-  arena_tree_new(&gArenaTree);
   arenas_extend();
   if (!arenas || !arenas[0]) {
 #ifndef XP_WIN
@@ -5185,50 +5156,6 @@ MozJemalloc::jemalloc_free_dirty_pages(void)
   malloc_spin_unlock(&arenas_lock);
 }
 
-inline arena_t*
-arena_t::GetById(arena_id_t aArenaId)
-{
-  arena_t key;
-  key.mId = aArenaId;
-  malloc_spin_lock(&arenas_lock);
-  arena_t* result = arena_tree_search(&gArenaTree, &key);
-  malloc_spin_unlock(&arenas_lock);
-  MOZ_RELEASE_ASSERT(result);
-  return result;
-}
-
-#ifdef NIGHTLY_BUILD
-template<> inline arena_id_t
-MozJemalloc::moz_create_arena()
-{
-  arena_t* arena = arenas_extend();
-  return arena->mId;
-}
-
-template<> inline void
-MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
-{
-  arena_t* arena = arena_t::GetById(aArenaId);
-  malloc_spin_lock(&arenas_lock);
-  arena_tree_remove(&gArenaTree, arena);
-  // The arena is leaked, and remaining allocations in it still are alive
-  // until they are freed. After that, the arena will be empty but still
-  // taking have at least a chunk taking address space. TODO: bug 1364359.
-  malloc_spin_unlock(&arenas_lock);
-}
-
-#define MALLOC_DECL(name, return_type, ...) \
-  template<> inline return_type \
-  MozJemalloc::moz_arena_ ## name(arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
-  { \
-    BaseAllocator allocator(arena_t::GetById(aArenaId)); \
-    return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
-  }
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
-#include "malloc_decls.h"
-
-#else
-
 #define MALLOC_DECL(name, return_type, ...) \
   template<> inline return_type \
   MozJemalloc::name(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
@@ -5237,8 +5164,6 @@ MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_ARENA
 #include "malloc_decls.h"
-
-#endif
 
 /*
  * End non-standard functions.
