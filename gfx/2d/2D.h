@@ -73,7 +73,7 @@ namespace mozilla {
 class Mutex;
 
 namespace wr {
-struct FontInstanceOptions;
+struct WrFontInstanceOptions;
 struct FontInstancePlatformOptions;
 }
 
@@ -833,7 +833,7 @@ public:
 
   virtual bool GetFontInstanceData(FontInstanceDataOutput, void *) { return false; }
 
-  virtual bool GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+  virtual bool GetWRFontInstanceOptions(Maybe<wr::WrFontInstanceOptions>* aOutOptions,
                                         Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
                                         std::vector<FontVariation>* aOutVariations)
   {

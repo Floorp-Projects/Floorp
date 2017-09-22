@@ -52,7 +52,7 @@ public:
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
-  bool GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+  bool GetWRFontInstanceOptions(Maybe<wr::WrFontInstanceOptions>* aOutOptions,
                                 Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
                                 std::vector<FontVariation>* aOutVariations) override;
 
