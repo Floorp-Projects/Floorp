@@ -111,11 +111,14 @@ GPUVideoTextureHost::CreateRenderTexture(const wr::ExternalImageId& aExternalIma
   mWrappedTextureHost->CreateRenderTexture(aExternalImageId);
 }
 
-uint32_t
-GPUVideoTextureHost::NumSubTextures() const
+void
+GPUVideoTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
+                                    const std::function<wr::ImageKey()>& aImageKeyAllocator)
 {
   MOZ_ASSERT(mWrappedTextureHost);
-  return mWrappedTextureHost->NumSubTextures();
+  MOZ_ASSERT(aImageKeys.IsEmpty());
+
+  mWrappedTextureHost->GetWRImageKeys(aImageKeys, aImageKeyAllocator);
 }
 
 void

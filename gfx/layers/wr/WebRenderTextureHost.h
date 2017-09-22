@@ -63,7 +63,8 @@ public:
 
   int32_t GetRGBStride();
 
-  virtual uint32_t NumSubTextures() const override;
+  virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
+                              const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
 
   virtual void AddWRImage(wr::ResourceUpdateQueue& aResources,
                           Range<const wr::ImageKey>& aImageKeys,
