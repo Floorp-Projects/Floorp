@@ -175,7 +175,7 @@ function process(functionName, functionBodies)
     var markerPos = functionName.indexOf(internalMarker);
     if (markerPos > 0) {
         var inChargeXTor = functionName.replace(internalMarker, "");
-        print("D " + memo(inChargeXTor) + " " + memo(functionName));
+        printOnce("D " + memo(inChargeXTor) + " " + memo(functionName));
     }
 
     // Further note: from https://itanium-cxx-abi.github.io/cxx-abi/abi.html the
@@ -234,7 +234,7 @@ function process(functionName, functionBodies)
 
             let variant_mangled = mangled.replace(synthetic, variant);
             let variant_full = variant_mangled + "$" + unmangled;
-            print("D " + memo(variant_full) + " " + memo(functionName));
+            printOnce("D " + memo(variant_full) + " " + memo(functionName));
         }
     }
 
@@ -257,9 +257,9 @@ function process(functionName, functionBodies)
         const D0 = not_in_charge_dtor.replace("D4Ev", "D0Ev");
         const D1 = not_in_charge_dtor.replace("D4Ev", "D1Ev");
         const D2 = not_in_charge_dtor.replace("D4Ev", "D2Ev");
-        print("D " + memo(D0) + " " + memo(D1));
-        print("D " + memo(D1) + " " + memo(D2));
-        print("D " + memo(D2) + " " + memo(functionName));
+        printOnce("D " + memo(D0) + " " + memo(D1));
+        printOnce("D " + memo(D1) + " " + memo(D2));
+        printOnce("D " + memo(D2) + " " + memo(functionName));
     }
 }
 
