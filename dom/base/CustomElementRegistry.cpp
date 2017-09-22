@@ -973,9 +973,9 @@ CustomElementRegistry::Upgrade(Element* aElement,
 
         LifecycleCallbackArgs args = {
           nsDependentAtomString(attrName),
-          NullString(),
-          (attrValue.IsEmpty() ? NullString() : attrValue),
-          (namespaceURI.IsEmpty() ? NullString() : namespaceURI)
+          VoidString(),
+          (attrValue.IsEmpty() ? VoidString() : attrValue),
+          (namespaceURI.IsEmpty() ? VoidString() : namespaceURI)
         };
         EnqueueLifecycleCallback(nsIDocument::eAttributeChanged, aElement,
                                  &args, aDefinition);

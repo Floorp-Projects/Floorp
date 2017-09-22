@@ -21,7 +21,7 @@ TEST_F(InitTest, ZeroCount)
     EXPECT_EQ(pp::Token::LAST, token.type);
 }
 
-TEST_F(InitTest, NullString)
+TEST_F(InitTest, VoidString)
 {
     EXPECT_FALSE(mPreprocessor.init(1, NULL, NULL));
 }
