@@ -1521,7 +1521,7 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
       break;
 
     case WindowState.Minimized:
-      await restoreWindow(win);
+      await restoreWindow(win, this.curBrowser.eventObserver);
       break;
   }
 
@@ -3005,7 +3005,7 @@ GeckoDriver.prototype.minimizeWindow = async function(cmd, resp) {
 
   if (WindowState.from(win.windowState) != WindowState.Minimized) {
     await new Promise(resolve => {
-      win.addEventListener("sizemodechange", whenIdle(win, resolve), {once: true});
+      this.curBrowser.eventObserver.addEventListener("visibilitychange", resolve, {once: true});
       win.minimize();
     });
   }
@@ -3042,7 +3042,7 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
       break;
 
     case WindowState.Minimized:
-      await restoreWindow(win);
+      await restoreWindow(win, this.curBrowser.eventObserver);
       break;
   }
 
@@ -3123,7 +3123,7 @@ GeckoDriver.prototype.fullscreenWindow = async function(cmd, resp) {
   assert.noUserPrompt(this.dialog);
 
   if (WindowState.from(win.windowState) == WindowState.Minimized) {
-    await restoreWindow(win);
+    await restoreWindow(win, this.curBrowser.eventObserver);
   }
 
   if (WindowState.from(win.windowState) != WindowState.Fullscreen) {
@@ -3713,13 +3713,15 @@ async function exitFullscreen(window) {
 /**
  * Restore window and wait for the window state to change.
  *
- * @param {ChromeWindow} window
+ * @param {ChromeWindow} chromWindow
  *     Window to restore.
+ * @param {WebElementEventTarget} contentWindow
+ *     Content window to listen for events in.
  */
-async function restoreWindow(window) {
+async function restoreWindow(chromeWindow, contentWindow) {
   return new Promise(resolve => {
-    window.addEventListener("sizemodechange", whenIdle(window, resolve), {once: true});
-    window.restore();
+    contentWindow.addEventListener("visibilitychange", resolve, {once: true});
+    chromeWindow.restore();
   });
 }
 

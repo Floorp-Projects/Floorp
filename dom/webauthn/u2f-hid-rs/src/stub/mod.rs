@@ -21,6 +21,7 @@ impl PlatformManager {
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
+        key_handles: Vec<Vec<u8>>,
         callback: OnceCallback<Vec<u8>>,
     ) {
         // No-op on Android

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/NotoSansCJKjp-Regular.subset.otf);
+}
+body {
+  font-family: test, serif;
+  line-height: 2em;
+}
+p {
+  margin: 1em;
+}
+span {
+  display: inline-block;
+}
+.v {
+  writing-mode: vertical-rl;
+}
+.halt {
+  font-feature-settings: "halt";
+  /* there are 3 characters in the text that should be affected by 'halt',
+     so if we add 1.5em of padding, the overall width will be the same */
+  padding-inline-end: 1.5em;
+}
+.palt {
+  font-feature-settings: "palt";
+  /* 'palt' results in even tighter spacing than 'halt', so we can add a
+     little more padding and the result should still be obscured by the
+     overlaid 'halt' span. (We don't try for an exact match as this involves
+     fractional pixel widths and would be very fragile.) */
+  padding-inline-end: 1.6em;
+}
+.vhal {
+  font-feature-settings: "vhal";
+  padding-inline-end: 1.5em;
+}
+.vpal {
+  font-feature-settings: "vpal";
+  padding-inline-end: 1.6em;
+}
+.red {
+  color: red;
+  background: red;
+}
+.green {
+  color: green;
+  background: green;
+}
+.overlay {
+  position: relative;
+  offset-block-start: -3em;
+}
+</style>
+</head>
+<body>
+There should be no red:
+<div>
+  <!-- check that the red 'halt' span is entirely hidden by the green default span -->
+  <p><span class="halt red">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+  <p class="overlay"><span class="green">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+  <!-- check that the red 'palt' span is entirely hidden by the green default span -->
+  <p><span class="palt red">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+  <p class="overlay"><span class="green">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+</div>
+<div class="v">
+  <!-- check the equivalent vertical-mode features -->
+  <p><span class="vhal red">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+  <p class="overlay"><span class="green">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+  <p><span class="vpal red">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+  <p class="overlay"><span class="green">&#x3084;&#x3063;&#x307B;&#x3046;&#x3001;&#x300C;&#x4E16;&#x754C;&#x300D;</p>
+</div>

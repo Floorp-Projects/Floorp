@@ -317,6 +317,7 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
                                             uint32_t aFaviconLoadType,
                                             nsIFaviconDataCallback* aCallback,
                                             nsIPrincipal* aLoadingPrincipal,
+                                            uint64_t aRequestContextID,
                                             mozIPlacesPendingOperation **_canceler)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -407,7 +408,8 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
 
   RefPtr<AsyncFetchAndSetIconForPage> event =
     new AsyncFetchAndSetIconForPage(icon, page, loadPrivate,
-                                    aCallback, aLoadingPrincipal);
+                                    aCallback, aLoadingPrincipal,
+                                    aRequestContextID);
 
   // Get the target thread and start the work.
   // DB will be updated and observers notified when data has finished loading.
