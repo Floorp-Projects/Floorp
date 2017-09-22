@@ -19,6 +19,8 @@ namespace binding_detail {
 // for small strings and a nsStringBuffer for longer strings.
 struct FakeString {
   FakeString() :
+    mData(nsString::char_traits::sEmptyBuffer),
+    mLength(0),
     mDataFlags(nsString::DataFlags::TERMINATED),
     mClassFlags(nsString::ClassFlags(0))
   {
