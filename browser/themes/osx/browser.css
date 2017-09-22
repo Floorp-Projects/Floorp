@@ -55,6 +55,11 @@
 
 /** Begin titlebar **/
 
+#titlebar {
+  /* Centrally align content items vertically */
+  -moz-box-pack: center;
+}
+
 #titlebar-content {
   /* Ensure the the content part of the titlebar does not shrink. */
   min-height: inherit;
@@ -69,6 +74,8 @@
 #titlebar-secondary-buttonbox {
   position: relative;
   z-index: 1;
+  /* Centrally align indicators and full screen button vertically */
+  -moz-box-align: center;
 }
 
 #titlebar-buttonbox-container {
@@ -101,28 +108,6 @@
  */
 #main-window[tabsintitlebar] > #titlebar {
   min-height: calc(var(--tab-min-height) + var(--space-above-tabbar) - var(--tab-toolbar-navbar-overlap));
-}
-
-/**
- * We also vertically center the window buttons.
- */
-#titlebar-buttonbox-container {
-  -moz-box-align: start;
-}
-
-#main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
-#main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
-  /*
-   * To vertically center the window controls, we place them at half the
-   * height of the tabstrip ((tab height + drag space) / 2) - half the height
-   * of the window controls (16px / 2).
-   * */
-  margin-top: calc((var(--tab-min-height) + var(--space-above-tabbar)) / 2 - 8px);
-}
-
-#main-window:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
-#main-window:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
-  margin-top: 3px;
 }
 
 /** End titlebar **/
