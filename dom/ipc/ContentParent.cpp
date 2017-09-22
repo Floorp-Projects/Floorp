@@ -4696,7 +4696,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     CommonCreateWindow(aThisTab, /* aSetOpener = */ true, aChromeFlags,
                        aCalledFromJS, aPositionSpecified, aSizeSpecified,
                        nullptr, aFeatures, aBaseURI, aFullZoom,
-                       nextTabParentId, NullString(), rv,
+                       nextTabParentId, VoidString(), rv,
                        newRemoteTab, &cwi.windowOpened(),
                        aTriggeringPrincipal);
   if (!ipcResult) {

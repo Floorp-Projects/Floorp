@@ -1609,7 +1609,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
                       flags,
                       target,
                       nullptr,      // No type hint
-                      NullString(), // No forced download
+                      VoidString(), // No forced download
                       postStream,
                       headersStream,
                       loadType,
@@ -5488,8 +5488,8 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
                       mozilla::net::RP_Unset,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
-                      nullptr, NullString(), nullptr, nullptr, LOAD_ERROR_PAGE,
-                      nullptr, true, NullString(), this, nullptr, false,
+                      nullptr, VoidString(), nullptr, nullptr, LOAD_ERROR_PAGE,
+                      nullptr, true, VoidString(), this, nullptr, false,
                       nullptr, nullptr);
 }
 
@@ -5589,7 +5589,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                       flags,
                       EmptyString(),   // No window target
                       NS_LossyConvertUTF16toASCII(contentTypeHint).get(),
-                      NullString(),    // No forced download
+                      VoidString(),    // No forced download
                       nullptr,         // No post data
                       nullptr,         // No headers data
                       loadType,        // Load type
@@ -9757,7 +9757,7 @@ public:
                                    mFlags, EmptyString(),
                                    mTypeHint.IsVoid() ? nullptr
                                                       : mTypeHint.get(),
-                                   NullString(), mPostData, mHeadersData,
+                                   VoidString(), mPostData, mHeadersData,
                                    mLoadType, mSHEntry, mFirstParty,
                                    mSrcdoc, mSourceDocShell, mBaseURI,
                                    mCheckForPrerender, nullptr, nullptr);
@@ -10226,7 +10226,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                                         aFlags,
                                         EmptyString(),   // No window target
                                         aTypeHint,
-                                        NullString(),    // No forced download
+                                        VoidString(),    // No forced download
                                         aPostData,
                                         aHeadersData,
                                         aLoadType,
@@ -10837,7 +10837,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   if (aFlags & INTERNAL_LOAD_FLAGS_IS_SRCDOC) {
     srcdoc = aSrcdoc;
   } else {
-    srcdoc = NullString();
+    srcdoc = VoidString();
   }
 
   bool isTopLevelDoc = mItemType == typeContent &&
@@ -12860,7 +12860,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
     aEntry->GetBaseURI(getter_AddRefs(baseURI));
     flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
   } else {
-    srcdoc = NullString();
+    srcdoc = VoidString();
   }
 
   if (!triggeringPrincipal) {
@@ -12884,7 +12884,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     flags,
                     EmptyString(),      // No window target
                     contentType.get(),  // Type hint
-                    NullString(),       // No forced file download
+                    VoidString(),       // No forced file download
                     postData,           // Post data stream
                     nullptr,            // No headers stream
                     aLoadType,          // Load type
@@ -14454,7 +14454,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              LOAD_LINK,                 // Load type
                              nullptr,                   // No SHEntry
                              true,                      // first party site
-                             NullString(),              // No srcdoc
+                             VoidString(),              // No srcdoc
                              this,                      // We are the source
                              nullptr,                   // baseURI not needed
                              true,                      // Check for prerendered doc
