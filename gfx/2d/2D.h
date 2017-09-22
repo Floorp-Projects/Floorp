@@ -72,6 +72,11 @@ namespace mozilla {
 
 class Mutex;
 
+namespace wr {
+struct WrFontInstanceOptions;
+struct FontInstancePlatformOptions;
+}
+
 namespace gfx {
 class UnscaledFont;
 class ScaledFont;
@@ -770,7 +775,9 @@ public:
   virtual already_AddRefed<ScaledFont>
     CreateScaledFont(Float aGlyphSize,
                      const uint8_t* aInstanceData,
-                     uint32_t aInstanceDataLength)
+                     uint32_t aInstanceDataLength,
+                     const FontVariation* aVariations,
+                     uint32_t aNumVariations)
   {
     return nullptr;
   }
@@ -820,9 +827,18 @@ public:
    */
   virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) = 0;
 
-  typedef void (*FontInstanceDataOutput)(const uint8_t* aData, uint32_t aLength, void* aBaton);
+  typedef void (*FontInstanceDataOutput)(const uint8_t* aData, uint32_t aLength,
+                                         const FontVariation* aVariations, uint32_t aNumVariations,
+                                         void* aBaton);
 
   virtual bool GetFontInstanceData(FontInstanceDataOutput, void *) { return false; }
+
+  virtual bool GetWRFontInstanceOptions(Maybe<wr::WrFontInstanceOptions>* aOutOptions,
+                                        Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+                                        std::vector<FontVariation>* aOutVariations)
+  {
+    return false;
+  }
 
   virtual bool CanSerialize() { return false; }
 
