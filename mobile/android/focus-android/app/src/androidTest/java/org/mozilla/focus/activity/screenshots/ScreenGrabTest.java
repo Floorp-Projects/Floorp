@@ -3,8 +3,10 @@ package org.mozilla.focus.activity.screenshots;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
@@ -28,6 +30,7 @@ import org.mozilla.focus.activity.TestHelper;
 import org.mozilla.focus.activity.helpers.HostScreencapScreenshotStrategy;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -41,14 +44,21 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.web.assertion.WebViewAssertions.webMatches;
+import static android.support.test.espresso.web.sugar.Web.onWebView;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.findElement;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.webScrollIntoView;
 import static android.view.KeyEvent.KEYCODE_ENTER;
 import static junit.framework.Assert.assertTrue;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mozilla.focus.activity.TestHelper.browserURLbar;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 @RunWith(AndroidJUnit4.class)
 public class ScreenGrabTest {
-
     private static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 10;
     private static final String TEST_PATH = "/";
 
@@ -146,12 +156,11 @@ public class ScreenGrabTest {
 
         Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy());
 
-        takeScreenshotsOfFirstrun();
+        takeScreenshotsOfFirstrun(context, device);
 
         takeScreenshotOfHomeScreen();
-        takeScreenshotOfMenuAndYourRightsPage(device);
-        takeScreenshotOfAboutPage(device);
-        takeScreenshotOfHelpPage(device);
+        takeScreenshotOfMenuAndYourRightsPage(context, device);
+        takeScreenshotOfAboutPage(context, device);
 
         takeScreenshotOfUrlBarAndBrowserView(device);
         takeScreenshotOfOpenWithAndShareViews(device);
@@ -165,64 +174,87 @@ public class ScreenGrabTest {
         // a screenshot of this dialog.
         // takeScreenshotOfGooglePlayDialog(device);
 
-        takeScreenshotOfContextMenu(device);
+        takeScreenshotOfContextMenu(context, device);
         takeScreenshotOfErrorPages(device);
     }
 
-    private void takeScreenshotsOfFirstrun() throws UiObjectNotFoundException {
+    private void takeScreenshotsOfFirstrun(Context context, UiDevice device) throws UiObjectNotFoundException {
         /* Wait for app to load, and take the First View screenshot */
-        TestHelper.firstSlide.waitForExists(waitingTime);
+
+        assertTrue(device.findObject(new UiSelector()
+                .text(context.getString(R.string.firstrun_defaultbrowser_title))
+                .enabled(true)
+        ).waitForExists(waitingTime));
+
         Screengrab.screenshot("Onboarding_1_View");
         TestHelper.nextBtn.click();
-        TestHelper.secondSlide.waitForExists(waitingTime);
+
+        assertTrue(device.findObject(new UiSelector()
+                .text(context.getString(R.string.firstrun_search_title))
+                .enabled(true)
+        ).waitForExists(waitingTime));
+
         Screengrab.screenshot("Onboarding_2_View");
         TestHelper.nextBtn.click();
-        TestHelper.thirdSlide.waitForExists(waitingTime);
+
+        assertTrue(device.findObject(new UiSelector()
+                .text(context.getString(R.string.firstrun_shortcut_title))
+                .enabled(true)
+        ).waitForExists(waitingTime));
+
         Screengrab.screenshot("Onboarding_3_View");
         TestHelper.nextBtn.click();
-        TestHelper.lastSlide.waitForExists(waitingTime);
+
+        assertTrue(device.findObject(new UiSelector()
+                .text(context.getString(R.string.firstrun_privacy_title))
+                .enabled(true)
+        ).waitForExists(waitingTime));
+
         Screengrab.screenshot("Onboarding_last_View");
         TestHelper.finishBtn.click();
     }
 
     private void takeScreenshotOfHomeScreen() {
         /* Home View*/
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         Screengrab.screenshot("Home_View");
     }
 
-    private void takeScreenshotOfMenuAndYourRightsPage(UiDevice device) throws UiObjectNotFoundException {
+    private void takeScreenshotOfMenuAndYourRightsPage(Context context, UiDevice device) throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
 
-        TestHelper.RightsItem.waitForExists(waitingTime);
+        assertTrue(TestHelper.RightsItem.waitForExists(waitingTime));
         Screengrab.screenshot("MainViewMenu");
 
         TestHelper.RightsItem.click();
-        TestHelper.webView.waitForExists(waitingTime);
+
+        final String content = context.getString(R.string.your_rights_content1,
+                context.getString(R.string.app_name));
+
+        onWebView()
+                .withElement(findElement(Locator.ID, "first"))
+                .check(webMatches(getText(), equalTo(content)));
+
         Screengrab.screenshot("YourRights_Page");
 
         device.pressBack();
     }
 
-    private void takeScreenshotOfAboutPage(UiDevice device) throws UiObjectNotFoundException {
+    private void takeScreenshotOfAboutPage(Context context, UiDevice device) throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
         TestHelper.AboutItem.click();
-        TestHelper.webView.waitForExists(waitingTime);
-        Screengrab.screenshot("About_Page");
-        device.pressBack();
-    }
 
-    private void takeScreenshotOfHelpPage(UiDevice device) throws UiObjectNotFoundException {
-        TestHelper.menuButton.perform(click());
-        TestHelper.HelpItem.click();
-        TestHelper.webView.waitForExists(waitingTime*5);
-        Screengrab.screenshot("Help_Page");
+        onWebView()
+                .withElement(findElement(Locator.ID, "wordmark"))
+                .perform(webClick());
+
+        Screengrab.screenshot("About_Page");
         device.pressBack();
     }
 
     private void takeScreenshotOfUrlBarAndBrowserView(UiDevice device) throws UiObjectNotFoundException {
         /* Location Bar View */
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         Screengrab.screenshot("LocationBarEmptyState");
 
         /* Autocomplete View */
@@ -231,12 +263,17 @@ public class ScreenGrabTest {
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText("mozilla"));
 
-        TestHelper.hint.waitForExists(waitingTime);
+        assertTrue(TestHelper.hint.waitForExists(waitingTime));
         Screengrab.screenshot("SearchFor");
 
         /* Browser View Menu */
         device.pressKeyCode(KEYCODE_ENTER);
-        TestHelper.webView.waitForExists(waitingTime);
+
+        onWebView()
+                .withTimeout(30, TimeUnit.SECONDS)
+                .withElement(findElement(Locator.CLASS_NAME, "masthead-logo"))
+                .perform(webClick());
+
         TestHelper.menuButton.perform(click());
         Screengrab.screenshot("BrowserViewMenu");
     }
@@ -246,12 +283,12 @@ public class ScreenGrabTest {
         UiObject openWithBtn = device.findObject(new UiSelector()
                 .resourceId("org.mozilla.focus.debug:id/open_select_browser")
                 .enabled(true));
-        openWithBtn.waitForExists(waitingTime);
+        assertTrue(openWithBtn.waitForExists(waitingTime));
         openWithBtn.click();
         UiObject shareList = device.findObject(new UiSelector()
                 .resourceId("org.mozilla.focus.debug:id/apps")
                 .enabled(true));
-        shareList.waitForExists(waitingTime);
+        assertTrue(shareList.waitForExists(waitingTime));
         Screengrab.screenshot("OpenWith_Dialog");
 
         /* Share View */
@@ -260,7 +297,7 @@ public class ScreenGrabTest {
                 .enabled(true));
         device.pressBack();
         TestHelper.menuButton.perform(click());
-        shareBtn.waitForExists(waitingTime);
+        assertTrue(shareBtn.waitForExists(waitingTime));
         shareBtn.click();
         TestHelper.shareAppList.waitForExists(waitingTime);
         Screengrab.screenshot("Share_Dialog");
@@ -270,9 +307,9 @@ public class ScreenGrabTest {
 
     private void takeAddToHomeScreenScreenshot() throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
-        TestHelper.AddtoHSmenuItem.waitForExists(waitingTime);
+        assertTrue(TestHelper.AddtoHSmenuItem.waitForExists(waitingTime));
         TestHelper.AddtoHSmenuItem.click();
-        TestHelper.AddtoHSCancelBtn.waitForExists(waitingTime);
+        assertTrue(TestHelper.AddtoHSCancelBtn.waitForExists(waitingTime));
         Screengrab.screenshot("AddtoHSDialog");
         TestHelper.pressBackKey();
 
@@ -297,7 +334,6 @@ public class ScreenGrabTest {
     }
 
     private void takeScreenshotOfEraseSnackbar(UiDevice device) {
-        TestHelper.webView.waitForExists(waitingTime);
         TestHelper.floatingEraseButton.perform(click());
         device.wait(Until.findObject(By.res("org.mozilla.focus.debug","snackbar_text")), waitingTime);
         Screengrab.screenshot("YourBrowingHistoryHasBeenErased");
@@ -307,7 +343,7 @@ public class ScreenGrabTest {
         /* Take Settings View */
         TestHelper.menuButton.perform(click());
         TestHelper.settingsMenuItem.click();
-        TestHelper.settingsHeading.waitForExists(waitingTime);
+        assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
         Screengrab.screenshot("Settings_View_Top");
 
         /* Language List (First page only */
@@ -322,7 +358,7 @@ public class ScreenGrabTest {
                 .enabled(true));
         Screengrab.screenshot("Language_Selection");
         CancelBtn.click();
-        TestHelper.settingsHeading.waitForExists(waitingTime);
+        assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
 
         /* Search Engine List */
         UiObject SearchEngineSelection = TestHelper.settingsList.getChild(new UiSelector()
@@ -339,7 +375,7 @@ public class ScreenGrabTest {
 
         /* scroll down */
         FirstSelection.click();
-        TestHelper.settingsHeading.waitForExists(waitingTime);
+        assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
         UiScrollable settingsView = new UiScrollable(new UiSelector().scrollable(true));
         settingsView.scrollToEnd(4);
         Screengrab.screenshot("Settings_View_Bottom");
@@ -347,7 +383,7 @@ public class ScreenGrabTest {
         device.pressBack();
     }
 
-    private void takeScreenshotOfContextMenu(UiDevice device) throws UiObjectNotFoundException {
+    private void takeScreenshotOfContextMenu(Context context, UiDevice device) throws UiObjectNotFoundException {
                 /* Take image context menu screenshot */
         UiObject titleMsg = device.findObject(new UiSelector()
                 .description("focus test page")
@@ -370,35 +406,46 @@ public class ScreenGrabTest {
                 .index(2)
                 .enabled(true));
 
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
-        titleMsg.waitForExists(waitingTime);
+
+        onWebView()
+                .withElement(findElement(Locator.ID, "header"))
+                .check(webMatches(getText(), equalTo("focus test page")));
+
+        assertTrue(titleMsg.waitForExists(waitingTime));
         assertTrue("Website title loaded", titleMsg.exists());
         Assert.assertTrue(mozillaImage.exists());
         mozillaImage.dragTo(mozillaImage,7);
-        imageMenuTitle.waitForExists(waitingTime);
+        assertTrue(imageMenuTitle.waitForExists(waitingTime));
         Assert.assertTrue(imageMenuTitle.exists());
         Screengrab.screenshot("Image_Context_Menu");
 
         //Open a new tab
         openNewTabTitle.click();
-        TestHelper.webView.waitForExists(waitingTime);
+        assertTrue(multiTabBtn.waitForExists(waitingTime));
         multiTabBtn.click();
-        eraseHistoryBtn.waitForExists(waitingTime);
+        assertTrue(eraseHistoryBtn.waitForExists(waitingTime));
         Screengrab.screenshot("Multi_Tab_Menu");
         TestHelper.pressBackKey();
         device.openNotification();
-        TestHelper.notificationBarDeleteItem.click();
+
+        final UiObject notificationErase = device.findObject(new UiSelector()
+                .text(context.getString(R.string.notification_erase_text))
+                .resourceId("android:id/text")
+                .enabled(true));
+
+        assertTrue(notificationErase.waitForExists(waitingTime));
+        notificationErase.click();
     }
 
     private void takeScreenshotOfGooglePlayDialog(UiDevice device) throws UiObjectNotFoundException {
         final String marketURL = "market://details?id=org.mozilla.firefox&referrer=utm_source%3D" +
                 "mozilla%26utm_medium%3DReferral%26utm_campaign%3Dmozilla-org";
 
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         TestHelper.inlineAutocompleteEditText.setText(marketURL);
         device.pressKeyCode(KEYCODE_ENTER);
 
@@ -407,26 +454,30 @@ public class ScreenGrabTest {
         UiObject alert = device.findObject(new UiSelector()
                 .resourceId("android:id/alertTitle"));
 
-        alert.waitForExists(waitingTime);
-        cancelBtn.waitForExists(waitingTime);
+        assertTrue(alert.waitForExists(waitingTime));
+        assertTrue(cancelBtn.waitForExists(waitingTime));
         Screengrab.screenshot("Redirect_Outside");
         cancelBtn.click();
 
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         device.pressBack();
     }
 
     private void takeScreenshotOfErrorPages(UiDevice device) throws UiObjectNotFoundException {
-        UiObject tryAgainBtn = device.findObject(new UiSelector()
-                .resourceId("errorTryAgain")
-                .clickable(true));
-
         for (ScreenGrabTest.ErrorTypes error: ScreenGrabTest.ErrorTypes.values()) {
-            TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+            assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
+
             TestHelper.inlineAutocompleteEditText.setText("error:"+ error.value);
             device.pressKeyCode(KEYCODE_ENTER);
-            TestHelper.webView.waitForExists(waitingTime);
-            tryAgainBtn.waitForExists(waitingTime);
+
+            onWebView()
+                    .withElement(findElement(Locator.ID, "errorTitle"))
+                    .perform(webClick());
+
+            onWebView()
+                    .withElement(findElement(Locator.ID, "errorTryAgain"))
+                    .perform(webScrollIntoView());
+
             Screengrab.screenshot(error.name());
             browserURLbar.click();
         }
