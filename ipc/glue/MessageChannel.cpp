@@ -1018,7 +1018,7 @@ MessageChannel::SendBuildID()
     MonitorAutoLock lock(*mMonitor);
     if (!Connected()) {
         ReportConnectionError("MessageChannel", msg);
-        MOZ_CRASH();
+        return;
     }
     mLink->SendMessage(msg.forget());
 }
