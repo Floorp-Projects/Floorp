@@ -86,22 +86,6 @@ ProgressGraphHelper.prototype = {
   },
 
   /**
-   * Return animation duration.
-   * @return {Number} duration
-   */
-  getDuration: function () {
-    return this.animation.effect.timing.duration;
-  },
-
-  /**
-   * Return animation's keyframe.
-   * @return {Object} keyframe
-   */
-  getKeyframes: function () {
-    return this.keyframes;
-  },
-
-  /**
    * Return graph type.
    * @return {String} if property is 'opacity' or 'transform', return that value.
    *                  Otherwise, return given animation type in constructor.
@@ -264,27 +248,14 @@ ProgressGraphHelper.prototype = {
   },
 
   /**
-   * Append path element as shape. Also, this method appends two segment
-   * that are {start x, 0} and {end x, 0} to make shape.
+   * Append path element.
    * @param {Element} parentEl - Parent element of this appended path element.
    * @param {Array} pathSegments - Path segments. Please see createPathSegments.
    * @param {String} cls - Class name.
    * @return {Element} path element.
    */
-  appendShapePath: function (parentEl, pathSegments, cls) {
-    return appendShapePath(parentEl, pathSegments, cls);
-  },
-
-  /**
-   * Append path element as line.
-   * @param {Element} parentEl - Parent element of this appended path element.
-   * @param {Array} pathSegments - Path segments. Please see createPathSegments.
-   * @param {String} cls - Class name.
-   * @return {Element} path element.
-   */
-  appendLinePath: function (parentEl, pathSegments, cls) {
-    const isClosePathNeeded = false;
-    return appendPathElement(parentEl, pathSegments, cls, isClosePathNeeded);
+  appendPathElement: function (parentEl, pathSegments, cls) {
+    return appendPathElement(parentEl, pathSegments, cls);
   },
 };
 
@@ -300,7 +271,7 @@ exports.ProgressGraphHelper = ProgressGraphHelper;
  * setFillMode:
  *   Animation fill-mode (e.g. "none", "backwards", "forwards" or "both")
  * setClosePathNeeded:
- *   If true, appendShapePath make the last segment of <path> element to
+ *   If true, appendPathElement make the last segment of <path> element to
  *   "close" segment("Z").
  *   Therefore, if don't need under-line of graph, please set false.
  * setOriginalBehavior:
@@ -389,7 +360,7 @@ SummaryGraphHelper.prototype = {
   },
 
   /**
-   * Set true if need to close path in appendShapePath.
+   * Set true if need to close path in appendPathElement.
    * @param {bool} isClosePathNeeded - true: close, false: open.
    */
   setClosePathNeeded: function (isClosePathNeeded) {
@@ -440,15 +411,14 @@ SummaryGraphHelper.prototype = {
   },
 
   /**
-   * Append path element as shape. Also, this method appends two segment
-   * that are {start x, 0} and {end x, 0} to make shape.
+   * Append path element.
    * @param {Element} parentEl - Parent element of this appended path element.
    * @param {Array} pathSegments - Path segments. Please see createPathSegments.
    * @param {String} cls - Class name.
    * @return {Element} path element.
    */
-  appendShapePath: function (parentEl, pathSegments, cls) {
-    return appendShapePath(parentEl, pathSegments, cls, this.isClosePathNeeded);
+  appendPathElement: function (parentEl, pathSegments, cls) {
+    return appendPathElement(parentEl, pathSegments, cls, this.isClosePathNeeded);
   },
 
   /**
@@ -528,50 +498,40 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
 }
 
 /**
- * Append path element as shape. Also, this method appends two segment
- * that are {start x, 0} and {end x, 0} to make shape.
- * But does not affect given pathSegments.
+ * Append path element.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Array} pathSegments - Path segments. Please see createPathSegments.
  * @param {String} cls - Class name.
  * @param {bool} isClosePathNeeded - Set true if need to close the path. (default true)
  * @return {Element} path element.
  */
-function appendShapePath(parentEl, pathSegments, cls, isClosePathNeeded = true) {
-  const segments = [
-    { x: pathSegments[0].x, y: 0 },
-    ...pathSegments,
-    { x: pathSegments[pathSegments.length - 1].x, y: 0 }
-  ];
-  return appendPathElement(parentEl, segments, cls, isClosePathNeeded);
-}
-
-/**
- * Append path element.
- * @param {Element} parentEl - Parent element of this appended path element.
- * @param {Array} pathSegments - Path segments. Please see createPathSegments.
- * @param {String} cls - Class name.
- * @param {bool} isClosePathNeeded - Set true if need to close the path.
- * @return {Element} path element.
- */
-function appendPathElement(parentEl, pathSegments, cls, isClosePathNeeded) {
+function appendPathElement(parentEl, pathSegments, cls, isClosePathNeeded = true) {
   // Create path string.
-  let currentSegment = pathSegments[0];
-  let path = `M${ currentSegment.x },${ currentSegment.y }`;
-  for (let i = 1; i < pathSegments.length; i++) {
-    const currentEasing = currentSegment.easing ? currentSegment.easing : "linear";
-    const nextSegment = pathSegments[i];
-    if (currentEasing === "linear") {
-      path += createLinePathString(nextSegment);
-    } else if (currentEasing.startsWith("steps")) {
-      path += createStepsPathString(currentSegment, nextSegment);
-    } else if (currentEasing.startsWith("frames")) {
-      path += createFramesPathString(currentSegment, nextSegment);
-    } else {
-      path += createCubicBezierPathString(currentSegment, nextSegment);
+  let path = `M${ pathSegments[0].x },0`;
+  for (let i = 0; i < pathSegments.length; i++) {
+    const pathSegment = pathSegments[i];
+    if (!pathSegment.easing || pathSegment.easing === "linear") {
+      path += createLinePathString(pathSegment);
+      continue;
     }
-    currentSegment = nextSegment;
+
+    if (i + 1 === pathSegments.length) {
+      // We already create steps or cubic-bezier path string in previous.
+      break;
+    }
+
+    const nextPathSegment = pathSegments[i + 1];
+    let createPathFunction;
+    if (pathSegment.easing.startsWith("steps")) {
+      createPathFunction = createStepsPathString;
+    } else if (pathSegment.easing.startsWith("frames")) {
+      createPathFunction = createFramesPathString;
+    } else {
+      createPathFunction = createCubicBezierPathString;
+    }
+    path += createPathFunction(pathSegment, nextPathSegment);
   }
+  path += ` L${ pathSegments[pathSegments.length - 1].x },0`;
   if (isClosePathNeeded) {
     path += " Z";
   }
