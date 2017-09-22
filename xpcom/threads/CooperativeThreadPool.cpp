@@ -31,7 +31,7 @@ CooperativeThreadPool::CooperativeThreadPool(size_t aNumThreads,
   , mController(aController)
   , mSelectedThread(size_t(0))
 {
-  MOZ_ASSERT(aNumThreads < kMaxThreads);
+  MOZ_ASSERT(aNumThreads <= kMaxThreads);
 
   gCooperativeSchedulingEnabled = true;
   sTlsCurrentThread.infallibleInit();
