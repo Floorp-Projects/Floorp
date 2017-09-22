@@ -12963,15 +12963,6 @@
     "bug_numbers": [1331804],
     "description": "The time a given main thread runnable took to run (in milliseconds). The key comes from the runnables nsINamed::name value."
   },
-  "MOZ_CHUNKED_TEXT_IN_XHR": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "58",
-    "kind": "boolean",
-    "bug_numbers": [1335365],
-    "releaseChannelCollection": "opt-out",
-    "description": "XMLHttpRequest.responseType set to moz-chunked-text"
-  },
   "MOZ_CHUNKED_ARRAYBUFFER_IN_XHR": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["amarchesini@mozilla.com"],
