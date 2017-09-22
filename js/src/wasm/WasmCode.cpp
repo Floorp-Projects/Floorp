@@ -89,12 +89,9 @@ static bool
 StaticallyLink(const CodeSegment& cs, const LinkDataTier& linkData)
 {
     for (LinkDataTier::InternalLink link : linkData.internalLinks) {
-        uint8_t* patchAt = cs.base() + link.patchAtOffset;
-        void* target = cs.base() + link.targetOffset;
-        if (link.isRawPointerPatch())
-            *(void**)(patchAt) = target;
-        else
-            Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
+        CodeOffset patchAt(link.patchAtOffset);
+        CodeOffset target(link.targetOffset);
+        Assembler::Bind(cs.base(), patchAt, target);
     }
 
     if (!EnsureBuiltinThunksInitialized())
@@ -121,12 +118,9 @@ static void
 StaticallyUnlink(uint8_t* base, const LinkDataTier& linkData)
 {
     for (LinkDataTier::InternalLink link : linkData.internalLinks) {
-        uint8_t* patchAt = base + link.patchAtOffset;
-        void* target = 0;
-        if (link.isRawPointerPatch())
-            *(void**)(patchAt) = target;
-        else
-            Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
+        CodeOffset patchAt(link.patchAtOffset);
+        CodeOffset target(-size_t(base));  // to reset immediate to null
+        Assembler::Bind(base, patchAt, target);
     }
 
     for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {

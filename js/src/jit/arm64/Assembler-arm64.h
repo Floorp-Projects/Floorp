@@ -245,12 +245,12 @@ class Assembler : public vixl::Assembler
     void processCodeLabels(uint8_t* rawCode) {
         for (size_t i = 0; i < codeLabels_.length(); i++) {
             CodeLabel label = codeLabels_[i];
-            Bind(rawCode, label.patchAt(), rawCode + label.target()->offset());
+            Bind(rawCode, *label.patchAt(), *label.target());
         }
     }
 
-    void Bind(uint8_t* rawCode, CodeOffset* label, const void* address) {
-        *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
+    static void Bind(uint8_t* rawCode, CodeOffset label, CodeOffset address) {
+        *reinterpret_cast<const void**>(rawCode + label.offset()) = rawCode + address.offset();
     }
 
     void retarget(Label* cur, Label* next);
@@ -269,9 +269,6 @@ class Assembler : public vixl::Assembler
     int actualIndex(int curOffset) {
         ARMBuffer::PoolEntry pe(curOffset);
         return armbuffer_.poolEntryOffset(pe);
-    }
-    size_t labelToPatchOffset(CodeOffset label) {
-        return label.offset();
     }
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index) {
         return code->raw() + index;
@@ -343,8 +340,6 @@ class Assembler : public vixl::Assembler
 
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
-
-    static void PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm);
 
     static void FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader& reader,
                                     const ObjectVector& nurseryObjects);
