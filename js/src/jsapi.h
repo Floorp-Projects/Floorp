@@ -3740,6 +3740,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions) : public TransitiveCompileOptions
         column(0),
         scriptSourceOffset(0),
         isRunOnce(false),
+        nonSyntacticScope(false),
         noScriptRval(false)
     { }
 
@@ -3775,6 +3776,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions) : public TransitiveCompileOptions
     unsigned scriptSourceOffset;
     // isRunOnce only applies to non-function scripts.
     bool isRunOnce;
+    bool nonSyntacticScope;
     bool noScriptRval;
 
   private:
@@ -3844,6 +3846,7 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     OwningCompileOptions& setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     OwningCompileOptions& setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     OwningCompileOptions& setSourceIsLazy(bool l) { sourceIsLazy = l; return *this; }
+    OwningCompileOptions& setNonSyntacticScope(bool n) { nonSyntacticScope = n; return *this; }
     OwningCompileOptions& setIntroductionType(const char* t) { introductionType = t; return *this; }
     bool setIntroductionInfo(JSContext* cx, const char* introducerFn, const char* intro,
                              unsigned line, JSScript* script, uint32_t offset)
@@ -3936,6 +3939,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) final : public ReadOnlyCompi
     CompileOptions& setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     CompileOptions& setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     CompileOptions& setSourceIsLazy(bool l) { sourceIsLazy = l; return *this; }
+    CompileOptions& setNonSyntacticScope(bool n) { nonSyntacticScope = n; return *this; }
     CompileOptions& setIntroductionType(const char* t) { introductionType = t; return *this; }
     CompileOptions& setIntroductionInfo(const char* introducerFn, const char* intro,
                                         unsigned line, JSScript* script, uint32_t offset)
