@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import os
 
 from requests.exceptions import HTTPError
 
@@ -65,17 +66,25 @@ def create_task_from_def(task_id, task_def, level):
     create.create_task(session, task_id, label, task_def)
 
 
-def create_tasks(to_run, full_task_graph, label_to_taskid, params, decision_task_id):
+def update_parent(task, graph):
+    task.task.setdefault('extra', {})['parent'] = os.environ.get('TASK_ID', '')
+    return task
+
+
+def create_tasks(to_run, full_task_graph, label_to_taskid, params, decision_task_id=None):
     """Create new tasks.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
     this function to create new tasks,
     allowing easy debugging with `mach taskgraph action-callback --test`.
-    This builds up all required tasks to run in order to run the tasks requested."""
+    This builds up all required tasks to run in order to run the tasks requested.
+
+    If you wish to create the tasks in a new group, leave out decision_task_id."""
     to_run = set(to_run)
     target_graph = full_task_graph.graph.transitive_closure(to_run)
     target_task_graph = TaskGraph(
         {l: full_task_graph[l] for l in target_graph.nodes},
         target_graph)
+    target_task_graph.for_each_task(update_parent)
     optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
                                                                 params,
                                                                 to_run,

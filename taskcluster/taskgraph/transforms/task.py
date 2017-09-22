@@ -1142,6 +1142,7 @@ def build_task(config, tasks):
 
         # set up extra
         extra = task.get('extra', {})
+        extra['parent'] = os.environ.get('TASK_ID', '')
         task_th = task.get('treeherder')
         if task_th:
             extra['treeherderEnv'] = task_th['environments']
@@ -1189,6 +1190,7 @@ def build_task(config, tasks):
         tags.update({
             'createdForUser': config.params['owner'],
             'kind': config.kind,
+            'label': task['label'],
         })
 
         task_def = {
