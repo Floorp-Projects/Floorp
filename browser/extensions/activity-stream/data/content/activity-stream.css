@@ -194,6 +194,10 @@ main {
     margin-bottom: 40px;
     position: relative; }
 
+.section-top-bar {
+  height: 16px;
+  margin-bottom: 12px; }
+
 .section-title {
   font-size: 13px;
   font-weight: bold;
@@ -515,9 +519,7 @@ main {
     transform: translateY(0); } }
 
 .sections-list .section-top-bar {
-  position: relative;
-  height: 16px;
-  margin-bottom: 18px; }
+  position: relative; }
   .sections-list .section-top-bar .section-info-option {
     offset-inline-end: 0;
     position: absolute;
