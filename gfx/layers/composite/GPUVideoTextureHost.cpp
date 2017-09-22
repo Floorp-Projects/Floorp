@@ -119,13 +119,13 @@ GPUVideoTextureHost::NumSubTextures() const
 }
 
 void
-GPUVideoTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
-                                         ResourceUpdateOp aOp,
-                                         const Range<wr::ImageKey>& aImageKeys,
-                                         const wr::ExternalImageId& aExtID)
+GPUVideoTextureHost::AddWRImage(wr::ResourceUpdateQueue& aResources,
+                                Range<const wr::ImageKey>& aImageKeys,
+                                const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mWrappedTextureHost);
-  mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
+
+  mWrappedTextureHost->AddWRImage(aResources, aImageKeys, aExtID);
 }
 
 void
