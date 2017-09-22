@@ -1492,7 +1492,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
 static bool
 AssumeThemePartAndStateAreTransparent(int32_t aPart, int32_t aState)
 {
-  if (aPart == MENU_POPUPITEM && aState == MBI_NORMAL) {
+  if (!(IsWin8Point1OrLater() && nsUXThemeData::IsHighContrastOn()) &&
+      aPart == MENU_POPUPITEM && aState == MBI_NORMAL) {
     return true;
   }
   return false;
