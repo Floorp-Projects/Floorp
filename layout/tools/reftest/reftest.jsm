@@ -805,7 +805,7 @@ function BuildConditionSandbox(aURL) {
 
     // see if we have the test plugin available,
     // and set a sandox prop accordingly
-    sandbox.haveTestPlugin = !!getTestPlugin("Test Plug-in");
+    sandbox.haveTestPlugin = !sandbox.Android && !!getTestPlugin("Test Plug-in");
 
     // Set a flag on sandbox if the windows default theme is active
     sandbox.windowsDefaultTheme = gContainingWindow.matchMedia("(-moz-windows-default-theme)").matches;
