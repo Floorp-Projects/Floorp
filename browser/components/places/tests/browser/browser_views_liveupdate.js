@@ -21,10 +21,6 @@ function test() {
 }
 
 function openBookmarksSidebar() {
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils in context");
-  ok(PlacesUIUtils, "PlacesUIUtils in context");
-
   // Open bookmarks menu.
   var popup = document.getElementById("bookmarksMenuPopup");
   ok(popup, "Menu popup element exists");
