@@ -17,6 +17,7 @@ EXTRA_JS_MODULES += [
     'DownloadCore.jsm',
     'DownloadIntegration.jsm',
     'DownloadList.jsm',
+    'DownloadPaths.jsm',
     'Downloads.jsm',
     'DownloadStore.jsm',
     'DownloadUIHelper.jsm',
