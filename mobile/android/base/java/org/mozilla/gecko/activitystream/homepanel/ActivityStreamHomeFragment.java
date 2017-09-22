@@ -5,7 +5,6 @@
 package org.mozilla.gecko.activitystream.homepanel;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -18,7 +17,6 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.home.HomeFragment;
 
 /**
@@ -51,7 +49,7 @@ public class ActivityStreamHomeFragment
                 || TextUtils.equals(s, ActivityStreamPanel.PREF_POCKET_ENABLED);
 
         if (shouldReload) {
-            activityStreamPanel.reload(getLoaderManager());
+            activityStreamPanel.reload(getLoaderManager(), sharedPreferences, this.getResources());
         }
 
     }
