@@ -629,8 +629,8 @@ ModuleGenerator::finishLinkData()
     // SIMD values in the constant pool.
     for (size_t i = 0; i < masm_.numCodeLabels(); i++) {
         CodeLabel cl = masm_.codeLabel(i);
-        LinkDataTier::InternalLink inLink(LinkDataTier::InternalLink::CodeLabel);
-        inLink.patchAtOffset = masm_.labelToPatchOffset(*cl.patchAt());
+        LinkDataTier::InternalLink inLink;
+        inLink.patchAtOffset = cl.patchAt()->offset();
         inLink.targetOffset = cl.target()->offset();
         if (!linkDataTier_->internalLinks.append(inLink))
             return false;

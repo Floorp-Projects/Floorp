@@ -1233,7 +1233,7 @@ class AssemblerMIPSShared : public AssemblerShared
     void bind(Label* label, BufferOffset boff = BufferOffset());
     void bindLater(Label* label, wasm::TrapDesc target);
     virtual void bind(InstImm* inst, uintptr_t branch, uintptr_t target) = 0;
-    virtual void Bind(uint8_t* rawCode, CodeOffset* label, const void* address) = 0;
+    virtual void Bind(uint8_t* rawCode, CodeOffset label, CodeOffset target) = 0;
     void bind(CodeOffset* label) {
         label->bind(currentOffset());
     }
@@ -1244,9 +1244,6 @@ class AssemblerMIPSShared : public AssemblerShared
         return nextOffset().getOffset();
     }
     void retarget(Label* label, Label* target);
-
-    // See Bind
-    size_t labelToPatchOffset(CodeOffset label) { return label.offset(); }
 
     void call(Label* label);
     void call(void* target);
