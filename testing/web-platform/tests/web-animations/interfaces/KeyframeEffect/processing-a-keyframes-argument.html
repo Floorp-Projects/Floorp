@@ -64,7 +64,7 @@ for (const prop of gNonAnimatableProps) {
     new KeyframeEffect(null, testKeyframe);
 
     assert_equals(testKeyframe.propAccessCount, 0, 'Accessor not called');
-  }, 'non-animatable property \'' + prop + '\' is not accessed when using'
+  }, `non-animatable property '${prop}' is not accessed when using`
      + ' a property-indexed keyframe object');
 }
 
@@ -75,7 +75,7 @@ for (const prop of gNonAnimatableProps) {
     new KeyframeEffect(null, testKeyframes);
 
     assert_equals(testKeyframes[0].propAccessCount, 0, 'Accessor not called');
-  }, 'non-animatable property \'' + prop + '\' is not accessed when using'
+  }, `non-animatable property '${prop}' is not accessed when using`
      + ' a keyframe sequence');
 }
 
