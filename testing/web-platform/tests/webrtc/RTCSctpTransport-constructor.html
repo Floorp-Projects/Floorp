@@ -67,7 +67,7 @@
     const pc = new RTCPeerConnection();
     assert_equals(pc.sctp, null);
 
-    return generateOffer({ pc, data: true })
+    return generateOffer({ data: true })
     .then(offer => pc.setRemoteDescription(offer))
     .then(() => pc.createAnswer())
     .then(answer => pc.setLocalDescription(answer))

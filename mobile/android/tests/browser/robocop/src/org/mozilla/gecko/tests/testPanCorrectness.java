@@ -17,8 +17,7 @@ public class testPanCorrectness extends PixelTest {
     public void testPanCorrectness() {
         String url = getAbsoluteUrl(mStringHelper.ROBOCOP_BOXES_URL);
 
-        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mSolo,
-                                                      mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
 
         blockForGeckoReady();
 

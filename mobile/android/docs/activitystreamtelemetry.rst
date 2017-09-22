@@ -18,6 +18,14 @@ A concept of a "global" extra is meant to support recording certain context info
 ``fx_account_present``, values: true, false
 Indicates if Firefox Account is currently enabled.
 
+``as_user_preferences``, values: (bit-packed) value of preferences enabled
+Each preference is assigned a value that is a unique power of 2, and value of as_user_preferences is the sum of all enabled preferences values.
+
+The SharedPreferences preferences measured (with their value) are:
+pref_activitystream_pocket_enabled: 4
+pref_activitystream_visited_enabled: 8
+pref_activitystream_recentbookmarks_enabled: 16
+
 Extra information available for various event types
 ===================================================
 Action position
@@ -160,7 +168,7 @@ Full Examples
 =============
 Following examples of events are here to provide a better feel for the overall shape of telemetry data being recorded.
 
-1) User with an active Firefox Account clicked on a menu item for a third highlight ("visited"):
+1) User with an active Firefox Account clicked on a menu item for a third highlight ("visited") [prefs enabled: top-stories, bookmarks, visited] :
     ::
 
         session="activitystream.1"
@@ -168,12 +176,13 @@ Following examples of events are here to provide a better feel for the overall s
         method="contextmenu"
         extras="{
             'fx_account_present': true,
+            'as_user_preferences': 28,
             'source_type': 'highlights',
             'source_subtype': 'visited',
             'action_position': 2
         }"
 
-2) User with no active Firefox Account clicked on a second highlight (recent bookmark), with total of 7 highlights being displayed:
+2) User with no active Firefox Account clicked on a second highlight (recent bookmark), with total of 7 highlights being displayed [prefs enabled: bookmarks] :
     ::
 
         session="activitystream.1"
@@ -181,13 +190,14 @@ Following examples of events are here to provide a better feel for the overall s
         method="listitem"
         extras="{
             'fx_account_present': false,
+            'as_user_preferences': 16,
             'source_type': 'highlights',
             'source_subtype': 'bookmarked'
             'action_position': 1,
             'count': 7
         }"
 
-3) User with an active Firefox Account clicked on a third pinned top site:
+3) User with an active Firefox Account clicked on a third pinned top site [prefs enabled: (none)] :
     ::
 
         session="activitystream.1"
@@ -195,13 +205,14 @@ Following examples of events are here to provide a better feel for the overall s
         method="listitem"
         extras="{
             'fx_account_present': true,
+            'as_user_preferences': 0,
             'source_type': 'topsites',
             'source_subtype': 'pinned',
             'action_position': 2,
             'page_number': 0
         }"
 
-4) User with an active Firefox Account clicked on a "share" context menu item, which was displayed for a regular top site number 6:
+4) User with an active Firefox Account clicked on a "share" context menu item, which was displayed for a regular top site number 6 [prefs enabled: visited, bookmarks] :
     ::
 
         session="activitystream.1"
@@ -209,6 +220,7 @@ Following examples of events are here to provide a better feel for the overall s
         method="contextmenu"
         extras="{
             'fx_account_present': true,
+            'as_user_preferences': 24,
             'source_type': 'topsites',
             'source_subtype': 'top',
             'item': 'share',

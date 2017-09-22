@@ -16,7 +16,7 @@ function preflightTest(succeeds, withCredentials, allowMethod, allowHeader, useM
     if (useMethod) {
       requestInit.method = useMethod
     }
-    if (useHeader.length > 0) {
+    if (useHeader) {
       requestInit.headers = [useHeader]
     }
     testURL += "allow_methods=" + allowMethod + "&"
@@ -36,9 +36,7 @@ preflightTest(true, false, "get", "x-test", "GET", ["X-Test", "1"])
 preflightTest(true, false, "*", "x-test", "SUPER", ["X-Test", "1"])
 preflightTest(true, false, "*", "*", "OK", ["X-Test", "1"])
 preflightTest(false, true, "*", "*", "OK", ["X-Test", "1"])
-preflightTest(false, true, "*", "", "PUT", [])
-preflightTest(true, true, "PUT", "*", "PUT", [])
-preflightTest(false, true, "put", "*", "PUT", [])
+preflightTest(false, true, "*", "", "PUT", undefined)
+preflightTest(false, true, "put", "*", "PUT", undefined)
 preflightTest(false, true, "get", "*", "GET", ["X-Test", "1"])
 preflightTest(false, true, "*", "*", "GET", ["X-Test", "1"])
-preflightTest(true, true, "*", "*", "*", ["*", "1"])

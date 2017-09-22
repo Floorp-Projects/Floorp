@@ -673,7 +673,7 @@ public abstract class GeckoApp extends GeckoActivity
             GeckoAccessibility.updateAccessibilitySettings(this);
 
         } else if ("Accessibility:Event".equals(event)) {
-            GeckoAccessibility.sendAccessibilityEvent(mLayerView, message);
+            GeckoAccessibility.sendAccessibilityEvent(message);
 
         } else if ("Bookmark:Insert".equals(event)) {
             final BrowserDB db = BrowserDB.from(getProfile());

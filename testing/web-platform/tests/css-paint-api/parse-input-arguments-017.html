@@ -20,7 +20,9 @@
 var testsPassed = false;
 try {
     registerPaint('foo13', class {
-        static get contextOptions() { return {alpha: true}; }
+        static get alpha() {
+            return true;
+        }
         paint() { }
     });
     testsPassed = true;

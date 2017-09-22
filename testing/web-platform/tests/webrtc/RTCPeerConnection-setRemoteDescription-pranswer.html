@@ -64,7 +64,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    return pc.createOffer()
+    return generateOffer()
     .then(offer =>
       promise_rejects(t, 'InvalidStateError',
         pc.setRemoteDescription({ type: 'pranswer', sdp: offer.sdp })));

@@ -549,8 +549,6 @@ CSS_PROP_ALIAS(-webkit-user-select,
                _moz_user_select,
                WebkitUserSelect,
                WEBKIT_PREFIX_PREF)
-
-#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
 CSS_PROP_ALIAS(-webkit-mask,
                _webkit_mask,
                mask,
@@ -601,5 +599,4 @@ CSS_PROP_ALIAS(-webkit-mask-size,
                mask_size,
                WebkitMaskSize,
                WEBKIT_PREFIX_PREF)
-#endif
 #undef WEBKIT_PREFIX_PREF

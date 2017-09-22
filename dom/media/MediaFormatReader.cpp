@@ -1821,7 +1821,7 @@ MediaFormatReader::NotifyError(TrackType aTrack, const MediaResult& aError)
       !aError.GPUCrashTimeStamp().IsNull()) {
 
     GPUProcessCrashTelemetryLogger::RecordGPUCrashData(mMediaDecoderOwnerID,
-                                                       &decoder,
+                                                       decoder.mDecoder.get(),
                                                        aError.GPUCrashTimeStamp(),
                                                        TimeStamp::Now());
   }
@@ -2024,7 +2024,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
              // frame, report the recovery time telemetry.
              if (aTrack == TrackType::kVideoTrack) {
                GPUProcessCrashTelemetryLogger::ReportTelemetry(
-                 mMediaDecoderOwnerID, &decoder);
+                 mMediaDecoderOwnerID, decoder.mDecoder.get());
              }
            },
            [self, this, aTrack, &decoder](const MediaResult& aError) {

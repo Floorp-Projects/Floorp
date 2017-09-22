@@ -21,11 +21,6 @@ const defaultDetails = Object.freeze({
 
 test(() => {
   const request = new PaymentRequest(defaultMethods, defaultDetails);
-  assert_idl_attribute(request, "onshippingaddresschange");
-}, "Must have a onshippingaddresschange IDL attribute");
-
-test(() => {
-  const request = new PaymentRequest(defaultMethods, defaultDetails);
   const ev = new Event("shippingaddresschange");
   let didHandle = false;
   request.onshippingaddresschange = evt => {

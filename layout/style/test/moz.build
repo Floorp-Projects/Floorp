@@ -124,8 +124,6 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
 ]
 
 DEFINES['MOZILLA_INTERNAL_API'] = True
-if CONFIG['MOZ_ENABLE_MASK_AS_SHORTHAND']:
-   HOST_DEFINES['MOZ_ENABLE_MASK_AS_SHORTHAND'] = True
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += ['css_properties.js']
