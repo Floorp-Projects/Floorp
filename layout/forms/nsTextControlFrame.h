@@ -203,12 +203,6 @@ public: //for methods who access nsTextControlFrame directly
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
 
-#define DEFINE_TEXTCTRL_FORWARDER(type, name)                                  \
-  type name() {                                                                \
-    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent()); \
-    NS_ASSERTION(txtCtrl, "Content not a text control element");               \
-    return txtCtrl->name();                                                    \
-  }
 #define DEFINE_TEXTCTRL_CONST_FORWARDER(type, name)                            \
   type name() const {                                                          \
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent()); \
@@ -224,7 +218,6 @@ public: //for methods who access nsTextControlFrame directly
   DEFINE_TEXTCTRL_CONST_FORWARDER(int32_t, GetRows)
 
 #undef DEFINE_TEXTCTRL_CONST_FORWARDER
-#undef DEFINE_TEXTCTRL_FORWARDER
 
 protected:
   class EditorInitializer;
