@@ -4194,10 +4194,7 @@ Element::ClearServoData(nsIDocument* aDoc) {
   // is necessary for correctness, since we invoke ClearServoData in various
   // places where an element's flattened tree parent changes, and such a change
   // may also make an element invalid to be used as a restyle root.
-  //
-  // Note that we need to null-check aDoc, which may be null in some situations
-  // when invoked from UnbindFromTree.
-  if (aDoc && aDoc->GetServoRestyleRoot() == this) {
+  if (aDoc->GetServoRestyleRoot() == this) {
     aDoc->ClearServoRestyleRoot();
   }
 #else
