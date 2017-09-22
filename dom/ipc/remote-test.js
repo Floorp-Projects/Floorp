@@ -26,7 +26,7 @@ var dshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
 addEventListener("click",
   function(e) {
     dump(e.target + "\n");
-    if (e.target instanceof Components.interfaces.nsIDOMHTMLAnchorElement &&
+    if (ChromeUtils.getClassName(e.target) === "HTMLAnchorElement" &&
         dshell == docShell) {
       var retval = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                             getInterface(Components.interfaces.nsIContentFrameMessageManager).
