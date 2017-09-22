@@ -513,7 +513,7 @@ class SandboxValidationError(Exception):
         s = StringIO()
 
         delim = '=' * 30
-        s.write('\n%s\nERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
+        s.write('\n%s\nFATAL ERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
 
         s.write('The error occurred while processing the following file or ')
         s.write('one of the files it includes:\n')
@@ -587,7 +587,7 @@ class BuildReaderError(Exception):
         s = StringIO()
 
         delim = '=' * 30
-        s.write('\n%s\nERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
+        s.write('\n%s\nFATAL ERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
 
         s.write('The error occurred while processing the following file:\n')
         s.write('\n')
