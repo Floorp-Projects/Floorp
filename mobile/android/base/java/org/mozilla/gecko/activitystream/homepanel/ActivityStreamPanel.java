@@ -89,6 +89,15 @@ public class ActivityStreamPanel extends FrameLayout {
                 ActivityStreamTelemetry.Contract.FX_ACCOUNT_PRESENT,
                 FirefoxAccounts.firefoxAccountsExist(context)
         );
+
+        updateSharedPreferencesGlobalExtras(sharedPreferences, context.getResources());
+    }
+
+    private void updateSharedPreferencesGlobalExtras(final SharedPreferences sharedPreferences, final Resources res) {
+        ActivityStreamTelemetry.Extras.setGlobal(
+                ActivityStreamTelemetry.Contract.AS_USER_PREFERENCES,
+                ActivityStreamTelemetry.getASUserPreferencesValue(sharedPreferences, res)
+        );
     }
 
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
@@ -113,8 +122,10 @@ public class ActivityStreamPanel extends FrameLayout {
         adapter.swapTopSitesCursor(null);
     }
 
-    public void reload(LoaderManager lm) {
+    public void reload(LoaderManager lm, SharedPreferences sharedPreferences, Resources res) {
         adapter.clearAndInit();
+
+        updateSharedPreferencesGlobalExtras(sharedPreferences, res);
 
         // Destroy loaders so they don't restart loading when returning.
         lm.destroyLoader(LOADER_ID_HIGHLIGHTS);
