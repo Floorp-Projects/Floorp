@@ -8,20 +8,32 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/WebIDLParser.js"></script>
 <script src="/resources/idlharness.js"></script>
+<style>
+  pre {
+    display: none;
+  }
+</style>
 <div id="log"></div>
 
-<script id="idl" type="text/plain">
+<pre id="idl">
+interface Event {
+};
+
+interface Error {
+};
+
+dictionary EventInit {
+};
+
 interface EventTarget {
 };
 
 interface EventHandler {
 };
-</script>
+</pre>
 
-<script id="gyroscope-idl" type="text/plain">
-// The interface of Sensor is defined in
-// https://www.w3.org/TR/generic-sensor/#idl-index
-[SecureContext, Exposed=Window]
+<pre id="generic-idl">
+[SecureContext]
 interface Sensor : EventTarget {
   readonly attribute boolean activated;
   readonly attribute DOMHighResTimeStamp? timestamp;
@@ -32,19 +44,36 @@ interface Sensor : EventTarget {
   attribute EventHandler onerror;
 };
 
-[Constructor(optional SensorOptions sensorOptions), Exposed=Window]
+dictionary SensorOptions {
+  double? frequency;
+};
+
+[SecureContext, Constructor(DOMString type, SensorErrorEventInit errorEventInitDict)]
+interface SensorErrorEvent : Event {
+  readonly attribute Error error;
+};
+
+dictionary SensorErrorEventInit : EventInit {
+  required Error error;
+};
+</pre>
+
+<pre id="gyroscope-idl">
+[Constructor(optional SensorOptions sensorOptions)]
 interface Gyroscope : Sensor {
   readonly attribute unrestricted double? x;
   readonly attribute unrestricted double? y;
   readonly attribute unrestricted double? z;
 };
-</script>
+</pre>
 
 <script>
+
 (() => {
   "use strict";
   let idl_array = new IdlArray();
   idl_array.add_untested_idls(document.getElementById('idl').textContent);
+  idl_array.add_untested_idls(document.getElementById('generic-idl').textContent);
   idl_array.add_idls(document.getElementById('gyroscope-idl').textContent);
 
   idl_array.add_objects({
@@ -53,4 +82,5 @@ interface Gyroscope : Sensor {
 
   idl_array.test();
 })();
+
 </script>

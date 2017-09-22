@@ -33,7 +33,6 @@ self.getterThrowsForAll = (obj, getterName, targets) => {
 
 self.methodThrows = (obj, methodName, target, args) => {
   const method = obj[methodName];
-  assert_equals(typeof method, 'function', methodName + ' should exist');
 
   assert_throws(new TypeError(), () => method.apply(target, args), methodName + ' should throw a TypeError');
 };

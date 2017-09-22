@@ -50,12 +50,7 @@ function getLoadedObject(win, contentFunc, closeFunc) {
 
       win.onload = function() {
           clearTimeout(timeout);
-          let content = '';
-          try {
-            content = contentFunc(win);
-          } catch(e) {
-            // use default empty string for cross-domain window (see above)
-          }
+          var content = contentFunc(win);
           done(content);
         };
     });

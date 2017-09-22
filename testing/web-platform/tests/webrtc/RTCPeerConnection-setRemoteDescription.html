@@ -109,7 +109,7 @@
       .then(() => generateAnswer(offer)))
     .then(answer =>
       pc.setRemoteDescription(answer)
-      .then(() => generateOffer({ pc, data: true }))
+      .then(() => generateOffer({ data: true }))
       .then(offer =>
         pc.setRemoteDescription(offer)
         .then(() => {

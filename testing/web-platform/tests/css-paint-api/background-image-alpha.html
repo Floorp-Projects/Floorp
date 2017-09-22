@@ -30,7 +30,7 @@
 
 <script id="code" type="text/worklet">
 registerPaint('opaque', class {
-    static get contextOptions() { return {alpha: false}; }
+    static get alpha() { return false; }
     paint(ctx, geom) {
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 4;
@@ -39,7 +39,7 @@ registerPaint('opaque', class {
 });
 
 registerPaint('nonOpaque', class {
-    static get contextOptions() { return {alpha: true}; }
+    static get alpha() { return true; }
     paint(ctx, geom) {
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 4;

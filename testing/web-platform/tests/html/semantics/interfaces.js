@@ -3,7 +3,7 @@ var elements = [
   ["abbr", ""],
   ["acronym", ""],
   ["address", ""],
-  ["applet", "Unknown"],
+  ["applet", "Applet"],
   ["area", "Area"],
   ["article", ""],
   ["aside", ""],
