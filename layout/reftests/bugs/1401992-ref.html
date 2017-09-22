@@ -1,0 +1,32 @@
+<!doctype html>
+<html class="reftest-wait">
+<head>
+<style>
+video {
+  width: 100px;
+  height: 100px;
+  border: 10px solid purple;
+}
+fieldset {
+  border: 10px solid blue;
+  border-color: green;
+}
+</style>
+<script>
+window.onload = function() {
+  let v = document.getElementById("x");
+  v.currentTime = -128;
+  v.controls = !v.controls;
+  // Wait for things to settle.
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      document.documentElement.removeAttribute("class");
+    });
+  });
+}
+</script>
+</head>
+<body>
+<fieldset><video id="x"></video></fieldset>
+</body>
+</html>
