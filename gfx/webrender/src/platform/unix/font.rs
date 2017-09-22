@@ -9,9 +9,9 @@ use freetype::freetype::{FT_BBox, FT_Outline_Translate, FT_Pixel_Mode, FT_Render
 use freetype::freetype::{FT_Done_Face, FT_Error, FT_Get_Char_Index, FT_Int32};
 use freetype::freetype::{FT_Done_FreeType, FT_Library_SetLcdFilter, FT_Pos};
 use freetype::freetype::{FT_F26Dot6, FT_Face, FT_Glyph_Format, FT_Long, FT_UInt};
-use freetype::freetype::{FT_GlyphSlot, FT_LcdFilter, FT_New_Memory_Face};
+use freetype::freetype::{FT_GlyphSlot, FT_LcdFilter, FT_New_Memory_Face, FT_Outline_Transform};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
-use freetype::freetype::{FT_Library, FT_Outline_Get_CBox, FT_Set_Char_Size};
+use freetype::freetype::{FT_Library, FT_Matrix, FT_Outline_Get_CBox, FT_Set_Char_Size};
 use internal_types::FastHashMap;
 use std::{mem, ptr, slice};
 use std::sync::Arc;
@@ -305,6 +305,20 @@ impl FontContext {
                 dx - ((cbox.xMin + dx) & !63),
                 dy - ((cbox.yMin + dy) & !63),
             );
+
+            if font.synthetic_italics {
+                // These magic numbers are pre-encoded fixed point
+                // values that apply ~12 degree shear. Borrowed
+                // from the Freetype implementation of the
+                // FT_GlyphSlot_Oblique function.
+                let transform = FT_Matrix {
+                    xx: 0x10000,
+                    yx: 0x00000,
+                    xy: 0x0366A,
+                    yy: 0x10000,
+                };
+                FT_Outline_Transform(outline, &transform);
+            }
         }
 
         let result = unsafe { FT_Render_Glyph(slot, render_mode) };

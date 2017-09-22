@@ -1023,10 +1023,12 @@ private:
 class RecordedScaledFontCreation : public RecordedEventDerived<RecordedScaledFontCreation> {
 public:
 
-  static void FontInstanceDataProc(const uint8_t* aData, uint32_t aSize, void* aBaton)
+  static void FontInstanceDataProc(const uint8_t* aData, uint32_t aSize,
+                                   const FontVariation* aVariations, uint32_t aNumVariations,
+                                   void* aBaton)
   {
     auto recordedScaledFontCreation = static_cast<RecordedScaledFontCreation*>(aBaton);
-    recordedScaledFontCreation->SetFontInstanceData(aData, aSize);
+    recordedScaledFontCreation->SetFontInstanceData(aData, aSize, aVariations, aNumVariations);
   }
 
   RecordedScaledFontCreation(ScaledFont* aScaledFont,
@@ -1047,7 +1049,8 @@ public:
   virtual std::string GetName() const { return "ScaledFont Creation"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 
-  void SetFontInstanceData(const uint8_t *aData, uint32_t aSize);
+  void SetFontInstanceData(const uint8_t *aData, uint32_t aSize,
+                           const FontVariation* aVariations, uint32_t aNumVariations);
 
 private:
   friend class RecordedEvent;
@@ -1056,6 +1059,7 @@ private:
   ReferencePtr mUnscaledFont;
   Float mGlyphSize;
   std::vector<uint8_t> mInstanceData;
+  std::vector<FontVariation> mVariations;
 
   template<class S>
   MOZ_IMPLICIT RecordedScaledFontCreation(S &aStream);
@@ -2895,7 +2899,9 @@ RecordedScaledFontCreation::PlayEvent(Translator *aTranslator) const
   }
 
   RefPtr<ScaledFont> scaledFont =
-    unscaledFont->CreateScaledFont(mGlyphSize, mInstanceData.data(), mInstanceData.size());
+    unscaledFont->CreateScaledFont(mGlyphSize,
+                                   mInstanceData.data(), mInstanceData.size(),
+                                   mVariations.data(), mVariations.size());
   aTranslator->AddScaledFont(mRefPtr, scaledFont);
   return true;
 }
@@ -2909,6 +2915,8 @@ RecordedScaledFontCreation::Record(S &aStream) const
   WriteElement(aStream, mGlyphSize);
   WriteElement(aStream, (size_t)mInstanceData.size());
   aStream.write((char*)mInstanceData.data(), mInstanceData.size());
+  WriteElement(aStream, (size_t)mVariations.size());
+  aStream.write((char*)mVariations.data(), sizeof(FontVariation) * mVariations.size());
 }
 
 inline void
@@ -2918,9 +2926,11 @@ RecordedScaledFontCreation::OutputSimpleEventInfo(std::stringstream &aStringStre
 }
 
 inline void
-RecordedScaledFontCreation::SetFontInstanceData(const uint8_t *aData, uint32_t aSize)
+RecordedScaledFontCreation::SetFontInstanceData(const uint8_t *aData, uint32_t aSize,
+                                                const FontVariation* aVariations, uint32_t aNumVariations)
 {
   mInstanceData.assign(aData, aData + aSize);
+  mVariations.assign(aVariations, aVariations + aNumVariations);
 }
 
 template<class S>
@@ -2935,6 +2945,10 @@ RecordedScaledFontCreation::RecordedScaledFontCreation(S &aStream)
   ReadElement(aStream, size);
   mInstanceData.resize(size);
   aStream.read((char*)mInstanceData.data(), size);
+  size_t numVariations;
+  ReadElement(aStream, numVariations);
+  mVariations.resize(numVariations);
+  aStream.read((char*)mVariations.data(), sizeof(FontVariation) * numVariations);
 }
 
 inline bool

@@ -23,6 +23,12 @@ public:
 
   layers::OffsetRange Write(Range<uint8_t> aBytes);
 
+  template<typename T>
+  layers::OffsetRange WriteAsBytes(Range<T> aValues)
+  {
+    return Write(Range<uint8_t>((uint8_t*)aValues.begin().get(), aValues.length() * sizeof(T)));
+  }
+
   void Flush(nsTArray<ipc::Shmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs);
 
   void Clear();
@@ -95,7 +101,8 @@ public:
                        wr::FontKey aFontKey,
                        float aGlyphSize,
                        const wr::FontInstanceOptions* aOptions,
-                       const wr::FontInstancePlatformOptions* aPlatformOptions);
+                       const wr::FontInstancePlatformOptions* aPlatformOptions,
+                       Range<const gfx::FontVariation> aVariations);
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
 

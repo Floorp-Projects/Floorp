@@ -1359,7 +1359,7 @@ var gBrowserInit = {
 
     // Misc. inits.
     TabletModeUpdater.init();
-    CombinedStopReload.init();
+    CombinedStopReload.ensureInitialized();
     gPrivateBrowsingUI.init();
     BrowserPageActions.init();
     gAccessibilityServiceIndicator.init();
@@ -4924,14 +4924,21 @@ var LinkTargetDisplay = {
 };
 
 var CombinedStopReload = {
-  init() {
+  // Try to initialize. Returns whether initialization was successful, which
+  // may mean we had already initialized.
+  ensureInitialized() {
     if (this._initialized)
-      return;
+      return true;
+    if (this._destroyed)
+      return false;
 
     let reload = document.getElementById("reload-button");
     let stop = document.getElementById("stop-button");
-    if (!stop || !reload || reload.nextSibling != stop)
-      return;
+    // It's possible the stop/reload buttons have been moved to the palette.
+    // They may be reinserted later, so we will retry initialization if/when
+    // we get notified of document loads.
+    if (!stop || !reload)
+      return false;
 
     this._initialized = true;
     if (XULBrowserWindow.stopCommand.getAttribute("disabled") != "true")
@@ -4941,15 +4948,21 @@ var CombinedStopReload = {
     this.stop = stop;
     this.stopReloadContainer = this.reload.parentNode;
     this.timeWhenSwitchedToStop = 0;
+
+    if (this._shouldStartPrefMonitoring) {
+      this.startAnimationPrefMonitoring();
+    }
+    return true;
   },
 
   uninit() {
+    this._destroyed = true;
+
     if (!this._initialized)
       return;
 
     Services.prefs.removeObserver("toolkit.cosmeticAnimations.enabled", this);
     this._cancelTransition();
-    this._initialized = false;
     this.stop.removeEventListener("click", this);
     this.stopReloadContainer.removeEventListener("animationend", this);
     this.stopReloadContainer = null;
@@ -4984,8 +4997,12 @@ var CombinedStopReload = {
 
   startAnimationPrefMonitoring() {
     // CombinedStopReload may have been uninitialized before the idleCallback is executed.
-    if (!this._initialized)
+    if (this._destroyed)
       return;
+    if (!this.ensureInitialized()) {
+      this._shouldStartPrefMonitoring = true;
+      return;
+    }
     this.animate = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
                    Services.prefs.getBoolPref("browser.stopReloadAnimation.enabled");
     Services.prefs.addObserver("toolkit.cosmeticAnimations.enabled", this);
@@ -5000,7 +5017,7 @@ var CombinedStopReload = {
   },
 
   switchToStop(aRequest, aWebProgress) {
-    if (!this._initialized || !this._shouldSwitch(aRequest, aWebProgress)) {
+    if (!this.ensureInitialized() || !this._shouldSwitch(aRequest, aWebProgress)) {
       return;
     }
 
@@ -5029,7 +5046,7 @@ var CombinedStopReload = {
   },
 
   switchToReload(aRequest, aWebProgress) {
-    if (!this._initialized || !this._shouldSwitch(aRequest, aWebProgress) ||
+    if (!this.ensureInitialized() || !this._shouldSwitch(aRequest, aWebProgress) ||
         !this.reload.hasAttribute("displaystop")) {
       return;
     }

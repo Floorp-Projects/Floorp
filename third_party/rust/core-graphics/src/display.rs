@@ -76,6 +76,7 @@ extern {
     pub fn CGDisplayPixelsHigh(display: CGDirectDisplayID) -> libc::size_t;
     pub fn CGDisplayPixelsWide(display: CGDirectDisplayID) -> libc::size_t;
     pub fn CGDisplayBounds(display: CGDirectDisplayID) -> CGRect;
+    pub fn CGDisplayCreateImage(display: CGDirectDisplayID) -> CGImageRef;
 
     // mouse stuff
     pub fn CGDisplayHideCursor(display: CGDirectDisplayID) -> CGError;
@@ -90,5 +91,7 @@ extern {
                                    listOptions: CGWindowListOption,
                                    windowId: CGWindowID,
                                    imageOptions: CGWindowImageOption) -> CGImageRef;
-
+    pub fn CGWindowListCreateImageFromArray(screenBounds: CGRect,
+                                            windowArray: CFArrayRef,
+                                            imageOptions: CGWindowImageOption) -> CGImageRef;
 }

@@ -35,6 +35,7 @@ struct Document {
     window_size: DeviceUintSize,
     inner_rect: DeviceUintRect,
     pan: DeviceIntPoint,
+    device_pixel_ratio: f32,
     page_zoom_factor: f32,
     pinch_zoom_factor: f32,
     // A set of pipelines that the caller has requested be
@@ -53,6 +54,7 @@ impl Document {
         config: FrameBuilderConfig,
         initial_size: DeviceUintSize,
         enable_render_on_scroll: bool,
+        default_device_pixel_ratio: f32,
     ) -> Self {
         let render_on_scroll = if enable_render_on_scroll {
             Some(false)
@@ -67,17 +69,20 @@ impl Document {
             pan: DeviceIntPoint::zero(),
             page_zoom_factor: 1.0,
             pinch_zoom_factor: 1.0,
+            device_pixel_ratio: default_device_pixel_ratio,
             render_on_scroll,
             output_pipelines: FastHashSet::default(),
         }
     }
 
-    fn accumulated_scale_factor(&self, hidpi_factor: f32) -> f32 {
-        hidpi_factor * self.page_zoom_factor * self.pinch_zoom_factor
+    fn accumulated_scale_factor(&self) -> f32 {
+        self.device_pixel_ratio *
+        self.page_zoom_factor *
+        self.pinch_zoom_factor
     }
 
-    fn build_scene(&mut self, resource_cache: &mut ResourceCache, hidpi_factor: f32) {
-        let accumulated_scale_factor = self.accumulated_scale_factor(hidpi_factor);
+    fn build_scene(&mut self, resource_cache: &mut ResourceCache) {
+        let accumulated_scale_factor = self.accumulated_scale_factor();
         self.frame.create(
             &self.scene,
             resource_cache,
@@ -92,9 +97,8 @@ impl Document {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         resource_profile: &mut ResourceProfileCounters,
-        hidpi_factor: f32,
     ) -> RendererFrame {
-        let accumulated_scale_factor = self.accumulated_scale_factor(hidpi_factor);
+        let accumulated_scale_factor = self.accumulated_scale_factor();
         let pan = LayerPoint::new(
             self.pan.x as f32 / accumulated_scale_factor,
             self.pan.y as f32 / accumulated_scale_factor,
@@ -102,7 +106,7 @@ impl Document {
         self.frame.build(
             resource_cache,
             gpu_cache,
-            &self.scene.display_lists,
+            &self.scene.pipelines,
             accumulated_scale_factor,
             pan,
             &self.output_pipelines,
@@ -129,10 +133,8 @@ pub struct RenderBackend {
     payload_rx: PayloadReceiver,
     payload_tx: PayloadSender,
     result_tx: Sender<ResultMsg>,
-
-    // TODO(gw): Consider using strongly typed units here.
-    hidpi_factor: f32,
     next_namespace_id: IdNamespace,
+    default_device_pixel_ratio: f32,
 
     gpu_cache: GpuCache,
     resource_cache: ResourceCache,
@@ -152,7 +154,7 @@ impl RenderBackend {
         payload_rx: PayloadReceiver,
         payload_tx: PayloadSender,
         result_tx: Sender<ResultMsg>,
-        hidpi_factor: f32,
+        default_device_pixel_ratio: f32,
         texture_cache: TextureCache,
         workers: Arc<ThreadPool>,
         notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
@@ -170,8 +172,7 @@ impl RenderBackend {
             payload_rx,
             payload_tx,
             result_tx,
-            hidpi_factor,
-
+            default_device_pixel_ratio,
             resource_cache,
             gpu_cache: GpuCache::new(),
             frame_config,
@@ -217,9 +218,11 @@ impl RenderBackend {
             DocumentMsg::SetWindowParameters {
                 window_size,
                 inner_rect,
+                device_pixel_ratio,
             } => {
                 doc.window_size = window_size;
                 doc.inner_rect = inner_rect;
+                doc.device_pixel_ratio = device_pixel_ratio;
                 DocumentOp::Nop
             }
             DocumentMsg::SetDisplayList {
@@ -271,7 +274,7 @@ impl RenderBackend {
                         viewport_size,
                         content_size,
                     );
-                    doc.build_scene(&mut self.resource_cache, self.hidpi_factor);
+                    doc.build_scene(&mut self.resource_cache);
                 }
 
                 if let Some(ref mut ros) = doc.render_on_scroll {
@@ -298,9 +301,9 @@ impl RenderBackend {
                 profile_scope!("SetRootPipeline");
 
                 doc.scene.set_root_pipeline_id(pipeline_id);
-                if doc.scene.display_lists.get(&pipeline_id).is_some() {
+                if doc.scene.pipelines.get(&pipeline_id).is_some() {
                     let _timer = profile_counters.total_time.timer();
-                    doc.build_scene(&mut self.resource_cache, self.hidpi_factor);
+                    doc.build_scene(&mut self.resource_cache);
                     DocumentOp::Built
                 } else {
                     DocumentOp::Nop
@@ -322,7 +325,6 @@ impl RenderBackend {
                         &mut self.resource_cache,
                         &mut self.gpu_cache,
                         &mut profile_counters.resources,
-                        self.hidpi_factor,
                     );
                     DocumentOp::Scrolled(frame)
                 } else {
@@ -338,7 +340,6 @@ impl RenderBackend {
                         &mut self.resource_cache,
                         &mut self.gpu_cache,
                         &mut profile_counters.resources,
-                        self.hidpi_factor,
                     );
                     DocumentOp::Scrolled(frame)
                 } else {
@@ -355,7 +356,6 @@ impl RenderBackend {
                         &mut self.resource_cache,
                         &mut self.gpu_cache,
                         &mut profile_counters.resources,
-                        self.hidpi_factor,
                     );
                     DocumentOp::Scrolled(frame)
                 } else {
@@ -383,7 +383,7 @@ impl RenderBackend {
                 //           rebuild of the frame!
                 if let Some(property_bindings) = property_bindings {
                     doc.scene.properties.set_properties(property_bindings);
-                    doc.build_scene(&mut self.resource_cache, self.hidpi_factor);
+                    doc.build_scene(&mut self.resource_cache);
                 }
 
                 if let Some(ref mut ros) = doc.render_on_scroll {
@@ -395,7 +395,6 @@ impl RenderBackend {
                         &mut self.resource_cache,
                         &mut self.gpu_cache,
                         &mut profile_counters.resources,
-                        self.hidpi_factor,
                     );
                     DocumentOp::Rendered(frame)
                 } else {
@@ -456,6 +455,7 @@ impl RenderBackend {
                         self.frame_config.clone(),
                         initial_size,
                         self.enable_render_on_scroll,
+                        self.default_device_pixel_ratio,
                     );
                     self.documents.insert(document_id, document);
                 }
@@ -645,9 +645,9 @@ impl RenderBackend {
         for (_, doc) in &self.documents {
             let mut debug_doc = debug_server::TreeNode::new("document");
 
-            for (_, display_list) in &doc.scene.display_lists {
+            for (_, pipeline) in &doc.scene.pipelines {
                 let mut debug_dl = debug_server::TreeNode::new("display_list");
-                self.traverse_items(&mut display_list.iter(), &mut debug_dl);
+                self.traverse_items(&mut pipeline.display_list.iter(), &mut debug_dl);
                 debug_doc.add_child(debug_dl);
             }
 

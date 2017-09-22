@@ -89,11 +89,22 @@ impl WrVecU8 {
 
     // Equivalent to `to_vec` but clears self instead of consuming the value.
     fn flush_into_vec(&mut self) -> Vec<u8> {
-        let vec = unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) };
+        self.convert_into_vec::<u8>()
+    }
+
+    // Like flush_into_vec, but also does an unsafe conversion to the desired type.
+    fn convert_into_vec<T>(&mut self) -> Vec<T> {
+        let vec = unsafe {
+            Vec::from_raw_parts(
+                self.data as *mut T,
+                self.length / mem::size_of::<T>(),
+                self.capacity / mem::size_of::<T>(),
+            )
+        };
         self.data = ptr::null_mut();
         self.length = 0;
         self.capacity = 0;
-        return vec;
+        vec
     }
 
     fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
@@ -160,6 +171,22 @@ impl MutByteSlice {
 
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         make_slice_mut(self.buffer, self.len)
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct WrFontInstanceOptions {
+    pub render_mode: FontRenderMode,
+    pub synthetic_italics: bool,
+}
+
+impl Into<FontInstanceOptions> for WrFontInstanceOptions {
+    fn into(self) -> FontInstanceOptions {
+        FontInstanceOptions {
+            render_mode: Some(self.render_mode),
+            synthetic_italics: self.synthetic_italics,
+        }
     }
 }
 
@@ -820,7 +847,8 @@ pub extern "C" fn wr_api_set_window_parameters(dh: &mut DocumentHandle,
     let size = DeviceUintSize::new(width as u32, height as u32);
     dh.api.set_window_parameters(dh.document_id,
                                  size,
-                                 DeviceUintRect::new(DeviceUintPoint::new(0, 0), size));
+                                 DeviceUintRect::new(DeviceUintPoint::new(0, 0), size),
+                                 1.0);
 }
 
 #[no_mangle]
@@ -961,15 +989,20 @@ pub extern "C" fn wr_resource_updates_add_font_instance(
     key: WrFontInstanceKey,
     font_key: WrFontKey,
     glyph_size: f32,
-    options: *const FontInstanceOptions,
-    platform_options: *const FontInstancePlatformOptions
+    options: *const WrFontInstanceOptions,
+    platform_options: *const FontInstancePlatformOptions,
+    variations: &mut WrVecU8,
 ) {
+    let instance_options: Option<FontInstanceOptions> = unsafe {
+        options.as_ref().map(|opts|{ (*opts).into() })
+    };
     resources.add_font_instance(
         key,
         font_key,
         Au::from_f32_px(glyph_size),
-        unsafe { options.as_ref().cloned() },
-        unsafe { platform_options.as_ref().cloned() }
+        instance_options,
+        unsafe { platform_options.as_ref().cloned() },
+        variations.convert_into_vec::<FontVariation>(),
     );
 }
 
