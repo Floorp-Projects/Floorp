@@ -488,6 +488,9 @@ public class GeckoView extends LayerView {
     private void init(final Context context, final GeckoViewSettings settings) {
         preload(context);
 
+        // Perform common initialization for Fennec/GeckoView.
+        GeckoAppShell.setLayerView(this);
+
         initializeView();
         mListener.registerListeners();
 
