@@ -116,7 +116,7 @@ class TestNode(ManifestItem):
         self._from_file = True
 
     @classmethod
-    def create(cls, test_id):
+    def create(cls, test_type, test_id):
         """Create a TestNode corresponding to a given test
 
         :param test_type: The type of the test
@@ -127,13 +127,14 @@ class TestNode(ManifestItem):
         node = DataNode(name)
         self = cls(node)
 
+        self.set("type", test_type)
         self._from_file = False
         return self
 
     @property
     def is_empty(self):
-        ignore_keys = set(["type"])
-        if set(self._data.keys()) - ignore_keys:
+        required_keys = set(["type"])
+        if set(self._data.keys()) != required_keys:
             return False
         return all(child.is_empty for child in self.children)
 
