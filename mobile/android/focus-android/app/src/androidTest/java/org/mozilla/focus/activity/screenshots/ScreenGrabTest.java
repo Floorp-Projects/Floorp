@@ -39,6 +39,7 @@ import tools.fastlane.screengrab.locale.LocaleTestRule;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
@@ -106,8 +107,9 @@ public class ScreenGrabTest {
 
             try {
                 webServer.enqueue(new MockResponse()
-                        .setBody(TestHelper.readTestAsset("image_test.html"))
-                        .addHeader("Set-Cookie", "sphere=battery; Expires=Wed, 21 Oct 2035 07:28:00 GMT;"));
+                        .setBody(TestHelper.readTestAsset("plain_test.html")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("image_test.html")));
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("rabbit.jpg")));
                 webServer.enqueue(new MockResponse()
@@ -159,7 +161,7 @@ public class ScreenGrabTest {
         takeScreenshotsOfFirstrun(context, device);
 
         takeScreenshotOfHomeScreen();
-        takeScreenshotOfMenuAndYourRightsPage(context, device);
+        takeScreenshotOfMenuAndYourRightsPage(device);
         takeScreenshotOfAboutPage(context, device);
 
         takeScreenshotOfUrlBarAndBrowserView(device);
@@ -220,7 +222,7 @@ public class ScreenGrabTest {
         Screengrab.screenshot("Home_View");
     }
 
-    private void takeScreenshotOfMenuAndYourRightsPage(Context context, UiDevice device) throws UiObjectNotFoundException {
+    private void takeScreenshotOfMenuAndYourRightsPage(UiDevice device) throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
 
         assertTrue(TestHelper.RightsItem.waitForExists(waitingTime));
@@ -228,12 +230,9 @@ public class ScreenGrabTest {
 
         TestHelper.RightsItem.click();
 
-        final String content = context.getString(R.string.your_rights_content1,
-                context.getString(R.string.app_name));
-
         onWebView()
                 .withElement(findElement(Locator.ID, "first"))
-                .check(webMatches(getText(), equalTo(content)));
+                .perform(webClick());
 
         Screengrab.screenshot("YourRights_Page");
 
@@ -266,13 +265,19 @@ public class ScreenGrabTest {
         assertTrue(TestHelper.hint.waitForExists(waitingTime));
         Screengrab.screenshot("SearchFor");
 
-        /* Browser View Menu */
-        device.pressKeyCode(KEYCODE_ENTER);
+        onView(withId(R.id.url_edit))
+                .check(matches(isDisplayed()))
+                .check(matches(hasFocus()))
+                .perform(click(), replaceText(webServer.url(TEST_PATH).toString()), pressImeActionButton());
+
+        device.findObject(new UiSelector()
+                .resourceId("org.mozilla.focus.debug:id/webview")
+                .enabled(true))
+                .waitForExists(waitingTime);
 
         onWebView()
-                .withTimeout(30, TimeUnit.SECONDS)
-                .withElement(findElement(Locator.CLASS_NAME, "masthead-logo"))
-                .perform(webClick());
+                .withElement(findElement(Locator.ID, "header"))
+                .check(webMatches(getText(), equalTo("focus test page")));
 
         TestHelper.menuButton.perform(click());
         Screengrab.screenshot("BrowserViewMenu");
