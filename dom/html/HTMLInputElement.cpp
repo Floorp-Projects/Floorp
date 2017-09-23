@@ -2636,17 +2636,6 @@ HTMLInputElement::GetRootEditorNode()
 }
 
 NS_IMETHODIMP_(Element*)
-HTMLInputElement::CreatePlaceholderNode()
-{
-  nsTextEditorState* state = GetEditorState();
-  if (state) {
-    NS_ENSURE_SUCCESS(state->CreatePlaceholderNode(), nullptr);
-    return state->GetPlaceholderNode();
-  }
-  return nullptr;
-}
-
-NS_IMETHODIMP_(Element*)
 HTMLInputElement::GetPlaceholderNode()
 {
   nsTextEditorState* state = GetEditorState();
@@ -2674,17 +2663,6 @@ HTMLInputElement::GetPlaceholderVisibility()
   }
 
   return state->GetPlaceholderVisibility();
-}
-
-NS_IMETHODIMP_(Element*)
-HTMLInputElement::CreatePreviewNode()
-{
-  nsTextEditorState* state = GetEditorState();
-  if (state) {
-    NS_ENSURE_SUCCESS(state->CreatePreviewNode(), nullptr);
-    return state->GetPreviewNode();
-  }
-  return nullptr;
 }
 
 NS_IMETHODIMP_(Element*)

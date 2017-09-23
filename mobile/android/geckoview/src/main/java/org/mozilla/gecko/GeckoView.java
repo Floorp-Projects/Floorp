@@ -488,9 +488,6 @@ public class GeckoView extends LayerView {
     private void init(final Context context, final GeckoViewSettings settings) {
         preload(context);
 
-        // Perform common initialization for Fennec/GeckoView.
-        GeckoAppShell.setLayerView(this);
-
         initializeView();
         mListener.registerListeners();
 
@@ -751,7 +748,8 @@ public class GeckoView extends LayerView {
                 mInputConnectionListener.onKeyMultiple(keyCode, repeatCount, event);
     }
 
-    /* package */ boolean isIMEEnabled() {
+    @Override
+    public boolean isIMEEnabled() {
         return mInputConnectionListener != null &&
                 mInputConnectionListener.isIMEEnabled();
     }

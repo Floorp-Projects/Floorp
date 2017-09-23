@@ -36,6 +36,7 @@ import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
                             HomePager.OnUrlOpenListener onUrlOpenListener,
                             HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         super(context,
+                anchor,
                 telemetryExtraBuilder,
                 mode,
                 item,

@@ -1,0 +1,10 @@
+<style></style>
+<script>
+  try { o1 = document.createElement('r') } catch(e) { }
+  try { o2 = document.createElement('input') } catch(e) { }
+  try { document.documentElement.appendChild(o1) } catch(e) { }
+  try { document.documentElement.appendChild(o2) } catch(e) { }
+  try { document.styleSheets[0].insertRule('*, :first-line { float:left }', 0); } catch(e) { }
+  try { o1.getClientRects() } catch(e) { }
+  try { o2.type = 'url' } catch(e) { }
+</script>

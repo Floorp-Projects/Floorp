@@ -6,10 +6,8 @@
 
 UNIFIED_SOURCES += [
     'nsMacCharset.cpp',
+    'OSPreferences_mac.cpp'
 ]
-
-if CONFIG['ENABLE_INTL_API']:
-    UNIFIED_SOURCES += ['OSPreferences_mac.cpp']
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [

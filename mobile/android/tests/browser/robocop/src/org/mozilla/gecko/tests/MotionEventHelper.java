@@ -5,8 +5,11 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.gfx.LayerView;
+
+import com.robotium.solo.Solo;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
@@ -26,11 +29,12 @@ class MotionEventHelper {
     private float mTouchStartTolerance;
     private final int mDpi;
 
-    public MotionEventHelper(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY) {
+    public MotionEventHelper(Instrumentation inst, Solo solo,
+                             int surfaceOffsetX, int surfaceOffsetY) {
         mInstrumentation = inst;
         mSurfaceOffsetX = surfaceOffsetX;
         mSurfaceOffsetY = surfaceOffsetY;
-        layerView = GeckoAppShell.getLayerView();
+        layerView = (LayerView) solo.getCurrentActivity().findViewById(R.id.layer_view);
         mApzEnabled = false;
         mTouchStartTolerance = 0.0f;
         mDpi = GeckoAppShell.getDpi();
@@ -118,7 +122,9 @@ class MotionEventHelper {
         Thread t = new Thread() {
             @Override
             public void run() {
-                layerView.setIsLongpressEnabled(false);
+                if (layerView != null) {
+                    layerView.setIsLongpressEnabled(false);
+                }
 
                 int numEvents = (int)(durationMillis * DRAG_EVENTS_PER_SECOND / 1000);
                 float eventDx = (endX - startX) / numEvents;
@@ -143,7 +149,9 @@ class MotionEventHelper {
                 downTime = move(downTime, endX, endY);
                 downTime = up(downTime, endX, endY);
 
-                layerView.setIsLongpressEnabled(true);
+                if (layerView != null) {
+                    layerView.setIsLongpressEnabled(true);
+                }
             }
         };
         t.start();
