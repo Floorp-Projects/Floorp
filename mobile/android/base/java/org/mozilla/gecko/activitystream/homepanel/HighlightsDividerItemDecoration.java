@@ -42,7 +42,9 @@ import android.view.View;
         for (int i = 0; i < childCount; i++) {
             final View child = parent.getChildAt(i);
 
-            if (parent.getChildAdapterPosition(child) < START_DRAWING_AT_POSITION) {
+            final int childPosition = parent.getChildAdapterPosition(child);
+            if (childPosition == RecyclerView.NO_POSITION
+                    || childPosition < START_DRAWING_AT_POSITION) {
                 continue;
             }
 
@@ -51,7 +53,7 @@ import android.view.View;
             }
 
             // Do not draw dividers above section title items.
-            final int childViewType = parent.getAdapter().getItemViewType(i);
+            final int childViewType = parent.getAdapter().getItemViewType(childPosition);
             if (childViewType == StreamRecyclerAdapter.RowItemType.HIGHLIGHTS_TITLE.getViewType()
                     || childViewType == StreamRecyclerAdapter.RowItemType.TOP_STORIES_TITLE.getViewType()) {
                 continue;
@@ -59,7 +61,9 @@ import android.view.View;
 
             final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child
                     .getLayoutParams();
-            final int topOfDivider = child.getTop() + params.topMargin;
+            final int dividerHeight = divider.getIntrinsicHeight();
+            // Use dividerHeight / 2 to account for divider height and place it evenly between the two views.
+            final int topOfDivider = child.getTop() - params.topMargin - dividerHeight / 2;
             final int bottomOfDivider = topOfDivider + divider.getIntrinsicHeight();
             divider.setBounds(left, topOfDivider, right, bottomOfDivider);
             divider.draw(c);

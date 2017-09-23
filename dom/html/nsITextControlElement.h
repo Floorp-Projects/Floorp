@@ -139,19 +139,9 @@ public:
   NS_IMETHOD_(mozilla::dom::Element*) GetRootEditorNode() = 0;
 
   /**
-   * Create the placeholder anonymous node for the text control and returns it.
-   */
-  NS_IMETHOD_(mozilla::dom::Element*) CreatePlaceholderNode() = 0;
-
-  /**
    * Get the placeholder anonymous node for the text control.
    */
   NS_IMETHOD_(mozilla::dom::Element*) GetPlaceholderNode() = 0;
-
-  /**
-   * Create the preview anonymous node for the text control and returns it.
-   */
-  NS_IMETHOD_(mozilla::dom::Element*) CreatePreviewNode() = 0;
 
   /**
    * Get the preview anonymous node for the text control.

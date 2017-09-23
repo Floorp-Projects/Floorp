@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -1051,7 +1051,7 @@ class LinkMenu extends React.PureComponent {
               action_position: index
             }));
           }
-          if (impression) {
+          if (impression && props.shouldSendImpressionStats) {
             props.dispatch(impression);
           }
         };
@@ -1254,10 +1254,14 @@ const TopSites = props => {
       "section",
       { className: "top-sites" },
       React.createElement(
-        "h3",
-        { className: "section-title" },
-        React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
-        React.createElement(FormattedMessage, { id: "header_top_sites" })
+        "div",
+        { className: "section-top-bar" },
+        React.createElement(
+          "h3",
+          { className: "section-title" },
+          React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
+          React.createElement(FormattedMessage, { id: "header_top_sites" })
+        )
       ),
       React.createElement(
         "ul",
@@ -2474,11 +2478,16 @@ class Section extends React.PureComponent {
   _dispatchImpressionStats() {
     const { props } = this;
     const maxCards = 3 * props.maxRows;
-    props.dispatch(ac.ImpressionStats({
-      source: props.eventSource,
-      tiles: props.rows.slice(0, maxCards).map(link => ({ id: link.guid })),
-      incognito: props.options && props.options.personalized
-    }));
+    const cards = props.rows.slice(0, maxCards);
+
+    if (this.needsImpressionStats(cards)) {
+      props.dispatch(ac.ImpressionStats({
+        source: props.eventSource,
+        tiles: cards.map(link => ({ id: link.guid })),
+        incognito: props.options && props.options.personalized
+      }));
+      this.impressionCardGuids = cards.map(link => link.guid);
+    }
   }
 
   // This sends an event when a user sees a set of new content. If content
@@ -2526,6 +2535,20 @@ class Section extends React.PureComponent {
     props.rows !== prevProps.rows) {
       this.sendImpressionStatsOrAddListener();
     }
+  }
+
+  needsImpressionStats(cards) {
+    if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
+      return true;
+    }
+
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].guid !== this.impressionCardGuids[i]) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   numberOfPlaceholders(items) {
@@ -2612,7 +2635,8 @@ class Section extends React.PureComponent {
       !shouldShowEmptyState && React.createElement(
         "ul",
         { className: "section-list", style: { padding: 0 } },
-        realRows.map((link, index) => link && React.createElement(Card, { key: index, index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions, eventSource: eventSource })),
+        realRows.map((link, index) => link && React.createElement(Card, { key: index, index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions,
+          eventSource: eventSource, shouldSendImpressionStats: this.props.shouldSendImpressionStats })),
         placeholders > 0 && [...new Array(placeholders)].map((_, i) => React.createElement(PlaceholderCard, { key: i }))
       ),
       shouldShowEmptyState && React.createElement(
@@ -2706,18 +2730,20 @@ class Card extends React.PureComponent {
       source: this.props.eventSource,
       action_position: this.props.index
     }));
-    this.props.dispatch(ac.ImpressionStats({
-      source: this.props.eventSource,
-      click: 0,
-      incognito: true,
-      tiles: [{ id: this.props.link.guid, pos: this.props.index }]
-    }));
+    if (this.props.shouldSendImpressionStats) {
+      this.props.dispatch(ac.ImpressionStats({
+        source: this.props.eventSource,
+        click: 0,
+        incognito: true,
+        tiles: [{ id: this.props.link.guid, pos: this.props.index }]
+      }));
+    }
   }
   onMenuUpdate(showContextMenu) {
     this.setState({ showContextMenu });
   }
   render() {
-    const { index, link, dispatch, contextMenuOptions, eventSource } = this.props;
+    const { index, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
     const { props } = this;
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
     // Display "now" as "trending" until we have new strings #3402
@@ -2797,7 +2823,8 @@ class Card extends React.PureComponent {
         onUpdate: this.onMenuUpdate,
         options: link.contextMenuOptions || contextMenuOptions,
         site: link,
-        visible: isContextMenuOpen })
+        visible: isContextMenuOpen,
+        shouldSendImpressionStats: shouldSendImpressionStats })
     );
   }
 }

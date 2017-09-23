@@ -687,7 +687,8 @@ class Marionette(object):
         poll_interval = 0.1
         starttime = datetime.datetime.now()
 
-        while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
+        timeout_time = starttime + datetime.timedelta(seconds=timeout)
+        while datetime.datetime.now() < timeout_time:
             # If the instance we want to connect to is not running return immediately
             if runner is not None and not runner.is_running():
                 return False

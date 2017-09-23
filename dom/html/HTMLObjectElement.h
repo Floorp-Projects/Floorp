@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsObjectLoadingContent.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsIConstraintValidation.h"
 
 namespace mozilla {
@@ -20,7 +19,6 @@ class HTMLFormSubmission;
 
 class HTMLObjectElement final : public nsGenericHTMLFormElement
                               , public nsObjectLoadingContent
-                              , public nsIDOMHTMLObjectElement
                               , public nsIConstraintValidation
 {
 public:
@@ -50,9 +48,6 @@ public:
 
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
-
-  // nsIDOMHTMLObjectElement
-  NS_DECL_NSIDOMHTMLOBJECTELEMENT
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
@@ -95,7 +90,10 @@ public:
                                            nsGenericHTMLFormElement)
 
   // Web IDL binding methods
-  // XPCOM GetData is ok; note that it's a URI attribute with a weird base URI
+  void GetData(DOMString& aValue)
+  {
+    GetURIAttr(nsGkAtoms::data, nsGkAtoms::codebase, aValue);
+  }
   void SetData(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::data, aValue, aRv);
@@ -172,7 +170,10 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::archive, aValue, aRv);
   }
-  // XPCOM GetCode is ok
+  void GetCode(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::code, aValue);
+  }
   void SetCode(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::code, aValue, aRv);
@@ -209,7 +210,10 @@ public:
   {
     SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, 0, aRv);
   }
-  // XPCOM GetCodebase is ok; note that it's a URI attribute
+  void GetCodeBase(DOMString& aValue)
+  {
+    GetURIAttr(nsGkAtoms::codebase, nullptr, aValue);
+  }
   void SetCodeBase(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::codebase, aValue, aRv);

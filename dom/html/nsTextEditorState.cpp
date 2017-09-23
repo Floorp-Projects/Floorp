@@ -1186,7 +1186,6 @@ nsTextEditorState::Construct(nsITextControlElement* aOwningElement,
     state->mPlaceholderVisibility = false;
     state->mPreviewVisibility = false;
     state->mIsCommittingComposition = false;
-    state->ClearValueCache();
     // When adding more member variable initializations here, add the same
     // also to the constructor.
     return state;
@@ -1199,6 +1198,24 @@ nsTextEditorState::~nsTextEditorState()
 {
   MOZ_COUNT_DTOR(nsTextEditorState);
   Clear();
+}
+
+Element*
+nsTextEditorState::GetRootNode()
+{
+  return mBoundFrame ? mBoundFrame->GetRootNode() : nullptr;
+}
+
+Element*
+nsTextEditorState::GetPlaceholderNode()
+{
+  return mBoundFrame ? mBoundFrame->GetPlaceholderNode() : nullptr;
+}
+
+Element*
+nsTextEditorState::GetPreviewNode()
+{
+  return mBoundFrame ? mBoundFrame->GetPreviewNode() : nullptr;
 }
 
 void
@@ -1225,9 +1242,6 @@ void nsTextEditorState::Unlink()
   tmp->Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelCon)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextEditor)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaceholderDiv)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreviewDiv)
 }
 
 void nsTextEditorState::Traverse(nsCycleCollectionTraversalCallback& cb)
@@ -1235,9 +1249,6 @@ void nsTextEditorState::Traverse(nsCycleCollectionTraversalCallback& cb)
   nsTextEditorState* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelCon)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextEditor)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlaceholderDiv)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreviewDiv)
 }
 
 nsFrameSelection*
@@ -1319,15 +1330,11 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 
   mBoundFrame = aFrame;
 
-  nsresult rv = CreateRootNode();
-  NS_ENSURE_SUCCESS(rv, rv);
+  Element* rootNode = aFrame->GetRootNode();
+  MOZ_ASSERT(rootNode);
 
-  nsIContent *rootNode = GetRootNode();
-  rv = InitializeRootNode();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIPresShell *shell = mBoundFrame->PresContext()->GetPresShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  nsIPresShell* shell = aFrame->PresContext()->GetPresShell();
+  MOZ_ASSERT(shell);
 
   // Create selection
   RefPtr<nsFrameSelection> frameSel = new nsFrameSelection();
@@ -1412,8 +1419,6 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   if (guard.IsInitializingRecursively()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  ClearValueCache();
 
   // Note that we don't check mTextEditor here, because we might already have
   // one around, in which case we don't create a new one, and we'll just tie
@@ -2101,7 +2106,6 @@ nsTextEditorState::DestroyEditor()
     mTextEditor->PreDestroy(true);
     mEditorInitialized = false;
   }
-  ClearValueCache();
 }
 
 void
@@ -2110,7 +2114,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   NS_ENSURE_TRUE_VOID(mBoundFrame);
 
   // If it was, however, it should be unbounded from the same frame.
-  NS_ASSERTION(!aFrame || aFrame == mBoundFrame, "Unbinding from the wrong frame");
+  MOZ_ASSERT(aFrame == mBoundFrame, "Unbinding from the wrong frame");
   NS_ENSURE_TRUE_VOID(!aFrame || aFrame == mBoundFrame);
 
   // If the editor is modified but nsIEditorObserver::EditAction() hasn't been
@@ -2146,7 +2150,6 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
     nsITextControlFrame::SelectionDirection direction =
       GetSelectionDirection(dirRv);
 
-    MOZ_ASSERT(aFrame == mBoundFrame);
     SelectionProperties& props = GetSelectionProperties();
     props.SetStart(start);
     props.SetEnd(end);
@@ -2241,8 +2244,6 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   }
 
   mBoundFrame = nullptr;
-  // Clear mRootNode so that we don't unexpectedly notify below.
-  nsCOMPtr<Element> rootNode = mRootNode.forget();
 
   // Now that we don't have a frame any more, store the value in the text buffer.
   // The only case where we don't do this is if a value transfer is in progress.
@@ -2251,156 +2252,6 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
     // TODO Find something better to do if this fails...
     NS_ENSURE_TRUE_VOID(success);
   }
-
-  if (rootNode && mMutationObserver) {
-    rootNode->RemoveMutationObserver(mMutationObserver);
-    mMutationObserver = nullptr;
-  }
-
-  // Unbind the anonymous content from the tree.
-  // We actually hold a reference to the content nodes so that
-  // they're not actually destroyed.
-  aFrame->DestroyAnonymousContent(rootNode.forget());
-  aFrame->DestroyAnonymousContent(mPlaceholderDiv.forget());
-  aFrame->DestroyAnonymousContent(mPreviewDiv.forget());
-}
-
-nsresult
-nsTextEditorState::CreateRootNode()
-{
-  MOZ_ASSERT(!mRootNode);
-  MOZ_ASSERT(mBoundFrame);
-
-  nsIPresShell *shell = mBoundFrame->PresContext()->GetPresShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-
-  nsIDocument *doc = shell->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  // Now create a DIV and add it to the anonymous content child list.
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
-                                                 kNameSpaceID_XHTML,
-                                                 nsIDOMNode::ELEMENT_NODE);
-
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mRootNode), nodeInfo.forget(),
-                                  NOT_FROM_PARSER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mMutationObserver = new nsAnonDivObserver(this);
-  mRootNode->AddMutationObserver(mMutationObserver);
-  return rv;
-}
-
-nsresult
-nsTextEditorState::InitializeRootNode()
-{
-  // Make our root node editable
-  mRootNode->SetFlags(NODE_IS_EDITABLE);
-
-  // Set the necessary classes on the text control. We use class values
-  // instead of a 'style' attribute so that the style comes from a user-agent
-  // style sheet and is still applied even if author styles are disabled.
-  nsAutoString classValue;
-  classValue.AppendLiteral("anonymous-div");
-  int32_t wrapCols = GetWrapCols();
-  if (wrapCols > 0) {
-    classValue.AppendLiteral(" wrap");
-  }
-  if (!IsSingleLineTextControl()) {
-    // We can't just inherit the overflow because setting visible overflow will
-    // crash when the number of lines exceeds the height of the textarea and
-    // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_CLIP)
-    // doesn't paint the caret for some reason.
-    const nsStyleDisplay* disp = mBoundFrame->StyleDisplay();
-    if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
-        disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
-      classValue.AppendLiteral(" inherit-overflow");
-    }
-    classValue.AppendLiteral(" inherit-scroll-behavior");
-  }
-  nsresult rv = mRootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                   classValue, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return mBoundFrame->UpdateValueDisplay(false);
-}
-
-Element*
-nsTextEditorState::CreateEmptyDivNode()
-{
-  MOZ_ASSERT(mBoundFrame);
-
-  nsIPresShell *shell = mBoundFrame->PresContext()->GetPresShell();
-  MOZ_ASSERT(shell);
-
-  nsIDocument *doc = shell->GetDocument();
-  MOZ_ASSERT(doc);
-
-  nsNodeInfoManager* pNodeInfoManager = doc->NodeInfoManager();
-  MOZ_ASSERT(pNodeInfoManager);
-
-  Element *element;
-
-  // Create a DIV
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = pNodeInfoManager->GetNodeInfo(nsGkAtoms::div, nullptr,
-                                           kNameSpaceID_XHTML,
-                                           nsIDOMNode::ELEMENT_NODE);
-
-  element = NS_NewHTMLDivElement(nodeInfo.forget());
-
-  // Create the text node for DIV
-  RefPtr<nsTextNode> textNode = new nsTextNode(pNodeInfoManager);
-  textNode->MarkAsMaybeModifiedFrequently();
-
-  element->AppendChildTo(textNode, false);
-
-  return element;
-}
-
-nsresult
-nsTextEditorState::CreatePlaceholderNode()
-{
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
-    if (content) {
-      nsAutoString placeholderTxt;
-      content->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder,
-                       placeholderTxt);
-      nsContentUtils::RemoveNewlines(placeholderTxt);
-      NS_ASSERTION(!placeholderTxt.IsEmpty(), "CreatePlaceholderNode() shouldn't \
-be called if @placeholder is the empty string when trimmed from line breaks");
-    }
-  }
-#endif // DEBUG
-
-  NS_ENSURE_TRUE(!mPlaceholderDiv, NS_ERROR_UNEXPECTED);
-
-  // Create a DIV for the placeholder
-  // and add it to the anonymous content child list
-  mPlaceholderDiv = CreateEmptyDivNode();
-
-  // initialize the text
-  UpdatePlaceholderText(false);
-
-  return NS_OK;
-}
-
-nsresult
-nsTextEditorState::CreatePreviewNode()
-{
-  NS_ENSURE_TRUE(!mPreviewDiv, NS_ERROR_UNEXPECTED);
-
-  // Create a DIV for the preview
-  // and add it to the anonymous content child list
-  mPreviewDiv = CreateEmptyDivNode();
-
-  mPreviewDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                       NS_LITERAL_STRING("preview-div"), false);
-
-  return NS_OK;
 }
 
 int32_t
@@ -2435,8 +2286,8 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 
   if (mTextEditor && mBoundFrame &&
       (mEditorInitialized || !IsSingleLineTextControl())) {
-    if (aIgnoreWrap && !mCachedValue.IsVoid()) {
-      aValue = mCachedValue;
+    if (aIgnoreWrap && !mBoundFrame->CachedValue().IsVoid()) {
+      aValue = mBoundFrame->CachedValue();
       return;
     }
 
@@ -2477,9 +2328,9 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
     // Only when the result doesn't include line breaks caused by hard-wrap,
     // mCacheValue should cache the value.
     if (!(flags & nsIDocumentEncoder::OutputWrap)) {
-      const_cast<nsTextEditorState*>(this)->SetValueCache(aValue);
+      mBoundFrame->CacheValue(aValue);
     } else {
-      const_cast<nsTextEditorState*>(this)->ClearValueCache();
+      mBoundFrame->ClearCachedValue();
     }
   } else {
     if (!mTextCtrlElement->ValueChanged() || !mValue) {
@@ -2722,7 +2573,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
 
         // The new value never includes line breaks caused by hard-wrap.
         // So, mCachedValue can always cache the new value.
-        if (!SetValueCache(newValue, fallible)) {
+        if (!mBoundFrame->CacheValue(newValue, fallible)) {
           return false;
         }
       }
@@ -2771,10 +2622,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
 
     // If we've reached the point where the root node has been created, we
     // can assume that it's safe to notify.
-    ValueWasChanged(!!mRootNode);
+    ValueWasChanged(!!mBoundFrame);
   }
 
-  mTextCtrlElement->OnValueChanged(/* aNotify = */ !!mRootNode,
+  mTextCtrlElement->OnValueChanged(/* aNotify = */ !!mBoundFrame,
                                    /* aWasInteractiveUserChange = */ false);
 
   return true;
@@ -2825,36 +2676,18 @@ nsTextEditorState::ValueWasChanged(bool aNotify)
 }
 
 void
-nsTextEditorState::UpdatePlaceholderText(bool aNotify)
-{
-  NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
-                                "mPlaceholderDiv isn't set");
-
-  // If we don't have a placeholder div, there's nothing to do.
-  if (!mPlaceholderDiv)
-    return;
-
-  nsAutoString placeholderValue;
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
-  content->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholderValue);
-  nsContentUtils::RemoveNewlines(placeholderValue);
-  NS_ASSERTION(mPlaceholderDiv->GetFirstChild(), "placeholder div has no child");
-  mPlaceholderDiv->GetFirstChild()->SetText(placeholderValue, aNotify);
-}
-
-void
 nsTextEditorState::SetPreviewText(const nsAString& aValue, bool aNotify)
 {
   // If we don't have a preview div, there's nothing to do.
-  if (!mPreviewDiv)
+  Element* previewDiv = GetPreviewNode();
+  if (!previewDiv)
     return;
 
   nsAutoString previewValue(aValue);
 
   nsContentUtils::RemoveNewlines(previewValue);
-  MOZ_ASSERT(mPreviewDiv->GetFirstChild(), "preview div has no child");
-  mPreviewDiv->GetFirstChild()->SetText(previewValue, aNotify);
+  MOZ_ASSERT(previewDiv->GetFirstChild(), "preview div has no child");
+  previewDiv->GetFirstChild()->SetText(previewValue, aNotify);
 
   UpdateOverlayTextVisibility(aNotify);
 }
@@ -2863,11 +2696,12 @@ void
 nsTextEditorState::GetPreviewText(nsAString& aValue)
 {
   // If we don't have a preview div, there's nothing to do.
-  if (!mPreviewDiv)
+  Element* previewDiv = GetPreviewNode();
+  if (!previewDiv)
     return;
 
-  MOZ_ASSERT(mPreviewDiv->GetFirstChild(), "preview div has no child");
-  const nsTextFragment *text = mPreviewDiv->GetFirstChild()->GetText();
+  MOZ_ASSERT(previewDiv->GetFirstChild(), "preview div has no child");
+  const nsTextFragment *text = previewDiv->GetFirstChild()->GetText();
 
   aValue.Truncate();
   text->AppendTo(aValue);
@@ -2908,42 +2742,4 @@ bool
 nsTextEditorState::EditorHasComposition()
 {
   return mTextEditor && mTextEditor->IsIMEComposing();
-}
-
-NS_IMPL_ISUPPORTS(nsAnonDivObserver, nsIMutationObserver)
-
-void
-nsAnonDivObserver::CharacterDataChanged(nsIDocument*             aDocument,
-                                        nsIContent*              aContent,
-                                        CharacterDataChangeInfo* aInfo)
-{
-  mTextEditorState->ClearValueCache();
-}
-
-void
-nsAnonDivObserver::ContentAppended(nsIDocument* aDocument,
-                                   nsIContent*  aContainer,
-                                   nsIContent*  aFirstNewContent,
-                                   int32_t      /* unused */)
-{
-  mTextEditorState->ClearValueCache();
-}
-
-void
-nsAnonDivObserver::ContentInserted(nsIDocument* aDocument,
-                                   nsIContent*  aContainer,
-                                   nsIContent*  aChild,
-                                   int32_t      /* unused */)
-{
-  mTextEditorState->ClearValueCache();
-}
-
-void
-nsAnonDivObserver::ContentRemoved(nsIDocument* aDocument,
-                                  nsIContent*  aContainer,
-                                  nsIContent*  aChild,
-                                  int32_t      aIndexInContainer,
-                                  nsIContent*  aPreviousSibling)
-{
-  mTextEditorState->ClearValueCache();
 }
