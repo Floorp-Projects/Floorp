@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="reftest-wait">
+<html>
 <head>
 <style>
 video {
@@ -13,20 +13,9 @@ fieldset {
 }
 </style>
 <script>
-window.onload = function() {
-  let v = document.getElementById("x");
-  v.currentTime = -128;
-  v.controls = !v.controls;
-  // Wait for things to settle.
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      document.documentElement.removeAttribute("class");
-    });
-  });
-}
 </script>
 </head>
 <body>
-<fieldset><video id="x"></video></fieldset>
+<fieldset><video id="x" style="visibility:hidden"></video></fieldset>
 </body>
 </html>
