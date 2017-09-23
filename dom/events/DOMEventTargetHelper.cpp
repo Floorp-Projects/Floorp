@@ -304,33 +304,6 @@ DOMEventTargetHelper::DispatchTrustedEvent(nsIDOMEvent* event)
 }
 
 nsresult
-DOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
-                                      JSContext* aCx,
-                                      const JS::Value& aValue)
-{
-  RefPtr<EventHandlerNonNull> handler;
-  JS::Rooted<JSObject*> callable(aCx);
-  if (aValue.isObject() && JS::IsCallable(callable = &aValue.toObject())) {
-    handler = new EventHandlerNonNull(aCx, callable, dom::GetIncumbentGlobal());
-  }
-  SetEventHandler(aType, EmptyString(), handler);
-  return NS_OK;
-}
-
-void
-DOMEventTargetHelper::GetEventHandler(nsIAtom* aType,
-                                      JSContext* aCx,
-                                      JS::Value* aValue)
-{
-  EventHandlerNonNull* handler = GetEventHandler(aType, EmptyString());
-  if (handler) {
-    *aValue = JS::ObjectValue(*handler->Callback(aCx));
-  } else {
-    *aValue = JS::NullValue();
-  }
-}
-
-nsresult
 DOMEventTargetHelper::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
