@@ -7,15 +7,13 @@
 
 #include <algorithm>  // find_if()
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Omnijar.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "nsIObserverService.h"
-#include "nsIToolkitChromeRegistry.h"
 #include "nsStringEnumerator.h"
+#include "nsIToolkitChromeRegistry.h"
 #include "nsXULAppAPI.h"
-#include "nsZipArchive.h"
 
 #ifdef ENABLE_INTL_API
 #include "unicode/uloc.h"
@@ -596,34 +594,7 @@ CreateOutArray(const nsTArray<nsCString>& aArray)
 NS_IMETHODIMP
 LocaleService::GetDefaultLocale(nsACString& aRetVal)
 {
-  // We don't allow this to change during a session (it's set at build/package
-  // time), so we cache the result the first time we're called.
-  if (mDefaultLocale.IsEmpty()) {
-    // Try to get the package locale from update.locale in omnijar. If the
-    // update.locale file is not found, item.len will remain 0 and we'll
-    // just use our hard-coded default below.
-    // (We could also search for an update.locale file in the GRE resources
-    // directory, to support non-packaged builds, but that seems like a lot
-    // of extra code for what is probably not an important use case.)
-    RefPtr<nsZipArchive> zip = Omnijar::GetReader(Omnijar::GRE);
-    if (zip) {
-      nsZipItemPtr<char> item(zip, "update.locale");
-      size_t len = item.Length();
-      // Ignore any trailing spaces, newlines, etc.
-      while (len > 0 && item.Buffer()[len - 1] <= ' ') {
-        len--;
-      }
-      mDefaultLocale.Assign(item.Buffer(), len);
-    }
-    // Hard-coded fallback, e.g. for non-packaged developer builds.
-    // XXX Is there any reason to make this a compile-time #define that
-    // can be set via configure or something?
-    if (mDefaultLocale.IsEmpty()) {
-      aRetVal.AssignLiteral("en-US");
-    }
-  }
-
-  aRetVal = mDefaultLocale;
+  aRetVal.AssignLiteral("en-US");
   return NS_OK;
 }
 
