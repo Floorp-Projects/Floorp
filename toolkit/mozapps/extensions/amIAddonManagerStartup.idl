@@ -75,13 +75,5 @@ interface amIAddonManagerStartup : nsISupports
    * NOT FOR USE OUTSIDE OF UNIT TESTS.
    */
   void reset();
-
-  /**
-   * Initializes the URL Preloader.
-   *
-   * NOT FOR USE OUTSIDE OF UNIT TESTS.
-   */
-  void initializeURLPreloader();
-
 };
 
