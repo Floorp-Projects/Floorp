@@ -110,9 +110,3 @@ endif
 $(TOPOBJDIR)/config/makefiles/xpidl/xpidl: $(addprefix install-,$(filter dist/bin%,$(INSTALL_MANIFESTS)))
 
 $(TOPOBJDIR)/build/application.ini: $(TOPOBJDIR)/buildid.h $(TOPOBJDIR)/source-repo.h
-
-# The manifest of allowed system add-ons should be re-built when using
-# "build faster".
-ifeq ($(MOZ_BUILD_APP),browser/app)
-default: $(TOPOBJDIR)/browser/app/features
-endif

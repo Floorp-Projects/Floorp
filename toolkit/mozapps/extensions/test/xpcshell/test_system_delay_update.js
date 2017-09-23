@@ -14,6 +14,7 @@ const DEFER_ID = "system_delay_defer@tests.mozilla.org";
 const DEFER_ALSO_ID = "system_delay_defer_also@tests.mozilla.org";
 const NORMAL_ID = "system1@tests.mozilla.org";
 
+
 const TEST_IGNORE_PREF = "delaytest.ignore";
 
 const distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
@@ -117,8 +118,6 @@ add_task(async function() {
   do_get_file("data/system_addons/system_delay_ignore.xpi").copyTo(distroDir, "system_delay_ignore@tests.mozilla.org.xpi");
   do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
 
-  await overrideBuiltIns({ "system": [IGNORE_ID, NORMAL_ID] })
-
   startupManager();
   let updateList = [
     { id: IGNORE_ID, version: "2.0", path: "system_delay_ignore_2.xpi" },
@@ -181,8 +180,6 @@ add_task(async function() {
 
   do_get_file("data/system_addons/system_delay_complete.xpi").copyTo(distroDir, "system_delay_complete@tests.mozilla.org.xpi");
   do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
-
-  await overrideBuiltIns({ "system": [COMPLETE_ID, NORMAL_ID] })
 
   startupManager();
 
@@ -267,8 +264,6 @@ add_task(async function() {
 
   do_get_file("data/system_addons/system_delay_defer.xpi").copyTo(distroDir, "system_delay_defer@tests.mozilla.org.xpi");
   do_get_file("data/system_addons/system1_1.xpi").copyTo(distroDir, "system1@tests.mozilla.org.xpi");
-
-  await overrideBuiltIns({ "system": [DEFER_ID, NORMAL_ID] })
 
   startupManager();
 
@@ -358,8 +353,6 @@ add_task(async function() {
 
   do_get_file("data/system_addons/system_delay_defer.xpi").copyTo(distroDir, "system_delay_defer@tests.mozilla.org.xpi");
   do_get_file("data/system_addons/system_delay_defer_also.xpi").copyTo(distroDir, "system_delay_defer_also@tests.mozilla.org.xpi");
-
-  await overrideBuiltIns({ "system": [DEFER_ID, DEFER_ALSO_ID] })
 
   startupManager();
 
