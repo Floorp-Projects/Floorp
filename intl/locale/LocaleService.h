@@ -306,7 +306,6 @@ private:
 
   virtual ~LocaleService();
 
-  nsAutoCStringN<16>  mDefaultLocale;
   nsTArray<nsCString> mAppLocales;
   nsTArray<nsCString> mRequestedLocales;
   nsTArray<nsCString> mAvailableLocales;
