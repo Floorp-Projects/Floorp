@@ -12,7 +12,11 @@
 #include "mozilla/BasePrincipal.h"
 #include "SystemPrincipal.h"
 
+#include "NSSErrorsService.h"
+#include "nsITransportSecurityInfo.h"
+
 #include "mozilla/AddonManagerWebAPI.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 #include "nsIContentPolicy.h"
@@ -710,6 +714,42 @@ ChannelWrapper::GetRemoteAddress(nsCString& aRetVal) const
   aRetVal.SetIsVoid(true);
   if (nsCOMPtr<nsIHttpChannelInternal> internal = QueryChannel()) {
     Unused << internal->GetRemoteAddress(aRetVal);
+  }
+}
+
+/*****************************************************************************
+ * Error handling
+ *****************************************************************************/
+
+void
+ChannelWrapper::GetErrorString(nsString& aRetVal) const
+{
+  if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
+    nsCOMPtr<nsISupports> securityInfo;
+    Unused << chan->GetSecurityInfo(getter_AddRefs(securityInfo));
+    if (nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo)) {
+      auto errorCode = tsi->GetErrorCode();
+      if (psm::IsNSSErrorCode(errorCode)) {
+        nsCOMPtr<nsINSSErrorsService> nsserr =
+          do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
+
+        nsresult rv = psm::GetXPCOMFromNSSError(errorCode);
+        if (nsserr && NS_SUCCEEDED(nsserr->GetErrorMessage(rv, aRetVal))) {
+          return;
+        }
+      }
+    }
+
+    nsresult status;
+    if (NS_SUCCEEDED(chan->GetStatus(&status)) && NS_FAILED(status)) {
+      nsAutoCString name;
+      GetErrorName(status, name);
+      AppendUTF8toUTF16(name, aRetVal);
+    } else {
+      aRetVal.SetIsVoid(true);
+    }
+  } else {
+    aRetVal.AssignLiteral("NS_ERROR_UNEXPECTED");
   }
 }
 

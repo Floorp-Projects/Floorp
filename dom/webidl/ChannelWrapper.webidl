@@ -141,6 +141,22 @@ interface ChannelWrapper {
 
 
   /**
+   * If the request has failed or been canceled, an opaque string representing
+   * the error. For requests that failed at the NSS layer, this is an NSS
+   * error message. For requests that failed for any other reason, it is the
+   * name of an nsresult error code. For requests which haven't failed, this
+   * is null.
+   *
+   * This string is used in the error message when notifying extension
+   * webRequest listeners of failure. The documentation specifically states
+   * that this value MUST NOT be parsed, and is only meant to be displayed to
+   * humans, but we all know how that works in real life.
+   */
+  [Cached, Pure]
+  readonly attribute DOMString? errorString;
+
+
+  /**
    * Information about the proxy server which is handling this request, or
    * null if the request is not proxied.
    */

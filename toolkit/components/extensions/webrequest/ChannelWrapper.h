@@ -134,6 +134,8 @@ public:
 
   void GetStatusLine(nsCString& aRetVal) const;
 
+  void GetErrorString(nsString& aRetVal) const;
+
 
   already_AddRefed<nsIURI> GetFinalURI(ErrorResult& aRv) const;
 

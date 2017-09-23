@@ -20,10 +20,6 @@ const {nsIHttpActivityObserver, nsISocketTransport} = Ci;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "NSSErrorsService",
-                                   "@mozilla.org/nss_errors_service;1",
-                                   "nsINSSErrorsService");
-
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
                                   "resource://gre/modules/ExtensionUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
@@ -680,35 +676,13 @@ HttpObserverManager = {
     return !filter.urls || filter.urls.matches(uri);
   },
 
-  get resultsMap() {
-    delete this.resultsMap;
-    this.resultsMap = new Map(Object.keys(Cr).map(name => [Cr[name], name]));
-    return this.resultsMap;
-  },
-
-  maybeError({channel}) {
-    // FIXME: Move to ChannelWrapper.
-
-    let {securityInfo} = channel;
-    if (securityInfo instanceof Ci.nsITransportSecurityInfo) {
-      if (NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
-        let nsresult = NSSErrorsService.getXPCOMFromNSSError(securityInfo.errorCode);
-        return {error: NSSErrorsService.getErrorMessage(nsresult)};
-      }
-    }
-
-    if (!Components.isSuccessCode(channel.status)) {
-      return {error: this.resultsMap.get(channel.status) || "NS_ERROR_NET_UNKNOWN"};
-    }
-    return null;
-  },
-
   errorCheck(channel) {
-    let errorData = this.maybeError(channel);
-    if (errorData) {
-      this.runChannelListener(channel, "onError", errorData);
+    let error = channel.errorString;
+    if (error) {
+      this.runChannelListener(channel, "onError", {error});
+      return true;
     }
-    return errorData;
+    return false;
   },
 
   getRequestData(channel, extraData) {
