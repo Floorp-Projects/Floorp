@@ -42,7 +42,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
@@ -1581,13 +1580,11 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
     // always consume events for plugins who may throw their own context menus
     // but not for image objects. Document objects will never be targets or
     // ancestors of targets, so that's OK.
-    nsCOMPtr<nsIDOMHTMLObjectElement> objectElement;
-    if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE)) {
-      objectElement = do_QueryInterface(node);
-    }
-
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-    if (objectElement || (content && content->IsHTMLElement(nsGkAtoms::embed))) {
+    if (content &&
+        (content->IsHTMLElement(nsGkAtoms::embed) ||
+         (!(flags & nsIContextMenuListener::CONTEXT_IMAGE) &&
+          content->IsHTMLElement(nsGkAtoms::object)))) {
       return NS_OK;
     }
   }

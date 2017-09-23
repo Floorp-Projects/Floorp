@@ -6,6 +6,9 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'WebPayments UI')
+
 EXTRA_COMPONENTS += [
     'payments.manifest',
     'paymentUIService.js',
@@ -14,3 +17,5 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += []
 
 JAR_MANIFESTS += ['jar.mn']
+
+SPHINX_TREES['docs'] = 'docs'
