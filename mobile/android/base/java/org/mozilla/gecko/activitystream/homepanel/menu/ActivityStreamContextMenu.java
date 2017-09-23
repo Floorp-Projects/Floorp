@@ -7,7 +7,9 @@ package org.mozilla.gecko.activitystream.homepanel.menu;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -44,6 +46,7 @@ public abstract class ActivityStreamContextMenu
 
     private final Context context;
     private final WebpageModel item;
+    @NonNull private final View snackbarAnchor;
 
     private final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder;
 
@@ -59,12 +62,14 @@ public abstract class ActivityStreamContextMenu
     private final MenuMode mode;
 
     /* package-private */ ActivityStreamContextMenu(final Context context,
+                                                    final View snackbarAnchor,
                                                     final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                                     final MenuMode mode,
                                                     final WebpageModel item,
                                                     HomePager.OnUrlOpenListener onUrlOpenListener,
                                                     HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.context = context;
+        this.snackbarAnchor = snackbarAnchor;
         this.item = item;
         this.telemetryExtraBuilder = telemetryExtraBuilder;
 
@@ -235,10 +240,15 @@ public abstract class ActivityStreamContextMenu
 
                         if (item.isBookmarked()) {
                             db.removeBookmarksWithURL(context.getContentResolver(), item.getUrl());
+
+                            // See bug 1402521 for adding "options" to the snackbar.
+                            Snackbar.make(ActivityStreamContextMenu.this.snackbarAnchor, R.string.bookmark_removed, Snackbar.LENGTH_LONG).show();
                         } else {
                             // We only store raw URLs in history (and bookmarks), hence we won't ever show about:reader
                             // URLs in AS topsites or highlights. Therefore we don't need to do any special about:reader handling here.
                             db.addBookmark(context.getContentResolver(), item.getTitle(), item.getUrl());
+
+                            Snackbar.make(ActivityStreamContextMenu.this.snackbarAnchor, R.string.bookmark_added, Snackbar.LENGTH_LONG).show();
                         }
                         item.onStateCommitted();
                     }
@@ -341,6 +351,7 @@ public abstract class ActivityStreamContextMenu
 
         if (!HardwareUtils.isTablet()) {
             menu = new BottomSheetContextMenu(context,
+                    anchor,
                     telemetryExtraBuilder, menuMode,
                     item, shouldOverrideIconWithImageProvider, onUrlOpenListener, onUrlOpenInBackgroundListener,
                     tilesWidth, tilesHeight);
