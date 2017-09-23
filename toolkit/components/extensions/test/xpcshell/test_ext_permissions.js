@@ -176,6 +176,24 @@ add_task(async function test_permissions() {
     result = await call("request", allOptional);
     equal(result.status, "success", "request() returned cleanly");
     equal(result.result, true, "request() returned true for accepted permissions");
+
+    // Verify that requesting a permission/origin in the wrong field fails
+    let originsAsPerms = {
+      permissions: OPTIONAL_ORIGINS,
+    };
+    let permsAsOrigins = {
+      origins: OPTIONAL_PERMISSIONS,
+    };
+
+    result = await call("request", originsAsPerms);
+    equal(result.status, "error", "Requesting an origin as a permission should fail");
+    ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
+       "Error message for origin as permission is reasonable");
+
+    result = await call("request", permsAsOrigins);
+    equal(result.status, "error", "Requesting a permission as an origin should fail");
+    ok(/Type error for parameter permissions \(Error processing origins/.test(result.message),
+       "Error message for permission as origin is reasonable");
   });
 
   let allPermissions = {
