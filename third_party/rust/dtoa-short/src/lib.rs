@@ -68,7 +68,7 @@ fn write_with_prec<W, V>(dest: &mut W, value: V, prec: usize)
 
 fn restrict_prec(buf: &mut [u8], prec: usize) -> (&[u8], Notation) {
     let len = buf.len();
-    debug_assert!(len <= BUFFER_SIZE, "dtoa may have changed its buffer size");
+    debug_assert!(len <= BUFFER_SIZE + 1, "dtoa may have changed its buffer size");
     // Put a leading zero to capture any carry.
     debug_assert!(buf[0] == b'\0', "Caller must prepare an empty byte for us");
     buf[0] = b'0';

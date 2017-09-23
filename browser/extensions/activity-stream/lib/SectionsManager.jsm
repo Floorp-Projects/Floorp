@@ -278,11 +278,16 @@ class SectionsFeed {
       case at.PREFS_INITIAL_VALUES:
         SectionsManager.init(action.data);
         break;
-      case at.PREF_CHANGED:
-        if (action.data && action.data.name.match(/^feeds.section.(\S+).options$/i)) {
-          SectionsManager.addBuiltInSection(action.data.name.slice(0, -8), action.data.value);
+      case at.PREF_CHANGED: {
+        if (action.data) {
+          const matched = action.data.name.match(/^(feeds.section.(\S+)).options$/i);
+          if (matched) {
+            SectionsManager.addBuiltInSection(matched[1], action.data.value);
+            this.store.dispatch({type: at.SECTION_OPTIONS_CHANGED, data: matched[2]});
+          }
         }
         break;
+      }
       case at.SECTION_DISABLE:
         SectionsManager.disableSection(action.data);
         break;

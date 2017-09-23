@@ -7,6 +7,7 @@
 #include "WebBrowserPersistDocumentParent.h"
 
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/TabParent.h"
 #include "nsComponentManagerUtils.h"
@@ -30,7 +31,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMHTMLSourceElement.h"
@@ -532,8 +532,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return OnWalkAttribute(aNode, "src");
     }
 
-    nsCOMPtr<nsIDOMHTMLObjectElement> nodeAsObject = do_QueryInterface(aNode);
-    if (nodeAsObject) {
+    if (content->IsHTMLElement(nsGkAtoms::object)) {
         return OnWalkAttribute(aNode, "data");
     }
 
@@ -1066,8 +1065,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLObjectElement> nodeAsObject = do_QueryInterface(aNodeIn);
-    if (nodeAsObject) {
+    if (content->IsHTMLElement(nsGkAtoms::object)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "data");

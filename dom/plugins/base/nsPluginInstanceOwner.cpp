@@ -35,7 +35,6 @@ using mozilla::DefaultXDisplay;
 #include "nsIPluginWidget.h"
 #include "nsViewManager.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsIAppShell.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsObjectLoadingContent.h"

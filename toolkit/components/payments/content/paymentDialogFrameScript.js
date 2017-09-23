@@ -2,6 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * This frame script only exists to mediate communications between the
+ * unprivileged frame in a content process and the privileged dialog wrapper
+ * in the UI process on the main thread.
+ *
+ * `paymentChromeToContent` messages from the privileged wrapper are converted
+ * into DOM events of the same name.
+ * `paymentContentToChrome` custom DOM events from the unprivileged frame are
+ * converted into messages of the same name.
+ *
+ * Business logic should stay out of this shim.
+ */
+
 "use strict";
 
 /* eslint-env mozilla/frame-script */
@@ -18,15 +31,7 @@ let PaymentFrameScript = {
   },
 
   handleEvent(event) {
-    switch (event.type) {
-      case "paymentContentToChrome": {
-        this.sendToChrome(event);
-        break;
-      }
-      default: {
-        throw new Error("Unexpected event type");
-      }
-    }
+    this.sendToChrome(event);
   },
 
   receiveMessage({data: {messageType, data}}) {

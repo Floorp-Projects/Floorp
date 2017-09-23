@@ -9220,6 +9220,14 @@
     "kind": "boolean",
     "description": "Was DataChannels negotiated"
   },
+  "WEBRTC_RTCP_MUX": {
+    "record_in_processes": ["main", "content"],
+    "bug_numbers": [1402221],
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com", "nohlmeier@mozilla.com"],
+    "expires_in_version": "62",
+    "kind": "boolean",
+    "description": "Was RTCP-MUX negotiated for a track"
+  },
   "WEBRTC_CALL_TYPE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],

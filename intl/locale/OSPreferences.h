@@ -9,9 +9,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#ifdef ENABLE_INTL_API
 #include "unicode/uloc.h"
-#endif
 
 #include "mozIOSPreferences.h"
 
