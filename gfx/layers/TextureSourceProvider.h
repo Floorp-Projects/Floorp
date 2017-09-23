@@ -61,7 +61,7 @@ public:
   /// ReadLock.
   /// This function provides a convenient way to do this delayed unlocking, if
   /// the texture itself requires it.
-  void UnlockAfterComposition(TextureHost* aTexture);
+  virtual void UnlockAfterComposition(TextureHost* aTexture);
 
   /// Most compositor backends operate asynchronously under the hood. This
   /// means that when a layer stops using a texture it is often desirable to

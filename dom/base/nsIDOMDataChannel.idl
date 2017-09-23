@@ -26,11 +26,6 @@ interface nsIDOMDataChannel : nsIDOMEventTarget
 
   readonly attribute unsigned short id;
 
-  [implicit_jscontext] attribute jsval onopen;
-  [implicit_jscontext] attribute jsval onerror;
-  [implicit_jscontext] attribute jsval onclose;
-  [implicit_jscontext] attribute jsval onmessage;
-
   attribute DOMString binaryType;
 
   void close();
