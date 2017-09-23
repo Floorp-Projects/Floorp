@@ -3068,7 +3068,7 @@ nsCSSRendering::ComputeBorderSpacedRepeatSize(nscoord aImageDimension,
                                               nscoord aAvailableSpace,
                                               nscoord& aSpace)
 {
-  int32_t count = aAvailableSpace / aImageDimension;
+  int32_t count = aImageDimension ? (aAvailableSpace / aImageDimension) : 0;
   aSpace = (aAvailableSpace - aImageDimension * count) / (count + 1);
   return aSpace + aImageDimension;
 }
