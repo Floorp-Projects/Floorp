@@ -46,9 +46,14 @@ ServiceWorkerRegisterJob::AsyncExecute()
     // unregister so that closing the window by shutting down the browser
     // results in the registration being gone on restart.
     if (registration->mPendingUninstall) {
+      registration->mPendingUninstall = false;
       swm->StoreRegistration(mPrincipal, registration);
+      // Its possible that a ready promise is created between when the
+      // uninstalling flag is set and when we resurrect the registration
+      // here.  In that case we might need to fire the ready promise
+      // now.
+      swm->CheckPendingReadyPromises();
     }
-    registration->mPendingUninstall = false;
     RefPtr<ServiceWorkerInfo> newest = registration->Newest();
     if (newest && mScriptSpec.Equals(newest->ScriptSpec()) && sameUVC) {
       SetRegistration(registration);

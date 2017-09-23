@@ -45,7 +45,7 @@ RefPtr<ID2D1Factory1> D2DFactory()
 DrawTargetD2D1::DrawTargetD2D1()
   : mPushedLayers(1)
   , mUsedCommandListsSincePurge(0)
-  , mDidComplexBlendWithListInList(false)
+  , mComplexBlendsWithListInList(0)
   , mDeviceSeq(0)
 {
 }
@@ -950,6 +950,8 @@ DrawTargetD2D1::PopLayer()
   DCCommandSink sink(mDC);
   list->Stream(&sink);
 
+  mComplexBlendsWithListInList = 0;
+
   mDC->PopLayer();
 }
 
@@ -1420,12 +1422,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 
     mDC->DrawImage(blendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
 
-    // This may seem a little counter intuitive. If this is false, we go through the regular
-    // codepaths and set it to true. When this was true, GetImageForLayerContent will return
-    // a bitmap for the current command list and we will no longer have a complex blend
-    // with a list for tmpImage. Therefore we can set it to false again.
-    mDidComplexBlendWithListInList = !mDidComplexBlendWithListInList;
-
+    mComplexBlendsWithListInList++;
     return;
   }
 
@@ -1506,6 +1503,8 @@ DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAli
   return true;
 }
 
+static const uint32_t sComplexBlendsWithListAllowedInList = 4;
+
 already_AddRefed<ID2D1Image>
 DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent)
 {
@@ -1535,7 +1534,7 @@ DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent)
     list->Close();
 
     RefPtr<ID2D1Bitmap1> tmpBitmap;
-    if (mDidComplexBlendWithListInList) {
+    if (mComplexBlendsWithListInList >= sComplexBlendsWithListAllowedInList) {
       D2D1_BITMAP_PROPERTIES1 props =
         D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET,
                                 D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
@@ -1545,6 +1544,7 @@ DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent)
       mDC->SetTarget(tmpBitmap);
       mDC->DrawImage(list, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
       mDC->SetTarget(CurrentTarget());
+      mComplexBlendsWithListInList = 0;
     }
 
     DCCommandSink sink(mDC);
@@ -1554,7 +1554,7 @@ DrawTargetD2D1::GetImageForLayerContent(bool aShouldPreserveContent)
       PushAllClips();
     }
 
-    if (mDidComplexBlendWithListInList) {
+    if (tmpBitmap) {
       return tmpBitmap.forget();
     }
 

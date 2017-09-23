@@ -80,9 +80,6 @@ DOMRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return DOMRequestBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_EVENT_HANDLER(DOMRequest, success)
-NS_IMPL_EVENT_HANDLER(DOMRequest, error)
-
 NS_IMETHODIMP
 DOMRequest::GetReadyState(nsAString& aReadyState)
 {
