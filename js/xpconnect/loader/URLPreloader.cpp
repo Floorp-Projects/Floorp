@@ -83,20 +83,22 @@ URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
     return NS_OK;
 }
 
+
 URLPreloader&
 URLPreloader::GetSingleton()
 {
-    if (!sSingleton) {
-        sSingleton = new URLPreloader();
-        ClearOnShutdown(&sSingleton);
+    static RefPtr<URLPreloader> singleton;
+
+    if (!singleton) {
+        singleton = new URLPreloader();
+        ClearOnShutdown(&singleton);
     }
 
-    return *sSingleton;
+    return *singleton;
 }
 
-bool URLPreloader::sInitialized = false;
 
-StaticRefPtr<URLPreloader> URLPreloader::sSingleton;
+bool URLPreloader::sInitialized = false;
 
 URLPreloader::URLPreloader()
 {
@@ -152,14 +154,6 @@ URLPreloader::InitInternal()
     }
 
     return Ok();
-}
-
-URLPreloader&
-URLPreloader::ReInitialize()
-{
-    sSingleton = new URLPreloader();
-
-    return *sSingleton;
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult>

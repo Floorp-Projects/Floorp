@@ -858,7 +858,7 @@ add_task(async function setup() {
   let system_addon = FileUtils.File(distroDir.path);
   system_addon.append("tel-system-xpi@tests.mozilla.org.xpi");
   system_addon.lastModifiedTime = SYSTEM_ADDON_INSTALL_DATE;
-  await loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
+  loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
 
   // Spoof the persona ID.
   LightweightThemeManager.currentTheme =
