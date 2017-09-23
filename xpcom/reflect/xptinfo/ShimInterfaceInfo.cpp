@@ -62,7 +62,6 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLMenuItemElement.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLScriptElement.h"
@@ -339,7 +338,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLLinkElement),
   DEFINE_SHIM(HTMLMediaElement),
   DEFINE_SHIM(HTMLMenuItemElement),
-  DEFINE_SHIM(HTMLObjectElement),
   DEFINE_SHIM(HTMLOptionElement),
   DEFINE_SHIM(HTMLOptionsCollection),
   DEFINE_SHIM(HTMLScriptElement),
