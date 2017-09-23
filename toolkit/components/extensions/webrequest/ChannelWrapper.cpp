@@ -177,31 +177,24 @@ class MOZ_STACK_CLASS HeaderVisitor final : public nsIHttpHeaderVisitor
 public:
   NS_DECL_NSIHTTPHEADERVISITOR
 
-  explicit HeaderVisitor(JSContext* aCx)
-    : mCx(aCx)
-    , mMap(aCx)
+  explicit HeaderVisitor(nsTArray<dom::MozHTTPHeader>& aHeaders)
+    : mHeaders(aHeaders)
   {}
 
-  JSObject* VisitRequestHeaders(nsIHttpChannel* aChannel, ErrorResult& aRv)
+  HeaderVisitor(nsTArray<dom::MozHTTPHeader>& aHeaders,
+                const nsCString& aContentTypeHdr)
+    : mHeaders(aHeaders)
+    , mContentTypeHdr(aContentTypeHdr)
+  {}
+
+  void VisitRequestHeaders(nsIHttpChannel* aChannel, ErrorResult& aRv)
   {
-    if (!Init()) {
-      return nullptr;
-    }
-    if (!CheckResult(aChannel->VisitRequestHeaders(this), aRv)) {
-      return nullptr;
-    }
-    return mMap;
+    CheckResult(aChannel->VisitRequestHeaders(this), aRv);
   }
 
-  JSObject* VisitResponseHeaders(nsIHttpChannel* aChannel, ErrorResult& aRv)
+  void VisitResponseHeaders(nsIHttpChannel* aChannel, ErrorResult& aRv)
   {
-    if (!Init()) {
-      return nullptr;
-    }
-    if (!CheckResult(aChannel->VisitResponseHeaders(this), aRv)) {
-      return nullptr;
-    }
-    return mMap;
+    CheckResult(aChannel->VisitResponseHeaders(this), aRv);
   }
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
@@ -223,18 +216,8 @@ public:
   }
 
 private:
-  bool Init()
-  {
-    mMap = NewMapObject(mCx);
-    return mMap;
-  }
-
   bool CheckResult(nsresult aNSRv, ErrorResult& aRv)
   {
-    if (JS_IsExceptionPending(mCx)) {
-      aRv.NoteJSContextException(mCx);
-      return false;
-    }
     if (NS_FAILED(aNSRv)) {
       aRv.Throw(aNSRv);
       return false;
@@ -242,8 +225,8 @@ private:
     return true;
   }
 
-  JSContext* mCx;
-  RootedObject mMap;
+  nsTArray<dom::MozHTTPHeader>& mHeaders;
+  nsCString mContentTypeHdr = VoidCString();
 
   nsrefcnt mRefCnt = 0;
 };
@@ -251,13 +234,16 @@ private:
 NS_IMETHODIMP
 HeaderVisitor::VisitHeader(const nsACString& aHeader, const nsACString& aValue)
 {
-  RootedValue header(mCx);
-  RootedValue value(mCx);
-
-  if (!xpc::NonVoidStringToJsval(mCx, NS_ConvertUTF8toUTF16(aHeader), &header) ||
-      !xpc::NonVoidStringToJsval(mCx, NS_ConvertUTF8toUTF16(aValue), &value) ||
-      !MapSet(mCx, mMap, header, value)) {
+  auto dict = mHeaders.AppendElement(fallible);
+  if (!dict) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+  dict->mName = aHeader;
+
+  if (!mContentTypeHdr.IsVoid() && aHeader.LowerCaseEqualsLiteral("content-type")) {
+    dict->mValue = mContentTypeHdr;
+  } else {
+    dict->mValue = aValue;
   }
 
   return NS_OK;
@@ -269,22 +255,22 @@ NS_IMPL_QUERY_INTERFACE(HeaderVisitor, nsIHttpHeaderVisitor)
 
 
 void
-ChannelWrapper::GetRequestHeaders(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv) const
+ChannelWrapper::GetRequestHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal, ErrorResult& aRv) const
 {
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    HeaderVisitor visitor(cx);
-    aRetVal.set(visitor.VisitRequestHeaders(chan, aRv));
+    HeaderVisitor visitor(aRetVal);
+    visitor.VisitRequestHeaders(chan, aRv);
   } else {
     aRv.Throw(NS_ERROR_UNEXPECTED);
   }
 }
 
 void
-ChannelWrapper::GetResponseHeaders(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv) const
+ChannelWrapper::GetResponseHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal, ErrorResult& aRv) const
 {
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    HeaderVisitor visitor(cx);
-    aRetVal.set(visitor.VisitResponseHeaders(chan, aRv));
+    HeaderVisitor visitor(aRetVal, mContentTypeHdr);
+    visitor.VisitResponseHeaders(chan, aRv);
   } else {
     aRv.Throw(NS_ERROR_UNEXPECTED);
   }
@@ -307,7 +293,14 @@ ChannelWrapper::SetResponseHeader(const nsCString& aHeader, const nsCString& aVa
 {
   nsresult rv = NS_ERROR_UNEXPECTED;
   if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    rv = chan->SetResponseHeader(aHeader, aValue, false);
+    if (aHeader.LowerCaseEqualsLiteral("content-type")) {
+      rv = chan->SetContentType(aValue);
+      if (NS_SUCCEEDED(rv)) {
+        mContentTypeHdr = aValue;
+      }
+    } else {
+      rv = chan->SetResponseHeader(aHeader, aValue, false);
+    }
   }
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

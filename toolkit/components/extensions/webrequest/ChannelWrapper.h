@@ -215,9 +215,9 @@ public:
 
   void GetRemoteAddress(nsCString& aRetVal) const;
 
-  void GetRequestHeaders(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv) const;
+  void GetRequestHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal, ErrorResult& aRv) const;
 
-  void GetResponseHeaders(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv) const;
+  void GetResponseHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal, ErrorResult& aRv) const;
 
   void SetRequestHeader(const nsCString& header, const nsCString& value, ErrorResult& aRv);
 
