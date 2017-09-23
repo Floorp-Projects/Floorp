@@ -396,8 +396,6 @@ NS_INTERFACE_MAP_END_INHERITING(XMLHttpRequestEventTarget)
 NS_IMPL_ADDREF_INHERITED(XMLHttpRequestMainThread, XMLHttpRequestEventTarget)
 NS_IMPL_RELEASE_INHERITED(XMLHttpRequestMainThread, XMLHttpRequestEventTarget)
 
-NS_IMPL_EVENT_HANDLER(XMLHttpRequestMainThread, readystatechange)
-
 void
 XMLHttpRequestMainThread::DisconnectFromOwner()
 {

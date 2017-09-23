@@ -92,10 +92,22 @@ TextureSourceProviderMLGPU::CreateDataTextureSourceAround(gfx::DataSourceSurface
   return nullptr;
 }
 
+void
+TextureSourceProviderMLGPU::UnlockAfterComposition(TextureHost* aTexture)
+{
+  TextureSourceProvider::UnlockAfterComposition(aTexture);
+
+  // If this is being called after we shutdown the compositor, we must finish
+  // read unlocking now to prevent a cycle.
+  if (!IsValid()) {
+    ReadUnlockTextures();
+  }
+}
+
 bool
 TextureSourceProviderMLGPU::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
 {
-  if (!mDevice) {
+  if (!IsValid()) {
     return false;
   }
   return TextureSourceProvider::NotifyNotUsedAfterComposition(aTextureHost);

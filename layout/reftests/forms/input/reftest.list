@@ -12,3 +12,6 @@ include percentage/reftest.list
 include hidden/reftest.list
 include color/reftest.list
 include datetime/reftest.list
+
+== selector-read-write-type-change-001.html selector-read-write-type-change-001-ref.html
+== selector-read-write-type-change-002.html selector-read-write-type-change-002-ref.html

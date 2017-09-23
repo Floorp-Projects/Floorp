@@ -257,7 +257,7 @@ config = {
                 os.path.join(os.getcwd(),
                     'mozharness', 'external_tools', 'machine-configuration.json')
             ],
-            'architectures': ['32bit'],
+            'architectures': ['32bit', '64bit'],
             'halt_on_failure': True,
             'enabled': ADJUST_MOUSE_AND_SCREEN
         }
