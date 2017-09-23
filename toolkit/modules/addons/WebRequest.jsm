@@ -68,14 +68,21 @@ class HeaderChanger {
   constructor(channel) {
     this.channel = channel;
 
-    this.originalHeaders = new Map();
-    for (let [name, value] of this.iterHeaders()) {
-      this.originalHeaders.set(name.toLowerCase(), {name, value});
+    this.array = this.readHeaders();
+  }
+
+  getMap() {
+    if (!this.map) {
+      this.map = new Map();
+      for (let header of this.array) {
+        this.map.set(header.name.toLowerCase(), header);
+      }
     }
+    return this.map;
   }
 
   toArray() {
-    return Array.from(this.originalHeaders.values());
+    return this.array;
   }
 
   validateHeaders(headers) {
@@ -110,7 +117,8 @@ class HeaderChanger {
       ({name}) => name.toLowerCase()));
 
     // Remove missing headers.
-    for (let name of this.originalHeaders.keys()) {
+    let origHeaders = this.getMap();
+    for (let name of origHeaders.keys()) {
       if (!newHeaders.has(name)) {
         this.setHeader(name, "");
       }
@@ -121,7 +129,7 @@ class HeaderChanger {
       if (binaryValue) {
         value = String.fromCharCode(...binaryValue);
       }
-      let original = this.originalHeaders.get(name.toLowerCase());
+      let original = origHeaders.get(name.toLowerCase());
       if (!original || value !== original.value) {
         this.setHeader(name, value);
       }
@@ -138,36 +146,22 @@ class RequestHeaderChanger extends HeaderChanger {
     }
   }
 
-  iterHeaders() {
-    return this.channel.getRequestHeaders().entries();
+  readHeaders() {
+    return this.channel.getRequestHeaders();
   }
 }
 
 class ResponseHeaderChanger extends HeaderChanger {
   setHeader(name, value) {
     try {
-      if (name.toLowerCase() === "content-type" && value) {
-        // The Content-Type header value can't be modified, so we
-        // set the channel's content type directly, instead, and
-        // record that we made the change for the sake of
-        // subsequent observers.
-        this.channel.contentType = value;
-        this.channel._contentType = value;
-      } else {
-        this.channel.setResponseHeader(name, value);
-      }
+      this.channel.setResponseHeader(name, value);
     } catch (e) {
       Cu.reportError(new Error(`Error setting response header ${name}: ${e}`));
     }
   }
 
-  * iterHeaders() {
-    for (let [name, value] of this.channel.getResponseHeaders()) {
-      if (name.toLowerCase() === "content-type") {
-        value = this.channel._contentType || value;
-      }
-      yield [name, value];
-    }
+  readHeaders() {
+    return this.channel.getResponseHeaders();
   }
 }
 

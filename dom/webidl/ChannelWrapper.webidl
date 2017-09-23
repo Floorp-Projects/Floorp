@@ -300,24 +300,32 @@ interface ChannelWrapper : EventTarget {
   readonly attribute sequence<MozFrameAncestorInfo>? frameAncestors;
 
   /**
-   * For HTTP requests, returns a Map of request headers which will be, or
-   * have been, sent with this request. Each key is a non-case-normalized
-   * header name string, and each value is its string value.
+   * For HTTP requests, returns an array of request headers which will be, or
+   * have been, sent with this request.
    *
    * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
    */
   [Throws]
-  object getRequestHeaders();
+  sequence<MozHTTPHeader> getRequestHeaders();
 
   /**
-   * For HTTP requests, returns a Map of response headers which were received
-   * for this request, in the same format as returned by getRequestHeaders.
-   *
+   * For HTTP requests, returns an array of response headers which were
+   * received for this request, in the same format as returned by
+   * getRequestHeaders.
+
    * Throws NS_ERROR_NOT_AVAILABLE if a response has not yet been received, or
    * NS_ERROR_UNEXPECTED if the channel is not an HTTP channel.
+   *
+   * Note: The Content-Type header is handled specially. That header is
+   * usually not mutable after the request has been received, and the content
+   * type must instead be changed via the contentType attribute. If a caller
+   * attempts to set the Content-Type header via setRequestHeader, however,
+   * that value is assigned to the contentType attribute and its original
+   * string value is cached. That original value is returned in place of the
+   * actual Content-Type header.
    */
   [Throws]
-  object getResponseHeaders();
+  sequence<MozHTTPHeader> getResponseHeaders();
 
   /**
    * Sets the given request header to the given value, overwriting any
@@ -335,6 +343,9 @@ interface ChannelWrapper : EventTarget {
    * removing it.
    *
    * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
+   *
+   * Note: The content type header is handled specially by this function. See
+   * getResponseHeaders() for details.
    */
   [Throws]
   void setResponseHeader(ByteString header, ByteString value);
@@ -387,6 +398,20 @@ dictionary MozProxyInfo {
 dictionary MozFrameAncestorInfo {
   required ByteString url;
   required unsigned long long frameId;
+};
+
+/**
+ * Represents an HTTP request or response header.
+ */
+dictionary MozHTTPHeader {
+  /**
+   * The case-insensitive, non-case-normalized header name.
+   */
+  required ByteString name;
+  /**
+   * The header value.
+   */
+  required ByteString value;
 };
 
 /**
