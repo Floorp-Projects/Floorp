@@ -71,15 +71,6 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsDOMOfflineResourceList, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsDOMOfflineResourceList, DOMEventTargetHelper)
 
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, checking)
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, error)
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, noupdate)
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, downloading)
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, progress)
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, cached)
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, updateready)
-NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, obsolete)
-
 nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
                                                    nsIURI *aDocumentURI,
                                                    nsIPrincipal *aLoadingPrincipal,

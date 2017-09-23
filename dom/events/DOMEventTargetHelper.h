@@ -118,14 +118,6 @@ public:
     return mListenerManager && mListenerManager->HasListenersFor(aTypeWithOn);
   }
 
-  nsresult SetEventHandler(nsIAtom* aType,
-                           JSContext* aCx,
-                           const JS::Value& aValue);
-  using dom::EventTarget::SetEventHandler;
-  void GetEventHandler(nsIAtom* aType,
-                       JSContext* aCx,
-                       JS::Value* aValue);
-  using dom::EventTarget::GetEventHandler;
   virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override
   {
     return nsPIDOMWindowOuter::GetFromCurrentInner(GetOwner());
@@ -226,32 +218,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
                               NS_DOMEVENTTARGETHELPER_IID)
 
 } // namespace mozilla
-
-// XPIDL event handlers
-#define NS_IMPL_EVENT_HANDLER(_class, _event)                                 \
-    NS_IMETHODIMP _class::GetOn##_event(JSContext* aCx,                       \
-                                        JS::MutableHandle<JS::Value> aValue)  \
-    {                                                                         \
-      GetEventHandler(nsGkAtoms::on##_event, aCx, aValue.address());          \
-      return NS_OK;                                                           \
-    }                                                                         \
-    NS_IMETHODIMP _class::SetOn##_event(JSContext* aCx,                       \
-                                        JS::Handle<JS::Value> aValue)         \
-    {                                                                         \
-      return SetEventHandler(nsGkAtoms::on##_event, aCx, aValue);             \
-    }
-
-#define NS_IMPL_FORWARD_EVENT_HANDLER(_class, _event, _baseclass)             \
-    NS_IMETHODIMP _class::GetOn##_event(JSContext* aCx,                       \
-                                        JS::MutableHandle<JS::Value> aValue)  \
-    {                                                                         \
-      return _baseclass::GetOn##_event(aCx, aValue);                          \
-    }                                                                         \
-    NS_IMETHODIMP _class::SetOn##_event(JSContext* aCx,                       \
-                                        JS::Handle<JS::Value> aValue)         \
-    {                                                                         \
-      return _baseclass::SetOn##_event(aCx, aValue);                          \
-    }
 
 // WebIDL event handlers
 #define IMPL_EVENT_HANDLER(_event)                                        \

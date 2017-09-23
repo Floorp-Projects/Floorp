@@ -292,19 +292,6 @@ interface nsIXMLHttpRequest : nsISupports
   readonly attribute nsIXMLHttpRequestUpload upload;
 
   /**
-   * Meant to be a script-only mechanism for setting a callback function.
-   * The attribute is expected to be JavaScript function object. When the
-   * readyState changes, the callback function will be called.
-   * This attribute should not be used from native code!!
-   *
-   * After the initial response, all event listeners will be cleared.
-   * // XXXbz what does that mean, exactly?   
-   *
-   * Call open() before setting an onreadystatechange listener.
-   */
-  [implicit_jscontext] attribute jsval onreadystatechange;
-
-  /**
    * If true, the request will be sent without cookie and authentication
    * headers.
    */

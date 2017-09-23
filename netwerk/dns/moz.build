@@ -69,13 +69,7 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
-if CONFIG['ENABLE_INTL_API']:
-    DEFINES['IDNA2008'] = True
-    USE_LIBS += ['icu']
-else:
-    UNIFIED_SOURCES += [
-        'nameprep.c',
-    ]
+USE_LIBS += ['icu']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
