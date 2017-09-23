@@ -47,6 +47,10 @@ interface ChannelWrapper {
    */
   static ChannelWrapper get(MozChannel channel);
 
+  /**
+   * A unique ID for for the requests which remains constant throughout the
+   * redirect chain.
+   */
   [Constant, StoreInSlot]
   readonly attribute unsigned long long id;
 
@@ -57,78 +61,173 @@ interface ChannelWrapper {
   attribute MozChannel? channel;
 
 
+  /**
+   * Cancels the request with the given nsresult status code.
+   */
   [Throws]
   void cancel(unsigned long result);
 
+  /**
+   * Redirects the wrapped HTTP channel to the given URI. For other channel
+   * types, this method will throw. The redirect is an internal redirect, and
+   * the  behavior is the same as nsIHttpChannel.redirectTo.
+   */
   [Throws]
   void redirectTo(URI url);
 
 
+  /**
+   * The content type of the request, usually as read from the Content-Type
+   * header. This should be used in preference to the header to determine the
+   * content type of the channel.
+   */
   [Pure]
   attribute ByteString contentType;
 
 
+  /**
+   * For HTTP requests, the request method (e.g., GET, POST, HEAD). For other
+   * request types, returns an empty string.
+   */
   [Cached, Pure]
   readonly attribute ByteString method;
 
+  /**
+   * For requests with LoadInfo, the content policy type that corresponds to
+   * the request. For requests without LoadInfo, returns "other".
+   */
   [Cached, Pure]
   readonly attribute MozContentPolicyType type;
 
 
+  /**
+   * When true, the request is currently suspended by the wrapper. When false,
+   * the request is not suspended by the wrapper, but may still be suspended
+   * by another caller.
+   */
   [Pure, SetterThrows]
   attribute boolean suspended;
 
 
+  /**
+   * The final URI of the channel (as returned by NS_GetFinalChannelURI) after
+   * any redirects have been processed.
+   */
   [Cached, GetterThrows, Pure]
   readonly attribute URI finalURI;
 
+  /**
+   * The string version of finalURI (but cheaper to access than
+   * finalURI.spec).
+   */
   [Cached, GetterThrows, Pure]
   readonly attribute ByteString finalURL;
 
 
+  /**
+   * The current HTTP status code of the request. This will be 0 if a response
+   * has not yet been received, or if the request is not an HTTP request.
+   */
   [Cached, Pure]
   readonly attribute unsigned long statusCode;
 
+  /**
+   * The HTTP status line for the request (e.g., "HTTP/1.0 200 Success"). This
+   * will be an empty string if a response has not yet been received, or if
+   * the request is not an HTTP request.
+   */
   [Cached, Pure]
   readonly attribute ByteString statusLine;
 
 
+  /**
+   * Information about the proxy server which is handling this request, or
+   * null if the request is not proxied.
+   */
   [Cached, Frozen, GetterThrows, Pure]
   readonly attribute MozProxyInfo? proxyInfo;
 
+  /**
+   * For HTTP requests, the IP address of the remote server handling the
+   * request. For other request types, returns null.
+   */
   [Cached, Pure]
   readonly attribute ByteString? remoteAddress;
 
 
+  /**
+   * The LoadInfo object for this channel, if available. Null for channels
+   * without load info, until support for those is removed.
+   */
   [Cached, Pure]
   readonly attribute LoadInfo? loadInfo;
 
+  /**
+   * True if this load was triggered by a system caller. This currently always
+   * false if the request has no LoadInfo or is a top-level document load.
+   */
   [Cached, Pure]
   readonly attribute boolean isSystemLoad;
 
+  /**
+   * The URL of the principal that triggered this load. This is equivalent to
+   * the LoadInfo's triggeringPrincipal, and will only ever be null for
+   * requests without LoadInfo.
+   */
   [Cached, Pure]
   readonly attribute ByteString? originURL;
 
+  /**
+   * The URL of the document loading the content for this request. This is
+   * equivalent to the LoadInfo's loadingPrincipal. This may only ever be null
+   * for top-level requests and requests without LoadInfo.
+   */
   [Cached, Pure]
   readonly attribute ByteString? documentURL;
 
+  /**
+   * The URI version of originURL. Will be null only when originURL is null.
+   */
   [Pure]
   readonly attribute URI? originURI;
 
+  /**
+   * The URI version of documentURL. Will be null only when documentURL is
+   * null.
+   */
   [Pure]
   readonly attribute URI? documentURI;
 
 
+  /**
+   * True if extensions may modify this request. This is currently false only
+   * if the request belongs to a document which has access to the
+   * mozAddonManager API.
+   */
   [Cached, GetterThrows, Pure]
   readonly attribute boolean canModify;
 
 
+  /**
+   * The outer window ID of the frame that the request belongs to, or 0 if it
+   * is a top-level load or does not belong to a document.
+   */
   [Cached, Constant]
   readonly attribute long long windowId;
 
+  /**
+   * The outer window ID of the parent frame of the window that the request
+   * belongs to, 0 if that parent frame is the top-level frame, and -1 if the
+   * request belongs to a top-level frame.
+   */
   [Cached, Constant]
   readonly attribute long long parentWindowId;
 
+  /**
+   * For cross-process requests, the <browser> or <iframe> element to which the
+   * content loading this request belongs. For requests that don't originate
+   * from a remote browser, this is null.
+   */
   [Cached, Pure]
   readonly attribute nsISupports? browserElement;
 
@@ -145,28 +244,79 @@ interface ChannelWrapper {
   [Cached, Frozen, GetterThrows, Pure]
   readonly attribute sequence<MozFrameAncestorInfo>? frameAncestors;
 
+  /**
+   * For HTTP requests, returns a Map of request headers which will be, or
+   * have been, sent with this request. Each key is a non-case-normalized
+   * header name string, and each value is its string value.
+   *
+   * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
+   */
   [Throws]
   object getRequestHeaders();
 
+  /**
+   * For HTTP requests, returns a Map of response headers which were received
+   * for this request, in the same format as returned by getRequestHeaders.
+   *
+   * Throws NS_ERROR_NOT_AVAILABLE if a response has not yet been received, or
+   * NS_ERROR_UNEXPECTED if the channel is not an HTTP channel.
+   */
   [Throws]
   object getResponseHeaders();
 
+  /**
+   * Sets the given request header to the given value, overwriting any
+   * previous value. Setting a header to a null string has the effect of
+   * removing it.
+   *
+   * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
+   */
   [Throws]
   void setRequestHeader(ByteString header, ByteString value);
 
+  /**
+   * Sets the given response header to the given value, overwriting any
+   * previous value. Setting a header to a null string has the effect of
+   * removing it.
+   *
+   * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
+   */
   [Throws]
   void setResponseHeader(ByteString header, ByteString value);
 };
 
+/**
+ * Information about the proxy server handing a request. This is approximately
+ * equivalent to nsIProxyInfo.
+ */
 dictionary MozProxyInfo {
+  /**
+   * The hostname of the server.
+   */
   required ByteString host;
+  /**
+   * The TCP port of the server.
+   */
   required long port;
+  /**
+   * The type of proxy (e.g., HTTP, SOCKS).
+   */
   required ByteString type;
 
+  /**
+   * True if the proxy is responsible for DNS lookups.
+   */
   required boolean proxyDNS;
 
+  /**
+   * The authentication username for the proxy, if any.
+   */
   ByteString? username = null;
 
+  /**
+   * The timeout, in seconds, before the network stack will failover to the
+   * next candidate proxy server if it has not received a response.
+   */
   unsigned long failoverTimeout;
 };
 
