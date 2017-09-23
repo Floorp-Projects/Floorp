@@ -47,6 +47,7 @@ import java.net.URISyntaxException;
     private String[] pageDomainTextReference = new String[] { "" };
 
     public BottomSheetContextMenu(final Context context,
+                                  final View anchor,
                                   final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                   final MenuMode mode,
                                   final WebpageModel item,
@@ -56,6 +57,7 @@ import java.net.URISyntaxException;
                                   final int tilesWidth, final int tilesHeight) {
 
         super(context,
+                anchor,
                 telemetryExtraBuilder,
                 mode,
                 item,

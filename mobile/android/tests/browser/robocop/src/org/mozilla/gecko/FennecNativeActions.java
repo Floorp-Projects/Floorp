@@ -356,7 +356,7 @@ public class FennecNativeActions implements Actions {
 
         PaintExpecter() {
             final PaintExpecter expecter = this;
-            mLayerView = GeckoAppShell.getLayerView();
+            mLayerView = (LayerView) mSolo.getView(R.id.layer_view);
             mDrawListener = new DrawListener() {
                 @Override
                 public void drawFinished() {
