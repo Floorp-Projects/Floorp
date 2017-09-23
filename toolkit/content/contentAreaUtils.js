@@ -1264,6 +1264,10 @@ function openURL(aURL) {
       loadUsingSystemPrincipal: true
     });
 
+    if (channel) {
+      channel.channelIsForDownload = true;
+    }
+
     var uriLoader = Components.classes["@mozilla.org/uriloader;1"]
                               .getService(Components.interfaces.nsIURILoader);
     uriLoader.openURI(channel,
