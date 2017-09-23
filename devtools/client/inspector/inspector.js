@@ -32,7 +32,6 @@ loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
 loader.lazyRequireGetter(this, "ExtensionSidebar", "devtools/client/inspector/extensions/extension-sidebar");
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
-loader.lazyRequireGetter(this, "ViewHelpers", "devtools/client/shared/widgets/view-helpers", true);
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 const {LocalizationHelper, localizeMarkup} = require("devtools/shared/l10n");
@@ -119,7 +118,6 @@ function Inspector(toolbox) {
   this.onMarkupLoaded = this.onMarkupLoaded.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onNewRoot = this.onNewRoot.bind(this);
-  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
   this.onPanelWindowResize = this.onPanelWindowResize.bind(this);
   this.onShowBoxModelHighlighterForNode =
     this.onShowBoxModelHighlighterForNode.bind(this);
@@ -794,20 +792,6 @@ Inspector.prototype = {
   setupToolbar: Task.async(function* () {
     this.teardownToolbar();
 
-    // Setup the sidebar toggle button.
-    let SidebarToggle = this.React.createFactory(this.browserRequire(
-      "devtools/client/shared/components/sidebar-toggle"));
-
-    let sidebarToggle = SidebarToggle({
-      onClick: this.onPaneToggleButtonClicked,
-      collapsed: false,
-      expandPaneTitle: INSPECTOR_L10N.getStr("inspector.expandPane"),
-      collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.collapsePane"),
-    });
-
-    let parentBox = this.panelDoc.getElementById("inspector-sidebar-toggle-box");
-    this._sidebarToggle = this.ReactDOM.render(sidebarToggle, parentBox);
-
     // Setup the add-node button.
     this.addNode = this.addNode.bind(this);
     this.addNodeButton = this.panelDoc.getElementById("inspector-element-add-button");
@@ -838,8 +822,6 @@ Inspector.prototype = {
   }),
 
   teardownToolbar: function () {
-    this._sidebarToggle = null;
-
     if (this.addNodeButton) {
       this.addNodeButton.removeEventListener("click", this.addNode);
       this.addNodeButton = null;
@@ -1571,43 +1553,6 @@ Inspector.prototype = {
     this._markupBox = null;
 
     return destroyPromise;
-  },
-
-  /**
-   * When the pane toggle button is clicked or pressed, toggle the pane, change the button
-   * state and tooltip.
-   */
-  onPaneToggleButtonClicked: function (e) {
-    let sidePaneContainer = this.panelDoc.querySelector(
-      "#inspector-splitter-box .controlled");
-    let isVisible = !this._sidebarToggle.state.collapsed;
-
-    // Make sure the sidebar has width and height attributes before collapsing
-    // because ViewHelpers needs it.
-    if (isVisible) {
-      let rect = sidePaneContainer.getBoundingClientRect();
-      if (!sidePaneContainer.hasAttribute("width")) {
-        sidePaneContainer.setAttribute("width", rect.width);
-      }
-      // always refresh the height attribute before collapsing, it could have
-      // been modified by resizing the container.
-      sidePaneContainer.setAttribute("height", rect.height);
-    }
-
-    let onAnimationDone = () => {
-      if (isVisible) {
-        this._sidebarToggle.setState({collapsed: true});
-      } else {
-        this._sidebarToggle.setState({collapsed: false});
-      }
-    };
-
-    ViewHelpers.togglePane({
-      visible: !isVisible,
-      animated: true,
-      delayed: true,
-      callback: onAnimationDone
-    }, sidePaneContainer);
   },
 
   onEyeDropperButtonClicked: function () {
