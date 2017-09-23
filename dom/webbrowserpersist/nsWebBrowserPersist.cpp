@@ -13,6 +13,7 @@
 #include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsIClassOfService.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
 #include "nsIPrivateBrowsingChannel.h"
@@ -1495,6 +1496,12 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
         nsAutoCString contentType;
         aChannel->GetContentType(contentType);
         return StartUpload(bufferedInputStream, aFile, contentType);
+    }
+
+    // Mark save channel as throttleable.
+    nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(aChannel));
+    if (cos) {
+      cos->AddClassFlags(nsIClassOfService::Throttleable);
     }
 
     // Read from the input channel
