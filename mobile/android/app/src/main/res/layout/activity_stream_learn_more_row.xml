@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- I couldn't get the TextView as a top level container to center the text with wrap_content (see below)
+     so it's nested in this ViewGroup. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_marginTop="30dp"
+             android:layout_marginBottom="30dp"
+             >
+
+    <!-- The layout params are wrap_content so the hit area is only as big as the text. -->
+    <TextView
+            android:id="@+id/learn_more_link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/pref_learn_more"
+            android:textSize="16sp"
+            android:textAppearance="@style/TextAppearance.Link"
+            />
+
+</FrameLayout>
