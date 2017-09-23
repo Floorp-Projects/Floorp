@@ -31,3 +31,7 @@ TEST_HARNESS_FILES.reftest.chrome += [
     'chrome/binding.xml',
     'chrome/userContent.css',
 ]
+
+TEST_HARNESS_FILES.reftest.manifest += [
+    'reftest/__init__.py'
+]
