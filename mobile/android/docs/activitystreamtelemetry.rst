@@ -164,6 +164,18 @@ Possible values for "item" key (names of menu items), in no particular order:
 - "dismiss"
 - "delete"
 
+Learn More interactions
+-----------------------
+A click on the "Learn more" link is recorded using: event="loadurl.1", method="listitem".
+
+In addition to the global extras, the following information is recorded:
+
+.. code-block:: js
+
+    extras: {
+        "source_type": "learn_more"
+    }
+
 Full Examples
 =============
 Following examples of events are here to provide a better feel for the overall shape of telemetry data being recorded.

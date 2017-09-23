@@ -673,7 +673,7 @@ class MozbuildObject(ProcessExecutionMixin):
         baseconfig = os.path.join(self.topsrcdir, 'config', 'baseconfig.mk')
 
         def is_xcode_lisense_error(output):
-            return self._is_osx() and 'Agreeing to the Xcode' in output
+            return self._is_osx() and b'Agreeing to the Xcode' in output
 
         def validate_make(make):
             if os.path.exists(baseconfig) and os.path.exists(make):

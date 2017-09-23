@@ -555,6 +555,7 @@ LazyPseudoIsCacheable(CSSPseudoElementType aType,
 {
   return aParentContext &&
          !nsCSSPseudoElements::IsEagerlyCascadedInServo(aType) &&
+         aOriginatingElement->HasServoData() &&
          !Servo_Element_IsPrimaryStyleReusedViaRuleNode(aOriginatingElement);
 }
 

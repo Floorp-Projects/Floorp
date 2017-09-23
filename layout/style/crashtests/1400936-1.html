@@ -1,0 +1,26 @@
+<!doctype html>
+<style>
+fieldset:invalid {
+  border: 10px solid red;
+}
+fieldset:valid {
+  border: 10px solid green;
+}
+input.foo {
+  color: green;
+}
+</style>
+<div>
+  <fieldset id="fieldset">
+    <div id="ancestor">
+      <input type="text" id="requiredInput" required>
+      <input type="text" id="other">
+    </div>
+  </fieldset>
+</div>
+<script>
+window.onload = function() {
+  other.classList.add('foo');
+  ancestor.remove();
+};
+</script>
