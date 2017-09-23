@@ -1,0 +1,13 @@
+<style>
+* { display: contents; }
+</style>
+<script>
+a = document.createElement('map')
+document.documentElement.appendChild(a)
+a.appendChild(document.head)
+document.documentElement.getBoundingClientRect()
+document.designMode = "on"
+document.designMode = "off"
+a.appendChild(document.createElement('frame'))
+document.designMode = "on"
+</script>
