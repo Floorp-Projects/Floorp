@@ -39,6 +39,7 @@ public class ActivityStreamTelemetry {
         public final static String TYPE_TOPSITES = "topsites";
         public final static String TYPE_HIGHLIGHTS = "highlights";
         public final static String TYPE_POCKET = "pocket";
+        public final static String TYPE_LEARN_MORE = "learn_more";
         public final static String SUBTYPE_PINNED = "pinned";
         public final static String SUBTYPE_SUGGESTED = "suggested";
         public final static String SUBTYPE_TOP = "top";

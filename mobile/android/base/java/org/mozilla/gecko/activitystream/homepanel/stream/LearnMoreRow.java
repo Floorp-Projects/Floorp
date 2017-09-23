@@ -10,6 +10,10 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 
 import java.util.Locale;
 
@@ -44,8 +48,8 @@ public class LearnMoreRow extends StreamViewHolder {
         learnMoreLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                // todo: add telemetry.
                 Tabs.getInstance().loadUrl(getLearnMoreURL());
+                sendOnClickTelemetry();
             }
         });
     }
@@ -62,5 +66,15 @@ public class LearnMoreRow extends StreamViewHolder {
         final String LOCALE = Locales.getLanguageTag(Locale.getDefault());
 
         return String.format(LEARN_MORE_URL_TEMPLATE, VERSION, OS, LOCALE);
+    }
+
+    private static void sendOnClickTelemetry() {
+        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
+                .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_LEARN_MORE);
+
+        Telemetry.sendUIEvent(
+                TelemetryContract.Event.LOAD_URL,
+                TelemetryContract.Method.LIST_ITEM,
+                extras.build());
     }
 }
