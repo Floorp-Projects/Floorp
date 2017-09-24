@@ -147,7 +147,6 @@ public class AndroidFxAccount {
 
   protected final Context context;
   private final AccountManager accountManager;
-  private final long neverSynced = -1;
 
   // This is really, really meant to be final. Only changed when account name changes.
   // See Bug 1368147.
@@ -800,20 +799,12 @@ public class AndroidFxAccount {
   }
 
   public long getLastSyncedTimestamp() {
+    final long neverSynced = -1L;
     try {
       return getSyncPrefs().getLong(PREF_KEY_LAST_SYNCED_TIMESTAMP, neverSynced);
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Got exception getting last synced time; ignoring.", e);
       return neverSynced;
-    }
-  }
-
-  public boolean neverSynced() {
-    try {
-      return getSyncPrefs().getLong(PREF_KEY_LAST_SYNCED_TIMESTAMP, neverSynced) == -1;
-    } catch (Exception e) {
-      Logger.warn(LOG_TAG, "Got exception getting last synced time; ignoring.", e);
-      return false;
     }
   }
 
