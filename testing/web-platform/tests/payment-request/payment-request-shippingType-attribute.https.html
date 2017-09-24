@@ -21,6 +21,11 @@ const defaultDetails = Object.freeze({
 });
 
 test(() => {
+  const request = new PaymentRequest(defaultMethods, defaultDetails);
+  assert_idl_attribute(request, "shippingType");
+}, "Must have a shippingType IDL attribute");
+
+test(() => {
   const request1 = new PaymentRequest(defaultMethods, defaultDetails, {});
   assert_equals(request1.shippingType, null, "must be null");
   const request2 = new PaymentRequest(defaultMethods, defaultDetails, {

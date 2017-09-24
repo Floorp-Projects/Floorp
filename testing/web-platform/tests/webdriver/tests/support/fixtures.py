@@ -56,7 +56,7 @@ def _dismiss_user_prompts(session):
 @ignore_exceptions
 def _restore_window_state(session):
     """Reset window to an acceptable size, bringing it out of maximized,
-    minimized, or fullscreened state.
+    minimized, or fullscreened state
 
     """
     session.window.size = (800, 600)

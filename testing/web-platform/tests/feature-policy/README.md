@@ -37,8 +37,8 @@ HTTP tests are used to test features with header policy.
 * test if feature is enabled / disabled in a cross-origin iframe.
 
 Examples:
-`/payment-request/payment-disabled-by-feature-policy.https.sub.html`
-`/payment-request/payment-disabled-by-feature-policy.https.sub.html.headers`
+`/feature-policy/payment-disabled-by-feature-policy.https.sub.html`
+`/feature-policy/payment-disabled-by-feature-policy.https.sub.html.headers`
 
 ### How to Write Container Policy Tests
 Simply use `test_feature_availability()` with the optional argument
@@ -47,7 +47,7 @@ Simply use `test_feature_availability()` with the optional argument
 * feature is enabled / disabled in a cross-origin iframe.
 
 Example:
-`/payment-request/payment-allowed-by-feature-policy-attribute.https.sub.html`
+`/feature-policy/payment-allowed-by-feature-policy-attribute.https.sub.html`
 
 ### How to Write Container Policy Tests with Redirect
 Similar to the section above, append
@@ -55,5 +55,5 @@ Similar to the section above, append
 passed to `test_feature_availability()`.
 
 Example:
-`/payment-request/payment-allowed-by-feature-policy-attribute-redirect-on-load.https.sub.html`
+`/feature-policy/payment-allowed-by-feature-policy-attribute-redirect-on-load.https.sub.html`
 
