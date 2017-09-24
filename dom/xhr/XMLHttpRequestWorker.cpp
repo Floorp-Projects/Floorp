@@ -103,7 +103,7 @@ public:
 
   // Only touched on the main thread.
   RefPtr<XMLHttpRequestMainThread> mXHR;
-  nsCOMPtr<nsIXMLHttpRequestUpload> mXHRUpload;
+  RefPtr<XMLHttpRequestUpload> mXHRUpload;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   nsCOMPtr<nsIEventTarget> mSyncEventResponseTarget;
   uint32_t mInnerEventStreamId;
@@ -293,7 +293,7 @@ static_assert(STRING_LAST_XHR >= STRING_LAST_EVENTTARGET, "Bad string setup!");
 static_assert(STRING_LAST_XHR == STRING_COUNT - 1, "Bad string setup!");
 
 const char* const sEventStrings[] = {
-  // nsIXMLHttpRequestEventTarget event types, supported by both XHR and Upload.
+  // XMLHttpRequestEventTarget event types, supported by both XHR and Upload.
   "abort",
   "error",
   "load",
@@ -952,11 +952,12 @@ Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
                (!mUploadEventListenersAttached && aAdd),
                "Messed up logic for upload listeners!");
 
-  nsCOMPtr<nsIDOMEventTarget> target =
+  DOMEventTargetHelper* targetHelper =
     aUpload ?
-    do_QueryInterface(mXHRUpload) :
-    do_QueryInterface(static_cast<nsIXMLHttpRequest*>(mXHR.get()));
-  NS_ASSERTION(target, "This should never fail!");
+    static_cast<XMLHttpRequestUpload*>(mXHRUpload.get()) :
+    static_cast<XMLHttpRequestEventTarget*>(mXHR.get());
+  MOZ_ASSERT(targetHelper, "This should never fail!");
+  nsCOMPtr<nsIDOMEventTarget> target = targetHelper;
 
   uint32_t lastEventType = aUpload ? STRING_LAST_EVENTTARGET : STRING_LAST_XHR;
 
@@ -1004,7 +1005,7 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIXMLHttpRequestUpload> uploadTarget = do_QueryInterface(target);
+  bool isUploadTarget = mXHR != target;
   ProgressEvent* progressEvent = aEvent->InternalDOMEvent()->AsProgressEvent();
 
   if (mInOpen && type.EqualsASCII(sEventStrings[STRING_readystatechange])) {
@@ -1028,20 +1029,20 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
 
     RefPtr<EventRunnable> runnable;
     if (progressEvent) {
-      runnable = new EventRunnable(this, !!uploadTarget, type,
+      runnable = new EventRunnable(this, isUploadTarget, type,
                                    progressEvent->LengthComputable(),
                                    progressEvent->Loaded(),
                                    progressEvent->Total(),
                                    scope);
     }
     else {
-      runnable = new EventRunnable(this, !!uploadTarget, type, scope);
+      runnable = new EventRunnable(this, isUploadTarget, type, scope);
     }
 
     runnable->Dispatch();
   }
 
-  if (!uploadTarget) {
+  if (!isUploadTarget) {
     if (type.EqualsASCII(sEventStrings[STRING_loadstart])) {
       mMainThreadSeenLoadStart = true;
     }
