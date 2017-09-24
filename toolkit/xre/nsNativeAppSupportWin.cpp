@@ -925,10 +925,10 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     ParseDDEArg(hsz2, 2, windowID);
                     // "" means to open the URL in a new window.
                     if ( windowID.IsEmpty() ) {
-                        url.Insert(NS_LITERAL_STRING("mozilla -new-window "), 0);
+                        url.InsertLiteral(u"mozilla -new-window ", 0);
                     }
                     else {
-                        url.Insert(NS_LITERAL_STRING("mozilla -url "), 0);
+                        url.InsertLiteral(u"mozilla -url ", 0);
                     }
 
 #if MOZ_DEBUG_DDE
@@ -1090,10 +1090,10 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
 
             // "" means to open the URL in a new window.
             if ( windowID.IsEmpty() ) {
-                url.Insert(NS_LITERAL_STRING("mozilla -new-window "), 0);
+                url.InsertLiteral(u"mozilla -new-window ", 0);
             }
             else {
-                url.Insert(NS_LITERAL_STRING("mozilla -url "), 0);
+                url.InsertLiteral(u"mozilla -url ", 0);
             }
 #if MOZ_DEBUG_DDE
             printf( "Handling dde XTYP_REQUEST request: [%s]...\n", NS_ConvertUTF16toUTF8(url).get() );
@@ -1486,4 +1486,3 @@ nsNativeAppSupportWin::OpenBrowserWindow()
 
     return cmdLine->Run();
 }
-

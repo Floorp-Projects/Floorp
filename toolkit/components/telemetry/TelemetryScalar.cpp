@@ -805,46 +805,46 @@ internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr)
 
   switch (aSr) {
     case ScalarResult::NotInitialized:
-      errorMessage.Append(NS_LITERAL_STRING(" - Telemetry was not yet initialized."));
+      errorMessage.AppendLiteral(u" - Telemetry was not yet initialized.");
       break;
     case ScalarResult::CannotUnpackVariant:
-      errorMessage.Append(NS_LITERAL_STRING(" - Cannot convert the provided JS value to nsIVariant."));
+      errorMessage.AppendLiteral(u" - Cannot convert the provided JS value to nsIVariant.");
       break;
     case ScalarResult::CannotRecordInProcess:
-      errorMessage.Append(NS_LITERAL_STRING(" - Cannot record the scalar in the current process."));
+      errorMessage.AppendLiteral(u" - Cannot record the scalar in the current process.");
       break;
     case ScalarResult::KeyedTypeMismatch:
-      errorMessage.Append(NS_LITERAL_STRING(" - Attempting to manage a keyed scalar as a scalar (or vice-versa)."));
+      errorMessage.AppendLiteral(u" - Attempting to manage a keyed scalar as a scalar (or vice-versa).");
       break;
     case ScalarResult::UnknownScalar:
-      errorMessage.Append(NS_LITERAL_STRING(" - Unknown scalar."));
+      errorMessage.AppendLiteral(u" - Unknown scalar.");
       break;
     case ScalarResult::OperationNotSupported:
-      errorMessage.Append(NS_LITERAL_STRING(" - The requested operation is not supported on this scalar."));
+      errorMessage.AppendLiteral(u" - The requested operation is not supported on this scalar.");
       break;
     case ScalarResult::InvalidType:
-      errorMessage.Append(NS_LITERAL_STRING(" - Attempted to set the scalar to an invalid data type."));
+      errorMessage.AppendLiteral(u" - Attempted to set the scalar to an invalid data type.");
       break;
     case ScalarResult::InvalidValue:
-      errorMessage.Append(NS_LITERAL_STRING(" - Attempted to set the scalar to an incompatible value."));
+      errorMessage.AppendLiteral(u" - Attempted to set the scalar to an incompatible value.");
       break;
     case ScalarResult::StringTooLong:
-      errorMessage.Append(NS_LITERAL_STRING(" - Truncating scalar value to 50 characters."));
+      errorMessage.AppendLiteral(u" - Truncating scalar value to 50 characters.");
       break;
     case ScalarResult::KeyIsEmpty:
-      errorMessage.Append(NS_LITERAL_STRING(" - The key must not be empty."));
+      errorMessage.AppendLiteral(u" - The key must not be empty.");
       break;
     case ScalarResult::KeyTooLong:
-      errorMessage.Append(NS_LITERAL_STRING(" - The key length must be limited to 70 characters."));
+      errorMessage.AppendLiteral(u" - The key length must be limited to 70 characters.");
       break;
     case ScalarResult::TooManyKeys:
-      errorMessage.Append(NS_LITERAL_STRING(" - Keyed scalars cannot have more than 100 keys."));
+      errorMessage.AppendLiteral(u" - Keyed scalars cannot have more than 100 keys.");
       break;
     case ScalarResult::UnsignedNegativeValue:
-      errorMessage.Append(NS_LITERAL_STRING(" - Trying to set an unsigned scalar to a negative number."));
+      errorMessage.AppendLiteral(u" - Trying to set an unsigned scalar to a negative number.");
       break;
     case ScalarResult::UnsignedTruncatedValue:
-      errorMessage.Append(NS_LITERAL_STRING(" - Truncating float/double number."));
+      errorMessage.AppendLiteral(u" - Truncating float/double number.");
       break;
     default:
       // Nothing.

@@ -219,7 +219,7 @@ nsChromeRegistryChrome::GetSelectedLocale(const nsACString& aPackage,
                                           nsACString& aLocale)
 {
   nsAutoCString reqLocale;
-  if (aPackage.Equals("global")) {
+  if (aPackage.EqualsLiteral("global")) {
     LocaleService::GetInstance()->GetAppLocaleAsLangTag(reqLocale);
   } else {
     AutoTArray<nsCString, 10> requestedLocales;

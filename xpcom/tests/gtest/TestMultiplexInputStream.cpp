@@ -17,9 +17,9 @@ TEST(MultiplexInputStream, Seek_SET)
   nsCString buf1;
   nsCString buf2;
   nsCString buf3;
-  buf1.Assign("Hello world");
-  buf2.Assign("The quick brown fox jumped over the lazy dog");
-  buf3.Assign("Foo bar");
+  buf1.AssignLiteral("Hello world");
+  buf2.AssignLiteral("The quick brown fox jumped over the lazy dog");
+  buf3.AssignLiteral("Foo bar");
 
   nsCOMPtr<nsIInputStream> inputStream1;
   nsCOMPtr<nsIInputStream> inputStream2;

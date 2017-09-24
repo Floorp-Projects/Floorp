@@ -526,7 +526,7 @@ public:
     AssertIsOnMainThread();
 
     nsCString topic(aTopic);
-    if (!topic.Equals(NS_LITERAL_CSTRING("BrowserChrome:Ready"))) {
+    if (!topic.EqualsLiteral("BrowserChrome:Ready")) {
       MOZ_ASSERT(false, "Unexpected topic.");
       return NS_ERROR_FAILURE;
     }

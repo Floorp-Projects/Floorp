@@ -802,11 +802,11 @@ FlyWebMDNSService::PairWithService(const nsAString& aServiceId,
   url.Append(aInfo->mService.mHostname);
   if (!discInfo->mService.mPath.IsEmpty()) {
     if (discInfo->mService.mPath.Find("/") != 0) {
-      url.Append(NS_LITERAL_STRING("/"));
+      url.AppendLiteral(u"/");
     }
     url.Append(discInfo->mService.mPath);
   } else {
-    url.Append(NS_LITERAL_STRING("/"));
+    url.AppendLiteral(u"/");
   }
   nsCOMPtr<nsIURI> uiURL;
   NS_NewURI(getter_AddRefs(uiURL), url);

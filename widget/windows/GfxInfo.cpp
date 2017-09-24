@@ -922,7 +922,7 @@ GfxInfo::AddCrashReportAnnotations()
     LossyAppendUTF16toASCII(mDeviceKeyDebug, note);
     LossyAppendUTF16toASCII(mDeviceKeyDebug, note);
   }
-  note.Append("\n");
+  note.AppendLiteral("\n");
 
   if (mHasDualGPU) {
     nsString deviceID2, vendorID2, subsysID2;

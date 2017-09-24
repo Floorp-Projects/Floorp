@@ -75,7 +75,7 @@ ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     origin.Append(subOrigin);
   }
-  origin.Append("]]");
+  origin.AppendLiteral("]]");
 
   ep->FinishInit(origin, aAttrs);
   return ep.forget();
@@ -185,7 +185,7 @@ ExpandedPrincipal::AddonHasPermission(const nsIAtom* aPerm)
 nsresult
 ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
-  aStr.Assign("[Expanded Principal [");
+  aStr.AssignLiteral("[Expanded Principal [");
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (i != 0) {
       aStr.AppendLiteral(", ");
@@ -198,7 +198,7 @@ ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 
     aStr.Append(spec);
   }
-  aStr.Append("]]");
+  aStr.AppendLiteral("]]");
   return NS_OK;
 }
 

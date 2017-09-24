@@ -1701,7 +1701,7 @@ nsComboboxControlFrame::GenerateStateKey(nsIContent* aContent,
   if (NS_FAILED(rv) || aKey.IsEmpty()) {
     return rv;
   }
-  aKey.Append("CCF");
+  aKey.AppendLiteral("CCF");
   return NS_OK;
 }
 
@@ -1718,4 +1718,3 @@ nsComboboxControlFrame::ToolkitHasNativePopup()
   return false;
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 }
-

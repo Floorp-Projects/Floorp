@@ -325,7 +325,7 @@ nsUrlClassifierUtils::GetTelemetryProvider(const nsACString& aTableName,
       !NS_LITERAL_CSTRING("mozcn").Equals(aProvider) &&
       !NS_LITERAL_CSTRING("yandex").Equals(aProvider) &&
       !NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME).Equals(aProvider)) {
-    aProvider.Assign(NS_LITERAL_CSTRING("other"));
+    aProvider.AssignLiteral("other");
   }
 
   return NS_OK;

@@ -281,7 +281,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     channel->GetURI(getter_AddRefs(uri));
     bool sniff;
     if (NS_SUCCEEDED(uri->SchemeIs("file", &sniff)) && sniff &&
-        contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+        contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
         nsresult rv;
         nsCOMPtr<nsIStreamConverterService> serv =
             do_GetService("@mozilla.org/streamConverters;1", &rv);

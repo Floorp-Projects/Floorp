@@ -99,7 +99,7 @@ nsResProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
                                           const nsACString& aPathname,
                                           nsACString& aResult)
 {
-    if (aHost.Equals("") || aHost.Equals(kAPP)) {
+    if (aHost.EqualsLiteral("") || aHost.EqualsLiteral(kAPP)) {
         aResult.Assign(mAppURI);
     } else if (aHost.Equals(kGRE)) {
         aResult.Assign(mGREURI);
@@ -113,9 +113,9 @@ nsResProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
 nsresult
 nsResProtocolHandler::SetSubstitution(const nsACString& aRoot, nsIURI* aBaseURI)
 {
-    MOZ_ASSERT(!aRoot.Equals(""));
-    MOZ_ASSERT(!aRoot.Equals(kAPP));
-    MOZ_ASSERT(!aRoot.Equals(kGRE));
+    MOZ_ASSERT(!aRoot.EqualsLiteral(""));
+    MOZ_ASSERT(!aRoot.EqualsLiteral(kAPP));
+    MOZ_ASSERT(!aRoot.EqualsLiteral(kGRE));
     return SubstitutingProtocolHandler::SetSubstitution(aRoot, aBaseURI);
 }
 
@@ -124,8 +124,8 @@ nsResProtocolHandler::SetSubstitutionWithFlags(const nsACString& aRoot,
                                                nsIURI* aBaseURI,
                                                uint32_t aFlags)
 {
-    MOZ_ASSERT(!aRoot.Equals(""));
-    MOZ_ASSERT(!aRoot.Equals(kAPP));
-    MOZ_ASSERT(!aRoot.Equals(kGRE));
+    MOZ_ASSERT(!aRoot.EqualsLiteral(""));
+    MOZ_ASSERT(!aRoot.EqualsLiteral(kAPP));
+    MOZ_ASSERT(!aRoot.EqualsLiteral(kGRE));
     return SubstitutingProtocolHandler::SetSubstitutionWithFlags(aRoot, aBaseURI, aFlags);
 }
