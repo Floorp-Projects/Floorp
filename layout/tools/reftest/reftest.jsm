@@ -141,6 +141,7 @@ var gFailedAssignedLayer = false;
 var gFailedAssignedLayerMessages = [];
 
 var gStartAfter = undefined;
+var gSuiteStarted = false
 
 // The enabled-state of the test-plugins, stored so they can be reset later
 var gTestPluginEnabledStates = null;
@@ -568,8 +569,9 @@ function StartTests()
             tIDs.push(gURLs[i].identifier);
         }
 
-        if (gStartAfter === undefined) {
+        if (gStartAfter === undefined && !gSuiteStarted) {
             logger.suiteStart(tIDs, {"skipped": gURLs.length - tURLs.length});
+            gSuiteStarted = true
         }
 
         if (gTotalChunks > 0 && gThisChunk > 0) {
@@ -1554,6 +1556,7 @@ function StartCurrentURI(aState)
 function DoneTests()
 {
     logger.suiteEnd({'results': gTestResults});
+    gSuiteStarted = false
     logger.info("Slowest test took " + gSlowestTestTime + "ms (" + gSlowestTestURL + ")");
     logger.info("Total canvas count = " + gRecycledCanvases.length);
     if (gFailedUseWidgetLayers) {
