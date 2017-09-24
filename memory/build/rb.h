@@ -70,7 +70,7 @@
  ******************************************************************************/
 
 #ifndef RB_H_
-#define	RB_H_
+#define RB_H_
 
 enum NodeColor
 {
@@ -135,555 +135,558 @@ struct RedBlackTree
 };
 
 /* Left accessors. */
-#define	rbp_left_get(a_type, a_field, a_node)				\
-    (a_node)->a_field.Left()
-#define	rbp_left_set(a_type, a_field, a_node, a_left)			\
-    (a_node)->a_field.SetLeft(a_left)
+#define rbp_left_get(a_type, a_field, a_node) (a_node)->a_field.Left()
+#define rbp_left_set(a_type, a_field, a_node, a_left)                          \
+  (a_node)->a_field.SetLeft(a_left)
 
 /* Right accessors. */
-#define	rbp_right_get(a_type, a_field, a_node)				\
-    (a_node)->a_field.Right()
-#define	rbp_right_set(a_type, a_field, a_node, a_right)			\
-    (a_node)->a_field.SetRight(a_right)
+#define rbp_right_get(a_type, a_field, a_node) (a_node)->a_field.Right()
+#define rbp_right_set(a_type, a_field, a_node, a_right)                        \
+  (a_node)->a_field.SetRight(a_right)
 
 /* Color accessors. */
-#define	rbp_red_get(a_type, a_field, a_node)				\
-    (a_node)->a_field.IsRed()
-#define	rbp_color_set(a_type, a_field, a_node, a_red)			\
-    (a_node)->a_field.SetColor(a_red ? NodeColor::Red : NodeColor::Black)
-#define	rbp_red_set(a_type, a_field, a_node)				\
-    (a_node)->a_field.SetColor(NodeColor::Red)
-#define	rbp_black_set(a_type, a_field, a_node)				\
-    (a_node)->a_field.SetColor(NodeColor::Black)
+#define rbp_red_get(a_type, a_field, a_node) (a_node)->a_field.IsRed()
+#define rbp_color_set(a_type, a_field, a_node, a_red)                          \
+  (a_node)->a_field.SetColor(a_red ? NodeColor::Red : NodeColor::Black)
+#define rbp_red_set(a_type, a_field, a_node)                                   \
+  (a_node)->a_field.SetColor(NodeColor::Red)
+#define rbp_black_set(a_type, a_field, a_node)                                 \
+  (a_node)->a_field.SetColor(NodeColor::Black)
 
 /* Node initializer. */
-#define	rbp_node_new(a_type, a_field, a_tree, a_node) do {		\
-    rbp_left_set(a_type, a_field, (a_node), &(a_tree)->rbt_nil);	\
-    rbp_right_set(a_type, a_field, (a_node), &(a_tree)->rbt_nil);	\
-    rbp_red_set(a_type, a_field, (a_node));				\
-} while (0)
+#define rbp_node_new(a_type, a_field, a_tree, a_node)                          \
+  do {                                                                         \
+    rbp_left_set(a_type, a_field, (a_node), &(a_tree)->rbt_nil);               \
+    rbp_right_set(a_type, a_field, (a_node), &(a_tree)->rbt_nil);              \
+    rbp_red_set(a_type, a_field, (a_node));                                    \
+  } while (0)
 
 /* Tree initializer. */
-#define	rb_new(a_type, a_field, a_tree) do {				\
-    (a_tree)->rbt_root = &(a_tree)->rbt_nil;				\
-    rbp_node_new(a_type, a_field, a_tree, &(a_tree)->rbt_nil);		\
-    rbp_black_set(a_type, a_field, &(a_tree)->rbt_nil);			\
-} while (0)
+#define rb_new(a_type, a_field, a_tree)                                        \
+  do {                                                                         \
+    (a_tree)->rbt_root = &(a_tree)->rbt_nil;                                   \
+    rbp_node_new(a_type, a_field, a_tree, &(a_tree)->rbt_nil);                 \
+    rbp_black_set(a_type, a_field, &(a_tree)->rbt_nil);                        \
+  } while (0)
 
 /* Tree operations. */
-#define	rbp_first(a_type, a_field, a_tree, a_root, r_node) do {		\
-    for ((r_node) = (a_root);						\
-      rbp_left_get(a_type, a_field, (r_node)) != &(a_tree)->rbt_nil;	\
-      (r_node) = rbp_left_get(a_type, a_field, (r_node))) {		\
-    }									\
-} while (0)
+#define rbp_first(a_type, a_field, a_tree, a_root, r_node)                     \
+  do {                                                                         \
+    for ((r_node) = (a_root);                                                  \
+         rbp_left_get(a_type, a_field, (r_node)) != &(a_tree)->rbt_nil;        \
+         (r_node) = rbp_left_get(a_type, a_field, (r_node))) {                 \
+    }                                                                          \
+  } while (0)
 
-#define	rbp_last(a_type, a_field, a_tree, a_root, r_node) do {		\
-    for ((r_node) = (a_root);						\
-      rbp_right_get(a_type, a_field, (r_node)) != &(a_tree)->rbt_nil;	\
-      (r_node) = rbp_right_get(a_type, a_field, (r_node))) {		\
-    }									\
-} while (0)
+#define rbp_last(a_type, a_field, a_tree, a_root, r_node)                      \
+  do {                                                                         \
+    for ((r_node) = (a_root);                                                  \
+         rbp_right_get(a_type, a_field, (r_node)) != &(a_tree)->rbt_nil;       \
+         (r_node) = rbp_right_get(a_type, a_field, (r_node))) {                \
+    }                                                                          \
+  } while (0)
 
-#define	rbp_next(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    if (rbp_right_get(a_type, a_field, (a_node))			\
-      != &(a_tree)->rbt_nil) {						\
-	rbp_first(a_type, a_field, a_tree, rbp_right_get(a_type,	\
-	  a_field, (a_node)), (r_node));				\
-    } else {								\
-	a_type *rbp_n_t = (a_tree)->rbt_root;				\
-	MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);			\
-	(r_node) = &(a_tree)->rbt_nil;					\
-	while (true) {							\
-	    int rbp_n_cmp = (a_cmp)((a_node), rbp_n_t);			\
-	    if (rbp_n_cmp < 0) {					\
-		(r_node) = rbp_n_t;					\
-		rbp_n_t = rbp_left_get(a_type, a_field, rbp_n_t);	\
-	    } else if (rbp_n_cmp > 0) {					\
-		rbp_n_t = rbp_right_get(a_type, a_field, rbp_n_t);	\
-	    } else {							\
-		break;							\
-	    }								\
-	    MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);			\
-	}								\
-    }									\
-} while (0)
+#define rbp_next(a_type, a_field, a_cmp, a_tree, a_node, r_node)               \
+  do {                                                                         \
+    if (rbp_right_get(a_type, a_field, (a_node)) != &(a_tree)->rbt_nil) {      \
+      rbp_first(a_type,                                                        \
+                a_field,                                                       \
+                a_tree,                                                        \
+                rbp_right_get(a_type, a_field, (a_node)),                      \
+                (r_node));                                                     \
+    } else {                                                                   \
+      a_type* rbp_n_t = (a_tree)->rbt_root;                                    \
+      MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);                               \
+      (r_node) = &(a_tree)->rbt_nil;                                           \
+      while (true) {                                                           \
+        int rbp_n_cmp = (a_cmp)((a_node), rbp_n_t);                            \
+        if (rbp_n_cmp < 0) {                                                   \
+          (r_node) = rbp_n_t;                                                  \
+          rbp_n_t = rbp_left_get(a_type, a_field, rbp_n_t);                    \
+        } else if (rbp_n_cmp > 0) {                                            \
+          rbp_n_t = rbp_right_get(a_type, a_field, rbp_n_t);                   \
+        } else {                                                               \
+          break;                                                               \
+        }                                                                      \
+        MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);                             \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
-#define	rbp_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    if (rbp_left_get(a_type, a_field, (a_node)) != &(a_tree)->rbt_nil) {\
-	rbp_last(a_type, a_field, a_tree, rbp_left_get(a_type,		\
-	  a_field, (a_node)), (r_node));				\
-    } else {								\
-	a_type *rbp_p_t = (a_tree)->rbt_root;				\
-	MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);			\
-	(r_node) = &(a_tree)->rbt_nil;					\
-	while (true) {							\
-	    int rbp_p_cmp = (a_cmp)((a_node), rbp_p_t);			\
-	    if (rbp_p_cmp < 0) {					\
-		rbp_p_t = rbp_left_get(a_type, a_field, rbp_p_t);	\
-	    } else if (rbp_p_cmp > 0) {					\
-		(r_node) = rbp_p_t;					\
-		rbp_p_t = rbp_right_get(a_type, a_field, rbp_p_t);	\
-	    } else {							\
-		break;							\
-	    }								\
-	    MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);			\
-	}								\
-    }									\
-} while (0)
+#define rbp_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node)               \
+  do {                                                                         \
+    if (rbp_left_get(a_type, a_field, (a_node)) != &(a_tree)->rbt_nil) {       \
+      rbp_last(a_type,                                                         \
+               a_field,                                                        \
+               a_tree,                                                         \
+               rbp_left_get(a_type, a_field, (a_node)),                        \
+               (r_node));                                                      \
+    } else {                                                                   \
+      a_type* rbp_p_t = (a_tree)->rbt_root;                                    \
+      MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);                               \
+      (r_node) = &(a_tree)->rbt_nil;                                           \
+      while (true) {                                                           \
+        int rbp_p_cmp = (a_cmp)((a_node), rbp_p_t);                            \
+        if (rbp_p_cmp < 0) {                                                   \
+          rbp_p_t = rbp_left_get(a_type, a_field, rbp_p_t);                    \
+        } else if (rbp_p_cmp > 0) {                                            \
+          (r_node) = rbp_p_t;                                                  \
+          rbp_p_t = rbp_right_get(a_type, a_field, rbp_p_t);                   \
+        } else {                                                               \
+          break;                                                               \
+        }                                                                      \
+        MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);                             \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
-#define	rb_first(a_type, a_field, a_tree, r_node) do {			\
-    rbp_first(a_type, a_field, a_tree, (a_tree)->rbt_root, (r_node));	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+#define rb_first(a_type, a_field, a_tree, r_node)                              \
+  do {                                                                         \
+    rbp_first(a_type, a_field, a_tree, (a_tree)->rbt_root, (r_node));          \
+    if ((r_node) == &(a_tree)->rbt_nil) {                                      \
+      (r_node) = nullptr;                                                      \
+    }                                                                          \
+  } while (0)
 
-#define	rb_last(a_type, a_field, a_tree, r_node) do {			\
-    rbp_last(a_type, a_field, a_tree, (a_tree)->rbt_root, r_node);	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+#define rb_last(a_type, a_field, a_tree, r_node)                               \
+  do {                                                                         \
+    rbp_last(a_type, a_field, a_tree, (a_tree)->rbt_root, r_node);             \
+    if ((r_node) == &(a_tree)->rbt_nil) {                                      \
+      (r_node) = nullptr;                                                      \
+    }                                                                          \
+  } while (0)
 
-#define	rb_next(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    rbp_next(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+#define rb_next(a_type, a_field, a_cmp, a_tree, a_node, r_node)                \
+  do {                                                                         \
+    rbp_next(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));              \
+    if ((r_node) == &(a_tree)->rbt_nil) {                                      \
+      (r_node) = nullptr;                                                      \
+    }                                                                          \
+  } while (0)
 
-#define	rb_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    rbp_prev(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+#define rb_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node)                \
+  do {                                                                         \
+    rbp_prev(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));              \
+    if ((r_node) == &(a_tree)->rbt_nil) {                                      \
+      (r_node) = nullptr;                                                      \
+    }                                                                          \
+  } while (0)
 
-#define	rb_search(a_type, a_field, a_cmp, a_tree, a_key, r_node) do {	\
-    int rbp_se_cmp;							\
-    (r_node) = (a_tree)->rbt_root;					\
-    while ((r_node) != &(a_tree)->rbt_nil				\
-      && (rbp_se_cmp = (a_cmp)((a_key), (r_node))) != 0) {		\
-	if (rbp_se_cmp < 0) {						\
-	    (r_node) = rbp_left_get(a_type, a_field, (r_node));		\
-	} else {							\
-	    (r_node) = rbp_right_get(a_type, a_field, (r_node));	\
-	}								\
-    }									\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+#define rb_search(a_type, a_field, a_cmp, a_tree, a_key, r_node)               \
+  do {                                                                         \
+    int rbp_se_cmp;                                                            \
+    (r_node) = (a_tree)->rbt_root;                                             \
+    while ((r_node) != &(a_tree)->rbt_nil &&                                   \
+           (rbp_se_cmp = (a_cmp)((a_key), (r_node))) != 0) {                   \
+      if (rbp_se_cmp < 0) {                                                    \
+        (r_node) = rbp_left_get(a_type, a_field, (r_node));                    \
+      } else {                                                                 \
+        (r_node) = rbp_right_get(a_type, a_field, (r_node));                   \
+      }                                                                        \
+    }                                                                          \
+    if ((r_node) == &(a_tree)->rbt_nil) {                                      \
+      (r_node) = nullptr;                                                      \
+    }                                                                          \
+  } while (0)
 
 /*
  * Find a match if it exists.  Otherwise, find the next greater node, if one
  * exists.
  */
-#define	rb_nsearch(a_type, a_field, a_cmp, a_tree, a_key, r_node) do {	\
-    a_type *rbp_ns_t = (a_tree)->rbt_root;				\
-    (r_node) = nullptr;							\
-    while (rbp_ns_t != &(a_tree)->rbt_nil) {				\
-	int rbp_ns_cmp = (a_cmp)((a_key), rbp_ns_t);			\
-	if (rbp_ns_cmp < 0) {						\
-	    (r_node) = rbp_ns_t;					\
-	    rbp_ns_t = rbp_left_get(a_type, a_field, rbp_ns_t);		\
-	} else if (rbp_ns_cmp > 0) {					\
-	    rbp_ns_t = rbp_right_get(a_type, a_field, rbp_ns_t);	\
-	} else {							\
-	    (r_node) = rbp_ns_t;					\
-	    break;							\
-	}								\
-    }									\
-} while (0)
+#define rb_nsearch(a_type, a_field, a_cmp, a_tree, a_key, r_node)              \
+  do {                                                                         \
+    a_type* rbp_ns_t = (a_tree)->rbt_root;                                     \
+    (r_node) = nullptr;                                                        \
+    while (rbp_ns_t != &(a_tree)->rbt_nil) {                                   \
+      int rbp_ns_cmp = (a_cmp)((a_key), rbp_ns_t);                             \
+      if (rbp_ns_cmp < 0) {                                                    \
+        (r_node) = rbp_ns_t;                                                   \
+        rbp_ns_t = rbp_left_get(a_type, a_field, rbp_ns_t);                    \
+      } else if (rbp_ns_cmp > 0) {                                             \
+        rbp_ns_t = rbp_right_get(a_type, a_field, rbp_ns_t);                   \
+      } else {                                                                 \
+        (r_node) = rbp_ns_t;                                                   \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 /*
  * Find a match if it exists.  Otherwise, find the previous lesser node, if one
  * exists.
  */
-#define	rbp_rotate_left(a_type, a_field, a_node, r_node) do {		\
-    (r_node) = rbp_right_get(a_type, a_field, (a_node));		\
-    rbp_right_set(a_type, a_field, (a_node),				\
-      rbp_left_get(a_type, a_field, (r_node)));				\
-    rbp_left_set(a_type, a_field, (r_node), (a_node));			\
-} while (0)
+#define rbp_rotate_left(a_type, a_field, a_node, r_node)                       \
+  do {                                                                         \
+    (r_node) = rbp_right_get(a_type, a_field, (a_node));                       \
+    rbp_right_set(                                                             \
+      a_type, a_field, (a_node), rbp_left_get(a_type, a_field, (r_node)));     \
+    rbp_left_set(a_type, a_field, (r_node), (a_node));                         \
+  } while (0)
 
-#define	rbp_rotate_right(a_type, a_field, a_node, r_node) do {		\
-    (r_node) = rbp_left_get(a_type, a_field, (a_node));			\
-    rbp_left_set(a_type, a_field, (a_node),				\
-      rbp_right_get(a_type, a_field, (r_node)));			\
-    rbp_right_set(a_type, a_field, (r_node), (a_node));			\
-} while (0)
+#define rbp_rotate_right(a_type, a_field, a_node, r_node)                      \
+  do {                                                                         \
+    (r_node) = rbp_left_get(a_type, a_field, (a_node));                        \
+    rbp_left_set(                                                              \
+      a_type, a_field, (a_node), rbp_right_get(a_type, a_field, (r_node)));    \
+    rbp_right_set(a_type, a_field, (r_node), (a_node));                        \
+  } while (0)
 
-#define	rbp_lean_left(a_type, a_field, a_node, r_node) do {		\
-    bool rbp_ll_red;							\
-    rbp_rotate_left(a_type, a_field, (a_node), (r_node));		\
-    rbp_ll_red = rbp_red_get(a_type, a_field, (a_node));		\
-    rbp_color_set(a_type, a_field, (r_node), rbp_ll_red);		\
-    rbp_red_set(a_type, a_field, (a_node));				\
-} while (0)
+#define rbp_lean_left(a_type, a_field, a_node, r_node)                         \
+  do {                                                                         \
+    bool rbp_ll_red;                                                           \
+    rbp_rotate_left(a_type, a_field, (a_node), (r_node));                      \
+    rbp_ll_red = rbp_red_get(a_type, a_field, (a_node));                       \
+    rbp_color_set(a_type, a_field, (r_node), rbp_ll_red);                      \
+    rbp_red_set(a_type, a_field, (a_node));                                    \
+  } while (0)
 
-#define	rbp_lean_right(a_type, a_field, a_node, r_node) do {		\
-    bool rbp_lr_red;							\
-    rbp_rotate_right(a_type, a_field, (a_node), (r_node));		\
-    rbp_lr_red = rbp_red_get(a_type, a_field, (a_node));		\
-    rbp_color_set(a_type, a_field, (r_node), rbp_lr_red);		\
-    rbp_red_set(a_type, a_field, (a_node));				\
-} while (0)
+#define rbp_lean_right(a_type, a_field, a_node, r_node)                        \
+  do {                                                                         \
+    bool rbp_lr_red;                                                           \
+    rbp_rotate_right(a_type, a_field, (a_node), (r_node));                     \
+    rbp_lr_red = rbp_red_get(a_type, a_field, (a_node));                       \
+    rbp_color_set(a_type, a_field, (r_node), rbp_lr_red);                      \
+    rbp_red_set(a_type, a_field, (a_node));                                    \
+  } while (0)
 
-#define	rbp_move_red_left(a_type, a_field, a_node, r_node) do {		\
-    a_type *rbp_mrl_t, *rbp_mrl_u;					\
-    rbp_mrl_t = rbp_left_get(a_type, a_field, (a_node));		\
-    rbp_red_set(a_type, a_field, rbp_mrl_t);				\
-    rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));		\
-    rbp_mrl_u = rbp_left_get(a_type, a_field, rbp_mrl_t);		\
-    if (rbp_red_get(a_type, a_field, rbp_mrl_u)) {			\
-	rbp_rotate_right(a_type, a_field, rbp_mrl_t, rbp_mrl_u);	\
-	rbp_right_set(a_type, a_field, (a_node), rbp_mrl_u);		\
-	rbp_rotate_left(a_type, a_field, (a_node), (r_node));		\
-	rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));		\
-	if (rbp_red_get(a_type, a_field, rbp_mrl_t)) {			\
-	    rbp_black_set(a_type, a_field, rbp_mrl_t);			\
-	    rbp_red_set(a_type, a_field, (a_node));			\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrl_t);	\
-	    rbp_left_set(a_type, a_field, (r_node), rbp_mrl_t);		\
-	} else {							\
-	    rbp_black_set(a_type, a_field, (a_node));			\
-	}								\
-    } else {								\
-	rbp_red_set(a_type, a_field, (a_node));				\
-	rbp_rotate_left(a_type, a_field, (a_node), (r_node));		\
-    }									\
-} while (0)
+#define rbp_move_red_left(a_type, a_field, a_node, r_node)                     \
+  do {                                                                         \
+    a_type *rbp_mrl_t, *rbp_mrl_u;                                             \
+    rbp_mrl_t = rbp_left_get(a_type, a_field, (a_node));                       \
+    rbp_red_set(a_type, a_field, rbp_mrl_t);                                   \
+    rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));                      \
+    rbp_mrl_u = rbp_left_get(a_type, a_field, rbp_mrl_t);                      \
+    if (rbp_red_get(a_type, a_field, rbp_mrl_u)) {                             \
+      rbp_rotate_right(a_type, a_field, rbp_mrl_t, rbp_mrl_u);                 \
+      rbp_right_set(a_type, a_field, (a_node), rbp_mrl_u);                     \
+      rbp_rotate_left(a_type, a_field, (a_node), (r_node));                    \
+      rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));                    \
+      if (rbp_red_get(a_type, a_field, rbp_mrl_t)) {                           \
+        rbp_black_set(a_type, a_field, rbp_mrl_t);                             \
+        rbp_red_set(a_type, a_field, (a_node));                                \
+        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrl_t);                 \
+        rbp_left_set(a_type, a_field, (r_node), rbp_mrl_t);                    \
+      } else {                                                                 \
+        rbp_black_set(a_type, a_field, (a_node));                              \
+      }                                                                        \
+    } else {                                                                   \
+      rbp_red_set(a_type, a_field, (a_node));                                  \
+      rbp_rotate_left(a_type, a_field, (a_node), (r_node));                    \
+    }                                                                          \
+  } while (0)
 
-#define	rbp_move_red_right(a_type, a_field, a_node, r_node) do {	\
-    a_type *rbp_mrr_t;							\
-    rbp_mrr_t = rbp_left_get(a_type, a_field, (a_node));		\
-    if (rbp_red_get(a_type, a_field, rbp_mrr_t)) {			\
-	a_type *rbp_mrr_u, *rbp_mrr_v;					\
-	rbp_mrr_u = rbp_right_get(a_type, a_field, rbp_mrr_t);		\
-	rbp_mrr_v = rbp_left_get(a_type, a_field, rbp_mrr_u);		\
-	if (rbp_red_get(a_type, a_field, rbp_mrr_v)) {			\
-	    rbp_color_set(a_type, a_field, rbp_mrr_u,			\
-	      rbp_red_get(a_type, a_field, (a_node)));			\
-	    rbp_black_set(a_type, a_field, rbp_mrr_v);			\
-	    rbp_rotate_left(a_type, a_field, rbp_mrr_t, rbp_mrr_u);	\
-	    rbp_left_set(a_type, a_field, (a_node), rbp_mrr_u);		\
-	    rbp_rotate_right(a_type, a_field, (a_node), (r_node));	\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);	\
-	    rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);	\
-	} else {							\
-	    rbp_color_set(a_type, a_field, rbp_mrr_t,			\
-	      rbp_red_get(a_type, a_field, (a_node)));			\
-	    rbp_red_set(a_type, a_field, rbp_mrr_u);			\
-	    rbp_rotate_right(a_type, a_field, (a_node), (r_node));	\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);	\
-	    rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);	\
-	}								\
-	rbp_red_set(a_type, a_field, (a_node));				\
-    } else {								\
-	rbp_red_set(a_type, a_field, rbp_mrr_t);			\
-	rbp_mrr_t = rbp_left_get(a_type, a_field, rbp_mrr_t);		\
-	if (rbp_red_get(a_type, a_field, rbp_mrr_t)) {			\
-	    rbp_black_set(a_type, a_field, rbp_mrr_t);			\
-	    rbp_rotate_right(a_type, a_field, (a_node), (r_node));	\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);	\
-	    rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);	\
-	} else {							\
-	    rbp_rotate_left(a_type, a_field, (a_node), (r_node));	\
-	}								\
-    }									\
-} while (0)
+#define rbp_move_red_right(a_type, a_field, a_node, r_node)                    \
+  do {                                                                         \
+    a_type* rbp_mrr_t;                                                         \
+    rbp_mrr_t = rbp_left_get(a_type, a_field, (a_node));                       \
+    if (rbp_red_get(a_type, a_field, rbp_mrr_t)) {                             \
+      a_type *rbp_mrr_u, *rbp_mrr_v;                                           \
+      rbp_mrr_u = rbp_right_get(a_type, a_field, rbp_mrr_t);                   \
+      rbp_mrr_v = rbp_left_get(a_type, a_field, rbp_mrr_u);                    \
+      if (rbp_red_get(a_type, a_field, rbp_mrr_v)) {                           \
+        rbp_color_set(                                                         \
+          a_type, a_field, rbp_mrr_u, rbp_red_get(a_type, a_field, (a_node))); \
+        rbp_black_set(a_type, a_field, rbp_mrr_v);                             \
+        rbp_rotate_left(a_type, a_field, rbp_mrr_t, rbp_mrr_u);                \
+        rbp_left_set(a_type, a_field, (a_node), rbp_mrr_u);                    \
+        rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
+        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
+        rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);                   \
+      } else {                                                                 \
+        rbp_color_set(                                                         \
+          a_type, a_field, rbp_mrr_t, rbp_red_get(a_type, a_field, (a_node))); \
+        rbp_red_set(a_type, a_field, rbp_mrr_u);                               \
+        rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
+        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
+        rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);                   \
+      }                                                                        \
+      rbp_red_set(a_type, a_field, (a_node));                                  \
+    } else {                                                                   \
+      rbp_red_set(a_type, a_field, rbp_mrr_t);                                 \
+      rbp_mrr_t = rbp_left_get(a_type, a_field, rbp_mrr_t);                    \
+      if (rbp_red_get(a_type, a_field, rbp_mrr_t)) {                           \
+        rbp_black_set(a_type, a_field, rbp_mrr_t);                             \
+        rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
+        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
+        rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);                   \
+      } else {                                                                 \
+        rbp_rotate_left(a_type, a_field, (a_node), (r_node));                  \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
-#define	rb_insert(a_type, a_field, a_cmp, a_tree, a_node) do {		\
-    a_type rbp_i_s;							\
-    a_type *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;		\
-    int rbp_i_cmp = 0;							\
-    rbp_i_g = &(a_tree)->rbt_nil;					\
-    rbp_left_set(a_type, a_field, &rbp_i_s, (a_tree)->rbt_root);	\
-    rbp_right_set(a_type, a_field, &rbp_i_s, &(a_tree)->rbt_nil);	\
-    rbp_black_set(a_type, a_field, &rbp_i_s);				\
-    rbp_i_p = &rbp_i_s;							\
-    rbp_i_c = (a_tree)->rbt_root;					\
-    /* Iteratively search down the tree for the insertion point,      */\
-    /* splitting 4-nodes as they are encountered.  At the end of each */\
-    /* iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down    */\
-    /* the tree, assuming a sufficiently deep tree.                   */\
-    while (rbp_i_c != &(a_tree)->rbt_nil) {				\
-	rbp_i_t = rbp_left_get(a_type, a_field, rbp_i_c);		\
-	rbp_i_u = rbp_left_get(a_type, a_field, rbp_i_t);		\
-	if (rbp_red_get(a_type, a_field, rbp_i_t)			\
-	  && rbp_red_get(a_type, a_field, rbp_i_u)) {			\
-	    /* rbp_i_c is the top of a logical 4-node, so split it.   */\
-	    /* This iteration does not move down the tree, due to the */\
-	    /* disruptiveness of node splitting.                      */\
-	    /*                                                        */\
-	    /* Rotate right.                                          */\
-	    rbp_rotate_right(a_type, a_field, rbp_i_c, rbp_i_t);	\
-	    /* Pass red links up one level.                           */\
-	    rbp_i_u = rbp_left_get(a_type, a_field, rbp_i_t);		\
-	    rbp_black_set(a_type, a_field, rbp_i_u);			\
-	    if (rbp_left_get(a_type, a_field, rbp_i_p) == rbp_i_c) {	\
-		rbp_left_set(a_type, a_field, rbp_i_p, rbp_i_t);	\
-		rbp_i_c = rbp_i_t;					\
-	    } else {							\
-		/* rbp_i_c was the right child of rbp_i_p, so rotate  */\
-		/* left in order to maintain the left-leaning         */\
-		/* invariant.                                         */\
-		MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_p)	\
-		  == rbp_i_c);						\
-		rbp_right_set(a_type, a_field, rbp_i_p, rbp_i_t);	\
-		rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_u);	\
-		if (rbp_left_get(a_type, a_field, rbp_i_g) == rbp_i_p) {\
-		    rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_u);	\
-		} else {						\
-		    MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_g)	\
-		      == rbp_i_p);					\
-		    rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_u);	\
-		}							\
-		rbp_i_p = rbp_i_u;					\
-		rbp_i_cmp = (a_cmp)((a_node), rbp_i_p);			\
-		if (rbp_i_cmp < 0) {					\
-		    rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_p);	\
-		} else {						\
-		    MOZ_ASSERT(rbp_i_cmp > 0);				\
-		    rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_p);	\
-		}							\
-		continue;						\
-	    }								\
-	}								\
-	rbp_i_g = rbp_i_p;						\
-	rbp_i_p = rbp_i_c;						\
-	rbp_i_cmp = (a_cmp)((a_node), rbp_i_c);				\
-	if (rbp_i_cmp < 0) {						\
-	    rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_c);		\
-	} else {							\
-	    MOZ_ASSERT(rbp_i_cmp > 0);					\
-	    rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_c);		\
-	}								\
-    }									\
-    /* rbp_i_p now refers to the node under which to insert.          */\
-    rbp_node_new(a_type, a_field, a_tree, (a_node));			\
-    if (rbp_i_cmp > 0) {						\
-	rbp_right_set(a_type, a_field, rbp_i_p, (a_node));		\
-	rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_t);		\
-	if (rbp_left_get(a_type, a_field, rbp_i_g) == rbp_i_p) {	\
-	    rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_t);		\
-	} else if (rbp_right_get(a_type, a_field, rbp_i_g) == rbp_i_p) {\
-	    rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_t);		\
-	}								\
-    } else {								\
-	rbp_left_set(a_type, a_field, rbp_i_p, (a_node));		\
-    }									\
-    /* Update the root and make sure that it is black.                */\
-    (a_tree)->rbt_root = rbp_left_get(a_type, a_field, &rbp_i_s);	\
-    rbp_black_set(a_type, a_field, (a_tree)->rbt_root);			\
-} while (0)
+#define rb_insert(a_type, a_field, a_cmp, a_tree, a_node)                      \
+  do {                                                                         \
+    a_type rbp_i_s;                                                            \
+    a_type *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;                   \
+    int rbp_i_cmp = 0;                                                         \
+    rbp_i_g = &(a_tree)->rbt_nil;                                              \
+    rbp_left_set(a_type, a_field, &rbp_i_s, (a_tree)->rbt_root);               \
+    rbp_right_set(a_type, a_field, &rbp_i_s, &(a_tree)->rbt_nil);              \
+    rbp_black_set(a_type, a_field, &rbp_i_s);                                  \
+    rbp_i_p = &rbp_i_s;                                                        \
+    rbp_i_c = (a_tree)->rbt_root;                                              \
+    /* Iteratively search down the tree for the insertion point,      */       \
+    /* splitting 4-nodes as they are encountered.  At the end of each */       \
+    /* iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down    */       \
+    /* the tree, assuming a sufficiently deep tree.                   */       \
+    while (rbp_i_c != &(a_tree)->rbt_nil) {                                    \
+      rbp_i_t = rbp_left_get(a_type, a_field, rbp_i_c);                        \
+      rbp_i_u = rbp_left_get(a_type, a_field, rbp_i_t);                        \
+      if (rbp_red_get(a_type, a_field, rbp_i_t) &&                             \
+          rbp_red_get(a_type, a_field, rbp_i_u)) {                             \
+        /* rbp_i_c is the top of a logical 4-node, so split it.   */           \
+        /* This iteration does not move down the tree, due to the */           \
+        /* disruptiveness of node splitting.                      */           \
+        /*                                                        */           \
+        /* Rotate right.                                          */           \
+        rbp_rotate_right(a_type, a_field, rbp_i_c, rbp_i_t);                   \
+        /* Pass red links up one level.                           */           \
+        rbp_i_u = rbp_left_get(a_type, a_field, rbp_i_t);                      \
+        rbp_black_set(a_type, a_field, rbp_i_u);                               \
+        if (rbp_left_get(a_type, a_field, rbp_i_p) == rbp_i_c) {               \
+          rbp_left_set(a_type, a_field, rbp_i_p, rbp_i_t);                     \
+          rbp_i_c = rbp_i_t;                                                   \
+        } else {                                                               \
+          /* rbp_i_c was the right child of rbp_i_p, so rotate  */             \
+          /* left in order to maintain the left-leaning         */             \
+          /* invariant.                                         */             \
+          MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_p) == rbp_i_c);      \
+          rbp_right_set(a_type, a_field, rbp_i_p, rbp_i_t);                    \
+          rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_u);                    \
+          if (rbp_left_get(a_type, a_field, rbp_i_g) == rbp_i_p) {             \
+            rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_u);                   \
+          } else {                                                             \
+            MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_g) == rbp_i_p);    \
+            rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_u);                  \
+          }                                                                    \
+          rbp_i_p = rbp_i_u;                                                   \
+          rbp_i_cmp = (a_cmp)((a_node), rbp_i_p);                              \
+          if (rbp_i_cmp < 0) {                                                 \
+            rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_p);                  \
+          } else {                                                             \
+            MOZ_ASSERT(rbp_i_cmp > 0);                                         \
+            rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_p);                 \
+          }                                                                    \
+          continue;                                                            \
+        }                                                                      \
+      }                                                                        \
+      rbp_i_g = rbp_i_p;                                                       \
+      rbp_i_p = rbp_i_c;                                                       \
+      rbp_i_cmp = (a_cmp)((a_node), rbp_i_c);                                  \
+      if (rbp_i_cmp < 0) {                                                     \
+        rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_c);                      \
+      } else {                                                                 \
+        MOZ_ASSERT(rbp_i_cmp > 0);                                             \
+        rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_c);                     \
+      }                                                                        \
+    }                                                                          \
+    /* rbp_i_p now refers to the node under which to insert.          */       \
+    rbp_node_new(a_type, a_field, a_tree, (a_node));                           \
+    if (rbp_i_cmp > 0) {                                                       \
+      rbp_right_set(a_type, a_field, rbp_i_p, (a_node));                       \
+      rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_t);                        \
+      if (rbp_left_get(a_type, a_field, rbp_i_g) == rbp_i_p) {                 \
+        rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_t);                       \
+      } else if (rbp_right_get(a_type, a_field, rbp_i_g) == rbp_i_p) {         \
+        rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_t);                      \
+      }                                                                        \
+    } else {                                                                   \
+      rbp_left_set(a_type, a_field, rbp_i_p, (a_node));                        \
+    }                                                                          \
+    /* Update the root and make sure that it is black.                */       \
+    (a_tree)->rbt_root = rbp_left_get(a_type, a_field, &rbp_i_s);              \
+    rbp_black_set(a_type, a_field, (a_tree)->rbt_root);                        \
+  } while (0)
 
-#define	rb_remove(a_type, a_field, a_cmp, a_tree, a_node) do {		\
-    a_type rbp_r_s;							\
-    a_type *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;		\
-    int rbp_r_cmp;							\
-    rbp_left_set(a_type, a_field, &rbp_r_s, (a_tree)->rbt_root);	\
-    rbp_right_set(a_type, a_field, &rbp_r_s, &(a_tree)->rbt_nil);	\
-    rbp_black_set(a_type, a_field, &rbp_r_s);				\
-    rbp_r_p = &rbp_r_s;							\
-    rbp_r_c = (a_tree)->rbt_root;					\
-    rbp_r_xp = &(a_tree)->rbt_nil;					\
-    /* Iterate down the tree, but always transform 2-nodes to 3- or   */\
-    /* 4-nodes in order to maintain the invariant that the current    */\
-    /* node is not a 2-node.  This allows simple deletion once a leaf */\
-    /* is reached.  Handle the root specially though, since there may */\
-    /* be no way to convert it from a 2-node to a 3-node.             */\
-    rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);				\
-    if (rbp_r_cmp < 0) {						\
-	rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);		\
-	rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);		\
-	if (rbp_red_get(a_type, a_field, rbp_r_t) == false		\
-	  && rbp_red_get(a_type, a_field, rbp_r_u) == false) {		\
-	    /* Apply standard transform to prepare for left move.     */\
-	    rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);	\
-	    rbp_black_set(a_type, a_field, rbp_r_t);			\
-	    rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);		\
-	    rbp_r_c = rbp_r_t;						\
-	} else {							\
-	    /* Move left.                                             */\
-	    rbp_r_p = rbp_r_c;						\
-	    rbp_r_c = rbp_left_get(a_type, a_field, rbp_r_c);		\
-	}								\
-    } else {								\
-	if (rbp_r_cmp == 0) {						\
-	    MOZ_ASSERT((a_node) == rbp_r_c);				\
-	    if (rbp_right_get(a_type, a_field, rbp_r_c)			\
-	      == &(a_tree)->rbt_nil) {					\
-		/* Delete root node (which is also a leaf node).      */\
-		if (rbp_left_get(a_type, a_field, rbp_r_c)		\
-		  != &(a_tree)->rbt_nil) {				\
-		    rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);	\
-		    rbp_right_set(a_type, a_field, rbp_r_t,		\
-		      &(a_tree)->rbt_nil);				\
-		} else {						\
-		    rbp_r_t = &(a_tree)->rbt_nil;			\
-		}							\
-		rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);	\
-	    } else {							\
-		/* This is the node we want to delete, but we will    */\
-		/* instead swap it with its successor and delete the  */\
-		/* successor.  Record enough information to do the    */\
-		/* swap later.  rbp_r_xp is the a_node's parent.      */\
-		rbp_r_xp = rbp_r_p;					\
-		rbp_r_cmp = 1; /* Note that deletion is incomplete.   */\
-	    }								\
-	}								\
-	if (rbp_r_cmp == 1) {						\
-	    if (rbp_red_get(a_type, a_field, rbp_left_get(a_type,	\
-	      a_field, rbp_right_get(a_type, a_field, rbp_r_c)))	\
-	      == false) {						\
-		rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);	\
-		if (rbp_red_get(a_type, a_field, rbp_r_t)) {		\
-		    /* Standard transform.                            */\
-		    rbp_move_red_right(a_type, a_field, rbp_r_c,	\
-		      rbp_r_t);						\
-		} else {						\
-		    /* Root-specific transform.                       */\
-		    rbp_red_set(a_type, a_field, rbp_r_c);		\
-		    rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);	\
-		    if (rbp_red_get(a_type, a_field, rbp_r_u)) {	\
-			rbp_black_set(a_type, a_field, rbp_r_u);	\
-			rbp_rotate_right(a_type, a_field, rbp_r_c,	\
-			  rbp_r_t);					\
-			rbp_rotate_left(a_type, a_field, rbp_r_c,	\
-			  rbp_r_u);					\
-			rbp_right_set(a_type, a_field, rbp_r_t,		\
-			  rbp_r_u);					\
-		    } else {						\
-			rbp_red_set(a_type, a_field, rbp_r_t);		\
-			rbp_rotate_left(a_type, a_field, rbp_r_c,	\
-			  rbp_r_t);					\
-		    }							\
-		}							\
-		rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);	\
-		rbp_r_c = rbp_r_t;					\
-	    } else {							\
-		/* Move right.                                        */\
-		rbp_r_p = rbp_r_c;					\
-		rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);	\
-	    }								\
-	}								\
-    }									\
-    if (rbp_r_cmp != 0) {						\
-	while (true) {							\
-	    MOZ_ASSERT(rbp_r_p != &(a_tree)->rbt_nil);			\
-	    rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);			\
-	    if (rbp_r_cmp < 0) {					\
-		rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);	\
-		if (rbp_r_t == &(a_tree)->rbt_nil) {			\
-		    /* rbp_r_c now refers to the successor node to    */\
-		    /* relocate, and rbp_r_xp/a_node refer to the     */\
-		    /* context for the relocation.                    */\
-		    if (rbp_left_get(a_type, a_field, rbp_r_xp)		\
-		      == (a_node)) {					\
-			rbp_left_set(a_type, a_field, rbp_r_xp,		\
-			  rbp_r_c);					\
-		    } else {						\
-			MOZ_ASSERT(rbp_right_get(a_type, a_field,	\
-			  rbp_r_xp) == (a_node));			\
-			rbp_right_set(a_type, a_field, rbp_r_xp,	\
-			  rbp_r_c);					\
-		    }							\
-		    rbp_left_set(a_type, a_field, rbp_r_c,		\
-		      rbp_left_get(a_type, a_field, (a_node)));		\
-		    rbp_right_set(a_type, a_field, rbp_r_c,		\
-		      rbp_right_get(a_type, a_field, (a_node)));	\
-		    rbp_color_set(a_type, a_field, rbp_r_c,		\
-		      rbp_red_get(a_type, a_field, (a_node)));		\
-		    if (rbp_left_get(a_type, a_field, rbp_r_p)		\
-		      == rbp_r_c) {					\
-			rbp_left_set(a_type, a_field, rbp_r_p,		\
-			  &(a_tree)->rbt_nil);				\
-		    } else {						\
-			MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_r_p)\
-			  == rbp_r_c);					\
-			rbp_right_set(a_type, a_field, rbp_r_p,		\
-			  &(a_tree)->rbt_nil);				\
-		    }							\
-		    break;						\
-		}							\
-		rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);	\
-		if (rbp_red_get(a_type, a_field, rbp_r_t) == false	\
-		  && rbp_red_get(a_type, a_field, rbp_r_u) == false) {	\
-		    rbp_move_red_left(a_type, a_field, rbp_r_c,		\
-		      rbp_r_t);						\
-		    if (rbp_left_get(a_type, a_field, rbp_r_p)		\
-		      == rbp_r_c) {					\
-			rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);\
-		    } else {						\
-			rbp_right_set(a_type, a_field, rbp_r_p,		\
-			  rbp_r_t);					\
-		    }							\
-		    rbp_r_c = rbp_r_t;					\
-		} else {						\
-		    rbp_r_p = rbp_r_c;					\
-		    rbp_r_c = rbp_left_get(a_type, a_field, rbp_r_c);	\
-		}							\
-	    } else {							\
-		/* Check whether to delete this node (it has to be    */\
-		/* the correct node and a leaf node).                 */\
-		if (rbp_r_cmp == 0) {					\
-		    MOZ_ASSERT((a_node) == rbp_r_c);			\
-		    if (rbp_right_get(a_type, a_field, rbp_r_c)		\
-		      == &(a_tree)->rbt_nil) {				\
-			/* Delete leaf node.                          */\
-			if (rbp_left_get(a_type, a_field, rbp_r_c)	\
-			  != &(a_tree)->rbt_nil) {			\
-			    rbp_lean_right(a_type, a_field, rbp_r_c,	\
-			      rbp_r_t);					\
-			    rbp_right_set(a_type, a_field, rbp_r_t,	\
-			      &(a_tree)->rbt_nil);			\
-			} else {					\
-			    rbp_r_t = &(a_tree)->rbt_nil;		\
-			}						\
-			if (rbp_left_get(a_type, a_field, rbp_r_p)	\
-			  == rbp_r_c) {					\
-			    rbp_left_set(a_type, a_field, rbp_r_p,	\
-			      rbp_r_t);					\
-			} else {					\
-			    rbp_right_set(a_type, a_field, rbp_r_p,	\
-			      rbp_r_t);					\
-			}						\
-			break;						\
-		    } else {						\
-			/* This is the node we want to delete, but we */\
-			/* will instead swap it with its successor    */\
-			/* and delete the successor.  Record enough   */\
-			/* information to do the swap later.          */\
-			/* rbp_r_xp is a_node's parent.               */\
-			rbp_r_xp = rbp_r_p;				\
-		    }							\
-		}							\
-		rbp_r_t = rbp_right_get(a_type, a_field, rbp_r_c);	\
-		rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);	\
-		if (rbp_red_get(a_type, a_field, rbp_r_u) == false) {	\
-		    rbp_move_red_right(a_type, a_field, rbp_r_c,	\
-		      rbp_r_t);						\
-		    if (rbp_left_get(a_type, a_field, rbp_r_p)		\
-		      == rbp_r_c) {					\
-			rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);\
-		    } else {						\
-			rbp_right_set(a_type, a_field, rbp_r_p,		\
-			  rbp_r_t);					\
-		    }							\
-		    rbp_r_c = rbp_r_t;					\
-		} else {						\
-		    rbp_r_p = rbp_r_c;					\
-		    rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);	\
-		}							\
-	    }								\
-	}								\
-    }									\
-    /* Update root.                                                   */\
-    (a_tree)->rbt_root = rbp_left_get(a_type, a_field, &rbp_r_s);	\
-} while (0)
+#define rb_remove(a_type, a_field, a_cmp, a_tree, a_node)                      \
+  do {                                                                         \
+    a_type rbp_r_s;                                                            \
+    a_type *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;                  \
+    int rbp_r_cmp;                                                             \
+    rbp_left_set(a_type, a_field, &rbp_r_s, (a_tree)->rbt_root);               \
+    rbp_right_set(a_type, a_field, &rbp_r_s, &(a_tree)->rbt_nil);              \
+    rbp_black_set(a_type, a_field, &rbp_r_s);                                  \
+    rbp_r_p = &rbp_r_s;                                                        \
+    rbp_r_c = (a_tree)->rbt_root;                                              \
+    rbp_r_xp = &(a_tree)->rbt_nil;                                             \
+    /* Iterate down the tree, but always transform 2-nodes to 3- or   */       \
+    /* 4-nodes in order to maintain the invariant that the current    */       \
+    /* node is not a 2-node.  This allows simple deletion once a leaf */       \
+    /* is reached.  Handle the root specially though, since there may */       \
+    /* be no way to convert it from a 2-node to a 3-node.             */       \
+    rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);                                    \
+    if (rbp_r_cmp < 0) {                                                       \
+      rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);                        \
+      rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);                        \
+      if (rbp_red_get(a_type, a_field, rbp_r_t) == false &&                    \
+          rbp_red_get(a_type, a_field, rbp_r_u) == false) {                    \
+        /* Apply standard transform to prepare for left move.     */           \
+        rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);                  \
+        rbp_black_set(a_type, a_field, rbp_r_t);                               \
+        rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);                       \
+        rbp_r_c = rbp_r_t;                                                     \
+      } else {                                                                 \
+        /* Move left.                                             */           \
+        rbp_r_p = rbp_r_c;                                                     \
+        rbp_r_c = rbp_left_get(a_type, a_field, rbp_r_c);                      \
+      }                                                                        \
+    } else {                                                                   \
+      if (rbp_r_cmp == 0) {                                                    \
+        MOZ_ASSERT((a_node) == rbp_r_c);                                       \
+        if (rbp_right_get(a_type, a_field, rbp_r_c) == &(a_tree)->rbt_nil) {   \
+          /* Delete root node (which is also a leaf node).      */             \
+          if (rbp_left_get(a_type, a_field, rbp_r_c) != &(a_tree)->rbt_nil) {  \
+            rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);                 \
+            rbp_right_set(a_type, a_field, rbp_r_t, &(a_tree)->rbt_nil);       \
+          } else {                                                             \
+            rbp_r_t = &(a_tree)->rbt_nil;                                      \
+          }                                                                    \
+          rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);                     \
+        } else {                                                               \
+          /* This is the node we want to delete, but we will    */             \
+          /* instead swap it with its successor and delete the  */             \
+          /* successor.  Record enough information to do the    */             \
+          /* swap later.  rbp_r_xp is the a_node's parent.      */             \
+          rbp_r_xp = rbp_r_p;                                                  \
+          rbp_r_cmp = 1; /* Note that deletion is incomplete.   */             \
+        }                                                                      \
+      }                                                                        \
+      if (rbp_r_cmp == 1) {                                                    \
+        if (rbp_red_get(                                                       \
+              a_type,                                                          \
+              a_field,                                                         \
+              rbp_left_get(                                                    \
+                a_type, a_field, rbp_right_get(a_type, a_field, rbp_r_c))) ==  \
+            false) {                                                           \
+          rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);                    \
+          if (rbp_red_get(a_type, a_field, rbp_r_t)) {                         \
+            /* Standard transform.                            */               \
+            rbp_move_red_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
+          } else {                                                             \
+            /* Root-specific transform.                       */               \
+            rbp_red_set(a_type, a_field, rbp_r_c);                             \
+            rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);                  \
+            if (rbp_red_get(a_type, a_field, rbp_r_u)) {                       \
+              rbp_black_set(a_type, a_field, rbp_r_u);                         \
+              rbp_rotate_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
+              rbp_rotate_left(a_type, a_field, rbp_r_c, rbp_r_u);              \
+              rbp_right_set(a_type, a_field, rbp_r_t, rbp_r_u);                \
+            } else {                                                           \
+              rbp_red_set(a_type, a_field, rbp_r_t);                           \
+              rbp_rotate_left(a_type, a_field, rbp_r_c, rbp_r_t);              \
+            }                                                                  \
+          }                                                                    \
+          rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);                     \
+          rbp_r_c = rbp_r_t;                                                   \
+        } else {                                                               \
+          /* Move right.                                        */             \
+          rbp_r_p = rbp_r_c;                                                   \
+          rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);                   \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+    if (rbp_r_cmp != 0) {                                                      \
+      while (true) {                                                           \
+        MOZ_ASSERT(rbp_r_p != &(a_tree)->rbt_nil);                             \
+        rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);                                \
+        if (rbp_r_cmp < 0) {                                                   \
+          rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);                    \
+          if (rbp_r_t == &(a_tree)->rbt_nil) {                                 \
+            /* rbp_r_c now refers to the successor node to    */               \
+            /* relocate, and rbp_r_xp/a_node refer to the     */               \
+            /* context for the relocation.                    */               \
+            if (rbp_left_get(a_type, a_field, rbp_r_xp) == (a_node)) {         \
+              rbp_left_set(a_type, a_field, rbp_r_xp, rbp_r_c);                \
+            } else {                                                           \
+              MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_r_xp) ==           \
+                         (a_node));                                            \
+              rbp_right_set(a_type, a_field, rbp_r_xp, rbp_r_c);               \
+            }                                                                  \
+            rbp_left_set(a_type,                                               \
+                         a_field,                                              \
+                         rbp_r_c,                                              \
+                         rbp_left_get(a_type, a_field, (a_node)));             \
+            rbp_right_set(a_type,                                              \
+                          a_field,                                             \
+                          rbp_r_c,                                             \
+                          rbp_right_get(a_type, a_field, (a_node)));           \
+            rbp_color_set(a_type,                                              \
+                          a_field,                                             \
+                          rbp_r_c,                                             \
+                          rbp_red_get(a_type, a_field, (a_node)));             \
+            if (rbp_left_get(a_type, a_field, rbp_r_p) == rbp_r_c) {           \
+              rbp_left_set(a_type, a_field, rbp_r_p, &(a_tree)->rbt_nil);      \
+            } else {                                                           \
+              MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_r_p) == rbp_r_c);  \
+              rbp_right_set(a_type, a_field, rbp_r_p, &(a_tree)->rbt_nil);     \
+            }                                                                  \
+            break;                                                             \
+          }                                                                    \
+          rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);                    \
+          if (rbp_red_get(a_type, a_field, rbp_r_t) == false &&                \
+              rbp_red_get(a_type, a_field, rbp_r_u) == false) {                \
+            rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);              \
+            if (rbp_left_get(a_type, a_field, rbp_r_p) == rbp_r_c) {           \
+              rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);                 \
+            } else {                                                           \
+              rbp_right_set(a_type, a_field, rbp_r_p, rbp_r_t);                \
+            }                                                                  \
+            rbp_r_c = rbp_r_t;                                                 \
+          } else {                                                             \
+            rbp_r_p = rbp_r_c;                                                 \
+            rbp_r_c = rbp_left_get(a_type, a_field, rbp_r_c);                  \
+          }                                                                    \
+        } else {                                                               \
+          /* Check whether to delete this node (it has to be    */             \
+          /* the correct node and a leaf node).                 */             \
+          if (rbp_r_cmp == 0) {                                                \
+            MOZ_ASSERT((a_node) == rbp_r_c);                                   \
+            if (rbp_right_get(a_type, a_field, rbp_r_c) ==                     \
+                &(a_tree)->rbt_nil) {                                          \
+              /* Delete leaf node.                          */                 \
+              if (rbp_left_get(a_type, a_field, rbp_r_c) !=                    \
+                  &(a_tree)->rbt_nil) {                                        \
+                rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
+                rbp_right_set(a_type, a_field, rbp_r_t, &(a_tree)->rbt_nil);   \
+              } else {                                                         \
+                rbp_r_t = &(a_tree)->rbt_nil;                                  \
+              }                                                                \
+              if (rbp_left_get(a_type, a_field, rbp_r_p) == rbp_r_c) {         \
+                rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);               \
+              } else {                                                         \
+                rbp_right_set(a_type, a_field, rbp_r_p, rbp_r_t);              \
+              }                                                                \
+              break;                                                           \
+            } else {                                                           \
+              /* This is the node we want to delete, but we */                 \
+              /* will instead swap it with its successor    */                 \
+              /* and delete the successor.  Record enough   */                 \
+              /* information to do the swap later.          */                 \
+              /* rbp_r_xp is a_node's parent.               */                 \
+              rbp_r_xp = rbp_r_p;                                              \
+            }                                                                  \
+          }                                                                    \
+          rbp_r_t = rbp_right_get(a_type, a_field, rbp_r_c);                   \
+          rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);                    \
+          if (rbp_red_get(a_type, a_field, rbp_r_u) == false) {                \
+            rbp_move_red_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
+            if (rbp_left_get(a_type, a_field, rbp_r_p) == rbp_r_c) {           \
+              rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);                 \
+            } else {                                                           \
+              rbp_right_set(a_type, a_field, rbp_r_p, rbp_r_t);                \
+            }                                                                  \
+            rbp_r_c = rbp_r_t;                                                 \
+          } else {                                                             \
+            rbp_r_p = rbp_r_c;                                                 \
+            rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);                 \
+          }                                                                    \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+    /* Update root.                                                   */       \
+    (a_tree)->rbt_root = rbp_left_get(a_type, a_field, &rbp_r_s);              \
+  } while (0)
 
 /*
  * The rb_wrap() macro provides a convenient way to wrap functions around the
@@ -693,55 +696,55 @@ struct RedBlackTree
  * call point.
  */
 
-#define	rb_wrap(a_prefix, a_tree_type, a_type, a_field, a_cmp)		\
-static void								\
-a_prefix##new(a_tree_type *tree) {					\
-    rb_new(a_type, a_field, tree);					\
-}									\
-static a_type *								\
-a_prefix##first(a_tree_type *tree) {					\
-    a_type *ret;							\
-    rb_first(a_type, a_field, tree, ret);				\
-    return (ret);							\
-}									\
-static a_type *								\
-a_prefix##last(a_tree_type *tree) {					\
-    a_type *ret;							\
-    rb_last(a_type, a_field, tree, ret);				\
-    return (ret);							\
-}									\
-static a_type *								\
-a_prefix##next(a_tree_type *tree, a_type *node) {			\
-    a_type *ret;							\
-    rb_next(a_type, a_field, a_cmp, tree, node, ret);			\
-    return (ret);							\
-}									\
-static a_type *								\
-a_prefix##prev(a_tree_type *tree, a_type *node) {			\
-    a_type *ret;							\
-    rb_prev(a_type, a_field, a_cmp, tree, node, ret);			\
-    return (ret);							\
-}									\
-static a_type *								\
-a_prefix##search(a_tree_type *tree, a_type *key) {			\
-    a_type *ret;							\
-    rb_search(a_type, a_field, a_cmp, tree, key, ret);			\
-    return (ret);							\
-}									\
-static a_type *								\
-a_prefix##nsearch(a_tree_type *tree, a_type *key) {			\
-    a_type *ret;							\
-    rb_nsearch(a_type, a_field, a_cmp, tree, key, ret);			\
-    return (ret);							\
-}									\
-static void								\
-a_prefix##insert(a_tree_type *tree, a_type *node) {			\
-    rb_insert(a_type, a_field, a_cmp, tree, node);			\
-}									\
-static void								\
-a_prefix##remove(a_tree_type *tree, a_type *node) {			\
-    rb_remove(a_type, a_field, a_cmp, tree, node);			\
-}
+#define rb_wrap(a_prefix, a_tree_type, a_type, a_field, a_cmp)                 \
+  static void a_prefix##new (a_tree_type * tree)                               \
+  {                                                                            \
+    rb_new(a_type, a_field, tree);                                             \
+  }                                                                            \
+  static a_type* a_prefix##first(a_tree_type* tree)                            \
+  {                                                                            \
+    a_type* ret;                                                               \
+    rb_first(a_type, a_field, tree, ret);                                      \
+    return (ret);                                                              \
+  }                                                                            \
+  static a_type* a_prefix##last(a_tree_type* tree)                             \
+  {                                                                            \
+    a_type* ret;                                                               \
+    rb_last(a_type, a_field, tree, ret);                                       \
+    return (ret);                                                              \
+  }                                                                            \
+  static a_type* a_prefix##next(a_tree_type* tree, a_type* node)               \
+  {                                                                            \
+    a_type* ret;                                                               \
+    rb_next(a_type, a_field, a_cmp, tree, node, ret);                          \
+    return (ret);                                                              \
+  }                                                                            \
+  static a_type* a_prefix##prev(a_tree_type* tree, a_type* node)               \
+  {                                                                            \
+    a_type* ret;                                                               \
+    rb_prev(a_type, a_field, a_cmp, tree, node, ret);                          \
+    return (ret);                                                              \
+  }                                                                            \
+  static a_type* a_prefix##search(a_tree_type* tree, a_type* key)              \
+  {                                                                            \
+    a_type* ret;                                                               \
+    rb_search(a_type, a_field, a_cmp, tree, key, ret);                         \
+    return (ret);                                                              \
+  }                                                                            \
+  static a_type* a_prefix##nsearch(a_tree_type* tree, a_type* key)             \
+  {                                                                            \
+    a_type* ret;                                                               \
+    rb_nsearch(a_type, a_field, a_cmp, tree, key, ret);                        \
+    return (ret);                                                              \
+  }                                                                            \
+  static void a_prefix##insert(a_tree_type* tree, a_type* node)                \
+  {                                                                            \
+    rb_insert(a_type, a_field, a_cmp, tree, node);                             \
+  }                                                                            \
+  static void a_prefix##remove(a_tree_type* tree, a_type* node)                \
+  {                                                                            \
+    rb_remove(a_type, a_field, a_cmp, tree, node);                             \
+  }
 
 /*
  * The iterators simulate recursion via an array of pointers that store the
@@ -785,59 +788,62 @@ a_prefix##remove(a_tree_type *tree, a_type *node) {			\
  * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
  * systems, respectively (approximately 348 and 1440 bytes, respectively).
  */
-#define rbp_f_height	(3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
+#define rbp_f_height (3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1)))
 
-#define	rb_foreach_begin(a_type, a_field, a_tree, a_var) {		\
-    {									\
-	/* Initialize the path to contain the left spine.             */\
-	a_type *rbp_f_path[rbp_f_height];				\
-	a_type *rbp_f_node;						\
-	bool rbp_f_synced = false;					\
-	unsigned rbp_f_depth = 0;					\
-	if ((a_tree)->rbt_root != &(a_tree)->rbt_nil) {			\
-	    rbp_f_path[rbp_f_depth] = (a_tree)->rbt_root;		\
-	    rbp_f_depth++;						\
-	    while ((rbp_f_node = rbp_left_get(a_type, a_field,		\
-	      rbp_f_path[rbp_f_depth-1])) != &(a_tree)->rbt_nil) {	\
-		rbp_f_path[rbp_f_depth] = rbp_f_node;			\
-		rbp_f_depth++;						\
-	    }								\
-	}								\
-	/* While the path is non-empty, iterate.                      */\
-	while (rbp_f_depth > 0) {					\
-	    (a_var) = rbp_f_path[rbp_f_depth-1];
+#define rb_foreach_begin(a_type, a_field, a_tree, a_var)                       \
+  {                                                                            \
+    {                                                                          \
+      /* Initialize the path to contain the left spine.             */         \
+      a_type* rbp_f_path[rbp_f_height];                                        \
+      a_type* rbp_f_node;                                                      \
+      bool rbp_f_synced = false;                                               \
+      unsigned rbp_f_depth = 0;                                                \
+      if ((a_tree)->rbt_root != &(a_tree)->rbt_nil) {                          \
+        rbp_f_path[rbp_f_depth] = (a_tree)->rbt_root;                          \
+        rbp_f_depth++;                                                         \
+        while ((rbp_f_node = rbp_left_get(                                     \
+                  a_type, a_field, rbp_f_path[rbp_f_depth - 1])) !=            \
+               &(a_tree)->rbt_nil) {                                           \
+          rbp_f_path[rbp_f_depth] = rbp_f_node;                                \
+          rbp_f_depth++;                                                       \
+        }                                                                      \
+      }                                                                        \
+      /* While the path is non-empty, iterate.                      */         \
+      while (rbp_f_depth > 0) {                                                \
+        (a_var) = rbp_f_path[rbp_f_depth - 1];
 
-#define	rb_foreach_end(a_type, a_field, a_tree, a_var)			\
-	    if (rbp_f_synced) {						\
-		rbp_f_synced = false;					\
-		continue;						\
-	    }								\
-	    /* Find the successor.                                    */\
-	    if ((rbp_f_node = rbp_right_get(a_type, a_field,		\
-	      rbp_f_path[rbp_f_depth-1])) != &(a_tree)->rbt_nil) {	\
-	        /* The successor is the left-most node in the right   */\
-		/* subtree.                                           */\
-		rbp_f_path[rbp_f_depth] = rbp_f_node;			\
-		rbp_f_depth++;						\
-		while ((rbp_f_node = rbp_left_get(a_type, a_field,	\
-		  rbp_f_path[rbp_f_depth-1])) != &(a_tree)->rbt_nil) {	\
-		    rbp_f_path[rbp_f_depth] = rbp_f_node;		\
-		    rbp_f_depth++;					\
-		}							\
-	    } else {							\
-		/* The successor is above the current node.  Unwind   */\
-		/* until a left-leaning edge is removed from the      */\
-		/* path, or the path is empty.                        */\
-		for (rbp_f_depth--; rbp_f_depth > 0; rbp_f_depth--) {	\
-		    if (rbp_left_get(a_type, a_field,			\
-		      rbp_f_path[rbp_f_depth-1])			\
-		      == rbp_f_path[rbp_f_depth]) {			\
-			break;						\
-		    }							\
-		}							\
-	    }								\
-	}								\
-    }									\
-}
+#define rb_foreach_end(a_type, a_field, a_tree, a_var)                         \
+  if (rbp_f_synced) {                                                          \
+    rbp_f_synced = false;                                                      \
+    continue;                                                                  \
+  }                                                                            \
+  /* Find the successor.                                    */                 \
+  if ((rbp_f_node =                                                            \
+         rbp_right_get(a_type, a_field, rbp_f_path[rbp_f_depth - 1])) !=       \
+      &(a_tree)->rbt_nil) {                                                    \
+    /* The successor is the left-most node in the right   */                   \
+    /* subtree.                                           */                   \
+    rbp_f_path[rbp_f_depth] = rbp_f_node;                                      \
+    rbp_f_depth++;                                                             \
+    while ((rbp_f_node =                                                       \
+              rbp_left_get(a_type, a_field, rbp_f_path[rbp_f_depth - 1])) !=   \
+           &(a_tree)->rbt_nil) {                                               \
+      rbp_f_path[rbp_f_depth] = rbp_f_node;                                    \
+      rbp_f_depth++;                                                           \
+    }                                                                          \
+  } else {                                                                     \
+    /* The successor is above the current node.  Unwind   */                   \
+    /* until a left-leaning edge is removed from the      */                   \
+    /* path, or the path is empty.                        */                   \
+    for (rbp_f_depth--; rbp_f_depth > 0; rbp_f_depth--) {                      \
+      if (rbp_left_get(a_type, a_field, rbp_f_path[rbp_f_depth - 1]) ==        \
+          rbp_f_path[rbp_f_depth]) {                                           \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  }                                                                            \
+  }                                                                            \
+  }                                                                            \
+  }
 
 #endif /* RB_H_ */
