@@ -91,3 +91,9 @@ class TestAddons(MarionetteTestCase):
 
         with self.assertRaises(AddonInstallException):
             self.addons.install(addon_path)
+
+    def test_install_nonexistent_addon(self):
+        addon_path = os.path.join(here, "does-not-exist.xpi")
+
+        with self.assertRaisesRegexp(AddonInstallException, "Could not find add-on at"):
+            self.addons.install(addon_path)
