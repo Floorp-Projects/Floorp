@@ -43,6 +43,16 @@ add_task(function* () {
       ok(!title.match(/Overall easing: /),
          "The tooltip doesn't show the easing if it is 'linear'");
     }
+    if (state.animationTimingFunction && state.animationTimingFunction !== "ease") {
+      is(state.type, "cssanimation",
+         "The animation type should be CSS Animations if has animation-timing-function");
+      ok(title.match(/Animation timing function: /),
+         "The tooltip shows animation-timing-function");
+    } else {
+      ok(!title.match(/Animation timing function: /),
+         "The tooltip doesn't show the animation-timing-function if it is 'ease'"
+         + " or not CSS Animations");
+    }
     if (state.fill) {
       ok(title.match(/Fill: /), "The tooltip shows the fill");
     }
