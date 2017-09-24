@@ -1116,10 +1116,8 @@ static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
  * On OSX, __thread/thread_local circles back calling malloc to allocate storage
  * on first access on each thread, which leads to an infinite loop, but
  * pthread-based TLS somehow doesn't have this problem.
- * On Windows, we use Tls{Get,Set}Value-based TLS for historical reasons.
- * TODO: we may want to use native TLS instead.
  */
-#if !defined(XP_WIN) && !defined(XP_DARWIN)
+#if !defined(XP_DARWIN)
 static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
 #else
 static mozilla::detail::ThreadLocal<arena_t*, mozilla::detail::ThreadLocalKeyStorage> thread_arena;
