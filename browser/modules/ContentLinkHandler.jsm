@@ -114,9 +114,7 @@ function setIconForLink(aIconInfo, aChromeGlobal) {
     "Link:SetIcon",
     { url: aIconInfo.iconUri.spec,
       loadingPrincipal: aIconInfo.loadingPrincipal,
-      requestContextID: aIconInfo.requestContextID,
-      canUseForTab: !aIconInfo.isRichIcon,
-    });
+      requestContextID: aIconInfo.requestContextID });
 }
 
 /*
@@ -151,9 +149,7 @@ function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
       continue;
     }
 
-    // Note that some sites use hi-res icons without specifying them as
-    // apple-touch or fluid icons.
-    if (icon.isRichIcon || icon.width >= FAVICON_RICH_ICON_MIN_WIDTH) {
+    if (icon.isRichIcon) {
       if (!largestRichIcon || largestRichIcon.width < icon.width) {
         largestRichIcon = icon;
       }
@@ -163,19 +159,17 @@ function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
   }
 
   // Now set the favicons for the page in the following order:
-  // 1. Set the best rich icon if any.
-  // 2. Set the preferred one if any, otherwise use the default one.
-  // This order allows smaller icon frames to eventually override rich icon
-  // frames.
-  if (largestRichIcon) {
-    setIconForLink(largestRichIcon, aChromeGlobal);
-  }
+  // 1. Set the preferred one if any, otherwise use the default one.
+  // 2. Set the best rich icon if any.
   if (preferredIcon) {
     setIconForLink(preferredIcon, aChromeGlobal);
   } else if (defaultIcon) {
     setIconForLink(defaultIcon, aChromeGlobal);
   }
 
+  if (largestRichIcon) {
+    setIconForLink(largestRichIcon, aChromeGlobal);
+  }
   load.timer = null;
   aFaviconLoads.delete(aPageUrl);
 }
@@ -210,8 +204,12 @@ function handleFaviconLink(aLink, aIsRichIcon, aChromeGlobal, aFaviconLoads) {
   if (!iconUri)
     return false;
 
-  // Extract the size type and width.
+  // Extract the size type and width. Note that some sites use hi-res icons
+  // without specifying them as apple-touch or fluid icons.
   let width = extractIconSize(aLink.sizes);
+  if (width >= FAVICON_RICH_ICON_MIN_WIDTH)
+    aIsRichIcon = true;
+
   let iconInfo = {
     iconUri,
     width,
