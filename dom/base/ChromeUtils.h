@@ -21,6 +21,8 @@ class HeapSnapshot;
 namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
+class IdleRequestCallback;
+struct IdleRequestOptions;
 class PrecompiledScript;
 class Promise;
 
@@ -144,6 +146,11 @@ public:
                            JS::HandleObject aObj,
                            JS::HandleObject aTarget,
                            JS::MutableHandleObject aRetval,
+                           ErrorResult& aRv);
+
+  static void IdleDispatch(const GlobalObject& global,
+                           IdleRequestCallback& callback,
+                           const IdleRequestOptions& options,
                            ErrorResult& aRv);
 };
 
