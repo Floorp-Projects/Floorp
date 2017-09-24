@@ -688,7 +688,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 env = {}
                 if isinstance(suites[suite], dict):
                     options_list = suites[suite].get('options', [])
-                    tests_list = suites[suite].get('tests', [])
+                    if self.config.get('verify') == True:
+                        tests_list = []
+                    else:
+                        tests_list = suites[suite].get('tests', [])
                     env = copy.deepcopy(suites[suite].get('env', {}))
                 else:
                     options_list = suites[suite]

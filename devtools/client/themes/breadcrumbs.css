@@ -1,0 +1,344 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Inspector HTMLBreadcrumbs */
+
+.breadcrumbs-widget-container {
+  margin-inline-end: 3px;
+  max-height: 24px; /* Set max-height for proper sizing on linux */
+  height: 24px; /* Set height to prevent starting small waiting for content */
+}
+
+.scrollbutton-up,
+.scrollbutton-down {
+  -moz-appearance: none;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  list-style-image: none;
+  margin: 0;
+  padding: 0;
+}
+
+.scrollbutton-up > .toolbarbutton-icon,
+.scrollbutton-down > .toolbarbutton-icon {
+  -moz-appearance: none;
+  width: 7px;
+  height: 16px;
+  background-size: 14px 16px;
+  background-position: 0 center;
+  background-repeat: no-repeat;
+  background-image: url("images/breadcrumbs-scrollbutton.png");
+  list-style-image: none;
+  margin: 0 8px;
+  padding: 0;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .scrollbutton-up > .toolbarbutton-icon,
+  .scrollbutton-down > .toolbarbutton-icon {
+    background-image: url("images/breadcrumbs-scrollbutton@2x.png");
+  }
+}
+
+.scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
+.scrollbutton-down:not([disabled]):active:hover > .toolbarbutton-icon {
+  background-position: -7px center;
+}
+
+.scrollbutton-up[disabled] > .toolbarbutton-icon,
+.scrollbutton-down[disabled] > .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+/* Draw shadows to indicate there is more content 'behind' scrollbuttons. */
+.scrollbutton-up:-moz-locale-dir(ltr):not(:dir(rtl)),
+.scrollbutton-up:dir(ltr),
+.scrollbutton-down:-moz-locale-dir(rtl),
+.scrollbutton-down:dir(rtl) {
+  border-right: solid 1px rgba(255, 255, 255, .1);
+  border-left: solid 1px transparent;
+  box-shadow: 3px 0px 3px -3px var(--theme-sidebar-background);
+}
+
+.scrollbutton-down:-moz-locale-dir(ltr):not(:dir(rtl)),
+.scrollbutton-down:dir(ltr),
+.scrollbutton-up:-moz-locale-dir(rtl),
+.scrollbutton-up:dir(rtl) {
+  border-right: solid 1px transparent;
+  border-left: solid 1px rgba(255, 255, 255, .1);
+  box-shadow: -3px 0px 3px -3px var(--theme-sidebar-background);
+}
+
+.scrollbutton-up[disabled],
+.scrollbutton-down[disabled] {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
+.scrollbutton-up > .toolbarbutton-icon:dir(rtl),
+.scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr):not(:dir(rtl)),
+.scrollbutton-down > .toolbarbutton-icon:dir(ltr) {
+  transform: scaleX(-1);
+}
+
+.breadcrumbs-widget-item {
+  background-color: transparent;
+  -moz-appearance: none;
+  min-height: 24px;
+  min-width: 65px;
+  margin: 0;
+  padding: 0 8px 0 20px;
+  border: none;
+  outline: none;
+  color: hsl(210,30%,85%);
+  position: relative;
+}
+
+.breadcrumbs-widget-item > .button-box {
+  border: none;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+:root[platform="win"] .breadcrumbs-widget-item:-moz-focusring > .button-box {
+  border-width: 0;
+}
+
+.breadcrumbs-widget-item::before {
+  content: "";
+  position: absolute;
+  top: 1px;
+  offset-inline-start: 0;
+  width: 12px;
+  height: 22px;
+  background-repeat: no-repeat;
+  /* Given the 1/2 aspect ratio of the separator pseudo-element and the 45deg angle of
+     the arrow shape, we need the arrow edges to be at this position from the start of
+     the gradient line. */
+  --position: 66.5%;
+  /* The color of the thin line in the arrow-shaped separator between 2 unselected
+     crumbs. There is no theme variable for this, this used to be an image. */
+  --line-color: #ACACAC;
+  --background-color: var(--theme-body-background);
+}
+
+#debugger-toolbar .breadcrumbs-widget-item::before {
+  --background-color: var(--theme-toolbar-background);
+}
+
+.theme-dark .breadcrumbs-widget-item::before {
+  --line-color: #6E6E6E;
+}
+
+.breadcrumbs-widget-item:first-child::before {
+  /* The first crumb does not need any separator before itself */
+  content: unset;
+}
+
+.breadcrumbs-widget-item:dir(rtl)::before {
+  transform: scaleX(-1);
+}
+
+.breadcrumbs-widget-item:not([checked])::before {
+  background-color: var(--background-color);
+  background-image:
+    linear-gradient(45deg,
+                    var(--background-color) 30%,
+                    transparent),
+    linear-gradient(-45deg,
+                    transparent,
+                    var(--background-color) 70%,
+                    var(--background-color)),
+    linear-gradient(45deg,
+                    transparent var(--position),
+                    var(--line-color) var(--position),
+                    var(--line-color) calc(var(--position) + 1px),
+                    transparent 0),
+    linear-gradient(-45deg,
+                    transparent calc(100% - var(--position)),
+                    var(--line-color) calc(100% - var(--position)),
+                    var(--line-color) calc(calc(100% - var(--position)) + 1px),
+                    transparent 0);
+  background-size:
+    100% 50%,
+    100% 50%,
+    100%,
+    100%;
+  background-position:
+    left bottom,
+    left top,
+    left top,
+    left top;
+}
+
+.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item::before {
+  background-color: var(--theme-selection-background);
+  background-image:
+    linear-gradient(45deg,
+                    transparent var(--position),
+                    var(--background-color) 0),
+    linear-gradient(-45deg,
+                    var(--background-color) calc(100% - var(--position)),
+                    transparent 0);
+  background-size: unset;
+}
+
+.breadcrumbs-widget-item[checked]::before {
+  background-image:
+    linear-gradient(45deg,
+                    transparent var(--position),
+                    var(--theme-selection-background) 0),
+    linear-gradient(-45deg,
+                    var(--theme-selection-background) calc(100% - var(--position)),
+                    var(--background-color) 0);
+}
+
+.breadcrumbs-widget-item[checked] {
+  background-color: var(--theme-selection-background);
+}
+
+.breadcrumbs-widget-item:first-child {
+  background-image: none;
+}
+
+/* RTL support: move the images that were on the left to the right,
+ * and move images that were on the right to the left.
+ */
+.breadcrumbs-widget-item:dir(rtl) {
+  padding: 0 20px 0 8px;
+}
+
+.breadcrumbs-widget-item:dir(rtl),
+.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item:dir(rtl) {
+  background-position: center right;
+}
+
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
+  color: var(--theme-selection-color);
+}
+
+.theme-dark .breadcrumbs-widget-item {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .breadcrumbs-widget-item {
+  color: var(--theme-body-color);
+}
+
+.breadcrumbs-widget-item-id {
+  color: var(--theme-body-color-alt);
+}
+
+.breadcrumbs-widget-item-classes {
+  color: var(--theme-content-color1);
+}
+
+.breadcrumbs-widget-item-pseudo-classes {
+  color: var(--theme-highlight-lightorange);
+}
+
+.theme-dark .breadcrumbs-widget-item:not([checked]):hover label {
+  color: white;
+}
+
+.theme-light .breadcrumbs-widget-item:not([checked]):hover label {
+  color: black;
+}
+
+/* Firebug theme support for breadcrumbs widget. */
+
+.theme-firebug .breadcrumbs-widget-item {
+  margin-inline-start: 10px;
+  margin-inline-end: 1px;
+  background-image: none;
+  border: 1px solid transparent;
+  color: #141414;
+  border-radius: 2px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  font-size: var(--theme-toolbar-font-size);
+}
+
+.theme-firebug .breadcrumbs-widget-item:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: transparent linear-gradient(
+              rgba(255, 255, 255, 0.4),
+              rgba(255, 255, 255, 0.2)) no-repeat;
+  box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.6) inset,
+              0 0 1px rgba(255, 255, 255, 0.6) inset,
+              0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.theme-firebug .breadcrumbs-widget-item > .button-box {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.theme-firebug .breadcrumbs-widget-item:first-child {
+  margin: 0;
+}
+
+.theme-firebug .breadcrumbs-widget-item:not(:first-child)::before {
+  content: url(chrome://devtools/skin/images/firebug/breadcrumbs-divider.svg);
+  background: none;
+  position: relative;
+  left: -3px;
+  margin: 0 0 0 -5px;
+  padding: 0;
+  width: 5px;
+}
+
+/* Breadcrumbs Separators (reset selection styles) */
+.theme-firebug .breadcrumbs-widget-item[checked],
+.theme-firebug .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id,
+.theme-firebug .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag,
+.theme-firebug .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes,
+.theme-firebug .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
+  background: none;
+  font-weight: bold;
+  color: inherit;
+}
+
+/* The first rule is there only to make sure the default rule from
+widgets.css is overwritten. */
+.theme-firebug .breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item {
+  background: none;
+}
+
+.theme-firebug .breadcrumbs-widget-item .breadcrumbs-widget-item-tag {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+/* Breadcrumbs Scrolling Buttons */
+
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-up,
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-down {
+  padding: 0;
+  box-shadow: none;
+  outline: 1px solid var(--theme-splitter-color);
+}
+
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-up:hover,
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-down:hover {
+  border: 1px transparent solid !important;
+  box-shadow: none !important;
+}
+
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-up:active,
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-down:active {
+  background: none !important;
+}
+
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
+.theme-firebug .breadcrumbs-widget-container .scrollbutton-down:not([disabled]):active:hover > .toolbarbutton-icon {
+  background-position: 0 center;
+}
