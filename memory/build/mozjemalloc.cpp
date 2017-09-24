@@ -301,10 +301,6 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 #endif
 
-#ifdef XP_WIN
-   /* MSVC++ does not support C99 variable-length arrays. */
-#  define RB_NO_C99_VARARRAYS
-#endif
 #include "rb.h"
 
 #ifdef MOZ_DEBUG
