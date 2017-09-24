@@ -10,6 +10,10 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/dom/IdleDeadline.h"
+#include "mozilla/dom/WindowBinding.h" // For IdleRequestCallback/Options
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -262,6 +266,109 @@ ChromeUtils::ShallowClone(GlobalObject& aGlobal,
 
   cleanup.release();
   aRetval.set(obj);
+}
+
+namespace {
+  class IdleDispatchRunnable final : public IdleRunnable
+                                   , public nsITimerCallback
+  {
+  public:
+    NS_DECL_ISUPPORTS_INHERITED
+
+    IdleDispatchRunnable(nsIGlobalObject* aParent,
+                         IdleRequestCallback& aCallback)
+      : IdleRunnable("ChromeUtils::IdleDispatch")
+      , mCallback(&aCallback)
+      , mParent(aParent)
+    {}
+
+    NS_IMETHOD Run() override
+    {
+      if (mCallback) {
+        CancelTimer();
+
+        auto deadline = mDeadline - TimeStamp::ProcessCreation();
+
+        ErrorResult rv;
+        RefPtr<IdleDeadline> idleDeadline =
+          new IdleDeadline(mParent, mTimedOut, deadline.ToMilliseconds());
+
+        mCallback->Call(*idleDeadline, rv, "ChromeUtils::IdleDispatch handler");
+        mCallback = nullptr;
+        mParent = nullptr;
+
+        rv.SuppressException();
+        return rv.StealNSResult();
+      }
+      return NS_OK;
+    }
+
+    void SetDeadline(TimeStamp aDeadline) override
+    {
+      mDeadline = aDeadline;
+    }
+
+    NS_IMETHOD Notify(nsITimer* aTimer) override
+    {
+      mTimedOut = true;
+      SetDeadline(TimeStamp::Now());
+      return Run();
+    }
+
+    void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override
+    {
+      MOZ_ASSERT(aTarget);
+      MOZ_ASSERT(!mTimer);
+      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+      if (mTimer) {
+        mTimer->SetTarget(aTarget);
+        mTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
+      }
+    }
+
+  protected:
+    virtual ~IdleDispatchRunnable()
+    {
+      CancelTimer();
+    }
+
+  private:
+    void CancelTimer()
+    {
+      if (mTimer) {
+        mTimer->Cancel();
+        mTimer = nullptr;
+      }
+    }
+
+    RefPtr<IdleRequestCallback> mCallback;
+    nsCOMPtr<nsIGlobalObject> mParent;
+
+    nsCOMPtr<nsITimer> mTimer;
+
+    TimeStamp mDeadline{};
+    bool mTimedOut = false;
+  };
+
+  NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable, nsITimerCallback)
+} // anonymous namespace
+
+/* static */ void
+ChromeUtils::IdleDispatch(const GlobalObject& aGlobal,
+                          IdleRequestCallback& aCallback,
+                          const IdleRequestOptions& aOptions,
+                          ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+
+  auto runnable = MakeRefPtr<IdleDispatchRunnable>(global, aCallback);
+
+  if (aOptions.mTimeout.WasPassed()) {
+    aRv = NS_IdleDispatchToCurrentThread(runnable.forget(), aOptions.mTimeout.Value());
+  } else {
+    aRv = NS_IdleDispatchToCurrentThread(runnable.forget());
+  }
 }
 
 /* static */ void
