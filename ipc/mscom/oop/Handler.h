@@ -14,6 +14,7 @@
 #include <objidl.h>
 
 #include "mozilla/mscom/Aggregation.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 
 /* WARNING! The code in this file may be loaded into the address spaces of other
@@ -79,6 +80,11 @@ public:
    * The default implementation is the identity function.
    */
   virtual REFIID MarshalAs(REFIID aRequestedIid) { return aRequestedIid; }
+
+  virtual HRESULT GetMarshalInterface(REFIID aMarshalAsIid,
+                                      NotNull<IUnknown*> aProxy,
+                                      NotNull<IID*> aOutIid,
+                                      NotNull<IUnknown**> aOutUnk);
 
   /**
    * Called when the implementer must provide the size of the payload.

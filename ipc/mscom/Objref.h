@@ -8,6 +8,9 @@
 #define mozilla_mscom_Objref_h
 
 #include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
+
+#include <guiddef.h>
 
 struct IStream;
 
@@ -38,6 +41,15 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream,
  */
 uint32_t
 GetOBJREFSize(NotNull<IStream*> aStream);
+
+/**
+ * Overrides the IID in a serialized proxy with the specified IID.
+ * @param aStream Pointer to a stream containing a serialized proxy.
+ * @param aStart Offset to the beginning of the serialized proxy within aStream.
+ * @param aNewIid The replacement IID to apply to the serialized proxy.
+ */
+bool
+SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid);
 
 } // namespace mscom
 } // namespace mozilla
