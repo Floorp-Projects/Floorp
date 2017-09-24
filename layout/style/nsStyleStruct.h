@@ -198,6 +198,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
                         // mFont.size should be used for display purposes
                         // while mSize is the value to return in
                         // getComputedStyle() for example.
+
+  // In stylo these three track whether the size is keyword-derived
+  // and if so if it has been modified by a factor/offset
+  float mFontSizeFactor;
+  nscoord mFontSizeOffset;
+  uint8_t mFontSizeKeyword; // NS_STYLE_FONT_SIZE_*, is NS_STYLE_FONT_SIZE_NO_KEYWORD
+                            // when not keyword-derived
+
   uint8_t mGenericID;   // [inherited] generic CSS font family, if any;
                         // value is a kGenericFont_* constant, see nsFont.h.
 
