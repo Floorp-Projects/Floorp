@@ -398,7 +398,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
       return rv;
 
     // Create a file to save our stream into. Should we scramble the name?
-    filename.Insert(NS_LITERAL_CSTRING("plugin-"), 0);
+    filename.InsertLiteral("plugin-", 0);
     rv = pluginTmp->AppendNative(filename);
     if (NS_FAILED(rv))
       return rv;

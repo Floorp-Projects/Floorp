@@ -2242,8 +2242,8 @@ nsHttpChannel::ProcessAltService()
 
     nsAutoCString scheme;
     mURI->GetScheme(scheme);
-    bool isHttp = scheme.Equals(NS_LITERAL_CSTRING("http"));
-    if (!isHttp && !scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+    bool isHttp = scheme.EqualsLiteral("http");
+    if (!isHttp && !scheme.EqualsLiteral("https")) {
         return;
     }
 
@@ -6401,8 +6401,8 @@ nsHttpChannel::BeginConnect()
     RefPtr<AltSvcMapping> mapping;
     if (!mConnectionInfo && mAllowAltSvc && // per channel
         !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
-        (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
-         scheme.Equals(NS_LITERAL_CSTRING("https"))) &&
+        (scheme.EqualsLiteral("http") ||
+         scheme.EqualsLiteral("https")) &&
         (!proxyInfo || proxyInfo->IsDirect()) &&
         (mapping = gHttpHandler->GetAltServiceMapping(scheme,
                                                       host, port,
@@ -6429,15 +6429,15 @@ nsHttpChannel::BeginConnect()
         if (consoleService) {
             nsAutoString message(NS_LITERAL_STRING("Alternate Service Mapping found: "));
             AppendASCIItoUTF16(scheme.get(), message);
-            message.Append(NS_LITERAL_STRING("://"));
+            message.AppendLiteral(u"://");
             AppendASCIItoUTF16(host.get(), message);
-            message.Append(NS_LITERAL_STRING(":"));
+            message.AppendLiteral(u":");
             message.AppendInt(port);
-            message.Append(NS_LITERAL_STRING(" to "));
+            message.AppendLiteral(u" to ");
             AppendASCIItoUTF16(scheme.get(), message);
-            message.Append(NS_LITERAL_STRING("://"));
+            message.AppendLiteral(u"://");
             AppendASCIItoUTF16(mapping->AlternateHost().get(), message);
-            message.Append(NS_LITERAL_STRING(":"));
+            message.AppendLiteral(u":");
             message.AppendInt(mapping->AlternatePort());
             consoleService->LogStringMessage(message.get());
         }

@@ -498,7 +498,7 @@ public:
       // Try again with d3d9, but record the failure reason
       // into a new var to avoid overwriting the d3d11 failure.
       failureReason = &secondFailureReason;
-      mFailureReason.Append(NS_LITERAL_CSTRING("; "));
+      mFailureReason.AppendLiteral("; ");
     }
 
     const nsCString& blacklistedDLL = FindD3D9BlacklistedDLL();
@@ -636,9 +636,9 @@ WMFVideoMFTManager::Init()
     // If we had some failures but eventually made it work,
     // make sure we preserve the messages.
     if (mDXVA2Manager->IsD3D11()) {
-      mDXVAFailureReason.Append(NS_LITERAL_CSTRING("Using D3D11 API"));
+      mDXVAFailureReason.AppendLiteral("Using D3D11 API");
     } else {
-      mDXVAFailureReason.Append(NS_LITERAL_CSTRING("Using D3D9 API"));
+      mDXVAFailureReason.AppendLiteral("Using D3D9 API");
     }
   }
 

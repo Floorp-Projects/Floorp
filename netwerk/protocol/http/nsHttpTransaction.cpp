@@ -1949,7 +1949,7 @@ nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header)
       ToLowerCase(schema);
 
       nsAutoCString contractid;
-      contractid.Assign(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+      contractid.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
       contractid.Append(schema);
 
       // using a new instance because of thread safety of auth modules refcnt

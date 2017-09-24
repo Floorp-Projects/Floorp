@@ -226,22 +226,22 @@ struct GMPCapabilityAndVersion
   {
     nsCString s;
     s.Append(mName);
-    s.Append(" version=");
+    s.AppendLiteral(" version=");
     s.Append(mVersion);
-    s.Append(" tags=[");
+    s.AppendLiteral(" tags=[");
     nsCString tags;
     for (const GMPCapability& cap : mCapabilities) {
       if (!tags.IsEmpty()) {
-        tags.Append(" ");
+        tags.AppendLiteral(" ");
       }
       tags.Append(cap.mAPIName);
       for (const nsCString& tag : cap.mAPITags) {
-        tags.Append(":");
+        tags.AppendLiteral(":");
         tags.Append(tag);
       }
     }
     s.Append(tags);
-    s.Append("]");
+    s.AppendLiteral("]");
     return s;
   }
 
@@ -259,7 +259,7 @@ GMPCapabilitiesToString()
   nsCString s;
   for (const GMPCapabilityAndVersion& gmp : *sGMPCapabilities) {
     if (!s.IsEmpty()) {
-      s.Append(", ");
+      s.AppendLiteral(", ");
     }
     s.Append(gmp.ToString());
   }

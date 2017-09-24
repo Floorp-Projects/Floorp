@@ -52,9 +52,9 @@ GetFrameState(nsIFrame* aFrame)
 #define FRAME_STATE_BIT(group_, value_, name_)                                \
   if ((state & NS_FRAME_STATE_BIT(value_)) && groups.Contains(#group_)) {     \
     if (!result.IsEmpty()) {                                                  \
-      result.Insert(" | ", 0);                                                \
+      result.InsertLiteral(" | ", 0);                                         \
     }                                                                         \
-    result.Insert(#name_, 0);                                                 \
+    result.InsertLiteral(#name_, 0);                                          \
     state = state & ~NS_FRAME_STATE_BIT(value_);                              \
   }
 #include "nsFrameStateBits.h"

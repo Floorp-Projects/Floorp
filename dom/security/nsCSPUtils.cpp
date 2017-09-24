@@ -142,7 +142,7 @@ CSP_LogMessage(const nsAString& aMessage,
 
   // Prepending CSP to the outgoing console message
   nsString cspMsg;
-  cspMsg.Append(NS_LITERAL_STRING("Content Security Policy: "));
+  cspMsg.AppendLiteral(u"Content Security Policy: ");
   cspMsg.Append(aMessage);
 
   // Currently 'aSourceLine' is not logged to the console, because similar
@@ -152,9 +152,9 @@ CSP_LogMessage(const nsAString& aMessage,
   // E.g. 'aSourceLine' might be: 'onclick attribute on DIV element'.
   // In such cases we append 'aSourceLine' directly to the error message.
   if (!aSourceLine.IsEmpty()) {
-    cspMsg.Append(NS_LITERAL_STRING(" Source: "));
+    cspMsg.AppendLiteral(" Source: ");
     cspMsg.Append(aSourceLine);
-    cspMsg.Append(NS_LITERAL_STRING("."));
+    cspMsg.AppendLiteral(u".");
   }
 
   nsresult rv;

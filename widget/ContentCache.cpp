@@ -42,15 +42,15 @@ class GetRectText : public nsAutoCString
 public:
   explicit GetRectText(const LayoutDeviceIntRect& aRect)
   {
-    Assign("{ x=");
+    AssignLiteral("{ x=");
     AppendInt(aRect.x);
-    Append(", y=");
+    AppendLiteral(", y=");
     AppendInt(aRect.y);
-    Append(", width=");
+    AppendLiteral(", width=");
     AppendInt(aRect.width);
-    Append(", height=");
+    AppendLiteral(", height=");
     AppendInt(aRect.height);
-    Append(" }");
+    AppendLiteral(" }");
   }
   virtual ~GetRectText() {}
 };
@@ -61,14 +61,14 @@ public:
   explicit GetWritingModeName(const WritingMode& aWritingMode)
   {
     if (!aWritingMode.IsVertical()) {
-      Assign("Horizontal");
+      AssignLiteral("Horizontal");
       return;
     }
     if (aWritingMode.IsVerticalLR()) {
-      Assign("Vertical (LTR)");
+      AssignLiteral("Vertical (LTR)");
       return;
     }
-    Assign("Vertical (RTL)");
+    AssignLiteral("Vertical (RTL)");
   }
   virtual ~GetWritingModeName() {}
 };

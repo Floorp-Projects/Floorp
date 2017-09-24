@@ -2592,7 +2592,7 @@ WorkerPrivate::MemoryReporter::TryToMapAddon(nsACString &path)
   }
 
   static const size_t explicitLength = strlen("explicit/");
-  addonId.Insert(NS_LITERAL_CSTRING("add-ons/"), 0);
+  addonId.InsertLiteral("add-ons/", 0);
   addonId += "/";
   path.Insert(addonId, explicitLength);
 }

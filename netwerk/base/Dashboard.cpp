@@ -888,8 +888,8 @@ HttpConnInfo::SetHTTP1ProtocolVersion(uint8_t pv)
 void
 HttpConnInfo::SetHTTP2ProtocolVersion(uint8_t pv)
 {
-    MOZ_ASSERT (pv == HTTP_VERSION_2);
-    protocolVersion.Assign(u"h2");
+    MOZ_ASSERT(pv == HTTP_VERSION_2);
+    protocolVersion.AssignLiteral(u"h2");
 }
 
 NS_IMETHODIMP

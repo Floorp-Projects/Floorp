@@ -660,7 +660,7 @@ nsUrlClassifierDBServiceWorker::NotifyUpdateObserver(nsresult aUpdateStatus)
   }
 
   // Do not record telemetry for testing tables.
-  if (!provider.Equals(TESTING_TABLE_PROVIDER_NAME)) {
+  if (!provider.EqualsLiteral(TESTING_TABLE_PROVIDER_NAME)) {
     Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR, provider,
                           NS_ERROR_GET_CODE(updateStatus));
   }

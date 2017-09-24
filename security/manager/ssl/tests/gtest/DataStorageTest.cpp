@@ -130,7 +130,7 @@ TEST_F(psm_DataStorageTest, InputValidation)
   EXPECT_EQ(NS_OK, storage->Put(longKey, testValue, DataStorage_Persistent));
   result = storage->Get(longKey, DataStorage_Persistent);
   EXPECT_STREQ("value", result.get());
-  longKey.Append("a");
+  longKey.AppendLiteral("a");
   // A key longer than that will not work
   EXPECT_EQ(NS_ERROR_INVALID_ARG,
             storage->Put(longKey, testValue, DataStorage_Persistent));
@@ -145,7 +145,7 @@ TEST_F(psm_DataStorageTest, InputValidation)
   EXPECT_EQ(NS_OK, storage->Put(testKey, longValue, DataStorage_Persistent));
   result = storage->Get(testKey, DataStorage_Persistent);
   EXPECT_STREQ(longValue.get(), result.get());
-  longValue.Append("a");
+  longValue.AppendLiteral("a");
   // A value longer than that will not work
   storage->Remove(testKey, DataStorage_Persistent);
   EXPECT_EQ(NS_ERROR_INVALID_ARG,

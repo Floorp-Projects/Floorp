@@ -305,11 +305,11 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
 
     if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
       if (!aCookieString.IsEmpty()) {
-        aCookieString.Append("; ");
+        aCookieString.AppendLiteral("; ");
       }
       if (!cookie->Name().IsEmpty()) {
         aCookieString.Append(cookie->Name().get());
-        aCookieString.Append("=");
+        aCookieString.AppendLiteral("=");
         aCookieString.Append(cookie->Value().get());
       } else {
         aCookieString.Append(cookie->Value().get());
@@ -616,4 +616,3 @@ CookieServiceChild::RunInTransaction(nsICookieTransactionCallback* aCallback)
 
 } // namespace net
 } // namespace mozilla
-

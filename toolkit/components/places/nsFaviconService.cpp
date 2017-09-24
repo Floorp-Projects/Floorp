@@ -402,7 +402,7 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
   // for database size and UX concerns.
   // Don't store favicons for error pages too.
   if (icon.spec.Equals(page.spec) ||
-      icon.spec.Equals(FAVICON_ERRORPAGE_URL)) {
+      icon.spec.EqualsLiteral(FAVICON_ERRORPAGE_URL)) {
     return NS_OK;
   }
 

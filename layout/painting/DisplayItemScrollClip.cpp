@@ -48,7 +48,7 @@ DisplayItemScrollClip::ToString(const DisplayItemScrollClip* aScrollClip)
     str.AppendPrintf("<%s>%s", scrollClip->mClip ? scrollClip->mClip->ToString().get() : "null",
                      scrollClip->mIsAsyncScrollable ? " [async-scrollable]" : "");
     if (scrollClip->mParent) {
-      str.Append(", ");
+      str.AppendLiteral(", ");
     }
   }
   return str;

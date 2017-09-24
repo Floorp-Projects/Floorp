@@ -515,7 +515,7 @@ nsTerminator::UpdateTelemetry()
       continue;
     }
     if (fields++ > 0) {
-      telemetryData->Append(", ");
+      telemetryData->AppendLiteral(", ");
     }
     telemetryData->AppendLiteral(R"(")");
     telemetryData->Append(shutdownStep.mTopic);

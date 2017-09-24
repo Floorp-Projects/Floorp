@@ -176,7 +176,7 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
       // and there is a directory "Mac HD" at its root. If such a
       // directory doesn't exist, we'll assume this is an HFS path.
       FSRef testRef;
-      possibleVolName.Insert("/", 0);
+      possibleVolName.InsertLiteral("/", 0);
       if (::FSPathMakeRef((UInt8*)possibleVolName.get(), &testRef, nullptr) != noErr)
         bHFSPath = true;
     }
