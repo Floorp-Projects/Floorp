@@ -13,9 +13,13 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.*;
+import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
+import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.PreferenceCategory;
+import android.preference.PreferenceScreen;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -24,7 +28,6 @@ import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -34,7 +37,6 @@ import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
@@ -103,7 +105,6 @@ public class FxAccountStatusFragment
   protected CheckBoxPreference passwordsPreference;
 
   protected EditTextPreference deviceNamePreference;
-  protected SwitchPreference syncOverMeteredPreference;
   protected Preference syncServerPreference;
   protected Preference syncNowPreference;
 
@@ -182,9 +183,6 @@ public class FxAccountStatusFragment
     historyPreference.setOnPreferenceClickListener(this);
     tabsPreference.setOnPreferenceClickListener(this);
     passwordsPreference.setOnPreferenceClickListener(this);
-
-    syncOverMeteredPreference = (SwitchPreference) ensureFindPreference(FxAccountSyncAdapter.PREFS_SYNC_METERED);
-    syncOverMeteredPreference.setOnPreferenceChangeListener(this);
 
     deviceNamePreference = (EditTextPreference) ensureFindPreference("device_name");
     deviceNamePreference.setOnPreferenceChangeListener(this);
@@ -948,10 +946,6 @@ public class FxAccountStatusFragment
       fxAccount.requestImmediateSync(STAGES_TO_SYNC_ON_DEVICE_NAME_CHANGE, null, true);
       hardRefresh(); // Updates the value displayed to the user, among other things.
       return true;
-    }
-
-    if (preference == syncOverMeteredPreference) {
-      GeckoSharedPrefs.forApp(getContext()).edit().putBoolean(FxAccountSyncAdapter.PREFS_SYNC_METERED, (Boolean) newValue).apply();
     }
 
     // For everything else, accept the change.
