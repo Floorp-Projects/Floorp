@@ -634,7 +634,8 @@ TEST(TestCookie,TestCookieMain)
                                                    false,                             // is httponly
                                                    true,                              // is session
                                                    INT64_MAX,                            // expiry time
-                                                   &attrs)));                         // originAttributes
+                                                   &attrs,                            // originAttributes
+                                                   nsICookie2::SAMESITE_UNSET)));
     EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->AddNative(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
                                                    NS_LITERAL_CSTRING("/foo"),           // path
                                                    NS_LITERAL_CSTRING("test2"),          // name
@@ -643,7 +644,8 @@ TEST(TestCookie,TestCookieMain)
                                                    true,                              // is httponly
                                                    true,                              // is session
                                                    PR_Now() / PR_USEC_PER_SEC + 2,       // expiry time
-                                                   &attrs)));                         // originAttributes
+                                                   &attrs,                            // originAttributes
+                                                   nsICookie2::SAMESITE_UNSET)));
     EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->AddNative(NS_LITERAL_CSTRING("new.domain"),     // domain
                                                    NS_LITERAL_CSTRING("/rabbit"),        // path
                                                    NS_LITERAL_CSTRING("test3"),          // name
@@ -652,7 +654,8 @@ TEST(TestCookie,TestCookieMain)
                                                    false,                             // is httponly
                                                    true,                              // is session
                                                    INT64_MAX,                            // expiry time
-                                                   &attrs)));                         // originAttributes
+                                                   &attrs,                            // originAttributes
+                                                   nsICookie2::SAMESITE_UNSET)));
     // confirm using enumerator
     nsCOMPtr<nsISimpleEnumerator> enumerator;
     EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))));
@@ -706,7 +709,8 @@ TEST(TestCookie,TestCookieMain)
                                                    false,                             // is httponly
                                                    true,                              // is session
                                                    INT64_MIN,                            // expiry time
-                                                   &attrs)));                         // originAttributes
+                                                   &attrs,                            // originAttributes
+                                                   nsICookie2::SAMESITE_UNSET)));
     EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CookieExistsNative(newDomainCookie, &attrs, &found)));
     EXPECT_FALSE(found);
     // sleep four seconds, to make sure the second cookie has expired
@@ -764,7 +768,52 @@ TEST(TestCookie,TestCookieMain)
       }
     }
     GetACookie(cookieService, "http://creation.ordering.tests/", nullptr, getter_Copies(cookie));
+
     EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
+
+
+    // *** SameSite attribute - parsing and cookie storage tests
+    // Clear the cookies
+    EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
+
+    // Set cookies with various incantations of the samesite attribute:
+    // No same site attribute present
+    SetACookie(cookieService, "http://samesite.test", nullptr, "unset=yes", nullptr);
+    // samesite attribute present but with no value
+    SetACookie(cookieService, "http://samesite.test", nullptr, "unspecified=yes; samesite", nullptr);
+    // samesite=strict
+    SetACookie(cookieService, "http://samesite.test", nullptr, "strict=yes; samesite=strict", nullptr);
+    // samesite=lax
+    SetACookie(cookieService, "http://samesite.test", nullptr, "lax=yes; samesite=lax", nullptr);
+
+    EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))));
+    i = 0;
+
+    // check the cookies for the required samesite value
+    while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsISupports> cookie;
+      if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
+      ++i;
+
+      // keep tabs on the second and third cookies, so we can check them later
+      nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+      if (!cookie2) break;
+      nsAutoCString name;
+      cookie2->GetName(name);
+      int32_t sameSiteAttr;
+      cookie2->GetSameSite(&sameSiteAttr);
+      if (name.EqualsLiteral("unset")) {
+        EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_UNSET);
+      } else if (name.EqualsLiteral("unspecified")) {
+        EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_STRICT);
+      } else if (name.EqualsLiteral("strict")) {
+        EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_STRICT);
+      } else if (name.EqualsLiteral("lax")) {
+        EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_LAX);
+      }
+    }
+
+    EXPECT_TRUE(i == 4);
 
     // XXX the following are placeholders: add these tests please!
     // *** "noncompliant cookie" tests
