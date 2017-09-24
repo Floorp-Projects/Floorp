@@ -195,6 +195,7 @@ struct nsCookieAttributes
   bool isSession;
   bool isSecure;
   bool isHttpOnly;
+  int8_t sameSite;
 };
 
 class nsCookieService final : public nsICookieService

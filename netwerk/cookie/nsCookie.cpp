@@ -79,7 +79,8 @@ nsCookie::Create(const nsACString &aName,
                  bool              aIsSession,
                  bool              aIsSecure,
                  bool              aIsHttpOnly,
-                 const OriginAttributes& aOriginAttributes)
+                 const OriginAttributes& aOriginAttributes,
+                 int32_t           aSameSite)
 {
   // Ensure mValue contains a valid UTF-8 sequence. Otherwise XPConnect will
   // truncate the string after the first invalid octet.
@@ -108,11 +109,16 @@ nsCookie::Create(const nsACString &aName,
   if (aCreationTime > gLastCreationTime)
     gLastCreationTime = aCreationTime;
 
+  // If aSameSite is not a sensible value, assume strict
+  if (aSameSite < 0 || aSameSite > nsICookie2::SAMESITE_STRICT) {
+    aSameSite = nsICookie2::SAMESITE_STRICT;
+  }
+
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
                               aExpiry, aLastAccessed, aCreationTime,
                               aIsSession, aIsSecure, aIsHttpOnly,
-                              aOriginAttributes);
+                              aOriginAttributes, aSameSite);
 }
 
 size_t
@@ -151,6 +157,7 @@ NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = 0;      
 NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = 0;              return NS_OK; }
 NS_IMETHODIMP nsCookie::GetCreationTime(int64_t *aCreation){ *aCreation = CreationTime(); return NS_OK; }
 NS_IMETHODIMP nsCookie::GetLastAccessed(int64_t *aTime)    { *aTime = LastAccessed();   return NS_OK; }
+NS_IMETHODIMP nsCookie::GetSameSite(int32_t *aSameSite)    { *aSameSite = SameSite();   return NS_OK; }
 
 NS_IMETHODIMP
 nsCookie::GetOriginAttributes(JSContext *aCx, JS::MutableHandle<JS::Value> aVal)
