@@ -99,6 +99,7 @@ testing/web-platform/products/
 mobile/android/gradle/.gradle
 
 # XCode project cruft
+/*.xcodeproj/
 embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/project.xcworkspace/xcuserdata
 embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/xcuserdata
 
