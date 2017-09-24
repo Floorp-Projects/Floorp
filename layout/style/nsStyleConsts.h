@@ -588,6 +588,7 @@ enum class StyleDisplay : uint8_t {
 #define NS_STYLE_FONT_SIZE_XXXLARGE             7  // Only used by <font size="7">. Not specifiable in CSS.
 #define NS_STYLE_FONT_SIZE_LARGER               8
 #define NS_STYLE_FONT_SIZE_SMALLER              9
+#define NS_STYLE_FONT_SIZE_NO_KEYWORD          10 // Used by Servo to track the "no keyword" case
 
 // See nsStyleFont
 // We should eventually stop using the NS_STYLE_* variants here.
