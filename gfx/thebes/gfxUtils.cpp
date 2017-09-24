@@ -1060,7 +1060,7 @@ EncodeSourceSurfaceInternal(SourceSurface* aSurface,
 
   nsCString string("data:");
   string.Append(aMimeType);
-  string.Append(";base64,");
+  string.AppendLiteral(";base64,");
   string.Append(encodedImg);
 
   if (aFile) {

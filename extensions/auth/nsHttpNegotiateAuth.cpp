@@ -195,7 +195,7 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
     // with non-standard servers that use stuff like "khttp/f.q.d.n"
     // instead.
     //
-    service.Insert("HTTP@", 0);
+    service.InsertLiteral("HTTP@", 0);
 
     const char *contractID;
     if (TestBoolPref(kNegotiateAuthSSPI)) {
@@ -383,8 +383,8 @@ class GetNextTokenRunnable final : public mozilla::Runnable
 
             // Use negotiate service to call GenerateCredentials outside of main thread
             nsAutoCString contractId;
-            contractId.Assign(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
-            contractId.Append("negotiate");
+            contractId.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+            contractId.AppendLiteral("negotiate");
             nsCOMPtr<nsIHttpAuthenticator> authenticator =
               do_GetService(contractId.get(), &rv);
             NS_ENSURE_SUCCESS(rv, rv);
