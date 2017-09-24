@@ -5,7 +5,7 @@
 
 /* globals window, document, PerformanceView, ToolbarView, RecordingsView, DetailsView */
 
-/* exported Cc, Ci, Cu, Cr, loader */
+/* exported Cc, Ci, Cu, Cr, loader, Promise */
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
@@ -17,6 +17,10 @@ var { Task } = require("devtools/shared/task");
 /* exported Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout */
 var { Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 var { PrefObserver } = require("devtools/client/shared/prefs");
+
+// Use privileged promise in panel documents to prevent having them to freeze
+// during toolbox destruction. See bug 1402779.
+var Promise = require("Promise");
 
 // Events emitted by various objects in the panel.
 var EVENTS = require("devtools/client/performance/events");

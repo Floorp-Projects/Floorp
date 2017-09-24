@@ -64,6 +64,10 @@ const {addDebuggerToGlobal} = require("resource://gre/modules/jsdebugger.jsm");
 const {OS} = require("resource://gre/modules/osfile.jsm");
 const {Reflect} = require("resource://gre/modules/reflect.jsm");
 
+// Use privileged promise in panel documents to prevent having them to freeze
+// during toolbox destruction. See bug 1402779.
+const Promise = require("Promise");
+
 XPCOMUtils.defineConstant(this, "SCRATCHPAD_CONTEXT_CONTENT", SCRATCHPAD_CONTEXT_CONTENT);
 XPCOMUtils.defineConstant(this, "SCRATCHPAD_CONTEXT_BROWSER", SCRATCHPAD_CONTEXT_BROWSER);
 XPCOMUtils.defineConstant(this, "BUTTON_POSITION_SAVE", BUTTON_POSITION_SAVE);
