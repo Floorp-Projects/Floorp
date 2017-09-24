@@ -134,24 +134,30 @@ struct RedBlackTree
   T rbt_nil;
 };
 
+#define rb_node_field(a_node, a_field) (a_node)->a_field
+
 /* Left accessors. */
-#define rbp_left_get(a_type, a_field, a_node) (a_node)->a_field.Left()
+#define rbp_left_get(a_type, a_field, a_node)                                  \
+  rb_node_field(a_node, a_field).Left()
 #define rbp_left_set(a_type, a_field, a_node, a_left)                          \
-  (a_node)->a_field.SetLeft(a_left)
+  rb_node_field(a_node, a_field).SetLeft(a_left)
 
 /* Right accessors. */
-#define rbp_right_get(a_type, a_field, a_node) (a_node)->a_field.Right()
+#define rbp_right_get(a_type, a_field, a_node)                                 \
+  rb_node_field(a_node, a_field).Right()
 #define rbp_right_set(a_type, a_field, a_node, a_right)                        \
-  (a_node)->a_field.SetRight(a_right)
+  rb_node_field(a_node, a_field).SetRight(a_right)
 
 /* Color accessors. */
-#define rbp_red_get(a_type, a_field, a_node) (a_node)->a_field.IsRed()
+#define rbp_red_get(a_type, a_field, a_node)                                   \
+  rb_node_field(a_node, a_field).IsRed()
 #define rbp_color_set(a_type, a_field, a_node, a_red)                          \
-  (a_node)->a_field.SetColor(a_red ? NodeColor::Red : NodeColor::Black)
+  rb_node_field(a_node, a_field)                                               \
+    .SetColor(a_red ? NodeColor::Red : NodeColor::Black)
 #define rbp_red_set(a_type, a_field, a_node)                                   \
-  (a_node)->a_field.SetColor(NodeColor::Red)
+  rb_node_field(a_node, a_field).SetColor(NodeColor::Red)
 #define rbp_black_set(a_type, a_field, a_node)                                 \
-  (a_node)->a_field.SetColor(NodeColor::Black)
+  rb_node_field(a_node, a_field).SetColor(NodeColor::Black)
 
 /* Node initializer. */
 #define rbp_node_new(a_type, a_field, a_tree, a_node)                          \
