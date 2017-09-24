@@ -147,4 +147,4 @@ a&rlm;b
 &notit;
 #errors
 #document-fragment
-| "\u00ACit"
+| "\u00ACit;"
