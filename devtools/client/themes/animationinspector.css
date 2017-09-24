@@ -697,6 +697,24 @@ body {
   height: 100%;
 }
 
+.keyframes svg .hint {
+  stroke-opacity: 0;
+  stroke-linecap: round;
+  stroke-width: 5;
+}
+
+.keyframes svg path.hint {
+  fill: none;
+}
+
+.keyframes svg path.hint:hover {
+  stroke-opacity: 1;
+}
+
+.keyframes svg rect.hint {
+  fill-opacity: .1;
+}
+
 .animation-detail {
   position: relative;
   width: 100%;
