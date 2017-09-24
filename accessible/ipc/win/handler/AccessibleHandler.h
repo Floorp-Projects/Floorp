@@ -59,6 +59,9 @@ public:
   HRESULT ReadHandlerPayload(IStream* aStream, REFIID aIid) override;
 
   REFIID MarshalAs(REFIID aRequestedIid) override;
+  HRESULT GetMarshalInterface(REFIID aMarshalAsIid, NotNull<IUnknown*> aProxy,
+                              NotNull<IID*> aOutIid,
+                              NotNull<IUnknown**> aOutUnk) override;
   HRESULT GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize) override;
   HRESULT WriteHandlerPayload(IStream* aStream, REFIID aIId) override;
 
