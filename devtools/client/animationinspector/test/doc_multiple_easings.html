@@ -3,6 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <style>
+  @keyframes css-animations {
+    from {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  #css-animations {
+    animation: css-animations 100s;
+  }
+
   div {
     background-color: lime;
     height: 50px;
@@ -10,6 +26,7 @@
   </style>
 </head>
 <body>
+  <div id="css-animations"></div>
   <script>
   "use strict";
   const DURATION = 100 * 1000;
@@ -69,6 +86,45 @@
       ],
       timing: {
         easing: "steps(10)",
+        duration: DURATION,
+      }
+    },
+    {
+      id: "many-keyframes",
+      frames: [
+        {
+          offset: 0,
+          easing: "steps(2)",
+          opacity: 1,
+          backgroundColor: "red",
+        },
+        {
+          offset: 0.25,
+          easing: "ease-in",
+          opacity: 0.25,
+        },
+        {
+          offset: 0.3,
+          easing: "ease-out",
+          backgroundColor: "blue",
+        },
+        {
+          offset: 0.5,
+          easing: "linear",
+          opacity: 0.5,
+        },
+        {
+          offset: 0.75,
+          easing: "ease-out",
+          opacity: 0.75,
+        },
+        {
+          offset: 1,
+          opacity: 0,
+          backgroundColor: "lime",
+        },
+      ],
+      timing: {
         duration: DURATION,
       }
     },
