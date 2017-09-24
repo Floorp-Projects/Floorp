@@ -19,6 +19,10 @@ const {Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
 const {Task} = require("devtools/shared/task");
 
+// Use privileged promise in panel documents to prevent having them to freeze
+// during toolbox destruction. See bug 1402779.
+const Promise = require("Promise");
+
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {
   // When new programs are received from the server.
