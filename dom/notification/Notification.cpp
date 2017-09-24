@@ -762,7 +762,7 @@ NotificationTelemetryService::GetNotificationPermission(nsISupports* aSupports,
   }
   nsAutoCString type;
   permission->GetType(type);
-  if (!type.Equals("desktop-notification")) {
+  if (!type.EqualsLiteral("desktop-notification")) {
     return false;
   }
   permission->GetCapability(aCapability);

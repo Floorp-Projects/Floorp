@@ -47,9 +47,9 @@ bool ContainNonWordCharacter(const nsAString& aStr)
 void GetPrefix(const nsINode* aNode, nsAString& aResult)
 {
   if (aNode->IsXULElement()) {
-    aResult.Assign(NS_LITERAL_STRING("xul"));
+    aResult.AssignLiteral(u"xul");
   } else if (aNode->IsHTMLElement()) {
-    aResult.Assign(NS_LITERAL_STRING("xhtml"));
+    aResult.AssignLiteral(u"xhtml");
   }
 }
 
@@ -83,7 +83,7 @@ void GenerateConcatExpression(const nsAString& aStr, nsAString& aResult)
         nonQuoteBeginPtr = nullptr;
       }
       if (!quoteBeginPtr) {
-        result.Append(NS_LITERAL_STRING("\',\""));
+        result.AppendLiteral(u"\',\"");
         quoteBeginPtr = cur;
       }
     } else {
@@ -92,7 +92,7 @@ void GenerateConcatExpression(const nsAString& aStr, nsAString& aResult)
       }
       if (quoteBeginPtr) {
         result.Append(quoteBeginPtr, cur - quoteBeginPtr);
-        result.Append(NS_LITERAL_STRING("\",\'"));
+        result.AppendLiteral(u"\",\'");
         quoteBeginPtr = nullptr;
       }
     }
@@ -100,7 +100,7 @@ void GenerateConcatExpression(const nsAString& aStr, nsAString& aResult)
 
   if (quoteBeginPtr) {
     result.Append(quoteBeginPtr, cur - quoteBeginPtr);
-    result.Append(NS_LITERAL_STRING("\",\'"));
+    result.AppendLiteral(u"\",\'");
   } else if (nonQuoteBeginPtr) {
     result.Append(nonQuoteBeginPtr, cur - nonQuoteBeginPtr);
   }
@@ -187,9 +187,9 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult)
     namePart.Assign(NS_LITERAL_STRING("[@name=") + quotedArgument + NS_LITERAL_STRING("]"));
   }
   if (count != 1) {
-    countPart.Assign(NS_LITERAL_STRING("["));
+    countPart.AssignLiteral(u"[");
     countPart.AppendInt(count);
-    countPart.Append(NS_LITERAL_STRING("]"));
+    countPart.AppendLiteral(u"]");
   }
   Generate(aNode->GetParentNode(), aResult);
   aResult.Append(NS_LITERAL_STRING("/") + tag + namePart + countPart);

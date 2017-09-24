@@ -1221,7 +1221,7 @@ CheckDirForUnsignedFiles(nsIFile* aDir,
 
     // if it's a directory we need to recurse
     if (isDir) {
-      curName.Append(NS_LITERAL_STRING("/"));
+      curName.AppendLiteral(u"/");
       rv = CheckDirForUnsignedFiles(file, curName, aItems,
                                     sigFilename, sfFilename, mfFilename);
     } else {

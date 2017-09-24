@@ -600,7 +600,7 @@ nsJARChannel::GetContentType(nsACString &result)
     // If the Jar file has not been open yet,
     // We return application/x-unknown-content-type
     if (!mOpened) {
-      result.Assign(UNKNOWN_CONTENT_TYPE);
+      result.AssignLiteral(UNKNOWN_CONTENT_TYPE);
       return NS_OK;
     }
 

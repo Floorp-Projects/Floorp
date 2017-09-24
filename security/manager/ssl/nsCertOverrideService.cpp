@@ -106,7 +106,7 @@ nsCertOverrideService::Init()
   // point another hash algorithm was used and is still supported for backwards
   // compatibility. This is not the case. It has always been SHA256.
   mOidTagForStoringNewHashes = SEC_OID_SHA256;
-  mDottedOidForStoringNewHashes.Assign("OID.2.16.840.1.101.3.4.2.1");
+  mDottedOidForStoringNewHashes.AssignLiteral("OID.2.16.840.1.101.3.4.2.1");
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
