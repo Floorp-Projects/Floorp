@@ -3352,22 +3352,7 @@ XMLHttpRequestMainThread::GetReadyState(uint16_t *aState)
 uint16_t
 XMLHttpRequestMainThread::ReadyState() const
 {
-  // Translate some of our internal states for external consumers
-  switch(mState) {
-    case State::unsent:
-      return UNSENT;
-    case State::opened:
-      return OPENED;
-    case State::headers_received:
-      return HEADERS_RECEIVED;
-    case State::loading:
-      return LOADING;
-    case State::done:
-      return DONE;
-    default:
-      MOZ_CRASH("Unknown state");
-  }
-  return 0;
+  return static_cast<uint16_t>(mState);
 }
 
 void
