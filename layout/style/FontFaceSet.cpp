@@ -663,7 +663,7 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
 
     nsAutoCString accept("application/font-woff;q=0.9,*/*;q=0.8");
     if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED)) {
-      accept.Insert(NS_LITERAL_CSTRING("application/font-woff2;q=1.0,"), 0);
+      accept.InsertLiteral("application/font-woff2;q=1.0,", 0);
     }
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                        accept, false);

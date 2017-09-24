@@ -661,7 +661,7 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsCString& aType,
 
   // If we didn't find any origins for this host in the poermissions database,
   // we can insert the default http:// and https:// permissions into the database.
-  // This has a relatively high liklihood of applying the permission to the correct
+  // This has a relatively high likelihood of applying the permission to the correct
   // origin.
   if (!foundHistory) {
     nsAutoCString hostSegment;
@@ -671,9 +671,9 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsCString& aType,
     // If this is an ipv6 URI, we need to surround it in '[', ']' before trying to
     // parse it as a URI.
     if (aHost.FindChar(':') != -1) {
-      hostSegment.Assign("[");
+      hostSegment.AssignLiteral("[");
       hostSegment.Append(aHost);
-      hostSegment.Append("]");
+      hostSegment.AppendLiteral("]");
     } else {
       hostSegment.Assign(aHost);
     }

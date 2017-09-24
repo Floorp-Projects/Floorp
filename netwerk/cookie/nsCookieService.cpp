@@ -1544,7 +1544,7 @@ nsCookieService::CreateTableWorker(const char* aName)
   // set will still work once they upgrade back.
   nsAutoCString command("CREATE TABLE ");
   command.Append(aName);
-  command.Append(" ("
+  command.AppendLiteral(" ("
       "id INTEGER PRIMARY KEY, "
       "baseDomain TEXT, "
       "originAttributes TEXT NOT NULL DEFAULT '', "
@@ -2588,7 +2588,7 @@ nsCookieService::Remove(const nsACString& aHost, const OriginAttributes& aAttrs,
     if (!host.IsEmpty() && host.First() == '.')
       host.Cut(0, 1);
 
-    host.Insert(NS_LITERAL_CSTRING("http://"), 0);
+    host.InsertLiteral("http://", 0);
 
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), host);
@@ -4299,7 +4299,7 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
     if (IsSubdomainOf(aCookieAttributes.host, aBaseDomain) &&
         IsSubdomainOf(hostFromURI, aCookieAttributes.host)) {
       // prepend a dot to indicate a domain cookie
-      aCookieAttributes.host.Insert(NS_LITERAL_CSTRING("."), 0);
+      aCookieAttributes.host.InsertLiteral(".", 0);
       return true;
     }
 

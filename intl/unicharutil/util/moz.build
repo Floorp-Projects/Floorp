@@ -17,16 +17,12 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'GreekCasing.cpp',
+    'ICUUtils.cpp',
     'IrishCasing.cpp',
     'nsBidiUtils.cpp',
     'nsSpecialCasingData.cpp',
     'nsUnicharUtils.cpp',
     'nsUnicodeProperties.cpp',
 ]
-
-if CONFIG['ENABLE_INTL_API']:
-    UNIFIED_SOURCES += [
-        'ICUUtils.cpp',
-    ]
 
 FINAL_LIBRARY = 'xul'

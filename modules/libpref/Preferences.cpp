@@ -1158,7 +1158,7 @@ Preferences::MakeBackupPrefFile(nsIFile *aFile)
   nsAutoString newFilename;
   nsresult rv = aFile->GetLeafName(newFilename);
   NS_ENSURE_SUCCESS(rv, rv);
-  newFilename.Insert(NS_LITERAL_STRING("Invalid"), 0);
+  newFilename.InsertLiteral(u"Invalid", 0);
   nsCOMPtr<nsIFile> newFile;
   rv = aFile->GetParent(getter_AddRefs(newFile));
   NS_ENSURE_SUCCESS(rv, rv);

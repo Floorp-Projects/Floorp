@@ -141,7 +141,7 @@ public:
     if (GetFragment().IsEmpty()) {
       return;
     }
-    aURL.Append(NS_LITERAL_CSTRING("#"));
+    aURL.AppendLiteral("#");
     aURL.Append(GetFragment());
   }
 

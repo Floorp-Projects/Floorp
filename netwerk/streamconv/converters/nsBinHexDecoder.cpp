@@ -493,7 +493,8 @@ nsresult nsBinHexDecoder::DetectContentType(nsIRequest* aRequest,
   mimeService->GetTypeFromExtension(nsDependentCString(fileExt), contentType);
 
   // Only set the type if it's not empty and, to prevent recursive loops, not the binhex type
-  if (!contentType.IsEmpty() && !contentType.Equals(APPLICATION_BINHEX)) {
+  if (!contentType.IsEmpty() &&
+      !contentType.EqualsLiteral(APPLICATION_BINHEX)) {
     channel->SetContentType(contentType);
   } else {
     channel->SetContentType(NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE));
@@ -501,7 +502,6 @@ nsresult nsBinHexDecoder::DetectContentType(nsIRequest* aRequest,
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsBinHexDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,

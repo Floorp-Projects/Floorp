@@ -784,16 +784,16 @@ LocaleService::Locale::Locale(const nsCString& aLocale, bool aRange)
 
   if (aRange) {
     if (mLanguage.IsEmpty()) {
-      mLanguage.Assign(NS_LITERAL_CSTRING("*"));
+      mLanguage.AssignLiteral("*");
     }
     if (mScript.IsEmpty()) {
-      mScript.Assign(NS_LITERAL_CSTRING("*"));
+      mScript.AssignLiteral("*");
     }
     if (mRegion.IsEmpty()) {
-      mRegion.Assign(NS_LITERAL_CSTRING("*"));
+      mRegion.AssignLiteral("*");
     }
     if (mVariant.IsEmpty()) {
-      mVariant.Assign(NS_LITERAL_CSTRING("*"));
+      mVariant.AssignLiteral("*");
     }
   }
 }

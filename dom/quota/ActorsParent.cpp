@@ -8237,7 +8237,7 @@ OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs) -> ResultType
     }
 
     if (!mHandledTokens.IsEmpty()) {
-      mHandledTokens.Append(NS_LITERAL_CSTRING(", "));
+      mHandledTokens.AppendLiteral(", ");
     }
     mHandledTokens.Append('\'');
     mHandledTokens.Append(token);

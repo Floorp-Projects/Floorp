@@ -112,7 +112,7 @@ class OriginKeyStore : public nsISupports
     {
       switch (aPrincipalInfo.type()) {
         case ipc::PrincipalInfo::TSystemPrincipalInfo:
-          aString.Assign("[System Principal]");
+          aString.AssignLiteral("[System Principal]");
           return;
 
         case ipc::PrincipalInfo::TNullPrincipalInfo: {
@@ -137,20 +137,20 @@ class OriginKeyStore : public nsISupports
           const ipc::ExpandedPrincipalInfo& info =
             aPrincipalInfo.get_ExpandedPrincipalInfo();
 
-          aString.Assign("[Expanded Principal [");
+          aString.AssignLiteral("[Expanded Principal [");
 
           for (uint32_t i = 0; i < info.whitelist().Length(); i++) {
             nsAutoCString str;
             PrincipalInfoToString(info.whitelist()[i], str);
 
             if (i != 0) {
-              aString.Append(", ");
+              aString.AppendLiteral(", ");
             }
 
             aString.Append(str);
           }
 
-          aString.Append("]]");
+          aString.AppendLiteral("]]");
           return;
         }
 

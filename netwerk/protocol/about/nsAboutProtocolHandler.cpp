@@ -142,7 +142,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
         rv = url->GetPathQueryRef(spec);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        spec.Insert("moz-safe-about:", 0);
+        spec.InsertLiteral("moz-safe-about:", 0);
 
         nsCOMPtr<nsIURI> inner;
         rv = NS_NewURI(getter_AddRefs(inner), spec);

@@ -39,7 +39,7 @@ BuildCrashGuardPrefName(CrashGuardType aType, nsCString& aOutPrefName)
   MOZ_ASSERT(aType < CrashGuardType::NUM_TYPES);
   MOZ_ASSERT(sCrashGuardNames[size_t(aType)]);
 
-  aOutPrefName.Assign("gfx.crash-guard.status.");
+  aOutPrefName.AssignLiteral("gfx.crash-guard.status.");
   aOutPrefName.Append(sCrashGuardNames[size_t(aType)]);
 }
 
@@ -191,7 +191,7 @@ DriverCrashGuard::GetGuardFile()
 
   nsCString filename;
   filename.Assign(sCrashGuardNames[size_t(mType)]);
-  filename.Append(".guard");
+  filename.AppendLiteral(".guard");
 
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR, getter_AddRefs(file));
