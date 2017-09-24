@@ -282,7 +282,7 @@ SourceBuffer::Detach()
   if (mTrackBuffersManager) {
     mTrackBuffersManager->Detach();
     mMediaSource->GetDecoder()->GetDemuxer()->DetachSourceBuffer(
-      mTrackBuffersManager.get());
+      mTrackBuffersManager);
   }
   mTrackBuffersManager = nullptr;
   mMediaSource = nullptr;
@@ -324,7 +324,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource,
     SetMode(SourceBufferAppendMode::Segments, dummy);
   }
   mMediaSource->GetDecoder()->GetDemuxer()->AttachSourceBuffer(
-    mTrackBuffersManager.get());
+    mTrackBuffersManager);
 }
 
 SourceBuffer::~SourceBuffer()
