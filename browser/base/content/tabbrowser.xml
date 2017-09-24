@@ -980,9 +980,18 @@
           <![CDATA[
             let browser = this.getBrowserForTab(aTab);
             browser.mIconURL = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-            let loadingPrincipal = aLoadingPrincipal ||
-                                   Services.scriptSecurityManager.getSystemPrincipal();
+            let loadingPrincipal = aLoadingPrincipal
+              ? aLoadingPrincipal
+              : Services.scriptSecurityManager.getSystemPrincipal();
             let requestContextID = aRequestContextID || 0;
+
+            if (aURI) {
+              if (!(aURI instanceof Ci.nsIURI)) {
+                aURI = makeURI(aURI);
+              }
+              PlacesUIUtils.loadFavicon(browser, loadingPrincipal, aURI, requestContextID);
+            }
+
             let sizedIconUrl = browser.mIconURL || "";
             if (sizedIconUrl != aTab.getAttribute("image")) {
               if (sizedIconUrl) {
