@@ -396,7 +396,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "19a815e7a270"
+        "revision": "d16610c5b335"
     }, 
     "kn": {
         "platforms": [
@@ -643,7 +643,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "a5c3b2b21533"
+        "revision": "e480860e432d"
     }, 
     "tr": {
         "platforms": [
