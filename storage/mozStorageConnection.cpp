@@ -1485,8 +1485,8 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
     while (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
       nsAutoCString name;
       rv = stmt->GetUTF8String(1, name);
-      if (NS_SUCCEEDED(rv) && !name.Equals(NS_LITERAL_CSTRING("main")) &&
-                              !name.Equals(NS_LITERAL_CSTRING("temp"))) {
+      if (NS_SUCCEEDED(rv) && !name.EqualsLiteral("main") &&
+                              !name.EqualsLiteral("temp")) {
         nsCString path;
         rv = stmt->GetUTF8String(2, path);
         if (NS_SUCCEEDED(rv) && !path.IsEmpty()) {

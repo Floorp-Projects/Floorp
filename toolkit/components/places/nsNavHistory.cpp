@@ -620,9 +620,9 @@ Atomic<int64_t> nsNavHistory::sLastInsertedVisitId(0);
 void // static
 nsNavHistory::StoreLastInsertedId(const nsACString& aTable,
                                   const int64_t aLastInsertedId) {
-  if (aTable.Equals(NS_LITERAL_CSTRING("moz_places"))) {
+  if (aTable.EqualsLiteral("moz_places")) {
     nsNavHistory::sLastInsertedPlaceId = aLastInsertedId;
-  } else if (aTable.Equals(NS_LITERAL_CSTRING("moz_historyvisits"))) {
+  } else if (aTable.EqualsLiteral("moz_historyvisits")) {
     nsNavHistory::sLastInsertedVisitId = aLastInsertedId;
   } else {
     MOZ_ASSERT(false, "Trying to store the insert id for an unknown table?");
@@ -1761,14 +1761,12 @@ PlacesSQLQueryBuilder::SelectAsDay()
         sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of month','-");
         sqlFragmentContainerBeginTime.AppendInt(MonthIndex);
-        sqlFragmentContainerBeginTime.Append(NS_LITERAL_CSTRING(
-            " months','utc')*1000000)"));
+        sqlFragmentContainerBeginTime.AppendLiteral(" months','utc')*1000000)");
         // To start of MonthIndex months ago
         sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of month','-");
         sqlFragmentContainerEndTime.AppendInt(MonthIndex - 1);
-        sqlFragmentContainerEndTime.Append(NS_LITERAL_CSTRING(
-            " months','utc')*1000000)"));
+        sqlFragmentContainerEndTime.AppendLiteral(" months','utc')*1000000)");
         // Search for the same timeframe.
         sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
         sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;

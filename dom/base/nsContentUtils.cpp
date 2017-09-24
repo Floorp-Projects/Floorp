@@ -1635,7 +1635,7 @@ nsContentUtils::SandboxFlagsToString(uint32_t aFlags, nsAString& aString)
 #define SANDBOX_KEYWORD(string, atom, flags)                \
   if (!(aFlags & (flags))) {                                \
     if (!aString.IsEmpty()) {                               \
-      aString.Append(NS_LITERAL_STRING(" "));               \
+      aString.AppendLiteral(u" ");                          \
     }                                                       \
     aString.Append(nsDependentAtomString(nsGkAtoms::atom)); \
   }
@@ -7193,7 +7193,7 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   JSAutoCompartment ac(cx, xpc::UnprivilegedJunkScope());
 
   // The pattern has to match the entire value.
-  aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
+  aPattern.InsertLiteral(u"^(?:", 0);
   aPattern.AppendLiteral(")$");
 
   JS::Rooted<JSObject*> re(cx,

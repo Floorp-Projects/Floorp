@@ -102,7 +102,7 @@ interface nsIURI : nsISupports
         nsCString spec;
         nsresult rv = GetSpec(spec);
         if (NS_FAILED(rv)) {
-            spec.Assign("[nsIURI::GetSpec failed]");
+            spec.AssignLiteral("[nsIURI::GetSpec failed]");
         }
         return spec;
     }

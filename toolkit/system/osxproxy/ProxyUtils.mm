@@ -26,12 +26,12 @@ NormalizeAddr(const nsACString& aAddr, nsCString& aNormalized)
   aNormalized = "";
   for (uint32_t i = 0; i < 4; ++i) {
     if (i != 0) {
-      aNormalized.Append(".");
+      aNormalized.AppendLiteral(".");
     }
     if (i < addr.Length()) {
       aNormalized.Append(addr[i]);
     } else {
-      aNormalized.Append("0");
+      aNormalized.AppendLiteral("0");
     }
   }
   return true;
