@@ -153,7 +153,9 @@ public:
   // OK to use on any thread.
   nsresult GetURI(ImageURL** aURI);
   nsresult GetCurrentURI(nsIURI** aURI);
+  bool IsScheme(const char* aScheme) const;
   bool IsChrome() const;
+  bool IsData() const;
 
   nsresult GetImageErrorCode(void);
 
