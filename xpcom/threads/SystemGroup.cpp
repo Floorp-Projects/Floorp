@@ -6,6 +6,7 @@
 
 #include "SystemGroup.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
 #include "nsINamed.h"
