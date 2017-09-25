@@ -501,6 +501,7 @@ Factory::DoesBackendSupportDataDrawtarget(BackendType aType)
   case BackendType::RECORDING:
   case BackendType::NONE:
   case BackendType::BACKEND_LAST:
+  case BackendType::WEBRENDER_TEXT:
     return false;
   case BackendType::CAIRO:
   case BackendType::SKIA:

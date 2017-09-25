@@ -2034,26 +2034,6 @@ private:
     nsCOMPtr<nsISupports> mOuter;    // only set in root
 };
 
-/***************************************************************************/
-
-class XPCJSObjectHolder final : public nsIXPConnectJSObjectHolder
-{
-public:
-    // all the interface method declarations...
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
-
-    // non-interface implementation
-
-public:
-    XPCJSObjectHolder(JSContext* cx, JSObject* obj);
-
-private:
-    virtual ~XPCJSObjectHolder() {}
-    XPCJSObjectHolder() = delete;
-
-    JS::PersistentRooted<JSObject*> mJSObj;
-};
 
 /***************************************************************************
 ****************************************************************************
@@ -2120,8 +2100,7 @@ public:
      * @param src_is_identity optional performance hint. Set to true only
      *                        if src is the identity pointer.
      */
-    static bool NativeInterface2JSObject(JS::MutableHandleValue d,
-                                         nsIXPConnectJSObjectHolder** dest,
+    static bool NativeInterface2JSObject(JS::MutableHandleValue dest,
                                          xpcObjectHelper& aHelper,
                                          const nsID* iid,
                                          bool allowNativeWrapper,

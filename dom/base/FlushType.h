@@ -38,6 +38,15 @@ enum class FlushType : uint8_t {
   Count
 };
 
+/**
+ * This is the enum used by nsIDocument::FlushPendingNotifications to decide
+ * whether the current document is skippable.
+ */
+enum class FlushTarget : uint8_t {
+  Normal = 0,     /* Flush current and parent documents. */
+  ParentOnly = 1  /* Skip current document, only flush its parent. */
+};
+
 struct ChangesToFlush {
   ChangesToFlush(FlushType aFlushType, bool aFlushAnimations)
     : mFlushType(aFlushType)

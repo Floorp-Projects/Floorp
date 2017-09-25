@@ -349,6 +349,14 @@ const walkerSpec = generateActorSpec({
         nodeFront: RetVal("nullable:disconnectedNode")
       }
     },
+    getNodeActorFromWindowID: {
+      request: {
+        windowID: Arg(0, "string")
+      },
+      response: {
+        nodeFront: RetVal("nullable:disconnectedNode")
+      }
+    },
     getStyleSheetOwnerNode: {
       request: {
         styleSheetActorID: Arg(0, "string")

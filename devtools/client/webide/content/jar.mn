@@ -28,5 +28,3 @@ webide.jar:
     content/runtime-panel.js          (runtime-panel.js)
     content/runtime-listing.xhtml     (runtime-listing.xhtml)
     content/runtime-listing.js        (runtime-listing.js)
-    content/simulator.js              (simulator.js)
-    content/simulator.xhtml           (simulator.xhtml)
