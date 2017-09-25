@@ -75,51 +75,15 @@ GYP_DIRS['trunk'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
 GYP_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
 GYP_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
 
-if CONFIG['ENABLE_TESTS']:
-    TEST_DIRS += [
-#        'trunk/gtest',
-    ]
-
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
-    GYP_DIRS += ['signaling']
-    GYP_DIRS['signaling'].input = 'signaling/signaling.gyp'
-    GYP_DIRS['signaling'].variables = gyp_vars_copy.copy()
-    GYP_DIRS['signaling'].variables.update(
-        build_for_test=0,
-        build_for_standalone=0
-    )
-    GYP_DIRS['signaling'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
-    # Excluded for various symbol conflicts
-    signaling_non_unified_sources = [
-        'signaling/src/common/browser_logging/CSFLog.cpp',
-        'signaling/src/jsep/JsepSessionImpl.cpp',
-        'signaling/src/media-conduit/AudioConduit.cpp',
-        'signaling/src/media-conduit/MediaCodecVideoCodec.cpp',
-        'signaling/src/media-conduit/VideoConduit.cpp',
-        'signaling/src/media-conduit/WebrtcMediaCodecVP8VideoCodec.cpp',
-        'signaling/src/mediapipeline/MediaPipeline.cpp',
-        'signaling/src/mediapipeline/MediaPipelineFilter.cpp',
-        'signaling/src/mediapipeline/SrtpFlow.cpp',
-        'signaling/src/peerconnection/MediaPipelineFactory.cpp',
-        'signaling/src/peerconnection/MediaStreamList.cpp',
-        'signaling/src/peerconnection/PeerConnectionCtx.cpp',
-        'signaling/src/peerconnection/PeerConnectionImpl.cpp',
-        'signaling/src/peerconnection/PeerConnectionMedia.cpp',
-        'signaling/src/peerconnection/WebrtcGlobalInformation.cpp',
-        'signaling/src/sdp/sipcc/cpr_string.c',
-        'signaling/src/sdp/sipcc/sdp_access.c',
-        'signaling/src/sdp/sipcc/sdp_attr.c',
-        'signaling/src/sdp/sipcc/sdp_attr_access.c',
-        'signaling/src/sdp/sipcc/sdp_base64.c',
-        'signaling/src/sdp/sipcc/sdp_config.c',
-        'signaling/src/sdp/sipcc/sdp_main.c',
-        'signaling/src/sdp/sipcc/sdp_services_unix.c',
-        'signaling/src/sdp/sipcc/sdp_token.c',
-        'signaling/src/sdp/sipcc/sdp_utils.c',
+    DIRS += [
+        'signaling/src/common',
+        'signaling/src/jsep',
+        'signaling/src/media-conduit',
+        'signaling/src/mediapipeline',
+        'signaling/src/peerconnection',
+        'signaling/src/sdp'
     ]
-
-    GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources
-
     GYP_DIRS += ['trunk/third_party/gflags']
     GYP_DIRS['trunk/third_party/gflags'].input = 'trunk/third_party/gflags/gflags.gyp'
     GYP_DIRS['trunk/third_party/gflags'].variables = gyp_vars_copy

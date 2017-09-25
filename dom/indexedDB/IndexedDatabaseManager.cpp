@@ -45,6 +45,8 @@
 #include "ScriptErrorHelper.h"
 #include "WorkerScope.h"
 #include "WorkerPrivate.h"
+#include "nsCharSeparatedTokenizer.h"
+#include "unicode/locid.h"
 
 // Bindings for ResolveConstructors
 #include "mozilla/dom/IDBCursorBinding.h"
@@ -58,11 +60,6 @@
 #include "mozilla/dom/IDBRequestBinding.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/IDBVersionChangeEventBinding.h"
-
-#ifdef ENABLE_INTL_API
-#include "nsCharSeparatedTokenizer.h"
-#include "unicode/locid.h"
-#endif
 
 #define IDB_STR "indexedDB"
 
@@ -430,7 +427,6 @@ IndexedDatabaseManager::Init()
   Preferences::RegisterCallbackAndCall(MaxSerializedMsgSizePrefChangeCallback,
                                        kPrefMaxSerilizedMsgSize);
 
-#ifdef ENABLE_INTL_API
   nsAutoCString acceptLang;
   Preferences::GetLocalizedCString("intl.accept_languages", acceptLang);
 
@@ -449,7 +445,6 @@ IndexedDatabaseManager::Init()
   if (mLocale.IsEmpty()) {
     mLocale.AssignLiteral("en_US");
   }
-#endif
 
   return NS_OK;
 }
@@ -1093,7 +1088,6 @@ IndexedDatabaseManager::LoggingModePrefChangedCallback(
   }
 }
 
-#ifdef ENABLE_INTL_API
 // static
 const nsCString&
 IndexedDatabaseManager::GetLocale()
@@ -1103,7 +1097,6 @@ IndexedDatabaseManager::GetLocale()
 
   return idbManager->mLocale;
 }
-#endif
 
 NS_IMPL_ADDREF(IndexedDatabaseManager)
 NS_IMPL_RELEASE_WITH_DESTROY(IndexedDatabaseManager, Destroy())

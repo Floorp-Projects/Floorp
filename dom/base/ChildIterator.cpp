@@ -8,7 +8,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 #include "mozilla/dom/HTMLContentElement.h"
-#include "mozilla/dom/HTMLShadowElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
@@ -78,17 +77,6 @@ ExplicitChildIterator::GetNextChild()
     }
     mIndexInInserted = 0;
     mChild = mChild->GetNextSibling();
-  } else if (mShadowIterator) {
-    // If we're inside of a <shadow> element, look through the
-    // explicit children of the projected ShadowRoot via
-    // the mShadowIterator.
-    nsIContent* nextChild = mShadowIterator->GetNextChild();
-    if (nextChild) {
-      return nextChild;
-    }
-
-    mShadowIterator = nullptr;
-    mChild = mChild->GetNextSibling();
   } else if (mDefaultChild) {
     // If we're already in default content, check if there are more nodes there
     MOZ_ASSERT(mChild);
@@ -110,23 +98,7 @@ ExplicitChildIterator::GetNextChild()
   // Iterate until we find a non-insertion point, or an insertion point with
   // content.
   while (mChild) {
-    // If the current child being iterated is a shadow insertion point then
-    // the iterator needs to go into the projected ShadowRoot.
-    if (ShadowRoot::IsShadowInsertionPoint(mChild)) {
-      // Look for the next child in the projected ShadowRoot for the <shadow>
-      // element.
-      HTMLShadowElement* shadowElem = HTMLShadowElement::FromContent(mChild);
-      ShadowRoot* projectedShadow = shadowElem->GetOlderShadowRoot();
-      if (projectedShadow) {
-        mShadowIterator = new ExplicitChildIterator(projectedShadow);
-        nsIContent* nextChild = mShadowIterator->GetNextChild();
-        if (nextChild) {
-          return nextChild;
-        }
-        mShadowIterator = nullptr;
-      }
-      mChild = mChild->GetNextSibling();
-    } else if (nsContentUtils::IsContentInsertionPoint(mChild)) {
+    if (nsContentUtils::IsContentInsertionPoint(mChild)) {
       // If the current child being iterated is a content insertion point
       // then the iterator needs to return the nodes distributed into
       // the content insertion point.
@@ -196,11 +168,9 @@ ExplicitChildIterator::Seek(nsIContent* aChildToFind)
       !aChildToFind->IsRootOfAnonymousSubtree()) {
     // Fast path: just point ourselves to aChildToFind, which is a
     // normal DOM child of ours.
-    MOZ_ASSERT(!ShadowRoot::IsShadowInsertionPoint(aChildToFind));
     MOZ_ASSERT(!nsContentUtils::IsContentInsertionPoint(aChildToFind));
     mChild = aChildToFind;
     mIndexInInserted = 0;
-    mShadowIterator = nullptr;
     mDefaultChild = nullptr;
     mIsFirst = false;
     return true;
@@ -221,9 +191,8 @@ ExplicitChildIterator::Get() const
   if (mIndexInInserted) {
     MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
     return assignedChildren[mIndexInInserted - 1];
-  } else if (mShadowIterator)  {
-    return mShadowIterator->Get();
   }
+
   return mDefaultChild ? mDefaultChild : mChild;
 }
 
@@ -238,13 +207,6 @@ ExplicitChildIterator::GetPreviousChild()
     if (--mIndexInInserted) {
       return assignedChildren[mIndexInInserted - 1];
     }
-    mChild = mChild->GetPreviousSibling();
-  } else if (mShadowIterator) {
-    nsIContent* previousChild = mShadowIterator->GetPreviousChild();
-    if (previousChild) {
-      return previousChild;
-    }
-    mShadowIterator = nullptr;
     mChild = mChild->GetPreviousSibling();
   } else if (mDefaultChild) {
     // If we're already in default content, check if there are more nodes there
@@ -265,22 +227,7 @@ ExplicitChildIterator::GetPreviousChild()
   // Iterate until we find a non-insertion point, or an insertion point with
   // content.
   while (mChild) {
-    if (ShadowRoot::IsShadowInsertionPoint(mChild)) {
-      // If the current child being iterated is a shadow insertion point then
-      // the iterator needs to go into the projected ShadowRoot.
-      HTMLShadowElement* shadowElem = HTMLShadowElement::FromContent(mChild);
-      ShadowRoot* projectedShadow = shadowElem->GetOlderShadowRoot();
-      if (projectedShadow) {
-        // Create a ExplicitChildIterator that begins iterating from the end.
-        mShadowIterator = new ExplicitChildIterator(projectedShadow, false);
-        nsIContent* previousChild = mShadowIterator->GetPreviousChild();
-        if (previousChild) {
-          return previousChild;
-        }
-        mShadowIterator = nullptr;
-      }
-      mChild = mChild->GetPreviousSibling();
-    } else if (nsContentUtils::IsContentInsertionPoint(mChild)) {
+    if (nsContentUtils::IsContentInsertionPoint(mChild)) {
       // If the current child being iterated is a content insertion point
       // then the iterator needs to return the nodes distributed into
       // the content insertion point.

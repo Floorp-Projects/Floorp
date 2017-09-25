@@ -80,29 +80,45 @@ CurlWrapper::~CurlWrapper()
 bool
 CurlWrapper::Init()
 {
-  // libcurl might show up under different names, try them all until we find it
+  const char* libcurlPaths[] = {
+    "/usr/lib",
+#ifdef XP_LINUX
+    "/usr/lib32",
+    "/usr/lib64",
+    "/usr/lib/i386-linux-gnu", // Debian 32-bit x86
+    "/usr/lib/x86_64-linux-gnu", // Debian 64-bit x86
+#endif // XP_LINUX
+  };
+
   const char* libcurlNames[] = {
+#ifdef XP_LINUX
     "libcurl.so",
     "libcurl.so.4",
     // Debian gives libcurl a different name when it is built against GnuTLS
+    "libcurl-gnutls.so",
     "libcurl-gnutls.so.4",
-    // Older libcurl if we can't find anything better
+    // Older versions in case we find nothing better
     "libcurl.so.3",
-#ifndef HAVE_64BIT_BUILD
-    // 32-bit versions on 64-bit hosts
-    "/usr/lib32/libcurl.so",
-    "/usr/lib32/libcurl.so.4",
-    "/usr/lib32/libcurl-gnutls.so.4",
-    "/usr/lib32/libcurl.so.3",
-#endif
+    "libcurl-gnutls.so.3", // See above for Debian
+#elif defined(XP_MACOSX)
     // macOS
     "libcurl.dylib",
     "libcurl.4.dylib",
-    "libcurl.3.dylib"
+    "libcurl.3.dylib",
+#endif
   };
 
-  for (const char* libname : libcurlNames) {
-    mLib = dlopen(libname, RTLD_NOW);
+  // libcurl might show up under different names, try them all until we find it
+
+  for (const char* libpath : libcurlPaths) {
+    for (const char* libname : libcurlNames) {
+      string fullpath = string(libpath) + "/" + libname;
+      mLib = dlopen(fullpath.c_str(), RTLD_NOW);
+
+      if (mLib) {
+        break;
+      }
+    }
 
     if (mLib) {
       break;

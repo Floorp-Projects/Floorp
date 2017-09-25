@@ -1047,23 +1047,10 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   // for destination insertion points where nodes have been distributed.
   nsTArray<nsIContent*>* destPoints = GetExistingDestInsertionPoints();
   if (destPoints && !destPoints->IsEmpty()) {
-    // Push destination insertion points to aVisitor.mDestInsertionPoints
-    // excluding shadow insertion points.
-    bool didPushNonShadowInsertionPoint = false;
+    // Push destination insertion points to aVisitor.mDestInsertionPoints.
     for (uint32_t i = 0; i < destPoints->Length(); i++) {
       nsIContent* point = destPoints->ElementAt(i);
-      if (!ShadowRoot::IsShadowInsertionPoint(point)) {
-        aVisitor.mDestInsertionPoints.AppendElement(point);
-        didPushNonShadowInsertionPoint = true;
-      }
-    }
-
-    // Next node in the event path is the final destination
-    // (non-shadow) insertion point that was pushed.
-    if (didPushNonShadowInsertionPoint) {
-      parent = aVisitor.mDestInsertionPoints.LastElement();
-      aVisitor.mDestInsertionPoints.SetLength(
-        aVisitor.mDestInsertionPoints.Length() - 1);
+      aVisitor.mDestInsertionPoints.AppendElement(point);
     }
   }
 
@@ -1087,10 +1074,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       aVisitor.mDestInsertionPoints.SetLength(
         aVisitor.mDestInsertionPoints.Length() - 1);
     } else {
-      // The pool host for the youngest shadow root is shadow DOM host,
-      // for older shadow roots, it is the shadow insertion point
-      // where the shadow root is projected, nullptr if none exists.
-      parent = thisShadowRoot->GetPoolHost();
+      parent = thisShadowRoot->GetHost();
     }
   }
 
@@ -2619,8 +2603,7 @@ FragmentOrElement::SetIsElementInStyleScopeFlagOnShadowTree(bool aInStyleScope)
   NS_ASSERTION(IsElement(), "calling SetIsElementInStyleScopeFlagOnShadowTree "
                             "on a non-Element is useless");
   ShadowRoot* shadowRoot = GetShadowRoot();
-  while (shadowRoot) {
+  if (shadowRoot) {
     shadowRoot->SetIsElementInStyleScopeFlagOnSubtree(aInStyleScope);
-    shadowRoot = shadowRoot->GetOlderShadowRoot();
   }
 }

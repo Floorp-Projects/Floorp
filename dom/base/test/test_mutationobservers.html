@@ -587,7 +587,7 @@ function testOutsideShadowDOM() {
     is(records.length, 1);
     is(records[0].type, "attributes", "Should have got attributes");
     observer.disconnect();
-    then(testInsideShadowDOM);
+    then(testMarquee);
   });
   m.observe(div, {
       attributes: true,
@@ -601,32 +601,6 @@ function testOutsideShadowDOM() {
   sr.firstChild.firstChild.data = "text2";
   sr.firstChild.appendChild(document.createElement("div"));
   div.setAttribute("foo", "bar");
-}
-
-function testInsideShadowDOM() {
-  var m = new M(function(records, observer) {
-    is(records.length, 4);
-    is(records[0].type, "childList");
-    is(records[1].type, "attributes");
-    is(records[2].type, "characterData");
-    is(records[3].type, "childList");
-    observer.disconnect();
-    then(testMarquee);
-  });
-  var sr = div.createShadowRoot();
-  m.observe(sr, {
-      attributes: true,
-      childList: true,
-      characterData: true,
-      subtree: true
-    });
-
-  sr.innerHTML = "<div" + ">text</" + "div>";
-  sr.firstChild.setAttribute("foo", "bar");
-  sr.firstChild.firstChild.data = "text2";
-  sr.firstChild.appendChild(document.createElement("div"));
-  div.setAttribute("foo", "bar2");
-
 }
 
 function testMarquee() {

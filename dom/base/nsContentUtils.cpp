@@ -50,7 +50,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLContentElement.h"
-#include "mozilla/dom/HTMLShadowElement.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -7567,20 +7566,6 @@ nsContentUtils::HasDistributedChildren(nsIContent* aContent)
     return true;
   }
 
-  ShadowRoot* shadow = ShadowRoot::FromNode(aContent);
-  if (shadow) {
-    // Children of a shadow root are distributed to
-    // the shadow insertion point of the younger shadow root.
-    return shadow->GetYoungerShadowRoot();
-  }
-
-  HTMLShadowElement* shadowEl = HTMLShadowElement::FromContent(aContent);
-  if (shadowEl && shadowEl->IsInsertionPoint()) {
-    // Children of a shadow insertion points are distributed
-    // to the insertion points in the older shadow root.
-    return shadowEl->GetOlderShadowRoot();
-  }
-
   HTMLContentElement* contentEl = HTMLContentElement::FromContent(aContent);
   if (contentEl && contentEl->IsInsertionPoint()) {
     // Children of a content insertion point are distributed to the
@@ -10152,6 +10137,49 @@ nsContentUtils::GetElementDefinitionIfObservingAttr(Element* aCustomElement,
   }
 
   return definition;
+}
+
+/* static */ void
+nsContentUtils::SyncInvokeReactions(nsIDocument::ElementCallbackType aType,
+                                    Element* aElement,
+                                    CustomElementDefinition* aDefinition)
+{
+  MOZ_ASSERT(aElement);
+
+  nsIDocument* doc = aElement->OwnerDoc();
+  nsPIDOMWindowInner* window(doc->GetInnerWindow());
+  if (!window) {
+    return;
+  }
+
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
+  if (!registry) {
+    return;
+  }
+
+  registry->SyncInvokeReactions(aType, aElement, aDefinition);
+}
+
+/* static */ void
+nsContentUtils::EnqueueUpgradeReaction(Element* aElement,
+                                       CustomElementDefinition* aDefinition)
+{
+  MOZ_ASSERT(aElement);
+
+  nsIDocument* doc = aElement->OwnerDoc();
+  nsPIDOMWindowInner* window(doc->GetInnerWindow());
+  if (!window) {
+    return;
+  }
+
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
+  if (!registry) {
+    return;
+  }
+
+  CustomElementReactionsStack* stack =
+    doc->GetDocGroup()->CustomElementReactionsStack();
+  stack->EnqueueUpgradeReaction(registry, aElement, aDefinition);
 }
 
 /* static */ void
