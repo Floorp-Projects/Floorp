@@ -22,7 +22,7 @@ class nsIAtom : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IATOM_IID)
 
-  NS_IMETHOD ToUTF8String(nsACString& aString) = 0;
+  NS_IMETHOD_(void) ToUTF8String(nsACString& aString) = 0;
 
   NS_IMETHOD_(size_t)
   SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) = 0;
@@ -98,7 +98,7 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAtom, NS_IATOM_IID)
 
 #define NS_DECL_NSIATOM \
-  NS_IMETHOD ToUTF8String(nsACString& _retval) override; \
+  NS_IMETHOD_(void) ToUTF8String(nsACString& _retval) override; \
   NS_IMETHOD_(size_t) SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
 
 class nsAtom final : public nsIAtom
