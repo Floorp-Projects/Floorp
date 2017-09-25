@@ -102,7 +102,7 @@ const StrongPromise = {
   },
   observe(subject, topic, tag) {
     const pos = tag.indexOf("|");
-    const channel = tag.substr(0, pos);
+    const channel = Number(tag.substr(0, pos));
     const location = tag.substr(pos + 1);
     const message = `Promised response from onMessage listener at ${location} went out of scope`;
     MessageChannel.abortChannel(channel, {message});
