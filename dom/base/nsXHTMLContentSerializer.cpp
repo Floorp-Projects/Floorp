@@ -666,17 +666,12 @@ nsXHTMLContentSerializer::LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aNa
       (aName == nsGkAtoms::tr) ||
       (aName == nsGkAtoms::th) ||
       (aName == nsGkAtoms::td) ||
-      (aName == nsGkAtoms::pre) ||
       (aName == nsGkAtoms::title) ||
-      (aName == nsGkAtoms::li) ||
       (aName == nsGkAtoms::dt) ||
       (aName == nsGkAtoms::dd) ||
-      (aName == nsGkAtoms::blockquote) ||
       (aName == nsGkAtoms::select) ||
       (aName == nsGkAtoms::option) ||
-      (aName == nsGkAtoms::p) ||
-      (aName == nsGkAtoms::map) ||
-      (aName == nsGkAtoms::div)) {
+      (aName == nsGkAtoms::map)) {
     return true;
   }
 
