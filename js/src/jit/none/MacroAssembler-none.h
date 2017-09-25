@@ -150,6 +150,8 @@ class Assembler : public AssemblerShared
     static void ToggleToCmp(CodeLocationLabel) { MOZ_CRASH(); }
     static void ToggleCall(CodeLocationLabel, bool) { MOZ_CRASH(); }
 
+    static void Bind(uint8_t*, CodeOffset, CodeOffset) { MOZ_CRASH(); }
+
     static uintptr_t GetPointer(uint8_t*) { MOZ_CRASH(); }
 
     static bool HasRoundInstruction(RoundingMode) { return false; }
@@ -187,7 +189,9 @@ class MacroAssemblerNone : public Assembler
     size_t numCodeLabels() const { MOZ_CRASH(); }
     CodeLabel codeLabel(size_t) { MOZ_CRASH(); }
 
+    bool reserve(size_t size) { MOZ_CRASH(); }
     bool appendRawCode(const uint8_t* code, size_t numBytes) { MOZ_CRASH(); }
+    bool swapBuffer(wasm::Bytes& bytes) { MOZ_CRASH(); }
 
     void trace(JSTracer*) { MOZ_CRASH(); }
     static void TraceJumpRelocations(JSTracer*, JitCode*, CompactBufferReader&) { MOZ_CRASH(); }
