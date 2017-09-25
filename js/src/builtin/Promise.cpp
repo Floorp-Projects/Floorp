@@ -471,9 +471,9 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 
 // ES2016, 25.4.1.3.
 static MOZ_MUST_USE bool
-CreateResolvingFunctions(JSContext* cx, HandleValue promise,
-                         MutableHandleValue resolveVal,
-                         MutableHandleValue rejectVal)
+CreateResolvingFunctions(JSContext* cx, HandleObject promise,
+                         MutableHandleObject resolveFn,
+                         MutableHandleObject rejectFn)
 {
     RootedAtom funName(cx, cx->names().empty);
     RootedFunction resolve(cx, NewNativeFunction(cx, ResolvePromiseFunction, 1, funName,
@@ -486,14 +486,14 @@ CreateResolvingFunctions(JSContext* cx, HandleValue promise,
     if (!reject)
         return false;
 
-    resolve->setExtendedSlot(ResolveFunctionSlot_Promise, promise);
+    resolve->setExtendedSlot(ResolveFunctionSlot_Promise, ObjectValue(*promise));
     resolve->setExtendedSlot(ResolveFunctionSlot_RejectFunction, ObjectValue(*reject));
 
-    reject->setExtendedSlot(RejectFunctionSlot_Promise, promise);
+    reject->setExtendedSlot(RejectFunctionSlot_Promise, ObjectValue(*promise));
     reject->setExtendedSlot(RejectFunctionSlot_ResolveFunction, ObjectValue(*resolve));
 
-    resolveVal.setObject(*resolve);
-    rejectVal.setObject(*reject);
+    resolveFn.set(resolve);
+    rejectFn.set(reject);
 
     return true;
 }
@@ -860,6 +860,32 @@ CreatePromiseObjectWithoutResolutionFunctions(JSContext* cx)
     return promise;
 }
 
+static MOZ_MUST_USE PromiseObject*
+CreatePromiseWithDefaultResolutionFunctions(JSContext* cx, MutableHandleObject resolve,
+                                            MutableHandleObject reject)
+{
+    // ES2016, 25.4.3.1., as if called with GetCapabilitiesExecutor as the
+    // executor argument.
+
+    // Steps 1-2 (Not applicable).
+
+    // Steps 3-7.
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx));
+    if (!promise)
+        return nullptr;
+
+    // Step 8.
+    if (!CreateResolvingFunctions(cx, promise, resolve, reject))
+        return nullptr;
+
+    promise->setFixedSlot(PromiseSlot_RejectFunction, ObjectValue(*reject));
+
+    // Steps 9-10 (Not applicable).
+
+    // Step 11.
+    return promise;
+}
+
 // ES2016, 25.4.1.5.
 static MOZ_MUST_USE bool
 NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
@@ -883,8 +909,15 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     // pass the reject (and resolve, in the race case) function to thenables
     // in the list passed to all/race, which (potentially) means exposing them
     // to content.
-    if (canOmitResolutionFunctions && IsNativeFunction(cVal, PromiseConstructor)) {
-        promise.set(CreatePromiseObjectWithoutResolutionFunctions(cx));
+    //
+    // For Promise.all and Promise.race we can only optimize away the creation
+    // of the GetCapabilitiesExecutor function, and directly allocate the
+    // result promise instead of invoking the Promise constructor.
+    if (IsNativeFunction(cVal, PromiseConstructor)) {
+        if (canOmitResolutionFunctions)
+            promise.set(CreatePromiseObjectWithoutResolutionFunctions(cx));
+        else
+            promise.set(CreatePromiseWithDefaultResolutionFunctions(cx, resolve, reject));
         if (!promise)
             return false;
         return true;
@@ -1255,19 +1288,19 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
     RootedNativeObject jobArgs(cx, &job->getExtendedSlot(ThenableJobSlot_JobData)
                                     .toObject().as<NativeObject>());
 
-    RootedValue promise(cx, jobArgs->getDenseElement(ThenableJobDataIndex_Promise));
+    RootedObject promise(cx, &jobArgs->getDenseElement(ThenableJobDataIndex_Promise).toObject());
     RootedValue thenable(cx, jobArgs->getDenseElement(ThenableJobDataIndex_Thenable));
 
     // Step 1.
-    RootedValue resolveVal(cx);
-    RootedValue rejectVal(cx);
-    if (!CreateResolvingFunctions(cx, promise, &resolveVal, &rejectVal))
+    RootedObject resolveFn(cx);
+    RootedObject rejectFn(cx);
+    if (!CreateResolvingFunctions(cx, promise, &resolveFn, &rejectFn))
         return false;
 
     // Step 2.
     FixedInvokeArgs<2> args2(cx);
-    args2[0].set(resolveVal);
-    args2[1].set(rejectVal);
+    args2[0].setObject(*resolveFn);
+    args2[1].setObject(*rejectFn);
 
     RootedValue rval(cx);
 
@@ -1281,6 +1314,7 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
     FixedInvokeArgs<1> rejectArgs(cx);
     rejectArgs[0].set(rval);
 
+    RootedValue rejectVal(cx, ObjectValue(*rejectFn));
     return Call(cx, rejectVal, UndefinedHandleValue, rejectArgs, &rval);
 }
 
@@ -1585,28 +1619,28 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     if (!promise)
         return nullptr;
 
-    RootedValue promiseVal(cx, ObjectValue(*promise));
-    if (needsWrapping && !cx->compartment()->wrap(cx, &promiseVal))
+    RootedObject promiseObj(cx, promise);
+    if (needsWrapping && !cx->compartment()->wrap(cx, &promiseObj))
         return nullptr;
 
     // Step 8.
     // The resolving functions are created in the compartment active when the
     // (maybe wrapped) Promise constructor was called. They contain checks and
     // can unwrap the Promise if required.
-    RootedValue resolveVal(cx);
-    RootedValue rejectVal(cx);
-    if (!CreateResolvingFunctions(cx, promiseVal, &resolveVal, &rejectVal))
+    RootedObject resolveFn(cx);
+    RootedObject rejectFn(cx);
+    if (!CreateResolvingFunctions(cx, promiseObj, &resolveFn, &rejectFn))
         return nullptr;
 
     // Need to wrap the resolution functions before storing them on the Promise.
     if (needsWrapping) {
         AutoCompartment ac(cx, promise);
-        RootedValue wrappedRejectVal(cx, rejectVal);
-        if (!cx->compartment()->wrap(cx, &wrappedRejectVal))
+        RootedObject wrappedRejectFn(cx, rejectFn);
+        if (!cx->compartment()->wrap(cx, &wrappedRejectFn))
             return nullptr;
-        promise->setFixedSlot(PromiseSlot_RejectFunction, wrappedRejectVal);
+        promise->setFixedSlot(PromiseSlot_RejectFunction, ObjectValue(*wrappedRejectFn));
     } else {
-        promise->setFixedSlot(PromiseSlot_RejectFunction, rejectVal);
+        promise->setFixedSlot(PromiseSlot_RejectFunction, ObjectValue(*rejectFn));
     }
 
     // Step 9.
@@ -1614,8 +1648,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     {
         FixedInvokeArgs<2> args(cx);
 
-        args[0].set(resolveVal);
-        args[1].set(rejectVal);
+        args[0].setObject(*resolveFn);
+        args[1].setObject(*rejectFn);
 
         RootedValue calleeOrRval(cx, ObjectValue(*executor));
         success = Call(cx, calleeOrRval, UndefinedHandleValue, args, &calleeOrRval);
@@ -1631,8 +1665,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
 
         args[0].set(exceptionVal);
 
-        // |rejectVal| is unused after this, so we can safely write to it.
-        if (!Call(cx, rejectVal, UndefinedHandleValue, args, &rejectVal))
+        RootedValue calleeOrRval(cx, ObjectValue(*rejectFn));
+        if (!Call(cx, calleeOrRval, UndefinedHandleValue, args, &calleeOrRval))
             return nullptr;
     }
 
@@ -1998,7 +2032,7 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
         // "resolve" on the canonical Promise constructor.
         RootedValue nextPromise(cx);
         RootedValue staticResolve(cx);
-        if (!GetProperty(cx, CVal, cx->names().resolve, &staticResolve))
+        if (!GetProperty(cx, C, CVal, cx->names().resolve, &staticResolve))
             return false;
 
         FixedInvokeArgs<1> resolveArgs(cx);
@@ -2207,7 +2241,7 @@ PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
         // "resolve" on the canonical Promise constructor.
         RootedValue nextPromise(cx);
         RootedValue staticResolve(cx);
-        if (!GetProperty(cx, CVal, cx->names().resolve, &staticResolve))
+        if (!GetProperty(cx, C, CVal, cx->names().resolve, &staticResolve))
             return false;
 
         FixedInvokeArgs<1> resolveArgs(cx);
@@ -3040,15 +3074,15 @@ static MOZ_MUST_USE bool
 BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromise_,
                HandleValue onFulfilled, HandleValue onRejected)
 {
-    RootedValue thenVal(cx);
-    if (!GetProperty(cx, promiseVal, cx->names().then, &thenVal))
+    RootedObject promiseObj(cx, ToObject(cx, promiseVal));
+    if (!promiseObj)
         return false;
 
-    RootedObject promiseObj(cx);
-    if (promiseVal.isObject())
-        promiseObj = &promiseVal.toObject();
+    RootedValue thenVal(cx);
+    if (!GetProperty(cx, promiseObj, promiseVal, cx->names().then, &thenVal))
+        return false;
 
-    if (promiseObj && promiseObj->is<PromiseObject>() && IsNativeFunction(thenVal, Promise_then)) {
+    if (promiseObj->is<PromiseObject>() && IsNativeFunction(thenVal, Promise_then)) {
         // |promise| is an unwrapped Promise, and |then| is the original
         // |Promise.prototype.then|, inline it here.
         // 25.4.5.3., step 3.
@@ -3098,7 +3132,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
     // (potentially after unwrapping them), and non-object values can't be
     // Promise objects. This can happen if Promise.all is called on an object
     // with a `resolve` method that returns primitives.
-    if (!promiseObj)
+    if (!promiseVal.isObject())
         return true;
 
     // The object created by the |promise.then| call or the inlined version

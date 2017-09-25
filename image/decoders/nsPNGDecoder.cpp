@@ -284,6 +284,7 @@ nsPNGDecoder::InitInternal()
         105,  67,  67,  80, '\0'};  // iCCP
   static png_byte unused_chunks[]=
        { 98,  75,  71,  68, '\0',   // bKGD
+        101,  88,  73, 102, '\0',   // eXIf
         104,  73,  83,  84, '\0',   // hIST
         105,  84,  88, 116, '\0',   // iTXt
         111,  70,  70, 115, '\0',   // oFFs

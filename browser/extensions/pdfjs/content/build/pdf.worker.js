@@ -3520,10 +3520,7 @@ var ColorSpace = function ColorSpaceClosure() {
     usesZeroToOneRange: true
   };
   ColorSpace.parse = function ColorSpace_parse(cs, xref, res) {
-    var IR = ColorSpace.parseToIR(cs, xref, res);
-    if (IR instanceof AlternateCS) {
-      return IR;
-    }
+    let IR = ColorSpace.parseToIR(cs, xref, res);
     return ColorSpace.fromIR(IR);
   };
   ColorSpace.fromIR = function ColorSpace_fromIR(IR) {
@@ -23730,8 +23727,8 @@ exports.getUnicodeForGlyph = getUnicodeForGlyph;
 "use strict";
 
 
-var pdfjsVersion = '1.9.583';
-var pdfjsBuild = 'd7b37ae7';
+var pdfjsVersion = '1.9.597';
+var pdfjsBuild = 'f3987bba';
 var pdfjsCoreWorker = __w_pdfjs_require__(18);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -28628,8 +28625,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
           symbolHeight += rdh;
           symbolBitmap = decodeRefinement(symbolWidth, symbolHeight, refinementTemplateIndex, symbolBitmap, (rdw >> 1) + rdx, (rdh >> 1) + rdy, false, refinementAt, decodingContext);
         }
-        var offsetT = t - (referenceCorner & 1 ? 0 : symbolHeight);
-        var offsetS = currentS - (referenceCorner & 2 ? symbolWidth : 0);
+        var offsetT = t - (referenceCorner & 1 ? 0 : symbolHeight - 1);
+        var offsetS = currentS - (referenceCorner & 2 ? symbolWidth - 1 : 0);
         var s2, t2, symbolRow;
         if (transposed) {
           for (s2 = 0; s2 < symbolHeight; s2++) {
@@ -39547,6 +39544,10 @@ class AnnotationFactory {
         return new SquareAnnotation(parameters);
       case 'Circle':
         return new CircleAnnotation(parameters);
+      case 'PolyLine':
+        return new PolylineAnnotation(parameters);
+      case 'Polygon':
+        return new PolygonAnnotation(parameters);
       case 'Highlight':
         return new HighlightAnnotation(parameters);
       case 'Underline':
@@ -40053,6 +40054,28 @@ class CircleAnnotation extends Annotation {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.CIRCLE;
     this._preparePopup(parameters.dict);
+  }
+}
+class PolylineAnnotation extends Annotation {
+  constructor(parameters) {
+    super(parameters);
+    this.data.annotationType = _util.AnnotationType.POLYLINE;
+    let dict = parameters.dict;
+    let rawVertices = dict.getArray('Vertices');
+    this.data.vertices = [];
+    for (let i = 0, ii = rawVertices.length; i < ii; i += 2) {
+      this.data.vertices.push({
+        x: rawVertices[i],
+        y: rawVertices[i + 1]
+      });
+    }
+    this._preparePopup(dict);
+  }
+}
+class PolygonAnnotation extends PolylineAnnotation {
+  constructor(parameters) {
+    super(parameters);
+    this.data.annotationType = _util.AnnotationType.POLYGON;
   }
 }
 class HighlightAnnotation extends Annotation {

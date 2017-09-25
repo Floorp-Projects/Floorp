@@ -720,7 +720,7 @@ nsDocShellTreeOwner::SetFocus()
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::GetTitle(char16_t** aTitle)
+nsDocShellTreeOwner::GetTitle(nsAString& aTitle)
 {
   nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
@@ -730,7 +730,7 @@ nsDocShellTreeOwner::GetTitle(char16_t** aTitle)
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::SetTitle(const char16_t* aTitle)
+nsDocShellTreeOwner::SetTitle(const nsAString& aTitle)
 {
   nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
