@@ -30,10 +30,11 @@ namespace mozilla {
 namespace net {
 
 static uint64_t
-FindTopOuterWindowID(nsPIDOMWindowOuter* aOuter)
+GatherAncestorOuterWindowIDs(nsPIDOMWindowOuter* aOuter, nsTArray<uint64_t>& aOuterWindowIDs)
 {
   nsCOMPtr<nsPIDOMWindowOuter> outer = aOuter;
   while (nsCOMPtr<nsPIDOMWindowOuter> parent = outer->GetScriptableParentOrNull()) {
+    aOuterWindowIDs.AppendElement(parent->WindowID());
     outer = parent;
   }
   return outer->WindowID();
@@ -114,10 +115,11 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       mOuterWindowID = contextOuter->WindowID();
       nsCOMPtr<nsPIDOMWindowOuter> parent = contextOuter->GetScriptableParent();
       mParentOuterWindowID = parent ? parent->WindowID() : mOuterWindowID;
-      mTopOuterWindowID = FindTopOuterWindowID(contextOuter);
+      mTopOuterWindowID = GatherAncestorOuterWindowIDs(contextOuter, mAncestorOuterWindowIDs);
     }
 
     mInnerWindowID = aLoadingContext->OwnerDoc()->InnerWindowID();
+    mAncestorPrincipals = aLoadingContext->OwnerDoc()->AncestorPrincipals();
 
     // When the element being loaded is a frame, we choose the frame's window
     // for the window ID and the frame element's window as the parent
@@ -271,12 +273,13 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   // with the hidden window.
   nsCOMPtr<nsPIDOMWindowOuter> parent = aOuterWindow->GetScriptableParent();
   mParentOuterWindowID = parent ? parent->WindowID() : 0;
-  mTopOuterWindowID = FindTopOuterWindowID(aOuterWindow);
+  mTopOuterWindowID = GatherAncestorOuterWindowIDs(aOuterWindow, mAncestorOuterWindowIDs);
 
   // get the docshell from the outerwindow, and then get the originattributes
   nsCOMPtr<nsIDocShell> docShell = aOuterWindow->GetDocShell();
   MOZ_ASSERT(docShell);
   mOriginAttributes = nsDocShell::Cast(docShell)->GetOriginAttributes();
+  mAncestorPrincipals = nsDocShell::Cast(docShell)->AncestorPrincipals();
 
 #ifdef DEBUG
   if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
@@ -313,6 +316,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mRedirectChainIncludingInternalRedirects(
       rhs.mRedirectChainIncludingInternalRedirects)
   , mRedirectChain(rhs.mRedirectChain)
+  , mAncestorPrincipals(rhs.mAncestorPrincipals)
+  , mAncestorOuterWindowIDs(rhs.mAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
@@ -346,6 +351,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    const OriginAttributes& aOriginAttributes,
                    RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
                    RedirectHistoryArray& aRedirectChain,
+                   nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
+                   const nsTArray<uint64_t>& aAncestorOuterWindowIDs,
                    const nsTArray<nsCString>& aCorsUnsafeHeaders,
                    bool aForcePreflight,
                    bool aIsPreflight,
@@ -373,6 +380,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
   , mIsThirdPartyContext(aIsThirdPartyContext)
   , mOriginAttributes(aOriginAttributes)
+  , mAncestorPrincipals(Move(aAncestorPrincipals))
+  , mAncestorOuterWindowIDs(aAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
   , mForcePreflight(aForcePreflight)
   , mIsPreflight(aIsPreflight)
@@ -912,6 +921,18 @@ const RedirectHistoryArray&
 LoadInfo::RedirectChain()
 {
   return mRedirectChain;
+}
+
+const nsTArray<nsCOMPtr<nsIPrincipal>>&
+LoadInfo::AncestorPrincipals()
+{
+  return mAncestorPrincipals;
+}
+
+const nsTArray<uint64_t>&
+LoadInfo::AncestorOuterWindowIDs()
+{
+  return mAncestorOuterWindowIDs;
 }
 
 void
