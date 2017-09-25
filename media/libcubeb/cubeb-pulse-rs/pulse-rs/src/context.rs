@@ -211,8 +211,10 @@ impl Context {
                    ffi::pa_context_get_server_info(self.raw_mut(), Some(wrapped::<CB>), userdata))
     }
 
-    pub fn get_sink_info_by_name<CB>(&self, name: &CStr, _: CB, userdata: *mut c_void) -> Result<Operation>
-        where CB: Fn(&Context, *const SinkInfo, i32, *mut c_void)
+    pub fn get_sink_info_by_name<'str, CS, CB>(&self, name: CS, _: CB, userdata: *mut c_void) -> Result<Operation>
+    where
+        CB: Fn(&Context, *const SinkInfo, i32, *mut c_void),
+        CS: Into<Option<&'str CStr>>,
     {
         debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
 
@@ -232,7 +234,10 @@ impl Context {
         }
 
         op_or_err!(self,
-                   ffi::pa_context_get_sink_info_by_name(self.raw_mut(), name.as_ptr(), Some(wrapped::<CB>), userdata))
+                   ffi::pa_context_get_sink_info_by_name(self.raw_mut(),
+                                                        name.into().unwrap_cstr(),
+                                                        Some(wrapped::<CB>),
+                                                        userdata))
     }
 
     pub fn get_sink_info_list<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
