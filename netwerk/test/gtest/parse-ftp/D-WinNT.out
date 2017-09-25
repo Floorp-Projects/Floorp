@@ -38,10 +38,12 @@
 08-22-2000  10:36:00       <DIR>          Sean
 08-10-2000  13:54:00       <DIR>          SLeong
 09-07-2000  17:46:00       <DIR>          svr
-07-21-2000  07:22:00       <JUNCTION>     a_junction_sample
 10-23-2000  13:27:00       <JUNCTION>     b_junction_sample -> foo
 06-15-2000  07:37:00       <JUNCTION>     c_junction_sample -> bar too
 07-14-2000  13:35:00              2094926 canprankdesk.tif
 07-21-2000  13:19:00                95077 Jon Kauffman Enjoys the Good Life.jpg
 07-21-2000  13:19:00                52275 Name Plate.jpg
 07-14-2000  13:38:00              2250540 Valentineoffprank-HiRes.jpg
+01-11-2014  00:25:00             18864566 Bug961346
+10-10-2014  10:10:00       <DIR>          Bug1061898
+01-18-2012  19:00:00             30724571 Bug1125816
