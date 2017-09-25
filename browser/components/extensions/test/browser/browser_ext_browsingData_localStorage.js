@@ -39,6 +39,17 @@ add_task(async function testLocalStorage() {
 
     let tabs = await openTabs();
 
+    browser.test.assertRejects(
+      browser.browsingData.removeLocalStorage({since: Date.now()}),
+      "Firefox does not support clearing localStorage with 'since'.",
+      "Expected error received when using unimplemented parameter 'since'."
+    );
+
+    await sendMessageToTabs(tabs, "resetLocalStorage");
+    await browser.browsingData.removeLocalStorage({hostnames: ["example.com"]});
+    await browser.tabs.sendMessage(tabs[0].id, "checkLocalStorageCleared");
+    await browser.tabs.sendMessage(tabs[1].id, "checkLocalStorageSet");
+
     await sendMessageToTabs(tabs, "resetLocalStorage");
     await sendMessageToTabs(tabs, "checkLocalStorageSet");
     await browser.browsingData.removeLocalStorage({});
