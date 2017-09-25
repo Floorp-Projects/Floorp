@@ -2517,24 +2517,24 @@ CASE(JSOP_GE)
 }
 END_CASE(JSOP_GE)
 
-#define SIGNED_SHIFT_OP(OP)                                                   \
+#define SIGNED_SHIFT_OP(OP, TYPE)                                             \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
         if (!ToInt32(cx, REGS.stackHandleAt(-2), &i))                         \
             goto error;                                                       \
         if (!ToInt32(cx, REGS.stackHandleAt(-1), &j))                         \
             goto error;                                                       \
-        i = i OP (j & 31);                                                    \
+        i = TYPE(i) OP (j & 31);                                              \
         REGS.sp--;                                                            \
         REGS.sp[-1].setInt32(i);                                              \
     JS_END_MACRO
 
 CASE(JSOP_LSH)
-    SIGNED_SHIFT_OP(<<);
+    SIGNED_SHIFT_OP(<<, uint32_t);
 END_CASE(JSOP_LSH)
 
 CASE(JSOP_RSH)
-    SIGNED_SHIFT_OP(>>);
+    SIGNED_SHIFT_OP(>>, int32_t);
 END_CASE(JSOP_RSH)
 
 #undef SIGNED_SHIFT_OP

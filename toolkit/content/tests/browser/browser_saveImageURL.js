@@ -37,6 +37,15 @@ add_task(async function preferred_API() {
     });
 
     saveImageURL(url, "image.jpg", null, true, false, null, null, null, null, false);
+    let channel = content.document.docShell.currentDocumentChannel;
+    if (channel) {
+      ok(true, channel.QueryInterface(Ci.nsIHttpChannelInternal)
+                      .channelIsForDownload);
+
+      // Throttleable is the only class flag assigned to downloads.
+      ok(channel.QueryInterface(Ci.nsIClassOfService).classFlags,
+         Ci.nsIClassOfService.Throttleable);
+    }
     await waitForFilePicker();
   });
 });
@@ -64,6 +73,15 @@ add_task(async function deprecated_API() {
     // pass the XUL document instead to test this interface.
     let doc = document;
 
+    let channel = content.document.docShell.currentDocumentChannel;
+    if (channel) {
+      ok(true, channel.QueryInterface(Ci.nsIHttpChannelInternal)
+                      .channelIsForDownload);
+
+      // Throttleable is the only class flag assigned to downloads.
+      ok(channel.QueryInterface(Ci.nsIClassOfService).classFlags,
+         Ci.nsIClassOfService.Throttleable);
+    }
     saveImageURL(url, "image.jpg", null, true, false, null, doc, null, null);
     await waitForFilePicker();
   });

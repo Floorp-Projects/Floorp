@@ -1,0 +1,10 @@
+<svg height='600'
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     filter="url(#f)">
+
+<filter id="f" filterRes="19" filterUnits="userSpaceOnUse">
+<feConvolveMatrix kernelMatrix="1 1 1 1 1 1 1 1 1" kernelUnitLength="1 -1" />
+</filter>
+
+</svg>
