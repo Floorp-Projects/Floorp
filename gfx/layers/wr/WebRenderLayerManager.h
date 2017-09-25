@@ -246,6 +246,7 @@ public:
   }
 
   bool ShouldNotifyInvalidation() const { return mShouldNotifyInvalidation; }
+  void SetNotifyInvalidation(bool aShouldNotifyInvalidation) { mShouldNotifyInvalidation = aShouldNotifyInvalidation; }
 
 private:
   /**
