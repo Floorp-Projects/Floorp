@@ -143,21 +143,6 @@ class TrySelect(MachCommandBase):
         return run_fuzzy_try(**kwargs)
 
     @SubCommand('try',
-                'empty',
-                description='Push to try without scheduling any tasks.')
-    def try_empty(self):
-        """Push to try, running no builds or tests
-
-        This selector does not prompt you to run anything, it just pushes
-        your patches to try, running no builds or tests by default. After
-        the push finishes, you can manually add desired jobs to your push
-        via Treeherder's Add New Jobs feature, located in the per-push
-        menu.
-        """
-        from tryselect.selectors.empty import run_empty_try
-        return run_empty_try()
-
-    @SubCommand('try',
                 'syntax',
                 description='Select tasks on try using try syntax',
                 parser=syntax_parser)
