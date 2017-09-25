@@ -189,6 +189,7 @@ public:
     eUnreachable,
     eChannelOpen,
     eRedirect,
+    eTerminated,
     ENUM_MAX
   };
 
@@ -763,6 +764,8 @@ protected:
    * Close the XMLHttpRequest's channels.
    */
   void CloseRequest();
+
+  void TerminateOngoingFetch();
 
   /**
    * Close the XMLHttpRequest's channels and dispatch appropriate progress
