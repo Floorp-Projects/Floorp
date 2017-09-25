@@ -399,6 +399,8 @@ nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
 nsresult
 nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
 {
+  mCanary.Check();
+
   uint32_t magic;
   uint32_t read;
 
@@ -489,6 +491,8 @@ nsUrlClassifierPrefixSet::CalculatePreallocateSize()
 nsresult
 nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
 {
+  mCanary.Check();
+
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
   uint32_t magic = PREFIXSET_VERSION_MAGIC;

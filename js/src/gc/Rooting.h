@@ -81,6 +81,85 @@ typedef JS::GCVector<PropertyName*> PropertyNameVector;
 typedef JS::GCVector<Shape*>        ShapeVector;
 typedef JS::GCVector<JSString*>     StringVector;
 
+/** Interface substitute for Rooted<T> which does not root the variable's memory. */
+template <typename T>
+class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>>
+{
+  public:
+    using ElementType = T;
+
+    template <typename CX>
+    explicit FakeRooted(CX* cx) : ptr(JS::GCPolicy<T>::initial()) {}
+
+    template <typename CX>
+    FakeRooted(CX* cx, T initial) : ptr(initial) {}
+
+    DECLARE_POINTER_CONSTREF_OPS(T);
+    DECLARE_POINTER_ASSIGN_OPS(FakeRooted, T);
+    DECLARE_NONPOINTER_ACCESSOR_METHODS(ptr);
+    DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(ptr);
+
+  private:
+    T ptr;
+
+    void set(const T& value) {
+        ptr = value;
+    }
+
+    FakeRooted(const FakeRooted&) = delete;
+};
+
+/** Interface substitute for MutableHandle<T> which is not required to point to rooted memory. */
+template <typename T>
+class FakeMutableHandle : public js::MutableHandleBase<T, FakeMutableHandle<T>>
+{
+  public:
+    using ElementType = T;
+
+    MOZ_IMPLICIT FakeMutableHandle(T* t) {
+        ptr = t;
+    }
+
+    MOZ_IMPLICIT FakeMutableHandle(FakeRooted<T>* root) {
+        ptr = root->address();
+    }
+
+    void set(const T& v) {
+        *ptr = v;
+    }
+
+    DECLARE_POINTER_CONSTREF_OPS(T);
+    DECLARE_NONPOINTER_ACCESSOR_METHODS(*ptr);
+    DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(*ptr);
+
+  private:
+    FakeMutableHandle() {}
+    DELETE_ASSIGNMENT_OPS(FakeMutableHandle, T);
+
+    T* ptr;
+};
+
+template <typename T> class MaybeRooted<T, NoGC>
+{
+  public:
+    typedef const T& HandleType;
+    typedef FakeRooted<T> RootType;
+    typedef FakeMutableHandle<T> MutableHandleType;
+
+    static JS::Handle<T> toHandle(HandleType v) {
+        MOZ_CRASH("Bad conversion");
+    }
+
+    static JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
+        MOZ_CRASH("Bad conversion");
+    }
+
+    template <typename T2>
+    static inline T2* downcastHandle(HandleType v) {
+        return &v->template as<T2>();
+    }
+};
+
 } /* namespace js */
 
 #endif /* gc_Rooting_h */

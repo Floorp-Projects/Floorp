@@ -81,24 +81,6 @@ js::ForOfPIC::Chain::initialize(JSContext* cx)
     return true;
 }
 
-js::ForOfPIC::Stub*
-js::ForOfPIC::Chain::isArrayOptimized(ArrayObject* obj)
-{
-    Stub* stub = getMatchingStub(obj);
-    if (!stub)
-        return nullptr;
-
-    // Ensure that this is an otherwise optimizable array.
-    if (!isOptimizableArray(obj))
-        return nullptr;
-
-    // Not yet enough!  Ensure that the world as we know it remains sane.
-    if (!isArrayStateStillSane())
-        return nullptr;
-
-    return stub;
-}
-
 bool
 js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx, HandleArrayObject array, bool* optimized)
 {
@@ -127,12 +109,19 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx, HandleArrayObject array, bo
     // By the time we get here, we should have a sane array state to work with.
     MOZ_ASSERT(isArrayStateStillSane());
 
+    // Ensure array's prototype is the actual Array.prototype
+    if (array->staticPrototype() != arrayProto_)
+        return true;
+
     // Check if stub already exists.
-    ForOfPIC::Stub* stub = isArrayOptimized(&array->as<ArrayObject>());
-    if (stub) {
+    if (hasMatchingStub(array)) {
         *optimized = true;
         return true;
     }
+
+    // Ensure array doesn't define @@iterator directly.
+    if (array->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator)))
+        return true;
 
     // If the number of stubs is about to exceed the limit, throw away entire
     // existing cache before adding new stubs.  We shouldn't really have heavy
@@ -140,17 +129,9 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx, HandleArrayObject array, bo
     if (numStubs() >= MAX_STUBS)
         eraseChain();
 
-    // Ensure array's prototype is the actual Array.prototype
-    if (!isOptimizableArray(array))
-        return true;
-
-    // Ensure array doesn't define @@iterator directly.
-    if (array->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator)))
-        return true;
-
     // Good to optimize now, create stub to add.
     RootedShape shape(cx, array->lastProperty());
-    stub = cx->new_<Stub>(shape);
+    Stub* stub = cx->new_<Stub>(shape);
     if (!stub)
         return false;
 
@@ -161,27 +142,19 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx, HandleArrayObject array, bo
     return true;
 }
 
-js::ForOfPIC::Stub*
-js::ForOfPIC::Chain::getMatchingStub(JSObject* obj)
+bool
+js::ForOfPIC::Chain::hasMatchingStub(ArrayObject* obj)
 {
     // Ensure PIC is initialized and not disabled.
-    if (!initialized_ || disabled_)
-        return nullptr;
+    MOZ_ASSERT(initialized_ && !disabled_);
 
     // Check if there is a matching stub.
     for (Stub* stub = stubs(); stub != nullptr; stub = stub->next()) {
-        if (stub->shape() == obj->maybeShape())
-            return stub;
+        if (stub->shape() == obj->shape())
+            return true;
     }
 
-    return nullptr;
-}
-
-bool
-js::ForOfPIC::Chain::isOptimizableArray(JSObject* obj)
-{
-    MOZ_ASSERT(obj->is<ArrayObject>());
-    return obj->staticPrototype() == arrayProto_;
+    return false;
 }
 
 bool

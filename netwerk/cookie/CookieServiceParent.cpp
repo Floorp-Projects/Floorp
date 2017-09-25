@@ -91,6 +91,7 @@ GetInfoFromCookie(nsCookie         *aCookie,
   aCookieStruct.creationTime() = aCookie->CreationTime();
   aCookieStruct.isSession() = aCookie->IsSession();
   aCookieStruct.isSecure() = aCookie->IsSecure();
+  aCookieStruct.sameSite() = aCookie->SameSite();
 }
 
 void
@@ -186,6 +187,7 @@ CookieServiceParent::SerialializeCookieList(const nsTArray<nsCookie*> &aFoundCoo
     cookieStruct->creationTime() = cookie->CreationTime();
     cookieStruct->isSession() = cookie->IsSession();
     cookieStruct->isSecure() = cookie->IsSecure();
+    cookieStruct->sameSite() = cookie->SameSite();
   }
 }
 

@@ -182,6 +182,10 @@ ShmSegmentsReader::ReadLarge(const layers::OffsetRange& aRange, wr::Vec_u8& aInt
 bool
 ShmSegmentsReader::Read(const layers::OffsetRange& aRange, wr::Vec_u8& aInto)
 {
+  if (aRange.length() == 0) {
+    return true;
+  }
+
   if (aRange.source() != 0) {
     return ReadLarge(aRange, aInto);
   }
