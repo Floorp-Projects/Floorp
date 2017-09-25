@@ -1,12 +1,18 @@
-MULTI_REPO = "projects/jamun"
-config = {
-    "log_name": "l10n_bumper",
+import sys
 
-    "exes": {
+MULTI_REPO = "projects/jamun"
+EXES = {}
+if sys.platform.startswith("linux"):
+    EXES = {
         # Get around the https warnings
         "hg": ["/usr/local/bin/hg", "--config", "web.cacerts=/etc/pki/tls/certs/ca-bundle.crt"],
         "hgtool.py": ["/usr/local/bin/hgtool.py"],
-    },
+    }
+
+
+config = {
+    "log_name": "l10n_bumper",
+    "exes": EXES,
 
     "gecko_pull_url": "https://hg.mozilla.org/{}".format(MULTI_REPO),
     "gecko_push_url": "ssh://hg.mozilla.org/{}".format(MULTI_REPO),
@@ -28,7 +34,35 @@ config = {
             "path": "mobile/android/locales/all-locales"
         }, {
             "platforms": ["android-multilocale"],
-            "path": "mobile/android/locales/maemo-locales"
+            "path": "mobile/android/locales/maemo-locales",
+        }],
+    }, {
+        "path": "browser/locales/l10n-changesets.json",
+        "format": "json",
+        "name": "Firefox l10n changesets",
+        "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fx%(MAJOR_VERSION)s",
+        "ignore_config": {
+            "ja": ["macosx64"],
+            "ja-JP-mac": ["linux", "linux64", "win32", "win64"],
+        },
+        "platform_configs": [{
+            "platforms": ["linux64", "linux", "macosx64",
+                          "win32", "win64"],
+            "path": "browser/locales/shipped-locales",
+            "format": "shipped-locales",
+        }],
+    }, {
+        "path": "browser/locales/central-changesets.json",
+        "format": "json",
+        "name": "Firefox l10n changesets",
+        "ignore_config": {
+            "ja": ["macosx64"],
+            "ja-JP-mac": ["linux", "linux64", "win32", "win64"],
+        },
+        "platform_configs": [{
+            "platforms": ["linux64", "linux", "macosx64",
+                          "win32", "win64"],
+            "path": "browser/locales/all-locales",
         }],
     }],
 }
