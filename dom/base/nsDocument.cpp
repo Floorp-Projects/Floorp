@@ -6313,7 +6313,8 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   }
 
   nsCOMPtr<nsIAtom> typeAtom(NS_Atomize(elemName));
-  CustomElementDefinition* definition = registry->mCustomDefinitions.Get(typeAtom);
+  CustomElementDefinition* definition =
+    registry->mCustomDefinitions.GetWeak(typeAtom);
   if (!definition) {
     return true;
   }
@@ -6382,6 +6383,8 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
     element->SetCustomElementData(
       new CustomElementData(definition->mType,
                             CustomElementData::State::eCustom));
+
+    element->SetCustomElementDefinition(definition);
 
     // It'll be removed when we deprecate custom elements v0.
     nsContentUtils::SyncInvokeReactions(nsIDocument::eCreated, element,

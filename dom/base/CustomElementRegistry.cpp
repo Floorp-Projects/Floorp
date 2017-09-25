@@ -158,46 +158,15 @@ private:
 NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementRegistry)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementRegistry)
-  tmp->mCustomDefinitions.Clear();
   tmp->mConstructors.clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCustomDefinitions)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWhenDefinedPromiseMap)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementRegistry)
-  for (auto iter = tmp->mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
-    auto& callbacks = iter.UserData()->mCallbacks;
-
-    if (callbacks->mAttributeChangedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mAttributeChangedCallback");
-      cb.NoteXPCOMChild(callbacks->mAttributeChangedCallback.Value());
-    }
-
-    if (callbacks->mCreatedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mCreatedCallback");
-      cb.NoteXPCOMChild(callbacks->mCreatedCallback.Value());
-    }
-
-    if (callbacks->mAttachedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mAttachedCallback");
-      cb.NoteXPCOMChild(callbacks->mAttachedCallback.Value());
-    }
-
-    if (callbacks->mDetachedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mDetachedCallback");
-      cb.NoteXPCOMChild(callbacks->mDetachedCallback.Value());
-    }
-
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-      "mCustomDefinitions->mConstructor");
-    cb.NoteXPCOMChild(iter.UserData()->mConstructor);
-  }
-
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCustomDefinitions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWhenDefinedPromiseMap)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -248,7 +217,7 @@ CustomElementRegistry::LookupCustomElementDefinition(const nsAString& aLocalName
   nsCOMPtr<nsIAtom> localNameAtom = NS_Atomize(aLocalName);
   nsCOMPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : localNameAtom;
 
-  CustomElementDefinition* data = mCustomDefinitions.Get(typeAtom);
+  CustomElementDefinition* data = mCustomDefinitions.GetWeak(typeAtom);
   if (data && data->mLocalName == localNameAtom) {
     return data;
   }
@@ -267,7 +236,7 @@ CustomElementRegistry::LookupCustomElementDefinition(JSContext* aCx,
     return nullptr;
   }
 
-  CustomElementDefinition* definition = mCustomDefinitions.Get(ptr->value());
+  CustomElementDefinition* definition = mCustomDefinitions.GetWeak(ptr->value());
   MOZ_ASSERT(definition, "Definition must be found in mCustomDefinitions");
 
   return definition;
@@ -286,7 +255,7 @@ CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTy
     typeName = info->NameAtom();
   }
 
-  if (mCustomDefinitions.Get(typeName)) {
+  if (mCustomDefinitions.GetWeak(typeName)) {
     return;
   }
 
@@ -358,7 +327,7 @@ CustomElementRegistry::CreateCustomElementCallback(
     nsCOMPtr<nsIAtom> typeAtom = elementData ?
       elementData->mType.get() : info->NameAtom();
 
-    definition = mCustomDefinitions.Get(typeAtom);
+    definition = mCustomDefinitions.GetWeak(typeAtom);
     if (!definition || definition->mLocalName != info->NameAtom()) {
       // Trying to enqueue a callback for an element that is not
       // a custom element. We are done, nothing to do.
@@ -458,7 +427,7 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
     nsCOMPtr<nsIAtom> typeAtom = elementData ?
       elementData->mType.get() : info->NameAtom();
 
-    definition = mCustomDefinitions.Get(typeAtom);
+    definition = mCustomDefinitions.GetWeak(typeAtom);
     if (!definition || definition->mLocalName != info->NameAtom()) {
       return;
     }
@@ -493,7 +462,8 @@ void
 CustomElementRegistry::GetCustomPrototype(nsIAtom* aAtom,
                                           JS::MutableHandle<JSObject*> aPrototype)
 {
-  mozilla::dom::CustomElementDefinition* definition = mCustomDefinitions.Get(aAtom);
+  mozilla::dom::CustomElementDefinition* definition =
+    mCustomDefinitions.GetWeak(aAtom);
   if (definition) {
     aPrototype.set(definition->mPrototype);
   } else {
@@ -631,7 +601,7 @@ CustomElementRegistry::Define(const nsAString& aName,
    * 3. If this CustomElementRegistry contains an entry with name name, then
    *    throw a "NotSupportedError" DOMException and abort these steps.
    */
-  if (mCustomDefinitions.Get(nameAtom)) {
+  if (mCustomDefinitions.GetWeak(nameAtom)) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
@@ -642,7 +612,7 @@ CustomElementRegistry::Define(const nsAString& aName,
    */
   const auto& ptr = mConstructors.lookup(constructorUnwrapped);
   if (ptr) {
-    MOZ_ASSERT(mCustomDefinitions.Get(ptr->value()),
+    MOZ_ASSERT(mCustomDefinitions.GetWeak(ptr->value()),
                "Definition must be found in mCustomDefinitions");
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
@@ -834,7 +804,7 @@ CustomElementRegistry::Define(const nsAString& aName,
     return;
   }
 
-  CustomElementDefinition* definition =
+  RefPtr<CustomElementDefinition> definition =
     new CustomElementDefinition(nameAtom,
                                 localNameAtom,
                                 &aFunctionConstructor,
@@ -843,7 +813,8 @@ CustomElementRegistry::Define(const nsAString& aName,
                                 callbacks,
                                 0 /* TODO dependent on HTML imports. Bug 877072 */);
 
-  mCustomDefinitions.Put(nameAtom, definition);
+  CustomElementDefinition* def = definition.get();
+  mCustomDefinitions.Put(nameAtom, definition.forget());
 
   MOZ_ASSERT(mCustomDefinitions.Count() == mConstructors.count(),
              "Number of entries should be the same");
@@ -851,7 +822,7 @@ CustomElementRegistry::Define(const nsAString& aName,
   /**
    * 13. 14. 15. Upgrade candidates
    */
-  UpgradeCandidates(nameAtom, definition, aRv);
+  UpgradeCandidates(nameAtom, def, aRv);
 
   /**
    * 16. If this CustomElementRegistry's when-defined promise map contains an
@@ -874,7 +845,7 @@ CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
                            JS::MutableHandle<JS::Value> aRetVal)
 {
   nsCOMPtr<nsIAtom> nameAtom(NS_Atomize(aName));
-  CustomElementDefinition* data = mCustomDefinitions.Get(nameAtom);
+  CustomElementDefinition* data = mCustomDefinitions.GetWeak(nameAtom);
 
   if (!data) {
     aRetVal.setUndefined();
@@ -900,7 +871,7 @@ CustomElementRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
     return promise.forget();
   }
 
-  if (mCustomDefinitions.Get(nameAtom)) {
+  if (mCustomDefinitions.GetWeak(nameAtom)) {
     promise->MaybeResolve(JS::UndefinedHandleValue);
     return promise.forget();
   }
@@ -1003,6 +974,9 @@ CustomElementRegistry::Upgrade(Element* aElement,
 
   // Step 8.
   data->mState = CustomElementData::State::eCustom;
+
+  // Step 9.
+  aElement->SetCustomElementDefinition(aDefinition);
 
   // This is for old spec.
   nsContentUtils::EnqueueLifecycleCallback(aElement->OwnerDoc(),
@@ -1155,6 +1129,50 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
 
 //-----------------------------------------------------
 // CustomElementDefinition
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementDefinition)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementDefinition)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConstructor)
+  tmp->mPrototype = nullptr;
+  tmp->mCallbacks = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementDefinition)
+  mozilla::dom::LifecycleCallbacks* callbacks = tmp->mCallbacks.get();
+
+  if (callbacks->mAttributeChangedCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+      "mCallbacks->mAttributeChangedCallback");
+    cb.NoteXPCOMChild(callbacks->mAttributeChangedCallback.Value());
+  }
+
+  if (callbacks->mCreatedCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mCreatedCallback");
+    cb.NoteXPCOMChild(callbacks->mCreatedCallback.Value());
+  }
+
+  if (callbacks->mAttachedCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mAttachedCallback");
+    cb.NoteXPCOMChild(callbacks->mAttachedCallback.Value());
+  }
+
+  if (callbacks->mDetachedCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mDetachedCallback");
+    cb.NoteXPCOMChild(callbacks->mDetachedCallback.Value());
+  }
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mConstructor");
+  cb.NoteXPCOMChild(tmp->mConstructor);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CustomElementDefinition)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mPrototype)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CustomElementDefinition, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CustomElementDefinition, Release)
+
 
 CustomElementDefinition::CustomElementDefinition(nsIAtom* aType,
                                                  nsIAtom* aLocalName,
