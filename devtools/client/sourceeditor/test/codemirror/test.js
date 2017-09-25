@@ -254,6 +254,11 @@ testCM("coordsCharBidi", function(cm) {
   }
 }, {lineNumbers: true});
 
+testCM("badBidiOptimization", function(cm) {
+  var coords = cm.charCoords(Pos(0, 34))
+  eqCharPos(cm.coordsChar({left: coords.right, top: coords.top + 2}), Pos(0, 34))
+}, {value: "----------<p class=\"title\">هل يمكنك اختيار مستوى قسط التأمين الذي ترغب بدفعه؟</p>"})
+
 testCM("posFromIndex", function(cm) {
   cm.setValue(
     "This function should\n" +
@@ -1155,6 +1160,16 @@ testCM("measureWrappedEndOfLine", function(cm) {
     }
   }
 }, {mode: "text/html", value: "0123456789abcde0123456789", lineWrapping: true}, ie_lt8 || opera_lt10);
+
+testCM("measureEndOfLineBidi", function(cm) {
+  eqCursorPos(cm.coordsChar({left: 5000, top: cm.charCoords(Pos(0, 0)).top}), Pos(0, 8, "after"))
+}, {value: "إإإإuuuuإإإإ"})
+
+testCM("measureWrappedBidiLevel2", function(cm) {
+  cm.setSize(cm.charCoords(Pos(0, 6), "editor").right + 60)
+  var c9 = cm.charCoords(Pos(0, 9))
+  eqCharPos(cm.coordsChar({left: c9.right - 1, top: c9.top + 1}), Pos(0, 9))
+}, {value: "foobar إإ إإ إإ إإ 555 بببببب", lineWrapping: true})
 
 testCM("measureWrappedBeginOfLine", function(cm) {
   if (phantom) return;
@@ -2467,6 +2482,23 @@ for (var i = 0; i < 5; ++i) {
   testCoordsWrappedBidi(getString(50));
 }
 */
+
+testCM("rtl_wrapped_selection", function(cm) {
+  cm.setSelection(Pos(0, 10), Pos(0, 190))
+  is(byClassName(cm.getWrapperElement(), "CodeMirror-selected").length >= 3)
+}, {value: new Array(10).join(" فتي تم تضمينها فتي تم"), lineWrapping: true})
+
+testCM("bidi_wrapped_selection", function(cm) {
+  if (phantom) return
+  cm.setSize(cm.charCoords(Pos(0, 10), "editor").left)
+  cm.setSelection(Pos(0, 37), Pos(0, 80))
+  var blocks = byClassName(cm.getWrapperElement(), "CodeMirror-selected")
+  is(blocks.length >= 2)
+  is(blocks.length <= 3)
+  var boxTop = blocks[0].getBoundingClientRect(), boxBot = blocks[blocks.length - 1].getBoundingClientRect()
+  is(boxTop.left > cm.charCoords(Pos(0, 1)).right)
+  is(boxBot.right < cm.charCoords(Pos(0, cm.getLine(0).length - 2)).left)
+}, {value: "<p>مفتي11 تم تضمينهفتي تم تضمينها فتي تفتي تم تضمينها فتي تفتي تم تضمينها فتي تفتي تم تضمينها فتي تا فت10ي ت</p>", lineWrapping: true})
 
 testCM("delete_wrapped", function(cm) {
   makeItWrapAfter(cm, Pos(0, 2));

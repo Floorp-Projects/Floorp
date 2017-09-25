@@ -1106,6 +1106,11 @@ Element::RemoveFromIdTable()
 already_AddRefed<ShadowRoot>
 Element::CreateShadowRoot(ErrorResult& aError)
 {
+  if (GetShadowRoot()) {
+    aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   nsAutoScriptBlocker scriptBlocker;
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
@@ -1142,24 +1147,7 @@ Element::CreateShadowRoot(ErrorResult& aError)
 
   shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
 
-  // Replace the old ShadowRoot with the new one and let the old
-  // ShadowRoot know about the younger ShadowRoot because the old
-  // ShadowRoot is projected into the younger ShadowRoot's shadow
-  // insertion point (if it exists).
-  ShadowRoot* olderShadow = GetShadowRoot();
   SetShadowRoot(shadowRoot);
-  if (olderShadow) {
-    olderShadow->SetYoungerShadow(shadowRoot);
-
-    // Unbind children of older shadow root because they
-    // are no longer in the composed tree.
-    for (nsIContent* child = olderShadow->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      child->UnbindFromTree(true, false);
-    }
-
-    olderShadow->SetIsComposedDocParticipant(false);
-  }
 
   // xblBinding takes ownership of docInfo.
   RefPtr<nsXBLBinding> xblBinding = new nsXBLBinding(shadowRoot, protoBinding);

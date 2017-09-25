@@ -51,8 +51,6 @@ div.after::after {content: " Y";}
     <div id="hostT" class="c">T</div>
     <div id="hostU"><span class="c">U</span></div>
     <div id="hostV" class="c" style="color:red"><b class="c" style="color:inherit">V</b></div>
-    <div id="hostW" class="c" style="color:red"><b class="c" style="color:inherit">W</b></div>
-    <span id="hostX" style="color:red"><b class="c" style="color:inherit">X</b></span>
     <!-- TODO(bug 1021572?) <div id="hostY" class="c" style="color:red"><b>Y</b></div> -->
 
    <script>
@@ -106,8 +104,6 @@ div.after::after {content: " Y";}
         shadow("hostP").innerHTML = '<content select="b"></content><content select="i"></content>';
         shadow("hostQ").innerHTML = '<content select="b"></content><content select="i"></content>';
         shadow("hostR").innerHTML = '<content select="span"></content>';
-        shadow("hostW").innerHTML = '<z style="color:red"><content select="b"></content></z>';
-        shadow("hostX").innerHTML = '<z style="color:red"><content select="b"></content></z>';
         // TODO(bug 1021572?) shadow("hostY").innerHTML = '<content select="b"><style scoped>:scope{color:green}</style></content>';
       }
 
@@ -224,8 +220,6 @@ div.after::after {content: " Y";}
             shadow("hostT");
             shadow("hostU");
             shadow("hostV").innerHTML = '<z style="color:green"><content select="b"></content></z>';
-            shadow("hostW").innerHTML = '<z style="color:green"><content select="b"></content></z>';
-            shadow("hostX").innerHTML = '<z style="color:green"><content select="b"></content></z>';
 
             document.body.offsetHeight;
             document.documentElement.removeAttribute("class");
