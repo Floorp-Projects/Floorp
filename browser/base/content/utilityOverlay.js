@@ -526,6 +526,7 @@ function checkForMiddleClick(node, event) {
 function createUserContextMenu(event, {
                                         isContextMenu = false,
                                         excludeUserContextId = 0,
+                                        showDefaultTab = false,
                                         useAccessKeys = true
                                       } = {}) {
   while (event.target.hasChildNodes()) {
@@ -536,7 +537,7 @@ function createUserContextMenu(event, {
   let docfrag = document.createDocumentFragment();
 
   // If we are excluding a userContextId, we want to add a 'no-container' item.
-  if (excludeUserContextId) {
+  if (excludeUserContextId || showDefaultTab) {
     let menuitem = document.createElement("menuitem");
     menuitem.setAttribute("data-usercontextid", "0");
     menuitem.setAttribute("label", bundle.getString("userContextNone.label"));
