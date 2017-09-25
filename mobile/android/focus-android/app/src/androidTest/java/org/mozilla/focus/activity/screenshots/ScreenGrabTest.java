@@ -312,16 +312,14 @@ public class ScreenGrabTest {
 
     private void takeAddToHomeScreenScreenshot() throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
+
         assertTrue(TestHelper.AddtoHSmenuItem.waitForExists(waitingTime));
         TestHelper.AddtoHSmenuItem.click();
+
         assertTrue(TestHelper.AddtoHSCancelBtn.waitForExists(waitingTime));
         Screengrab.screenshot("AddtoHSDialog");
-        TestHelper.pressBackKey();
 
-        // in certain cases, keyboard may not pop up in time. if it does, press back again
-        if (TestHelper.AddtoHSCancelBtn.exists()) {
-            TestHelper.pressBackKey();
-        }
+        TestHelper.AddtoHSCancelBtn.click();
     }
 
     private void takeScreenshotOfNotification(Context context, UiDevice device) {
