@@ -216,6 +216,7 @@ pref(dom.IntersectionObserver.enabled,true) load 1369363.xul
 load 1370072.html
 pref(clipboard.autocopy,true) load 1370737.html
 pref(dom.IntersectionObserver.enabled,true) load 1370968.html
+load 1373750.html
 load 1377826.html
 skip-if(stylo&&isDebugBuild&&winWidget) load structured_clone_container_throws.html # Bug 1383845
 load xhr_empty_datauri.html
