@@ -162,6 +162,14 @@ const RECOMMENDED_PREFS = new Map([
   // Should be set in profile.
   ["browser.uitour.enabled", false],
 
+  // Turn off search suggestions in the location bar so as not to trigger
+  // network connections.
+  ["browser.urlbar.suggest.searches", false],
+
+  // Turn off the location bar search suggestions opt-in.  It interferes with
+  // tests that don't expect it to be there.
+  ["browser.urlbar.userMadeSearchSuggestionsChoice", true],
+
   // Do not show datareporting policy notifications which can
   // interfere with tests
   [
