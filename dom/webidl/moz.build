@@ -739,7 +739,6 @@ WEBIDL_FILES = [
     'PerformanceMark.webidl',
     'PerformanceMeasure.webidl',
     'PerformanceNavigation.webidl',
-    'PerformanceNavigationTiming.webidl',
     'PerformanceObserver.webidl',
     'PerformanceObserverEntryList.webidl',
     'PerformanceResourceTiming.webidl',
