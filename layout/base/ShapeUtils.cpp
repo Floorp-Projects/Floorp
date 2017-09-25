@@ -38,7 +38,7 @@ ShapeUtils::ComputeShapeRadius(const StyleShapeRadius aType,
 }
 
 nsPoint
-ShapeUtils::ComputeCircleOrEllipseCenter(const StyleBasicShape* aBasicShape,
+ShapeUtils::ComputeCircleOrEllipseCenter(const UniquePtr<StyleBasicShape>& aBasicShape,
                                          const nsRect& aRefBox)
 {
   MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Circle ||
@@ -54,7 +54,7 @@ ShapeUtils::ComputeCircleOrEllipseCenter(const StyleBasicShape* aBasicShape,
 }
 
 nscoord
-ShapeUtils::ComputeCircleRadius(const StyleBasicShape* aBasicShape,
+ShapeUtils::ComputeCircleRadius(const UniquePtr<StyleBasicShape>& aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
@@ -86,7 +86,7 @@ ShapeUtils::ComputeCircleRadius(const StyleBasicShape* aBasicShape,
 }
 
 nsSize
-ShapeUtils::ComputeEllipseRadii(const StyleBasicShape* aBasicShape,
+ShapeUtils::ComputeEllipseRadii(const UniquePtr<StyleBasicShape>& aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
@@ -117,7 +117,7 @@ ShapeUtils::ComputeEllipseRadii(const StyleBasicShape* aBasicShape,
 }
 
 /* static */ nsRect
-ShapeUtils::ComputeInsetRect(const StyleBasicShape* aBasicShape,
+ShapeUtils::ComputeInsetRect(const UniquePtr<StyleBasicShape>& aBasicShape,
                              const nsRect& aRefBox)
 {
   MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Inset,
@@ -138,7 +138,7 @@ ShapeUtils::ComputeInsetRect(const StyleBasicShape* aBasicShape,
 }
 
 /* static */ bool
-ShapeUtils::ComputeInsetRadii(const StyleBasicShape* aBasicShape,
+ShapeUtils::ComputeInsetRadii(const UniquePtr<StyleBasicShape>& aBasicShape,
                               const nsRect& aInsetRect,
                               const nsRect& aRefBox,
                               nscoord aRadii[8])
@@ -150,7 +150,7 @@ ShapeUtils::ComputeInsetRadii(const StyleBasicShape* aBasicShape,
 }
 
 /* static */ nsTArray<nsPoint>
-ShapeUtils::ComputePolygonVertices(const StyleBasicShape* aBasicShape,
+ShapeUtils::ComputePolygonVertices(const UniquePtr<StyleBasicShape>& aBasicShape,
                                    const nsRect& aRefBox)
 {
   MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Polygon,
