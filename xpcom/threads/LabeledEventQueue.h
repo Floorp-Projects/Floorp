@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/AbstractEventQueue.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Queue.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
