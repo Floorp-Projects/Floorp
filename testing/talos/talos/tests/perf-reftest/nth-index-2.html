@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<style>
+.x:nth-of-type(200000) { background-color: yellow; }
+.x:nth-of-type(200000) div, .x:nth-of-type(200000) span { color: green; }
+</style>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  let root = document.createElement("div");
+  root.className = "root";
+  for (let i = 0; i < 200000; i++) {
+    root.appendChild(document.createElement("div"));
+  }
+  let last = root.lastChild;
+  last.appendChild(build_dom(5000, "div"));
+  document.body.appendChild(root);
+  flush_style(root);
+  perf_start();
+  last.className = "x";
+  flush_style(root);
+  perf_finish();
+};
+</script>
+<body></body>
