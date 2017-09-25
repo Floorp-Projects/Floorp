@@ -293,7 +293,7 @@ def chunk_locales(config, jobs):
                 )
                 chunked['mozharness']['options'] = chunked['mozharness'].get('options', [])
                 # chunkify doesn't work with dicts
-                locales_with_changesets_as_list = locales_with_changesets.items()
+                locales_with_changesets_as_list = sorted(locales_with_changesets.items())
                 chunked_locales = chunkify(locales_with_changesets_as_list, this_chunk, chunks)
                 chunked['mozharness']['options'].extend([
                     'locale={}:{}'.format(locale, changeset)
@@ -313,7 +313,7 @@ def chunk_locales(config, jobs):
             job['mozharness']['options'] = job['mozharness'].get('options', [])
             job['mozharness']['options'].extend([
                 'locale={}:{}'.format(locale, changeset)
-                for locale, changeset in locales_with_changesets.items()
+                for locale, changeset in sorted(locales_with_changesets.items())
             ])
             yield job
 
