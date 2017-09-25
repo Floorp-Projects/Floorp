@@ -5011,7 +5011,7 @@ nsComputedDOMStyle::DoGetClip()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetWillChange()
 {
-  const nsCOMArray<nsIAtom>& willChange = StyleDisplay()->mWillChange;
+  const nsTArray<RefPtr<nsIAtom>>& willChange = StyleDisplay()->mWillChange;
 
   if (willChange.IsEmpty()) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -6696,7 +6696,7 @@ nsComputedDOMStyle::DoGetMaskType()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetContextProperties()
 {
-  const nsTArray<nsCOMPtr<nsIAtom>>& contextProps = StyleSVG()->mContextProps;
+  const nsTArray<RefPtr<nsIAtom>>& contextProps = StyleSVG()->mContextProps;
 
   if (contextProps.IsEmpty()) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;

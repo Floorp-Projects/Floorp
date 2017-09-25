@@ -82,7 +82,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
                   "Bogus namespace.");
 
   if (mBuilder) {
-    nsCOMPtr<nsIAtom> name = nsHtml5TreeOperation::Reget(aName);
+    RefPtr<nsIAtom> name = nsHtml5TreeOperation::Reget(aName);
 
     nsIContent* intendedParent = aIntendedParent ?
       static_cast<nsIContent*>(aIntendedParent) : nullptr;
@@ -769,7 +769,7 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName,
   aPublicId.ToString(publicId);
   aSystemId.ToString(systemId);
   if (mBuilder) {
-    nsCOMPtr<nsIAtom> name = nsHtml5TreeOperation::Reget(aName);
+    RefPtr<nsIAtom> name = nsHtml5TreeOperation::Reget(aName);
     nsresult rv = nsHtml5TreeOperation::AppendDoctypeToDocument(
       name, publicId, systemId, mBuilder);
     if (NS_FAILED(rv)) {

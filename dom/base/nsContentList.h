@@ -472,8 +472,8 @@ protected:
 
   nsINode* mRootNode; // Weak ref
   int32_t mMatchNameSpaceId;
-  nsCOMPtr<nsIAtom> mHTMLMatchAtom;
-  nsCOMPtr<nsIAtom> mXMLMatchAtom;
+  RefPtr<nsIAtom> mHTMLMatchAtom;
+  RefPtr<nsIAtom> mXMLMatchAtom;
 
   /**
    * Function to use to determine whether a piece of content matches

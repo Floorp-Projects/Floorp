@@ -126,7 +126,7 @@ private:
       return !(*this == aOther);
     }
   };
-  nsCOMPtr<nsIAtom> mMedium;
+  RefPtr<nsIAtom> mMedium;
   nsTArray<FeatureEntry> mFeatureCache;
 };
 
@@ -243,7 +243,7 @@ private:
   bool mHasOnly; // only needed for serialization
   bool mTypeOmitted; // only needed for serialization
   bool mHadUnknownExpression;
-  nsCOMPtr<nsIAtom> mMediaType;
+  RefPtr<nsIAtom> mMediaType;
   nsTArray<nsMediaExpression> mExpressions;
 };
 

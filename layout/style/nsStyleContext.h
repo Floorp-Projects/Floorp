@@ -339,7 +339,7 @@ protected:
 
   // If this style context is for a pseudo-element or anonymous box,
   // the relevant atom.
-  nsCOMPtr<nsIAtom> mPseudoTag;
+  RefPtr<nsIAtom> mPseudoTag;
 
   // mBits stores a number of things:
   //  - It records (using the style struct bits) which structs are

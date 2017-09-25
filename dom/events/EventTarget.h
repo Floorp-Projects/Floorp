@@ -60,7 +60,7 @@ public:
   // Note, this takes the type in onfoo form!
   EventHandlerNonNull* GetEventHandler(const nsAString& aType)
   {
-    nsCOMPtr<nsIAtom> type = NS_Atomize(aType);
+    RefPtr<nsIAtom> type = NS_Atomize(aType);
     return GetEventHandler(type, EmptyString());
   }
 

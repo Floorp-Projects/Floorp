@@ -1389,7 +1389,7 @@ nsXULTreeBuilder::GetTemplateActionCellFor(int32_t aRow, nsTreeColumn& aCol)
         return nullptr;
     }
 
-    nsCOMPtr<nsIAtom> colAtom(aCol.GetAtom());
+    RefPtr<nsIAtom> colAtom(aCol.GetAtom());
     int32_t colIndex(aCol.GetIndex());
 
     nsIContent* result = nullptr;

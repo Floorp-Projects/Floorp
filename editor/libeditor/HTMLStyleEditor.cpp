@@ -59,7 +59,7 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
                               const nsAString& aAttribute,
                               const nsAString& aValue)
 {
-  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  RefPtr<nsIAtom> property = NS_Atomize(aProperty);
   return SetInlineProperty(property, aAttribute, aValue);
 }
 
@@ -215,7 +215,7 @@ HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
 
   // Now look for things like <font>
   if (aAttribute && !aAttribute->IsEmpty()) {
-    nsCOMPtr<nsIAtom> atom = NS_Atomize(*aAttribute);
+    RefPtr<nsIAtom> atom = NS_Atomize(*aAttribute);
     MOZ_ASSERT(atom);
 
     nsString attrValue;
@@ -324,7 +324,7 @@ HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
                                         const nsAString* aAttribute,
                                         const nsAString& aValue)
 {
-  nsCOMPtr<nsIAtom> attrAtom = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
+  RefPtr<nsIAtom> attrAtom = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
 
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
@@ -706,7 +706,7 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       // otherwise we just want to eliminate the attribute
-      nsCOMPtr<nsIAtom> attribute = NS_Atomize(*aAttribute);
+      RefPtr<nsIAtom> attribute = NS_Atomize(*aAttribute);
       if (aNode.HasAttr(kNameSpaceID_None, attribute)) {
         // if this matching attribute is the ONLY one on the node,
         // then remove the whole node.  Otherwise just nix the attribute.
@@ -733,7 +733,7 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
     // this implementation for the node aNode; let's check if it carries those
     // css styles
     if (aNode.IsElement()) {
-      nsCOMPtr<nsIAtom> attribute =
+      RefPtr<nsIAtom> attribute =
         aAttribute ? NS_Atomize(*aAttribute) : nullptr;
       bool hasAttribute =
         mCSSEditUtils->HaveCSSEquivalentStyles(
@@ -1079,7 +1079,7 @@ HTMLEditor::GetInlineProperty(const nsAString& aProperty,
                               bool* aAny,
                               bool* aAll)
 {
-  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  RefPtr<nsIAtom> property = NS_Atomize(aProperty);
   return GetInlineProperty(property, aAttribute, aValue, aFirst, aAny, aAll);
 }
 
@@ -1110,7 +1110,7 @@ HTMLEditor::GetInlinePropertyWithAttrValue(const nsAString& aProperty,
                                            bool* aAll,
                                            nsAString& outValue)
 {
-  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  RefPtr<nsIAtom> property = NS_Atomize(aProperty);
   return GetInlinePropertyWithAttrValue(property, aAttribute, aValue, aFirst,
                                         aAny, aAll, outValue);
 }
@@ -1150,7 +1150,7 @@ NS_IMETHODIMP
 HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
                                  const nsAString& aAttribute)
 {
-  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  RefPtr<nsIAtom> property = NS_Atomize(aProperty);
   return RemoveInlineProperty(property, aAttribute);
 }
 

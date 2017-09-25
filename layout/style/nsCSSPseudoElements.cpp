@@ -137,7 +137,7 @@ nsCSSPseudoElements::GetPseudoAtom(const nsAString& aPseudoElement)
     --start;
     haveTwoColons = false;
   }
-  nsCOMPtr<nsIAtom> pseudo = NS_Atomize(Substring(start, end));
+  RefPtr<nsIAtom> pseudo = NS_Atomize(Substring(start, end));
   MOZ_ASSERT(pseudo);
 
   // There aren't any non-CSS2 pseudo-elements with a single ':'
