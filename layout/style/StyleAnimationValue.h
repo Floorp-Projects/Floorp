@@ -611,7 +611,10 @@ struct AnimationValue
 
   float GetOpacity() const;
 
-  // Returns the scale for mGecko or mServo, which are calculated with
+  // Return the transform list as a RefPtr.
+  already_AddRefed<const nsCSSValueSharedList> GetTransformList() const;
+
+  // Return the scale for mGecko or mServo, which are calculated with
   // reference to aFrame.
   gfxSize GetScaleValue(const nsIFrame* aFrame) const;
 
