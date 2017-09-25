@@ -374,7 +374,14 @@ class AbstractShot {
       clipFilename = clipFilename.substring(0, clipFilename.length - excedingchars);
       clipFilename = clipFilename + '[...]';
     }
-    return clipFilename + '.png';
+    let clip = this.getClip(this.clipNames()[0]);
+    let extension = ".png";
+    if (clip && clip.image && clip.image.type) {
+      if (clip.image.type == "jpeg") {
+        extension = ".jpg";
+      }
+    }
+    return clipFilename + extension;
   }
 
   get urlDisplay() {
@@ -698,12 +705,15 @@ class _Clip {
       this._image = undefined;
       return;
     }
-    assert(checkObject(image, ["url"], ["dimensions", "text", "location", "captureType"]), "Bad attrs for Clip Image:", Object.keys(image));
+    assert(checkObject(image, ["url"], ["dimensions", "text", "location", "captureType", "type"]), "Bad attrs for Clip Image:", Object.keys(image));
     assert(isValidClipImageUrl(image.url), "Bad Clip image URL:", image.url);
     assert(image.captureType == "madeSelection" || image.captureType == "selection" || image.captureType == "visible" || image.captureType == "auto" || image.captureType == "fullPage" || !image.captureType, "Bad image.captureType:", image.captureType);
     assert(typeof image.text == "string" || !image.text, "Bad Clip image text:", image.text);
     if (image.dimensions) {
       assert(typeof image.dimensions.x == "number" && typeof image.dimensions.y == "number", "Bad Clip image dimensions:", image.dimensions);
+    }
+    if (image.type) {
+      assert(image.type == "png" || image.type == "jpeg", "Unexpected image type:", image.type);
     }
     assert(image.location &&
       typeof image.location.left == "number" &&

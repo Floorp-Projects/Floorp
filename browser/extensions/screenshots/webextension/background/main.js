@@ -1,4 +1,4 @@
-/* globals selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror, startBackground */
+/* globals selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror, startBackground, blobConverters */
 
 "use strict";
 
@@ -223,9 +223,7 @@ this.main = (function() {
   communication.register("downloadShot", (sender, info) => {
     // 'data:' urls don't work directly, let's use a Blob
     // see http://stackoverflow.com/questions/40269862/save-data-uri-as-file-using-downloads-download-api
-    const binary = atob(info.url.split(',')[1]); // just the base64 data
-    const data = Uint8Array.from(binary, char => char.charCodeAt(0))
-    const blob = new Blob([data], {type: "image/png"})
+    const blob = blobConverters.dataUrlToBlob(info.url);
     let url = URL.createObjectURL(blob);
     let downloadId;
     let onChangedCallback = catcher.watchFunction(function(change) {
