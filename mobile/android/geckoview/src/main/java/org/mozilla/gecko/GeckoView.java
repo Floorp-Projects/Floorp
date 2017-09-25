@@ -685,7 +685,7 @@ public class GeckoView extends LayerView {
 
     /**
     * Set this GeckoView as active or inactive. Setting a GeckoView to inactive will
-    * significantly reduce its memory footprint, but should only be done if the 
+    * significantly reduce its memory footprint, but should only be done if the
     * GeckoView is not currently visible.
     * @param active A boolean determining whether the GeckoView is active
     */
