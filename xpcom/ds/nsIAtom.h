@@ -97,6 +97,29 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIAtom, NS_IATOM_IID)
   NS_IMETHOD ToUTF8String(nsACString& _retval) override; \
   NS_IMETHOD_(size_t) SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
 
+class nsAtom final : public nsIAtom
+{
+public:
+  NS_DECL_NSIATOM
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) final;
+  typedef mozilla::TrueType HasThreadSafeRefCnt;
+
+private:
+  friend class nsIAtom;
+  friend class nsAtomFriend;
+
+  // Construction and destruction is done entirely by |friend|s.
+  nsAtom(const nsAString& aString, uint32_t aHash);
+  nsAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash);
+  ~nsAtom();
+
+  MozExternalRefCountType DynamicAddRef();
+  MozExternalRefCountType DynamicRelease();
+
+  mozilla::ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+};
+
 // The four forms of NS_Atomize (for use with |nsCOMPtr<nsIAtom>|) return the
 // atom for the string given. At any given time there will always be one atom
 // representing a given string. Atoms are intended to make string comparison
