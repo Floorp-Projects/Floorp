@@ -17,7 +17,7 @@ namespace layers {
 ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
                                              wr::DisplayListBuilder& aBuilder,
                                              const StackingContextHelper& aStackingContext,
-                                             WebRenderLayerManager::ClipIdMap& aCache,
+                                             WebRenderCommandsBuilder::ClipIdMap& aCache,
                                              bool aApzEnabled)
   : mBuilder(&aBuilder)
   , mPushedClipAndScroll(false)
@@ -76,7 +76,7 @@ ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
                                                  wr::DisplayListBuilder& aBuilder,
                                                  int32_t aAppUnitsPerDevPixel,
                                                  const StackingContextHelper& aStackingContext,
-                                                 WebRenderLayerManager::ClipIdMap& aCache)
+                                                 WebRenderCommandsBuilder::ClipIdMap& aCache)
 {
   if (!aAsr) {
     return;
@@ -130,7 +130,7 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
                                           wr::DisplayListBuilder& aBuilder,
                                           const StackingContextHelper& aStackingContext,
                                           int32_t aAppUnitsPerDevPixel,
-                                          WebRenderLayerManager::ClipIdMap& aCache)
+                                          WebRenderCommandsBuilder::ClipIdMap& aCache)
 {
   if (!aChain) {
     return;
