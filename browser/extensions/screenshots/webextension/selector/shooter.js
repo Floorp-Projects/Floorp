@@ -1,5 +1,5 @@
 /* globals global, documentMetadata, util, uicontrol, ui, catcher */
-/* globals buildSettings, domainFromUrl, randomString, shot */
+/* globals buildSettings, domainFromUrl, randomString, shot, blobConverters */
 
 "use strict";
 
@@ -27,13 +27,6 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       .replace(origin, 'REDACTED_URL');
     const result = JSON.parse(json);
     return result;
-  }
-
-  function base64ToBinary(url) {
-    const binary = atob(url.split(',')[1]);
-    const data = Uint8Array.from(binary, char => char.charCodeAt(0));
-    const blob = new Blob([data], {type: "image/png"});
-    return blob;
   }
 
   catcher.registerHandler((errorObj) => {
@@ -70,7 +63,16 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     } finally {
       ui.iframe.unhide();
     }
-    return canvas.toDataURL();
+    let limit = buildSettings.pngToJpegCutoff;
+    let dataUrl = canvas.toDataURL();
+    if (limit && dataUrl.length > limit) {
+      let jpegDataUrl = canvas.toDataURL("image/jpeg");
+      if (jpegDataUrl.length < dataUrl.length) {
+        // Only use the JPEG if it is actually smaller
+        dataUrl = jpegDataUrl;
+      }
+    }
+    return dataUrl;
   };
 
   let isSaving = null;
@@ -106,13 +108,16 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       captureText = util.captureEnclosedText(selectedPos);
     }
     let dataUrl = url || screenshotPage(selectedPos, captureType);
+    let type = blobConverters.getTypeFromDataUrl(dataUrl);
+    type = type ? type.split("/", 2)[1] : null;
     if (dataUrl) {
-      imageBlob = base64ToBinary(dataUrl);
+      imageBlob = blobConverters.dataUrlToBlob(dataUrl);
       shotObject.delAllClips();
       shotObject.addClip({
         createdDate: Date.now(),
         image: {
           url: "data:",
+          type,
           captureType,
           text: captureText,
           location: selectedPos,
@@ -173,6 +178,17 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
         });
     }
     catcher.watchPromise(promise.then((dataUrl) => {
+      let type = blobConverters.getTypeFromDataUrl(dataUrl);
+      type = type ? type.split("/", 2)[1] : null;
+      shotObject.delAllClips();
+      shotObject.addClip({
+        createdDate: Date.now(),
+        image: {
+          url: dataUrl,
+          type,
+          location: selectedPos
+        }
+      });
       ui.triggerDownload(dataUrl, shotObject.filename);
       uicontrol.deactivate();
     }));
