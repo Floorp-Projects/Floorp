@@ -628,6 +628,14 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     impl: "_getNodeActorFromObjectActor"
   }),
 
+  getNodeActorFromWindowID: custom(function (windowID) {
+    return this._getNodeActorFromWindowID(windowID).then(response => {
+      return response ? response.node : null;
+    });
+  }, {
+    impl: "_getNodeActorFromWindowID"
+  }),
+
   getStyleSheetOwnerNode: custom(function (styleSheetActorID) {
     return this._getStyleSheetOwnerNode(styleSheetActorID).then(response => {
       return response ? response.node : null;
