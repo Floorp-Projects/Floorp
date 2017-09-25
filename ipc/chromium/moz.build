@@ -142,6 +142,13 @@ if os_bsd or os_linux:
             'src/base/message_pump_glib.cc',
         ]
 
+if os_solaris:
+    SOURCES += [
+        'src/base/atomicops_internals_x86_gcc.cc',
+        'src/base/process_util_linux.cc',
+        'src/base/time_posix.cc',
+    ]
+
 ost = CONFIG['OS_TEST']
 if '86' not in ost and 'arm' not in ost and 'aarch64' != ost and 'mips' not in ost:
     SOURCES += [
