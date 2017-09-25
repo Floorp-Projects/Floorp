@@ -270,6 +270,10 @@
     }
   });
 
+  p.style.paintOrder = "markers";
+  is(p.style.paintOrder, "markers",
+     "specified value serialization for paint-order doesn't contain repetitive values");
+
   p.remove();
 })();
 
