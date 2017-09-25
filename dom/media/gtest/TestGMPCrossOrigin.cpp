@@ -8,6 +8,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "ChromiumCDMCallback.h"
 #include "GMPTestMonitor.h"
 #include "GMPVideoDecoderProxy.h"
 #include "GMPVideoEncoderProxy.h"
@@ -22,6 +23,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h" // For MediaKeyStatus
 #include "mozilla/dom/MediaKeyMessageEventBinding.h" // For MediaKeyMessageType
+#include "nsThreadUtils.h"
 
 using namespace std;
 
@@ -237,6 +239,13 @@ GetGMPThread()
   return thread.forget();
 }
 
+static RefPtr<AbstractThread>
+GetAbstractGMPThread()
+{
+  RefPtr<GeckoMediaPluginService> service =
+    GeckoMediaPluginService::GetGeckoMediaPluginService();
+  return service->GetAbstractGMPThread();
+}
 /**
  * Enumerate files under |aPath| (non-recursive).
  */
@@ -458,6 +467,28 @@ private:
   nsresult& mResult;
 };
 
+static NodeId
+GetNodeId(const nsAString& aOrigin,
+          const nsAString& aTopLevelOrigin,
+          const nsAString & aGmpName,
+          bool aInPBMode)
+{
+  OriginAttributes attrs;
+  attrs.mPrivateBrowsingId = aInPBMode ? 1 : 0;
+
+  nsAutoCString suffix;
+  attrs.CreateSuffix(suffix);
+
+  nsAutoString origin;
+  origin.Assign(aOrigin);
+  origin.Append(NS_ConvertUTF8toUTF16(suffix));
+
+  nsAutoString topLevelOrigin;
+  topLevelOrigin.Assign(aTopLevelOrigin);
+  topLevelOrigin.Append(NS_ConvertUTF8toUTF16(suffix));
+  return NodeId(origin, topLevelOrigin, aGmpName);
+}
+
 static nsCString
 GetNodeId(const nsAString& aOrigin,
           const nsAString& aTopLevelOrigin,
@@ -526,7 +557,7 @@ AssertIsOnGMPThread()
   MOZ_ASSERT(currentThread == thread);
 }
 
-class GMPStorageTest : public GMPDecryptorProxyCallback
+class GMPStorageTest
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPStorageTest)
 
@@ -539,8 +570,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   GMPStorageTest()
-    : mDecryptor(nullptr)
-    , mMonitor("GMPStorageTest")
+    : mMonitor("GMPStorageTest")
     , mFinished(false)
   {
   }
@@ -550,7 +580,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   {
     nsTArray<uint8_t> msg;
     msg.AppendElements(aMessage.get(), aMessage.Length());
-    mDecryptor->UpdateSession(1, NS_LITERAL_CSTRING("fake-session-id"), msg);
+    mCDM->UpdateSession(NS_LITERAL_CSTRING("fake-session-id"), 1, msg);
   }
 
   void TestGetNodeId()
@@ -608,37 +638,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     SetFinished();
   }
 
-  class CreateDecryptorDone : public GetGMPDecryptorCallback
-  {
-  public:
-    explicit CreateDecryptorDone(GMPStorageTest* aRunner)
-      : mRunner(aRunner)
-    {
-    }
-
-    void Done(GMPDecryptorProxy* aDecryptor) override
-    {
-      mRunner->mDecryptor = aDecryptor;
-      EXPECT_TRUE(!!mRunner->mDecryptor);
-
-      if (mRunner->mDecryptor) {
-        mRunner->mDecryptor->Init(mRunner, false, true);
-      }
-    }
-
-  private:
-    RefPtr<GMPStorageTest> mRunner;
-  };
-
-  void CreateDecryptor(const nsCString& aNodeId,
-                       const nsCString& aUpdate)
-  {
-    nsTArray<nsCString> updates;
-    updates.AppendElement(aUpdate);
-    nsCOMPtr<nsIRunnable> continuation(new Updates(this, Move(updates)));
-    CreateDecryptor(aNodeId, continuation);
-  }
-
   void CreateDecryptor(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
                        bool aInPBMode,
@@ -648,59 +647,40 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     updates.AppendElement(aUpdate);
     CreateDecryptor(aOrigin, aTopLevelOrigin, aInPBMode, Move(updates));
   }
-  class Updates : public Runnable
-  {
-  public:
-    Updates(GMPStorageTest* aRunner, nsTArray<nsCString>&& aUpdates)
-      : mozilla::Runnable("GMPStorageTest::Updates")
-      , mRunner(aRunner)
-      , mUpdates(Move(aUpdates))
-    {
-    }
 
-    NS_IMETHOD Run() override
-    {
-      for (auto& update : mUpdates) {
-        mRunner->Update(update);
-      }
-      return NS_OK;
-    }
-
-  private:
-    RefPtr<GMPStorageTest> mRunner;
-    nsTArray<nsCString> mUpdates;
-  };
   void CreateDecryptor(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
                        bool aInPBMode,
                        nsTArray<nsCString>&& aUpdates) {
-    nsCOMPtr<nsIRunnable> updates(new Updates(this, Move(aUpdates)));
-    CreateDecryptor(GetNodeId(aOrigin, aTopLevelOrigin, aInPBMode), updates);
+    CreateDecryptor(GetNodeId(aOrigin, aTopLevelOrigin, NS_LITERAL_STRING("gmp-fake"), aInPBMode), Move(aUpdates));
   }
 
-  void CreateDecryptor(const nsCString& aNodeId,
-                       nsIRunnable* aContinuation) {
+  void CreateDecryptor(const NodeId& aNodeId,
+                       nsTArray<nsCString>&& aUpdates) {
     RefPtr<GeckoMediaPluginService> service =
       GeckoMediaPluginService::GetGeckoMediaPluginService();
     EXPECT_TRUE(service);
 
-    mNodeId = aNodeId;
-    EXPECT_TRUE(!mNodeId.IsEmpty());
-
     nsTArray<nsCString> tags;
     tags.AppendElement(NS_LITERAL_CSTRING("fake"));
 
-    UniquePtr<GetGMPDecryptorCallback> callback(
-      new CreateDecryptorDone(this));
+    RefPtr<GMPStorageTest> self = this;
+    RefPtr<gmp::GetCDMParentPromise> promise =
+          service->GetCDM(aNodeId, Move(tags), nullptr);
+    auto thread = GetAbstractGMPThread();
+    promise->Then(thread,
+                  __func__,
+                  [self, aUpdates](RefPtr<gmp::ChromiumCDMParent> cdm) {
+                    self->mCDM = cdm;
+                    EXPECT_TRUE(!!self->mCDM);
+                    self->mCallback.reset(new CallbackProxy(self));
+                    self->mCDM->Init(self->mCallback.get(), false, true, GetMainThreadEventTarget());
 
-    // Continue after the OnSetDecryptorId message, so that we don't
-    // get warnings in the async shutdown tests due to receiving the
-    // SetDecryptorId message after we've started shutdown.
-    mSetDecryptorIdContinuation = aContinuation;
-
-    nsresult rv =
-      service->GetGMPDecryptor(nullptr, &tags, mNodeId, Move(callback));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+                    for (auto& update : aUpdates) {
+                      self->Update(update);
+                    }
+                  },
+                  [](nsresult rv) { EXPECT_TRUE(false); });
   }
 
   void TestBasicStorage() {
@@ -1048,7 +1028,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   void TestCrossOriginStorage() {
-    EXPECT_TRUE(!mDecryptor);
+    EXPECT_TRUE(!mCDM);
 
     // Send the decryptor the message "store recordid $time"
     // Wait for the decrytor to send us "stored recordid $time"
@@ -1208,8 +1188,8 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   void ShutdownThen(already_AddRefed<nsIRunnable> aContinuation) {
-    EXPECT_TRUE(!!mDecryptor);
-    if (!mDecryptor) {
+    EXPECT_TRUE(!!mCDM);
+    if (!mCDM) {
       return;
     }
     EXPECT_FALSE(mNodeId.IsEmpty());
@@ -1222,9 +1202,9 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   void Shutdown() {
-    if (mDecryptor) {
-      mDecryptor->Close();
-      mDecryptor = nullptr;
+    if (mCDM) {
+      mCDM->Shutdown();
+      mCDM = nullptr;
       mNodeId = EmptyCString();
     }
   }
@@ -1240,9 +1220,9 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     SystemGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
-  void SessionMessage(const nsCString& aSessionId,
-                      mozilla::dom::MediaKeyMessageType aMessageType,
-                      const nsTArray<uint8_t>& aMessage) override
+  void SessionMessage(const nsACString& aSessionId,
+                      uint32_t aMessageType,
+                      const nsTArray<uint8_t>& aMessage)
   {
     MonitorAutoLock mon(mMonitor);
 
@@ -1259,42 +1239,10 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     }
   }
 
-  void SetDecryptorId(uint32_t aId) override
-  {
-    if (!mSetDecryptorIdContinuation) {
-      return;
-    }
-    nsCOMPtr<nsIThread> thread(GetGMPThread());
-    thread->Dispatch(mSetDecryptorIdContinuation, NS_DISPATCH_NORMAL);
-    mSetDecryptorIdContinuation = nullptr;
-  }
-
-  void SetSessionId(uint32_t aCreateSessionToken,
-                    const nsCString& aSessionId) override { }
-  void ResolveLoadSessionPromise(uint32_t aPromiseId,
-                                 bool aSuccess) override {}
-  void ResolvePromise(uint32_t aPromiseId) override {}
-  void RejectPromise(uint32_t aPromiseId,
-                     nsresult aException,
-                     const nsCString& aSessionId) override { }
-  void ExpirationChange(const nsCString& aSessionId,
-                        UnixTime aExpiryTime) override {}
-  void SessionClosed(const nsCString& aSessionId) override {}
-  void SessionError(const nsCString& aSessionId,
-                    nsresult aException,
-                    uint32_t aSystemCode,
-                    const nsCString& aMessage) override {}
-  void Decrypted(uint32_t aId,
-                 mozilla::DecryptStatus aResult,
-                 const nsTArray<uint8_t>& aDecryptedData) override { }
-
-  void BatchedKeyStatusChanged(const nsCString& aSessionId,
-                               const nsTArray<CDMKeyInfo>& aKeyInfos) override { }
-
-  void Terminated() override {
-    if (mDecryptor) {
-      mDecryptor->Close();
-      mDecryptor = nullptr;
+  void Terminated() {
+    if (mCDM) {
+      mCDM->Shutdown();
+      mCDM = nullptr;
     }
   }
 
@@ -1315,10 +1263,63 @@ private:
   RefPtr<nsIRunnable> mSetDecryptorIdContinuation;
 
   GMPDecryptorProxy* mDecryptor;
+  RefPtr<gmp::ChromiumCDMParent> mCDM;
   Monitor mMonitor;
   Atomic<bool> mFinished;
   nsCString mNodeId;
-};
+
+  class CallbackProxy : public ChromiumCDMCallback {
+  public:
+
+    CallbackProxy(GMPStorageTest* aRunner)
+      : mRunner(aRunner)
+    {
+    }
+
+    void SetSessionId(uint32_t aPromiseId,
+                      const nsCString& aSessionId) override { }
+
+    void ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                   bool aSuccessful) override { }
+
+    void ResolvePromise(uint32_t aPromiseId) override { }
+
+    void RejectPromise(uint32_t aPromiseId,
+                       nsresult aError,
+                       const nsCString& aErrorMessage) override {  }
+
+    void SessionMessage(const nsACString& aSessionId,
+                        uint32_t aMessageType,
+                        nsTArray<uint8_t>&& aMessage) override
+    {
+      mRunner->SessionMessage(aSessionId, aMessageType, Move(aMessage));
+    }
+
+    void SessionKeysChange(const nsCString& aSessionId,
+                           nsTArray<mozilla::gmp::CDMKeyInformation>&& aKeysInfo) override { }
+
+    void ExpirationChange(const nsCString& aSessionId,
+                          double aSecondsSinceEpoch) override { }
+
+    void SessionClosed(const nsCString& aSessionId) override { }
+
+    void LegacySessionError(const nsCString& aSessionId,
+                            nsresult aError,
+                            uint32_t aSystemCode,
+                            const nsCString& aMessage) override { }
+
+    void Terminated() override { mRunner->Terminated(); }
+
+    void Shutdown() override { mRunner->Shutdown(); }
+
+  private:
+
+    // Warning: Weak ref.
+    GMPStorageTest* mRunner;
+  };
+
+  UniquePtr<CallbackProxy> mCallback;
+}; // class GMPStorageTest
 
 void
 GMPTestRunner::DoTest(void (GMPTestRunner::*aTestMethod)(GMPTestMonitor&))
