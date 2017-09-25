@@ -49,7 +49,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html pe
 == perspective-zindex-2.html green-rect.html
 != sorting-1a.html sorting-1-ref.html
 # Parallel planes, different z depth
-fails-if(webrender) == sorting-2a.html sorting-2-ref.html
+== sorting-2a.html sorting-2-ref.html
 # Parallel planes, same z depth (shouldn't be sorted!)
 == sorting-2b.html sorting-2-ref.html
 == sorting-3a.html green-rect.html
@@ -84,7 +84,7 @@ fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == mask-layer-2.html mask-layer-ref.html
 fails-if(webrender) == mask-layer-3.html mask-layer-ref.html
 fails-if(webrender) == split-intersect1.html split-intersect1-ref.html
-fuzzy(255,150) fails-if(webrender) == split-intersect2.html split-intersect2-ref.html
+fuzzy(255,150) == split-intersect2.html split-intersect2-ref.html
 fuzzy(255,100) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref.html
 fuzzy-if(winWidget,150,120) == component-alpha-1.html component-alpha-1-ref.html
 == nested-transform-1.html nested-transform-1-ref.html
