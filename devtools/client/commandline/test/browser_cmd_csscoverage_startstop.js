@@ -4,6 +4,7 @@
 // Tests that the addon commands works as they should
 
 const csscoverage = require("devtools/shared/fronts/csscoverage");
+const {gDevTools} = require("devtools/client/framework/devtools");
 
 const PAGE_1 = TEST_BASE_HTTPS + "browser_cmd_csscoverage_page1.html";
 const PAGE_2 = TEST_BASE_HTTPS + "browser_cmd_csscoverage_page2.html";
