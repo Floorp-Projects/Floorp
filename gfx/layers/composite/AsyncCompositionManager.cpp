@@ -597,17 +597,12 @@ ApplyAnimatedValue(Layer* aLayer,
       break;
     }
     case eCSSProperty_transform: {
-      MOZ_ASSERT(aValue.mGecko.GetUnit() == StyleAnimationValue::eUnit_Transform,
-                 "The unit of interpolated value for transform should be "
-                 "transform");
-      // TODO: Convert AnimationValue into css shared list.
-      nsCSSValueSharedList* list = aValue.mGecko.GetCSSValueSharedListValue();
-
+      RefPtr<const nsCSSValueSharedList> list = aValue.GetTransformList();
       const TransformData& transformData = aAnimationData.get_TransformData();
       nsPoint origin = transformData.origin();
       // we expect all our transform data to arrive in device pixels
       Point3D transformOrigin = transformData.transformOrigin();
-      nsDisplayTransform::FrameTransformProperties props(list,
+      nsDisplayTransform::FrameTransformProperties props(Move(list),
                                                          transformOrigin);
 
       Matrix4x4 transform =

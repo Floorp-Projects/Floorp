@@ -587,13 +587,13 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
         break;
       }
       case eCSSProperty_transform: {
-        // TODO: Convert AnimationValue into css shared list.
-        nsCSSValueSharedList* list = animationValue.mGecko.GetCSSValueSharedListValue();
+        RefPtr<const nsCSSValueSharedList> list =
+          animationValue.GetTransformList();
         const TransformData& transformData = animation.data().get_TransformData();
         nsPoint origin = transformData.origin();
         // we expect all our transform data to arrive in device pixels
         gfx::Point3D transformOrigin = transformData.transformOrigin();
-        nsDisplayTransform::FrameTransformProperties props(list,
+        nsDisplayTransform::FrameTransformProperties props(Move(list),
                                                            transformOrigin);
 
         gfx::Matrix4x4 transform =
