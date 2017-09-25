@@ -213,7 +213,7 @@ nsSHistory::EvictContentViewerForTransaction(nsISHTransaction* aTrans)
     LOG_SHENTRY_SPEC(("Evicting content viewer 0x%p for "
                       "owning SHEntry 0x%p at %s.",
                       viewer.get(), ownerEntry.get(), _spec),
-                     ownerEntry);
+                      ownerEntry);
 
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
@@ -588,7 +588,7 @@ nsSHistory::GetEntryAtIndex(int32_t aIndex, bool aModifyIndex,
 }
 
 /* Get the transaction at a given index */
-NS_IMETHODIMP
+nsresult
 nsSHistory::GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult)
 {
   nsresult rv;
@@ -1290,8 +1290,13 @@ nsSHistory::GloballyEvictContentViewers()
 }
 
 nsresult
-nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aEntry)
+nsSHistory::FindTransactionForBFCache(nsIBFCacheEntry* aEntry,
+                                      nsISHTransaction** aResult,
+                                      int32_t* aResultIndex)
 {
+  *aResult = nullptr;
+  *aResultIndex = -1;
+
   int32_t startIndex = std::max(0, mIndex - nsISHistory::VIEWER_WINDOW);
   int32_t endIndex = std::min(mLength - 1, mIndex + nsISHistory::VIEWER_WINDOW);
   nsCOMPtr<nsISHTransaction> trans;
@@ -1311,15 +1316,29 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aEntry)
     temp->GetNext(getter_AddRefs(trans));
   }
   if (i > endIndex) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
-  if (i == mIndex) {
+  trans.forget(aResult);
+  *aResultIndex = i;
+  return NS_OK;
+}
+
+nsresult
+nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aEntry)
+{
+  int32_t index;
+  nsCOMPtr<nsISHTransaction> trans;
+  FindTransactionForBFCache(aEntry, getter_AddRefs(trans), &index);
+
+  if (index == mIndex) {
     NS_WARNING("How did the current SHEntry expire?");
     return NS_OK;
   }
 
-  EvictContentViewerForTransaction(trans);
+  if (trans) {
+    EvictContentViewerForTransaction(trans);
+  }
 
   return NS_OK;
 }
@@ -1586,6 +1605,20 @@ nsSHistory::RemoveDynEntries(int32_t aIndex, nsISHContainer* aContainer)
   }
 }
 
+void
+nsSHistory::RemoveDynEntriesForBFCacheEntry(nsIBFCacheEntry* aEntry)
+{
+  int32_t index;
+  nsCOMPtr<nsISHTransaction> trans;
+  FindTransactionForBFCache(aEntry, getter_AddRefs(trans), &index);
+  if (trans) {
+    nsCOMPtr<nsISHEntry> entry;
+    trans->GetSHEntry(getter_AddRefs(entry));
+    nsCOMPtr<nsISHContainer> container(do_QueryInterface(entry));
+    RemoveDynEntries(index, container);
+  }
+}
+
 NS_IMETHODIMP
 nsSHistory::UpdateIndex()
 {
@@ -1703,7 +1736,7 @@ nsSHistory::LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
 {
   if (!mRootDocShell) {

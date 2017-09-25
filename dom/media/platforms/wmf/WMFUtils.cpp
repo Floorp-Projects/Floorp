@@ -14,8 +14,8 @@
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
 #include "prenv.h"
-#include <Shlobj.h>
-#include <Shlwapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include <initguid.h>
 #include <stdint.h>
 #include "mozilla/mscom/EnsureMTA.h"

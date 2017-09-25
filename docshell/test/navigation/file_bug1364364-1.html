@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>title</title>
+  </head>
+  <body onload="loadFramesAndNavigate();">
+    <p id="content"></p>
+    <div id="frameContainer">
+    </div>
+    <script type="application/javascript">
+    function waitForLoad(frame) {
+      return new Promise(r => frame.onload = r);
+    }
+
+    async function loadFramesAndNavigate() {
+      let dynamicFrame = document.createElement("iframe");
+      dynamicFrame.src = "data:text/html,iframe1";
+      document.querySelector("#frameContainer").appendChild(dynamicFrame);
+      await waitForLoad(dynamicFrame);
+      dynamicFrame.src = "data:text/html,iframe2";
+      await waitForLoad(dynamicFrame);
+      dynamicFrame.src = "data:text/html,iframe3";
+      await waitForLoad(dynamicFrame);
+      dynamicFrame.src = "data:text/html,iframe4";
+      await waitForLoad(dynamicFrame);
+      dynamicFrame.src = "data:text/html,iframe5";
+      await waitForLoad(dynamicFrame);
+      location.href = "file_bug1364364-2.html";
+    }
+    </script>
+  </body>
+</html>
