@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.UiDevice;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,8 +37,16 @@ public class HostScreencapScreenshotStrategy implements ScreenshotStrategy {
     private static final String HOST_LOOPBACK = "10.0.2.2";
     private static final int PORT = 9771;
 
+    private UiDevice device;
+
+    public HostScreencapScreenshotStrategy(UiDevice device) {
+        this.device = device;
+    }
+
     @Override
     public void takeScreenshot(String screenshotName, ScreenshotCallback screenshotCallback) {
+        device.waitForIdle();
+
         takeScreenshotViaHost(screenshotName);
 
         Bitmap bitmap = readScreenshotFromStorage();

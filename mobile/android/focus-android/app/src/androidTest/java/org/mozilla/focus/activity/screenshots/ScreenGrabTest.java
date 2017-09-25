@@ -156,7 +156,7 @@ public class ScreenGrabTest {
         final Context context = instrumentation.getTargetContext();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy());
+        Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy(device));
 
         takeScreenshotsOfFirstrun(context, device);
 
