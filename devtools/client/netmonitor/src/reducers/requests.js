@@ -24,6 +24,7 @@ const Request = I.Record({
   isCustom: false,
   // Request properties - at the beginning, they are unknown and are gradually filled in
   startedMillis: undefined,
+  endedMillis: undefined,
   method: undefined,
   url: undefined,
   urlDetails: undefined,
