@@ -134,7 +134,7 @@ impl Context {
                 ctx.mainloop.signal();
             }
 
-            let _ = context.get_sink_info_by_name(unsafe { CStr::from_ptr(info.default_sink_name) },
+            let _ = context.get_sink_info_by_name(try_cstr_from(info.default_sink_name),
                                                   sink_info_cb,
                                                   u);
         }
@@ -162,7 +162,6 @@ impl Context {
                 ctx.operation_wait(None, &o);
             }
         }
-        assert!(ctx.default_sink_info.is_some());
         ctx.mainloop.unlock();
 
         // Return the result.
@@ -232,14 +231,17 @@ impl Context {
 
     pub fn enumerate_devices(&self, devtype: cubeb::DeviceType) -> Result<cubeb::DeviceCollection> {
         fn add_output_device(_: &pulse::Context, i: *const pulse::SinkInfo, eol: i32, user_data: *mut c_void) {
+            let mut list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
+            let ctx = &(*list_data.context);
+
             if eol != 0 {
+                ctx.mainloop.signal();
                 return;
             }
 
             debug_assert!(!i.is_null());
             debug_assert!(!user_data.is_null());
 
-            let mut list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
             let info = unsafe { &*i };
 
             let group_id = match info.proplist().gets("sysfs.path") {
@@ -261,7 +263,6 @@ impl Context {
                 cubeb::DevicePref::empty()
             };
 
-            let ctx = &(*list_data.context);
             let device_id = ctx.devids.borrow_mut().add(info_name);
             let friendly_name = info_description.into_raw();
             let devinfo = cubeb::DeviceInfo {
@@ -283,19 +284,20 @@ impl Context {
                 latency_hi: 0,
             };
             list_data.devinfo.push(devinfo);
-
-            ctx.mainloop.signal();
         }
 
         fn add_input_device(_: &pulse::Context, i: *const pulse::SourceInfo, eol: i32, user_data: *mut c_void) {
+            let mut list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
+            let ctx = &(*list_data.context);
+
             if eol != 0 {
+                ctx.mainloop.signal();
                 return;
             }
 
             debug_assert!(!user_data.is_null());
             debug_assert!(!i.is_null());
 
-            let mut list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
             let info = unsafe { &*i };
 
             let group_id = match info.proplist().gets("sysfs.path") {
@@ -317,7 +319,6 @@ impl Context {
                 cubeb::DevicePref::empty()
             };
 
-            let ctx = &(*list_data.context);
             let device_id = ctx.devids.borrow_mut().add(info_name);
             let friendly_name = info_description.into_raw();
             let devinfo = cubeb::DeviceInfo {
@@ -341,14 +342,17 @@ impl Context {
 
             list_data.devinfo.push(devinfo);
 
-            ctx.mainloop.signal();
         }
 
         fn default_device_names(_: &pulse::Context, info: &pulse::ServerInfo, user_data: *mut c_void) {
             let list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
 
-            list_data.default_sink_name = unsafe { CStr::from_ptr(info.default_sink_name) }.to_owned();
-            list_data.default_source_name = unsafe { CStr::from_ptr(info.default_source_name) }.to_owned();
+            list_data.default_sink_name = super::try_cstr_from(info.default_sink_name)
+                .map(|s| s.to_owned())
+                .unwrap_or_default();
+            list_data.default_source_name = super::try_cstr_from(info.default_source_name)
+                .map(|s| s.to_owned())
+                .unwrap_or_default();
 
             (*list_data.context).mainloop.signal();
         }
