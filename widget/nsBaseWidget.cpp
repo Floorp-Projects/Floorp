@@ -697,10 +697,6 @@ nsBaseWidget::SetSizeMode(nsSizeMode aMode)
 // Get this component cursor
 //
 //-------------------------------------------------------------------------
-nsCursor nsBaseWidget::GetCursor()
-{
-  return mCursor;
-}
 
 void
 nsBaseWidget::SetCursor(nsCursor aCursor)
