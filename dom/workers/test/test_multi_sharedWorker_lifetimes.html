@@ -12,21 +12,20 @@
         "use strict";
 
         const scrollbarPref = "layout.testing.overlay-scrollbars.always-visible";
-        const bfCacheEnabledPref = "browser.sessionhistory.cache_subframes";
-        const bfCacheDepthPref = "browser.sessionhistory.max_total_viewers";
-        const bfCacheDepth = 10;
+        const viewersPref = "browser.sessionhistory.max_total_viewers";
 
-        const frameRelativeURL = "multi_sharedWorker_frame.html";
+        const windowRelativeURL = "multi_sharedWorker_frame.html";
         const storedData = "0123456789abcdefghijklmnopqrstuvwxyz";
 
         let testGenerator = (function*() {
           SimpleTest.waitForExplicitFinish();
 
-	  // Force scrollbar to always be shown.  The scrollbar setting is
-	  // necessary to avoid the fade-in/fade-out from evicting our document
-	  // from the BF cache below.  If bug 1049277 is fixed, then we can
-	  // stop setting the scrollbar pref here.
-          SpecialPowers.pushPrefEnv({ set: [[scrollbarPref, true]] },
+          // Force scrollbar to always be shown.  The scrollbar setting is
+          // necessary to avoid the fade-in/fade-out from evicting our document
+          // from the BF cache below.  If bug 1049277 is fixed, then we can
+          // stop setting the scrollbar pref here.
+          SpecialPowers.pushPrefEnv({ set: [[scrollbarPref, true],
+                                            [viewersPref, 10]] },
                                     sendToGenerator);
           yield undefined;
 
@@ -38,76 +37,62 @@
             }
           });
 
-          let frame = document.getElementById("frame");
-          frame.src = frameRelativeURL;
-          frame.onload = sendToGenerator;
-
+          let testWin = window.open(windowRelativeURL, "testWin");
           yield undefined;
 
-          frame = frame.contentWindow;
-          frame.postMessage({ command: "retrieve" }, "*");
+          testWin.postMessage({ command: "retrieve" }, "*");
 
           let event = yield undefined;
           ok(event instanceof MessageEvent, "Got a MessageEvent");
-          is(event.source, frame, "Correct window got the event");
+          is(event.source, testWin, "Correct window got the event");
           is(event.data.type, "result", "Got a result message");
           is(event.data.data, undefined, "No data stored yet");
 
-          frame.postMessage({ command: "store", data: storedData }, "*");
-          frame.postMessage({ command: "retrieve" }, "*");
+          testWin.postMessage({ command: "store", data: storedData }, "*");
+          testWin.postMessage({ command: "retrieve" }, "*");
 
           event = yield undefined;
           ok(event instanceof MessageEvent, "Got a MessageEvent");
-          is(event.source, frame, "Correct window got the event");
+          is(event.source, testWin, "Correct window got the event");
           is(event.data.type, "result", "Got a result message");
           is(event.data.data, storedData, "Got stored data");
 
           // Navigate when the bfcache is disabled.
-          info("Navigating to about:blank");
-          frame = document.getElementById("frame");
-          frame.onload = sendToGenerator;
-          frame.src = "about:blank";
-          frame.contentWindow.document.body.offsetTop;
+          info("Navigating to a blank page");
+          testWin.onunload = function(){};;
+          testWin.location = "blank.html";
+          testWin.document.body.offsetTop;
 
           yield undefined;
 
-          info("Navigating to " + frameRelativeURL);
-          frame.src = frameRelativeURL;
-          frame.contentWindow.document.body.offsetTop;
+          info("Navigating to " + windowRelativeURL);
+          testWin.onunload = function(){};
+          testWin.location = windowRelativeURL;
+          testWin.document.body.offsetTop;
 
           yield undefined;
 
-          frame = frame.contentWindow;
-          frame.postMessage({ command: "retrieve" }, "*");
+          testWin.postMessage({ command: "retrieve" }, "*");
 
           event = yield undefined;
           ok(event instanceof MessageEvent, "Got a MessageEvent");
-          is(event.source, frame, "Correct window got the event");
+          is(event.source, testWin, "Correct window got the event");
           is(event.data.type, "result", "Got a result message");
           is(event.data.data, undefined, "No data stored");
 
-          frame.postMessage({ command: "store", data: storedData }, "*");
-          frame.postMessage({ command: "retrieve" }, "*");
+          testWin.postMessage({ command: "store", data: storedData }, "*");
+          testWin.postMessage({ command: "retrieve" }, "*");
 
           event = yield undefined;
           ok(event instanceof MessageEvent, "Got a MessageEvent");
-          is(event.source, frame, "Correct window got the event");
+          is(event.source, testWin, "Correct window got the event");
           is(event.data.type, "result", "Got a result message");
           is(event.data.data, storedData, "Got stored data");
 
-          info("Enabling '" + bfCacheEnabledPref + "' pref");
-          SpecialPowers.pushPrefEnv({ set: [[bfCacheEnabledPref, true],
-                                            [bfCacheDepthPref, bfCacheDepth]] },
-                                    sendToGenerator);
-          yield undefined;
-
           // Navigate when the bfcache is enabled.
-          frame = document.getElementById("frame");
-          frame.onload = sendToGenerator;
-
-          info("Navigating to about:blank");
-          frame.src = "about:blank";
-          frame.contentWindow.document.body.offsetTop;
+          info("Navigating to a blank page");
+          testWin.location = "blank.html";
+          testWin.document.body.offsetTop;
 
           yield undefined;
 
@@ -116,32 +101,33 @@
             SpecialPowers.exactGC(sendToGenerator);
             yield undefined;
 
+            // It seems using SpecialPowers.executeSoon() would make the
+            // entryGlobal being the TabChildGlobal (and that would make the
+            // baseURI in the location assignment below being incorrect);
+            // setTimeout on the otherhand ensures the entryGlobal is this
+            // window.
             info("Waiting the event queue to clear");
-            SpecialPowers.executeSoon(sendToGenerator);
+            setTimeout(sendToGenerator, 0);
             yield undefined;
           }
 
-          info("Navigating to " + frameRelativeURL);
-          frame.src = frameRelativeURL;
-          frame.contentWindow.document.body.offsetTop;
+          info("Navigating to " + windowRelativeURL);
+          testWin.location = windowRelativeURL;
+          testWin.document.body.offsetTop;
 
           yield undefined;
 
-          frame = frame.contentWindow;
-          frame.postMessage({ command: "retrieve" }, "*");
+          testWin.postMessage({ command: "retrieve" }, "*");
 
           event = yield undefined;
           ok(event instanceof MessageEvent, "Got a MessageEvent");
-          is(event.source, frame, "Correct window got the event");
+          is(event.source, testWin, "Correct window got the event");
           is(event.data.type, "result", "Got a result message");
           is(event.data.data, storedData, "Still have data stored");
 
-          info("Resetting '" + bfCacheEnabledPref + "' pref");
-          SpecialPowers.popPrefEnv(sendToGenerator);
-          yield undefined;
-
           window.removeEventListener("message", sendToGenerator);
 
+          testWin.close();
           SimpleTest.finish();
         })();
 
@@ -150,6 +136,5 @@
       </script>
   </head>
   <body onload="testGenerator.next();">
-    <iframe id="frame"></iframe>
   </body>
 </html>

@@ -8324,16 +8324,11 @@ nsDocShell::CanSavePresentation(uint32_t aLoadType,
     return false;
   }
 
-  // Don't cache the content viewer if we're in a subframe and the subframe
-  // pref is disabled.
-  bool cacheFrames =
-    Preferences::GetBool("browser.sessionhistory.cache_subframes", false);
-  if (!cacheFrames) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    GetSameTypeParent(getter_AddRefs(root));
-    if (root && root != this) {
-      return false;  // this is a subframe load
-    }
+  // Don't cache the content viewer if we're in a subframe.
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  GetSameTypeParent(getter_AddRefs(root));
+  if (root && root != this) {
+    return false;  // this is a subframe load
   }
 
   // If the document does not want its presentation cached, then don't.
