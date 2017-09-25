@@ -186,7 +186,7 @@ toolbar[brighttext] {
 
 #bookmarks-toolbar-button,
 #bookmarks-toolbar-placeholder {
-  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+  list-style-image: url("chrome://browser/skin/bookmarks-toolbar.svg");
 }
 
 #bookmarks-menu-button {

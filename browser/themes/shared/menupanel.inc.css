@@ -97,7 +97,7 @@
 }
 
 #panelMenu_viewBookmarksToolbar {
-  list-style-image: url("chrome://browser/skin/toolbar.svg");
+  list-style-image: url("chrome://browser/skin/bookmarks-toolbar.svg");
 }
 
 #appMenu-library-bookmarks-button,
