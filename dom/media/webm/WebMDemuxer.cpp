@@ -647,14 +647,14 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   int packetEncryption = nestegg_packet_encryption(holder->Packet());
 
   for (uint32_t i = 0; i < count; ++i) {
-    unsigned char* data;
+    unsigned char* data = nullptr;
     size_t length;
     r = nestegg_packet_data(holder->Packet(), i, &data, &length);
     if (r == -1) {
       WEBM_DEBUG("nestegg_packet_data failed r=%d", r);
       return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
     }
-    unsigned char* alphaData;
+    unsigned char* alphaData = nullptr;
     size_t alphaLength = 0;
     // Check packets for alpha information if file has declared alpha frames
     // may be present.
@@ -679,16 +679,29 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
                      == NESTEGG_PACKET_HAS_KEYFRAME_TRUE;
       } else {
         auto sample = MakeSpan(data, length);
+        auto alphaSample = MakeSpan(alphaData, alphaLength);
+
         switch (mVideoCodec) {
         case NESTEGG_CODEC_VP8:
           isKeyframe = VPXDecoder::IsKeyframe(sample, VPXDecoder::Codec::VP8);
+          if (isKeyframe && alphaLength) {
+            isKeyframe =
+              VPXDecoder::IsKeyframe(alphaSample, VPXDecoder::Codec::VP8);
+          }
           break;
         case NESTEGG_CODEC_VP9:
           isKeyframe = VPXDecoder::IsKeyframe(sample, VPXDecoder::Codec::VP9);
+          if (isKeyframe && alphaLength) {
+            isKeyframe =
+              VPXDecoder::IsKeyframe(alphaSample, VPXDecoder::Codec::VP9);
+          }
           break;
 #ifdef MOZ_AV1
         case NESTEGG_CODEC_AV1:
           isKeyframe = AOMDecoder::IsKeyframe(sample);
+          if (isKeyframe && alphaLength) {
+            isKeyframe = AOMDecoder::IsKeyframe(alphaSample);
+          }
           break;
 #endif
         default:
