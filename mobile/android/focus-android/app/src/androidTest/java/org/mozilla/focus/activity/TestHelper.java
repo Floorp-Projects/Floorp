@@ -88,7 +88,7 @@ public final class TestHelper {
             .resourceId("org.mozilla.focus.debug:id/search_hint")
             .clickable(true));
     public static UiObject webView = mDevice.findObject(new UiSelector()
-            .className("android.webkit.Webview")
+            .className("android.webkit.WebView")
             .enabled(true));
     static UiObject progressBar = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/progress")
