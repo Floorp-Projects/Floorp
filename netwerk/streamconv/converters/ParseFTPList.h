@@ -99,6 +99,7 @@ struct list_result
 
 int ParseFTPList(const char *line,
                  struct list_state *state,
-                 struct list_result *result );
+                 struct list_result *result,
+                 PRTimeParamFn timeParam = PR_LocalTimeParameters);
 
 #endif /* !ParseRTPList_h___ */
