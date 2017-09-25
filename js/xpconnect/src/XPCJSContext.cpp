@@ -45,6 +45,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -559,7 +560,11 @@ XPCJSContext::ActivityCallback(void* arg, bool active)
 static inline bool
 IsWebExtensionPrincipal(nsIPrincipal* principal, nsAString& addonId)
 {
-    return BasePrincipal::Cast(principal)->AddonPolicy();
+    if (auto policy = BasePrincipal::Cast(principal)->AddonPolicy()) {
+        policy->GetId(addonId);
+        return true;
+    }
+    return false;
 }
 
 static bool
