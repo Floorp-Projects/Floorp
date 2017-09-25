@@ -890,17 +890,13 @@ NS_IMETHODIMP nsXULWindow::SetFocus()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetTitle(char16_t** aTitle)
+NS_IMETHODIMP nsXULWindow::GetTitle(nsAString& aTitle)
 {
-  NS_ENSURE_ARG_POINTER(aTitle);
-
-  *aTitle = ToNewUnicode(mTitle);
-  if (!*aTitle)
-    return NS_ERROR_OUT_OF_MEMORY;
+  aTitle = mTitle;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::SetTitle(const char16_t* aTitle)
+NS_IMETHODIMP nsXULWindow::SetTitle(const nsAString& aTitle)
 {
   NS_ENSURE_STATE(mWindow);
   mTitle.Assign(aTitle);

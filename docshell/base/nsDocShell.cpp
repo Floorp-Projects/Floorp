@@ -6632,16 +6632,14 @@ nsDocShell::GetMainWidget(nsIWidget** aMainWidget)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetTitle(char16_t** aTitle)
+nsDocShell::GetTitle(nsAString& aTitle)
 {
-  NS_ENSURE_ARG_POINTER(aTitle);
-
-  *aTitle = ToNewUnicode(mTitle);
+  aTitle = mTitle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShell::SetTitle(const char16_t* aTitle)
+nsDocShell::SetTitle(const nsAString& aTitle)
 {
   // Store local title
   mTitle = aTitle;
