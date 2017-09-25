@@ -581,9 +581,9 @@ nsresult
 StartupCache::ResetStartupWriteTimer()
 {
   mStartupWriteInitiated = false;
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mTimer)
-    mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    mTimer = NS_NewTimer();
   else
     rv = mTimer->Cancel();
   NS_ENSURE_SUCCESS(rv, rv);
