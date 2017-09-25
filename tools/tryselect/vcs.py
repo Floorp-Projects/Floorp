@@ -103,7 +103,7 @@ class VCSHelper(object):
         self.check_working_directory(push)
 
         config = None
-        if labels or labels == []:
+        if labels:
             config = self.write_task_config(labels, templates)
 
         try:
