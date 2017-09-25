@@ -6128,7 +6128,7 @@ function stripUnsafeProtocolOnPaste(pasteData) {
   // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL for those.
   let changed = false;
   let pasteDataNoJS = pasteData.replace(/\r?\n/g, "")
-                               .replace(/^(?:\s*javascript:)+/i,
+                               .replace(/^(?:\W*javascript:)+/i,
                                         () => {
                                                 changed = true;
                                                 return "";
