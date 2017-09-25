@@ -154,6 +154,8 @@ reftest-harness:
     description: layout/tools/reftest unittests
     platform:
         - linux64/opt
+        - linux64/debug
+        - linux64-asan/opt
     require-build: true
     treeherder:
         symbol: py(ref)

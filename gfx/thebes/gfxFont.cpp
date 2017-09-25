@@ -40,6 +40,7 @@
 #include "gfxMathTable.h"
 #include "gfxSVGGlyphs.h"
 #include "gfx2DGlue.h"
+#include "TextDrawTarget.h"
 
 #include "GreekCasing.h"
 
@@ -1922,6 +1923,10 @@ gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
                     double advance = details->mAdvance;
 
                     if (glyphData->IsMissing()) {
+                        if (auto* textDrawer = aRunParams.context->GetTextDrawer()) {
+                            textDrawer->FoundUnsupportedFeature();
+                            return false;
+                        }
                         // Default-ignorable chars will have zero advance width;
                         // we don't have to draw the hexbox for them.
                         if (aRunParams.drawMode != DrawMode::GLYPH_PATH &&
@@ -2006,7 +2011,6 @@ gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
     gfxFloat& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
     gfxTextRun::Range markRange(aParams.mark);
     gfxTextRun::DrawParams params(aParams.context);
-    params.textDrawer = aParams.textDrawer;
 
     gfxFloat clusterStart = -std::numeric_limits<gfxFloat>::infinity();
     bool shouldDrawEmphasisMark = false;
@@ -2062,7 +2066,14 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         return;
     }
 
+    auto* textDrawer = aRunParams.context->GetTextDrawer();
     fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
+
+    if (fontParams.haveSVGGlyphs && textDrawer) {
+        textDrawer->FoundUnsupportedFeature();
+        return;
+    }
+
     fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
     fontParams.contextPaint = aRunParams.runContextPaint;
     fontParams.isVerticalFont =

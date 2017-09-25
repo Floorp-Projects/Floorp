@@ -45,10 +45,6 @@ PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
     return NS_ERROR_FAILURE;
   }
 
-  if (!mPDFiumEngine) {
-    mPDFiumEngine = PDFiumEngineShim::GetInstanceOrNull();
-    NS_ENSURE_TRUE(mPDFiumEngine, NS_ERROR_FAILURE);
-  }
 
   nsAutoCString nativePath;
   nsresult rv = aFile->GetNativePath(nativePath);
@@ -56,15 +52,25 @@ PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
     return rv;
   }
 
-  mPDFDoc = mPDFiumEngine->LoadDocument(nativePath.get(), nullptr);
-  if (!mPDFDoc) {
+  return OpenDocument(nativePath.get());
+}
+
+nsresult
+PDFViaEMFPrintHelper::OpenDocument(const char* aFileName)
+{
+  MOZ_ASSERT(aFileName);
+
+  if (mPDFDoc) {
+    MOZ_ASSERT_UNREACHABLE("We can only open one PDF at a time,"
+                           "Use CloseDocument() to close the opened file"
+                           "before calling OpenDocument()");
     return NS_ERROR_FAILURE;
   }
 
-  if (mPDFiumEngine->GetPageCount(mPDFDoc) < 1) {
-    CloseDocument();
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(CreatePDFiumEngineIfNeed(), NS_ERROR_FAILURE);
+
+  mPDFDoc = mPDFiumEngine->LoadDocument(aFileName, nullptr);
+  NS_ENSURE_TRUE(mPDFDoc, NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -170,4 +176,14 @@ PDFViaEMFPrintHelper::CloseDocument()
     mPDFiumEngine->CloseDocument(mPDFDoc);
     mPDFDoc = nullptr;
   }
+}
+
+bool
+PDFViaEMFPrintHelper::CreatePDFiumEngineIfNeed()
+{
+  if (!mPDFiumEngine) {
+    mPDFiumEngine = PDFiumEngineShim::GetInstanceOrNull();
+  }
+
+  return !!mPDFiumEngine;
 }

@@ -126,7 +126,6 @@ RuntimeList.prototype = {
 
     let usbListNode = doc.querySelector("#runtime-panel-usb");
     let wifiListNode = doc.querySelector("#runtime-panel-wifi");
-    let simulatorListNode = doc.querySelector("#runtime-panel-simulator");
     let otherListNode = doc.querySelector("#runtime-panel-other");
     let noHelperNode = doc.querySelector("#runtime-panel-noadbhelper");
     let noUSBNode = doc.querySelector("#runtime-panel-nousbdevice");
@@ -152,7 +151,6 @@ RuntimeList.prototype = {
     for (let [type, parent] of [
       ["usb", usbListNode],
       ["wifi", wifiListNode],
-      ["simulator", simulatorListNode],
       ["other", otherListNode],
     ]) {
       while (parent.hasChildNodes()) {

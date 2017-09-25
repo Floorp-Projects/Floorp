@@ -378,6 +378,9 @@ nsFileStreamBase::DoPendingOpen()
 
     case eOpened:
         MOZ_ASSERT(mFD);
+        if (NS_WARN_IF(!mFD)) {
+          return NS_ERROR_FAILURE;
+        }
         return NS_OK;
 
     case eClosed:

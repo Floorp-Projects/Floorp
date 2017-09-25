@@ -33,9 +33,8 @@ function removeItem(array, callback) {
  *
  * DevToolsShim is a singleton that provides a set of helpers to interact with DevTools,
  * that work whether the DevTools addon is installed or not. It can be used to start
- * listening to events, register tools, themes. As soon as a DevTools addon is installed
- * the DevToolsShim will forward all the requests received until then to the real DevTools
- * instance.
+ * listening to events. As soon as a DevTools addon is installed the DevToolsShim will
+ * forward all the requests received until then to the real DevTools instance.
  *
  * DevToolsShim.isInstalled() can also be used to know if DevTools are currently
  * installed.
@@ -43,8 +42,6 @@ function removeItem(array, callback) {
 this.DevToolsShim = {
   _gDevTools: null,
   listeners: [],
-  tools: [],
-  themes: [],
 
   /**
    * Lazy getter for the `gDevTools` instance. Should only be called when users interacts
@@ -110,10 +107,6 @@ this.DevToolsShim = {
    * The following methods can be called before DevTools are initialized:
    * - on
    * - off
-   * - registerTool
-   * - unregisterTool
-   * - registerTheme
-   * - unregisterTheme
    *
    * If DevTools are not initialized when calling the method, DevToolsShim will call the
    * appropriate method as soon as a gDevTools instance is registered.
@@ -141,54 +134,6 @@ this.DevToolsShim = {
       this._gDevTools.off(event, listener);
     } else {
       removeItem(this.listeners, ([e, l]) => e === event && l === listener);
-    }
-  },
-
-  /**
-   * This method is only used by the addon-sdk and should be removed when Firefox 56 is
-   * no longer supported.
-   */
-  registerTool: function (tool) {
-    if (this.isInitialized()) {
-      this._gDevTools.registerTool(tool);
-    } else {
-      this.tools.push(tool);
-    }
-  },
-
-  /**
-   * This method is only used by the addon-sdk and should be removed when Firefox 56 is
-   * no longer supported.
-   */
-  unregisterTool: function (tool) {
-    if (this.isInitialized()) {
-      this._gDevTools.unregisterTool(tool);
-    } else {
-      removeItem(this.tools, t => t === tool);
-    }
-  },
-
-  /**
-   * This method is only used by the addon-sdk and should be removed when Firefox 56 is
-   * no longer supported.
-   */
-  registerTheme: function (theme) {
-    if (this.isInitialized()) {
-      this._gDevTools.registerTheme(theme);
-    } else {
-      this.themes.push(theme);
-    }
-  },
-
-  /**
-   * This method is only used by the addon-sdk and should be removed when Firefox 56 is
-   * no longer supported.
-   */
-  unregisterTheme: function (theme) {
-    if (this.isInitialized()) {
-      this._gDevTools.unregisterTheme(theme);
-    } else {
-      removeItem(this.themes, t => t === theme);
     }
   },
 
@@ -261,35 +206,9 @@ this.DevToolsShim = {
       this._gDevTools.on(event, listener);
     }
 
-    for (let tool of this.tools) {
-      this._gDevTools.registerTool(tool);
-    }
-
-    for (let theme of this.themes) {
-      this._gDevTools.registerTheme(theme);
-    }
-
     this.listeners = [];
-    this.tools = [];
-    this.themes = [];
   },
 };
-
-/**
- * Compatibility layer for addon-sdk. Remove when Firefox 57 hits release.
- *
- * The methods below are used by classes and tests from addon-sdk/
- * If DevTools are not installed when calling one of them, the call will throw.
- */
-
-let addonSdkMethods = [
-  "closeToolbox",
-  "connectDebuggerServer",
-  "createDebuggerClient",
-  "getToolbox",
-  "initBrowserToolboxProcessForAddon",
-  "showToolbox",
-];
 
 /**
  * Compatibility layer for webextensions.
@@ -305,7 +224,7 @@ let webExtensionsMethods = [
   "openBrowserConsole",
 ];
 
-for (let method of [...addonSdkMethods, ...webExtensionsMethods]) {
+for (let method of webExtensionsMethods) {
   this.DevToolsShim[method] = function () {
     return this.gDevTools[method].apply(this.gDevTools, arguments);
   };

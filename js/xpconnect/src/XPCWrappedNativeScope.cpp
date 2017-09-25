@@ -200,9 +200,8 @@ XPCWrappedNativeScope::GetComponentsJSObject(JS::MutableHandleObject obj)
 
     RootedValue val(cx);
     xpcObjectHelper helper(mComponents);
-    bool ok = XPCConvert::NativeInterface2JSObject(&val, nullptr, helper,
-                                                   nullptr, false,
-                                                   nullptr);
+    bool ok = XPCConvert::NativeInterface2JSObject(&val, helper, nullptr,
+                                                   false, nullptr);
     if (NS_WARN_IF(!ok))
         return false;
 

@@ -1121,6 +1121,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 57 uses schema version 39.
 
+      if (currentSchemaVersion < 40) {
+        rv = MigrateV40Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 58 uses schema version 40.
+
       // Schema Upgrades must add migration code here.
 
       rv = UpdateBookmarkRootTitles();
@@ -2342,6 +2349,31 @@ Database::MigrateV39Up() {
   nsresult rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_DATEADDED);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV40Up() {
+  MOZ_ASSERT(NS_IsMainThread());
+  // We are changing the hashing function to crop the hashed text to a maximum
+  // length, thus we must recalculate the hashes.
+  // Due to this, on downgrade some of these may not match, it should be limited
+  // to unicode and very long urls though.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places "
+    "SET url_hash = hash(url) "
+    "WHERE url_hash <> hash(url)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_icons "
+    "SET fixed_icon_url_hash = hash(fixup_url(icon_url)) "
+    "WHERE fixed_icon_url_hash <> hash(fixup_url(icon_url))"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_pages_w_icons "
+    "SET page_url_hash = hash(page_url) "
+    "WHERE page_url_hash <> hash(page_url)"));
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 

@@ -227,7 +227,6 @@ def old_configure_options(*options):
     '--enable-updater',
     '--enable-valgrind',
     '--enable-verify-mar',
-    '--enable-webrtc',
     '--enable-xul',
     '--enable-zipwriter',
     '--includedir',

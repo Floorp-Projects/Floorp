@@ -22,3 +22,4 @@ test-pref(dom.animations-api.core.enabled,true) == style-updates-on-iteration-co
 test-pref(dom.animations-api.core.enabled,true) == style-updates-on-iteration-composition-changed-from-replace-to-accumulate.html style-updates-for-iteration-composite-ref.html
 test-pref(dom.animations-api.core.enabled,true) == style-updates-on-current-iteration-changed.html style-updates-for-iteration-composite-ref.html
 test-pref(dom.animations-api.core.enabled,true) == cancel-animation-with-selector-matching.html about:blank
+test-pref(dom.animations-api.core.enabled,true) == child-in-animating-element-display-none.html child-in-animating-element-display-none-ref.html

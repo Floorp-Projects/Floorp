@@ -731,13 +731,10 @@ private:
     // Is true if the network request has been triggered.
     bool mNetworkTriggered = false;
     bool mWaitingForProxy = false;
-    // Is true if the onCacheEntryAvailable callback has been called.
-    bool mOnCacheAvailableCalled;
     // Will be true if the onCacheEntryAvailable callback is not called by the
     // time we send the network request
     Atomic<bool> mRaceCacheWithNetwork;
     uint32_t mRaceDelay;
-    bool mCacheAsyncOpenCalled;
     // If true then OnCacheEntryAvailable should ignore the entry, because
     // SetupTransaction removed conditional headers and decisions made in
     // OnCacheEntryCheck are no longer valid.

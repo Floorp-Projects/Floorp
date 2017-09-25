@@ -14,7 +14,6 @@ namespace mozilla {
 namespace layers {
 
 class CompositorOptions;
-class CompositorAnimationStorage;
 
 /**
  * This class handles layer updates pushed directly from child processes to
