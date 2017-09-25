@@ -13,30 +13,6 @@
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT     0x110000
 
-#ifndef ENABLE_INTL_API
-static const nsCharProps1&
-GetCharProps1(uint32_t aCh)
-{
-    if (aCh < UNICODE_BMP_LIMIT) {
-        return sCharProp1Values[sCharProp1Pages[0][aCh >> kCharProp1CharBits]]
-                               [aCh & ((1 << kCharProp1CharBits) - 1)];
-    }
-    if (aCh < (kCharProp1MaxPlane + 1) * 0x10000) {
-        return sCharProp1Values[sCharProp1Pages[sCharProp1Planes[(aCh >> 16) - 1]]
-                                               [(aCh & 0xffff) >> kCharProp1CharBits]]
-                               [aCh & ((1 << kCharProp1CharBits) - 1)];
-    }
-
-    // Default values for unassigned
-    static const nsCharProps1 undefined = {
-        0,       // Index to mirrored char offsets
-        0,       // Hangul Syllable type
-        0        // Combining class
-    };
-    return undefined;
-}
-#endif
-
 const nsCharProps2&
 GetCharProps2(uint32_t aCh)
 {
@@ -54,21 +30,8 @@ GetCharProps2(uint32_t aCh)
     // Default values for unassigned
     using namespace mozilla::unicode;
     static const nsCharProps2 undefined = {
-#if ENABLE_INTL_API
         VERTICAL_ORIENTATION_R,
         0 // IdentifierType
-#else
-        uint8_t(Script::UNKNOWN),
-        PAIRED_BRACKET_TYPE_NONE,
-        0, // EastAsianWidthFWH
-        HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED,
-        0, // IdentifierType
-        0, // DefaultIgnorable
-        eCharType_LeftToRight,
-        VERTICAL_ORIENTATION_R,
-        0, // LineBreak
-        -1 // Numeric Value
-#endif
     };
     return undefined;
 }
@@ -135,7 +98,6 @@ const nsUGenCategory sDetailedToGeneralCategory[] = {
   /* SPACE_SEPARATOR */     nsUGenCategory::kSeparator
 };
 
-#ifdef ENABLE_INTL_API
 const hb_unicode_general_category_t sICUtoHBcategory[U_CHAR_CATEGORY_COUNT] = {
   HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED, // U_GENERAL_OTHER_TYPES = 0,
   HB_UNICODE_GENERAL_CATEGORY_UPPERCASE_LETTER, // U_UPPERCASE_LETTER = 1,
@@ -168,142 +130,6 @@ const hb_unicode_general_category_t sICUtoHBcategory[U_CHAR_CATEGORY_COUNT] = {
   HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION, // U_INITIAL_PUNCTUATION = 28,
   HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION, // U_FINAL_PUNCTUATION = 29,
 };
-#endif
-
-#if !ENABLE_INTL_API
-uint8_t GetGeneralCategory(uint32_t aCh) {
-  return GetCharProps2(aCh).mCategory;
-}
-
-nsCharType GetBidiCat(uint32_t aCh) {
-  return nsCharType(GetCharProps2(aCh).mBidiCategory);
-}
-
-int8_t GetNumericValue(uint32_t aCh) {
-  return GetCharProps2(aCh).mNumericValue;
-}
-
-uint32_t
-GetMirroredChar(uint32_t aCh)
-{
-    return aCh + sMirrorOffsets[GetCharProps1(aCh).mMirrorOffsetIndex];
-}
-
-bool
-HasMirroredChar(uint32_t aCh)
-{
-    return GetCharProps1(aCh).mMirrorOffsetIndex != 0;
-}
-
-uint8_t
-GetCombiningClass(uint32_t aCh)
-{
-    return GetCharProps1(aCh).mCombiningClass;
-}
-
-uint8_t
-GetLineBreakClass(uint32_t aCh)
-{
-    return GetCharProps2(aCh).mLineBreak;
-}
-
-Script
-GetScriptCode(uint32_t aCh)
-{
-    return Script(GetCharProps2(aCh).mScriptCode);
-}
-
-uint32_t
-GetScriptTagForCode(Script aScriptCode)
-{
-    // this will safely return 0 for negative script codes, too :)
-    if (static_cast<uint32_t>(aScriptCode) > ArrayLength(sScriptCodeToTag)) {
-        return 0;
-    }
-    return sScriptCodeToTag[static_cast<uint32_t>(aScriptCode)];
-}
-
-PairedBracketType GetPairedBracketType(uint32_t aCh)
-{
-  return PairedBracketType(GetCharProps2(aCh).mPairedBracketType);
-}
-
-uint32_t GetPairedBracket(uint32_t aCh)
-{
-  return GetPairedBracketType(aCh) != PAIRED_BRACKET_TYPE_NONE
-         ? GetMirroredChar(aCh) : aCh;
-}
-
-static inline uint32_t
-GetCaseMapValue(uint32_t aCh)
-{
-    if (aCh < UNICODE_BMP_LIMIT) {
-        return sCaseMapValues[sCaseMapPages[0][aCh >> kCaseMapCharBits]]
-                             [aCh & ((1 << kCaseMapCharBits) - 1)];
-    }
-    if (aCh < (kCaseMapMaxPlane + 1) * 0x10000) {
-        return sCaseMapValues[sCaseMapPages[sCaseMapPlanes[(aCh >> 16) - 1]]
-                                           [(aCh & 0xffff) >> kCaseMapCharBits]]
-                             [aCh & ((1 << kCaseMapCharBits) - 1)];
-    }
-    return 0;
-}
-
-uint32_t
-GetUppercase(uint32_t aCh)
-{
-    uint32_t mapValue = GetCaseMapValue(aCh);
-    if (mapValue & (kLowerToUpper | kTitleToUpper)) {
-        return aCh ^ (mapValue & kCaseMapCharMask);
-    }
-    if (mapValue & kLowerToTitle) {
-        return GetUppercase(aCh ^ (mapValue & kCaseMapCharMask));
-    }
-    return aCh;
-}
-
-uint32_t
-GetLowercase(uint32_t aCh)
-{
-    uint32_t mapValue = GetCaseMapValue(aCh);
-    if (mapValue & kUpperToLower) {
-        return aCh ^ (mapValue & kCaseMapCharMask);
-    }
-    if (mapValue & kTitleToUpper) {
-        return GetLowercase(aCh ^ (mapValue & kCaseMapCharMask));
-    }
-    return aCh;
-}
-
-uint32_t
-GetTitlecaseForLower(uint32_t aCh)
-{
-    uint32_t mapValue = GetCaseMapValue(aCh);
-    if (mapValue & (kLowerToTitle | kLowerToUpper)) {
-        return aCh ^ (mapValue & kCaseMapCharMask);
-    }
-    return aCh;
-}
-
-uint32_t
-GetTitlecaseForAll(uint32_t aCh)
-{
-    uint32_t mapValue = GetCaseMapValue(aCh);
-    if (mapValue & (kLowerToTitle | kLowerToUpper)) {
-        return aCh ^ (mapValue & kCaseMapCharMask);
-    }
-    if (mapValue & kUpperToLower) {
-        return GetTitlecaseForLower(aCh ^ (mapValue & kCaseMapCharMask));
-    }
-    return aCh;
-}
-
-bool IsEastAsianWidthFWH(uint32_t aCh)
-{
-    return GetCharProps2(aCh).mEastAsianWidthFWH;
-}
-
-#endif
 
 #define DEFINE_BMP_1PLANE_MAPPING_GET_FUNC(prefix_) \
   uint32_t Get##prefix_(uint32_t aCh) \
@@ -332,31 +158,18 @@ IsClusterExtender(uint32_t aCh, uint8_t aCategory)
 }
 
 enum HSType {
-#if ENABLE_INTL_API
     HST_NONE = U_HST_NOT_APPLICABLE,
     HST_L    = U_HST_LEADING_JAMO,
     HST_V    = U_HST_VOWEL_JAMO,
     HST_T    = U_HST_TRAILING_JAMO,
     HST_LV   = U_HST_LV_SYLLABLE,
     HST_LVT  = U_HST_LVT_SYLLABLE
-#else
-    HST_NONE = 0x00,
-    HST_L    = 0x01,
-    HST_V    = 0x02,
-    HST_T    = 0x04,
-    HST_LV   = 0x03,
-    HST_LVT  = 0x07
-#endif
 };
 
 static HSType
 GetHangulSyllableType(uint32_t aCh)
 {
-#if ENABLE_INTL_API
     return HSType(u_getIntPropertyValue(aCh, UCHAR_HANGUL_SYLLABLE_TYPE));
-#else
-    return HSType(GetCharProps1(aCh).mHangulType);
-#endif
 }
 
 void
