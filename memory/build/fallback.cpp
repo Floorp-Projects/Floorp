@@ -6,6 +6,7 @@
 
 #include "mozmemory.h"
 #include "mozjemalloc.h"
+#include <stdlib.h>
 
 struct SystemMalloc {
 #define MALLOC_DECL(name, return_type, ...) \
