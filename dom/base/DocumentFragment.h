@@ -43,8 +43,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentFragment,
-                                           FragmentOrElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentFragment, FragmentOrElement)
 
   // interface nsIDOMNode
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -122,15 +121,9 @@ public:
     return nullptr;
   }
 
-  Element* GetHost() const
-  {
-    return mHost;
-  }
+  Element* GetHost() const { return mHost; }
 
-  void SetHost(Element* aHost)
-  {
-    mHost = aHost;
-  }
+  void SetHost(Element* aHost) { mHost = aHost; }
 
   static already_AddRefed<DocumentFragment>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);

@@ -70,7 +70,6 @@ class nsHtml5StackNode
   private:
     int32_t refcount;
     mozilla::dom::HTMLContentCreatorFunction htmlCreator;
-
   public:
     inline int32_t getFlags()
     {

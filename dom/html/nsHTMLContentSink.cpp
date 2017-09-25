@@ -30,6 +30,7 @@
 #include "mozilla/Logging.h"
 #include "nsNodeUtils.h"
 #include "nsIContent.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 
