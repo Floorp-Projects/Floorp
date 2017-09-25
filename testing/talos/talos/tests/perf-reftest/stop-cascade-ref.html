@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<style>
+.x { background-color: yellow; }
+</style>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  let roots = [];
+  for (let i = 0; i < 200; i++) {
+    let root = document.createElement("div");
+    roots.push(root);
+    document.body.appendChild(root);
+  }
+  flush_style(roots[0]);
+  perf_start();
+  for (x in ["x", "", "x"]) {
+    for (let root of roots) {
+      root.className = x;
+    }
+  }
+  flush_style(roots[0]);
+  perf_finish();
+};
+</script>
+<body></body>

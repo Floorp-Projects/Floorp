@@ -4,3 +4,17 @@
 & http://localhost/tests/perf-reftest/bloom-basic.html, http://localhost/tests/perf-reftest/bloom-basic-ref.html
 & http://localhost/tests/perf-reftest/bloom-basic-2.html, http://localhost/tests/perf-reftest/bloom-basic-ref.html
 & http://localhost/tests/perf-reftest/coalesce-1.html, http://localhost/tests/perf-reftest/coalesce-ref.html
+& http://localhost/tests/perf-reftest/coalesce-2.html, http://localhost/tests/perf-reftest/coalesce-ref.html
+& http://localhost/tests/perf-reftest/style-sharing.html, http://localhost/tests/perf-reftest/style-sharing-ref.html
+& http://localhost/tests/perf-reftest/style-sharing-style-attr.html, http://localhost/tests/perf-reftest/style-sharing-ref.html
+& http://localhost/tests/perf-reftest/display-none-1.html, http://localhost/tests/perf-reftest/display-none-1-ref.html
+& http://localhost/tests/perf-reftest/nth-index-1.html, http://localhost/tests/perf-reftest/nth-index-ref.html
+& http://localhost/tests/perf-reftest/nth-index-2.html, http://localhost/tests/perf-reftest/nth-index-ref.html
+& http://localhost/tests/perf-reftest/some-descendants-1.html, http://localhost/tests/perf-reftest/some-descendants-1-ref.html
+& http://localhost/tests/perf-reftest/only-children-1.html, http://localhost/tests/perf-reftest/only-children-ref.html
+& http://localhost/tests/perf-reftest/dep-check-1.html, http://localhost/tests/perf-reftest/dep-check-1-ref.html
+& http://localhost/tests/perf-reftest/slow-selector-1.html, http://localhost/tests/perf-reftest/slow-selector-1-ref.html
+& http://localhost/tests/perf-reftest/slow-selector-2.html, http://localhost/tests/perf-reftest/slow-selector-2-ref.html
+& http://localhost/tests/perf-reftest/style-attr-1.html, http://localhost/tests/perf-reftest/style-attr-1-ref.html
+& http://localhost/tests/perf-reftest/stop-cascade-1.html, http://localhost/tests/perf-reftest/stop-cascade-ref.html
+& http://localhost/tests/perf-reftest/stop-cascade-2.html, http://localhost/tests/perf-reftest/stop-cascade-ref.html
