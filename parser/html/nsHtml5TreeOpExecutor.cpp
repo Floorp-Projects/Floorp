@@ -280,7 +280,6 @@ nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
       gBackgroundFlushList->insertBack(this);
     }
     if (gBackgroundFlushRunner) {
-      NS_WARNING("We've already scheduled a task for background list flush.");
       return;
     }
     // Now we set up a repetitive idle scheduler for flushing background list.
