@@ -75,9 +75,7 @@
 <!ENTITY projectPanel_tabs "Tabs">
 <!ENTITY runtimePanel_usb "USB Devices">
 <!ENTITY runtimePanel_wifi "Wi-Fi Devices">
-<!ENTITY runtimePanel_simulator "Simulators">
 <!ENTITY runtimePanel_other "Other">
-<!ENTITY runtimePanel_installsimulator "Install Simulator">
 <!ENTITY runtimePanel_noadbhelper "Install ADB Helper">
 <!ENTITY runtimePanel_nousbdevice "Can’t see your device?">
 <!ENTITY runtimePanel_refreshDevices_label "Refresh Devices">
@@ -174,19 +172,3 @@
 
 <!-- Logs panel -->
 <!ENTITY logs_title "Pre-packaging Command Logs">
-
-<!-- Simulator Options -->
-<!ENTITY simulator_title "Simulator Options">
-<!ENTITY simulator_remove "Delete Simulator">
-<!ENTITY simulator_reset "Restore Defaults">
-<!ENTITY simulator_name "Name">
-<!ENTITY simulator_software "Software">
-<!ENTITY simulator_version "Version">
-<!ENTITY simulator_profile "Profile">
-<!ENTITY simulator_hardware "Hardware">
-<!ENTITY simulator_device "Device">
-<!ENTITY simulator_screenSize "Screen">
-<!ENTITY simulator_pixelRatio "Pixel Ratio">
-<!ENTITY simulator_tv_data "TV Simulation">
-<!ENTITY simulator_tv_data_open "Config Data">
-<!ENTITY simulator_tv_data_open_button "Open Config Directory…">

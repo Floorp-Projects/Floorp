@@ -21,7 +21,6 @@ const utils = require("devtools/client/webide/modules/utils");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {showDoorhanger} = require("devtools/client/shared/doorhanger");
-const {Simulators} = require("devtools/client/webide/modules/simulators");
 const {Task} = require("devtools/shared/task");
 
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
@@ -45,7 +44,6 @@ const MS_PER_DAY = 86400000;
  });
 
 // Download remote resources early
-getJSON("devtools.webide.addonsURL");
 getJSON("devtools.webide.templatesURL");
 getJSON("devtools.devices.url");
 
@@ -91,9 +89,8 @@ var UI = {
     // If the user decides to uninstall any of this addon, we won't install it again.
     let autoinstallADBHelper = Services.prefs.getBoolPref("devtools.webide.autoinstallADBHelper");
     if (autoinstallADBHelper) {
-      GetAvailableAddons().then(addons => {
-        addons.adb.install();
-      }, console.error);
+      let addons = GetAvailableAddons();
+      addons.adb.install();
     }
 
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", false);
@@ -107,16 +104,12 @@ var UI = {
     this.contentViewer.fullZoom = Services.prefs.getCharPref("devtools.webide.zoom");
 
     gDevToolsBrowser.isWebIDEInitialized.resolve();
-
-    this.configureSimulator = this.configureSimulator.bind(this);
-    Simulators.on("configure", this.configureSimulator);
   },
 
   destroy: function () {
     window.removeEventListener("focus", this.onfocus, true);
     AppManager.off("app-manager-update", this.appManagerUpdate);
     AppManager.destroy();
-    Simulators.off("configure", this.configureSimulator);
     this.updateConnectionTelemetry();
     this._telemetry.toolClosed("webide");
     this._telemetry.destroy();
@@ -197,10 +190,6 @@ var UI = {
         break;
     }
     this._updatePromise = promise.resolve();
-  },
-
-  configureSimulator: function (event, simulator) {
-    UI.selectDeckPanel("simulator");
   },
 
   openInBrowser: function (url) {
