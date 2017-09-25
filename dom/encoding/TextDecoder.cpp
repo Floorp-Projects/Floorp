@@ -14,8 +14,6 @@
 namespace mozilla {
 namespace dom {
 
-static const char16_t kReplacementChar = static_cast<char16_t>(0xFFFD);
-
 void
 TextDecoder::Init(const nsAString& aLabel, const bool aFatal,
                   ErrorResult& aRv)

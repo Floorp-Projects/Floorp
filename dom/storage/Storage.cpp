@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+static const char kStorageEnabled[] = "dom.storage.enabled";
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Storage, mWindow, mPrincipal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Storage)

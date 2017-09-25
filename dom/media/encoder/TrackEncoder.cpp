@@ -23,7 +23,6 @@ static const int DEFAULT_CHANNELS = 1;
 static const int DEFAULT_SAMPLING_RATE = 16000;
 static const int DEFAULT_FRAME_WIDTH = 640;
 static const int DEFAULT_FRAME_HEIGHT = 480;
-static const int DEFAULT_TRACK_RATE = USECS_PER_S;
 // 1 second threshold if the audio encoder cannot be initialized.
 static const int AUDIO_INIT_FAILED_DURATION = 1;
 // 30 second threshold if the video encoder cannot be initialized.
