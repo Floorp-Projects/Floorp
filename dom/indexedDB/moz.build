@@ -7,7 +7,10 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: IndexedDB")
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_MANIFESTS += [
+    'test/mochitest-intl-api.ini',
+    'test/mochitest.ini',
+]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
@@ -17,9 +20,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell-child-process.ini',
     'test/unit/xpcshell-parent-process.ini'
 ]
-
-if CONFIG['ENABLE_INTL_API']:
-    MOCHITEST_MANIFESTS += ['test/mochitest-intl-api.ini']
 
 EXPORTS.mozilla.dom += [
     'IDBCursor.h',
