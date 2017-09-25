@@ -106,11 +106,10 @@ SVGGeometryElement::GetOrBuildPath(const DrawTarget& aDrawTarget,
   // that the pref is only live on page reload (or app restart for SVG in
   // chrome). The benefit is that we avoid causing a CPU memory cache miss by
   // looking at the global variable that the pref's stored in.
-  if (cacheable && mCachedPath) {
-    if (aDrawTarget.GetBackendType() == mCachedPath->GetBackendType()) {
-      RefPtr<Path> path(mCachedPath);
-      return path.forget();
-    }
+  if (cacheable && mCachedPath && mCachedPath->GetFillRule() == aFillRule &&
+      aDrawTarget.GetBackendType() == mCachedPath->GetBackendType()) {
+    RefPtr<Path> path(mCachedPath);
+    return path.forget();
   }
   RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder(aFillRule);
   RefPtr<Path> path = BuildPath(builder);
