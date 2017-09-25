@@ -29,6 +29,7 @@ import org.mozilla.focus.activity.TestHelper;
 import org.mozilla.focus.activity.helpers.HostScreencapScreenshotStrategy;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -58,6 +59,7 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 @RunWith(AndroidJUnit4.class)
 public class ScreenGrabTest {
     private static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 10;
+    private static final long loadingWaitingTime = DateUtils.SECOND_IN_MILLIS * 20;
     private static final String TEST_PATH = "/";
 
     private enum ErrorTypes {
@@ -404,7 +406,10 @@ public class ScreenGrabTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.pressEnterKey();
 
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+
         onWebView()
+                .withTimeout(loadingWaitingTime, TimeUnit.MILLISECONDS)
                 .withElement(findElement(Locator.ID, "header"))
                 .check(webMatches(getText(), equalTo("focus test page")));
 
@@ -463,11 +468,15 @@ public class ScreenGrabTest {
             TestHelper.inlineAutocompleteEditText.setText("error:"+ error.value);
             device.pressKeyCode(KEYCODE_ENTER);
 
+            assertTrue(TestHelper.webView.waitForExists(waitingTime));
+
             onWebView()
+                    .withTimeout(loadingWaitingTime, TimeUnit.MILLISECONDS)
                     .withElement(findElement(Locator.ID, "errorTitle"))
                     .perform(webClick());
 
             onWebView()
+                    .withTimeout(loadingWaitingTime, TimeUnit.MILLISECONDS)
                     .withElement(findElement(Locator.ID, "errorTryAgain"))
                     .perform(webScrollIntoView());
 
