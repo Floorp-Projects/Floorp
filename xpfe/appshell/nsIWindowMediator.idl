@@ -109,7 +109,7 @@ interface nsIWindowMediator: nsISupports
     * @param inTitle the window's new title
     */
   [noscript] void updateWindowTitle(in nsIXULWindow aWindow,
-                                    in wstring inTitle );
+                                    in AString inTitle);
 
   /* z-ordering: */
 

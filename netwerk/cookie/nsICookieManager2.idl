@@ -46,8 +46,12 @@ interface nsICookieManager2 : nsICookieManager
    *        expiration date, in seconds since midnight (00:00:00), January 1,
    *        1970 UTC. note that expiry time will also be honored for session cookies;
    *        in this way, the more restrictive of the two will take effect.
-   * @param aOriginAttributes The originAttributes of this cookie. This
-   *                          attribute is optional to avoid breaking add-ons.
+   * @param aOriginAttributes
+   *        the originAttributes of this cookie. This attribute is optional to
+   *        avoid breaking add-ons.
+   * @param aSameSite
+   *        the SameSite attribute. This attribute is optional to avoid breaking
+   *        addons
    */
   [implicit_jscontext, optional_argc]
   void add(in AUTF8String aHost,
@@ -58,7 +62,8 @@ interface nsICookieManager2 : nsICookieManager
            in boolean     aIsHttpOnly,
            in boolean     aIsSession,
            in int64_t     aExpiry,
-           [optional] in jsval aOriginAttributes);
+           [optional] in jsval aOriginAttributes,
+           [optional] in int32_t aSameSite);
 
   [notxpcom]
   nsresult addNative(in AUTF8String aHost,
@@ -69,7 +74,8 @@ interface nsICookieManager2 : nsICookieManager
                      in boolean     aIsHttpOnly,
                      in boolean     aIsSession,
                      in int64_t     aExpiry,
-                     in OriginAttributesPtr aOriginAttributes);
+                     in OriginAttributesPtr aOriginAttributes,
+                     in int32_t aSameSite);
 
   /**
    * Find whether a given cookie already exists.

@@ -396,7 +396,7 @@ nsWindowMediator::UpdateWindowTimeStamp(nsIXULWindow* inWindow)
 
 NS_IMETHODIMP
 nsWindowMediator::UpdateWindowTitle(nsIXULWindow* inWindow,
-                                    const char16_t* inTitle)
+                                    const nsAString& inTitle)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_STATE(mReady);

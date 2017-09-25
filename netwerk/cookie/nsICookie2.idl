@@ -11,10 +11,13 @@
  * access of cookie objects
  */
 
-[scriptable, uuid(05c420e5-03d0-4c7b-a605-df7ebe5ca326)]
+[scriptable, uuid(be205dae-4f4c-11e6-80ba-ea5cd310c1a8)]
 
 interface nsICookie2 : nsICookie
 {
+    const uint32_t SAMESITE_UNSET  = 0;
+    const uint32_t SAMESITE_LAX    = 1;
+    const uint32_t SAMESITE_STRICT = 2;
 
     /**
      * the host (possibly fully qualified) of the cookie,
@@ -60,4 +63,15 @@ interface nsICookie2 : nsICookie
      */
     readonly attribute int64_t lastAccessed;
 
+    /**
+     * the sameSite attribute; this controls the cookie behavior for cross-site
+     * requests as per
+     * https://tools.ietf.org/html/draft-west-first-party-cookies-07
+     *
+     * This should be one of:
+     * - SAMESITE_UNSET - the SameSite attribute is not present
+     * - SAMESITE_LAX - the SameSite attribute is present, but not strict
+     * - SAMESITE_STRICT - the SameSite attribute is present and strict
+     */
+    readonly attribute int32_t sameSite;
 };

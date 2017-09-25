@@ -4266,7 +4266,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
 
     // Get a list of instructions using the |this| value in the order they
     // appear in the graph.
-    Vector<MInstruction*> instructions(cx);
+    Vector<MInstruction*, 4> instructions(cx);
 
     for (MUseDefIterator uses(thisValue); uses; uses++) {
         MDefinition* use = uses.def();
