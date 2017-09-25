@@ -336,10 +336,17 @@ public class ScreenGrabTest {
         device.pressBack();
     }
 
-    private void takeScreenshotOfEraseSnackbar(UiDevice device) {
-        TestHelper.floatingEraseButton.perform(click());
+    private void takeScreenshotOfEraseSnackbar(UiDevice device) throws UiObjectNotFoundException {
+        final UiObject floatingEraseButton = device.findObject(new UiSelector()
+                .resourceId("org.mozilla.focus.debug:id/erase")
+                .enabled(true));
+
+        assertTrue(floatingEraseButton.waitForExists(waitingTime));
+
+        floatingEraseButton.click();
+
         device.wait(Until.findObject(By.res("org.mozilla.focus.debug","snackbar_text")), waitingTime);
-        Screengrab.screenshot("YourBrowingHistoryHasBeenErased");
+        Screengrab.screenshot("YourBrowsingHistoryHasBeenErased");
     }
 
     private void takeScreenshotOfSettings(UiDevice device) throws UiObjectNotFoundException {
