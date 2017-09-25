@@ -941,7 +941,7 @@ TabChild::SetVisibility(bool aVisibility)
 }
 
 NS_IMETHODIMP
-TabChild::GetTitle(char16_t** aTitle)
+TabChild::GetTitle(nsAString& aTitle)
 {
   NS_WARNING("TabChild::GetTitle not supported in TabChild");
 
@@ -949,7 +949,7 @@ TabChild::GetTitle(char16_t** aTitle)
 }
 
 NS_IMETHODIMP
-TabChild::SetTitle(const char16_t* aTitle)
+TabChild::SetTitle(const nsAString& aTitle)
 {
   // JavaScript sends the "DOMTitleChanged" event to the parent
   // via the message manager.

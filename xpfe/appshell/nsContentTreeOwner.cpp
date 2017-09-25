@@ -713,15 +713,14 @@ NS_IMETHODIMP nsContentTreeOwner::SetFocus()
    return mXULWindow->SetFocus();
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetTitle(char16_t** aTitle)
+NS_IMETHODIMP nsContentTreeOwner::GetTitle(nsAString& aTitle)
 {
-   NS_ENSURE_ARG_POINTER(aTitle);
    NS_ENSURE_STATE(mXULWindow);
 
    return mXULWindow->GetTitle(aTitle);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetTitle(const char16_t* aTitle)
+NS_IMETHODIMP nsContentTreeOwner::SetTitle(const nsAString& aTitle)
 {
    // We only allow the title to be set from the primary content shell
   if(!mPrimary || !mContentTitleSetting)
@@ -810,7 +809,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const char16_t* aTitle)
     return rv.StealNSResult();
   }
 
-  return mXULWindow->SetTitle(title.get());
+  return mXULWindow->SetTitle(title);
 }
 
 //*****************************************************************************
@@ -1148,13 +1147,13 @@ nsSiteWindow::SetVisibility(bool aVisibility)
 }
 
 NS_IMETHODIMP
-nsSiteWindow::GetTitle(char16_t * *aTitle)
+nsSiteWindow::GetTitle(nsAString& aTitle)
 {
   return mAggregator->GetTitle(aTitle);
 }
 
 NS_IMETHODIMP
-nsSiteWindow::SetTitle(const char16_t * aTitle)
+nsSiteWindow::SetTitle(const nsAString& aTitle)
 {
   return mAggregator->SetTitle(aTitle);
 }
