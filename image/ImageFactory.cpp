@@ -86,6 +86,30 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   return imageFlags;
 }
 
+#ifdef DEBUG
+static void
+NotifyImageLoading(ImageURL* aURI)
+{
+  if (!NS_IsMainThread()) {
+    RefPtr<ImageURL> uri(aURI);
+    nsCOMPtr<nsIRunnable> ev =
+      NS_NewRunnableFunction("NotifyImageLoading", [uri] () -> void {
+        NotifyImageLoading(uri);
+    });
+    SystemGroup::Dispatch(TaskCategory::Other, ev.forget());
+    return;
+  }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
+  if (obs) {
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+    obs->NotifyObservers(nullptr, "image-loading", NS_ConvertUTF8toUTF16(spec).get());
+  }
+}
+#endif
+
 /* static */ already_AddRefed<Image>
 ImageFactory::CreateImage(nsIRequest* aRequest,
                           ProgressTracker* aProgressTracker,
@@ -102,14 +126,10 @@ ImageFactory::CreateImage(nsIRequest* aRequest,
 
 #ifdef DEBUG
   // Record the image load for startup performance testing.
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
-    if (obs) {
-      nsAutoCString spec;
-      aURI->GetSpec(spec);
-      obs->NotifyObservers(nullptr, "image-loading", NS_ConvertUTF8toUTF16(spec).get());
-    }
+  bool match = false;
+  if ((NS_SUCCEEDED(aURI->SchemeIs("resource", &match)) && match) ||
+      (NS_SUCCEEDED(aURI->SchemeIs("chrome", &match)) && match)) {
+    NotifyImageLoading(aURI);
   }
 #endif
 
