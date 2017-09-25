@@ -763,13 +763,11 @@ MP4MetadataRust::Init()
     mp4parse_log(true);
   }
 
-  mp4parse_fallible_allocation(true);
-
   mp4parse_status rv = mp4parse_read(mRustParser.get());
   MOZ_LOG(sLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
                         rv == mp4parse_status_OK);
-  if (rv != mp4parse_status_OK && rv != mp4parse_status_TABLE_TOO_LARGE) {
+  if (rv != mp4parse_status_OK && rv != mp4parse_status_OOM) {
     MOZ_LOG(sLog, LogLevel::Info, ("Rust mp4 parser fails to parse this stream."));
     MOZ_ASSERT(rv > 0);
     Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_ERROR_CODE, rv);

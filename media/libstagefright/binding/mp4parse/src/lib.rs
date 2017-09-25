@@ -11,13 +11,17 @@ extern crate afl;
 extern crate byteorder;
 extern crate bitreader;
 extern crate num_traits;
-extern crate mp4parse_fallible;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use bitreader::{BitReader, ReadInto};
 use std::io::{Read, Take};
 use std::io::Cursor;
 use std::cmp;
 use num_traits::Num;
+
+#[cfg(feature = "mp4parse_fallible")]
+extern crate mp4parse_fallible;
+
+#[cfg(feature = "mp4parse_fallible")]
 use mp4parse_fallible::FallibleVec;
 
 mod boxes;
@@ -35,16 +39,6 @@ const BUF_SIZE_LIMIT: usize = 1024 * 1024;
 const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
 
 static DEBUG_MODE: std::sync::atomic::AtomicBool = std::sync::atomic::ATOMIC_BOOL_INIT;
-
-static FALLIBLE_ALLOCATION: std::sync::atomic::AtomicBool = std::sync::atomic::ATOMIC_BOOL_INIT;
-
-pub fn set_fallible_allocation_mode(fallible: bool) {
-    FALLIBLE_ALLOCATION.store(fallible, std::sync::atomic::Ordering::SeqCst);
-}
-
-fn get_fallible_allocation_mode() -> bool {
-    FALLIBLE_ALLOCATION.load(std::sync::atomic::Ordering::Relaxed)
-}
 
 pub fn set_debug_mode(mode: bool) {
     DEBUG_MODE.store(mode, std::sync::atomic::Ordering::SeqCst);
@@ -65,8 +59,10 @@ macro_rules! log {
 
 // TODO: vec_push() and vec_reserve() needs to be replaced when Rust supports
 // fallible memory allocation in raw_vec.
+#[allow(unreachable_code)]
 pub fn vec_push<T>(vec: &mut Vec<T>, val: T) -> std::result::Result<(), ()> {
-    if get_fallible_allocation_mode() {
+    #[cfg(feature = "mp4parse_fallible")]
+    {
         return vec.try_push(val);
     }
 
@@ -74,8 +70,10 @@ pub fn vec_push<T>(vec: &mut Vec<T>, val: T) -> std::result::Result<(), ()> {
     Ok(())
 }
 
+#[allow(unreachable_code)]
 pub fn vec_reserve<T>(vec: &mut Vec<T>, size: usize) -> std::result::Result<(), ()> {
-    if get_fallible_allocation_mode() {
+    #[cfg(feature = "mp4parse_fallible")]
+    {
         return vec.try_reserve(size);
     }
 
@@ -83,8 +81,10 @@ pub fn vec_reserve<T>(vec: &mut Vec<T>, size: usize) -> std::result::Result<(), 
     Ok(())
 }
 
-fn reserve_read_buf(size: usize) -> std::result::Result<Vec<u8>, ()> {
-    if get_fallible_allocation_mode() {
+#[allow(unreachable_code)]
+fn allocate_read_buf(size: usize) -> std::result::Result<Vec<u8>, ()> {
+    #[cfg(feature = "mp4parse_fallible")]
+    {
         let mut buf: Vec<u8> = Vec::new();
         buf.try_reserve(size)?;
         unsafe { buf.set_len(size); }
@@ -110,8 +110,6 @@ pub enum Error {
     Io(std::io::Error),
     /// read_mp4 terminated without detecting a moov box.
     NoMoov,
-    /// Parse error caused by table size is over limitation.
-    TableTooLarge,
     /// Out of memory
     OutOfMemory,
 }
@@ -2061,7 +2059,7 @@ fn read_buf<T: ReadBytesExt>(src: &mut T, size: usize) -> Result<Vec<u8>> {
     if size > BUF_SIZE_LIMIT {
         return Err(Error::InvalidData("read_buf size exceeds BUF_SIZE_LIMIT"));
     }
-    if let Ok(mut buf) = reserve_read_buf(size) {
+    if let Ok(mut buf) = allocate_read_buf(size) {
         let r = src.read(&mut buf)?;
         if r != size {
           return Err(Error::InvalidData("failed buffer read"));
@@ -2102,7 +2100,7 @@ fn be_u32<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
 fn be_u32_with_limit<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
     be_u32(src).and_then(|v| {
         if v > TABLE_SIZE_LIMIT {
-            return Err(Error::TableTooLarge);
+            return Err(Error::OutOfMemory);
         }
         Ok(v)
     })
