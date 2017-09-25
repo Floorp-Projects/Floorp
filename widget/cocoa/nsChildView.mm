@@ -3103,7 +3103,9 @@ nsChildView::GetDocumentAccessible()
   if (!mozilla::a11y::ShouldA11yBeEnabled())
     return nullptr;
 
-  if (mAccessible) {
+  // mAccessible might be dead if accessibility was previously disabled and is
+  // now being enabled again.
+  if (mAccessible && mAccessible->IsAlive()) {
     RefPtr<a11y::Accessible> ret;
     CallQueryReferent(mAccessible.get(),
                       static_cast<a11y::Accessible**>(getter_AddRefs(ret)));
