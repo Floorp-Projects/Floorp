@@ -5360,6 +5360,23 @@ AnimationValue::GetOpacity() const
                 : mGecko.GetFloatValue();
 }
 
+already_AddRefed<const nsCSSValueSharedList>
+AnimationValue::GetTransformList() const
+{
+  MOZ_ASSERT(!mServo != mGecko.IsNull());
+  MOZ_ASSERT(mServo || mGecko.GetUnit() == StyleAnimationValue::eUnit_Transform,
+             "The unit of interpolated value for transform should be "
+             "transform on Gecko backend");
+
+  RefPtr<nsCSSValueSharedList> transform;
+  if (mServo) {
+    Servo_AnimationValue_GetTransform(mServo, &transform);
+  } else {
+    transform = mGecko.GetCSSValueSharedListValue();
+  }
+  return transform.forget();
+}
+
 gfxSize
 AnimationValue::GetScaleValue(const nsIFrame* aFrame) const
 {
