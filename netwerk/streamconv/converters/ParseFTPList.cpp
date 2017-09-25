@@ -40,7 +40,8 @@ FixupYear(PRExplodedTime* aTime)
 }
 
 int ParseFTPList(const char *line, struct list_state *state,
-                 struct list_result *result, PRTimeParamFn timeParam)
+                 struct list_result *result, PRTimeParamFn timeParam,
+                 NowTimeFn nowTimeFn)
 {
   unsigned int carry_buf_len; /* copy of state->carry_buf_len */
   unsigned int pos;
@@ -1138,7 +1139,7 @@ int ParseFTPList(const char *line, struct list_state *state,
 
           if (!state->now_time)
           {
-            state->now_time = PR_Now();
+            state->now_time = nowTimeFn();
             PR_ExplodeTime((state->now_time), timeParam, &(state->now_tm) );
           }
 
@@ -1616,7 +1617,7 @@ int ParseFTPList(const char *line, struct list_state *state,
                 result->fe_time.tm_min = atoi(p+3);
                 if (!state->now_time)
                 {
-                  state->now_time = PR_Now();
+                  state->now_time = nowTimeFn();
                   PR_ExplodeTime((state->now_time), timeParam, &(state->now_tm) );
                 }
                 result->fe_time.tm_year = state->now_tm.tm_year;
