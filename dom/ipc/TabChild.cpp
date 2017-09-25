@@ -414,7 +414,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mActiveSuppressDisplayport(0)
   , mLayersId(0)
   , mBeforeUnloadListeners(0)
-  , mLayersConnected(true)
+  , mLayersConnected(false)
   , mDidFakeShow(false)
   , mNotified(false)
   , mTriedBrowserInit(false)
@@ -1174,6 +1174,7 @@ TabChild::DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                      const CompositorOptions& aCompositorOptions,
                      PRenderFrameChild* aRenderFrame, const ShowInfo& aShowInfo)
 {
+  mLayersConnected = aRenderFrame ? true : false;
   InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions, aRenderFrame);
   RecvShow(ScreenIntSize(0, 0), aShowInfo, mParentIsActive, nsSizeMode_Normal);
   mDidFakeShow = true;
@@ -2797,11 +2798,6 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       mLayersId = aLayersId;
     }
 
-    ShadowLayerForwarder* lf =
-        mPuppetWidget->GetLayerManager(
-            nullptr, mTextureFactoryIdentifier.mParentBackend)
-                ->AsShadowForwarder();
-
     LayerManager* lm = mPuppetWidget->GetLayerManager();
     if (lm->AsWebRenderLayerManager()) {
       lm->AsWebRenderLayerManager()->Initialize(compositorChild,
@@ -2812,6 +2808,10 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       InitAPZState();
     }
 
+    ShadowLayerForwarder* lf =
+        mPuppetWidget->GetLayerManager(
+            nullptr, mTextureFactoryIdentifier.mParentBackend)
+                ->AsShadowForwarder();
     if (lf) {
       nsTArray<LayersBackend> backends;
       backends.AppendElement(mTextureFactoryIdentifier.mParentBackend);
@@ -3167,6 +3167,7 @@ TabChild::ReinitRendering()
     return;
   }
 
+  mLayersConnected = true;
   ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
   gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
 
