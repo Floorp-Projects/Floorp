@@ -144,7 +144,7 @@ public:
   }
 protected:
   WeakFrame         mFrame;
-  nsCOMPtr<nsIAtom> mAttr;
+  RefPtr<nsIAtom> mAttr;
 };
 
 //

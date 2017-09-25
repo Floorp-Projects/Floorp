@@ -905,7 +905,7 @@ Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 
   MOZ_ASSERT(attr->Type() == nsAttrValue::eAtom);
 
-  nsCOMPtr<nsIAtom> atom = attr->GetAtomValue();
+  RefPtr<nsIAtom> atom = attr->GetAtomValue();
   return atom.forget().take();
 }
 
@@ -939,7 +939,7 @@ LangValue(Implementor* aElement)
   }
 
   MOZ_ASSERT(attr->Type() == nsAttrValue::eAtom);
-  nsCOMPtr<nsIAtom> atom = attr->GetAtomValue();
+  RefPtr<nsIAtom> atom = attr->GetAtomValue();
   return atom.forget().take();
 }
 
@@ -1112,7 +1112,7 @@ ClassOrClassList(Implementor* aElement, nsIAtom** aClass, nsIAtom*** aClassList)
   // At this point we should have an atom array. It is likely, but not
   // guaranteed, that we have two or more elements in the array.
   MOZ_ASSERT(attr->Type() == nsAttrValue::eAtomArray);
-  nsTArray<nsCOMPtr<nsIAtom>>* atomArray = attr->GetAtomArrayValue();
+  nsTArray<RefPtr<nsIAtom>>* atomArray = attr->GetAtomArrayValue();
   uint32_t length = atomArray->Length();
 
   // Special case: zero elements.
@@ -1131,10 +1131,10 @@ ClassOrClassList(Implementor* aElement, nsIAtom** aClass, nsIAtom*** aClassList)
   // Note: We could also expose this array as an array of nsCOMPtrs, since
   // bindgen knows what those look like, and eliminate the reinterpret_cast.
   // But it's not obvious that that would be preferable.
-  static_assert(sizeof(nsCOMPtr<nsIAtom>) == sizeof(nsIAtom*), "Bad simplification");
-  static_assert(alignof(nsCOMPtr<nsIAtom>) == alignof(nsIAtom*), "Bad simplification");
+  static_assert(sizeof(RefPtr<nsIAtom>) == sizeof(nsIAtom*), "Bad simplification");
+  static_assert(alignof(RefPtr<nsIAtom>) == alignof(nsIAtom*), "Bad simplification");
 
-  nsCOMPtr<nsIAtom>* elements = atomArray->Elements();
+  RefPtr<nsIAtom>* elements = atomArray->Elements();
   nsIAtom** rawElements = reinterpret_cast<nsIAtom**>(elements);
   *aClassList = rawElements;
   return atomArray->Length();
@@ -1399,7 +1399,7 @@ Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsIAtom* aName,
   // Try resolving the counter style if possible, and keep it unresolved
   // otherwise.
   CounterStyleManager* manager = aPresContext->CounterStyleManager();
-  nsCOMPtr<nsIAtom> name = already_AddRefed<nsIAtom>(aName);
+  RefPtr<nsIAtom> name = already_AddRefed<nsIAtom>(aName);
   if (CounterStyle* style = manager->GetCounterStyle(name)) {
     *aPtr = style;
   } else {
@@ -2379,7 +2379,7 @@ FontSizePrefs
 Gecko_GetBaseSize(nsIAtom* aLanguage)
 {
   LangGroupFontPrefs prefs;
-  nsCOMPtr<nsIAtom> langGroupAtom = StaticPresData::Get()->GetUncachedLangGroup(aLanguage);
+  RefPtr<nsIAtom> langGroupAtom = StaticPresData::Get()->GetUncachedLangGroup(aLanguage);
 
   prefs.Initialize(langGroupAtom);
   FontSizePrefs sizes;

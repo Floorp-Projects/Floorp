@@ -94,10 +94,10 @@ public:
 
 protected:
     nsXULTemplateQueryProcessorRDF* mProcessor;
-    nsCOMPtr<nsIAtom>        mSourceVariable;
+    RefPtr<nsIAtom>        mSourceVariable;
     nsCOMPtr<nsIRDFResource> mSource;
     nsCOMPtr<nsIRDFResource> mProperty;
-    nsCOMPtr<nsIAtom>        mTargetVariable;
+    RefPtr<nsIAtom>        mTargetVariable;
     nsCOMPtr<nsIRDFNode>     mTarget;
 };
 

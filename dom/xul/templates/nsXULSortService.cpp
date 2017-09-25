@@ -44,7 +44,7 @@ XULSortServiceImpl::SetSortHints(nsIContent *aNode, nsSortState* aSortState)
 
   // for trees, also set the sort info on the currently sorted column
   if (aNode->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
-    if (aSortState->sortKeys.Count() >= 1) {
+    if (aSortState->sortKeys.Length() >= 1) {
       nsAutoString sortkey;
       aSortState->sortKeys[0]->ToString(sortkey);
       SetSortColumnHints(aNode, sortkey, direction);
@@ -184,7 +184,7 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
                                          nullptr, sortState->sortHints, &sortOrder);
   }
   else {
-    int32_t length = sortState->sortKeys.Count();
+    int32_t length = sortState->sortKeys.Length();
     for (int32_t t = 0; t < length; t++) {
       // for templates, use the query processor to do sorting
       if (sortState->processor) {
@@ -347,14 +347,14 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
     nsAutoString sortResource, sortResource2;
     aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortResource, sortResource);
     if (!sortResource.IsEmpty()) {
-      nsCOMPtr<nsIAtom> sortkeyatom = NS_Atomize(sortResource);
-      aSortState->sortKeys.AppendObject(sortkeyatom);
+      RefPtr<nsIAtom> sortkeyatom = NS_Atomize(sortResource);
+      aSortState->sortKeys.AppendElement(sortkeyatom);
       sort.Append(sortResource);
 
       aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortResource2, sortResource2);
       if (!sortResource2.IsEmpty()) {
-        nsCOMPtr<nsIAtom> sortkeyatom2 = NS_Atomize(sortResource2);
-        aSortState->sortKeys.AppendObject(sortkeyatom2);
+        RefPtr<nsIAtom> sortkeyatom2 = NS_Atomize(sortResource2);
+        aSortState->sortKeys.AppendElement(sortkeyatom2);
         sort.Append(' ');
         sort.Append(sortResource2);
       }
@@ -363,9 +363,9 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   else {
     nsWhitespaceTokenizer tokenizer(sort);
     while (tokenizer.hasMoreTokens()) {
-      nsCOMPtr<nsIAtom> keyatom = NS_Atomize(tokenizer.nextToken());
+      RefPtr<nsIAtom> keyatom = NS_Atomize(tokenizer.nextToken());
       NS_ENSURE_TRUE(keyatom, NS_ERROR_OUT_OF_MEMORY);
-      aSortState->sortKeys.AppendObject(keyatom);
+      aSortState->sortKeys.AppendElement(keyatom);
     }
   }
 

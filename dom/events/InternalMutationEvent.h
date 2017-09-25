@@ -37,9 +37,9 @@ public:
   }
 
   nsCOMPtr<nsIDOMNode> mRelatedNode;
-  nsCOMPtr<nsIAtom>    mAttrName;
-  nsCOMPtr<nsIAtom>    mPrevAttrValue;
-  nsCOMPtr<nsIAtom>    mNewAttrValue;
+  RefPtr<nsIAtom>    mAttrName;
+  RefPtr<nsIAtom>    mPrevAttrValue;
+  RefPtr<nsIAtom>    mNewAttrValue;
   unsigned short       mAttrChange;
 
   void AssignMutationEventData(const InternalMutationEvent& aEvent,

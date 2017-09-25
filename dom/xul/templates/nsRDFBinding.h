@@ -24,9 +24,9 @@ class RDFBinding {
 
 public:
 
-    nsCOMPtr<nsIAtom>        mSubjectVariable;
+    RefPtr<nsIAtom>        mSubjectVariable;
     nsCOMPtr<nsIRDFResource> mPredicate;
-    nsCOMPtr<nsIAtom>        mTargetVariable;
+    RefPtr<nsIAtom>        mTargetVariable;
 
     // indicates whether a binding is dependant on the result from a
     // previous binding

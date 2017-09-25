@@ -258,7 +258,7 @@ TableRowsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
 {
   EnsureInitialized();
   aFound = false;
-  nsCOMPtr<nsIAtom> nameAtom = NS_Atomize(aName);
+  RefPtr<nsIAtom> nameAtom = NS_Atomize(aName);
   NS_ENSURE_TRUE(nameAtom, nullptr);
 
   for (auto& node : mRows) {

@@ -320,7 +320,7 @@ CSSEditUtils::IsCSSEditableProperty(nsINode* aNode,
                                     nsIAtom* aProperty,
                                     const nsAString* aAttribute)
 {
-  nsCOMPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
+  RefPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
   return IsCSSEditableProperty(aNode, aProperty, attribute);
 }
 
@@ -912,7 +912,7 @@ CSSEditUtils::SetCSSEquivalentToHTMLStyle(Element* aElement,
                                           const nsAString* aValue,
                                           bool aSuppressTransaction)
 {
-  nsCOMPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
+  RefPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
   return SetCSSEquivalentToHTMLStyle(aElement, aHTMLProperty, attribute,
                                      aValue, aSuppressTransaction);
 }
@@ -961,7 +961,7 @@ CSSEditUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode* aNode,
                                              bool aSuppressTransaction)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aNode);
-  nsCOMPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
+  RefPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
 
   return RemoveCSSEquivalentToHTMLStyle(element, aHTMLProperty, attribute,
                                         aValue, aSuppressTransaction);
@@ -1075,7 +1075,7 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                   StyleType aStyleType)
 {
   MOZ_ASSERT(aNode && aProperty);
-  nsCOMPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
+  RefPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
   return IsCSSEquivalentToHTMLInlineStyleSet(aNode,
                                              aProperty, attribute,
                                              aValue, aStyleType);
@@ -1090,7 +1090,7 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode* aNode,
 {
   MOZ_ASSERT(aNode && aProperty);
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
+  RefPtr<nsIAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
   return IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, attribute,
                                              aValue, aStyleType);
 }

@@ -148,7 +148,7 @@ nsHTMLStyleSheet::LangRule::MapRuleInfoInto(nsRuleData* aRuleData)
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
     nsCSSValue* lang = aRuleData->ValueForLang();
     if (lang->GetUnit() == eCSSUnit_Null) {
-      nsCOMPtr<nsIAtom> langAtom = mLang;
+      RefPtr<nsIAtom> langAtom = mLang;
       lang->SetAtomIdentValue(langAtom.forget());
     }
   }

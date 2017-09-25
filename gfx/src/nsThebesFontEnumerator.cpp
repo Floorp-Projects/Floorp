@@ -48,7 +48,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
     else
         generic.SetIsVoid(true);
 
-    nsCOMPtr<nsIAtom> langGroupAtom;
+    RefPtr<nsIAtom> langGroupAtom;
     if (aLangGroup) {
         nsAutoCString lowered;
         lowered.Assign(aLangGroup);
@@ -156,7 +156,7 @@ public:
     }
 
 private:
-    nsCOMPtr<nsIAtom> mLangGroupAtom;
+    RefPtr<nsIAtom> mLangGroupAtom;
     nsAutoCStringN<16> mGeneric;
     UniquePtr<EnumerateFontsPromise> mEnumerateFontsPromise;
 };
@@ -192,7 +192,7 @@ nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
     nsresult rv = NS_NewNamedThread("FontEnumThread", getter_AddRefs(thread));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAtom> langGroupAtom;
+    RefPtr<nsIAtom> langGroupAtom;
     if (aLangGroup) {
         nsAutoCStringN<16> lowered;
         lowered.Assign(aLangGroup);

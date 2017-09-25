@@ -989,7 +989,7 @@ void
 nsCSSValue::AtomizeIdentValue()
 {
   MOZ_ASSERT(mUnit == eCSSUnit_Ident);
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(GetStringBufferValue());
+  RefPtr<nsIAtom> atom = NS_Atomize(GetStringBufferValue());
   Reset();
   mUnit = eCSSUnit_AtomIdent;
   mValue.mAtom = atom.forget().take();

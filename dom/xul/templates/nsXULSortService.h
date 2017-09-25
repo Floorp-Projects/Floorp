@@ -38,7 +38,7 @@ struct nsSortState
 
   MOZ_INIT_OUTSIDE_CTOR nsSortState_direction direction;
   nsAutoString sort;
-  nsCOMArray<nsIAtom> sortKeys;
+  nsTArray<RefPtr<nsIAtom>> sortKeys;
 
   nsCOMPtr<nsIXULTemplateQueryProcessor> processor;
   nsCOMPtr<nsIContent> lastContainer;
