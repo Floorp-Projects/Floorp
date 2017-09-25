@@ -709,6 +709,9 @@ HttpObserverManager = {
     }
   },
 
+  STATUS_TYPES: new Set(["headersReceived", "authRequired", "onRedirect", "onStart", "onStop"]),
+  FILTER_TYPES: new Set(["opening", "modify", "afterModify", "headersReceived", "authRequired", "onRedirect"]),
+
   runChannelListener(channel, kind, extraData = null) {
     let handlerResults = [];
     let requestHeaders;
@@ -719,24 +722,22 @@ HttpObserverManager = {
         return;
       }
 
-      let includeStatus = ["headersReceived", "authRequired", "onRedirect", "onStart", "onStop"].includes(kind);
-      let registerFilter = ["opening", "modify", "afterModify", "headersReceived", "authRequired", "onRedirect"].includes(kind);
-
+      let registerFilter = this.FILTER_TYPES.has(kind);
       let commonData = null;
       let requestBody;
-      for (let [callback, opts] of this.listeners[kind].entries()) {
+      this.listeners[kind].forEach((opts, callback) => {
         if (!channel.matches(opts.filter, opts.extension, extraData)) {
-          continue;
+          return;
         }
 
         if (!commonData) {
           commonData = this.getRequestData(channel, extraData);
-          if (includeStatus) {
+          if (this.STATUS_TYPES.has(kind)) {
             commonData.statusCode = channel.statusCode;
             commonData.statusLine = channel.statusLine;
           }
         }
-        let data = Object.assign({}, commonData);
+        let data = Object.create(commonData);
 
         if (registerFilter && opts.blocking && opts.extension) {
           channel.registerTraceableChannel(opts.extension, opts.tabParent);
@@ -768,7 +769,7 @@ HttpObserverManager = {
         } catch (e) {
           Cu.reportError(e);
         }
-      }
+      });
     } catch (e) {
       Cu.reportError(e);
     }
