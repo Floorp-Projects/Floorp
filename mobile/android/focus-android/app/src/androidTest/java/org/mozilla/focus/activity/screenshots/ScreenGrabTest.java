@@ -3,7 +3,6 @@ package org.mozilla.focus.activity.screenshots;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.res.Resources;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.web.webdriver.Locator;
@@ -30,7 +29,6 @@ import org.mozilla.focus.activity.TestHelper;
 import org.mozilla.focus.activity.helpers.HostScreencapScreenshotStrategy;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -53,7 +51,6 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static android.support.test.espresso.web.webdriver.DriverAtoms.webScrollIntoView;
 import static android.view.KeyEvent.KEYCODE_ENTER;
 import static junit.framework.Assert.assertTrue;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mozilla.focus.activity.TestHelper.browserURLbar;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
@@ -135,20 +132,6 @@ public class ScreenGrabTest {
             }
         }
     };
-
-    public static void swipeDownNotificationBar (UiDevice deviceInstance) {
-        int dHeight = deviceInstance.getDisplayHeight();
-        int dWidth = deviceInstance.getDisplayWidth();
-        int xScrollPosition = dWidth/2;
-        int yScrollStop = dHeight/4 * 3;
-        deviceInstance.swipe(
-                xScrollPosition,
-                yScrollStop,
-                xScrollPosition,
-                0,
-                20
-        );
-    }
 
     @Test
     public void screenGrabTest() throws InterruptedException, UiObjectNotFoundException {
