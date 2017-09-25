@@ -47,7 +47,6 @@ label,
   display: none;
 }
 
-#runtime-panel-simulator,
 .panel-item-complex {
   clear: both;
   position: relative;
@@ -128,7 +127,6 @@ button.panel-item:not(:disabled):hover {
 }
 
 .project-panel-item-openpackaged  { background-image: -moz-image-rect(url("icons.png"), 260, 438, 286, 412); }
-.runtime-panel-item-simulator     { background-image: -moz-image-rect(url("icons.png"), 0, 438, 26, 412); }
 .runtime-panel-item-other         { background-image: -moz-image-rect(url("icons.png"), 26, 438, 52, 412); }
 #runtime-screenshot               { background-image: -moz-image-rect(url("icons.png"), 131, 438, 156, 412); }
 
@@ -145,5 +143,4 @@ button.panel-item:not(:disabled):hover {
 .project-panel-item-openhosted    { background-image: -moz-image-rect(url("icons.png"), 208, 438, 234, 412); }
 
 .project-panel-item-newapp,
-#runtime-panel-noadbhelper,
-#runtime-panel-installsimulator   { background-image: -moz-image-rect(url("icons.png"), 234, 438, 260, 412); }
+#runtime-panel-noadbhelper        { background-image: -moz-image-rect(url("icons.png"), 234, 438, 260, 412); }
