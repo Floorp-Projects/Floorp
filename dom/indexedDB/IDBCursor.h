@@ -205,11 +205,9 @@ private:
 
   ~IDBCursor();
 
-#ifdef ENABLE_INTL_API
   // Checks if this is a locale aware cursor (ie. the index's sortKey is unset)
   bool
   IsLocaleAware() const;
-#endif
 
   void
   DropJSObjects();
