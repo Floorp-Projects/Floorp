@@ -1048,11 +1048,18 @@ nsRange::SetSelection(mozilla::dom::Selection* aSelection)
   if (mSelection == aSelection) {
     return;
   }
+
   // At least one of aSelection and mSelection must be null
   // aSelection will be null when we are removing from a selection
   // and a range can't be in more than one selection at a time,
   // thus mSelection must be null too.
   MOZ_ASSERT(!aSelection || !mSelection);
+
+  // Extra step in case our parent failed to ensure the above
+  // invariant.
+  if (aSelection && mSelection) {
+    mSelection->RemoveRange(this);
+  }
 
   mSelection = aSelection;
   if (mSelection) {

@@ -487,15 +487,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   mWindow = [[windowClass alloc] initWithContentRect:contentRect styleMask:features 
                                  backing:NSBackingStoreBuffered defer:YES];
 
-  if ([mWindow respondsToSelector:@selector(setTitleVisibility:)]) {
-    // By default, hide window titles.
-    [mWindow setTitleVisibility:NSWindowTitleHidden];
-  }
-  if ([mWindow respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
-    // By default, hide window titlebars.
-    [mWindow setTitlebarAppearsTransparent:YES];
-  }
-
   // setup our notification delegate. Note that setDelegate: does NOT retain.
   mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
   [mWindow setDelegate:mDelegate];

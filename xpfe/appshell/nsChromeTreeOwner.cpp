@@ -430,13 +430,13 @@ NS_IMETHODIMP nsChromeTreeOwner::SetFocus()
    return mXULWindow->SetFocus();
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetTitle(char16_t** aTitle)
+NS_IMETHODIMP nsChromeTreeOwner::GetTitle(nsAString& aTitle)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetTitle(aTitle);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const char16_t* aTitle)
+NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const nsAString& aTitle)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetTitle(aTitle);

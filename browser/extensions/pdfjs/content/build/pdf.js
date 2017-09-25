@@ -3309,8 +3309,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.9.583';
-  exports.build = build = 'd7b37ae7';
+  exports.version = version = '1.9.597';
+  exports.build = build = 'f3987bba';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3824,6 +3824,10 @@ class AnnotationElementFactory {
         return new SquareAnnotationElement(parameters);
       case _util.AnnotationType.CIRCLE:
         return new CircleAnnotationElement(parameters);
+      case _util.AnnotationType.POLYLINE:
+        return new PolylineAnnotationElement(parameters);
+      case _util.AnnotationType.POLYGON:
+        return new PolygonAnnotationElement(parameters);
       case _util.AnnotationType.HIGHLIGHT:
         return new HighlightAnnotationElement(parameters);
       case _util.AnnotationType.UNDERLINE:
@@ -4129,7 +4133,7 @@ class PopupAnnotationElement extends AnnotationElement {
     super(parameters, isRenderable);
   }
   render() {
-    const IGNORE_TYPES = ['Line', 'Square', 'Circle'];
+    const IGNORE_TYPES = ['Line', 'Square', 'Circle', 'PolyLine', 'Polygon'];
     this.container.className = 'popupAnnotation';
     if (IGNORE_TYPES.indexOf(this.data.parentType) >= 0) {
       return this.container;
@@ -4303,6 +4307,46 @@ class CircleAnnotationElement extends AnnotationElement {
     this.container.append(svg);
     this._createPopup(this.container, circle, data);
     return this.container;
+  }
+}
+class PolylineAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+    this.containerClassName = 'polylineAnnotation';
+    this.svgElementName = 'svg:polyline';
+  }
+  render() {
+    this.container.className = this.containerClassName;
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let vertices = data.vertices;
+    let points = [];
+    for (let i = 0, ii = vertices.length; i < ii; i++) {
+      let x = vertices[i].x - data.rect[0];
+      let y = data.rect[3] - vertices[i].y;
+      points.push(x + ',' + y);
+    }
+    points = points.join(' ');
+    let borderWidth = data.borderStyle.width;
+    let polyline = this.svgFactory.createElement(this.svgElementName);
+    polyline.setAttribute('points', points);
+    polyline.setAttribute('stroke-width', borderWidth);
+    polyline.setAttribute('stroke', 'transparent');
+    polyline.setAttribute('fill', 'none');
+    svg.appendChild(polyline);
+    this.container.append(svg);
+    this._createPopup(this.container, polyline, data);
+    return this.container;
+  }
+}
+class PolygonAnnotationElement extends PolylineAnnotationElement {
+  constructor(parameters) {
+    super(parameters);
+    this.containerClassName = 'polygonAnnotation';
+    this.svgElementName = 'svg:polygon';
   }
 }
 class HighlightAnnotationElement extends AnnotationElement {
@@ -5005,8 +5049,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '1.9.583';
-var pdfjsBuild = 'd7b37ae7';
+var pdfjsVersion = '1.9.597';
+var pdfjsBuild = 'f3987bba';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(13);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -8132,8 +8176,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '1.9.583';
-  PDFJS.build = 'd7b37ae7';
+  PDFJS.version = '1.9.597';
+  PDFJS.build = 'f3987bba';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {

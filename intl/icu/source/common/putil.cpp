@@ -675,6 +675,16 @@ extern U_IMPORT char *U_TZNAME[];
 
 #if !UCONFIG_NO_FILE_IO && ((U_PLATFORM_IS_DARWIN_BASED && (U_PLATFORM != U_PF_IPHONE || defined(U_TIMEZONE))) || U_PLATFORM_IS_LINUX_BASED || U_PLATFORM == U_PF_BSD || U_PLATFORM == U_PF_SOLARIS)
 /* These platforms are likely to use Olson timezone IDs. */
+/* common targets of the symbolic link at TZDEFAULT are:
+ * "/usr/share/zoneinfo/<olsonID>" default, older Linus distros, macOS to 10.12
+ * "../usr/share/zoneinfo/<olsonID>" newer Linux distros: Red Hat Enterprise Linux 7, Ubuntu, SuSe Linux
+ * "/usr/share/lib/zoneinfo/<olsonID>" Solaris
+ * "../usr/share/lib/zoneinfo/<olsonID>" Solaris
+ * "/var/db/timezone/zoneinfo/<olsonID>" macOS 10.13
+ * To avoid checking lots of paths, just check that the target path
+ * before the <olsonID> ends with "/zoneinfo/", and the <olsonID> is valid.
+ */
+
 #define CHECK_LOCALTIME_LINK 1
 #if U_PLATFORM_IS_DARWIN_BASED
 #include <tzfile.h>
@@ -682,12 +692,12 @@ extern U_IMPORT char *U_TZNAME[];
 #elif U_PLATFORM == U_PF_SOLARIS
 #define TZDEFAULT       "/etc/localtime"
 #define TZZONEINFO      "/usr/share/lib/zoneinfo/"
-#define TZZONEINFO2     "../usr/share/lib/zoneinfo/"
 #define TZ_ENV_CHECK    "localtime"
 #else
 #define TZDEFAULT       "/etc/localtime"
 #define TZZONEINFO      "/usr/share/zoneinfo/"
 #endif
+#define TZZONEINFOTAIL  "/zoneinfo/"
 #if U_HAVE_DIRENT_H
 #define TZFILE_SKIP     "posixrules" /* tz file to skip when searching. */
 /* Some Linux distributions have 'localtime' in /usr/share/zoneinfo
@@ -1125,24 +1135,15 @@ uprv_tzname(int n)
         */
         int32_t ret = (int32_t)readlink(TZDEFAULT, gTimeZoneBuffer, sizeof(gTimeZoneBuffer)-1);
         if (0 < ret) {
-            int32_t tzZoneInfoLen = uprv_strlen(TZZONEINFO);
+            int32_t tzZoneInfoTailLen = uprv_strlen(TZZONEINFOTAIL);
             gTimeZoneBuffer[ret] = 0;
-            if (uprv_strncmp(gTimeZoneBuffer, TZZONEINFO, tzZoneInfoLen) == 0
-                && isValidOlsonID(gTimeZoneBuffer + tzZoneInfoLen))
+            char *  tzZoneInfoTailPtr = uprv_strstr(gTimeZoneBuffer, TZZONEINFOTAIL);
+            
+            if (tzZoneInfoTailPtr != NULL
+                && isValidOlsonID(tzZoneInfoTailPtr + tzZoneInfoTailLen))
             {
-                return (gTimeZoneBufferPtr = gTimeZoneBuffer + tzZoneInfoLen);
+                return (gTimeZoneBufferPtr = tzZoneInfoTailPtr + tzZoneInfoTailLen);
             }
-#if U_PLATFORM == U_PF_SOLARIS
-            else
-            {
-                tzZoneInfoLen = uprv_strlen(TZZONEINFO2);
-                if (uprv_strncmp(gTimeZoneBuffer, TZZONEINFO2, tzZoneInfoLen) == 0
-                                && isValidOlsonID(gTimeZoneBuffer + tzZoneInfoLen))
-                {
-                    return (gTimeZoneBufferPtr = gTimeZoneBuffer + tzZoneInfoLen);
-                }
-            }
-#endif
         } else {
 #if defined(SEARCH_TZFILE)
             DefaultTZInfo* tzInfo = (DefaultTZInfo*)uprv_malloc(sizeof(DefaultTZInfo));
