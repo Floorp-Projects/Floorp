@@ -569,6 +569,20 @@ EffectCompositor::HasThrottledStyleUpdates() const
   return false;
 }
 
+bool
+EffectCompositor::HasPendingStyleUpdatesFor(Element* aElement) const
+{
+  for (auto& elementSet : mElementsToRestyle) {
+    for (auto iter = elementSet.ConstIter(); !iter.Done(); iter.Next()) {
+      if (iter.Key().mElement->Contains(aElement)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 void
 EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {

@@ -43,11 +43,6 @@ AnimationInfo::AddAnimation()
 
   Animation* anim = mAnimations.AppendElement();
 
-  if (mManager->AsWebRenderLayerManager()) {
-    mManager->AsWebRenderLayerManager()->
-      KeepCompositorAnimationsIdAlive(mCompositorAnimationsId);
-  }
-
   mMutated = true;
 
   return anim;
@@ -71,11 +66,6 @@ AnimationInfo::ClearAnimations()
 
   if (mAnimations.IsEmpty() && mAnimationData.IsEmpty()) {
     return;
-  }
-
-  if (mManager->AsWebRenderLayerManager()) {
-    mManager->AsWebRenderLayerManager()->
-      AddCompositorAnimationsIdForDiscard(mCompositorAnimationsId);
   }
 
   mAnimations.Clear();

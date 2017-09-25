@@ -172,7 +172,7 @@ Required for enumerated histograms. Similar to n_buckets, it represent the numbe
 
 ``labels``
 ----------
-Required for categorical histograms. This is an array of strings which are the labels for different values in this histograms. The labels are restricted to a C++-friendly subset of characters (``^[a-z][a-z0-9_]+[a-z0-9]$``).
+Required for categorical histograms. This is an array of strings which are the labels for different values in this histograms. The labels are restricted to a C++-friendly subset of characters (``^[a-z][a-z0-9_]+[a-z0-9]$``). This field is limited to 100 strings, each with a maximum length of 20 characters.
 
 ``bug_numbers``
 ---------------

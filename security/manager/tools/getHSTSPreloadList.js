@@ -250,7 +250,7 @@ function output(sortedStatuses, currentList) {
     writeTo(HEADER, fos);
     writeTo(getExpirationTimeString(), fos);
 
-    for (let status in sortedStatuses) {
+    for (let status of sortedStatuses) {
       // If we've encountered an error for this entry (other than the site not
       // sending an HSTS header), be safe and don't remove it from the list
       // (given that it was already on the list).

@@ -124,6 +124,7 @@
 #include "DisplayItemClip.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "prenv.h"
+#include "TextDrawTarget.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -6067,6 +6068,29 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
 
     nsPresContext* presCtx = aFrame->PresContext();
     nsContextBoxBlur contextBoxBlur;
+
+    nscolor shadowColor;
+    if (shadowDetails->mHasColor)
+      shadowColor = shadowDetails->mColor;
+    else
+      shadowColor = aForegroundColor;
+
+    // Webrender just needs the shadow details
+    if (auto* textDrawer = aContext->GetTextDrawer()) {
+      wr::TextShadow wrShadow;
+
+      wrShadow.offset = {
+        presCtx->AppUnitsToFloatDevPixels(shadowDetails->mXOffset),
+        presCtx->AppUnitsToFloatDevPixels(shadowDetails->mYOffset)
+      };
+
+      wrShadow.blur_radius = presCtx->AppUnitsToFloatDevPixels(shadowDetails->mRadius);
+      wrShadow.color = wr::ToColorF(ToDeviceColor(shadowColor));
+
+      textDrawer->AppendShadow(wrShadow);
+      return;
+    }
+
     gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, 0, blurRadius,
                                                     presCtx->AppUnitsPerDevPixel(),
                                                     aDestCtx, aDirtyRect, nullptr,
@@ -6074,11 +6098,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
     if (!shadowContext)
       continue;
 
-    nscolor shadowColor;
-    if (shadowDetails->mHasColor)
-      shadowColor = shadowDetails->mColor;
-    else
-      shadowColor = aForegroundColor;
+    
 
     aDestCtx->Save();
     aDestCtx->NewPath();

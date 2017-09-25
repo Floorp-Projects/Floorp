@@ -487,6 +487,33 @@ interface nsITelemetry : nsISupports
   void registerEvents(in ACString aCategory, in jsval aEventData);
 
   /**
+   * Parent process only. Register new scalars to record them from addons. This
+   * allows registering multiple scalars for a group. They will be valid only for
+   * the current Firefox session.
+   * Note that scalars shipping in Firefox should be registered in Scalars.yaml.
+   *
+   * @param aGroupName The unique group the scalars are registered in.
+   * @param aScalarData An object that contains registration data for multiple scalars in the form:
+   *   {
+   *     "sample_scalar": {
+   *       "kind": Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+   *       "keyed": true, //optional, defaults to false
+   *       "record_on_release: true, // optional, defaults to false
+   *       "expired": false // optional, defaults to false.
+   *     },
+   *     ...
+   *   }
+   * @param aScalarData.<name>.kind One of the scalar types defined in this file (SCALAR_TYPE_*)
+   * @param aScalarData.<name>.keyed Optional, whether this is a keyed scalar or not. Defaults to false.
+   * @param aScalarData.<name>.record_on_release Optional, whether to record this data on release.
+   *                                             Defaults to false.
+   * @param aScalarData.<name>.expired Optional, whether this scalar entry is expired. This allows
+   *                                   recording it without error, but it will be discarded. Defaults to false.
+   */
+  [implicit_jscontext]
+  void registerScalars(in ACString aGroupName, in jsval aScalarData);
+
+  /**
    * Resets all the stored events. This is intended to be only used in tests.
    */
   void clearEvents();

@@ -1289,8 +1289,8 @@ var Impl = {
         if (processType == "parent" && (key == "histograms" || key == "keyedHistograms")) {
           payloadLoc = payloadObj;
         }
-        // Dynamic processes only collect events.
-        if (processType == "dynamic" && key != "events") {
+        // The Dynamic process only collects events and scalars.
+        if (processType == "dynamic" && !["events", "scalars"].includes(key)) {
           continue;
         }
 

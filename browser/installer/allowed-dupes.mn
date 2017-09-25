@@ -69,10 +69,8 @@ browser/chrome/devtools/skin/promisedebugger.css
 browser/chrome/devtools/skin/variables.css
 modules/devtools/Console.jsm
 modules/devtools/Loader.jsm
-modules/devtools/Simulator.jsm
 modules/devtools/shared/Console.jsm
 modules/devtools/shared/Loader.jsm
-modules/devtools/shared/apps/Simulator.jsm
 browser/modules/devtools/client/framework/gDevTools.jsm
 browser/modules/devtools/gDevTools.jsm
 browser/chrome/icons/default/default16.png

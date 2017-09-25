@@ -95,6 +95,19 @@ const char* GetNameForProcessID(ProcessID process);
  */
 GeckoProcessType GetGeckoProcessType(ProcessID process);
 
+/**
+ * Check if the passed telemetry identifier is valid.
+ *
+ * @param aStr The string identifier.
+ * @param aMaxLength The maximum length of the identifier.
+ * @param aAllowInfixPeriod Whether or not to allow infix dots.
+ * @param aAllowInfixUnderscore Whether or not to allow infix underscores.
+ * @returns true if the string validates correctly, false otherwise.
+ */
+bool
+IsValidIdentifierString(const nsACString& aStr, const size_t aMaxLength,
+                        const bool aAllowInfixPeriod, const bool aAllowInfixUnderscore);
+
 } // namespace Common
 } // namespace Telemetry
 } // namespace mozilla

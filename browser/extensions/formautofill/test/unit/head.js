@@ -196,12 +196,14 @@ function objectMatches(object, fields) {
 
 add_task(async function head_initialize() {
   Services.prefs.setStringPref("extensions.formautofill.available", "on");
+  Services.prefs.setBoolPref("extensions.formautofill.creditCards.available", true);
   Services.prefs.setBoolPref("extensions.formautofill.heuristics.enabled", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
 
   // Clean up after every test.
   do_register_cleanup(function head_cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.available");
+    Services.prefs.clearUserPref("extensions.formautofill.creditCards.available");
     Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
   });

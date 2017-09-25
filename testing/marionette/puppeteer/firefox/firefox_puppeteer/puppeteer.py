@@ -50,14 +50,6 @@ class Puppeteer(object):
         See the :class:`~api.utils.Utils` reference.
         """
 
-    @property
-    def platform(self):
-        """Returns the lowercased platform name.
-
-        :returns: Platform name
-        """
-        return self.marionette.session_capabilities['platformName']
-
     @use_class_as_property('api.prefs.Preferences')
     def prefs(self):
         """

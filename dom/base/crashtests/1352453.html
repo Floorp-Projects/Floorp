@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      tr {
+        font: medium / 1000 cursive;
+      }
+
+      :only-of-type {
+        border-image: repeating-linear-gradient(45deg, blue, red) space 1% / 1pt auto;
+      }
+    </style>
+    <script>
+      o1 = document.createElement('tr');
+      o2 = document.createElement('th');
+      o3 = document.createElement('rt');
+      document.documentElement.appendChild(o1);
+      o1.appendChild(o2);
+      o2.appendChild(o3);
+    </script>
+  </head>
+</html>

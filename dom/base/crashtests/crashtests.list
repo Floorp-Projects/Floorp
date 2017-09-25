@@ -209,6 +209,7 @@ pref(dom.IntersectionObserver.enabled,true) load 1326194-1.html
 pref(dom.IntersectionObserver.enabled,true) load 1326194-2.html
 pref(dom.IntersectionObserver.enabled,true) load 1332939.html
 pref(dom.webcomponents.enabled,true) load 1341693.html
+load 1352453.html
 pref(dom.IntersectionObserver.enabled,true) load 1353529.xul
 load 1368327.html
 pref(dom.IntersectionObserver.enabled,true) load 1369363.xul

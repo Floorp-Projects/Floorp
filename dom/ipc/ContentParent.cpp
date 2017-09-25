@@ -2263,6 +2263,9 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
   DataStorage::GetAllChildProcessData(xpcomInit.dataStorage());
 
+  // Send the dynamic scalar definitions to the new process.
+  TelemetryIPC::GetDynamicScalarDefinitions(xpcomInit.dynamicScalarDefs());
+
   // Must send screen info before send initialData
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.CopyScreensToRemote(this);

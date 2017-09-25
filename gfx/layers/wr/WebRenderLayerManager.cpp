@@ -109,6 +109,12 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
     WrBridge()->Destroy(aIsSync);
   }
 
+  // Clear this before calling RemoveUnusedAndResetWebRenderUserData(),
+  // otherwise that function might destroy some WebRenderAnimationData instances
+  // which will put stuff back into mDiscardedCompositorAnimationsIds. If
+  // mActiveCompositorAnimationIds is empty that won't happen.
+  mActiveCompositorAnimationIds.clear();
+
   mLastCanvasDatas.Clear();
   RemoveUnusedAndResetWebRenderUserData();
 
@@ -991,15 +997,30 @@ WebRenderLayerManager::DiscardImages()
 }
 
 void
-WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
+WebRenderLayerManager::AddActiveCompositorAnimationId(uint64_t aId)
 {
-  mDiscardedCompositorAnimationsIds.AppendElement(aId);
+  // In layers-free mode we track the active compositor animation ids on the
+  // client side so that we don't try to discard the same animation id multiple
+  // times. We could just ignore the multiple-discard on the parent side, but
+  // checking on the content side reduces IPC traffic.
+  MOZ_ASSERT(IsLayersFreeTransaction());
+  mActiveCompositorAnimationIds.insert(aId);
 }
 
 void
-WebRenderLayerManager::KeepCompositorAnimationsIdAlive(uint64_t aId)
+WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 {
-  mDiscardedCompositorAnimationsIds.RemoveElement(aId);
+  if (!IsLayersFreeTransaction()) {
+    // For layers-full we don't track the active animation id in
+    // mActiveCompositorAnimationIds, we just call this on layer destruction and
+    // don't need to worry about discarding the same id multiple times.
+    mDiscardedCompositorAnimationsIds.AppendElement(aId);
+  } else if (mActiveCompositorAnimationIds.erase(aId)) {
+    // For layers-free ensure we don't try to discard an animation id that wasn't
+    // active. We also remove it from mActiveCompositorAnimationIds so we don't
+    // discard it again unless it gets re-activated.
+    mDiscardedCompositorAnimationsIds.AppendElement(aId);
+  }
 }
 
 void

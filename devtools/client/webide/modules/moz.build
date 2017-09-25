@@ -13,8 +13,6 @@ DevToolsModules(
     'project-list.js',
     'runtime-list.js',
     'runtimes.js',
-    'simulator-process.js',
-    'simulators.js',
     'tab-store.js',
     'utils.js'
 )
