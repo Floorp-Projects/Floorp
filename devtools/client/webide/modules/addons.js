@@ -9,11 +9,7 @@ const Services = require("Services");
 const {getJSON} = require("devtools/client/shared/getjson");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 
-const ADDONS_URL = "devtools.webide.addonsURL";
-
-var SIMULATOR_LINK = Services.prefs.getCharPref("devtools.webide.simulatorAddonsURL");
 var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbAddonURL");
-var SIMULATOR_ADDON_ID = Services.prefs.getCharPref("devtools.webide.simulatorAddonID");
 var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbAddonID");
 
 var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
@@ -35,43 +31,23 @@ addonsListener.onEnabled =
 addonsListener.onDisabled =
 addonsListener.onInstalled =
 addonsListener.onUninstalled = (updatedAddon) => {
-  GetAvailableAddons().then(addons => {
-    for (let a of [...addons.simulators, addons.adb]) {
-      if (a.addonID == updatedAddon.id) {
-        a.updateInstallStatus();
-      }
-    }
-  });
+  let addons = GetAvailableAddons();
+  addons.adb.updateInstallStatus();
 };
 AddonManager.addAddonListener(addonsListener);
 
-var GetAvailableAddons_promise = null;
+var AvailableAddons = null;
 var GetAvailableAddons = exports.GetAvailableAddons = function () {
-  if (!GetAvailableAddons_promise) {
-    GetAvailableAddons_promise = new Promise((resolve, reject) => {
-      let addons = {
-        simulators: [],
-        adb: null
-      };
-      getJSON(ADDONS_URL).then(json => {
-        for (let stability in json) {
-          for (let version of json[stability]) {
-            addons.simulators.push(new SimulatorAddon(stability, version));
-          }
-        }
-        addons.adb = new ADBAddon();
-        resolve(addons);
-      }, e => {
-        GetAvailableAddons_promise = null;
-        reject(e);
-      });
-    });
+  if (!AvailableAddons) {
+    AvailableAddons = {
+      adb: new ADBAddon()
+    };
   }
-  return GetAvailableAddons_promise;
+  return AvailableAddons;
 };
 
 exports.ForgetAddonsList = function () {
-  GetAvailableAddons_promise = null;
+  AvailableAddons = null;
 };
 
 function Addon() {}
@@ -159,20 +135,6 @@ Addon.prototype = {
     this.installFailureHandler(install, "Install failed");
   },
 };
-
-function SimulatorAddon(stability, version) {
-  EventEmitter.decorate(this);
-  this.stability = stability;
-  this.version = version;
-  // This addon uses the string "linux" for "linux32"
-  let fixedOS = OS == "linux32" ? "linux" : OS;
-  this.xpiLink = SIMULATOR_LINK.replace(/#OS#/g, fixedOS)
-                               .replace(/#VERSION#/g, version)
-                               .replace(/#SLASHED_VERSION#/g, version.replace(/\./g, "_"));
-  this.addonID = SIMULATOR_ADDON_ID.replace(/#SLASHED_VERSION#/g, version.replace(/\./g, "_"));
-  this.updateInstallStatus();
-}
-SimulatorAddon.prototype = Object.create(Addon.prototype);
 
 function ADBAddon() {
   EventEmitter.decorate(this);

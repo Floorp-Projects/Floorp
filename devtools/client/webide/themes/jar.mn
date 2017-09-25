@@ -16,7 +16,6 @@ webide.jar:
   skin/config-view.css         (config-view.css)
   skin/wifi-auth.css           (wifi-auth.css)
   skin/panel-listing.css       (panel-listing.css)
-  skin/simulator.css           (simulator.css)
   skin/rocket.svg              (rocket.svg)
   skin/noise.png               (noise.png)
   skin/default-app-icon.png    (default-app-icon.png)

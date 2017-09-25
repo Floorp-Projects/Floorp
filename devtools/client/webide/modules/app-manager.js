@@ -775,7 +775,6 @@ var AppManager = exports.AppManager = {
     this.runtimeList = {
       usb: [],
       wifi: [],
-      simulator: [],
       other: []
     };
   },
@@ -792,9 +791,6 @@ var AppManager = exports.AppManager = {
           break;
         case RuntimeTypes.WIFI:
           this.runtimeList.wifi.push(runtime);
-          break;
-        case RuntimeTypes.SIMULATOR:
-          this.runtimeList.simulator.push(runtime);
           break;
         default:
           this.runtimeList.other.push(runtime);
