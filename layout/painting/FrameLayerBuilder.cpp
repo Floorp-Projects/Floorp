@@ -4103,11 +4103,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
     if (!bounds.IsEmpty()) {
       if (itemASR != mContainerASR) {
-        const DisplayItemClip* clip = DisplayItemClipChain::ClipForASR(item->GetClipChain(), mContainerASR);
-        MOZ_ASSERT(clip || gfxPrefs::LayoutUseContainersForRootFrames(),
-                   "the item should have finite bounds with respect to mContainerASR.");
-        if (clip) {
-          bounds = clip->GetClipRect();
+        if (Maybe<nsRect> clip = item->GetClipWithRespectToASR(mBuilder, mContainerASR)) {
+          bounds = clip.ref();
         }
       }
     }

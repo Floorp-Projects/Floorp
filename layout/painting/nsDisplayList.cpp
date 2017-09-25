@@ -2157,15 +2157,8 @@ nsDisplayList::GetClippedBoundsWithRespectToASR(nsDisplayListBuilder* aBuilder,
   for (nsDisplayItem* i = GetBottom(); i != nullptr; i = i->GetAbove()) {
     nsRect r = i->GetClippedBounds(aBuilder);
     if (aASR != i->GetActiveScrolledRoot() && !r.IsEmpty()) {
-      const DisplayItemClip* clip = DisplayItemClipChain::ClipForASR(i->GetClipChain(), aASR);
-#ifdef DEBUG
-      if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
-        MOZ_ASSERT(clip,
-                   "Need to be clipped wrt aASR. Do not call this function with an ASR that our child items don't have finite bounds wrt.");
-      }
-#endif
-      if (clip) {
-        r = clip->GetClipRect();
+      if (Maybe<nsRect> clip = i->GetClipWithRespectToASR(aBuilder, aASR)) {
+        r = clip.ref();
       }
     }
     if (aVisibleRect) {
@@ -2974,6 +2967,21 @@ nsDisplayItem::SetClipChain(const DisplayItemClipChain* aClipChain,
     mState.mClipChain = mClipChain;
     mState.mClip = mClip;
   }
+}
+
+Maybe<nsRect>
+nsDisplayItem::GetClipWithRespectToASR(nsDisplayListBuilder* aBuilder,
+                                       const ActiveScrolledRoot* aASR) const
+{
+  if (const DisplayItemClip* clip = DisplayItemClipChain::ClipForASR(GetClipChain(), aASR)) {
+    return Some(clip->GetClipRect());
+  }
+#ifdef DEBUG
+  if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
+    MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
+  }
+#endif
+  return Nothing();
 }
 
 void
@@ -9399,6 +9407,30 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
 
   return true;
 }
+
+Maybe<nsRect>
+nsDisplayMask::GetClipWithRespectToASR(nsDisplayListBuilder* aBuilder,
+                                       const ActiveScrolledRoot* aASR) const
+{
+  if (const DisplayItemClip* clip = DisplayItemClipChain::ClipForASR(GetClipChain(), aASR)) {
+    return Some(clip->GetClipRect());
+  }
+  // This item does not have a clip with respect to |aASR|. However, we
+  // might still have finite bounds with respect to |aASR|. Check our
+  // children.
+  nsDisplayList* childList = GetSameCoordinateSystemChildren();
+  if (childList) {
+    return Some(childList->GetClippedBoundsWithRespectToASR(aBuilder, aASR));
+  }
+#ifdef DEBUG
+  if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
+    MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
+  }
+#endif
+  return Nothing();
+}
+
+
 
 #ifdef MOZ_DUMP_PAINTING
 void
