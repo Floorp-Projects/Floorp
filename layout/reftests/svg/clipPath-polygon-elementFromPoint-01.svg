@@ -21,11 +21,11 @@
 
       inElem = document.elementFromPoint(100, 100);
       if (inElem.style.fill == "red") { ++inCount; }
-      inElem = document.elementFromPoint(150, 100);
+      inElem = document.elementFromPoint(149, 100);
       if (inElem.style.fill == "red") { ++inCount; }
-      inElem = document.elementFromPoint(150, 150);
+      inElem = document.elementFromPoint(149, 149);
       if (inElem.style.fill == "red") { ++inCount; }
-      inElem = document.elementFromPoint(100, 150);
+      inElem = document.elementFromPoint(100, 149);
       if (inElem.style.fill == "red") { ++inCount; }
       if (inCount == 4) { document.getElementById("in").style.fill = "lime"; }
 
