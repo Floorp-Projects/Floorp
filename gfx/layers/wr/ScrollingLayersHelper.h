@@ -28,7 +28,7 @@ public:
   ScrollingLayersHelper(nsDisplayItem* aItem,
                         wr::DisplayListBuilder& aBuilder,
                         const StackingContextHelper& aStackingContext,
-                        WebRenderLayerManager::ClipIdMap& aCache,
+                        WebRenderCommandsBuilder::ClipIdMap& aCache,
                         bool aApzEnabled);
   ~ScrollingLayersHelper();
 
@@ -39,12 +39,12 @@ private:
                                  wr::DisplayListBuilder& aBuilder,
                                  int32_t aAppUnitsPerDevPixel,
                                  const StackingContextHelper& aStackingContext,
-                                 WebRenderLayerManager::ClipIdMap& aCache);
+                                 WebRenderCommandsBuilder::ClipIdMap& aCache);
   void DefineAndPushChain(const DisplayItemClipChain* aChain,
                           wr::DisplayListBuilder& aBuilder,
                           const StackingContextHelper& aStackingContext,
                           int32_t aAppUnitsPerDevPixel,
-                          WebRenderLayerManager::ClipIdMap& aCache);
+                          WebRenderCommandsBuilder::ClipIdMap& aCache);
   bool DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
                                 const StackingContextHelper& aStackingContext);
 

@@ -498,7 +498,7 @@ public:
     container->SetScaleHint(scaleHint);
 
     LayerRect rect(destGFXRect.x, destGFXRect.y, destGFXRect.width, destGFXRect.height);
-    return aManager->PushImage(this, container, aBuilder, aResources, aSc, rect);
+    return aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, rect);
   }
 
   // It would be great if we could override GetOpaqueRegion to return nonempty here,
