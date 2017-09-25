@@ -6,54 +6,49 @@
 #ifndef TEST_GMP_STORAGE_H__
 #define TEST_GMP_STORAGE_H__
 
-#include "gmp-errors.h"
-#include "gmp-platform.h"
+#include <functional>
 #include <string>
+#include <vector>
+// This include is required in order for content_decryption_module to work
+// on Unix systems.
+#include "stddef.h"
+#include "content_decryption_module.h"
+
+#define IO_SUCCEEDED(x) ((x) == cdm::FileIOClient::Status::kSuccess)
+#define IO_FAILED(x) ((x) != cdm::FileIOClient::Status::kSuccess)
 
 class ReadContinuation {
 public:
   virtual ~ReadContinuation() {}
-  virtual void ReadComplete(GMPErr aErr, const std::string& aData) = 0;
+  virtual void operator()(bool aSuccess,
+                          const uint8_t* aData,
+                          uint32_t aDataSize) = 0;
 };
 
-// Reads a record to storage using GMPRecord.
-// Calls ReadContinuation with read data.
-GMPErr
-ReadRecord(const std::string& aRecordName,
-           ReadContinuation* aContinuation);
+void WriteRecord(cdm::Host_8* aHost,
+                 const std::string& aRecordName,
+                 const std::string& aData,
+                 std::function<void()>&& aOnSuccess,
+                 std::function<void()>&& aOnFailure);
 
-// Writes a record to storage using GMPRecord.
-// Runs continuation when data is written.
-GMPErr
-WriteRecord(const std::string& aRecordName,
-            const std::string& aData,
-            GMPTask* aOnSuccess,
-            GMPTask* aOnFailure);
+void WriteRecord(cdm::Host_8* aHost,
+                 const std::string& aRecordName,
+                 const uint8_t* aData,
+                 uint32_t aNumBytes,
+                 std::function<void()>&& aOnSuccess,
+                 std::function<void()>&& aOnFailure);
 
-GMPErr
-WriteRecord(const std::string& aRecordName,
-            const uint8_t* aData,
-            uint32_t aNumBytes,
-            GMPTask* aOnSuccess,
-            GMPTask* aOnFailure);
-
-GMPErr
-GMPOpenRecord(const char* aName,
-              uint32_t aNameLength,
-              GMPRecord** aOutRecord,
-              GMPRecordClient* aClient);
-
-GMPErr
-GMPRunOnMainThread(GMPTask* aTask);
+void ReadRecord(cdm::Host_8* aHost,
+                const std::string& aRecordName,
+                std::function<void(bool, const uint8_t*, uint32_t)>&& aOnReadComplete);
 
 class OpenContinuation {
 public:
   virtual ~OpenContinuation() {}
-  virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) = 0;
+  virtual void operator()(bool aSuccess) = 0;
 };
 
-void
-GMPOpenRecord(const std::string& aRecordName,
-              OpenContinuation* aContinuation);
-
+void OpenRecord(cdm::Host_8* aHost,
+                const std::string& aRecordName,
+                std::function<void(bool)>&& aOpenComplete);
 #endif // TEST_GMP_STORAGE_H__

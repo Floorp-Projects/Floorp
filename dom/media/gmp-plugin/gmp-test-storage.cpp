@@ -9,218 +9,244 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
-class WriteRecordClient : public GMPRecordClient {
+using namespace cdm;
+using namespace std;
+
+class WriteRecordClient : public FileIOClient
+{
 public:
-  GMPErr Init(GMPRecord* aRecord,
-              GMPTask* aOnSuccess,
-              GMPTask* aOnFailure,
-              const uint8_t* aData,
-              uint32_t aDataSize) {
-    mRecord = aRecord;
-    mOnSuccess = aOnSuccess;
-    mOnFailure = aOnFailure;
+  WriteRecordClient(function<void()>&& aOnSuccess,
+                    function<void()>&& aOnFailure,
+                    const uint8_t* aData,
+                    uint32_t aDataSize)
+    : mOnSuccess(move(aOnSuccess))
+    , mOnFailure(move(aOnFailure))
+  {
     mData.insert(mData.end(), aData, aData + aDataSize);
-    return mRecord->Open();
   }
 
-  void OpenComplete(GMPErr aStatus) override {
-    if (GMP_SUCCEEDED(aStatus)) {
-      mRecord->Write(mData.empty() ? nullptr : &mData.front(), mData.size());
-    } else {
-      GMPRunOnMainThread(mOnFailure);
-      mOnSuccess->Destroy();
+  void OnOpenComplete(Status aStatus) override
+  {
+    // If we hit an error, fail.
+    if (aStatus != Status::kSuccess) {
+      Done(aStatus);
+    } else if (mFileIO) { // Otherwise, write our data to the file.
+      mFileIO->Write(mData.empty() ? nullptr : &mData.front(), mData.size());
     }
   }
 
-  void ReadComplete(GMPErr aStatus,
-                    const uint8_t* aData,
-                    uint32_t aDataSize) override {}
-
-  void WriteComplete(GMPErr aStatus) override {
-    // Note: Call Close() before running continuation, in case the
-    // continuation tries to open the same record; if we call Close()
-    // after running the continuation, the Close() call will arrive
-    // just after the Open() call succeeds, immediately closing the
-    // record we just opened.
-    mRecord->Close();
-    if (GMP_SUCCEEDED(aStatus)) {
-      GMPRunOnMainThread(mOnSuccess);
-      mOnFailure->Destroy();
-    } else {
-      GMPRunOnMainThread(mOnFailure);
-      mOnSuccess->Destroy();
-    }
-    delete this;
+  void OnReadComplete(Status aStatus,
+                      const uint8_t* aData,
+                      uint32_t aDataSize) override
+  {
   }
 
-private:
-  GMPRecord* mRecord;
-  GMPTask* mOnSuccess;
-  GMPTask* mOnFailure;
-  std::vector<uint8_t> mData;
-};
-
-GMPErr
-WriteRecord(const std::string& aRecordName,
-            const uint8_t* aData,
-            uint32_t aNumBytes,
-            GMPTask* aOnSuccess,
-            GMPTask* aOnFailure)
-{
-  GMPRecord* record;
-  auto* client = new WriteRecordClient();
-  auto err = GMPOpenRecord(aRecordName.c_str(),
-                           aRecordName.size(),
-                           &record,
-                           client);
-  if (GMP_FAILED(err)) {
-    GMPRunOnMainThread(aOnFailure);
-    aOnSuccess->Destroy();
-    return err;
-  }
-  return client->Init(record, aOnSuccess, aOnFailure, aData, aNumBytes);
-}
-
-GMPErr
-WriteRecord(const std::string& aRecordName,
-            const std::string& aData,
-            GMPTask* aOnSuccess,
-            GMPTask* aOnFailure)
-{
-  return WriteRecord(aRecordName,
-                     (const uint8_t*)aData.c_str(),
-                     aData.size(),
-                     aOnSuccess,
-                     aOnFailure);
-}
-
-class ReadRecordClient : public GMPRecordClient {
-public:
-  GMPErr Init(GMPRecord* aRecord,
-              ReadContinuation* aContinuation) {
-    mRecord = aRecord;
-    mContinuation = aContinuation;
-    return mRecord->Open();
-  }
-
-  void OpenComplete(GMPErr aStatus) override {
-    auto err = mRecord->Read();
-    if (GMP_FAILED(err)) {
-      mContinuation->ReadComplete(err, "");
-      delete this;
-    }
-  }
-
-  void ReadComplete(GMPErr aStatus,
-                    const uint8_t* aData,
-                    uint32_t aDataSize) override {
-    // Note: Call Close() before running continuation, in case the
-    // continuation tries to open the same record; if we call Close()
-    // after running the continuation, the Close() call will arrive
-    // just after the Open() call succeeds, immediately closing the
-    // record we just opened.
-    mRecord->Close();
-    std::string data((const char*)aData, aDataSize);
-    mContinuation->ReadComplete(GMPNoErr, data);
-    delete this;
-  }
-
-  void WriteComplete(GMPErr aStatus) override {
-  }
-
-private:
-  GMPRecord* mRecord;
-  ReadContinuation* mContinuation;
-};
-
-GMPErr
-ReadRecord(const std::string& aRecordName,
-           ReadContinuation* aContinuation)
-{
-  MOZ_ASSERT(aContinuation);
-  GMPRecord* record;
-  auto* client = new ReadRecordClient();
-  auto err = GMPOpenRecord(aRecordName.c_str(),
-                           aRecordName.size(),
-                           &record,
-                           client);
-  if (GMP_FAILED(err)) {
-    return err;
-  }
-  return client->Init(record, aContinuation);
-}
-
-extern GMPPlatformAPI* g_platform_api; // Defined in gmp-fake.cpp
-
-GMPErr
-GMPOpenRecord(const char* aName,
-              uint32_t aNameLength,
-              GMPRecord** aOutRecord,
-              GMPRecordClient* aClient)
-{
-  MOZ_ASSERT(g_platform_api);
-  return g_platform_api->createrecord(aName, aNameLength, aOutRecord, aClient);
-}
-
-GMPErr
-GMPRunOnMainThread(GMPTask* aTask)
-{
-  MOZ_ASSERT(g_platform_api);
-  return g_platform_api->runonmainthread(aTask);
-}
-
-class OpenRecordClient : public GMPRecordClient {
-public:
-  /*
-   * This function will take the memory ownership of the parameters and
-   * delete them when done.
-   */
-  static void Open(const std::string& aRecordName,
-            OpenContinuation* aContinuation) {
-    MOZ_ASSERT(aContinuation);
-    (new OpenRecordClient(aContinuation))->Do(aRecordName);
-  }
-
-  void OpenComplete(GMPErr aStatus) override {
+  void OnWriteComplete(Status aStatus) override
+  {
     Done(aStatus);
   }
 
-  void ReadComplete(GMPErr aStatus,
-                    const uint8_t* aData,
-                    uint32_t aDataSize) override {
-    MOZ_CRASH("Should not reach here.");
-  }
-
-  void WriteComplete(GMPErr aStatus) override {
-    MOZ_CRASH("Should not reach here.");
+  void Do(const string& aName, Host_8* aHost)
+  {
+    // Initialize the FileIO.
+    mFileIO = aHost->CreateFileIO(this);
+    mFileIO->Open(aName.c_str(), aName.size());
   }
 
 private:
-  explicit OpenRecordClient(OpenContinuation* aContinuation)
-    : mRecord(nullptr), mContinuation(aContinuation) {}
-
-  void Do(const std::string& aName) {
-    auto err = GMPOpenRecord(aName.c_str(), aName.size(), &mRecord, this);
-    if (GMP_FAILED(err) ||
-        GMP_FAILED(err = mRecord->Open())) {
-      Done(err);
+  void Done(cdm::FileIOClient::Status aStatus)
+  {
+    // Note: Call Close() before running continuation, in case the
+    // continuation tries to open the same record; if we call Close()
+    // after running the continuation, the Close() call will arrive
+    // just after the Open() call succeeds, immediately closing the
+    // record we just opened.
+    if (mFileIO) {
+      // will delete mFileIO inside Close.
+      mFileIO->Close();
     }
-  }
 
-  void Done(GMPErr err) {
-    // mContinuation is responsible for closing mRecord.
-    mContinuation->OpenComplete(err, mRecord);
-    delete mContinuation;
+    if (IO_SUCCEEDED(aStatus)) {
+      mOnSuccess();
+    } else {
+      mOnFailure();
+    }
+
     delete this;
   }
 
-  GMPRecord* mRecord;
-  OpenContinuation* mContinuation;
+  FileIO* mFileIO = nullptr;
+  function<void()> mOnSuccess;
+  function<void()> mOnFailure;
+  std::vector<uint8_t> mData;
 };
 
 void
-GMPOpenRecord(const std::string& aRecordName,
-              OpenContinuation* aContinuation)
+WriteRecord(Host_8* aHost,
+            const std::string& aRecordName,
+            const uint8_t* aData,
+            uint32_t aNumBytes,
+            function<void()>&& aOnSuccess,
+            function<void()>&& aOnFailure)
 {
-  OpenRecordClient::Open(aRecordName, aContinuation);
+  // client will be delete in WriteRecordClient::Done
+  WriteRecordClient* client = new WriteRecordClient(move(aOnSuccess),
+                                                    move(aOnFailure),
+                                                    aData,
+                                                    aNumBytes);
+  client->Do(aRecordName, aHost);
+}
+
+void
+WriteRecord(Host_8* aHost,
+            const std::string& aRecordName,
+            const std::string& aData,
+            function<void()> &&aOnSuccess,
+            function<void()>&& aOnFailure)
+{
+  return WriteRecord(aHost,
+                     aRecordName,
+                     (const uint8_t*)aData.c_str(),
+                     aData.size(),
+                     move(aOnSuccess),
+                     move(aOnFailure));
+}
+
+class ReadRecordClient : public FileIOClient
+{
+public:
+  explicit ReadRecordClient(function<void(bool, const uint8_t*, uint32_t)>&& aOnReadComplete)
+    : mOnReadComplete(move(aOnReadComplete))
+  {
+  }
+
+  void OnOpenComplete(Status aStatus) override
+  {
+    auto err = aStatus;
+    if (aStatus != Status::kSuccess) {
+      Done(err, reinterpret_cast<const uint8_t*>(""), 0);
+    } else {
+      mFileIO->Read();
+    }
+  }
+
+  void OnReadComplete(Status aStatus,
+                      const uint8_t* aData,
+                      uint32_t aDataSize) override
+  {
+    Done(aStatus, aData, aDataSize);
+  }
+
+  void OnWriteComplete(Status aStatus) override
+  {
+  }
+
+  void Do(const string& aName, Host_8* aHost)
+  {
+    mFileIO = aHost->CreateFileIO(this);
+    mFileIO->Open(aName.c_str(), aName.size());
+  }
+
+private:
+  void Done(cdm::FileIOClient::Status aStatus,
+            const uint8_t* aData,
+            uint32_t aDataSize)
+  {
+    // Note: Call Close() before running continuation, in case the
+    // continuation tries to open the same record; if we call Close()
+    // after running the continuation, the Close() call will arrive
+    // just after the Open() call succeeds, immediately closing the
+    // record we just opened.
+    if (mFileIO) {
+      // will delete mFileIO inside Close.
+      mFileIO->Close();
+    }
+
+    if (IO_SUCCEEDED(aStatus)) {
+      mOnReadComplete(true, aData, aDataSize);
+    } else {
+      mOnReadComplete(false, reinterpret_cast<const uint8_t*>(""), 0);
+    }
+
+    delete this;
+  }
+
+  FileIO* mFileIO = nullptr;
+  function<void(bool, const uint8_t*, uint32_t)> mOnReadComplete;
+};
+
+void
+ReadRecord(Host_8* aHost,
+           const std::string& aRecordName,
+           function<void(bool, const uint8_t*, uint32_t)>&& aOnReadComplete)
+{
+  // client will be delete in ReadRecordClient::Done
+  ReadRecordClient* client = new ReadRecordClient(move(aOnReadComplete));
+  client->Do(aRecordName, aHost);
+}
+
+class OpenRecordClient : public FileIOClient
+{
+public:
+  explicit OpenRecordClient(function<void(bool)>&& aOpenComplete)
+    : mOpenComplete(move(aOpenComplete))
+  {
+  }
+
+  void OnOpenComplete(Status aStatus) override
+  {
+    Done(aStatus);
+  }
+
+  void OnReadComplete(Status aStatus,
+                      const uint8_t* aData,
+                      uint32_t aDataSize) override
+  {
+  }
+
+  void OnWriteComplete(Status aStatus) override
+  {
+  }
+
+  void Do(const string& aName, Host_8* aHost)
+  {
+    // Initialize the FileIO.
+    mFileIO = aHost->CreateFileIO(this);
+    mFileIO->Open(aName.c_str(), aName.size());
+  }
+
+private:
+  void Done(cdm::FileIOClient::Status aStatus)
+  {
+    // Note: Call Close() before running continuation, in case the
+    // continuation tries to open the same record; if we call Close()
+    // after running the continuation, the Close() call will arrive
+    // just after the Open() call succeeds, immediately closing the
+    // record we just opened.
+    if (mFileIO) {
+      // will delete mFileIO inside Close.
+      mFileIO->Close();
+    }
+
+    if (IO_SUCCEEDED(aStatus)) {
+      mOpenComplete(true);
+    } else {
+      mOpenComplete(false);
+    }
+
+    delete this;
+  }
+
+  FileIO* mFileIO = nullptr;
+  function<void(bool)> mOpenComplete;;
+};
+
+void
+OpenRecord(Host_8* aHost,
+           const std::string& aRecordName,
+           function<void(bool)>&& aOpenComplete)
+{
+  // client will be delete in OpenRecordClient::Done
+  OpenRecordClient* client = new OpenRecordClient(move(aOpenComplete));
+  client->Do(aRecordName, aHost);
 }

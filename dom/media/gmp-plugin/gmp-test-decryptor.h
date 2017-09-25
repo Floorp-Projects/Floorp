@@ -6,79 +6,133 @@
 #ifndef FAKE_DECRYPTOR_H__
 #define FAKE_DECRYPTOR_H__
 
-#include "gmp-decryption.h"
+#include "content_decryption_module.h"
 #include <string>
 #include "mozilla/Attributes.h"
 
-class FakeDecryptor : public GMPDecryptor {
+class FakeDecryptor : public cdm::ContentDecryptionModule_8 {
 public:
+  explicit FakeDecryptor(cdm::Host_8* aHost);
 
-  explicit FakeDecryptor();
-
-  void Init(GMPDecryptorCallback* aCallback,
-            bool aDistinctiveIdentifierRequired,
-            bool aPersistentStateRequired) override
+  void Initialize(bool aAllowDistinctiveIdentifier,
+                  bool aAllowPersistentState) override
   {
-    mCallback = aCallback;
   }
 
-  void CreateSession(uint32_t aCreateSessionToken,
-                     uint32_t aPromiseId,
-                     const char* aInitDataType,
-                     uint32_t aInitDataTypeSize,
-                     const uint8_t* aInitData,
-                     uint32_t aInitDataSize,
-                     GMPSessionType aSessionType) override
+  void SetServerCertificate(uint32_t aPromiseId,
+                            const uint8_t* aServerCertificateData,
+                            uint32_t aServerCertificateDataSize)
+                            override
+  {
+  }
+
+  void CreateSessionAndGenerateRequest(uint32_t aPromiseId,
+                                       cdm::SessionType aSessionType,
+                                       cdm::InitDataType aInitDataType,
+                                       const uint8_t* aInitData,
+                                       uint32_t aInitDataSize)
+                                       override
   {
   }
 
   void LoadSession(uint32_t aPromiseId,
+                   cdm::SessionType aSessionType,
                    const char* aSessionId,
-                   uint32_t aSessionIdLength) override
+                   uint32_t aSessionIdSize) override
   {
   }
 
   void UpdateSession(uint32_t aPromiseId,
                      const char* aSessionId,
-                     uint32_t aSessionIdLength,
+                     uint32_t aSessionIdSize,
                      const uint8_t* aResponse,
                      uint32_t aResponseSize) override;
 
   void CloseSession(uint32_t aPromiseId,
                     const char* aSessionId,
-                    uint32_t aSessionIdLength) override
+                    uint32_t aSessionIdSize) override
   {
   }
 
   void RemoveSession(uint32_t aPromiseId,
                      const char* aSessionId,
-                     uint32_t aSessionIdLength) override
+                     uint32_t aSessionIdSize) override
   {
   }
 
-  void SetServerCertificate(uint32_t aPromiseId,
-                            const uint8_t* aServerCert,
-                            uint32_t aServerCertSize) override
+  void TimerExpired(void* aContext) override
   {
   }
 
-  void Decrypt(GMPBuffer* aBuffer,
-               GMPEncryptedBufferMetadata* aMetadata) override
+  cdm::Status Decrypt(const cdm::InputBuffer& aEncryptedBuffer,
+                      cdm::DecryptedBlock* aDecryptedBuffer) override
+  {
+    return cdm::Status::kDecodeError;
+  }
+
+  cdm::Status InitializeAudioDecoder(
+    const cdm::AudioDecoderConfig& aAudioDecoderConfig) override
+  {
+    return cdm::Status::kDecodeError;
+  }
+
+  cdm::Status InitializeVideoDecoder(
+    const cdm::VideoDecoderConfig& aVideoDecoderConfig) override
+  {
+    return cdm::Status::kDecodeError;
+  }
+
+  void DeinitializeDecoder(cdm::StreamType aDecoderType) override
   {
   }
 
-  void DecryptingComplete() override;
+  void ResetDecoder(cdm::StreamType aDecoderType) override
+  {
+  }
+
+  cdm::Status DecryptAndDecodeFrame(
+    const cdm::InputBuffer& aEncryptedBuffer,
+    cdm::VideoFrame* aVideoFrame) override
+  {
+    return cdm::Status::kDecodeError;
+  }
+
+  cdm::Status DecryptAndDecodeSamples(
+    const cdm::InputBuffer& aEncryptedBuffer,
+    cdm::AudioFrames* aAudioFrame) override
+  {
+    return cdm::Status::kDecodeError;
+  }
+
+  void OnPlatformChallengeResponse(
+    const cdm::PlatformChallengeResponse& aResponse) override
+  {
+  }
+
+  void OnQueryOutputProtectionStatus(cdm::QueryResult aResult,
+                                     uint32_t aLinkMask,
+                                     uint32_t aOutputProtectionMask) override
+  {
+  }
+
+  void Destroy() override
+  {
+    delete this;
+    sInstance = nullptr;
+  }
 
   static void Message(const std::string& aMessage);
+
+  cdm::Host_8* mHost;
+
+  static FakeDecryptor* sInstance;
 
 private:
 
   virtual ~FakeDecryptor() {}
-  static FakeDecryptor* sInstance;
 
   void TestStorage();
 
-  GMPDecryptorCallback* mCallback;
 };
 
 #endif
