@@ -562,10 +562,6 @@ mochitest-browser-chrome:
             linux32/debug: 5400
             linux32-stylo-disabled/debug: 5400
             default: 3600
-    worker-type:
-        by-test-platform:
-            windows10-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     mozharness:
         mochitest-flavor: browser
         script: desktop_unittest.py
