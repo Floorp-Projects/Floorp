@@ -173,6 +173,28 @@ add_task(async function test_datepicker_clicked() {
 });
 
 /**
+ * Make sure picker is in correct state when it is reopened.
+ */
+add_task(async function test_datepicker_reopen_state() {
+  const inputValue = "2016-12-15";
+  const nextMonth = "2017-01-01";
+
+  await helper.openPicker(`data:text/html, <input type="date" value="${inputValue}">`);
+  // Navigate to the next month but does not commit the change
+  Assert.equal(helper.getElement(MONTH_YEAR).textContent, DATE_FORMAT(new Date(inputValue)));
+  helper.click(helper.getElement(BTN_NEXT_MONTH));
+  Assert.equal(helper.getElement(MONTH_YEAR).textContent, DATE_FORMAT(new Date(nextMonth)));
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+
+  // Ensures the picker opens to the month of the input value
+  await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, gBrowser.selectedBrowser);
+  await helper.waitForPickerReady();
+  Assert.equal(helper.getElement(MONTH_YEAR).textContent, DATE_FORMAT(new Date(inputValue)));
+
+  await helper.tearDown();
+});
+
+/**
  * When min and max attributes are set, calendar should show some dates as
  * out-of-range.
  */
