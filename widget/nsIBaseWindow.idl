@@ -226,5 +226,5 @@ interface nsIBaseWindow : nsISupports
 	/*
 	Title of the window.
 	*/
-	attribute wstring title;
+	attribute AString title;
 };
