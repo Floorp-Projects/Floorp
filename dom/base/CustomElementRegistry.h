@@ -362,11 +362,15 @@ public:
   void GetCustomPrototype(nsIAtom* aAtom,
                           JS::MutableHandle<JSObject*> aPrototype);
 
+  void SyncInvokeReactions(nsIDocument::ElementCallbackType aType,
+                           Element* aCustomElement,
+                           CustomElementDefinition* aDefinition);
+
   /**
    * Upgrade an element.
    * https://html.spec.whatwg.org/multipage/scripting.html#upgrades
    */
-  void Upgrade(Element* aElement, CustomElementDefinition* aDefinition, ErrorResult& aRv);
+  static void Upgrade(Element* aElement, CustomElementDefinition* aDefinition, ErrorResult& aRv);
 
 private:
   ~CustomElementRegistry();
@@ -375,9 +379,6 @@ private:
     nsIDocument::ElementCallbackType aType, Element* aCustomElement,
     LifecycleCallbackArgs* aArgs, CustomElementDefinition* aDefinition);
 
-  void SyncInvokeReactions(nsIDocument::ElementCallbackType aType,
-                           Element* aCustomElement,
-                           CustomElementDefinition* aDefinition);
   /**
    * Registers an unresolved custom element that is a candidate for
    * upgrade when the definition is registered via registerElement.

@@ -10155,6 +10155,49 @@ nsContentUtils::GetElementDefinitionIfObservingAttr(Element* aCustomElement,
 }
 
 /* static */ void
+nsContentUtils::SyncInvokeReactions(nsIDocument::ElementCallbackType aType,
+                                    Element* aElement,
+                                    CustomElementDefinition* aDefinition)
+{
+  MOZ_ASSERT(aElement);
+
+  nsIDocument* doc = aElement->OwnerDoc();
+  nsPIDOMWindowInner* window(doc->GetInnerWindow());
+  if (!window) {
+    return;
+  }
+
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
+  if (!registry) {
+    return;
+  }
+
+  registry->SyncInvokeReactions(aType, aElement, aDefinition);
+}
+
+/* static */ void
+nsContentUtils::EnqueueUpgradeReaction(Element* aElement,
+                                       CustomElementDefinition* aDefinition)
+{
+  MOZ_ASSERT(aElement);
+
+  nsIDocument* doc = aElement->OwnerDoc();
+  nsPIDOMWindowInner* window(doc->GetInnerWindow());
+  if (!window) {
+    return;
+  }
+
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
+  if (!registry) {
+    return;
+  }
+
+  CustomElementReactionsStack* stack =
+    doc->GetDocGroup()->CustomElementReactionsStack();
+  stack->EnqueueUpgradeReaction(registry, aElement, aDefinition);
+}
+
+/* static */ void
 nsContentUtils::EnqueueLifecycleCallback(nsIDocument* aDoc,
                                          nsIDocument::ElementCallbackType aType,
                                          Element* aCustomElement,
