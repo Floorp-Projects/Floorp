@@ -106,7 +106,6 @@ config = {
             },
         },
     },
-    },
     "partials": {
         "releases-dir": {
             "product-name": "Firefox-%(version)s-Partial-%(prev_version)s",
