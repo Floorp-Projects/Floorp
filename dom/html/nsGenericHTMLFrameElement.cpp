@@ -24,6 +24,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsSubDocumentFrame.h"
 #include "nsXULElement.h"
+#include "nsAttrValueOrString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
