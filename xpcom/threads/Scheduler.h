@@ -10,7 +10,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
+#include "nsTArray.h"
 
 // Windows silliness. winbase.h defines an empty no-argument Yield macro.
 #undef Yield
