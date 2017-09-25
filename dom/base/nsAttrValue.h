@@ -84,7 +84,7 @@ public:
 class nsAttrValue {
   friend struct MiscContainer;
 public:
-  typedef nsTArray< nsCOMPtr<nsIAtom> > AtomArray;
+  typedef nsTArray< RefPtr<nsIAtom> > AtomArray;
 
   // This has to be the same as in ValueBaseType
   enum ValueType {

@@ -260,7 +260,7 @@ StaticPresData::GetLangGroup(nsIAtom* aLanguage,
 already_AddRefed<nsIAtom>
 StaticPresData::GetUncachedLangGroup(nsIAtom* aLanguage) const
 {
-  nsCOMPtr<nsIAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage);
+  RefPtr<nsIAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage);
   if (!langGroupAtom) {
     langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
   }

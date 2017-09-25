@@ -49,13 +49,13 @@ public:
 
   bool Contains(const nsAString& elem) const
   {
-    nsCOMPtr<nsIAtom> atom = NS_AtomizeMainThread(elem);
+    RefPtr<nsIAtom> atom = NS_AtomizeMainThread(elem);
     return Contains(atom);
   }
 
   bool Contains(const nsACString& aElem) const
   {
-    nsCOMPtr<nsIAtom> atom = NS_Atomize(aElem);
+    RefPtr<nsIAtom> atom = NS_Atomize(aElem);
     return Contains(atom);
   }
 
@@ -72,13 +72,13 @@ public:
 
   void Add(const nsAString& aElem)
   {
-    nsCOMPtr<nsIAtom> atom = NS_AtomizeMainThread(aElem);
+    RefPtr<nsIAtom> atom = NS_AtomizeMainThread(aElem);
     return Add(atom);
   }
 
   void Remove(const nsAString& aElem)
   {
-    nsCOMPtr<nsIAtom> atom = NS_AtomizeMainThread(aElem);
+    RefPtr<nsIAtom> atom = NS_AtomizeMainThread(aElem);
     return Remove(atom);
   }
 
@@ -159,7 +159,7 @@ private:
   nsCOMPtr<nsIURI> mURI;
   mutable nsCOMPtr<nsIURI> mURINoRef;
 
-  mutable nsCOMPtr<nsIAtom> mScheme;
+  mutable RefPtr<nsIAtom> mScheme;
   mutable nsCString mHost;
 
   mutable nsAutoString mPath;

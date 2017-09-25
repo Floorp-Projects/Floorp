@@ -127,7 +127,7 @@ public:
     return result;
   }
 
-  nsCOMPtr<nsIAtom> mCommand;
+  RefPtr<nsIAtom> mCommand;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignCommandEventData(const WidgetCommandEvent& aEvent,

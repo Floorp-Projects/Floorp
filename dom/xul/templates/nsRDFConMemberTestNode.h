@@ -70,8 +70,8 @@ public:
 
 protected:
     nsXULTemplateQueryProcessorRDF* mProcessor;
-    nsCOMPtr<nsIAtom> mContainerVariable;
-    nsCOMPtr<nsIAtom> mMemberVariable;
+    RefPtr<nsIAtom> mContainerVariable;
+    RefPtr<nsIAtom> mMemberVariable;
 };
 
 #endif // nsRDFConMemberTestNode_h__

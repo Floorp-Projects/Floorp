@@ -1289,7 +1289,7 @@ protected:
   RefPtr<mozilla::RestyleManager> mRestyleManager;
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   nsIAtom* MOZ_UNSAFE_REF("always a static atom") mMedium; // initialized by subclass ctors
-  nsCOMPtr<nsIAtom> mMediaEmulated;
+  RefPtr<nsIAtom> mMediaEmulated;
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
 
   // This pointer is nulled out through SetLinkHandler() in the destructors of
@@ -1301,7 +1301,7 @@ protected:
   // This may in fact hold a langGroup such as x-western rather than
   // a specific language, however (e.g, if it is inferred from the
   // charset rather than explicitly specified as a lang attribute).
-  nsCOMPtr<nsIAtom>     mLanguage;
+  RefPtr<nsIAtom>     mLanguage;
 
 public:
   // The following are public member variables so that we can use them

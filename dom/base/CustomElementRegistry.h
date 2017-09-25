@@ -102,7 +102,7 @@ struct CustomElementData
   CustomElementData(nsIAtom* aType, State aState);
   // Custom element type, for <button is="x-button"> or <x-button>
   // this would be x-button.
-  nsCOMPtr<nsIAtom> mType;
+  RefPtr<nsIAtom> mType;
   // Element is being created flag as described in the custom elements spec.
   bool mElementIsBeingCreated;
   // Flag to determine if the created callback has been invoked, thus it
@@ -150,22 +150,22 @@ struct CustomElementDefinition
   CustomElementDefinition(nsIAtom* aType,
                           nsIAtom* aLocalName,
                           Function* aConstructor,
-                          nsCOMArray<nsIAtom>&& aObservedAttributes,
+                          nsTArray<RefPtr<nsIAtom>>&& aObservedAttributes,
                           JSObject* aPrototype,
                           mozilla::dom::LifecycleCallbacks* aCallbacks,
                           uint32_t aDocOrder);
 
   // The type (name) for this custom element.
-  nsCOMPtr<nsIAtom> mType;
+  RefPtr<nsIAtom> mType;
 
   // The localname to (e.g. <button is=type> -- this would be button).
-  nsCOMPtr<nsIAtom> mLocalName;
+  RefPtr<nsIAtom> mLocalName;
 
   // The custom element constructor.
   RefPtr<CustomElementConstructor> mConstructor;
 
   // The list of attributes that this custom element observes.
-  nsCOMArray<nsIAtom> mObservedAttributes;
+  nsTArray<RefPtr<nsIAtom>> mObservedAttributes;
 
   // The prototype to use for new custom elements of this type.
   JS::Heap<JSObject *> mPrototype;
@@ -411,12 +411,12 @@ private:
                          CustomElementDefinition* aDefinition,
                          ErrorResult& aRv);
 
-  typedef nsRefPtrHashtable<nsISupportsHashKey, CustomElementDefinition>
+  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, CustomElementDefinition>
     DefinitionMap;
-  typedef nsClassHashtable<nsISupportsHashKey, nsTArray<nsWeakPtr>>
+  typedef nsClassHashtable<nsRefPtrHashKey<nsIAtom>, nsTArray<nsWeakPtr>>
     CandidateMap;
   typedef JS::GCHashMap<JS::Heap<JSObject*>,
-                        nsCOMPtr<nsIAtom>,
+                        RefPtr<nsIAtom>,
                         js::MovableCellHasher<JS::Heap<JSObject*>>,
                         js::SystemAllocPolicy> ConstructorMap;
 
@@ -430,7 +430,7 @@ private:
   // mCustomDefinitions again to get definitions.
   ConstructorMap mConstructors;
 
-  typedef nsRefPtrHashtable<nsISupportsHashKey, Promise>
+  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, Promise>
     WhenDefinedPromiseMap;
   WhenDefinedPromiseMap mWhenDefinedPromiseMap;
 

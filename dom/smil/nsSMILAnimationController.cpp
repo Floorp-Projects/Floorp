@@ -676,7 +676,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   // Look up target (animated) attribute
   // SMILANIM section 3.1, attributeName may
   // have an XMLNS prefix to indicate the XML namespace.
-  nsCOMPtr<nsIAtom> attributeName;
+  RefPtr<nsIAtom> attributeName;
   int32_t attributeNamespaceID;
   if (!aAnimElem->GetTargetAttributeName(&attributeNamespaceID,
                                          getter_AddRefs(attributeName)))

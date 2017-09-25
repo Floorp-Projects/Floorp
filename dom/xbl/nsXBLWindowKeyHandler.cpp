@@ -510,7 +510,7 @@ nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> eventTypeAtom =
+  RefPtr<nsIAtom> eventTypeAtom =
     ConvertEventToDOMEventType(*widgetKeyboardEvent);
   return WalkHandlers(keyEvent, eventTypeAtom);
 }
@@ -810,7 +810,7 @@ nsXBLWindowKeyHandler::HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
     return false;
   }
 
-  nsCOMPtr<nsIAtom> eventTypeAtom =
+  RefPtr<nsIAtom> eventTypeAtom =
     ConvertEventToDOMEventType(*widgetKeyboardEvent);
   return WalkHandlersInternal(aEvent, eventTypeAtom, mHandler, false,
                               aOutReservedForChrome);
