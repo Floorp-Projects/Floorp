@@ -44,7 +44,6 @@
         <treecol id="siteCol" label="&treehead.sitename2.label;" flex="3"
                  persist="width" width="50"
                  onclick="gSitePermissionsManager.buildPermissionsList(event.target)"/>
-        <splitter class="tree-splitter"/>
         <treecol id="statusCol" label="&treehead.status.label;" flex="1"
                  persist="width" width="50" data-isCurrentSortCol="true"
                  onclick="gSitePermissionsManager.buildPermissionsList(event.target);"/>

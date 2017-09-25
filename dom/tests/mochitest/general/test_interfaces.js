@@ -736,6 +736,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceNavigation",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "PerformanceNavigationTiming",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceObserver",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceObserverEntryList",

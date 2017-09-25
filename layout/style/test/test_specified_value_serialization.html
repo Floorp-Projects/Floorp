@@ -238,6 +238,45 @@
   p.remove();
 })();
 
+(function test_bug_1397619() {
+  var borderRadius = [
+    // [ specified style,
+    //   expected serialization,
+    //   descriptionOfTestcase ],
+    [ "10px 10px",
+      "10px",
+      "Width and height specified for " ],
+    [ "10px",
+      "10px",
+      "Only width specified for " ],
+  ];
+
+
+  var frame_container = document.getElementById("display");
+  var p = document.createElement("p");
+  frame_container.appendChild(p);
+
+  [
+    "border-top-left-radius",
+    "border-bottom-left-radius",
+    "border-top-right-radius",
+    "border-bottom-right-radius",
+    "border-spacing",
+  ].forEach(function(property) {
+    for (var i = 0; i < borderRadius.length; ++i) {
+      var test = borderRadius[i];
+      p.style.setProperty(property, test[0]);
+      is(p.style.getPropertyValue(property), test[1], test[2] + property);
+    }
+  });
+
+  p.style.paintOrder = "markers";
+  is(p.style.paintOrder, "markers",
+     "specified value serialization for paint-order doesn't contain repetitive values");
+
+  p.remove();
+})();
+
 </script>
 </pre>
 </body>

@@ -2055,9 +2055,18 @@ Toolbox.prototype = {
   /**
    * Show a drop down menu that allows the user to switch frames.
    */
-  showFramesMenu: function (event) {
+  showFramesMenu: async function (event) {
     let menu = new Menu();
     let target = event.target;
+
+    // Need to initInspector to check presence of getNodeActorFromWindowID
+    // and use the highlighter later
+    await this.initInspector();
+    if (!("_supportsFrameHighlight" in this)) {
+    // Only works with FF58+ targets
+      this._supportsFrameHighlight =
+        await this.target.actorHasMethod("domwalker", "getNodeActorFromWindowID");
+    }
 
     // Generate list of menu items from the list of frames.
     this.frameMap.forEach(frame => {
@@ -2078,6 +2087,9 @@ Toolbox.prototype = {
         checked,
         click: () => {
           this.onSelectFrame(frame.id);
+        },
+        hover: () => {
+          this.onHightlightFrame(frame.id);
         }
       }));
     });
@@ -2088,6 +2100,7 @@ Toolbox.prototype = {
 
     menu.once("close").then(() => {
       this.frameButton.isChecked = false;
+      this.highlighterUtils.unhighlight();
     });
 
     // Show a drop down menu with frames.
@@ -2132,6 +2145,18 @@ Toolbox.prototype = {
       windowId: frameId
     };
     this._target.client.request(packet);
+  },
+
+  /**
+   * Highlight a frame in the page
+   */
+  onHightlightFrame: async function (frameId) {
+    // Only enable frame highlighting when the top level document is targeted
+    if (this._supportsFrameHighlight &&
+        this.frameMap.get(this.selectedFrameId).parentID === undefined) {
+      let frameActor = await this.walker.getNodeActorFromWindowID(frameId);
+      this.highlighterUtils.highlightNodeFront(frameActor);
+    }
   },
 
   /**

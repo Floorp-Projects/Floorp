@@ -207,6 +207,10 @@ RestyleTracker::DoProcessRestyles()
           NS_ASSERTION(found, "Where did our entry go?");
           data->mRestyleHint =
             nsRestyleHint(data->mRestyleHint & ~eRestyle_LaterSiblings);
+
+          if (Element* parent = element->GetFlattenedTreeParentElement()) {
+            parent->UnsetFlags(ELEMENT_HAS_CHILD_WITH_LATER_SIBLINGS_HINT);
+          }
         }
 
         LOG_RESTYLE("%d pending restyles after expanding out "

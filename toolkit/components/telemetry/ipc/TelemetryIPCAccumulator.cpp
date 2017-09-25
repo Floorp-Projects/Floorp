@@ -178,7 +178,7 @@ TelemetryIPCAccumulator::AccumulateChildKeyedHistogram(mozilla::Telemetry::Histo
 }
 
 void
-TelemetryIPCAccumulator::RecordChildScalarAction(mozilla::Telemetry::ScalarID aId,
+TelemetryIPCAccumulator::RecordChildScalarAction(uint32_t aId, bool aDynamic,
                                                  ScalarActionType aAction, const ScalarVariant& aValue)
 {
   StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
@@ -195,12 +195,12 @@ TelemetryIPCAccumulator::RecordChildScalarAction(mozilla::Telemetry::ScalarID aI
     DispatchIPCTimerFired();
   }
   // Store the action.
-  gChildScalarsActions->AppendElement(ScalarAction{aId, aAction, Some(aValue)});
+  gChildScalarsActions->AppendElement(ScalarAction{aId, aDynamic, aAction, Some(aValue)});
   ArmIPCTimer(locker);
 }
 
 void
-TelemetryIPCAccumulator::RecordChildKeyedScalarAction(mozilla::Telemetry::ScalarID aId,
+TelemetryIPCAccumulator::RecordChildKeyedScalarAction(uint32_t aId, bool aDynamic,
                                                       const nsAString& aKey,
                                                       ScalarActionType aAction,
                                                       const ScalarVariant& aValue)
@@ -220,7 +220,7 @@ TelemetryIPCAccumulator::RecordChildKeyedScalarAction(mozilla::Telemetry::Scalar
   }
   // Store the action.
   gChildKeyedScalarsActions->AppendElement(
-    KeyedScalarAction{aId, aAction, NS_ConvertUTF16toUTF8(aKey), Some(aValue)});
+    KeyedScalarAction{aId, aDynamic, aAction, NS_ConvertUTF16toUTF8(aKey), Some(aValue)});
   ArmIPCTimer(locker);
 }
 

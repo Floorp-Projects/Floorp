@@ -2541,6 +2541,13 @@ gfxPlatform::InitWebRenderConfig()
   }
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+  featureWebRender.ForceDisable(
+    FeatureStatus::Unavailable,
+    "WebRender not ready for use on Android",
+    NS_LITERAL_CSTRING("FEATURE_FAILURE_ANDROID"));
+#endif
+
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit this feature
   if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
     gfxVars::SetUseWebRender(true);

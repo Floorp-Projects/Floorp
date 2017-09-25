@@ -365,7 +365,7 @@ var lateref = make_reference_p();
 var laterefcs = getComputedStyle(lateref, "");
 
 // flush style changes
-var x = getComputedStyle(div, "").color;
+var x = getComputedStyle(div, "").width;
 
 // Start our timer as close as possible to when we start the first
 // transition.
@@ -416,7 +416,7 @@ for (var i in pseudo_element_tests) {
 lateref.style.textIndent = "1000px";
 
 // flush style changes
-x = getComputedStyle(div, "").color;
+x = getComputedStyle(div, "").width;
 
 gStartTime2 = Date.now(); // set after all transitions have started
 gCurrentTime = gStartTime2;

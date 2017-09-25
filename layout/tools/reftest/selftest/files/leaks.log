@@ -1,0 +1,73 @@
+== BloatView: ALL (cumulative) LEAK AND BLOAT STATISTICS, default process 1148
+     |<----------------Class--------------->|<-----Bytes------>|<----Objects---->|
+     |                                      | Per-Inst   Leaked|   Total      Rem|
+   0 |TOTAL                                 |       19    19915|16007885      378|
+  68 |CacheEntry                            |      208      208|     521        1|
+  71 |CacheEntryHandle                      |       16       16|    7692        1|
+  72 |CacheFile                             |      264      264|     521        1|
+  80 |CacheFileMetadata                     |      176      176|     521        1|
+  81 |CacheFileOutputStream                 |       64       64|     463        1|
+  90 |CacheStorageService                   |      256      256|       1        1|
+  97 |CancelableRunnable                    |       24       24|   45614        1|
+ 103 |ChannelEventQueue                     |       96       96|     996        1|
+ 131 |CondVar                               |       36      360|     822       10|
+ 148 |ConsoleReportCollector                |       60      120|    1380        2|
+ 150 |ContentParent                         |     1712     1712|       2        1|
+ 188 |DataStorage                           |      284      852|       3        3|
+ 320 |HttpBaseChannel                       |     1368     1368|    1143        1|
+ 321 |HttpChannelParent                     |      176      176|     996        1|
+ 322 |HttpChannelParentListener             |       48       48|     961        1|
+ 342 |IdlePeriod                            |       12       36|     166        3|
+ 369 |InterceptedChannelBase                |      240      240|      18        1|
+ 389 |LoadContext                           |       72      144|    1023        2|
+ 391 |LoadInfo                              |      144      144|    3903        1|
+ 427 |Mutex                                 |       44     1012|   14660       23|
+ 439 |NullPrincipalURI                      |       80       80|     421        1|
+ 468 |PBrowserParent                        |      312      312|      21        1|
+ 479 |PContentParent                        |     1428     1428|       2        1|
+ 486 |PHttpChannelParent                    |       24       24|     996        1|
+ 527 |PollableEvent                         |       12       12|       1        1|
+ 576 |ReentrantMonitor                      |       24       72|    6922        3|
+ 577 |RefCountedMonitor                     |       84       84|     154        1|
+ 583 |RequestContextService                 |       60       60|       1        1|
+ 592 |Runnable                              |       20       40|  178102        2|
+ 627 |Service                               |      128      128|       1        1|
+ 646 |SharedMemory                          |       16       16|    1636        1|
+ 675 |StringAdopt                           |        1        3|   17087        3|
+ 688 |TabParent                             |      976      976|      21        1|
+ 699 |ThirdPartyUtil                        |       16       16|       1        1|
+ 875 |ipc::MessageChannel                   |      208      208|     166        1|
+ 920 |nsAuthURLParser                       |       12       12|       2        1|
+ 974 |nsCategoryObserver                    |       72       72|       8        1|
+ 976 |nsChannelClassifier                   |       28       28|     918        1|
+1004 |nsCookiePermission                    |       40       40|       1        1|
+1005 |nsCookieService                       |       80       80|       1        1|
+1010 |nsDNSService                          |      140      140|       1        1|
+1066 |nsEffectiveTLDService                 |       20       20|       1        1|
+1134 |nsHttpAuthCache::OriginClearObserver  |       16       32|       2        2|
+1135 |nsHttpChannel                         |     1816     1816|    1143        1|
+1136 |nsHttpChannelAuthProvider             |      148      148|    1012        1|
+1138 |nsHttpConnectionInfo                  |      128      128|    1021        1|
+1139 |nsHttpConnectionMgr                   |      304      304|       1        1|
+1141 |nsHttpHandler                         |      544      544|       1        1|
+1142 |nsHttpRequestHead                     |       92       92|    1190        1|
+1145 |nsIDNService                          |       56       56|       1        1|
+1146 |nsIOService                           |      176      176|       1        1|
+1176 |nsJSPrincipals                        |       16       64|   12583        4|
+1186 |nsLocalFile                           |       88      264|   13423        3|
+1192 |nsMainThreadPtrHolder<T>              |       20       80|    2253        4|
+1222 |nsNodeWeakReference                   |       16       16|     919        1|
+1223 |nsNotifyAddrListener                  |      112      112|       1        1|
+1241 |nsPermissionManager                   |      136      136|       1        1|
+1248 |nsPrefBranch                          |       76       76|      63        1|
+1257 |nsProxyInfo                           |       72       72|    1098        1|
+1265 |nsRedirectHistoryEntry                |       32       32|      69        1|
+1307 |nsSiteSecurityService                 |       56       56|       1        1|
+1311 |nsSocketTransportService              |      208      208|       1        1|
+1313 |nsStandardURL                         |      196     1372|   59651        7|
+1319 |nsStreamConverterService              |       48       48|       1        1|
+1324 |nsStringBuffer                        |        8     1688|  722245      211|
+1371 |nsTArray_base                         |        4      136| 3419841       34|
+1380 |nsThread                              |      304      912|     165        3|
+1416 |nsWeakReference                       |       20      180|    1388        9|
+nsTraceRefcnt::DumpStatistics: 1489 entries

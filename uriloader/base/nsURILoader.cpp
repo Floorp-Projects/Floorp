@@ -402,10 +402,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   uint32_t disposition;
   rv = aChannel->GetContentDisposition(&disposition);
 
-  bool allowContentDispositionToForceExternalHandling = true;
-
-  if (NS_SUCCEEDED(rv) && (disposition == nsIChannel::DISPOSITION_ATTACHMENT) &&
-      allowContentDispositionToForceExternalHandling) {
+  if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT) {
     forceExternalHandling = true;
   }
 

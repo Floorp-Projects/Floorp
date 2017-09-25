@@ -24,6 +24,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
 #include "nsISelection.h"
+#include "TextDrawTarget.h"
 
 namespace mozilla {
 namespace css {
@@ -208,6 +209,13 @@ public:
   }
   void PaintTextToContext(gfxContext* aCtx,
                           nsPoint aOffsetFromRect);
+
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                       const StackingContextHelper& aSc,
+                                       layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
+
   NS_DISPLAY_DECL_NAME("TextOverflow", TYPE_TEXT_OVERFLOW)
 private:
   nsRect          mRect;   // in reference frame coordinates
@@ -277,6 +285,43 @@ nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
                               mStyle->mString.Length(), pt);
   }
 }
+
+bool
+nsDisplayTextOverflowMarker::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                     const StackingContextHelper& aSc,
+                                                     layers::WebRenderLayerManager* aManager,
+                                                     nsDisplayListBuilder* aDisplayListBuilder)
+{
+  if (!aManager->IsLayersFreeTransaction() ||
+      !gfxPrefs::LayersAllowTextLayers() ||
+      !CanUseAdvancedLayer(aDisplayListBuilder->GetWidgetLayerManager())) {
+      return false;
+  }
+
+  bool snap;
+  nsRect bounds = GetBounds(aDisplayListBuilder, &snap);
+  if (bounds.IsEmpty()) {
+    return true;
+  }
+
+  // Run the rendering algorithm to capture the glyphs and shadows
+  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget();
+  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
+  // TextOverflowMarker only draws glyphs
+  textDrawer->StartDrawing(TextDrawTarget::Phase::eGlyphs);
+  Paint(aDisplayListBuilder, captureCtx);
+
+  if (!textDrawer->CanSerializeFonts()) {
+    return false;
+  }
+
+  textDrawer->CreateWebRenderCommands(aBuilder, aSc, aManager, this, bounds);
+
+
+  return true;
+}
+
 
 TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aBlockFrame)

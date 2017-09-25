@@ -1,0 +1,78 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1506019436 18000
+#      Thu Sep 21 13:43:56 2017 -0500
+# Node ID 83cf64a1a5e6d104cb699ac4fde07048bdd87543
+# Parent  838dc505b85e966a325736271f6027e70b34fdd6
+Bug 1402065 Remove __in and __out from our in-tree copy of pdfium
+
+These macros are not used by anything other than Microsoft static analysis
+tools, but they break the MinGW compile. MinGW cannot define these macros
+in C++ code, because they conflict with libstdc++ arguement names.
+
+See Line 222 of https://sourceforge.net/p/mingw-w64/mingw-w64/ci/cef07470773f3c56e5189125f6b82bf278265e69/tree/mingw-w64-headers/include/sal.h
+
+diff --git a/modules/pdfium/pdfium/core/fxge/win32/fx_win32_dwrite.cpp b/modules/pdfium/pdfium/core/fxge/win32/fx_win32_dwrite.cpp
+--- a/modules/pdfium/pdfium/core/fxge/win32/fx_win32_dwrite.cpp
++++ b/modules/pdfium/pdfium/core/fxge/win32/fx_win32_dwrite.cpp
+@@ -6,19 +6,19 @@
+ 
+ #include <dwrite.h>
+ 
+ #include "core/fxcrt/fx_system.h"
+ #include "core/fxge/ge/cfx_cliprgn.h"
+ #include "core/fxge/win32/dwrite_int.h"
+ 
+ typedef HRESULT(__stdcall* FuncType_DWriteCreateFactory)(
+-    __in DWRITE_FACTORY_TYPE,
+-    __in REFIID,
+-    __out IUnknown**);
++    DWRITE_FACTORY_TYPE,
++    REFIID,
++    IUnknown**);
+ template <typename InterfaceType>
+ inline void SafeRelease(InterfaceType** currentObject) {
+   if (*currentObject) {
+     (*currentObject)->Release();
+     *currentObject = nullptr;
+   }
+ }
+ template <typename InterfaceType>
+@@ -109,17 +109,17 @@ class CDwGdiTextRenderer {
+   ~CDwGdiTextRenderer();
+ 
+   HRESULT STDMETHODCALLTYPE DrawGlyphRun(const FX_RECT& text_bbox,
+                                          __in_opt CFX_ClipRgn* pClipRgn,
+                                          __in_opt DWRITE_MATRIX const* pMatrix,
+                                          FLOAT baselineOriginX,
+                                          FLOAT baselineOriginY,
+                                          DWRITE_MEASURING_MODE measuringMode,
+-                                         __in DWRITE_GLYPH_RUN const* glyphRun,
++                                         DWRITE_GLYPH_RUN const* glyphRun,
+                                          const COLORREF& textColor);
+ 
+  private:
+   CFX_DIBitmap* pBitmap_;
+   IDWriteBitmapRenderTarget* pRenderTarget_;
+   IDWriteRenderingParams* pRenderingParams_;
+ };
+ 
+@@ -408,17 +408,17 @@ CDwGdiTextRenderer::~CDwGdiTextRenderer(
+ 
+ STDMETHODIMP CDwGdiTextRenderer::DrawGlyphRun(
+     const FX_RECT& text_bbox,
+     __in_opt CFX_ClipRgn* pClipRgn,
+     __in_opt DWRITE_MATRIX const* pMatrix,
+     FLOAT baselineOriginX,
+     FLOAT baselineOriginY,
+     DWRITE_MEASURING_MODE measuringMode,
+-    __in DWRITE_GLYPH_RUN const* glyphRun,
++    DWRITE_GLYPH_RUN const* glyphRun,
+     const COLORREF& textColor) {
+   HRESULT hr = S_OK;
+   if (pMatrix) {
+     hr = pRenderTarget_->SetCurrentTransform(pMatrix);
+     if (FAILED(hr)) {
+       return hr;
+     }
+   }

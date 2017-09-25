@@ -115,7 +115,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
 
         dump(`Clicking the frame list button\n`);
         let btn = toolbox.doc.getElementById("command-button-frames");
-        let frameMenu = toolbox.showFramesMenu({target: btn});
+        let frameMenu = await toolbox.showFramesMenu({target: btn});
         dump(`Clicked the frame list button\n`);
 
         await frameMenu.once("open");

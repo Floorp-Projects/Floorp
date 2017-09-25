@@ -342,7 +342,7 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         }
 
         xpcObjectHelper helper(iface);
-        return NativeInterface2JSObject(d, nullptr, helper, iid, true, pErr);
+        return NativeInterface2JSObject(d, helper, iid, true, pErr);
     }
 
     default:
@@ -714,27 +714,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     return true;
 }
 
-static inline bool
-CreateHolderIfNeeded(JSContext* cx, HandleObject obj, MutableHandleValue d,
-                     nsIXPConnectJSObjectHolder** dest)
-{
-    if (dest) {
-        if (!obj)
-            return false;
-        RefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(cx, obj);
-        objHolder.forget(dest);
-    }
-
-    d.setObjectOrNull(obj);
-
-    return true;
-}
-
 /***************************************************************************/
 // static
 bool
 XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
-                                     nsIXPConnectJSObjectHolder** dest,
                                      xpcObjectHelper& aHelper,
                                      const nsID* iid,
                                      bool allowNativeWrapper,
@@ -744,8 +727,6 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         iid = &NS_GET_IID(nsISupports);
 
     d.setNull();
-    if (dest)
-        *dest = nullptr;
     if (!aHelper.Object())
         return true;
     if (pErr)
@@ -782,7 +763,8 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     if (flat) {
         if (allowNativeWrapper && !JS_WrapObject(cx, &flat))
             return false;
-        return CreateHolderIfNeeded(cx, flat, d, dest);
+        d.setObjectOrNull(flat);
+        return true;
     }
 
     if (iid->Equals(NS_GET_IID(nsISupports))) {
@@ -794,7 +776,8 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
             flat = promise->PromiseObj();
             if (!JS_WrapObject(cx, &flat))
                 return false;
-            return CreateHolderIfNeeded(cx, flat, d, dest);
+            d.setObjectOrNull(flat);
+            return true;
         }
     }
 
@@ -831,8 +814,6 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     flat = wrapper->GetFlatJSObject();
     if (!allowNativeWrapper) {
         d.setObjectOrNull(flat);
-        if (dest)
-            wrapper.forget(dest);
         if (pErr)
             *pErr = NS_OK;
         return true;
@@ -845,18 +826,6 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         return false;
 
     d.setObjectOrNull(flat);
-
-    if (dest) {
-        // The wrapper still holds the original flat object.
-        if (flat == original) {
-            wrapper.forget(dest);
-        } else {
-            if (!flat)
-                return false;
-            RefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(cx, flat);
-            objHolder.forget(dest);
-        }
-    }
 
     if (pErr)
         *pErr = NS_OK;

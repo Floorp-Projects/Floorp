@@ -19,7 +19,6 @@
 #include "StorageBaseStatementInternal.h"
 #include "mozilla/Attributes.h"
 
-class nsIXPConnectJSObjectHolder;
 struct sqlite3_stmt;
 
 namespace mozilla {

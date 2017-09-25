@@ -75,9 +75,6 @@ class SVGContextPaint;
 namespace gfx {
 class GlyphRenderingOptions;
 } // namespace gfx
-namespace layout {
-class TextDrawTarget;
-} // namespace layout
 } // namespace mozilla
 
 struct gfxFontStyle {
@@ -2313,7 +2310,6 @@ struct MOZ_STACK_CLASS FontDrawParams {
 
 struct MOZ_STACK_CLASS EmphasisMarkDrawParams {
     gfxContext* context;
-    mozilla::layout::TextDrawTarget* textDrawer = nullptr;
     gfxFont::Spacing* spacing;
     gfxTextRun* mark;
     gfxFloat advance;

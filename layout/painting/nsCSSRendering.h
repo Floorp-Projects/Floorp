@@ -19,7 +19,6 @@
 #include "nsIFrame.h"
 #include "nsImageRenderer.h"
 #include "nsCSSRenderingBorders.h"
-#include "TextDrawTarget.h"
 
 class gfxContext;
 class nsStyleContext;
@@ -600,7 +599,6 @@ struct nsCSSRendering {
     // The distance between the left edge of the given frame and the
     // position of the text as positioned without offset of the shadow.
     Float icoordInFrame = 0.0f;
-    mozilla::layout::TextDrawTarget* textDrawer = nullptr;
   };
 
   /**
