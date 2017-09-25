@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.locale.LocaleAwareFragment;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
@@ -102,10 +103,13 @@ public class SessionsSheetFragment extends LocaleAwareFragment implements View.O
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                getActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .remove(SessionsSheetFragment.this)
-                        .commit();
+                final MainActivity activity = (MainActivity) getActivity();
+                if (activity != null) {
+                    activity.getSupportFragmentManager()
+                            .beginTransaction()
+                            .remove(SessionsSheetFragment.this)
+                            .commit();
+                }
             }
         });
 
