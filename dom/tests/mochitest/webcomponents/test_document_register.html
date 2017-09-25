@@ -107,7 +107,6 @@ function startTest() {
   var constructedButton = new buttonConstructor();
   is(constructedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
   is(constructedButton.__proto__, extendedProto, "Created element should have the prototype of the extended type.");
-  is(constructedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
 
   // Try creating an element with a custom element name, but not in the html namespace.
   var htmlNamespaceProto = Object.create(HTMLElement.prototype);
