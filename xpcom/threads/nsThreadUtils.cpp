@@ -9,6 +9,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/TimeStamp.h"
 #include "LeakRefPtr.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef MOZILLA_INTERNAL_API
 # include "nsThreadManager.h"
