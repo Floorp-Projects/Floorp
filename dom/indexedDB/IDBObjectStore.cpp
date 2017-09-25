@@ -1316,9 +1316,7 @@ IDBObjectStore::AppendIndexUpdateInfo(
 {
   nsresult rv;
 
-#ifdef ENABLE_INTL_API
   const bool localeAware = !aLocale.IsEmpty();
-#endif
 
   if (!aMultiEntry) {
     Key key;
@@ -1336,14 +1334,12 @@ IDBObjectStore::AppendIndexUpdateInfo(
     IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
     updateInfo->indexId() = aIndexID;
     updateInfo->value() = key;
-#ifdef ENABLE_INTL_API
     if (localeAware) {
       rv = key.ToLocaleBasedKey(updateInfo->localizedValue(), aLocale);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
-#endif
 
     return NS_OK;
   }
@@ -1383,14 +1379,12 @@ IDBObjectStore::AppendIndexUpdateInfo(
       IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
       updateInfo->indexId() = aIndexID;
       updateInfo->value() = value;
-#ifdef ENABLE_INTL_API
       if (localeAware) {
         rv = value.ToLocaleBasedKey(updateInfo->localizedValue(), aLocale);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
       }
-#endif
     }
   }
   else {
@@ -1404,14 +1398,12 @@ IDBObjectStore::AppendIndexUpdateInfo(
     IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
     updateInfo->indexId() = aIndexID;
     updateInfo->value() = value;
-#ifdef ENABLE_INTL_API
     if (localeAware) {
       rv = value.ToLocaleBasedKey(updateInfo->localizedValue(), aLocale);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
-#endif
   }
 
   return NS_OK;
@@ -2277,11 +2269,9 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   // Valid locale names are always ASCII as per BCP-47.
   nsCString locale = NS_LossyConvertUTF16toASCII(aOptionalParameters.mLocale);
   bool autoLocale = locale.EqualsASCII("auto");
-#ifdef ENABLE_INTL_API
   if (autoLocale) {
     locale = IndexedDatabaseManager::GetLocale();
   }
-#endif
 
   IndexMetadata* metadata = indexes.AppendElement(
     IndexMetadata(transaction->NextIndexId(), nsString(aName), keyPath,

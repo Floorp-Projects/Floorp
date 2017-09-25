@@ -22,7 +22,6 @@
 #include "webrtc/config.h"
 
 #include "signaling/src/jsep/JsepTrack.h"
-#include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransport.h"
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SipccSdp.h"

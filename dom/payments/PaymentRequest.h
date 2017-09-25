@@ -36,6 +36,12 @@ public:
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
+  static nsresult IsValidStandardizedPMI(const nsAString& aIdentifier,
+                                         nsAString& aErrorMsg);
+
+  static nsresult IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
+                                                 nsAString& aErrorMsg);
+
   static nsresult IsValidMethodData(JSContext* aCx,
                                     const Sequence<PaymentMethodData>& aMethodData,
                                     nsAString& aErrorMsg);

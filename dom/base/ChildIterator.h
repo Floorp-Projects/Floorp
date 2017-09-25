@@ -48,16 +48,12 @@ public:
   ExplicitChildIterator(const ExplicitChildIterator& aOther)
     : mParent(aOther.mParent), mChild(aOther.mChild),
       mDefaultChild(aOther.mDefaultChild),
-      mShadowIterator(aOther.mShadowIterator ?
-                      new ExplicitChildIterator(*aOther.mShadowIterator) :
-                      nullptr),
       mIsFirst(aOther.mIsFirst),
       mIndexInInserted(aOther.mIndexInInserted) {}
 
   ExplicitChildIterator(ExplicitChildIterator&& aOther)
     : mParent(aOther.mParent), mChild(aOther.mChild),
       mDefaultChild(aOther.mDefaultChild),
-      mShadowIterator(Move(aOther.mShadowIterator)),
       mIsFirst(aOther.mIsFirst),
       mIndexInInserted(aOther.mIndexInInserted) {}
 
@@ -115,11 +111,6 @@ protected:
   // nsXBLChildrenElement or HTMLContentElement). Once this transitions back
   // to null, we continue iterating at mChild's next sibling.
   nsIContent* mDefaultChild;
-
-  // If non-null, this points to an iterator of the explicit children of
-  // the ShadowRoot projected by the current shadow element that we're
-  // iterating.
-  nsAutoPtr<ExplicitChildIterator> mShadowIterator;
 
   // A flag to let us know that we haven't started iterating yet.
   bool mIsFirst;

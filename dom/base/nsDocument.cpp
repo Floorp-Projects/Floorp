@@ -279,6 +279,7 @@
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsHTMLTags.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -6024,6 +6025,10 @@ nsDocument::CreateElement(const nsAString& aTagName,
     elem->SetPseudoElementType(pseudoType);
   }
 
+  if (is) {
+    elem->SetAttr(kNameSpaceID_None, nsGkAtoms::is, *is, true);
+  }
+
   return elem.forget();
 }
 
@@ -6073,6 +6078,10 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                      NOT_FROM_PARSER, is);
   if (rv.Failed()) {
     return nullptr;
+  }
+
+  if (is) {
+    element->SetAttr(kNameSpaceID_None, nsGkAtoms::is, *is, true);
   }
 
   return element.forget();
@@ -6357,11 +6366,26 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
       return true;
     }
   } else {
-    nsDependentAtomString localName(definition->mLocalName);
-    element =
-      document->CreateElem(localName, nullptr, kNameSpaceID_XHTML,
-                           (definition->mLocalName != typeAtom) ? &elemName
-                                                                : nullptr);
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo =
+      document->NodeInfoManager()->GetNodeInfo(definition->mLocalName, nullptr,
+                                               kNameSpaceID_XHTML,
+                                               nsIDOMNode::ELEMENT_NODE);
+
+    int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(definition->mLocalName);
+    if (tag == eHTMLTag_userdefined &&
+        nsContentUtils::IsCustomElementName(definition->mType)) {
+      element = NS_NewHTMLElement(nodeInfo.forget(), NOT_FROM_PARSER);
+    } else {
+      element = ::CreateHTMLElement(tag, nodeInfo.forget(), NOT_FROM_PARSER);
+    }
+
+    element->SetCustomElementData(
+      new CustomElementData(definition->mType,
+                            CustomElementData::State::eCustom));
+
+    // It'll be removed when we deprecate custom elements v0.
+    nsContentUtils::SyncInvokeReactions(nsIDocument::eCreated, element,
+                                        definition);
     NS_ENSURE_TRUE(element, false);
   }
 
