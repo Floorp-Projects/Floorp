@@ -30,6 +30,7 @@
 #include "mozilla/Logging.h"
 #include "nsNodeUtils.h"
 #include "nsIContent.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 
@@ -223,6 +224,26 @@ public:
   int32_t mStackPos;
 };
 
+static void
+DoCustomElementCreate(Element** aElement, nsIDocument* aDoc,
+                      CustomElementConstructor* aConstructor, ErrorResult& aRv)
+{
+  RefPtr<Element> element =
+    aConstructor->Construct("Custom Element Create", aRv);
+  if (aRv.Failed() || !element->IsHTMLElement()) {
+    aRv.ThrowTypeError<MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE>(NS_LITERAL_STRING("HTMLElement"));
+    return;
+  }
+
+  if (aDoc != element->OwnerDoc() || element->GetParentNode() ||
+      element->HasChildren() || element->GetAttrCount()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  element.forget(aElement);
+}
+
 nsresult
 NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                   FromParser aFromParser, const nsAString* aIs)
@@ -237,6 +258,81 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
                "Trying to HTML elements that don't have the XHTML namespace");
 
   int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
+
+  // https://dom.spec.whatwg.org/#concept-create-element
+  // We only handle the "synchronous custom elements flag is set" now.
+  // For the unset case (e.g. cloning a node), see bug 1319342 for that.
+  // Step 4.
+  CustomElementDefinition* definition = nullptr;
+  if (CustomElementRegistry::IsCustomElementEnabled()) {
+    definition =
+      nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
+                                                    nodeInfo->LocalName(),
+                                                    nodeInfo->NamespaceID(),
+                                                    aIs);
+  }
+
+  // It might be a problem that parser synchronously calls constructor, so filed
+  // bug 1378079 to figure out what we should do for parser case.
+  if (definition) {
+    /*
+     * Synchronous custom elements flag is determined by 3 places in spec,
+     * 1) create an element for a token, the flag is determined by
+     *    "will execute script" which is not originally created
+     *    for the HTML fragment parsing algorithm.
+     * 2) createElement and createElementNS, the flag is the same as
+     *    NOT_FROM_PARSER.
+     * 3) clone a node, our implementation will not go into this function.
+     * For the unset case which is non-synchronous only applied for
+     * inner/outerHTML.
+     */
+    bool synchronousCustomElements = aFromParser != dom::FROM_PARSER_FRAGMENT ||
+                                     aFromParser == dom::NOT_FROM_PARSER;
+    // Per discussion in https://github.com/w3c/webcomponents/issues/635,
+    // use entry global in those places that are called from JS APIs.
+    nsIGlobalObject* global = GetEntryGlobal();
+    MOZ_ASSERT(global);
+    AutoEntryScript aes(global, "create custom elements");
+    JSContext* cx = aes.cx();
+    ErrorResult rv;
+
+    // Step 5.
+    if (definition->IsCustomBuiltIn()) {
+      // SetupCustomElement() should be called with an element that don't have
+      // CustomElementData setup, if not we will hit the assertion in
+      // SetCustomElementData().
+      nsCOMPtr<nsIAtom> tagAtom = nodeInfo->NameAtom();
+      nsCOMPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
+      // Built-in element
+      *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
+      (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
+      if (synchronousCustomElements) {
+        CustomElementRegistry::Upgrade(*aResult, definition, rv);
+      } else {
+        nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
+      }
+
+      if (rv.MaybeSetPendingException(cx)) {
+        aes.ReportException();
+      }
+      return NS_OK;
+    }
+
+    // Step 6.1.
+    if (synchronousCustomElements) {
+      DoCustomElementCreate(aResult, nodeInfo->GetDocument(),
+                            definition->mConstructor, rv);
+      if (rv.MaybeSetPendingException(cx)) {
+        NS_IF_ADDREF(*aResult = NS_NewHTMLUnknownElement(nodeInfo.forget(), aFromParser));
+      }
+      return NS_OK;
+    }
+
+    // Step 6.2.
+    NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
+    nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
+    return NS_OK;
+  }
 
   // Per the Custom Element specification, unknown tags that are valid custom
   // element names should be HTMLElement instead of HTMLUnknownElement.

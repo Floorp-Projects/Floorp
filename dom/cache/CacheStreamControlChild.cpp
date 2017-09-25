@@ -115,11 +115,18 @@ CacheStreamControlChild::OpenStream(const nsID& aId, InputStreamResolver&& aReso
     return;
   }
 
+  // If we are on a worker, then we need to hold it alive until the async
+  // IPC operation below completes.  While the IPC layer will trigger a
+  // rejection here in many cases, we must handle the case where the
+  // MozPromise resolve runnable is already in the event queue when the
+  // worker wants to shut down.
+  RefPtr<CacheWorkerHolder> holder = GetWorkerHolder();
+
   SendOpenStream(aId)->Then(GetCurrentThreadSerialEventTarget(), __func__,
-  [aResolver](const OptionalIPCStream& aOptionalStream) {
+  [aResolver, holder](const OptionalIPCStream& aOptionalStream) {
     nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aOptionalStream);
     aResolver(Move(stream));
-  }, [aResolver](PromiseRejectReason aReason) {
+  }, [aResolver, holder](PromiseRejectReason aReason) {
     aResolver(nullptr);
   });
 }

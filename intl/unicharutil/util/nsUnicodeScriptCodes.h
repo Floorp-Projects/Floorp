@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Wed Jun 28 17:08:23 2017 from UCD data files with version info:
+ * Created on Thu Sep 21 20:35:51 2017 from UCD data files with version info:
  *
 
 # Unicode Character Database
@@ -28,27 +28,6 @@
 
 This directory contains the final data files
 for the Unicode Character Database, for Version 10.0.0 of the Unicode Standard.
-
-# Scripts-10.0.0.txt
-# Date: 2017-03-11, 06:40:37 GMT
-
-# BidiMirroring-10.0.0.txt
-# Date: 2017-04-12, 17:30:00 GMT [KW, LI]
-
-# BidiBrackets-10.0.0.txt
-# Date: 2017-04-12, 17:30:00 GMT [AG, LI, KW]
-
-# HangulSyllableType-10.0.0.txt
-# Date: 2017-02-14, 04:26:11 GMT
-
-# LineBreak-10.0.0.txt
-# Date: 2017-03-08, 02:00:00 GMT [KW, LI]
-
-# EastAsianWidth-10.0.0.txt
-# Date: 2017-03-08, 02:00:00 GMT [KW, LI]
-
-# DerivedCoreProperties-10.0.0.txt
-# Date: 2017-03-19, 00:05:15 GMT
 
 # IdentifierStatus.txt
 # Date: 2017-04-08, 16:13:41 GMT
@@ -69,17 +48,6 @@ for the Unicode Character Database, for Version 10.0.0 of the Unicode Standard.
 
 #pragma pack(1)
 
-#if !ENABLE_INTL_API
-
-struct nsCharProps1 {
-  unsigned char mMirrorOffsetIndex:5;
-  unsigned char mHangulType:3;
-  unsigned char mCombiningClass:8;
-};
-
-#endif
-
-#if ENABLE_INTL_API
 
 struct nsCharProps2 {
   // Currently only 4 bits are defined here, so 4 more could be added without
@@ -88,31 +56,6 @@ struct nsCharProps2 {
   unsigned char mVertOrient:2;
   unsigned char mIdType:2;
 };
-
-#endif
-
-#if !ENABLE_INTL_API
-
-// This struct currently requires 5 bytes. We try to ensure that whole-byte
-// fields will not straddle byte boundaries, to optimize access to them.
-struct nsCharProps2 {
-  unsigned char mScriptCode:8;
-  // -- byte boundary --
-  unsigned char mPairedBracketType:2;
-  unsigned char mEastAsianWidthFWH:1;
-  unsigned char mCategory:5;
-  // -- byte boundary --
-  unsigned char mIdType:2;
-  unsigned char mDefaultIgnorable:1;
-  unsigned char mBidiCategory:5;
-  // -- byte boundary --
-  unsigned char mVertOrient:2;
-  unsigned char mLineBreak:6;
-  // -- byte boundary --
-  signed char   mNumericValue; // only 5 bits are actually needed here
-};
-
-#endif
 
 #pragma pack()
 

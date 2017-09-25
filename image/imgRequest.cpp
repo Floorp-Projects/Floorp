@@ -459,13 +459,26 @@ imgRequest::GetCurrentURI(nsIURI** aURI)
 }
 
 bool
-imgRequest::IsChrome() const
+imgRequest::IsScheme(const char* aScheme) const
 {
-  bool isChrome = false;
-  if (NS_WARN_IF(NS_FAILED(mURI->SchemeIs("chrome", &isChrome)))) {
+  MOZ_ASSERT(aScheme);
+  bool isScheme = false;
+  if (NS_WARN_IF(NS_FAILED(mURI->SchemeIs(aScheme, &isScheme)))) {
     return false;
   }
-  return isChrome;
+  return isScheme;
+}
+
+bool
+imgRequest::IsChrome() const
+{
+  return IsScheme("chrome");
+}
+
+bool
+imgRequest::IsData() const
+{
+  return IsScheme("data");
 }
 
 nsresult
@@ -819,13 +832,17 @@ imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
   }
 
-  // Try to retarget OnDataAvailable to a decode thread.
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  // Try to retarget OnDataAvailable to a decode thread. We must process data
+  // URIs synchronously as per the spec however.
+  if (!channel || IsData()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIThreadRetargetableRequest> retargetable =
     do_QueryInterface(aRequest);
-  if (httpChannel && retargetable) {
+  if (retargetable) {
     nsAutoCString mimeType;
-    nsresult rv = httpChannel->GetContentType(mimeType);
+    nsresult rv = channel->GetContentType(mimeType);
     if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {
       // Retarget OnDataAvailable to the DecodePool's IO thread.
       nsCOMPtr<nsIEventTarget> target =
