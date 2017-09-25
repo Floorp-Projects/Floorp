@@ -36,7 +36,7 @@
             "type": "array",
             "items": {"type": "string", "format": "hostname"},
             "optional": true,
-            "description": "Only remove data associated with these hostnames (only applies to cookies)."
+            "description": "Only remove data associated with these hostnames (only applies to cookies and localStorage)."
           },
           "originTypes": {
             "type": "object",
