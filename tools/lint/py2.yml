@@ -41,7 +41,7 @@ py2:
         - testing/gtest
         - testing/instrumentation/runinstrumentation.py
         - testing/marionette
-        - testing/mochitest
+        - testing/mochitest/pywebsocket
         - testing/mozbase
         - testing/mozharness
         - testing/remotecppunittests.py
