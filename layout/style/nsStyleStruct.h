@@ -2421,11 +2421,7 @@ public:
     return !(*this == aOther);
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StyleBasicShape);
-
 private:
-  ~StyleBasicShape() {}
-
   StyleBasicShapeType mType;
   StyleFillRule mFillRule;
 
@@ -2439,7 +2435,7 @@ private:
   nsStyleCorners mRadius;
 };
 
-struct StyleShapeSource
+struct StyleShapeSource final
 {
   StyleShapeSource()
     : mURL(nullptr)
@@ -2474,13 +2470,13 @@ struct StyleShapeSource
 
   bool SetURL(css::URLValue* aValue);
 
-  StyleBasicShape* GetBasicShape() const
+  const UniquePtr<StyleBasicShape>& GetBasicShape() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::Shape, "Wrong shape source type!");
     return mBasicShape;
   }
 
-  void SetBasicShape(StyleBasicShape* aBasicShape,
+  void SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
                      StyleGeometryBox aReferenceBox);
 
   StyleGeometryBox GetReferenceBox() const
@@ -2498,8 +2494,8 @@ private:
 
   void* operator new(size_t) = delete;
 
+  mozilla::UniquePtr<StyleBasicShape> mBasicShape;
   union {
-    StyleBasicShape* mBasicShape;
     css::URLValue* mURL;
   };
   StyleShapeSourceType mType = StyleShapeSourceType::None;

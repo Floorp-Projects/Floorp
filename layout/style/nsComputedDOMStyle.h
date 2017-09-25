@@ -12,6 +12,7 @@
 #include "mozilla/ArenaRefPtrInlines.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleComplexColor.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsCSSProps.h"
@@ -703,13 +704,13 @@ private:
   template<typename ReferenceBox>
   already_AddRefed<CSSValue>
   CreatePrimitiveValueForShapeSource(
-    const mozilla::StyleBasicShape* aStyleBasicShape,
+    const mozilla::UniquePtr<mozilla::StyleBasicShape>& aStyleBasicShape,
     ReferenceBox aReferenceBox,
     const KTableEntry aBoxKeywordTable[]);
 
   // Helper function for computing basic shape styles.
   already_AddRefed<CSSValue> CreatePrimitiveValueForBasicShape(
-    const mozilla::StyleBasicShape* aStyleBasicShape);
+    const mozilla::UniquePtr<mozilla::StyleBasicShape>& aStyleBasicShape);
   void BoxValuesToString(nsAString& aString,
                          const nsTArray<nsStyleCoord>& aBoxValues);
   void BasicShapeRadiiToString(nsAString& aCssText,
