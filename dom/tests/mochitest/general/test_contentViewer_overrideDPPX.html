@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+ <!DOCTYPE HTML>
 <html>
 <head>
   <title>nsIContentViewer::overrideDPPX test</title>
@@ -10,17 +10,31 @@
 <body>
 
 <iframe></iframe>
+<img>
 
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
 
 const frameWindow = document.querySelector("iframe").contentWindow;
+const image = document.querySelector("img");
 
 const originalDPR = window.devicePixelRatio;
 const originalZoom = SpecialPowers.getFullZoom(window);
 const dppx = originalDPR * 1.5;
 const zoom = originalZoom * 0.5;
+
+const imageSets = {
+  "1x"  : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA" +
+          "GUlEQVQ4jWP4z8DwnxLMMGrAqAGjBgwXAwAwxP4QWURl4wAAAABJRU5ErkJggg==",
+  "1.5x": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA" +
+          "GElEQVQ4jWNgaGD4TxEeNWDUgFEDhosBAOsIfxAZ/CYXAAAAAElFTkSuQmCC",
+  "2x"  : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA" +
+          "GElEQVQ4jWNgYPj/nzI8asCoAaMGDBMDADKm/hBZaHKGAAAAAElFTkSuQmCC"
+};
+
+image.srcset = Object.entries(imageSets).map(v => v[1] + " " + v[0]).join(", ");
+image.src = imageSets["1x"];
 
 const setOverrideDPPX = (value) => {
   if (value > 0) {
@@ -326,6 +340,38 @@ const gTests = {
     }, {once: true});
 
     frameWindow.location.reload(true);
+  },
+
+  "test overrideDPPX with srcset": async function (done) {
+    assertValuesAreInitial();
+
+    let originalSrc = image.src;
+
+    setOverrideDPPX(1);
+    await new Promise(resolve => image.onload = resolve);
+
+    is(image.currentSrc, imageSets["1x"],
+      "Image url is properly set for 1dppx.");
+
+    setOverrideDPPX(1.5);
+    await new Promise(resolve => image.onload = resolve);
+
+    is(image.currentSrc, imageSets["1.5x"],
+      "Image url is properly set for 1.5dppx.");
+
+    setOverrideDPPX(2);
+    await new Promise(resolve => image.onload = resolve);
+
+    is(image.currentSrc, imageSets["2x"],
+      "Image is properly set for 2dppx.");
+
+    setOverrideDPPX(0);
+    await new Promise(resolve => image.onload = resolve);
+
+    is(image.currentSrc, originalSrc,
+      "Image is properly restored to the default value.");
+
+    done();
   }
 };
 
