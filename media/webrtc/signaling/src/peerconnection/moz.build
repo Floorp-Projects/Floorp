@@ -1,0 +1,33 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+include('/media/webrtc/webrtc.mozbuild')
+
+LOCAL_INCLUDES += [
+    '!/ipc/ipdl/_ipdlheaders',
+    '/dom/base',
+    '/dom/media',
+    '/ipc/chromium/src',
+    '/media/mtransport',
+    '/media/webrtc',
+    '/media/webrtc/signaling/src/common',
+    '/media/webrtc/signaling/src/common/browser_logging',
+    '/media/webrtc/signaling/src/common/time_profiling',
+    '/media/webrtc/signaling/src/media-conduit',
+    '/media/webrtc/signaling/src/mediapipeline',
+    '/media/webrtc/trunk',
+]
+
+# Multiple uses of logTag
+SOURCES += [
+    'MediaPipelineFactory.cpp',
+    'MediaStreamList.cpp',
+    'PeerConnectionCtx.cpp',
+    'PeerConnectionImpl.cpp',
+    'PeerConnectionMedia.cpp',
+    'WebrtcGlobalInformation.cpp',
+]
+
+FINAL_LIBRARY = 'xul'

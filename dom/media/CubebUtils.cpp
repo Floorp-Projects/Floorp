@@ -106,9 +106,9 @@ enum class CubebState {
   Shutdown
 } sCubebState = CubebState::Uninitialized;
 cubeb* sCubebContext;
-double sVolumeScale;
-uint32_t sCubebPlaybackLatencyInMilliseconds;
-uint32_t sCubebMSGLatencyInFrames;
+double sVolumeScale = 1.0;
+uint32_t sCubebPlaybackLatencyInMilliseconds = 100;
+uint32_t sCubebMSGLatencyInFrames = 512;
 bool sCubebPlaybackLatencyPrefSet;
 bool sCubebMSGLatencyPrefSet;
 bool sAudioStreamInitEverSucceeded = false;

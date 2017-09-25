@@ -7,6 +7,7 @@
 # Once we have gn support available in the build system
 # (see Bug 1336429) we can use the gn build files directly
 # rather than building things here.
+include('/media/webrtc/webrtc.mozbuild')
 
 ALLOW_COMPILER_WARNINGS = True
 
@@ -55,9 +56,8 @@ else:
 
 if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
     if CONFIG['OS_TARGET'] == 'Linux':
+        DEFINES['USE_X11'] = True
         DEFINES['WEBRTC_BUILD_LIBEVENT'] = True
-        DEFINES['WEBRTC_LINUX'] = True
-        DEFINES['WEBRTC_POSIX'] = True
 
         LOCAL_INCLUDES += [
             '../third_party/gflags/gen/posix/include',
@@ -82,8 +82,6 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
             'Xrender',
         ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
-        DEFINES['WEBRTC_MAC'] = True
-        DEFINES['WEBRTC_POSIX'] = True
 
         LOCAL_INCLUDES += [
             '../third_party/gflags/gen/posix/include',
@@ -115,8 +113,6 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
              'OSXRunLoopSingleton.cpp',
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
-        DEFINES['WEBRTC_WIN'] = True
-
         DEFINES['UNICODE'] = True
         DEFINES['_UNICODE'] = True
 
@@ -562,7 +558,6 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
 
     if CONFIG['GNU_CXX']:
         CXXFLAGS += [
-            '-Wno-error=shadow',
             '-Wno-inconsistent-missing-override',
             '-Wno-overloaded-virtual',
         ]
