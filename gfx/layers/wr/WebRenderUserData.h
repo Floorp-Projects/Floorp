@@ -140,7 +140,7 @@ class WebRenderAnimationData : public WebRenderUserData
 public:
   explicit WebRenderAnimationData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem,
                                   WebRenderUserDataRefTable* aTable);
-  virtual ~WebRenderAnimationData() {}
+  virtual ~WebRenderAnimationData();
 
   virtual UserDataType GetType() override { return UserDataType::eAnimation; }
   static UserDataType Type() { return UserDataType::eAnimation; }

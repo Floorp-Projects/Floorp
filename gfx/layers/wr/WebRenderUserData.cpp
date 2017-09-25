@@ -220,6 +220,18 @@ WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager
 {
 }
 
+WebRenderAnimationData::~WebRenderAnimationData()
+{
+  // It may be the case that nsDisplayItem that created this WebRenderUserData
+  // gets destroyed without getting a chance to discard the compositor animation
+  // id, so we should do it as part of cleanup here.
+  uint64_t animationId = mAnimationInfo.GetCompositorAnimationsId();
+  // animationId might be 0 if mAnimationInfo never held any active animations.
+  if (animationId) {
+    mWRManager->AddCompositorAnimationsIdForDiscard(animationId);
+  }
+}
+
 WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem,
                                          WebRenderUserDataRefTable* aTable)
   : WebRenderUserData(aWRManager, aItem, aTable)

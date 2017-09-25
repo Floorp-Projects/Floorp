@@ -607,16 +607,14 @@ NativeInterface2JSObject(HandleObject aScope,
                          nsWrapperCache* aCache,
                          const nsIID * aIID,
                          bool aAllowWrapping,
-                         MutableHandleValue aVal,
-                         nsIXPConnectJSObjectHolder** aHolder)
+                         MutableHandleValue aVal)
 {
     AutoJSContext cx;
     JSAutoCompartment ac(cx, aScope);
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
-    if (!XPCConvert::NativeInterface2JSObject(aVal, aHolder, helper, aIID,
-                                              aAllowWrapping, &rv))
+    if (!XPCConvert::NativeInterface2JSObject(aVal, helper, aIID, aAllowWrapping, &rv))
         return rv;
 
     MOZ_ASSERT(aAllowWrapping || !xpc::WrapperFactory::IsXrayWrapper(&aVal.toObject()),
@@ -639,7 +637,7 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
     RootedObject aScope(aJSContext, aScopeArg);
     RootedValue v(aJSContext);
     nsresult rv = NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID,
-                                           true, &v, nullptr);
+                                           true, &v);
     if (NS_FAILED(rv))
         return rv;
 
@@ -648,24 +646,6 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
 
     *aRetVal = v.toObjectOrNull();
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::WrapNativeHolder(JSContext * aJSContext,
-                              JSObject * aScopeArg,
-                              nsISupports* aCOMObj,
-                              const nsIID & aIID,
-                              nsIXPConnectJSObjectHolder **aHolder)
-{
-    MOZ_ASSERT(aHolder, "bad param");
-    MOZ_ASSERT(aJSContext, "bad param");
-    MOZ_ASSERT(aScopeArg, "bad param");
-    MOZ_ASSERT(aCOMObj, "bad param");
-
-    RootedObject aScope(aJSContext, aScopeArg);
-    RootedValue v(aJSContext);
-    return NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID,
-                                    true, &v, aHolder);
 }
 
 NS_IMETHODIMP
@@ -683,7 +663,7 @@ nsXPConnect::WrapNativeToJSVal(JSContext* aJSContext,
 
     RootedObject aScope(aJSContext, aScopeArg);
     return NativeInterface2JSObject(aScope, aCOMObj, aCache, aIID,
-                                    aAllowWrapping, aVal, nullptr);
+                                    aAllowWrapping, aVal);
 }
 
 NS_IMETHODIMP

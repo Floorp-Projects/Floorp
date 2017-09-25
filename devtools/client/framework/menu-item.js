@@ -45,8 +45,9 @@ function MenuItem({
     checked = false,
     click = () => {},
     disabled = false,
-    label = "",
+    hover = () => {},
     id = null,
+    label = "",
     submenu = null,
     type = "normal",
     visible = true,
@@ -55,6 +56,7 @@ function MenuItem({
   this.checked = checked;
   this.click = click;
   this.disabled = disabled;
+  this.hover = hover;
   this.id = id;
   this.label = label;
   this.submenu = submenu;

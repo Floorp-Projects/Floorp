@@ -573,7 +573,9 @@ public:
   virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,
                                 mozilla::css::Rule* aStyleRule) override;
 
-  virtual void FlushPendingNotifications(mozilla::FlushType aType) override;
+  virtual void FlushPendingNotifications(mozilla::FlushType aType,
+                                         mozilla::FlushTarget aTarget
+                                           = mozilla::FlushTarget::Normal) override;
   virtual void FlushExternalResources(mozilla::FlushType aType) override;
   virtual void SetXMLDeclaration(const char16_t *aVersion,
                                  const char16_t *aEncoding,

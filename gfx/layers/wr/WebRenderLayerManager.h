@@ -6,6 +6,7 @@
 #ifndef GFX_WEBRENDERLAYERMANAGER_H
 #define GFX_WEBRENDERLAYERMANAGER_H
 
+#include <unordered_set>
 #include <vector>
 
 #include "gfxPrefs.h"
@@ -171,12 +172,11 @@ public:
   void DiscardImages();
   void DiscardLocalImages();
 
-  // Before destroying a layer with animations, add its compositorAnimationsId
-  // to a list of ids that will be discarded on the next transaction
+  // Methods to manage the compositor animation ids. Active animations are still
+  // going, and when they end we discard them and remove them from the active
+  // list.
+  void AddActiveCompositorAnimationId(uint64_t aId);
   void AddCompositorAnimationsIdForDiscard(uint64_t aId);
-  // If the animations are valid and running on the compositor,
-  // we should keep the compositorAnimationsId alive on the compositor side.
-  void KeepCompositorAnimationsIdAlive(uint64_t aId);
   void DiscardCompositorAnimations();
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
@@ -298,6 +298,12 @@ private:
   // of poor texture cache usage, but also because images end up deleted before
   // they are used. This should hopfully be temporary.
   nsTArray<wr::ImageKey> mImageKeysToDeleteLater;
+
+  // Set of compositor animation ids for which there are active animations (as
+  // of the last transaction) on the compositor side.
+  std::unordered_set<uint64_t> mActiveCompositorAnimationIds;
+  // Compositor animation ids for animations that are done now and that we want
+  // the compositor to discard information for.
   nsTArray<uint64_t> mDiscardedCompositorAnimationsIds;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,

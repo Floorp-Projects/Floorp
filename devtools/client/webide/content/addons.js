@@ -17,10 +17,7 @@ window.addEventListener("load", function () {
     }
   };
   document.querySelector("#close").onclick = CloseUI;
-  GetAvailableAddons().then(BuildUI, (e) => {
-    console.error(e);
-    window.alert(Strings.formatStringFromName("error_cantFetchAddonsJSON", [e], 1));
-  });
+  BuildUI(GetAvailableAddons());
 }, {capture: true, once: true});
 
 window.addEventListener("unload", function () {
@@ -33,9 +30,6 @@ function CloseUI() {
 
 function BuildUI(addons) {
   BuildItem(addons.adb, "adb");
-  for (let addon of addons.simulators) {
-    BuildItem(addon, "simulator");
-  }
 }
 
 function BuildItem(addon, type) {
@@ -80,11 +74,6 @@ function BuildItem(addon, type) {
     case "adb":
       li.setAttribute("addon", type);
       name.textContent = Strings.GetStringFromName("addons_adb_label");
-      break;
-    case "simulator":
-      li.setAttribute("addon", "simulator-" + addon.version);
-      let stability = Strings.GetStringFromName("addons_" + addon.stability);
-      name.textContent = Strings.formatStringFromName("addons_simulator_label", [addon.version, stability], 2);
       break;
   }
 

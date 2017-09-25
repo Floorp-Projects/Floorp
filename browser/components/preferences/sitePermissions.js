@@ -153,6 +153,7 @@ var gSitePermissionsManager = {
     let menupopup = document.createElement("menupopup");
     menulist.setAttribute("flex", "1");
     menulist.setAttribute("width", "50");
+    menulist.setAttribute("class", "website-status");
     menulist.appendChild(menupopup);
     let states = SitePermissions.getAvailableStates(permission.type);
     for (let state of states) {

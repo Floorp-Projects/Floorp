@@ -26,7 +26,7 @@ window.addEventListener("load", function () {
  * The Monitor is a WebIDE tool used to display any kind of time-based data in
  * the form of graphs.
  *
- * The data can come from a Firefox OS device, simulator, or from a WebSockets
+ * The data can come from a Firefox OS device, or from a WebSockets
  * server running locally.
  *
  * The format of a data update is typically an object like:

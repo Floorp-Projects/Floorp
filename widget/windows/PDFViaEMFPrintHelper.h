@@ -33,6 +33,7 @@ public:
 
   /** Loads the specified PDF file. */
   NS_IMETHOD OpenDocument(nsIFile *aFile);
+  NS_IMETHOD OpenDocument(const char* aFileName);
 
   /** Releases document buffer. */
   void CloseDocument();
@@ -47,10 +48,8 @@ public:
   bool DrawPageToFile(const wchar_t* aFilePath, unsigned int aPageIndex,
                       int aPageWidth, int aPageHeight);
 
-private:
-
-  bool LoadPDFDataToBuffer(nsIFile *aFile);
-
+protected:
+  virtual bool CreatePDFiumEngineIfNeed();
   bool RenderPageToDC(HDC aDC, unsigned int aPageIndex,
                       int aPageWidth, int aPageHeight);
 

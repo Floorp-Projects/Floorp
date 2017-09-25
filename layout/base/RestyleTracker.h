@@ -356,6 +356,15 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
     }
   }
 
+  // If we need to restyle later siblings, we will need a flag on parent to note
+  // that some children need restyle for nsComputedDOMStyle.
+  if (aRestyleHint & eRestyle_LaterSiblings) {
+    nsIContent* parent = aElement->GetFlattenedTreeParent();
+    if (parent && parent->IsElement()) {
+      parent->SetFlags(ELEMENT_HAS_CHILD_WITH_LATER_SIBLINGS_HINT);
+    }
+  }
+
   mHaveLaterSiblingRestyles =
     mHaveLaterSiblingRestyles || (aRestyleHint & eRestyle_LaterSiblings) != 0;
   return hadRestyleLaterSiblings;

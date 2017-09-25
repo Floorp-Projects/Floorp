@@ -133,6 +133,9 @@ Menu.prototype._createMenuItems = function (parent) {
       menuitem.addEventListener("command", () => {
         item.click();
       });
+      menuitem.addEventListener("DOMMenuItemActive", () => {
+        item.hover();
+      });
 
       if (item.type === "checkbox") {
         menuitem.setAttribute("type", "checkbox");

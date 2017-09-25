@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+#test {
+  display: none;
+  width: 100px;
+  height: 100px;
+}
+</style>
+<div id="test"></div>
+<script>
+  test.animate({ backgroundColor: [ 'red', 'blue' ] },
+               { duration: 1000,
+                 iterations: Infinity });
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.styleSheets[0].cssRules[0].style.setProperty('display', 'block');
+      test.getBoundingClientRect();
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  });
+</script>
+</html>

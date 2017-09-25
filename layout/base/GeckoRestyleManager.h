@@ -345,6 +345,7 @@ public:
 #endif
 
   bool IsProcessingRestyles() { return mIsProcessingRestyles; }
+  bool HasPendingRestyles() const;
 
 private:
   inline nsStyleSet* StyleSet() const {

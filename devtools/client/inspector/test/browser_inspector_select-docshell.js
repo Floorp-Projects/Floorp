@@ -29,7 +29,7 @@ add_task(function* () {
   ok(!btn.firstChild, "The frame list button doesn't have any children");
 
   // Open frame menu and wait till it's available on the screen.
-  let menu = toolbox.showFramesMenu({target: btn});
+  let menu = yield toolbox.showFramesMenu({target: btn});
   yield once(menu, "open");
 
   // Verify that the menu is popuplated.

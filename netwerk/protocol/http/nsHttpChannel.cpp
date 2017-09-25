@@ -344,10 +344,8 @@ nsHttpChannel::nsHttpChannel()
     , mWarningReporter(nullptr)
     , mIsReadingFromCache(false)
     , mFirstResponseSource(RESPONSE_PENDING)
-    , mOnCacheAvailableCalled(false)
     , mRaceCacheWithNetwork(false)
     , mRaceDelay(0)
-    , mCacheAsyncOpenCalled(false)
     , mIgnoreCacheEntry(false)
     , mRCWNLock("nsHttpChannel.mRCWNLock")
     , mDidReval(false)
@@ -1108,7 +1106,7 @@ nsHttpChannel::SetupTransaction()
     // could be added in OnCacheEntryCheck. We cannot send conditional request
     // without having the entry, so we need to remove the headers here and
     // ignore the cache entry in OnCacheEntryAvailable.
-    if (mRaceCacheWithNetwork && !mOnCacheAvailableCalled) {
+    if (mRaceCacheWithNetwork && AwaitingCacheCallbacks()) {
         if (mDidReval) {
             LOG(("  Removing conditional request headers"));
             UntieValidationRequest();
@@ -3983,28 +3981,19 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
 
         if (!mCacheOpenDelay) {
             MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread");
-            mCacheAsyncOpenCalled = true;
             if (mNetworkTriggered) {
                 mRaceCacheWithNetwork = sRCWNEnabled;
             }
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
-            if (NS_FAILED(rv)) {
-                // Drop the flag since the cache open failed
-                mCacheAsyncOpenCalled = false;
-            }
         } else {
             // We pass `this` explicitly as a parameter due to the raw pointer
             // to refcounted object in lambda analysis.
             mCacheOpenFunc = [openURI, extension, cacheEntryOpenFlags, cacheStorage] (nsHttpChannel* self) -> void {
                 MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread");
-                self->mCacheAsyncOpenCalled = true;
                 if (self->mNetworkTriggered) {
                     self->mRaceCacheWithNetwork = true;
                 }
-                nsresult rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
-                if (NS_FAILED(rv)) {
-                    self->mCacheAsyncOpenCalled = false;
-                }
+                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
             };
 
             mCacheOpenTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
@@ -4434,7 +4423,6 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry *entry,
                                      nsresult status)
 {
     MOZ_ASSERT(NS_IsMainThread());
-    mOnCacheAvailableCalled = true;
 
     nsresult rv;
 
@@ -9035,9 +9023,32 @@ nsHttpChannel::ResumeInternal()
                                ToMilliseconds();
 
         if (mCallOnResume) {
-            nsresult rv = AsyncCall(mCallOnResume);
+            // Resume the interrupted procedure first, then resume
+            // the pump to continue process the input stream.
+            RefPtr<nsRunnableMethod<nsHttpChannel>> callOnResume=
+                NewRunnableMethod("CallOnResume", this, mCallOnResume);
+            // Should not resume pump that created after resumption.
+            RefPtr<nsInputStreamPump> transactionPump = mTransactionPump;
+            RefPtr<nsInputStreamPump> cachePump = mCachePump;
+
+            nsresult rv =
+                NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+                    "nsHttpChannel::CallOnResume",
+                    [callOnResume, transactionPump, cachePump]() {
+                        callOnResume->Run();
+
+                        if (transactionPump) {
+                            transactionPump->Resume();
+                        }
+
+                        if (cachePump) {
+                            cachePump->Resume();
+                        }
+                    })
+                );
             mCallOnResume = nullptr;
             NS_ENSURE_SUCCESS(rv, rv);
+            return rv;
         }
     }
 
@@ -9404,7 +9415,7 @@ nsHttpChannel::TriggerNetwork()
         return NS_OK;
     }
 
-    if (mCacheAsyncOpenCalled && !mOnCacheAvailableCalled) {
+    if (AwaitingCacheCallbacks()) {
         mRaceCacheWithNetwork = sRCWNEnabled;
     }
 

@@ -1639,7 +1639,9 @@ public:
    * Flush notifications for this document and its parent documents
    * (since those may affect the layout of this one).
    */
-  virtual void FlushPendingNotifications(mozilla::FlushType aType) = 0;
+  virtual void FlushPendingNotifications(mozilla::FlushType aType,
+                                         mozilla::FlushTarget aTarget
+                                           = mozilla::FlushTarget::Normal) = 0;
 
   /**
    * Calls FlushPendingNotifications on any external resources this document

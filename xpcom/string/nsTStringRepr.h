@@ -133,13 +133,13 @@ public:
   }
 
   // Accessors.
-  template <typename U> struct raw_type { typedef const U* type; };
+  template <typename U, typename Dummy> struct raw_type { typedef const U* type; };
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <> struct raw_type<char16_t> { typedef char16ptr_t type; };
+  template <typename Dummy> struct raw_type<char16_t, Dummy> { typedef char16ptr_t type; };
 #endif
 
   // Returns pointer to string data (not necessarily null-terminated)
-  const typename raw_type<T>::type Data() const
+  const typename raw_type<T, int>::type Data() const
   {
     return mData;
   }
