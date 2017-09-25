@@ -504,7 +504,8 @@ void Gecko_SetStyleCoordCalcValue(nsStyleUnit* unit, nsStyleUnion* value, nsStyl
 void Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* dst, const mozilla::StyleShapeSource* src);
 
 void Gecko_DestroyShapeSource(mozilla::StyleShapeSource* shape);
-mozilla::StyleBasicShape* Gecko_NewBasicShape(mozilla::StyleBasicShapeType type);
+void Gecko_NewBasicShape(mozilla::StyleShapeSource* shape,
+                         mozilla::StyleBasicShapeType type);
 void Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* shape, ServoBundledURI uri);
 
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);

@@ -1047,7 +1047,8 @@ StyleShapeSource::StyleShapeSource(const StyleShapeSource& aSource)
   if (aSource.mType == StyleShapeSourceType::URL) {
     SetURL(aSource.mURL);
   } else if (aSource.mType == StyleShapeSourceType::Shape) {
-    SetBasicShape(aSource.mBasicShape, aSource.mReferenceBox);
+    SetBasicShape(MakeUnique<StyleBasicShape>(*aSource.mBasicShape),
+                  aSource.mReferenceBox);
   } else if (aSource.mType == StyleShapeSourceType::Box) {
     SetReferenceBox(aSource.mReferenceBox);
   }
@@ -1063,7 +1064,8 @@ StyleShapeSource::operator=(const StyleShapeSource& aOther)
   if (aOther.mType == StyleShapeSourceType::URL) {
     SetURL(aOther.mURL);
   } else if (aOther.mType == StyleShapeSourceType::Shape) {
-    SetBasicShape(aOther.mBasicShape, aOther.mReferenceBox);
+    SetBasicShape(MakeUnique<StyleBasicShape>(*aOther.mBasicShape),
+                  aOther.mReferenceBox);
   } else if (aOther.mType == StyleShapeSourceType::Box) {
     SetReferenceBox(aOther.mReferenceBox);
   } else {
@@ -1105,13 +1107,12 @@ StyleShapeSource::SetURL(css::URLValue* aValue)
 }
 
 void
-StyleShapeSource::SetBasicShape(StyleBasicShape* aBasicShape,
+StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
                                 StyleGeometryBox aReferenceBox)
 {
   NS_ASSERTION(aBasicShape, "expected pointer");
   ReleaseRef();
-  mBasicShape = aBasicShape;
-  mBasicShape->AddRef();
+  mBasicShape = Move(aBasicShape);
   mReferenceBox = aReferenceBox;
   mType = StyleShapeSourceType::Shape;
 }
@@ -1127,15 +1128,11 @@ StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
 void
 StyleShapeSource::ReleaseRef()
 {
-  if (mType == StyleShapeSourceType::Shape) {
-    NS_ASSERTION(mBasicShape, "expected pointer");
-    mBasicShape->Release();
-  } else if (mType == StyleShapeSourceType::URL) {
+  if (mType == StyleShapeSourceType::URL) {
     NS_ASSERTION(mURL, "expected pointer");
     mURL->Release();
   }
-  // Both mBasicShape and mURL are pointers in a union. Nulling one of them
-  // nulls both of them.
+
   mURL = nullptr;
 }
 

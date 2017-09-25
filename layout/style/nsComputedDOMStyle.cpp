@@ -6356,7 +6356,7 @@ nsComputedDOMStyle::BasicShapeRadiiToString(nsAString& aCssText,
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
-  const StyleBasicShape* aStyleBasicShape)
+  const UniquePtr<StyleBasicShape>& aStyleBasicShape)
 {
   MOZ_ASSERT(aStyleBasicShape, "Expect a valid basic shape pointer!");
 
@@ -6437,7 +6437,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
 template<typename ReferenceBox>
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::CreatePrimitiveValueForShapeSource(
-  const StyleBasicShape* aStyleBasicShape,
+  const UniquePtr<StyleBasicShape>& aStyleBasicShape,
   ReferenceBox aReferenceBox,
   const KTableEntry aBoxKeywordTable[])
 {
