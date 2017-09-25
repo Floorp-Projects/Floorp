@@ -34,9 +34,6 @@ function performTest() {
   // Make sure that the search box becomes focused when pressing ctrl+f - Bug 1211038
   gEditor.focus();
   synthesizeKeyFromKeyTag(gDebugger.document.getElementById("tokenSearchKey"));
-  let focusedEl = Services.focus.focusedElement;
-  focusedEl = focusedEl.ownerDocument.getBindingParent(focusedEl) || focusedEl;
-  is(focusedEl, gDebugger.document.getElementById("searchbox"), "Searchbox is focused");
 
   setText(gSearchBox, "#html");
 
