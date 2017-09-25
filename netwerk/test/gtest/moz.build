@@ -13,6 +13,10 @@ UNIFIED_SOURCES += [
     'TestStandardURL.cpp',
 ]
 
+TEST_DIRS += [
+    'parse-ftp',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul-gtest'
