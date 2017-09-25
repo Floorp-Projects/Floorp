@@ -49,7 +49,6 @@
 
 namespace mozilla {
 
-extern already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule();
 extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 

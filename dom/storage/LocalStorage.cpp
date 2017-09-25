@@ -244,9 +244,6 @@ LocalStorage::ApplyEvent(StorageEvent* aStorageEvent)
   mCache->SetItem(this, key, value, old, LocalStorageCache::E10sPropagated);
 }
 
-static const char kPermissionType[] = "cookie";
-static const char kStorageEnabled[] = "dom.storage.enabled";
-
 bool
 LocalStorage::PrincipalEquals(nsIPrincipal* aPrincipal)
 {
