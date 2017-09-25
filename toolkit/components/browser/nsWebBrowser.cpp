@@ -1582,9 +1582,8 @@ nsWebBrowser::SetFocus()
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetTitle(char16_t** aTitle)
+nsWebBrowser::GetTitle(nsAString& aTitle)
 {
-  NS_ENSURE_ARG_POINTER(aTitle);
   NS_ENSURE_STATE(mDocShell);
 
   NS_ENSURE_SUCCESS(mDocShellAsWin->GetTitle(aTitle), NS_ERROR_FAILURE);
@@ -1593,7 +1592,7 @@ nsWebBrowser::GetTitle(char16_t** aTitle)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetTitle(const char16_t* aTitle)
+nsWebBrowser::SetTitle(const nsAString& aTitle)
 {
   NS_ENSURE_STATE(mDocShell);
 

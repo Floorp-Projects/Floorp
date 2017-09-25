@@ -993,7 +993,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                         if(!baseWindow) {
                             break;
                         }
-                        baseWindow->GetTitle(getter_Copies(title));
+                        baseWindow->GetTitle(title);
                         // Escape any double-quotes in the title.
                         escapeQuotes( title );
 
