@@ -141,8 +141,6 @@ struct RedBlackTree
   rb_node_field(a_node, a_field).SetLeft(a_left)
 
 /* Right accessors. */
-#define rbp_right_get(a_type, a_field, a_node)                                 \
-  rb_node_field(a_node, a_field).Right()
 #define rbp_right_set(a_type, a_field, a_node, a_right)                        \
   rb_node_field(a_node, a_field).SetRight(a_right)
 
@@ -185,18 +183,18 @@ struct RedBlackTree
 #define rbp_last(a_type, a_field, a_tree, a_root, r_node)                      \
   do {                                                                         \
     for ((r_node) = (a_root);                                                  \
-         rbp_right_get(a_type, a_field, (r_node)) != &(a_tree)->rbt_nil;       \
-         (r_node) = rbp_right_get(a_type, a_field, (r_node))) {                \
+         rb_node_field((r_node), a_field).Right() != &(a_tree)->rbt_nil;       \
+         (r_node) = rb_node_field((r_node), a_field).Right()) {                \
     }                                                                          \
   } while (0)
 
 #define rbp_next(a_type, a_field, a_cmp, a_tree, a_node, r_node)               \
   do {                                                                         \
-    if (rbp_right_get(a_type, a_field, (a_node)) != &(a_tree)->rbt_nil) {      \
+    if (rb_node_field((a_node), a_field).Right() != &(a_tree)->rbt_nil) {      \
       rbp_first(a_type,                                                        \
                 a_field,                                                       \
                 a_tree,                                                        \
-                rbp_right_get(a_type, a_field, (a_node)),                      \
+                rb_node_field((a_node), a_field).Right(),                      \
                 (r_node));                                                     \
     } else {                                                                   \
       a_type* rbp_n_t = (a_tree)->rbt_root;                                    \
@@ -208,7 +206,7 @@ struct RedBlackTree
           (r_node) = rbp_n_t;                                                  \
           rbp_n_t = rb_node_field(rbp_n_t, a_field).Left();                    \
         } else if (rbp_n_cmp > 0) {                                            \
-          rbp_n_t = rbp_right_get(a_type, a_field, rbp_n_t);                   \
+          rbp_n_t = rb_node_field(rbp_n_t, a_field).Right();                   \
         } else {                                                               \
           break;                                                               \
         }                                                                      \
@@ -235,7 +233,7 @@ struct RedBlackTree
           rbp_p_t = rb_node_field(rbp_p_t, a_field).Left();                    \
         } else if (rbp_p_cmp > 0) {                                            \
           (r_node) = rbp_p_t;                                                  \
-          rbp_p_t = rbp_right_get(a_type, a_field, rbp_p_t);                   \
+          rbp_p_t = rb_node_field(rbp_p_t, a_field).Right();                   \
         } else {                                                               \
           break;                                                               \
         }                                                                      \
@@ -285,7 +283,7 @@ struct RedBlackTree
       if (rbp_se_cmp < 0) {                                                    \
         (r_node) = rb_node_field((r_node), a_field).Left();                    \
       } else {                                                                 \
-        (r_node) = rbp_right_get(a_type, a_field, (r_node));                   \
+        (r_node) = rb_node_field((r_node), a_field).Right();                   \
       }                                                                        \
     }                                                                          \
     if ((r_node) == &(a_tree)->rbt_nil) {                                      \
@@ -307,7 +305,7 @@ struct RedBlackTree
         (r_node) = rbp_ns_t;                                                   \
         rbp_ns_t = rb_node_field(rbp_ns_t, a_field).Left();                    \
       } else if (rbp_ns_cmp > 0) {                                             \
-        rbp_ns_t = rbp_right_get(a_type, a_field, rbp_ns_t);                   \
+        rbp_ns_t = rb_node_field(rbp_ns_t, a_field).Right();                   \
       } else {                                                                 \
         (r_node) = rbp_ns_t;                                                   \
         break;                                                                 \
@@ -321,7 +319,7 @@ struct RedBlackTree
  */
 #define rbp_rotate_left(a_type, a_field, a_node, r_node)                       \
   do {                                                                         \
-    (r_node) = rbp_right_get(a_type, a_field, (a_node));                       \
+    (r_node) = rb_node_field((a_node), a_field).Right();                       \
     rbp_right_set(                                                             \
       a_type, a_field, (a_node), rb_node_field((r_node), a_field).Left());     \
     rbp_left_set(a_type, a_field, (r_node), (a_node));                         \
@@ -331,7 +329,7 @@ struct RedBlackTree
   do {                                                                         \
     (r_node) = rb_node_field((a_node), a_field).Left();                        \
     rbp_left_set(                                                              \
-      a_type, a_field, (a_node), rbp_right_get(a_type, a_field, (r_node)));    \
+      a_type, a_field, (a_node), rb_node_field((r_node), a_field).Right());    \
     rbp_right_set(a_type, a_field, (r_node), (a_node));                        \
   } while (0)
 
@@ -358,13 +356,13 @@ struct RedBlackTree
     a_type *rbp_mrl_t, *rbp_mrl_u;                                             \
     rbp_mrl_t = rb_node_field((a_node), a_field).Left();                       \
     rbp_red_set(a_type, a_field, rbp_mrl_t);                                   \
-    rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));                      \
+    rbp_mrl_t = rb_node_field((a_node), a_field).Right();                      \
     rbp_mrl_u = rb_node_field(rbp_mrl_t, a_field).Left();                      \
     if (rbp_red_get(a_type, a_field, rbp_mrl_u)) {                             \
       rbp_rotate_right(a_type, a_field, rbp_mrl_t, rbp_mrl_u);                 \
       rbp_right_set(a_type, a_field, (a_node), rbp_mrl_u);                     \
       rbp_rotate_left(a_type, a_field, (a_node), (r_node));                    \
-      rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));                    \
+      rbp_mrl_t = rb_node_field((a_node), a_field).Right();                    \
       if (rbp_red_get(a_type, a_field, rbp_mrl_t)) {                           \
         rbp_black_set(a_type, a_field, rbp_mrl_t);                             \
         rbp_red_set(a_type, a_field, (a_node));                                \
@@ -385,7 +383,7 @@ struct RedBlackTree
     rbp_mrr_t = rb_node_field((a_node), a_field).Left();                       \
     if (rbp_red_get(a_type, a_field, rbp_mrr_t)) {                             \
       a_type *rbp_mrr_u, *rbp_mrr_v;                                           \
-      rbp_mrr_u = rbp_right_get(a_type, a_field, rbp_mrr_t);                   \
+      rbp_mrr_u = rb_node_field(rbp_mrr_t, a_field).Right();                   \
       rbp_mrr_v = rb_node_field(rbp_mrr_u, a_field).Left();                    \
       if (rbp_red_get(a_type, a_field, rbp_mrr_v)) {                           \
         rbp_color_set(                                                         \
@@ -455,13 +453,13 @@ struct RedBlackTree
           /* rbp_i_c was the right child of rbp_i_p, so rotate  */             \
           /* left in order to maintain the left-leaning         */             \
           /* invariant.                                         */             \
-          MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_p) == rbp_i_c);      \
+          MOZ_ASSERT(rb_node_field(rbp_i_p, a_field).Right() == rbp_i_c);      \
           rbp_right_set(a_type, a_field, rbp_i_p, rbp_i_t);                    \
           rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_u);                    \
           if (rb_node_field(rbp_i_g, a_field).Left() == rbp_i_p) {             \
             rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_u);                   \
           } else {                                                             \
-            MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_g) == rbp_i_p);    \
+            MOZ_ASSERT(rb_node_field(rbp_i_g, a_field).Right() == rbp_i_p);    \
             rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_u);                  \
           }                                                                    \
           rbp_i_p = rbp_i_u;                                                   \
@@ -470,7 +468,7 @@ struct RedBlackTree
             rbp_i_c = rb_node_field(rbp_i_p, a_field).Left();                  \
           } else {                                                             \
             MOZ_ASSERT(rbp_i_cmp > 0);                                         \
-            rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_p);                 \
+            rbp_i_c = rb_node_field(rbp_i_p, a_field).Right();                 \
           }                                                                    \
           continue;                                                            \
         }                                                                      \
@@ -482,7 +480,7 @@ struct RedBlackTree
         rbp_i_c = rb_node_field(rbp_i_c, a_field).Left();                      \
       } else {                                                                 \
         MOZ_ASSERT(rbp_i_cmp > 0);                                             \
-        rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_c);                     \
+        rbp_i_c = rb_node_field(rbp_i_c, a_field).Right();                     \
       }                                                                        \
     }                                                                          \
     /* rbp_i_p now refers to the node under which to insert.          */       \
@@ -492,7 +490,7 @@ struct RedBlackTree
       rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_t);                        \
       if (rb_node_field(rbp_i_g, a_field).Left() == rbp_i_p) {                 \
         rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_t);                       \
-      } else if (rbp_right_get(a_type, a_field, rbp_i_g) == rbp_i_p) {         \
+      } else if (rb_node_field(rbp_i_g, a_field).Right() == rbp_i_p) {         \
         rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_t);                      \
       }                                                                        \
     } else {                                                                   \
@@ -538,7 +536,7 @@ struct RedBlackTree
     } else {                                                                   \
       if (rbp_r_cmp == 0) {                                                    \
         MOZ_ASSERT((a_node) == rbp_r_c);                                       \
-        if (rbp_right_get(a_type, a_field, rbp_r_c) == &(a_tree)->rbt_nil) {   \
+        if (rb_node_field(rbp_r_c, a_field).Right() == &(a_tree)->rbt_nil) {   \
           /* Delete root node (which is also a leaf node).      */             \
           if (rb_node_field(rbp_r_c, a_field).Left() != &(a_tree)->rbt_nil) {  \
             rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);                 \
@@ -560,7 +558,7 @@ struct RedBlackTree
         if (rbp_red_get(                                                       \
               a_type,                                                          \
               a_field,                                                         \
-              rb_node_field(rbp_right_get(a_type, a_field, rbp_r_c), a_field)  \
+              rb_node_field(rb_node_field(rbp_r_c, a_field).Right(), a_field)  \
                 .Left()) == false) {                                           \
           rbp_r_t = rb_node_field(rbp_r_c, a_field).Left();                    \
           if (rbp_red_get(a_type, a_field, rbp_r_t)) {                         \
@@ -585,7 +583,7 @@ struct RedBlackTree
         } else {                                                               \
           /* Move right.                                        */             \
           rbp_r_p = rbp_r_c;                                                   \
-          rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);                   \
+          rbp_r_c = rb_node_field(rbp_r_c, a_field).Right();                   \
         }                                                                      \
       }                                                                        \
     }                                                                          \
@@ -602,7 +600,7 @@ struct RedBlackTree
             if (rb_node_field(rbp_r_xp, a_field).Left() == (a_node)) {         \
               rbp_left_set(a_type, a_field, rbp_r_xp, rbp_r_c);                \
             } else {                                                           \
-              MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_r_xp) ==           \
+              MOZ_ASSERT(rb_node_field(rbp_r_xp, a_field).Right() ==           \
                          (a_node));                                            \
               rbp_right_set(a_type, a_field, rbp_r_xp, rbp_r_c);               \
             }                                                                  \
@@ -613,7 +611,7 @@ struct RedBlackTree
             rbp_right_set(a_type,                                              \
                           a_field,                                             \
                           rbp_r_c,                                             \
-                          rbp_right_get(a_type, a_field, (a_node)));           \
+                          rb_node_field((a_node), a_field).Right());           \
             rbp_color_set(a_type,                                              \
                           a_field,                                             \
                           rbp_r_c,                                             \
@@ -621,7 +619,7 @@ struct RedBlackTree
             if (rb_node_field(rbp_r_p, a_field).Left() == rbp_r_c) {           \
               rbp_left_set(a_type, a_field, rbp_r_p, &(a_tree)->rbt_nil);      \
             } else {                                                           \
-              MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_r_p) == rbp_r_c);  \
+              MOZ_ASSERT(rb_node_field(rbp_r_p, a_field).Right() == rbp_r_c);  \
               rbp_right_set(a_type, a_field, rbp_r_p, &(a_tree)->rbt_nil);     \
             }                                                                  \
             break;                                                             \
@@ -645,7 +643,7 @@ struct RedBlackTree
           /* the correct node and a leaf node).                 */             \
           if (rbp_r_cmp == 0) {                                                \
             MOZ_ASSERT((a_node) == rbp_r_c);                                   \
-            if (rbp_right_get(a_type, a_field, rbp_r_c) ==                     \
+            if (rb_node_field(rbp_r_c, a_field).Right() ==                     \
                 &(a_tree)->rbt_nil) {                                          \
               /* Delete leaf node.                          */                 \
               if (rb_node_field(rbp_r_c, a_field).Left() !=                    \
@@ -670,7 +668,7 @@ struct RedBlackTree
               rbp_r_xp = rbp_r_p;                                              \
             }                                                                  \
           }                                                                    \
-          rbp_r_t = rbp_right_get(a_type, a_field, rbp_r_c);                   \
+          rbp_r_t = rb_node_field(rbp_r_c, a_field).Right();                   \
           rbp_r_u = rb_node_field(rbp_r_t, a_field).Left();                    \
           if (rbp_red_get(a_type, a_field, rbp_r_u) == false) {                \
             rbp_move_red_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
@@ -682,7 +680,7 @@ struct RedBlackTree
             rbp_r_c = rbp_r_t;                                                 \
           } else {                                                             \
             rbp_r_p = rbp_r_c;                                                 \
-            rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);                 \
+            rbp_r_c = rb_node_field(rbp_r_c, a_field).Right();                 \
           }                                                                    \
         }                                                                      \
       }                                                                        \
@@ -823,7 +821,7 @@ struct RedBlackTree
   }                                                                            \
   /* Find the successor.                                    */                 \
   if ((rbp_f_node =                                                            \
-         rbp_right_get(a_type, a_field, rbp_f_path[rbp_f_depth - 1])) !=       \
+         rb_node_field(rbp_f_path[rbp_f_depth - 1], a_field).Right()) !=       \
       &(a_tree)->rbt_nil) {                                                    \
     /* The successor is the left-most node in the right   */                   \
     /* subtree.                                           */                   \
