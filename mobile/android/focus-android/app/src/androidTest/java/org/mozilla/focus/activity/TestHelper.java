@@ -118,7 +118,7 @@ public final class TestHelper {
             .text("Erase browsing history")
             .resourceId("android:id/text")
             .enabled(true));
-    static UiObject notificationExpandSwitch = TestHelper.mDevice.findObject(new UiSelector()
+    public static UiObject notificationExpandSwitch = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("android:id/expand_button")
             .packageName("org.mozilla.focus.debug")
             .enabled(true));

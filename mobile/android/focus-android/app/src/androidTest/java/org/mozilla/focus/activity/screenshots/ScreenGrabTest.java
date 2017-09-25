@@ -307,7 +307,7 @@ public class ScreenGrabTest {
         TestHelper.AddtoHSCancelBtn.click();
     }
 
-    private void takeScreenshotOfNotification(Context context, UiDevice device) {
+    private void takeScreenshotOfNotification(Context context, UiDevice device) throws UiObjectNotFoundException {
         device.openNotification();
 
         assertTrue(device.findObject(new UiSelector()
@@ -315,6 +315,18 @@ public class ScreenGrabTest {
                 .resourceId("android:id/text")
                 .enabled(true))
                 .waitForExists(waitingTime));
+
+        final UiObject openAction = device.findObject(new UiSelector()
+                .descriptionContains(context.getString(R.string.notification_action_open))
+                .resourceId("android:id/action0")
+                .enabled(true));
+
+        if (!openAction.waitForExists(waitingTime)) {
+            // The notification is not expanded. Let's expand it now.
+
+            TestHelper.notificationExpandSwitch.click();
+            assertTrue(openAction.waitForExists(waitingTime));
+        }
 
         Screengrab.screenshot("DeleteHistory_NotificationBar");
 
