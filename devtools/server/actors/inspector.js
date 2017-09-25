@@ -2617,6 +2617,31 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
+   * Given a windowID return the NodeActor for the corresponding frameElement,
+   * unless it's the root window
+   */
+  getNodeActorFromWindowID: function (windowID) {
+    let win;
+
+    try {
+      win = Services.wm.getOuterWindowWithId(windowID);
+    } catch (e) {
+      // ignore
+    }
+
+    if (!win) {
+      return { error: "noWindow",
+               message: "The related docshell is destroyed or not found" };
+    } else if (!win.frameElement) {
+      // the frame element of the root document is privileged & thus
+      // inaccessible, so return the document body/element instead
+      return this.attachElement(win.document.body || win.document.documentElement);
+    }
+
+    return this.attachElement(win.frameElement);
+  },
+
+  /**
    * Given a StyleSheetActor (identified by its ID), commonly used in the
    * style-editor, get its ownerNode and return the corresponding walker's
    * NodeActor.
