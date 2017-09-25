@@ -15,7 +15,7 @@
 <?xml-stylesheet href="resource://devtools/client/themes/common.css"?>
 <?xml-stylesheet href="chrome://webide/skin/webide.css"?>
 
-<window id="webide" onclose="return UI.canCloseProject();"
+<window id="webide" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         title="&windowTitle;"
@@ -153,7 +153,6 @@
         <iframe id="deck-panel-runtimedetails" flex="1" lazysrc="runtimedetails.xhtml"/>
         <iframe id="deck-panel-monitor" flex="1" lazysrc="monitor.xhtml"/>
         <iframe id="deck-panel-devicepreferences" flex="1" lazysrc="devicepreferences.xhtml"/>
-        <iframe id="deck-panel-simulator" flex="1" lazysrc="simulator.xhtml"/>
       </deck>
       <splitter class="devtools-side-splitter" id="runtime-listing-splitter"/>
       <vbox id="runtime-listing-panel" class="runtime-listing panel-list" flex="1">

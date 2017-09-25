@@ -9,7 +9,6 @@ const Services = require("Services");
 const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const {Connection} = require("devtools/shared/client/connection-manager");
 const {DebuggerServer} = require("devtools/server/main");
-const {Simulators} = require("devtools/client/webide/modules/simulators");
 const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const promise = require("promise");
@@ -195,47 +194,6 @@ exports.RuntimeScanners = RuntimeScanners;
 
 /* SCANNERS */
 
-var SimulatorScanner = {
-
-  _runtimes: [],
-
-  enable() {
-    this._updateRuntimes = this._updateRuntimes.bind(this);
-    Simulators.on("updated", this._updateRuntimes);
-    this._updateRuntimes();
-  },
-
-  disable() {
-    Simulators.off("updated", this._updateRuntimes);
-  },
-
-  _emitUpdated() {
-    this.emit("runtime-list-updated");
-  },
-
-  _updateRuntimes() {
-    Simulators.findSimulators().then(simulators => {
-      this._runtimes = [];
-      for (let simulator of simulators) {
-        this._runtimes.push(new SimulatorRuntime(simulator));
-      }
-      this._emitUpdated();
-    });
-  },
-
-  scan() {
-    return promise.resolve();
-  },
-
-  listRuntimes: function () {
-    return this._runtimes;
-  }
-
-};
-
-EventEmitter.decorate(SimulatorScanner);
-RuntimeScanners.add(SimulatorScanner);
-
 /**
  * This is a lazy ADB scanner shim which only tells the ADB Helper to start and
  * stop as needed.  The real scanner that lists devices lives in ADB Helper.
@@ -361,7 +319,6 @@ RuntimeScanners.add(StaticScanner);
 var RuntimeTypes = exports.RuntimeTypes = {
   USB: "USB",
   WIFI: "WIFI",
-  SIMULATOR: "SIMULATOR",
   REMOTE: "REMOTE",
   LOCAL: "LOCAL",
   OTHER: "OTHER"
@@ -476,35 +433,6 @@ WiFiRuntime.prototype = {
 
 // For testing use only
 exports._WiFiRuntime = WiFiRuntime;
-
-function SimulatorRuntime(simulator) {
-  this.simulator = simulator;
-}
-
-SimulatorRuntime.prototype = {
-  type: RuntimeTypes.SIMULATOR,
-  connect: function (connection) {
-    return this.simulator.launch().then(port => {
-      connection.host = "localhost";
-      connection.port = port;
-      connection.keepConnecting = true;
-      connection.once(Connection.Events.DISCONNECTED, e => this.simulator.kill());
-      connection.connect();
-    });
-  },
-  configure() {
-    Simulators.emit("configure", this.simulator);
-  },
-  get id() {
-    return this.simulator.id;
-  },
-  get name() {
-    return this.simulator.name;
-  },
-};
-
-// For testing use only
-exports._SimulatorRuntime = SimulatorRuntime;
 
 var gLocalRuntime = {
   type: RuntimeTypes.LOCAL,
