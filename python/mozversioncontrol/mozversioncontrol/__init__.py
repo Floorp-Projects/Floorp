@@ -82,10 +82,18 @@ class Repository(object):
     def __exit__(self, exc_type, exc_value, exc_tb):
         pass
 
-    def _run(self, *args):
-        return subprocess.check_output((self._tool, ) + args,
-                                       cwd=self.path,
-                                       env=self._env)
+    def _run(self, *args, **runargs):
+        return_codes = runargs.get('return_codes', [])
+
+        cmd = (self._tool,) + args
+        try:
+            return subprocess.check_output(cmd,
+                                           cwd=self.path,
+                                           env=self._env)
+        except subprocess.CalledProcessError as e:
+            if e.returncode in return_codes:
+                return ''
+            raise
 
     @property
     def tool_version(self):
@@ -266,7 +274,7 @@ class HgRepository(Repository):
             template += "{file_mods % '\\n{file}'}"
 
         return self._run('outgoing', '-r', '.', '--quiet',
-                         '--template', template, upstream).split()
+                         '--template', template, upstream, return_codes=(1,)).split()
 
     def add_remove_files(self, path):
         args = ['addremove', path]
