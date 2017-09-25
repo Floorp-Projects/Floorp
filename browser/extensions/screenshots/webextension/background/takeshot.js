@@ -1,4 +1,4 @@
-/* globals communication, shot, main, auth, catcher, analytics, buildSettings */
+/* globals communication, shot, main, auth, catcher, analytics, buildSettings, blobConverters */
 
 "use strict";
 
@@ -33,10 +33,10 @@ this.takeshot = (function() {
     }
     let convertBlobPromise = Promise.resolve();
     if (buildSettings.uploadBinary && !imageBlob) {
-      imageBlob = base64ToBinary(shot.getClip(shot.clipNames()[0]).image.url);
+      imageBlob = blobConverters.dataUrlToBlob(shot.getClip(shot.clipNames()[0]).image.url);
       shot.getClip(shot.clipNames()[0]).image.url = "";
     } else if (!buildSettings.uploadBinary && imageBlob) {
-      convertBlobPromise = blobToDataUrl(imageBlob).then((dataUrl) => {
+      convertBlobPromise = blobConverters.blobToDataUrl(imageBlob).then((dataUrl) => {
         shot.getClip(shot.clipNames()[0]).image.url = dataUrl;
       });
       imageBlob = null;
@@ -120,40 +120,12 @@ this.takeshot = (function() {
     }));
   }
 
-  function base64ToBinary(url) {
-    const binary = atob(url.split(',')[1]);
-    const data = Uint8Array.from(binary, char => char.charCodeAt(0));
-    const blob = new Blob([data], {type: "image/png"});
-    return blob;
-  }
-
   /** Combines two buffers or Uint8Array's */
   function concatBuffers(buffer1, buffer2) {
     var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
     tmp.set(new Uint8Array(buffer1), 0);
     tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
     return tmp.buffer;
-  }
-
-  /** Returns a promise that converts a Blob to a TypedArray */
-  function blobToArray(blob) {
-    return new Promise((resolve, reject) => {
-      let reader = new FileReader();
-      reader.addEventListener("loadend", function() {
-        resolve(reader.result);
-      });
-      reader.readAsArrayBuffer(blob);
-    });
-  }
-
-  function blobToDataUrl(blob) {
-    return new Promise((resolve, reject) => {
-      let reader = new FileReader();
-      reader.addEventListener("loadend", function() {
-        resolve(reader.result);
-      });
-      reader.readAsDataURL(blob);
-    });
   }
 
   /** Creates a multipart TypedArray, given {name: value} fields
@@ -163,7 +135,7 @@ this.takeshot = (function() {
       */
   function createMultipart(fields, fileField, fileFilename, blob) {
     let boundary = "---------------------------ScreenshotBoundary" + Date.now();
-    return blobToArray(blob).then((blobAsBuffer) => {
+    return blobConverters.blobToArray(blob).then((blobAsBuffer) => {
       let body = [];
       for (let name in fields) {
         body.push("--" + boundary);

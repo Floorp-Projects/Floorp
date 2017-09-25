@@ -18,6 +18,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"] += [
   'webextension/assertIsBlankDocument.js',
   'webextension/assertIsTrusted.js',
   'webextension/blank.html',
+  'webextension/blobConverters.js',
   'webextension/catcher.js',
   'webextension/clipboard.js',
   'webextension/domainFromUrl.js',
