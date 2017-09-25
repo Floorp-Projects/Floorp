@@ -34,8 +34,6 @@ def mozharness_on_buildbot_bridge(config, job, taskdesc):
     branch = config.params['project']
     product = run['product']
 
-    worker.pop('env', None)
-
     buildername = run['buildername'].format(branch=branch)
 
     worker.update({
