@@ -52,14 +52,14 @@ public:
   JSObject* WrapObject(JSContext *cx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+  void GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval);
 
-  virtual void GetEntriesByType(const nsAString& aEntryType,
-                                nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+  void GetEntriesByType(const nsAString& aEntryType,
+                        nsTArray<RefPtr<PerformanceEntry>>& aRetval);
 
-  virtual void GetEntriesByName(const nsAString& aName,
-                                const Optional<nsAString>& aEntryType,
-                                nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+  void GetEntriesByName(const nsAString& aName,
+                        const Optional<nsAString>& aEntryType,
+                        nsTArray<RefPtr<PerformanceEntry>>& aRetval);
 
   virtual void AddEntry(nsIHttpChannel* channel,
                         nsITimedChannel* timedChannel) = 0;
@@ -154,7 +154,7 @@ protected:
 
   nsTObserverArray<PerformanceObserver*> mObservers;
 
-protected:
+private:
   static const uint64_t kDefaultResourceTimingBufferSize = 150;
 
   // When kDefaultResourceTimingBufferSize is increased or removed, these should
