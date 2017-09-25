@@ -1097,23 +1097,48 @@ WebMTrackDemuxer::Seek(const TimeUnit& aTime)
   // actual time seeked to. Typically the random access point time
 
   auto seekTime = aTime;
-  mSamples.Reset();
-  mParent->SeekInternal(mType, aTime);
-  nsresult rv = mParent->GetNextPacket(mType, &mSamples);
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-      // Ignore the error for now, the next GetSample will be rejected with EOS.
-      return SeekPromise::CreateAndResolve(TimeUnit::Zero(), __func__);
-    }
-    return SeekPromise::CreateAndReject(rv, __func__);
-  }
+  bool keyframe = false;
+
   mNeedKeyframe = true;
 
-  // Check what time we actually seeked to.
-  if (mSamples.GetSize() > 0) {
-    const RefPtr<MediaRawData>& sample = mSamples.First();
-    seekTime = sample->mTime;
-  }
+  do {
+    mSamples.Reset();
+    mParent->SeekInternal(mType, seekTime);
+    nsresult rv = mParent->GetNextPacket(mType, &mSamples);
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+        // Ignore the error for now, the next GetSample will be rejected with EOS.
+        return SeekPromise::CreateAndResolve(TimeUnit::Zero(), __func__);
+      }
+      return SeekPromise::CreateAndReject(rv, __func__);
+    }
+
+    // Check what time we actually seeked to.
+    if (mSamples.GetSize() == 0) {
+      // We can't determine if the seek succeeded at this stage, so break the
+      // loop.
+      break;
+    }
+
+    for (const auto& sample : mSamples) {
+      seekTime = sample->mTime;
+      keyframe = sample->mKeyframe;
+      if (keyframe) {
+        break;
+      }
+    }
+    if (mType == TrackInfo::kVideoTrack &&
+        !mInfo->GetAsVideoInfo()->HasAlpha()) {
+      // We only perform a search for a keyframe on videos with alpha layer to
+      // prevent potential regression for normal video (even though invalid)
+      break;
+    }
+    if (!keyframe) {
+      // We didn't find any keyframe, attempt to seek to the previous cluster.
+      seekTime = mSamples.First()->mTime - TimeUnit::FromMicroseconds(1);
+    }
+  } while (!keyframe && seekTime >= TimeUnit::Zero());
+
   SetNextKeyFrameTime();
 
   return SeekPromise::CreateAndResolve(seekTime, __func__);
