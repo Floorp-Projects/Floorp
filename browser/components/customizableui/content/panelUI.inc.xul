@@ -462,7 +462,8 @@
   </popupnotification>
 </panel>
 
-<menupopup id="customizationPaletteItemContextMenu">
+<menupopup id="customizationPaletteItemContextMenu"
+           onpopupshowing="gCustomizeMode.onPaletteContextMenuShowing(event)">
   <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
             class="customize-context-addToToolbar"
             accesskey="&customizeMenu.addToToolbar.accesskey;"

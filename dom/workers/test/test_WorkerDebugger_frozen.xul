@@ -16,11 +16,8 @@
   <script type="application/javascript">
   <![CDATA[
 
-    const CACHE_SUBFRAMES = "browser.sessionhistory.cache_subframes";
-    const MAX_TOTAL_VIEWERS = "browser.sessionhistory.max_total_viewers";
-
-    const IFRAME1_URL = "WorkerDebugger_frozen_iframe1.html";
-    const IFRAME2_URL = "WorkerDebugger_frozen_iframe2.html";
+    const WINDOW1_URL = "WorkerDebugger_frozen_window1.html";
+    const WINDOW2_URL = "WorkerDebugger_frozen_window2.html";
 
     const WORKER1_URL = "WorkerDebugger_frozen_worker1.js";
     const WORKER2_URL = "WorkerDebugger_frozen_worker2.js";
@@ -29,18 +26,14 @@
       (async function() {
         SimpleTest.waitForExplicitFinish();
 
-        var oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
-
-        SpecialPowers.setBoolPref(CACHE_SUBFRAMES, true);
-        SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
-
-        let iframe = $("iframe");
+        SpecialPowers.pushPrefEnv({set:
+          [["browser.sessionhistory.max_total_viewers", 10]]});
 
         let promise = waitForMultiple([
           waitForRegister(WORKER1_URL),
           waitForWindowMessage(window, "ready"),
         ]);
-        iframe.src = IFRAME1_URL;
+        let testWin = window.open(WINDOW1_URL, "testWin");;
         let [dbg1] = await promise;
         is(dbg1.isClosed, false,
            "debugger for worker on page 1 should not be closed");
@@ -51,7 +44,7 @@
           waitForRegister(WORKER2_URL),
           waitForWindowMessage(window, "ready"),
         ]);
-        iframe.src = IFRAME2_URL;
+        testWin.location = WINDOW2_URL;
         let [,, dbg2] = await promise;
         is(dbg1.isClosed, true,
            "debugger for worker on page 1 should be closed");
@@ -63,15 +56,12 @@
           waitForDebuggerClose(dbg2),
           waitForRegister(WORKER1_URL)
         ]);
-        iframe.contentWindow.history.back();
+        testWin.history.back();
         [,, dbg1] = await promise;
         is(dbg1.isClosed, false,
            "debugger for worker on page 1 should not be closed");
         is(dbg2.isClosed, true,
            "debugger for worker on page 2 should be closed");
-
-        SpecialPowers.clearUserPref(CACHE_SUBFRAMES);
-        SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);
 
         SimpleTest.finish();
       })();
@@ -84,7 +74,6 @@
     <p id="display"></p>
     <div id="content" style="display:none;"></div>
     <pre id="test"></pre>
-    <iframe id="iframe"></iframe>
   </body>
   <label id="test-result"/>
 </window>

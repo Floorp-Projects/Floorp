@@ -121,6 +121,20 @@ interface nsISHistoryInternal: nsISupports
                                               in nsISHContainer aContainer);
 
    /**
+    * Similar to RemoveDynEntries, but instead of specifying an index, use the
+    * given BFCacheEntry to find the index and remove dynamic entries from the
+    * index.
+    *
+    * The method takes no effect if the bfcache entry is not or no longer hold
+    * by the SHistory instance.
+    *
+    * @param aEntry
+    *        The bfcache entry to look up for index to remove dynamic entries
+    *        from.
+    */
+   [noscript, notxpcom] void RemoveDynEntriesForBFCacheEntry(in nsIBFCacheEntry aEntry);
+
+   /**
     * Removes entries from the history if their docshellID is in
     * aIDs array.
     */

@@ -83,19 +83,24 @@ private:
   friend class nsSHEnumerator;
   friend class nsSHistoryObserver;
 
-  // Could become part of nsIWebNavigation
-  NS_IMETHOD GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult);
+  nsresult GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult);
   nsresult LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
                                 nsIDocShell* aRootDocShell, long aLoadType,
                                 bool& aDifferenceFound);
   nsresult InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
                         long aLoadType);
 
-  NS_IMETHOD LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd);
+  nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd);
 
 #ifdef DEBUG
   nsresult PrintHistory();
 #endif
+
+  // Find the transaction for a given bfcache entry. It only looks up between
+  // the range where alive viewers may exist (i.e nsISHistory::VIEWER_WINDOW).
+  nsresult FindTransactionForBFCache(nsIBFCacheEntry* aEntry,
+                                     nsISHTransaction** aResult,
+                                     int32_t* aResultIndex);
 
   // Evict content viewers in this window which don't lie in the "safe" range
   // around aIndex.

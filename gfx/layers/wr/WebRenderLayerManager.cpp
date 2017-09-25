@@ -464,7 +464,9 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
                       DrawTarget* aDT,
                       const LayerRect& aImageRect,
                       const LayerPoint& aOffset,
-                      nsDisplayListBuilder* aDisplayListBuilder)
+                      nsDisplayListBuilder* aDisplayListBuilder,
+                      RefPtr<BasicLayerManager>& aManager,
+                      WebRenderLayerManager* aWrManager)
 {
   MOZ_ASSERT(aDT);
 
@@ -479,21 +481,43 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
     break;
   case DisplayItemType::TYPE_FILTER:
     {
-      RefPtr<BasicLayerManager> tempManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
+      if (aManager == nullptr) {
+        aManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
+      }
+
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(aDisplayListBuilder, tempManager);
+      layerBuilder->Init(aDisplayListBuilder, aManager);
+      layerBuilder->DidBeginRetainedLayerTransaction(aManager);
 
-      tempManager->BeginTransactionWithTarget(context);
+      aManager->BeginTransactionWithTarget(context);
+
       ContainerLayerParameters param;
-      RefPtr<Layer> layer = aItem->BuildLayer(aDisplayListBuilder, tempManager, param);
+      RefPtr<Layer> layer =
+        static_cast<nsDisplayFilter*>(aItem)->BuildLayer(aDisplayListBuilder,
+                                                         aManager, param);
+
       if (layer) {
-        tempManager->SetRoot(layer);
-        static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder, context, tempManager);
+        UniquePtr<LayerProperties> props;
+        props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
+
+        aManager->SetRoot(layer);
+        layerBuilder->WillEndTransaction();
+
+        nsIntRegion invalid;
+        props->ComputeDifferences(layer, invalid, nullptr);
+
+        static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
+                                                           context, aManager);
+
+        if (!invalid.IsEmpty()) {
+          aWrManager->SetNotifyInvalidation(true);
+        }
       }
 
-      if (tempManager->InTransaction()) {
-        tempManager->AbortTransaction();
+      if (aManager->InTransaction()) {
+        aManager->AbortTransaction();
       }
+      aManager->SetTarget(nullptr);
       break;
     }
   default:
@@ -554,11 +578,18 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
   }
 
   aOffset = RoundedToInt(bounds.TopLeft());
-  nsRegion invalidRegion;
+
+  bool needPaint = true;
   nsAutoPtr<nsDisplayItemGeometry> geometry = fallbackData->GetGeometry();
 
-  if (geometry) {
+
+  // nsDisplayFilter is rendered via BasicLayerManager which means the invalidate
+  // region is unknown until we traverse the displaylist contained by it.
+  if (geometry && !fallbackData->IsInvalid() &&
+      aItem->GetType() != DisplayItemType::TYPE_FILTER) {
     nsRect invalid;
+    nsRegion invalidRegion;
+
     if (aItem->IsInvalid(invalid)) {
       invalidRegion.OrWith(clippedBounds);
     } else {
@@ -574,11 +605,12 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
         invalidRegion.OrWith(clippedBounds);
       }
     }
+    needPaint = !invalidRegion.IsEmpty();
   }
 
-  gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK ?
-                                                    gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
-  if (!geometry || !invalidRegion.IsEmpty() || fallbackData->IsInvalid()) {
+  if (needPaint) {
+    gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK ?
+                                                      gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
     if (gfxPrefs::WebRenderBlobImages()) {
       bool snapped;
       bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(clippedBounds);
@@ -588,7 +620,8 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
-      PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
+      PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder,
+                            fallbackData->mBasicLayerManager, this);
       recorder->Finish();
 
       Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
@@ -608,7 +641,9 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
           if (!dt) {
             return nullptr;
           }
-          PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
+          PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset,
+                                aDisplayListBuilder,
+                                fallbackData->mBasicLayerManager, this);
         }
         if (!helper.UpdateImage()) {
           return nullptr;
