@@ -1,6 +1,6 @@
 E10SCohort=unsupportedChannel
 ContentSandboxLevel=2
-TelemetryEnvironment={}
+TelemetryEnvironment={"EscapedField":"EscapedData\\n\\nfoo"}
 EMCheckCompatibility=true
 ProductName=Firefox
 ContentSandboxCapabilities=119
