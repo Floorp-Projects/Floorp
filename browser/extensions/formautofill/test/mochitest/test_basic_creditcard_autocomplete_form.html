@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: simple form credit card autofill
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+const {FormAutofillUtils} = SpecialPowers.Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+
+const MOCK_STORAGE = [{
+  "cc-name": "John Doe",
+  "cc-number": "1234567812345678",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "1111222233334444",
+  "cc-exp-month": 12,
+  "cc-exp-year": 2022,
+}];
+
+const reducedMockRecord = {
+  "cc-name": "John Doe",
+  "cc-number": "1234123456785678",
+};
+
+function patchRecordCCNumber(record) {
+  const ccNumber = record["cc-number"];
+  const normalizedCCNumber = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
+  const ccNumberFmt = FormAutofillUtils.fmtMaskedCreditCardLabel(normalizedCCNumber);
+
+  return Object.assign({}, record, {ccNumberFmt});
+}
+
+function checkElementFilled(element, expectedvalue) {
+  const focusedElem = document.activeElement;
+  const promises = [];
+
+  promises.push(new Promise(resolve => {
+    element.addEventListener("input", function onInput() {
+      ok(true, "Checking " + element.name + " field fires input event");
+      resolve();
+    }, {once: true});
+  }));
+
+  // Don't expect that focused input will receive "change" event since focus never move away.
+  if (element !== focusedElem) {
+    promises.push(new Promise(resolve => {
+      element.addEventListener("change", function onChange() {
+        ok(true, "Checking " + element.name + " field fires change event");
+        is(element.value, expectedvalue, "Checking " + element.name + " field");
+        resolve();
+      }, {once: true});
+    }));
+  }
+
+  return promises;
+}
+
+function checkFormFilled(creditCard) {
+  let promises = [];
+  for (let prop in creditCard) {
+    let element = document.getElementById(prop);
+    let converted = String(creditCard[prop]); // Convert potential number to string
+
+    promises.push(...checkElementFilled(element, converted));
+  }
+  doKey("return");
+  return Promise.all(promises);
+}
+
+async function setupCreditCardStorage() {
+  await addCreditCard(MOCK_STORAGE[0]);
+  await addCreditCard(MOCK_STORAGE[1]);
+}
+
+async function setupFormHistory() {
+  await updateFormHistory([
+    {op: "add", fieldname: "cc-name", value: "John Smith"},
+    {op: "add", fieldname: "cc-exp-year", value: 2023},
+  ]);
+}
+
+initPopupListener();
+
+// Form with history only.
+add_task(async function history_only_menu_checking() {
+  await setupFormHistory();
+
+  await setInput("#cc-exp-year", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(["2023"], false);
+});
+
+// Display credit card result even if the number of fillable fields is less than the threshold.
+add_task(async function all_saved_fields_less_than_threshold() {
+  await addCreditCard(reducedMockRecord);
+
+  await setInput("#cc-name", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries([reducedMockRecord].map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-name"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
+
+  await cleanUpCreditCards();
+});
+
+// Form with both history and credit card storage.
+add_task(async function check_menu_when_both_existed() {
+  await setupCreditCardStorage();
+
+  await setInput("#cc-number", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primaryAffix: cc.ccNumberFmt.affix,
+    primary: cc.ccNumberFmt.label,
+    secondary: cc["cc-name"],
+  })));
+
+  await setInput("#cc-name", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-name"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
+
+  await setInput("#cc-exp-year", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-exp-year"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
+
+  await setInput("#cc-exp-month", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-exp-month"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
+
+  await cleanUpCreditCards();
+});
+
+// Display history search result if no matched data in credit card.
+add_task(async function check_fallback_for_mismatched_field() {
+  await addCreditCard(reducedMockRecord);
+
+  await setInput("#cc-exp-year", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(["2023"], false);
+
+  await cleanUpCreditCards();
+});
+
+// Display history search result if credit card autofill is disabled.
+add_task(async function check_search_result_for_pref_off() {
+  await setupCreditCardStorage();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.formautofill.creditCards.enabled", false]],
+  });
+
+  await setInput("#cc-name", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(["John Smith"], false);
+
+  await SpecialPowers.popPrefEnv();
+});
+
+// Autofill the credit card from dropdown menu.
+add_task(async function check_fields_after_form_autofill() {
+  await setInput("#cc-exp-year", 202);
+
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.slice(1).map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-exp-year"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
+
+  doKey("down");
+  await checkFormFilled(MOCK_STORAGE[1]);
+});
+
+// Fallback to history search after autofill address.
+add_task(async function check_fallback_after_form_autofill() {
+  await setInput("#cc-name", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(["John Smith"], false);
+});
+
+// Resume form autofill once all the autofilled fileds are changed.
+add_task(async function check_form_autofill_resume() {
+  document.querySelector("#cc-name").blur();
+  document.querySelector("#form1").reset();
+
+  await setInput("#cc-name", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-name"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>Name: <input id="cc-name" autocomplete="cc-name"></label></p>
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+    <p><label>Expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></label></p>
+    <p><label>Expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></label></p>
+    <p><label>CSC: <input id="cc-csc" autocomplete="cc-csc"></label></p>
+  </form>
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>
