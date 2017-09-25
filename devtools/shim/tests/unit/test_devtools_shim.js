@@ -17,10 +17,6 @@ function createMockDevTools() {
   let methods = [
     "on",
     "off",
-    "registerTool",
-    "registerTheme",
-    "unregisterTool",
-    "unregisterTheme",
     "emit",
     "saveDevToolsSession",
     "restoreDevToolsSession",
@@ -139,72 +135,6 @@ function test_off_called_before_with_bad_callback() {
   restoreDevToolsInstalled();
 }
 
-function test_registering_tool() {
-  mockDevToolsInstalled(true);
-
-  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
-
-  let tool1 = {};
-  let tool2 = {};
-  let tool3 = {};
-  let mock = createMockDevTools();
-
-  // Pre-register tool1
-  DevToolsShim.registerTool(tool1);
-
-  // Pre-register tool3, but unregister right after
-  DevToolsShim.registerTool(tool3);
-  DevToolsShim.unregisterTool(tool3);
-
-  DevToolsShim.register(mock);
-  checkCalls(mock, "registerTool", 1, [tool1]);
-
-  DevToolsShim.registerTool(tool2);
-  checkCalls(mock, "registerTool", 2, [tool2]);
-
-  DevToolsShim.unregister();
-
-  // Create a new mock and check the tools are not added once again.
-  mock = createMockDevTools();
-  DevToolsShim.register(mock);
-  checkCalls(mock, "registerTool", 0);
-
-  restoreDevToolsInstalled();
-}
-
-function test_registering_theme() {
-  mockDevToolsInstalled(true);
-
-  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
-
-  let theme1 = {};
-  let theme2 = {};
-  let theme3 = {};
-  let mock = createMockDevTools();
-
-  // Pre-register theme1
-  DevToolsShim.registerTheme(theme1);
-
-  // Pre-register theme3, but unregister right after
-  DevToolsShim.registerTheme(theme3);
-  DevToolsShim.unregisterTheme(theme3);
-
-  DevToolsShim.register(mock);
-  checkCalls(mock, "registerTheme", 1, [theme1]);
-
-  DevToolsShim.registerTheme(theme2);
-  checkCalls(mock, "registerTheme", 2, [theme2]);
-
-  DevToolsShim.unregister();
-
-  // Create a new mock and check the themes are not added once again.
-  mock = createMockDevTools();
-  DevToolsShim.register(mock);
-  checkCalls(mock, "registerTheme", 0);
-
-  restoreDevToolsInstalled();
-}
-
 function test_events() {
   mockDevToolsInstalled(true);
 
@@ -281,12 +211,6 @@ function run_test() {
   DevToolsShim.unregister();
 
   test_off_called_before_with_bad_callback();
-  DevToolsShim.unregister();
-
-  test_registering_tool();
-  DevToolsShim.unregister();
-
-  test_registering_theme();
   DevToolsShim.unregister();
 
   test_scratchpad_apis();

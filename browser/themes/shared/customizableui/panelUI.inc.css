@@ -1369,13 +1369,13 @@ photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbu
   margin-inline-start: 10px;
 }
 
-/* An em-based minimum height works better for a text-only button. */
+/* Unset the min-height constraint, because that works better for a text-only button. */
 #appMenu-zoomReset-button {
-  min-height: 2em;
+  min-height: unset;
 }
 
 #appMenu-zoomReset-button > .toolbarbutton-text {
-  min-width: 3em;
+  min-width: calc(3ch + 8px);
   text-align: center;
 }
 

@@ -1196,10 +1196,15 @@ ServoRestyleManager::ProcessPendingRestyles()
 void
 ServoRestyleManager::ProcessAllPendingAttributeAndStateInvalidations()
 {
-  AutoTimelineMarker marker(mPresContext->GetDocShell(),
-                            "ProcessAllPendingAttributeAndStateInvalidations");
+  if (mSnapshots.IsEmpty()) {
+    return;
+  }
   for (auto iter = mSnapshots.Iter(); !iter.Done(); iter.Next()) {
-    Servo_ProcessInvalidations(StyleSet()->RawSet(), iter.Key(), &mSnapshots);
+    // Servo data for the element might have been dropped. (e.g. by removing
+    // from its document)
+    if (iter.Key()->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
+      Servo_ProcessInvalidations(StyleSet()->RawSet(), iter.Key(), &mSnapshots);
+    }
   }
   ClearSnapshots();
 }

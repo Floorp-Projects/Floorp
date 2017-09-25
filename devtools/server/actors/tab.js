@@ -532,6 +532,7 @@ TabActor.prototype = {
       return true;
     }
 
+    // Otherwise, check if it is a WebExtension content script sandbox
     let global = unwrapDebuggerObjectGlobal(wrappedGlobal);
     if (!global) {
       return false;

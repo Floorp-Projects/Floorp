@@ -37,6 +37,10 @@ DEFAULT_CXX_11 = {
     '__cplusplus': '201103L',
 }
 
+DRAFT_CXX_14 = {
+    '__cplusplus': '201300L',
+}
+
 DEFAULT_CXX_14 = {
     '__cplusplus': '201402L',
 }
@@ -47,6 +51,10 @@ SUPPORTS_GNU99 = {
 
 SUPPORTS_GNUXX11 = {
     '-std=gnu++11': DEFAULT_CXX_11,
+}
+
+SUPPORTS_GNUXX14 = {
+    '-std=gnu++14': DEFAULT_CXX_14,
 }
 
 SUPPORTS_CXX14 = {
@@ -76,13 +84,16 @@ def GCC(version):
 def GXX(version):
     return GCC_BASE(version) + DEFAULT_CXX_97 + SUPPORTS_GNUXX11
 
+SUPPORTS_DRAFT_CXX14_VERSION = {
+    '-std=gnu++14': DRAFT_CXX_14,
+}
 
 GCC_4_7 = GCC('4.7.3')
 GXX_4_7 = GXX('4.7.3')
 GCC_4_9 = GCC('4.9.3')
-GXX_4_9 = GXX('4.9.3')
+GXX_4_9 = GXX('4.9.3') + SUPPORTS_DRAFT_CXX14_VERSION
 GCC_5 = GCC('5.2.1') + DEFAULT_C11
-GXX_5 = GXX('5.2.1')
+GXX_5 = GXX('5.2.1') + SUPPORTS_GNUXX14
 
 GCC_PLATFORM_LITTLE_ENDIAN = {
     '__BYTE_ORDER__': 1234,
@@ -163,7 +174,7 @@ def CLANG(version):
 @memoize
 def CLANGXX(version):
     return (GCC_BASE('4.2.1') + CLANG_BASE(version) + DEFAULT_CXX_97 +
-            SUPPORTS_GNUXX11)
+            SUPPORTS_GNUXX11 + SUPPORTS_GNUXX14)
 
 
 CLANG_3_3 = CLANG('3.3.0') + DEFAULT_C99
@@ -171,6 +182,9 @@ CLANGXX_3_3 = CLANGXX('3.3.0')
 CLANG_3_6 = CLANG('3.6.2') + DEFAULT_C11
 CLANGXX_3_6 = CLANGXX('3.6.2') + {
     '-std=gnu++11': {
+        '__has_feature(cxx_alignof)': '1',
+    },
+    '-std=gnu++14': {
         '__has_feature(cxx_alignof)': '1',
     },
 }
@@ -901,9 +915,21 @@ class WindowsToolchainTest(BaseToolchainTest):
     CLANGXX_3_6_RESULT = LinuxToolchainTest.CLANGXX_3_6_RESULT
     GCC_4_7_RESULT = LinuxToolchainTest.GCC_4_7_RESULT
     GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
-    GXX_4_9_RESULT = LinuxToolchainTest.GXX_4_9_RESULT
+    GXX_4_9_RESULT = CompilerResult(
+        flags=['-std=gnu++14'],
+        version='4.9.3',
+        type='gcc',
+        compiler='/usr/bin/g++',
+        language='C++',
+    )
     GCC_5_RESULT = LinuxToolchainTest.GCC_5_RESULT
-    GXX_5_RESULT = LinuxToolchainTest.GXX_5_RESULT
+    GXX_5_RESULT = CompilerResult(
+        flags=['-std=gnu++14'],
+        version='5.2.1',
+        type='gcc',
+        compiler='/usr/bin/g++-5',
+        language='C++',
+    )
 
     # VS2015u3 or greater is required.
     def test_msvc(self):

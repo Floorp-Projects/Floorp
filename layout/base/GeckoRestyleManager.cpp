@@ -3651,6 +3651,12 @@ GeckoRestyleManager::ComputeAndProcessStyleChange(
   ClearCachedInheritedStyleDataOnDescendants(contextsToClear);
 }
 
+bool
+GeckoRestyleManager::HasPendingRestyles() const
+{
+  return mPendingRestyles.Count() != 0;
+}
+
 nsStyleSet*
 ElementRestyler::StyleSet() const
 {

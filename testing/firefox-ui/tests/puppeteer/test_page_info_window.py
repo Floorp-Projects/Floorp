@@ -68,8 +68,9 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
                            opener,
                            )
 
+        platformName = self.marionette.session_capabilities['platformName']
         for trigger in open_strategies:
-            if trigger == 'shortcut' and self.puppeteer.platform == 'windows_nt':
+            if trigger == 'shortcut' and platformName == 'windows_nt':
                 # The shortcut for page info window does not exist on windows.
                 self.assertRaises(ValueError, self.browser.open_page_info_window,
                                   trigger=trigger)
@@ -90,9 +91,10 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
                             'shortcut',
                             closer,
                             )
+        platformName = self.marionette.session_capabilities['platformName']
         for trigger in close_strategies:
             # menu only works on OS X
-            if trigger == 'menu' and self.puppeteer.platform != 'darwin':
+            if trigger == 'menu' and platformName != 'darwin':
                 continue
 
             page_info = self.browser.open_page_info_window()

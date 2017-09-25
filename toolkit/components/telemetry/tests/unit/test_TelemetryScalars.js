@@ -7,11 +7,15 @@ const STRING_SCALAR = "telemetry.test.string_kind";
 const BOOLEAN_SCALAR = "telemetry.test.boolean_kind";
 const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 
-function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
+function getProcessScalars(aChannel, aProcessName, aKeyed = false, aClear = false) {
   const scalars = aKeyed ?
-    Telemetry.snapshotKeyedScalars(aChannel, aClear).parent :
-    Telemetry.snapshotScalars(aChannel, aClear).parent;
+    Telemetry.snapshotKeyedScalars(aChannel, aClear)[aProcessName] :
+    Telemetry.snapshotScalars(aChannel, aClear)[aProcessName];
   return scalars || {};
+}
+
+function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
+  return getProcessScalars(aChannel, "parent", aKeyed, aClear);
 }
 
 add_task(async function test_serializationFormat() {
@@ -530,4 +534,158 @@ add_task(async function test_keyed_max_keys() {
     Assert.equal(keyedScalars[KEYED_UINT_SCALAR][keyName], expectedValue++,
                  "The key must contain the expected value.");
   });
+});
+
+add_task(function* test_dynamicScalars_registration() {
+  Telemetry.clearScalars();
+
+  const TEST_CASES = [
+    {
+      "group": "telemetry.test",
+      "data": {
+        "missing_kind": {
+          keyed: false,
+          record_on_release: true
+        },
+      },
+      "evaluation": /missing 'kind'/,
+      "description": "Registration must fail if required fields are missing"
+    },
+    {
+      "group": "telemetry.test",
+      "data": {
+        "invalid_collection": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          record_on_release: "opt-in"
+        },
+      },
+      "evaluation": /Invalid 'record_on_release'/,
+      "description": "Registration must fail if 'record_on_release' is of the wrong type"
+    },
+    {
+      "group": "telemetry.test",
+      "data": {
+        "invalid_kind": {
+          kind: "12",
+        },
+      },
+      "evaluation": /Invalid or missing 'kind'/,
+      "description": "Registration must fail if 'kind' is of the wrong type"
+    },
+    {
+      "group": "telemetry.test",
+      "data": {
+        "invalid_expired": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          expired: "never",
+        },
+      },
+      "evaluation": /Invalid 'expired'/,
+      "description": "Registration must fail if 'expired' is of the wrong type"
+    },
+    {
+      "group": "telemetry.test",
+      "data": {
+        "valid_scalar": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          keyed: false,
+          record_on_release: true
+        },
+        "invalid_scalar": {
+          expired: false,
+        },
+      },
+      "evaluation": /Invalid or missing 'kind'/,
+      "description": "No scalar must be registered if the batch contains an invalid one"
+    },
+    {
+      "group": "telemetry.test",
+      "data": {
+        "unsigned_int_kind": {
+          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+          keyed: false,
+          record_on_release: true
+        },
+      },
+      "evaluation": /already registered/,
+      "description": "Registration must fail if a scalar with the same name exists already"
+    },
+  ];
+
+  for (let testCase of TEST_CASES) {
+    Assert.throws(() => Telemetry.registerScalars(testCase.group, testCase.data),
+                  testCase.evaluation, testCase.description);
+  }
+});
+
+add_task(function* test_dynamicScalars_recording() {
+  Telemetry.clearScalars();
+
+  // Disable extended recording so that we will just record opt-out.
+  Telemetry.canRecordExtended = false;
+
+  // Register some test scalars.
+  Telemetry.registerScalars("telemetry.test.dynamic", {
+    "record_optout": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      record_on_release: true
+    },
+    "record_keyed": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      keyed: true,
+      record_on_release: true
+    },
+    "record_optin": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_BOOLEAN,
+      record_on_release: false
+    },
+    "record_expired": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_STRING,
+      expired: true,
+      record_on_release: true
+    },
+  });
+
+  // Set the dynamic scalars to some test values.
+  Telemetry.scalarSet("telemetry.test.dynamic.record_optout", 1);
+  Telemetry.keyedScalarSet("telemetry.test.dynamic.record_keyed", "someKey", 5);
+  Telemetry.scalarSet("telemetry.test.dynamic.record_optin", false);
+  Telemetry.scalarSet("telemetry.test.dynamic.record_expired", "test");
+
+  // Get a snapshot of the scalars and check that the dynamic ones were correctly set.
+  let scalars =
+    getProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, "dynamic", false, false);
+  let keyedScalars =
+    getProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, "dynamic", true, true);
+
+  Assert.ok(!("telemetry.test.dynamic.record_optin" in scalars),
+            "Dynamic opt-in scalars must not be recorded.");
+  Assert.ok("telemetry.test.dynamic.record_keyed" in keyedScalars,
+            "Dynamic opt-out keyed scalars must be recorded.");
+  Assert.ok(!("telemetry.test.dynamic.record_expired" in scalars),
+            "Dynamic expired scalars must not be recorded.");
+  Assert.ok("telemetry.test.dynamic.record_optout" in scalars,
+            "Dynamic opt-out scalars must be recorded.");
+  Assert.equal(scalars["telemetry.test.dynamic.record_optout"], 1,
+               "The recorded scalar must contain the right value.");
+  Assert.equal(keyedScalars["telemetry.test.dynamic.record_keyed"].someKey, 5,
+               "The recorded keyed scalar must contain the right value.");
+
+  // Enable extended recording.
+  Telemetry.canRecordExtended = true;
+
+  // Set the dynamic scalars to some test values.
+  Telemetry.scalarSet("telemetry.test.dynamic.record_optin", true);
+  Telemetry.scalarSet("telemetry.test.dynamic.record_expired", "test");
+
+  // Get a snapshot of the scalars and check that the dynamic ones were correctly set.
+  scalars =
+    getProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, "dynamic", false, true);
+
+  Assert.ok(!("telemetry.test.dynamic.record_expired" in scalars),
+            "Dynamic expired scalars must not be recorded.");
+  Assert.ok("telemetry.test.dynamic.record_optin" in scalars,
+            "Dynamic opt-in scalars must be recorded.");
+  Assert.equal(scalars["telemetry.test.dynamic.record_optin"], true,
+               "The recorded scalar must contain the right value.");
 });

@@ -36,7 +36,7 @@
 }
 
 :root[customizing] #navigator-toolbox::after {
-  display: none;
+  border-bottom-style: none;
 }
 
 /* Bookmark toolbar */

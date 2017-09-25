@@ -68,6 +68,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
       easing: this._form.easing,
       fill: this._form.fill,
       direction: this._form.direction,
+      animationTimingFunction: this._form.animationTimingFunction,
       isRunningOnCompositor: this._form.isRunningOnCompositor,
       propertyState: this._form.propertyState,
       documentCurrentTime: this._form.documentCurrentTime
