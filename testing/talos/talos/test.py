@@ -839,6 +839,7 @@ class perf_reftest(PageloaderTest):
     tpmanifest = '${talos}/tests/perf-reftest/perf_reftest.manifest'
     tpcycles = 1
     tppagecycles = 10
+    tptimeout = 30000
     gecko_profile_interval = 1
     gecko_profile_entries = 2000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
