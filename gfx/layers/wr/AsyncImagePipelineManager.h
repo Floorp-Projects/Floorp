@@ -42,7 +42,6 @@ protected:
 
 public:
   void Destroy();
-  bool HasKeysToDelete();
 
   void AddPipeline(const wr::PipelineId& aPipelineId);
   void RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
@@ -92,7 +91,6 @@ public:
   }
 
 private:
-  void DeleteOldAsyncImages();
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
   wr::IdNamespace GetNamespace() { return mIdNamespace; }
@@ -138,8 +136,7 @@ private:
   Maybe<TextureHost::ResourceUpdateOp>
   UpdateImageKeys(wr::ResourceUpdateQueue& aResourceUpdates,
                   AsyncImagePipeline* aPipeline,
-                  nsTArray<wr::ImageKey>& aKeys,
-                  nsTArray<wr::ImageKey>& aKeysToDelete);
+                  nsTArray<wr::ImageKey>& aKeys);
   Maybe<TextureHost::ResourceUpdateOp>
   UpdateWithoutExternalImage(wr::ResourceUpdateQueue& aResources,
                              TextureHost* aTexture,
@@ -153,7 +150,6 @@ private:
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
   nsClassHashtable<nsUint64HashKey, AsyncImagePipeline> mAsyncImagePipelines;
   uint32_t mAsyncImageEpoch;
-  nsTArray<wr::ImageKey> mKeysToDelete;
   bool mDestroyed;
 
   // Render time for the current composition.
