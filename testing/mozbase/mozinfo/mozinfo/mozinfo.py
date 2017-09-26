@@ -8,7 +8,7 @@
 # linux) to the information; I certainly wouldn't want anyone parsing this
 # information and having behaviour depend on it
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import platform
@@ -292,15 +292,15 @@ def main(args=None):
     flag = False
     for key, value in options.__dict__.items():
         if value is True:
-            print '%s choices: %s' % (key, ' '.join([str(choice)
-                                                     for choice in choices[key]]))
+            print('%s choices: %s' % (key, ' '.join([str(choice)
+                                                     for choice in choices[key]])))
             flag = True
     if flag:
         return
 
     # otherwise, print out all info
     for key, value in info.items():
-        print '%s: %s' % (key, value)
+        print('%s: %s' % (key, value))
 
 
 if __name__ == '__main__':

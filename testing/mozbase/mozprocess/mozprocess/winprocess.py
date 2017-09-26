@@ -34,7 +34,7 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 
 import sys
 import subprocess
@@ -453,33 +453,33 @@ def CanCreateJobObject():
 
 
 def parent():
-    print 'Starting parent'
+    print('Starting parent')
     currentProc = GetCurrentProcess()
     if IsProcessInJob(currentProc):
-        print >> sys.stderr, "You should not be in a job object to test"
+        print("You should not be in a job object to test", file=sys.stderr)
         sys.exit(1)
     assert CanCreateJobObject()
-    print 'File: %s' % __file__
+    print('File: %s' % __file__)
     command = [sys.executable, __file__, '-child']
-    print 'Running command: %s' % command
+    print('Running command: %s' % command)
     process = subprocess.Popen(command)
     process.kill()
     code = process.returncode
-    print 'Child code: %s' % code
+    print('Child code: %s' % code)
     assert code == 127
 
 
 def child():
-    print 'Starting child'
+    print('Starting child')
     currentProc = GetCurrentProcess()
     injob = IsProcessInJob(currentProc)
-    print "Is in a job?: %s" % injob
+    print("Is in a job?: %s" % injob)
     can_create = CanCreateJobObject()
-    print 'Can create job?: %s' % can_create
+    print('Can create job?: %s' % can_create)
     process = subprocess.Popen('c:\\windows\\notepad.exe')
     assert process._job
     jobinfo = QueryInformationJobObject(process._job, 'JobObjectExtendedLimitInformation')
-    print 'Job info: %s' % jobinfo
+    print('Job info: %s' % jobinfo)
     limitflags = jobinfo['BasicLimitInformation']['LimitFlags']
-    print 'LimitFlags: %s' % limitflags
+    print('LimitFlags: %s' % limitflags)
     process.kill()

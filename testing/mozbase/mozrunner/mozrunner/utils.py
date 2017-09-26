@@ -6,6 +6,8 @@
 
 """Utility functions for mozrunner"""
 
+from __future__ import absolute_import, print_function
+
 import mozinfo
 import os
 import sys
@@ -64,7 +66,7 @@ def findInPath(fileName, path=os.environ['PATH']):
 
 if __name__ == '__main__':
     for i in sys.argv[1:]:
-        print findInPath(i)
+        print(findInPath(i))
 
 
 def _find_marionette_in_args(*args, **kwargs):

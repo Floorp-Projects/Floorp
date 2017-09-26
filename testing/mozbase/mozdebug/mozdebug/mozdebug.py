@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 import mozinfo
 from collections import namedtuple
@@ -150,7 +152,7 @@ def get_debugger_info(debugger, debuggerArgs=None, debuggerInteractive=False):
                 debuggerPath = debugger
 
     if not debuggerPath:
-        print 'Error: Could not find debugger %s.' % debugger
+        print('Error: Could not find debugger %s.' % debugger)
         return None
 
     debuggerName = os.path.basename(debuggerPath).lower()
