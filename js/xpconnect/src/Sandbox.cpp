@@ -440,14 +440,14 @@ sandbox_moved(JSObject* obj, JSObject* old)
 
 static bool
 writeToProto_setProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                         JS::MutableHandleValue vp, JS::ObjectOpResult& result)
+                         JS::HandleValue v, JS::ObjectOpResult& result)
 {
     RootedObject proto(cx);
     if (!JS_GetPrototype(cx, obj, &proto))
         return false;
 
     RootedValue receiver(cx, ObjectValue(*proto));
-    return JS_ForwardSetPropertyTo(cx, proto, id, vp, receiver, result);
+    return JS_ForwardSetPropertyTo(cx, proto, id, v, receiver, result);
 }
 
 static bool
