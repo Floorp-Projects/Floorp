@@ -17,6 +17,7 @@ import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.UrlUtils
+import org.mozilla.focus.utils.beautifyUrl
 import java.lang.ref.WeakReference
 
 class SessionViewHolder internal constructor(private val fragment: SessionsSheetFragment, itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
@@ -62,7 +63,7 @@ class SessionViewHolder internal constructor(private val fragment: SessionsSheet
         val shortUrl = UrlUtils.stripCommonSubdomains(
                 UrlUtils.stripScheme(session.url.value))
 
-        textView.text = shortUrl
+        textView.text = shortUrl.beautifyUrl()
     }
 
     override fun onClick(view: View) {
