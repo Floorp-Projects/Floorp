@@ -666,29 +666,23 @@ js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
 }
 
 /*
- * Check and adjust the new attributes for the shape to make sure that our
- * slot access optimizations are sound. It is responsibility of the callers to
- * enforce all restrictions from ECMA-262 v5 8.12.9 [[DefineOwnProperty]].
+ * Assert some invariants that should hold when changing properties. It's the
+ * responsibility of the callers to ensure these hold.
  */
-static inline bool
-CheckCanChangeAttrs(JSContext* cx, JSObject* obj, Shape* shape, unsigned* attrsp)
+static void
+AssertCanChangeAttrs(Shape* shape, unsigned attrs)
 {
+#ifdef DEBUG
     if (shape->configurable())
-        return true;
+        return;
 
     /* A permanent property must stay permanent. */
-    *attrsp |= JSPROP_PERMANENT;
+    MOZ_ASSERT(attrs & JSPROP_PERMANENT);
 
     /* Reject attempts to remove a slot from the permanent data property. */
-    if (shape->isDataDescriptor() && shape->hasSlot() &&
-        (*attrsp & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)))
-    {
-        if (!cx->helperThread())
-            JSObject::reportNotConfigurable(cx, shape->propid());
-        return false;
-    }
-
-    return true;
+    MOZ_ASSERT_IF(shape->isDataDescriptor() && shape->hasSlot(),
+                  !(attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)));
+#endif
 }
 
 /* static */ Shape*
@@ -742,8 +736,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     /* Property exists: search must have returned a valid entry. */
     MOZ_ASSERT_IF(entry, !entry->isRemoved());
 
-    if (!CheckCanChangeAttrs(cx, obj, shape, &attrs))
-        return nullptr;
+    AssertCanChangeAttrs(shape, attrs);
 
     /*
      * If the caller wants to allocate a slot, but doesn't care which slot,
@@ -889,8 +882,7 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
 
     MarkTypePropertyNonData(cx, obj, shape->propid());
 
-    if (!CheckCanChangeAttrs(cx, obj, shape, &attrs))
-        return nullptr;
+    AssertCanChangeAttrs(shape, attrs);
 
     if (shape->attrs == attrs && shape->getter() == getter && shape->setter() == setter)
         return shape;
