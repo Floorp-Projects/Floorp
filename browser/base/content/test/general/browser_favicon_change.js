@@ -17,7 +17,8 @@ add_task(async function() {
         continue;
       }
       let imageVal = extraTab.getAttribute("image").replace(/#.*$/, "");
-      if (!imageVal) {
+      // Ignore chrome favicons set on the tab before the actual page load.
+      if (!imageVal || !imageVal.startsWith("http://example.org/")) {
         // The value gets removed because it doesn't load.
         continue;
       }

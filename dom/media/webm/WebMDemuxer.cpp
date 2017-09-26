@@ -647,14 +647,14 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   int packetEncryption = nestegg_packet_encryption(holder->Packet());
 
   for (uint32_t i = 0; i < count; ++i) {
-    unsigned char* data;
+    unsigned char* data = nullptr;
     size_t length;
     r = nestegg_packet_data(holder->Packet(), i, &data, &length);
     if (r == -1) {
       WEBM_DEBUG("nestegg_packet_data failed r=%d", r);
       return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
     }
-    unsigned char* alphaData;
+    unsigned char* alphaData = nullptr;
     size_t alphaLength = 0;
     // Check packets for alpha information if file has declared alpha frames
     // may be present.
@@ -679,16 +679,29 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
                      == NESTEGG_PACKET_HAS_KEYFRAME_TRUE;
       } else {
         auto sample = MakeSpan(data, length);
+        auto alphaSample = MakeSpan(alphaData, alphaLength);
+
         switch (mVideoCodec) {
         case NESTEGG_CODEC_VP8:
           isKeyframe = VPXDecoder::IsKeyframe(sample, VPXDecoder::Codec::VP8);
+          if (isKeyframe && alphaLength) {
+            isKeyframe =
+              VPXDecoder::IsKeyframe(alphaSample, VPXDecoder::Codec::VP8);
+          }
           break;
         case NESTEGG_CODEC_VP9:
           isKeyframe = VPXDecoder::IsKeyframe(sample, VPXDecoder::Codec::VP9);
+          if (isKeyframe && alphaLength) {
+            isKeyframe =
+              VPXDecoder::IsKeyframe(alphaSample, VPXDecoder::Codec::VP9);
+          }
           break;
 #ifdef MOZ_AV1
         case NESTEGG_CODEC_AV1:
           isKeyframe = AOMDecoder::IsKeyframe(sample);
+          if (isKeyframe && alphaLength) {
+            isKeyframe = AOMDecoder::IsKeyframe(alphaSample);
+          }
           break;
 #endif
         default:
@@ -1084,23 +1097,48 @@ WebMTrackDemuxer::Seek(const TimeUnit& aTime)
   // actual time seeked to. Typically the random access point time
 
   auto seekTime = aTime;
-  mSamples.Reset();
-  mParent->SeekInternal(mType, aTime);
-  nsresult rv = mParent->GetNextPacket(mType, &mSamples);
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-      // Ignore the error for now, the next GetSample will be rejected with EOS.
-      return SeekPromise::CreateAndResolve(TimeUnit::Zero(), __func__);
-    }
-    return SeekPromise::CreateAndReject(rv, __func__);
-  }
+  bool keyframe = false;
+
   mNeedKeyframe = true;
 
-  // Check what time we actually seeked to.
-  if (mSamples.GetSize() > 0) {
-    const RefPtr<MediaRawData>& sample = mSamples.First();
-    seekTime = sample->mTime;
-  }
+  do {
+    mSamples.Reset();
+    mParent->SeekInternal(mType, seekTime);
+    nsresult rv = mParent->GetNextPacket(mType, &mSamples);
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+        // Ignore the error for now, the next GetSample will be rejected with EOS.
+        return SeekPromise::CreateAndResolve(TimeUnit::Zero(), __func__);
+      }
+      return SeekPromise::CreateAndReject(rv, __func__);
+    }
+
+    // Check what time we actually seeked to.
+    if (mSamples.GetSize() == 0) {
+      // We can't determine if the seek succeeded at this stage, so break the
+      // loop.
+      break;
+    }
+
+    for (const auto& sample : mSamples) {
+      seekTime = sample->mTime;
+      keyframe = sample->mKeyframe;
+      if (keyframe) {
+        break;
+      }
+    }
+    if (mType == TrackInfo::kVideoTrack &&
+        !mInfo->GetAsVideoInfo()->HasAlpha()) {
+      // We only perform a search for a keyframe on videos with alpha layer to
+      // prevent potential regression for normal video (even though invalid)
+      break;
+    }
+    if (!keyframe) {
+      // We didn't find any keyframe, attempt to seek to the previous cluster.
+      seekTime = mSamples.First()->mTime - TimeUnit::FromMicroseconds(1);
+    }
+  } while (!keyframe && seekTime >= TimeUnit::Zero());
+
   SetNextKeyFrameTime();
 
   return SeekPromise::CreateAndResolve(seekTime, __func__);

@@ -969,14 +969,30 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
   // Do the first traversal.
   DocumentStyleRootIterator iter(doc->GetServoRestyleRoot());
   while (Element* root = iter.GetNextStyleRoot()) {
-    MOZ_ASSERT(MayTraverseFrom(const_cast<Element*>(root)));
+    MOZ_ASSERT(MayTraverseFrom(root));
 
-    // If there were text nodes inserted into the document (but not elements),
-    // there may be lazy frame construction to do even if no styling is required.
-    postTraversalRequired |= root->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
+    Element* parent = root->GetFlattenedTreeParentElementForStyle();
+    MOZ_ASSERT_IF(parent,
+                  !parent->HasAnyOfFlags(Element::kAllServoDescendantBits));
 
-    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, aFlags);
-    postTraversalRequired |= required;
+    postTraversalRequired |=
+      Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, aFlags);
+    postTraversalRequired |=
+      root->HasAnyOfFlags(Element::kAllServoDescendantBits | NODE_NEEDS_FRAME);
+
+    if (parent) {
+      MOZ_ASSERT(root == doc->GetServoRestyleRoot());
+      if (parent->HasDirtyDescendantsForServo()) {
+        // If any style invalidation was triggered in our siblings, then we may
+        // need to post-traverse them, even if the root wasn't restyled after
+        // all.
+        doc->SetServoRestyleRoot(
+            parent,
+            doc->GetServoRestyleRootDirtyBits() |
+            ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+        postTraversalRequired = true;
+      }
+    }
   }
 
   // If there are still animation restyles needed, trigger a second traversal to
@@ -995,8 +1011,10 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
     nsINode* styleRoot = doc->GetServoRestyleRoot();
     Element* root = styleRoot->IsElement() ? styleRoot->AsElement() : rootElement;
 
-    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, aFlags);
-    postTraversalRequired |= required;
+    postTraversalRequired |=
+      Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, aFlags);
+    postTraversalRequired |=
+      root->HasAnyOfFlags(Element::kAllServoDescendantBits | NODE_NEEDS_FRAME);
   }
 
   return postTraversalRequired;
@@ -1430,8 +1448,8 @@ ServoStyleSet::MaybeGCRuleTree()
   Servo_MaybeGCRuleTree(mRawSet.get());
 }
 
-bool
-ServoStyleSet::MayTraverseFrom(Element* aElement)
+/* static */ bool
+ServoStyleSet::MayTraverseFrom(const Element* aElement)
 {
   MOZ_ASSERT(aElement->IsInComposedDoc());
   Element* parent = aElement->GetFlattenedTreeParentElementForStyle();

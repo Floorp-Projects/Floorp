@@ -20,6 +20,8 @@ var {
   defineLazyGetter,
 } = ExtensionUtils;
 
+const READER_MODE_PREFIX = "about:reader";
+
 let tabTracker;
 let windowTracker;
 
@@ -228,6 +230,8 @@ class TabTracker extends TabTrackerBase {
     windowTracker.addOpenListener(this._handleWindowOpen);
     windowTracker.addCloseListener(this._handleWindowClose);
 
+    Services.mm.addMessageListener("Reader:UpdateReaderButton", this);
+
     /* eslint-disable mozilla/balanced-listeners */
     this.on("tab-detached", this._handleTabDestroyed);
     this.on("tab-removed", this._handleTabDestroyed);
@@ -358,6 +362,21 @@ class TabTracker extends TabTrackerBase {
         Promise.resolve().then(() => {
           this.emitActivated(nativeTab);
         });
+        break;
+    }
+  }
+
+  /**
+   * @param {Object} message
+   *        The message to handle.
+   * @private
+   */
+  receiveMessage(message) {
+    switch (message.name) {
+      case "Reader:UpdateReaderButton":
+        if (message.data && message.data.isArticle !== undefined) {
+          this.emit("tab-isarticle", message);
+        }
         break;
     }
   }
@@ -633,6 +652,14 @@ class Tab extends TabBase {
 
   get windowId() {
     return windowTracker.getId(this.window);
+  }
+
+  get isArticle() {
+    return this.nativeTab.linkedBrowser.isArticle;
+  }
+
+  get isInReaderMode() {
+    return this.url && this.url.startsWith(READER_MODE_PREFIX);
   }
 
   /**

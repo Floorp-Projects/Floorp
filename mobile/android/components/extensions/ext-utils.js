@@ -557,6 +557,16 @@ class Tab extends TabBase {
   get windowId() {
     return windowTracker.getId(this.window);
   }
+
+  // TODO: Just return false for these until properly implemented on Android.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1402924
+  get isArticle() {
+    return false;
+  }
+
+  get isInReaderMode() {
+    return false;
+  }
 }
 
 // Manages tab-specific context data and dispatches tab select and close events.

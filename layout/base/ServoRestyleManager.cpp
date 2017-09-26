@@ -1046,19 +1046,7 @@ ServoRestyleManager::SnapshotFor(Element* aElement)
   aElement->SetFlags(ELEMENT_HAS_SNAPSHOT);
 
   // Now that we have a snapshot, make sure a restyle is triggered.
-  //
-  // If we have any later siblings, we need to flag the restyle on the parent,
-  // so that a traversal from the restyle root is guaranteed to reach those
-  // siblings (since the snapshot may generate hints for later siblings).
-  if (aElement->GetNextElementSibling()) {
-    Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
-    MOZ_ASSERT(parent);
-    parent->NoteDirtyForServo();
-    parent->SetHasDirtyDescendantsForServo();
-  } else {
-    aElement->NoteDirtyForServo();
-  }
-
+  aElement->NoteDirtyForServo();
   return *snapshot;
 }
 
