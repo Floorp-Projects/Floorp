@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIChannel.h"
@@ -91,13 +92,12 @@ namespace detail {
   };
 }
 
-class ChannelWrapper final : public nsISupports
-                           , public nsWrapperCache
+class ChannelWrapper final : public DOMEventTargetHelper
                            , private detail::ChannelHolder
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ChannelWrapper)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ChannelWrapper, DOMEventTargetHelper)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CHANNELWRAPPER_IID)
 
@@ -135,6 +135,10 @@ public:
   void GetStatusLine(nsCString& aRetVal) const;
 
   void GetErrorString(nsString& aRetVal) const;
+
+  void ErrorCheck();
+
+  IMPL_EVENT_HANDLER(error);
 
 
   already_AddRefed<nsIURI> GetFinalURI(ErrorResult& aRv) const;
@@ -213,6 +217,8 @@ private:
     return true;
   }
 
+  void FireEvent(const nsAString& aType);
+
   uint64_t WindowId(nsILoadInfo* aLoadInfo) const;
 
   nsresult GetFrameAncestors(nsILoadInfo* aLoadInfo, nsTArray<dom::MozFrameAncestorInfo>& aFrameAncestors) const;
@@ -223,9 +229,11 @@ private:
     return ++sNextId;
   }
 
+
   const uint64_t mId = GetNextId();
   nsCOMPtr<nsISupports> mParent;
 
+  bool mFiredErrorEvent = false;
   bool mSuspended = false;
 };
 
