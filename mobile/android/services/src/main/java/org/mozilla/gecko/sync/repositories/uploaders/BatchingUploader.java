@@ -128,7 +128,7 @@ public class BatchingUploader {
         final String guid = record.guid;
 
         // If store failed entirely, just bail out. We've already told our delegate that we failed.
-        if (payloadDispatcher.storeFailed) {
+        if (payloadDispatcher.storeFailed.get()) {
             return;
         }
 

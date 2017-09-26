@@ -5,29 +5,7 @@ set -x
 
 make_flags='-j12'
 
-if [ -z "$root_dir" -o ! -d "$root_dir" ]; then
-  root_dir=$(mktemp -d)
-fi
-
-if test -z $TMPDIR; then
-  TMPDIR=/tmp/
-fi
-
-mkdir $root_dir/gpg
-GPG="gpg --homedir $root_dir/gpg"
-
-> $root_dir/downloads
-
-download() {
-  wget -c -P $TMPDIR $1/$2
-  (cd $TMPDIR; sha256sum $2) >> $root_dir/downloads
-}
-
-download_and_check() {
-  download $1 ${2%.*}
-  wget -c -P $TMPDIR $1/$2
-  $GPG --verify $TMPDIR/$2 $TMPDIR/${2%.*}
-}
+. $data_dir/download-tools.sh
 
 prepare() {
   pushd $root_dir
@@ -95,11 +73,17 @@ apply_patch() {
 }
 
 build_binutils() {
+  # if binutils_configure_flags is not set at all, give it the default value
+  if [ -z "${binutils_configure_flags+xxx}" ];
+  then
+    # gold is disabled because we don't use it on automation, and also we ran into
+    # some issues with it using this script in build-clang.py.
+    binutils_configure_flags="--disable-gold --enable-plugins --disable-nls"
+  fi
+
   mkdir $root_dir/binutils-objdir
   pushd $root_dir/binutils-objdir
-  # gold is disabled because we don't use it on automation, and also we ran into
-  # some issues with it using this script in build-clang.py.
-  ../binutils-$binutils_version/configure --prefix /tools/gcc/ --disable-gold --enable-plugins --disable-nls
+  ../binutils-$binutils_version/configure --prefix /tools/gcc/ $binutils_configure_flags
   make $make_flags
   make install $make_flags DESTDIR=$root_dir
   popd
@@ -114,5 +98,61 @@ build_gcc() {
 
   cd $root_dir/tools
   tar caf $root_dir/gcc.tar.xz gcc/
+  popd
+}
+
+build_gcc_and_mingw() {
+  export install_dir=$root_dir/tools/gcc/
+  mkdir -p $install_dir
+  export PATH=$PATH:$install_dir/bin/
+
+  cd $root_dir
+
+  git clone -n git://git.code.sf.net/p/mingw-w64/mingw-w64
+  pushd mingw-w64
+  git checkout $mingw_version # Asserts the integrity of the checkout (Right?)
+  popd
+
+  mkdir gcc-objdir
+  pushd gcc-objdir
+  ../gcc-$gcc_version/configure --prefix=$install_dir --target=i686-w64-mingw32 --with-gnu-ld --with-gnu-as --disable-multilib --enable-threads=posix
+  make $make_flags all-gcc
+  make $make_flags install-gcc
+  popd
+
+  mkdir mingw-w64-headers32
+  pushd mingw-w64-headers32
+  ../mingw-w64/mingw-w64-headers/configure --host=i686-w64-mingw32 --prefix=$install_dir/i686-w64-mingw32/ --enable-sdk=all --enable-secure-api --enable-idl
+  make $make_flags install
+  popd
+
+  mkdir mingw-w64-crt32
+  pushd mingw-w64-crt32
+  ../mingw-w64/mingw-w64-crt/configure --host=i686-w64-mingw32 --prefix=$install_dir/i686-w64-mingw32/
+  make
+  make install
+  popd
+
+  mkdir mingw-w64-pthread
+  pushd mingw-w64-pthread
+  ../mingw-w64/mingw-w64-libraries/winpthreads/configure --host=i686-w64-mingw32 --prefix=$install_dir/i686-w64-mingw32/
+  make
+  make install
+  popd
+
+  pushd gcc-objdir
+  make
+  make install
+  popd
+
+  mkdir widl32
+  pushd widl32
+  ../mingw-w64/mingw-w64-tools/widl/configure --prefix=$install_dir --target=i686-w64-mingw32
+  make
+  make install
+  popd
+
+  pushd $root_dir/tools
+  tar caf $root_dir/mingw32.tar.xz gcc/
   popd
 }
