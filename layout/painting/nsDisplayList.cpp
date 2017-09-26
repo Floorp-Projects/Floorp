@@ -124,12 +124,6 @@ SpammyLayoutWarningsEnabled()
 }
 #endif
 
-void*
-AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder)
-{
-  return aBuilder->Allocate(aSize, DisplayItemType::TYPE_ZERO);
-}
-
 /* static */ bool
 ActiveScrolledRoot::IsAncestor(const ActiveScrolledRoot* aAncestor,
                                const ActiveScrolledRoot* aDescendant)
@@ -924,8 +918,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentContainerASR(nullptr),
       mCurrentFrame(aReferenceFrame),
       mCurrentReferenceFrame(aReferenceFrame),
-      mCurrentAGR(&mRootAGR),
-      mRootAGR(aReferenceFrame, nullptr),
+      mRootAGR(AnimatedGeometryRoot::CreateAGRForFrame(aReferenceFrame, nullptr, true, false)),
+      mCurrentAGR(mRootAGR),
       mUsedAGRBudget(0),
       mDirtyRect(-1,-1,-1,-1),
       mGlassDisplayItem(nullptr),
@@ -941,6 +935,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsBuildingScrollbar(false),
       mCurrentScrollbarWillHaveLayer(false),
       mBuildCaret(aBuildCaret),
+      mRetainingDisplayList(false),
       mIgnoreSuppression(false),
       mIsAtRootOfPseudoStackingContext(false),
       mIncludeAllOutOfFlows(false),
@@ -983,8 +978,8 @@ void
 nsDisplayListBuilder::BeginFrame()
 {
   nsCSSRendering::BeginFrameTreesLocked();
-  mCurrentAGR = &mRootAGR;
-  mFrameToAnimatedGeometryRootMap.Put(mReferenceFrame, &mRootAGR);
+  mCurrentAGR = mRootAGR;
+  mFrameToAnimatedGeometryRootMap.Put(mReferenceFrame, mRootAGR);
 
   mIsPaintingToWindow = false;
   mIgnoreSuppression = false;
@@ -996,6 +991,7 @@ void
 nsDisplayListBuilder::EndFrame()
 {
   mFrameToAnimatedGeometryRootMap.Clear();
+  mActiveScrolledRoots.Clear();
 
   nsCSSRendering::EndFrameTreesLocked();
 }
@@ -1020,22 +1016,25 @@ bool nsDisplayListBuilder::NeedToForceTransparentSurfaceForItem(nsDisplayItem* a
 
 AnimatedGeometryRoot*
 nsDisplayListBuilder::WrapAGRForFrame(nsIFrame* aAnimatedGeometryRoot,
+                                      bool aIsAsync,
                                       AnimatedGeometryRoot* aParent /* = nullptr */)
 {
-  MOZ_ASSERT(IsAnimatedGeometryRoot(aAnimatedGeometryRoot) == AGR_YES);
+  DebugOnly<bool> dummy;
+  MOZ_ASSERT(IsAnimatedGeometryRoot(aAnimatedGeometryRoot, dummy) == AGR_YES);
 
-  AnimatedGeometryRoot* result = nullptr;
+  RefPtr<AnimatedGeometryRoot> result;
   if (!mFrameToAnimatedGeometryRootMap.Get(aAnimatedGeometryRoot, &result)) {
     MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(RootReferenceFrame(), aAnimatedGeometryRoot));
-    AnimatedGeometryRoot* parent = aParent;
+    RefPtr<AnimatedGeometryRoot> parent = aParent;
     if (!parent) {
       nsIFrame* parentFrame = nsLayoutUtils::GetCrossDocParentFrame(aAnimatedGeometryRoot);
       if (parentFrame) {
-        nsIFrame* parentAGRFrame = FindAnimatedGeometryRootFrameFor(parentFrame);
-        parent = WrapAGRForFrame(parentAGRFrame);
+        bool isAsync;
+        nsIFrame* parentAGRFrame = FindAnimatedGeometryRootFrameFor(parentFrame, isAsync);
+        parent = WrapAGRForFrame(parentAGRFrame, isAsync);
       }
     }
-    result = new (this) AnimatedGeometryRoot(aAnimatedGeometryRoot, parent);
+    result = AnimatedGeometryRoot::CreateAGRForFrame(aAnimatedGeometryRoot, parent, aIsAsync, IsRetainingDisplayList());
     mFrameToAnimatedGeometryRootMap.Put(aAnimatedGeometryRoot, result);
   }
   MOZ_ASSERT(!aParent || result->mParentAGR == aParent);
@@ -1056,18 +1055,19 @@ AnimatedGeometryRoot*
 nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsIFrame* aFrame)
 {
   if (!IsPaintingToWindow()) {
-    return &mRootAGR;
+    return mRootAGR;
   }
   if (aFrame == mCurrentFrame) {
     return mCurrentAGR;
   }
-  AnimatedGeometryRoot* result = nullptr;
+  RefPtr<AnimatedGeometryRoot> result;
   if (mFrameToAnimatedGeometryRootMap.Get(aFrame, &result)) {
     return result;
   }
 
-  nsIFrame* agrFrame = FindAnimatedGeometryRootFrameFor(aFrame);
-  result = WrapAGRForFrame(agrFrame);
+  bool isAsync;
+  nsIFrame* agrFrame = FindAnimatedGeometryRootFrameFor(aFrame, isAsync);
+  result = WrapAGRForFrame(agrFrame, isAsync);
   mFrameToAnimatedGeometryRootMap.Put(aFrame, result);
   return result;
 }
@@ -1162,9 +1162,6 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
                "All presshells should have been exited");
   NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
 
-  for (ActiveScrolledRoot* asr : mActiveScrolledRoots) {
-    asr->ActiveScrolledRoot::~ActiveScrolledRoot();
-  }
   for (nsDisplayItem* i : mTemporaryItems) {
     i->Destroy(this);
   }
@@ -1316,6 +1313,8 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame, nsDisplayList* a
       docShell->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
     }
     mIsInChromePresContext = pc->IsChrome();
+  } else {
+    mCurrentAGR = mRootAGR;
   }
 }
 
@@ -1410,9 +1409,7 @@ ActiveScrolledRoot*
 nsDisplayListBuilder::AllocateActiveScrolledRoot(const ActiveScrolledRoot* aParent,
                                                  nsIScrollableFrame* aScrollableFrame)
 {
-  void* p = Allocate(sizeof(ActiveScrolledRoot), DisplayItemType::TYPE_ZERO);
-  ActiveScrolledRoot* asr =
-    new (KnownNotNull, p) ActiveScrolledRoot(aParent, aScrollableFrame);
+  RefPtr<ActiveScrolledRoot> asr = ActiveScrolledRoot::CreateASRForFrame(aParent, aScrollableFrame, IsRetainingDisplayList());
   mActiveScrolledRoots.AppendElement(asr);
   return asr;
 }
@@ -1539,9 +1536,12 @@ IsStickyFrameActive(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* 
 
 nsDisplayListBuilder::AGRState
 nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
+                                             bool& aIsAsync,
                                              nsIFrame** aParent)
 {
+  aIsAsync = false;
   if (aFrame == mReferenceFrame) {
+    aIsAsync = true;
     return AGR_YES;
   }
   if (!IsPaintingToWindow()) {
@@ -1549,6 +1549,41 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
       *aParent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
     }
     return AGR_NO;
+  }
+
+  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+  if (!parent) {
+    aIsAsync = true;
+    return AGR_YES;
+  }
+
+  AGRState result = AGR_NO; // Possible to transition from not being an AGR
+                            // to being an AGR without a style change.
+
+  LayoutFrameType parentType = parent->Type();
+
+  if (aFrame->IsTransformed()) {
+    aIsAsync = EffectCompositor::HasAnimationsForCompositor(aFrame, eCSSProperty_transform);
+    result = AGR_YES;
+  }
+
+  if (parentType == LayoutFrameType::Scroll ||
+      parentType == LayoutFrameType::ListControl) {
+    nsIScrollableFrame* sf = do_QueryFrame(parent);
+    if (sf->GetScrolledFrame() == aFrame) {
+      if (sf->IsScrollingActive(this)) {
+        aIsAsync = aIsAsync || sf->MayBeAsynchronouslyScrolled();
+        result = AGR_YES;
+      } else {
+        result = AGR_MAYBE;
+      }
+    }
+  }
+
+  // Finished checking all conditions that might set aIsAsync, so we can
+  // early return now.
+  if (result == AGR_YES) {
+    return result;
   }
 
   if (nsLayoutUtils::IsPopup(aFrame))
@@ -1565,18 +1600,8 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
     // for background-attachment:fixed elements.
     return AGR_YES;
   }
-  if (aFrame->IsTransformed()) {
-    return AGR_YES;
-  }
 
-  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
-  if (!parent)
-    return AGR_YES;
 
-  bool maybe = false; // Possible to transition from not being an AGR
-                      // to being an AGR without a style change.
-
-  LayoutFrameType parentType = parent->Type();
   // Treat the slider thumb as being as an active scrolled root when it wants
   // its own layer so that it can move without repainting.
   if (parentType == LayoutFrameType::Slider) {
@@ -1588,26 +1613,16 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
     if (sf && sf->IsMaybeScrollingActive()) {
       return AGR_YES;
     }
-    maybe = true;
+    result = AGR_MAYBE;
   }
 
   if (aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY) {
     if (IsStickyFrameActive(this, aFrame, parent)) {
       return AGR_YES;
     }
-    maybe = true;
+    result = AGR_MAYBE;
   }
 
-  if (parentType == LayoutFrameType::Scroll ||
-      parentType == LayoutFrameType::ListControl) {
-    nsIScrollableFrame* sf = do_QueryFrame(parent);
-    if (sf->GetScrolledFrame() == aFrame) {
-      if (sf->IsScrollingActive(this)) {
-        return AGR_YES;
-      }
-      maybe = true;
-    }
-  }
 
   // Fixed-pos frames are parented by the viewport frame, which has no parent.
   if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame)) {
@@ -1623,23 +1638,23 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
     // For example, layout/reftests/svg/fragmentIdentifier-01.xhtml
     //
     // see https://www.w3.org/TR/SVG/linking.html#SVGFragmentIdentifiers
-    maybe = true;
+    result = AGR_MAYBE;
   }
 
   if (aParent) {
     *aParent = parent;
   }
-  return !maybe ? AGR_NO : AGR_MAYBE;
+  return result;
 }
 
 nsIFrame*
-nsDisplayListBuilder::FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame)
+nsDisplayListBuilder::FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame, bool& aIsAsync)
 {
   MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(RootReferenceFrame(), aFrame));
   nsIFrame* cursor = aFrame;
   while (cursor != RootReferenceFrame()) {
     nsIFrame* next;
-    if (IsAnimatedGeometryRoot(cursor, &next) == AGR_YES)
+    if (IsAnimatedGeometryRoot(cursor, aIsAsync, &next) == AGR_YES)
       return cursor;
     cursor = next;
   }
@@ -1649,20 +1664,21 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame)
 void
 nsDisplayListBuilder::RecomputeCurrentAnimatedGeometryRoot()
 {
+  bool isAsync;
   if (*mCurrentAGR != mCurrentFrame &&
-      IsAnimatedGeometryRoot(const_cast<nsIFrame*>(mCurrentFrame)) == AGR_YES) {
+      IsAnimatedGeometryRoot(const_cast<nsIFrame*>(mCurrentFrame), isAsync) == AGR_YES) {
     AnimatedGeometryRoot* oldAGR = mCurrentAGR;
-    mCurrentAGR = WrapAGRForFrame(const_cast<nsIFrame*>(mCurrentFrame), mCurrentAGR);
+    mCurrentAGR = WrapAGRForFrame(const_cast<nsIFrame*>(mCurrentFrame), isAsync, mCurrentAGR);
 
     // Iterate the AGR cache and look for any objects that reference the old AGR and check
     // to see if they need to be updated. AGRs can be in the cache multiple times, so we may
     // end up doing the work multiple times for AGRs that don't change.
     for (auto iter = mFrameToAnimatedGeometryRootMap.Iter(); !iter.Done(); iter.Next()) {
-      AnimatedGeometryRoot* cached = iter.UserData();
+      RefPtr<AnimatedGeometryRoot> cached = iter.UserData();
       if (cached->mParentAGR == oldAGR && cached != mCurrentAGR) {
         // It's possible that this cached AGR struct that has the old AGR as a parent
         // should instead have mCurrentFrame has a parent.
-        nsIFrame* parent = FindAnimatedGeometryRootFrameFor(*cached);
+        nsIFrame* parent = FindAnimatedGeometryRootFrameFor(*cached, isAsync);
         MOZ_ASSERT(parent == mCurrentFrame || parent == *oldAGR);
         if (parent == mCurrentFrame) {
           cached->mParentAGR = mCurrentAGR;

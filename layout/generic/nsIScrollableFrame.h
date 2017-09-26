@@ -315,6 +315,13 @@ public:
    * expectation that scrolling is going to happen.
    */
   virtual bool IsScrollingActive(nsDisplayListBuilder* aBuilder) = 0;
+
+  /**
+   * Returns true if this scroll frame might be scrolled
+   * asynchronously by the compositor.
+   */
+  virtual bool MayBeAsynchronouslyScrolled() = 0;
+
   /**
    * Same as the above except doesn't take into account will-change budget,
    * which means that it can be called during display list building.
