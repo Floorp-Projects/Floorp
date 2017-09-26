@@ -595,7 +595,60 @@ struct extent_node_t {
 	/* What type of chunk is there; used by chunk recycling code. */
 	ChunkType chunk_type;
 };
-typedef RedBlackTree<extent_node_t> extent_tree_t;
+
+template<typename T>
+int
+CompareAddr(T* aAddr1, T* aAddr2)
+{
+  uintptr_t addr1 = reinterpret_cast<uintptr_t>(aAddr1);
+  uintptr_t addr2 = reinterpret_cast<uintptr_t>(aAddr2);
+
+  return (addr1 > addr2) - (addr1 < addr2);
+}
+
+struct ExtentTreeSzTrait
+{
+  static RedBlackTreeNode<extent_node_t>& GetTreeNode(extent_node_t* aThis)
+  {
+    return aThis->link_szad;
+  }
+
+  static inline int Compare(extent_node_t* aNode, extent_node_t* aOther)
+  {
+    int ret = (aNode->size > aOther->size) - (aNode->size < aOther->size);
+    return ret ? ret : CompareAddr(aNode->addr, aOther->addr);
+  }
+};
+
+struct ExtentTreeTrait
+{
+  static RedBlackTreeNode<extent_node_t>& GetTreeNode(extent_node_t* aThis)
+  {
+    return aThis->link_ad;
+  }
+
+  static inline int Compare(extent_node_t* aNode, extent_node_t* aOther)
+  {
+    return CompareAddr(aNode->addr, aOther->addr);
+  }
+};
+
+struct ExtentTreeBoundsTrait : public ExtentTreeTrait
+{
+  static inline int Compare(extent_node_t* aKey, extent_node_t* aNode)
+  {
+    uintptr_t key_addr = reinterpret_cast<uintptr_t>(aKey->addr);
+    uintptr_t node_addr = reinterpret_cast<uintptr_t>(aNode->addr);
+    size_t node_size = aNode->size;
+
+    // Is aKey within aNode?
+    if (node_addr <= key_addr && key_addr < node_addr + node_size) {
+      return 0;
+    }
+
+    return (key_addr > node_addr) - (key_addr < node_addr);
+  }
+};
 
 /******************************************************************************/
 /*
@@ -707,8 +760,37 @@ struct arena_chunk_map_t {
 #define	CHUNK_MAP_LARGE		((size_t)0x02U)
 #define	CHUNK_MAP_ALLOCATED	((size_t)0x01U)
 };
-typedef RedBlackTree<arena_chunk_map_t> arena_avail_tree_t;
-typedef RedBlackTree<arena_chunk_map_t> arena_run_tree_t;
+struct ArenaChunkMapLink
+{
+  static RedBlackTreeNode<arena_chunk_map_t>& GetTreeNode(arena_chunk_map_t* aThis)
+  {
+    return aThis->link;
+  }
+};
+
+struct ArenaRunTreeTrait : public ArenaChunkMapLink
+{
+  static inline int Compare(arena_chunk_map_t* aNode, arena_chunk_map_t* aOther)
+  {
+    MOZ_ASSERT(aNode);
+    MOZ_ASSERT(aOther);
+    return CompareAddr(aNode, aOther);
+  }
+};
+
+struct ArenaAvailTreeTrait : public ArenaChunkMapLink
+{
+  static inline int Compare(arena_chunk_map_t* aNode, arena_chunk_map_t* aOther)
+  {
+    size_t size1 = aNode->bits & ~pagesize_mask;
+    size_t size2 = aOther->bits & ~pagesize_mask;
+    int ret = (size1 > size2) - (size1 < size2);
+    return ret ? ret : CompareAddr((aNode->bits & CHUNK_MAP_KEY) ? nullptr : aNode, aOther);
+  }
+};
+
+typedef RedBlackTree<arena_chunk_map_t, ArenaAvailTreeTrait> arena_avail_tree_t;
+typedef RedBlackTree<arena_chunk_map_t, ArenaRunTreeTrait> arena_run_tree_t;
 
 /* Arena chunk header. */
 struct arena_chunk_t {
@@ -734,7 +816,23 @@ struct arena_chunk_t {
 	/* Map of pages within chunk that keeps track of free/large/small. */
 	arena_chunk_map_t map[1]; /* Dynamically sized. */
 };
-typedef RedBlackTree<arena_chunk_t> arena_chunk_tree_t;
+
+struct ArenaDirtyChunkTrait
+{
+  static RedBlackTreeNode<arena_chunk_t>& GetTreeNode(arena_chunk_t* aThis)
+  {
+    return aThis->link_dirty;
+  }
+
+  static inline int Compare(arena_chunk_t* aNode, arena_chunk_t* aOther)
+  {
+    MOZ_ASSERT(aNode);
+    MOZ_ASSERT(aOther);
+    return CompareAddr(aNode, aOther);
+  }
+};
+
+typedef RedBlackTree<arena_chunk_t, ArenaDirtyChunkTrait> arena_chunk_tree_t;
 
 #ifdef MALLOC_DOUBLE_PURGE
 namespace mozilla {
@@ -935,7 +1033,22 @@ public:
   void HardPurge();
 };
 
-typedef RedBlackTree<arena_t> arena_tree_t;
+struct ArenaTreeTrait
+{
+  static RedBlackTreeNode<arena_t>& GetTreeNode(arena_t* aThis)
+  {
+    return aThis->mLink;
+  }
+
+  static inline int Compare(arena_t* aNode, arena_t* aOther)
+  {
+    MOZ_ASSERT(aNode);
+    MOZ_ASSERT(aOther);
+    return (aNode->mId > aOther->mId) - (aNode->mId < aOther->mId);
+  }
+};
+
+typedef RedBlackTree<arena_t, ArenaTreeTrait> arena_tree_t;
 
 /********/
 /*
@@ -953,14 +1066,14 @@ static malloc_mutex_t	chunks_mtx;
  * address space.  Depending on function, different tree orderings are needed,
  * which is why there are two trees with the same contents.
  */
-static extent_tree_t	chunks_szad_mmap;
-static extent_tree_t	chunks_ad_mmap;
+static RedBlackTree<extent_node_t, ExtentTreeSzTrait> chunks_szad_mmap;
+static RedBlackTree<extent_node_t, ExtentTreeTrait> chunks_ad_mmap;
 
 /* Protects huge allocation-related data structures. */
 static malloc_mutex_t	huge_mtx;
 
 /* Tree of chunks that are stand-alone huge allocations. */
-static extent_tree_t	huge;
+static RedBlackTree<extent_node_t, ExtentTreeTrait> huge;
 
 /* Huge allocation statistics. */
 static uint64_t		huge_nmalloc;
@@ -1483,74 +1596,6 @@ base_node_dealloc(extent_node_t *node)
  */
 /******************************************************************************/
 /*
- * Begin extent tree code.
- */
-
-static inline int
-extent_szad_comp(extent_node_t *a, extent_node_t *b)
-{
-	int ret;
-	size_t a_size = a->size;
-	size_t b_size = b->size;
-
-	ret = (a_size > b_size) - (a_size < b_size);
-	if (ret == 0) {
-		uintptr_t a_addr = (uintptr_t)a->addr;
-		uintptr_t b_addr = (uintptr_t)b->addr;
-
-		ret = (a_addr > b_addr) - (a_addr < b_addr);
-	}
-
-	return (ret);
-}
-
-/* Wrap red-black tree macros in functions. */
-rb_wrap(extent_tree_szad_, extent_tree_t, extent_node_t,
-    link_szad, extent_szad_comp)
-
-static inline int
-extent_ad_comp(extent_node_t *a, extent_node_t *b)
-{
-	uintptr_t a_addr = (uintptr_t)a->addr;
-	uintptr_t b_addr = (uintptr_t)b->addr;
-
-	return ((a_addr > b_addr) - (a_addr < b_addr));
-}
-
-/* Wrap red-black tree macros in functions. */
-rb_wrap(extent_tree_ad_, extent_tree_t, extent_node_t, link_ad,
-    extent_ad_comp)
-
-static inline int
-extent_bounds_comp(extent_node_t* aKey, extent_node_t* aNode)
-{
-  uintptr_t key_addr = (uintptr_t)aKey->addr;
-  uintptr_t node_addr = (uintptr_t)aNode->addr;
-  size_t node_size = aNode->size;
-
-  // Is aKey within aNode?
-  if (node_addr <= key_addr && key_addr < node_addr + node_size) {
-    return 0;
-  }
-
-  return ((key_addr > node_addr) - (key_addr < node_addr));
-}
-
-/*
- * This is an expansion of just the search function from the rb_wrap macro.
- */
-static extent_node_t *
-extent_tree_bounds_search(extent_tree_t *tree, extent_node_t *key) {
-    extent_node_t *ret;
-    rb_search(extent_node_t, link_ad, extent_bounds_comp, tree, key, ret);
-    return ret;
-}
-
-/*
- * End extent tree code.
- */
-/******************************************************************************/
-/*
  * Begin chunk management functions.
  */
 
@@ -1993,8 +2038,9 @@ pages_purge(void *addr, size_t length, bool force_zero)
 }
 
 static void *
-chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
-    size_t alignment, bool base, bool *zeroed)
+chunk_recycle(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
+              RedBlackTree<extent_node_t, ExtentTreeTrait>* chunks_ad,
+              size_t size, size_t alignment, bool base, bool *zeroed)
 {
 	void *ret;
 	extent_node_t *node;
@@ -2019,7 +2065,7 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 	key.addr = nullptr;
 	key.size = alloc_size;
 	malloc_mutex_lock(&chunks_mtx);
-	node = extent_tree_szad_nsearch(chunks_szad, &key);
+	node = chunks_szad->SearchOrNext(&key);
 	if (!node) {
 		malloc_mutex_unlock(&chunks_mtx);
 		return nullptr;
@@ -2034,13 +2080,13 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 		*zeroed = (chunk_type == ZEROED_CHUNK);
 	}
 	/* Remove node from the tree. */
-	extent_tree_szad_remove(chunks_szad, node);
-	extent_tree_ad_remove(chunks_ad, node);
+	chunks_szad->Remove(node);
+	chunks_ad->Remove(node);
 	if (leadsize != 0) {
 		/* Insert the leading space as a smaller chunk. */
 		node->size = leadsize;
-		extent_tree_szad_insert(chunks_szad, node);
-		extent_tree_ad_insert(chunks_ad, node);
+		chunks_szad->Insert(node);
+		chunks_ad->Insert(node);
 		node = nullptr;
 	}
 	if (trailsize != 0) {
@@ -2064,8 +2110,8 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 		node->addr = (void *)((uintptr_t)(ret) + size);
 		node->size = trailsize;
 		node->chunk_type = chunk_type;
-		extent_tree_szad_insert(chunks_szad, node);
-		extent_tree_ad_insert(chunks_ad, node);
+		chunks_szad->Insert(node);
+		chunks_ad->Insert(node);
 		node = nullptr;
 	}
 
@@ -2159,8 +2205,9 @@ chunk_ensure_zero(void* ptr, size_t size, bool zeroed)
 }
 
 static void
-chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
-    size_t size, ChunkType chunk_type)
+chunk_record(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
+             RedBlackTree<extent_node_t, ExtentTreeTrait>* chunks_ad,
+             void *chunk, size_t size, ChunkType chunk_type)
 {
 	extent_node_t *xnode, *node, *prev, *xprev, key;
 
@@ -2182,7 +2229,7 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 
 	malloc_mutex_lock(&chunks_mtx);
 	key.addr = (void *)((uintptr_t)chunk + size);
-	node = extent_tree_ad_nsearch(chunks_ad, &key);
+	node = chunks_ad->SearchOrNext(&key);
 	/* Try to coalesce forward. */
 	if (node && node->addr == key.addr) {
 		/*
@@ -2190,13 +2237,13 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		 * not change the position within chunks_ad, so only
 		 * remove/insert from/into chunks_szad.
 		 */
-		extent_tree_szad_remove(chunks_szad, node);
+		chunks_szad->Remove(node);
 		node->addr = chunk;
 		node->size += size;
 		if (node->chunk_type != chunk_type) {
 			node->chunk_type = RECYCLED_CHUNK;
 		}
-		extent_tree_szad_insert(chunks_szad, node);
+		chunks_szad->Insert(node);
 	} else {
 		/* Coalescing forward failed, so insert a new node. */
 		if (!xnode) {
@@ -2213,12 +2260,12 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		node->addr = chunk;
 		node->size = size;
 		node->chunk_type = chunk_type;
-		extent_tree_ad_insert(chunks_ad, node);
-		extent_tree_szad_insert(chunks_szad, node);
+		chunks_ad->Insert(node);
+		chunks_szad->Insert(node);
 	}
 
 	/* Try to coalesce backward. */
-	prev = extent_tree_ad_prev(chunks_ad, node);
+	prev = chunks_ad->Prev(node);
 	if (prev && (void *)((uintptr_t)prev->addr + prev->size) ==
 	    chunk) {
 		/*
@@ -2226,16 +2273,16 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		 * not change the position within chunks_ad, so only
 		 * remove/insert node from/into chunks_szad.
 		 */
-		extent_tree_szad_remove(chunks_szad, prev);
-		extent_tree_ad_remove(chunks_ad, prev);
+		chunks_szad->Remove(prev);
+		chunks_ad->Remove(prev);
 
-		extent_tree_szad_remove(chunks_szad, node);
+		chunks_szad->Remove(node);
 		node->addr = prev->addr;
 		node->size += prev->size;
 		if (node->chunk_type != prev->chunk_type) {
 			node->chunk_type = RECYCLED_CHUNK;
 		}
-		extent_tree_szad_insert(chunks_szad, node);
+		chunks_szad->Insert(node);
 
 		xprev = prev;
 	}
@@ -2354,82 +2401,6 @@ choose_arena(size_t size)
   MOZ_DIAGNOSTIC_ASSERT(ret);
   return (ret);
 }
-
-static inline int
-arena_comp(arena_t* a, arena_t* b)
-{
-  MOZ_ASSERT(a);
-  MOZ_ASSERT(b);
-
-  return (a->mId > b->mId) - (a->mId < b->mId);
-}
-
-/* Wrap red-black tree macros in functions. */
-rb_wrap(arena_tree_, arena_tree_t, arena_t, mLink, arena_comp)
-
-static inline int
-arena_chunk_comp(arena_chunk_t *a, arena_chunk_t *b)
-{
-	uintptr_t a_chunk = (uintptr_t)a;
-	uintptr_t b_chunk = (uintptr_t)b;
-
-	MOZ_ASSERT(a);
-	MOZ_ASSERT(b);
-
-	return ((a_chunk > b_chunk) - (a_chunk < b_chunk));
-}
-
-/* Wrap red-black tree macros in functions. */
-rb_wrap(arena_chunk_tree_dirty_, arena_chunk_tree_t,
-    arena_chunk_t, link_dirty, arena_chunk_comp)
-
-static inline int
-arena_run_comp(arena_chunk_map_t *a, arena_chunk_map_t *b)
-{
-	uintptr_t a_mapelm = (uintptr_t)a;
-	uintptr_t b_mapelm = (uintptr_t)b;
-
-	MOZ_ASSERT(a);
-	MOZ_ASSERT(b);
-
-	return ((a_mapelm > b_mapelm) - (a_mapelm < b_mapelm));
-}
-
-/* Wrap red-black tree macros in functions. */
-rb_wrap(arena_run_tree_, arena_run_tree_t, arena_chunk_map_t, link,
-    arena_run_comp)
-
-static inline int
-arena_avail_comp(arena_chunk_map_t *a, arena_chunk_map_t *b)
-{
-	int ret;
-	size_t a_size = a->bits & ~pagesize_mask;
-	size_t b_size = b->bits & ~pagesize_mask;
-
-	ret = (a_size > b_size) - (a_size < b_size);
-	if (ret == 0) {
-		uintptr_t a_mapelm, b_mapelm;
-
-		if ((a->bits & CHUNK_MAP_KEY) == 0)
-			a_mapelm = (uintptr_t)a;
-		else {
-			/*
-			 * Treat keys as though they are lower than anything
-			 * else.
-			 */
-			a_mapelm = 0;
-		}
-		b_mapelm = (uintptr_t)b;
-
-		ret = (a_mapelm > b_mapelm) - (a_mapelm < b_mapelm);
-	}
-
-	return (ret);
-}
-
-/* Wrap red-black tree macros in functions. */
-rb_wrap(arena_avail_tree_, arena_avail_tree_t, arena_chunk_map_t, link,
-    arena_avail_comp)
 
 static inline void *
 arena_run_reg_alloc(arena_run_t *run, arena_bin_t *bin)
@@ -2609,7 +2580,7 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
   MOZ_ASSERT(need_pages <= total_pages);
   rem_pages = total_pages - need_pages;
 
-  arena_avail_tree_remove(&mRunsAvail, &chunk->map[run_ind]);
+  mRunsAvail.Remove(&chunk->map[run_ind]);
 
   /* Keep track of trailing unused pages for later use. */
   if (rem_pages > 0) {
@@ -2619,7 +2590,7 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
     chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
         pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
         pagesize_mask);
-    arena_avail_tree_insert(&mRunsAvail, &chunk->map[run_ind+need_pages]);
+    mRunsAvail.Insert(&chunk->map[run_ind+need_pages]);
   }
 
   for (i = 0; i < need_pages; i++) {
@@ -2694,7 +2665,7 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
   }
 
   if (chunk->ndirty == 0 && old_ndirty > 0) {
-    arena_chunk_tree_dirty_remove(&mChunksDirty, chunk);
+    mChunksDirty.Remove(chunk);
   }
 }
 
@@ -2749,8 +2720,7 @@ arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed)
   mStats.committed += arena_chunk_header_npages;
 
   /* Insert the run into the tree of available runs. */
-  arena_avail_tree_insert(&mRunsAvail,
-      &aChunk->map[arena_chunk_header_npages]);
+  mRunsAvail.Insert(&aChunk->map[arena_chunk_header_npages]);
 
 #ifdef MALLOC_DOUBLE_PURGE
   new (&aChunk->chunks_madvised_elem) mozilla::DoublyLinkedListElement<arena_chunk_t>();
@@ -2762,7 +2732,7 @@ arena_t::DeallocChunk(arena_chunk_t* aChunk)
 {
   if (mSpare) {
     if (mSpare->ndirty > 0) {
-      arena_chunk_tree_dirty_remove(&aChunk->arena->mChunksDirty, mSpare);
+      aChunk->arena->mChunksDirty.Remove(mSpare);
       mNumDirty -= mSpare->ndirty;
       mStats.committed -= mSpare->ndirty;
     }
@@ -2783,7 +2753,7 @@ arena_t::DeallocChunk(arena_chunk_t* aChunk)
    * Dirty page flushing only uses the tree of dirty chunks, so leaving this
    * chunk in the chunks_* trees is sufficient for that purpose.
    */
-  arena_avail_tree_remove(&mRunsAvail, &aChunk->map[arena_chunk_header_npages]);
+  mRunsAvail.Remove(&aChunk->map[arena_chunk_header_npages]);
 
   mSpare = aChunk;
 }
@@ -2800,7 +2770,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
 
   /* Search the arena's chunks for the lowest best fit. */
   key.bits = aSize | CHUNK_MAP_KEY;
-  mapelm = arena_avail_tree_nsearch(&mRunsAvail, &key);
+  mapelm = mRunsAvail.SearchOrNext(&key);
   if (mapelm) {
     arena_chunk_t* chunk =
         (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
@@ -2818,7 +2788,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
     mSpare = nullptr;
     run = (arena_run_t*)(uintptr_t(chunk) + (arena_chunk_header_npages << pagesize_2pow));
     /* Insert the run into the tree of available runs. */
-    arena_avail_tree_insert(&mRunsAvail, &chunk->map[arena_chunk_header_npages]);
+    mRunsAvail.Insert(&chunk->map[arena_chunk_header_npages]);
     SplitRun(run, aSize, aLarge, aZero);
     return run;
   }
@@ -2852,9 +2822,9 @@ arena_t::Purge(bool aAll)
   size_t dirty_max = aAll ? 1 : mMaxDirty;
 #ifdef MOZ_DEBUG
   size_t ndirty = 0;
-  rb_foreach_begin(arena_chunk_t, link_dirty, &mChunksDirty, chunk) {
+  rb_foreach_begin(arena_chunk_t, ArenaChunkLinkDirty::GetTreeNode, &mChunksDirty, chunk) {
     ndirty += chunk->ndirty;
-  } rb_foreach_end(arena_chunk_t, link_dirty, &mChunksDirty, chunk)
+  } rb_foreach_end(arena_chunk_t, ArenaChunkLinkDirty::GetTreeNode, &mChunksDirty, chunk)
   MOZ_ASSERT(ndirty == mNumDirty);
 #endif
   MOZ_DIAGNOSTIC_ASSERT(aAll || (mNumDirty > mMaxDirty));
@@ -2869,7 +2839,7 @@ arena_t::Purge(bool aAll)
 #ifdef MALLOC_DOUBLE_PURGE
     bool madvised = false;
 #endif
-    chunk = arena_chunk_tree_dirty_last(&mChunksDirty);
+    chunk = mChunksDirty.Last();
     MOZ_DIAGNOSTIC_ASSERT(chunk);
 
     for (i = chunk_npages - 1; chunk->ndirty > 0; i--) {
@@ -2917,7 +2887,7 @@ arena_t::Purge(bool aAll)
     }
 
     if (chunk->ndirty == 0) {
-      arena_chunk_tree_dirty_remove(&mChunksDirty, chunk);
+      mChunksDirty.Remove(chunk);
     }
 #ifdef MALLOC_DOUBLE_PURGE
     if (madvised) {
@@ -2959,8 +2929,7 @@ arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
     }
 
     if (chunk->ndirty == 0) {
-      arena_chunk_tree_dirty_insert(&mChunksDirty,
-          chunk);
+      mChunksDirty.Insert(chunk);
     }
     chunk->ndirty += run_pages;
     mNumDirty += run_pages;
@@ -2987,8 +2956,7 @@ arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
      * Remove successor from tree of available runs; the coalesced run is
      * inserted later.
      */
-    arena_avail_tree_remove(&mRunsAvail,
-        &chunk->map[run_ind+run_pages]);
+    mRunsAvail.Remove(&chunk->map[run_ind+run_pages]);
 
     size += nrun_size;
     run_pages = size >> pagesize_2pow;
@@ -3012,7 +2980,7 @@ arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
      * Remove predecessor from tree of available runs; the coalesced run is
      * inserted later.
      */
-    arena_avail_tree_remove(&mRunsAvail, &chunk->map[run_ind]);
+    mRunsAvail.Remove(&chunk->map[run_ind]);
 
     size += prun_size;
     run_pages = size >> pagesize_2pow;
@@ -3026,7 +2994,7 @@ arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
   }
 
   /* Insert into tree of available runs, now that coalescing is complete. */
-  arena_avail_tree_insert(&mRunsAvail, &chunk->map[run_ind]);
+  mRunsAvail.Insert(&chunk->map[run_ind]);
 
   /* Deallocate chunk if it is now completely unused. */
   if ((chunk->map[arena_chunk_header_npages].bits & (~pagesize_mask |
@@ -3090,10 +3058,10 @@ arena_t::GetNonFullBinRun(arena_bin_t* aBin)
   unsigned i, remainder;
 
   /* Look for a usable run. */
-  mapelm = arena_run_tree_first(&aBin->runs);
+  mapelm = aBin->runs.First();
   if (mapelm) {
     /* run is guaranteed to have available space. */
-    arena_run_tree_remove(&aBin->runs, mapelm);
+    aBin->runs.Remove(mapelm);
     run = (arena_run_t*)(mapelm->bits & ~pagesize_mask);
     return run;
   }
@@ -3569,7 +3537,7 @@ isalloc_validate(const void* ptr)
     /* Chunk. */
     key.addr = (void*)chunk;
     malloc_mutex_lock(&huge_mtx);
-    node = extent_tree_ad_search(&huge, &key);
+    node = huge.Search(&key);
     if (node)
       ret = node->size;
     else
@@ -3602,7 +3570,7 @@ isalloc(const void *ptr)
 
 		/* Extract from tree of huge allocations. */
 		key.addr = const_cast<void*>(ptr);
-		node = extent_tree_ad_search(&huge, &key);
+		node = huge.Search(&key);
 		MOZ_DIAGNOSTIC_ASSERT(node);
 
 		ret = node->size;
@@ -3631,7 +3599,8 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   extent_node_t key;
   malloc_mutex_lock(&huge_mtx);
   key.addr = const_cast<void*>(aPtr);
-  node = extent_tree_bounds_search(&huge, &key);
+  node = reinterpret_cast<
+    RedBlackTree<extent_node_t, ExtentTreeBoundsTrait>*>(&huge)->Search(&key);
   if (node) {
     *aInfo = { TagLiveHuge, node->addr, node->size };
   }
@@ -3770,8 +3739,8 @@ arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapE
        * run only contains one region, then it never gets
        * inserted into the non-full runs tree.
        */
-      MOZ_DIAGNOSTIC_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) == run_mapelm);
-      arena_run_tree_remove(&bin->runs, run_mapelm);
+      MOZ_DIAGNOSTIC_ASSERT(bin->runs.Search(run_mapelm) == run_mapelm);
+      bin->runs.Remove(run_mapelm);
     }
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
     run->magic = 0;
@@ -3793,16 +3762,16 @@ arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapE
         arena_chunk_map_t* runcur_mapelm = &runcur_chunk->map[runcur_pageind];
 
         /* Insert runcur. */
-        MOZ_DIAGNOSTIC_ASSERT(!arena_run_tree_search(&bin->runs, runcur_mapelm));
-        arena_run_tree_insert(&bin->runs, runcur_mapelm);
+        MOZ_DIAGNOSTIC_ASSERT(!bin->runs.Search(runcur_mapelm));
+        bin->runs.Insert(runcur_mapelm);
       }
       bin->runcur = run;
     } else {
       size_t run_pageind = (uintptr_t(run) - uintptr_t(aChunk)) >> pagesize_2pow;
       arena_chunk_map_t *run_mapelm = &aChunk->map[run_pageind];
 
-      MOZ_DIAGNOSTIC_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) == nullptr);
-      arena_run_tree_insert(&bin->runs, run_mapelm);
+      MOZ_DIAGNOSTIC_ASSERT(bin->runs.Search(run_mapelm) == nullptr);
+      bin->runs.Insert(run_mapelm);
     }
   }
   mStats.allocated_small -= size;
@@ -4052,7 +4021,7 @@ arena_t::Init()
   memset(&mStats, 0, sizeof(arena_stats_t));
 
   /* Initialize chunks. */
-  arena_chunk_tree_dirty_new(&mChunksDirty);
+  mChunksDirty.Init();
 #ifdef MALLOC_DOUBLE_PURGE
   new (&mChunksMAdvised) mozilla::DoublyLinkedList<arena_chunk_t>();
 #endif
@@ -4063,7 +4032,7 @@ arena_t::Init()
   // thread local arenas. TODO: make this more flexible.
   mMaxDirty = opt_dirty_max >> 3;
 
-  arena_avail_tree_new(&mRunsAvail);
+  mRunsAvail.Init();
 
   /* Initialize bins. */
   prev_run_size = pagesize;
@@ -4072,7 +4041,7 @@ arena_t::Init()
   for (i = 0; i < ntbins; i++) {
     bin = &mBins[i];
     bin->runcur = nullptr;
-    arena_run_tree_new(&bin->runs);
+    bin->runs.Init();
 
     bin->reg_size = (1ULL << (TINY_MIN_2POW + i));
 
@@ -4085,7 +4054,7 @@ arena_t::Init()
   for (; i < ntbins + nqbins; i++) {
     bin = &mBins[i];
     bin->runcur = nullptr;
-    arena_run_tree_new(&bin->runs);
+    bin->runs.Init();
 
     bin->reg_size = quantum * (i - ntbins + 1);
 
@@ -4098,7 +4067,7 @@ arena_t::Init()
   for (; i < ntbins + nqbins + nsbins; i++) {
     bin = &mBins[i];
     bin->runcur = nullptr;
-    arena_run_tree_new(&bin->runs);
+    bin->runs.Init();
 
     bin->reg_size = (small_max << (i - (ntbins + nqbins) + 1));
 
@@ -4154,7 +4123,7 @@ arenas_extend()
 
   // TODO: Use random Ids.
   ret->mId = narenas;
-  arena_tree_insert(&gArenaTree, ret);
+  gArenaTree.Insert(ret);
 
   /* Allocate and initialize arenas. */
   if (narenas % arenas_growth == 0) {
@@ -4234,7 +4203,7 @@ huge_palloc(size_t size, size_t alignment, bool zero)
 	node->size = psize;
 
 	malloc_mutex_lock(&huge_mtx);
-	extent_tree_ad_insert(&huge, node);
+	huge.Insert(node);
 	huge_nmalloc++;
 
         /* Although we allocated space for csize bytes, we indicate that we've
@@ -4307,7 +4276,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 			/* Update recorded size. */
 			malloc_mutex_lock(&huge_mtx);
 			key.addr = const_cast<void*>(ptr);
-			node = extent_tree_ad_search(&huge, &key);
+			node = huge.Search(&key);
 			MOZ_ASSERT(node);
 			MOZ_ASSERT(node->size == oldsize);
 			huge_allocated -= oldsize - psize;
@@ -4332,7 +4301,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
                         extent_node_t *node, key;
                         malloc_mutex_lock(&huge_mtx);
                         key.addr = const_cast<void*>(ptr);
-                        node = extent_tree_ad_search(&huge, &key);
+                        node = huge.Search(&key);
                         MOZ_ASSERT(node);
                         MOZ_ASSERT(node->size == oldsize);
                         huge_allocated += psize - oldsize;
@@ -4378,10 +4347,10 @@ huge_dalloc(void *ptr)
 
 	/* Extract from tree of huge allocations. */
 	key.addr = ptr;
-	node = extent_tree_ad_search(&huge, &key);
+	node = huge.Search(&key);
 	MOZ_ASSERT(node);
 	MOZ_ASSERT(node->addr == ptr);
-	extent_tree_ad_remove(&huge, node);
+	huge.Remove(node);
 
 	huge_ndalloc++;
 	huge_allocated -= node->size;
@@ -4626,12 +4595,12 @@ MALLOC_OUT:
 
   /* Initialize chunks data. */
   malloc_mutex_init(&chunks_mtx);
-  extent_tree_szad_new(&chunks_szad_mmap);
-  extent_tree_ad_new(&chunks_ad_mmap);
+  chunks_szad_mmap.Init();
+  chunks_ad_mmap.Init();
 
   /* Initialize huge allocation data. */
   malloc_mutex_init(&huge_mtx);
-  extent_tree_ad_new(&huge);
+  huge.Init();
   huge_nmalloc = 0;
   huge_ndalloc = 0;
   huge_allocated = 0;
@@ -4648,7 +4617,7 @@ MALLOC_OUT:
   /*
    * Initialize one arena here.
    */
-  arena_tree_new(&gArenaTree);
+  gArenaTree.Init();
   arenas_extend();
   if (!arenas || !arenas[0]) {
 #ifndef XP_WIN
@@ -5042,10 +5011,10 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
       arena_bin_t* bin = &arena->mBins[j];
       size_t bin_unused = 0;
 
-      rb_foreach_begin(arena_chunk_map_t, link, &bin->runs, mapelm) {
+      rb_foreach_begin(arena_chunk_map_t, ArenaChunkMapLink::GetTreeNode, &bin->runs, mapelm) {
         run = (arena_run_t*)(mapelm->bits & ~pagesize_mask);
         bin_unused += run->nfree * bin->reg_size;
-      } rb_foreach_end(arena_chunk_map_t, link, &bin->runs, mapelm)
+      } rb_foreach_end(arena_chunk_map_t, ArenaChunkMapLink::GetTreeNode, &bin->runs, mapelm)
 
       if (bin->runcur) {
         bin_unused += bin->runcur->nfree * bin->reg_size;
@@ -5178,7 +5147,7 @@ arena_t::GetById(arena_id_t aArenaId)
   arena_t key;
   key.mId = aArenaId;
   malloc_spin_lock(&arenas_lock);
-  arena_t* result = arena_tree_search(&gArenaTree, &key);
+  arena_t* result = gArenaTree.Search(&key);
   malloc_spin_unlock(&arenas_lock);
   MOZ_RELEASE_ASSERT(result);
   return result;
@@ -5197,7 +5166,7 @@ MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
 {
   arena_t* arena = arena_t::GetById(aArenaId);
   malloc_spin_lock(&arenas_lock);
-  arena_tree_remove(&gArenaTree, arena);
+  gArenaTree.Remove(arena);
   // The arena is leaked, and remaining allocations in it still are alive
   // until they are freed. After that, the arena will be empty but still
   // taking have at least a chunk taking address space. TODO: bug 1364359.
