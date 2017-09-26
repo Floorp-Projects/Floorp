@@ -2246,6 +2246,13 @@ public:
   static nsIContent*
     GetEditableRootContentByContentEditable(nsIDocument* aDocument);
 
+  static void AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
+                                      nsDisplayList& aList,
+                                      nsIFrame* aFrame,
+                                      const nsRect& aCanvasArea,
+                                      const nsRegion& aVisibleRegion,
+                                      nscolor aBackstop);
+
   /**
    * Returns true if the passed in prescontext needs the dark grey background
    * that goes behind the page of a print preview presentation.
