@@ -1702,6 +1702,14 @@ public:
   static void NotifyInstalledMenuKeyboardListener(bool aInstalling);
 
   /**
+   * Check whether the nsIURI uses the given scheme.
+   *
+   * Note that this will check the innermost URI rather than that of
+   * the nsIURI itself.
+   */
+  static bool SchemeIs(nsIURI* aURI, const char* aScheme);
+
+  /**
    * Returns true if aPrincipal is the system principal.
    */
   static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);
