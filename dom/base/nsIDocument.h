@@ -2742,7 +2742,7 @@ public:
 
   enum ElementCallbackType {
     eCreated,
-    eAttached,
+    eConnected,
     eDetached,
     eAttributeChanged
   };

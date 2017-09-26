@@ -28,14 +28,13 @@ CustomElementCallback::Call()
       mOwnerData->mElementIsBeingCreated = true;
 
       // The callback hasn't actually been invoked yet, but we need to flip
-      // this now in order to enqueue the attached callback. This is a spec
+      // this now in order to enqueue the connected callback. This is a spec
       // bug (w3c bug 27437).
       mOwnerData->mCreatedCallbackInvoked = true;
 
-      // If ELEMENT is in a document and this document has a browsing context,
-      // enqueue attached callback for ELEMENT.
+      // If ELEMENT is connected, enqueue connected callback for ELEMENT.
       nsIDocument* document = mThisObject->GetComposedDoc();
-      if (document && document->GetDocShell()) {
+      if (document) {
         NodeInfo* ni = mThisObject->NodeInfo();
         nsDependentAtomString extType(mOwnerData->mType);
 
@@ -49,15 +48,15 @@ CustomElementCallback::Call()
             extType.IsEmpty() ? nullptr : &extType);
 
         nsContentUtils::EnqueueLifecycleCallback(
-          document, nsIDocument::eAttached, mThisObject, nullptr, definition);
+          document, nsIDocument::eConnected, mThisObject, nullptr, definition);
       }
 
       static_cast<LifecycleCreatedCallback *>(mCallback.get())->Call(mThisObject, rv);
       mOwnerData->mElementIsBeingCreated = false;
       break;
     }
-    case nsIDocument::eAttached:
-      static_cast<LifecycleAttachedCallback *>(mCallback.get())->Call(mThisObject, rv);
+    case nsIDocument::eConnected:
+      static_cast<LifecycleConnectedCallback *>(mCallback.get())->Call(mThisObject, rv);
       break;
     case nsIDocument::eDetached:
       static_cast<LifecycleDetachedCallback *>(mCallback.get())->Call(mThisObject, rv);
@@ -340,9 +339,9 @@ CustomElementRegistry::CreateCustomElementCallback(
       }
       break;
 
-    case nsIDocument::eAttached:
-      if (aDefinition->mCallbacks->mAttachedCallback.WasPassed()) {
-        func = aDefinition->mCallbacks->mAttachedCallback.Value();
+    case nsIDocument::eConnected:
+      if (aDefinition->mCallbacks->mConnectedCallback.WasPassed()) {
+        func = aDefinition->mCallbacks->mConnectedCallback.Value();
       }
       break;
 
@@ -943,7 +942,11 @@ CustomElementRegistry::Upgrade(Element* aElement,
   }
 
   // Step 4.
-  // TODO: Bug 1334043 - Implement connected lifecycle callbacks for custom elements
+  if (aElement->IsInComposedDoc()) {
+    nsContentUtils::EnqueueLifecycleCallback(aElement->OwnerDoc(),
+                                             nsIDocument::eConnected, aElement,
+                                             nullptr, aDefinition);
+  }
 
   // Step 5.
   AutoConstructionStackEntry acs(aDefinition->mConstructionStack,
@@ -1138,9 +1141,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementDefinition)
     cb.NoteXPCOMChild(callbacks->mCreatedCallback.Value());
   }
 
-  if (callbacks->mAttachedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mAttachedCallback");
-    cb.NoteXPCOMChild(callbacks->mAttachedCallback.Value());
+  if (callbacks->mConnectedCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mConnectedCallback");
+    cb.NoteXPCOMChild(callbacks->mConnectedCallback.Value());
   }
 
   if (callbacks->mDetachedCallback.WasPassed()) {
