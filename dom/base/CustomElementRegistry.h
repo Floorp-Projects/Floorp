@@ -258,11 +258,12 @@ public:
   {
   }
 
-  // nsWeakPtr is a weak pointer of Element
+  // Hold a strong reference of Element so that it does not get cycle collected
+  // before the reactions in its reaction queue are invoked.
   // The element reaction queues are stored in CustomElementData.
   // We need to lookup ElementReactionQueueMap again to get relevant reaction queue.
   // The choice of 1 for the auto size here is based on gut feeling.
-  typedef AutoTArray<nsWeakPtr, 1> ElementQueue;
+  typedef AutoTArray<RefPtr<Element>, 1> ElementQueue;
 
   /**
    * Enqueue a custom element upgrade reaction

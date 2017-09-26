@@ -1948,11 +1948,12 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
     document->ClearBoxObjectFor(this);
 
-    // Detached must be enqueued whenever custom element is removed from
-    // the document and this document has a browsing context.
-    if (GetCustomElementData() && document->GetDocShell()) {
-      // Enqueue a detached callback for the custom element.
-      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDetached, this);
+     // Disconnected must be enqueued whenever a connected custom element becomes
+     // disconnected.
+    if (CustomElementRegistry::IsCustomElementEnabled() &&
+        GetCustomElementData()) {
+      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
+                                               this);
     }
   }
 
