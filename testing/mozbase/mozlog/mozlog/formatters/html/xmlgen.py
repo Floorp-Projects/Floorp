@@ -21,6 +21,9 @@ This file is originally from: https://bitbucket.org/hpk42/py, specifically:
 https://bitbucket.org/hpk42/py/src/980c8d526463958ee7cae678a7e4e9b054f36b94/py/_xmlgen.py?at=default
 by holger krekel, holger at merlinux eu. 2009
 """
+
+from __future__ import absolute_import
+
 import sys
 import re
 

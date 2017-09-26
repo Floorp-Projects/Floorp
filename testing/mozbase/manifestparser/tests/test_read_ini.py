@@ -10,6 +10,8 @@ is the default:
 http://docs.python.org/2/library/configparser.html
 """
 
+from __future__ import absolute_import
+
 import unittest
 from manifestparser import read_ini
 from StringIO import StringIO
