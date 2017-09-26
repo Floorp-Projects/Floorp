@@ -15,6 +15,7 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -38,7 +39,7 @@ class PayloadDispatcher {
     // Written from sequentially running thread(s) on the SingleThreadExecutor `executor`.
     // Read by many threads running concurrently on the records consumer thread pool.
     volatile boolean recordUploadFailed = false;
-    volatile boolean storeFailed = false;
+    final AtomicBoolean storeFailed = new AtomicBoolean(false);
 
     PayloadDispatcher(Executor executor, BatchingUploader uploader, @Nullable Long initialLastModified) {
         // Initially we don't know if we're in a batching mode.
@@ -105,7 +106,7 @@ class PayloadDispatcher {
     }
 
     void lastPayloadFailed(Exception e) {
-        uploader.sessionStoreDelegate.onStoreFailed(e);
+        doStoreFailed(e);
     }
 
     void finalizeQueue(final boolean needToCommit, final Runnable finalRunnable) {
@@ -135,13 +136,19 @@ class PayloadDispatcher {
     }
 
     void concurrentModificationDetected() {
-        recordUploadFailed = true;
-        storeFailed = true;
-        uploader.sessionStoreDelegate.onStoreFailed(new CollectionConcurrentModificationException());
+        doStoreFailed(new CollectionConcurrentModificationException());
     }
 
     void prepareForNextBatch() {
         batchWhiteboard = batchWhiteboard.nextBatchMeta();
+    }
+
+    private void doStoreFailed(Exception reason) {
+        if (storeFailed.getAndSet(true)) {
+            return;
+        }
+        recordUploadFailed = true;
+        uploader.sessionStoreDelegate.onStoreFailed(reason);
     }
 
     private static void bumpTimestampTo(final AtomicLong current, long newValue) {
