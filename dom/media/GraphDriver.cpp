@@ -568,9 +568,9 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
-  , mOuputChannels(mGraphImpl->AudioChannelCount())
-  , mScratchBuffer(std::max<uint32_t>(1, mOuputChannels))
-  , mBuffer(std::max<uint32_t>(1, mOuputChannels))
+  , mOutputChannels(mGraphImpl->AudioChannelCount())
+  , mScratchBuffer(std::max<uint32_t>(1, mOutputChannels))
+  , mBuffer(std::max<uint32_t>(1, mOutputChannels))
   , mSampleRate(0)
   , mInputChannels(1)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
@@ -653,7 +653,7 @@ AudioCallbackDriver::Init()
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  output.channels = mOuputChannels;
+  output.channels = mOutputChannels;
   output.layout = CUBEB_LAYOUT_UNDEFINED;
 
   Maybe<uint32_t> latencyPref = CubebUtils::GetCubebMSGLatencyInFrames();
@@ -954,7 +954,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // driver is the first one for this graph), and the graph would exit. Simply
     // return here until we have messages.
     if (!mGraphImpl->MessagesQueued()) {
-      PodZero(aOutputBuffer, aFrames * mOuputChannels);
+      PodZero(aOutputBuffer, aFrames * mOutputChannels);
       return aFrames;
     }
     mGraphImpl->SwapMessageQueues();
@@ -1041,7 +1041,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // removed/added to this list and TSAN issues, but input and output will
   // use separate callback methods.
   mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
-                               mSampleRate, mOuputChannels);
+                               mSampleRate, mOutputChannels);
 
   bool switching = false;
   {
