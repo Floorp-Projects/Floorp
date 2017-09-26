@@ -293,42 +293,6 @@ BaselineCacheIRCompiler::emitGuardCompartment()
 }
 
 bool
-BaselineCacheIRCompiler::emitGuardAnyClass()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    AutoScratchRegister scratch(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    Address testAddr(stubAddress(reader.stubOffset()));
-
-    masm.loadObjGroup(obj, scratch);
-    masm.loadPtr(Address(scratch, ObjectGroup::offsetOfClasp()), scratch);
-    masm.branchPtr(Assembler::NotEqual, testAddr, scratch, failure->label());
-    return true;
-}
-
-bool
-BaselineCacheIRCompiler::emitGuardHasProxyHandler()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    AutoScratchRegister scratch(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    Address testAddr(stubAddress(reader.stubOffset()));
-    masm.loadPtr(testAddr, scratch);
-
-    Address handlerAddr(obj, ProxyObject::offsetOfHandler());
-    masm.branchPtr(Assembler::NotEqual, handlerAddr, scratch, failure->label());
-    return true;
-}
-
-bool
 BaselineCacheIRCompiler::emitGuardSpecificObject()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -400,54 +364,6 @@ BaselineCacheIRCompiler::emitGuardSpecificSymbol()
 
     Address addr(stubAddress(reader.stubOffset()));
     masm.branchPtr(Assembler::NotEqual, addr, sym, failure->label());
-    return true;
-}
-
-bool
-BaselineCacheIRCompiler::emitGuardXrayExpandoShapeAndDefaultProto()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    bool hasExpando = reader.readBool();
-    Address shapeWrapperAddress(stubAddress(reader.stubOffset()));
-
-    AutoScratchRegister scratch(allocator, masm);
-    Maybe<AutoScratchRegister> scratch2;
-    if (hasExpando)
-        scratch2.emplace(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
-    Address holderAddress(scratch, sizeof(Value) * GetXrayJitInfo()->xrayHolderSlot);
-    Address expandoAddress(scratch, NativeObject::getFixedSlotOffset(GetXrayJitInfo()->holderExpandoSlot));
-
-    if (hasExpando) {
-        masm.branchTestObject(Assembler::NotEqual, holderAddress, failure->label());
-        masm.unboxObject(holderAddress, scratch);
-        masm.branchTestObject(Assembler::NotEqual, expandoAddress, failure->label());
-        masm.unboxObject(expandoAddress, scratch);
-
-        // Unwrap the expando before checking its shape.
-        masm.loadPtr(Address(scratch, ProxyObject::offsetOfReservedSlots()), scratch);
-        masm.unboxObject(Address(scratch, detail::ProxyReservedSlots::offsetOfPrivateSlot()), scratch);
-
-        masm.loadPtr(shapeWrapperAddress, scratch2.ref());
-        LoadShapeWrapperContents(masm, scratch2.ref(), scratch2.ref(), failure->label());
-        masm.branchTestObjShape(Assembler::NotEqual, scratch, scratch2.ref(), failure->label());
-
-        // The reserved slots on the expando should all be in fixed slots.
-        Address protoAddress(scratch, NativeObject::getFixedSlotOffset(GetXrayJitInfo()->expandoProtoSlot));
-        masm.branchTestUndefined(Assembler::NotEqual, protoAddress, failure->label());
-    } else {
-        Label done;
-        masm.branchTestObject(Assembler::NotEqual, holderAddress, &done);
-        masm.unboxObject(holderAddress, scratch);
-        masm.branchTestObject(Assembler::Equal, expandoAddress, failure->label());
-        masm.bind(&done);
-    }
-
     return true;
 }
 
