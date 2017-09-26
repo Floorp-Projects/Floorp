@@ -39,14 +39,10 @@ public:
     NS_DECL_NSIINPUTSTREAM
 
     nsInputStreamTransport(nsIInputStream *source,
-                           uint64_t offset,
-                           uint64_t limit,
                            bool closeWhenDone)
         : mSource(source)
-        , mOffset(offset)
-        , mLimit(limit)
+        , mOffset(0)
         , mCloseWhenDone(closeWhenDone)
-        , mFirstTime(true)
         , mInProgress(false)
     {
     }
@@ -63,9 +59,7 @@ private:
     nsCOMPtr<nsITransportEventSink> mEventSink;
     nsCOMPtr<nsIInputStream>        mSource;
     int64_t                         mOffset;
-    int64_t                         mLimit;
     bool                            mCloseWhenDone;
-    bool                            mFirstTime;
 
     // this variable serves as a lock to prevent the state of the transport
     // from being modified once the copy is in progress.
@@ -160,7 +154,7 @@ nsInputStreamTransport::Close()
         mSource->Close();
 
     // make additional reads return early...
-    mOffset = mLimit = 0;
+    mOffset = 0;
     return NS_OK;
 }
 
@@ -173,40 +167,13 @@ nsInputStreamTransport::Available(uint64_t *result)
 NS_IMETHODIMP
 nsInputStreamTransport::Read(char *buf, uint32_t count, uint32_t *result)
 {
-    if (mFirstTime) {
-        mFirstTime = false;
-        if (mOffset != 0) {
-            // read from current position if offset equal to max
-            if (mOffset != -1) {
-                nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSource);
-                if (seekable)
-                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
-            }
-            // reset offset to zero so we can use it to enforce limit
-            mOffset = 0;
-        }
-    }
-
-    // limit amount read
-    uint64_t max = count;
-    if (mLimit != -1) {
-        max = mLimit - mOffset;
-        if (max == 0) {
-            *result = 0;
-            return NS_OK;
-        }
-    }
-
-    if (count > max)
-        count = static_cast<uint32_t>(max);
-
     nsresult rv = mSource->Read(buf, count, result);
 
     if (NS_SUCCEEDED(rv)) {
         mOffset += *result;
         if (mEventSink)
             mEventSink->OnTransportStatus(this, NS_NET_STATUS_READING, mOffset,
-                                          mLimit);
+                                          -1);
     }
     return rv;
 }
@@ -527,13 +494,11 @@ nsStreamTransportService::IsOnCurrentThread(bool *result)
 
 NS_IMETHODIMP
 nsStreamTransportService::CreateInputTransport(nsIInputStream *stream,
-                                               int64_t offset,
-                                               int64_t limit,
                                                bool closeWhenDone,
                                                nsITransport **result)
 {
     nsInputStreamTransport *trans =
-        new nsInputStreamTransport(stream, offset, limit, closeWhenDone);
+        new nsInputStreamTransport(stream, closeWhenDone);
     if (!trans)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = trans);
