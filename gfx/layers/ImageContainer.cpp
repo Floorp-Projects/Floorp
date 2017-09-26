@@ -126,6 +126,15 @@ ImageContainerListener::ClearImageContainer()
   mImageContainer = nullptr;
 }
 
+void
+ImageContainerListener::DropImageClient()
+{
+  MutexAutoLock lock(mLock);
+  if (mImageContainer) {
+    mImageContainer->DropImageClient();
+  }
+}
+
 already_AddRefed<ImageClient>
 ImageContainer::GetImageClient()
 {
@@ -162,12 +171,10 @@ ImageContainer::EnsureImageClient()
     mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this);
     if (mImageClient) {
       mAsyncContainerHandle = mImageClient->GetAsyncHandle();
-      mNotifyCompositeListener = new ImageContainerListener(this);
     } else {
       // It's okay to drop the async container handle since the ImageBridgeChild
       // is going to die anyway.
       mAsyncContainerHandle = CompositableHandle();
-      mNotifyCompositeListener = nullptr;
     }
   }
 }
@@ -183,6 +190,7 @@ ImageContainer::ImageContainer(Mode flag)
   mCurrentProducerID(-1)
 {
   if (flag == ASYNCHRONOUS) {
+    mNotifyCompositeListener = new ImageContainerListener(this);
     EnsureImageClient();
   }
 }
@@ -381,6 +389,7 @@ CompositableHandle ImageContainer::GetAsyncContainerHandle()
 {
   NS_ASSERTION(IsAsync(), "Shared image ID is only relevant to async ImageContainers");
   NS_ASSERTION(mAsyncContainerHandle, "Should have a shared image ID");
+  RecursiveMutexAutoLock mon(mRecursiveMutex);
   EnsureImageClient();
   return mAsyncContainerHandle;
 }
