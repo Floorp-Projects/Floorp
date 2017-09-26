@@ -151,6 +151,8 @@ TrackBuffersManager::QueueTask(SourceBufferTask* aTask)
   if (!GetTaskQueue()) {
     MOZ_ASSERT(aTask->GetType() == SourceBufferTask::Type::Detach,
                "only detach task could happen here!");
+    MSE_DEBUG("Could not queue the task '%s' without task queue",
+              aTask->GetTypeName());
     return;
   }
 
@@ -183,6 +185,8 @@ TrackBuffersManager::ProcessTasks()
     // nothing to do.
     return;
   }
+
+  MSE_DEBUG("Process task '%s'", task->GetTypeName());
   switch (task->GetType()) {
     case Type::AppendBuffer:
       mCurrentTask = task;
