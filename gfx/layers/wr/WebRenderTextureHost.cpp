@@ -154,16 +154,16 @@ WebRenderTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
 }
 
 void
-WebRenderTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                        const wr::LayoutRect& aBounds,
-                                        const wr::LayoutRect& aClip,
-                                        wr::ImageRendering aFilter,
-                                        Range<const wr::ImageKey>& aImageKeys)
+WebRenderTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                       const wr::LayoutRect& aBounds,
+                                       const wr::LayoutRect& aClip,
+                                       wr::ImageRendering aFilter,
+                                       const Range<wr::ImageKey>& aImageKeys)
 {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(aImageKeys.length() > 0);
 
-  mWrappedTextureHost->PushExternalImage(aBuilder,
+  mWrappedTextureHost->PushDisplayItems(aBuilder,
                                          aBounds,
                                          aClip,
                                          aFilter,

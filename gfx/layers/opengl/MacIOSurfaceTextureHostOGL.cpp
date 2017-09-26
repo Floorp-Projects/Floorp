@@ -198,11 +198,11 @@ MacIOSurfaceTextureHostOGL::PushResourceUpdates(wr::ResourceUpdateQueue& aResour
 }
 
 void
-MacIOSurfaceTextureHostOGL::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                              const wr::LayoutRect& aBounds,
-                                              const wr::LayoutRect& aClip,
-                                              wr::ImageRendering aFilter,
-                                              Range<const wr::ImageKey>& aImageKeys)
+MacIOSurfaceTextureHostOGL::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                             const wr::LayoutRect& aBounds,
+                                             const wr::LayoutRect& aClip,
+                                             wr::ImageRendering aFilter,
+                                             const Range<wr::ImageKey>& aImageKeys)
 {
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:

@@ -640,13 +640,13 @@ public:
   }
 
   // Put all necessary WR commands into DisplayListBuilder for this textureHost rendering.
-  virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                 const wr::LayoutRect& aBounds,
-                                 const wr::LayoutRect& aClip,
-                                 wr::ImageRendering aFilter,
-                                 Range<const wr::ImageKey>& aKeys)
+  virtual void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                const wr::LayoutRect& aBounds,
+                                const wr::LayoutRect& aClip,
+                                wr::ImageRendering aFilter,
+                                const Range<wr::ImageKey>& aKeys)
   {
-    MOZ_ASSERT_UNREACHABLE("No PushExternalImage() implementation for this TextureHost type.");
+    MOZ_ASSERT_UNREACHABLE("No PushDisplayItems() implementation for this TextureHost type.");
   }
 
   /**
@@ -751,11 +751,11 @@ public:
                                    const Range<wr::ImageKey>& aImageKeys,
                                    const wr::ExternalImageId& aExtID) override;
 
-  virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                 const wr::LayoutRect& aBounds,
-                                 const wr::LayoutRect& aClip,
-                                 wr::ImageRendering aFilter,
-                                 Range<const wr::ImageKey>& aImageKeys) override;
+  virtual void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                const wr::LayoutRect& aBounds,
+                                const wr::LayoutRect& aClip,
+                                wr::ImageRendering aFilter,
+                                const Range<wr::ImageKey>& aImageKeys) override;
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
