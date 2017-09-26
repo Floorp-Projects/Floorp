@@ -14,7 +14,9 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/WebComponentsBinding.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGenericHTMLElement.h"
 #include "nsWrapperCache.h"
 #include "nsContentUtils.h"
 
@@ -25,7 +27,6 @@ namespace dom {
 
 struct CustomElementData;
 struct ElementDefinitionOptions;
-struct LifecycleCallbacks;
 class CallbackFunction;
 class CustomElementReaction;
 class Function;
@@ -117,6 +118,22 @@ struct CustomElementData
   // e.g., create an element, insert a node.
   AutoTArray<UniquePtr<CustomElementReaction>, 3> mReactionQueue;
 
+  RefPtr<CustomElementDefinition> mCustomElementDefinition;
+
+  void
+  SetCustomElementDefinition(CustomElementDefinition* aDefinition)
+  {
+    MOZ_ASSERT(!mCustomElementDefinition);
+
+    mCustomElementDefinition = aDefinition;
+  }
+
+  CustomElementDefinition*
+  GetCustomElementDefinition()
+  {
+    return mCustomElementDefinition;
+  }
+
 private:
   virtual ~CustomElementData() {}
 };
@@ -127,6 +144,9 @@ private:
 // https://html.spec.whatwg.org/multipage/scripting.html#custom-element-definition
 struct CustomElementDefinition
 {
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CustomElementDefinition)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CustomElementDefinition)
+
   CustomElementDefinition(nsIAtom* aType,
                           nsIAtom* aLocalName,
                           Function* aConstructor,
@@ -172,6 +192,9 @@ struct CustomElementDefinition
 
     return mObservedAttributes.Contains(aName);
   }
+
+private:
+  ~CustomElementDefinition() {}
 };
 
 class CustomElementReaction
@@ -394,7 +417,7 @@ private:
                          CustomElementDefinition* aDefinition,
                          ErrorResult& aRv);
 
-  typedef nsClassHashtable<nsISupportsHashKey, CustomElementDefinition>
+  typedef nsRefPtrHashtable<nsISupportsHashKey, CustomElementDefinition>
     DefinitionMap;
   typedef nsClassHashtable<nsISupportsHashKey, nsTArray<nsWeakPtr>>
     CandidateMap;

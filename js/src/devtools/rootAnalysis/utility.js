@@ -267,11 +267,5 @@ function addToKeyedList(collection, key, entry)
 
 function loadTypeInfo(filename)
 {
-    var info = {};
-    for (var line of readFileLines_gen(filename)) {
-        line = line.replace(/\n/, "");
-        let [property, name] = line.split("$$");
-        addToKeyedList(info, property, name);
-    }
-    return info;
+    return JSON.parse(os.file.readFile(filename));
 }

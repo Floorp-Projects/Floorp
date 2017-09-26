@@ -366,8 +366,6 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
                         LogicalPoint(mBlockWM,
                                      mScrollableFrame->GetScrollPosition(),
                                      nullContainerSize));
-    nsIFrame* scrollFrame = do_QueryFrame(mScrollableFrame);
-    scrollFrame->AddStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   }
   uint8_t direction = aBlockFrame->StyleVisibility()->mDirection;
   const nsStyleTextReset* style = aBlockFrame->StyleTextReset();

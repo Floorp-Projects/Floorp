@@ -4,6 +4,7 @@
 
 #include "nsHtml5SpeculativeLoad.h"
 #include "nsHtml5TreeOpExecutor.h"
+#include "mozilla/Encoding.h"
 
 nsHtml5SpeculativeLoad::nsHtml5SpeculativeLoad()
   :
