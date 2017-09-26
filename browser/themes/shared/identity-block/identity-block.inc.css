@@ -101,7 +101,7 @@
 }
 
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
-  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg);
+  list-style-image: url(chrome://browser/skin/search-glass.svg);
   fill-opacity: .4;
 }
 
