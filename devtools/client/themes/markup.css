@@ -3,14 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --markup-hidden-attr-color: var(--theme-comment);
-  --markup-hidden-tag-color: #A1A1A4;
   --markup-outline: var(--theme-splitter-color);
 }
 
 .theme-dark:root {
-  --markup-hidden-attr-color: var(--theme-body-color-inactive);
-  --markup-hidden-tag-color: var(--theme-content-color1);
   --markup-outline: var(--theme-selection-background);
 }
 
@@ -336,16 +332,6 @@ ul.children + .tag-line::before {
   z-index: 1;
 }
 
-
-.not-displayed .attr-name,
-.not-displayed .attr-value {
-  color: var(--markup-hidden-attr-color);
-}
-
-.not-displayed .theme-fg-color3 {
-  color: var(--markup-hidden-tag-color);
-}
-
 /* Firebug Theme */
 
 .theme-firebug .theme-fg-color3 {
@@ -365,12 +351,6 @@ ul.children + .tag-line::before {
 
 .theme-firebug .markupview-events {
   font-size: var(--theme-toolbar-font-size);
-}
-
-/* In case a node isn't displayed in the page, we fade the syntax highlighting */
-.theme-firebug .not-displayed .open,
-.theme-firebug .not-displayed .close {
-  opacity: .5;
 }
 
 /* Selected nodes in the tree should have light selected text.
@@ -401,6 +381,12 @@ ul.children + .tag-line::before {
 
 .theme-firebug .doctype {
   color: #787878;
+}
+
+/* In case a node isn't displayed in the page, we fade the syntax highlighting */
+.not-displayed .open,
+.not-displayed .close {
+  opacity: .5;
 }
 
 /* Events */
