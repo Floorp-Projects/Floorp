@@ -15,6 +15,7 @@ DIRS += [
 
 DevToolsModules(
     'app.js',
+    'commands.js',
     'constants.js',
     'index.css',
     'manager.js',
