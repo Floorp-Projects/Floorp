@@ -515,17 +515,17 @@ struct RedBlackTree
     Trait::GetTreeNode(&rbt_nil).SetColor(NodeColor::Black);
   }
 
-  T* First()
+  T* First(T* aStart = nullptr)
   {
     T* ret;
-    rbp_first(T, Trait::GetTreeNode, this, rbt_root, (ret));
+    rbp_first(T, Trait::GetTreeNode, this, (aStart ? aStart : rbt_root), (ret));
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
-  T* Last()
+  T* Last(T* aStart = nullptr)
   {
     T* ret;
-    rbp_last(T, Trait::GetTreeNode, this, rbt_root, ret);
+    rbp_last(T, Trait::GetTreeNode, this, (aStart ? aStart : rbt_root), ret);
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
@@ -533,8 +533,7 @@ struct RedBlackTree
   {
     T* ret;
     if (Trait::GetTreeNode(aNode).Right() != &rbt_nil) {
-      rbp_first(
-        T, Trait::GetTreeNode, this, Trait::GetTreeNode(aNode).Right(), (ret));
+      ret = First(Trait::GetTreeNode(aNode).Right());
     } else {
       T* rbp_n_t = rbt_root;
       MOZ_ASSERT(rbp_n_t != &rbt_nil);
@@ -559,8 +558,7 @@ struct RedBlackTree
   {
     T* ret;
     if (Trait::GetTreeNode(aNode).Left() != &rbt_nil) {
-      rbp_last(
-        T, Trait::GetTreeNode, this, Trait::GetTreeNode(aNode).Left(), (ret));
+      ret = Last(Trait::GetTreeNode(aNode).Left());
     } else {
       T* rbp_p_t = rbt_root;
       MOZ_ASSERT(rbp_p_t != &rbt_nil);
