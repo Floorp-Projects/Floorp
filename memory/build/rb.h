@@ -36,7 +36,7 @@
  *
  ******************************************************************************
  *
- * cpp macro implementation of left-leaning red-black trees.
+ * C++ template implementation of left-leaning red-black trees.
  *
  * Usage:
  *
@@ -50,20 +50,23 @@
  * color bits are stored in the least significant bit of right-child pointers,
  * thus making node linkage as compact as is possible for red-black trees.
  *
- * Some macros use a comparison function pointer, which is expected to have the
- * following prototype:
- *
- *   int (a_cmp *)(a_type *a_node, a_type *a_other);
- *                         ^^^^^^
- *                      or a_key
+ * The RedBlackTree template expects two type arguments: the type of the nodes,
+ * containing a RedBlackTreeNode, and a trait providing two methods:
+ *  - a GetTreeNode method that returns a reference to the RedBlackTreeNode
+ *    corresponding to a given node with the following signature:
+ *      static RedBlackTreeNode<T>& GetTreeNode(T*)
+ *  - a Compare function with the following signature:
+ *      static int Compare(T* aNode, T* aOther)
+ *                            ^^^^^
+ *                         or aKey
  *
  * Interpretation of comparision function return values:
  *
- *   -1 : a_node <  a_other
- *    0 : a_node == a_other
- *    1 : a_node >  a_other
+ *   -1 : aNode <  aOther
+ *    0 : aNode == aOther
+ *    1 : aNode >  aOther
  *
- * In all cases, the a_node or a_key macro argument is the first argument to the
+ * In all cases, the aNode or aKey argument is the first argument to the
  * comparison function, which makes it possible to write comparison functions
  * that treat the first argument specially.
  *
@@ -131,15 +134,7 @@ public:
   }
 };
 
-/* Root structure. */
-template <typename T>
-struct RedBlackTree
-{
-  T* rbt_root;
-  T rbt_nil;
-};
-
-#define rb_node_field(a_node, a_field) (a_node)->a_field
+#define rb_node_field(a_node, a_field) a_field(a_node)
 
 /* Node initializer. */
 #define rbp_node_new(a_type, a_field, a_tree, a_node)                          \
@@ -669,63 +664,72 @@ struct RedBlackTree
     (a_tree)->rbt_root = rb_node_field(&rbp_r_s, a_field).Left();              \
   } while (0)
 
-/*
- * The rb_wrap() macro provides a convenient way to wrap functions around the
- * cpp macros.  The main benefits of wrapping are that 1) repeated macro
- * expansion can cause code bloat, especially for rb_{insert,remove)(), and
- * 2) type, linkage, comparison functions, etc. need not be specified at every
- * call point.
- */
+/* Tree structure. */
+template<typename T, typename Trait>
+struct RedBlackTree
+{
+  T* rbt_root;
+  T rbt_nil;
 
-#define rb_wrap(a_prefix, a_tree_type, a_type, a_field, a_cmp)                 \
-  static void a_prefix##new (a_tree_type * tree)                               \
-  {                                                                            \
-    rb_new(a_type, a_field, tree);                                             \
-  }                                                                            \
-  static a_type* a_prefix##first(a_tree_type* tree)                            \
-  {                                                                            \
-    a_type* ret;                                                               \
-    rb_first(a_type, a_field, tree, ret);                                      \
-    return (ret);                                                              \
-  }                                                                            \
-  static a_type* a_prefix##last(a_tree_type* tree)                             \
-  {                                                                            \
-    a_type* ret;                                                               \
-    rb_last(a_type, a_field, tree, ret);                                       \
-    return (ret);                                                              \
-  }                                                                            \
-  static a_type* a_prefix##next(a_tree_type* tree, a_type* node)               \
-  {                                                                            \
-    a_type* ret;                                                               \
-    rb_next(a_type, a_field, a_cmp, tree, node, ret);                          \
-    return (ret);                                                              \
-  }                                                                            \
-  static a_type* a_prefix##prev(a_tree_type* tree, a_type* node)               \
-  {                                                                            \
-    a_type* ret;                                                               \
-    rb_prev(a_type, a_field, a_cmp, tree, node, ret);                          \
-    return (ret);                                                              \
-  }                                                                            \
-  static a_type* a_prefix##search(a_tree_type* tree, a_type* key)              \
-  {                                                                            \
-    a_type* ret;                                                               \
-    rb_search(a_type, a_field, a_cmp, tree, key, ret);                         \
-    return (ret);                                                              \
-  }                                                                            \
-  static a_type* a_prefix##nsearch(a_tree_type* tree, a_type* key)             \
-  {                                                                            \
-    a_type* ret;                                                               \
-    rb_nsearch(a_type, a_field, a_cmp, tree, key, ret);                        \
-    return (ret);                                                              \
-  }                                                                            \
-  static void a_prefix##insert(a_tree_type* tree, a_type* node)                \
-  {                                                                            \
-    rb_insert(a_type, a_field, a_cmp, tree, node);                             \
-  }                                                                            \
-  static void a_prefix##remove(a_tree_type* tree, a_type* node)                \
-  {                                                                            \
-    rb_remove(a_type, a_field, a_cmp, tree, node);                             \
+  void Init()
+  {
+    rb_new(T, Trait::GetTreeNode, this);
   }
+
+  T* First()
+  {
+    T* ret;
+    rb_first(T, Trait::GetTreeNode, this, ret);
+    return ret;
+  }
+
+  T* Last()
+  {
+    T* ret;
+    rb_last(T, Trait::GetTreeNode, this, ret);
+    return ret;
+  }
+
+  T* Next(T* aNode)
+  {
+    T* ret;
+    rb_next(T, Trait::GetTreeNode, Trait::Compare, this, aNode, ret);
+    return ret;
+  }
+
+  T* Prev(T* aNode)
+  {
+    T* ret;
+    rb_prev(T, Trait::GetTreeNode, Trait::Compare, this, aNode, ret);
+    return ret;
+  }
+
+  T* Search(T* aKey)
+  {
+    T* ret;
+    rb_search(T, Trait::GetTreeNode, Trait::Compare, this, aKey, ret);
+    return ret;
+  }
+
+  /* Find a match if it exists. Otherwise, find the next greater node, if one
+   * exists */
+  T* SearchOrNext(T* aKey)
+  {
+    T* ret;
+    rb_nsearch(T, Trait::GetTreeNode, Trait::Compare, this, aKey, ret);
+    return ret;
+  }
+
+  void Insert(T* aNode)
+  {
+    rb_insert(T, Trait::GetTreeNode, Trait::Compare, this, aNode);
+  }
+
+  void Remove(T* aNode)
+  {
+    rb_remove(T, Trait::GetTreeNode, Trait::Compare, this, aNode);
+  }
+};
 
 /*
  * The iterators simulate recursion via an array of pointers that store the
