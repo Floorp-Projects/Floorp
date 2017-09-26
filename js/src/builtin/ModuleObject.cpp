@@ -1078,6 +1078,9 @@ ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject 
             }
         }
 
+        if (!obj)
+            return false;
+
         value = ObjectValue(*obj);
         if (!SetProperty(cx, env, funDecl.name->asPropertyName(), value))
             return false;

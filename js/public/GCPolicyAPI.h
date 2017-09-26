@@ -131,7 +131,7 @@ struct GCPointerPolicy
         return false;
     }
     static bool isValid(T v) {
-        return js::gc::IsCellPointerValid(v);
+        return js::gc::IsCellPointerValidOrNull(v);
     }
 };
 template <> struct GCPolicy<JS::Symbol*> : public GCPointerPolicy<JS::Symbol*> {};
