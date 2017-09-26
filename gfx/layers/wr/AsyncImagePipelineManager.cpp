@@ -173,7 +173,10 @@ AsyncImagePipelineManager::GenerateImageKeyForTextureHost(wr::ResourceUpdateQueu
   WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
 
   if (!gfxEnv::EnableWebRenderRecording() && wrTexture) {
-    wrTexture->GetWRImageKeys(aKeys, std::bind(&AsyncImagePipelineManager::GenerateImageKey, this));
+    auto numKeys = wrTexture->NumSubTextures();
+    for (uint32_t i = 0; i < numKeys; ++i) {
+      aKeys.AppendElement(GenerateImageKey());
+    }
     MOZ_ASSERT(!aKeys.IsEmpty());
     Range<const wr::ImageKey> keys(&aKeys[0], aKeys.Length());
     wrTexture->AddWRImage(aResources, keys, wrTexture->GetExternalImageKey());

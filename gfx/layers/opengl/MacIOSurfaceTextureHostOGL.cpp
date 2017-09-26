@@ -125,37 +125,23 @@ MacIOSurfaceTextureHostOGL::CreateRenderTexture(const wr::ExternalImageId& aExte
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId), texture.forget());
 }
 
-void
-MacIOSurfaceTextureHostOGL::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                                           const std::function<wr::ImageKey()>& aImageKeyAllocator)
+uint32_t
+MacIOSurfaceTextureHostOGL::NumSubTextures() const
 {
-  MOZ_ASSERT(aImageKeys.IsEmpty());
-
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
-    case gfx::SurfaceFormat::B8G8R8X8: {
-      // 1 image key
-      aImageKeys.AppendElement(aImageKeyAllocator());
-      MOZ_ASSERT(aImageKeys.Length() == 1);
-      break;
-    }
+    case gfx::SurfaceFormat::B8G8R8X8:
     case gfx::SurfaceFormat::YUV422: {
-      // 1 image key
-      aImageKeys.AppendElement(aImageKeyAllocator());
-      MOZ_ASSERT(aImageKeys.Length() == 1);
-      break;
+      return 1;
     }
     case gfx::SurfaceFormat::NV12: {
-      // 2 image key
-      aImageKeys.AppendElement(aImageKeyAllocator());
-      aImageKeys.AppendElement(aImageKeyAllocator());
-      MOZ_ASSERT(aImageKeys.Length() == 2);
-      break;
+      return 2;
     }
     default: {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      MOZ_ASSERT_UNREACHABLE("unexpected format");
+      return 1;
     }
   }
 }

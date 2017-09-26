@@ -1042,31 +1042,22 @@ DXGITextureHostD3D11::CreateRenderTexture(const wr::ExternalImageId& aExternalIm
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId), texture.forget());
 }
 
-void
-DXGITextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                                     const std::function<wr::ImageKey()>& aImageKeyAllocator)
+uint32_t
+DXGITextureHostD3D11::NumSubTextures() const
 {
-  MOZ_ASSERT(aImageKeys.IsEmpty());
-
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
-      // 1 image key
-      aImageKeys.AppendElement(aImageKeyAllocator());
-      MOZ_ASSERT(aImageKeys.Length() == 1);
-      break;
+      return 1;
     }
     case gfx::SurfaceFormat::NV12: {
-      // 2 image key
-      aImageKeys.AppendElement(aImageKeyAllocator());
-      aImageKeys.AppendElement(aImageKeyAllocator());
-      MOZ_ASSERT(aImageKeys.Length() == 2);
-      break;
+      return 2;
     }
     default: {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      MOZ_ASSERT_UNREACHABLE("unexpected format");
+      return 1;
     }
   }
 }
@@ -1309,17 +1300,6 @@ void
 DXGIYCbCrTextureHostD3D11::CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
 {
   // We use AddImage() directly. It's no corresponding RenderTextureHost.
-}
-
-void
-DXGIYCbCrTextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                                          const std::function<wr::ImageKey()>& aImageKeyAllocator)
-{
-  MOZ_ASSERT(aImageKeys.IsEmpty());
-
-  // 1 image key
-  aImageKeys.AppendElement(aImageKeyAllocator());
-  MOZ_ASSERT(aImageKeys.Length() == 1);
 }
 
 void

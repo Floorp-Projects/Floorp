@@ -134,14 +134,11 @@ WebRenderTextureHost::GetRGBStride()
   return ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
 }
 
-void
-WebRenderTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                                     const std::function<wr::ImageKey()>& aImageKeyAllocator)
+uint32_t
+WebRenderTextureHost::NumSubTextures() const
 {
   MOZ_ASSERT(mWrappedTextureHost);
-  MOZ_ASSERT(aImageKeys.IsEmpty());
-
-  mWrappedTextureHost->GetWRImageKeys(aImageKeys, aImageKeyAllocator);
+  return mWrappedTextureHost->NumSubTextures();
 }
 
 void
