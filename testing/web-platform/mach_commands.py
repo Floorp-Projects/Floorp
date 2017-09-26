@@ -279,7 +279,7 @@ testing/web-platform/tests for tests that may be shared
         if proc:
             proc.wait()
 
-        context.commands.dispatch("wpt-manifest-update", context, {"check_clean": False, "rebuild": False})
+        context.commands.dispatch("wpt-manifest-update", context)
 
 
 class WPTManifestUpdater(MozbuildObject):
