@@ -80,7 +80,7 @@ function run_test()
   // Set up a pump to push data from the file to the stream converter
   var pump = Cc["@mozilla.org/network/input-stream-pump;1"].
              createInstance(Ci.nsIInputStreamPump);
-  pump.init(fstream, -1, -1, 0, 0, true);
+  pump.init(fstream, 0, 0, true);
   pump.asyncRead(converter, null);
   do_test_pending();
 }
