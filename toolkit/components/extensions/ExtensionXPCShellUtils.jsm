@@ -95,9 +95,8 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
 }
 
 class ContentPage {
-  constructor(remote = REMOTE_CONTENT_SCRIPTS, extension = null) {
+  constructor(remote = REMOTE_CONTENT_SCRIPTS) {
     this.remote = remote;
-    this.extension = extension;
 
     this.browserReady = this._initBrowser();
   }
@@ -123,12 +122,6 @@ class ContentPage {
     let browser = chromeDoc.createElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
-
-    if (this.extension && this.extension.remote) {
-      browser.setAttribute("remote", "true");
-      browser.setAttribute("remoteType", "extension");
-      browser.sameProcessAsFrameLoader = this.extension.groupFrameLoader;
-    }
 
     let awaitFrameLoader = Promise.resolve();
     if (this.remote) {
@@ -695,26 +688,8 @@ var ExtensionTestUtils = {
     REMOTE_CONTENT_SCRIPTS = !!val;
   },
 
-  /**
-   * Loads a content page into a hidden docShell.
-   *
-   * @param {string} url
-   *        The URL to load.
-   * @param {object} [options = {}]
-   * @param {ExtensionWrapper} [options.extension]
-   *        If passed, load the URL as an extension page for the given
-   *        extension.
-   * @param {boolean} [options.remote]
-   *        If true, load the URL in a content process. If false, load
-   *        it in the parent process.
-   * @param {string} [options.redirectUrl]
-   *        An optional URL that the initial page is expected to
-   *        redirect to.
-   *
-   * @returns {ContentPage}
-   */
-  loadContentPage(url, {extension = undefined, remote = undefined, redirectUrl = undefined} = {}) {
-    let contentPage = new ContentPage(remote, extension && extension.extension);
+  loadContentPage(url, remote = undefined, redirectUrl = undefined) {
+    let contentPage = new ContentPage(remote);
 
     return contentPage.loadURL(url, redirectUrl).then(() => {
       return contentPage;
