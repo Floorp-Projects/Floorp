@@ -84,19 +84,19 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == filter-marked-line-08.svg pass.svg
 == filter-marked-line-09.svg pass.svg
 == filter-nested-filtering-01.svg pass.svg
-== filter-nested-filtering-02.svg pass.svg
+fails-if(webrender) == filter-nested-filtering-02.svg pass.svg
 == filter-patterned-rect-01.svg pass.svg
 == filter-patterned-rect-02.svg pass.svg
 == filter-region-01a.html pass.svg
 == filter-region-01b.html pass.svg
-== filter-transform-01.svg pass.svg
+fails-if(webrender) == filter-transform-01.svg pass.svg
 
 == feColorMatrix-saturate-01.svg pass.svg
 
 == feComponentTransfer-03.svg pass.svg
 == feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
-fuzzy(1,26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
+fuzzy(1,26732) fails-if(webrender) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
 fuzzy(1,10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 

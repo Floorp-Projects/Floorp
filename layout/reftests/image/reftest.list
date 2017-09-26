@@ -1,9 +1,9 @@
 fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1-ref.html
 pref(gfx.webrender.layers-free,true) skip-if(!webrender) == background-image-zoom-1.html background-image-zoom-1-ref.html
 fails-if(usesRepeatResampling) == background-image-zoom-2.html about:blank
-fails-if(webrender) == image-seam-1a.html image-seam-1-ref.html
-fails-if(webrender) == image-seam-1b.html image-seam-1-ref.html
-fuzzy-if(Android,255,154) fails-if(webrender) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
+== image-seam-1a.html image-seam-1-ref.html
+== image-seam-1b.html image-seam-1-ref.html
+fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
 pref(gfx.webrender.layers-free,true) skip-if(!webrender) == image-seam-1a.html image-seam-1-ref.html
 pref(gfx.webrender.layers-free,true) skip-if(!webrender) == image-seam-1b.html image-seam-1-ref.html
 pref(gfx.webrender.layers-free,true) skip-if(!webrender) == image-seam-2.html  image-seam-2-ref.html

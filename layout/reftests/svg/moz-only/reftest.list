@@ -19,4 +19,4 @@ random-if(d2d) == feImage-zoom-01b.svg          feImage-zoom-01-ref.svg
 == foreignObject-zoom-01.svg                    pass.svg
 == zoom-invalidation-01.svg                     pass.svg
 == replaced-element-zoom-01.html                pass.svg
-fuzzy-if(winWidget,12,7) == zoomed-svg-with-viewBox-01.svg   zoomed-svg-with-viewBox-01-ref.svg
+fuzzy-if(winWidget,12,7) fails-if(webrender) == zoomed-svg-with-viewBox-01.svg   zoomed-svg-with-viewBox-01-ref.svg
