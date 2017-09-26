@@ -525,6 +525,20 @@ HttpObserverManager = {
     onStop: new Map(),
   },
 
+  getWrapper(nativeChannel) {
+    let wrapper = ChannelWrapper.get(nativeChannel);
+    if (!wrapper._addedListeners) {
+      /* eslint-disable mozilla/balanced-listeners */
+      if (this.listeners.onError.size) {
+        wrapper.addEventListener("error", this);
+      }
+      /* eslint-enable mozilla/balanced-listeners */
+
+      wrapper._addedListeners = true;
+    }
+    return wrapper;
+  },
+
   get activityDistributor() {
     return Cc["@mozilla.org/network/http-activity-distributor;1"].getService(Ci.nsIHttpActivityDistributor);
   },
@@ -602,7 +616,7 @@ HttpObserverManager = {
   },
 
   observe(subject, topic, data) {
-    let channel = ChannelWrapper.get(subject);
+    let channel = this.getWrapper(subject);
     switch (topic) {
       case "http-on-modify-request":
         this.runChannelListener(channel, "opening");
@@ -640,7 +654,7 @@ HttpObserverManager = {
     if (!(nativeChannel instanceof Ci.nsIChannel)) {
       return;
     }
-    let channel = ChannelWrapper.get(nativeChannel);
+    let channel = this.getWrapper(nativeChannel);
 
     // StartStopListener has to be activated early in the request to catch
     // SSL connection issues which do not get reported via nsIHttpActivityObserver.
@@ -652,11 +666,17 @@ HttpObserverManager = {
     let lastActivity = channel.lastActivity || 0;
     if (activitySubtype === nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE &&
         lastActivity && lastActivity !== this.GOOD_LAST_ACTIVITY) {
-      if (!this.errorCheck(channel)) {
-        this.runChannelListener(channel, "onError",
-          {error: this.activityErrorsMap.get(lastActivity) ||
-                  `NS_ERROR_NET_UNKNOWN_${lastActivity}`});
-      }
+      // Make a trip through the event loop to make sure errors have a
+      // chance to be processed before we fall back to a generic error
+      // string.
+      Services.tm.dispatchToMainThread(() => {
+        channel.errorCheck();
+        if (!channel.errorString) {
+          this.runChannelListener(channel, "onError",
+            {error: this.activityErrorsMap.get(lastActivity) ||
+                    `NS_ERROR_NET_UNKNOWN_${lastActivity}`});
+        }
+      });
     } else if (lastActivity !== this.GOOD_LAST_ACTIVITY &&
                lastActivity !== nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE) {
       channel.lastActivity = activitySubtype;
@@ -674,15 +694,6 @@ HttpObserverManager = {
     }
 
     return !filter.urls || filter.urls.matches(uri);
-  },
-
-  errorCheck(channel) {
-    let error = channel.errorString;
-    if (error) {
-      this.runChannelListener(channel, "onError", {error});
-      return true;
-    }
-    return false;
   },
 
   getRequestData(channel, extraData) {
@@ -754,22 +765,24 @@ HttpObserverManager = {
     }
   },
 
+  handleEvent(event) {
+    let channel = event.currentTarget;
+    switch (event.type) {
+      case "error":
+        this.runChannelListener(
+          channel, "onError", {error: channel.errorString});
+        break;
+    }
+  },
+
   runChannelListener(channel, kind, extraData = null) {
     let handlerResults = [];
     let requestHeaders;
     let responseHeaders;
 
     try {
-      if (this.activityInitialized) {
-        if (kind === "onError") {
-          this.destroyFilters(channel);
-          if (channel.errorNotified) {
-            return;
-          }
-          channel.errorNotified = true;
-        } else if (this.errorCheck(channel)) {
-          return;
-        }
+      if (kind !== "onError" && channel.errorString) {
+        return;
       }
 
       let includeStatus = ["headersReceived", "authRequired", "onRedirect", "onStart", "onStop"].includes(kind);
@@ -861,8 +874,6 @@ HttpObserverManager = {
         if (result.cancel) {
           channel.suspended = false;
           channel.cancel(Cr.NS_ERROR_ABORT);
-
-          this.errorCheck(channel);
           return;
         }
 
@@ -894,7 +905,7 @@ HttpObserverManager = {
       if (kind === "modify" && this.listeners.afterModify.size) {
         await this.runChannelListener(channel, "afterModify");
       } else if (kind !== "onError") {
-        this.errorCheck(channel);
+        channel.errorCheck();
       }
     } catch (e) {
       Cu.reportError(e);
@@ -949,7 +960,7 @@ HttpObserverManager = {
   },
 
   onChannelReplaced(oldChannel, newChannel) {
-    let channel = ChannelWrapper.get(oldChannel);
+    let channel = this.getWrapper(oldChannel);
 
     // We want originalURI, this will provide a moz-ext rather than jar or file
     // uri on redirects.

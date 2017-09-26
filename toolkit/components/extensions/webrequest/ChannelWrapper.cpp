@@ -19,6 +19,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/Event.h"
 #include "nsIContentPolicy.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -90,6 +91,9 @@ ChannelWrapper::ClearCachedAttributes()
   ChannelWrapperBinding::ClearCachedRemoteAddressValue(this);
   ChannelWrapperBinding::ClearCachedStatusCodeValue(this);
   ChannelWrapperBinding::ClearCachedStatusLineValue(this);
+  if (!mFiredErrorEvent) {
+    ChannelWrapperBinding::ClearCachedErrorStringValue(this);
+  }
 }
 
 /*****************************************************************************
@@ -102,6 +106,7 @@ ChannelWrapper::Cancel(uint32_t aResult, ErrorResult& aRv)
   nsresult rv = NS_ERROR_UNEXPECTED;
   if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
     rv = chan->Cancel(nsresult(aResult));
+    ErrorCheck();
   }
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -753,6 +758,38 @@ ChannelWrapper::GetErrorString(nsString& aRetVal) const
   }
 }
 
+void
+ChannelWrapper::ErrorCheck()
+{
+  if (!mFiredErrorEvent) {
+    nsAutoString error;
+    GetErrorString(error);
+    if (error.Length()) {
+      mFiredErrorEvent = true;
+      ChannelWrapperBinding::ClearCachedErrorStringValue(this);
+      FireEvent(NS_LITERAL_STRING("error"));
+    }
+  }
+}
+
+/*****************************************************************************
+ * Event dispatching
+ *****************************************************************************/
+
+void
+ChannelWrapper::FireEvent(const nsAString& aType)
+{
+  EventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+
+  RefPtr<Event> event = Event::Constructor(this, aType, init);
+  event->SetTrusted(true);
+
+  bool defaultPrevented;
+  DispatchEvent(event, &defaultPrevented);
+}
+
 /*****************************************************************************
  * Glue
  *****************************************************************************/
@@ -766,24 +803,22 @@ ChannelWrapper::WrapObject(JSContext* aCx, HandleObject aGivenProto)
 NS_IMPL_CYCLE_COLLECTION_CLASS(ChannelWrapper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChannelWrapper)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(ChannelWrapper)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ChannelWrapper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ChannelWrapper, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ChannelWrapper)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ChannelWrapper, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(ChannelWrapper)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ChannelWrapper, DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ChannelWrapper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ChannelWrapper)
+NS_IMPL_ADDREF_INHERITED(ChannelWrapper, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(ChannelWrapper, DOMEventTargetHelper)
 
 } // namespace extensions
 } // namespace mozilla

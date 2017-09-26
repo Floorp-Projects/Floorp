@@ -40,7 +40,7 @@ enum MozContentPolicyType {
  * callers to access them without XPConnect overhead.
  */
 [ChromeOnly, Exposed=System]
-interface ChannelWrapper {
+interface ChannelWrapper : EventTarget {
   /**
    * Returns the wrapper instance for the given channel. The same wrapper is
    * always returned for a given channel.
@@ -154,6 +154,18 @@ interface ChannelWrapper {
    */
   [Cached, Pure]
   readonly attribute DOMString? errorString;
+
+  /**
+   * Dispatched when the channel is closed with an error status. Check
+   * errorString for the error details.
+   */
+  attribute EventHandler onerror;
+
+  /**
+   * Checks the request's current status and dispatches an error event if the
+   * request has failed and one has not already been dispatched.
+   */
+  void errorCheck();
 
 
   /**
