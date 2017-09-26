@@ -1370,7 +1370,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
             JS_DefineProperty(cx, glob, "__LOCATION__",
                               GetLocationProperty, nullptr,
-                              JSPROP_SHARED);
+                              0);
 
             {
                 // We are almost certainly going to run script here, so we need an
