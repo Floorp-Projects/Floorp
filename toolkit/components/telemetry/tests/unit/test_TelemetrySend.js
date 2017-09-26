@@ -411,6 +411,25 @@ add_task(async function test_evictedOnServerErrors() {
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0);
 });
 
+add_task(async function test_tooLateToSend() {
+  Assert.ok(true, "TEST BEGIN");
+  const TEST_TYPE = "test-too-late-to-send";
+
+  await TelemetrySend.reset();
+  PingServer.start();
+  PingServer.registerPingHandler(() => Assert.ok(false, "Should not have received any pings now"));
+
+  Assert.equal(TelemetrySend.pendingPingCount, 0, "Should have no pending pings yet");
+
+  TelemetrySend.testTooLateToSend(true);
+
+  TelemetryController.submitExternalPing(TEST_TYPE, {});
+  Assert.equal(TelemetrySend.pendingPingCount, 1, "Should not send the ping, should pend delivery");
+
+  Assert.equal(Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").snapshot().counts[7], 1,
+    "Should have registered the failed attempt to send");
+});
+
 // Test that the current, non-persisted pending pings are properly saved on shutdown.
 add_task(async function test_persistCurrentPingsOnShutdown() {
   const TEST_TYPE = "test-persistCurrentPingsOnShutdown";
