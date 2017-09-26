@@ -1,9 +1,22 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /**
  * Tests for the "DownloadPaths.jsm" JavaScript module.
  */
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cr = Components.results;
+
+Cu.import("resource://gre/modules/DownloadPaths.jsm");
 
 /**
  * Provides a temporary save directory.
@@ -41,7 +54,7 @@ function testCreateNiceUniqueFile(aTempFile, aExpectedLeafName) {
   do_check_eq(createdFile.leafName, aExpectedLeafName);
 }
 
-add_task(async function test_splitBaseNameAndExtension() {
+function run_test() {
   // Usual file names.
   testSplitBaseNameAndExtension("base", ["base", ""]);
   testSplitBaseNameAndExtension("base.ext", ["base", ".ext"]);
@@ -75,9 +88,7 @@ add_task(async function test_splitBaseNameAndExtension() {
   testSplitBaseNameAndExtension(" .ext", [" ", ".ext"]);
   testSplitBaseNameAndExtension(" .ext. ", [" .ext", ". "]);
   testSplitBaseNameAndExtension(" .ext.gz ", [" .ext", ".gz "]);
-});
 
-add_task(async function test_createNiceUniqueFile() {
   var destDir = createTemporarySaveDirectory();
   try {
     // Single extension.
@@ -113,4 +124,4 @@ add_task(async function test_createNiceUniqueFile() {
     // Clean up the temporary directory.
     destDir.remove(true);
   }
-});
+}
