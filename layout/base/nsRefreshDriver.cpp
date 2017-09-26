@@ -1949,7 +1949,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
         nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
         shell->mObservingLayoutFlushes = false;
-        shell->mSuppressInterruptibleReflows = false;
+        shell->mWasLastReflowInterrupted = false;
         FlushType flushType = HasPendingAnimations(shell)
                                ? FlushType::Layout
                                : FlushType::InterruptibleLayout;
