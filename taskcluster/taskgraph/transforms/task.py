@@ -534,6 +534,7 @@ GROUP_NAMES = {
     'I': 'Docker Image Builds',
     'TL': 'Toolchain builds for Linux 64-bits',
     'TM': 'Toolchain builds for OSX',
+    'TMW': 'Toolchain builds for Windows MinGW',
     'TW32': 'Toolchain builds for Windows 32-bits',
     'TW64': 'Toolchain builds for Windows 64-bits',
     'SM-tc': 'Spidermonkey builds',

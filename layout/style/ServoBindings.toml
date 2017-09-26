@@ -346,6 +346,7 @@ opaque-types = [
     "StyleAnimationValue", # pulls in a whole bunch of stuff we don't need in the bindings
     "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
                                 # don't align properly on Linux 32-bit
+    "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
 ]
 mapped-generic-types = [
     { generic = true, gecko = "mozilla::ServoUnsafeCell", servo = "::std::cell::UnsafeCell" },
