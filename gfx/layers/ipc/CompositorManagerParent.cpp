@@ -42,6 +42,18 @@ CompositorManagerParent::CreateSameProcess()
   // on the main thread and complete before we return the manager handles.
   RefPtr<CompositorManagerParent> parent = new CompositorManagerParent();
   parent->SetOtherProcessId(base::GetCurrentProcId());
+
+  // CompositorManagerParent::Bind would normally add a reference for IPDL but
+  // we don't use that in the same process case.
+  parent.get()->AddRef();
+  sInstance = parent;
+
+#ifdef COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
+  if (!sActiveActors) {
+    sActiveActors = new nsTArray<CompositorManagerParent*>();
+  }
+  sActiveActors->AppendElement(parent);
+#endif
   return parent.forget();
 }
 
@@ -121,22 +133,12 @@ CompositorManagerParent::Bind(Endpoint<PCompositorManagerParent>&& aEndpoint)
     return;
   }
 
-  BindComplete();
-}
-
-void
-CompositorManagerParent::BindComplete()
-{
   // Add the IPDL reference to ourself, so we can't get freed until IPDL is
   // done with us.
   AddRef();
 
-  StaticMutexAutoLock lock(sMutex);
-  if (OtherPid() == base::GetCurrentProcId()) {
-    sInstance = this;
-  }
-
 #ifdef COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
+  StaticMutexAutoLock lock(sMutex);
   if (!sActiveActors) {
     sActiveActors = new nsTArray<CompositorManagerParent*>();
   }
