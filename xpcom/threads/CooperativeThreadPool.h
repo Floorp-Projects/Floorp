@@ -10,11 +10,8 @@
 #include "mozilla/Array.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
-#include "nsCOMPtr.h"
-#include "nsThreadUtils.h"
 #include "prthread.h"
 
 // Windows silliness. winbase.h defines an empty no-argument Yield macro.
