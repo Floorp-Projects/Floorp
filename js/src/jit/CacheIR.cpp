@@ -16,7 +16,6 @@
 #include "vm/SelfHosting.h"
 #include "jsobjinlines.h"
 
-#include "jit/MacroAssembler-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
@@ -204,8 +203,6 @@ GetPropIRGenerator::tryAttachStub()
             if (tryAttachWindowProxy(obj, objId, id))
                 return true;
             if (tryAttachCrossCompartmentWrapper(obj, objId, id))
-                return true;
-            if (tryAttachXrayCrossCompartmentWrapper(obj, objId, id))
                 return true;
             if (tryAttachFunction(obj, objId, id))
                 return true;
@@ -872,7 +869,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
 
     maybeEmitIdGuard(id);
     writer.guardIsProxy(objId);
-    writer.guardHasProxyHandler(objId, Wrapper::wrapperHandler(obj));
+    writer.guardIsCrossCompartmentWrapper(objId);
 
     // Load the object wrapped by the CCW
     ObjOperandId wrapperTargetId = writer.loadWrapperTarget(objId);
@@ -893,114 +890,6 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     EmitReadSlotReturn(writer, unwrapped, holder, shape, /* wrapResult = */ true);
 
     trackAttached("CCWSlot");
-    return true;
-}
-
-static bool
-GetXrayExpandoShapeWrapper(JSContext* cx, HandleObject xray, MutableHandleObject wrapper)
-{
-    Value v = GetProxyReservedSlot(xray, GetXrayJitInfo()->xrayHolderSlot);
-    if (v.isObject()) {
-        NativeObject* holder = &v.toObject().as<NativeObject>();
-        v = holder->getFixedSlot(GetXrayJitInfo()->holderExpandoSlot);
-        if (v.isObject()) {
-            RootedNativeObject expando(cx, &UncheckedUnwrap(&v.toObject())->as<NativeObject>());
-            wrapper.set(NewWrapperWithObjectShape(cx, expando));
-            return wrapper != nullptr;
-        }
-    }
-    wrapper.set(nullptr);
-    return true;
-}
-
-bool
-GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(HandleObject obj, ObjOperandId objId,
-                                                         HandleId id)
-{
-    if (!IsProxy(obj))
-        return false;
-
-    XrayJitInfo* info = GetXrayJitInfo();
-    if (!info || !info->isCrossCompartmentXray(GetProxyHandler(obj)))
-        return false;
-
-    if (!info->globalHasExclusiveExpandos(cx_->global()))
-        return false;
-
-    RootedObject target(cx_, UncheckedUnwrap(obj));
-
-    RootedObject expandoShapeWrapper(cx_);
-    if (!GetXrayExpandoShapeWrapper(cx_, obj, &expandoShapeWrapper)) {
-        cx_->recoverFromOutOfMemory();
-        return false;
-    }
-
-    // Look for a getter we can call on the xray or its prototype chain.
-    Rooted<PropertyDescriptor> desc(cx_);
-    RootedObject holder(cx_, obj);
-    AutoObjectVector prototypes(cx_);
-    AutoObjectVector prototypeExpandoShapeWrappers(cx_);
-    while (true) {
-        if (!GetOwnPropertyDescriptor(cx_, holder, id, &desc)) {
-            cx_->clearPendingException();
-            return false;
-        }
-        if (desc.object())
-            break;
-        if (!GetPrototype(cx_, holder, &holder)) {
-            cx_->clearPendingException();
-            return false;
-        }
-        if (!holder || !IsProxy(holder) || !info->isCrossCompartmentXray(GetProxyHandler(holder)))
-            return false;
-        RootedObject prototypeExpandoShapeWrapper(cx_);
-        if (!GetXrayExpandoShapeWrapper(cx_, holder, &prototypeExpandoShapeWrapper) ||
-            !prototypes.append(holder) ||
-            !prototypeExpandoShapeWrappers.append(prototypeExpandoShapeWrapper))
-        {
-            cx_->recoverFromOutOfMemory();
-            return false;
-        }
-    }
-    if (!desc.isAccessorDescriptor())
-        return false;
-
-    RootedObject getter(cx_, desc.getterObject());
-    if (!getter || !getter->is<JSFunction>() || !getter->as<JSFunction>().isNative())
-        return false;
-
-    maybeEmitIdGuard(id);
-    writer.guardIsProxy(objId);
-    writer.guardHasProxyHandler(objId, GetProxyHandler(obj));
-
-    // Load the object wrapped by the CCW
-    ObjOperandId wrapperTargetId = writer.loadWrapperTarget(objId);
-
-    // Test the wrapped object's class. The properties held by xrays or their
-    // prototypes will be invariant for objects of a given class, except for
-    // changes due to xray expandos or xray prototype mutations.
-    writer.guardAnyClass(wrapperTargetId, target->getClass());
-
-    // Make sure the expandos on the xray and its prototype chain match up with
-    // what we expect. The expando shape needs to be consistent, to ensure it
-    // has not had any shadowing properties added, and the expando cannot have
-    // any custom prototype (xray prototypes are stable otherwise).
-    //
-    // We can only do this for xrays with exclusive access to their expandos
-    // (as we checked earlier), which store a pointer to their expando
-    // directly. Xrays in other compartments may share their expandos with each
-    // other and a VM call is needed just to find the expando.
-    writer.guardXrayExpandoShapeAndDefaultProto(objId, expandoShapeWrapper);
-    for (size_t i = 0; i < prototypes.length(); i++) {
-        JSObject* proto = prototypes[i];
-        ObjOperandId protoId = writer.loadObject(proto);
-        writer.guardXrayExpandoShapeAndDefaultProto(protoId, prototypeExpandoShapeWrappers[i]);
-    }
-
-    writer.callNativeGetterResult(objId, &getter->as<JSFunction>());
-    writer.typeMonitorResult();
-
-    trackAttached("XrayGetter");
     return true;
 }
 
@@ -4375,41 +4264,4 @@ CompareIRGenerator::trackNotAttached()
         sp.endCache(guard);
     }
 #endif
-}
-
-// Class which holds a shape pointer for use when caches might reference data in other zones.
-static const Class shapeContainerClass = {
-    "ShapeContainer",
-    JSCLASS_HAS_RESERVED_SLOTS(1)
-};
-
-static const size_t SHAPE_CONTAINER_SLOT = 0;
-
-JSObject*
-jit::NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj)
-{
-    MOZ_ASSERT(cx->compartment() != obj->compartment());
-
-    RootedObject wrapper(cx);
-    {
-        AutoCompartment ac(cx, obj);
-        wrapper = NewObjectWithClassProto(cx, &shapeContainerClass, nullptr);
-        if (!obj)
-            return nullptr;
-        wrapper->as<NativeObject>().setSlot(SHAPE_CONTAINER_SLOT, PrivateGCThingValue(obj->lastProperty()));
-    }
-    if (!JS_WrapObject(cx, &wrapper))
-        return nullptr;
-    MOZ_ASSERT(IsWrapper(wrapper));
-    return wrapper;
-}
-
-void
-jit::LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst, Label* failure)
-{
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), dst);
-    Address privateAddr(dst, detail::ProxyReservedSlots::offsetOfPrivateSlot());
-    masm.branchTestObject(Assembler::NotEqual, privateAddr, failure);
-    masm.unboxObject(privateAddr, dst);
-    masm.unboxNonDouble(Address(dst, NativeObject::getFixedSlotOffset(SHAPE_CONTAINER_SLOT)), dst);
 }
