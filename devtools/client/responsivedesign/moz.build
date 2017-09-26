@@ -5,7 +5,6 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 DevToolsModules(
-    'resize-commands.js',
     'responsivedesign-old.js',
 )
 
