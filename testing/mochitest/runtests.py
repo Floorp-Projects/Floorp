@@ -1613,6 +1613,9 @@ toolbar#nav-bar {
         if hasattr(options, "topobjdir"):
             browserEnv["MOZ_DEVELOPER_OBJ_DIR"] = options.topobjdir
 
+        if options.headless:
+            browserEnv["MOZ_HEADLESS"] = '1'
+
         # These variables are necessary for correct application startup; change
         # via the commandline at your own risk.
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
@@ -2469,6 +2472,7 @@ toolbar#nav-bar {
         if options.flavor in ('a11y', 'chrome'):
             options.e10s = False
         mozinfo.update({"e10s": options.e10s})  # for test manifest parsing.
+        mozinfo.update({"headless": options.headless})  # for test manifest parsing.
 
         if options.jscov_dir_prefix is not None:
             mozinfo.update({'coverage': True})
