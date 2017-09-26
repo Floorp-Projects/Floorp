@@ -6,6 +6,8 @@
 
 #include "builtin/ModuleObject.h"
 
+#include "mozilla/EnumSet.h"
+
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
@@ -889,29 +891,41 @@ ModuleObject::Freeze(JSContext* cx, HandleModuleObject self)
 #ifdef DEBUG
 
 static inline bool
-IsObjectFrozen(JSContext* cx, HandleObject obj)
+CheckObjectFrozen(JSContext* cx, HandleObject obj, bool* result)
 {
-    bool frozen = false;
-    MOZ_ALWAYS_TRUE(TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, &frozen));
-    return frozen;
+    return TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, result);
 }
 
 static inline bool
-IsObjectPropertyFrozen(JSContext* cx, HandleNativeObject obj, uint32_t slot)
+CheckObjectPropertyFrozen(JSContext* cx, HandleNativeObject obj, uint32_t slot, bool* result)
 {
     RootedObject property(cx, &obj->getSlot(slot).toObject());
-    return IsObjectFrozen(cx, property);
+    return CheckObjectFrozen(cx, property, result);
 }
 
 /* static */ inline bool
-ModuleObject::IsFrozen(JSContext* cx, HandleModuleObject self)
+ModuleObject::AssertFrozen(JSContext* cx, HandleModuleObject self)
 {
-    return IsObjectPropertyFrozen(cx, self, RequestedModulesSlot) &&
-           IsObjectPropertyFrozen(cx, self, ImportEntriesSlot) &&
-           IsObjectPropertyFrozen(cx, self, LocalExportEntriesSlot) &&
-           IsObjectPropertyFrozen(cx, self, IndirectExportEntriesSlot) &&
-           IsObjectPropertyFrozen(cx, self, StarExportEntriesSlot) &&
-           IsObjectFrozen(cx, self);
+    static const mozilla::EnumSet<ModuleSlot> slotsToCheck = {
+        RequestedModulesSlot,
+        ImportEntriesSlot,
+        LocalExportEntriesSlot,
+        IndirectExportEntriesSlot,
+        StarExportEntriesSlot
+    };
+
+    bool frozen = false;
+    for (auto slot : slotsToCheck) {
+        if (!CheckObjectPropertyFrozen(cx, self, slot, &frozen))
+            return false;
+        MOZ_ASSERT(frozen);
+    }
+
+    if (!CheckObjectFrozen(cx, self, &frozen))
+        return false;
+    MOZ_ASSERT(frozen);
+
+    return true;
 }
 
 #endif
@@ -1034,7 +1048,10 @@ ModuleObject::noteFunctionDeclaration(JSContext* cx, HandleAtom name, HandleFunc
 /* static */ bool
 ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self)
 {
-    MOZ_ASSERT(IsFrozen(cx, self));
+#ifdef DEBUG
+    if (!AssertFrozen(cx, self))
+        return false;
+#endif
 
     FunctionDeclarationVector* funDecls = self->functionDeclarations();
     if (!funDecls) {
@@ -1074,7 +1091,10 @@ ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject 
 /* static */ bool
 ModuleObject::execute(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
 {
-    MOZ_ASSERT(IsFrozen(cx, self));
+#ifdef DEBUG
+    if (!AssertFrozen(cx, self))
+        return false;
+#endif
 
     RootedScript script(cx, self->script());
     RootedModuleEnvironmentObject scope(cx, self->environment());
