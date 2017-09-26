@@ -23,6 +23,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/Logging.h"        // for gfxCriticalError
 #include "mozilla/UniquePtr.h"
+#include "TextDrawTarget.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -470,6 +471,11 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
                                 gfx::ShapedTextFlags aOrientation) const
 {
     if (aRange.start >= aRange.end) {
+        return;
+    }
+
+    if (auto* textDrawer = aParams.context->GetTextDrawer()) {
+        textDrawer->FoundUnsupportedFeature();
         return;
     }
 
