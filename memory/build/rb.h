@@ -230,91 +230,6 @@ public:
     }                                                                          \
   } while (0)
 
-#define rb_insert(a_type, a_field, a_cmp, a_tree, a_node)                      \
-  do {                                                                         \
-    a_type rbp_i_s;                                                            \
-    a_type *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;                   \
-    int rbp_i_cmp = 0;                                                         \
-    rbp_i_g = &(a_tree)->rbt_nil;                                              \
-    a_field(&rbp_i_s).SetLeft((a_tree)->rbt_root);                             \
-    a_field(&rbp_i_s).SetRight(&(a_tree)->rbt_nil);                            \
-    a_field(&rbp_i_s).SetColor(NodeColor::Black);                              \
-    rbp_i_p = &rbp_i_s;                                                        \
-    rbp_i_c = (a_tree)->rbt_root;                                              \
-    /* Iteratively search down the tree for the insertion point,      */       \
-    /* splitting 4-nodes as they are encountered.  At the end of each */       \
-    /* iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down    */       \
-    /* the tree, assuming a sufficiently deep tree.                   */       \
-    while (rbp_i_c != &(a_tree)->rbt_nil) {                                    \
-      rbp_i_t = a_field(rbp_i_c).Left();                                       \
-      rbp_i_u = a_field(rbp_i_t).Left();                                       \
-      if (a_field(rbp_i_t).IsRed() && a_field(rbp_i_u).IsRed()) {              \
-        /* rbp_i_c is the top of a logical 4-node, so split it.   */           \
-        /* This iteration does not move down the tree, due to the */           \
-        /* disruptiveness of node splitting.                      */           \
-        /*                                                        */           \
-        /* Rotate right.                                          */           \
-        rbp_rotate_right(a_type, a_field, rbp_i_c, rbp_i_t);                   \
-        /* Pass red links up one level.                           */           \
-        rbp_i_u = a_field(rbp_i_t).Left();                                     \
-        a_field(rbp_i_u).SetColor(NodeColor::Black);                           \
-        if (a_field(rbp_i_p).Left() == rbp_i_c) {                              \
-          a_field(rbp_i_p).SetLeft(rbp_i_t);                                   \
-          rbp_i_c = rbp_i_t;                                                   \
-        } else {                                                               \
-          /* rbp_i_c was the right child of rbp_i_p, so rotate  */             \
-          /* left in order to maintain the left-leaning         */             \
-          /* invariant.                                         */             \
-          MOZ_ASSERT(a_field(rbp_i_p).Right() == rbp_i_c);                     \
-          a_field(rbp_i_p).SetRight(rbp_i_t);                                  \
-          rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_u);                    \
-          if (a_field(rbp_i_g).Left() == rbp_i_p) {                            \
-            a_field(rbp_i_g).SetLeft(rbp_i_u);                                 \
-          } else {                                                             \
-            MOZ_ASSERT(a_field(rbp_i_g).Right() == rbp_i_p);                   \
-            a_field(rbp_i_g).SetRight(rbp_i_u);                                \
-          }                                                                    \
-          rbp_i_p = rbp_i_u;                                                   \
-          rbp_i_cmp = (a_cmp)((a_node), rbp_i_p);                              \
-          if (rbp_i_cmp < 0) {                                                 \
-            rbp_i_c = a_field(rbp_i_p).Left();                                 \
-          } else {                                                             \
-            MOZ_ASSERT(rbp_i_cmp > 0);                                         \
-            rbp_i_c = a_field(rbp_i_p).Right();                                \
-          }                                                                    \
-          continue;                                                            \
-        }                                                                      \
-      }                                                                        \
-      rbp_i_g = rbp_i_p;                                                       \
-      rbp_i_p = rbp_i_c;                                                       \
-      rbp_i_cmp = (a_cmp)((a_node), rbp_i_c);                                  \
-      if (rbp_i_cmp < 0) {                                                     \
-        rbp_i_c = a_field(rbp_i_c).Left();                                     \
-      } else {                                                                 \
-        MOZ_ASSERT(rbp_i_cmp > 0);                                             \
-        rbp_i_c = a_field(rbp_i_c).Right();                                    \
-      }                                                                        \
-    }                                                                          \
-    /* rbp_i_p now refers to the node under which to insert.          */       \
-    a_field(a_node).SetLeft(&(a_tree)->rbt_nil);                               \
-    a_field(a_node).SetRight(&(a_tree)->rbt_nil);                              \
-    a_field(a_node).SetColor(NodeColor::Red);                                  \
-    if (rbp_i_cmp > 0) {                                                       \
-      a_field(rbp_i_p).SetRight((a_node));                                     \
-      rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_t);                        \
-      if (a_field(rbp_i_g).Left() == rbp_i_p) {                                \
-        a_field(rbp_i_g).SetLeft(rbp_i_t);                                     \
-      } else if (a_field(rbp_i_g).Right() == rbp_i_p) {                        \
-        a_field(rbp_i_g).SetRight(rbp_i_t);                                    \
-      }                                                                        \
-    } else {                                                                   \
-      a_field(rbp_i_p).SetLeft((a_node));                                      \
-    }                                                                          \
-    /* Update the root and make sure that it is black.                */       \
-    (a_tree)->rbt_root = a_field(&rbp_i_s).Left();                             \
-    a_field((a_tree)->rbt_root).SetColor(NodeColor::Black);                    \
-  } while (0)
-
 #define rb_remove(a_type, a_field, a_cmp, a_tree, a_node)                      \
   do {                                                                         \
     a_type rbp_r_s;                                                            \
@@ -607,7 +522,87 @@ struct RedBlackTree
 
   void Insert(T* aNode)
   {
-    rb_insert(T, Trait::GetTreeNode, Trait::Compare, this, aNode);
+    T rbp_i_s;
+    T *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;
+    int rbp_i_cmp = 0;
+    rbp_i_g = &rbt_nil;
+    Trait::GetTreeNode(&rbp_i_s).SetLeft(rbt_root);
+    Trait::GetTreeNode(&rbp_i_s).SetRight(&rbt_nil);
+    Trait::GetTreeNode(&rbp_i_s).SetColor(NodeColor::Black);
+    rbp_i_p = &rbp_i_s;
+    rbp_i_c = rbt_root;
+    /* Iteratively search down the tree for the insertion point,
+     * splitting 4-nodes as they are encountered. At the end of each
+     * iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down
+     * the tree, assuming a sufficiently deep tree. */
+    while (rbp_i_c != &rbt_nil) {
+      rbp_i_t = Trait::GetTreeNode(rbp_i_c).Left();
+      rbp_i_u = Trait::GetTreeNode(rbp_i_t).Left();
+      if (Trait::GetTreeNode(rbp_i_t).IsRed() &&
+          Trait::GetTreeNode(rbp_i_u).IsRed()) {
+        /* rbp_i_c is the top of a logical 4-node, so split it.
+         * This iteration does not move down the tree, due to the
+         * disruptiveness of node splitting.
+         *
+         * Rotate right. */
+        rbp_rotate_right(T, Trait::GetTreeNode, rbp_i_c, rbp_i_t);
+        /* Pass red links up one level. */
+        rbp_i_u = Trait::GetTreeNode(rbp_i_t).Left();
+        Trait::GetTreeNode(rbp_i_u).SetColor(NodeColor::Black);
+        if (Trait::GetTreeNode(rbp_i_p).Left() == rbp_i_c) {
+          Trait::GetTreeNode(rbp_i_p).SetLeft(rbp_i_t);
+          rbp_i_c = rbp_i_t;
+        } else {
+          /* rbp_i_c was the right child of rbp_i_p, so rotate
+           * left in order to maintain the left-leaning invariant. */
+          MOZ_ASSERT(Trait::GetTreeNode(rbp_i_p).Right() == rbp_i_c);
+          Trait::GetTreeNode(rbp_i_p).SetRight(rbp_i_t);
+          rbp_lean_left(T, Trait::GetTreeNode, rbp_i_p, rbp_i_u);
+          if (Trait::GetTreeNode(rbp_i_g).Left() == rbp_i_p) {
+            Trait::GetTreeNode(rbp_i_g).SetLeft(rbp_i_u);
+          } else {
+            MOZ_ASSERT(Trait::GetTreeNode(rbp_i_g).Right() == rbp_i_p);
+            Trait::GetTreeNode(rbp_i_g).SetRight(rbp_i_u);
+          }
+          rbp_i_p = rbp_i_u;
+          rbp_i_cmp = Trait::Compare(aNode, rbp_i_p);
+          if (rbp_i_cmp < 0) {
+            rbp_i_c = Trait::GetTreeNode(rbp_i_p).Left();
+          } else {
+            MOZ_ASSERT(rbp_i_cmp > 0);
+            rbp_i_c = Trait::GetTreeNode(rbp_i_p).Right();
+          }
+          continue;
+        }
+      }
+      rbp_i_g = rbp_i_p;
+      rbp_i_p = rbp_i_c;
+      rbp_i_cmp = Trait::Compare(aNode, rbp_i_c);
+      if (rbp_i_cmp < 0) {
+        rbp_i_c = Trait::GetTreeNode(rbp_i_c).Left();
+      } else {
+        MOZ_ASSERT(rbp_i_cmp > 0);
+        rbp_i_c = Trait::GetTreeNode(rbp_i_c).Right();
+      }
+    }
+    /* rbp_i_p now refers to the node under which to insert. */
+    Trait::GetTreeNode(aNode).SetLeft(&rbt_nil);
+    Trait::GetTreeNode(aNode).SetRight(&rbt_nil);
+    Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+    if (rbp_i_cmp > 0) {
+      Trait::GetTreeNode(rbp_i_p).SetRight(aNode);
+      rbp_lean_left(T, Trait::GetTreeNode, rbp_i_p, rbp_i_t);
+      if (Trait::GetTreeNode(rbp_i_g).Left() == rbp_i_p) {
+        Trait::GetTreeNode(rbp_i_g).SetLeft(rbp_i_t);
+      } else if (Trait::GetTreeNode(rbp_i_g).Right() == rbp_i_p) {
+        Trait::GetTreeNode(rbp_i_g).SetRight(rbp_i_t);
+      }
+    } else {
+      Trait::GetTreeNode(rbp_i_p).SetLeft(aNode);
+    }
+    /* Update the root and make sure that it is black. */
+    rbt_root = Trait::GetTreeNode(&rbp_i_s).Left();
+    Trait::GetTreeNode(rbt_root).SetColor(NodeColor::Black);
   }
 
   void Remove(T* aNode)
