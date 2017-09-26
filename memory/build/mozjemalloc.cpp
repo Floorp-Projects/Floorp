@@ -386,6 +386,122 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #define	RUN_MAX_OVRHD		0x0000003dU
 #define	RUN_MAX_OVRHD_RELAX	0x00001800U
 
+/*
+ * When MALLOC_STATIC_SIZES is defined most of the parameters
+ * controlling the malloc behavior are defined as compile-time constants
+ * for best performance and cannot be altered at runtime.
+ */
+#if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) && !defined(__aarch64__)
+#define MALLOC_STATIC_SIZES 1
+#endif
+
+#ifdef MALLOC_STATIC_SIZES
+
+/*
+ * VM page size. It must divide the runtime CPU page size or the code
+ * will abort.
+ * Platform specific page size conditions copied from js/public/HeapAPI.h
+ */
+#if (defined(SOLARIS) || defined(__FreeBSD__)) && \
+    (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
+#define pagesize_2pow (size_t(13))
+#elif defined(__powerpc64__)
+#define pagesize_2pow (size_t(16))
+#else
+#define pagesize_2pow (size_t(12))
+#endif
+#define pagesize (size_t(1) << pagesize_2pow)
+#define pagesize_mask (pagesize - 1)
+
+/* Various quantum-related settings. */
+
+#define QUANTUM_DEFAULT  (size_t(1) << QUANTUM_2POW_MIN)
+static const size_t quantum = QUANTUM_DEFAULT;
+static const size_t quantum_mask = QUANTUM_DEFAULT - 1;
+
+/* Various bin-related settings. */
+
+static const size_t small_min = (QUANTUM_DEFAULT >> 1) + 1;
+static const size_t small_max = size_t(SMALL_MAX_DEFAULT);
+
+/* Max size class for bins. */
+static const size_t bin_maxclass = pagesize >> 1;
+
+ /* Number of (2^n)-spaced tiny bins. */
+static const unsigned ntbins = unsigned(QUANTUM_2POW_MIN - TINY_MIN_2POW);
+
+ /* Number of quantum-spaced bins. */
+static const unsigned nqbins = unsigned(SMALL_MAX_DEFAULT >> QUANTUM_2POW_MIN);
+
+/* Number of (2^n)-spaced sub-page bins. */
+static const unsigned nsbins = unsigned(pagesize_2pow - SMALL_MAX_2POW_DEFAULT - 1);
+
+#else /* !MALLOC_STATIC_SIZES */
+
+/* VM page size. */
+static size_t pagesize;
+static size_t pagesize_mask;
+static size_t pagesize_2pow;
+
+/* Various bin-related settings. */
+static size_t bin_maxclass; /* Max size class for bins. */
+static unsigned ntbins; /* Number of (2^n)-spaced tiny bins. */
+static unsigned nqbins; /* Number of quantum-spaced bins. */
+static unsigned nsbins; /* Number of (2^n)-spaced sub-page bins. */
+static size_t small_min;
+static size_t small_max;
+
+/* Various quantum-related settings. */
+static size_t quantum;
+static size_t quantum_mask; /* (quantum - 1). */
+
+#endif
+
+/* Various chunk-related settings. */
+
+/*
+ * Compute the header size such that it is large enough to contain the page map
+ * and enough nodes for the worst case: one node per non-header page plus one
+ * extra for situations where we briefly have one more node allocated than we
+ * will need.
+ */
+#define calculate_arena_header_size() \
+ (sizeof(arena_chunk_t) + sizeof(arena_chunk_map_t) * (chunk_npages - 1))
+
+#define calculate_arena_header_pages() \
+ ((calculate_arena_header_size() >> pagesize_2pow) + \
+  ((calculate_arena_header_size() & pagesize_mask) ? 1 : 0))
+
+/* Max size class for arenas. */
+#define calculate_arena_maxclass() \
+ (chunksize - (arena_chunk_header_npages << pagesize_2pow))
+
+/*
+ * Recycle at most 128 chunks. With 1 MiB chunks, this means we retain at most
+ * 6.25% of the process address space on a 32-bit OS for later use.
+ */
+#define CHUNK_RECYCLE_LIMIT 128
+
+#ifdef MALLOC_STATIC_SIZES
+#define CHUNKSIZE_DEFAULT ((size_t) 1 << CHUNK_2POW_DEFAULT)
+static const size_t chunksize = CHUNKSIZE_DEFAULT;
+static const size_t chunksize_mask = CHUNKSIZE_DEFAULT - 1;
+static const size_t chunk_npages = CHUNKSIZE_DEFAULT >> pagesize_2pow;
+#define arena_chunk_header_npages calculate_arena_header_pages()
+#define arena_maxclass calculate_arena_maxclass()
+static const size_t recycle_limit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
+#else
+static size_t chunksize;
+static size_t chunksize_mask; /* (chunksize - 1). */
+static size_t chunk_npages;
+static size_t arena_chunk_header_npages;
+static size_t arena_maxclass; /* Max size class for arenas. */
+static size_t recycle_limit;
+#endif
+
+/* The current amount of recycled bytes, updated atomically. */
+static size_t recycled_size;
+
 /******************************************************************************/
 
 /* MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive. */
@@ -820,131 +936,6 @@ public:
 };
 
 typedef RedBlackTree<arena_t> arena_tree_t;
-
-/******************************************************************************/
-/*
- * Data.
- */
-
-/*
- * When MALLOC_STATIC_SIZES is defined most of the parameters
- * controlling the malloc behavior are defined as compile-time constants
- * for best performance and cannot be altered at runtime.
- */
-#if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) && !defined(__aarch64__)
-#define MALLOC_STATIC_SIZES 1
-#endif
-
-#ifdef MALLOC_STATIC_SIZES
-
-/*
- * VM page size. It must divide the runtime CPU page size or the code
- * will abort.
- * Platform specific page size conditions copied from js/public/HeapAPI.h
- */
-#if (defined(SOLARIS) || defined(__FreeBSD__)) && \
-    (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
-#define pagesize_2pow			((size_t) 13)
-#elif defined(__powerpc64__)
-#define pagesize_2pow			((size_t) 16)
-#else
-#define pagesize_2pow			((size_t) 12)
-#endif
-#define pagesize			((size_t) 1 << pagesize_2pow)
-#define pagesize_mask			(pagesize - 1)
-
-/* Various quantum-related settings. */
-
-#define QUANTUM_DEFAULT 		((size_t) 1 << QUANTUM_2POW_MIN)
-static const size_t	quantum	=	QUANTUM_DEFAULT;
-static const size_t	quantum_mask =	QUANTUM_DEFAULT - 1;
-
-/* Various bin-related settings. */
-
-static const size_t	small_min =	(QUANTUM_DEFAULT >> 1) + 1;
-static const size_t	small_max =	(size_t) SMALL_MAX_DEFAULT;
-
-/* Max size class for bins. */
-static const size_t	bin_maxclass =	pagesize >> 1;
-
- /* Number of (2^n)-spaced tiny bins. */
-static const unsigned	ntbins =	(unsigned)
-					(QUANTUM_2POW_MIN - TINY_MIN_2POW);
-
- /* Number of quantum-spaced bins. */
-static const unsigned	nqbins =	(unsigned)
-					(SMALL_MAX_DEFAULT >> QUANTUM_2POW_MIN);
-
-/* Number of (2^n)-spaced sub-page bins. */
-static const unsigned	nsbins =	(unsigned)
-					(pagesize_2pow -
-					 SMALL_MAX_2POW_DEFAULT - 1);
-
-#else /* !MALLOC_STATIC_SIZES */
-
-/* VM page size. */
-static size_t		pagesize;
-static size_t		pagesize_mask;
-static size_t		pagesize_2pow;
-
-/* Various bin-related settings. */
-static size_t		bin_maxclass; /* Max size class for bins. */
-static unsigned		ntbins; /* Number of (2^n)-spaced tiny bins. */
-static unsigned		nqbins; /* Number of quantum-spaced bins. */
-static unsigned		nsbins; /* Number of (2^n)-spaced sub-page bins. */
-static size_t		small_min;
-static size_t		small_max;
-
-/* Various quantum-related settings. */
-static size_t		quantum;
-static size_t		quantum_mask; /* (quantum - 1). */
-
-#endif
-
-/* Various chunk-related settings. */
-
-/*
- * Compute the header size such that it is large enough to contain the page map
- * and enough nodes for the worst case: one node per non-header page plus one
- * extra for situations where we briefly have one more node allocated than we
- * will need.
- */
-#define calculate_arena_header_size()					\
-	(sizeof(arena_chunk_t) + sizeof(arena_chunk_map_t) * (chunk_npages - 1))
-
-#define calculate_arena_header_pages()					\
-	((calculate_arena_header_size() >> pagesize_2pow) +		\
-	 ((calculate_arena_header_size() & pagesize_mask) ? 1 : 0))
-
-/* Max size class for arenas. */
-#define calculate_arena_maxclass()					\
-	(chunksize - (arena_chunk_header_npages << pagesize_2pow))
-
-/*
- * Recycle at most 128 chunks. With 1 MiB chunks, this means we retain at most
- * 6.25% of the process address space on a 32-bit OS for later use.
- */
-#define CHUNK_RECYCLE_LIMIT 128
-
-#ifdef MALLOC_STATIC_SIZES
-#define CHUNKSIZE_DEFAULT		((size_t) 1 << CHUNK_2POW_DEFAULT)
-static const size_t	chunksize =	CHUNKSIZE_DEFAULT;
-static const size_t	chunksize_mask =CHUNKSIZE_DEFAULT - 1;
-static const size_t	chunk_npages =	CHUNKSIZE_DEFAULT >> pagesize_2pow;
-#define arena_chunk_header_npages	calculate_arena_header_pages()
-#define arena_maxclass			calculate_arena_maxclass()
-static const size_t	recycle_limit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
-#else
-static size_t		chunksize;
-static size_t		chunksize_mask; /* (chunksize - 1). */
-static size_t		chunk_npages;
-static size_t		arena_chunk_header_npages;
-static size_t		arena_maxclass; /* Max size class for arenas. */
-static size_t		recycle_limit;
-#endif
-
-/* The current amount of recycled bytes, updated atomically. */
-static size_t recycled_size;
 
 /********/
 /*
