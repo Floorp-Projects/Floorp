@@ -69,7 +69,7 @@ var FormAssistant = {
         if (aData == "TOUCHING" || aData == "WAITING_LISTENERS") {
           break;
         }
-        let focused = this._currentFocusedElement && this._currentFocusedElement.get();
+        let focused = this.focusedElement;
         if (aData == "NOTHING") {
           if (!focused || this._showValidationMessage(focused)) {
             break;
@@ -94,13 +94,17 @@ var FormAssistant = {
 
     // Ignore this notificaiton if the current tab doesn't contain the invalid element
     let currentElement = aInvalidElements.queryElementAt(0, Ci.nsISupports);
-    let focused = this._currentFocusedElement && this._currentFocusedElement.get();
+    let focused = this.focusedElement;
     if (focused && focused.ownerGlobal.top !== currentElement.ownerGlobal.top) {
         return;
     }
 
     // Our focus listener will show the element's validation message
     currentElement.focus();
+  },
+
+  get focusedElement() {
+    return this._currentFocusedElement && this._currentFocusedElement.get();
   },
 
   handleEvent: function(aEvent) {
@@ -116,7 +120,7 @@ var FormAssistant = {
       }
 
       case "blur": {
-        let focused = this._currentFocusedElement && this._currentFocusedElement.get();
+        let focused = this.focusedElement;
         if (focused) {
           this._hideFormAssistPopup(focused);
         }
@@ -126,16 +130,19 @@ var FormAssistant = {
 
       case "click": {
         let currentElement = aEvent.target;
+        if (currentElement !== this.focusedElement) {
+          break;
+        }
 
         // Prioritize a form validation message over autocomplete suggestions
         // when the element is first focused (a form validation message will
         // only be available if an invalid form was submitted)
-        if (this._showValidationMessage(currentElement)) {
+        if (this._isValidateable(currentElement)) {
           break;
         }
 
         let checkResultsClick = hasResults => {
-          if (!hasResults) {
+          if (!hasResults && currentElement === this.focusedElement) {
             this._hideFormAssistPopup(currentElement);
           }
         };
@@ -146,19 +153,20 @@ var FormAssistant = {
 
       case "input": {
         let currentElement = aEvent.target;
-        let focused = this._currentFocusedElement && this._currentFocusedElement.get();
 
         // If this element isn't focused, we're already in middle of an
         // autocomplete, or its value hasn't changed, don't show the
         // autocomplete popup.
-        if (currentElement !== focused || this._doingAutocomplete) {
+        if (currentElement !== this.focusedElement || this._doingAutocomplete) {
           break;
         }
 
-        // Since we can only show one popup at a time, prioritze autocomplete
+        // Since we can only show one popup at a time, prioritize autocomplete
         // suggestions over a form validation message
         let checkResultsInput = hasResults => {
-          if (hasResults || this._showValidationMessage(currentElement)) {
+          if (hasResults ||
+              currentElement !== this.focusedElement ||
+              this._showValidationMessage(currentElement)) {
             return;
           }
           // If we're not showing autocomplete suggestions, hide the form assist popup
@@ -264,7 +272,7 @@ var FormAssistant = {
       let suggestions = autoCompleteSuggestions.concat(listSuggestions);
 
       // Return false if there are no suggestions to show
-      if (!suggestions.length) {
+      if (!suggestions.length || aElement !== this.focusedElement) {
         aCallback(false);
         return;
       }
@@ -292,6 +300,7 @@ var FormAssistant = {
             aElement instanceof Ci.nsIDOMHTMLTextAreaElement ||
             aElement instanceof Ci.nsIDOMHTMLSelectElement ||
             aElement instanceof Ci.nsIDOMHTMLButtonElement) &&
+           aElement.matches(":-moz-ui-invalid") &&
            aElement.validationMessage;
   },
 
