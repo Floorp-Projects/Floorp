@@ -18,6 +18,7 @@
 #include "nsILoadGroup.h"
 #include "nsNetCID.h"
 #include "nsStreamUtils.h"
+#include "SlicedInputStream.h"
 #include <algorithm>
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
@@ -331,6 +332,10 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     // (1) the stream is blocking
     // (2) the stream does not support nsIAsyncInputStream
     //
+    if (mStreamOffset != UINT64_MAX || mStreamLength != UINT64_MAX) {
+        mStream = new SlicedInputStream(mStream, mStreamOffset, mStreamLength);
+        mStreamOffset = 0;
+    }
 
     bool nonBlocking;
     nsresult rv = mStream->IsNonBlocking(&nonBlocking);
@@ -338,17 +343,6 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 
     if (nonBlocking) {
         mAsyncStream = do_QueryInterface(mStream);
-        //
-        // if the stream supports nsIAsyncInputStream, and if we need to seek
-        // to a starting offset, then we must do so here.  in the non-async
-        // stream case, the stream transport service will take care of seeking
-        // for us.
-        //
-        if (mAsyncStream && (mStreamOffset != UINT64_MAX)) {
-            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
-            if (seekable)
-                seekable->Seek(nsISeekableStream::NS_SEEK_SET, mStreamOffset);
-        }
     }
 
     if (!mAsyncStream) {
@@ -358,8 +352,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsITransport> transport;
-        rv = sts->CreateInputTransport(mStream, mStreamOffset, mStreamLength,
-                                       mCloseWhenDone, getter_AddRefs(transport));
+        rv = sts->CreateInputTransport(mStream, mCloseWhenDone, getter_AddRefs(transport));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIInputStream> wrapper;
