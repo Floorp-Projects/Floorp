@@ -1460,12 +1460,13 @@ var CustomizableUIInternal = {
       if (tooltip) {
         node.setAttribute("tooltiptext", tooltip);
       }
-      node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
       let commandHandler = this.handleWidgetCommand.bind(this, aWidget, node);
       node.addEventListener("command", commandHandler);
       let clickHandler = this.handleWidgetClick.bind(this, aWidget, node);
       node.addEventListener("click", clickHandler);
+
+      let nodeClasses = ["toolbarbutton-1", "chromeclass-toolbar-additional"];
 
       // If the widget has a view, and has view showing / hiding listeners,
       // hook those up to this widget.
@@ -1477,12 +1478,16 @@ var CustomizableUIInternal = {
           // PanelUI relies on the .PanelUI-subView class to be able to show only
           // one sub-view at a time.
           viewNode.classList.add("PanelUI-subView");
+          if (aWidget.source == CustomizableUI.SOURCE_BUILTIN) {
+            nodeClasses.push("subviewbutton-nav");
+          }
           this.ensureSubviewListeners(viewNode);
         } else {
           log.error("Could not find the view node with id: " + aWidget.viewId +
                     ", for widget: " + aWidget.id + ".");
         }
       }
+      node.setAttribute("class", nodeClasses.join(" "));
 
       if (aWidget.onCreated) {
         aWidget.onCreated(node);
