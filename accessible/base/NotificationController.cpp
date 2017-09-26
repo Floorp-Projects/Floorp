@@ -601,9 +601,13 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   if (!mDocument)
     return;
 
+  // Wait until an update, we have started, or an interruptible reflow is
+  // finished.
   if (mObservingState == eRefreshProcessing ||
-      mObservingState == eRefreshProcessingForUpdate)
+      mObservingState == eRefreshProcessingForUpdate ||
+      mPresShell->IsReflowInterrupted()) {
     return;
+  }
 
   // Any generic notifications should be queued if we're processing content
   // insertions or generic notifications.
