@@ -154,7 +154,7 @@ TooltipToggle.prototype = {
 
   _onMouseOut: function (event) {
     // Only hide the tooltip if the mouse leaves baseNode.
-    if (event && this._baseNode && this._baseNode.contains(event.relatedTarget)) {
+    if (event && this._baseNode && !this._baseNode.contains(event.relatedTarget)) {
       return;
     }
 
