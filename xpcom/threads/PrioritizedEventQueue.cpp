@@ -6,10 +6,8 @@
 
 #include "PrioritizedEventQueue.h"
 #include "mozilla/EventQueue.h"
-#include "mozilla/ScopeExit.h"
 #include "nsThreadManager.h"
 #include "nsXPCOMPrivate.h" // for gXPCOMThreadsShutDown
-#include "InputEventStatistics.h"
 
 using namespace mozilla;
 
