@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from multiprocessing import current_process
 from threading import current_thread, Lock
@@ -11,8 +11,8 @@ import sys
 import time
 import traceback
 
-from logtypes import Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple
-from logtypes import log_action, convertor_registry
+from .logtypes import Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple
+from .logtypes import log_action, convertor_registry
 
 """Structured Logging for recording test results.
 
@@ -238,8 +238,8 @@ class StructuredLogger(object):
                 except Exception:
                     # Write the exception details directly to stderr because
                     # log() would call this method again which is currently locked.
-                    print >> sys.__stderr__, '%s: Failure calling log handler:' % __name__
-                    print >> sys.__stderr__, traceback.format_exc()
+                    print('%s: Failure calling log handler:' % __name__, file=sys.__stderr__)
+                    print(traceback.format_exc(), file=sys.__stderr__)
 
     def _make_log_data(self, action, data):
         all_data = {"action": action,

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import, print_function
+
 import argparse
 import collections
 import ConfigParser
@@ -159,10 +161,10 @@ class ProcessLauncher(object):
 
         maxtime = self.children[proc_name].maxtime
         if self.verbose:
-            print "%sLaunching %s for %d*%d seconds" % (" " * level,
+            print("%sLaunching %s for %d*%d seconds" % (" " * level,
                                                         proc_name,
                                                         maxtime,
-                                                        self.UNIT_TIME)
+                                                        self.UNIT_TIME))
 
         while self.children[proc_name].children:
             child = self.children[proc_name].children.pop()
@@ -174,7 +176,7 @@ class ProcessLauncher(object):
 
         self._launch(maxtime)
         if self.verbose:
-            print "%sFinished %s" % (" " * level, proc_name)
+            print("%sFinished %s" % (" " * level, proc_name))
 
     def _launch(self, running_time):
         """
