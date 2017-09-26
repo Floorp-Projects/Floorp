@@ -136,14 +136,6 @@ public:
 
 #define rb_node_field(a_node, a_field) a_field(a_node)
 
-/* Node initializer. */
-#define rbp_node_new(a_type, a_field, a_tree, a_node)                          \
-  do {                                                                         \
-    rb_node_field((a_node), a_field).SetLeft(&(a_tree)->rbt_nil);              \
-    rb_node_field((a_node), a_field).SetRight(&(a_tree)->rbt_nil);             \
-    rb_node_field((a_node), a_field).SetColor(NodeColor::Red);                 \
-  } while (0)
-
 /* Tree operations. */
 #define rbp_first(a_type, a_field, a_tree, a_root, r_node)                     \
   do {                                                                         \
@@ -425,7 +417,9 @@ public:
       }                                                                        \
     }                                                                          \
     /* rbp_i_p now refers to the node under which to insert.          */       \
-    rbp_node_new(a_type, a_field, a_tree, (a_node));                           \
+    rb_node_field(a_node, a_field).SetLeft(&(a_tree)->rbt_nil);                \
+    rb_node_field(a_node, a_field).SetRight(&(a_tree)->rbt_nil);               \
+    rb_node_field(a_node, a_field).SetColor(NodeColor::Red);                   \
     if (rbp_i_cmp > 0) {                                                       \
       rb_node_field(rbp_i_p, a_field).SetRight((a_node));                      \
       rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_t);                        \
@@ -634,7 +628,8 @@ struct RedBlackTree
   void Init()
   {
     rbt_root = &rbt_nil;
-    rbp_node_new(T, Trait::GetTreeNode, this, &rbt_nil);
+    rb_node_field(&rbt_nil, Trait::GetTreeNode).SetLeft(&rbt_nil);
+    rb_node_field(&rbt_nil, Trait::GetTreeNode).SetRight(&rbt_nil);
     rb_node_field(&rbt_nil, Trait::GetTreeNode).SetColor(NodeColor::Black);
   }
 
