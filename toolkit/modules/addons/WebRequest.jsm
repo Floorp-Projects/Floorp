@@ -33,9 +33,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "webReqService",
 
 XPCOMUtils.defineLazyGetter(this, "ExtensionError", () => ExtensionUtils.ExtensionError);
 
-let WebRequestListener = Components.Constructor("@mozilla.org/webextensions/webRequestListener;1",
-                                                "nsIWebRequestListener", "init");
-
 function runLater(job) {
   Services.tm.dispatchToMainThread(job);
 }
@@ -306,24 +303,6 @@ var ContentPolicyManager = {
 };
 ContentPolicyManager.init();
 
-function StartStopListener(manager, channel) {
-  this.manager = manager;
-  new WebRequestListener(this, channel.channel);
-}
-
-StartStopListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
-                                         Ci.nsIStreamListener]),
-
-  onStartRequest: function(request, context) {
-    this.manager.onStartRequest(ChannelWrapper.get(request));
-  },
-
-  onStopRequest(request, context, statusCode) {
-    this.manager.onStopRequest(ChannelWrapper.get(request));
-  },
-};
-
 var ChannelEventSink = {
   _classDescription: "WebRequest channel event sink",
   _classID: Components.ID("115062f8-92f1-11e5-8b7f-080027b0f7ec"),
@@ -532,6 +511,12 @@ HttpObserverManager = {
       if (this.listeners.onError.size) {
         wrapper.addEventListener("error", this);
       }
+      if (this.listeners.onStart.size) {
+        wrapper.addEventListener("start", this);
+      }
+      if (this.listeners.onStop.size) {
+        wrapper.addEventListener("stop", this);
+      }
       /* eslint-enable mozilla/balanced-listeners */
 
       wrapper._addedListeners = true;
@@ -656,13 +641,6 @@ HttpObserverManager = {
     }
     let channel = this.getWrapper(nativeChannel);
 
-    // StartStopListener has to be activated early in the request to catch
-    // SSL connection issues which do not get reported via nsIHttpActivityObserver.
-    if (activityType == nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION &&
-        activitySubtype == nsIHttpActivityObserver.ACTIVITY_SUBTYPE_REQUEST_HEADER) {
-      this.attachStartStopListener(channel);
-    }
-
     let lastActivity = channel.lastActivity || 0;
     if (activitySubtype === nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE &&
         lastActivity && lastActivity !== this.GOOD_LAST_ACTIVITY) {
@@ -771,6 +749,13 @@ HttpObserverManager = {
       case "error":
         this.runChannelListener(
           channel, "onError", {error: channel.errorString});
+        break;
+      case "start":
+        this.destroyFilters(channel);
+        this.runChannelListener(channel, "onStart");
+        break;
+      case "stop":
+        this.runChannelListener(channel, "onStop");
         break;
     }
   },
@@ -930,25 +915,7 @@ HttpObserverManager = {
     return false;
   },
 
-  attachStartStopListener(channel) {
-    // Check whether we've already added a listener to this channel,
-    // so we don't wind up chaining multiple listeners.
-    if (!this.needTracing || channel.hasListener ||
-        !(channel.channel instanceof Ci.nsITraceableChannel)) {
-      return;
-    }
-
-    // skip redirections, https://bugzilla.mozilla.org/show_bug.cgi?id=728901#c8
-    let {statusCode} = channel;
-    if (statusCode < 300 || statusCode >= 400) {
-      new StartStopListener(this, channel);
-      channel.hasListener = true;
-    }
-  },
-
   examine(channel, topic, data) {
-    this.attachStartStopListener(channel);
-
     if (this.listeners.headersReceived.size) {
       this.runChannelListener(channel, "headersReceived");
     }
@@ -967,15 +934,6 @@ HttpObserverManager = {
     this.destroyFilters(channel);
     this.runChannelListener(channel, "onRedirect", {redirectUrl: newChannel.originalURI.spec});
     channel.channel = newChannel;
-  },
-
-  onStartRequest(channel) {
-    this.destroyFilters(channel);
-    this.runChannelListener(channel, "onStart");
-  },
-
-  onStopRequest(channel) {
-    this.runChannelListener(channel, "onStop");
   },
 };
 
