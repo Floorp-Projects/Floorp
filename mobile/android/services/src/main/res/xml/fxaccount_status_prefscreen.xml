@@ -84,11 +84,6 @@
         android:key="device_name"
         android:persistent="false"
         android:title="@string/fxaccount_status_device_name" />
-    <SwitchPreference 
-	android:key="sync.allow_metered"
-	android:defaultValue="true"
-	android:title="@string/fxaccount_pref_sync_use_metered"
-	android:summary="@string/fxaccount_pref_sync_use_metered_summary"/>
 
     <org.mozilla.gecko.fxa.activities.CustomColorPreference
         android:editable="false"
