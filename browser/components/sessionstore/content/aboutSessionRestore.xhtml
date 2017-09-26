@@ -25,28 +25,19 @@
     <script type="application/javascript" src="chrome://browser/content/aboutSessionRestore.js"/>
   </head>
 
-  <body dir="&locale.dir;" class="illustrated">
+  <body dir="&locale.dir;">
 
     <div class="container restore-chosen">
-      <div class="description-wrapper">
-        <div class="title">
-          <h1 class="title-text">&restorepage.errorTitle2;</h1>
-        </div>
-        <div class="description">
-          <p>&restorepage.problemDesc2;</p>
 
-          <div id="errorLongDesc">
-            <p>&restorepage.tryThis2;</p>
-          </div>
+      <div class="title">
+        <h1 class="title-text">&restorepage.errorTitle2;</h1>
+      </div>
+      <div class="description">
+        <p>&restorepage.problemDesc2;</p>
+
+        <div id="errorLongDesc">
+          <p>&restorepage.tryThis2;</p>
         </div>
-        <button id="tabsToggle" class="show-tabs">
-          <span id="showTabs">
-            &restorepage.showTabs;
-          </span>
-          <span id="hideTabs">
-            &restorepage.hideTabs;
-          </span>
-        </button>
       </div>
       <div class="tree-container" available="true">
         <xul:tree id="tabList" seltype="single" hidecolumnpicker="true"
