@@ -628,14 +628,15 @@ BackgroundChildImpl::RecvDispatchLocalStorageChange(
 }
 
 bool
-BackgroundChildImpl::GetMessageSchedulerGroups(const Message& aMsg, nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+BackgroundChildImpl::GetMessageSchedulerGroups(const Message& aMsg, SchedulerGroupSet& aGroups)
 {
   if (aMsg.type() == layout::PVsync::MessageType::Msg_Notify__ID) {
     MOZ_ASSERT(NS_IsMainThread());
     aGroups.Clear();
     if (dom::TabChild::HasActiveTabs()) {
-      for (dom::TabChild* tabChild : dom::TabChild::GetActiveTabs()) {
-        aGroups.AppendElement(tabChild->TabGroup());
+      for (auto iter = dom::TabChild::GetActiveTabs().ConstIter();
+           !iter.Done(); iter.Next()) {
+        aGroups.Put(iter.Get()->GetKey()->TabGroup());
       }
     }
     return true;

@@ -10,6 +10,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/JSEventHandler.h"
 #include "mozilla/Maybe.h"
+#include "nsArrayUtils.h"
 #include "nsCOMArray.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIXPConnect.h"
@@ -54,10 +55,28 @@ EventListenerChange::GetTarget(nsIDOMEventTarget** aTarget)
 }
 
 NS_IMETHODIMP
-EventListenerChange::GetChangedListenerNames(nsIArray** aEventNames)
+EventListenerChange::GetCountOfEventListenerChangesAffectingAccessibility(
+  uint32_t* aCount)
 {
-  NS_ENSURE_ARG_POINTER(aEventNames);
-  NS_ADDREF(*aEventNames = mChangedListenerNames);
+  *aCount = 0;
+
+  uint32_t length;
+  nsresult rv = mChangedListenerNames->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (size_t i = 0; i < length; i++) {
+    nsCOMPtr<nsIAtom> listenerName =
+      do_QueryElementAt(mChangedListenerNames, i);
+
+    // These are the event listener changes which may make an element
+    // accessible or inaccessible.
+    if (listenerName == nsGkAtoms::onclick ||
+        listenerName == nsGkAtoms::onmousedown ||
+        listenerName == nsGkAtoms::onmouseup) {
+      *aCount += 1;
+    }
+  }
+
   return NS_OK;
 }
 

@@ -3005,8 +3005,7 @@ public:
   static void EnqueueUpgradeReaction(Element* aElement,
                                      mozilla::dom::CustomElementDefinition* aDefinition);
 
-  static void EnqueueLifecycleCallback(nsIDocument* aDoc,
-                                       nsIDocument::ElementCallbackType aType,
+  static void EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
                                        Element* aCustomElement,
                                        mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
                                        mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
@@ -3037,6 +3036,19 @@ public:
   static void AppendNativeAnonymousChildren(const nsIContent* aContent,
                                             nsTArray<nsIContent*>& aKids,
                                             uint32_t aFlags);
+
+  /**
+   * Query loadingPrincipal if it is specified as 'loadingprincipal' attribute on
+   * aLoadingNode, otherwise the NodePrincipal of aLoadingNode is returned
+   * (which is System Principal).
+   *
+   * Return true if aLoadingPrincipal has 'loadingprincipal' attributes, and
+   * the value 'loadingprincipal' is also successfully deserialized, otherwise
+   * return false.
+   */
+  static bool
+  GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
+                                nsIPrincipal** aLoadingPrincipal);
 
   /**
    * Returns the content policy type that should be used for loading images

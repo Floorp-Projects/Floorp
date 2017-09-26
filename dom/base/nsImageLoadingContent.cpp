@@ -1018,8 +1018,6 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
              "Principal mismatch?");
 #endif
 
-  nsContentPolicyType policyType = PolicyTypeForLoad(aImageLoadType);
-
   nsLoadFlags loadFlags = aLoadFlags;
   int32_t corsmode = GetCORSMode();
   if (corsmode == CORS_ANONYMOUS) {
@@ -1040,12 +1038,24 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  bool result =
+    nsContentUtils::GetLoadingPrincipalForXULNode(content,
+                                                  getter_AddRefs(loadingPrincipal));
+
+  // If result is true, which means this node has specified 'loadingprincipal'
+  // attribute on it, so we use favicon as the policy type.
+  nsContentPolicyType policyType = result ?
+                                     nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
+                                     PolicyTypeForLoad(aImageLoadType);
+
   nsCOMPtr<nsINode> thisNode =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   nsresult rv = nsContentUtils::LoadImage(aNewURI,
                                           thisNode,
                                           aDocument,
-                                          aDocument->NodePrincipal(),
+                                          loadingPrincipal,
                                           0,
                                           aDocument->GetDocumentURI(),
                                           referrerPolicy,

@@ -2064,8 +2064,6 @@ js::NativeGetOwnPropertyDescriptor(JSContext* cx, HandleNativeObject obj, Handle
 
     desc.setAttributes(GetPropertyAttributes(obj, prop));
     if (desc.isAccessorDescriptor()) {
-        MOZ_ASSERT(desc.isShared());
-
         // The result of GetOwnPropertyDescriptor() must be either undefined or
         // a complete property descriptor (per ES6 draft rev 32 (2015 Feb 2)
         // 6.1.7.3, Invariants of the Essential Internal Methods).
@@ -2095,7 +2093,6 @@ js::NativeGetOwnPropertyDescriptor(JSContext* cx, HandleNativeObject obj, Handle
         // desc.getter/setter, and mask away the SHARED bit.
         desc.setGetter(nullptr);
         desc.setSetter(nullptr);
-        desc.attributesRef() &= ~JSPROP_SHARED;
 
         if (prop.isDenseOrTypedArrayElement()) {
             desc.value().set(obj->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
@@ -2139,15 +2136,20 @@ GetExistingProperty(JSContext* cx,
                     typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
 {
     if (shape->hasSlot()) {
+        MOZ_ASSERT(shape->hasDefaultGetter());
+
         vp.set(obj->getSlot(shape->slot()));
+
         MOZ_ASSERT_IF(!vp.isMagic(JS_UNINITIALIZED_LEXICAL) &&
                       !obj->isSingleton() &&
                       !obj->template is<EnvironmentObject>() &&
                       shape->hasDefaultGetter(),
                       ObjectGroupHasProperty(cx, obj->group(), shape->propid(), vp));
-    } else {
-        vp.setUndefined();
+        return true;
     }
+
+    vp.setUndefined();
+
     if (shape->hasDefaultGetter())
         return true;
 
@@ -2170,22 +2172,11 @@ GetExistingProperty(JSContext* cx,
     if (!allowGC)
         return false;
 
-    if (!CallGetter(cx,
-                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
-                    MaybeRooted<Value, allowGC>::toHandle(receiver),
-                    MaybeRooted<Shape*, allowGC>::toHandle(shape),
-                    MaybeRooted<Value, allowGC>::toMutableHandle(vp)))
-    {
-        return false;
-    }
-
-    // Ancient nonstandard extension: via the JSAPI it's possible to create a
-    // data property that has both a slot and a getter. In that case, copy the
-    // value returned by the getter back into the slot.
-    if (shape->hasSlot() && obj->contains(cx, shape))
-        obj->setSlot(shape->slot(), vp);
-
-    return true;
+    return CallGetter(cx,
+                      MaybeRooted<JSObject*, allowGC>::toHandle(obj),
+                      MaybeRooted<Value, allowGC>::toHandle(receiver),
+                      MaybeRooted<Shape*, allowGC>::toHandle(shape),
+                      MaybeRooted<Value, allowGC>::toMutableHandle(vp));
 }
 
 bool
