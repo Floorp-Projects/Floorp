@@ -252,8 +252,7 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
     return true;
   }
   if (MediaPrefs::PDMWMFVP9DecoderEnabled()) {
-    if ((VPXDecoder::IsVP8(aTrackInfo.mMimeType)
-         || VPXDecoder::IsVP9(aTrackInfo.mMimeType))
+    if (VPXDecoder::IsVP9(aTrackInfo.mMimeType)
         && CanCreateWMFDecoder<CLSID_WebmMfVpxDec>()) {
       return true;
     }
