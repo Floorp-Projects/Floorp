@@ -928,7 +928,7 @@
                        hidden="true"
                        tooltip="dynamic-shortcut-tooltip"/>
 
-        <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+        <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                        removable="true"
                        onmousedown="PanelUI.showSubView('appMenu-libraryView', this, null, event);"
                        closemenu="none"
@@ -1062,7 +1062,7 @@
                      tooltip="dynamic-shortcut-tooltip"/>
 
       <toolbarbutton id="bookmarks-menu-button"
-                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                      type="menu"
                      label="&bookmarksMenuButton2.label;"
                      tooltip="dynamic-shortcut-tooltip"
