@@ -2709,22 +2709,46 @@ nsLayoutUtils::PostTranslate(Matrix4x4& aTransform, const nsPoint& aOrigin, floa
   aTransform.PostTranslate(gfxOrigin);
 }
 
+// We want to this return true for the scroll frame, but not the
+// scrolled frame (which has the same content).
+bool
+nsLayoutUtils::FrameHasDisplayPort(nsIFrame* aFrame, nsIFrame* aScrolledFrame)
+{
+  if (!aFrame->GetContent() || !HasDisplayPort(aFrame->GetContent())) {
+    return false;
+  }
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  if (sf) {
+    if (aScrolledFrame && aScrolledFrame != sf->GetScrolledFrame()) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
 Matrix4x4
 nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame,
                                       const nsIFrame *aAncestor,
-                                      bool aInCSSUnits)
+                                      uint32_t aFlags,
+                                      nsIFrame** aOutAncestor)
 {
   nsIFrame* parent;
   Matrix4x4 ctm;
   if (aFrame == aAncestor) {
     return ctm;
   }
-  ctm = aFrame->GetTransformMatrix(aAncestor, &parent, aInCSSUnits);
-  while (parent && parent != aAncestor) {
+  ctm = aFrame->GetTransformMatrix(aAncestor, &parent, aFlags);
+  while (parent && parent != aAncestor &&
+    (!(aFlags & nsIFrame::STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT) ||
+      (!parent->IsStackingContext() && !FrameHasDisplayPort(parent)))) {
     if (!parent->Extend3DContext()) {
       ctm.ProjectTo2D();
     }
-    ctm = ctm * parent->GetTransformMatrix(aAncestor, &parent, aInCSSUnits);
+    ctm = ctm * parent->GetTransformMatrix(aAncestor, &parent, aFlags);
+  }
+  if (aOutAncestor) {
+    *aOutAncestor = parent;
   }
   return ctm;
 }
@@ -3029,7 +3053,9 @@ TransformGfxRectToAncestor(nsIFrame *aFrame,
                            const Rect &aRect,
                            const nsIFrame *aAncestor,
                            bool* aPreservesAxisAlignedRectangles = nullptr,
-                           Maybe<Matrix4x4>* aMatrixCache = nullptr)
+                           Maybe<Matrix4x4>* aMatrixCache = nullptr,
+                           bool aStopAtStackingContextAndDisplayPort = false,
+                           nsIFrame** aOutAncestor = nullptr)
 {
   Matrix4x4 ctm;
   if (aMatrixCache && *aMatrixCache) {
@@ -3037,7 +3063,11 @@ TransformGfxRectToAncestor(nsIFrame *aFrame,
     ctm = aMatrixCache->value();
   } else {
     // Else, compute it
-    ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
+    uint32_t flags = 0;
+    if (aStopAtStackingContextAndDisplayPort) {
+      flags |= nsIFrame::STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT;
+    }
+    ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor, flags, aOutAncestor);
     if (aMatrixCache) {
       // and put it in the cache, if provided
       *aMatrixCache = Some(ctm);
@@ -3098,7 +3128,9 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                                             const nsRect& aRect,
                                             const nsIFrame* aAncestor,
                                             bool* aPreservesAxisAlignedRectangles /* = nullptr */,
-                                            Maybe<Matrix4x4>* aMatrixCache /* = nullptr */)
+                                            Maybe<Matrix4x4>* aMatrixCache /* = nullptr */,
+                                            bool aStopAtStackingContextAndDisplayPort /* = false */,
+                                            nsIFrame** aOutAncestor /* = nullptr */)
 {
   SVGTextFrame* text = GetContainingSVGTextFrame(aFrame);
 
@@ -3107,7 +3139,9 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
 
   if (text) {
     result = ToRect(text->TransformFrameRectFromTextChild(aRect, aFrame));
-    result = TransformGfxRectToAncestor(text, result, aAncestor, nullptr, aMatrixCache);
+    result = TransformGfxRectToAncestor(text, result, aAncestor,
+                                        nullptr, aMatrixCache,
+                                        aStopAtStackingContextAndDisplayPort, aOutAncestor);
     // TransformFrameRectFromTextChild could involve any kind of transform, we
     // could drill down into it to get an answer out of it but we don't yet.
     if (aPreservesAxisAlignedRectangles)
@@ -3117,7 +3151,9 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                   NSAppUnitsToFloatPixels(aRect.y, srcAppUnitsPerDevPixel),
                   NSAppUnitsToFloatPixels(aRect.width, srcAppUnitsPerDevPixel),
                   NSAppUnitsToFloatPixels(aRect.height, srcAppUnitsPerDevPixel));
-    result = TransformGfxRectToAncestor(aFrame, result, aAncestor, aPreservesAxisAlignedRectangles, aMatrixCache);
+    result = TransformGfxRectToAncestor(aFrame, result, aAncestor,
+                                        aPreservesAxisAlignedRectangles, aMatrixCache,
+                                        aStopAtStackingContextAndDisplayPort, aOutAncestor);
   }
 
   float destAppUnitsPerDevPixel = aAncestor->PresContext()->AppUnitsPerDevPixel();
