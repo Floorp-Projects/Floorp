@@ -266,6 +266,12 @@
   font-size: 1.25em;
 }
 
+/* Ensure diacritics and other edge-of-font-box glyphs do not get clipped,
+ * even in non-Latin scripts. */
+html|input.urlbar-input {
+  line-height: 1.745em;
+}
+
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
   border-color: -moz-mac-focusring;
