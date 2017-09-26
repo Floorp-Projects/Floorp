@@ -88,10 +88,19 @@ CurlWrapper::Init()
     "/usr/lib/i386-linux-gnu", // Debian 32-bit x86
     "/usr/lib/x86_64-linux-gnu", // Debian 64-bit x86
 #endif // XP_LINUX
+#if !defined(XP_MACOSX) && !defined(XP_LINUX) // Various BSDs
+    "/usr/local/lib", // FreeBSD, OpenBSD
+    "/usr/pkg/lib", // NetBSD
+#endif // !defined(XP_MACOSX) && !defined(XP_LINUX)
   };
 
   const char* libcurlNames[] = {
-#ifdef XP_LINUX
+#if defined(XP_MACOSX)
+    // macOS
+    "libcurl.dylib",
+    "libcurl.4.dylib",
+    "libcurl.3.dylib",
+#else // Linux, *BSD, ...
     "libcurl.so",
     "libcurl.so.4",
     // Debian gives libcurl a different name when it is built against GnuTLS
@@ -100,11 +109,6 @@ CurlWrapper::Init()
     // Older versions in case we find nothing better
     "libcurl.so.3",
     "libcurl-gnutls.so.3", // See above for Debian
-#elif defined(XP_MACOSX)
-    // macOS
-    "libcurl.dylib",
-    "libcurl.4.dylib",
-    "libcurl.3.dylib",
 #endif
   };
 
