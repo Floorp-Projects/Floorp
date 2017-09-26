@@ -365,14 +365,14 @@ CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj, HandleId id,
 }
 
 MOZ_ALWAYS_INLINE bool
-CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj, HandleId id, MutableHandleValue vp,
+CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj, HandleId id, HandleValue v,
                ObjectOpResult& result)
 {
     if (!CheckRecursionLimit(cx))
         return false;
 
-    assertSameCompartment(cx, obj, id, vp);
-    return op(cx, obj, id, vp, result);
+    assertSameCompartment(cx, obj, id, v);
+    return op(cx, obj, id, v, result);
 }
 
 inline bool
