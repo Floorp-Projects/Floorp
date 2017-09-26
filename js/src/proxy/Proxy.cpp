@@ -272,6 +272,21 @@ Proxy::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp)
 }
 
 bool
+js::ProxyHas(JSContext* cx, HandleObject proxy, HandleValue idVal, MutableHandleValue result)
+{
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, idVal, &id))
+        return false;
+
+    bool has;
+    if (!Proxy::has(cx, proxy, id, &has))
+        return false;
+
+    result.setBoolean(has);
+    return true;
+}
+
+bool
 Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp)
 {
     if (!CheckRecursionLimit(cx))

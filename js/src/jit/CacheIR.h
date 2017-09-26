@@ -254,7 +254,7 @@ extern const char* CacheKindNames[];
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
     _(CallProxyGetByValueResult)          \
-    _(CallProxyHasOwnResult)              \
+    _(CallProxyHasPropResult)             \
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadStringResult)                   \
@@ -939,9 +939,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
         writeOperandId(idVal);
     }
-    void callProxyHasOwnResult(ObjOperandId obj, ValOperandId idVal) {
-        writeOpWithOperandId(CacheOp::CallProxyHasOwnResult, obj);
+    void callProxyHasPropResult(ObjOperandId obj, ValOperandId idVal, bool hasOwn) {
+        writeOpWithOperandId(CacheOp::CallProxyHasPropResult, obj);
         writeOperandId(idVal);
+        buffer_.writeByte(uint32_t(hasOwn));
     }
     void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
