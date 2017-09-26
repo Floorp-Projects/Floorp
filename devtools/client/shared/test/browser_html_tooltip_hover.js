@@ -45,7 +45,7 @@ add_task(function* () {
 
   info("Move out of the container");
   let hidden = tooltip.once("hidden");
-  EventUtils.synthesizeMouseAtCenter(container, { type: "mouseout" }, doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(container, { type: "mousemove" }, doc.defaultView);
   yield hidden;
 
   info("Destroy the tooltip and finish");

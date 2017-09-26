@@ -47,7 +47,6 @@ var whitelist = [
   {file: "chrome://browser/content/newtab/alternativeDefaultSites.json"},
 
   // Add-on compat
-  {file: "chrome://browser/skin/devtools/common.css"},
   {file: "chrome://global/content/XPCNativeWrapper.js"},
   {file: "chrome://global/locale/brand.dtd"},
 

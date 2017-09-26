@@ -325,13 +325,12 @@ define(function (require, exports, module) {
 
           let id = tab.props.id;
 
-          // Use 'visibility:hidden' + 'width/height:0' for hiding
-          // content of non-selected tab. It's faster (not sure why)
-          // than display:none and visibility:collapse.
+          // Use 'visibility:hidden' + 'height:0' for hiding content of non-selected
+          // tab. It's faster than 'display:none' because it avoids triggering frame
+          // destruction and reconstruction. 'width' is not changed to avoid relayout.
           let style = {
             visibility: selected ? "visible" : "hidden",
             height: selected ? "100%" : "0",
-            width: selected ? "100%" : "0",
           };
 
           // Allows lazy loading panels by creating them only if they are selected,

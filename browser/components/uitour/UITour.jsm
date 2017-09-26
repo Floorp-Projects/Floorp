@@ -133,10 +133,7 @@ this.UITour = {
         panelPopup.removeEventListener("popupshown", aCallback);
       },
     }],
-    ["backForward", {
-      query: "#back-button",
-      widgetName: "urlbar-container",
-    }],
+    ["backForward", {query: "#back-button"}],
     ["bookmarks",   {query: "#bookmarks-menu-button"}],
     ["controlCenter-trackingUnblock", controlCenterTrackingToggleTarget(true)],
     ["controlCenter-trackingBlock", controlCenterTrackingToggleTarget(false)],

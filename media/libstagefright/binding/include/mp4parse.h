@@ -23,8 +23,7 @@ typedef enum mp4parse_status {
 	mp4parse_status_UNSUPPORTED = 3,
 	mp4parse_status_EOF = 4,
 	mp4parse_status_IO = 5,
-	mp4parse_status_TABLE_TOO_LARGE = 6,
-	mp4parse_status_OOM = 7,
+	mp4parse_status_OOM = 6,
 } mp4parse_status;
 
 typedef enum mp4parse_track_type {
@@ -118,8 +117,6 @@ void mp4parse_free(mp4parse_parser* parser);
 
 /// Enable `mp4_parser` log.
 void mp4parse_log(bool enable);
-
-void mp4parse_fallible_allocation(bool enable);
 
 /// Run the `mp4parse_parser*` allocated by `mp4parse_new()` until EOF or error.
 mp4parse_status mp4parse_read(mp4parse_parser* parser);
