@@ -27,7 +27,7 @@ loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/dom-panel
 // Other dependencies
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "CommandState", "devtools/shared/gcli/command-state", true);
-loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsivedesign/responsivedesign");
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 
 const {MultiLocalizationHelper} = require("devtools/shared/l10n");
