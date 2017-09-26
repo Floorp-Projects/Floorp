@@ -134,21 +134,6 @@ public:
   }
 };
 
-/* Tree operations. */
-#define rbp_first(a_type, a_field, a_tree, a_root, r_node)                     \
-  do {                                                                         \
-    for ((r_node) = (a_root); a_field(r_node).Left() != &(a_tree)->rbt_nil;    \
-         (r_node) = a_field(r_node).Left()) {                                  \
-    }                                                                          \
-  } while (0)
-
-#define rbp_last(a_type, a_field, a_tree, a_root, r_node)                      \
-  do {                                                                         \
-    for ((r_node) = (a_root); a_field(r_node).Right() != &(a_tree)->rbt_nil;   \
-         (r_node) = a_field(r_node).Right()) {                                 \
-    }                                                                          \
-  } while (0)
-
 #define rbp_rotate_left(a_type, a_field, a_node, r_node)                       \
   do {                                                                         \
     (r_node) = a_field(a_node).Right();                                        \
@@ -518,14 +503,20 @@ struct RedBlackTree
   T* First(T* aStart = nullptr)
   {
     T* ret;
-    rbp_first(T, Trait::GetTreeNode, this, (aStart ? aStart : rbt_root), (ret));
+    for (ret = aStart ? aStart : rbt_root;
+         Trait::GetTreeNode(ret).Left() != &rbt_nil;
+         ret = Trait::GetTreeNode(ret).Left()) {
+    }
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
   T* Last(T* aStart = nullptr)
   {
     T* ret;
-    rbp_last(T, Trait::GetTreeNode, this, (aStart ? aStart : rbt_root), ret);
+    for (ret = aStart ? aStart : rbt_root;
+         Trait::GetTreeNode(ret).Right() != &rbt_nil;
+         ret = Trait::GetTreeNode(ret).Right()) {
+    }
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
