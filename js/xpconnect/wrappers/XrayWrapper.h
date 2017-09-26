@@ -105,11 +105,10 @@ public:
     // Slots for holder objects.
     enum {
         HOLDER_SLOT_CACHED_PROTO = 0,
-        HOLDER_SLOT_EXPANDO = 1,
         HOLDER_SHARED_SLOT_COUNT
     };
 
-    static JSObject* getHolder(JSObject* wrapper);
+    JSObject* getHolder(JSObject* wrapper);
     JSObject* ensureHolder(JSContext* cx, JS::HandleObject wrapper);
     virtual JSObject* createHolder(JSContext* cx, JSObject* wrapper) = 0;
 
@@ -126,21 +125,14 @@ protected:
 
 private:
     bool expandoObjectMatchesConsumer(JSContext* cx, JS::HandleObject expandoObject,
-                                      nsIPrincipal* consumerOrigin);
-
-    // |expandoChain| is the expando chain in the wrapped object's compartment.
-    // |exclusiveWrapper| is any xray that has exclusive use of the expando.
-    // |cx| may be in any compartment.
+                                      nsIPrincipal* consumerOrigin,
+                                      JS::HandleObject exclusiveGlobal);
     bool getExpandoObjectInternal(JSContext* cx, JSObject* expandoChain,
-                                  JS::HandleObject exclusiveWrapper,
-                                  nsIPrincipal* origin,
+                                  nsIPrincipal* origin, JSObject* exclusiveGlobal,
                                   JS::MutableHandleObject expandoObject);
-
-    // |cx| is in the target's compartment, and |exclusiveWrapper| is any xray
-    // that has exclusive use of the expando.
     JSObject* attachExpandoObject(JSContext* cx, JS::HandleObject target,
-                                  JS::HandleObject exclusiveWrapper,
-                                  nsIPrincipal* origin);
+                                  nsIPrincipal* origin,
+                                  JS::HandleObject exclusiveGlobal);
 
     XrayTraits(XrayTraits&) = delete;
     const XrayTraits& operator=(XrayTraits&) = delete;
@@ -609,7 +601,7 @@ class AutoSetWrapperNotShadowing;
 enum ExpandoSlots {
     JSSLOT_EXPANDO_NEXT = 0,
     JSSLOT_EXPANDO_ORIGIN,
-    JSSLOT_EXPANDO_EXCLUSIVE_WRAPPER_HOLDER,
+    JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL,
     JSSLOT_EXPANDO_PROTOTYPE,
     JSSLOT_EXPANDO_COUNT
 };
@@ -631,9 +623,6 @@ ClearXrayExpandoSlots(JSObject* target, size_t slotIndex);
  */
 JSObject*
 EnsureXrayExpandoObject(JSContext* cx, JS::HandleObject wrapper);
-
-// Information about xrays for use by the JITs.
-extern js::XrayJitInfo gXrayJitInfo;
 
 } // namespace xpc
 
