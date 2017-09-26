@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1355109
+-->
+<window title="Mozilla Bug 1355109"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=758415"
+     target="_blank">Mozilla Bug 758415</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  // Import our test JSM. We first strip the filename off
+  // the chrome url, then append the jsm filename.
+  var base = /.*\//.exec(window.location.href)[0];
+  Cu.import(base + "file_expandosharing.jsm");
+
+  // Wait for all child frames to load.
+  var gLoadCount = 0;
+  function frameLoaded() {
+    if (++gLoadCount == window.frames.length)
+      go();
+  }
+
+  function go() {
+    testSandbox(1);
+    testSandbox(100);
+    testSandbox(1000);
+    SimpleTest.finish();
+  }
+
+  function testSandbox(iterations) {
+    var sandbox = new Cu.Sandbox(window);
+    sandbox.iframes = document.getElementsByTagName('iframe');
+    Cu.evalInSandbox(testClassName.toSource(), sandbox);
+    Cu.evalInSandbox(testIC.toSource(), sandbox);
+    is(Cu.evalInSandbox("testIC(" + iterations + ");", sandbox), true, "sandbox test");
+  }
+
+  // This is in a separate function to provide a common source location for ICs.
+  function testClassName(obj, expected) {
+    var className = obj.className;
+    if (className != expected)
+        throw new Error("Got " + className + ", expected " + expected);
+  }
+
+  function testIC(iterations) {
+    for (var i = 0; i < this.iframes.length; i++) {
+      var win = this.iframes[i].contentWindow;
+      var spans = win.document.getElementsByTagName('span');
+      for (var j = 0; j < spans.length; j++) {
+        var span = spans[j];
+        for (var k = 0; k < iterations; k++)
+          testClassName(span, "iamaspan");
+        Object.defineProperty(span, "className", { value: "what" });
+        testClassName(span, "what");
+      }
+    }
+    return true;
+  }
+  ]]>
+  </script>
+  <iframe id="inlineFrame1" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_xrayic.html" />
+  <iframe id="inlineFrame2" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_xrayic.html" />
+</window>
