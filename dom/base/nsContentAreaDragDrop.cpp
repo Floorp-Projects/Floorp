@@ -25,6 +25,7 @@
 #include "nsIDOMRange.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsITransferable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOM.h"
@@ -56,7 +57,6 @@
 #include "TabParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAreaElement.h"
-#include "mozilla/dom/HTMLAnchorElement.h"
 #include "nsVariant.h"
 
 using namespace mozilla::dom;
@@ -474,7 +474,9 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
       draggedNode = mTarget;
     }
 
+    nsCOMPtr<nsIDOMHTMLAreaElement>   area;   // client-side image map
     nsCOMPtr<nsIImageLoadingContent>  image;
+    nsCOMPtr<nsIDOMHTMLAnchorElement> link;
 
     nsCOMPtr<nsIContent> selectedImageOrLinkNode;
     GetDraggableSelectionData(selection, mSelectionTargetNode,
@@ -499,16 +501,19 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
         *aCanDrag = false;
         return NS_OK;
       }
+
+      area  = do_QueryInterface(draggedNode);
       image = do_QueryInterface(draggedNode);
+      link  = do_QueryInterface(draggedNode);
     }
 
     {
       // set for linked images, and links
       nsCOMPtr<nsIContent> linkNode;
 
-      RefPtr<HTMLAreaElement> areaElem = HTMLAreaElement::FromContentOrNull(draggedNode);
-      if (areaElem) {
+      if (area) {
         // use the alt text (or, if missing, the href) as the title
+        HTMLAreaElement* areaElem = static_cast<HTMLAreaElement*>(area.get());
         areaElem->GetAttribute(NS_LITERAL_STRING("alt"), mTitleString);
         if (mTitleString.IsEmpty()) {
           // this can be a relative link
@@ -633,9 +638,9 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
           nodeToSerialize = do_QueryInterface(draggedNode);
         }
         dragNode = nodeToSerialize;
-      } else if (draggedNode && draggedNode->IsHTMLElement(nsGkAtoms::a)) {
+      } else if (link) {
         // set linkNode. The code below will handle this
-        linkNode = do_QueryInterface(draggedNode);    // XXX test this
+        linkNode = do_QueryInterface(link);    // XXX test this
         GetNodeString(draggedNode, mTitleString);
       } else if (parentLink) {
         // parentLink will always be null if there's selected content
