@@ -96,7 +96,6 @@ devtools/client/memory/test/chrome/*.html
 devtools/client/performance/components/test/test_jit_optimizations_01.html
 devtools/client/projecteditor/**
 devtools/client/responsive.html/test/browser/touch.html
-devtools/client/responsivedesign/**
 devtools/client/scratchpad/**
 devtools/client/shadereditor/**
 devtools/client/shared/*.jsm
