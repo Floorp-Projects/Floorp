@@ -450,7 +450,7 @@ function checkSettingsSection(data) {
     Assert.equal(typeof data.settings.defaultSearchEngineData, "object");
   }
 
-  if (gIsWindows) {
+  if (gIsWindows && AppConstants.MOZ_BUILD_APP == "browser") {
     Assert.equal(typeof data.settings.attribution, "object");
     Assert.equal(data.settings.attribution.source, "google.com");
   }
