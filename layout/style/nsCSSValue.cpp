@@ -2891,7 +2891,7 @@ css::URLValueData::DefinitelyEqualURIsAndPrincipal(
 nsDependentCSubstring
 css::URLValueData::GetRustString() const
 {
-  uint8_t* chars;
+  const uint8_t* chars;
   uint32_t len;
   Servo_GetArcStringData(mStrings.mRustString.mPtr, &chars, &len);
   return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
