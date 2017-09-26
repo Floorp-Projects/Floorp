@@ -39,7 +39,6 @@ public:
                                           bool aUseExternalSurfaceSize,
                                           const gfx::IntSize& aSurfaceSize);
 
-  void BindComplete();
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   bool DeallocPCompositorBridgeParent(PCompositorBridgeParent* aActor) override;
