@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>DevicePixelRatios with Zoom</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+
+<div>Testing devicePixelRatio with different zoom levels</div>
+
+<script type="application/javascript">
+
+// We're creating a table of zooms and expected devicePixelRatio (DPR) strings.
+// The values in the table are specific to the "native" DPR at zoom level 100%.
+// If we don't have a table for a native DPR value, we'll trivially report
+// a successful test with a note that we didn't have a table.
+// For the moment, we only have a table for native DPR of 2.
+let zoomsAndDPRsToTest;
+
+const originalZoom = SpecialPowers.getFullZoom(window);
+const zoom = 1;
+SpecialPowers.setFullZoom(window, zoom);
+
+const dprAtZoom1 = window.devicePixelRatio;
+if (dprAtZoom1 == 1) {
+  zoomsAndDPRsToTest = [
+    [300, "3"],
+    [250, "2.5"],
+    [200, "2"],
+    [167, "1.6666666666666667"],
+    [150, "1.5"],
+    [133, "1.3333333333333333"],
+    [120, "1.2"],
+    [110, "1.0909090909090908"],
+    [100, "1"],
+    [90,  "0.8955223880597015"],
+    [80,  "0.8"],
+    [67,  "0.6666666666666666"],
+    [50,  "0.5"],
+  ];
+} else if (dprAtZoom1 == 2) {
+  zoomsAndDPRsToTest = [
+    [300, "6"],
+    [250, "5"],
+    [200, "4"],
+    [167, "3.3333333333333335"],
+    [150, "3"],
+    [133, "2.608695652173913"], // there's a trailing 0 here unreported by JS
+    [120, "2.4"],
+    [110, "2.2222222222222223"],
+    [100, "2"],
+    [90,  "1.8181818181818181"],
+    [80,  "1.5789473684210527"],
+    [67,  "1.3333333333333333"],
+    [50,  "1"],
+  ];
+}
+
+if (zoomsAndDPRsToTest.length == 0) {
+  // Need to run at least one test function to keep mochitest harness happy.
+  ok(true, `No table of data for devicePixelRatio of ${dprAtZoom1} at zoom level 100%.`);
+}
+
+for (let i = 0; i < zoomsAndDPRsToTest.length; ++i) {
+  let data = zoomsAndDPRsToTest[i];
+  let zoomPercent = data[0];
+  let targetDPR = data[1];
+
+  let relativeZoom = zoom * zoomPercent / 100;
+  SpecialPowers.setFullZoom(window, relativeZoom);
+
+  // Force conversion to string for string comparison to targetDPR.
+  let actualDPR = window.devicePixelRatio + "";
+  is(actualDPR, targetDPR, `At ${zoomPercent}% zoom, window.devicePixelRatio is rounded correctly.`);
+}
+
+// Reset the zoom when the test is done.
+SpecialPowers.setFullZoom(window, originalZoom);
+</script>
+
+</body>
+</html>
