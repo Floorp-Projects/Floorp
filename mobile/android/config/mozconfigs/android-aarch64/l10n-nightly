@@ -3,7 +3,7 @@ NO_NDK=1
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 # L10n
-ac_add_options --with-l10n-base=../../mozilla-beta
+ac_add_options --with-l10n-base=../../l10n-central
 
 . "$topsrcdir/build/mozconfig.no-compile"
 
