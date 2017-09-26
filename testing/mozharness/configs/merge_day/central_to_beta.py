@@ -29,13 +29,6 @@ config = {
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
         # File, from, to
-        (f, "ac_add_options --with-l10n-base=../../l10n-central",
-        "ac_add_options --with-l10n-base=../../mozilla-beta")
-        for f in ["mobile/android/config/mozconfigs/android-api-16/l10n-nightly",
-                  "mobile/android/config/mozconfigs/android-x86/l10n-nightly",
-                  "mobile/android/config/mozconfigs/android-aarch64/l10n-nightly"]
-    ] + [
-        # File, from, to
         (f, "ac_add_options --enable-profiling", "") for f in
         ["mobile/android/config/mozconfigs/android-api-16/nightly",
          "mobile/android/config/mozconfigs/android-x86/nightly",
