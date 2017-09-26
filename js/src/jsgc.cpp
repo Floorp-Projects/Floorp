@@ -8081,13 +8081,19 @@ JS::AssertGCThingIsNotAnObjectSubclass(Cell* cell)
 JS_FRIEND_API(void)
 js::gc::AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind)
 {
-    MOZ_ASSERT(IsCellPointerValid(cell));
-    if (!cell)
+    if (!cell) {
         MOZ_ASSERT(kind == JS::TraceKind::Null);
-    else if (IsInsideNursery(cell))
+        return;
+    }
+
+    MOZ_ASSERT(IsCellPointerValid(cell));
+
+    if (IsInsideNursery(cell)) {
         MOZ_ASSERT(kind == JS::TraceKind::Object);
-    else
-        MOZ_ASSERT(MapAllocToTraceKind(cell->asTenured().getAllocKind()) == kind);
+        return;
+    }
+
+    MOZ_ASSERT(MapAllocToTraceKind(cell->asTenured().getAllocKind()) == kind);
 }
 #endif
 

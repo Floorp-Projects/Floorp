@@ -406,8 +406,6 @@ IsInsideNursery(const js::gc::Cell* cell)
 MOZ_ALWAYS_INLINE bool
 IsCellPointerValid(const void* cell)
 {
-    if (!cell)
-        return true;
     auto addr = uintptr_t(cell);
     if (addr < ChunkSize || addr % CellAlignBytes != 0)
         return false;
@@ -417,6 +415,14 @@ IsCellPointerValid(const void* cell)
     if (location == ChunkLocation::Nursery)
         return detail::NurseryCellHasStoreBuffer(cell);
     return false;
+}
+
+MOZ_ALWAYS_INLINE bool
+IsCellPointerValidOrNull(const void* cell)
+{
+    if (!cell)
+        return true;
+    return IsCellPointerValid(cell);
 }
 
 } /* namespace gc */
