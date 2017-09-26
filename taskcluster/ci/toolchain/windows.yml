@@ -94,7 +94,7 @@ win64-clang-tidy:
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
 
-win64-rust-1.19:
+win64-rust-1.20:
     description: "rust repack"
     treeherder:
         kind: build
@@ -111,14 +111,37 @@ win64-rust-1.19:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-          '--channel', '1.19.0',
+          '--channel', '1.20.0',
           '--host', 'x86_64-pc-windows-msvc',
           '--target', 'x86_64-pc-windows-msvc',
         ]
         toolchain-alias: win64-rust
         toolchain-artifact: public/build/rustc.tar.bz2
 
-win32-rust-1.19:
+win64-rust-1.19:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(rust-1.19)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+        env:
+          UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+          '--channel', '1.19.0',
+          '--host', 'x86_64-pc-windows-msvc',
+          '--target', 'x86_64-pc-windows-msvc',
+        ]
+        toolchain-artifact: public/build/rustc.tar.bz2
+
+win32-rust-1.20:
     description: "rust repack"
     treeherder:
         kind: build
@@ -135,14 +158,14 @@ win32-rust-1.19:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-          '--channel', '1.19.0',
+          '--channel', '1.20.0',
           '--host', 'i686-pc-windows-msvc',
           '--target', 'i686-pc-windows-msvc',
         ]
         toolchain-alias: win32-rust
         toolchain-artifact: public/build/rustc.tar.bz2
 
-mingw32-rust-1.19:
+mingw32-rust-1.20:
     description: "rust repack"
     treeherder:
         kind: build
@@ -159,7 +182,7 @@ mingw32-rust-1.19:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-          '--channel', '1.19.0',
+          '--channel', '1.20.0',
           '--host', 'i686-unknown-linux-gnu',
           '--target', 'i686-pc-windows-gnu',
           '--target', 'x86_64-unknown-linux-gnu',
