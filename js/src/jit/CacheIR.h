@@ -171,12 +171,11 @@ extern const char* CacheKindNames[];
     _(GuardShape)                         \
     _(GuardGroup)                         \
     _(GuardProto)                         \
-    _(GuardClass)                         /* Guard an object class, per GuardClassKind */ \
-    _(GuardAnyClass)                      /* Guard an arbitrary class for an object */ \
+    _(GuardClass)                         \
     _(GuardCompartment)                   \
     _(GuardIsNativeFunction)              \
     _(GuardIsProxy)                       \
-    _(GuardHasProxyHandler)               \
+    _(GuardIsCrossCompartmentWrapper)     \
     _(GuardNotDOMProxy)                   \
     _(GuardSpecificObject)                \
     _(GuardSpecificAtom)                  \
@@ -192,8 +191,6 @@ extern const char* CacheKindNames[];
     _(GuardAndGetIterator)                \
     _(GuardHasGetterSetter)               \
     _(GuardGroupHasUnanalyzedNewScript)   \
-    _(GuardIndexIsNonNegative)            \
-    _(GuardXrayExpandoShapeAndDefaultProto) \
     _(LoadStackValue)                     \
     _(LoadObject)                         \
     _(LoadProto)                          \
@@ -357,14 +354,6 @@ enum class GuardClassKind : uint8_t
     WindowProxy,
     JSFunction,
 };
-
-// Some ops refer to shapes that might be in other zones. Instead of putting
-// cross-zone pointers in the caches themselves (which would complicate tracing
-// enormously), these ops instead contain wrappers for objects in the target
-// zone, which refer to the actual shape via a reserved slot.
-JSObject* NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj);
-
-void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst, Label* failure);
 
 // Class to record CacheIR + some additional metadata for code generation.
 class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
@@ -534,10 +523,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardShape, obj);
         addStubField(uintptr_t(shape), StubField::Type::Shape);
     }
-    void guardXrayExpandoShapeAndDefaultProto(ObjOperandId obj, JSObject* shapeWrapper) {
-        writeOpWithOperandId(CacheOp::GuardXrayExpandoShapeAndDefaultProto, obj);
-        buffer_.writeByte(uint32_t(!!shapeWrapper));        addStubField(uintptr_t(shapeWrapper), StubField::Type::JSObject);
-    }
     void guardGroup(ObjOperandId obj, ObjectGroup* group) {
         writeOpWithOperandId(CacheOp::GuardGroup, obj);
         addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
@@ -552,10 +537,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardClass, obj);
         buffer_.writeByte(uint32_t(kind));
     }
-    void guardAnyClass(ObjOperandId obj, const Class* clasp) {
-        writeOpWithOperandId(CacheOp::GuardAnyClass, obj);
-        addStubField(uintptr_t(clasp), StubField::Type::RawWord);
-    }
     void guardIsNativeFunction(ObjOperandId obj, JSNative nativeFunc) {
         writeOpWithOperandId(CacheOp::GuardIsNativeFunction, obj);
         writePointer(JS_FUNC_TO_DATA_PTR(void*, nativeFunc));
@@ -563,9 +544,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardIsProxy(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardIsProxy, obj);
     }
-    void guardHasProxyHandler(ObjOperandId obj, const void* handler) {
-        writeOpWithOperandId(CacheOp::GuardHasProxyHandler, obj);
-        addStubField(uintptr_t(handler), StubField::Type::RawWord);
+    void guardIsCrossCompartmentWrapper(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::GuardIsCrossCompartmentWrapper, obj);
     }
     void guardNotDOMProxy(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardNotDOMProxy, obj);
@@ -632,10 +612,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardGroupHasUnanalyzedNewScript(ObjectGroup* group) {
         writeOp(CacheOp::GuardGroupHasUnanalyzedNewScript);
         addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
-    }
-
-    void guardIndexIsNonNegative(Int32OperandId index) {
-        writeOpWithOperandId(CacheOp::GuardIndexIsNonNegative, index);
     }
 
     void loadFrameCalleeResult() {
@@ -1217,7 +1193,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId, HandleId id);
     bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id);
     bool tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperandId objId, HandleId id);
-    bool tryAttachXrayCrossCompartmentWrapper(HandleObject obj, ObjOperandId objId, HandleId id);
     bool tryAttachFunction(HandleObject obj, ObjOperandId objId, HandleId id);
 
     bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
