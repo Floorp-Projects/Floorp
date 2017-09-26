@@ -446,15 +446,12 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin-bottom: -1px;
 }
 
-/* The overflow button icon _looks_ disabled, but is also shown as [open]. */
-#nav-bar[customizing] > .overflow-button {
-  /* This color is the hard-coded #4c4c4c at 40% opacity as found in toolbarbutton-icons.inc.css */
-  fill: hsla(0,0%,30%,.4);
-}
-
+/* In customize mode, the overflow button should look both 'disabled' and 'open'.
+ * So we make the button fully opaque but fill the icon semi-transparent. */
 #nav-bar[customizing] > .overflow-button > .toolbarbutton-icon {
   background-color: var(--toolbarbutton-active-background);
   opacity: 1;
+  fill-opacity: 0.4;
 }
 
 #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
