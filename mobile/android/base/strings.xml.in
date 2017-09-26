@@ -639,4 +639,9 @@
   <string name="private_tab_learn_more">&private_tab_learn_more;</string>
 
   <string name="fullscreen_warning">&fullscreen_warning;</string>
+
+  <string name="pwa_add_to_launcher_confirm">&pwa_add_to_launcher_confirm;</string>
+  <string name="pwa_add_to_launcher_badge">&pwa_add_to_launcher_badge;</string>
+  <string name="pwa_onboarding_sumo">&pwa_onboarding_sumo;</string>
+  <string name="pwa_continue_to_website">&pwa_continue_to_website;</string>
 </resources>
