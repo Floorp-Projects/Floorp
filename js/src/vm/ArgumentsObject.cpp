@@ -576,7 +576,7 @@ MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId id,
         return true;
     }
 
-    unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE | JSPROP_RESOLVING;
+    unsigned attrs = JSPROP_SHADOWABLE | JSPROP_RESOLVING;
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
         if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg))
@@ -776,7 +776,7 @@ UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId i
         return true;
     }
 
-    unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
+    unsigned attrs = JSPROP_SHADOWABLE;
     GetterOp getter = UnmappedArgGetter;
     SetterOp setter = UnmappedArgSetter;
 
@@ -793,7 +793,7 @@ UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId i
         if (!JSID_IS_ATOM(id, cx->names().callee))
             return true;
 
-        attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
+        attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER;
         getter = CastAsGetterOp(argsobj->global().getThrowTypeError());
         setter = CastAsSetterOp(argsobj->global().getThrowTypeError());
     }

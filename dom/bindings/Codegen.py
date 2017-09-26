@@ -2732,8 +2732,7 @@ class AttrDefiner(PropertyDefiner):
 
         def flags(attr):
             unforgeable = " | JSPROP_PERMANENT" if self.unforgeable else ""
-            enumerable = " | %s" % EnumerabilityFlags(attr)
-            return ("JSPROP_SHARED" + enumerable + unforgeable)
+            return EnumerabilityFlags(attr) + unforgeable
 
         def getter(attr):
             if self.static:

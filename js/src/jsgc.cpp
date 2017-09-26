@@ -8657,7 +8657,7 @@ NewMemoryInfoObject(JSContext* cx)
 #endif
         if (!JS_DefineProperty(cx, obj, pair.name,
                                getter, nullptr,
-                               JSPROP_ENUMERATE | JSPROP_SHARED))
+                               JSPROP_ENUMERATE))
         {
             return nullptr;
         }
@@ -8692,7 +8692,7 @@ NewMemoryInfoObject(JSContext* cx)
 #endif
         if (!JS_DefineProperty(cx, zoneObj, pair.name,
                                getter, nullptr,
-                               JSPROP_ENUMERATE | JSPROP_SHARED))
+                               JSPROP_ENUMERATE))
         {
             return nullptr;
         }
