@@ -4,14 +4,15 @@
 // accompanying file LICENSE for details
 
 use ClientContext;
+use {set_in_callback, assert_not_in_callback};
 use audioipc::{ClientMessage, Connection, ServerMessage, messages};
-use audioipc::shm::{SharedMemSlice, SharedMemMutSlice};
+use audioipc::shm::{SharedMemMutSlice, SharedMemSlice};
 use cubeb_backend::Stream;
 use cubeb_core::{ErrorCode, Result, ffi};
 use std::ffi::CString;
+use std::fs::File;
 use std::os::raw::c_void;
 use std::os::unix::io::FromRawFd;
-use std::fs::File;
 use std::ptr;
 use std::thread;
 
@@ -27,7 +28,7 @@ pub struct ClientStream<'ctx> {
 
 fn stream_thread(
     mut conn: Connection,
-    input_shm: SharedMemSlice,
+    input_shm: &SharedMemSlice,
     mut output_shm: SharedMemMutSlice,
     data_cb: ffi::cubeb_data_callback,
     state_cb: ffi::cubeb_state_callback,
@@ -38,7 +39,7 @@ fn stream_thread(
             Ok(r) => r,
             Err(e) => {
                 debug!("stream_thread: Failed to receive message: {:?}", e);
-                continue;
+                return;
             },
         };
 
@@ -48,14 +49,21 @@ fn stream_thread(
                 return;
             },
             ClientMessage::StreamDataCallback(nframes, frame_size) => {
-                info!(
+                trace!(
                     "stream_thread: Data Callback: nframes={} frame_size={}",
                     nframes,
                     frame_size
                 );
                 // TODO: This is proof-of-concept. Make it better.
-                let input_ptr: *const u8 = input_shm.get_slice(nframes as usize * frame_size).unwrap().as_ptr();
-                let output_ptr: *mut u8 = output_shm.get_mut_slice(nframes as usize * frame_size).unwrap().as_mut_ptr();
+                let input_ptr: *const u8 = input_shm
+                    .get_slice(nframes as usize * frame_size)
+                    .unwrap()
+                    .as_ptr();
+                let output_ptr: *mut u8 = output_shm
+                    .get_mut_slice(nframes as usize * frame_size)
+                    .unwrap()
+                    .as_mut_ptr();
+                set_in_callback(true);
                 let nframes = data_cb(
                     ptr::null_mut(),
                     user_ptr as *mut c_void,
@@ -63,11 +71,18 @@ fn stream_thread(
                     output_ptr as *mut _,
                     nframes as _
                 );
-                conn.send(ServerMessage::StreamDataCallback(nframes as isize)).unwrap();
+                set_in_callback(false);
+                let r = conn.send(ServerMessage::StreamDataCallback(nframes as isize));
+                if r.is_err() {
+                    debug!("stream_thread: Failed to send StreamDataCallback: {:?}", r);
+                    return;
+                }
             },
             ClientMessage::StreamStateCallback(state) => {
                 info!("stream_thread: State Callback: {:?}", state);
+                set_in_callback(true);
                 state_cb(ptr::null_mut(), user_ptr as *mut _, state);
+                set_in_callback(false);
             },
             m => {
                 info!("Unexpected ClientMessage: {:?}", m);
@@ -84,25 +99,30 @@ impl<'ctx> ClientStream<'ctx> {
         state_callback: ffi::cubeb_state_callback,
         user_ptr: *mut c_void,
     ) -> Result<*mut ffi::cubeb_stream> {
+        assert_not_in_callback();
+        let mut conn = ctx.connection();
 
-        ctx.conn()
-            .send(ServerMessage::StreamInit(init_params))
-            .unwrap();
+        let r = conn.send(ServerMessage::StreamInit(init_params));
+        if r.is_err() {
+            debug!("ClientStream::init: Failed to send StreamInit: {:?}", r);
+            return Err(ErrorCode::Error.into());
+        }
 
-        let r = match ctx.conn().receive_with_fd::<ClientMessage>() {
+        let r = match conn.receive_with_fd::<ClientMessage>() {
             Ok(r) => r,
             Err(_) => return Err(ErrorCode::Error.into()),
         };
 
-        let (token, conn) = match r {
-            (ClientMessage::StreamCreated(tok), Some(fd)) => (tok, unsafe {
-                Connection::from_raw_fd(fd)
-            }),
-            (ClientMessage::StreamCreated(_), None) => {
-                debug!("Missing fd!");
-                return Err(ErrorCode::Error.into());
+        let (token, conn2) = match r {
+            ClientMessage::StreamCreated(tok) => {
+                let fd = conn.take_fd();
+                if fd.is_none() {
+                    debug!("Missing fd!");
+                    return Err(ErrorCode::Error.into());
+                }
+                (tok, unsafe { Connection::from_raw_fd(fd.unwrap()) })
             },
-            (m, _) => {
+            m => {
                 debug!("Unexpected message: {:?}", m);
                 return Err(ErrorCode::Error.into());
             },
@@ -111,45 +131,60 @@ impl<'ctx> ClientStream<'ctx> {
         // TODO: It'd be nicer to receive these two fds as part of
         // StreamCreated, but that requires changing sendmsg/recvmsg to
         // support multiple fds.
-        let r = match ctx.conn().receive_with_fd::<ClientMessage>() {
+        let r = match conn.receive_with_fd::<ClientMessage>() {
             Ok(r) => r,
             Err(_) => return Err(ErrorCode::Error.into()),
         };
 
         let input_file = match r {
-            (ClientMessage::StreamCreatedInputShm, Some(fd)) => unsafe {
-                File::from_raw_fd(fd)
+            ClientMessage::StreamCreatedInputShm => {
+                let fd = conn.take_fd();
+                if fd.is_none() {
+                    debug!("Missing fd!");
+                    return Err(ErrorCode::Error.into());
+                }
+                unsafe { File::from_raw_fd(fd.unwrap()) }
             },
-            (m, _) => {
+            m => {
                 debug!("Unexpected message: {:?}", m);
                 return Err(ErrorCode::Error.into());
             },
         };
 
-        let input_shm = SharedMemSlice::from(input_file,
-                                             SHM_AREA_SIZE).unwrap();
+        let input_shm = SharedMemSlice::from(input_file, SHM_AREA_SIZE).unwrap();
 
-        let r = match ctx.conn().receive_with_fd::<ClientMessage>() {
+        let r = match conn.receive_with_fd::<ClientMessage>() {
             Ok(r) => r,
             Err(_) => return Err(ErrorCode::Error.into()),
         };
 
         let output_file = match r {
-            (ClientMessage::StreamCreatedOutputShm, Some(fd)) => unsafe {
-                File::from_raw_fd(fd)
+            ClientMessage::StreamCreatedOutputShm => {
+                let fd = conn.take_fd();
+                if fd.is_none() {
+                    debug!("Missing fd!");
+                    return Err(ErrorCode::Error.into());
+                }
+                unsafe { File::from_raw_fd(fd.unwrap()) }
             },
-            (m, _) => {
+            m => {
                 debug!("Unexpected message: {:?}", m);
                 return Err(ErrorCode::Error.into());
             },
         };
 
-        let output_shm = SharedMemMutSlice::from(output_file,
-                                                 SHM_AREA_SIZE).unwrap();
+        let output_shm = SharedMemMutSlice::from(output_file, SHM_AREA_SIZE).unwrap();
 
         let user_data = user_ptr as usize;
         let join_handle = thread::spawn(move || {
-            stream_thread(conn, input_shm, output_shm, data_callback, state_callback, user_data)
+            stream_thread(
+                conn2,
+                &input_shm,
+                output_shm,
+                data_callback,
+                state_callback,
+                user_data
+            )
         });
 
         Ok(Box::into_raw(Box::new(ClientStream {
@@ -162,48 +197,76 @@ impl<'ctx> ClientStream<'ctx> {
 
 impl<'ctx> Drop for ClientStream<'ctx> {
     fn drop(&mut self) {
-        let _: Result<()> = send_recv!(self.context.conn(), StreamDestroy(self.token) => StreamDestroyed);
+        let mut conn = self.context.connection();
+        let r = conn.send(ServerMessage::StreamDestroy(self.token));
+        if r.is_err() {
+            debug!("ClientStream::Drop send error={:?}", r);
+        } else {
+            let r = conn.receive();
+            if let Ok(ClientMessage::StreamDestroyed) = r {
+            } else {
+                debug!("ClientStream::Drop receive error={:?}", r);
+            }
+        }
+        // XXX: This is guaranteed to wait forever if the send failed.
         self.join_handle.take().unwrap().join().unwrap();
     }
 }
 
 impl<'ctx> Stream for ClientStream<'ctx> {
     fn start(&self) -> Result<()> {
-        send_recv!(self.context.conn(), StreamStart(self.token) => StreamStarted)
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        send_recv!(conn, StreamStart(self.token) => StreamStarted)
     }
 
     fn stop(&self) -> Result<()> {
-        send_recv!(self.context.conn(), StreamStop(self.token) => StreamStopped)
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        send_recv!(conn, StreamStop(self.token) => StreamStopped)
     }
 
     fn reset_default_device(&self) -> Result<()> {
-        send_recv!(self.context.conn(), StreamResetDefaultDevice(self.token) => StreamDefaultDeviceReset)
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        send_recv!(conn, StreamResetDefaultDevice(self.token) => StreamDefaultDeviceReset)
     }
 
     fn position(&self) -> Result<u64> {
-        send_recv!(self.context.conn(), StreamGetPosition(self.token) => StreamPosition())
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        send_recv!(conn, StreamGetPosition(self.token) => StreamPosition())
     }
 
     fn latency(&self) -> Result<u32> {
-        send_recv!(self.context.conn(), StreamGetLatency(self.token) => StreamLatency())
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        send_recv!(conn, StreamGetLatency(self.token) => StreamLatency())
     }
 
     fn set_volume(&self, volume: f32) -> Result<()> {
-        send_recv!(self.context.conn(), StreamSetVolume(self.token, volume) => StreamVolumeSet)
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        send_recv!(conn, StreamSetVolume(self.token, volume) => StreamVolumeSet)
     }
 
     fn set_panning(&self, panning: f32) -> Result<()> {
-        send_recv!(self.context.conn(), StreamSetPanning(self.token, panning) => StreamPanningSet)
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        send_recv!(conn, StreamSetPanning(self.token, panning) => StreamPanningSet)
     }
 
     fn current_device(&self) -> Result<*const ffi::cubeb_device> {
-        match send_recv!(self.context.conn(), StreamGetCurrentDevice(self.token) => StreamCurrentDevice()) {
+        assert_not_in_callback();
+        let mut conn = self.context.connection();
+        match send_recv!(conn, StreamGetCurrentDevice(self.token) => StreamCurrentDevice()) {
             Ok(d) => Ok(Box::into_raw(Box::new(d.into()))),
             Err(e) => Err(e),
         }
     }
 
     fn device_destroy(&self, device: *const ffi::cubeb_device) -> Result<()> {
+        assert_not_in_callback();
         // It's all unsafe...
         if !device.is_null() {
             unsafe {
@@ -224,6 +287,7 @@ impl<'ctx> Stream for ClientStream<'ctx> {
         &self,
         _device_changed_callback: ffi::cubeb_device_changed_callback,
     ) -> Result<()> {
+        assert_not_in_callback();
         Ok(())
     }
 }
