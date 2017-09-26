@@ -1413,7 +1413,7 @@ fuzzy-if(Android,5,2800) == 506481-1.html 506481-1-ref.html
 == 507762-4.html 507762-2-ref.html
 random-if(cocoaWidget||(gtkWidget&&webrender)||winWidget) == 508816-1.xul 508816-1-ref.xul # Bug 631982 and bug 1375012
 == 508816-2.html 508816-2-ref.html
-== 508908-1.xul 508908-1-ref.xul
+skip-if(isDebugBuild) == 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
 fuzzy-if(Android,5,1656) fuzzy-if(skiaContent,1,1200) == 512410.html 512410-ref.html
