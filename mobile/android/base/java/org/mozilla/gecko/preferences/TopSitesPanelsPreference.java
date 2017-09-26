@@ -15,8 +15,9 @@ import org.mozilla.gecko.R;
  */
 public class TopSitesPanelsPreference extends PanelsPreference {
 
-    TopSitesPanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable, int index, boolean animate) {
-        super(context, parentCategory, isRemovable, index, animate);
+    TopSitesPanelsPreference(final Context context, final CustomListCategory parentCategory, final boolean isRemovable,
+            final boolean isHidden, final int index, final boolean animate) {
+        super(context, parentCategory, isRemovable, isHidden, index, animate);
     }
 
     @Override
