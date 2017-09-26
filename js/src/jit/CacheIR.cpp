@@ -570,7 +570,7 @@ EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
                 lastObjId = protoId;
             }
         }
-    } else if (obj->is<UnboxedPlainObject>() && expandoId.isSome()) {
+    } else if (obj->is<UnboxedPlainObject>()) {
         holderId->emplace(*expandoId);
     } else {
         holderId->emplace(objId);
@@ -2234,8 +2234,8 @@ HasPropIRGenerator::tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
 }
 
 bool
-HasPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId,
-                                    HandleId key, ValOperandId keyId)
+HasPropIRGenerator::tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
+                                       HandleId key, ValOperandId keyId)
 {
     bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
@@ -2251,16 +2251,47 @@ HasPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId,
         if (!LookupPropertyPure(cx_, obj, key, &holder, &prop))
             return false;
     }
-    if (!prop.isFound())
+    if (!prop)
         return false;
 
-    // Use MegamorphicHasOwnResult if applicable
-    if (hasOwn && mode_ == ICState::Mode::Megamorphic) {
-        writer.megamorphicHasOwnResult(objId, keyId);
-        writer.returnFromIC();
-        trackAttached("MegamorphicHasProp");
+    if (tryAttachMegamorphic(objId, keyId))
         return true;
-    }
+    if (tryAttachNative(obj, objId, key, keyId, prop, holder))
+        return true;
+    if (tryAttachUnboxed(obj, objId, key, keyId))
+        return true;
+    if (tryAttachTypedObject(obj, objId, key, keyId))
+        return true;
+    if (tryAttachUnboxedExpando(obj, objId, key, keyId))
+        return true;
+
+    return false;
+}
+
+bool
+HasPropIRGenerator::tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId)
+{
+    if (mode_ != ICState::Mode::Megamorphic)
+        return false;
+
+    if (cacheKind_ != CacheKind::HasOwn)
+        return false;
+
+    writer.megamorphicHasOwnResult(objId, keyId);
+    writer.returnFromIC();
+    trackAttached("MegamorphicHasProp");
+    return true;
+}
+
+bool
+HasPropIRGenerator::tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
+                                    ValOperandId keyId, PropertyResult prop, JSObject* holder)
+{
+    if (!prop.isNativeProperty())
+        return false;
+
+    if (!IsCacheableProtoChain(obj, holder))
+        return false;
 
     Maybe<ObjOperandId> tempId;
     emitIdGuard(keyId, key);
@@ -2273,11 +2304,99 @@ HasPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId,
 }
 
 bool
-HasPropIRGenerator::tryAttachNativeDoesNotExist(HandleObject obj, ObjOperandId objId,
-                                                HandleId key, ValOperandId keyId)
+HasPropIRGenerator::tryAttachUnboxed(JSObject* obj, ObjOperandId objId,
+                                     jsid key, ValOperandId keyId)
+{
+    if (!obj->is<UnboxedPlainObject>())
+        return false;
+
+    const UnboxedLayout::Property* prop = obj->as<UnboxedPlainObject>().layout().lookup(key);
+    if (!prop)
+        return false;
+
+    emitIdGuard(keyId, key);
+    writer.guardGroup(objId, obj->group());
+    writer.loadBooleanResult(true);
+    writer.returnFromIC();
+
+    trackAttached("UnboxedHasProp");
+    return true;
+}
+
+bool
+HasPropIRGenerator::tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId,
+                                            jsid key, ValOperandId keyId)
+{
+    if (!obj->is<UnboxedPlainObject>())
+        return false;
+
+    UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
+    if (!expando)
+        return false;
+
+    Shape* shape = expando->lookup(cx_, key);
+    if (!shape)
+        return false;
+
+    Maybe<ObjOperandId> tempId;
+    emitIdGuard(keyId, key);
+    EmitReadSlotGuard(writer, obj, obj, objId, &tempId);
+    writer.loadBooleanResult(true);
+    writer.returnFromIC();
+
+    trackAttached("UnboxedExpandoHasProp");
+    return true;
+}
+
+bool
+HasPropIRGenerator::tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
+                                         jsid key, ValOperandId keyId)
+{
+    if (!obj->is<TypedObject>())
+        return false;
+
+    if (!obj->as<TypedObject>().typeDescr().hasProperty(cx_->names(), key))
+        return false;
+
+    emitIdGuard(keyId, key);
+    writer.guardGroup(objId, obj->group());
+    writer.loadBooleanResult(true);
+    writer.returnFromIC();
+
+    trackAttached("TypedObjectHasProp");
+    return true;
+}
+
+bool
+HasPropIRGenerator::tryAttachSlotDoesNotExist(JSObject* obj, ObjOperandId objId,
+                                              jsid key, ValOperandId keyId)
 {
     bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
+    emitIdGuard(keyId, key);
+    if (hasOwn) {
+        Maybe<ObjOperandId> tempId;
+        TestMatchingReceiver(writer, obj, objId, &tempId);
+    } else {
+        Maybe<ObjOperandId> tempId;
+        EmitReadSlotGuard(writer, obj, nullptr, objId, &tempId);
+    }
+    writer.loadBooleanResult(false);
+    writer.returnFromIC();
+
+    trackAttached("DoesNotExist");
+    return true;
+}
+
+bool
+HasPropIRGenerator::tryAttachDoesNotExist(HandleObject obj, ObjOperandId objId,
+                                          HandleId key, ValOperandId keyId)
+{
+    bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
+
+    // Check that property doesn't exist on |obj| or it's prototype chain. These
+    // checks allow Native/Unboxed/Typed objects with a NativeObject prototype
+    // chain. They return false if unknown such as resolve hooks or proxies.
     if (hasOwn) {
         if (!CheckHasNoSuchOwnProperty(cx_, obj, key))
             return false;
@@ -2286,26 +2405,12 @@ HasPropIRGenerator::tryAttachNativeDoesNotExist(HandleObject obj, ObjOperandId o
             return false;
     }
 
-    // Use MegamorphicHasOwnResult if applicable
-    if (hasOwn && mode_ == ICState::Mode::Megamorphic) {
-        writer.megamorphicHasOwnResult(objId, keyId);
-        writer.returnFromIC();
-        trackAttached("MegamorphicHasOwn");
+    if (tryAttachMegamorphic(objId, keyId))
         return true;
-    }
+    if (tryAttachSlotDoesNotExist(obj, objId, key, keyId))
+        return true;
 
-    Maybe<ObjOperandId> tempId;
-    emitIdGuard(keyId, key);
-    if (hasOwn) {
-        TestMatchingReceiver(writer, obj, objId, &tempId);
-    } else {
-        EmitReadSlotGuard(writer, obj, nullptr, objId, &tempId);
-    }
-    writer.loadBooleanResult(false);
-    writer.returnFromIC();
-
-    trackAttached("NativeDoesNotExist");
-    return true;
+    return false;
 }
 
 bool
@@ -2358,9 +2463,9 @@ HasPropIRGenerator::tryAttachStub()
     }
 
     if (nameOrSymbol) {
-        if (tryAttachNative(obj, objId, id, keyId))
+        if (tryAttachNamedProp(obj, objId, id, keyId))
             return true;
-        if (tryAttachNativeDoesNotExist(obj, objId, id, keyId))
+        if (tryAttachDoesNotExist(obj, objId, id, keyId))
             return true;
 
         trackNotAttached();
