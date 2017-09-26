@@ -103,9 +103,6 @@ private:
     key.mHandle = GetNextResourceId();
     return key;
   }
-  bool GenerateImageKeyForTextureHost(wr::ResourceUpdateQueue& aResources,
-                                      TextureHost* aTexture,
-                                      nsTArray<wr::ImageKey>& aKeys);
 
   struct ForwardingTextureHost {
     ForwardingTextureHost(const wr::Epoch& aEpoch, TextureHost* aTexture)
@@ -138,11 +135,16 @@ private:
     nsTArray<wr::ImageKey> mKeys;
   };
 
-  bool UpdateImageKeys(wr::ResourceUpdateQueue& aResourceUpdates,
-                       bool& aUseExternalImage,
-                       AsyncImagePipeline* aImageMgr,
-                       nsTArray<wr::ImageKey>& aKeys,
-                       nsTArray<wr::ImageKey>& aKeysToDelete);
+  Maybe<TextureHost::ResourceUpdateOp>
+  UpdateImageKeys(wr::ResourceUpdateQueue& aResourceUpdates,
+                  AsyncImagePipeline* aPipeline,
+                  nsTArray<wr::ImageKey>& aKeys,
+                  nsTArray<wr::ImageKey>& aKeysToDelete);
+  Maybe<TextureHost::ResourceUpdateOp>
+  UpdateWithoutExternalImage(wr::ResourceUpdateQueue& aResources,
+                             TextureHost* aTexture,
+                             wr::ImageKey aKey,
+                             TextureHost::ResourceUpdateOp);
 
   RefPtr<wr::WebRenderAPI> mApi;
   wr::IdNamespace mIdNamespace;
