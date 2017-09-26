@@ -71,7 +71,7 @@ interface nsIApplicationReputationQuery : nsISupports {
    * is not set by the caller, it will be passed as an empty string but the
    * query won't produce any useful information.
    */
-  readonly attribute AString suggestedFileName;
+  readonly attribute AUTF8String suggestedFileName;
 
   /*
    * The size of the downloaded file in bytes.

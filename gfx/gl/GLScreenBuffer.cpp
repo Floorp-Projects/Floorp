@@ -68,71 +68,62 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
                               KnowsCompositor* compositorConnection,
                               const layers::TextureFlags& flags)
 {
-  return CreateFactory(gl, caps, compositorConnection->GetTextureForwarder(),
-                       compositorConnection->GetCompositorBackendType(), flags);
-}
+    LayersIPCChannel* ipcChannel = compositorConnection->GetTextureForwarder();
+    const layers::LayersBackend backend = compositorConnection->GetCompositorBackendType();
+    const bool useANGLE = compositorConnection->GetCompositorUseANGLE();
 
-/* static */ UniquePtr<SurfaceFactory>
-GLScreenBuffer::CreateFactory(GLContext* gl,
-                              const SurfaceCaps& caps,
-                              LayersIPCChannel* ipcChannel,
-                              const mozilla::layers::LayersBackend backend,
-                              const layers::TextureFlags& flags)
-{
+    const bool useGl = !gfxPrefs::WebGLForceLayersReadback() &&
+                       (backend == layers::LayersBackend::LAYERS_OPENGL ||
+                       (backend == layers::LayersBackend::LAYERS_WR && !useANGLE));
+    const bool useD3D = !gfxPrefs::WebGLForceLayersReadback() &&
+                        (backend == layers::LayersBackend::LAYERS_D3D11 ||
+                        (backend == layers::LayersBackend::LAYERS_WR && useANGLE));
+
     UniquePtr<SurfaceFactory> factory = nullptr;
-    if (!gfxPrefs::WebGLForceLayersReadback()) {
-        switch (backend) {
-            case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
+    if (useGl) {
 #if defined(XP_MACOSX)
-                factory = SurfaceFactory_IOSurface::Create(gl, caps, ipcChannel, flags);
+        factory = SurfaceFactory_IOSurface::Create(gl, caps, ipcChannel, flags);
 #elif defined(GL_PROVIDER_GLX)
-                if (sGLXLibrary.UseTextureFromPixmap())
-                  factory = SurfaceFactory_GLXDrawable::Create(gl, caps, ipcChannel, flags);
+        if (sGLXLibrary.UseTextureFromPixmap())
+            factory = SurfaceFactory_GLXDrawable::Create(gl, caps, ipcChannel, flags);
 #elif defined(MOZ_WIDGET_UIKIT)
-                factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, ipcChannel, mFlags);
+        factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, ipcChannel, mFlags);
 #elif defined(MOZ_WIDGET_ANDROID)
-                if (XRE_IsParentProcess() && !gfxPrefs::WebGLSurfaceTextureEnabled()) {
-                    factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
-                } else {
-                    factory = SurfaceFactory_SurfaceTexture::Create(gl, caps, ipcChannel, flags);
-                }
+        if (XRE_IsParentProcess() && !gfxPrefs::WebGLSurfaceTextureEnabled()) {
+            factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
+        } else {
+            factory = SurfaceFactory_SurfaceTexture::Create(gl, caps, ipcChannel, flags);
+        }
 #else
-                if (gl->GetContextType() == GLContextType::EGL) {
-                    if (XRE_IsParentProcess()) {
-                        factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
-                    }
-                }
-#endif
-                break;
+        if (gl->GetContextType() == GLContextType::EGL) {
+            if (XRE_IsParentProcess()) {
+                factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
             }
-            case mozilla::layers::LayersBackend::LAYERS_D3D11: {
+        }
+#endif
+    } else if (useD3D) {
 #ifdef XP_WIN
-                // Enable surface sharing only if ANGLE and compositing devices
-                // are both WARP or both not WARP
-                gfx::DeviceManagerDx* dm = gfx::DeviceManagerDx::Get();
-                if (gl->IsANGLE() &&
-                    (gl->IsWARP() == dm->IsWARP()) &&
-                    dm->TextureSharingWorks())
-                {
-                    factory = SurfaceFactory_ANGLEShareHandle::Create(gl, caps, ipcChannel, flags);
-                }
-
-                if (!factory && gfxPrefs::WebGLDXGLEnabled()) {
-                  factory = SurfaceFactory_D3D11Interop::Create(gl, caps, ipcChannel, flags);
-                }
-#endif
-              break;
-            }
-            default:
-              break;
+        // Enable surface sharing only if ANGLE and compositing devices
+        // are both WARP or both not WARP
+        gfx::DeviceManagerDx* dm = gfx::DeviceManagerDx::Get();
+        if (gl->IsANGLE() &&
+            (gl->IsWARP() == dm->IsWARP()) &&
+             dm->TextureSharingWorks())
+        {
+            factory = SurfaceFactory_ANGLEShareHandle::Create(gl, caps, ipcChannel, flags);
         }
 
-#ifdef GL_PROVIDER_GLX
-        if (!factory && sGLXLibrary.UseTextureFromPixmap()) {
-            factory = SurfaceFactory_GLXDrawable::Create(gl, caps, ipcChannel, flags);
+        if (!factory && gfxPrefs::WebGLDXGLEnabled()) {
+            factory = SurfaceFactory_D3D11Interop::Create(gl, caps, ipcChannel, flags);
         }
 #endif
     }
+
+#ifdef GL_PROVIDER_GLX
+    if (!factory && sGLXLibrary.UseTextureFromPixmap()) {
+        factory = SurfaceFactory_GLXDrawable::Create(gl, caps, ipcChannel, flags);
+    }
+#endif
 
     return factory;
 }

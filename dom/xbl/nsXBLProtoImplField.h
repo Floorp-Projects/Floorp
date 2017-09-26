@@ -45,7 +45,7 @@ public:
   const char16_t* GetName() const { return mName; }
 
   unsigned AccessorAttributes() const {
-    return JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER |
+    return JSPROP_GETTER | JSPROP_SETTER |
            (mJSAttributes & (JSPROP_ENUMERATE | JSPROP_PERMANENT));
   }
 

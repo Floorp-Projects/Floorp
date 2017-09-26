@@ -34,14 +34,6 @@ interface nsIInputStreamPump : nsIRequest
      *        then it will be QI'd to nsIAsyncInputStream.  if the QI succeeds
      *        then the stream will be read directly.  otherwise, it will be read
      *        on a background thread using the stream transport service.
-     * @param aStreamPos
-     *        specifies the stream offset from which to start reading.  the
-     *        offset value is absolute.  pass -1 to specify the current offset.
-     *        NOTE: this parameter is ignored if the underlying stream does not
-     *        implement nsISeekableStream.
-     * @param aStreamLen
-     *        specifies how much data to read from the stream.  pass -1 to read
-     *        all data available in the stream.
      * @param aSegmentSize
      *        if the stream transport service is used, then this parameter
      *        specifies the segment size for the stream transport's buffer.
@@ -56,8 +48,6 @@ interface nsIInputStreamPump : nsIRequest
      *        a labeled main therad event target.
      */
     void init(in nsIInputStream aStream,
-              in long long      aStreamPos,
-              in long long      aStreamLen,
               in unsigned long  aSegmentSize,
               in unsigned long  aSegmentCount,
               in boolean        aCloseWhenDone,

@@ -39,14 +39,10 @@ public:
     NS_DECL_NSIINPUTSTREAM
 
     nsInputStreamTransport(nsIInputStream *source,
-                           uint64_t offset,
-                           uint64_t limit,
                            bool closeWhenDone)
         : mSource(source)
-        , mOffset(offset)
-        , mLimit(limit)
+        , mOffset(0)
         , mCloseWhenDone(closeWhenDone)
-        , mFirstTime(true)
         , mInProgress(false)
     {
     }
@@ -63,9 +59,7 @@ private:
     nsCOMPtr<nsITransportEventSink> mEventSink;
     nsCOMPtr<nsIInputStream>        mSource;
     int64_t                         mOffset;
-    int64_t                         mLimit;
     bool                            mCloseWhenDone;
-    bool                            mFirstTime;
 
     // this variable serves as a lock to prevent the state of the transport
     // from being modified once the copy is in progress.
@@ -160,7 +154,7 @@ nsInputStreamTransport::Close()
         mSource->Close();
 
     // make additional reads return early...
-    mOffset = mLimit = 0;
+    mOffset = 0;
     return NS_OK;
 }
 
@@ -173,40 +167,13 @@ nsInputStreamTransport::Available(uint64_t *result)
 NS_IMETHODIMP
 nsInputStreamTransport::Read(char *buf, uint32_t count, uint32_t *result)
 {
-    if (mFirstTime) {
-        mFirstTime = false;
-        if (mOffset != 0) {
-            // read from current position if offset equal to max
-            if (mOffset != -1) {
-                nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSource);
-                if (seekable)
-                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
-            }
-            // reset offset to zero so we can use it to enforce limit
-            mOffset = 0;
-        }
-    }
-
-    // limit amount read
-    uint64_t max = count;
-    if (mLimit != -1) {
-        max = mLimit - mOffset;
-        if (max == 0) {
-            *result = 0;
-            return NS_OK;
-        }
-    }
-
-    if (count > max)
-        count = static_cast<uint32_t>(max);
-
     nsresult rv = mSource->Read(buf, count, result);
 
     if (NS_SUCCEEDED(rv)) {
         mOffset += *result;
         if (mEventSink)
             mEventSink->OnTransportStatus(this, NS_NET_STATUS_READING, mOffset,
-                                          mLimit);
+                                          -1);
     }
     return rv;
 }
@@ -220,215 +187,6 @@ nsInputStreamTransport::ReadSegments(nsWriteSegmentFun writer, void *closure,
 
 NS_IMETHODIMP
 nsInputStreamTransport::IsNonBlocking(bool *result)
-{
-    *result = false;
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsOutputStreamTransport
-//
-// Implements nsIOutputStream as a wrapper around the real input stream.  This
-// allows the transport to support seeking, range-limiting, progress reporting,
-// and close-when-done semantics while utilizing NS_AsyncCopy.
-//-----------------------------------------------------------------------------
-
-class nsOutputStreamTransport : public nsITransport
-                              , public nsIOutputStream
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSITRANSPORT
-    NS_DECL_NSIOUTPUTSTREAM
-
-    nsOutputStreamTransport(nsIOutputStream *sink,
-                            int64_t offset,
-                            int64_t limit,
-                            bool closeWhenDone)
-        : mSink(sink)
-        , mOffset(offset)
-        , mLimit(limit)
-        , mCloseWhenDone(closeWhenDone)
-        , mFirstTime(true)
-        , mInProgress(false)
-    {
-    }
-
-private:
-    virtual ~nsOutputStreamTransport()
-    {
-    }
-
-    nsCOMPtr<nsIAsyncOutputStream>  mPipeOut;
-
-    // while the copy is active, these members may only be accessed from the
-    // nsIOutputStream implementation.
-    nsCOMPtr<nsITransportEventSink> mEventSink;
-    nsCOMPtr<nsIOutputStream>       mSink;
-    int64_t                         mOffset;
-    int64_t                         mLimit;
-    bool                            mCloseWhenDone;
-    bool                            mFirstTime;
-
-    // this variable serves as a lock to prevent the state of the transport
-    // from being modified once the copy is in progress.
-    bool                            mInProgress;
-};
-
-NS_IMPL_ISUPPORTS(nsOutputStreamTransport,
-                  nsITransport,
-                  nsIOutputStream)
-
-/** nsITransport **/
-
-NS_IMETHODIMP
-nsOutputStreamTransport::OpenInputStream(uint32_t flags,
-                                         uint32_t segsize,
-                                         uint32_t segcount,
-                                         nsIInputStream **result)
-{
-    // this transport only supports writing!
-    NS_NOTREACHED("nsOutputStreamTransport::OpenInputStream");
-    return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::OpenOutputStream(uint32_t flags,
-                                          uint32_t segsize,
-                                          uint32_t segcount,
-                                          nsIOutputStream **result)
-{
-    NS_ENSURE_TRUE(!mInProgress, NS_ERROR_IN_PROGRESS);
-
-    nsresult rv;
-    nsCOMPtr<nsIEventTarget> target =
-            do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // XXX if the caller requests an unbuffered stream, then perhaps
-    //     we'd want to simply return mSink; however, then we would
-    //     not be writing to mSink on a background thread.  is this ok?
-
-    bool nonblocking = !(flags & OPEN_BLOCKING);
-
-    net_ResolveSegmentParams(segsize, segcount);
-
-    nsCOMPtr<nsIAsyncInputStream> pipeIn;
-    rv = NS_NewPipe2(getter_AddRefs(pipeIn),
-                     getter_AddRefs(mPipeOut),
-                     true, nonblocking,
-                     segsize, segcount);
-    if (NS_FAILED(rv)) return rv;
-
-    mInProgress = true;
-
-    // startup async copy process...
-    rv = NS_AsyncCopy(pipeIn, this, target,
-                      NS_ASYNCCOPY_VIA_READSEGMENTS, segsize);
-    if (NS_SUCCEEDED(rv))
-        NS_ADDREF(*result = mPipeOut);
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::Close(nsresult reason)
-{
-    if (NS_SUCCEEDED(reason))
-        reason = NS_BASE_STREAM_CLOSED;
-
-    return mPipeOut->CloseWithStatus(reason);
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::SetEventSink(nsITransportEventSink *sink,
-                                      nsIEventTarget *target)
-{
-    NS_ENSURE_TRUE(!mInProgress, NS_ERROR_IN_PROGRESS);
-
-    if (target)
-        return net_NewTransportEventSinkProxy(getter_AddRefs(mEventSink),
-                                              sink, target);
-
-    mEventSink = sink;
-    return NS_OK;
-}
-
-/** nsIOutputStream **/
-
-NS_IMETHODIMP
-nsOutputStreamTransport::Close()
-{
-    if (mCloseWhenDone)
-        mSink->Close();
-
-    // make additional writes return early...
-    mOffset = mLimit = 0;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::Flush()
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::Write(const char *buf, uint32_t count, uint32_t *result)
-{
-    if (mFirstTime) {
-        mFirstTime = false;
-        if (mOffset != 0) {
-            // write to current position if offset equal to max
-            if (mOffset != -1) {
-                nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSink);
-                if (seekable)
-                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
-            }
-            // reset offset to zero so we can use it to enforce limit
-            mOffset = 0;
-        }
-    }
-
-    // limit amount written
-    uint64_t max = count;
-    if (mLimit != -1) {
-        max = mLimit - mOffset;
-        if (max == 0) {
-            *result = 0;
-            return NS_OK;
-        }
-    }
-
-    if (count > max)
-        count = static_cast<uint32_t>(max);
-
-    nsresult rv = mSink->Write(buf, count, result);
-
-    if (NS_SUCCEEDED(rv)) {
-        mOffset += *result;
-        if (mEventSink)
-            mEventSink->OnTransportStatus(this, NS_NET_STATUS_WRITING, mOffset,
-                                          mLimit);
-    }
-    return rv;
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::WriteSegments(nsReadSegmentFun reader, void *closure,
-                                       uint32_t count, uint32_t *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::WriteFrom(nsIInputStream *in, uint32_t count, uint32_t *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsOutputStreamTransport::IsNonBlocking(bool *result)
 {
     *result = false;
     return NS_OK;
@@ -527,28 +285,11 @@ nsStreamTransportService::IsOnCurrentThread(bool *result)
 
 NS_IMETHODIMP
 nsStreamTransportService::CreateInputTransport(nsIInputStream *stream,
-                                               int64_t offset,
-                                               int64_t limit,
                                                bool closeWhenDone,
                                                nsITransport **result)
 {
     nsInputStreamTransport *trans =
-        new nsInputStreamTransport(stream, offset, limit, closeWhenDone);
-    if (!trans)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*result = trans);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStreamTransportService::CreateOutputTransport(nsIOutputStream *stream,
-                                                int64_t offset,
-                                                int64_t limit,
-                                                bool closeWhenDone,
-                                                nsITransport **result)
-{
-    nsOutputStreamTransport *trans =
-        new nsOutputStreamTransport(stream, offset, limit, closeWhenDone);
+        new nsInputStreamTransport(stream, closeWhenDone);
     if (!trans)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = trans);

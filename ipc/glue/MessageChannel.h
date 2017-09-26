@@ -564,7 +564,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
         Message& Msg() { return mMessage; }
         const Message& Msg() const { return mMessage; }
 
-        bool GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups) override;
+        bool GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups) override;
 
     private:
         MessageTask() = delete;

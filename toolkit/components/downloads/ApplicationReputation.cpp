@@ -170,7 +170,7 @@ private:
   bool IsBinaryFile();
 
   // Returns the type of download binary for the file.
-  ClientDownloadRequest::DownloadType GetDownloadType(const nsAString& aFilename);
+  ClientDownloadRequest::DownloadType GetDownloadType(const nsACString& aFilename);
 
   // Clean up and call the callback. PendingLookup must not be used after this
   // function is called.
@@ -401,311 +401,311 @@ PendingLookup::~PendingLookup()
   LOG(("Destroying pending lookup [this = %p]", this));
 }
 
-static const char16_t* const kBinaryFileExtensions[] = {
+static const char* const kBinaryFileExtensions[] = {
     // Extracted from the "File Type Policies" Chrome extension
-    //u".001",
-    //u".7z",
-    //u".ace",
-    //u".action", // Mac script
-    //u".ad", // Windows
-    u".ade", // MS Access
-    u".adp", // MS Access
-    u".apk", // Android package
-    u".app", // Executable application
-    u".application", // MS ClickOnce
-    u".appref-ms", // MS ClickOnce
-    //u".arc",
-    //u".arj",
-    u".as", // Mac archive
-    u".asp", // Windows Server script
-    u".asx", // Windows Media Player
-    //u".b64",
-    //u".balz",
-    u".bas", // Basic script
-    u".bash", // Linux shell
-    u".bat", // Windows shell
-    //u".bhx",
-    //u".bin",
-    u".bz", // Linux archive (bzip)
-    u".bz2", // Linux archive (bzip2)
-    u".bzip2", // Linux archive (bzip2)
-    u".cab", // Windows archive
-    u".cdr", // Mac disk image
-    u".cfg", // Windows
-    u".chi", // Windows Help
-    u".chm", // Windows Help
-    u".class", // Java
-    u".cmd", // Windows executable
-    u".com", // Windows executable
-    u".command", // Mac script
-    u".cpgz", // Mac archive
-    //u".cpio",
-    u".cpl", // Windows executable
-    u".crt", // Windows signed certificate
-    u".crx", // Chrome extensions
-    u".csh", // Linux shell
-    u".dart", // Mac disk image
-    u".dc42", // Apple DiskCopy Image
-    u".deb", // Linux package
-    u".dex", // Android
-    u".diskcopy42", // Apple DiskCopy Image
-    u".dll", // Windows executable
-    u".dmg", // Mac disk image
-    u".dmgpart", // Mac disk image
-    //u".docb", // MS Office
-    //u".docm", // MS Word
-    //u".docx", // MS Word
-    //u".dotm", // MS Word
-    //u".dott", // MS Office
-    u".drv", // Windows driver
-    u".dvdr", // Mac Disk image
-    u".efi", // Firmware
-    u".eml", // MS Outlook
-    u".exe", // Windows executable
-    //u".fat",
-    u".fon", // Windows font
-    u".fxp", // MS FoxPro
-    u".gadget", // Windows
-    u".grp", // Windows
-    u".gz", // Linux archive (gzip)
-    u".gzip", // Linux archive (gzip)
-    u".hfs", // Mac disk image
-    u".hlp", // Windows Help
-    u".hqx", // Mac archive
-    u".hta", // HTML trusted application
-    u".htm",
-    u".html",
-    u".htt", // MS HTML template
-    u".img", // Mac disk image
-    u".imgpart", // Mac disk image
-    u".inf", // Windows installer
-    u".ini", // Generic config file
-    u".ins", // IIS config
-    //u".inx", // InstallShield
-    u".iso", // CD image
-    u".isp", // IIS config
-    //u".isu", // InstallShield
-    u".jar", // Java
-    u".jnlp", // Java
-    //u".job", // Windows
-    u".js", // JavaScript script
-    u".jse", // JScript
-    u".ksh", // Linux shell
-    //u".lha",
-    u".lnk", // Windows
-    u".local", // Windows
-    //u".lpaq1",
-    //u".lpaq5",
-    //u".lpaq8",
-    //u".lzh",
-    //u".lzma",
-    u".mad", // MS Access
-    u".maf", // MS Access
-    u".mag", // MS Access
-    u".mam", // MS Access
-    u".manifest", // Windows
-    u".maq", // MS Access
-    u".mar", // MS Access
-    u".mas", // MS Access
-    u".mat", // MS Access
-    u".mau", // Media attachment
-    u".mav", // MS Access
-    u".maw", // MS Access
-    u".mda", // MS Access
-    u".mdb", // MS Access
-    u".mde", // MS Access
-    u".mdt", // MS Access
-    u".mdw", // MS Access
-    u".mdz", // MS Access
-    u".mht", // MS HTML
-    u".mhtml", // MS HTML
-    u".mim", // MS Mail
-    u".mmc", // MS Office
-    u".mof", // Windows
-    u".mpkg", // Mac installer
-    u".msc", // Windows executable
-    u".msg", // MS Outlook
-    u".msh", // Windows shell
-    u".msh1", // Windows shell
-    u".msh1xml", // Windows shell
-    u".msh2", // Windows shell
-    u".msh2xml", // Windows shell
-    u".mshxml", // Windows
-    u".msi", // Windows installer
-    u".msp", // Windows installer
-    u".mst", // Windows installer
-    u".ndif", // Mac disk image
-    //u".ntfs", // 7z
-    u".ocx", // ActiveX
-    u".ops", // MS Office
-    //u".out", // Linux binary
-    //u".paf", // PortableApps package
-    //u".paq8f",
-    //u".paq8jd",
-    //u".paq8l",
-    //u".paq8o",
-    u".partial", // Downloads
-    u".pax", // Mac archive
-    u".pcd", // Microsoft Visual Test
-    u".pdf", // Adobe Acrobat
-    //u".pea",
-    u".pet", // Linux package
-    u".pif", // Windows
-    u".pkg", // Mac installer
-    u".pl", // Perl script
-    u".plg", // MS Visual Studio
-    //u".potx", // MS PowerPoint
-    //u".ppam", // MS PowerPoint
-    //u".ppsx", // MS PowerPoint
-    //u".pptm", // MS PowerPoint
-    //u".pptx", // MS PowerPoint
-    u".prf", // MS Outlook
-    u".prg", // Windows
-    u".ps1", // Windows shell
-    u".ps1xml", // Windows shell
-    u".ps2", // Windows shell
-    u".ps2xml", // Windows shell
-    u".psc1", // Windows shell
-    u".psc2", // Windows shell
-    u".pst", // MS Outlook
-    u".pup", // Linux package
-    u".py", // Python script
-    u".pyc", // Python binary
-    u".pyw", // Python GUI
-    //u".quad",
-    //u".r00",
-    //u".r01",
-    //u".r02",
-    //u".r03",
-    //u".r04",
-    //u".r05",
-    //u".r06",
-    //u".r07",
-    //u".r08",
-    //u".r09",
-    //u".r10",
-    //u".r11",
-    //u".r12",
-    //u".r13",
-    //u".r14",
-    //u".r15",
-    //u".r16",
-    //u".r17",
-    //u".r18",
-    //u".r19",
-    //u".r20",
-    //u".r21",
-    //u".r22",
-    //u".r23",
-    //u".r24",
-    //u".r25",
-    //u".r26",
-    //u".r27",
-    //u".r28",
-    //u".r29",
-    //u".rar",
-    u".rb", // Ruby script
-    u".reg", // Windows Registry
-    u".rels", // MS Office
-    //u".rgs", // Windows Registry
-    u".rpm", // Linux package
-    //u".rtf", // MS Office
-    //u".run", // Linux shell
-    u".scf", // Windows shell
-    u".scr", // Windows
-    u".sct", // Windows shell
-    u".search-ms", // Windows
-    u".sh", // Linux shell
-    u".shar", // Linux shell
-    u".shb", // Windows
-    u".shs", // Windows shell
-    //u".sldm", // MS PowerPoint
-    //u".sldx", // MS PowerPoint
-    u".slp", // Linux package
-    u".smi", // Mac disk image
-    u".sparsebundle", // Mac disk image
-    u".sparseimage", // Mac disk image
-    u".spl", // Adobe Flash
-    //u".squashfs",
-    u".svg",
-    u".swf", // Adobe Flash
-    u".swm", // Windows Imaging
-    u".sys", // Windows
-    u".tar", // Linux archive
-    u".taz", // Linux archive (bzip2)
-    u".tbz", // Linux archive (bzip2)
-    u".tbz2", // Linux archive (bzip2)
-    u".tcsh", // Linux shell
-    u".tgz", // Linux archive (gzip)
-    //u".toast", // Roxio disk image
-    //u".torrent", // Bittorrent
-    u".tpz", // Linux archive (gzip)
-    u".txz", // Linux archive (xz)
-    u".tz", // Linux archive (gzip)
-    //u".u3p", // U3 Smart Apps
-    u".udf", // MS Excel
-    u".udif", // Mac disk image
-    u".url", // Windows
-    //u".uu",
-    //u".uue",
-    u".vb", // Visual Basic script
-    u".vbe", // Visual Basic script
-    u".vbs", // Visual Basic script
-    //u".vbscript", // Visual Basic script
-    u".vhd", // Windows virtual hard drive
-    u".vhdx", // Windows virtual hard drive
-    u".vmdk", // VMware virtual disk
-    u".vsd", // MS Visio
-    u".vsmacros", // MS Visual Studio
-    u".vss", // MS Visio
-    u".vst", // MS Visio
-    u".vsw", // MS Visio
-    u".website",  // Windows
-    u".wim", // Windows Imaging
-    //u".workflow", // Mac Automator
-    //u".wrc", // FreeArc archive
-    u".ws", // Windows script
-    u".wsc", // Windows script
-    u".wsf", // Windows script
-    u".wsh", // Windows script
-    u".xar", // MS Excel
-    u".xbap", // XAML Browser Application
-    u".xhtml",
-    u".xhtm",
-    u".xht",
-    u".xip", // Mac archive
-    //u".xlsm", // MS Excel
-    //u".xlsx", // MS Excel
-    //u".xltm", // MS Excel
-    //u".xltx", // MS Excel
-    u".xml",
-    u".xnk", // MS Exchange
-    u".xrm-ms", // Windows
-    u".xsl", // XML Stylesheet
-    //u".xxe",
-    u".xz", // Linux archive (xz)
-    u".z", // InstallShield
+    //".001",
+    //".7z",
+    //".ace",
+    //".action", // Mac script
+    //".ad", // Windows
+    ".ade", // MS Access
+    ".adp", // MS Access
+    ".apk", // Android package
+    ".app", // Executable application
+    ".application", // MS ClickOnce
+    ".appref-ms", // MS ClickOnce
+    //".arc",
+    //".arj",
+    ".as", // Mac archive
+    ".asp", // Windows Server script
+    ".asx", // Windows Media Player
+    //".b64",
+    //".balz",
+    ".bas", // Basic script
+    ".bash", // Linux shell
+    ".bat", // Windows shell
+    //".bhx",
+    //".bin",
+    ".bz", // Linux archive (bzip)
+    ".bz2", // Linux archive (bzip2)
+    ".bzip2", // Linux archive (bzip2)
+    ".cab", // Windows archive
+    ".cdr", // Mac disk image
+    ".cfg", // Windows
+    ".chi", // Windows Help
+    ".chm", // Windows Help
+    ".class", // Java
+    ".cmd", // Windows executable
+    ".com", // Windows executable
+    ".command", // Mac script
+    ".cpgz", // Mac archive
+    //".cpio",
+    ".cpl", // Windows executable
+    ".crt", // Windows signed certificate
+    ".crx", // Chrome extensions
+    ".csh", // Linux shell
+    ".dart", // Mac disk image
+    ".dc42", // Apple DiskCopy Image
+    ".deb", // Linux package
+    ".dex", // Android
+    ".diskcopy42", // Apple DiskCopy Image
+    ".dll", // Windows executable
+    ".dmg", // Mac disk image
+    ".dmgpart", // Mac disk image
+    //".docb", // MS Office
+    //".docm", // MS Word
+    //".docx", // MS Word
+    //".dotm", // MS Word
+    //".dott", // MS Office
+    ".drv", // Windows driver
+    ".dvdr", // Mac Disk image
+    ".efi", // Firmware
+    ".eml", // MS Outlook
+    ".exe", // Windows executable
+    //".fat",
+    ".fon", // Windows font
+    ".fxp", // MS FoxPro
+    ".gadget", // Windows
+    ".grp", // Windows
+    ".gz", // Linux archive (gzip)
+    ".gzip", // Linux archive (gzip)
+    ".hfs", // Mac disk image
+    ".hlp", // Windows Help
+    ".hqx", // Mac archive
+    ".hta", // HTML trusted application
+    ".htm",
+    ".html",
+    ".htt", // MS HTML template
+    ".img", // Mac disk image
+    ".imgpart", // Mac disk image
+    ".inf", // Windows installer
+    ".ini", // Generic config file
+    ".ins", // IIS config
+    //".inx", // InstallShield
+    ".iso", // CD image
+    ".isp", // IIS config
+    //".isu", // InstallShield
+    ".jar", // Java
+    ".jnlp", // Java
+    //".job", // Windows
+    ".js", // JavaScript script
+    ".jse", // JScript
+    ".ksh", // Linux shell
+    //".lha",
+    ".lnk", // Windows
+    ".local", // Windows
+    //".lpaq1",
+    //".lpaq5",
+    //".lpaq8",
+    //".lzh",
+    //".lzma",
+    ".mad", // MS Access
+    ".maf", // MS Access
+    ".mag", // MS Access
+    ".mam", // MS Access
+    ".manifest", // Windows
+    ".maq", // MS Access
+    ".mar", // MS Access
+    ".mas", // MS Access
+    ".mat", // MS Access
+    ".mau", // Media attachment
+    ".mav", // MS Access
+    ".maw", // MS Access
+    ".mda", // MS Access
+    ".mdb", // MS Access
+    ".mde", // MS Access
+    ".mdt", // MS Access
+    ".mdw", // MS Access
+    ".mdz", // MS Access
+    ".mht", // MS HTML
+    ".mhtml", // MS HTML
+    ".mim", // MS Mail
+    ".mmc", // MS Office
+    ".mof", // Windows
+    ".mpkg", // Mac installer
+    ".msc", // Windows executable
+    ".msg", // MS Outlook
+    ".msh", // Windows shell
+    ".msh1", // Windows shell
+    ".msh1xml", // Windows shell
+    ".msh2", // Windows shell
+    ".msh2xml", // Windows shell
+    ".mshxml", // Windows
+    ".msi", // Windows installer
+    ".msp", // Windows installer
+    ".mst", // Windows installer
+    ".ndif", // Mac disk image
+    //".ntfs", // 7z
+    ".ocx", // ActiveX
+    ".ops", // MS Office
+    //".out", // Linux binary
+    //".paf", // PortableApps package
+    //".paq8f",
+    //".paq8jd",
+    //".paq8l",
+    //".paq8o",
+    ".partial", // Downloads
+    ".pax", // Mac archive
+    ".pcd", // Microsoft Visual Test
+    ".pdf", // Adobe Acrobat
+    //".pea",
+    ".pet", // Linux package
+    ".pif", // Windows
+    ".pkg", // Mac installer
+    ".pl", // Perl script
+    ".plg", // MS Visual Studio
+    //".potx", // MS PowerPoint
+    //".ppam", // MS PowerPoint
+    //".ppsx", // MS PowerPoint
+    //".pptm", // MS PowerPoint
+    //".pptx", // MS PowerPoint
+    ".prf", // MS Outlook
+    ".prg", // Windows
+    ".ps1", // Windows shell
+    ".ps1xml", // Windows shell
+    ".ps2", // Windows shell
+    ".ps2xml", // Windows shell
+    ".psc1", // Windows shell
+    ".psc2", // Windows shell
+    ".pst", // MS Outlook
+    ".pup", // Linux package
+    ".py", // Python script
+    ".pyc", // Python binary
+    ".pyw", // Python GUI
+    //".quad",
+    //".r00",
+    //".r01",
+    //".r02",
+    //".r03",
+    //".r04",
+    //".r05",
+    //".r06",
+    //".r07",
+    //".r08",
+    //".r09",
+    //".r10",
+    //".r11",
+    //".r12",
+    //".r13",
+    //".r14",
+    //".r15",
+    //".r16",
+    //".r17",
+    //".r18",
+    //".r19",
+    //".r20",
+    //".r21",
+    //".r22",
+    //".r23",
+    //".r24",
+    //".r25",
+    //".r26",
+    //".r27",
+    //".r28",
+    //".r29",
+    //".rar",
+    ".rb", // Ruby script
+    ".reg", // Windows Registry
+    ".rels", // MS Office
+    //".rgs", // Windows Registry
+    ".rpm", // Linux package
+    //".rtf", // MS Office
+    //".run", // Linux shell
+    ".scf", // Windows shell
+    ".scr", // Windows
+    ".sct", // Windows shell
+    ".search-ms", // Windows
+    ".sh", // Linux shell
+    ".shar", // Linux shell
+    ".shb", // Windows
+    ".shs", // Windows shell
+    //".sldm", // MS PowerPoint
+    //".sldx", // MS PowerPoint
+    ".slp", // Linux package
+    ".smi", // Mac disk image
+    ".sparsebundle", // Mac disk image
+    ".sparseimage", // Mac disk image
+    ".spl", // Adobe Flash
+    //".squashfs",
+    ".svg",
+    ".swf", // Adobe Flash
+    ".swm", // Windows Imaging
+    ".sys", // Windows
+    ".tar", // Linux archive
+    ".taz", // Linux archive (bzip2)
+    ".tbz", // Linux archive (bzip2)
+    ".tbz2", // Linux archive (bzip2)
+    ".tcsh", // Linux shell
+    ".tgz", // Linux archive (gzip)
+    //".toast", // Roxio disk image
+    //".torrent", // Bittorrent
+    ".tpz", // Linux archive (gzip)
+    ".txz", // Linux archive (xz)
+    ".tz", // Linux archive (gzip)
+    //".u3p", // U3 Smart Apps
+    ".udf", // MS Excel
+    ".udif", // Mac disk image
+    ".url", // Windows
+    //".uu",
+    //".uue",
+    ".vb", // Visual Basic script
+    ".vbe", // Visual Basic script
+    ".vbs", // Visual Basic script
+    //".vbscript", // Visual Basic script
+    ".vhd", // Windows virtual hard drive
+    ".vhdx", // Windows virtual hard drive
+    ".vmdk", // VMware virtual disk
+    ".vsd", // MS Visio
+    ".vsmacros", // MS Visual Studio
+    ".vss", // MS Visio
+    ".vst", // MS Visio
+    ".vsw", // MS Visio
+    ".website",  // Windows
+    ".wim", // Windows Imaging
+    //".workflow", // Mac Automator
+    //".wrc", // FreeArc archive
+    ".ws", // Windows script
+    ".wsc", // Windows script
+    ".wsf", // Windows script
+    ".wsh", // Windows script
+    ".xar", // MS Excel
+    ".xbap", // XAML Browser Application
+    ".xhtml",
+    ".xhtm",
+    ".xht",
+    ".xip", // Mac archive
+    //".xlsm", // MS Excel
+    //".xlsx", // MS Excel
+    //".xltm", // MS Excel
+    //".xltx", // MS Excel
+    ".xml",
+    ".xnk", // MS Exchange
+    ".xrm-ms", // Windows
+    ".xsl", // XML Stylesheet
+    //".xxe",
+    ".xz", // Linux archive (xz)
+    ".z", // InstallShield
 #ifdef XP_WIN // disable on Mac/Linux, see 1167493
-    u".zip", // Generic archive
+    ".zip", // Generic archive
 #endif
-    u".zipx", // WinZip
-    //u".zpaq",
+    ".zipx", // WinZip
+    //".zpaq",
 };
 
 bool
 PendingLookup::IsBinaryFile()
 {
-  nsString fileName;
+  nsCString fileName;
   nsresult rv = mQuery->GetSuggestedFileName(fileName);
   if (NS_FAILED(rv)) {
     LOG(("No suggested filename [this = %p]", this));
     return false;
   }
-  LOG(("Suggested filename: %s [this = %p]",
-       NS_ConvertUTF16toUTF8(fileName).get(), this));
+  LOG(("Suggested filename: %s [this = %p]", fileName.get(), this));
 
   for (size_t i = 0; i < ArrayLength(kBinaryFileExtensions); ++i) {
-    if (StringEndsWith(fileName, nsDependentString(kBinaryFileExtensions[i]))) {
+    if (StringEndsWith(fileName,
+                       nsDependentCString(kBinaryFileExtensions[i]))) {
       return true;
     }
   }
@@ -714,33 +714,33 @@ PendingLookup::IsBinaryFile()
 }
 
 ClientDownloadRequest::DownloadType
-PendingLookup::GetDownloadType(const nsAString& aFilename) {
+PendingLookup::GetDownloadType(const nsACString& aFilename) {
   MOZ_ASSERT(IsBinaryFile());
 
   // From https://cs.chromium.org/chromium/src/chrome/common/safe_browsing/download_protection_util.cc?l=17
-  if (StringEndsWith(aFilename, NS_LITERAL_STRING(".zip"))) {
+  if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".zip"))) {
     return ClientDownloadRequest::ZIPPED_EXECUTABLE;
-  } else if (StringEndsWith(aFilename, NS_LITERAL_STRING(".apk"))) {
+  } else if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".apk"))) {
     return ClientDownloadRequest::ANDROID_APK;
-  } else if (StringEndsWith(aFilename, NS_LITERAL_STRING(".app")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".cdr")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".dart")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".dc42")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".diskcopy42")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".dmg")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".dmgpart")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".dvdr")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".img")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".imgpart")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".iso")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".mpkg")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".ndif")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".pkg")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".smi")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".sparsebundle")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".sparseimage")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".toast")) ||
-             StringEndsWith(aFilename, NS_LITERAL_STRING(".udif"))) {
+  } else if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".app")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".cdr")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dart")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dc42")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".diskcopy42")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dmg")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dmgpart")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dvdr")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".img")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".imgpart")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".iso")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".mpkg")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".ndif")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".pkg")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".smi")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".sparsebundle")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".sparseimage")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".toast")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".udif"))) {
     return ClientDownloadRequest::MAC_EXECUTABLE;
   }
 
@@ -1318,10 +1318,10 @@ PendingLookup::SendRemoteQueryInternal()
   rv = mQuery->GetSha256Hash(sha256Hash);
   NS_ENSURE_SUCCESS(rv, rv);
   mRequest.mutable_digests()->set_sha256(sha256Hash.Data());
-  nsString fileName;
+  nsCString fileName;
   rv = mQuery->GetSuggestedFileName(fileName);
   NS_ENSURE_SUCCESS(rv, rv);
-  mRequest.set_file_basename(NS_ConvertUTF16toUTF8(fileName).get());
+  mRequest.set_file_basename(fileName.get());
   mRequest.set_download_type(GetDownloadType(fileName));
 
   if (mRequest.signature().trusted()) {

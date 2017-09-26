@@ -211,12 +211,11 @@ nsAtom::~nsAtom()
 
 NS_IMPL_QUERY_INTERFACE(nsAtom, nsIAtom);
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsAtom::ToUTF8String(nsACString& aBuf)
 {
   MOZ_ASSERT(!IsHTML5Atom(), "Called ToUTF8String() on an HTML5 atom");
   CopyUTF16toUTF8(nsDependentString(mString, mLength), aBuf);
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(size_t)
