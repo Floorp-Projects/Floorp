@@ -331,6 +331,26 @@ add_task(async function click_and_hold_slider() {
   await waitForEvent("play");
 });
 
+/*
+ * Bug 1402877: Don't let click event dispatch through media controls to video element.
+ */
+add_task(async function click_event_dispatch() {
+  const clientScriptClickHandler = (e) => {
+    ok(false, "Should not receive the event");
+  };
+  video.addEventListener("click", clientScriptClickHandler);
+
+  video.pause();
+  await waitForEvent("pause");
+  video.currentTime = 0.0;
+  await waitForEvent("seeking", "seeked");
+  is(video.paused, true, "checking video play state");
+  synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
+  await waitForEvent("seeking", "seeked");
+
+  video.removeEventListener("click", clientScriptClickHandler);
+});
+
 // Bug 1367194: Always ensure video is paused before finishing the test.
 add_task(async function ensure_video_pause() {
   if (!video.paused) {
