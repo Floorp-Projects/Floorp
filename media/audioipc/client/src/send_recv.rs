@@ -17,26 +17,36 @@ macro_rules! send_recv {
         send_recv!(__recv $conn, $rmsg __result)
     }};
     //
-    (__send $conn:expr, $smsg:ident) => (
-        $conn.send(ServerMessage::$smsg)
-            .unwrap();
-    );
-    (__send $conn:expr, $smsg:ident, $($a:expr),*) => (
-        $conn.send(ServerMessage::$smsg($($a),*))
-            .unwrap();
-    );
-    (__recv $conn:expr, $rmsg:ident) => (
-        if let ClientMessage::$rmsg = $conn.receive().unwrap() {
+    (__send $conn:expr, $smsg:ident) => ({
+        let r = $conn.send(ServerMessage::$smsg);
+        if r.is_err() {
+            debug!("send error - got={:?}", r);
+            return Err(ErrorCode::Error.into());
+        }
+    });
+    (__send $conn:expr, $smsg:ident, $($a:expr),*) => ({
+        let r = $conn.send(ServerMessage::$smsg($($a),*));
+        if r.is_err() {
+            debug!("send error - got={:?}", r);
+            return Err(ErrorCode::Error.into());
+        }
+    });
+    (__recv $conn:expr, $rmsg:ident) => ({
+        let r = $conn.receive().unwrap();
+        if let ClientMessage::$rmsg = r {
             Ok(())
         } else {
-            panic!("wrong message received");
+            debug!("receive error - got={:?}", r);
+            Err(ErrorCode::Error.into())
         }
-    );
-    (__recv $conn:expr, $rmsg:ident __result) => (
-        if let ClientMessage::$rmsg(v) = $conn.receive().unwrap() {
+    });
+    (__recv $conn:expr, $rmsg:ident __result) => ({
+        let r = $conn.receive().unwrap();
+        if let ClientMessage::$rmsg(v) = r {
             Ok(v)
         } else {
-            panic!("wrong message received");
+            debug!("receive error - got={:?}", r);
+            Err(ErrorCode::Error.into())
         }
-    )
+    })
 }

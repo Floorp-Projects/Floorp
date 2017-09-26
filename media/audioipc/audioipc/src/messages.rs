@@ -126,7 +126,7 @@ pub struct StreamParams {
 
 impl<'a> From<&'a ffi::cubeb_stream_params> for StreamParams {
     fn from(params: &'a ffi::cubeb_stream_params) -> Self {
-        assert!(params.channels <= u8::max_value() as u32);
+        assert!(params.channels <= u32::from(u8::max_value()));
 
         StreamParams {
             format: params.format,
@@ -141,8 +141,8 @@ impl<'a> From<&'a StreamParams> for ffi::cubeb_stream_params {
     fn from(params: &StreamParams) -> Self {
         ffi::cubeb_stream_params {
             format: params.format,
-            rate: params.rate as u32,
-            channels: params.channels as u32,
+            rate: u32::from(params.rate),
+            channels: u32::from(params.channels),
             layout: params.layout
         }
     }
