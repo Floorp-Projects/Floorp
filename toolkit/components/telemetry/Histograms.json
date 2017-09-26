@@ -5228,6 +5228,16 @@
     "n_buckets" : 64,
     "description": "The width dimension of the 'sizes' attribute for <link rel=icon>."
   },
+  "PAGE_METADATA_SIZE": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 500,
+    "n_buckets": 10,
+    "alert_emails": ["najiang@mozilla.com", "activity-stream@mozilla.com"],
+    "bug_numbers": [1399880],
+    "description": "The size of the description and preview image url for page metadata (Bytes)"
+  },
   "FENNEC_DISTRIBUTION_REFERRER_INVALID": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

@@ -5,6 +5,7 @@
 "use strict";
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 Cu.importGlobalProperties(["URL"]);
+Cu.import("resource://gre/modules/Services.jsm");
 
 // Debounce time in milliseconds - this should be long enough to account for
 // sync script tags that could appear between desired meta tags
@@ -125,6 +126,11 @@ this.ContentMetaHandler = {
           description: entry.description.value,
           previewImageURL: entry.image.value
         });
+
+        // Telemetry for recording the size of page metadata
+        let metadataSize = entry.description.value ? entry.description.value.length : 0;
+        metadataSize += entry.image.value ? entry.image.value.length : 0;
+        Services.telemetry.getHistogramById("PAGE_METADATA_SIZE").add(metadataSize);
         metaTags.delete(url);
       }, TIMEOUT_DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
     }
