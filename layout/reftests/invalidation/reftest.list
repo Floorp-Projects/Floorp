@@ -86,7 +86,6 @@ pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
 == negative-w-component.html negative-w-component-ref.html
 
 == mask-invalidation-1a.html mask-invalidation-1-ref.html
-pref(gfx.webrender.layers-free,true) skip-if(!webrender) == mask-invalidation-1a.html mask-invalidation-1-ref.html
 == mask-invalidation-1b.html mask-invalidation-1-ref.html
 
 fails-if(webrender) == mask-invalidation-2a.html mask-invalidation-2-ref.html
