@@ -310,6 +310,8 @@ public class Tabs implements BundleEventListener {
         }
 
         mSelectedTab = tab;
+        mSelectedTab.updatePageAction();
+
         notifyListeners(tab, TabEvents.SELECTED);
 
         if (mLayerView != null) {
