@@ -12,7 +12,7 @@
 #include "SkTemplates.h"
 
 // A debugging mode that helps prioritize porting stages to SkJumper.
-#if 0
+#if 0 && SK_JUMPER_USE_ASSEMBLY
     #include "SkOnce.h"
     #include <atomic>
 
@@ -31,6 +31,13 @@
 // SkJumper_generated.S is not compiled with MSAN, so MSAN would yell really loud.
 #if !defined(__has_feature)
     #define __has_feature(x) 0
+#endif
+#if !defined(SK_JUMPER_USE_ASSEMBLY)
+#if __has_feature(memory_sanitizer)
+#define SK_JUMPER_USE_ASSEMBLY 0
+#else
+#define SK_JUMPER_USE_ASSEMBLY 1
+#endif
 #endif
 
 // Stages expect these constants to be set to these values.
@@ -144,7 +151,7 @@ using StageFn = void(void);
 
 extern "C" {
 
-#if __has_feature(memory_sanitizer)
+#if !SK_JUMPER_USE_ASSEMBLY
     // We'll just run portable code.
 
 #elif defined(__aarch64__)
@@ -196,7 +203,7 @@ extern "C" {
 
 // Translate SkRasterPipeline's StockStage enum to StageFn function pointers.
 
-#if __has_feature(memory_sanitizer)
+#if !SK_JUMPER_USE_ASSEMBLY
     // We'll just run portable code.
 
 #elif defined(__aarch64__)
@@ -316,7 +323,7 @@ bool SkRasterPipeline::run_with_jumper(size_t x, size_t n) const {
     };
 
     // While possible, build and run at full vector stride.
-#if __has_feature(memory_sanitizer)
+#if !SK_JUMPER_USE_ASSEMBLY
     // We'll just run portable code.
 
 #elif defined(__aarch64__)
