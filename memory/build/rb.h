@@ -134,24 +134,10 @@ public:
   }
 };
 
-#define rbp_rotate_left(a_type, a_field, a_node, r_node)                       \
-  do {                                                                         \
-    (r_node) = a_field(a_node).Right();                                        \
-    a_field(a_node).SetRight(a_field(r_node).Left());                          \
-    a_field(r_node).SetLeft((a_node));                                         \
-  } while (0)
-
-#define rbp_rotate_right(a_type, a_field, a_node, r_node)                      \
-  do {                                                                         \
-    (r_node) = a_field(a_node).Left();                                         \
-    a_field(a_node).SetLeft(a_field(r_node).Right());                          \
-    a_field(r_node).SetRight((a_node));                                        \
-  } while (0)
-
 #define rbp_lean_left(a_type, a_field, a_node, r_node)                         \
   do {                                                                         \
     NodeColor rbp_ll_color;                                                    \
-    rbp_rotate_left(a_type, a_field, (a_node), (r_node));                      \
+    r_node = RotateLeft(a_node);                                               \
     rbp_ll_color = a_field(a_node).Color();                                    \
     a_field(r_node).SetColor(rbp_ll_color);                                    \
     a_field(a_node).SetColor(NodeColor::Red);                                  \
@@ -160,7 +146,7 @@ public:
 #define rbp_lean_right(a_type, a_field, a_node, r_node)                        \
   do {                                                                         \
     NodeColor rbp_lr_color;                                                    \
-    rbp_rotate_right(a_type, a_field, (a_node), (r_node));                     \
+    r_node = RotateRight(a_node);                                              \
     rbp_lr_color = a_field(a_node).Color();                                    \
     a_field(r_node).SetColor(rbp_lr_color);                                    \
     a_field(a_node).SetColor(NodeColor::Red);                                  \
@@ -174,21 +160,21 @@ public:
     rbp_mrl_t = a_field(a_node).Right();                                       \
     rbp_mrl_u = a_field(rbp_mrl_t).Left();                                     \
     if (a_field(rbp_mrl_u).IsRed()) {                                          \
-      rbp_rotate_right(a_type, a_field, rbp_mrl_t, rbp_mrl_u);                 \
+      rbp_mrl_u = RotateRight(rbp_mrl_t);                                      \
       a_field(a_node).SetRight(rbp_mrl_u);                                     \
-      rbp_rotate_left(a_type, a_field, (a_node), (r_node));                    \
+      r_node = RotateLeft(a_node);                                             \
       rbp_mrl_t = a_field(a_node).Right();                                     \
       if (a_field(rbp_mrl_t).IsRed()) {                                        \
         a_field(rbp_mrl_t).SetColor(NodeColor::Black);                         \
         a_field(a_node).SetColor(NodeColor::Red);                              \
-        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrl_t);                 \
+        rbp_mrl_t = RotateLeft(a_node);                                        \
         a_field(r_node).SetLeft(rbp_mrl_t);                                    \
       } else {                                                                 \
         a_field(a_node).SetColor(NodeColor::Black);                            \
       }                                                                        \
     } else {                                                                   \
       a_field(a_node).SetColor(NodeColor::Red);                                \
-      rbp_rotate_left(a_type, a_field, (a_node), (r_node));                    \
+      r_node = RotateLeft(a_node);                                             \
     }                                                                          \
   } while (0)
 
@@ -203,16 +189,16 @@ public:
       if (a_field(rbp_mrr_v).IsRed()) {                                        \
         a_field(rbp_mrr_u).SetColor(a_field(a_node).Color());                  \
         a_field(rbp_mrr_v).SetColor(NodeColor::Black);                         \
-        rbp_rotate_left(a_type, a_field, rbp_mrr_t, rbp_mrr_u);                \
+        rbp_mrr_u = RotateLeft(rbp_mrr_t);                                   \
         a_field(a_node).SetLeft(rbp_mrr_u);                                    \
-        rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
-        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
+        r_node = RotateRight(a_node);                                          \
+        rbp_mrr_t = RotateLeft(a_node);                                        \
         a_field(r_node).SetRight(rbp_mrr_t);                                   \
       } else {                                                                 \
         a_field(rbp_mrr_t).SetColor(a_field(a_node).Color());                  \
         a_field(rbp_mrr_u).SetColor(NodeColor::Red);                           \
-        rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
-        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
+        r_node = RotateRight(a_node);                                          \
+        rbp_mrr_t = RotateLeft(a_node);                                        \
         a_field(r_node).SetRight(rbp_mrr_t);                                   \
       }                                                                        \
       a_field(a_node).SetColor(NodeColor::Red);                                \
@@ -221,11 +207,11 @@ public:
       rbp_mrr_t = a_field(rbp_mrr_t).Left();                                   \
       if (a_field(rbp_mrr_t).IsRed()) {                                        \
         a_field(rbp_mrr_t).SetColor(NodeColor::Black);                         \
-        rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
-        rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
+        r_node = RotateRight(a_node);                                          \
+        rbp_mrr_t = RotateLeft(a_node);                                        \
         a_field(r_node).SetRight(rbp_mrr_t);                                   \
       } else {                                                                 \
-        rbp_rotate_left(a_type, a_field, (a_node), (r_node));                  \
+        r_node = RotateLeft(a_node);                                           \
       }                                                                        \
     }                                                                          \
   } while (0)
@@ -375,7 +361,7 @@ struct RedBlackTree
          * disruptiveness of node splitting.
          *
          * Rotate right. */
-        rbp_rotate_right(T, Trait::GetTreeNode, rbp_i_c, rbp_i_t);
+        rbp_i_t = RotateRight(rbp_i_c);
         /* Pass red links up one level. */
         rbp_i_u = Trait::GetTreeNode(rbp_i_t).Left();
         Trait::GetTreeNode(rbp_i_u).SetColor(NodeColor::Black);
@@ -502,12 +488,12 @@ struct RedBlackTree
             rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
             if (Trait::GetTreeNode(rbp_r_u).IsRed()) {
               Trait::GetTreeNode(rbp_r_u).SetColor(NodeColor::Black);
-              rbp_rotate_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
-              rbp_rotate_left(T, Trait::GetTreeNode, rbp_r_c, rbp_r_u);
+              rbp_r_t = RotateRight(rbp_r_c);
+              rbp_r_u = RotateLeft(rbp_r_c);
               Trait::GetTreeNode(rbp_r_t).SetRight(rbp_r_u);
             } else {
               Trait::GetTreeNode(rbp_r_t).SetColor(NodeColor::Red);
-              rbp_rotate_left(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+              rbp_r_t = RotateLeft(rbp_r_c);
             }
           }
           Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
@@ -610,6 +596,23 @@ struct RedBlackTree
     }
     /* Update root. */
     rbt_root = Trait::GetTreeNode(&rbp_r_s).Left();
+  }
+
+private:
+  T* RotateLeft(T* aNode)
+  {
+    T* node = Trait::GetTreeNode(aNode).Right();
+    Trait::GetTreeNode(aNode).SetRight(Trait::GetTreeNode(node).Left());
+    Trait::GetTreeNode(node).SetLeft(aNode);
+    return node;
+  }
+
+  T* RotateRight(T* aNode)
+  {
+    T* node = Trait::GetTreeNode(aNode).Left();
+    Trait::GetTreeNode(aNode).SetLeft(Trait::GetTreeNode(node).Right());
+    Trait::GetTreeNode(node).SetRight(aNode);
+    return node;
   }
 };
 
