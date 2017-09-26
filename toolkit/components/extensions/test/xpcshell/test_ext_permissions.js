@@ -1,7 +1,11 @@
 "use strict";
 
+XPCOMUtils.defineLazyGetter(this, "ExtensionManager", () => {
+  const {ExtensionManager}
+    = Cu.import("resource://gre/modules/ExtensionChild.jsm", {});
+  return ExtensionManager;
+});
 Cu.import("resource://gre/modules/ExtensionPermissions.jsm");
-Cu.import("resource://gre/modules/MessageChannel.jsm");
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
@@ -9,39 +13,19 @@ AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
-let extensionHandlers = new WeakSet();
-
-function frameScript() {
-  /* globals content */
-  const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-  Cu.import("resource://gre/modules/MessageChannel.jsm");
-
-  let handle;
-  MessageChannel.addListener(this, "ExtensionTest:HandleUserInput", {
-    receiveMessage({name, data}) {
-      if (data) {
-        handle = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils)
-                        .setHandlingUserInput(true);
-      } else if (handle) {
-        handle.destruct();
-        handle = null;
-      }
-    },
-  });
-}
-
-async function withHandlingUserInput(extension, fn) {
-  let {messageManager} = extension.extension.groupFrameLoader;
-
-  if (!extensionHandlers.has(extension)) {
-    messageManager.loadFrameScript(`data:,(${frameScript})(this)`, false);
-    extensionHandlers.add(extension);
+// Find the DOMWindowUtils for the background page for the given
+// extension (wrapper)
+function findWinUtils(extension) {
+  let extensionChild = ExtensionManager.extensions.get(extension.extension.id);
+  let bgwin = null;
+  for (let view of extensionChild.views) {
+    if (view.viewType == "background") {
+      bgwin = view.contentWindow;
+    }
   }
-
-  await MessageChannel.sendMessage(messageManager, "ExtensionTest:HandleUserInput", true);
-  await fn();
-  await MessageChannel.sendMessage(messageManager, "ExtensionTest:HandleUserInput", false);
+  notEqual(bgwin, null, "Found background window for the test extension");
+  return bgwin.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDOMWindowUtils);
 }
 
 let sawPrompt = false;
@@ -110,6 +94,7 @@ add_task(async function test_permissions() {
   });
 
   await extension.startup();
+  let winUtils = findWinUtils(extension);
 
   function call(method, arg) {
     extension.sendMessage(method, arg);
@@ -152,31 +137,32 @@ add_task(async function test_permissions() {
   result = await call("contains", {permissions: [perm]});
   equal(result, false, "Permission requested outside an event handler was not granted");
 
-  await withHandlingUserInput(extension, async () => {
-    result = await call("request", {permissions: ["notifications"]});
-    equal(result.status, "error", "request() for permission not in optional_permissions should fail");
-    ok(/since it was not declared in optional_permissions/.test(result.message),
-       "error message for undeclared optional_permission is reasonable");
+  let userInputHandle = winUtils.setHandlingUserInput(true);
 
-    // Check request() when the prompt is canceled.
-    acceptPrompt = false;
-    result = await call("request", {permissions: [perm]});
-    equal(result.status, "success", "request() returned cleanly");
-    equal(result.result, false, "request() returned false for rejected permission");
+  result = await call("request", {permissions: ["notifications"]});
+  equal(result.status, "error", "request() for permission not in optional_permissions should fail");
+  ok(/since it was not declared in optional_permissions/.test(result.message),
+     "error message for undeclared optional_permission is reasonable");
 
-    result = await call("contains", {permissions: [perm]});
-    equal(result, false, "Rejected permission was not granted");
+  // Check request() when the prompt is canceled.
+  acceptPrompt = false;
+  result = await call("request", {permissions: [perm]});
+  equal(result.status, "success", "request() returned cleanly");
+  equal(result.result, false, "request() returned false for rejected permission");
 
-    // Call request() and accept the prompt
-    acceptPrompt = true;
-    let allOptional = {
-      permissions: OPTIONAL_PERMISSIONS,
-      origins: OPTIONAL_ORIGINS,
-    };
-    result = await call("request", allOptional);
-    equal(result.status, "success", "request() returned cleanly");
-    equal(result.result, true, "request() returned true for accepted permissions");
-  });
+  result = await call("contains", {permissions: [perm]});
+  equal(result, false, "Rejected permission was not granted");
+
+  // Call request() and accept the prompt
+  acceptPrompt = true;
+  let allOptional = {
+    permissions: OPTIONAL_PERMISSIONS,
+    origins: OPTIONAL_ORIGINS,
+  };
+  result = await call("request", allOptional);
+  equal(result.status, "success", "request() returned cleanly");
+  equal(result.result, true, "request() returned true for accepted permissions");
+  userInputHandle.destruct();
 
   let allPermissions = {
     permissions: [...REQUIRED_PERMISSIONS, ...OPTIONAL_PERMISSIONS],
@@ -254,15 +240,17 @@ add_task(async function test_startup() {
   let perms = await extension1.awaitMessage("perms");
   perms = await extension2.awaitMessage("perms");
 
-  await withHandlingUserInput(extension1, async () => {
-    extension1.sendMessage(PERMS1);
-    await extension1.awaitMessage("requested");
-  });
+  let winUtils = findWinUtils(extension1);
+  let handle = winUtils.setHandlingUserInput(true);
+  extension1.sendMessage(PERMS1);
+  await extension1.awaitMessage("requested");
+  handle.destruct();
 
-  await withHandlingUserInput(extension2, async () => {
-    extension2.sendMessage(PERMS2);
-    await extension2.awaitMessage("requested");
-  });
+  winUtils = findWinUtils(extension2);
+  handle = winUtils.setHandlingUserInput(true);
+  extension2.sendMessage(PERMS2);
+  await extension2.awaitMessage("requested");
+  handle.destruct();
 
   // Restart everything, and force the permissions store to be
   // re-read on startup
@@ -335,45 +323,47 @@ add_task(async function test_alreadyGranted() {
 
   await extension.startup();
 
-  await withHandlingUserInput(extension, async () => {
-    let url = await extension.awaitMessage("ready");
-    await ExtensionTestUtils.loadContentPage(url, {extension});
-    await extension.awaitMessage("page-ready");
+  let winUtils = findWinUtils(extension);
+  let handle = winUtils.setHandlingUserInput(true);
 
-    async function checkRequest(arg, expectPrompt, msg) {
-      sawPrompt = false;
-      extension.sendMessage("request", arg);
-      let result = await extension.awaitMessage("request.result");
-      ok(result, "request() call succeeded");
-      equal(sawPrompt, expectPrompt,
-            `Got ${expectPrompt ? "" : "no "}permission prompt for ${msg}`);
-    }
+  let url = await extension.awaitMessage("ready");
+  await ExtensionTestUtils.loadContentPage(url);
+  await extension.awaitMessage("page-ready");
 
-    await checkRequest({permissions: ["geolocation"]}, false,
-                       "required permission from manifest");
-    await checkRequest({origins: ["http://required-host.com/"]}, false,
-                       "origin permission from manifest");
-    await checkRequest({origins: ["http://host.required-domain.com/"]}, false,
-                       "wildcard origin permission from manifest");
+  async function checkRequest(arg, expectPrompt, msg) {
+    sawPrompt = false;
+    extension.sendMessage("request", arg);
+    let result = await extension.awaitMessage("request.result");
+    ok(result, "request() call succeeded");
+    equal(sawPrompt, expectPrompt,
+          `Got ${expectPrompt ? "" : "no "}permission prompt for ${msg}`);
+  }
 
-    await checkRequest({permissions: ["clipboardRead"]}, true,
-                       "optional permission");
-    await checkRequest({permissions: ["clipboardRead"]}, false,
-                       "already granted optional permission");
+  await checkRequest({permissions: ["geolocation"]}, false,
+                     "required permission from manifest");
+  await checkRequest({origins: ["http://required-host.com/"]}, false,
+                     "origin permission from manifest");
+  await checkRequest({origins: ["http://host.required-domain.com/"]}, false,
+                     "wildcard origin permission from manifest");
 
-    await checkRequest({origins: ["http://optional-host.com/"]}, true,
-                       "optional origin");
-    await checkRequest({origins: ["http://optional-host.com/"]}, false,
-                       "already granted origin permission");
+  await checkRequest({permissions: ["clipboardRead"]}, true,
+                     "optional permission");
+  await checkRequest({permissions: ["clipboardRead"]}, false,
+                     "already granted optional permission");
 
-    await checkRequest({origins: ["http://*.optional-domain.com/"]}, true,
-                       "optional wildcard origin");
-    await checkRequest({origins: ["http://*.optional-domain.com/"]}, false,
-                       "already granted optional wildcard origin");
-    await checkRequest({origins: ["http://host.optional-domain.com/"]}, false,
-                       "host matching optional wildcard origin");
-  });
+  await checkRequest({origins: ["http://optional-host.com/"]}, true,
+                     "optional origin");
+  await checkRequest({origins: ["http://optional-host.com/"]}, false,
+                     "already granted origin permission");
 
+  await checkRequest({origins: ["http://*.optional-domain.com/"]}, true,
+                     "optional wildcard origin");
+  await checkRequest({origins: ["http://*.optional-domain.com/"]}, false,
+                     "already granted optional wildcard origin");
+  await checkRequest({origins: ["http://host.optional-domain.com/"]}, false,
+                     "host matching optional wildcard origin");
+
+  handle.destruct();
   await extension.unload();
 });
 
