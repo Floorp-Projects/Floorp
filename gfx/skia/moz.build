@@ -597,8 +597,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
         'skia/src/ports/SkFontHost_FreeType_common.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    if CONFIG['CC_TYPE'] != 'gcc':
+        SOURCES += [
+            'skia/src/jumper/SkJumper_generated_win.S',
+        ]
     SOURCES += [
-        'skia/src/jumper/SkJumper_generated_win.S',
         'skia/src/ports/SkDebug_win.cpp',
         'skia/src/ports/SkFontHost_win.cpp',
         'skia/src/ports/SkFontMgr_win_dw.cpp',
@@ -707,6 +710,8 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    if CONFIG['CC_TYPE'] == 'gcc':
+        DEFINES['SK_JUMPER_USE_ASSEMBLY'] = False
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
     UNIFIED_SOURCES += [
