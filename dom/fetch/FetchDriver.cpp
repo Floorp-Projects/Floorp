@@ -75,8 +75,6 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   , mFetchCalled(false)
 #endif
 {
-  AssertIsOnMainThread();
-
   MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aMainThreadEventTarget);
@@ -84,8 +82,6 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
 
 FetchDriver::~FetchDriver()
 {
-  AssertIsOnMainThread();
-
   // We assert this since even on failures, we should call
   // FailWithNetworkError().
   MOZ_ASSERT(mResponseAvailableCalled);
@@ -922,7 +918,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 NS_IMETHODIMP
 FetchDriver::CheckListenerChain()
 {
-  return NS_OK;
+  return NS_ERROR_NO_INTERFACE;
 }
 
 NS_IMETHODIMP
