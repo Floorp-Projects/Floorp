@@ -39,8 +39,6 @@
 
 const Services = require("Services");
 
-const DEFAULT_HTTP_VERSION = "HTTP/1.1";
-
 const Curl = {
   /**
    * Generates a cURL command string which can be used from the command line etc.
