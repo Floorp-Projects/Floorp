@@ -18,11 +18,11 @@
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::a, etc.
 #include "nsHTMLTags.h"
 #include "nsIAtom.h"                    // for nsIAtom
+#include "nsIDOMHTMLAnchorElement.h"    // for nsIDOMHTMLAnchorElement
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsNameSpaceManager.h"        // for kNameSpaceID_None
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsString.h"                   // for nsAutoString
-#include "mozilla/dom/HTMLAnchorElement.h"
 
 namespace mozilla {
 
@@ -336,18 +336,14 @@ HTMLEditUtils::IsLink(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
 
-  if (!aNode->IsContent()) {
-    return false;
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
+  if (anchor) {
+    nsAutoString tmpText;
+    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && !tmpText.IsEmpty()) {
+      return true;
+    }
   }
-
-  RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContentOrNull(aNode->AsContent());
-  if (!anchor) {
-    return false;
-  }
-
-  nsAutoString tmpText;
-  anchor->GetHref(tmpText);
-  return !tmpText.IsEmpty();
+  return false;
 }
 
 bool

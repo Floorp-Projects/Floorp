@@ -12,7 +12,10 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMWindow.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDOMCSSValue.h"
@@ -24,13 +27,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContentPolicy.h"
 #include "imgRequestProxy.h"
-#include "mozilla/dom/HTMLAnchorElement.h"
-#include "mozilla/dom/HTMLAreaElement.h"
-#include "mozilla/dom/HTMLLinkElement.h"
 
-using mozilla::dom::HTMLAnchorElement;
-using mozilla::dom::HTMLAreaElement;
-using mozilla::dom::HTMLLinkElement;
 using mozilla::dom::Element;
 using mozilla::ErrorResult;
 
@@ -66,24 +63,30 @@ nsContextMenuInfo::GetAssociatedLink(nsAString& aHRef)
   NS_ENSURE_STATE(mAssociatedLink);
   aHRef.Truncate(0);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mAssociatedLink));
-  nsCOMPtr<nsIContent> linkContent;
-  if (content &&
-      content->IsAnyOfHTMLElements(nsGkAtoms::a,
-                                   nsGkAtoms::area,
-                                   nsGkAtoms::link)) {
-    bool hasAttr = content->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
+  nsCOMPtr<nsIDOMElement> content(do_QueryInterface(mAssociatedLink));
+  nsAutoString localName;
+  if (content) {
+    content->GetLocalName(localName);
+  }
+
+  nsCOMPtr<nsIDOMElement> linkContent;
+  ToLowerCase(localName);
+  if (localName.EqualsLiteral("a") ||
+      localName.EqualsLiteral("area") ||
+      localName.EqualsLiteral("link")) {
+    bool hasAttr;
+    content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
     if (hasAttr) {
       linkContent = content;
-      RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContent(linkContent);
+      nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(linkContent));
       if (anchor) {
         anchor->GetHref(aHRef);
       } else {
-        RefPtr<HTMLAreaElement> area = HTMLAreaElement::FromContent(linkContent);
+        nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(linkContent));
         if (area) {
           area->GetHref(aHRef);
         } else {
-          RefPtr<HTMLLinkElement> link = HTMLLinkElement::FromContent(linkContent);
+          nsCOMPtr<nsIDOMHTMLLinkElement> link(do_QueryInterface(linkContent));
           if (link) {
             link->GetHref(aHRef);
           }
@@ -98,12 +101,15 @@ nsContextMenuInfo::GetAssociatedLink(nsAString& aHRef)
       if (!content) {
         break;
       }
-      if (content->IsHTMLElement(nsGkAtoms::a)) {
+      content->GetLocalName(localName);
+      ToLowerCase(localName);
+      if (localName.EqualsLiteral("a")) {
         bool hasAttr;
-        hasAttr = content->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
+        content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
         if (hasAttr) {
           linkContent = content;
-          RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContent(linkContent);
+          nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(
+            do_QueryInterface(linkContent));
           if (anchor) {
             anchor->GetHref(aHRef);
           }
