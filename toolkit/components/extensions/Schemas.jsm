@@ -2718,25 +2718,16 @@ this.Schemas = {
   },
 
   receiveMessage(msg) {
-    let {data} = msg;
     switch (msg.name) {
       case "Schema:Add":
-        // If we're given a Map, the ordering of the initial items
-        // matters, so swap with our current data to make sure its
-        // entries appear first.
-        if (typeof data.get === "function") {
-          // Create a new Map so we're sure it's in the same compartment.
-          [this.schemaJSON, data] = [new Map(data), this.schemaJSON];
-        }
-
-        for (let [url, schema] of data) {
+        for (let [url, schema] of msg.data) {
           this.schemaJSON.set(url, schema);
         }
         this.flushSchemas();
         break;
 
       case "Schema:Delete":
-        this.schemaJSON.delete(data.url);
+        this.schemaJSON.delete(msg.data.url);
         this.flushSchemas();
         break;
     }
