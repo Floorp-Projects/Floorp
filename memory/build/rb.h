@@ -149,49 +149,6 @@ public:
     }                                                                          \
   } while (0)
 
-#define rb_search(a_type, a_field, a_cmp, a_tree, a_key, r_node)               \
-  do {                                                                         \
-    int rbp_se_cmp;                                                            \
-    (r_node) = (a_tree)->rbt_root;                                             \
-    while ((r_node) != &(a_tree)->rbt_nil &&                                   \
-           (rbp_se_cmp = (a_cmp)((a_key), (r_node))) != 0) {                   \
-      if (rbp_se_cmp < 0) {                                                    \
-        (r_node) = a_field(r_node).Left();                                     \
-      } else {                                                                 \
-        (r_node) = a_field(r_node).Right();                                    \
-      }                                                                        \
-    }                                                                          \
-    if ((r_node) == &(a_tree)->rbt_nil) {                                      \
-      (r_node) = nullptr;                                                      \
-    }                                                                          \
-  } while (0)
-
-/*
- * Find a match if it exists.  Otherwise, find the next greater node, if one
- * exists.
- */
-#define rb_nsearch(a_type, a_field, a_cmp, a_tree, a_key, r_node)              \
-  do {                                                                         \
-    a_type* rbp_ns_t = (a_tree)->rbt_root;                                     \
-    (r_node) = nullptr;                                                        \
-    while (rbp_ns_t != &(a_tree)->rbt_nil) {                                   \
-      int rbp_ns_cmp = (a_cmp)((a_key), rbp_ns_t);                             \
-      if (rbp_ns_cmp < 0) {                                                    \
-        (r_node) = rbp_ns_t;                                                   \
-        rbp_ns_t = a_field(rbp_ns_t).Left();                                   \
-      } else if (rbp_ns_cmp > 0) {                                             \
-        rbp_ns_t = a_field(rbp_ns_t).Right();                                  \
-      } else {                                                                 \
-        (r_node) = rbp_ns_t;                                                   \
-        break;                                                                 \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
-/*
- * Find a match if it exists.  Otherwise, find the previous lesser node, if one
- * exists.
- */
 #define rbp_rotate_left(a_type, a_field, a_node, r_node)                       \
   do {                                                                         \
     (r_node) = a_field(a_node).Right();                                        \
@@ -626,17 +583,36 @@ struct RedBlackTree
 
   T* Search(T* aKey)
   {
-    T* ret;
-    rb_search(T, Trait::GetTreeNode, Trait::Compare, this, aKey, ret);
-    return ret;
+    T* ret = rbt_root;
+    int rbp_se_cmp;
+    while (ret != &rbt_nil && (rbp_se_cmp = Trait::Compare(aKey, ret)) != 0) {
+      if (rbp_se_cmp < 0) {
+        ret = Trait::GetTreeNode(ret).Left();
+      } else {
+        ret = Trait::GetTreeNode(ret).Right();
+      }
+    }
+    return (ret == &rbt_nil) ? nullptr : ret;
   }
 
   /* Find a match if it exists. Otherwise, find the next greater node, if one
    * exists */
   T* SearchOrNext(T* aKey)
   {
-    T* ret;
-    rb_nsearch(T, Trait::GetTreeNode, Trait::Compare, this, aKey, ret);
+    T* ret = nullptr;
+    T* rbp_ns_t = rbt_root;
+    while (rbp_ns_t != &rbt_nil) {
+      int rbp_ns_cmp = Trait::Compare(aKey, rbp_ns_t);
+      if (rbp_ns_cmp < 0) {
+        ret = rbp_ns_t;
+        rbp_ns_t = Trait::GetTreeNode(rbp_ns_t).Left();
+      } else if (rbp_ns_cmp > 0) {
+        rbp_ns_t = Trait::GetTreeNode(rbp_ns_t).Right();
+      } else {
+        ret = rbp_ns_t;
+        break;
+      }
+    }
     return ret;
   }
 
