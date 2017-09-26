@@ -2100,7 +2100,7 @@ photonpanelmultiview #panelMenu_pocket {
   -moz-context-properties: fill;
   fill: currentColor;
 %ifdef XP_MACOSX
-  list-style-image: url("chrome://browser/skin/find.svg");
+  list-style-image: url("chrome://browser/skin/search-glass.svg");
 %else
   list-style-image: url("chrome://browser/skin/folder.svg");
 %endif
