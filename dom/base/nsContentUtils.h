@@ -3005,8 +3005,7 @@ public:
   static void EnqueueUpgradeReaction(Element* aElement,
                                      mozilla::dom::CustomElementDefinition* aDefinition);
 
-  static void EnqueueLifecycleCallback(nsIDocument* aDoc,
-                                       nsIDocument::ElementCallbackType aType,
+  static void EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
                                        Element* aCustomElement,
                                        mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
                                        mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
