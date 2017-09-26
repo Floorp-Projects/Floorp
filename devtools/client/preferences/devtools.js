@@ -100,9 +100,6 @@ pref("devtools.markup.collapseAttributeLength", 120);
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "authored");
 
-// Enable the Responsive UI tool
-pref("devtools.responsiveUI.no-reload-notification", false);
-
 // Enable the Memory tools
 pref("devtools.memory.enabled", true);
 
