@@ -8,10 +8,6 @@ import android.net.Uri
 
 // Extension functions for the String class
 
-internal object Constants {
-    val ELLIPSIS_CHARACTER = '…'
-}
-
 /**
  * Beautify a URL by truncating it in a way that highlights important parts of the URL.
  *
@@ -26,56 +22,20 @@ fun String.beautifyUrl(): String {
 
     val uri = Uri.parse(this)
 
-    // We start with the host name:
-    // * Pick the last two segments:
-    //   en.m.wikipedia.org -> wikipedia.org
-    // * If the last element has a length of 2 or less than take another segment:
-    //   www.tomshardware.co.uk -> tomshardware.co.uk
-    // * If there's no host then just remove the URL as is.
+    // Use only the truncated host name
 
-    val host = uri.host ?: return this
-    val hostSegments = host.split(".")
-
-    val usedHostSegments = mutableListOf<String>()
-    for (segment in hostSegments.reversed()) {
-        if (usedHostSegments.size < 2) {
-            // We always pick the first two segments
-            usedHostSegments.add(0, segment)
-        } else if (usedHostSegments.first().length <= 2) {
-            // The last segment has a length of 2 or less -> pick this segment too
-            usedHostSegments.add(0, segment)
-        } else {
-            // We have everything we need. Bail out.
-            break
-        }
+    val truncatedHost = uri.truncatedHost()
+    if (truncatedHost.isNullOrEmpty()) {
+        return this
     }
-    beautifulUrl.append(usedHostSegments.joinToString(separator = "."))
 
-    // Now let's look at the path:
-    // * We always take the first and the last segment and truncate everything in between:
-    // /mozilla-mobile/focus-android/issues/1231 -> /mozilla-mobile/…/1231
+    beautifulUrl.append(truncatedHost)
 
-    val pathSegments = uri.pathSegments
+    // Append the truncated path
 
-    for ((index, segment) in uri.pathSegments.withIndex()) {
-        when (index) {
-            0 -> {
-                // Pick the first segment
-                beautifulUrl.append("/")
-                beautifulUrl.append(segment)
-            }
-            pathSegments.size - 1 -> {
-                // Pick the last segment
-                beautifulUrl.append("/")
-                beautifulUrl.append(segment)
-            }
-            1 -> {
-                // If this is the second element and there are more elements then insert the
-                // ellipsis character here.
-                beautifulUrl.append("/")
-                beautifulUrl.append(Constants.ELLIPSIS_CHARACTER)
-            }
-        }
+    val truncatedPath = uri.truncatedPath()
+    if (!truncatedPath.isNullOrEmpty()) {
+        beautifulUrl.append(truncatedPath)
     }
 
     // And then append (only) the first query parameter

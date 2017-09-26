@@ -62,7 +62,7 @@ class StringExtensionsTest {
                 "https://github.com/mozilla-mobile/focus-android/issues/1231")
     }
 
-    internal fun assertEqualsBeautified(expected: String, url: String) {
+    private fun assertEqualsBeautified(expected: String, url: String) {
         assertEquals("beautify($url)", expected, url.beautifyUrl())
     }
 }
