@@ -699,7 +699,7 @@ main {
       fill: #FFF;
       -moz-context-properties: fill; }
   .search-wrapper .search-label {
-    background: url("chrome://browser/skin/find.svg") no-repeat 12px center/16px;
+    background: url("chrome://browser/skin/search-glass.svg") no-repeat 12px center/16px;
     fill: rgba(12, 12, 13, 0.4);
     -moz-context-properties: fill;
     position: absolute;

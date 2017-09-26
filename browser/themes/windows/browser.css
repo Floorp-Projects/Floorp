@@ -680,7 +680,7 @@ html|span.ac-emphasize-text-url {
 
 .ac-type-icon[type=keyword],
 .ac-site-icon[type=searchengine] {
-  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg);
+  list-style-image: url(chrome://browser/skin/search-glass.svg);
   -moz-context-properties: fill;
   fill: GrayText;
 }
