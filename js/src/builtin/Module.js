@@ -317,9 +317,8 @@ function ModuleInstantiate()
         if (stack.length === 0 &&
             typeof(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT)) === "undefined")
         {
-            // This can happen due to OOM when appending to the stack.
-            assert(error === "out of memory",
-                   "Stack must contain module unless we hit OOM");
+            // This can happen due to OOM when appending to the stack or
+            // over-recursion errors.
             RecordModuleError(module, error);
         }
 
@@ -542,9 +541,8 @@ function ModuleEvaluate()
         if (stack.length === 0 &&
             typeof(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT)) === "undefined")
         {
-            // This can happen due to OOM when appending to the stack.
-            assert(error === "out of memory",
-                  "Stack must contain module unless we hit OOM");
+            // This can happen due to OOM when appending to the stack or
+            // over-recursion errors.
             RecordModuleError(module, error);
         }
 
