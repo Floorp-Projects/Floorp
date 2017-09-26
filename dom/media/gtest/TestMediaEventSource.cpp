@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "MediaEventSource.h"
