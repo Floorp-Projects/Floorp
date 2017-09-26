@@ -6,6 +6,7 @@
 package org.mozilla.gecko.toolbar;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
@@ -108,6 +109,11 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
 
         if ("PageActions:Add".equals(event)) {
             final String id = message.getString("id");
+
+            boolean alreadyAdded = isPwaAdded(id);
+            if (alreadyAdded) {
+                return;
+            }
             final String title = message.getString("title");
             final String imageURL = message.getString("icon");
             final boolean important = message.getBoolean("important");
@@ -116,6 +122,10 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
             addPageAction(id, title, imageURL, useTint, new OnPageActionClickListeners() {
                 @Override
                 public void onClick(final String id) {
+                    if (id != null && id.equals(PageAction.UUID_PAGE_ACTION_PWA)) {
+                        GeckoApplication.createShortcut();
+                        return;
+                    }
                     final GeckoBundle data = new GeckoBundle(1);
                     data.putString("id", id);
                     EventDispatcher.getInstance().dispatch("PageActions:Clicked", data);
@@ -133,6 +143,15 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
         } else if ("PageActions:Remove".equals(event)) {
             removePageAction(message.getString("id"));
         }
+    }
+
+    private boolean isPwaAdded(String id) {
+        for (PageAction pageAction : mPageActionList) {
+            if (pageAction.getID() != null && pageAction.getID().equals(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void addPageAction(final String id, final String title, final String imageData, final boolean useTint,
@@ -328,7 +347,9 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
         public boolean onLongClick(String id);
     }
 
-    private static class PageAction {
+    public static class PageAction {
+        public static final String UUID_PAGE_ACTION_PWA = "279c269d-6397-4f86-a6d2-452e26456d4a";
+
         private final OnPageActionClickListeners mOnPageActionClickListeners;
         private Drawable mDrawable;
         private final String mTitle;
@@ -348,6 +369,15 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
             mImportant = important;
 
             key = UUID.fromString(mId.subSequence(1, mId.length() - 2).toString()).hashCode();
+        }
+
+        public static void showPwaPageAction() {
+            GeckoBundle bundle = new GeckoBundle();
+            bundle.putString("id", UUID_PAGE_ACTION_PWA);
+            bundle.putString("title", "Add PWA Shortcut");
+            bundle.putString("icon", "drawable://icon_openinapp");
+            bundle.putBoolean("important", true);
+            EventDispatcher.getInstance().dispatch("PageActions:Add", bundle);
         }
 
         public Drawable getDrawable() {
@@ -385,6 +415,12 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
                 return mOnPageActionClickListeners.onLongClick(mId);
             }
             return false;
+        }
+
+        public static void clearPwaPageAction() {
+            GeckoBundle bundle = new GeckoBundle();
+            bundle.putString("id", UUID_PAGE_ACTION_PWA);
+            EventDispatcher.getInstance().dispatch("PageActions:Remove", bundle);
         }
     }
 }
