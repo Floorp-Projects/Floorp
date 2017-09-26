@@ -134,24 +134,6 @@ public:
   }
 };
 
-#define rbp_lean_left(a_type, a_field, a_node, r_node)                         \
-  do {                                                                         \
-    NodeColor rbp_ll_color;                                                    \
-    r_node = RotateLeft(a_node);                                               \
-    rbp_ll_color = a_field(a_node).Color();                                    \
-    a_field(r_node).SetColor(rbp_ll_color);                                    \
-    a_field(a_node).SetColor(NodeColor::Red);                                  \
-  } while (0)
-
-#define rbp_lean_right(a_type, a_field, a_node, r_node)                        \
-  do {                                                                         \
-    NodeColor rbp_lr_color;                                                    \
-    r_node = RotateRight(a_node);                                              \
-    rbp_lr_color = a_field(a_node).Color();                                    \
-    a_field(r_node).SetColor(rbp_lr_color);                                    \
-    a_field(a_node).SetColor(NodeColor::Red);                                  \
-  } while (0)
-
 #define rbp_move_red_left(a_type, a_field, a_node, r_node)                     \
   do {                                                                         \
     a_type *rbp_mrl_t, *rbp_mrl_u;                                             \
@@ -373,7 +355,7 @@ struct RedBlackTree
            * left in order to maintain the left-leaning invariant. */
           MOZ_ASSERT(Trait::GetTreeNode(rbp_i_p).Right() == rbp_i_c);
           Trait::GetTreeNode(rbp_i_p).SetRight(rbp_i_t);
-          rbp_lean_left(T, Trait::GetTreeNode, rbp_i_p, rbp_i_u);
+          rbp_i_u = LeanLeft(rbp_i_p);
           if (Trait::GetTreeNode(rbp_i_g).Left() == rbp_i_p) {
             Trait::GetTreeNode(rbp_i_g).SetLeft(rbp_i_u);
           } else {
@@ -407,7 +389,7 @@ struct RedBlackTree
     Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
     if (rbp_i_cmp > 0) {
       Trait::GetTreeNode(rbp_i_p).SetRight(aNode);
-      rbp_lean_left(T, Trait::GetTreeNode, rbp_i_p, rbp_i_t);
+      rbp_i_t = LeanLeft(rbp_i_p);
       if (Trait::GetTreeNode(rbp_i_g).Left() == rbp_i_p) {
         Trait::GetTreeNode(rbp_i_g).SetLeft(rbp_i_t);
       } else if (Trait::GetTreeNode(rbp_i_g).Right() == rbp_i_p) {
@@ -459,7 +441,7 @@ struct RedBlackTree
         if (Trait::GetTreeNode(rbp_r_c).Right() == &rbt_nil) {
           /* Delete root node (which is also a leaf node). */
           if (Trait::GetTreeNode(rbp_r_c).Left() != &rbt_nil) {
-            rbp_lean_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+            rbp_r_t = LeanRight(rbp_r_c);
             Trait::GetTreeNode(rbp_r_t).SetRight(&rbt_nil);
           } else {
             rbp_r_t = &rbt_nil;
@@ -557,7 +539,7 @@ struct RedBlackTree
             if (Trait::GetTreeNode(rbp_r_c).Right() == &rbt_nil) {
               /* Delete leaf node. */
               if (Trait::GetTreeNode(rbp_r_c).Left() != &rbt_nil) {
-                rbp_lean_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+                rbp_r_t = LeanRight(rbp_r_c);
                 Trait::GetTreeNode(rbp_r_t).SetRight(&rbt_nil);
               } else {
                 rbp_r_t = &rbt_nil;
@@ -612,6 +594,24 @@ private:
     T* node = Trait::GetTreeNode(aNode).Left();
     Trait::GetTreeNode(aNode).SetLeft(Trait::GetTreeNode(node).Right());
     Trait::GetTreeNode(node).SetRight(aNode);
+    return node;
+  }
+
+  T* LeanLeft(T* aNode)
+  {
+    T* node = RotateLeft(aNode);
+    NodeColor color = Trait::GetTreeNode(aNode).Color();
+    Trait::GetTreeNode(node).SetColor(color);
+    Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+    return node;
+  }
+
+  T* LeanRight(T* aNode)
+  {
+    T* node = RotateRight(aNode);
+    NodeColor color = Trait::GetTreeNode(aNode).Color();
+    Trait::GetTreeNode(node).SetColor(color);
+    Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
     return node;
   }
 };
