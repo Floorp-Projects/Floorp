@@ -473,6 +473,10 @@ photonpanelmultiview .panel-subview-body {
   height: calc(51px + 2.2em);
 }
 
+toolbarpaletteitem[place=panel] > .toolbarbutton-1 {
+  -moz-box-flex: 1;
+}
+
 /* Help SDK buttons fit in. */
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-icon,
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
@@ -1716,6 +1720,21 @@ toolbaritem[overflowedItem=true],
 .widget-overflow-list .toolbarbutton-1 {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
+}
+
+.widget-overflow-list .subviewbutton-nav:-moz-locale-dir(ltr)::after {
+    transform: scaleX(-1);
+}
+.widget-overflow-list .subviewbutton-nav::after {
+    margin-inline-start: 10px;
+    -moz-context-properties: fill;
+    content: url(chrome://browser/skin/back-12.svg);
+    fill: GrayText;
+    float: right;
+}
+
+toolbarpaletteitem[place=panel] > .subviewbutton-nav::after {
+  opacity: 0.5;
 }
 
 .widget-overflow-list .toolbarbutton-1:not(.toolbarbutton-combined) > .toolbarbutton-text {
