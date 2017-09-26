@@ -5,7 +5,7 @@
 "use strict";
 
 // The prefix used for RDM messages in content.
-// see: devtools/client/responsivedesign/responsivedesign-child.js
+// see: devtools/client/responsive.html/browser/content.js
 const MESSAGE_PREFIX = "ResponsiveMode:";
 const REQUEST_DONE_SUFFIX = ":Done";
 
