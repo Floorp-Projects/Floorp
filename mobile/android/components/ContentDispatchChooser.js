@@ -65,15 +65,20 @@ ContentDispatchChooser.prototype =
 
       EventDispatcher.instance.sendRequestForResult(msg).then(() => {
         // Java opens an app on success: take no action.
-      }, (uri) => {
+      }, (data) => {
+        if (data.isFallback) {
+          // We always want to open a fallback url
+          window.location.href = data.uri;
+          return;
+        }
+
         // We couldn't open this. If this was from a click, it's likely that we just
         // want this to fail silently. If the user entered this on the address bar, though,
         // we want to show the neterror page.
-
         let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         let millis = dwu.millisSinceLastUserInput;
         if (millis > 0 && millis >= 1000) {
-          window.location.href = uri;
+          window.location.href = data.uri;
         }
       });
     }
