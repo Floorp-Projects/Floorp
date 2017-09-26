@@ -104,8 +104,7 @@ class USBRemoteDebugger {
 
     if (aSession.server.port) {
       return DebuggerServer.AuthenticationResult.DENY;
-    } else {
-      return DebuggerServer.AuthenticationResult.ALLOW;
     }
+    return DebuggerServer.AuthenticationResult.ALLOW;
   }
 }
