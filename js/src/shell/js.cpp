@@ -7273,7 +7273,7 @@ static const JSJitInfo doFoo_methodinfo = {
 
 static const JSPropertySpec dom_props[] = {
     {"x",
-     JSPROP_SHARED | JSPROP_ENUMERATE,
+     JSPROP_ENUMERATE,
      { {
         { { dom_genericGetter, &dom_x_getterinfo } },
         { { dom_genericSetter, &dom_x_setterinfo } }

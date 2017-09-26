@@ -681,7 +681,7 @@ AssertCanChangeAttrs(Shape* shape, unsigned attrs)
 
     /* Reject attempts to remove a slot from the permanent data property. */
     MOZ_ASSERT_IF(shape->isDataDescriptor() && shape->hasSlot(),
-                  !(attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)));
+                  !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 #endif
 }
 
@@ -745,7 +745,8 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
      */
     bool hadSlot = shape->hasSlot();
     uint32_t oldSlot = shape->maybeSlot();
-    if (!(attrs & JSPROP_SHARED) && slot == SHAPE_INVALID_SLOT && hadSlot)
+    bool needSlot = !getter && !setter;
+    if (needSlot && slot == SHAPE_INVALID_SLOT && hadSlot)
         slot = oldSlot;
 
     Rooted<UnownedBaseShape*> nbase(cx);
@@ -777,7 +778,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         shape = entry->shape();
     }
 
-    MOZ_ASSERT_IF(shape->hasSlot() && !(attrs & JSPROP_SHARED), shape->slot() == slot);
+    MOZ_ASSERT_IF(shape->hasSlot() && needSlot, shape->slot() == slot);
 
     if (obj->inDictionaryMode()) {
         /*
@@ -799,7 +800,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
          * FIXME bug 593129 -- slot allocation and NativeObject *this must move
          * out of here!
          */
-        if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED)) {
+        if (slot == SHAPE_INVALID_SLOT && needSlot) {
             if (!allocDictionarySlot(cx, obj, &slot))
                 return nullptr;
         }
@@ -808,8 +809,6 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
             shape->base()->adoptUnowned(nbase);
         else
             shape->base_ = nbase;
-
-        MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
 
         shape->setSlot(slot);
         shape->attrs = uint8_t(attrs);
@@ -874,11 +873,12 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
                              unsigned attrs, GetterOp getter, SetterOp setter)
 {
     MOZ_ASSERT(obj->containsPure(shape));
-    MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
-    MOZ_ASSERT(!((attrs ^ shape->attrs) & JSPROP_SHARED) ||
-               !(attrs & JSPROP_SHARED));
+#ifdef DEBUG
+    bool needSlot = !getter && !setter;
+    MOZ_ASSERT_IF(shape->hasSlot() != needSlot, needSlot);
+#endif
 
     MarkTypePropertyNonData(cx, obj, shape->propid());
 
@@ -1800,7 +1800,6 @@ Shape::dump(js::GenericPrinter& out) const
         DUMP_ATTR(PERMANENT, permanent);
         DUMP_ATTR(GETTER, getter);
         DUMP_ATTR(SETTER, setter);
-        DUMP_ATTR(SHARED, shared);
 #undef  DUMP_ATTR
         out.putChar(')');
     }
