@@ -26,7 +26,6 @@ DIRS += [
     'scratchpad',
     'shadereditor',
     'shared',
-    'shims',
     'sourceeditor',
     'storage',
     'styleeditor',
@@ -35,10 +34,6 @@ DIRS += [
     'webconsole',
     'webide',
 ]
-
-# Shim old theme paths used by DevTools add-ons
-if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DIRS += ['themes/shims']
 
 JAR_MANIFESTS += ['jar.mn']
 

@@ -27,7 +27,6 @@ DIRS += [
     'security',
     'sourcemap',
     'sprintfjs',
-    'shims',
     'specs',
     'touch',
     'transport',
