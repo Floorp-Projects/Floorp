@@ -15,6 +15,7 @@ import org.mozilla.gecko.sync.Server15PreviousPostFailedException;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
+import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.util.ArrayList;
@@ -129,15 +130,6 @@ public class BatchingUploader {
 
         // If store failed entirely, just bail out. We've already told our delegate that we failed.
         if (payloadDispatcher.storeFailed.get()) {
-            return;
-        }
-
-        // If a record or a payload failed, we won't let subsequent requests proceed.
-        // This means that we may bail much earlier.
-        if (payloadDispatcher.recordUploadFailed) {
-            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
-                    new Server15PreviousPostFailedException(), guid
-            );
             return;
         }
 
@@ -281,6 +273,10 @@ public class BatchingUploader {
         if (isCommit && !isLastPayload) {
             uploaderMeta = uploaderMeta.nextUploaderMeta();
         }
+    }
+
+    /* package-local */ void abort() {
+        repositorySession.abort();
     }
 
     /**

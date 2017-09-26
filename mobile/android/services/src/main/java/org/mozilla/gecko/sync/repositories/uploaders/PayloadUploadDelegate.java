@@ -10,6 +10,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.Server15RecordPostFailedException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncResponse;
@@ -165,6 +166,8 @@ class PayloadUploadDelegate implements SyncStorageRequestDelegate {
             for (String guid : failed.keySet()) {
                 dispatcher.recordFailed(guid);
             }
+            dispatcher.payloadFailed(new Server15RecordPostFailedException());
+            return;
         }
         // GC
         failed = null;
@@ -197,9 +200,6 @@ class PayloadUploadDelegate implements SyncStorageRequestDelegate {
         }
         // GC
         postedRecordGuids = null;
-
-        if (isLastPayload) {
-            dispatcher.lastPayloadFailed(e);
-        }
+        dispatcher.payloadFailed(e);
     }
 }
