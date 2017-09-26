@@ -321,12 +321,12 @@ AsyncImagePipelineManager::ApplyAsyncImages()
 
     if (pipeline->mUseExternalImage) {
       MOZ_ASSERT(pipeline->mCurrentTexture->AsWebRenderTextureHost());
-      Range<const wr::ImageKey> range_keys(&keys[0], keys.Length());
-      pipeline->mCurrentTexture->PushExternalImage(builder,
-                                                    wr::ToLayoutRect(rect),
-                                                    wr::ToLayoutRect(rect),
-                                                    pipeline->mFilter,
-                                                    range_keys);
+      Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
+      pipeline->mCurrentTexture->PushDisplayItems(builder,
+                                                  wr::ToLayoutRect(rect),
+                                                  wr::ToLayoutRect(rect),
+                                                  pipeline->mFilter,
+                                                  range_keys);
       HoldExternalImage(pipelineId, epoch, pipeline->mCurrentTexture->AsWebRenderTextureHost());
     } else {
       MOZ_ASSERT(keys.Length() == 1);
