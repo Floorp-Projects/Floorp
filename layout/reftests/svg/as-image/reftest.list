@@ -41,12 +41,12 @@ include zoom/reftest.list
 == canvas-drawImage-scale-1b.html lime100x100-ref.html
 == canvas-drawImage-scale-1c.html lime100x100-ref.html
 
-fuzzy(1,2) fuzzy-if(skiaContent,1,529) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
-fuzzy(1,2) fuzzy-if(skiaContent,1,529) == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
+fuzzy(1,2) fuzzy-if(skiaContent,1,529) fails-if(webrender) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
+fuzzy(1,2) fuzzy-if(skiaContent,1,529) fails-if(webrender) == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
 
 fuzzy-if(winWidget&&!d2d,1,10000) fuzzy-if(azureSkia,1,10000) fuzzy-if(Android,1,10000) == canvas-drawImage-alpha-1.html canvas-drawImage-alpha-1-ref.html
 #Same as scale-2a but with globalAlpha:
-fuzzy(1,2) fuzzy-if(azureSkia,1,40000) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
+fuzzy(1,2) fuzzy-if(azureSkia,1,40000) fails-if(webrender) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
 
 == canvas-drawImage-slice-1a.html lime100x100-ref.html
 == canvas-drawImage-slice-1b.html lime100x100-ref.html
@@ -99,11 +99,11 @@ fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,tru
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,350) == img-simple-3.html  img-simple-3-ref.html
+fuzzy-if(skiaContent,255,350) fails-if(webrender) == img-simple-3.html  img-simple-3-ref.html
 == img-simple-4.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,90) == img-simple-5.html  img-simple-5-ref.html
+fuzzy-if(skiaContent,255,90) fails-if(webrender) == img-simple-5.html  img-simple-5-ref.html
 == img-simple-6.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,27) == img-simple-7.html  img-simple-7-ref.html
+fuzzy-if(skiaContent,255,27) fails-if(webrender) == img-simple-7.html  img-simple-7-ref.html
 
 # Test with mix of <html:img> and <svg:image> referring to the same images,
 # with a variety of preserveAspectRatio values in play.
@@ -130,34 +130,34 @@ fuzzy-if(d2d,16,10) == img-content-outside-viewBox-1.html img-content-outside-vi
 == img-foreignObject-iframe-1b.html       lime100x100-ref.html
 != img-foreignObject-iframe-1b-helper.svg lime100x100-ref.html
 
-== img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
-== img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
-== img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
-== img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
+fails-if(webrender) == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
+fails-if(webrender) == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
+fails-if(webrender) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
+fails-if(webrender) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
 
-== img-height-meet-1.html   img-height-meet-1-ref.html
-== img-height-meet-2.html   img-height-meet-2-ref.html
-== img-height-slice-1.html  img-height-slice-1-ref.html
-== img-height-slice-2.html  img-height-slice-2-ref.html
+fails-if(webrender) == img-height-meet-1.html   img-height-meet-1-ref.html
+fails-if(webrender) == img-height-meet-2.html   img-height-meet-2-ref.html
+fails-if(webrender) == img-height-slice-1.html  img-height-slice-1-ref.html
+fails-if(webrender) == img-height-slice-2.html  img-height-slice-2-ref.html
 
-== img-width-meet-1.html   img-width-meet-1-ref.html
-== img-width-meet-2.html   img-width-meet-2-ref.html
-== img-width-slice-1.html  img-width-slice-1-ref.html
-== img-width-slice-2.html  img-width-slice-2-ref.html
+fails-if(webrender) == img-width-meet-1.html   img-width-meet-1-ref.html
+fails-if(webrender) == img-width-meet-2.html   img-width-meet-2-ref.html
+fails-if(webrender) == img-width-slice-1.html  img-width-slice-1-ref.html
+fails-if(webrender) == img-width-slice-2.html  img-width-slice-2-ref.html
 
 # Alternate version of "width & height both non-%-valued" tests, but now
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
-== img-novb-widthAndHeight-meet-1-em.html  img-novb-widthAndHeight-all-1-ref.html
-== img-novb-widthAndHeight-meet-1-px.html  img-novb-widthAndHeight-all-1-ref.html
-== img-novb-widthAndHeight-slice-1-em.html img-novb-widthAndHeight-all-1-ref.html
-== img-novb-widthAndHeight-slice-1-px.html img-novb-widthAndHeight-all-1-ref.html
+fails-if(webrender) == img-novb-widthAndHeight-meet-1-em.html  img-novb-widthAndHeight-all-1-ref.html
+fails-if(webrender) == img-novb-widthAndHeight-meet-1-px.html  img-novb-widthAndHeight-all-1-ref.html
+fails-if(webrender) == img-novb-widthAndHeight-slice-1-em.html img-novb-widthAndHeight-all-1-ref.html
+fails-if(webrender) == img-novb-widthAndHeight-slice-1-px.html img-novb-widthAndHeight-all-1-ref.html
 
 # Alternate versions of "only one dimension is non-%-valued" tests, but now
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
-== img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
-== img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
-fuzzy-if(skiaContent,255,10) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
-fuzzy-if(skiaContent,255,10) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
+fails-if(webrender) == img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
+fails-if(webrender) == img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
+fuzzy-if(skiaContent,255,10) fails-if(webrender) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
+fuzzy-if(skiaContent,255,10) fails-if(webrender) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
 
 # with with a fragmentIdentifier viewBox
 == img-fragment-1a.html  img-fragment-1-ref.html
@@ -174,8 +174,8 @@ fuzzy-if(skiaContent,255,10) == img-novb-width-slice-1.html    img-novb-width-al
 == svg-image-simple-3.svg lime100x100.svg
 
 # tests for <svg> files that include themselves as an <image>
-fuzzy-if(webrender,1-1,4-4) == svg-image-recursive-1a.svg  svg-image-recursive-1-ref.svg
-fuzzy-if(webrender,1-1,4-4) == svg-image-recursive-1b.svg  svg-image-recursive-1-ref.svg
+== svg-image-recursive-1a.svg  svg-image-recursive-1-ref.svg
+== svg-image-recursive-1b.svg  svg-image-recursive-1-ref.svg
 == svg-image-recursive-2a.svg  svg-image-recursive-2-ref.svg
 == svg-image-recursive-2b.html svg-image-recursive-2-ref.svg
 

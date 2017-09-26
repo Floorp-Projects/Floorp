@@ -52,7 +52,7 @@ skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.ht
 == grid-item-dir-001.html grid-item-dir-001-ref.html
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
-fuzzy-if(webrender,1-1,2-2) == grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
+== grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
 == grid-min-max-content-sizing-002.html grid-min-max-content-sizing-002-ref.html
 fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html
 == grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html
@@ -186,15 +186,15 @@ skip-if(Android&&isDebugBuild) == grid-row-gap-004.html grid-row-gap-004-ref.htm
 == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010-ref.html
 == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-010-ref.html
 == grid-item-blockifying-001.html grid-item-blockifying-001-ref.html
-== grid-fragmentation-001.html grid-fragmentation-001-ref.html
-== grid-fragmentation-002.html grid-fragmentation-002-ref.html
-== grid-fragmentation-003.html grid-fragmentation-003-ref.html
-== grid-fragmentation-004.html grid-fragmentation-004-ref.html
-== grid-fragmentation-005.html grid-fragmentation-005-ref.html
-== grid-fragmentation-006.html grid-fragmentation-006-ref.html
-== grid-fragmentation-007.html grid-fragmentation-007-ref.html
-== grid-fragmentation-008.html grid-fragmentation-008-ref.html
-== grid-fragmentation-009.html grid-fragmentation-009-ref.html
+fails-if(webrender) == grid-fragmentation-001.html grid-fragmentation-001-ref.html
+fails-if(webrender) == grid-fragmentation-002.html grid-fragmentation-002-ref.html
+fails-if(webrender) == grid-fragmentation-003.html grid-fragmentation-003-ref.html
+fails-if(webrender) == grid-fragmentation-004.html grid-fragmentation-004-ref.html
+fails-if(webrender) == grid-fragmentation-005.html grid-fragmentation-005-ref.html
+fails-if(webrender) == grid-fragmentation-006.html grid-fragmentation-006-ref.html
+fails-if(webrender) == grid-fragmentation-007.html grid-fragmentation-007-ref.html
+fails-if(webrender) == grid-fragmentation-008.html grid-fragmentation-008-ref.html
+fails-if(webrender) == grid-fragmentation-009.html grid-fragmentation-009-ref.html
 == grid-fragmentation-010.html grid-fragmentation-010-ref.html
 == grid-fragmentation-011.html grid-fragmentation-011-ref.html
 == grid-fragmentation-012.html grid-fragmentation-012-ref.html
@@ -205,35 +205,34 @@ asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # b
 == grid-fragmentation-017.html grid-fragmentation-017-ref.html
 == grid-fragmentation-018.html grid-fragmentation-018-ref.html
 == grid-fragmentation-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-020.html grid-fragmentation-020-ref.html
+fails-if(webrender) == grid-fragmentation-020.html grid-fragmentation-020-ref.html
 == grid-fragmentation-021.html grid-fragmentation-021-ref.html
-== grid-fragmentation-022.html grid-fragmentation-007-ref.html
-== grid-fragmentation-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-024.html grid-fragmentation-024-ref.html
+fails-if(webrender) == grid-fragmentation-022.html grid-fragmentation-007-ref.html
+fails-if(webrender) == grid-fragmentation-023.html grid-fragmentation-023-ref.html
+fails-if(webrender) == grid-fragmentation-024.html grid-fragmentation-024-ref.html
 == grid-fragmentation-025.html grid-fragmentation-025-ref.html
-== grid-fragmentation-026.html grid-fragmentation-026-ref.html
+fails-if(webrender) == grid-fragmentation-026.html grid-fragmentation-026-ref.html
 == grid-fragmentation-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-028.html grid-fragmentation-028-ref.html
-fuzzy-if(webrender,1-1,2-2) == grid-fragmentation-029.html grid-fragmentation-029-ref.html
+fails-if(webrender) == grid-fragmentation-028.html grid-fragmentation-028-ref.html
+fails-if(webrender) == grid-fragmentation-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-030.html grid-fragmentation-030-ref.html
-== grid-fragmentation-031.html grid-fragmentation-031-ref.html
+fails-if(webrender) == grid-fragmentation-031.html grid-fragmentation-031-ref.html
 
 # Fragmentation tests that does dynamic content removal/insertions.
 # They should give the same result as the corresponding static test.
-== grid-fragmentation-dyn3-001.html grid-fragmentation-001-ref.html
-== grid-fragmentation-dyn4-001.html grid-fragmentation-001-ref.html
-== grid-fragmentation-dyn1-002.html grid-fragmentation-002-ref.html
-== grid-fragmentation-dyn3-002.html grid-fragmentation-002-ref.html
-== grid-fragmentation-dyn3-003.html grid-fragmentation-003-ref.html
-== grid-fragmentation-dyn4-004.html grid-fragmentation-004-ref.html
-== grid-fragmentation-dyn4-005.html grid-fragmentation-005-ref.html
-== grid-fragmentation-dyn5-005.html grid-fragmentation-005-ref.html
-== grid-fragmentation-dyn1-006.html grid-fragmentation-006-ref.html
-== grid-fragmentation-dyn3-007.html grid-fragmentation-007-ref.html
-== grid-fragmentation-dyn5-007.html grid-fragmentation-007-ref.html
-== grid-fragmentation-dyn5-008.html grid-fragmentation-008-ref.html
-== grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
-== grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-001.html grid-fragmentation-001-ref.html
+fails-if(webrender) == grid-fragmentation-dyn4-001.html grid-fragmentation-001-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-002.html grid-fragmentation-002-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-002.html grid-fragmentation-002-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-003.html grid-fragmentation-003-ref.html
+fails-if(webrender) == grid-fragmentation-dyn4-004.html grid-fragmentation-004-ref.html
+fails-if(webrender) == grid-fragmentation-dyn4-005.html grid-fragmentation-005-ref.html
+fails-if(webrender) == grid-fragmentation-dyn5-005.html grid-fragmentation-005-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-006.html grid-fragmentation-006-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-007.html grid-fragmentation-007-ref.html
+fails-if(webrender) == grid-fragmentation-dyn5-007.html grid-fragmentation-007-ref.html
+fails-if(webrender) == grid-fragmentation-dyn5-008.html grid-fragmentation-008-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
 == grid-fragmentation-dyn4-015.html grid-fragmentation-015-ref.html
 == grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
 == grid-fragmentation-dyn1-016.html grid-fragmentation-016-ref.html
@@ -245,39 +244,39 @@ fuzzy-if(webrender,1-1,2-2) == grid-fragmentation-029.html grid-fragmentation-02
 == grid-fragmentation-dyn3-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-dyn4-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-dyn5-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-dyn1-020.html grid-fragmentation-020-ref.html
-== grid-fragmentation-dyn2-020.html grid-fragmentation-020-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-020.html grid-fragmentation-020-ref.html
+fails-if(webrender) == grid-fragmentation-dyn2-020.html grid-fragmentation-020-ref.html
 != grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html # bug 1251799
 == grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html
 asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html # assertion related to bug 1251799 ?
 == grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html
-== grid-fragmentation-dyn2-022.html grid-fragmentation-007-ref.html
-== grid-fragmentation-dyn1-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn2-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn3-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn4-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn5-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
+fails-if(webrender) == grid-fragmentation-dyn2-022.html grid-fragmentation-007-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-023.html grid-fragmentation-023-ref.html
+fails-if(webrender) == grid-fragmentation-dyn2-023.html grid-fragmentation-023-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-023.html grid-fragmentation-023-ref.html
+fails-if(webrender) == grid-fragmentation-dyn4-023.html grid-fragmentation-023-ref.html
+fails-if(webrender) == grid-fragmentation-dyn5-023.html grid-fragmentation-023-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
 == grid-fragmentation-dyn2-025.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn1-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn2-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn3-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn4-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn5-026.html grid-fragmentation-026-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-026.html grid-fragmentation-026-ref.html
+fails-if(webrender) == grid-fragmentation-dyn2-026.html grid-fragmentation-026-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-026.html grid-fragmentation-026-ref.html
+fails-if(webrender) == grid-fragmentation-dyn4-026.html grid-fragmentation-026-ref.html
+fails-if(webrender) == grid-fragmentation-dyn5-026.html grid-fragmentation-026-ref.html
 == grid-fragmentation-dyn1-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-dyn2-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-dyn3-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-dyn4-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-dyn5-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn1-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn2-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn3-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn4-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn5-028.html grid-fragmentation-028-ref.html
-fuzzy-if(webrender,1-1,2-2) == grid-fragmentation-dyn1-029.html grid-fragmentation-029-ref.html
-fuzzy-if(webrender,1-1,2-2) == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-028.html grid-fragmentation-028-ref.html
+fails-if(webrender) == grid-fragmentation-dyn2-028.html grid-fragmentation-028-ref.html
+fails-if(webrender) == grid-fragmentation-dyn3-028.html grid-fragmentation-028-ref.html
+fails-if(webrender) == grid-fragmentation-dyn4-028.html grid-fragmentation-028-ref.html
+fails-if(webrender) == grid-fragmentation-dyn5-028.html grid-fragmentation-028-ref.html
+fails-if(webrender) == grid-fragmentation-dyn1-029.html grid-fragmentation-029-ref.html
+fails-if(webrender) == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-dyn2-030.html grid-fragmentation-030-ref.html
-== grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
+fails-if(webrender) == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
 == bug1306106.html bug1306106-ref.html
 == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html

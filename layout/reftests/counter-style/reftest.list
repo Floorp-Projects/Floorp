@@ -3,7 +3,7 @@
 == system-symbolic.html   system-symbolic-ref.html
 == system-alphabetic.html system-alphabetic-ref.html
 == system-numeric.html    system-numeric-ref.html
-== system-additive.html   system-additive-ref.html
+fails-if(webrender) == system-additive.html   system-additive-ref.html
 == system-extends.html    system-extends-ref.html
 == system-cyclic-invalid.html     system-common-invalid-ref.html
 == system-fixed-invalid.html      system-common-invalid2-ref.html
