@@ -269,6 +269,13 @@ this.TelemetrySend = {
   },
 
   /**
+   * Only used in tests to set whether it is too late in shutdown to send pings.
+   */
+  testTooLateToSend(tooLate) {
+    TelemetrySendImpl._tooLateToSend = tooLate;
+  },
+
+  /**
    * Test-only - this allows overriding behavior to enable ping sending in debug builds.
    */
   setTestModeEnabled(testing) {
