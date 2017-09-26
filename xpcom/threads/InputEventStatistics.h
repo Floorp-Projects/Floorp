@@ -11,7 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 
