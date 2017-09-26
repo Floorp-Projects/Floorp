@@ -2271,13 +2271,12 @@ HasPropIRGenerator::tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
 bool
 HasPropIRGenerator::tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId)
 {
+    bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
+
     if (mode_ != ICState::Mode::Megamorphic)
         return false;
 
-    if (cacheKind_ != CacheKind::HasOwn)
-        return false;
-
-    writer.megamorphicHasOwnResult(objId, keyId);
+    writer.megamorphicHasPropResult(objId, keyId, hasOwn);
     writer.returnFromIC();
     trackAttached("MegamorphicHasProp");
     return true;

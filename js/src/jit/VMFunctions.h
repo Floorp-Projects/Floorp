@@ -876,8 +876,9 @@ template <bool HandleMissing>
 bool
 GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp);
 
+template <bool HasOwn>
 bool
-HasOwnNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp);
+HasNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp);
 
 template <bool NeedsTypeBarrier>
 bool
