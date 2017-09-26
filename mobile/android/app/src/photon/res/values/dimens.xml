@@ -46,6 +46,7 @@
     <dimen name="tablet_fwd_button_padding_start">4dp</dimen>
     <dimen name="tablet_fwd_button_padding_end">4dp</dimen>
 
+    <dimen name="tablet_tab_strip_height_pwa">0dp</dimen>
     <dimen name="tablet_tab_strip_height">48dp</dimen>
     <dimen name="tablet_tab_strip_item_width">178dp</dimen>
     <dimen name="tablet_tab_strip_item_height">40dp</dimen>

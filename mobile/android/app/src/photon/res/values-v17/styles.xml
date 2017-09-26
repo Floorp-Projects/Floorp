@@ -115,4 +115,17 @@
         <item name="android:layout_toStartOf">@id/close</item>
     </style>
 
+    <style name="PwaConfirm.Title">
+        <item name="android:layout_toEndOf">@id/pwa_confirm_icon_wrap</item>
+        <item name="android:layout_toStartOf">@id/pwa_confirm_cancel</item>
+    </style>
+
+    <style name="PwaConfirm.Cancel">
+        <item name="android:layout_alignParentEnd">true</item>
+    </style>
+
+    <style name="PwaConfirm.Url">
+        <item name="android:layout_alignStart">@+id/pwa_confirm_title</item>
+    </style>
+
 </resources>
