@@ -577,38 +577,31 @@ BufferTextureHost::NumSubTextures() const
 }
 
 void
-BufferTextureHost::AddWRImage(wr::ResourceUpdateQueue& aResources,
-                              Range<const wr::ImageKey>& aImageKeys,
-                              const wr::ExternalImageId& aExtID)
+BufferTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+                                       ResourceUpdateOp aOp,
+                                       const Range<wr::ImageKey>& aImageKeys,
+                                       const wr::ExternalImageId& aExtID)
 {
+  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
+                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
+  auto bufferType = wr::WrExternalImageBufferType::ExternalBuffer;
+
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
 
     wr::ImageDescriptor descriptor(GetSize(),
                                    ImageDataSerializer::ComputeRGBStride(GetFormat(), GetSize().width),
                                    GetFormat());
-    aResources.AddExternalImageBuffer(aImageKeys[0], descriptor, aExtID);
+    (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
   } else {
     MOZ_ASSERT(aImageKeys.length() == 3);
 
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     wr::ImageDescriptor yDescriptor(desc.ySize(), desc.ySize().width, gfx::SurfaceFormat::A8);
     wr::ImageDescriptor cbcrDescriptor(desc.cbCrSize(), desc.cbCrSize().width, gfx::SurfaceFormat::A8);
-    aResources.AddExternalImage(aImageKeys[0],
-                                yDescriptor,
-                                aExtID,
-                                wr::WrExternalImageBufferType::ExternalBuffer,
-                                0);
-    aResources.AddExternalImage(aImageKeys[1],
-                                cbcrDescriptor,
-                                aExtID,
-                                wr::WrExternalImageBufferType::ExternalBuffer,
-                                1);
-    aResources.AddExternalImage(aImageKeys[2],
-                                cbcrDescriptor,
-                                aExtID,
-                                wr::WrExternalImageBufferType::ExternalBuffer,
-                                2);
+    (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, bufferType, 0);
+    (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, bufferType, 1);
+    (aResources.*method)(aImageKeys[2], cbcrDescriptor, aExtID, bufferType, 2);
   }
 }
 

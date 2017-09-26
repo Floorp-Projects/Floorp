@@ -178,8 +178,9 @@ AsyncImagePipelineManager::GenerateImageKeyForTextureHost(wr::ResourceUpdateQueu
       aKeys.AppendElement(GenerateImageKey());
     }
     MOZ_ASSERT(!aKeys.IsEmpty());
-    Range<const wr::ImageKey> keys(&aKeys[0], aKeys.Length());
-    wrTexture->AddWRImage(aResources, keys, wrTexture->GetExternalImageKey());
+    Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
+    wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE,
+                                   keys, wrTexture->GetExternalImageKey());
     return true;
   } else {
     RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
