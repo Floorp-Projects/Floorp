@@ -1725,6 +1725,12 @@ public:
   }
 
   /**
+   * Same as IsTransformed, except that it doesn't take SVG transforms
+   * into account.
+   */
+  bool IsCSSTransformed(const nsStyleDisplay* aStyleDisplay, mozilla::EffectSet* aEffectSet = nullptr) const;
+
+  /**
    * True if this frame has any animation of transform in effect.
    *
    * @param aEffectSet: This function may need to look up EffectSet property.
