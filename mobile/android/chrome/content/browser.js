@@ -2735,7 +2735,7 @@ var NativeWindow = {
      */
     _getContextType: function(element) {
       // For anchor nodes, we try to use the scheme to pick a string
-      if (ChromeUtils.getClassName(element) === "HTMLAnchorElement") {
+      if (element instanceof Ci.nsIDOMHTMLAnchorElement) {
         let uri = this.makeURI(this._getLinkURL(element));
         try {
           return Strings.browser.GetStringFromName("browser.menu.context." + uri.scheme);
@@ -2820,7 +2820,7 @@ var NativeWindow = {
 
     // Returns a url associated with a node
     _getUrl: function(node) {
-      if ((ChromeUtils.getClassName(node) === "HTMLAnchorElement" && node.href) ||
+      if ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
           (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {
         return this._getLinkURL(node);
       } else if (node instanceof Ci.nsIImageLoadingContent && node.currentURI) {
@@ -3051,7 +3051,7 @@ var NativeWindow = {
 
     _getLink: function(aElement) {
       if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
-          ((ChromeUtils.getClassName(aElement) === "HTMLAnchorElement" && aElement.href) ||
+          ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
           (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
           aElement instanceof Ci.nsIDOMHTMLLinkElement ||
           aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
@@ -4775,7 +4775,7 @@ var BrowserEventHandler = {
 
   _getLinkURI: function(aElement) {
     if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
-        ((ChromeUtils.getClassName(aElement) === "HTMLAnchorElement" && aElement.href) ||
+        ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
         (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href))) {
       try {
         return Services.io.newURI(aElement.href);
