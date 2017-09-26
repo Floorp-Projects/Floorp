@@ -12,9 +12,6 @@
 #expand <em:version>__MOZILLA_VERSION_U__</em:version>
     <em:bootstrap>true</em:bootstrap>
 
-    <!-- for running custom screenshot binaries -->
-    <em:unpack>true</em:unpack>
-
     <!-- Front End MetaData -->
     <em:name>mozscreenshots</em:name>
     <em:description>Take screenshots of Mozilla applications in various UI configurations.</em:description>
