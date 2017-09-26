@@ -214,6 +214,12 @@ add_task(async function testTabSwitchContext() {
          "title": "Default Title 2",
          "badge": "d2",
          "badgeBackgroundColor": [0, 0xff, 0, 0xff]},
+        {"icon": browser.runtime.getURL("default-2.png"),
+         "popup": browser.runtime.getURL("default-2.html"),
+         "title": "Default Title 2",
+         "badge": "d2",
+         "badgeBackgroundColor": [0, 0xff, 0, 0xff],
+         "disabled": false},
       ];
 
       return [
@@ -251,20 +257,6 @@ add_task(async function testTabSwitchContext() {
           await expectDefaults(details[0]);
           expect(details[2]);
         },
-        expect => {
-          browser.test.log("Navigate to a new page. Expect no changes.");
-
-          // TODO: This listener should not be necessary, but the |tabs.update|
-          // callback currently fires too early in e10s windows.
-          browser.tabs.onUpdated.addListener(function listener(tabId, changed) {
-            if (tabId == tabs[1] && changed.url) {
-              browser.tabs.onUpdated.removeListener(listener);
-              expect(details[2]);
-            }
-          });
-
-          browser.tabs.update(tabs[1], {url: "about:blank?1"});
-        },
         async expect => {
           browser.test.log("Switch back to the first tab. Expect previously set properties.");
           await browser.tabs.update(tabs[0], {active: true});
@@ -295,6 +287,18 @@ add_task(async function testTabSwitchContext() {
 
           await expectDefaults(details[3]);
           expect(details[2]);
+        },
+        expect => {
+          browser.test.log("Navigate to a new page. Expect defaults.");
+
+          browser.tabs.onUpdated.addListener(function listener(tabId, changed) {
+            if (tabId == tabs[1] && changed.url) {
+              browser.tabs.onUpdated.removeListener(listener);
+              expect(details[6]);
+            }
+          });
+
+          browser.tabs.update(tabs[1], {url: "about:blank?1"});
         },
         async expect => {
           browser.test.log("Delete tab, switch back to tab 1. Expect previous results again.");
