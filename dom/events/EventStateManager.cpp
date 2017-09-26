@@ -3202,34 +3202,20 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       SetActiveManager(this, activeContent);
     }
     break;
-  case ePointerCancel: {
-    if(WidgetMouseEvent* pointerEvent = aEvent->AsPointerEvent()) {
-      // Implicitly releasing capture for given pointer. ePointerLostCapture
-      // should be send after ePointerUp or ePointerCancel.
-      PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
-      GenerateMouseEnterExit(pointerEvent);
-      // After UP/Cancel Touch pointers become invalid so we can remove relevant
-      // helper from Table. Mouse/Pen pointers are valid all the time (not only
-      // between down/up)
-      if (pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
-        mPointersEnterLeaveHelper.Remove(pointerEvent->pointerId);
-        GenerateMouseEnterExit(pointerEvent);
-      }
-    }
-    break;
-  }
+  case ePointerCancel:
   case ePointerUp: {
     WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
-
+    MOZ_ASSERT(pointerEvent);
     // Implicitly releasing capture for given pointer. ePointerLostCapture
     // should be send after ePointerUp or ePointerCancel.
     PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
 
-    // After UP/Cancel Touch pointers become invalid so we can remove relevant helper from Table
-    // Mouse/Pen pointers are valid all the time (not only between down/up)
     if (pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
-      mPointersEnterLeaveHelper.Remove(pointerEvent->pointerId);
+      // After UP/Cancel Touch pointers become invalid so we can remove relevant
+      // helper from Table Mouse/Pen pointers are valid all the time (not only
+      // between down/up)
       GenerateMouseEnterExit(pointerEvent);
+      mPointersEnterLeaveHelper.Remove(pointerEvent->pointerId);
     }
     break;
   }
