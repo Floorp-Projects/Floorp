@@ -21,3 +21,4 @@ fuzzy-if(OSX==1010,1,10) == table-parts-01.html table-parts-01-ref.html
 == dynamic-content.html dynamic-content-ref.html
 == generated-content-inherit-001.html generated-content-inherit-001-ref.html
 == dynamic-generated-content-inherit-001.html generated-content-inherit-001-ref.html
+== attr-whitespace.xhtml attr-whitespace-ref.html
