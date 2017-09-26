@@ -18,10 +18,6 @@
 */
 
 add_task(async function() {
-  // sanity check
-  ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
-  ok(PlacesUIUtils, "checking PlacesUIUtils, running in chrome context?");
-
   let toolbarId = PlacesUtils.toolbarFolderId;
   let toolbarNode = PlacesUtils.getFolderContents(toolbarId).root;
 

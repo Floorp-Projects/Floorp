@@ -34,12 +34,6 @@ function onLibraryReady(organizer) {
 
 function test() {
   waitForExplicitFinish();
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils is running in chrome context");
-  ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
-  ok(PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION > 0,
-     "Left pane version in chrome context, current version is: " + PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION );
-
   // Ensure left pane is initialized.
   ok(PlacesUIUtils.leftPaneFolderId > 0, "left pane folder is initialized");
 

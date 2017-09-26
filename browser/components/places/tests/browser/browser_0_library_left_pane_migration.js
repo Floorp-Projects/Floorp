@@ -15,9 +15,6 @@
 const TEST_URI = "http://www.mozilla.org/";
 
 add_task(async function() {
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils is running in chrome context");
-  ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
   ok(PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION > 0,
      "Left pane version in chrome context, current version is: " + PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION );
 

@@ -2,31 +2,27 @@ diff --git a/media/libstagefright/binding/mp4parse/Cargo.toml b/media/libstagefr
 index ff9422c..814c4c6 100644
 --- a/media/libstagefright/binding/mp4parse/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse/Cargo.toml
-@@ -20,20 +20,12 @@ exclude = [
+@@ -20,19 +20,12 @@ exclude = [
  ]
  
 -[badges]
 -travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
  
  [dependencies]
--byteorder = "1.0.0"
+ byteorder = "1.0.0"
 -afl = { version = "0.1.1", optional = true }
 -afl-plugin = { version = "0.1.1", optional = true }
 -abort_on_panic = { version = "1.0.0", optional = true }
--bitreader = { version = "0.3.0" }
--num-traits = "0.1.37"
--mp4parse_fallible = { path = "../mp4parse_fallible" }
-+byteorder = "1.0.0"
-+bitreader = { version = "0.3.0" }
-+num-traits = "0.1.37"
-+mp4parse_fallible = { path = "../mp4parse_fallible" }
+ bitreader = { version = "0.3.0" }
+ num-traits = "0.1.37"
+-mp4parse_fallible = { git = "https://github.com/alfredoyang/mp4parse_fallible", optional = true }
++mp4parse_fallible = { path = "../mp4parse_fallible", optional = true }
  
  [dev-dependencies]
  test-assembler = "0.1.2"
  
 -[features]
 -fuzz = ["afl", "afl-plugin", "abort_on_panic"]
--
  # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
  [profile.release]
  debug-assertions = true
@@ -34,7 +30,7 @@ diff --git a/media/libstagefright/binding/mp4parse_capi/Cargo.toml b/media/libst
 index a30e045..a965f06 100644
 --- a/media/libstagefright/binding/mp4parse_capi/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-@@ -18,19 +18,10 @@ exclude = [
+@@ -18,22 +18,13 @@ exclude = [
    "*.mp4",
  ]
 
@@ -46,7 +42,11 @@ index a30e045..a965f06 100644
 
  [dependencies]
  byteorder = "1.0.0"
- mp4parse = {version = "0.8.0", path = "../mp4parse"}
+
+ # To enable fallible memory allocation, add 'features = ["mp4parse_fallible"]'
+ # in mp4parse brace.
+-mp4parse = {version = "0.8.0", path = "../mp4parse"}
++mp4parse = {version = "0.8.0", path = "../mp4parse", features = ["mp4parse_fallible"]}
  num-traits = "0.1.37"
 
 -[build-dependencies]

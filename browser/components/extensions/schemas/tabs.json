@@ -76,7 +76,9 @@
           "width": {"type": "integer", "optional": true, "description": "The width of the tab in pixels."},
           "height": {"type": "integer", "optional": true, "description": "The height of the tab in pixels."},
           "sessionId": {"type": "string", "optional": true, "description": "The session ID used to uniquely identify a Tab obtained from the $(ref:sessions) API."},
-          "cookieStoreId": {"type": "string", "optional": true, "description": "The CookieStoreId used for the tab."}
+          "cookieStoreId": {"type": "string", "optional": true, "description": "The CookieStoreId used for the tab."},
+          "isArticle": {"type": "boolean", "optional": true, "description": "Whether the document in the tab can be rendered in reader mode."},
+          "isInReaderMode": {"type": "boolean", "optional": true, "description": "Whether the document in the tab is being rendered in reader mode."}
         }
       },
       {
@@ -897,6 +899,21 @@
                 "description": "An ISO language code such as <code>en</code> or <code>fr</code>. For a complete list of languages supported by this method, see <a href='http://src.chromium.org/viewvc/chrome/trunk/src/third_party/cld/languages/internal/languages.cc'>kLanguageInfoTable</a>. The 2nd to 4th columns will be checked and the first non-NULL value will be returned except for Simplified Chinese for which zh-CN will be returned. For an unknown language, <code>und</code> will be returned."
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "toggleReaderMode",
+        "type": "function",
+        "description": "Toggles reader mode for the document in the tab.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "optional": true,
+            "description": "Defaults to the active tab of the $(topic:current-window)[current window]."
           }
         ]
       },

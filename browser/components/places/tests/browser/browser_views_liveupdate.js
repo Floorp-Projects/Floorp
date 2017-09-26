@@ -9,36 +9,6 @@
 var toolbar = document.getElementById("PersonalToolbar");
 var wasCollapsed = toolbar.collapsed;
 
-function test() {
-  waitForExplicitFinish();
-
-  // Uncollapse the personal toolbar if needed.
-  if (wasCollapsed) {
-    promiseSetToolbarVisibility(toolbar, true).then(openBookmarksSidebar);
-  } else {
-    openBookmarksSidebar();
-  }
-}
-
-function openBookmarksSidebar() {
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils in context");
-  ok(PlacesUIUtils, "PlacesUIUtils in context");
-
-  // Open bookmarks menu.
-  var popup = document.getElementById("bookmarksMenuPopup");
-  ok(popup, "Menu popup element exists");
-  fakeOpenPopup(popup);
-
-  // Open bookmarks sidebar.
-  var sidebar = document.getElementById("sidebar");
-  sidebar.addEventListener("load", function() {
-    // Need to executeSoon since the tree is initialized on sidebar load.
-    executeSoon(startTest);
-  }, {capture: true, once: true});
-  SidebarUI.show("viewBookmarksSidebar");
-}
-
 /**
  * Simulates popup opening causing it to populate.
  * We cannot just use menu.open, since it would not work on Mac due to native menubar.
@@ -51,134 +21,106 @@ function fakeOpenPopup(aPopup) {
   aPopup.dispatchEvent(popupEvent);
 }
 
-/**
- * Adds bookmarks observer, and executes a bunch of bookmarks operations.
- */
-function startTest() {
-  var bs = PlacesUtils.bookmarks;
-  // Add observers.
-  bs.addObserver(bookmarksObserver);
-  PlacesUtils.annotations.addObserver(bookmarksObserver);
-  var addedBookmarks = [];
+async function testInFolder(folderGuid, prefix) {
+  let addedBookmarks = [];
+  let item = await PlacesUtils.bookmarks.insert({
+    parentGuid: folderGuid,
+    title: `${prefix}1`,
+    url: `http://${prefix}1.mozilla.org/`,
+  });
+  item.title = `${prefix}1_edited`;
+  await PlacesUtils.bookmarks.update(item);
+  addedBookmarks.push(item);
 
-  // MENU
-  info("*** Acting on menu bookmarks");
-  var id = bs.insertBookmark(bs.bookmarksMenuFolder,
-                             PlacesUtils._uri("http://bm1.mozilla.org/"),
-                             bs.DEFAULT_INDEX,
-                             "bm1");
-  bs.setItemTitle(id, "bm1_edited");
-  addedBookmarks.push(id);
-  id = bs.insertBookmark(bs.bookmarksMenuFolder,
-                         PlacesUtils._uri("place:"),
-                         bs.DEFAULT_INDEX,
-                         "bm2");
-  bs.setItemTitle(id, "");
-  addedBookmarks.push(id);
-  id = bs.insertSeparator(bs.bookmarksMenuFolder, bs.DEFAULT_INDEX);
-  addedBookmarks.push(id);
-  id = bs.createFolder(bs.bookmarksMenuFolder,
-                       "bmf",
-                       bs.DEFAULT_INDEX);
-  bs.setItemTitle(id, "bmf_edited");
-  addedBookmarks.push(id);
-  id = bs.insertBookmark(id,
-                         PlacesUtils._uri("http://bmf1.mozilla.org/"),
-                         bs.DEFAULT_INDEX,
-                         "bmf1");
-  bs.setItemTitle(id, "bmf1_edited");
-  addedBookmarks.push(id);
-  bs.moveItem(id, bs.bookmarksMenuFolder, 0);
-
-  // TOOLBAR
-  info("*** Acting on toolbar bookmarks");
-  id = bs.insertBookmark(bs.toolbarFolder,
-                         PlacesUtils._uri("http://tb1.mozilla.org/"),
-                         bs.DEFAULT_INDEX,
-                         "tb1");
-  bs.setItemTitle(id, "tb1_edited");
-  addedBookmarks.push(id);
-  // Test live update of title.
-  bs.setItemTitle(id, "tb1_edited");
-  id = bs.insertBookmark(bs.toolbarFolder,
-                         PlacesUtils._uri("place:"),
-                         bs.DEFAULT_INDEX,
-                         "tb2");
-  bs.setItemTitle(id, "");
-  addedBookmarks.push(id);
-  id = bs.insertSeparator(bs.toolbarFolder, bs.DEFAULT_INDEX);
-  addedBookmarks.push(id);
-  id = bs.createFolder(bs.toolbarFolder,
-                       "tbf",
-                       bs.DEFAULT_INDEX);
-  bs.setItemTitle(id, "tbf_edited");
-  addedBookmarks.push(id);
-  id = bs.insertBookmark(id,
-                         PlacesUtils._uri("http://tbf1.mozilla.org/"),
-                         bs.DEFAULT_INDEX,
-                         "tbf1");
-  bs.setItemTitle(id, "tbf1_edited");
-  addedBookmarks.push(id);
-  bs.moveItem(id, bs.toolbarFolder, 0);
-
-  // UNSORTED
-  info("*** Acting on unsorted bookmarks");
-  id = bs.insertBookmark(bs.unfiledBookmarksFolder,
-                         PlacesUtils._uri("http://ub1.mozilla.org/"),
-                         bs.DEFAULT_INDEX,
-                         "ub1");
-  bs.setItemTitle(id, "ub1_edited");
-  addedBookmarks.push(id);
-  id = bs.insertBookmark(bs.unfiledBookmarksFolder,
-                         PlacesUtils._uri("place:"),
-                         bs.DEFAULT_INDEX,
-                         "ub2");
-  bs.setItemTitle(id, "ub2_edited");
-  addedBookmarks.push(id);
-  id = bs.insertSeparator(bs.unfiledBookmarksFolder, bs.DEFAULT_INDEX);
-  addedBookmarks.push(id);
-  id = bs.createFolder(bs.unfiledBookmarksFolder,
-                       "ubf",
-                       bs.DEFAULT_INDEX);
-  bs.setItemTitle(id, "ubf_edited");
-  addedBookmarks.push(id);
-  id = bs.insertBookmark(id,
-                         PlacesUtils._uri("http://ubf1.mozilla.org/"),
-                         bs.DEFAULT_INDEX,
-                         "bubf1");
-  bs.setItemTitle(id, "bubf1_edited");
-  addedBookmarks.push(id);
-  bs.moveItem(id, bs.unfiledBookmarksFolder, 0);
-
-  // Remove all added bookmarks.
-  addedBookmarks.forEach(function(aItem) {
-    // If we remove an item after its containing folder has been removed,
-    // this will throw, but we can ignore that.
-    try {
-      bs.removeItem(aItem);
-    } catch (ex) {}
+  item = await PlacesUtils.bookmarks.insert({
+    parentGuid: folderGuid,
+    title: `${prefix}2`,
+    url: "place:",
   });
 
-  // Remove observers.
-  bs.removeObserver(bookmarksObserver);
-  PlacesUtils.annotations.removeObserver(bookmarksObserver);
-  finishTest();
+  item.title = `${prefix}2_edited`;
+  await PlacesUtils.bookmarks.update(item);
+  addedBookmarks.push(item);
+
+  item = await PlacesUtils.bookmarks.insert({
+    parentGuid: folderGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+  });
+  addedBookmarks.push(item);
+
+  item = await PlacesUtils.bookmarks.insert({
+    parentGuid: folderGuid,
+    title: `${prefix}f`,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
+
+  item.title = `${prefix}f_edited`;
+  await PlacesUtils.bookmarks.update(item);
+  addedBookmarks.push(item);
+
+  item = await PlacesUtils.bookmarks.insert({
+    parentGuid: item.guid,
+    title: `${prefix}f1`,
+    url: `http://${prefix}f1.mozilla.org/`,
+  });
+  addedBookmarks.push(item);
+
+  item.index = 0;
+  item.parentGuid = folderGuid;
+  await PlacesUtils.bookmarks.update(item);
+
+  return addedBookmarks;
 }
 
-/**
- * Restores browser state and calls finish.
- */
-function finishTest() {
-  // Close bookmarks sidebar.
-  SidebarUI.hide();
+add_task(async function test() {
+  // Uncollapse the personal toolbar if needed.
+  if (wasCollapsed) {
+    await promiseSetToolbarVisibility(toolbar, true);
+  }
+
+  // Open bookmarks menu.
+  var popup = document.getElementById("bookmarksMenuPopup");
+  ok(popup, "Menu popup element exists");
+  fakeOpenPopup(popup);
+
+  // Open bookmarks sidebar.
+  await withSidebarTree("bookmarks", async () => {
+    // Add observers.
+    PlacesUtils.bookmarks.addObserver(bookmarksObserver);
+    PlacesUtils.annotations.addObserver(bookmarksObserver);
+    var addedBookmarks = [];
+
+    // MENU
+    info("*** Acting on menu bookmarks");
+    addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.menuGuid, "bm"));
+
+    // TOOLBAR
+    info("*** Acting on toolbar bookmarks");
+    addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.toolbarGuid, "tb"));
+
+    // UNSORTED
+    info("*** Acting on unsorted bookmarks");
+    addedBookmarks = addedBookmarks.concat(await testInFolder(PlacesUtils.bookmarks.unfiledGuid, "ub"));
+
+    // Remove all added bookmarks.
+    for (let bm of addedBookmarks) {
+      // If we remove an item after its containing folder has been removed,
+      // this will throw, but we can ignore that.
+      try {
+        await PlacesUtils.bookmarks.remove(bm);
+      } catch (ex) {}
+    }
+
+    // Remove observers.
+    PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
+    PlacesUtils.annotations.removeObserver(bookmarksObserver);
+  });
 
   // Collapse the personal toolbar if needed.
   if (wasCollapsed) {
-    promiseSetToolbarVisibility(toolbar, false).then(finish);
-  } else {
-    finish();
+    await promiseSetToolbarVisibility(toolbar, false);
   }
-}
+});
 
 /**
  * The observer is where magic happens, for every change we do it will look for
@@ -211,14 +153,14 @@ var bookmarksObserver = {
   },
 
   onItemRemoved: function PSB_onItemRemoved(aItemId, aFolderId, aIndex,
-                                            aItemType) {
+                                            aItemType, url, aGuid) {
     var views = getViewsForFolder(aFolderId);
     ok(views.length > 0, "Found affected views (" + views.length + "): " + views);
     // Check that item has been removed.
     for (var i = 0; i < views.length; i++) {
       var node = null;
       [node, ] = searchItemInView(aItemId, views[i]);
-      is(node, null, "Places node not found in " + views[i]);
+      is(node, null, "Places node should not be found in " + views[i]);
     }
   },
 
