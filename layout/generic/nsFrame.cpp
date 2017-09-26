@@ -1327,10 +1327,17 @@ bool
 nsIFrame::IsTransformed(const nsStyleDisplay* aStyleDisplay,
                         EffectSet* aEffectSet) const
 {
+  return IsCSSTransformed(aStyleDisplay, aEffectSet) ||
+         IsSVGTransformed();
+}
+
+bool
+nsIFrame::IsCSSTransformed(const nsStyleDisplay* aStyleDisplay,
+                           EffectSet* aEffectSet) const
+{
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
   return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
           (aStyleDisplay->HasTransform(this) ||
-           IsSVGTransformed() ||
            HasAnimationOfTransform(aEffectSet)));
 }
 
@@ -1402,7 +1409,7 @@ nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay,
   if (!parent || !parent->Extend3DContext()) {
     return false;
   }
-  return IsTransformed(aStyleDisplay,aEffectSet) ||
+  return IsCSSTransformed(aStyleDisplay, aEffectSet) ||
          BackfaceIsHidden(aStyleDisplay);
 }
 
