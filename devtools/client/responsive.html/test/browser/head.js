@@ -51,19 +51,16 @@ flags.testing = true;
 Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 Services.prefs.setCharPref("devtools.devices.url",
   TEST_URI_ROOT + "devices.json");
-Services.prefs.setBoolPref("devtools.responsive.html.enabled", true);
 
 registerCleanupFunction(() => {
   flags.testing = false;
   Services.prefs.clearUserPref("devtools.devices.url");
-  Services.prefs.clearUserPref("devtools.responsive.html.enabled");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
   asyncStorage.removeItem("devtools.devices.url_cache");
   asyncStorage.removeItem("devtools.devices.local");
 });
 
-// This depends on the "devtools.responsive.html.enabled" pref
-loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsivedesign/responsivedesign");
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 
 /**
  * Open responsive design mode for the given tab.
