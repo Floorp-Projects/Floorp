@@ -78,7 +78,7 @@ Tools.inspector = {
   },
   inMenu: true,
   commands: [
-    "devtools/client/responsivedesign/resize-commands",
+    "devtools/client/responsive.html/commands",
     "devtools/client/inspector/inspector-commands"
   ],
 
