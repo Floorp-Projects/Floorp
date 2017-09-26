@@ -642,7 +642,7 @@ array_length_getter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleV
 }
 
 static bool
-array_length_setter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+array_length_setter(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
                     ObjectOpResult& result)
 {
     MOZ_ASSERT(id == NameToId(cx->names().length));
@@ -651,14 +651,14 @@ array_length_setter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleV
         // This array .length property was found on the prototype
         // chain. Ideally the setter should not have been called, but since
         // we're here, do an impression of SetPropertyByDefining.
-        return DefineDataProperty(cx, obj, id, vp, JSPROP_ENUMERATE, result);
+        return DefineDataProperty(cx, obj, id, v, JSPROP_ENUMERATE, result);
     }
 
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
     MOZ_ASSERT(arr->lengthIsWritable(),
                "setter shouldn't be called if property is non-writable");
 
-    return ArraySetLength(cx, arr, id, JSPROP_PERMANENT, vp, result);
+    return ArraySetLength(cx, arr, id, JSPROP_PERMANENT, v, result);
 }
 
 struct ReverseIndexComparator
