@@ -16,3 +16,4 @@ TESTING_JS_MODULES += [
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "XPCShell Harness")
+    SCHEDULES.exclusive = ['xpcshell', 'xpcshell-coverage']
