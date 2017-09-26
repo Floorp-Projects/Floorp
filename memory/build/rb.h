@@ -134,33 +134,25 @@ public:
   }
 };
 
-#define rb_node_field(a_node, a_field) a_field(a_node)
-
 /* Tree operations. */
 #define rbp_first(a_type, a_field, a_tree, a_root, r_node)                     \
   do {                                                                         \
-    for ((r_node) = (a_root);                                                  \
-         rb_node_field((r_node), a_field).Left() != &(a_tree)->rbt_nil;        \
-         (r_node) = rb_node_field((r_node), a_field).Left()) {                 \
+    for ((r_node) = (a_root); a_field(r_node).Left() != &(a_tree)->rbt_nil;    \
+         (r_node) = a_field(r_node).Left()) {                                  \
     }                                                                          \
   } while (0)
 
 #define rbp_last(a_type, a_field, a_tree, a_root, r_node)                      \
   do {                                                                         \
-    for ((r_node) = (a_root);                                                  \
-         rb_node_field((r_node), a_field).Right() != &(a_tree)->rbt_nil;       \
-         (r_node) = rb_node_field((r_node), a_field).Right()) {                \
+    for ((r_node) = (a_root); a_field(r_node).Right() != &(a_tree)->rbt_nil;   \
+         (r_node) = a_field(r_node).Right()) {                                 \
     }                                                                          \
   } while (0)
 
 #define rbp_next(a_type, a_field, a_cmp, a_tree, a_node, r_node)               \
   do {                                                                         \
-    if (rb_node_field((a_node), a_field).Right() != &(a_tree)->rbt_nil) {      \
-      rbp_first(a_type,                                                        \
-                a_field,                                                       \
-                a_tree,                                                        \
-                rb_node_field((a_node), a_field).Right(),                      \
-                (r_node));                                                     \
+    if (a_field(a_node).Right() != &(a_tree)->rbt_nil) {                       \
+      rbp_first(a_type, a_field, a_tree, a_field(a_node).Right(), (r_node));   \
     } else {                                                                   \
       a_type* rbp_n_t = (a_tree)->rbt_root;                                    \
       MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);                               \
@@ -169,9 +161,9 @@ public:
         int rbp_n_cmp = (a_cmp)((a_node), rbp_n_t);                            \
         if (rbp_n_cmp < 0) {                                                   \
           (r_node) = rbp_n_t;                                                  \
-          rbp_n_t = rb_node_field(rbp_n_t, a_field).Left();                    \
+          rbp_n_t = a_field(rbp_n_t).Left();                                   \
         } else if (rbp_n_cmp > 0) {                                            \
-          rbp_n_t = rb_node_field(rbp_n_t, a_field).Right();                   \
+          rbp_n_t = a_field(rbp_n_t).Right();                                  \
         } else {                                                               \
           break;                                                               \
         }                                                                      \
@@ -182,12 +174,8 @@ public:
 
 #define rbp_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node)               \
   do {                                                                         \
-    if (rb_node_field((a_node), a_field).Left() != &(a_tree)->rbt_nil) {       \
-      rbp_last(a_type,                                                         \
-               a_field,                                                        \
-               a_tree,                                                         \
-               rb_node_field((a_node), a_field).Left(),                        \
-               (r_node));                                                      \
+    if (a_field(a_node).Left() != &(a_tree)->rbt_nil) {                        \
+      rbp_last(a_type, a_field, a_tree, a_field(a_node).Left(), (r_node));     \
     } else {                                                                   \
       a_type* rbp_p_t = (a_tree)->rbt_root;                                    \
       MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);                               \
@@ -195,10 +183,10 @@ public:
       while (true) {                                                           \
         int rbp_p_cmp = (a_cmp)((a_node), rbp_p_t);                            \
         if (rbp_p_cmp < 0) {                                                   \
-          rbp_p_t = rb_node_field(rbp_p_t, a_field).Left();                    \
+          rbp_p_t = a_field(rbp_p_t).Left();                                   \
         } else if (rbp_p_cmp > 0) {                                            \
           (r_node) = rbp_p_t;                                                  \
-          rbp_p_t = rb_node_field(rbp_p_t, a_field).Right();                   \
+          rbp_p_t = a_field(rbp_p_t).Right();                                  \
         } else {                                                               \
           break;                                                               \
         }                                                                      \
@@ -214,9 +202,9 @@ public:
     while ((r_node) != &(a_tree)->rbt_nil &&                                   \
            (rbp_se_cmp = (a_cmp)((a_key), (r_node))) != 0) {                   \
       if (rbp_se_cmp < 0) {                                                    \
-        (r_node) = rb_node_field((r_node), a_field).Left();                    \
+        (r_node) = a_field(r_node).Left();                                     \
       } else {                                                                 \
-        (r_node) = rb_node_field((r_node), a_field).Right();                   \
+        (r_node) = a_field(r_node).Right();                                    \
       }                                                                        \
     }                                                                          \
     if ((r_node) == &(a_tree)->rbt_nil) {                                      \
@@ -236,9 +224,9 @@ public:
       int rbp_ns_cmp = (a_cmp)((a_key), rbp_ns_t);                             \
       if (rbp_ns_cmp < 0) {                                                    \
         (r_node) = rbp_ns_t;                                                   \
-        rbp_ns_t = rb_node_field(rbp_ns_t, a_field).Left();                    \
+        rbp_ns_t = a_field(rbp_ns_t).Left();                                   \
       } else if (rbp_ns_cmp > 0) {                                             \
-        rbp_ns_t = rb_node_field(rbp_ns_t, a_field).Right();                   \
+        rbp_ns_t = a_field(rbp_ns_t).Right();                                  \
       } else {                                                                 \
         (r_node) = rbp_ns_t;                                                   \
         break;                                                                 \
@@ -252,60 +240,58 @@ public:
  */
 #define rbp_rotate_left(a_type, a_field, a_node, r_node)                       \
   do {                                                                         \
-    (r_node) = rb_node_field((a_node), a_field).Right();                       \
-    rb_node_field((a_node), a_field)                                           \
-      .SetRight(rb_node_field((r_node), a_field).Left());                      \
-    rb_node_field((r_node), a_field).SetLeft((a_node));                        \
+    (r_node) = a_field(a_node).Right();                                        \
+    a_field(a_node).SetRight(a_field(r_node).Left());                          \
+    a_field(r_node).SetLeft((a_node));                                         \
   } while (0)
 
 #define rbp_rotate_right(a_type, a_field, a_node, r_node)                      \
   do {                                                                         \
-    (r_node) = rb_node_field((a_node), a_field).Left();                        \
-    rb_node_field((a_node), a_field)                                           \
-      .SetLeft(rb_node_field((r_node), a_field).Right());                      \
-    rb_node_field((r_node), a_field).SetRight((a_node));                       \
+    (r_node) = a_field(a_node).Left();                                         \
+    a_field(a_node).SetLeft(a_field(r_node).Right());                          \
+    a_field(r_node).SetRight((a_node));                                        \
   } while (0)
 
 #define rbp_lean_left(a_type, a_field, a_node, r_node)                         \
   do {                                                                         \
     NodeColor rbp_ll_color;                                                    \
     rbp_rotate_left(a_type, a_field, (a_node), (r_node));                      \
-    rbp_ll_color = rb_node_field((a_node), a_field).Color();                   \
-    rb_node_field((r_node), a_field).SetColor(rbp_ll_color);                   \
-    rb_node_field((a_node), a_field).SetColor(NodeColor::Red);                 \
+    rbp_ll_color = a_field(a_node).Color();                                    \
+    a_field(r_node).SetColor(rbp_ll_color);                                    \
+    a_field(a_node).SetColor(NodeColor::Red);                                  \
   } while (0)
 
 #define rbp_lean_right(a_type, a_field, a_node, r_node)                        \
   do {                                                                         \
     NodeColor rbp_lr_color;                                                    \
     rbp_rotate_right(a_type, a_field, (a_node), (r_node));                     \
-    rbp_lr_color = rb_node_field((a_node), a_field).Color();                   \
-    rb_node_field((r_node), a_field).SetColor(rbp_lr_color);                   \
-    rb_node_field((a_node), a_field).SetColor(NodeColor::Red);                 \
+    rbp_lr_color = a_field(a_node).Color();                                    \
+    a_field(r_node).SetColor(rbp_lr_color);                                    \
+    a_field(a_node).SetColor(NodeColor::Red);                                  \
   } while (0)
 
 #define rbp_move_red_left(a_type, a_field, a_node, r_node)                     \
   do {                                                                         \
     a_type *rbp_mrl_t, *rbp_mrl_u;                                             \
-    rbp_mrl_t = rb_node_field((a_node), a_field).Left();                       \
-    rb_node_field(rbp_mrl_t, a_field).SetColor(NodeColor::Red);                \
-    rbp_mrl_t = rb_node_field((a_node), a_field).Right();                      \
-    rbp_mrl_u = rb_node_field(rbp_mrl_t, a_field).Left();                      \
-    if (rb_node_field(rbp_mrl_u, a_field).IsRed()) {                           \
+    rbp_mrl_t = a_field(a_node).Left();                                        \
+    a_field(rbp_mrl_t).SetColor(NodeColor::Red);                               \
+    rbp_mrl_t = a_field(a_node).Right();                                       \
+    rbp_mrl_u = a_field(rbp_mrl_t).Left();                                     \
+    if (a_field(rbp_mrl_u).IsRed()) {                                          \
       rbp_rotate_right(a_type, a_field, rbp_mrl_t, rbp_mrl_u);                 \
-      rb_node_field((a_node), a_field).SetRight(rbp_mrl_u);                    \
+      a_field(a_node).SetRight(rbp_mrl_u);                                     \
       rbp_rotate_left(a_type, a_field, (a_node), (r_node));                    \
-      rbp_mrl_t = rb_node_field((a_node), a_field).Right();                    \
-      if (rb_node_field(rbp_mrl_t, a_field).IsRed()) {                         \
-        rb_node_field(rbp_mrl_t, a_field).SetColor(NodeColor::Black);          \
-        rb_node_field((a_node), a_field).SetColor(NodeColor::Red);             \
+      rbp_mrl_t = a_field(a_node).Right();                                     \
+      if (a_field(rbp_mrl_t).IsRed()) {                                        \
+        a_field(rbp_mrl_t).SetColor(NodeColor::Black);                         \
+        a_field(a_node).SetColor(NodeColor::Red);                              \
         rbp_rotate_left(a_type, a_field, (a_node), rbp_mrl_t);                 \
-        rb_node_field((r_node), a_field).SetLeft(rbp_mrl_t);                   \
+        a_field(r_node).SetLeft(rbp_mrl_t);                                    \
       } else {                                                                 \
-        rb_node_field((a_node), a_field).SetColor(NodeColor::Black);           \
+        a_field(a_node).SetColor(NodeColor::Black);                            \
       }                                                                        \
     } else {                                                                   \
-      rb_node_field((a_node), a_field).SetColor(NodeColor::Red);               \
+      a_field(a_node).SetColor(NodeColor::Red);                                \
       rbp_rotate_left(a_type, a_field, (a_node), (r_node));                    \
     }                                                                          \
   } while (0)
@@ -313,37 +299,35 @@ public:
 #define rbp_move_red_right(a_type, a_field, a_node, r_node)                    \
   do {                                                                         \
     a_type* rbp_mrr_t;                                                         \
-    rbp_mrr_t = rb_node_field((a_node), a_field).Left();                       \
-    if (rb_node_field(rbp_mrr_t, a_field).IsRed()) {                           \
+    rbp_mrr_t = a_field(a_node).Left();                                        \
+    if (a_field(rbp_mrr_t).IsRed()) {                                          \
       a_type *rbp_mrr_u, *rbp_mrr_v;                                           \
-      rbp_mrr_u = rb_node_field(rbp_mrr_t, a_field).Right();                   \
-      rbp_mrr_v = rb_node_field(rbp_mrr_u, a_field).Left();                    \
-      if (rb_node_field(rbp_mrr_v, a_field).IsRed()) {                         \
-        rb_node_field(rbp_mrr_u, a_field)                                      \
-          .SetColor(rb_node_field((a_node), a_field).Color());                 \
-        rb_node_field(rbp_mrr_v, a_field).SetColor(NodeColor::Black);          \
+      rbp_mrr_u = a_field(rbp_mrr_t).Right();                                  \
+      rbp_mrr_v = a_field(rbp_mrr_u).Left();                                   \
+      if (a_field(rbp_mrr_v).IsRed()) {                                        \
+        a_field(rbp_mrr_u).SetColor(a_field(a_node).Color());                  \
+        a_field(rbp_mrr_v).SetColor(NodeColor::Black);                         \
         rbp_rotate_left(a_type, a_field, rbp_mrr_t, rbp_mrr_u);                \
-        rb_node_field((a_node), a_field).SetLeft(rbp_mrr_u);                   \
+        a_field(a_node).SetLeft(rbp_mrr_u);                                    \
         rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
         rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
-        rb_node_field((r_node), a_field).SetRight(rbp_mrr_t);                  \
+        a_field(r_node).SetRight(rbp_mrr_t);                                   \
       } else {                                                                 \
-        rb_node_field(rbp_mrr_t, a_field)                                      \
-          .SetColor(rb_node_field((a_node), a_field).Color());                 \
-        rb_node_field(rbp_mrr_u, a_field).SetColor(NodeColor::Red);            \
+        a_field(rbp_mrr_t).SetColor(a_field(a_node).Color());                  \
+        a_field(rbp_mrr_u).SetColor(NodeColor::Red);                           \
         rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
         rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
-        rb_node_field((r_node), a_field).SetRight(rbp_mrr_t);                  \
+        a_field(r_node).SetRight(rbp_mrr_t);                                   \
       }                                                                        \
-      rb_node_field((a_node), a_field).SetColor(NodeColor::Red);               \
+      a_field(a_node).SetColor(NodeColor::Red);                                \
     } else {                                                                   \
-      rb_node_field(rbp_mrr_t, a_field).SetColor(NodeColor::Red);              \
-      rbp_mrr_t = rb_node_field(rbp_mrr_t, a_field).Left();                    \
-      if (rb_node_field(rbp_mrr_t, a_field).IsRed()) {                         \
-        rb_node_field(rbp_mrr_t, a_field).SetColor(NodeColor::Black);          \
+      a_field(rbp_mrr_t).SetColor(NodeColor::Red);                             \
+      rbp_mrr_t = a_field(rbp_mrr_t).Left();                                   \
+      if (a_field(rbp_mrr_t).IsRed()) {                                        \
+        a_field(rbp_mrr_t).SetColor(NodeColor::Black);                         \
         rbp_rotate_right(a_type, a_field, (a_node), (r_node));                 \
         rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);                 \
-        rb_node_field((r_node), a_field).SetRight(rbp_mrr_t);                  \
+        a_field(r_node).SetRight(rbp_mrr_t);                                   \
       } else {                                                                 \
         rbp_rotate_left(a_type, a_field, (a_node), (r_node));                  \
       }                                                                        \
@@ -356,9 +340,9 @@ public:
     a_type *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;                   \
     int rbp_i_cmp = 0;                                                         \
     rbp_i_g = &(a_tree)->rbt_nil;                                              \
-    rb_node_field(&rbp_i_s, a_field).SetLeft((a_tree)->rbt_root);              \
-    rb_node_field(&rbp_i_s, a_field).SetRight(&(a_tree)->rbt_nil);             \
-    rb_node_field(&rbp_i_s, a_field).SetColor(NodeColor::Black);               \
+    a_field(&rbp_i_s).SetLeft((a_tree)->rbt_root);                             \
+    a_field(&rbp_i_s).SetRight(&(a_tree)->rbt_nil);                            \
+    a_field(&rbp_i_s).SetColor(NodeColor::Black);                              \
     rbp_i_p = &rbp_i_s;                                                        \
     rbp_i_c = (a_tree)->rbt_root;                                              \
     /* Iteratively search down the tree for the insertion point,      */       \
@@ -366,10 +350,9 @@ public:
     /* iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down    */       \
     /* the tree, assuming a sufficiently deep tree.                   */       \
     while (rbp_i_c != &(a_tree)->rbt_nil) {                                    \
-      rbp_i_t = rb_node_field(rbp_i_c, a_field).Left();                        \
-      rbp_i_u = rb_node_field(rbp_i_t, a_field).Left();                        \
-      if (rb_node_field(rbp_i_t, a_field).IsRed() &&                           \
-          rb_node_field(rbp_i_u, a_field).IsRed()) {                           \
+      rbp_i_t = a_field(rbp_i_c).Left();                                       \
+      rbp_i_u = a_field(rbp_i_t).Left();                                       \
+      if (a_field(rbp_i_t).IsRed() && a_field(rbp_i_u).IsRed()) {              \
         /* rbp_i_c is the top of a logical 4-node, so split it.   */           \
         /* This iteration does not move down the tree, due to the */           \
         /* disruptiveness of node splitting.                      */           \
@@ -377,31 +360,31 @@ public:
         /* Rotate right.                                          */           \
         rbp_rotate_right(a_type, a_field, rbp_i_c, rbp_i_t);                   \
         /* Pass red links up one level.                           */           \
-        rbp_i_u = rb_node_field(rbp_i_t, a_field).Left();                      \
-        rb_node_field(rbp_i_u, a_field).SetColor(NodeColor::Black);            \
-        if (rb_node_field(rbp_i_p, a_field).Left() == rbp_i_c) {               \
-          rb_node_field(rbp_i_p, a_field).SetLeft(rbp_i_t);                    \
+        rbp_i_u = a_field(rbp_i_t).Left();                                     \
+        a_field(rbp_i_u).SetColor(NodeColor::Black);                           \
+        if (a_field(rbp_i_p).Left() == rbp_i_c) {                              \
+          a_field(rbp_i_p).SetLeft(rbp_i_t);                                   \
           rbp_i_c = rbp_i_t;                                                   \
         } else {                                                               \
           /* rbp_i_c was the right child of rbp_i_p, so rotate  */             \
           /* left in order to maintain the left-leaning         */             \
           /* invariant.                                         */             \
-          MOZ_ASSERT(rb_node_field(rbp_i_p, a_field).Right() == rbp_i_c);      \
-          rb_node_field(rbp_i_p, a_field).SetRight(rbp_i_t);                   \
+          MOZ_ASSERT(a_field(rbp_i_p).Right() == rbp_i_c);                     \
+          a_field(rbp_i_p).SetRight(rbp_i_t);                                  \
           rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_u);                    \
-          if (rb_node_field(rbp_i_g, a_field).Left() == rbp_i_p) {             \
-            rb_node_field(rbp_i_g, a_field).SetLeft(rbp_i_u);                  \
+          if (a_field(rbp_i_g).Left() == rbp_i_p) {                            \
+            a_field(rbp_i_g).SetLeft(rbp_i_u);                                 \
           } else {                                                             \
-            MOZ_ASSERT(rb_node_field(rbp_i_g, a_field).Right() == rbp_i_p);    \
-            rb_node_field(rbp_i_g, a_field).SetRight(rbp_i_u);                 \
+            MOZ_ASSERT(a_field(rbp_i_g).Right() == rbp_i_p);                   \
+            a_field(rbp_i_g).SetRight(rbp_i_u);                                \
           }                                                                    \
           rbp_i_p = rbp_i_u;                                                   \
           rbp_i_cmp = (a_cmp)((a_node), rbp_i_p);                              \
           if (rbp_i_cmp < 0) {                                                 \
-            rbp_i_c = rb_node_field(rbp_i_p, a_field).Left();                  \
+            rbp_i_c = a_field(rbp_i_p).Left();                                 \
           } else {                                                             \
             MOZ_ASSERT(rbp_i_cmp > 0);                                         \
-            rbp_i_c = rb_node_field(rbp_i_p, a_field).Right();                 \
+            rbp_i_c = a_field(rbp_i_p).Right();                                \
           }                                                                    \
           continue;                                                            \
         }                                                                      \
@@ -410,30 +393,30 @@ public:
       rbp_i_p = rbp_i_c;                                                       \
       rbp_i_cmp = (a_cmp)((a_node), rbp_i_c);                                  \
       if (rbp_i_cmp < 0) {                                                     \
-        rbp_i_c = rb_node_field(rbp_i_c, a_field).Left();                      \
+        rbp_i_c = a_field(rbp_i_c).Left();                                     \
       } else {                                                                 \
         MOZ_ASSERT(rbp_i_cmp > 0);                                             \
-        rbp_i_c = rb_node_field(rbp_i_c, a_field).Right();                     \
+        rbp_i_c = a_field(rbp_i_c).Right();                                    \
       }                                                                        \
     }                                                                          \
     /* rbp_i_p now refers to the node under which to insert.          */       \
-    rb_node_field(a_node, a_field).SetLeft(&(a_tree)->rbt_nil);                \
-    rb_node_field(a_node, a_field).SetRight(&(a_tree)->rbt_nil);               \
-    rb_node_field(a_node, a_field).SetColor(NodeColor::Red);                   \
+    a_field(a_node).SetLeft(&(a_tree)->rbt_nil);                               \
+    a_field(a_node).SetRight(&(a_tree)->rbt_nil);                              \
+    a_field(a_node).SetColor(NodeColor::Red);                                  \
     if (rbp_i_cmp > 0) {                                                       \
-      rb_node_field(rbp_i_p, a_field).SetRight((a_node));                      \
+      a_field(rbp_i_p).SetRight((a_node));                                     \
       rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_t);                        \
-      if (rb_node_field(rbp_i_g, a_field).Left() == rbp_i_p) {                 \
-        rb_node_field(rbp_i_g, a_field).SetLeft(rbp_i_t);                      \
-      } else if (rb_node_field(rbp_i_g, a_field).Right() == rbp_i_p) {         \
-        rb_node_field(rbp_i_g, a_field).SetRight(rbp_i_t);                     \
+      if (a_field(rbp_i_g).Left() == rbp_i_p) {                                \
+        a_field(rbp_i_g).SetLeft(rbp_i_t);                                     \
+      } else if (a_field(rbp_i_g).Right() == rbp_i_p) {                        \
+        a_field(rbp_i_g).SetRight(rbp_i_t);                                    \
       }                                                                        \
     } else {                                                                   \
-      rb_node_field(rbp_i_p, a_field).SetLeft((a_node));                       \
+      a_field(rbp_i_p).SetLeft((a_node));                                      \
     }                                                                          \
     /* Update the root and make sure that it is black.                */       \
-    (a_tree)->rbt_root = rb_node_field(&rbp_i_s, a_field).Left();              \
-    rb_node_field((a_tree)->rbt_root, a_field).SetColor(NodeColor::Black);     \
+    (a_tree)->rbt_root = a_field(&rbp_i_s).Left();                             \
+    a_field((a_tree)->rbt_root).SetColor(NodeColor::Black);                    \
   } while (0)
 
 #define rb_remove(a_type, a_field, a_cmp, a_tree, a_node)                      \
@@ -441,9 +424,9 @@ public:
     a_type rbp_r_s;                                                            \
     a_type *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;                  \
     int rbp_r_cmp;                                                             \
-    rb_node_field(&rbp_r_s, a_field).SetLeft((a_tree)->rbt_root);              \
-    rb_node_field(&rbp_r_s, a_field).SetRight(&(a_tree)->rbt_nil);             \
-    rb_node_field(&rbp_r_s, a_field).SetColor(NodeColor::Black);               \
+    a_field(&rbp_r_s).SetLeft((a_tree)->rbt_root);                             \
+    a_field(&rbp_r_s).SetRight(&(a_tree)->rbt_nil);                            \
+    a_field(&rbp_r_s).SetColor(NodeColor::Black);                              \
     rbp_r_p = &rbp_r_s;                                                        \
     rbp_r_c = (a_tree)->rbt_root;                                              \
     rbp_r_xp = &(a_tree)->rbt_nil;                                             \
@@ -454,32 +437,31 @@ public:
     /* be no way to convert it from a 2-node to a 3-node.             */       \
     rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);                                    \
     if (rbp_r_cmp < 0) {                                                       \
-      rbp_r_t = rb_node_field(rbp_r_c, a_field).Left();                        \
-      rbp_r_u = rb_node_field(rbp_r_t, a_field).Left();                        \
-      if (rb_node_field(rbp_r_t, a_field).IsBlack() &&                         \
-          rb_node_field(rbp_r_u, a_field).IsBlack()) {                         \
+      rbp_r_t = a_field(rbp_r_c).Left();                                       \
+      rbp_r_u = a_field(rbp_r_t).Left();                                       \
+      if (a_field(rbp_r_t).IsBlack() && a_field(rbp_r_u).IsBlack()) {          \
         /* Apply standard transform to prepare for left move.     */           \
         rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);                  \
-        rb_node_field(rbp_r_t, a_field).SetColor(NodeColor::Black);            \
-        rb_node_field(rbp_r_p, a_field).SetLeft(rbp_r_t);                      \
+        a_field(rbp_r_t).SetColor(NodeColor::Black);                           \
+        a_field(rbp_r_p).SetLeft(rbp_r_t);                                     \
         rbp_r_c = rbp_r_t;                                                     \
       } else {                                                                 \
         /* Move left.                                             */           \
         rbp_r_p = rbp_r_c;                                                     \
-        rbp_r_c = rb_node_field(rbp_r_c, a_field).Left();                      \
+        rbp_r_c = a_field(rbp_r_c).Left();                                     \
       }                                                                        \
     } else {                                                                   \
       if (rbp_r_cmp == 0) {                                                    \
         MOZ_ASSERT((a_node) == rbp_r_c);                                       \
-        if (rb_node_field(rbp_r_c, a_field).Right() == &(a_tree)->rbt_nil) {   \
+        if (a_field(rbp_r_c).Right() == &(a_tree)->rbt_nil) {                  \
           /* Delete root node (which is also a leaf node).      */             \
-          if (rb_node_field(rbp_r_c, a_field).Left() != &(a_tree)->rbt_nil) {  \
+          if (a_field(rbp_r_c).Left() != &(a_tree)->rbt_nil) {                 \
             rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);                 \
-            rb_node_field(rbp_r_t, a_field).SetRight(&(a_tree)->rbt_nil);      \
+            a_field(rbp_r_t).SetRight(&(a_tree)->rbt_nil);                     \
           } else {                                                             \
             rbp_r_t = &(a_tree)->rbt_nil;                                      \
           }                                                                    \
-          rb_node_field(rbp_r_p, a_field).SetLeft(rbp_r_t);                    \
+          a_field(rbp_r_p).SetLeft(rbp_r_t);                                   \
         } else {                                                               \
           /* This is the node we want to delete, but we will    */             \
           /* instead swap it with its successor and delete the  */             \
@@ -490,35 +472,31 @@ public:
         }                                                                      \
       }                                                                        \
       if (rbp_r_cmp == 1) {                                                    \
-        if (rb_node_field(                                                     \
-              rb_node_field(rb_node_field(rbp_r_c, a_field).Right(), a_field)  \
-                .Left(),                                                       \
-              a_field)                                                         \
-              .IsBlack()) {                                                    \
-          rbp_r_t = rb_node_field(rbp_r_c, a_field).Left();                    \
-          if (rb_node_field(rbp_r_t, a_field).IsRed()) {                       \
+        if (a_field(a_field(a_field(rbp_r_c).Right()).Left()).IsBlack()) {     \
+          rbp_r_t = a_field(rbp_r_c).Left();                                   \
+          if (a_field(rbp_r_t).IsRed()) {                                      \
             /* Standard transform.                            */               \
             rbp_move_red_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
           } else {                                                             \
             /* Root-specific transform.                       */               \
-            rb_node_field(rbp_r_c, a_field).SetColor(NodeColor::Red);          \
-            rbp_r_u = rb_node_field(rbp_r_t, a_field).Left();                  \
-            if (rb_node_field(rbp_r_u, a_field).IsRed()) {                     \
-              rb_node_field(rbp_r_u, a_field).SetColor(NodeColor::Black);      \
+            a_field(rbp_r_c).SetColor(NodeColor::Red);                         \
+            rbp_r_u = a_field(rbp_r_t).Left();                                 \
+            if (a_field(rbp_r_u).IsRed()) {                                    \
+              a_field(rbp_r_u).SetColor(NodeColor::Black);                     \
               rbp_rotate_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
               rbp_rotate_left(a_type, a_field, rbp_r_c, rbp_r_u);              \
-              rb_node_field(rbp_r_t, a_field).SetRight(rbp_r_u);               \
+              a_field(rbp_r_t).SetRight(rbp_r_u);                              \
             } else {                                                           \
-              rb_node_field(rbp_r_t, a_field).SetColor(NodeColor::Red);        \
+              a_field(rbp_r_t).SetColor(NodeColor::Red);                       \
               rbp_rotate_left(a_type, a_field, rbp_r_c, rbp_r_t);              \
             }                                                                  \
           }                                                                    \
-          rb_node_field(rbp_r_p, a_field).SetLeft(rbp_r_t);                    \
+          a_field(rbp_r_p).SetLeft(rbp_r_t);                                   \
           rbp_r_c = rbp_r_t;                                                   \
         } else {                                                               \
           /* Move right.                                        */             \
           rbp_r_p = rbp_r_c;                                                   \
-          rbp_r_c = rb_node_field(rbp_r_c, a_field).Right();                   \
+          rbp_r_c = a_field(rbp_r_c).Right();                                  \
         }                                                                      \
       }                                                                        \
     }                                                                          \
@@ -527,65 +505,58 @@ public:
         MOZ_ASSERT(rbp_r_p != &(a_tree)->rbt_nil);                             \
         rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);                                \
         if (rbp_r_cmp < 0) {                                                   \
-          rbp_r_t = rb_node_field(rbp_r_c, a_field).Left();                    \
+          rbp_r_t = a_field(rbp_r_c).Left();                                   \
           if (rbp_r_t == &(a_tree)->rbt_nil) {                                 \
             /* rbp_r_c now refers to the successor node to    */               \
             /* relocate, and rbp_r_xp/a_node refer to the     */               \
             /* context for the relocation.                    */               \
-            if (rb_node_field(rbp_r_xp, a_field).Left() == (a_node)) {         \
-              rb_node_field(rbp_r_xp, a_field).SetLeft(rbp_r_c);               \
+            if (a_field(rbp_r_xp).Left() == (a_node)) {                        \
+              a_field(rbp_r_xp).SetLeft(rbp_r_c);                              \
             } else {                                                           \
-              MOZ_ASSERT(rb_node_field(rbp_r_xp, a_field).Right() ==           \
-                         (a_node));                                            \
-              rb_node_field(rbp_r_xp, a_field).SetRight(rbp_r_c);              \
+              MOZ_ASSERT(a_field(rbp_r_xp).Right() == (a_node));               \
+              a_field(rbp_r_xp).SetRight(rbp_r_c);                             \
             }                                                                  \
-            rb_node_field(rbp_r_c, a_field)                                    \
-              .SetLeft(rb_node_field((a_node), a_field).Left());               \
-            rb_node_field(rbp_r_c, a_field)                                    \
-              .SetRight(rb_node_field((a_node), a_field).Right());             \
-            rb_node_field(rbp_r_c, a_field)                                    \
-              .SetColor(rb_node_field((a_node), a_field).Color());             \
-            if (rb_node_field(rbp_r_p, a_field).Left() == rbp_r_c) {           \
-              rb_node_field(rbp_r_p, a_field).SetLeft(&(a_tree)->rbt_nil);     \
+            a_field(rbp_r_c).SetLeft(a_field(a_node).Left());                  \
+            a_field(rbp_r_c).SetRight(a_field(a_node).Right());                \
+            a_field(rbp_r_c).SetColor(a_field(a_node).Color());                \
+            if (a_field(rbp_r_p).Left() == rbp_r_c) {                          \
+              a_field(rbp_r_p).SetLeft(&(a_tree)->rbt_nil);                    \
             } else {                                                           \
-              MOZ_ASSERT(rb_node_field(rbp_r_p, a_field).Right() == rbp_r_c);  \
-              rb_node_field(rbp_r_p, a_field).SetRight(&(a_tree)->rbt_nil);    \
+              MOZ_ASSERT(a_field(rbp_r_p).Right() == rbp_r_c);                 \
+              a_field(rbp_r_p).SetRight(&(a_tree)->rbt_nil);                   \
             }                                                                  \
             break;                                                             \
           }                                                                    \
-          rbp_r_u = rb_node_field(rbp_r_t, a_field).Left();                    \
-          if (rb_node_field(rbp_r_t, a_field).IsBlack() &&                     \
-              rb_node_field(rbp_r_u, a_field).IsBlack()) {                     \
+          rbp_r_u = a_field(rbp_r_t).Left();                                   \
+          if (a_field(rbp_r_t).IsBlack() && a_field(rbp_r_u).IsBlack()) {      \
             rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);              \
-            if (rb_node_field(rbp_r_p, a_field).Left() == rbp_r_c) {           \
-              rb_node_field(rbp_r_p, a_field).SetLeft(rbp_r_t);                \
+            if (a_field(rbp_r_p).Left() == rbp_r_c) {                          \
+              a_field(rbp_r_p).SetLeft(rbp_r_t);                               \
             } else {                                                           \
-              rb_node_field(rbp_r_p, a_field).SetRight(rbp_r_t);               \
+              a_field(rbp_r_p).SetRight(rbp_r_t);                              \
             }                                                                  \
             rbp_r_c = rbp_r_t;                                                 \
           } else {                                                             \
             rbp_r_p = rbp_r_c;                                                 \
-            rbp_r_c = rb_node_field(rbp_r_c, a_field).Left();                  \
+            rbp_r_c = a_field(rbp_r_c).Left();                                 \
           }                                                                    \
         } else {                                                               \
           /* Check whether to delete this node (it has to be    */             \
           /* the correct node and a leaf node).                 */             \
           if (rbp_r_cmp == 0) {                                                \
             MOZ_ASSERT((a_node) == rbp_r_c);                                   \
-            if (rb_node_field(rbp_r_c, a_field).Right() ==                     \
-                &(a_tree)->rbt_nil) {                                          \
+            if (a_field(rbp_r_c).Right() == &(a_tree)->rbt_nil) {              \
               /* Delete leaf node.                          */                 \
-              if (rb_node_field(rbp_r_c, a_field).Left() !=                    \
-                  &(a_tree)->rbt_nil) {                                        \
+              if (a_field(rbp_r_c).Left() != &(a_tree)->rbt_nil) {             \
                 rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
-                rb_node_field(rbp_r_t, a_field).SetRight(&(a_tree)->rbt_nil);  \
+                a_field(rbp_r_t).SetRight(&(a_tree)->rbt_nil);                 \
               } else {                                                         \
                 rbp_r_t = &(a_tree)->rbt_nil;                                  \
               }                                                                \
-              if (rb_node_field(rbp_r_p, a_field).Left() == rbp_r_c) {         \
-                rb_node_field(rbp_r_p, a_field).SetLeft(rbp_r_t);              \
+              if (a_field(rbp_r_p).Left() == rbp_r_c) {                        \
+                a_field(rbp_r_p).SetLeft(rbp_r_t);                             \
               } else {                                                         \
-                rb_node_field(rbp_r_p, a_field).SetRight(rbp_r_t);             \
+                a_field(rbp_r_p).SetRight(rbp_r_t);                            \
               }                                                                \
               break;                                                           \
             } else {                                                           \
@@ -597,25 +568,25 @@ public:
               rbp_r_xp = rbp_r_p;                                              \
             }                                                                  \
           }                                                                    \
-          rbp_r_t = rb_node_field(rbp_r_c, a_field).Right();                   \
-          rbp_r_u = rb_node_field(rbp_r_t, a_field).Left();                    \
-          if (rb_node_field(rbp_r_u, a_field).IsBlack()) {                     \
+          rbp_r_t = a_field(rbp_r_c).Right();                                  \
+          rbp_r_u = a_field(rbp_r_t).Left();                                   \
+          if (a_field(rbp_r_u).IsBlack()) {                                    \
             rbp_move_red_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
-            if (rb_node_field(rbp_r_p, a_field).Left() == rbp_r_c) {           \
-              rb_node_field(rbp_r_p, a_field).SetLeft(rbp_r_t);                \
+            if (a_field(rbp_r_p).Left() == rbp_r_c) {                          \
+              a_field(rbp_r_p).SetLeft(rbp_r_t);                               \
             } else {                                                           \
-              rb_node_field(rbp_r_p, a_field).SetRight(rbp_r_t);               \
+              a_field(rbp_r_p).SetRight(rbp_r_t);                              \
             }                                                                  \
             rbp_r_c = rbp_r_t;                                                 \
           } else {                                                             \
             rbp_r_p = rbp_r_c;                                                 \
-            rbp_r_c = rb_node_field(rbp_r_c, a_field).Right();                 \
+            rbp_r_c = a_field(rbp_r_c).Right();                                \
           }                                                                    \
         }                                                                      \
       }                                                                        \
     }                                                                          \
     /* Update root.                                                   */       \
-    (a_tree)->rbt_root = rb_node_field(&rbp_r_s, a_field).Left();              \
+    (a_tree)->rbt_root = a_field(&rbp_r_s).Left();                             \
   } while (0)
 
 /* Tree structure. */
@@ -628,9 +599,9 @@ struct RedBlackTree
   void Init()
   {
     rbt_root = &rbt_nil;
-    rb_node_field(&rbt_nil, Trait::GetTreeNode).SetLeft(&rbt_nil);
-    rb_node_field(&rbt_nil, Trait::GetTreeNode).SetRight(&rbt_nil);
-    rb_node_field(&rbt_nil, Trait::GetTreeNode).SetColor(NodeColor::Black);
+    Trait::GetTreeNode(&rbt_nil).SetLeft(&rbt_nil);
+    Trait::GetTreeNode(&rbt_nil).SetRight(&rbt_nil);
+    Trait::GetTreeNode(&rbt_nil).SetColor(NodeColor::Black);
   }
 
   T* First()
@@ -743,10 +714,8 @@ struct RedBlackTree
       if ((a_tree)->rbt_root != &(a_tree)->rbt_nil) {                          \
         rbp_f_path[rbp_f_depth] = (a_tree)->rbt_root;                          \
         rbp_f_depth++;                                                         \
-        while (                                                                \
-          (rbp_f_node =                                                        \
-             rb_node_field(rbp_f_path[rbp_f_depth - 1], a_field).Left()) !=    \
-          &(a_tree)->rbt_nil) {                                                \
+        while ((rbp_f_node = a_field(rbp_f_path[rbp_f_depth - 1]).Left()) !=   \
+               &(a_tree)->rbt_nil) {                                           \
           rbp_f_path[rbp_f_depth] = rbp_f_node;                                \
           rbp_f_depth++;                                                       \
         }                                                                      \
@@ -761,15 +730,13 @@ struct RedBlackTree
     continue;                                                                  \
   }                                                                            \
   /* Find the successor.                                    */                 \
-  if ((rbp_f_node =                                                            \
-         rb_node_field(rbp_f_path[rbp_f_depth - 1], a_field).Right()) !=       \
+  if ((rbp_f_node = a_field(rbp_f_path[rbp_f_depth - 1]).Right()) !=           \
       &(a_tree)->rbt_nil) {                                                    \
     /* The successor is the left-most node in the right   */                   \
     /* subtree.                                           */                   \
     rbp_f_path[rbp_f_depth] = rbp_f_node;                                      \
     rbp_f_depth++;                                                             \
-    while ((rbp_f_node =                                                       \
-              rb_node_field(rbp_f_path[rbp_f_depth - 1], a_field).Left()) !=   \
+    while ((rbp_f_node = a_field(rbp_f_path[rbp_f_depth - 1]).Left()) !=       \
            &(a_tree)->rbt_nil) {                                               \
       rbp_f_path[rbp_f_depth] = rbp_f_node;                                    \
       rbp_f_depth++;                                                           \
@@ -779,7 +746,7 @@ struct RedBlackTree
     /* until a left-leaning edge is removed from the      */                   \
     /* path, or the path is empty.                        */                   \
     for (rbp_f_depth--; rbp_f_depth > 0; rbp_f_depth--) {                      \
-      if (rb_node_field(rbp_f_path[rbp_f_depth - 1], a_field).Left() ==        \
+      if (a_field(rbp_f_path[rbp_f_depth - 1]).Left() ==                       \
           rbp_f_path[rbp_f_depth]) {                                           \
         break;                                                                 \
       }                                                                        \
