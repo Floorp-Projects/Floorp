@@ -54,11 +54,14 @@ public class PanelsPreference extends CustomListPreference {
     private int mPositionState = -1;
     private final int mIndex;
 
-    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable, int index, boolean animate) {
+    public PanelsPreference(final Context context, final CustomListCategory parentCategory, final boolean isRemovable,
+            final boolean isHidden, final int index, final boolean animate) {
         super(context, parentCategory);
         mIsRemovable = isRemovable;
         mIndex = index;
         mAnimate = animate;
+
+        setHidden(isHidden);
     }
 
     @Override
