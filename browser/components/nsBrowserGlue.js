@@ -2850,8 +2850,10 @@ var JawsScreenReaderVersionCheck = {
   },
 
   _checkVersionAndPrompt() {
-    // This executes a JAWS version check.
-    if (!Services.appinfo.shouldBlockIncompatJaws) {
+    // Make sure we only prompt for versions of JAWS we do not
+    // support and never prompt if e10s is disabled.
+    if (!Services.appinfo.shouldBlockIncompatJaws ||
+        !Services.appinfo.browserTabsRemoteAutostart) {
       return;
     }
 

@@ -961,14 +961,6 @@ class nsIWidget : public nsISupports
     virtual void SetBackgroundColor(const nscolor &aColor) { }
 
     /**
-     * Get the cursor for this widget.
-     *
-     * @return this widget's cursor.
-     */
-
-    virtual nsCursor GetCursor(void) = 0;
-
-    /**
      * Set the cursor for this widget
      *
      * @param aCursor the new cursor for this widget

@@ -34,6 +34,7 @@ function startTest() {
       checkQuerySelector,
       checkQuerySelectorAll,
       checkQuerySelectorAllNotExist,
+      checkQuerySelectorException,
       checkQuerySelectorAllException
     ];
     runTests(tests, testEnd);
@@ -87,6 +88,25 @@ let checkQuerySelectorAllNotExist = Task.async(function*() {
   nextTest();
 });
 
+let checkQuerySelectorException = Task.async(function*() {
+  info ("$ returns an exception if an invalid selector was provided");
+  let response = yield evaluateJS("$(':foo')");
+  checkObject(response, {
+    input: "$(':foo')",
+    exceptionMessage: "SyntaxError: ':foo' is not a valid selector",
+    exception: {
+      type: "object",
+      class: "DOMException",
+      preview: {
+        kind: "DOMException",
+        name: "SyntaxError",
+        message: "':foo' is not a valid selector"
+      }
+    }
+  });
+  nextTest();
+});
+
 let checkQuerySelectorAllException = Task.async(function*() {
   info ("$$ returns an exception if an invalid selector was provided");
   let response = yield evaluateJS("$$(':foo')");
@@ -94,6 +114,8 @@ let checkQuerySelectorAllException = Task.async(function*() {
     input: "$$(':foo')",
     exceptionMessage: "SyntaxError: ':foo' is not a valid selector",
     exception: {
+      type: "object",
+      class: "DOMException",
       preview: {
         kind: "DOMException",
         name: "SyntaxError",

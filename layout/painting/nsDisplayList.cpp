@@ -1218,6 +1218,10 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   state->mCaretFrame = nullptr;
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
 
+#ifdef DEBUG
+  state->mAutoLayoutPhase.emplace(aReferenceFrame->PresContext(), eLayoutPhase_DisplayListBuilding);
+#endif
+
   state->mPresShell->UpdateCanvasBackground();
 
   if (mIsPaintingToWindow) {
