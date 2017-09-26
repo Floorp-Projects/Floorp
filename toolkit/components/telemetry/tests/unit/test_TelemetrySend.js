@@ -17,6 +17,8 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
+
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryHealthPing",
   "resource://gre/modules/TelemetryHealthPing.jsm");
 
@@ -84,6 +86,7 @@ add_task(async function test_setup() {
   await setEmptyPrefWatchlist();
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, true);
+  TelemetryStopwatch.setTestModeEnabled(true);
 });
 
 // Test the ping sending logic.
