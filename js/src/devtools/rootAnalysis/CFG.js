@@ -40,6 +40,14 @@ function isMatchingDestructor(constructor, edge)
     if (variable.Name[1].charAt(0) != '~')
         return false;
 
+    // Note that in some situations, a regular function can begin with '~', so
+    // we don't necessarily have a destructor in hand. This is probably a
+    // sixgill artifact, but in js::wasm::ModuleGenerator::~ModuleGenerator, a
+    // templatized static inline EraseIf is invoked, and it gets named ~EraseIf
+    // for some reason.
+    if (!("PEdgeCallInstance" in edge))
+        return false;
+
     var constructExp = constructor.PEdgeCallInstance.Exp;
     assert(constructExp.Kind == "Var");
 
@@ -55,7 +63,7 @@ function isMatchingDestructor(constructor, edge)
 // treat each instance separately, such as when different regions of a function
 // body were guarded by these constructors and you needed to do something
 // different with each.)
-function allRAIIGuardedCallPoints(bodies, body, isConstructor)
+function allRAIIGuardedCallPoints(typeInfo, bodies, body, isConstructor)
 {
     if (!("PEdge" in body))
         return [];
@@ -70,7 +78,7 @@ function allRAIIGuardedCallPoints(bodies, body, isConstructor)
             continue;
         var variable = callee.Variable;
         assert(variable.Kind == "Func");
-        if (!isConstructor(edge.Type, variable.Name))
+        if (!isConstructor(typeInfo, edge.Type, variable.Name))
             continue;
         if (!("PEdgeCallInstance" in edge))
             continue;

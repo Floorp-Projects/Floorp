@@ -3040,37 +3040,6 @@ nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetCursorType(int16_t *aCursor)
-{
-  NS_ENSURE_ARG_POINTER(aCursor);
-
-  nsIDocument* doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  bool isSameDoc = false;
-  do {
-    if (EventStateManager::sMouseOverDocument == doc) {
-      isSameDoc = true;
-      break;
-    }
-  } while ((doc = doc->GetParentDocument()));
-
-  if (!isSameDoc) {
-    *aCursor = eCursor_none;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget)
-    return NS_ERROR_FAILURE;
-
-  // fetch cursor value from window's widget
-  *aCursor = widget->GetCursor();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetDisplayDPI(float *aDPI)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();

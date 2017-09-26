@@ -202,9 +202,9 @@ private:
 
   /**
    * MaybeNotifyIMEOfAddedTextDuringDocumentChange() may send text change
-   * notification caused by the nodes added between mFirstAddedNodeOffset in
-   * mFirstAddedNodeContainer and mLastAddedNodeOffset in
-   * mLastAddedNodeContainer and forgets the range.
+   * notification caused by the nodes added between mFirstAddedContent in
+   * mFirstAddedContainer and mLastAddedContent in
+   * mLastAddedContainer and forgets the range.
    */
   void MaybeNotifyIMEOfAddedTextDuringDocumentChange();
 
@@ -232,15 +232,14 @@ private:
    */
   bool HasAddedNodesDuringDocumentChange() const
   {
-    return mFirstAddedNodeContainer && mLastAddedNodeContainer;
+    return mFirstAddedContainer && mLastAddedContainer;
   }
 
   /**
-   * Returns true if the node at aOffset in aParent is next node of the node at
-   * mLastAddedNodeOffset in mLastAddedNodeContainer in pre-order tree
-   * traversal of the DOM.
+   * Returns true if the passed-in node in aParent is the next node of
+   * mLastAddedContent in pre-order tree traversal of the DOM.
    */
-  bool IsNextNodeOfLastAddedNode(nsINode* aParent, int32_t aOffset) const;
+  bool IsNextNodeOfLastAddedNode(nsINode* aParent, nsIContent* aChild) const;
 
   void PostFocusSetNotification();
   void MaybeNotifyIMEOfFocusSet();
@@ -256,7 +255,9 @@ private:
   void CancelNotifyingIMEOfPositionChange();
   void PostCompositionEventHandledNotification();
 
-  void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
+  void NotifyContentAdded(nsINode* aContainer,
+                          nsIContent* aFirstContent,
+                          nsIContent* aLastContent);
   void ObserveEditableNode();
   /**
    *  NotifyIMEOfBlur() notifies IME of blur.
@@ -431,42 +432,43 @@ private:
    */
   struct FlatTextCache
   {
-    // mContainerNode and mNodeOffset represent a point in DOM tree.  E.g.,
-    // if mContainerNode is a div element, mNodeOffset is index of its child.
+    // mContainerNode and mNode represent a point in DOM tree.  E.g.,
+    // if mContainerNode is a div element, mNode is a child.
     nsCOMPtr<nsINode> mContainerNode;
-    int32_t mNodeOffset;
+    // mNode points to the last child which participates in the current
+    // mFlatTextLength. If mNode is null, then that means that the end point for
+    // mFlatTextLength is immediately before the first child of mContainerNode.
+    nsCOMPtr<nsINode> mNode;
     // Length of flat text generated from contents between the start of content
     // and a child node whose index is mNodeOffset of mContainerNode.
     uint32_t mFlatTextLength;
 
     FlatTextCache()
-      : mNodeOffset(0)
-      , mFlatTextLength(0)
+      : mFlatTextLength(0)
     {
     }
 
     void Clear()
     {
       mContainerNode = nullptr;
-      mNodeOffset = 0;
+      mNode = nullptr;
       mFlatTextLength = 0;
     }
 
-    void Cache(nsINode* aContainer, int32_t aNodeOffset,
+    void Cache(nsINode* aContainer, nsINode* aNode,
                uint32_t aFlatTextLength)
     {
       MOZ_ASSERT(aContainer, "aContainer must not be null");
-      MOZ_ASSERT(
-        aNodeOffset <= static_cast<int32_t>(aContainer->GetChildCount()),
-        "aNodeOffset must be same as or less than the count of children");
+      MOZ_ASSERT(!aNode || aNode->GetParentNode() == aContainer,
+                 "aNode must be either null or a child of aContainer");
       mContainerNode = aContainer;
-      mNodeOffset = aNodeOffset;
+      mNode = aNode;
       mFlatTextLength = aFlatTextLength;
     }
 
-    bool Match(nsINode* aContainer, int32_t aNodeOffset) const
+    bool Match(nsINode* aContainer, nsINode* aNode) const
     {
-      return aContainer == mContainerNode && aNodeOffset == mNodeOffset;
+      return aContainer == mContainerNode && aNode == mNode;
     }
   };
   // mEndOfAddedTextCache caches text length from the start of content to
@@ -479,26 +481,25 @@ private:
   // handled by the editor and no other mutation (e.g., adding node) occur.
   FlatTextCache mStartOfRemovingTextRangeCache;
 
-  // mFirstAddedNodeContainer is parent node of first added node in current
+  // mFirstAddedContainer is parent node of first added node in current
   // document change.  So, this is not nullptr only when a node was added
   // during a document change and the change has not been included into
   // mTextChangeData yet.
   // Note that this shouldn't be in cycle collection since this is not nullptr
   // only during a document change.
-  nsCOMPtr<nsINode> mFirstAddedNodeContainer;
-  // mLastAddedNodeContainer is parent node of last added node in current
+  nsCOMPtr<nsINode> mFirstAddedContainer;
+  // mLastAddedContainer is parent node of last added node in current
   // document change.  So, this is not nullptr only when a node was added
   // during a document change and the change has not been included into
   // mTextChangeData yet.
   // Note that this shouldn't be in cycle collection since this is not nullptr
   // only during a document change.
-  nsCOMPtr<nsINode> mLastAddedNodeContainer;
-  // mFirstAddedNodeOffset is offset of first added node in
-  // mFirstAddedNodeContainer.
-  int32_t mFirstAddedNodeOffset;
-  // mLastAddedNodeOffset is offset of *after* last added node in
-  // mLastAddedNodeContainer.  I.e., the index of last added node + 1.
-  int32_t mLastAddedNodeOffset;
+  nsCOMPtr<nsINode> mLastAddedContainer;
+
+  // mFirstAddedContent is the first node added in mFirstAddedContainer.
+  nsCOMPtr<nsIContent> mFirstAddedContent;
+  // mLastAddedContent is the last node added in mLastAddedContainer;
+  nsCOMPtr<nsIContent> mLastAddedContent;
 
   TextChangeData mTextChangeData;
 
