@@ -624,14 +624,14 @@ intrinsic_DefineProperty(JSContext* cx, unsigned argc, Value* vp)
         if (getter.isObject())
             desc.setGetterObject(&getter.toObject());
         if (!getter.isNull())
-            attrs |= JSPROP_GETTER | JSPROP_SHARED;
+            attrs |= JSPROP_GETTER;
 
         Value setter = args[4];
         MOZ_ASSERT(setter.isObject() || setter.isNullOrUndefined());
         if (setter.isObject())
             desc.setSetterObject(&setter.toObject());
         if (!setter.isNull())
-            attrs |= JSPROP_SETTER | JSPROP_SHARED;
+            attrs |= JSPROP_SETTER;
 
         // By convention, these bits are not used on accessor descriptors.
         attrs &= ~(JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);

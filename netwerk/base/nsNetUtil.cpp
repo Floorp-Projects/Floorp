@@ -709,8 +709,6 @@ NS_NewInputStreamChannel(nsIChannel        **outChannel,
 nsresult
 NS_NewInputStreamPump(nsIInputStreamPump **result,
                       nsIInputStream      *stream,
-                      int64_t              streamPos /* = int64_t(-1) */,
-                      int64_t              streamLen /* = int64_t(-1) */,
                       uint32_t             segsize /* = 0 */,
                       uint32_t             segcount /* = 0 */,
                       bool                 closeWhenDone /* = false */,
@@ -720,8 +718,8 @@ NS_NewInputStreamPump(nsIInputStreamPump **result,
     nsCOMPtr<nsIInputStreamPump> pump =
         do_CreateInstance(NS_INPUTSTREAMPUMP_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = pump->Init(stream, streamPos, streamLen,
-                        segsize, segcount, closeWhenDone, mainThreadTarget);
+        rv = pump->Init(stream, segsize, segcount, closeWhenDone,
+                        mainThreadTarget);
         if (NS_SUCCEEDED(rv)) {
             *result = nullptr;
             pump.swap(*result);

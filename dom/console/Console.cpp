@@ -1660,7 +1660,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
       if (NS_WARN_IF(!JS_DefineProperty(aCx, eventObj, "stacktrace",
                                         JS_DATA_TO_FUNC_PTR(JSNative, funObj.get()),
                                         nullptr,
-                                        JSPROP_ENUMERATE | JSPROP_SHARED |
+                                        JSPROP_ENUMERATE |
                                         JSPROP_GETTER | JSPROP_SETTER))) {
         return false;
       }

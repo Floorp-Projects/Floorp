@@ -134,38 +134,36 @@ WebRenderTextureHost::GetRGBStride()
   return ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
 }
 
-void
-WebRenderTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                                     const std::function<wr::ImageKey()>& aImageKeyAllocator)
+uint32_t
+WebRenderTextureHost::NumSubTextures() const
 {
   MOZ_ASSERT(mWrappedTextureHost);
-  MOZ_ASSERT(aImageKeys.IsEmpty());
-
-  mWrappedTextureHost->GetWRImageKeys(aImageKeys, aImageKeyAllocator);
+  return mWrappedTextureHost->NumSubTextures();
 }
 
 void
-WebRenderTextureHost::AddWRImage(wr::ResourceUpdateQueue& aResources,
-                                 Range<const wr::ImageKey>& aImageKeys,
-                                 const wr::ExternalImageId& aExtID)
+WebRenderTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+                                          ResourceUpdateOp aOp,
+                                          const Range<wr::ImageKey>& aImageKeys,
+                                          const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(mExternalImageId == aExtID);
 
-  mWrappedTextureHost->AddWRImage(aResources, aImageKeys, aExtID);
+  mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
 }
 
 void
-WebRenderTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                        const wr::LayoutRect& aBounds,
-                                        const wr::LayoutRect& aClip,
-                                        wr::ImageRendering aFilter,
-                                        Range<const wr::ImageKey>& aImageKeys)
+WebRenderTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                       const wr::LayoutRect& aBounds,
+                                       const wr::LayoutRect& aClip,
+                                       wr::ImageRendering aFilter,
+                                       const Range<wr::ImageKey>& aImageKeys)
 {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(aImageKeys.length() > 0);
 
-  mWrappedTextureHost->PushExternalImage(aBuilder,
+  mWrappedTextureHost->PushDisplayItems(aBuilder,
                                          aBounds,
                                          aClip,
                                          aFilter,

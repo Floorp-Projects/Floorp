@@ -276,8 +276,8 @@ ExtensionStreamGetter::OnStream(nsIInputStream* aStream)
   }
 
   nsCOMPtr<nsIInputStreamPump> pump;
-  nsresult rv = NS_NewInputStreamPump(getter_AddRefs(pump), aStream, -1, -1, 0,
-                                      0, false, mMainThreadEventTarget);
+  nsresult rv = NS_NewInputStreamPump(getter_AddRefs(pump), aStream, 0, 0,
+                                      false, mMainThreadEventTarget);
   if (NS_FAILED(rv)) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     return;

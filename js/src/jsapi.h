@@ -875,11 +875,6 @@ static const uint8_t JSPROP_GETTER =           0x10;
 /* property holds setter function */
 static const uint8_t JSPROP_SETTER =           0x20;
 
-/* don't allocate a value slot for this property; don't copy the property on set
-   of the same-named property in an object that delegates to a prototype
-   containing this property */
-static const uint8_t JSPROP_SHARED =           0x40;
-
 /* internal JS engine use only */
 static const uint8_t JSPROP_INTERNAL_USE_BIT = 0x80;
 
@@ -2278,23 +2273,23 @@ inline int CheckIsSetterOp(JSSetterOp op);
  */
 #define JS_PSG(name, getter, flags) \
     JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(nullptr), flags, \
-                        JSPROP_SHARED)
+                        0)
 #define JS_PSGS(name, getter, setter, flags) \
     JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(setter), flags, \
-                         JSPROP_SHARED)
+                        0)
 #define JS_SYM_GET(symbol, getter, flags) \
     JS_PS_ACCESSOR_SPEC(reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
-                        JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(nullptr), flags, JSPROP_SHARED)
+                        JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(nullptr), flags, 0)
 #define JS_SELF_HOSTED_GET(name, getterName, flags) \
     JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName), JSNATIVE_WRAPPER(nullptr), flags, \
-                         JSPROP_SHARED | JSPROP_GETTER)
+                        JSPROP_GETTER)
 #define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags) \
     JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName), SELFHOSTED_WRAPPER(setterName), \
-                         flags, JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER)
+                         flags, JSPROP_GETTER | JSPROP_SETTER)
 #define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags) \
     JS_PS_ACCESSOR_SPEC(reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
                          SELFHOSTED_WRAPPER(getterName), JSNATIVE_WRAPPER(nullptr), flags, \
-                         JSPROP_SHARED | JSPROP_GETTER)
+                         JSPROP_GETTER)
 #define JS_STRING_PS(name, string, flags) \
     JS_PS_VALUE_SPEC(name, STRINGVALUE_WRAPPER(string), flags)
 #define JS_STRING_SYM_PS(symbol, string, flags) \
@@ -2864,7 +2859,6 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     }
 
     bool hasGetterOrSetter() const { return desc().getter || desc().setter; }
-    bool isShared() const { return has(JSPROP_SHARED); }
 
     JS::HandleObject object() const {
         return JS::HandleObject::fromMarkedLocation(&desc().obj);
@@ -2881,14 +2875,12 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                                      JSPROP_IGNORE_VALUE |
                                      JSPROP_GETTER |
                                      JSPROP_SETTER |
-                                     JSPROP_SHARED |
                                      JSPROP_REDEFINE_NONCONFIGURABLE |
                                      JSPROP_RESOLVING |
                                      SHADOWABLE)) == 0);
         MOZ_ASSERT(!hasAll(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
         MOZ_ASSERT(!hasAll(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
         if (isAccessorDescriptor()) {
-            MOZ_ASSERT(has(JSPROP_SHARED));
             MOZ_ASSERT(!has(JSPROP_READONLY));
             MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
             MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
@@ -2917,7 +2909,6 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                                      JSPROP_READONLY |
                                      JSPROP_GETTER |
                                      JSPROP_SETTER |
-                                     JSPROP_SHARED |
                                      JSPROP_REDEFINE_NONCONFIGURABLE |
                                      JSPROP_RESOLVING |
                                      SHADOWABLE)) == 0);
@@ -3018,12 +3009,12 @@ class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
     void setGetterObject(JSObject* obj) {
         desc().getter = reinterpret_cast<JSGetterOp>(obj);
         desc().attrs &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
-        desc().attrs |= JSPROP_GETTER | JSPROP_SHARED;
+        desc().attrs |= JSPROP_GETTER;
     }
     void setSetterObject(JSObject* obj) {
         desc().setter = reinterpret_cast<JSSetterOp>(obj);
         desc().attrs &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
-        desc().attrs |= JSPROP_SETTER | JSPROP_SHARED;
+        desc().attrs |= JSPROP_SETTER;
     }
 
     JS::MutableHandleObject getterObject() {
