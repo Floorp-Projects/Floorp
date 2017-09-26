@@ -23,6 +23,7 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
+import org.mozilla.gecko.toolbar.PageActionLayout;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.SiteLogins;
@@ -463,6 +464,16 @@ public class Tab {
 
     public void setManifestUrl(String manifestUrl) {
         mManifestUrl = manifestUrl;
+        updatePageAction();
+    }
+
+    public void updatePageAction() {
+        if (mManifestUrl != null) {
+            PageActionLayout.PageAction.showPwaPageAction();
+
+        } else {
+            PageActionLayout.PageAction.clearPwaPageAction();
+        }
     }
 
     public void setHasOpenSearch(boolean hasOpenSearch) {
