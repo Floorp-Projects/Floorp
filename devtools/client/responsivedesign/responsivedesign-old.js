@@ -209,7 +209,7 @@ ResponsiveUI.prototype = {
   init: Task.async(function* () {
     debug("INIT BEGINS");
     let ready = this.waitForMessage("ResponsiveMode:ChildScriptReady");
-    this.mm.loadFrameScript("resource://devtools/client/responsivedesign/responsivedesign-child.js", true);
+    this.mm.loadFrameScript("resource://devtools/client/responsive.html/browser/content.js", true);
     yield ready;
 
     yield gDevToolsBrowser.loadBrowserStyleSheet(this.mainWindow);
