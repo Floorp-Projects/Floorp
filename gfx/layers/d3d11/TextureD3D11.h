@@ -337,9 +337,10 @@ public:
 
   virtual uint32_t NumSubTextures() const override;
 
-  virtual void AddWRImage(wr::ResourceUpdateQueue& aAPI,
-                          Range<const wr::ImageKey>& aImageKeys,
-                          const wr::ExternalImageId& aExtID) override;
+  virtual void PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+                                   ResourceUpdateOp aOp,
+                                   const Range<wr::ImageKey>& aImageKeys,
+                                   const wr::ExternalImageId& aExtID) override;
 
   virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                  const wr::LayoutRect& aBounds,
@@ -397,9 +398,10 @@ public:
 
   virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
 
-  virtual void AddWRImage(wr::ResourceUpdateQueue& aResources,
-                          Range<const wr::ImageKey>& aImageKeys,
-                          const wr::ExternalImageId& aExtID) override;
+  virtual void PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+                                   ResourceUpdateOp aOp,
+                                   const Range<wr::ImageKey>& aImageKeys,
+                                   const wr::ExternalImageId& aExtID) override;
 
   virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                  const wr::LayoutRect& aBounds,

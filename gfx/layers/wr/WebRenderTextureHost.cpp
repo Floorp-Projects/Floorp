@@ -142,14 +142,15 @@ WebRenderTextureHost::NumSubTextures() const
 }
 
 void
-WebRenderTextureHost::AddWRImage(wr::ResourceUpdateQueue& aResources,
-                                 Range<const wr::ImageKey>& aImageKeys,
-                                 const wr::ExternalImageId& aExtID)
+WebRenderTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+                                          ResourceUpdateOp aOp,
+                                          const Range<wr::ImageKey>& aImageKeys,
+                                          const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(mExternalImageId == aExtID);
 
-  mWrappedTextureHost->AddWRImage(aResources, aImageKeys, aExtID);
+  mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
 }
 
 void
