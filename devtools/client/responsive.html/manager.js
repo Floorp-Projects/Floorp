@@ -31,10 +31,6 @@ loader.lazyRequireGetter(this, "EmulationFront",
 /**
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when
  * opening and closing the responsive UI.
- *
- * While the HTML UI is in an experimental stage, the older ResponsiveUIManager
- * from devtools/client/responsivedesign/responsivedesign.jsm delegates to this
- * object when the pref "devtools.responsive.html.enabled" is true.
  */
 const ResponsiveUIManager = exports.ResponsiveUIManager = {
   activeTabs: new Map(),
