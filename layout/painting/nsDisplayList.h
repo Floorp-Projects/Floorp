@@ -37,6 +37,7 @@
 #include "mozilla/gfx/UserData.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "nsCSSRenderingBorders.h"
+#include "nsAutoLayoutPhase.h"
 #include "nsDisplayItemTypes.h"
 
 #include <stdint.h>
@@ -1474,6 +1475,9 @@ private:
 
   struct PresShellState {
     nsIPresShell* mPresShell;
+#ifdef DEBUG
+    mozilla::Maybe<nsAutoLayoutPhase> mAutoLayoutPhase;
+#endif
     nsIFrame*     mCaretFrame;
     nsRect        mCaretRect;
     mozilla::Maybe<OutOfFlowDisplayData> mFixedBackgroundDisplayData;
