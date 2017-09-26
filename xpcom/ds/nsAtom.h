@@ -67,7 +67,10 @@ public:
   }
 
   // A hashcode that is better distributed than the actual atom pointer, for
-  // use in situations that need a well-distributed hashcode.
+  // use in situations that need a well-distributed hashcode. It's called hash()
+  // rather than Hash() so we can use mozilla::BloomFilter<N, nsAtom>, because
+  // BloomFilter requires elements to implement a function called hash().
+  //
   uint32_t hash() const
   {
     MOZ_ASSERT(!IsHTML5Atom());
