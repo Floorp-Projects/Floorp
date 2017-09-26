@@ -1,0 +1,55 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMHTMLElement.idl"
+
+/**
+ * The nsIDOMHTMLAnchorElement interface is the interface to a [X]HTML
+ * a element.
+ *
+ * This interface is trying to follow the DOM Level 2 HTML specification:
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * with changes from the work-in-progress WHATWG HTML specification:
+ * http://www.whatwg.org/specs/web-apps/current-work/
+ */
+
+[uuid(339c01c8-2d41-4626-b231-eec63f0241b6)]
+interface nsIDOMHTMLAnchorElement : nsISupports
+{
+           attribute DOMString        href;
+           attribute DOMString        target;
+
+           attribute DOMString        ping;
+           attribute DOMString        download;
+
+           attribute DOMString        rel;
+           attribute DOMString        hreflang;
+           attribute DOMString        type;
+
+  /**
+   * An alias for the textContent attribute.
+   */
+  [Null(Stringify)]
+           attribute DOMString        text;
+
+  // URL decomposition IDL attributes
+           attribute DOMString        protocol;
+           attribute DOMString        host;
+           attribute DOMString        hostname;
+           attribute DOMString        port;
+           attribute DOMString        pathname;
+           attribute DOMString        search;
+           attribute DOMString        hash;
+
+
+           attribute DOMString        charset;
+           attribute DOMString        coords;
+           attribute DOMString        name;
+           attribute DOMString        rev;
+           attribute DOMString        shape;
+
+  DOMString                 toString();
+};

@@ -43,6 +43,7 @@
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsCSSRendering.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsNameSpaceManager.h"
 #include <algorithm>
 #ifdef ACCESSIBILITY
@@ -80,7 +81,6 @@
 
 #include "mozilla/dom/Link.h"
 #include "SVGImageContext.h"
-#include "mozilla/dom/HTMLAnchorElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1993,7 +1993,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
       }
       status = (*aHref != nullptr);
 
-      RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContent(content);
+      nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
       if (anchor) {
         anchor->GetTarget(aTarget);
       }
