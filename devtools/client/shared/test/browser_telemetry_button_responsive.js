@@ -10,6 +10,26 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
+const asyncStorage = require("devtools/shared/async-storage");
+
+// Toggling the RDM UI involves several docShell swap operations, which are somewhat slow
+// on debug builds. Usually we are just barely over the limit, so a blanket factor of 2
+// should be enough.
+requestLongerTimeout(2);
+
+flags.testing = true;
+Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
+Services.prefs.setCharPref("devtools.devices.url",
+  "http://example.com/browser/devtools/client/responsive.html/test/browser/devices.json");
+
+registerCleanupFunction(() => {
+  flags.testing = false;
+  Services.prefs.clearUserPref("devtools.devices.url");
+  Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
+  asyncStorage.removeItem("devtools.devices.url_cache");
+  asyncStorage.removeItem("devtools.devices.local");
+});
+
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 
 add_task(function* () {
