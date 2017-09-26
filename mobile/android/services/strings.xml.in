@@ -47,8 +47,6 @@
 <string name="fxaccount_status_history">&fxaccount_status_history;</string>
 <string name="fxaccount_status_passwords">&fxaccount_status_passwords2;</string>
 <string name="fxaccount_status_tabs">&fxaccount_status_tabs;</string>
-<string name="fxaccount_pref_sync_use_metered">&fxaccount_pref_sync_use_metered;</string>
-<string name="fxaccount_pref_sync_use_metered_summary">&fxaccount_pref_sync_use_metered_summary;</string>
 <string name="fxaccount_status_additional_settings">&fxaccount_status_additional_settings;</string>
 <string name="fxaccount_status_legal">&fxaccount_status_legal;</string>
 <string name="fxaccount_status_linktos">&fxaccount_status_linktos2;</string>
