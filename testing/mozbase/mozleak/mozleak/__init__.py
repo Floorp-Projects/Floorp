@@ -6,6 +6,8 @@
 mozleak is a library for extracting memory leaks from leak logs files.
 """
 
+from __future__ import absolute_import
+
 from .leaklog import process_leak_log
 
 __all__ = ['process_leak_log']
