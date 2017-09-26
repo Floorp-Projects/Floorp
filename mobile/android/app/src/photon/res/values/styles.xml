@@ -976,4 +976,21 @@
         <item name="android:layout_toLeftOf">@id/close</item>
     </style>
 
+    <style name="PwaConfirm">
+        <item name="android:layout_width">match_parent</item>
+    </style>
+
+    <style name="PwaConfirm.Title">
+        <item name="android:layout_toRightOf">@id/pwa_confirm_icon_wrap</item>
+        <item name="android:layout_toLeftOf">@id/pwa_confirm_cancel</item>
+    </style>
+
+    <style name="PwaConfirm.Cancel">
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+    <style name="PwaConfirm.Url">
+        <item name="android:layout_alignLeft">@+id/pwa_confirm_title</item>
+    </style>
+
 </resources>

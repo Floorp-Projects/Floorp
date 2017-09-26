@@ -929,6 +929,8 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'toolbar/NavButton.java',
     'toolbar/PageActionLayout.java',
     'toolbar/PhoneTabsButton.java',
+    'toolbar/PwaConfirm.java',
+    'toolbar/PwaOnboarding.java',
     'toolbar/SecurityModeUtil.java',
     'toolbar/ShapedButton.java',
     'toolbar/ShapedButtonFrameLayout.java',

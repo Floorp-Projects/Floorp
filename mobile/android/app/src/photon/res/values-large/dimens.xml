@@ -43,4 +43,7 @@
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">@dimen/browser_toolbar_icon_width</dimen>
+
+    <dimen name="tablet_tab_strip_height_pwa">48dp</dimen>
+
 </resources>
