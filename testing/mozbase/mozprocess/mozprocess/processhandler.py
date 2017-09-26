@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import errno
 import os
@@ -113,7 +113,7 @@ class ProcessHandlerMixin(object):
                                           shell, cwd, env,
                                           universal_newlines, startupinfo, creationflags)
             except OSError:
-                print >> sys.stderr, args
+                print(args, file=sys.stderr)
                 raise
 
         def debug(self, msg):
@@ -174,7 +174,8 @@ class ProcessHandlerMixin(object):
                             # application might already have been terminated itself. Any other
                             # error would indicate a problem in killing the process.
                             if getattr(e, "errno", None) != errno.ESRCH:
-                                print >> sys.stderr, "Could not terminate process: %s" % self.pid
+                                print("Could not terminate process: %s" %
+                                      self.pid, file=sys.stderr)
                                 raise
                     else:
                         os.kill(pid, sig)
@@ -269,8 +270,8 @@ class ProcessHandlerMixin(object):
                 if not (can_create_job or can_nest_jobs) and not self._ignore_children:
                     # We can't create job objects AND the user wanted us to
                     # Warn the user about this.
-                    print >> sys.stderr, \
-                        "ProcessManager UNABLE to use job objects to manage child processes"
+                    print("ProcessManager UNABLE to use job objects to manage "
+                          "child processes", file=sys.stderr)
 
                 # set process creation flags
                 creationflags |= winprocess.CREATE_SUSPENDED
@@ -280,7 +281,7 @@ class ProcessHandlerMixin(object):
                 if not (can_create_job or can_nest_jobs):
                     # Since we've warned, we just log info here to inform you
                     # of the consequence of setting ignore_children = True
-                    print "ProcessManager NOT managing child processes"
+                    print("ProcessManager NOT managing child processes")
 
                 # create the process
                 hp, ht, pid, tid = winprocess.CreateProcess(
@@ -353,10 +354,10 @@ class ProcessHandlerMixin(object):
                         # Spin up our thread for managing the IO Completion Port
                         self._procmgrthread = threading.Thread(target=self._procmgr)
                     except:
-                        print >> sys.stderr, """Exception trying to use job objects;
-falling back to not using job objects for managing child processes"""
+                        print("""Exception trying to use job objects;
+falling back to not using job objects for managing child processes""", file=sys.stderr)
                         tb = traceback.format_exc()
-                        print >> sys.stderr, tb
+                        print(tb, file=sys.stderr)
                         # Ensure no dangling handles left behind
                         self._cleanup_job_io_port()
                 else:
@@ -419,14 +420,14 @@ falling back to not using job objects for managing child processes"""
                         # don't want to mistake that situation for the situation of an unexpected
                         # parent abort (which is what we're looking for here).
                         if diff.seconds > self.MAX_IOCOMPLETION_PORT_NOTIFICATION_DELAY:
-                            print >> sys.stderr, \
-                                "WARNING | IO Completion Port failed to signal process shutdown"
-                            print >> sys.stderr, \
-                                "Parent process %s exited with children alive:" % self.pid
-                            print >> sys.stderr, \
-                                "PIDS: %s" % ', '.join([str(i) for i in self._spawned_procs])
-                            print >> sys.stderr, \
-                                "Attempting to kill them, but no guarantee of success"
+                            print("WARNING | IO Completion Port failed to signal "
+                                  "process shutdown", file=sys.stderr)
+                            print("Parent process %s exited with children alive:"
+                                  % self.pid, file=sys.stderr)
+                            print("PIDS: %s" % ', '.join([str(i) for i in self._spawned_procs]),
+                                  file=sys.stderr)
+                            print("Attempting to kill them, but no guarantee of success",
+                                  file=sys.stderr)
 
                             self.kill()
                             self._process_events.put({self.pid: 'FINISHED'})
@@ -437,16 +438,15 @@ falling back to not using job objects for managing child processes"""
                         errcode = winprocess.GetLastError()
                         if errcode == winprocess.ERROR_ABANDONED_WAIT_0:
                             # Then something has killed the port, break the loop
-                            print >> sys.stderr, "IO Completion Port unexpectedly closed"
+                            print("IO Completion Port unexpectedly closed", file=sys.stderr)
                             self._process_events.put({self.pid: 'FINISHED'})
                             break
                         elif errcode == winprocess.WAIT_TIMEOUT:
                             # Timeouts are expected, just keep on polling
                             continue
                         else:
-                            print >> sys.stderr, \
-                                "Error Code %s trying to query IO Completion Port, " \
-                                "exiting" % errcode
+                            print("Error Code %s trying to query IO Completion Port, "
+                                  "exiting" % errcode, file=sys.stderr)
                             raise WinError(errcode)
                             break
 
@@ -547,11 +547,12 @@ falling back to not using job objects for managing child processes"""
 
                     if rc == winprocess.WAIT_TIMEOUT:
                         # The process isn't dead, so kill it
-                        print "Timed out waiting for process to close, attempting TerminateProcess"
+                        print("Timed out waiting for process to close, "
+                              "attempting TerminateProcess")
                         self.kill()
                     elif rc == winprocess.WAIT_OBJECT_0:
                         # We caught WAIT_OBJECT_0, which indicates all is well
-                        print "Single process terminated successfully"
+                        print("Single process terminated successfully")
                         self.returncode = winprocess.GetExitCodeProcess(self._handle)
                     else:
                         # An error occured we should probably throw
@@ -629,8 +630,8 @@ falling back to not using job objects for managing child processes"""
                         if getattr(e, "errno", None) != 10:
                             # Error 10 is "no child process", which could indicate normal
                             # close
-                            print >> sys.stderr, \
-                                "Encountered error waiting for pid to close: %s" % e
+                            print("Encountered error waiting for pid to close: %s" % e,
+                                  file=sys.stderr)
                             raise
 
                         return self.returncode
@@ -645,8 +646,8 @@ falling back to not using job objects for managing child processes"""
 
         else:
             # An unrecognized platform, we will call the base class for everything
-            print >> sys.stderr, \
-                "Unrecognized platform, process groups may not be managed properly"
+            print("Unrecognized platform, process groups may not "
+                  "be managed properly", file=sys.stderr)
 
             def _wait(self):
                 self.returncode = subprocess.Popen.wait(self)
@@ -855,8 +856,8 @@ falling back to not using job objects for managing child processes"""
 
     # TODO Remove this method when consumers have been fixed
     def waitForFinish(self, timeout=None):
-        print >> sys.stderr, "MOZPROCESS WARNING: ProcessHandler.waitForFinish() is deprecated, " \
-                             "use ProcessHandler.wait() instead"
+        print("MOZPROCESS WARNING: ProcessHandler.waitForFinish() is deprecated, "
+              "use ProcessHandler.wait() instead", file=sys.stderr)
         return self.wait(timeout=timeout)
 
     @property
@@ -890,10 +891,10 @@ falling back to not using job objects for managing child processes"""
 
             if new_pgid and new_pgid != self.proc.pgid:
                 self.proc.detached_pid = new_pid
-                print >> sys.stdout, \
-                    'Child process with id "%s" has been marked as detached because it is no ' \
-                    'longer in the managed process group. Keeping reference to the process id ' \
-                    '"%s" which is the new child process.' % (self.pid, new_pid)
+                print('Child process with id "%s" has been marked as detached because it is no '
+                      'longer in the managed process group. Keeping reference to the process id '
+                      '"%s" which is the new child process.' %
+                      (self.pid, new_pid), file=sys.stdout)
 
 
 class CallableList(list):
