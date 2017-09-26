@@ -1171,7 +1171,7 @@ class XPCShellTests(object):
         global gotSIGINT
 
         # Number of times to repeat test(s) in --verify mode
-        VERIFY_REPEAT = 20
+        VERIFY_REPEAT = 10
 
         if isinstance(options, Namespace):
             options = vars(options)
@@ -1403,9 +1403,24 @@ class XPCShellTests(object):
                                           testClass, mobileArgs, **kwargs)
                 return status
 
+            def step2():
+                # Run tests sequentially, with MOZ_CHAOSMODE enabled.
+                sequential_tests = []
+                self.env["MOZ_CHAOSMODE"] = "3"
+                for i in xrange(VERIFY_REPEAT):
+                    self.testCount += 1
+                    test = testClass(test_object, retry=False,
+                                     mobileArgs=mobileArgs, **kwargs)
+                    sequential_tests.append(test)
+                status = self.runTestList(tests_queue, sequential_tests,
+                                          testClass, mobileArgs, **kwargs)
+                return status
+
             steps = [
                 ("1. Run each test %d times, sequentially." % VERIFY_REPEAT,
                  step1),
+                ("2. Run each test %d times, sequentially, in chaos mode." % VERIFY_REPEAT,
+                 step2),
             ]
             startTime = datetime.now()
             maxTime = timedelta(seconds=options['verifyMaxTime'])
