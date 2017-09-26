@@ -344,6 +344,7 @@ public:
 
   void NotifyComposite(const ImageCompositeNotification& aNotification);
   void ClearImageContainer();
+  void DropImageClient();
 private:
   typedef mozilla::Mutex Mutex;
 
