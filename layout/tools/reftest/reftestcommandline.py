@@ -237,15 +237,11 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           nargs="*",
                           help="Path to test file, manifest file, or directory containing tests")
 
-        self.add_argument("--work-path",
-                          action="store",
-                          dest="workPath",
-                          help="Path to the base dir of all source files.")
-
-        self.add_argument("--obj-path",
-                          action="store",
-                          dest="objPath",
-                          help="Path to the base dir of all object files.")
+        self.add_argument("--sandbox-read-whitelist",
+                          action="append",
+                          dest="sandboxReadWhitelist",
+                          default=[],
+                          help="Path to add to the sandbox whitelist.")
 
         self.add_argument("--verify",
                           action="store_true",
