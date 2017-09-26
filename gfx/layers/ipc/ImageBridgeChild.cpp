@@ -240,13 +240,16 @@ ImageBridgeChild::ShutdownStep2(SynchronousTask* aTask)
 
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
-  Close();
+  if (!mDestroyed) {
+    Close();
+  }
 }
 
 void
 ImageBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mCanSend = false;
+  mDestroyed = true;
   {
     MutexAutoLock lock(mContainerMapLock);
     mImageContainerListeners.Clear();
@@ -650,8 +653,6 @@ ImageBridgeChild::WillShutdown()
 
     task.Wait();
   }
-
-  mDestroyed = true;
 }
 
 void
