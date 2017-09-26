@@ -86,7 +86,6 @@ do_register_cleanup(function() {
   distDir.append("distribution");
   distDir.remove(true);
   Assert.ok(!distDir.exists());
-  Services.prefs.clearUserPref("distribution.testing.loadFromProfile");
 });
 
 add_task(async function() {
