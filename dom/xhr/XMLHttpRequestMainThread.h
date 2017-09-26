@@ -15,7 +15,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIDocument.h"
 #include "nsIStreamListener.h"
-#include "nsWeakReference.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIInterfaceRequestor.h"
@@ -158,6 +157,8 @@ public:
   void GetCORSUnsafeHeaders(nsTArray<nsCString>& aArray) const;
 };
 
+class nsXHRParseEndListener;
+
 // Make sure that any non-DOM interfaces added here are also added to
 // nsXMLHttpRequestXPCOMifier.
 class XMLHttpRequestMainThread final : public XMLHttpRequest,
@@ -166,7 +167,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
                                        public nsIChannelEventSink,
                                        public nsIProgressEventSink,
                                        public nsIInterfaceRequestor,
-                                       public nsSupportsWeakReference,
                                        public nsITimerCallback,
                                        public nsISizeOfEventTarget,
                                        public nsINamed,
@@ -817,6 +817,9 @@ protected:
   // useful to change the correct state when XHR is working sync.
   bool mEventDispatchingSuspended;
 
+  // Our parse-end listener, if we are parsing.
+  RefPtr<nsXHRParseEndListener> mParseEndListener;
+
   static bool sDontWarnAboutSyncXHR;
 };
 
@@ -884,19 +887,18 @@ public:
   NS_DECL_ISUPPORTS
   NS_IMETHOD HandleEvent(nsIDOMEvent *event) override
   {
-    nsCOMPtr<nsIXMLHttpRequest> xhr = do_QueryReferent(mXHR);
-    if (xhr) {
-      static_cast<XMLHttpRequestMainThread*>(xhr.get())->OnBodyParseEnd();
+    if (mXHR) {
+      mXHR->OnBodyParseEnd();
     }
     mXHR = nullptr;
     return NS_OK;
   }
-  explicit nsXHRParseEndListener(nsIXMLHttpRequest* aXHR)
-    : mXHR(do_GetWeakReference(aXHR)) {}
+  explicit nsXHRParseEndListener(XMLHttpRequestMainThread* aXHR)
+    : mXHR(aXHR) {}
 private:
   virtual ~nsXHRParseEndListener() {}
 
-  nsWeakPtr mXHR;
+  XMLHttpRequestMainThread* mXHR;
 };
 
 } // dom namespace
