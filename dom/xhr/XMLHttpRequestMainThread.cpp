@@ -235,6 +235,8 @@ XMLHttpRequestMainThread::~XMLHttpRequestMainThread()
     Abort();
   }
 
+  mParseEndListener = nullptr;
+
   MOZ_ASSERT(!mFlagSyncLooping, "we rather crash than hang");
   mFlagSyncLooping = false;
 
@@ -407,7 +409,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XMLHttpRequestMainThread)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY(nsISizeOfEventTarget)
@@ -2372,10 +2373,11 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   if (mIsHtml) {
     NS_ASSERTION(!mFlagSyncLooping,
       "We weren't supposed to support HTML parsing with XHR!");
+    mParseEndListener = new nsXHRParseEndListener(this);
     nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(mResponseXML);
     EventListenerManager* manager =
       eventTarget->GetOrCreateListenerManager();
-    manager->AddEventListenerByType(new nsXHRParseEndListener(this),
+    manager->AddEventListenerByType(mParseEndListener,
                                     kLiteralString_DOMContentLoaded,
                                     TrustedEventsAtSystemGroupBubble());
     return NS_OK;
@@ -2399,6 +2401,7 @@ void
 XMLHttpRequestMainThread::OnBodyParseEnd()
 {
   mFlagParseBody = false;
+  mParseEndListener = nullptr;
   ChangeStateToDone();
 }
 
