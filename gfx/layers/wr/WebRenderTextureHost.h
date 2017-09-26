@@ -70,11 +70,11 @@ public:
                                    const Range<wr::ImageKey>& aImageKeys,
                                    const wr::ExternalImageId& aExtID) override;
 
-  virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                 const wr::LayoutRect& aBounds,
-                                 const wr::LayoutRect& aClip,
-                                 wr::ImageRendering aFilter,
-                                 Range<const wr::ImageKey>& aImageKeys) override;
+  virtual void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                const wr::LayoutRect& aBounds,
+                                const wr::LayoutRect& aClip,
+                                wr::ImageRendering aFilter,
+                                const Range<wr::ImageKey>& aImageKeys) override;
 
 protected:
   void CreateRenderTextureHost(const SurfaceDescriptor& aDesc, TextureHost* aTexture);

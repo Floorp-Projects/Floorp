@@ -606,11 +606,11 @@ BufferTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
 }
 
 void
-BufferTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                     const wr::LayoutRect& aBounds,
-                                     const wr::LayoutRect& aClip,
-                                     wr::ImageRendering aFilter,
-                                     Range<const wr::ImageKey>& aImageKeys)
+BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                    const wr::LayoutRect& aBounds,
+                                    const wr::LayoutRect& aClip,
+                                    wr::ImageRendering aFilter,
+                                    const Range<wr::ImageKey>& aImageKeys)
 {
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
