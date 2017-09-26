@@ -6,14 +6,12 @@
 
 XPIDL_SOURCES += [
     'mozIWebRequestService.idl',
-    'nsIWebRequestListener.idl',
 ]
 
 XPIDL_MODULE = 'webextensions'
 
 UNIFIED_SOURCES += [
     'ChannelWrapper.cpp',
-    'nsWebRequestListener.cpp',
     'StreamFilter.cpp',
     'StreamFilterChild.cpp',
     'StreamFilterEvents.cpp',
@@ -23,10 +21,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     'PStreamFilter.ipdl',
-]
-
-EXPORTS += [
-    'nsWebRequestListener.h',
 ]
 
 EXPORTS.mozilla += [

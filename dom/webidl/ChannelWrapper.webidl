@@ -169,6 +169,17 @@ interface ChannelWrapper : EventTarget {
 
 
   /**
+   * Dispatched when the channel begins receiving data.
+   */
+  attribute EventHandler onstart;
+
+  /**
+   * Dispatched when the channel has finished receiving data.
+   */
+  attribute EventHandler onstop;
+
+
+  /**
    * Information about the proxy server which is handling this request, or
    * null if the request is not proxied.
    */
