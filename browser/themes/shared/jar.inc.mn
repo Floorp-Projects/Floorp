@@ -170,7 +170,7 @@
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/synced-tabs.svg                (../shared/icons/synced-tabs.svg)
-  skin/classic/browser/toolbar.svg                    (../shared/icons/toolbar.svg)
+  skin/classic/browser/bookmarks-toolbar.svg          (../shared/icons/bookmarks-toolbar.svg)
   skin/classic/browser/webIDE.svg                     (../shared/icons/webIDE.svg)
   skin/classic/browser/window.svg                     (../shared/icons/window.svg)
   skin/classic/browser/zoom-in.svg                    (../shared/icons/zoom-in.svg)

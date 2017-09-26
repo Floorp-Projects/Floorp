@@ -556,6 +556,22 @@ public:
    */
   void SetCustomElementData(CustomElementData* aData);
 
+  /**
+   * Gets the custom element definition used by web components custom element.
+   *
+   * @return The custom element definition or null if element is not a custom
+   *         element or custom element is not defined yet.
+   */
+  CustomElementDefinition* GetCustomElementDefinition() const;
+
+  /**
+   * Sets the custom element definition, called when custom element is created
+   * or upgraded.
+   *
+   * @param aDefinition The custom element definition.
+   */
+  void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
+
 protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the

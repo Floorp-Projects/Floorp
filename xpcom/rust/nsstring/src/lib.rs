@@ -5,12 +5,18 @@
 //! Use `&{mut,} nsA[C]String` for functions in rust which wish to take or
 //! mutate XPCOM strings. The other string types `Deref` to this type.
 //!
-//! Use `ns[C]String<'a>` (`ns[C]String` in C++) for string struct members, and
-//! as an intermediate between rust string data structures (such as `String`,
-//! `Vec<u16>`, `&str`, and `&[u16]`) and `&{mut,} nsA[C]String` (using
-//! `ns[C]String::from(value)`). These conversions, when possible, will not
-//! perform any allocations. When using this type in structs shared with C++,
-//! the correct lifetime argument is usually `'static`.
+//! Use `ns[C]String` (`ns[C]String` in C++) for string struct members, and as
+//! an intermediate between rust string data structures (such as `String` or
+//! `Vec<u16>`) and `&{mut,} nsA[C]String` (using `ns[C]String::from(value)`).
+//! These conversions will attempt to re-use the passed-in buffer, appending a
+//! null.
+//!
+//! Use `ns[C]Str` (`nsDependent[C]String` in C++) as an intermediate between
+//! borrowed rust data structures (such as `&str` and `&[u16]`) and `&{mut,}
+//! nsA[C]String` (using `ns[C]Str::from(value)`). These conversions should not
+//! perform any allocations. This type is not safe to share with `C++` as a
+//! struct field, but passing the borrowed `&{mut,} nsA[C]String` over FFI is
+//! safe.
 //!
 //! Use `nsFixed[C]String` or `ns_auto_[c]string!` for dynamic stack allocated
 //! strings which are expected to hold short string values.
@@ -48,7 +54,7 @@
 //! with the methods `.append`, `.append_utf{8,16}`, and with the `write!`
 //! macro, and can be assigned to with `.assign`.
 //!
-//! ## `ns[C]String<'a>`
+//! ## `ns[C]Str<'a>`
 //!
 //! This type is an maybe-owned string type. It acts similarially to a
 //! `Cow<[{u8,u16}]>`. This type provides `Deref` and `DerefMut` implementations
@@ -57,20 +63,36 @@
 //! storage. When modified this type may re-allocate in order to ensure that it
 //! does not mutate its backing storage.
 //!
-//! `ns[C]String`s can be constructed either with `ns[C]String::new()`, which
-//! creates an empty `ns[C]String<'static>`, or through one of the provided
-//! `From` implementations. Both string types may be constructed `From<&'a
-//! str>`, with `nsCString` having a `'a` lifetime, as the storage is shared
-//! with the `str`, while `nsString` has a `'static` lifetime, as its storage
-//! has to be transcoded.
+//! `ns[C]Str`s can be constructed either with `ns[C]Str::new()`, which creates
+//! an empty `ns[C]Str<'static>`, or through one of the provided `From`
+//! implementations. Only `nsCStr` can be constructed `From<'a str>`, as
+//! constructing a `nsStr` would require transcoding. Use `ns[C]String` instead.
 //!
 //! When passing this type by reference, prefer passing a `&nsA[C]String` or
 //! `&mut nsA[C]String`. to passing this type.
 //!
 //! When passing this type across the language boundary, pass it as `*const
 //! nsA[C]String` for an immutable reference, or `*mut nsA[C]String` for a
-//! mutable reference. This struct may also be included in `#[repr(C)]`
-//! structs shared with C++.
+//! mutable reference.
+//!
+//! ## `ns[C]String`
+//!
+//! This type is an owned, null-terminated string type. This type provides
+//! `Deref` and `DerefMut` implementations to `nsA[C]String`, which provides the
+//! methods for manipulating this type.
+//!
+//! `ns[C]String`s can be constructed either with `ns[C]String::new()`, which
+//! creates an empty `ns[C]String`, or through one of the provided `From`
+//! implementations, which will try to avoid reallocating when possible,
+//! although a terminating `null` will be added.
+//!
+//! When passing this type by reference, prefer passing a `&nsA[C]String` or
+//! `&mut nsA[C]String`. to passing this type.
+//!
+//! When passing this type across the language boundary, pass it as `*const
+//! nsA[C]String` for an immutable reference, or `*mut nsA[C]String` for a
+//! mutable reference. This struct may also be included in `#[repr(C)]` structs
+//! shared with C++.
 //!
 //! ## `nsFixed[C]String<'a>`
 //!
@@ -105,7 +127,7 @@
 //! ## `ns[C]StringRepr`
 //!
 //! This crate also provides the type `ns[C]StringRepr` which acts conceptually
-//! similar to an `ns[C]String<'static>`, however, it does not have a `Drop`
+//! similar to an `ns[C]String`, however, it does not have a `Drop`
 //! implementation.
 //!
 //! If this type is dropped in rust, it will not free its backing storage. This
@@ -122,7 +144,6 @@ use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
 use std::borrow;
 use std::slice;
-use std::ptr;
 use std::mem;
 use std::fmt;
 use std::cmp;
@@ -175,6 +196,7 @@ macro_rules! define_string_types {
 
         AString = $AString: ident;
         String = $String: ident;
+        Str = $Str: ident;
         FixedString = $FixedString: ident;
 
         StringLike = $StringLike: ident;
@@ -205,6 +227,18 @@ macro_rules! define_string_types {
             length: u32,
             dataflags: DataFlags,
             classflags: ClassFlags,
+        }
+
+        impl $StringRepr {
+            fn new(classflags: ClassFlags) -> $StringRepr {
+                static NUL: $char_t = 0;
+                $StringRepr {
+                    data: &NUL,
+                    length: 0,
+                    dataflags: data_flags::TERMINATED | data_flags::LITERAL,
+                    classflags: classflags,
+                }
+            }
         }
 
         impl Deref for $StringRepr {
@@ -385,8 +419,14 @@ macro_rules! define_string_types {
             }
         }
 
-        impl<'a> cmp::PartialEq<$String<'a>> for $AString {
-            fn eq(&self, other: &$String<'a>) -> bool {
+        impl cmp::PartialEq<$String> for $AString {
+            fn eq(&self, other: &$String) -> bool {
+                self.eq(&**other)
+            }
+        }
+
+        impl<'a> cmp::PartialEq<$Str<'a>> for $AString {
+            fn eq(&self, other: &$Str<'a>) -> bool {
                 self.eq(&**other)
             }
         }
@@ -398,26 +438,21 @@ macro_rules! define_string_types {
         }
 
         #[repr(C)]
-        pub struct $String<'a> {
+        pub struct $Str<'a> {
             hdr: $StringRepr,
             _marker: PhantomData<&'a [$char_t]>,
         }
 
-        impl $String<'static> {
-            pub fn new() -> $String<'static> {
-                $String {
-                    hdr: $StringRepr {
-                        data: ptr::null(),
-                        length: 0,
-                        dataflags: DataFlags::empty(),
-                        classflags: class_flags::NULL_TERMINATED,
-                    },
+        impl $Str<'static> {
+            pub fn new() -> $Str<'static> {
+                $Str {
+                    hdr: $StringRepr::new(ClassFlags::empty()),
                     _marker: PhantomData,
                 }
             }
         }
 
-        impl<'a> Drop for $String<'a> {
+        impl<'a> Drop for $Str<'a> {
             fn drop(&mut self) {
                 unsafe {
                     $drop(&mut **self);
@@ -425,65 +460,184 @@ macro_rules! define_string_types {
             }
         }
 
-        impl<'a> Deref for $String<'a> {
+        impl<'a> Deref for $Str<'a> {
             type Target = $AString;
             fn deref(&self) -> &$AString {
                 &self.hdr
             }
         }
 
-        impl<'a> DerefMut for $String<'a> {
+        impl<'a> DerefMut for $Str<'a> {
             fn deref_mut(&mut self) -> &mut $AString {
                 &mut self.hdr
             }
         }
 
-        impl<'a> AsRef<[$char_t]> for $String<'a> {
+        impl<'a> AsRef<[$char_t]> for $Str<'a> {
             fn as_ref(&self) -> &[$char_t] {
                 &self
             }
         }
 
-        impl<'a> From<&'a String> for $String<'a> {
-            fn from(s: &'a String) -> $String<'a> {
-                $String::from(&s[..])
-            }
-        }
-
-        impl<'a> From<&'a Vec<$char_t>> for $String<'a> {
-            fn from(s: &'a Vec<$char_t>) -> $String<'a> {
-                $String::from(&s[..])
-            }
-        }
-
-        impl<'a> From<&'a [$char_t]> for $String<'a> {
-            fn from(s: &'a [$char_t]) -> $String<'a> {
+        impl<'a> From<&'a [$char_t]> for $Str<'a> {
+            fn from(s: &'a [$char_t]) -> $Str<'a> {
                 assert!(s.len() < (u32::MAX as usize));
-                $String {
+                if s.is_empty() {
+                    return $Str::new();
+                }
+                $Str {
                     hdr: $StringRepr {
-                        data: if s.is_empty() { ptr::null() } else { s.as_ptr() },
+                        data: s.as_ptr(),
                         length: s.len() as u32,
                         dataflags: DataFlags::empty(),
-                        classflags: class_flags::NULL_TERMINATED,
+                        classflags: ClassFlags::empty(),
                     },
                     _marker: PhantomData,
                 }
             }
         }
 
-        impl From<Box<[$char_t]>> for $String<'static> {
-            fn from(s: Box<[$char_t]>) -> $String<'static> {
+        impl<'a> From<&'a Vec<$char_t>> for $Str<'a> {
+            fn from(s: &'a Vec<$char_t>) -> $Str<'a> {
+                $Str::from(&s[..])
+            }
+        }
+
+        impl<'a> From<&'a $AString> for $Str<'a> {
+            fn from(s: &'a $AString) -> $Str<'a> {
+                $Str::from(&s[..])
+            }
+        }
+
+        impl<'a> fmt::Write for $Str<'a> {
+            fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+                $AString::write_str(self, s)
+            }
+        }
+
+        impl<'a> fmt::Display for $Str<'a> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                <$AString as fmt::Display>::fmt(self, f)
+            }
+        }
+
+        impl<'a> fmt::Debug for $Str<'a> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                <$AString as fmt::Debug>::fmt(self, f)
+            }
+        }
+
+        impl<'a> cmp::PartialEq for $Str<'a> {
+            fn eq(&self, other: &$Str<'a>) -> bool {
+                $AString::eq(self, other)
+            }
+        }
+
+        impl<'a> cmp::PartialEq<[$char_t]> for $Str<'a> {
+            fn eq(&self, other: &[$char_t]) -> bool {
+                $AString::eq(self, other)
+            }
+        }
+
+        impl<'a, 'b> cmp::PartialEq<&'b [$char_t]> for $Str<'a> {
+            fn eq(&self, other: &&'b [$char_t]) -> bool {
+                $AString::eq(self, *other)
+            }
+        }
+
+        impl<'a> cmp::PartialEq<str> for $Str<'a> {
+            fn eq(&self, other: &str) -> bool {
+                $AString::eq(self, other)
+            }
+        }
+
+        impl<'a, 'b> cmp::PartialEq<&'b str> for $Str<'a> {
+            fn eq(&self, other: &&'b str) -> bool {
+                $AString::eq(self, *other)
+            }
+        }
+
+        #[repr(C)]
+        pub struct $String {
+            hdr: $StringRepr,
+        }
+
+        impl $String {
+            pub fn new() -> $String {
+                $String {
+                    hdr: $StringRepr::new(class_flags::NULL_TERMINATED),
+                }
+            }
+        }
+
+        impl Drop for $String {
+            fn drop(&mut self) {
+                unsafe {
+                    $drop(&mut **self);
+                }
+            }
+        }
+
+        impl Deref for $String {
+            type Target = $AString;
+            fn deref(&self) -> &$AString {
+                &self.hdr
+            }
+        }
+
+        impl DerefMut for $String {
+            fn deref_mut(&mut self) -> &mut $AString {
+                &mut self.hdr
+            }
+        }
+
+        impl AsRef<[$char_t]> for $String {
+            fn as_ref(&self) -> &[$char_t] {
+                &self
+            }
+        }
+
+        impl<'a> From<&'a [$char_t]> for $String {
+            fn from(s: &'a [$char_t]) -> $String {
+                let mut res = $String::new();
+                res.assign(&$Str::from(&s[..]));
+                res
+            }
+        }
+
+        impl<'a> From<&'a Vec<$char_t>> for $String {
+            fn from(s: &'a Vec<$char_t>) -> $String {
+                $String::from(&s[..])
+            }
+        }
+
+        impl<'a> From<&'a $AString> for $String {
+            fn from(s: &'a $AString) -> $String {
+                $String::from(&s[..])
+            }
+        }
+
+        impl From<Box<[$char_t]>> for $String {
+            fn from(s: Box<[$char_t]>) -> $String {
+                s.to_vec().into()
+            }
+        }
+
+        impl From<Vec<$char_t>> for $String {
+            fn from(mut s: Vec<$char_t>) -> $String {
                 assert!(s.len() < (u32::MAX as usize));
                 if s.is_empty() {
                     return $String::new();
                 }
+
+                let length = s.len() as u32;
+                s.push(0); // null terminator
 
                 // SAFETY NOTE: This method produces an data_flags::OWNED
                 // ns[C]String from a Box<[$char_t]>. this is only safe
                 // because in the Gecko tree, we use the same allocator for
                 // Rust code as for C++ code, meaning that our box can be
                 // legally freed with libc::free().
-                let length = s.len() as u32;
                 let ptr = s.as_ptr();
                 mem::forget(s);
                 unsafe {
@@ -493,72 +647,57 @@ macro_rules! define_string_types {
                     hdr: $StringRepr {
                         data: ptr,
                         length: length,
-                        dataflags: data_flags::OWNED,
+                        dataflags: data_flags::OWNED | data_flags::TERMINATED,
                         classflags: class_flags::NULL_TERMINATED,
-                    },
-                    _marker: PhantomData,
+                    }
                 }
             }
         }
 
-        impl From<Vec<$char_t>> for $String<'static> {
-            fn from(s: Vec<$char_t>) -> $String<'static> {
-                s.into_boxed_slice().into()
-            }
-        }
-
-        impl<'a> From<&'a $AString> for $String<'static> {
-            fn from(s: &'a $AString) -> $String<'static> {
-                let mut string = $String::new();
-                string.assign(s);
-                string
-            }
-        }
-
-        impl<'a> fmt::Write for $String<'a> {
+        impl fmt::Write for $String {
             fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
                 $AString::write_str(self, s)
             }
         }
 
-        impl<'a> fmt::Display for $String<'a> {
+        impl fmt::Display for $String {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 <$AString as fmt::Display>::fmt(self, f)
             }
         }
 
-        impl<'a> fmt::Debug for $String<'a> {
+        impl fmt::Debug for $String {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 <$AString as fmt::Debug>::fmt(self, f)
             }
         }
 
-        impl<'a> cmp::PartialEq for $String<'a> {
-            fn eq(&self, other: &$String<'a>) -> bool {
+        impl cmp::PartialEq for $String {
+            fn eq(&self, other: &$String) -> bool {
                 $AString::eq(self, other)
             }
         }
 
-        impl<'a> cmp::PartialEq<[$char_t]> for $String<'a> {
+        impl cmp::PartialEq<[$char_t]> for $String {
             fn eq(&self, other: &[$char_t]) -> bool {
                 $AString::eq(self, other)
             }
         }
 
-        impl<'a, 'b> cmp::PartialEq<&'b [$char_t]> for $String<'a> {
-            fn eq(&self, other: &&'b [$char_t]) -> bool {
+        impl<'a> cmp::PartialEq<&'a [$char_t]> for $String {
+            fn eq(&self, other: &&'a [$char_t]) -> bool {
                 $AString::eq(self, *other)
             }
         }
 
-        impl<'a> cmp::PartialEq<str> for $String<'a> {
+        impl cmp::PartialEq<str> for $String {
             fn eq(&self, other: &str) -> bool {
                 $AString::eq(self, other)
             }
         }
 
-        impl<'a, 'b> cmp::PartialEq<&'b str> for $String<'a> {
-            fn eq(&self, other: &&'b str) -> bool {
+        impl<'a> cmp::PartialEq<&'a str> for $String {
+            fn eq(&self, other: &&'a str) -> bool {
                 $AString::eq(self, *other)
             }
         }
@@ -568,7 +707,7 @@ macro_rules! define_string_types {
         /// buffer, rather than using heap allocations.
         #[repr(C)]
         pub struct $FixedString<'a> {
-            base: $String<'a>,
+            base: $String,
             capacity: u32,
             buffer: *mut $char_t,
             _marker: PhantomData<&'a mut [$char_t]>,
@@ -581,13 +720,7 @@ macro_rules! define_string_types {
                 let buf_ptr = buf.as_mut_ptr();
                 $FixedString {
                     base: $String {
-                        hdr: $StringRepr {
-                            data: ptr::null(),
-                            length: 0,
-                            dataflags: DataFlags::empty(),
-                            classflags: class_flags::FIXED | class_flags::NULL_TERMINATED,
-                        },
-                        _marker: PhantomData,
+                        hdr: $StringRepr::new(class_flags::FIXED | class_flags::NULL_TERMINATED),
                     },
                     capacity: len as u32,
                     buffer: buf_ptr,
@@ -667,7 +800,7 @@ macro_rules! define_string_types {
         /// &[$char_type], and &$AString to a function, while still performing
         /// optimized operations when passed the $AString.
         pub enum $StringAdapter<'a> {
-            Borrowed($String<'a>),
+            Borrowed($Str<'a>),
             Abstract(&'a $AString),
         }
 
@@ -720,7 +853,13 @@ macro_rules! define_string_types {
             }
         }
 
-        impl<'a> $StringLike for $String<'a> {
+        impl<'a> $StringLike for $Str<'a> {
+            fn adapt(&self) -> $StringAdapter {
+                $StringAdapter::Abstract(self)
+            }
+        }
+
+        impl $StringLike for $String {
             fn adapt(&self) -> $StringAdapter {
                 $StringAdapter::Abstract(self)
             }
@@ -734,19 +873,19 @@ macro_rules! define_string_types {
 
         impl $StringLike for [$char_t] {
             fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Borrowed($String::from(self))
+                $StringAdapter::Borrowed($Str::from(self))
             }
         }
 
         impl $StringLike for Vec<$char_t> {
             fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Borrowed($String::from(&self[..]))
+                $StringAdapter::Borrowed($Str::from(&self[..]))
             }
         }
 
         impl $StringLike for Box<[$char_t]> {
             fn adapt(&self) -> $StringAdapter {
-                $StringAdapter::Borrowed($String::from(&self[..]))
+                $StringAdapter::Borrowed($Str::from(&self[..]))
             }
         }
     }
@@ -761,6 +900,7 @@ define_string_types! {
 
     AString = nsACString;
     String = nsCString;
+    Str = nsCStr;
     FixedString = nsFixedCString;
 
     StringLike = nsCStringLike;
@@ -805,20 +945,38 @@ impl nsACString {
     }
 }
 
-impl<'a> From<&'a str> for nsCString<'a> {
-    fn from(s: &'a str) -> nsCString<'a> {
+impl<'a> From<&'a str> for nsCStr<'a> {
+    fn from(s: &'a str) -> nsCStr<'a> {
         s.as_bytes().into()
     }
 }
 
-impl From<Box<str>> for nsCString<'static> {
-    fn from(s: Box<str>) -> nsCString<'static> {
+impl<'a> From<&'a String> for nsCStr<'a> {
+    fn from(s: &'a String) -> nsCStr<'a> {
+        nsCStr::from(&s[..])
+    }
+}
+
+impl<'a> From<&'a str> for nsCString {
+    fn from(s: &'a str) -> nsCString {
+        s.as_bytes().into()
+    }
+}
+
+impl<'a> From<&'a String> for nsCString {
+    fn from(s: &'a String) -> nsCString {
+        nsCString::from(&s[..])
+    }
+}
+
+impl From<Box<str>> for nsCString {
+    fn from(s: Box<str>) -> nsCString {
         s.into_string().into()
     }
 }
 
-impl From<String> for nsCString<'static> {
-    fn from(s: String) -> nsCString<'static> {
+impl From<String> for nsCString {
+    fn from(s: String) -> nsCString {
         s.into_bytes().into()
     }
 }
@@ -851,19 +1009,19 @@ impl cmp::PartialEq<str> for nsACString {
 
 impl nsCStringLike for str {
     fn adapt(&self) -> nsCStringAdapter {
-        nsCStringAdapter::Borrowed(nsCString::from(self))
+        nsCStringAdapter::Borrowed(nsCStr::from(self))
     }
 }
 
 impl nsCStringLike for String {
     fn adapt(&self) -> nsCStringAdapter {
-        nsCStringAdapter::Borrowed(nsCString::from(&self[..]))
+        nsCStringAdapter::Borrowed(nsCStr::from(&self[..]))
     }
 }
 
 impl nsCStringLike for Box<str> {
     fn adapt(&self) -> nsCStringAdapter {
-        nsCStringAdapter::Borrowed(nsCString::from(&self[..]))
+        nsCStringAdapter::Borrowed(nsCStr::from(&self[..]))
     }
 }
 
@@ -884,6 +1042,7 @@ define_string_types! {
 
     AString = nsAString;
     String = nsString;
+    Str = nsStr;
     FixedString = nsFixedString;
 
     StringLike = nsStringLike;
@@ -926,9 +1085,15 @@ impl nsAString {
 
 // NOTE: The From impl for a string slice for nsString produces a <'static>
 // lifetime, as it allocates.
-impl<'a> From<&'a str> for nsString<'static> {
-    fn from(s: &'a str) -> nsString<'static> {
+impl<'a> From<&'a str> for nsString {
+    fn from(s: &'a str) -> nsString {
         s.encode_utf16().collect::<Vec<u16>>().into()
+    }
+}
+
+impl<'a> From<&'a String> for nsString {
+    fn from(s: &'a String) -> nsString {
+        nsString::from(&s[..])
     }
 }
 
@@ -1022,6 +1187,8 @@ pub mod test_helpers {
         nsFixedString,
         nsCString,
         nsString,
+        nsCStr,
+        nsStr,
         nsCStringRepr,
         nsStringRepr,
         data_flags,
@@ -1042,7 +1209,7 @@ pub mod test_helpers {
                 }
             }
         };
-        ($T:ty, $U:ty, $fname:ident) => {
+        ($T:ty, $U:ty, $V:ty, $fname:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
             pub extern fn $fname(size: *mut usize, align: *mut usize) {
@@ -1052,13 +1219,17 @@ pub mod test_helpers {
 
                     assert_eq!(*size, mem::size_of::<$U>());
                     assert_eq!(*align, mem::align_of::<$U>());
+                    assert_eq!(*size, mem::size_of::<$V>());
+                    assert_eq!(*align, mem::align_of::<$V>());
                 }
             }
         }
     }
 
-    size_align_check!(nsStringRepr, nsString<'static>, Rust_Test_ReprSizeAlign_nsString);
-    size_align_check!(nsCStringRepr, nsCString<'static>, Rust_Test_ReprSizeAlign_nsCString);
+    size_align_check!(nsStringRepr, nsString, nsStr<'static>,
+                      Rust_Test_ReprSizeAlign_nsString);
+    size_align_check!(nsCStringRepr, nsCString, nsCStr<'static>,
+                      Rust_Test_ReprSizeAlign_nsCString);
     size_align_check!(nsFixedString<'static>, Rust_Test_ReprSizeAlign_nsFixedString);
     size_align_check!(nsFixedCString<'static>, Rust_Test_ReprSizeAlign_nsFixedCString);
 
@@ -1088,7 +1259,7 @@ pub mod test_helpers {
                 }
             }
         };
-        ($T:ty, $U:ty, $member:ident, $method:ident) => {
+        ($T:ty, $U:ty, $V:ty, $member:ident, $method:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
             pub extern fn $method(size: *mut usize,
@@ -1112,19 +1283,35 @@ pub mod test_helpers {
                                (&tmp.hdr.$member as *const _ as usize) -
                                (&tmp as *const _ as usize));
                     mem::forget(tmp);
+
+                    let tmp: $V = mem::zeroed();
+                    assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
+                    assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
+                    assert_eq!(*offset,
+                               (&tmp.hdr.$member as *const _ as usize) -
+                               (&tmp as *const _ as usize));
+                    mem::forget(tmp);
                 }
             }
         }
     }
 
-    member_check!(nsStringRepr, nsString<'static>, data, Rust_Test_Member_nsString_mData);
-    member_check!(nsStringRepr, nsString<'static>, length, Rust_Test_Member_nsString_mLength);
-    member_check!(nsStringRepr, nsString<'static>, dataflags, Rust_Test_Member_nsString_mDataFlags);
-    member_check!(nsStringRepr, nsString<'static>, classflags, Rust_Test_Member_nsString_mClassFlags);
-    member_check!(nsCStringRepr, nsCString<'static>, data, Rust_Test_Member_nsCString_mData);
-    member_check!(nsCStringRepr, nsCString<'static>, length, Rust_Test_Member_nsCString_mLength);
-    member_check!(nsCStringRepr, nsCString<'static>, dataflags, Rust_Test_Member_nsCString_mDataFlags);
-    member_check!(nsCStringRepr, nsCString<'static>, classflags, Rust_Test_Member_nsCString_mClassFlags);
+    member_check!(nsStringRepr, nsString, nsStr<'static>,
+                  data, Rust_Test_Member_nsString_mData);
+    member_check!(nsStringRepr, nsString, nsStr<'static>,
+                  length, Rust_Test_Member_nsString_mLength);
+    member_check!(nsStringRepr, nsString, nsStr<'static>,
+                  dataflags, Rust_Test_Member_nsString_mDataFlags);
+    member_check!(nsStringRepr, nsString, nsStr<'static>,
+                  classflags, Rust_Test_Member_nsString_mClassFlags);
+    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
+                  data, Rust_Test_Member_nsCString_mData);
+    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
+                  length, Rust_Test_Member_nsCString_mLength);
+    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
+                  dataflags, Rust_Test_Member_nsCString_mDataFlags);
+    member_check!(nsCStringRepr, nsCString, nsCStr<'static>,
+                  classflags, Rust_Test_Member_nsCString_mClassFlags);
     member_check!(nsFixedString<'static>, capacity, Rust_Test_Member_nsFixedString_mFixedCapacity);
     member_check!(nsFixedString<'static>, buffer, Rust_Test_Member_nsFixedString_mFixedBuf);
     member_check!(nsFixedCString<'static>, capacity, Rust_Test_Member_nsFixedCString_mFixedCapacity);

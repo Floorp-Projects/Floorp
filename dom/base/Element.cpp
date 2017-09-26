@@ -3581,7 +3581,7 @@ Element::GetTransformToAncestor(Element& aAncestor)
     // then the call to GetTransformToAncestor will return the transform
     // all the way up through the parent chain.
     transform = nsLayoutUtils::GetTransformToAncestor(primaryFrame,
-      ancestorFrame, true);
+      ancestorFrame, nsIFrame::IN_CSS_UNITS);
   }
 
   DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
@@ -3598,7 +3598,7 @@ Element::GetTransformToParent()
   if (primaryFrame) {
     nsIFrame* parentFrame = primaryFrame->GetParent();
     transform = nsLayoutUtils::GetTransformToAncestor(primaryFrame,
-      parentFrame, true);
+      parentFrame, nsIFrame::IN_CSS_UNITS);
   }
 
   DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
@@ -3613,7 +3613,7 @@ Element::GetTransformToViewport()
   Matrix4x4 transform;
   if (primaryFrame) {
     transform = nsLayoutUtils::GetTransformToAncestor(primaryFrame,
-      nsLayoutUtils::GetDisplayRootFrame(primaryFrame), true);
+      nsLayoutUtils::GetDisplayRootFrame(primaryFrame), nsIFrame::IN_CSS_UNITS);
   }
 
   DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
@@ -4212,6 +4212,26 @@ Element::SetCustomElementData(CustomElementData* aData)
   nsExtendedDOMSlots *slots = ExtendedDOMSlots();
   MOZ_ASSERT(!slots->mCustomElementData, "Custom element data may not be changed once set.");
   slots->mCustomElementData = aData;
+}
+
+CustomElementDefinition*
+Element::GetCustomElementDefinition() const
+{
+  CustomElementData* data = GetCustomElementData();
+  if (!data) {
+    return nullptr;
+  }
+
+  return data->GetCustomElementDefinition();
+}
+
+void
+Element::SetCustomElementDefinition(CustomElementDefinition* aDefinition)
+{
+  CustomElementData* data = GetCustomElementData();
+  MOZ_ASSERT(data);
+
+  data->SetCustomElementDefinition(aDefinition);
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoElementMallocSizeOf)

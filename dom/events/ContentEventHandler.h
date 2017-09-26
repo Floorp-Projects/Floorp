@@ -46,56 +46,62 @@ private:
   class MOZ_STACK_CLASS RawRange final
   {
   public:
-    RawRange()
-      : mStartOffset(0)
-      , mEndOffset(0)
-    {
-    }
+    RawRange() {}
 
     void Clear()
     {
-      mRoot = mStartContainer = mEndContainer = nullptr;
-      mStartOffset = mEndOffset = 0;
+      mRoot = nullptr;
+      mStart = RangeBoundary();
+      mEnd = RangeBoundary();
     }
 
     bool IsPositioned() const
     {
-      return mStartContainer && mEndContainer;
+      return mStart.IsSet() && mEnd.IsSet();
     }
     bool Collapsed() const
     {
-      return mStartContainer == mEndContainer &&
-             mStartOffset == mEndOffset &&
-             IsPositioned();
+      return mStart == mEnd && IsPositioned();
     }
-    nsINode* GetStartContainer() const { return mStartContainer; }
-    nsINode* GetEndContainer() const { return mEndContainer; }
-    uint32_t StartOffset() const { return mStartOffset; }
-    uint32_t EndOffset() const { return mEndOffset; }
+    nsINode* GetStartContainer() const { return mStart.Container(); }
+    nsINode* GetEndContainer() const { return mEnd.Container(); }
+    uint32_t StartOffset() const { return mStart.Offset(); }
+    uint32_t EndOffset() const { return mEnd.Offset(); }
+    nsIContent* StartRef() const { return mStart.Ref(); }
+    nsIContent* EndRef() const { return mEnd.Ref(); }
 
-    nsresult CollapseTo(nsINode* aContainer, uint32_t aOffset)
+    // XXX: Make these use RangeBoundaries...
+    nsresult CollapseTo(const RawRangeBoundary& aBoundary)
     {
-      return SetStartAndEnd(aContainer, aOffset, aContainer, aOffset);
+      return SetStartAndEnd(aBoundary, aBoundary);
     }
-    nsresult SetStart(nsINode* aStartContainer, uint32_t aStartOffset);
-    nsresult SetEnd(nsINode* aEndContainer, uint32_t aEndOffset);
+    nsresult SetStart(const RawRangeBoundary& aStart);
+    nsresult SetEnd(const RawRangeBoundary& aEnd);
+
+    // NOTE: These helpers can hide performance problems, as they perform a
+    // search to find aStartOffset in aStartContainer.
+    nsresult SetStart(nsINode* aStartContainer, uint32_t aStartOffset) {
+      return SetStart(RawRangeBoundary(aStartContainer, aStartOffset));
+    }
+    nsresult SetEnd(nsINode* aEndContainer, uint32_t aEndOffset) {
+      return SetEnd(RawRangeBoundary(aEndContainer, aEndOffset));
+    }
+
     nsresult SetEndAfter(nsINode* aEndContainer);
     void SetStartAndEnd(const nsRange* aRange);
-    nsresult SetStartAndEnd(nsINode* aStartContainer, uint32_t aStartOffset,
-                            nsINode* aEndContainer, uint32_t aEndOffset);
+    nsresult SetStartAndEnd(const RawRangeBoundary& aStart,
+                            const RawRangeBoundary& aEnd);
 
     nsresult SelectNodeContents(nsINode* aNodeToSelectContents);
 
   private:
-    bool IsValidOffset(nsINode* aContainer, uint32_t aOffset) const;
     nsINode* IsValidBoundary(nsINode* aNode) const;
     inline void AssertStartIsBeforeOrEqualToEnd();
 
     nsCOMPtr<nsINode> mRoot;
-    nsCOMPtr<nsINode> mStartContainer;
-    nsCOMPtr<nsINode> mEndContainer;
-    uint32_t mStartOffset;
-    uint32_t mEndOffset;
+
+    RangeBoundary mStart;
+    RangeBoundary mEnd;
   };
 
 public:
@@ -163,76 +169,72 @@ public:
   // When mNode is an element and mOffset is 0, the start position means after
   // the open tag of mNode.
   // This is useful to receive one or more sets of them instead of nsRange.
-  struct NodePosition
+  // This type is intended to be used for short-lived operations, and is thus
+  // marked MOZ_STACK_CLASS.
+  struct MOZ_STACK_CLASS NodePosition : public RangeBoundary
   {
-    nsCOMPtr<nsINode> mNode;
-    int32_t mOffset;
     // Only when mNode is an element node and mOffset is 0, mAfterOpenTag is
     // referred.
-    bool mAfterOpenTag;
+    bool mAfterOpenTag = true;
 
     NodePosition()
-      : mOffset(-1)
-      , mAfterOpenTag(true)
+      : RangeBoundary()
     {
     }
 
-    NodePosition(nsINode* aNode, int32_t aOffset)
-      : mNode(aNode)
-      , mOffset(aOffset)
-      , mAfterOpenTag(true)
+    NodePosition(nsINode* aContainer, int32_t aOffset)
+      : RangeBoundary(aContainer, aOffset)
+    {
+    }
+
+    NodePosition(nsINode* aContainer, nsIContent* aRef)
+      : RangeBoundary(aContainer, aRef)
     {
     }
 
     explicit NodePosition(const nsIFrame::ContentOffsets& aContentOffsets)
-      : mNode(aContentOffsets.content)
-      , mOffset(aContentOffsets.offset)
-      , mAfterOpenTag(true)
-    {
-    }
-
-  protected:
-    NodePosition(nsINode* aNode, int32_t aOffset, bool aAfterOpenTag)
-      : mNode(aNode)
-      , mOffset(aOffset)
-      , mAfterOpenTag(aAfterOpenTag)
+      : RangeBoundary(aContentOffsets.content, aContentOffsets.offset)
     {
     }
 
   public:
     bool operator==(const NodePosition& aOther) const
     {
-      return mNode == aOther.mNode &&
-             mOffset == aOther.mOffset &&
-             mAfterOpenTag == aOther.mAfterOpenTag;
+      return RangeBoundary::operator==(aOther) &&
+        mAfterOpenTag == aOther.mAfterOpenTag;
     }
 
-    bool IsValid() const
-    {
-      return mNode && mOffset >= 0;
-    }
-    bool OffsetIsValid() const
-    {
-      return IsValid() && static_cast<uint32_t>(mOffset) <= mNode->Length();
-    }
     bool IsBeforeOpenTag() const
     {
-      return IsValid() && mNode->IsElement() && !mOffset && !mAfterOpenTag;
+      return IsSet() &&
+        Container()->IsElement() &&
+        !Ref() &&
+        !mAfterOpenTag;
     }
     bool IsImmediatelyAfterOpenTag() const
     {
-      return IsValid() && mNode->IsElement() && !mOffset && mAfterOpenTag;
+      return IsSet() &&
+        Container()->IsElement() &&
+        !Ref() &&
+        mAfterOpenTag;
     }
   };
 
-  // NodePositionBefore isn't good name if mNode isn't an element node nor
-  // mOffset is not 0, though, when mNode is an element node and mOffset is 0,
-  // this is treated as before the open tag of mNode.
+  // NodePositionBefore isn't good name if Container() isn't an element node nor
+  // Offset() is not 0, though, when Container() is an element node and mOffset
+  // is 0, this is treated as before the open tag of Container().
   struct NodePositionBefore final : public NodePosition
   {
-    NodePositionBefore(nsINode* aNode, int32_t aOffset)
-      : NodePosition(aNode, aOffset, false)
+    NodePositionBefore(nsINode* aContainer, int32_t aOffset)
+      : NodePosition(aContainer, aOffset)
     {
+      mAfterOpenTag = false;
+    }
+
+    NodePositionBefore(nsINode* aContainer, nsIContent* aRef)
+      : NodePosition(aContainer, aRef)
+    {
+      mAfterOpenTag = false;
     }
   };
 

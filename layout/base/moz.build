@@ -37,6 +37,7 @@ EXPORTS += [
     'FrameProperties.h',
     'LayoutLogging.h',
     'MobileViewportManager.h',
+    'nsAutoLayoutPhase.h',
     'nsBidi.h',
     'nsBidiPresUtils.h',
     'nsCaret.h',
