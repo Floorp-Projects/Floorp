@@ -23,6 +23,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/RangeBoundary.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -44,6 +45,8 @@ class nsRange final : public nsIDOMRange,
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::DOMRect DOMRect;
   typedef mozilla::dom::DOMRectList DOMRectList;
+  typedef mozilla::RangeBoundary RangeBoundary;
+  typedef mozilla::RawRangeBoundary RawRangeBoundary;
 
   virtual ~nsRange();
 
@@ -82,9 +85,19 @@ public:
     return mRoot;
   }
 
+  const RangeBoundary& StartRef() const
+  {
+    return mStart;
+  }
+
   nsINode* GetStartContainer() const
   {
     return mStart.Container();
+  }
+
+  const RangeBoundary& EndRef() const
+  {
+    return mEnd;
   }
 
   nsINode* GetEndContainer() const
@@ -411,215 +424,6 @@ public:
 
   typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:
-
-  // This class has two specializations, one using reference counting
-  // pointers and one using raw pointers. This helps us avoid unnecessary
-  // AddRef/Release calls.
-  template<typename ParentType, typename RefType>
-  class RangeBoundaryBase
-  {
-    // This class will maintain a reference to the child immediately
-    // before the boundary's offset. We try to avoid computing the
-    // offset as much as possible and just ensure mRef points to the
-    // correct child.
-    //
-    // mParent
-    //    |
-    // [child0] [child1] [child2]
-    //            /      |
-    //         mRef    mOffset=2
-    //
-    // If mOffset == 0, mRef is null.
-    // For text nodes, mRef will always be null and the offset will
-    // be kept up-to-date.
-
-    // for cycle collecting mParent and mRef;
-    friend class nsRange;
-
-  public:
-    RangeBoundaryBase(nsINode* aContainer, nsIContent* aRef)
-      : mParent(aContainer)
-      , mRef(aRef)
-    {
-      if (!mRef) {
-        mOffset = mozilla::Some(0);
-      } else {
-        mOffset.reset();
-      }
-    }
-
-    RangeBoundaryBase(nsINode* aContainer, int32_t aOffset)
-      : mParent(aContainer)
-      , mRef(nullptr)
-      , mOffset(mozilla::Some(aOffset))
-    {
-      if (mParent && mParent->IsContainerNode()) {
-        // Find a reference node
-        if (aOffset == static_cast<int32_t>(aContainer->GetChildCount())) {
-          mRef = aContainer->GetLastChild();
-        } else if (aOffset != 0) {
-          mRef = mParent->GetChildAt(aOffset - 1);
-          MOZ_ASSERT(mRef);
-        }
-
-        MOZ_ASSERT_IF(!mRef, aOffset == 0);
-      }
-
-      MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
-    }
-
-    RangeBoundaryBase()
-      : mParent(nullptr)
-      , mRef(nullptr)
-    {
-    }
-
-    // Needed for initializing RawRangeBoundary from an existing RangeBoundary.
-    explicit RangeBoundaryBase(const RangeBoundaryBase<nsCOMPtr<nsINode>, nsCOMPtr<nsIContent>>& aOther)
-      : mParent(aOther.mParent)
-      , mRef(aOther.mRef)
-      , mOffset(aOther.mOffset)
-    {
-    }
-
-    nsIContent*
-    Ref() const
-    {
-      return mRef;
-    }
-
-    nsINode*
-    Container() const
-    {
-      return mParent;
-    }
-
-    nsIContent*
-    GetChildAtOffset() const
-    {
-      if (!mParent || !mParent->IsContainerNode()) {
-        return nullptr;
-      }
-      if (!mRef) {
-        MOZ_ASSERT(Offset() == 0);
-        return mParent->GetFirstChild();
-      }
-      MOZ_ASSERT(mParent->GetChildAt(Offset()) == mRef->GetNextSibling());
-      return mRef->GetNextSibling();
-    }
-
-    uint32_t
-    Offset() const
-    {
-      if (mOffset.isSome()) {
-        return mOffset.value();
-      }
-
-      if (!mParent) {
-        return 0;
-      }
-
-      MOZ_ASSERT(mRef);
-      MOZ_ASSERT(mRef->GetParentNode() == mParent);
-      mOffset = mozilla::Some(mParent->IndexOf(mRef) + 1);
-
-      return mOffset.value();
-    }
-
-    void
-    InvalidateOffset()
-    {
-      MOZ_ASSERT(mParent);
-      MOZ_ASSERT(mParent->IsContainerNode(), "Range is positioned on a text node!");
-
-      if (!mRef) {
-        MOZ_ASSERT(mOffset.isSome() && mOffset.value() == 0);
-        return;
-      }
-      mOffset.reset();
-    }
-
-    void
-    AdjustOffset(int32_t aDelta)
-    {
-      MOZ_ASSERT(mRef);
-      mOffset = mozilla::Some(Offset() + aDelta);
-    }
-
-    void
-    Set(nsINode* aContainer, int32_t aOffset)
-    {
-      mParent = aContainer;
-      if (mParent && mParent->IsContainerNode()) {
-        // Find a reference node
-        if (aOffset == static_cast<int32_t>(aContainer->GetChildCount())) {
-          mRef = aContainer->GetLastChild();
-        } else if (aOffset == 0) {
-          mRef = nullptr;
-        } else {
-          mRef = mParent->GetChildAt(aOffset - 1);
-          MOZ_ASSERT(mRef);
-        }
-
-        MOZ_ASSERT_IF(!mRef, aOffset == 0);
-      } else {
-        mRef = nullptr;
-      }
-
-      mOffset = mozilla::Some(aOffset);
-      MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
-    }
-
-    void
-    SetAfterRef(nsINode* aParent, nsIContent* aRef)
-    {
-      mParent = aParent;
-      mRef = aRef;
-      if (!mRef) {
-        mOffset = mozilla::Some(0);
-      } else {
-        mOffset.reset();
-      }
-    }
-
-    bool
-    IsSet() const
-    {
-      return mParent && (mRef || mOffset.isSome());
-    }
-
-    // Convenience methods for switching between the two types
-    // of RangeBoundary.
-    RangeBoundaryBase<nsINode*, nsIContent*>
-    AsRaw() const
-    {
-      return RangeBoundaryBase<nsINode*, nsIContent*>(*this);
-    }
-
-    template<typename A, typename B>
-    RangeBoundaryBase& operator=(const RangeBoundaryBase<A,B>& aOther)
-    {
-      // Since the member variables may be nsCOMPtrs, better to try to avoid
-      // extra Release/AddRef calls.
-      if (mParent != aOther.mParent) {
-        mParent = aOther.mParent;
-      }
-      if (mRef != aOther.mRef) {
-        mRef = aOther.mRef;
-      }
-      mOffset = aOther.mOffset;
-      return *this;
-    }
-
-  private:
-    ParentType mParent;
-    RefType mRef;
-
-    mutable mozilla::Maybe<uint32_t> mOffset;
-  };
-
-  typedef RangeBoundaryBase<nsCOMPtr<nsINode>, nsCOMPtr<nsIContent>> RangeBoundary;
-  typedef RangeBoundaryBase<nsINode*, nsIContent*> RawRangeBoundary;
 
   void RegisterCommonAncestor(nsINode* aNode);
   void UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking);

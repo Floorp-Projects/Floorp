@@ -79,7 +79,11 @@ public:
 
   // A hashcode that is better distributed than the actual atom pointer, for
   // use in situations that need a well-distributed hashcode.
-  uint32_t hash() const { return mHash; }
+  uint32_t hash() const
+  {
+    MOZ_ASSERT(!IsHTML5Atom());
+    return mHash;
+  }
 
 protected:
   uint32_t mLength: 30;
@@ -96,6 +100,30 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIAtom, NS_IATOM_IID)
 #define NS_DECL_NSIATOM \
   NS_IMETHOD ToUTF8String(nsACString& _retval) override; \
   NS_IMETHOD_(size_t) SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
+
+class nsAtom final : public nsIAtom
+{
+public:
+  NS_DECL_NSIATOM
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) final;
+  typedef mozilla::TrueType HasThreadSafeRefCnt;
+
+private:
+  friend class nsIAtom;
+  friend class nsAtomFriend;
+  friend class nsHtml5AtomEntry;
+
+  // Construction and destruction is done entirely by |friend|s.
+  nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash);
+  nsAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash);
+  ~nsAtom();
+
+  MozExternalRefCountType DynamicAddRef();
+  MozExternalRefCountType DynamicRelease();
+
+  mozilla::ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+};
 
 // The four forms of NS_Atomize (for use with |nsCOMPtr<nsIAtom>|) return the
 // atom for the string given. At any given time there will always be one atom
