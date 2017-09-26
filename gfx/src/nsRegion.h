@@ -394,6 +394,26 @@ public:
 
   RectIterator RectIter() const { return RectIterator(*this); }
 
+  static inline pixman_box32_t RectToBox(const nsRect &aRect)
+  {
+    pixman_box32_t box = { aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost() };
+    return box;
+  }
+
+  static inline pixman_box32_t RectToBox(const mozilla::gfx::IntRect &aRect)
+  {
+    pixman_box32_t box = { aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost() };
+    return box;
+  }
+
+
+  static inline nsRect BoxToRect(const pixman_box32_t &aBox)
+  {
+    return nsRect(aBox.x1, aBox.y1,
+                  aBox.x2 - aBox.x1,
+                  aBox.y2 - aBox.y1);
+  }
+
 private:
   pixman_region32_t mImpl;
 
@@ -429,26 +449,6 @@ private:
       pixman_region32_reset(&mImpl, &box);
     }
     return *this;
-  }
-
-  static inline pixman_box32_t RectToBox(const nsRect &aRect)
-  {
-    pixman_box32_t box = { aRect.x, aRect.y, aRect.XMost(), aRect.YMost() };
-    return box;
-  }
-
-  static inline pixman_box32_t RectToBox(const mozilla::gfx::IntRect &aRect)
-  {
-    pixman_box32_t box = { aRect.x, aRect.y, aRect.XMost(), aRect.YMost() };
-    return box;
-  }
-
-
-  static inline nsRect BoxToRect(const pixman_box32_t &aBox)
-  {
-    return nsRect(aBox.x1, aBox.y1,
-                  aBox.x2 - aBox.x1,
-                  aBox.y2 - aBox.y1);
   }
 
   pixman_region32_t* Impl() const
