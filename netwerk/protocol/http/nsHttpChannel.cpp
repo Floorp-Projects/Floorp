@@ -5115,7 +5115,7 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
     nsCOMPtr<nsIInputStream> inputStream = mCacheInputStream.forget();
 
     rv = nsInputStreamPump::Create(getter_AddRefs(mCachePump), inputStream,
-                                   int64_t(-1), int64_t(-1), 0, 0, true);
+                                   0, 0, true);
     if (NS_FAILED(rv)) {
         inputStream->Close();
         return rv;
