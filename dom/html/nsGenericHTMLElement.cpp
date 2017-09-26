@@ -317,7 +317,7 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
       // Add the parent's origin to our own to get to the
       // right coordinate system.
       const bool isOffsetParent = !isPositioned && IsOffsetParent(parent);
-      if (!isAbsolutelyPositioned && !isOffsetParent) {
+      if (!isOffsetParent) {
         origin += parent->GetPositionIgnoringScrolling();
       }
 
