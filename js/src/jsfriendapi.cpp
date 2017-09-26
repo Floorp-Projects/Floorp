@@ -1370,20 +1370,6 @@ js::GetDOMProxyShadowsCheck()
     return gDOMProxyShadowsCheck;
 }
 
-static XrayJitInfo* gXrayJitInfo = nullptr;
-
-JS_FRIEND_API(void)
-js::SetXrayJitInfo(XrayJitInfo* info)
-{
-    gXrayJitInfo = info;
-}
-
-XrayJitInfo*
-js::GetXrayJitInfo()
-{
-    return gXrayJitInfo;
-}
-
 bool
 js::detail::IdMatchesAtom(jsid id, JSAtom* atom)
 {
