@@ -473,6 +473,11 @@ public:
   void SetMicrophoneActive(bool aActive);
 
   void CompleteAudioContextOperations(AsyncCubebOperation aOperation);
+
+  /* Fetch, or create a shared thread pool with up to one thread for
+   * AsyncCubebTask. */
+  SharedThreadPool* GetInitShutdownThread();
+
 private:
   /**
    * On certain MacBookPro, the microphone is located near the left speaker.
@@ -538,9 +543,9 @@ private:
     AudioCallbackDriver* mDriver;
   };
 
-  /* Thread for off-main-thread initialization and
-   * shutdown of the audio stream. */
-  nsCOMPtr<nsIThread> mInitShutdownThread;
+  /* Shared thread pool with up to one thread for off-main-thread
+   * initialization and shutdown of the audio stream via AsyncCubebTask. */
+  RefPtr<SharedThreadPool> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
   AutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
   /* Used to queue us to add the mixer callback on first run. */
@@ -566,21 +571,19 @@ public:
 
   nsresult Dispatch(uint32_t aFlags = NS_DISPATCH_NORMAL)
   {
-    nsresult rv = EnsureThread();
-    if (!NS_FAILED(rv)) {
-      rv = sThreadPool->Dispatch(this, aFlags);
+    SharedThreadPool* threadPool = mDriver->GetInitShutdownThread();
+    if (!threadPool) {
+      return NS_ERROR_FAILURE;
     }
-    return rv;
+    return threadPool->Dispatch(this, aFlags);
   }
 
 protected:
   virtual ~AsyncCubebTask();
 
 private:
-  static nsresult EnsureThread();
-
   NS_IMETHOD Run() override final;
-  static StaticRefPtr<nsIThreadPool> sThreadPool;
+
   RefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
   RefPtr<MediaStreamGraphImpl> mShutdownGrip;
