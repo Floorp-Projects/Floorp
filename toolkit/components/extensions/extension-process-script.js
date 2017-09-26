@@ -380,6 +380,16 @@ ExtensionManager = {
       }
 
       case "Schema:Add": {
+        // If we're given a Map, the ordering of the initial items
+        // matters, so swap with our current data to make sure its
+        // entries appear first.
+        if (typeof data.get === "function") {
+          [this.schemaJSON, data] = [data, this.schemaJSON];
+
+          Services.cpmm.initialProcessData["Extension:Schemas"] =
+            this.schemaJSON;
+        }
+
         for (let [url, schema] of data) {
           this.schemaJSON.set(url, schema);
         }
