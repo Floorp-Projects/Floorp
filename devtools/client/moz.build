@@ -22,7 +22,6 @@ DIRS += [
     'performance',
     'preferences',
     'responsive.html',
-    'responsivedesign',
     'scratchpad',
     'shadereditor',
     'shared',
