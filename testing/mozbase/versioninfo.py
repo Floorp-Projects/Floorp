@@ -9,6 +9,8 @@ List mozbase package dependencies or generate changelogs
 from commit messages.
 """
 
+from __future__ import absolute_import, print_function
+
 from collections import Iterable
 from distutils.version import StrictVersion
 import argparse
@@ -84,7 +86,7 @@ def changelog(args):
         return '\n'.join(lines)
 
     changelog = map(prettify, changelog)
-    print '\n'.join(changelog)
+    print('\n'.join(changelog))
 
 
 def dependencies(args):
@@ -100,8 +102,8 @@ def dependencies(args):
 
     # print package version information
     for value in info.values():
-        print '%s %s : %s' % (value['Name'], value['Version'],
-                              ', '.join(dependencies[value['Name']]))
+        print('%s %s : %s' % (value['Name'], value['Version'],
+                              ', '.join(dependencies[value['Name']])))
 
 
 def main(args=sys.argv[1:]):
