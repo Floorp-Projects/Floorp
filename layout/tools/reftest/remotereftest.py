@@ -356,6 +356,9 @@ class RemoteReftest(RefTest):
                                                       debuggerInfo=debuggerInfo,
                                                       symbolsPath=symbolsPath,
                                                       timeout=timeout)
+        if status == 1:
+            # when max run time exceeded, avoid restart
+            lastTestSeen = RefTest.TEST_SEEN_FINAL
         return status, lastTestSeen
 
     def cleanup(self, profileDir):
