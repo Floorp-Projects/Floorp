@@ -6,7 +6,6 @@
 
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/EventQueue.h"
-#include "LabeledEventQueue.h"
 
 #include "LeakRefPtr.h"
 #include "nsComponentManagerUtils.h"
