@@ -1,0 +1,9 @@
+<style>:invalid { color: red; }</style>
+<form id="theForm"></form>
+<button id="button" form="theForm">
+<script>
+window.onload = function() {
+  button.setCustomValidity("foo");
+  document.body.remove();
+}
+</script>
