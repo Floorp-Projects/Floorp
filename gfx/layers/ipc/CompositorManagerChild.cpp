@@ -24,14 +24,16 @@ using gfx::GPUProcessManager;
 StaticRefPtr<CompositorManagerChild> CompositorManagerChild::sInstance;
 
 /* static */ bool
-CompositorManagerChild::IsInitialized(base::ProcessId aGPUPid)
+CompositorManagerChild::IsInitialized(uint64_t aProcessToken)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return sInstance && sInstance->CanSend() && sInstance->OtherPid() == aGPUPid;
+  return sInstance && sInstance->CanSend() &&
+         sInstance->mProcessToken == aProcessToken;
 }
 
 /* static */ bool
-CompositorManagerChild::InitSameProcess(uint32_t aNamespace)
+CompositorManagerChild::InitSameProcess(uint32_t aNamespace,
+                                        uint64_t aProcessToken)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_WARN_IF(IsInitialized(base::GetCurrentProcId()))) {
@@ -41,20 +43,30 @@ CompositorManagerChild::InitSameProcess(uint32_t aNamespace)
 
   RefPtr<CompositorManagerParent> parent =
     CompositorManagerParent::CreateSameProcess();
-  sInstance = new CompositorManagerChild(parent, aNamespace);
+  RefPtr<CompositorManagerChild> child =
+    new CompositorManagerChild(parent, aProcessToken, aNamespace);
+  if (NS_WARN_IF(!child->CanSend())) {
+    MOZ_ASSERT_UNREACHABLE("Failed to open same process protocol");
+    return false;
+  }
+
+  parent->BindComplete();
+  sInstance = child.forget();
   return true;
 }
 
 /* static */ bool
 CompositorManagerChild::Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
-                             uint32_t aNamespace)
+                             uint32_t aNamespace,
+                             uint64_t aProcessToken /* = 0 */)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (sInstance) {
     MOZ_ASSERT(sInstance->mNamespace != aNamespace);
   }
 
-  sInstance = new CompositorManagerChild(Move(aEndpoint), aNamespace);
+  sInstance = new CompositorManagerChild(Move(aEndpoint), aProcessToken,
+                                         aNamespace);
   return sInstance->CanSend();
 }
 
@@ -73,14 +85,14 @@ CompositorManagerChild::Shutdown()
 }
 
 /* static */ void
-CompositorManagerChild::OnGPUProcessLost()
+CompositorManagerChild::OnGPUProcessLost(uint64_t aProcessToken)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Since GPUChild and CompositorManagerChild will race on ActorDestroy, we
   // cannot know if the CompositorManagerChild is about to be released but has
   // yet to be. As such, we want to pre-emptively set mCanSend to false.
-  if (sInstance) {
+  if (sInstance && sInstance->mProcessToken == aProcessToken) {
     sInstance->mCanSend = false;
   }
 }
@@ -162,10 +174,12 @@ CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(LayerManager* aL
 }
 
 CompositorManagerChild::CompositorManagerChild(CompositorManagerParent* aParent,
+                                               uint64_t aProcessToken,
                                                uint32_t aNamespace)
-  : mCanSend(false)
+  : mProcessToken(aProcessToken)
   , mNamespace(aNamespace)
   , mResourceId(0)
+  , mCanSend(false)
 {
   MOZ_ASSERT(aParent);
 
@@ -182,10 +196,12 @@ CompositorManagerChild::CompositorManagerChild(CompositorManagerParent* aParent,
 }
 
 CompositorManagerChild::CompositorManagerChild(Endpoint<PCompositorManagerChild>&& aEndpoint,
+                                               uint64_t aProcessToken,
                                                uint32_t aNamespace)
-  : mCanSend(false)
+  : mProcessToken(aProcessToken)
   , mNamespace(aNamespace)
   , mResourceId(0)
+  , mCanSend(false)
 {
   if (NS_WARN_IF(!aEndpoint.Bind(this))) {
     return;
