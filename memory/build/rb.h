@@ -230,176 +230,6 @@ public:
     }                                                                          \
   } while (0)
 
-#define rb_remove(a_type, a_field, a_cmp, a_tree, a_node)                      \
-  do {                                                                         \
-    a_type rbp_r_s;                                                            \
-    a_type *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;                  \
-    int rbp_r_cmp;                                                             \
-    a_field(&rbp_r_s).SetLeft((a_tree)->rbt_root);                             \
-    a_field(&rbp_r_s).SetRight(&(a_tree)->rbt_nil);                            \
-    a_field(&rbp_r_s).SetColor(NodeColor::Black);                              \
-    rbp_r_p = &rbp_r_s;                                                        \
-    rbp_r_c = (a_tree)->rbt_root;                                              \
-    rbp_r_xp = &(a_tree)->rbt_nil;                                             \
-    /* Iterate down the tree, but always transform 2-nodes to 3- or   */       \
-    /* 4-nodes in order to maintain the invariant that the current    */       \
-    /* node is not a 2-node.  This allows simple deletion once a leaf */       \
-    /* is reached.  Handle the root specially though, since there may */       \
-    /* be no way to convert it from a 2-node to a 3-node.             */       \
-    rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);                                    \
-    if (rbp_r_cmp < 0) {                                                       \
-      rbp_r_t = a_field(rbp_r_c).Left();                                       \
-      rbp_r_u = a_field(rbp_r_t).Left();                                       \
-      if (a_field(rbp_r_t).IsBlack() && a_field(rbp_r_u).IsBlack()) {          \
-        /* Apply standard transform to prepare for left move.     */           \
-        rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);                  \
-        a_field(rbp_r_t).SetColor(NodeColor::Black);                           \
-        a_field(rbp_r_p).SetLeft(rbp_r_t);                                     \
-        rbp_r_c = rbp_r_t;                                                     \
-      } else {                                                                 \
-        /* Move left.                                             */           \
-        rbp_r_p = rbp_r_c;                                                     \
-        rbp_r_c = a_field(rbp_r_c).Left();                                     \
-      }                                                                        \
-    } else {                                                                   \
-      if (rbp_r_cmp == 0) {                                                    \
-        MOZ_ASSERT((a_node) == rbp_r_c);                                       \
-        if (a_field(rbp_r_c).Right() == &(a_tree)->rbt_nil) {                  \
-          /* Delete root node (which is also a leaf node).      */             \
-          if (a_field(rbp_r_c).Left() != &(a_tree)->rbt_nil) {                 \
-            rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);                 \
-            a_field(rbp_r_t).SetRight(&(a_tree)->rbt_nil);                     \
-          } else {                                                             \
-            rbp_r_t = &(a_tree)->rbt_nil;                                      \
-          }                                                                    \
-          a_field(rbp_r_p).SetLeft(rbp_r_t);                                   \
-        } else {                                                               \
-          /* This is the node we want to delete, but we will    */             \
-          /* instead swap it with its successor and delete the  */             \
-          /* successor.  Record enough information to do the    */             \
-          /* swap later.  rbp_r_xp is the a_node's parent.      */             \
-          rbp_r_xp = rbp_r_p;                                                  \
-          rbp_r_cmp = 1; /* Note that deletion is incomplete.   */             \
-        }                                                                      \
-      }                                                                        \
-      if (rbp_r_cmp == 1) {                                                    \
-        if (a_field(a_field(a_field(rbp_r_c).Right()).Left()).IsBlack()) {     \
-          rbp_r_t = a_field(rbp_r_c).Left();                                   \
-          if (a_field(rbp_r_t).IsRed()) {                                      \
-            /* Standard transform.                            */               \
-            rbp_move_red_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
-          } else {                                                             \
-            /* Root-specific transform.                       */               \
-            a_field(rbp_r_c).SetColor(NodeColor::Red);                         \
-            rbp_r_u = a_field(rbp_r_t).Left();                                 \
-            if (a_field(rbp_r_u).IsRed()) {                                    \
-              a_field(rbp_r_u).SetColor(NodeColor::Black);                     \
-              rbp_rotate_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
-              rbp_rotate_left(a_type, a_field, rbp_r_c, rbp_r_u);              \
-              a_field(rbp_r_t).SetRight(rbp_r_u);                              \
-            } else {                                                           \
-              a_field(rbp_r_t).SetColor(NodeColor::Red);                       \
-              rbp_rotate_left(a_type, a_field, rbp_r_c, rbp_r_t);              \
-            }                                                                  \
-          }                                                                    \
-          a_field(rbp_r_p).SetLeft(rbp_r_t);                                   \
-          rbp_r_c = rbp_r_t;                                                   \
-        } else {                                                               \
-          /* Move right.                                        */             \
-          rbp_r_p = rbp_r_c;                                                   \
-          rbp_r_c = a_field(rbp_r_c).Right();                                  \
-        }                                                                      \
-      }                                                                        \
-    }                                                                          \
-    if (rbp_r_cmp != 0) {                                                      \
-      while (true) {                                                           \
-        MOZ_ASSERT(rbp_r_p != &(a_tree)->rbt_nil);                             \
-        rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);                                \
-        if (rbp_r_cmp < 0) {                                                   \
-          rbp_r_t = a_field(rbp_r_c).Left();                                   \
-          if (rbp_r_t == &(a_tree)->rbt_nil) {                                 \
-            /* rbp_r_c now refers to the successor node to    */               \
-            /* relocate, and rbp_r_xp/a_node refer to the     */               \
-            /* context for the relocation.                    */               \
-            if (a_field(rbp_r_xp).Left() == (a_node)) {                        \
-              a_field(rbp_r_xp).SetLeft(rbp_r_c);                              \
-            } else {                                                           \
-              MOZ_ASSERT(a_field(rbp_r_xp).Right() == (a_node));               \
-              a_field(rbp_r_xp).SetRight(rbp_r_c);                             \
-            }                                                                  \
-            a_field(rbp_r_c).SetLeft(a_field(a_node).Left());                  \
-            a_field(rbp_r_c).SetRight(a_field(a_node).Right());                \
-            a_field(rbp_r_c).SetColor(a_field(a_node).Color());                \
-            if (a_field(rbp_r_p).Left() == rbp_r_c) {                          \
-              a_field(rbp_r_p).SetLeft(&(a_tree)->rbt_nil);                    \
-            } else {                                                           \
-              MOZ_ASSERT(a_field(rbp_r_p).Right() == rbp_r_c);                 \
-              a_field(rbp_r_p).SetRight(&(a_tree)->rbt_nil);                   \
-            }                                                                  \
-            break;                                                             \
-          }                                                                    \
-          rbp_r_u = a_field(rbp_r_t).Left();                                   \
-          if (a_field(rbp_r_t).IsBlack() && a_field(rbp_r_u).IsBlack()) {      \
-            rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);              \
-            if (a_field(rbp_r_p).Left() == rbp_r_c) {                          \
-              a_field(rbp_r_p).SetLeft(rbp_r_t);                               \
-            } else {                                                           \
-              a_field(rbp_r_p).SetRight(rbp_r_t);                              \
-            }                                                                  \
-            rbp_r_c = rbp_r_t;                                                 \
-          } else {                                                             \
-            rbp_r_p = rbp_r_c;                                                 \
-            rbp_r_c = a_field(rbp_r_c).Left();                                 \
-          }                                                                    \
-        } else {                                                               \
-          /* Check whether to delete this node (it has to be    */             \
-          /* the correct node and a leaf node).                 */             \
-          if (rbp_r_cmp == 0) {                                                \
-            MOZ_ASSERT((a_node) == rbp_r_c);                                   \
-            if (a_field(rbp_r_c).Right() == &(a_tree)->rbt_nil) {              \
-              /* Delete leaf node.                          */                 \
-              if (a_field(rbp_r_c).Left() != &(a_tree)->rbt_nil) {             \
-                rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
-                a_field(rbp_r_t).SetRight(&(a_tree)->rbt_nil);                 \
-              } else {                                                         \
-                rbp_r_t = &(a_tree)->rbt_nil;                                  \
-              }                                                                \
-              if (a_field(rbp_r_p).Left() == rbp_r_c) {                        \
-                a_field(rbp_r_p).SetLeft(rbp_r_t);                             \
-              } else {                                                         \
-                a_field(rbp_r_p).SetRight(rbp_r_t);                            \
-              }                                                                \
-              break;                                                           \
-            } else {                                                           \
-              /* This is the node we want to delete, but we */                 \
-              /* will instead swap it with its successor    */                 \
-              /* and delete the successor.  Record enough   */                 \
-              /* information to do the swap later.          */                 \
-              /* rbp_r_xp is a_node's parent.               */                 \
-              rbp_r_xp = rbp_r_p;                                              \
-            }                                                                  \
-          }                                                                    \
-          rbp_r_t = a_field(rbp_r_c).Right();                                  \
-          rbp_r_u = a_field(rbp_r_t).Left();                                   \
-          if (a_field(rbp_r_u).IsBlack()) {                                    \
-            rbp_move_red_right(a_type, a_field, rbp_r_c, rbp_r_t);             \
-            if (a_field(rbp_r_p).Left() == rbp_r_c) {                          \
-              a_field(rbp_r_p).SetLeft(rbp_r_t);                               \
-            } else {                                                           \
-              a_field(rbp_r_p).SetRight(rbp_r_t);                              \
-            }                                                                  \
-            rbp_r_c = rbp_r_t;                                                 \
-          } else {                                                             \
-            rbp_r_p = rbp_r_c;                                                 \
-            rbp_r_c = a_field(rbp_r_c).Right();                                \
-          }                                                                    \
-        }                                                                      \
-      }                                                                        \
-    }                                                                          \
-    /* Update root.                                                   */       \
-    (a_tree)->rbt_root = a_field(&rbp_r_s).Left();                             \
-  } while (0)
-
 /* Tree structure. */
 template<typename T, typename Trait>
 struct RedBlackTree
@@ -607,7 +437,179 @@ struct RedBlackTree
 
   void Remove(T* aNode)
   {
-    rb_remove(T, Trait::GetTreeNode, Trait::Compare, this, aNode);
+    T rbp_r_s;
+    T *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;
+    int rbp_r_cmp;
+    Trait::GetTreeNode(&rbp_r_s).SetLeft(rbt_root);
+    Trait::GetTreeNode(&rbp_r_s).SetRight(&rbt_nil);
+    Trait::GetTreeNode(&rbp_r_s).SetColor(NodeColor::Black);
+    rbp_r_p = &rbp_r_s;
+    rbp_r_c = rbt_root;
+    rbp_r_xp = &rbt_nil;
+    /* Iterate down the tree, but always transform 2-nodes to 3- or
+     * 4-nodes in order to maintain the invariant that the current
+     * node is not a 2-node. This allows simple deletion once a leaf
+     * is reached. Handle the root specially though, since there may
+     * be no way to convert it from a 2-node to a 3-node. */
+    rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
+    if (rbp_r_cmp < 0) {
+      rbp_r_t = Trait::GetTreeNode(rbp_r_c).Left();
+      rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
+      if (Trait::GetTreeNode(rbp_r_t).IsBlack() &&
+          Trait::GetTreeNode(rbp_r_u).IsBlack()) {
+        /* Apply standard transform to prepare for left move. */
+        rbp_move_red_left(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+        Trait::GetTreeNode(rbp_r_t).SetColor(NodeColor::Black);
+        Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+        rbp_r_c = rbp_r_t;
+      } else {
+        /* Move left. */
+        rbp_r_p = rbp_r_c;
+        rbp_r_c = Trait::GetTreeNode(rbp_r_c).Left();
+      }
+    } else {
+      if (rbp_r_cmp == 0) {
+        MOZ_ASSERT(aNode == rbp_r_c);
+        if (Trait::GetTreeNode(rbp_r_c).Right() == &rbt_nil) {
+          /* Delete root node (which is also a leaf node). */
+          if (Trait::GetTreeNode(rbp_r_c).Left() != &rbt_nil) {
+            rbp_lean_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+            Trait::GetTreeNode(rbp_r_t).SetRight(&rbt_nil);
+          } else {
+            rbp_r_t = &rbt_nil;
+          }
+          Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+        } else {
+          /* This is the node we want to delete, but we will
+           * instead swap it with its successor and delete the
+           * successor. Record enough information to do the
+           * swap later. rbp_r_xp is the aNode's parent. */
+          rbp_r_xp = rbp_r_p;
+          rbp_r_cmp = 1; /* Note that deletion is incomplete. */
+        }
+      }
+      if (rbp_r_cmp == 1) {
+        if (Trait::GetTreeNode(
+              Trait::GetTreeNode(Trait::GetTreeNode(rbp_r_c).Right()).Left())
+              .IsBlack()) {
+          rbp_r_t = Trait::GetTreeNode(rbp_r_c).Left();
+          if (Trait::GetTreeNode(rbp_r_t).IsRed()) {
+            /* Standard transform. */
+            rbp_move_red_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+          } else {
+            /* Root-specific transform. */
+            Trait::GetTreeNode(rbp_r_c).SetColor(NodeColor::Red);
+            rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
+            if (Trait::GetTreeNode(rbp_r_u).IsRed()) {
+              Trait::GetTreeNode(rbp_r_u).SetColor(NodeColor::Black);
+              rbp_rotate_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+              rbp_rotate_left(T, Trait::GetTreeNode, rbp_r_c, rbp_r_u);
+              Trait::GetTreeNode(rbp_r_t).SetRight(rbp_r_u);
+            } else {
+              Trait::GetTreeNode(rbp_r_t).SetColor(NodeColor::Red);
+              rbp_rotate_left(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+            }
+          }
+          Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+          rbp_r_c = rbp_r_t;
+        } else {
+          /* Move right. */
+          rbp_r_p = rbp_r_c;
+          rbp_r_c = Trait::GetTreeNode(rbp_r_c).Right();
+        }
+      }
+    }
+    if (rbp_r_cmp != 0) {
+      while (true) {
+        MOZ_ASSERT(rbp_r_p != &rbt_nil);
+        rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
+        if (rbp_r_cmp < 0) {
+          rbp_r_t = Trait::GetTreeNode(rbp_r_c).Left();
+          if (rbp_r_t == &rbt_nil) {
+            /* rbp_r_c now refers to the successor node to
+             * relocate, and rbp_r_xp/aNode refer to the
+             * context for the relocation. */
+            if (Trait::GetTreeNode(rbp_r_xp).Left() == (aNode)) {
+              Trait::GetTreeNode(rbp_r_xp).SetLeft(rbp_r_c);
+            } else {
+              MOZ_ASSERT(Trait::GetTreeNode(rbp_r_xp).Right() == (aNode));
+              Trait::GetTreeNode(rbp_r_xp).SetRight(rbp_r_c);
+            }
+            Trait::GetTreeNode(rbp_r_c).SetLeft(
+              Trait::GetTreeNode(aNode).Left());
+            Trait::GetTreeNode(rbp_r_c).SetRight(
+              Trait::GetTreeNode(aNode).Right());
+            Trait::GetTreeNode(rbp_r_c).SetColor(
+              Trait::GetTreeNode(aNode).Color());
+            if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
+              Trait::GetTreeNode(rbp_r_p).SetLeft(&rbt_nil);
+            } else {
+              MOZ_ASSERT(Trait::GetTreeNode(rbp_r_p).Right() == rbp_r_c);
+              Trait::GetTreeNode(rbp_r_p).SetRight(&rbt_nil);
+            }
+            break;
+          }
+          rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
+          if (Trait::GetTreeNode(rbp_r_t).IsBlack() &&
+              Trait::GetTreeNode(rbp_r_u).IsBlack()) {
+            rbp_move_red_left(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+            if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
+              Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+            } else {
+              Trait::GetTreeNode(rbp_r_p).SetRight(rbp_r_t);
+            }
+            rbp_r_c = rbp_r_t;
+          } else {
+            rbp_r_p = rbp_r_c;
+            rbp_r_c = Trait::GetTreeNode(rbp_r_c).Left();
+          }
+        } else {
+          /* Check whether to delete this node (it has to be
+           * the correct node and a leaf node). */
+          if (rbp_r_cmp == 0) {
+            MOZ_ASSERT(aNode == rbp_r_c);
+            if (Trait::GetTreeNode(rbp_r_c).Right() == &rbt_nil) {
+              /* Delete leaf node. */
+              if (Trait::GetTreeNode(rbp_r_c).Left() != &rbt_nil) {
+                rbp_lean_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+                Trait::GetTreeNode(rbp_r_t).SetRight(&rbt_nil);
+              } else {
+                rbp_r_t = &rbt_nil;
+              }
+              if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
+                Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+              } else {
+                Trait::GetTreeNode(rbp_r_p).SetRight(rbp_r_t);
+              }
+              break;
+            } else {
+              /* This is the node we want to delete, but we
+               * will instead swap it with its successor
+               * and delete the successor. Record enough
+               * information to do the swap later.
+               * rbp_r_xp is aNode's parent. */
+              rbp_r_xp = rbp_r_p;
+            }
+          }
+          rbp_r_t = Trait::GetTreeNode(rbp_r_c).Right();
+          rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
+          if (Trait::GetTreeNode(rbp_r_u).IsBlack()) {
+            rbp_move_red_right(T, Trait::GetTreeNode, rbp_r_c, rbp_r_t);
+            if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
+              Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+            } else {
+              Trait::GetTreeNode(rbp_r_p).SetRight(rbp_r_t);
+            }
+            rbp_r_c = rbp_r_t;
+          } else {
+            rbp_r_p = rbp_r_c;
+            rbp_r_c = Trait::GetTreeNode(rbp_r_c).Right();
+          }
+        }
+      }
+    }
+    /* Update root. */
+    rbt_root = Trait::GetTreeNode(&rbp_r_s).Left();
   }
 };
 
