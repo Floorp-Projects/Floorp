@@ -666,7 +666,7 @@ SERVO_BINDING_FUNC(Servo_HasPendingRestyleAncestor, bool,
                    RawGeckoElementBorrowed element)
 
 SERVO_BINDING_FUNC(Servo_GetArcStringData, void,
-                   const RustString*, uint8_t** chars, uint32_t* len);
+                   const RustString*, uint8_t const** chars, uint32_t* len);
 SERVO_BINDING_FUNC(Servo_ReleaseArcStringData, void,
                    const mozilla::ServoRawOffsetArc<RustString>* string);
 SERVO_BINDING_FUNC(Servo_CloneArcStringData, mozilla::ServoRawOffsetArc<RustString>,
