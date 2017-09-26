@@ -106,11 +106,6 @@ const Curl = {
       command.push("-I");
     }
 
-    // Add http version.
-    if (data.httpVersion && data.httpVersion != DEFAULT_HTTP_VERSION) {
-      command.push("--" + data.httpVersion.split("/")[1]);
-    }
-
     // Add request headers.
     let headers = data.headers;
     if (multipartRequest) {
