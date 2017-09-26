@@ -436,7 +436,7 @@ public class PayloadUploadDelegateTest {
 
         assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
         assertTrue(payloadDispatcher.recordUploadFailed);
-        assertTrue(payloadDispatcher.storeFailed);
+        assertTrue(payloadDispatcher.storeFailed.get());
 
         assertTrue(((MockRepositorySessionStoreDelegate) sessionStoreDelegate).storeFailedException instanceof CollectionConcurrentModificationException);
     }
