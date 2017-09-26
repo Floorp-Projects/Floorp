@@ -14,10 +14,6 @@ const { assert, dumpn } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
 
-const TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
-                             "Uint32Array", "Int8Array", "Int16Array", "Int32Array",
-                             "Float32Array", "Float64Array"];
-
 // Number of items to preview in objects, arrays, maps, sets, lists,
 // collections, etc.
 const OBJECT_PREVIEW_MAX_ITEMS = 10;
@@ -120,7 +116,7 @@ ObjectActor.prototype = {
 
     // FF40+: Allow to know how many properties an object has to lazily display them
     // when there is a bunch.
-    if (TYPED_ARRAY_CLASSES.indexOf(g.class) != -1) {
+    if (isTypedArray(g)) {
       // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
       let length = DevToolsUtils.getProperty(this.obj, "length");
       g.ownPropertyLength = length;
@@ -349,8 +345,7 @@ ObjectActor.prototype = {
     // prototype. Avoid calling getOwnPropertyNames on objects that may have
     // many properties like Array, strings or js objects. That to avoid
     // freezing firefox when doing so.
-    if (TYPED_ARRAY_CLASSES.includes(this.obj.class) ||
-        ["Array", "Object", "String"].includes(this.obj.class)) {
+    if (isArray(this.obj) || ["Object", "String"].includes(this.obj.class)) {
       obj = obj.proto;
       level++;
     }
@@ -820,7 +815,11 @@ function PropertyIteratorActor(objectActor, options) {
     } else {
       throw new Error("Unsupported class to enumerate entries from: " + cls);
     }
-  } else if (options.ignoreNonIndexedProperties && !options.query) {
+  } else if (
+    isArray(objectActor.obj)
+    && options.ignoreNonIndexedProperties
+    && !options.query
+  ) {
     this.iterator = enumArrayProperties(objectActor, options);
   } else {
     this.iterator = enumObjectProperties(objectActor, options);
@@ -872,13 +871,13 @@ PropertyIteratorActor.prototype.requestTypes = {
 
 function enumArrayProperties(objectActor, options) {
   let length = DevToolsUtils.getProperty(objectActor.obj, "length");
-  if (typeof length !== "number") {
+  if (!isSafePositiveInteger(length)) {
     // Pseudo arrays are flagged as ArrayLike if they have
     // subsequent indexed properties without having any length attribute.
     length = 0;
     let names = objectActor.obj.getOwnPropertyNames();
     for (let key of names) {
-      if (isNaN(key) || key != length++) {
+      if (!isSafeIndex(key) || key != length++) {
         break;
       }
     }
@@ -906,15 +905,32 @@ function enumObjectProperties(objectActor, options) {
 
   if (options.ignoreNonIndexedProperties || options.ignoreIndexedProperties) {
     let length = DevToolsUtils.getProperty(objectActor.obj, "length");
-    if (typeof length !== "number") {
-      // Pseudo arrays are flagged as ArrayLike if they have
-      // subsequent indexed properties without having any length attribute.
-      length = 0;
-      for (let key of names) {
-        if (isNaN(key) || key != length++) {
-          break;
+    let sliceIndex;
+
+    const isLengthTrustworthy =
+      isSafePositiveInteger(length)
+      && (length > 0 && isSafeIndex(names[length - 1]))
+      && !isSafeIndex(names[length]);
+
+    if (!isLengthTrustworthy) {
+      // The length property may not reflect what the object looks like, let's find
+      // where indexed properties end.
+
+      if (!isSafeIndex(names[0])) {
+        // If the first item is not a number, this means there is no indexed properties
+        // in this object.
+        sliceIndex = 0;
+      } else {
+        sliceIndex = names.length;
+        while (sliceIndex > 0) {
+          if (isSafeIndex(names[sliceIndex - 1])) {
+            break;
+          }
+          sliceIndex--;
         }
       }
+    } else {
+      sliceIndex = length;
     }
 
     // It appears that getOwnPropertyNames always returns indexed properties
@@ -922,11 +938,11 @@ function enumObjectProperties(objectActor, options) {
     // We do such clever operation to optimize very large array inspection,
     // like webaudio buffers.
     if (options.ignoreIndexedProperties) {
-      // Keep items after `length` index
-      names = names.slice(length);
+      // Keep items after `sliceIndex` index
+      names = names.slice(sliceIndex);
     } else if (options.ignoreNonIndexedProperties) {
-      // Remove `length` first items
-      names.splice(length);
+      // Keep `sliceIndex` first items
+      names.length = sliceIndex;
     }
   }
 
@@ -1616,7 +1632,7 @@ function GenericObject(objectActor, grip, rawObj, specialStringBehavior = false)
 // Preview functions that do not rely on the object class.
 DebuggerServer.ObjectActorPreviewers.Object = [
   function TypedArray({obj, hooks}, grip) {
-    if (TYPED_ARRAY_CLASSES.indexOf(obj.class) == -1) {
+    if (!isTypedArray(obj)) {
       return false;
     }
 
@@ -2487,6 +2503,57 @@ function unwrap(obj) {
 
   // Recursively remove additional security wrappers.
   return unwrap(unwrapped);
+}
+
+const TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
+                             "Uint32Array", "Int8Array", "Int16Array", "Int32Array",
+                             "Float32Array", "Float64Array"];
+
+/**
+ * Returns true if a debuggee object is a typed array.
+ *
+ * @param obj Debugger.Object
+ *        The debuggee object to test.
+ * @return Boolean
+ */
+function isTypedArray(object) {
+  return TYPED_ARRAY_CLASSES.includes(object.class);
+}
+
+/**
+ * Returns true if a debuggee object is an array, including a typed array.
+ *
+ * @param obj Debugger.Object
+ *        The debuggee object to test.
+ * @return Boolean
+ */
+function isArray(object) {
+  return isTypedArray(object) || object.class === "Array";
+}
+
+/**
+ * Returns true if the parameter is a safe positive integer.
+ *
+ * @param num Number
+ *        The number to test.
+ * @return Boolean
+ */
+function isSafePositiveInteger(num) {
+  return Number.isSafeInteger(num) && 1 / num > 0;
+}
+
+/**
+ * Returns true if the parameter is suitable to be an array index.
+ *
+ * @param num Any
+ * @return Boolean
+ */
+function isSafeIndex(str) {
+  // Transform the parameter to a number using the Unary operator.
+  let num = +str;
+  return isSafePositiveInteger(num) &&
+    // Check the string since unary can transform non number (boolean, null, …).
+    num + "" === str;
 }
 
 exports.ObjectActor = ObjectActor;
