@@ -225,16 +225,13 @@ GPUProcessManager::EnsureProtocolsReady()
 void
 GPUProcessManager::EnsureCompositorManagerChild()
 {
-  base::ProcessId gpuPid = EnsureGPUReady()
-                           ? mGPUChild->OtherPid()
-                           : base::GetCurrentProcId();
-
-  if (CompositorManagerChild::IsInitialized(gpuPid)) {
+  bool gpuReady = EnsureGPUReady();
+  if (CompositorManagerChild::IsInitialized(mProcessToken)) {
     return;
   }
 
-  if (!EnsureGPUReady()) {
-    CompositorManagerChild::InitSameProcess(AllocateNamespace());
+  if (!gpuReady) {
+    CompositorManagerChild::InitSameProcess(AllocateNamespace(), mProcessToken);
     return;
   }
 
@@ -251,7 +248,8 @@ GPUProcessManager::EnsureCompositorManagerChild()
   }
 
   mGPUChild->SendInitCompositorManager(Move(parentPipe));
-  CompositorManagerChild::Init(Move(childPipe), AllocateNamespace());
+  CompositorManagerChild::Init(Move(childPipe), AllocateNamespace(),
+                               mProcessToken);
 }
 
 void
@@ -523,7 +521,7 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
 {
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
-  CompositorManagerChild::OnGPUProcessLost();
+  CompositorManagerChild::OnGPUProcessLost(aHost->GetProcessToken());
   DestroyProcess();
 
   if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessMaxRestarts())) {
