@@ -9,3 +9,4 @@ PUPPETEER_FIREFOX_MANIFESTS += ["tests/puppeteer/manifest.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Firefox UI Tests")
+    SCHEDULES.exclusive = ["firefox-ui"]
