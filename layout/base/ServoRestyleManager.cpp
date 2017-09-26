@@ -1046,25 +1046,7 @@ ServoRestyleManager::SnapshotFor(Element* aElement)
   aElement->SetFlags(ELEMENT_HAS_SNAPSHOT);
 
   // Now that we have a snapshot, make sure a restyle is triggered.
-  //
-  // If we have any later siblings, we need to flag the restyle on the parent,
-  // so that a traversal from the restyle root is guaranteed to reach those
-  // siblings (since the snapshot may generate hints for later siblings).
-  if (aElement->GetNextElementSibling()) {
-    Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
-    MOZ_ASSERT(parent);
-    // The parent will only be outside of the composed doc if we're mid-unbind.
-    //
-    // FIXME(emilio): Make the traversal lazily mark the parent as dirty if
-    // needed to avoid this problem altogether, plus being better perf-wise.
-    if (parent->IsInComposedDoc()) {
-      parent->NoteDirtyForServo();
-      parent->SetHasDirtyDescendantsForServo();
-    }
-  } else {
-    aElement->NoteDirtyForServo();
-  }
-
+  aElement->NoteDirtyForServo();
   return *snapshot;
 }
 
