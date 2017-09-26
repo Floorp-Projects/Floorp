@@ -149,52 +149,6 @@ public:
     }                                                                          \
   } while (0)
 
-#define rbp_next(a_type, a_field, a_cmp, a_tree, a_node, r_node)               \
-  do {                                                                         \
-    if (a_field(a_node).Right() != &(a_tree)->rbt_nil) {                       \
-      rbp_first(a_type, a_field, a_tree, a_field(a_node).Right(), (r_node));   \
-    } else {                                                                   \
-      a_type* rbp_n_t = (a_tree)->rbt_root;                                    \
-      MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);                               \
-      (r_node) = &(a_tree)->rbt_nil;                                           \
-      while (true) {                                                           \
-        int rbp_n_cmp = (a_cmp)((a_node), rbp_n_t);                            \
-        if (rbp_n_cmp < 0) {                                                   \
-          (r_node) = rbp_n_t;                                                  \
-          rbp_n_t = a_field(rbp_n_t).Left();                                   \
-        } else if (rbp_n_cmp > 0) {                                            \
-          rbp_n_t = a_field(rbp_n_t).Right();                                  \
-        } else {                                                               \
-          break;                                                               \
-        }                                                                      \
-        MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);                             \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
-#define rbp_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node)               \
-  do {                                                                         \
-    if (a_field(a_node).Left() != &(a_tree)->rbt_nil) {                        \
-      rbp_last(a_type, a_field, a_tree, a_field(a_node).Left(), (r_node));     \
-    } else {                                                                   \
-      a_type* rbp_p_t = (a_tree)->rbt_root;                                    \
-      MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);                               \
-      (r_node) = &(a_tree)->rbt_nil;                                           \
-      while (true) {                                                           \
-        int rbp_p_cmp = (a_cmp)((a_node), rbp_p_t);                            \
-        if (rbp_p_cmp < 0) {                                                   \
-          rbp_p_t = a_field(rbp_p_t).Left();                                   \
-        } else if (rbp_p_cmp > 0) {                                            \
-          (r_node) = rbp_p_t;                                                  \
-          rbp_p_t = a_field(rbp_p_t).Right();                                  \
-        } else {                                                               \
-          break;                                                               \
-        }                                                                      \
-        MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);                             \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
 #define rb_search(a_type, a_field, a_cmp, a_tree, a_key, r_node)               \
   do {                                                                         \
     int rbp_se_cmp;                                                            \
@@ -621,14 +575,52 @@ struct RedBlackTree
   T* Next(T* aNode)
   {
     T* ret;
-    rbp_next(T, Trait::GetTreeNode, Trait::Compare, this, (aNode), (ret));
+    if (Trait::GetTreeNode(aNode).Right() != &rbt_nil) {
+      rbp_first(
+        T, Trait::GetTreeNode, this, Trait::GetTreeNode(aNode).Right(), (ret));
+    } else {
+      T* rbp_n_t = rbt_root;
+      MOZ_ASSERT(rbp_n_t != &rbt_nil);
+      ret = &rbt_nil;
+      while (true) {
+        int rbp_n_cmp = Trait::Compare(aNode, rbp_n_t);
+        if (rbp_n_cmp < 0) {
+          ret = rbp_n_t;
+          rbp_n_t = Trait::GetTreeNode(rbp_n_t).Left();
+        } else if (rbp_n_cmp > 0) {
+          rbp_n_t = Trait::GetTreeNode(rbp_n_t).Right();
+        } else {
+          break;
+        }
+        MOZ_ASSERT(rbp_n_t != &rbt_nil);
+      }
+    }
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
   T* Prev(T* aNode)
   {
     T* ret;
-    rbp_prev(T, Trait::GetTreeNode, Trait::Compare, this, (aNode), (ret));
+    if (Trait::GetTreeNode(aNode).Left() != &rbt_nil) {
+      rbp_last(
+        T, Trait::GetTreeNode, this, Trait::GetTreeNode(aNode).Left(), (ret));
+    } else {
+      T* rbp_p_t = rbt_root;
+      MOZ_ASSERT(rbp_p_t != &rbt_nil);
+      ret = &rbt_nil;
+      while (true) {
+        int rbp_p_cmp = Trait::Compare(aNode, rbp_p_t);
+        if (rbp_p_cmp < 0) {
+          rbp_p_t = Trait::GetTreeNode(rbp_p_t).Left();
+        } else if (rbp_p_cmp > 0) {
+          ret = rbp_p_t;
+          rbp_p_t = Trait::GetTreeNode(rbp_p_t).Right();
+        } else {
+          break;
+        }
+        MOZ_ASSERT(rbp_p_t != &rbt_nil);
+      }
+    }
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
