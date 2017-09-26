@@ -27,7 +27,7 @@ registerCleanupFunction(() => {
 
 SimpleTest.requestCompleteLog();
 
-loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsivedesign/responsivedesign");
+loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager");
 
 /**
  * Open the Responsive Design Mode
