@@ -63,6 +63,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Weave: "resource://services-sync/main.js",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  gDevTools: "resource://devtools/client/framework/gDevTools.jsm",
+  gDevToolsBrowser: "resource://devtools/client/framework/gDevTools.jsm",
   webrtcUI: "resource:///modules/webrtcUI.jsm",
   ZoomUI: "resource:///modules/ZoomUI.jsm",
 });
@@ -135,6 +137,12 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "@mozilla.org/xre/app-info;1",
                                      "nsICrashReporter");
 }
+
+XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
+  let tmp = {};
+  Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", tmp);
+  return tmp.BrowserToolboxProcess;
+});
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
@@ -8503,6 +8511,15 @@ var TabContextMenu = {
   }
 };
 
+Object.defineProperty(this, "HUDService", {
+  get: function HUDService_getter() {
+    let devtools = Cu.import("resource://devtools/shared/Loader.jsm", {}).devtools;
+    return devtools.require("devtools/client/webconsole/hudservice").HUDService;
+  },
+  configurable: true,
+  enumerable: true
+});
+
 // Prompt user to restart the browser in safe mode
 function safeModeRestart() {
   if (Services.appinfo.inSafeMode) {
@@ -8558,6 +8575,24 @@ function duplicateTabIn(aTab, where, delta) {
       break;
   }
 }
+
+var Scratchpad = {
+  openScratchpad: function SP_openScratchpad() {
+    return this.ScratchpadManager.openScratchpad();
+  }
+};
+
+XPCOMUtils.defineLazyGetter(Scratchpad, "ScratchpadManager", function() {
+  let tmp = {};
+  Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm", tmp);
+  return tmp.ScratchpadManager;
+});
+
+var ResponsiveUI = {
+  toggle: function RUI_toggle() {
+    this.ResponsiveUIManager.toggle(window, gBrowser.selectedTab);
+  }
+};
 
 var MousePosTracker = {
   _listeners: new Set(),
