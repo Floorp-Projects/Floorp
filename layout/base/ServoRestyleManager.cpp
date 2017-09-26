@@ -1053,8 +1053,14 @@ ServoRestyleManager::SnapshotFor(Element* aElement)
   if (aElement->GetNextElementSibling()) {
     Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
     MOZ_ASSERT(parent);
-    parent->NoteDirtyForServo();
-    parent->SetHasDirtyDescendantsForServo();
+    // The parent will only be outside of the composed doc if we're mid-unbind.
+    //
+    // FIXME(emilio): Make the traversal lazily mark the parent as dirty if
+    // needed to avoid this problem altogether, plus being better perf-wise.
+    if (parent->IsInComposedDoc()) {
+      parent->NoteDirtyForServo();
+      parent->SetHasDirtyDescendantsForServo();
+    }
   } else {
     aElement->NoteDirtyForServo();
   }
