@@ -29,8 +29,10 @@
 #include "nsILoadGroup.h"
 #include "nsIProxiedChannel.h"
 #include "nsIProxyInfo.h"
+#include "nsITraceableChannel.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsNetUtil.h"
+#include "nsProxyRelease.h"
 #include "nsPrintfCString.h"
 
 using namespace mozilla::dom;
@@ -773,6 +775,74 @@ ChannelWrapper::ErrorCheck()
 }
 
 /*****************************************************************************
+ * nsIWebRequestListener
+ *****************************************************************************/
+
+NS_IMPL_ISUPPORTS(ChannelWrapper::RequestListener,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIThreadRetargetableStreamListener)
+
+ChannelWrapper::RequestListener::~RequestListener() {
+  NS_ReleaseOnMainThreadSystemGroup("RequestListener::mChannelWrapper",
+                                    mChannelWrapper.forget());
+}
+
+nsresult
+ChannelWrapper::RequestListener::Init()
+{
+  if (nsCOMPtr<nsITraceableChannel> chan = mChannelWrapper->QueryChannel()) {
+    return chan->SetNewListener(this, getter_AddRefs(mOrigStreamListener));
+  }
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+ChannelWrapper::RequestListener::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
+{
+  MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
+
+  mChannelWrapper->ErrorCheck();
+  mChannelWrapper->FireEvent(NS_LITERAL_STRING("start"));
+
+  return mOrigStreamListener->OnStartRequest(request, aCtxt);
+}
+
+NS_IMETHODIMP
+ChannelWrapper::RequestListener::OnStopRequest(nsIRequest *request, nsISupports *aCtxt,
+                                               nsresult aStatus)
+{
+  MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
+
+  mChannelWrapper->ErrorCheck();
+  mChannelWrapper->FireEvent(NS_LITERAL_STRING("stop"));
+
+  return mOrigStreamListener->OnStopRequest(request, aCtxt, aStatus);
+}
+
+NS_IMETHODIMP
+ChannelWrapper::RequestListener::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
+                                             nsIInputStream * inStr,
+                                             uint64_t sourceOffset, uint32_t count)
+{
+  MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
+  return mOrigStreamListener->OnDataAvailable(request, aCtxt, inStr, sourceOffset, count);
+}
+
+NS_IMETHODIMP
+ChannelWrapper::RequestListener::CheckListenerChain()
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread!");
+    nsresult rv;
+    nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+        do_QueryInterface(mOrigStreamListener, &rv);
+    if (retargetableListener) {
+        return retargetableListener->CheckListenerChain();
+    }
+    return rv;
+}
+
+/*****************************************************************************
  * Event dispatching
  *****************************************************************************/
 
@@ -788,6 +858,31 @@ ChannelWrapper::FireEvent(const nsAString& aType)
 
   bool defaultPrevented;
   DispatchEvent(event, &defaultPrevented);
+}
+
+void
+ChannelWrapper::CheckEventListeners()
+{
+  if (!mAddedStreamListener && (HasListenersFor(nsGkAtoms::onerror) ||
+                                HasListenersFor(nsGkAtoms::onstart) ||
+                                HasListenersFor(nsGkAtoms::onstop))) {
+    auto listener = MakeRefPtr<RequestListener>(this);
+    if (!NS_WARN_IF(NS_FAILED(listener->Init()))) {
+      mAddedStreamListener = true;
+    }
+  }
+}
+
+void
+ChannelWrapper::EventListenerAdded(nsIAtom* aType)
+{
+  CheckEventListeners();
+}
+
+void
+ChannelWrapper::EventListenerRemoved(nsIAtom* aType)
+{
+  CheckEventListeners();
 }
 
 /*****************************************************************************

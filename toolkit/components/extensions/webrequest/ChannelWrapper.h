@@ -18,6 +18,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIStreamListener.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsWeakPtr.h"
 #include "nsWrapperCache.h"
 
@@ -139,6 +141,8 @@ public:
   void ErrorCheck();
 
   IMPL_EVENT_HANDLER(error);
+  IMPL_EVENT_HANDLER(start);
+  IMPL_EVENT_HANDLER(stop);
 
 
   already_AddRefed<nsIURI> GetFinalURI(ErrorResult& aRv) const;
@@ -193,6 +197,12 @@ public:
   void SetResponseHeader(const nsCString& header, const nsCString& value, ErrorResult& aRv);
 
 
+  using EventTarget::EventListenerAdded;
+  using EventTarget::EventListenerRemoved;
+  virtual void EventListenerAdded(nsIAtom* aType) override;
+  virtual void EventListenerRemoved(nsIAtom* aType) override;
+
+
   nsISupports* GetParentObject() const { return mParent; }
 
   JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
@@ -229,12 +239,45 @@ private:
     return ++sNextId;
   }
 
+  void CheckEventListeners();
+
+  mutable Maybe<URLInfo> mFinalURLInfo;
+  mutable Maybe<URLInfo> mDocumentURLInfo;
+
+  UniquePtr<WebRequestChannelEntry> mChannelEntry;
+
+  // The overridden Content-Type header value.
+  nsCString mContentTypeHdr = VoidCString();
 
   const uint64_t mId = GetNextId();
   nsCOMPtr<nsISupports> mParent;
 
+  bool mAddedStreamListener = false;
   bool mFiredErrorEvent = false;
   bool mSuspended = false;
+
+
+  class RequestListener final : public nsIStreamListener
+                              , public nsIThreadRetargetableStreamListener
+  {
+  public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+
+    explicit RequestListener(ChannelWrapper* aWrapper)
+      : mChannelWrapper(aWrapper) {}
+
+    nsresult Init();
+
+  protected:
+    virtual ~RequestListener();
+
+  private:
+    RefPtr<ChannelWrapper> mChannelWrapper;
+    nsCOMPtr<nsIStreamListener> mOrigStreamListener;
+  };
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ChannelWrapper,
