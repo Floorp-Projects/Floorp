@@ -673,13 +673,17 @@ MessageChannel::CanSend() const
 void
 MessageChannel::WillDestroyCurrentMessageLoop()
 {
-#if !defined(ANDROID)
+#if defined(DEBUG)
 #if defined(MOZ_CRASHREPORTER)
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProtocolName"),
                                        nsDependentCString(mName));
 #endif
     MOZ_CRASH("MessageLoop destroyed before MessageChannel that's bound to it");
 #endif
+
+    // Clear mWorkerThread to avoid posting to it in the future.
+    MonitorAutoLock lock(*mMonitor);
+    mWorkerLoop = nullptr;
 }
 
 void
@@ -1964,7 +1968,7 @@ MessageChannel::MessageTask::Post()
 
     if (eventTarget) {
         eventTarget->Dispatch(self.forget(), NS_DISPATCH_NORMAL);
-    } else {
+    } else if (mChannel->mWorkerLoop) {
         mChannel->mWorkerLoop->PostTask(self.forget());
     }
 }
@@ -2406,7 +2410,9 @@ MessageChannel::OnChannelConnected(int32_t peer_id)
     mPeerPidSet = true;
     mPeerPid = peer_id;
     RefPtr<CancelableRunnable> task = mOnChannelConnectedTask;
-    mWorkerLoop->PostTask(task.forget());
+    if (mWorkerLoop) {
+        mWorkerLoop->PostTask(task.forget());
+    }
 }
 
 void
@@ -2599,7 +2605,9 @@ MessageChannel::OnNotifyMaybeChannelError()
         &MessageChannel::OnNotifyMaybeChannelError);
       RefPtr<Runnable> task = mChannelErrorTask;
       // 10 ms delay is completely arbitrary
-      mWorkerLoop->PostDelayedTask(task.forget(), 10);
+      if (mWorkerLoop) {
+          mWorkerLoop->PostDelayedTask(task.forget(), 10);
+      }
       return;
     }
 
@@ -2611,7 +2619,7 @@ MessageChannel::PostErrorNotifyTask()
 {
     mMonitor->AssertCurrentThreadOwns();
 
-    if (mChannelErrorTask)
+    if (mChannelErrorTask || !mWorkerLoop)
         return;
 
     // This must be the last code that runs on this thread!

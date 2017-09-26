@@ -174,7 +174,6 @@ public:
     return mIsFullyOccluded;
   }
 
-  virtual nsCursor        GetCursor() override;
   virtual void            SetCursor(nsCursor aCursor) override;
   virtual nsresult        SetCursor(imgIContainer* aCursor,
                                     uint32_t aHotspotX, uint32_t aHotspotY) override;

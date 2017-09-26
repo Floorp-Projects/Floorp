@@ -33,14 +33,27 @@ nsAutoLayoutPhase::Enter()
     case eLayoutPhase_Paint:
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                  "recurring into paint");
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
+                 "recurring into paint from display list building");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                  "painting in the middle of reflow");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
                  "painting in the middle of frame construction");
       break;
+    case eLayoutPhase_DisplayListBuilding:
+      // It's fine and expected to be in a paint here.
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
+                 "recurring into display list building");
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+                 "display list building in the middle of reflow");
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+                 "display list building in the middle of frame construction");
+      break;
     case eLayoutPhase_Reflow:
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                  "reflowing in the middle of a paint");
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
+                 "reflowing in the middle of a display list building");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                  "recurring into reflow");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
@@ -49,6 +62,8 @@ nsAutoLayoutPhase::Enter()
     case eLayoutPhase_FrameC:
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                  "constructing frames in the middle of a paint");
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] == 0,
+                 "constructing frames in the middle of a display list building");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
                  "constructing frames in the middle of reflow");
       MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,

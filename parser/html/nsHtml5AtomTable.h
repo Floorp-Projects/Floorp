@@ -7,13 +7,10 @@
 
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
-#include "nsAutoPtr.h"
 #include "nsIAtom.h"
 #include "nsISerialEventTarget.h"
 
 #define RECENTLY_USED_PARSER_ATOMS_SIZE 31
-
-class nsHtml5Atom;
 
 class nsHtml5AtomEntry : public nsStringHashKey
 {
@@ -21,12 +18,9 @@ class nsHtml5AtomEntry : public nsStringHashKey
     explicit nsHtml5AtomEntry(KeyTypePointer aStr);
     nsHtml5AtomEntry(const nsHtml5AtomEntry& aOther);
     ~nsHtml5AtomEntry();
-    inline nsHtml5Atom* GetAtom()
-    {
-      return mAtom;
-    }
+    inline nsAtom* GetAtom() { return mAtom; }
   private:
-    nsAutoPtr<nsHtml5Atom> mAtom;
+    nsAtom* mAtom;
 };
 
 /**
