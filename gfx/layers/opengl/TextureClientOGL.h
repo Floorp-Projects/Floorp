@@ -20,34 +20,6 @@ namespace mozilla {
 
 namespace layers {
 
-class EGLImageTextureData : public TextureData
-{
-public:
-
-  static already_AddRefed<TextureClient>
-  CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSize,
-                      LayersIPCChannel* aAllocator, TextureFlags aFlags);
-
-  virtual void FillInfo(TextureData::Info& aInfo) const override;
-
-  virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual void Deallocate(LayersIPCChannel*) override { mImage = nullptr; }
-
-  virtual void Forget(LayersIPCChannel*) override { mImage = nullptr; }
-
-  // Unused functions.
-  virtual bool Lock(OpenMode) override { return true; }
-
-  virtual void Unlock() override {}
-
-protected:
-  EGLImageTextureData(EGLImageImage* aImage, gfx::IntSize aSize);
-
-  RefPtr<EGLImageImage> mImage;
-  const gfx::IntSize mSize;
-};
-
 #ifdef MOZ_WIDGET_ANDROID
 
 class AndroidSurfaceTextureData : public TextureData
