@@ -50,6 +50,9 @@ static UniquePtr<nsString> sProfileDir;
 static UniquePtr<nsString> sContentTempDir;
 static UniquePtr<nsString> sRoamingAppDataDir;
 static UniquePtr<nsString> sLocalAppDataDir;
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+static UniquePtr<nsString> sUserExtensionsDir;
+#endif
 
 static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
@@ -127,6 +130,9 @@ SandboxBroker::CacheRulesDirectories()
   CacheDirAndAutoClear(dirSvc, NS_APP_CONTENT_PROCESS_TEMP_DIR, &sContentTempDir);
   CacheDirAndAutoClear(dirSvc, NS_WIN_APPDATA_DIR, &sRoamingAppDataDir);
   CacheDirAndAutoClear(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, &sLocalAppDataDir);
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+  CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DIR, &sUserExtensionsDir);
+#endif
 }
 
 SandboxBroker::SandboxBroker()
@@ -485,13 +491,19 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sBinDir, NS_LITERAL_STRING("\\*"));
 
-    // Add rule to allow read access chrome directory within profile.
+    // Add rule to allow read access to the chrome directory within profile.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sProfileDir, NS_LITERAL_STRING("\\chrome\\*"));
 
-    // Add rule to allow read access extensions directory within profile.
+    // Add rule to allow read access to the extensions directory within profile.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sProfileDir, NS_LITERAL_STRING("\\extensions\\*"));
+
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+    // Add rule to allow read access to the per-user extensions directory.
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                     sUserExtensionsDir, NS_LITERAL_STRING("\\*"));
+#endif
   }
 
   // Add the policy for the client side of a pipe. It is just a file
