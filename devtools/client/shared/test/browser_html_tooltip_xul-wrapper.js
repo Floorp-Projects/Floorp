@@ -26,10 +26,19 @@ add_task(function* () {
 
   let [, win, doc] = yield createHost("bottom", TEST_URI);
 
-  info("Resizing window to have some space below the window.");
+  info("Resize and move the window to have space below.");
   let originalWidth = win.top.outerWidth;
   let originalHeight = win.top.outerHeight;
-  win.top.resizeBy(0, -100);
+  win.top.resizeBy(-100, -200);
+  let originalTop = win.top.screenTop;
+  let originalLeft = win.top.screenLeft;
+  win.top.moveTo(100, 100);
+
+  registerCleanupFunction(() => {
+    info("Restore original window dimensions and position.");
+    win.top.resizeTo(originalWidth, originalHeight);
+    win.top.moveTo(originalTop, originalLeft);
+  });
 
   info("Create HTML tooltip");
   let tooltip = new HTMLTooltip(doc, {useXulWrapper: true});
@@ -55,9 +64,6 @@ add_task(function* () {
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 
   tooltip.destroy();
-
-  info("Restore original window dimensions.");
-  win.top.resizeTo(originalWidth, originalHeight);
 });
 
 function checkTooltip(tooltip, position, height) {

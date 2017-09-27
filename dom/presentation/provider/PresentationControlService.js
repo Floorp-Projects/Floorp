@@ -663,7 +663,7 @@ TCPControlChannel.prototype = {
                  this._direction); // jshint ignore:line
     this._pump = Cc["@mozilla.org/network/input-stream-pump;1"].
                createInstance(Ci.nsIInputStreamPump);
-    this._pump.init(this._input, -1, -1, 0, 0, false);
+    this._pump.init(this._input, 0, 0, false);
     this._pump.asyncRead(this, null);
     this._stateMachine.onChannelReady();
   },

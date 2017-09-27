@@ -88,8 +88,10 @@
 #include "nsIXULRuntime.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
+#include "nsPointerHashKeys.h"
 #include "nsLayoutUtils.h"
 #include "nsPrintfCString.h"
+#include "nsTHashtable.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "nsViewManager.h"
@@ -164,7 +166,7 @@ NS_IMPL_ISUPPORTS(TabChildSHistoryListener,
 
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
-nsTArray<TabChild*>* TabChild::sActiveTabs;
+nsTHashtable<nsPtrHashKey<TabChild>>* TabChild::sActiveTabs;
 
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
@@ -1120,7 +1122,7 @@ TabChild::ActorDestroy(ActorDestroyReason why)
 TabChild::~TabChild()
 {
   if (sActiveTabs) {
-    sActiveTabs->RemoveElement(this);
+    sActiveTabs->RemoveEntry(this);
     if (sActiveTabs->IsEmpty()) {
       delete sActiveTabs;
       sActiveTabs = nullptr;
@@ -2589,12 +2591,12 @@ TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
 
   if (aIsActive) {
     if (!sActiveTabs) {
-      sActiveTabs = new nsTArray<TabChild*>();
+      sActiveTabs = new nsTHashtable<nsPtrHashKey<TabChild>>();
     }
-    sActiveTabs->AppendElement(this);
+    sActiveTabs->PutEntry(this);
   } else {
     if (sActiveTabs) {
-      sActiveTabs->RemoveElement(this);
+      sActiveTabs->RemoveEntry(this);
       // We don't delete sActiveTabs here when it's empty since that
       // could cause a lot of churn. Instead, we wait until ~TabChild.
     }

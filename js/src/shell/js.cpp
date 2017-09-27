@@ -1448,6 +1448,9 @@ ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
 }
 
 static bool
+CooperativeThreadMayYield(JSContext* cx);
+
+static bool
 Evaluate(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1538,14 +1541,25 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
 
-            // Find all eligible globals to execute in: any global in another
-            // zone group which has not been entered by a cooperative thread.
+            // Find all eligible globals to execute in.
             JS::AutoObjectVector eligibleGlobals(cx);
             for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
-                if (!c->zone()->group()->ownerContext().context() &&
-                    c->maybeGlobal() &&
-                    !cx->runtime()->isSelfHostingGlobal(c->maybeGlobal()))
-                {
+                // Compartments without globals and the self hosting global may
+                // not be entered.
+                if (!c->maybeGlobal() || cx->runtime()->isSelfHostingGlobal(c->maybeGlobal()))
+                    continue;
+
+                // Globals in zone groups which are not in use by a cooperative
+                // thread may be entered.
+                if (!c->zone()->group()->ownerContext().context()) {
+                    if (!eligibleGlobals.append(c->maybeGlobal()))
+                        return false;
+                }
+
+                // Globals in zone groups which use exclusive locking may be
+                // entered, in which case this thread will yield until the zone
+                // group is available.
+                if (c->zone()->group()->useExclusiveLocking() && CooperativeThreadMayYield(cx)) {
                     if (!eligibleGlobals.append(c->maybeGlobal()))
                         return false;
                 }
@@ -3337,24 +3351,16 @@ CooperativeYield()
 }
 
 static bool
-CooperativeYieldThread(JSContext* cx, unsigned argc, Value* vp)
+CooperativeThreadMayYield(JSContext* cx)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!cx->runtime()->gc.canChangeActiveContext(cx)) {
-        JS_ReportErrorASCII(cx, "Cooperating multithreading context switches are not currently allowed");
+    if (!cx->runtime()->gc.canChangeActiveContext(cx))
         return false;
-    }
 
-    if (GetShellContext(cx)->isWorker) {
-        JS_ReportErrorASCII(cx, "Worker threads cannot yield");
+    if (GetShellContext(cx)->isWorker)
         return false;
-    }
 
-    if (cooperationState->singleThreaded) {
-        JS_ReportErrorASCII(cx, "Yielding is not allowed while single threaded");
+    if (cooperationState->singleThreaded)
         return false;
-    }
 
     // To avoid contention issues between threads, yields are not allowed while
     // a thread has access to zone groups other than its original one, i.e. if
@@ -3364,10 +3370,30 @@ CooperativeYieldThread(JSContext* cx, unsigned argc, Value* vp)
     // threads, whereas the browser has more control over which threads are
     // running at different times.
     for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next()) {
-        if (group->ownerContext().context() == cx && group != cx->zone()->group()) {
-            JS_ReportErrorASCII(cx, "Yielding is not allowed while owning multiple zone groups");
+        if (group->ownerContext().context() == cx && group != cx->zone()->group())
             return false;
-        }
+    }
+
+    return true;
+}
+
+static void
+CooperativeYieldCallback(JSContext* cx)
+{
+    MOZ_ASSERT(CooperativeThreadMayYield(cx));
+    CooperativeBeginWait(cx);
+    CooperativeYield();
+    CooperativeEndWait(cx);
+}
+
+static bool
+CooperativeYieldThread(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!CooperativeThreadMayYield(cx)) {
+        JS_ReportErrorASCII(cx, "Yielding is not currently allowed");
+        return false;
     }
 
     {
@@ -3466,6 +3492,8 @@ WorkerMain(void* arg)
          : JS_NewCooperativeContext(input->siblingContext);
     if (!cx)
         return;
+
+    SetCooperativeYieldCallback(cx, CooperativeYieldCallback);
 
     UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
     if (!sc)
@@ -7273,7 +7301,7 @@ static const JSJitInfo doFoo_methodinfo = {
 
 static const JSPropertySpec dom_props[] = {
     {"x",
-     JSPROP_SHARED | JSPROP_ENUMERATE,
+     JSPROP_ENUMERATE,
      { {
         { { dom_genericGetter, &dom_x_getterinfo } },
         { { dom_genericSetter, &dom_x_setterinfo } }
@@ -8645,6 +8673,7 @@ main(int argc, char** argv, char** envp)
     JS::SetSingleThreadedExecutionCallbacks(cx,
                                             CooperativeBeginSingleThreadedExecution,
                                             CooperativeEndSingleThreadedExecution);
+    SetCooperativeYieldCallback(cx, CooperativeYieldCallback);
 
     result = Shell(cx, &op, envp);
 

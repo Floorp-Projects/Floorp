@@ -302,8 +302,6 @@ nsresult NS_NewInputStreamChannel(nsIChannel        **outChannel,
 
 nsresult NS_NewInputStreamPump(nsIInputStreamPump **result,
                                nsIInputStream      *stream,
-                               int64_t              streamPos = int64_t(-1),
-                               int64_t              streamLen = int64_t(-1),
                                uint32_t             segsize = 0,
                                uint32_t             segcount = 0,
                                bool                 closeWhenDone = false,

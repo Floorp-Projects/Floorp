@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1102502
 
 SimpleTest.waitForExplicitFinish();
 
-var attachedCallbackCount = 0;
+var connectedCallbackCount = 0;
 
 var p = Object.create(HTMLElement.prototype);
 
@@ -24,12 +24,12 @@ p.createdCallback = function() {
   ok(true, "createdCallback called.");
 };
 
-p.attachedCallback = function() {
-  ok(true, "attachedCallback should be called when the parser creates an element in the document.");
-  attachedCallbackCount++;
-  // attachedCallback should be called twice, once for the element created for innerHTML and
+p.connectedCallback = function() {
+  ok(true, "connectedCallback should be called when the parser creates an element in the document.");
+  connectedCallbackCount++;
+  // connectedCallback should be called twice, once for the element created for innerHTML and
   // once for the element created in this document.
-  if (attachedCallbackCount == 2) {
+  if (connectedCallbackCount == 2) {
     SimpleTest.finish();
   }
 }

@@ -127,7 +127,7 @@ struct InternalGCPointerPolicy {
         TraceManuallyBarrieredEdge(trc, vp, name);
     }
     static bool isValid(T v) {
-        return gc::IsCellPointerValid(v);
+        return gc::IsCellPointerValidOrNull(v);
     }
 };
 

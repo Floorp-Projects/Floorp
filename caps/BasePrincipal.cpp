@@ -53,7 +53,8 @@ NS_IMETHODIMP
 BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin)
 {
   MOZ_ASSERT(mInitialized);
-  return mOriginNoSuffix->ToUTF8String(aOrigin);
+  mOriginNoSuffix->ToUTF8String(aOrigin);
+  return NS_OK;
 }
 
 bool
@@ -293,7 +294,8 @@ NS_IMETHODIMP
 BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
 {
   MOZ_ASSERT(mOriginSuffix);
-  return mOriginSuffix->ToUTF8String(aOriginAttributes);
+  mOriginSuffix->ToUTF8String(aOriginAttributes);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

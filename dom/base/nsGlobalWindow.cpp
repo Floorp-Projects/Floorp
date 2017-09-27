@@ -361,31 +361,6 @@ static uint32_t gThrottledIdlePeriodLength;
   }                                                                           \
   PR_END_MACRO
 
-#define FORWARD_TO_OUTER_CHROME(method, args, err_rval)                       \
-  PR_BEGIN_MACRO                                                              \
-  if (IsInnerWindow()) {                                                      \
-    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
-    if (!AsInner()->HasActiveDocument()) {                                    \
-      NS_WARNING(outer ?                                                      \
-                 "Inner window does not have active document." :              \
-                 "No outer window available!");                               \
-      return err_rval;                                                        \
-    }                                                                         \
-    return ((nsGlobalChromeWindow *)outer)->method args;                      \
-  }                                                                           \
-  PR_END_MACRO
-
-#define FORWARD_TO_INNER_CHROME(method, args, err_rval)                       \
-  PR_BEGIN_MACRO                                                              \
-  if (IsOuterWindow()) {                                                      \
-    if (!mInnerWindow) {                                                      \
-      NS_WARNING("No inner window available!");                               \
-      return err_rval;                                                        \
-    }                                                                         \
-    return ((nsGlobalChromeWindow *)nsGlobalWindow::Cast(mInnerWindow))->method args; \
-  }                                                                           \
-  PR_END_MACRO
-
 #define FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
@@ -1753,6 +1728,20 @@ nsGlobalWindow::~nsGlobalWindow()
 {
   AssertIsOnMainThread();
 
+  if (IsChromeWindow()) {
+    MOZ_ASSERT(mCleanMessageManager,
+              "chrome windows may always disconnect the msg manager");
+
+    DisconnectAndClearGroupMessageManagers();
+
+    if (mChromeFields.mMessageManager) {
+      static_cast<nsFrameMessageManager *>(
+        mChromeFields.mMessageManager.get())->Disconnect();
+    }
+
+    mCleanMessageManager = false;
+  }
+
   DisconnectEventTargetObjects();
 
   // We have to check if sWindowsById isn't null because ::Shutdown might have
@@ -2040,10 +2029,9 @@ nsGlobalWindow::CleanUp()
 
   if (mCleanMessageManager) {
     MOZ_ASSERT(mIsChrome, "only chrome should have msg manager cleaned");
-    nsGlobalChromeWindow *asChrome = static_cast<nsGlobalChromeWindow*>(this);
-    if (asChrome->mMessageManager) {
+    if (mChromeFields.mMessageManager) {
       static_cast<nsFrameMessageManager*>(
-        asChrome->mMessageManager.get())->Disconnect();
+        mChromeFields.mMessageManager.get())->Disconnect();
     }
   }
 
@@ -2215,6 +2203,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   if (aIID.Equals(NS_GET_IID(mozIDOMWindowProxy)) && IsOuterWindow()) {
     foundInterface = AsOuter();
   } else
+  if (aIID.Equals(NS_GET_IID(nsIDOMChromeWindow)) && IsChromeWindow()) {
+    foundInterface = static_cast<nsIDOMChromeWindow*>(this);
+  } else
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
@@ -2355,6 +2346,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
 
   tmp->TraverseHostObjectURIs(cb);
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mBrowserDOMWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mMessageManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mGroupMessageManagers)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mOpenerForInitialContentBrowser)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -2436,6 +2432,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleRequestExecutor)
   tmp->DisableIdleCallbackRequests();
+
+  if (tmp->IsChromeWindow()) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mBrowserDOMWindow)
+    if (tmp->mChromeFields.mMessageManager) {
+      static_cast<nsFrameMessageManager*>(
+        tmp->mChromeFields.mMessageManager.get())->Disconnect();
+      NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mMessageManager)
+    }
+    tmp->DisconnectAndClearGroupMessageManagers();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mGroupMessageManagers)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mOpenerForInitialContentBrowser)
+  }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -3125,7 +3133,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       newInnerGlobal = newInnerWindow->GetWrapperPreserveColor();
     } else {
       if (thisChrome) {
-        newInnerWindow = nsGlobalChromeWindow::Create(this);
+        newInnerWindow = nsGlobalWindow::CreateChrome(this);
       } else {
         newInnerWindow = nsGlobalWindow::Create(this);
       }
@@ -7309,12 +7317,11 @@ nsGlobalWindow::SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
   if (!NS_WARN_IF(!IsChromeWindow())) {
-    auto chromeWin = static_cast<nsGlobalChromeWindow*>(this);
-    if (!NS_WARN_IF(chromeWin->mFullscreenPresShell)) {
+    if (!NS_WARN_IF(mChromeFields.mFullscreenPresShell)) {
       if (nsIPresShell* shell = mDocShell->GetPresShell()) {
         if (nsRefreshDriver* rd = shell->GetRefreshDriver()) {
-          chromeWin->mFullscreenPresShell = do_GetWeakReference(shell);
-          MOZ_ASSERT(chromeWin->mFullscreenPresShell);
+          mChromeFields.mFullscreenPresShell = do_GetWeakReference(shell);
+          MOZ_ASSERT(mChromeFields.mFullscreenPresShell);
           rd->SetIsResizeSuppressed();
           rd->Freeze();
         }
@@ -7362,13 +7369,12 @@ nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
   DispatchCustomEvent(NS_LITERAL_STRING("fullscreen"));
 
   if (!NS_WARN_IF(!IsChromeWindow())) {
-    auto chromeWin = static_cast<nsGlobalChromeWindow*>(this);
     if (nsCOMPtr<nsIPresShell> shell =
-        do_QueryReferent(chromeWin->mFullscreenPresShell)) {
+        do_QueryReferent(mChromeFields.mFullscreenPresShell)) {
       if (nsRefreshDriver* rd = shell->GetRefreshDriver()) {
         rd->Thaw();
       }
-      chromeWin->mFullscreenPresShell = nullptr;
+      mChromeFields.mFullscreenPresShell = nullptr;
     }
   }
 
@@ -9362,8 +9368,7 @@ nsGlobalWindow::CanClose()
 
   if (mIsChrome) {
     nsCOMPtr<nsIBrowserDOMWindow> bwin;
-    nsIDOMChromeWindow* chromeWin = static_cast<nsGlobalChromeWindow*>(this);
-    chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
+    GetBrowserDOMWindow(getter_AddRefs(bwin));
 
     bool canClose = true;
     if (bwin && NS_SUCCEEDED(bwin->CanClose(&canClose))) {
@@ -14015,44 +14020,13 @@ nsGlobalWindow::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
   }
 }
 
-// nsGlobalChromeWindow implementation
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
-                                                  nsGlobalWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserDOMWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGroupMessageManagers)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpenerForInitialContentBrowser)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGlobalChromeWindow,
-                                                nsGlobalWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserDOMWindow)
-  if (tmp->mMessageManager) {
-    static_cast<nsFrameMessageManager*>(
-      tmp->mMessageManager.get())->Disconnect();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
-  }
-  tmp->DisconnectAndClearGroupMessageManagers();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGroupMessageManagers)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOpenerForInitialContentBrowser)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-// QueryInterface implementation for nsGlobalChromeWindow
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalChromeWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMChromeWindow)
-NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
-
-NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
-NS_IMPL_RELEASE_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
-
-/* static */ already_AddRefed<nsGlobalChromeWindow>
-nsGlobalChromeWindow::Create(nsGlobalWindow *aOuterWindow)
+/* static */ already_AddRefed<nsGlobalWindow>
+nsGlobalWindow::CreateChrome(nsGlobalWindow *aOuterWindow)
 {
-  RefPtr<nsGlobalChromeWindow> window = new nsGlobalChromeWindow(aOuterWindow);
+  RefPtr<nsGlobalWindow> window = new nsGlobalWindow(aOuterWindow);
+  window->mIsChrome = true;
+  window->mCleanMessageManager = true;
+
   window->InitWasOffline();
   return window.forget();
 }
@@ -14102,7 +14076,7 @@ nsGlobalWindow::IsFullyOccluded()
 void
 nsGlobalWindow::Maximize()
 {
-  MOZ_ASSERT(IsInnerWindow());
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
@@ -14114,7 +14088,7 @@ nsGlobalWindow::Maximize()
 void
 nsGlobalWindow::Minimize()
 {
-  MOZ_ASSERT(IsInnerWindow());
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
@@ -14126,7 +14100,7 @@ nsGlobalWindow::Minimize()
 void
 nsGlobalWindow::Restore()
 {
-  MOZ_ASSERT(IsInnerWindow());
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
@@ -14271,9 +14245,10 @@ nsGlobalWindow::SetCursor(const nsAString& aCursor, ErrorResult& aError)
 }
 
 NS_IMETHODIMP
-nsGlobalChromeWindow::GetBrowserDOMWindow(nsIBrowserDOMWindow **aBrowserWindow)
+nsGlobalWindow::GetBrowserDOMWindow(nsIBrowserDOMWindow **aBrowserWindow)
 {
-  FORWARD_TO_INNER_CHROME(GetBrowserDOMWindow, (aBrowserWindow), NS_ERROR_UNEXPECTED);
+  MOZ_RELEASE_ASSERT(IsChromeWindow());
+  FORWARD_TO_INNER(GetBrowserDOMWindow, (aBrowserWindow), NS_ERROR_UNEXPECTED);
 
   ErrorResult rv;
   NS_IF_ADDREF(*aBrowserWindow = GetBrowserDOMWindow(rv));
@@ -14285,7 +14260,7 @@ nsGlobalWindow::GetBrowserDOMWindowOuter()
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   MOZ_ASSERT(IsChromeWindow());
-  return static_cast<nsGlobalChromeWindow*>(this)->mBrowserDOMWindow;
+  return mChromeFields.mBrowserDOMWindow;
 }
 
 nsIBrowserDOMWindow*
@@ -14299,7 +14274,7 @@ nsGlobalWindow::SetBrowserDOMWindowOuter(nsIBrowserDOMWindow* aBrowserWindow)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   MOZ_ASSERT(IsChromeWindow());
-  static_cast<nsGlobalChromeWindow*>(this)->mBrowserDOMWindow = aBrowserWindow;
+  mChromeFields.mBrowserDOMWindow = aBrowserWindow;
 }
 
 void
@@ -14359,9 +14334,9 @@ nsGlobalWindow::NotifyDefaultButtonLoaded(Element& aDefaultButton,
 }
 
 NS_IMETHODIMP
-nsGlobalChromeWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
+nsGlobalWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
 {
-  FORWARD_TO_INNER_CHROME(GetMessageManager, (aManager), NS_ERROR_UNEXPECTED);
+  FORWARD_TO_INNER(GetMessageManager, (aManager), NS_ERROR_UNEXPECTED);
 
   ErrorResult rv;
   NS_IF_ADDREF(*aManager = GetMessageManager(rv));
@@ -14373,23 +14348,23 @@ nsGlobalWindow::GetMessageManager(ErrorResult& aError)
 {
   MOZ_ASSERT(IsChromeWindow());
   MOZ_RELEASE_ASSERT(IsInnerWindow());
-  nsGlobalChromeWindow* myself = static_cast<nsGlobalChromeWindow*>(this);
-  if (!myself->mMessageManager) {
+  if (!mChromeFields.mMessageManager) {
     nsCOMPtr<nsIMessageBroadcaster> globalMM =
       do_GetService("@mozilla.org/globalmessagemanager;1");
-    myself->mMessageManager =
+    mChromeFields.mMessageManager =
       new nsFrameMessageManager(nullptr,
                                 static_cast<nsFrameMessageManager*>(globalMM.get()),
                                 MM_CHROME | MM_BROADCASTER);
   }
-  return myself->mMessageManager;
+  return mChromeFields.mMessageManager;
 }
 
 NS_IMETHODIMP
-nsGlobalChromeWindow::GetGroupMessageManager(const nsAString& aGroup,
-                                             nsIMessageBroadcaster** aManager)
+nsGlobalWindow::GetGroupMessageManager(const nsAString& aGroup,
+                                       nsIMessageBroadcaster** aManager)
 {
-  FORWARD_TO_INNER_CHROME(GetGroupMessageManager, (aGroup, aManager), NS_ERROR_UNEXPECTED);
+  MOZ_RELEASE_ASSERT(IsChromeWindow());
+  FORWARD_TO_INNER(GetGroupMessageManager, (aGroup, aManager), NS_ERROR_UNEXPECTED);
 
   ErrorResult rv;
   NS_IF_ADDREF(*aManager = GetGroupMessageManager(aGroup, rv));
@@ -14403,9 +14378,8 @@ nsGlobalWindow::GetGroupMessageManager(const nsAString& aGroup,
   MOZ_ASSERT(IsChromeWindow());
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
-  nsGlobalChromeWindow* myself = static_cast<nsGlobalChromeWindow*>(this);
   nsCOMPtr<nsIMessageBroadcaster> messageManager =
-    myself->mGroupMessageManagers.LookupForAdd(aGroup).OrInsert(
+    mChromeFields.mGroupMessageManagers.LookupForAdd(aGroup).OrInsert(
       [this, &aError] () {
         nsFrameMessageManager* parent =
           static_cast<nsFrameMessageManager*>(GetMessageManager(aError));
@@ -14418,20 +14392,22 @@ nsGlobalWindow::GetGroupMessageManager(const nsAString& aGroup,
 }
 
 nsresult
-nsGlobalChromeWindow::SetOpenerForInitialContentBrowser(mozIDOMWindowProxy* aOpenerWindow)
+nsGlobalWindow::SetOpenerForInitialContentBrowser(mozIDOMWindowProxy* aOpenerWindow)
 {
+  MOZ_RELEASE_ASSERT(IsChromeWindow());
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(!mOpenerForInitialContentBrowser);
-  mOpenerForInitialContentBrowser = aOpenerWindow;
+  MOZ_ASSERT(!mChromeFields.mOpenerForInitialContentBrowser);
+  mChromeFields.mOpenerForInitialContentBrowser = aOpenerWindow;
   return NS_OK;
 }
 
 nsresult
-nsGlobalChromeWindow::TakeOpenerForInitialContentBrowser(mozIDOMWindowProxy** aOpenerWindow)
+nsGlobalWindow::TakeOpenerForInitialContentBrowser(mozIDOMWindowProxy** aOpenerWindow)
 {
+  MOZ_RELEASE_ASSERT(IsChromeWindow());
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   // Intentionally forget our own member
-  mOpenerForInitialContentBrowser.forget(aOpenerWindow);
+  mChromeFields.mOpenerForInitialContentBrowser.forget(aOpenerWindow);
   return NS_OK;
 }
 

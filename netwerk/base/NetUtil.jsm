@@ -136,7 +136,7 @@ this.NetUtil = {
         if (aSource instanceof Ci.nsIInputStream) {
             let pump = Cc["@mozilla.org/network/input-stream-pump;1"].
                        createInstance(Ci.nsIInputStreamPump);
-            pump.init(aSource, -1, -1, 0, 0, true);
+            pump.init(aSource, 0, 0, true);
             pump.asyncRead(listener, null);
             return;
         }

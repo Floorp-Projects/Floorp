@@ -356,11 +356,12 @@ Editor.prototype = {
     });
 
     cm.getWrapperElement().addEventListener("contextmenu", ev => {
-      ev.preventDefault();
-
       if (!this.config.contextMenu) {
         return;
       }
+
+      ev.stopPropagation();
+      ev.preventDefault();
 
       let popup = this.config.contextMenu;
       if (typeof popup == "string") {

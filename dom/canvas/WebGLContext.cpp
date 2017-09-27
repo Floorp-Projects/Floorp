@@ -2399,7 +2399,6 @@ WebGLContext::StartVRPresentation()
         gl::GLScreenBuffer::CreateFactory(gl,
             caps,
             vrmc,
-            vrmc->GetBackendType(),
             TextureFlags::ORIGIN_BOTTOM_LEFT);
 
     if (factory) {

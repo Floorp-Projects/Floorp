@@ -29,6 +29,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
+#include "nsILabelableRunnable.h"
 
 #if defined(ANDROID) && defined(DEBUG)
 #include <android/log.h>
@@ -268,6 +269,8 @@ protected:
     ~IToplevelProtocol();
 
 public:
+    using SchedulerGroupSet = nsILabelableRunnable::SchedulerGroupSet;
+
     void SetTransport(UniquePtr<Transport> aTrans)
     {
         mTrans = Move(aTrans);
@@ -388,7 +391,7 @@ public:
     // when it's difficult to determine an EventTarget ahead of time. See the
     // comment in nsILabelableRunnable.h for more information.
     virtual bool
-    GetMessageSchedulerGroups(const Message& aMsg, nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+    GetMessageSchedulerGroups(const Message& aMsg, SchedulerGroupSet& aGroups)
     {
         return false;
     }

@@ -10,14 +10,16 @@ interface nsIDOMEventTarget;
 interface nsIArray;
 
 /**
- * Contains an event target along with an array of nsIAtom in form "oneventname"
- * representing changed event listener names.
+ * Contains an event target along with a count of event listener changes
+ * affecting accessibility.
  */
 [scriptable, uuid(07222b02-da12-4cf4-b2f7-761da007a8d8)]
 interface nsIEventListenerChange : nsISupports
 {
   readonly attribute nsIDOMEventTarget target;
-  [noscript] readonly attribute nsIArray changedListenerNames;
+
+  [noscript]
+  readonly attribute uint32_t countOfEventListenerChangesAffectingAccessibility;
 };
 
 [scriptable, function, uuid(aa7c95f6-d3b5-44b3-9597-1d9f19b9c5f2)]
