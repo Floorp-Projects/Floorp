@@ -14,7 +14,7 @@ define(function (require, exports, module) {
    *   const {
    *     Tabs,
    *     TabPanel
-   *   } = createFactories(require("devtools/client/shared/components/tabs/tabs"));
+   *   } = createFactories(require("devtools/client/shared/components/tabs/Tabs"));
    */
   function createFactories(args) {
     let result = {};

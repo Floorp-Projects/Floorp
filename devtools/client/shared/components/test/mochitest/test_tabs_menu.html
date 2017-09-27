@@ -14,8 +14,8 @@ Test all-tabs menu.
   <link rel="stylesheet" type="text/css" href="resource://devtools/client/themes/variables.css">
   <link rel="stylesheet" type="text/css" href="resource://devtools/client/themes/common.css">
   <link rel="stylesheet" type="text/css" href="resource://devtools/client/themes/light-theme.css">
-  <link rel="stylesheet" type="text/css" href="resource://devtools/client/shared/components/tabs/tabs.css">
-  <link rel="stylesheet" type="text/css" href="resource://devtools/client/shared/components/tabs/tabbar.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/shared/components/tabs/Tabs.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/shared/components/tabs/TabBar.css">
   <link rel="stylesheet" type="text/css" href="resource://devtools/client/inspector/components/side-panel.css">
   <link rel="stylesheet" type="text/css" href="resource://devtools/client/inspector/components/InspectorTabPanel.css">
 </head>
@@ -27,7 +27,7 @@ window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
-    const Tabbar = React.createFactory(browserRequire("devtools/client/shared/components/tabs/tabbar"));
+    const Tabbar = React.createFactory(browserRequire("devtools/client/shared/components/tabs/TabBar"));
 
     // Create container for the TabBar. Set smaller width
     // to ensure that tabs won't fit and the all-tabs menu

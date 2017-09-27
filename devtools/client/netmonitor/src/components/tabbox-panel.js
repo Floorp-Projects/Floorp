@@ -13,8 +13,8 @@ const { L10N } = require("../utils/l10n");
 const { PANELS } = require("../constants");
 
 // Components
-const Tabbar = createFactory(require("devtools/client/shared/components/tabs/tabbar"));
-const TabPanel = createFactory(require("devtools/client/shared/components/tabs/tabs").TabPanel);
+const Tabbar = createFactory(require("devtools/client/shared/components/tabs/TabBar"));
+const TabPanel = createFactory(require("devtools/client/shared/components/tabs/Tabs").TabPanel);
 const CookiesPanel = createFactory(require("./cookies-panel"));
 const HeadersPanel = createFactory(require("./headers-panel"));
 const ParamsPanel = createFactory(require("./params-panel"));

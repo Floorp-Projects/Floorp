@@ -9,7 +9,7 @@
 const React = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const TreeView = React.createFactory(require("devtools/client/shared/components/tree/tree-view"));
+const TreeView = React.createFactory(require("devtools/client/shared/components/tree/TreeView"));
 
 // Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");

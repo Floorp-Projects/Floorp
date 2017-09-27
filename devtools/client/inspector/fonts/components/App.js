@@ -8,7 +8,7 @@ const { addons, createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
+const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 const FontList = createFactory(require("./FontList"));
 
 const { getStr } = require("../utils/l10n");
