@@ -1795,32 +1795,6 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
       }
       break;
 
-    case CSSPseudoClassType::mozEmptyExceptChildrenWithLocalname:
-      {
-        NS_ASSERTION(aString, "Must have string!");
-        const nsIContent *child = nullptr;
-        int32_t index = -1;
-
-        if (aForStyling) {
-          // FIXME:  This isn't sufficient to handle:
-          //   :-moz-empty-except-children-with-localname() + E
-          //   :-moz-empty-except-children-with-localname() ~ E
-          // because we don't know to restyle the grandparent of the
-          // inserted/removed element (as in bug 534804 for :empty).
-          *aSetSlowSelectorFlag = true;
-        }
-        do {
-          child = aElement->GetChildAt(++index);
-        } while (child &&
-                  (!IsSignificantChildMaybeThreadSafe(child, true, false) ||
-                  (child->GetNameSpaceID() == aElement->GetNameSpaceID() &&
-                    child->NodeInfo()->NameAtom()->Equals(nsDependentString(aString)))));
-        if (child) {
-          return false;
-        }
-      }
-      break;
-
     case CSSPseudoClassType::dir:
       {
         if (aDependence) {
