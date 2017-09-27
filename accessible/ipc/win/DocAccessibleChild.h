@@ -53,7 +53,8 @@ public:
                       const LayoutDeviceIntRect& aCaretRect);
   bool SendTextChangeEvent(const uint64_t& aID, const nsString& aStr,
                            const int32_t& aStart, const uint32_t& aLen,
-                           const bool& aIsInsert, const bool& aFromUser);
+                           const bool& aIsInsert, const bool& aFromUser,
+                           const bool aDoSyncCheck = true);
   bool SendSelectionEvent(const uint64_t& aID, const uint64_t& aWidgetID,
                           const uint32_t& aType);
   bool SendRoleChangedEvent(const uint32_t& aRole);
@@ -221,7 +222,7 @@ private:
     void Dispatch(DocAccessibleChild* aIPCDoc) override
     {
       Unused << aIPCDoc->SendTextChangeEvent(mID, mStr, mStart, mLen, mIsInsert,
-                                             mFromUser);
+                                             mFromUser, false);
     }
 
     uint64_t  mID;
