@@ -8,9 +8,6 @@ const {utils: Cu} = Components;
 const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {PrerenderData} = Cu.import("resource://activity-stream/common/PrerenderData.jsm", {});
-Cu.import("resource://gre/modules/Services.jsm");
-
-const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 
 this.PrefsFeed = class PrefsFeed {
   constructor(prefMap) {
@@ -30,30 +27,11 @@ this.PrefsFeed = class PrefsFeed {
     }
   }
 
-  _initOnboardingPref() {
-    const snippetsEnabled = this._prefs.get("feeds.snippets");
-    if (!snippetsEnabled) {
-      this.setOnboardingDisabledDefault(true);
-    }
-  }
-
-  setOnboardingDisabledDefault(value) {
-    const branch = Services.prefs.getDefaultBranch("");
-    branch.setBoolPref(ONBOARDING_FINISHED_PREF, value);
-  }
-
   onPrefChanged(name, value) {
     if (this._prefMap.has(name)) {
       this.store.dispatch(ac.BroadcastToContent({type: at.PREF_CHANGED, data: {name, value}}));
     }
-
     this._checkPrerender(name);
-
-    if (name === "feeds.snippets") {
-      // If snippets are disabled, onboarding notifications should also be
-      // disabled because they look like snippets.
-      this.setOnboardingDisabledDefault(!value);
-    }
   }
 
   init() {
@@ -69,7 +47,6 @@ this.PrefsFeed = class PrefsFeed {
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
 
     this._setPrerenderPref();
-    this._initOnboardingPref();
   }
   removeListeners() {
     this._prefs.ignoreBranch(this);
@@ -84,9 +61,6 @@ this.PrefsFeed = class PrefsFeed {
         break;
       case at.SET_PREF:
         this._prefs.set(action.data.name, action.data.value);
-        break;
-      case at.DISABLE_ONBOARDING:
-        this.setOnboardingDisabledDefault(true);
         break;
     }
   }

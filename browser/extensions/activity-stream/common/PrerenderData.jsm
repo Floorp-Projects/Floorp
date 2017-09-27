@@ -74,7 +74,8 @@ this.PrerenderData = new _PrerenderData({
       icon: "pocket",
       id: "topstories",
       order: 1,
-      title: {id: "header_recommended_by", values: {provider: "Pocket"}}
+      title: {id: "header_recommended_by", values: {provider: "Pocket"}},
+      topics: [{}]
     },
     {
       enabled: true,

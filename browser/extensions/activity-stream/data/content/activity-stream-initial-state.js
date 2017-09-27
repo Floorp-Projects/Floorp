@@ -138,6 +138,9 @@
       "enabled": true,
       "icon": "pocket",
       "id": "topstories",
+      "topics": [
+        {}
+      ],
       "initialized": false
     },
     {
