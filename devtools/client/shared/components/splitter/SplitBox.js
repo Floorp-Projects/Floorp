@@ -6,7 +6,7 @@
 
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const Draggable = React.createFactory(require("devtools/client/shared/components/splitter/draggable"));
+const Draggable = React.createFactory(require("devtools/client/shared/components/splitter/Draggable"));
 const { DOM: dom, PropTypes } = React;
 
 /**

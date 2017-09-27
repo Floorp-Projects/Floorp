@@ -12,7 +12,7 @@ const {
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
-const TreeViewClass = require("devtools/client/shared/components/tree/tree-view");
+const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const TreeView = createFactory(TreeViewClass);
 
 /**

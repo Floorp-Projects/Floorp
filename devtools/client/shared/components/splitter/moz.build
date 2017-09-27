@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'draggable.js',
-    'split-box.css',
-    'split-box.js',
+    'Draggable.js',
+    'SplitBox.css',
+    'SplitBox.js',
 )

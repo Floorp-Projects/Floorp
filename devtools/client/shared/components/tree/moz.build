@@ -4,11 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'label-cell.js',
-    'object-provider.js',
-    'tree-cell.js',
-    'tree-header.js',
-    'tree-row.js',
-    'tree-view.css',
-    'tree-view.js',
+    'LabelCell.js',
+    'ObjectProvider.js',
+    'TreeCell.js',
+    'TreeHeader.js',
+    'TreeRow.js',
+    'TreeView.css',
+    'TreeView.js',
 )

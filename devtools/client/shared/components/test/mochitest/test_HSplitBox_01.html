@@ -35,7 +35,7 @@ window.onload = Task.async(function* () {
     const React = browserRequire("devtools/client/shared/vendor/react");
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 
-    let HSplitBox = React.createFactory(browserRequire("devtools/client/shared/components/h-split-box"));
+    let HSplitBox = React.createFactory(browserRequire("devtools/client/shared/components/HSplitBox"));
     ok(HSplitBox, "Should get HSplitBox");
 
     const newSizes = [];

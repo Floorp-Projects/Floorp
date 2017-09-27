@@ -89,7 +89,7 @@ AnimationsTimeline.prototype = {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 
     const SplitBox = React.createFactory(
-      browserRequire("devtools/client/shared/components/splitter/split-box"));
+      browserRequire("devtools/client/shared/components/splitter/SplitBox"));
 
     const splitter = SplitBox({
       className: "animation-root",

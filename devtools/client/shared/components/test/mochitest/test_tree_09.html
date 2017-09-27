@@ -22,7 +22,7 @@ window.onload = Task.async(function* () {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
     const { Simulate } = React.addons.TestUtils;
-    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/Tree"));
 
     let numberOfExpands = 0;
     let lastExpandedItem = null;

@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/toolbox.css" type="text/css"?>
-<?xml-stylesheet href="resource://devtools/client/shared/components/notification-box.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/NotificationBox.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 

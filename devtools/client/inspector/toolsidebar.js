@@ -73,7 +73,7 @@ ToolSidebar.prototype = {
 
   render: function () {
     let Tabbar = this.React.createFactory(this.browserRequire(
-      "devtools/client/shared/components/tabs/tabbar"));
+      "devtools/client/shared/components/tabs/TabBar"));
 
     let sidebar = Tabbar({
       menuDocument: this._toolPanel._toolbox.doc,
