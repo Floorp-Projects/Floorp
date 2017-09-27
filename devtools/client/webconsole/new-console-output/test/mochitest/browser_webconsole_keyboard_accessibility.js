@@ -54,12 +54,12 @@ add_task(function* () {
   }
   synthesizeKeyShortcut(clearShortcut);
   yield waitFor(() => findMessages(hud, "").length == 0);
-  ok(hasFocus(hud.jsterm.inputNode), "jsterm input is focused");
+  is(hud.jsterm.inputNode.getAttribute("focused"), "true", "jsterm input is focused");
 
   // Focus filter
   info("try ctrl-f to focus filter");
   synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
-  ok(!hasFocus(hud.jsterm.inputNode), "jsterm input is not focused");
+  ok(!hud.jsterm.inputNode.getAttribute("focused"), "jsterm input is not focused");
   is(hud.ui.filterBox, outputScroller.ownerDocument.activeElement,
     "filter input is focused");
 });
