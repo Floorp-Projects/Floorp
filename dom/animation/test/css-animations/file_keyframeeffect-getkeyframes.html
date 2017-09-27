@@ -660,6 +660,8 @@ test(function(t) {
 
   var frames = getKeyframes(div);
 
+  assert_equals(frames.length, 2, "number of frames");
+
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
       transform: "none" },
@@ -677,6 +679,8 @@ test(function(t) {
   div.style.animation = 'anim-variables-shorthand 100s';
 
   var frames = getKeyframes(div);
+
+  assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
