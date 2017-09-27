@@ -294,10 +294,6 @@
   border-inline-end-style: none;
   padding-inline-end: 5px;
 }
-.urlbar-input-box {
-  margin: 0;
-  padding: 3px 0 2px;
-}
 
 /* ::::: URL Bar Zoom Reset Button ::::: */
 @keyframes urlbar-zoom-reset-pulse {
