@@ -207,8 +207,7 @@ SdpHelper::GetBundledMids(const Sdp& sdp, BundledMids* bundledMids)
 
   for (SdpGroupAttributeList::Group& group : bundleGroups) {
     if (group.tags.empty()) {
-      SDP_SET_ERROR("Empty BUNDLE group");
-      return NS_ERROR_INVALID_ARG;
+      continue;
     }
 
     const SdpMediaSection* masterBundleMsection(
