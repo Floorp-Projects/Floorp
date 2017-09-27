@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TEST_GMP_STORAGE_H__
-#define TEST_GMP_STORAGE_H__
+#ifndef TEST_CDM_STORAGE_H__
+#define TEST_CDM_STORAGE_H__
 
 #include <functional>
 #include <string>
@@ -51,4 +51,4 @@ public:
 void OpenRecord(cdm::Host_8* aHost,
                 const std::string& aRecordName,
                 std::function<void(bool)>&& aOpenComplete);
-#endif // TEST_GMP_STORAGE_H__
+#endif // TEST_CDM_STORAGE_H__
