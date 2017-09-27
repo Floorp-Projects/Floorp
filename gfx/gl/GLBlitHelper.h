@@ -28,7 +28,6 @@ class GPUVideoImage;
 class PlanarYCbCrImage;
 class SurfaceTextureImage;
 class MacIOSurfaceImage;
-class EGLImageImage;
 class SurfaceDescriptorD3D10;
 class SurfaceDescriptorDXGIYCbCr;
 } // namespace layers
@@ -132,8 +131,6 @@ public:
 #ifdef MOZ_WIDGET_ANDROID
     // Blit onto the current FB.
     bool BlitImage(layers::SurfaceTextureImage* stImage, const gfx::IntSize& destSize,
-                   OriginPos destOrigin) const;
-    bool BlitImage(layers::EGLImageImage* eglImage, const gfx::IntSize& destSize,
                    OriginPos destOrigin) const;
 #endif
 #ifdef XP_MACOSX

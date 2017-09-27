@@ -855,13 +855,8 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
      * to will botch an assertion in JSObject::freeSlot) if the new last
      * property (shape here) has a slotSpan that does not cover it.
      */
-    if (hadSlot && !shape->hasSlot()) {
-        if (oldSlot < obj->slotSpan())
-            obj->freeSlot(cx, oldSlot);
-        /* Note: The optimization based on propertyRemovals is only relevant to the active thread. */
-        if (!cx->helperThread())
-            ++cx->propertyRemovals;
-    }
+    if (hadSlot && !shape->hasSlot() && oldSlot < obj->slotSpan())
+        obj->freeSlot(cx, oldSlot);
 
     obj->checkShapeConsistency();
 
@@ -959,11 +954,8 @@ NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj, jsid id_)
     }
 
     /* If shape has a slot, free its slot number. */
-    if (shape->hasSlot()) {
+    if (shape->hasSlot())
         obj->freeSlot(cx, shape->slot());
-        if (!cx->helperThread())
-            ++cx->propertyRemovals;
-    }
 
     /*
      * A dictionary-mode object owns mutable, unique shapes on a non-circular
@@ -1042,8 +1034,6 @@ NativeObject::clear(JSContext* cx, HandleNativeObject obj)
 
     JS_ALWAYS_TRUE(obj->setLastProperty(cx, shape));
 
-    if (!cx->helperThread())
-        ++cx->propertyRemovals;
     obj->checkShapeConsistency();
 }
 

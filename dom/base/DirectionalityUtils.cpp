@@ -244,16 +244,6 @@ DoesNotParticipateInAutoDirection(const Element* aElement)
           aElement->IsInAnonymousSubtree());
 }
 
-static inline bool
-IsBdiWithoutDirAuto(const Element* aElement)
-{
-  // We are testing for bdi elements without explicit dir="auto", so we can't
-  // use the HasDirAuto() flag, since that will return true for bdi element with
-  // no dir attribute or an invalid dir attribute
-  return (aElement->IsHTMLElement(nsGkAtoms::bdi) &&
-          (!aElement->HasValidDir() || aElement->HasFixedDir()));
-}
-
 /**
  * Returns true if aElement is one of the element whose text content should not
  * affect the direction of ancestors with dir=auto (though it may affect its own
@@ -263,7 +253,7 @@ static bool
 DoesNotAffectDirectionOfAncestors(const Element* aElement)
 {
   return (DoesNotParticipateInAutoDirection(aElement) ||
-          IsBdiWithoutDirAuto(aElement) ||
+          aElement->IsHTMLElement(nsGkAtoms::bdi) ||
           aElement->HasFixedDir());
 }
 
