@@ -4067,14 +4067,14 @@ GetUserMediaWindowListener::StopRawID(const nsString& removedDeviceID)
       nsString id;
       source->GetAudioDevice()->GetRawId(id);
       if (removedDeviceID.Equals(id)) {
-        source->Stop();
+        source->StopTrack(kAudioTrack);
       }
     }
     if (source->GetVideoDevice()) {
       nsString id;
       source->GetVideoDevice()->GetRawId(id);
       if (removedDeviceID.Equals(id)) {
-        source->Stop();
+        source->StopTrack(kVideoTrack);
       }
     }
   }
