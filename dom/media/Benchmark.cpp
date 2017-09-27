@@ -44,7 +44,8 @@ VP9Benchmark::IsVP9DecodeFast()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef MOZ_WIDGET_ANDROID
+  // Disable VP9 estimizer on Mac, see bug 1400787.
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_APPLEMEDIA)
   return false;
 #else
   bool hasPref = Preferences::HasUserValue(sBenchmarkFpsPref);
