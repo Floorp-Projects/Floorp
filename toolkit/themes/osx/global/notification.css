@@ -16,3 +16,7 @@
 .popup-notification-warning {
   color: #aa1b08;
 }
+
+.popup-notification-button[anonid="secondarybutton"]:not([hidden="true"])  ~ .popup-notification-button[default]:not([highlight="true"]) {
+  border-inline-start: 1px solid var(--panel-separator-color);
+}

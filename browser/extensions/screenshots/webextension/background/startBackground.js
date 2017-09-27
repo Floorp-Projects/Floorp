@@ -14,6 +14,7 @@ this.startBackground = (function() {
     "log.js",
     "makeUuid.js",
     "catcher.js",
+    "blobConverters.js",
     "background/selectorLoader.js",
     "background/communication.js",
     "background/auth.js",

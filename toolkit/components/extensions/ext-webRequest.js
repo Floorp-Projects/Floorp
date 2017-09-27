@@ -17,9 +17,17 @@ function WebRequestEventManager(context, eventName) {
   let name = `webRequest.${eventName}`;
   let register = (fire, filter, info) => {
     let listener = data => {
+      // data.isProxy is only set from the WebRequest AuthRequestor handler,
+      // in which case we know that this is onAuthRequired.  If this is proxy
+      // authorization, we allow without any additional matching/filtering.
+      let isProxyAuth = data.isProxy && context.extension.hasPermission("proxy");
+
       // Prevent listening in on requests originating from system principal to
-      // prevent tinkering with OCSP, app and addon updates, etc.
-      if (data.isSystemPrincipal) {
+      // prevent tinkering with OCSP, app and addon updates, etc.  However,
+      // proxy addons need to be able to provide auth for any request so we
+      // allow those through.  The exception is for proxy extensions handling
+      // proxy authentication.
+      if (data.isSystemPrincipal && !isProxyAuth) {
         return;
       }
 
@@ -31,7 +39,7 @@ function WebRequestEventManager(context, eventName) {
       // and the origin that is loading the resource.
       const origin = data.documentUrl;
       const own = origin && origin.startsWith(context.extension.getURL());
-      if (origin && !own && !hosts.matches(data.documentURI)) {
+      if (origin && !own && !isProxyAuth && !hosts.matches(data.documentURI)) {
         return;
       }
 

@@ -221,10 +221,12 @@ FrameParser::FrameHeader::SampleRate() const
 {
   // Sample rates - use [version][srate]
   static const uint16_t SAMPLE_RATE[4][4] = {
+    // clang-format off
     { 11025, 12000,  8000, 0 }, // MPEG 2.5
     {     0,     0,     0, 0 }, // Reserved
     { 22050, 24000, 16000, 0 }, // MPEG 2
     { 44100, 48000, 32000, 0 }  // MPEG 1
+    // clang-format on
   };
 
   return SAMPLE_RATE[RawVersion()][RawSampleRate()];
@@ -243,11 +245,13 @@ FrameParser::FrameHeader::SamplesPerFrame() const
 {
   // Samples per frame - use [version][layer]
   static const uint16_t FRAME_SAMPLE[4][4] = {
+    // clang-format off
     // Layer     3     2     1       Version
     {      0,  576, 1152,  384 }, // 2.5
     {      0,    0,    0,    0 }, // Reserved
     {      0,  576, 1152,  384 }, // 2
     {      0, 1152, 1152,  384 }  // 1
+    // clang-format on
   };
 
   return FRAME_SAMPLE[RawVersion()][RawLayer()];
@@ -258,6 +262,7 @@ FrameParser::FrameHeader::Bitrate() const
 {
   // Bitrates - use [version][layer][bitrate]
   static const uint16_t BITRATE[4][4][16] = {
+    // clang-format off
     { // Version 2.5
       { 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 0 }, // Reserved
       { 0,   8,  16,  24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0 }, // Layer 3
@@ -282,6 +287,7 @@ FrameParser::FrameHeader::Bitrate() const
       { 0,  32,  48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0 }, // Layer 2
       { 0,  32,  64,  96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0 }, // Layer 1
     }
+    // clang-format on
   };
 
   return 1000 * BITRATE[RawVersion()][RawLayer()][RawBitrate()];

@@ -977,8 +977,8 @@ def build_macosx_engine_payload(config, task, task_def):
 
 @payload_builder('buildbot-bridge')
 def build_buildbot_bridge_payload(config, task, task_def):
-    del task['extra']['treeherder']
-    del task['extra']['treeherderEnv']
+    task['extra'].pop('treeherder', None)
+    task['extra'].pop('treeherderEnv', None)
     worker = task['worker']
     task_def['payload'] = {
         'buildername': worker['buildername'],

@@ -234,6 +234,11 @@ repackage-signing
 Repackage-signing take the repackaged installers (windows) and update packaging (with
 the signed internal bits) and signs them.
 
+repo-update
+-----------
+Repo-Update tasks are tasks that perform some action on the project repo itself,
+in order to update its state in some way.
+
 partials
 --------
 Partials takes the complete.mar files produced in previous tasks and generates partial

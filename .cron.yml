@@ -97,3 +97,18 @@ jobs:
           by-project:
               mozilla-central: [{hour: 10, minute: 0}]
               # No default
+
+    - name: periodic-update
+      job:
+          type: decision-task
+          treeherder-symbol: Nfile
+          target-tasks-method: nightly_file_update
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              # No default branch
+              mozilla-central:
+                  # Buildbot start time is 10:02am UTC, until we are able to
+                  # disable buildbot scheduling, use +12h
+                  - {hour: 22, minute: 0}
