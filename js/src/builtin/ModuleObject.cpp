@@ -1113,7 +1113,7 @@ ModuleObject::execute(JSContext* cx, HandleModuleObject self, MutableHandleValue
 ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleObject exports)
 {
     MOZ_ASSERT(!self->namespace_());
-    MOZ_ASSERT(exports->is<ArrayObject>() || exports->is<UnboxedArrayObject>());
+    MOZ_ASSERT(exports->is<ArrayObject>());
 
     RootedModuleNamespaceObject ns(cx, ModuleNamespaceObject::create(cx, self));
     if (!ns)
