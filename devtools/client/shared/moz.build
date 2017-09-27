@@ -12,6 +12,7 @@ DIRS += [
     'redux',
     'source-map',
     'vendor',
+    'webpack',
     'widgets',
 ]
 

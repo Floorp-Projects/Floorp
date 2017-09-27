@@ -541,7 +541,7 @@ add_task(function* test_dynamicScalars_registration() {
 
   const TEST_CASES = [
     {
-      "group": "telemetry.test",
+      "category": "telemetry.test",
       "data": {
         "missing_kind": {
           keyed: false,
@@ -552,7 +552,7 @@ add_task(function* test_dynamicScalars_registration() {
       "description": "Registration must fail if required fields are missing"
     },
     {
-      "group": "telemetry.test",
+      "category": "telemetry.test",
       "data": {
         "invalid_collection": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
@@ -563,7 +563,7 @@ add_task(function* test_dynamicScalars_registration() {
       "description": "Registration must fail if 'record_on_release' is of the wrong type"
     },
     {
-      "group": "telemetry.test",
+      "category": "telemetry.test",
       "data": {
         "invalid_kind": {
           kind: "12",
@@ -573,7 +573,7 @@ add_task(function* test_dynamicScalars_registration() {
       "description": "Registration must fail if 'kind' is of the wrong type"
     },
     {
-      "group": "telemetry.test",
+      "category": "telemetry.test",
       "data": {
         "invalid_expired": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
@@ -584,7 +584,7 @@ add_task(function* test_dynamicScalars_registration() {
       "description": "Registration must fail if 'expired' is of the wrong type"
     },
     {
-      "group": "telemetry.test",
+      "category": "telemetry.test",
       "data": {
         "valid_scalar": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
@@ -599,7 +599,7 @@ add_task(function* test_dynamicScalars_registration() {
       "description": "No scalar must be registered if the batch contains an invalid one"
     },
     {
-      "group": "telemetry.test",
+      "category": "telemetry.test",
       "data": {
         "unsigned_int_kind": {
           kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
@@ -613,7 +613,7 @@ add_task(function* test_dynamicScalars_registration() {
   ];
 
   for (let testCase of TEST_CASES) {
-    Assert.throws(() => Telemetry.registerScalars(testCase.group, testCase.data),
+    Assert.throws(() => Telemetry.registerScalars(testCase.category, testCase.data),
                   testCase.evaluation, testCase.description);
   }
 });

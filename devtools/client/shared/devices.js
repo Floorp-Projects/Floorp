@@ -63,7 +63,7 @@ let addDevice = Task.async(function* (device, type = "phones") {
   if (!list) {
     list = localDevices[type] = [];
   }
-  list.push(device);
+  list.push(Object.assign({}, device));
   yield asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
 });
 exports.addDevice = addDevice;

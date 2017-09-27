@@ -99,7 +99,7 @@ private:
   nsCOMPtr<dom::Element> mElement;
 
   // The CSS property to change.
-  nsCOMPtr<nsIAtom> mProperty;
+  RefPtr<nsIAtom> mProperty;
 
   // The value to set the property to (ignored if mRemoveProperty==true).
   nsString mValue;

@@ -244,7 +244,7 @@ protected:
 
   // Prototype handlers are chained. We own the next handler in the chain.
   nsXBLPrototypeHandler* mNextHandler;
-  nsCOMPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
+  RefPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
   RefPtr<nsXBLEventHandler> mHandler;
   nsXBLPrototypeBinding* mPrototypeBinding; // the binding owns us
 };

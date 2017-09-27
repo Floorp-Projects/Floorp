@@ -101,8 +101,8 @@ public:
     void SetSimple() { mSimple = true; }
 
     // the reference and member variables for the query
-    nsCOMPtr<nsIAtom> mRefVariable;
-    nsCOMPtr<nsIAtom> mMemberVariable;
+    RefPtr<nsIAtom> mRefVariable;
+    RefPtr<nsIAtom> mMemberVariable;
 
 protected:
 

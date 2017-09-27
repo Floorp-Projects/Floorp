@@ -30,17 +30,22 @@
   text-shadow: none !important;
 }
 
+@media (-moz-os-version: windows-win7) {
+  @media (-moz-windows-default-theme) {
+    /* Always show light toolbar elements on aero surface. */
+    #TabsToolbar,
+    #TabsToolbar toolbarbutton[disabled="true"] {
+      color: hsl(240,9%,98%);
+    }
+
+    /* Keep showing the correct color inside the tabs. */
+    .tabbrowser-tab {
+      color: var(--chrome-color) !important;
+    }
+  }
+}
+
 @media (-moz-windows-glass) {
-  /* Always show light toolbar elements on aero glass surface. */
-  #TabsToolbar {
-    color: hsl(240,9%,98%);
-  }
-
-  /* Keep showing the correct color inside the tabs. */
-  .tabbrowser-tab {
-    color: var(--chrome-color) !important;
-  }
-
   /* Make the menubar text readable on aero glass (copied from browser-aero.css). */
   #toolbar-menubar {
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);

@@ -14,7 +14,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsStyleContext.h"
 
-typedef nsCOMArray<nsIAtom> AtomArray;
+typedef nsTArray<RefPtr<nsIAtom>> AtomArray;
 
 class nsTreeStyleCache
 {
@@ -55,7 +55,7 @@ protected:
 
   private:
     DFAState mState;
-    nsCOMPtr<nsIAtom> mInputSymbol;
+    RefPtr<nsIAtom> mInputSymbol;
   };
 
   typedef nsDataHashtable<nsGenericHashKey<Transition>, DFAState> TransitionTable;

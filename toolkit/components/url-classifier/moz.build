@@ -38,6 +38,7 @@ UNIFIED_SOURCES += [
     'protobuf/safebrowsing.pb.cc',
     'ProtocolParser.cpp',
     'RiceDeltaDecoder.cpp',
+    'UrlClassifierTelemetryUtils.cpp',
 ]
 
 # define conflicting LOG() macros

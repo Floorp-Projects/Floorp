@@ -476,7 +476,7 @@ void Pickle::EndRead(PickleIterator& iter, uint32_t ipcMsgType) const {
     uint32_t latencyMs = round((mozilla::TimeStamp::Now() - iter.start_).ToMilliseconds());
     if (latencyMs >= kMinTelemetryIPCReadLatencyMs) {
       mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_READ_MAIN_THREAD_LATENCY_MS,
-                                     nsDependentCString(mozilla::ipc::StringFromIPCMessageType(ipcMsgType)),
+                                     nsDependentCString(IPC::StringFromIPCMessageType(ipcMsgType)),
                                      latencyMs);
     }
   }

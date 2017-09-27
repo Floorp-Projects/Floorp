@@ -51,14 +51,12 @@ Message::Message()
                     &_header->source_event_type);
   }
 #endif
-  InitLoggingVariables();
 }
 
 Message::Message(int32_t routing_id,
                  msgid_t type,
                  uint32_t segment_capacity,
                  HeaderFlags flags,
-                 const char* const aName,
                  bool recordWriteLatency)
     : Pickle(MSG_HEADER_SZ, segment_capacity) {
   MOZ_COUNT_CTOR(IPC::Message);
@@ -86,7 +84,6 @@ Message::Message(int32_t routing_id,
   if (recordWriteLatency) {
     create_time_ = mozilla::TimeStamp::Now();
   }
-  InitLoggingVariables(aName);
 }
 
 #ifndef MOZ_TASK_TRACER
@@ -101,12 +98,10 @@ Message::Message(const char* data, int data_len)
   : Pickle(MSG_HEADER_SZ_DATA, data, data_len)
 {
   MOZ_COUNT_CTOR(IPC::Message);
-  InitLoggingVariables();
 }
 
 Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
   MOZ_COUNT_CTOR(IPC::Message);
-  InitLoggingVariables(other.name_);
 #if defined(OS_POSIX)
   file_descriptor_set_ = other.file_descriptor_set_.forget();
 #endif
@@ -115,10 +110,9 @@ Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
 /*static*/ Message*
 Message::IPDLMessage(int32_t routing_id,
                      msgid_t type,
-                     HeaderFlags flags,
-                     const char* const name)
+                     HeaderFlags flags)
 {
-  return new Message(routing_id, type, 0, flags, name, true);
+  return new Message(routing_id, type, 0, flags, true);
 }
 
 /*static*/ Message*
@@ -143,13 +137,8 @@ Message::ForInterruptDispatchError()
   return m;
 }
 
-void Message::InitLoggingVariables(const char* const aName) {
-  name_ = aName;
-}
-
 Message& Message::operator=(Message&& other) {
   *static_cast<Pickle*>(this) = mozilla::Move(other);
-  InitLoggingVariables(other.name_);
 #if defined(OS_POSIX)
   file_descriptor_set_.swap(other.file_descriptor_set_);
 #endif

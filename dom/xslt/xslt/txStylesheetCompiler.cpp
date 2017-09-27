@@ -132,7 +132,7 @@ txStylesheetCompiler::startElement(const char16_t *aName,
         NS_ENSURE_SUCCESS(rv, rv);
         atts[i].mValue.Append(aAttrs[i * 2 + 1]);
 
-        nsCOMPtr<nsIAtom> prefixToBind;
+        RefPtr<nsIAtom> prefixToBind;
         if (atts[i].mPrefix == nsGkAtoms::xmlns) {
             prefixToBind = atts[i].mLocalName;
         }
@@ -156,7 +156,7 @@ txStylesheetCompiler::startElement(const char16_t *aName,
         }
     }
 
-    nsCOMPtr<nsIAtom> prefix, localname;
+    RefPtr<nsIAtom> prefix, localname;
     int32_t namespaceID;
     rv = XMLUtils::splitExpatName(aName, getter_AddRefs(prefix),
                                   getter_AddRefs(localname), &namespaceID);
@@ -862,7 +862,7 @@ public:
     TX_DECL_FUNCTION
 
 private:
-    nsCOMPtr<nsIAtom> mName;
+    RefPtr<nsIAtom> mName;
 };
 
 nsresult

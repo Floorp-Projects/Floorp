@@ -301,8 +301,8 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
       // SetupCustomElement() should be called with an element that don't have
       // CustomElementData setup, if not we will hit the assertion in
       // SetCustomElementData().
-      nsCOMPtr<nsIAtom> tagAtom = nodeInfo->NameAtom();
-      nsCOMPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
+      RefPtr<nsIAtom> tagAtom = nodeInfo->NameAtom();
+      RefPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
       // Built-in element
       *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
       (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));

@@ -1705,12 +1705,10 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
     if forReply:
         clsname = md.replyCtorFunc()
         msgid = md.replyId()
-        prettyName = md.prettyReplyName(protocol.name+'::')
         replyEnum = 'REPLY'
     else:
         clsname = md.msgCtorFunc()
         msgid = md.msgId()
-        prettyName = md.prettyMsgName(protocol.name+'::')
         replyEnum = 'NOT_REPLY'
 
     nested = md.decl.type.nested
@@ -1782,7 +1780,6 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
                                       ExprVar(msgid),
                                       ExprLiteral.Int(int(segmentSize)),
                                       flags,
-                                      ExprLiteral.String(prettyName),
                                       # Pass `true` to recordWriteLatency to collect telemetry
                                       ExprLiteral.TRUE ])))
     else:
@@ -1790,8 +1787,7 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
             StmtReturn(ExprCall(ExprVar('IPC::Message::IPDLMessage'),
                                args=[ routingId,
                                       ExprVar(msgid),
-                                      flags,
-                                      ExprLiteral.String(prettyName) ])))
+                                      flags ])))
 
     return func
 

@@ -112,6 +112,7 @@ public:
   static void PerformWorkerMicroTaskCheckpoint();
 
   static void PerformWorkerDebuggerMicroTaskCheckpoint();
+  static bool IsWorkerDebuggerMicroTaskEmpty();
 
   // WebIDL
 

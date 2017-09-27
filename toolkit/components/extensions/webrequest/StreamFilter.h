@@ -96,7 +96,7 @@ private:
   nsString mError;
 
   const uint64_t mChannelId;
-  const nsCOMPtr<nsIAtom> mAddonId;
+  const RefPtr<nsIAtom> mAddonId;
 };
 
 } // namespace extensions

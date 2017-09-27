@@ -1570,7 +1570,7 @@ nsTreeContentView::UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aC
 nsIContent*
 nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
 {
-  nsCOMPtr<nsIAtom> colAtom(aCol.GetAtom());
+  RefPtr<nsIAtom> colAtom(aCol.GetAtom());
   int32_t colIndex(aCol.GetIndex());
 
   // Traverse through cells, try to find the cell by "ref" attribute or by cell

@@ -88,7 +88,7 @@ bool
 HTMLEditUtils::IsNodeThatCanOutdent(nsIDOMNode* aNode)
 {
   MOZ_ASSERT(aNode);
-  nsCOMPtr<nsIAtom> nodeAtom = EditorBase::GetTag(aNode);
+  RefPtr<nsIAtom> nodeAtom = EditorBase::GetTag(aNode);
   return (nodeAtom == nsGkAtoms::ul)
       || (nodeAtom == nsGkAtoms::ol)
       || (nodeAtom == nsGkAtoms::dl)

@@ -88,7 +88,7 @@ protected:
 
   nsresult CheckToken(const nsAString& aStr);
   nsresult CheckTokens(const nsTArray<nsString>& aStr);
-  void RemoveDuplicatesInternal(nsTArray<nsCOMPtr<nsIAtom>>* aArray,
+  void RemoveDuplicatesInternal(nsTArray<RefPtr<nsIAtom>>* aArray,
                                 uint32_t aStart);
   void AddInternal(const nsAttrValue* aAttr,
                    const nsTArray<nsString>& aTokens);
@@ -100,7 +100,7 @@ protected:
   inline const nsAttrValue* GetParsedAttr();
 
   nsCOMPtr<Element> mElement;
-  nsCOMPtr<nsIAtom> mAttrAtom;
+  RefPtr<nsIAtom> mAttrAtom;
   const mozilla::dom::DOMTokenListSupportedTokenArray mSupportedTokens;
 };
 

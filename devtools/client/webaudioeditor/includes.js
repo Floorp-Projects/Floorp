@@ -16,6 +16,10 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
+// Use privileged promise in panel documents to prevent having them to freeze
+// during toolbox destruction. See bug 1402779.
+const Promise = require("Promise");
+
 const STRINGS_URI = "devtools/client/locales/webaudioeditor.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 

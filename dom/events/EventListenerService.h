@@ -41,8 +41,7 @@ public:
 protected:
   virtual ~EventListenerChange();
   nsCOMPtr<dom::EventTarget> mTarget;
-  nsCOMPtr<nsIMutableArray> mChangedListenerNames;
-
+  nsTArray<RefPtr<nsIAtom>> mChangedListenerNames;
 };
 
 class EventListenerInfo final : public nsIEventListenerInfo

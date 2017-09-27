@@ -1186,7 +1186,7 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
             nsAutoString tagstr;
             condition->GetAttr(kNameSpaceID_None, nsGkAtoms::tag, tagstr);
 
-            nsCOMPtr<nsIAtom> tag;
+            RefPtr<nsIAtom> tag;
             if (! tagstr.IsEmpty()) {
                 tag = NS_Atomize(tagstr);
             }
@@ -1296,7 +1296,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     nsAutoString subject;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::subject, subject);
 
-    nsCOMPtr<nsIAtom> svar;
+    RefPtr<nsIAtom> svar;
     nsCOMPtr<nsIRDFResource> sres;
     if (subject.IsEmpty()) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_TRIPLE_BAD_SUBJECT);
@@ -1322,7 +1322,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     nsAutoString object;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::object, object);
 
-    nsCOMPtr<nsIAtom> ovar;
+    RefPtr<nsIAtom> ovar;
     nsCOMPtr<nsIRDFNode> onode;
     if (object.IsEmpty()) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_TRIPLE_BAD_OBJECT);
@@ -1399,7 +1399,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> containervar = NS_Atomize(container);
+    RefPtr<nsIAtom> containervar = NS_Atomize(container);
 
     // child
     nsAutoString child;
@@ -1410,7 +1410,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> childvar = NS_Atomize(child);
+    RefPtr<nsIAtom> childvar = NS_Atomize(child);
 
     TestNode* testnode =
         new nsRDFConMemberTestNode(aParentNode,

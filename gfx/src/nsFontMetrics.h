@@ -249,7 +249,7 @@ private:
 
     nsFont mFont;
     RefPtr<gfxFontGroup> mFontGroup;
-    nsCOMPtr<nsIAtom> mLanguage;
+    RefPtr<nsIAtom> mLanguage;
     // Pointer to the device context for which this fontMetrics object was
     // created.
     nsDeviceContext* MOZ_NON_OWNING_REF mDeviceContext;

@@ -754,7 +754,7 @@ nsAttrValue::GetAsAtom() const
 
     case eAtom:
       {
-        nsCOMPtr<nsIAtom> atom = GetAtomValue();
+        RefPtr<nsIAtom> atom = GetAtomValue();
         return atom.forget();
       }
 
@@ -913,7 +913,7 @@ nsAttrValue::HashValue() const
     {
       uint32_t hash = 0;
       uint32_t count = cont->mValue.mAtomArray->Length();
-      for (nsCOMPtr<nsIAtom> *cur = cont->mValue.mAtomArray->Elements(),
+      for (RefPtr<nsIAtom> *cur = cont->mValue.mAtomArray->Elements(),
                              *end = cur + count;
            cur != end; ++cur) {
         hash = AddToHash(hash, cur->get());
@@ -1193,7 +1193,7 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
 
         nsDependentAtomString val1(aValue);
 
-        for (nsCOMPtr<nsIAtom> *cur = array->Elements(),
+        for (RefPtr<nsIAtom> *cur = array->Elements(),
                                *end = cur + array->Length();
              cur != end; ++cur) {
           // For performance reasons, don't do a full on unicode case
@@ -1243,7 +1243,7 @@ nsAttrValue::ParseAtom(const nsAString& aValue)
 {
   ResetIfSet();
 
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(aValue);
+  RefPtr<nsIAtom> atom = NS_Atomize(aValue);
   if (atom) {
     SetPtrValueAndType(atom.forget().take(), eAtomBase);
   }
@@ -1275,7 +1275,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
     ++iter;
   } while (iter != end && !nsContentUtils::IsHTMLWhitespace(*iter));
 
-  nsCOMPtr<nsIAtom> classAtom = NS_AtomizeMainThread(Substring(start, iter));
+  RefPtr<nsIAtom> classAtom = NS_AtomizeMainThread(Substring(start, iter));
   if (!classAtom) {
     Reset();
     return;
@@ -1796,7 +1796,7 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                  "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
-      nsCOMPtr<nsIAtom> atom = NS_AtomizeMainThread(*aValue);
+      RefPtr<nsIAtom> atom = NS_AtomizeMainThread(*aValue);
       if (atom) {
         cont->mStringBits =
           reinterpret_cast<uintptr_t>(atom.forget().take()) | eAtomBase;

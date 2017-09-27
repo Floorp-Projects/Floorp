@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" dir="">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="chrome://devtools/skin/widgets.css"/>
@@ -23,17 +23,17 @@
     <div id="app-wrapper" class="theme-body">
       <div id="output-container" role="document" aria-live="polite"/>
       <div id="jsterm-wrapper">
-        <xul:notificationbox id="webconsole-notificationbox">
+        <div id="webconsole-notificationbox">
           <div class="jsterm-input-container" style="direction:ltr">
-            <xul:stack class="jsterm-stack-node" flex="1">
-              <xul:textbox class="jsterm-complete-node devtools-monospace"
-                       multiline="true" rows="1" tabindex="-1"/>
-              <xul:textbox class="jsterm-input-node devtools-monospace"
-                       multiline="true" rows="1" tabindex="0"
+            <div class="jsterm-stack-node">
+              <textarea class="jsterm-complete-node devtools-monospace"
+                       tabindex="-1"/>
+              <textarea class="jsterm-input-node devtools-monospace"
+                       rows="1" tabindex="0"
                        aria-autocomplete="list"/>
-            </xul:stack>
+            </div>
           </div>
-        </xul:notificationbox>
+        </div>
       </div>
     </div>
   </body>

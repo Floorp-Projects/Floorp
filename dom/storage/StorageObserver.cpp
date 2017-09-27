@@ -153,6 +153,50 @@ StorageObserver::NoteBackgroundThread(nsIEventTarget* aBackgroundThread)
   mBackgroundThread = aBackgroundThread;
 }
 
+nsresult
+StorageObserver::ClearMatchingOrigin(const char16_t* aData,
+                                     nsACString& aOriginScope)
+{
+  nsresult rv;
+
+  NS_ConvertUTF16toUTF8 domain(aData);
+
+  nsAutoCString convertedDomain;
+  nsCOMPtr<nsIIDNService> converter = do_GetService(NS_IDNSERVICE_CONTRACTID);
+  if (converter) {
+    // Convert the domain name to the ACE format
+    rv = converter->ConvertUTF8toACE(domain, convertedDomain);
+  } else {
+    // In case the IDN service is not available, this is the best we can come
+    // up with!
+    rv = NS_EscapeURL(domain,
+                      esc_OnlyNonASCII | esc_AlwaysCopy,
+                      convertedDomain,
+                      fallible);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString originScope;
+  rv = CreateReversedDomain(convertedDomain, originScope);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (XRE_IsParentProcess()) {
+    StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+    if (NS_WARN_IF(!storageChild)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    storageChild->SendClearMatchingOrigin(originScope);
+  }
+
+  aOriginScope = originScope;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 StorageObserver::Observe(nsISupports* aSubject,
                          const char* aTopic,
@@ -276,52 +320,41 @@ StorageObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "extension:purge-localStorage")) {
-    StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
-    if (NS_WARN_IF(!storageChild)) {
-      return NS_ERROR_FAILURE;
-    }
+    const char topic[] = "extension:purge-localStorage-caches";
 
-    storageChild->AsyncClearAll();
+    if (aData) {
+      nsCString originScope;
+      rv = ClearMatchingOrigin(aData, originScope);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-    if (XRE_IsParentProcess()) {
-      storageChild->SendClearAll();
-    }
-
-    Notify("extension:purge-localStorage-caches");
-
-    return NS_OK;
-  }
-
-  // Clear everything (including so and pb data) from caches and database
-  // for the gived domain and subdomains.
-  if (!strcmp(aTopic, "browser:purge-domain-data")) {
-    // Convert the domain name to the ACE format
-    nsAutoCString aceDomain;
-    nsCOMPtr<nsIIDNService> converter = do_GetService(NS_IDNSERVICE_CONTRACTID);
-    if (converter) {
-      rv = converter->ConvertUTF8toACE(NS_ConvertUTF16toUTF8(aData), aceDomain);
-      NS_ENSURE_SUCCESS(rv, rv);
+      Notify(topic, EmptyString(), originScope);
     } else {
-      // In case the IDN service is not available, this is the best we can come
-      // up with!
-      rv = NS_EscapeURL(NS_ConvertUTF16toUTF8(aData),
-                        esc_OnlyNonASCII | esc_AlwaysCopy,
-                        aceDomain,
-                        fallible);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsAutoCString originScope;
-    rv = CreateReversedDomain(aceDomain, originScope);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (XRE_IsParentProcess()) {
       StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
       if (NS_WARN_IF(!storageChild)) {
         return NS_ERROR_FAILURE;
       }
 
-      storageChild->SendClearMatchingOrigin(originScope);
+      storageChild->AsyncClearAll();
+
+      if (XRE_IsParentProcess()) {
+        storageChild->SendClearAll();
+      }
+
+      Notify(topic);
+    }
+
+    return NS_OK;
+  }
+
+  // Clear everything (including so and pb data) from caches and database
+  // for the given domain and subdomains.
+  if (!strcmp(aTopic, "browser:purge-domain-data")) {
+    nsCString originScope;
+    rv = ClearMatchingOrigin(aData, originScope);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
     Notify("domain-data-cleared", EmptyString(), originScope);

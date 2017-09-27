@@ -17,7 +17,7 @@ struct nsNameSpaceEntry
   explicit nsNameSpaceEntry(nsIAtom* aPrefix)
     : prefix(aPrefix) {}
 
-  nsCOMPtr<nsIAtom> prefix;
+  RefPtr<nsIAtom> prefix;
   MOZ_INIT_OUTSIDE_CTOR int32_t nameSpaceID;
 };
 

@@ -165,6 +165,7 @@ struct TestFileData
 {
   const char* mFilename;
   uint32_t mNumberVideoTracks;
+  bool mHasVideoIndice;
   int64_t mVideoDuration; // For first video track, -1 if N/A.
   int32_t mWidth;
   int32_t mHeight;
@@ -177,90 +178,93 @@ struct TestFileData
   int8_t mAudioProfile;
 };
 static const TestFileData testFiles[] = {
-  // filename                      #V dur   w    h  #A dur  crypt  off   moof  headr  audio_profile
-  { "test_case_1156505.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
-  { "test_case_1181213.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181215.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181220.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181223.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181719.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1185230.mp4",        1, 416666,
+  // filename                      #V V-ind   dur   w    h  #A dur  crypt  off   moof  headr  audio_profile
+  { "test_case_1156505.mp4",        0, false, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
+  { "test_case_1181213.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181215.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181220.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181223.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181719.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1185230.mp4",        1, true, 416666,
                                            320, 240, 1,  5, false,   0, false, false, 2 },
-  { "test_case_1187067.mp4",        1, 80000,
+  { "test_case_1187067.mp4",        1, true, 80000,
                                            160,  90, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1200326.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1204580.mp4",        1, 502500,
+  { "test_case_1200326.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1204580.mp4",        1, true, 502500,
                                            320, 180, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1216748.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
-  { "test_case_1296473.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1296532.mp4",        1, 5589333,
+  { "test_case_1216748.mp4",        0, false, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
+  { "test_case_1296473.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1296532.mp4",        1, true, 5589333,
                                            560, 320, 1, 5589333,
                                                             true,    0, true,  true,  2  },
-  { "test_case_1301065.mp4",        0, -1,   0,   0, 1, 100079991719000000,
+  { "test_case_1301065.mp4",        0, false, -1,   0,   0, 1, 100079991719000000,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-u32max.mp4", 0, -1,   0,   0, 1, 97391548639,
+  { "test_case_1301065-u32max.mp4", 0, false, -1,   0,   0, 1, 97391548639,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-max-ez.mp4", 0, -1,   0,   0, 1, 209146758205306,
+  { "test_case_1301065-max-ez.mp4", 0, false, -1,   0,   0, 1, 209146758205306,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-harder.mp4", 0, -1,   0,   0, 1, 209146758205328,
+  { "test_case_1301065-harder.mp4", 0, false, -1,   0,   0, 1, 209146758205328,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-max-ok.mp4", 0, -1,   0,   0, 1, 9223372036854775804,
+  { "test_case_1301065-max-ok.mp4", 0, false, -1,   0,   0, 1, 9223372036854775804,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-overfl.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1301065-i64max.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1301065-i64min.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1301065-u64max.mp4", 0, -1,   0,   0, 1,  0, false,   0, false, false, 2 },
-  { "test_case_1329061.mov",        0, -1,   0,   0, 1,  234567981,
+  { "test_case_1301065-overfl.mp4", 0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1301065-i64max.mp4", 0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1301065-i64min.mp4", 0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1301065-u64max.mp4", 0, false, -1,   0,   0, 1,  0, false,   0, false, false, 2 },
+  { "test_case_1329061.mov",        0, false, -1,   0,   0, 1,  234567981,
                                                             false,   0, false, false, 2 },
-  { "test_case_1351094.mp4",        0, -1,   0,   0, 0, -1, false,   0, true,  true,  0 },
+  { "test_case_1351094.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, true,  true,  0 },
 };
 
 static const TestFileData rustTestFiles[] = {
   // filename                      #V dur   w    h  #A dur  crypt  off   moof  headr  audio_profile
-  { "test_case_1156505.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
-  { "test_case_1181213.mp4",        1, 416666,
+  { "test_case_1156505.mp4",        0, false, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
+  { "test_case_1181213.mp4",        1, true, 416666,
                                            320, 240, 1, 477460,
                                                              true,   0, false, false, 2 },
-  { "test_case_1181215.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181220.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181223.mp4",        0, 416666,
+  { "test_case_1181215.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181220.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181223.mp4",        0, false, 416666,
                                            320, 240, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1181719.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1185230.mp4",        2, 416666,
+  { "test_case_1181719.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1185230.mp4",        2, true, 416666,
                                            320, 240, 2,  5, false,   0, false, false, 2 },
-  { "test_case_1187067.mp4",        1, 80000,
+  { "test_case_1187067.mp4",        1, true, 80000,
                                            160,  90, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1200326.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1204580.mp4",        1, 502500,
+  { "test_case_1200326.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1204580.mp4",        1, true, 502500,
                                            320, 180, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1216748.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
-  { "test_case_1296473.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1296532.mp4",        1, 5589333,
+  { "test_case_1216748.mp4",        0, false, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
+  { "test_case_1296473.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1296532.mp4",        1, true, 5589333,
                                            560, 320, 1, 5589333,
                                                             true,    0, true,  true,  2  },
-  { "test_case_1301065.mp4",        0, -1,   0,   0, 1, 100079991719000000,
+  { "test_case_1301065.mp4",        0, false, -1,   0,   0, 1, 100079991719000000,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-u32max.mp4", 0, -1,   0,   0, 1, 97391548639,
+  { "test_case_1301065-u32max.mp4", 0, false, -1,   0,   0, 1, 97391548639,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-max-ez.mp4", 0, -1,   0,   0, 1, 209146758205306,
+  { "test_case_1301065-max-ez.mp4", 0, false, -1,   0,   0, 1, 209146758205306,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-harder.mp4", 0, -1,   0,   0, 1, 209146758205328,
+  { "test_case_1301065-harder.mp4", 0, false, -1,   0,   0, 1, 209146758205328,
                                                             false,   0, false, false, 2 },
-  { "test_case_1301065-max-ok.mp4", 0, -1,   0,   0, 1, 9223372036854775804,
+  { "test_case_1301065-max-ok.mp4", 0, false, -1,   0,   0, 1, 9223372036854775804,
                                                             false,   0, false, false, 2 },
   // The duration is overflow for int64_t in TestFileData, rust parser uses uint64_t so
   // this file is ignore.
   //{ "test_case_1301065-overfl.mp4", 0, -1,   0,   0, 1, 9223372036854775827,
   //                                                          false,   0, false, false, 2 },
-  { "test_case_1301065-i64max.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1301065-i64min.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
-  { "test_case_1301065-u64max.mp4", 0, -1,   0,   0, 1,  0, false,   0, false, false, 2 },
-  { "test_case_1329061.mov",        0, -1,   0,   0, 1,  234567981,
+  { "test_case_1301065-i64max.mp4", 0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1301065-i64min.mp4", 0, false, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1301065-u64max.mp4", 0, false, -1,   0,   0, 1,  0, false,   0, false, false, 2 },
+  { "test_case_1329061.mov",        0, false, -1,   0,   0, 1,  234567981,
                                                             false,   0, false, false, 2 },
-  { "test_case_1351094.mp4",        0, -1,   0,   0, 0, -1, false,   0, true,  true,  0 },
-  { "test_case_1389299.mp4",        1, 5589333,
+  { "test_case_1351094.mp4",        0, false, -1,   0,   0, 0, -1, false,   0, true,  true,  0 },
+  { "test_case_1389299.mp4",        1, true, 5589333,
                                            560, 320, 1, 5589333,
                                                             true,    0, true,  true,  2  },
+
+  { "test_case_1389527.mp4",        1, false, 5005000,
+                                            80, 128, 1, 4992000, false,   0, false, false, 2 },
 };
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
 {
@@ -322,12 +326,14 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
 
         MP4Metadata::ResultAndIndice indices =
           metadata.GetTrackIndice(videoInfo->mTrackId);
-        EXPECT_TRUE(!!indices.Ref()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
-        for (size_t i = 0; i < indices.Ref()->Length(); i++) {
-          Index::Indice data;
-          EXPECT_TRUE(indices.Ref()->GetIndice(i, data)) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
-          EXPECT_TRUE(data.start_offset <= data.end_offset) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
-          EXPECT_TRUE(data.start_composition <= data.end_composition) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+        EXPECT_EQ(!!indices.Ref(), tests[test].mHasVideoIndice) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+        if (tests[test].mHasVideoIndice) {
+          for (size_t i = 0; i < indices.Ref()->Length(); i++) {
+            Index::Indice data;
+            EXPECT_TRUE(indices.Ref()->GetIndice(i, data)) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+            EXPECT_TRUE(data.start_offset <= data.end_offset) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+            EXPECT_TRUE(data.start_composition <= data.end_composition) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+          }
         }
       }
       trackInfo = metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0);

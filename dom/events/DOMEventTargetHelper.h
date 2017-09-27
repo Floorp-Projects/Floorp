@@ -208,7 +208,7 @@ private:
 
   struct {
     nsTArray<nsString> mStrings;
-    nsTArray<nsCOMPtr<nsIAtom>> mAtoms;
+    nsTArray<RefPtr<nsIAtom>> mAtoms;
   } mKeepingAliveTypes;
 
   bool mIsKeptAlive;

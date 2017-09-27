@@ -449,8 +449,8 @@ public:
 
     TX_DECL_NODE_TEST
 
-    nsCOMPtr<nsIAtom> mPrefix;
-    nsCOMPtr<nsIAtom> mLocalName;
+    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mLocalName;
     int32_t mNamespace;
 private:
     uint16_t mNodeType;
@@ -496,7 +496,7 @@ public:
 
 private:
     NodeType mNodeType;
-    nsCOMPtr<nsIAtom> mNodeName;
+    RefPtr<nsIAtom> mNodeName;
 };
 
 /**
@@ -831,8 +831,8 @@ public:
     TX_DECL_EXPR
 
 private:
-    nsCOMPtr<nsIAtom> mPrefix;
-    nsCOMPtr<nsIAtom> mLocalName;
+    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mLocalName;
     int32_t mNamespace;
 };
 
@@ -980,8 +980,8 @@ public:
 
 private:
     int32_t mNamespace;
-    nsCOMPtr<nsIAtom> mPrefix;
-    nsCOMPtr<nsIAtom> mLocalName;
+    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mLocalName;
 };
 
 /**

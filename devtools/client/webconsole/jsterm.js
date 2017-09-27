@@ -1006,7 +1006,11 @@ JSTerm.prototype = {
     inputNode.style.height = "auto";
 
     // Now resize the input field to fit its contents.
-    let scrollHeight = inputNode.inputField.scrollHeight;
+    // TODO: remove `inputNode.inputField.scrollHeight` when the old
+    // console UI is removed. See bug 1381834
+    let scrollHeight = inputNode.inputField ?
+      inputNode.inputField.scrollHeight : inputNode.scrollHeight;
+
     if (scrollHeight > 0) {
       inputNode.style.height = scrollHeight + "px";
     }

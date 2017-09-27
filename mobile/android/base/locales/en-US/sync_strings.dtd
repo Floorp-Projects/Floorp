@@ -68,6 +68,10 @@
 <!ENTITY fxaccount_status_passwords2 'Logins'>
 <!ENTITY fxaccount_status_tabs 'Open tabs'>
 <!ENTITY fxaccount_status_additional_settings 'Additional Settings'>
+<!ENTITY fxaccount_pref_sync_use_metered 'Sync over metered connections'>
+<!-- Localization note: Only affects background syncing, user initiated 
+     syncs will still be done regardless of the connection -->
+<!ENTITY fxaccount_pref_sync_use_metered_summary 'Allow usage of cellular data and metered Wi-Fi to sync in the background'>
 <!ENTITY fxaccount_status_legal 'Legal' >
 <!-- Localization note: when tapped, the following two strings link to
      external web pages.  Compare fxaccount_policy_{linktos,linkprivacy}:

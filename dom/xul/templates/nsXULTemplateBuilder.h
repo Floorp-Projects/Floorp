@@ -423,8 +423,8 @@ protected:
     /**
      * The default reference and member variables.
      */
-    nsCOMPtr<nsIAtom> mRefVariable;
-    nsCOMPtr<nsIAtom> mMemberVariable;
+    RefPtr<nsIAtom> mRefVariable;
+    RefPtr<nsIAtom> mMemberVariable;
 
     /**
      * The match map contains nsTemplateMatch objects, one for each unique

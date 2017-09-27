@@ -60,7 +60,7 @@ protected:
   RefPtr<EditorBase> mEditorBase;
 
   // The tag (mapping to object type) for the new element.
-  nsCOMPtr<nsIAtom> mTag;
+  RefPtr<nsIAtom> mTag;
 
   // The node into which the new node will be inserted.
   nsCOMPtr<nsINode> mParent;
