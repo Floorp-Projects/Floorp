@@ -76,6 +76,7 @@ class nsISelectionController;
 class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
+class nsDisplayItem;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsDisplayList;
@@ -603,7 +604,7 @@ public:
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::Sides Sides;
   typedef mozilla::LogicalSides LogicalSides;
-  typedef mozilla::SmallPointerArray<mozilla::DisplayItemData> DisplayItemArray;
+  typedef mozilla::SmallPointerArray<mozilla::DisplayItemData> DisplayItemDataArray;
   typedef nsQueryFrame::ClassID ClassID;
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
@@ -1134,6 +1135,8 @@ public:
   typedef AutoTArray<nsIContent*, 2> ContentArray;
   static void DestroyContentArray(ContentArray* aArray);
 
+  typedef AutoTArray<nsDisplayItem*, 4> DisplayItemArray;
+
   typedef mozilla::layers::WebRenderUserData WebRenderUserData;
   typedef nsRefPtrHashtable<nsUint32HashKey, WebRenderUserData> WebRenderUserDataTable;
 
@@ -1230,6 +1233,8 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(GenConProperty, ContentArray,
                                       DestroyContentArray)
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayItems, DisplayItemArray)
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BidiDataProperty, mozilla::FrameBidiData)
 
@@ -4073,7 +4078,13 @@ public:
                             const nsStyleCoord& aCoord,
                             ComputeSizeFlags    aFlags = eDefault);
 
-  DisplayItemArray& DisplayItemData() { return mDisplayItemData; }
+  DisplayItemDataArray& DisplayItemData() { return mDisplayItemData; }
+
+  void AddDisplayItem(nsDisplayItem* aItem);
+  bool RemoveDisplayItem(nsDisplayItem* aItem);
+  void RemoveDisplayItemDataForDeletion();
+  bool HasDisplayItems();
+  bool HasDisplayItem(nsDisplayItem* aItem);
 
   void DestroyAnonymousContent(already_AddRefed<nsIContent> aContent);
 
@@ -4104,7 +4115,8 @@ private:
   nsContainerFrame* mParent;
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
-  DisplayItemArray mDisplayItemData;
+
+  DisplayItemDataArray mDisplayItemData;
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder);
 
