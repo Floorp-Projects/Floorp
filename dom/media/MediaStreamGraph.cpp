@@ -2893,13 +2893,6 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
   mMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aTrack);
 
-  for (uint32_t j = 0; j < mDirectListeners.Length(); ++j) {
-    DirectMediaStreamListener* l = mDirectListeners[j];
-    StreamTime offset = 0; // FIX! need a separate StreamTime.... or the end of the internal buffer
-    l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID,
-                          offset, aTrack->mCommands, *aSegment);
-  }
-
   for (const TrackBound<DirectMediaStreamTrackListener>& source
          : mDirectTrackListeners) {
     if (aTrack->mID != source.mTrackID) {
@@ -2934,38 +2927,6 @@ SourceMediaStream::NotifyListenersEvent(MediaStreamGraphEvent aNewEvent)
     MediaStreamGraphEvent mEvent;
   };
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aNewEvent));
-}
-
-void
-SourceMediaStream::AddDirectListener(DirectMediaStreamListener* aListener)
-{
-  bool wasEmpty;
-  {
-    MutexAutoLock lock(mMutex);
-    wasEmpty = mDirectListeners.IsEmpty();
-    mDirectListeners.AppendElement(aListener);
-  }
-
-  if (wasEmpty) {
-    // Async
-    NotifyListenersEvent(MediaStreamGraphEvent::EVENT_HAS_DIRECT_LISTENERS);
-  }
-}
-
-void
-SourceMediaStream::RemoveDirectListener(DirectMediaStreamListener* aListener)
-{
-  bool isEmpty;
-  {
-    MutexAutoLock lock(mMutex);
-    mDirectListeners.RemoveElement(aListener);
-    isEmpty = mDirectListeners.IsEmpty();
-  }
-
-  if (isEmpty) {
-    // Async
-    NotifyListenersEvent(MediaStreamGraphEvent::EVENT_HAS_NO_DIRECT_LISTENERS);
-  }
 }
 
 void
