@@ -222,8 +222,6 @@ extern const char* CacheKindNames[];
     _(ArrayPush)                          \
     _(ArrayJoinResult)                    \
     _(StoreTypedElement)                  \
-    _(StoreUnboxedArrayElement)           \
-    _(StoreUnboxedArrayElementHole)       \
     _(CallNativeSetter)                   \
     _(CallScriptedSetter)                 \
     _(CallSetArrayLength)                 \
@@ -239,10 +237,8 @@ extern const char* CacheKindNames[];
     _(LoadDenseElementHoleResult)         \
     _(LoadDenseElementExistsResult)       \
     _(LoadDenseElementHoleExistsResult)   \
-    _(LoadUnboxedArrayElementResult)      \
     _(LoadTypedElementResult)             \
     _(LoadInt32ArrayLengthResult)         \
-    _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectArgResult)       \
     _(LoadArgumentsObjectLengthResult)    \
     _(LoadFunctionLengthResult)           \
@@ -348,7 +344,6 @@ class StubField
 enum class GuardClassKind : uint8_t
 {
     Array,
-    UnboxedArray,
     MappedArguments,
     UnmappedArguments,
     WindowProxy,
@@ -781,22 +776,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         buffer_.writeByte(uint32_t(elementType));
         buffer_.writeByte(uint32_t(handleOOB));
     }
-    void storeUnboxedArrayElement(ObjOperandId obj, Int32OperandId index, ValOperandId rhs,
-                                  JSValueType elementType)
-    {
-        writeOpWithOperandId(CacheOp::StoreUnboxedArrayElement, obj);
-        writeOperandId(index);
-        writeOperandId(rhs);
-        buffer_.writeByte(uint32_t(elementType));
-    }
-    void storeUnboxedArrayElementHole(ObjOperandId obj, Int32OperandId index, ValOperandId rhs,
-                                      JSValueType elementType)
-    {
-        writeOpWithOperandId(CacheOp::StoreUnboxedArrayElementHole, obj);
-        writeOperandId(index);
-        writeOperandId(rhs);
-        buffer_.writeByte(uint32_t(elementType));
-    }
     void storeDenseElementHole(ObjOperandId obj, Int32OperandId index, ValOperandId rhs,
                                bool handleAdd)
     {
@@ -904,9 +883,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadInt32ArrayLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadInt32ArrayLengthResult, obj);
     }
-    void loadUnboxedArrayLengthResult(ObjOperandId obj) {
-        writeOpWithOperandId(CacheOp::LoadUnboxedArrayLengthResult, obj);
-    }
     void loadArgumentsObjectLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
     }
@@ -932,11 +908,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadDenseElementHoleExistsResult(ObjOperandId obj, Int32OperandId index) {
         writeOpWithOperandId(CacheOp::LoadDenseElementHoleExistsResult, obj);
         writeOperandId(index);
-    }
-    void loadUnboxedArrayElementResult(ObjOperandId obj, Int32OperandId index, JSValueType elementType) {
-        writeOpWithOperandId(CacheOp::LoadUnboxedArrayElementResult, obj);
-        writeOperandId(index);
-        buffer_.writeByte(uint32_t(elementType));
     }
     void loadTypedElementResult(ObjOperandId obj, Int32OperandId index, TypedThingLayout layout,
                                 Scalar::Type elementType) {
@@ -1215,8 +1186,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
                                uint32_t index, Int32OperandId indexId);
     bool tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
                                    uint32_t index, Int32OperandId indexId);
-    bool tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
-                                      uint32_t index, Int32OperandId indexId);
     bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
                                uint32_t index, Int32OperandId indexId);
 
@@ -1386,15 +1355,11 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
 
     bool tryAttachSetDenseElement(HandleObject obj, ObjOperandId objId, uint32_t index,
                                   Int32OperandId indexId, ValOperandId rhsId);
-    bool tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperandId objId, uint32_t index,
-                                         Int32OperandId indexId, ValOperandId rhsId);    
     bool tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId, uint32_t index,
                                   Int32OperandId indexId, ValOperandId rhsId);
 
     bool tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId objId, uint32_t index,
                                       Int32OperandId indexId, ValOperandId rhsId);
-    bool tryAttachSetUnboxedArrayElementHole(HandleObject obj, ObjOperandId objId, uint32_t index,
-                                             Int32OperandId indexId, ValOperandId rhsId);
 
     bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
                                ValOperandId rhsId, bool handleDOMProxies);

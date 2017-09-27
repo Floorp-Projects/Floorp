@@ -502,7 +502,7 @@ GetBuiltinTagFast(JSObject* obj, const Class* clasp, JSContext* cx)
         return cx->names().objectObject;
     }
 
-    if (clasp == &ArrayObject::class_ || clasp == &UnboxedArrayObject::class_)
+    if (clasp == &ArrayObject::class_)
         return cx->names().objectArray;
 
     if (clasp == &JSFunction::class_)
