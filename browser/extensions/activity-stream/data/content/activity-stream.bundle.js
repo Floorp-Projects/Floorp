@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -638,7 +638,8 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           return item;
         })
       }));
-    case at.PLACES_LINK_DELETED:
+    case at.PLACES_LINKS_DELETED:
+      return prevState.map(section => Object.assign({}, section, { rows: section.rows.filter(site => !action.data.includes(site.url)) }));
     case at.PLACES_LINK_BLOCKED:
       return prevState.map(section => Object.assign({}, section, { rows: section.rows.filter(site => site.url !== action.data.url) }));
     default:
@@ -1511,10 +1512,14 @@ class TopSitesEdit extends React.PureComponent {
             "section",
             { className: "edit-topsites-inner-wrapper" },
             React.createElement(
-              "h3",
-              { className: "section-title" },
-              React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
-              React.createElement(FormattedMessage, { id: "header_top_sites" })
+              "div",
+              { className: "section-top-bar" },
+              React.createElement(
+                "h3",
+                { className: "section-title" },
+                React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
+                React.createElement(FormattedMessage, { id: "header_top_sites" })
+              )
             ),
             React.createElement(
               "ul",
@@ -2569,7 +2574,10 @@ class Section extends React.PureComponent {
       contextMenuOptions, intl, initialized
     } = this.props;
     const maxCards = CARDS_PER_ROW * maxRows;
-    const shouldShowTopics = id === "topstories" && this.props.topics && this.props.topics.length > 0;
+
+    // Show topics only for top stories and if it's not initialized yet (so
+    // content doesn't shift when it is loaded) or has loaded with topics
+    const shouldShowTopics = id === "topstories" && (!this.props.topics || this.props.topics.length > 0);
 
     const infoOptionIconA11yAttrs = {
       "aria-haspopup": "true",
@@ -2694,6 +2702,9 @@ const { FormattedMessage } = __webpack_require__(2);
 const cardContextTypes = __webpack_require__(26);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
+// Keep track of pending image loads to only request once
+const gImageLoading = new Map();
+
 /**
  * Card component.
  * Cards are found within a Section component and contain information about a link such
@@ -2706,11 +2717,47 @@ const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 class Card extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.state = { showContextMenu: false, activeCard: null };
+    this.state = {
+      activeCard: null,
+      imageLoaded: false,
+      showContextMenu: false
+    };
     this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
     this.onLinkClick = this.onLinkClick.bind(this);
   }
+
+  /**
+   * Helper to conditionally load an image and update state when it loads.
+   */
+  async maybeLoadImage() {
+    // No need to load if it's already loaded or no image
+    const { image } = this.props.link;
+    if (!this.state.imageLoaded && image) {
+      // Initialize a promise to share a load across multiple card updates
+      if (!gImageLoading.has(image)) {
+        const loaderPromise = new Promise((resolve, reject) => {
+          const loader = new Image();
+          loader.addEventListener("load", resolve);
+          loader.addEventListener("error", reject);
+          loader.src = image;
+        });
+
+        // Save and remove the promise only while it's pending
+        gImageLoading.set(image, loaderPromise);
+        loaderPromise.catch(ex => ex).then(() => gImageLoading.delete(image)).catch();
+      }
+
+      // Wait for the image whether just started loading or reused promise
+      await gImageLoading.get(image);
+
+      // Only update state if we're still waiting to load the original image
+      if (this.props.link.image === image && !this.state.imageLoaded) {
+        this.setState({ imageLoaded: true });
+      }
+    }
+  }
+
   onMenuButtonClick(event) {
     event.preventDefault();
     this.setState({
@@ -2742,6 +2789,18 @@ class Card extends React.PureComponent {
   onMenuUpdate(showContextMenu) {
     this.setState({ showContextMenu });
   }
+  componentDidMount() {
+    this.maybeLoadImage();
+  }
+  componentDidUpdate() {
+    this.maybeLoadImage();
+  }
+  componentWillReceiveProps(nextProps) {
+    // Clear the image state if changing images
+    if (nextProps.link.image !== this.props.link.image) {
+      this.setState({ imageLoaded: false });
+    }
+  }
   render() {
     const { index, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
     const { props } = this;
@@ -2763,7 +2822,7 @@ class Card extends React.PureComponent {
           hasImage && React.createElement(
             "div",
             { className: "card-preview-image-outer" },
-            React.createElement("div", { className: `card-preview-image${link.image ? " loaded" : ""}`, style: imageStyle })
+            React.createElement("div", { className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`, style: imageStyle })
           ),
           React.createElement(
             "div",
@@ -2894,7 +2953,7 @@ class Topics extends React.PureComponent {
       React.createElement(
         "ul",
         null,
-        topics.map(t => React.createElement(Topic, { key: t.name, url: t.url, name: t.name }))
+        topics && topics.map(t => React.createElement(Topic, { key: t.name, url: t.url, name: t.name }))
       ),
       read_more_endpoint && React.createElement(
         "a",
@@ -2985,8 +3044,7 @@ var PrerenderData = new _PrerenderData({
     icon: "pocket",
     id: "topstories",
     order: 1,
-    title: { id: "header_recommended_by", values: { provider: "Pocket" } },
-    topics: [{}]
+    title: { id: "header_recommended_by", values: { provider: "Pocket" } }
   }, {
     enabled: true,
     id: "highlights",
@@ -3257,6 +3315,10 @@ class SnippetsMap extends Map {
     await this.set("blockList", blockList);
   }
 
+  disableOnboarding() {
+    this._dispatch(ac.SendToMain({ type: at.DISABLE_ONBOARDING }));
+  }
+
   showFirefoxAccounts() {
     this._dispatch(ac.SendToMain({ type: at.SHOW_FIREFOX_ACCOUNTS }));
   }
@@ -3395,7 +3457,6 @@ class SnippetsProvider {
     if (needsUpdate && this.appData.snippetsURL) {
       this.snippetsMap.set("snippets-last-update", Date.now());
       try {
-        // TODO: timeout?
         const response = await fetch(this.appData.snippetsURL);
         if (response.status === 200) {
           const payload = await response.text();
@@ -3409,8 +3470,16 @@ class SnippetsProvider {
     }
   }
 
-  _showDefaultSnippets() {
+  _noSnippetFallback() {
     // TODO
+  }
+
+  _forceOnboardingVisibility(shouldBeVisible) {
+    const onboardingEl = document.getElementById("onboarding-notification-bar");
+
+    if (onboardingEl) {
+      onboardingEl.style.display = shouldBeVisible ? "" : "none";
+    }
   }
 
   _showRemoteSnippets() {
@@ -3480,15 +3549,18 @@ class SnippetsProvider {
     try {
       this._showRemoteSnippets();
     } catch (e) {
-      this._showDefaultSnippets(e);
+      this._noSnippetFallback(e);
     }
 
     window.dispatchEvent(new Event(SNIPPETS_ENABLED_EVENT));
+
+    this._forceOnboardingVisibility(true);
     this.initialized = true;
   }
 
   uninit() {
     window.dispatchEvent(new Event(SNIPPETS_DISABLED_EVENT));
+    this._forceOnboardingVisibility(false);
     this.initialized = false;
   }
 }
@@ -3508,16 +3580,16 @@ function addSnippetsSubscriber(store) {
 
   store.subscribe(async () => {
     const state = store.getState();
-    // state.Snippets.initialized:  Should snippets be initialised?
-    // snippets.initialized:        Is SnippetsProvider currently initialised?
-    if (state.Snippets.initialized && !snippets.initialized && state.Snippets.onboardingFinished) {
-      // Don't call init multiple times
-      if (!initializing) {
-        initializing = true;
-        await snippets.init({ appData: state.Snippets });
-        initializing = false;
-      }
-    } else if (state.Snippets.initialized === false && snippets.initialized) {
+    // state.Prefs.values["feeds.snippets"]:  Should snippets be shown?
+    // state.Snippets.initialized             Is the snippets data initialized?
+    // snippets.initialized:                  Is SnippetsProvider currently initialised?
+    if (state.Prefs.values["feeds.snippets"] && state.Snippets.initialized && !snippets.initialized &&
+    // Don't call init multiple times
+    !initializing) {
+      initializing = true;
+      await snippets.init({ appData: state.Snippets });
+      initializing = false;
+    } else if (state.Prefs.values["feeds.snippets"] === false && snippets.initialized) {
       snippets.uninit();
     }
   });
