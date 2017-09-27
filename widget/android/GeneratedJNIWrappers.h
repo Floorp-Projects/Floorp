@@ -3460,6 +3460,27 @@ public:
 
     explicit GeckoSurfaceTexture(const Context& ctx) : ObjectBase<GeckoSurfaceTexture>(ctx) {}
 
+    struct AttachToGLContext_t {
+        typedef GeckoSurfaceTexture Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int64_t,
+                int32_t> Args;
+        static constexpr char name[] = "attachToGLContext";
+        static constexpr char signature[] =
+                "(JI)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto AttachToGLContext(int64_t, int32_t) const -> nsresult;
+
     struct DecrementUse_t {
         typedef GeckoSurfaceTexture Owner;
         typedef void ReturnType;
@@ -3478,6 +3499,25 @@ public:
     };
 
     auto DecrementUse() const -> void;
+
+    struct DetachFromGLContext_t {
+        typedef GeckoSurfaceTexture Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "detachFromGLContext";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto DetachFromGLContext() const -> nsresult;
 
     struct GetHandle_t {
         typedef GeckoSurfaceTexture Owner;
@@ -3535,6 +3575,26 @@ public:
     };
 
     auto IncrementUse() const -> void;
+
+    struct IsAttachedToGLContext_t {
+        typedef GeckoSurfaceTexture Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int64_t> Args;
+        static constexpr char name[] = "isAttachedToGLContext";
+        static constexpr char signature[] =
+                "(J)Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto IsAttachedToGLContext(int64_t) const -> bool;
 
     struct IsSingleBuffer_t {
         typedef GeckoSurfaceTexture Owner;
@@ -3594,23 +3654,6 @@ public:
 
     static auto Lookup(int32_t) -> GeckoSurfaceTexture::LocalRef;
 
-    struct NativeAcquireTexture_t {
-        typedef GeckoSurfaceTexture Owner;
-        typedef int32_t ReturnType;
-        typedef int32_t SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "nativeAcquireTexture";
-        static constexpr char signature[] =
-                "()I";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
     struct ReleaseTexImage_t {
         typedef GeckoSurfaceTexture Owner;
         typedef void ReturnType;
@@ -3652,7 +3695,6 @@ public:
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
 
-    template<class Impl> class Natives;
 };
 
 class LayerView : public mozilla::jni::ObjectBase<LayerView>
