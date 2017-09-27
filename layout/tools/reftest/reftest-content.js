@@ -440,6 +440,12 @@ function shouldSnapshotWholePage(contentRootElement) {
 function getNoPaintElements(contentRootElement) {
     return contentRootElement.getElementsByClassName('reftest-no-paint');
 }
+function getNoDisplayListElements(contentRootElement) {
+    return contentRootElement.getElementsByClassName('reftest-no-display-list');
+}
+function getDisplayListElements(contentRootElement) {
+    return contentRootElement.getElementsByClassName('reftest-display-list');
+}
 
 function getOpaqueLayerElements(contentRootElement) {
     return contentRootElement.getElementsByClassName('reftest-opaque-layer');
@@ -598,6 +604,14 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
                 for (var i = 0; i < elements.length; ++i) {
                   windowUtils().checkAndClearPaintedState(elements[i]);
                 }
+                elements = getNoDisplayListElements(contentRootElement);
+                for (var i = 0; i < elements.length; ++i) {
+                  windowUtils().checkAndClearDisplayListState(elements[i]);
+                }
+                elements = getDisplayListElements(contentRootElement);
+                for (var i = 0; i < elements.length; ++i) {
+                  windowUtils().checkAndClearDisplayListState(elements[i]);
+                }
                 var notification = content.document.createEvent("Events");
                 notification.initEvent("MozReftestInvalidate", true, false);
                 contentRootElement.dispatchEvent(notification);
@@ -696,6 +710,23 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
                   if (windowUtils().checkAndClearPaintedState(elements[i])) {
                       SendFailedNoPaint();
                   }
+              }
+              // We only support retained display lists in the content process
+              // right now, so don't fail reftest-no-display-list tests when
+              // we don't have e10s.
+              if (gBrowserIsRemote) {
+                elements = getNoDisplayListElements(contentRootElement);
+                for (var i = 0; i < elements.length; ++i) {
+                    if (windowUtils().checkAndClearDisplayListState(elements[i])) {
+                        SendFailedNoDisplayList();
+                    }
+                }
+                elements = getDisplayListElements(contentRootElement);
+                for (var i = 0; i < elements.length; ++i) {
+                    if (!windowUtils().checkAndClearDisplayListState(elements[i])) {
+                        SendFailedDisplayList();
+                    }
+                }
               }
               CheckLayerAssertions(contentRootElement);
             }
@@ -1157,6 +1188,16 @@ function SendFailedLoad(why)
 function SendFailedNoPaint()
 {
     sendAsyncMessage("reftest:FailedNoPaint");
+}
+
+function SendFailedNoDisplayList()
+{
+    sendAsyncMessage("reftest:FailedNoDisplayList");
+}
+
+function SendFailedDisplayList()
+{
+    sendAsyncMessage("reftest:FailedDisplayList");
 }
 
 function SendFailedOpaqueLayer(why)
