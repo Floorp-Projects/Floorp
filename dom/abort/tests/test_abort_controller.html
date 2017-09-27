@@ -12,27 +12,61 @@
 <body>
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.pushPrefEnv({"set": [["dom.abortController.enabled", true ]]}, () => {
-  let ifr = document.createElement("iframe");
-  ifr.src = "file_abort_controller.html";
-  document.body.appendChild(ifr);
+function testWebIDL() {
+  ok("AbortController" in self, "We have a AbortController prototype");
+  ok("AbortSignal" in self, "We have a AbortSignal prototype");
 
-  window.onmessage = function(e) {
-    if (e.data.type == "finish") {
-      SimpleTest.finish();
-      return;
-    }
+  var ac = new AbortController();
+  ok(!!ac, "AbortController can be created");
+  ok(ac instanceof AbortController, "AbortController is a AbortController");
 
-    if (e.data.type == "check") {
-      ok(e.data.status, e.data.message);
-      return;
-    }
+  ok(!!ac.signal, "AbortController has a signal");
+  ok(ac.signal instanceof AbortSignal, "abortSignal is a AbortSignal");
+  is(ac.signal.aborted, false, "By default AbortSignal.aborted is false");
+  next();
+}
 
-    ok(false, "Something when wrong.");
+function testUpdateData() {
+  var ac = new AbortController();
+
+  is(ac.signal.aborted, false, "By default AbortSignal.aborted is false");
+
+  ac.abort();
+  is(ac.signal.aborted, true, "Signal is aborted");
+
+  next();
+}
+
+function testAbortEvent() {
+  var ac = new AbortController();
+  ac.signal.onabort = function(e) {
+    is(e.type, "abort", "Abort received");
+    next();
   }
-});
+  ac.abort();
+}
+
+var steps = [
+  // Simple stuff
+  testWebIDL,
+  testUpdateData,
+
+  // Event propagation
+  testAbortEvent,
+];
+
+function next() {
+  if (!steps.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
 
 SimpleTest.waitForExplicitFinish();
+next();
 
 </script>
 </body>
