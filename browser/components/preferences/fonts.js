@@ -21,62 +21,61 @@ const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 var gFontsDialog = {
   _selectLanguageGroupPromise: Promise.resolve(),
 
-  async _selectLanguageGroup(aLanguageGroup) {
-    // Avoid overlapping language group selections by awaiting the resolution
-    // of the previous one.  We do this because this function is re-entrant,
-    // as inserting <preference> elements into the DOM sometimes triggers a call
-    // back into this function.  And since this function is also asynchronous,
-    // that call can enter this function before the previous run has completed,
-    // which would corrupt the font menulists.  Awaiting the previous call's
-    // resolution avoids that fate.
-    await this._selectLanguageGroupPromise;
+  _selectLanguageGroup(aLanguageGroup) {
+    this._selectLanguageGroupPromise = (async () => {
+      // Avoid overlapping language group selections by awaiting the resolution
+      // of the previous one.  We do this because this function is re-entrant,
+      // as inserting <preference> elements into the DOM sometimes triggers a call
+      // back into this function.  And since this function is also asynchronous,
+      // that call can enter this function before the previous run has completed,
+      // which would corrupt the font menulists.  Awaiting the previous call's
+      // resolution avoids that fate.
+      await this._selectLanguageGroupPromise;
 
-    var prefs = [{ format: kDefaultFontType,          type: "string",   element: "defaultFontType", fonttype: null},
-                 { format: kFontNameFmtSerif,         type: "fontname", element: "serif",      fonttype: "serif"       },
-                 { format: kFontNameFmtSansSerif,     type: "fontname", element: "sans-serif", fonttype: "sans-serif"  },
-                 { format: kFontNameFmtMonospace,     type: "fontname", element: "monospace",  fonttype: "monospace"   },
-                 { format: kFontNameListFmtSerif,     type: "unichar",  element: null,         fonttype: "serif"       },
-                 { format: kFontNameListFmtSansSerif, type: "unichar",  element: null,         fonttype: "sans-serif"  },
-                 { format: kFontNameListFmtMonospace, type: "unichar",  element: null,         fonttype: "monospace"   },
-                 { format: kFontSizeFmtVariable,      type: "int",      element: "sizeVar",    fonttype: null          },
-                 { format: kFontSizeFmtFixed,         type: "int",      element: "sizeMono",   fonttype: null          },
-                 { format: kFontMinSizeFmt,           type: "int",      element: "minSize",    fonttype: null          }];
-    var preferences = document.getElementById("fontPreferences");
-    for (var i = 0; i < prefs.length; ++i) {
-      var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
-      if (!preference) {
-        preference = document.createElement("preference");
-        var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
-        preference.id = name;
-        preference.setAttribute("name", name);
-        preference.setAttribute("type", prefs[i].type);
-        preferences.appendChild(preference);
+      var prefs = [
+        { format: kDefaultFontType,          type: "string",   element: "defaultFontType", fonttype: null     },
+        { format: kFontNameFmtSerif,         type: "fontname", element: "serif",      fonttype: "serif"       },
+        { format: kFontNameFmtSansSerif,     type: "fontname", element: "sans-serif", fonttype: "sans-serif"  },
+        { format: kFontNameFmtMonospace,     type: "fontname", element: "monospace",  fonttype: "monospace"   },
+        { format: kFontNameListFmtSerif,     type: "unichar",  element: null,         fonttype: "serif"       },
+        { format: kFontNameListFmtSansSerif, type: "unichar",  element: null,         fonttype: "sans-serif"  },
+        { format: kFontNameListFmtMonospace, type: "unichar",  element: null,         fonttype: "monospace"   },
+        { format: kFontSizeFmtVariable,      type: "int",      element: "sizeVar",    fonttype: null          },
+        { format: kFontSizeFmtFixed,         type: "int",      element: "sizeMono",   fonttype: null          },
+        { format: kFontMinSizeFmt,           type: "int",      element: "minSize",    fonttype: null          }
+      ];
+      var preferences = document.getElementById("fontPreferences");
+      for (var i = 0; i < prefs.length; ++i) {
+        var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
+        if (!preference) {
+          preference = document.createElement("preference");
+          var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
+          preference.id = name;
+          preference.setAttribute("name", name);
+          preference.setAttribute("type", prefs[i].type);
+          preferences.appendChild(preference);
+        }
+
+        if (!prefs[i].element)
+          continue;
+
+        var element = document.getElementById(prefs[i].element);
+        if (element) {
+          element.setAttribute("preference", preference.id);
+
+          if (prefs[i].fonttype)
+            await FontBuilder.buildFontList(aLanguageGroup, prefs[i].fonttype, element);
+
+          preference.setElementValue(element);
+        }
       }
-
-      if (!prefs[i].element)
-        continue;
-
-      var element = document.getElementById(prefs[i].element);
-      if (element) {
-        element.setAttribute("preference", preference.id);
-
-        if (prefs[i].fonttype)
-          await FontBuilder.buildFontList(aLanguageGroup, prefs[i].fonttype, element);
-
-        preference.setElementValue(element);
-      }
-    }
-  },
-
-  _safelySelectLanguageGroup(aLanguageGroup) {
-    this._selectLanguageGroupPromise =
-      this._selectLanguageGroup(aLanguageGroup)
-        .catch(Components.utils.reportError);
+    })()
+      .catch(Components.utils.reportError);
   },
 
   readFontLanguageGroup() {
     var languagePref = document.getElementById("font.language.group");
-    this._safelySelectLanguageGroup(languagePref.value);
+    this._selectLanguageGroup(languagePref.value);
     return undefined;
   },
 
