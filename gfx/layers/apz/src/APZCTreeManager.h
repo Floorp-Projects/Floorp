@@ -54,7 +54,7 @@ class WebRenderScrollData;
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
  *
  * There are two kinds of locks used by APZ: APZCTreeManager::mTreeLock
- * ("the tree lock") and AsyncPanZoomController::mMonitor ("APZC locks").
+ * ("the tree lock") and AsyncPanZoomController::mRecursiveMutex ("APZC locks").
  *
  * To avoid deadlock, we impose a lock ordering between these locks, which is:
  *
