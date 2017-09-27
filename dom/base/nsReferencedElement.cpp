@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsReferencedElement.h"
-
-#include "mozilla/Encoding.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "nsBindingManager.h"
