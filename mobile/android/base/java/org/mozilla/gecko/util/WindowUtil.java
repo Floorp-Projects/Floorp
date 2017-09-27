@@ -6,6 +6,7 @@
 package org.mozilla.gecko.util;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
@@ -13,7 +14,9 @@ import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.Window;
 
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.lwt.LightweightTheme;
 
 public class WindowUtil {
 
@@ -29,17 +32,27 @@ public class WindowUtil {
             return;
         }
 
-        final @ColorRes int colorResId;
+        final @ColorInt int color;
         final boolean isDarkTheme;
 
         if (HardwareUtils.isTablet()) {
-            colorResId = R.color.status_bar_bg_color_tablet;
+            color = ContextCompat.getColor(activity, R.color.status_bar_bg_color_tablet);
             isDarkTheme = true;
         } else {
-            colorResId = isPrivate ? R.color.status_bar_bg_color_private : R.color.status_bar_bg_color;
-            isDarkTheme = isPrivate;
+            LightweightTheme theme = ((GeckoApplication) activity.getApplication()).getLightweightTheme();
+            @ColorInt int themeColor = theme.getColor();
+            if (isPrivate) {
+                color = ContextCompat.getColor(activity, R.color.status_bar_bg_color_private);
+                isDarkTheme = true;
+            } else if (theme.isEnabled() && themeColor != Color.TRANSPARENT) {
+                color = themeColor;
+                isDarkTheme = !theme.isLightTheme();
+            } else {
+                color = ContextCompat.getColor(activity, R.color.status_bar_bg_color);
+                isDarkTheme = false;
+            }
         }
-        setStatusBarColorRes(activity, colorResId, isDarkTheme);
+        setStatusBarColor(activity, color, isDarkTheme);
     }
 
     public static void setStatusBarColorRes(final Activity activity, final @ColorRes int colorResId,
