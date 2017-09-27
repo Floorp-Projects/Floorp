@@ -26,8 +26,10 @@ class JSAtom;
 
 namespace js {
 
-class WasmActivation;
-namespace jit { class MacroAssembler; }
+namespace jit {
+class MacroAssembler;
+struct Register;
+} // namespace jit
 
 namespace wasm {
 
@@ -42,7 +44,7 @@ struct Frame;
 struct FuncOffsets;
 struct CallableOffsets;
 
-// Iterates over a linear group of wasm frames of a single WasmActivation,
+// Iterates over a linear group of wasm frames of a single wasm JitActivation,
 // called synchronously from C++ in the wasm thread. It will stop at the first
 // frame that is not of the same kind, or at the end of an activation.
 //
@@ -61,7 +63,7 @@ class WasmFrameIter
     enum class Unwind { True, False };
 
   private:
-    WasmActivation* activation_;
+    jit::JitActivation* activation_;
     const Code* code_;
     const CallSite* callsite_;
     const CodeRange* codeRange_;
@@ -73,7 +75,9 @@ class WasmFrameIter
 
   public:
     // See comment above this class definition.
-    explicit WasmFrameIter(WasmActivation* activation, Unwind unwind = Unwind::False);
+    explicit WasmFrameIter(jit::JitActivation* activation, Frame* fp = nullptr);
+    const jit::JitActivation* activation() const { return activation_; }
+    void setUnwind(Unwind unwind) { unwind_ = unwind; }
     void operator++();
     bool done() const;
     const char* filename() const;
@@ -108,7 +112,7 @@ class ExitReason
         ImportJit,     // fast-path call directly into JIT code
         ImportInterp,  // slow-path call into C++ Invoke()
         BuiltinNative, // fast-path call directly into native C++ code
-        Trap,          // call to trap handler for the trap in WasmActivation::trap
+        Trap,          // call to trap handler
         DebugTrap      // call to debug trap handler
     };
 
@@ -150,11 +154,11 @@ class ExitReason
     }
 };
 
-// Iterates over the frames of a single WasmActivation, given an
+// Iterates over the frames of a single wasm JitActivation, given an
 // asynchronously-interrupted thread's state.
 class ProfilingFrameIterator
 {
-    const WasmActivation* activation_;
+    const jit::JitActivation* activation_;
     const Code* code_;
     const CodeRange* codeRange_;
     Frame* callerFP_;
@@ -162,12 +166,13 @@ class ProfilingFrameIterator
     void* stackAddress_;
     ExitReason exitReason_;
 
-    void initFromExitFP();
+    void initFromExitFP(const Frame* fp = nullptr);
 
   public:
     ProfilingFrameIterator();
-    explicit ProfilingFrameIterator(const WasmActivation& activation);
-    ProfilingFrameIterator(const WasmActivation& activation,
+    explicit ProfilingFrameIterator(const jit::JitActivation& activation,
+                                    const Frame* fp = nullptr);
+    ProfilingFrameIterator(const jit::JitActivation& activation,
                            const JS::ProfilingFrameIterator::RegisterState& state);
     void operator++();
     bool done() const { return !codeRange_; }
@@ -179,11 +184,20 @@ class ProfilingFrameIterator
 // Prologue/epilogue code generation
 
 void
+SetExitFP(jit::MacroAssembler& masm, jit::Register scratch);
+void
+ClearExitFP(jit::MacroAssembler& masm, jit::Register scratch);
+
+void
 GenerateExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                      CallableOffsets* offsets);
 void
 GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                      CallableOffsets* offsets);
+void
+GenerateJitExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, CallableOffsets* offsets);
+void
+GenerateJitExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, CallableOffsets* offsets);
 void
 GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
                          FuncOffsets* offsets, CompileMode mode = CompileMode::Once,
@@ -196,11 +210,6 @@ GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOf
 
 Instance*
 LookupFaultingInstance(const Code& code, void* pc, void* fp);
-
-// If the innermost (active) Activation is a WasmActivation, return it.
-
-WasmActivation*
-ActivationIfInnermost(JSContext* cx);
 
 // Return whether the given PC is in wasm code.
 
@@ -232,7 +241,7 @@ typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
 // frame should be ignored.
 
 bool
-StartUnwinding(const WasmActivation& activation, const RegisterState& registers,
+StartUnwinding(const jit::JitActivation& activation, const RegisterState& registers,
                UnwindState* unwindState, bool* unwoundCaller);
 
 } // namespace wasm

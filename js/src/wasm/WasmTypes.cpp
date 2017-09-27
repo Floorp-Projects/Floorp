@@ -679,13 +679,10 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
   : begin_(offsets.begin),
     ret_(0),
     end_(offsets.end),
-    funcIndex_(0),
-    funcLineOrBytecode_(0),
-    funcBeginToNormalEntry_(0),
-    funcBeginToTierEntry_(0),
     kind_(kind)
 {
     MOZ_ASSERT(begin_ <= end_);
+    PodZero(&u);
 #ifdef DEBUG
     switch (kind_) {
       case FarJumpIsland:
@@ -704,12 +701,12 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets)
   : begin_(offsets.begin),
     ret_(0),
     end_(offsets.end),
-    funcIndex_(funcIndex),
-    funcLineOrBytecode_(0),
-    funcBeginToNormalEntry_(0),
-    funcBeginToTierEntry_(0),
     kind_(kind)
 {
+    u.funcIndex_ = funcIndex;
+    u.func.lineOrBytecode_ = 0;
+    u.func.beginToNormalEntry_ = 0;
+    u.func.beginToTierEntry_ = 0;
     MOZ_ASSERT(kind == Entry);
     MOZ_ASSERT(begin_ <= end_);
 }
@@ -718,14 +715,11 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
   : begin_(offsets.begin),
     ret_(offsets.ret),
     end_(offsets.end),
-    funcIndex_(0),
-    funcLineOrBytecode_(0),
-    funcBeginToNormalEntry_(0),
-    funcBeginToTierEntry_(0),
     kind_(kind)
 {
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);
+    PodZero(&u);
 #ifdef DEBUG
     switch (kind_) {
       case TrapExit:
@@ -742,45 +736,56 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets offsets)
   : begin_(offsets.begin),
     ret_(offsets.ret),
     end_(offsets.end),
-    funcIndex_(funcIndex),
-    funcLineOrBytecode_(0),
-    funcBeginToNormalEntry_(0),
-    funcBeginToTierEntry_(0),
     kind_(kind)
 {
-    MOZ_ASSERT(isImportExit());
+    MOZ_ASSERT(isImportExit() && !isImportJitExit());
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);
+    u.funcIndex_ = funcIndex;
+    u.func.lineOrBytecode_ = 0;
+    u.func.beginToNormalEntry_ = 0;
+    u.func.beginToTierEntry_ = 0;
+}
+
+CodeRange::CodeRange(uint32_t funcIndex, JitExitOffsets offsets)
+  : begin_(offsets.begin),
+    ret_(offsets.ret),
+    end_(offsets.end),
+    kind_(ImportJitExit)
+{
+    MOZ_ASSERT(isImportJitExit());
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
+    u.funcIndex_ = funcIndex;
+    u.jitExit.beginToUntrustedFPStart_ = offsets.untrustedFPStart - begin_;
+    u.jitExit.beginToUntrustedFPEnd_ = offsets.untrustedFPEnd - begin_;
 }
 
 CodeRange::CodeRange(Trap trap, CallableOffsets offsets)
   : begin_(offsets.begin),
     ret_(offsets.ret),
     end_(offsets.end),
-    trap_(trap),
-    funcLineOrBytecode_(0),
-    funcBeginToNormalEntry_(0),
-    funcBeginToTierEntry_(0),
     kind_(TrapExit)
 {
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);
+    u.trap_ = trap;
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
   : begin_(offsets.begin),
     ret_(offsets.ret),
     end_(offsets.end),
-    funcIndex_(funcIndex),
-    funcLineOrBytecode_(funcLineOrBytecode),
-    funcBeginToNormalEntry_(offsets.normalEntry - begin_),
-    funcBeginToTierEntry_(offsets.tierEntry - begin_),
     kind_(Function)
 {
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);
     MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
     MOZ_ASSERT(offsets.tierEntry - begin_ <= UINT8_MAX);
+    u.funcIndex_ = funcIndex;
+    u.func.lineOrBytecode_ = funcLineOrBytecode;
+    u.func.beginToNormalEntry_ = offsets.normalEntry - begin_;
+    u.func.beginToTierEntry_ = offsets.tierEntry - begin_;
 }
 
 const CodeRange*

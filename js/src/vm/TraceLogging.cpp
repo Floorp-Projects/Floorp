@@ -260,20 +260,27 @@ TraceLoggerThread::enable(JSContext* cx)
         int32_t engine = 0;
 
         if (act->isJit()) {
-            JSJitFrameIter frame(iter->asJit());
+            JitFrameIter frame(iter->asJit());
 
-            while (!frame.isScripted() && !frame.done())
+            while (!frame.done()) {
+                if (frame.isWasm()) {
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                              JSMSG_TRACELOGGER_ENABLE_FAIL,
+                                              "not yet supported in wasm code");
+                    return false;
+                }
+                if (frame.asJSJit().isScripted())
+                    break;
                 ++frame;
+            }
 
             MOZ_ASSERT(!frame.done());
-            MOZ_ASSERT(frame.isIonJS() || frame.isBaselineJS());
 
-            script = frame.script();
-            engine = frame.isIonJS() ? TraceLogger_IonMonkey : TraceLogger_Baseline;
-        } else if (act->isWasm()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TRACELOGGER_ENABLE_FAIL,
-                                      "not yet supported in wasm code");
-            return false;
+            const JSJitFrameIter& jitFrame = frame.asJSJit();
+            MOZ_ASSERT(jitFrame.isIonJS() || jitFrame.isBaselineJS());
+
+            script = jitFrame.script();
+            engine = jitFrame.isIonJS() ? TraceLogger_IonMonkey : TraceLogger_Baseline;
         } else {
             MOZ_ASSERT(act->isInterpreter());
             InterpreterFrame* fp = act->asInterpreter()->current();

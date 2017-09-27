@@ -930,11 +930,8 @@ Activation::isProfiling() const
     if (isInterpreter())
         return asInterpreter()->isProfiling();
 
-    if (isJit())
-        return asJit()->isProfiling();
-
-    MOZ_ASSERT(isWasm());
-    return asWasm()->isProfiling();
+    MOZ_ASSERT(isJit());
+    return asJit()->isProfiling();
 }
 
 Activation*
