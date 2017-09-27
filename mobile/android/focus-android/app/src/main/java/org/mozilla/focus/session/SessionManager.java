@@ -71,14 +71,11 @@ public class SessionManager {
         final String action = intent.getAction();
 
         if (Intent.ACTION_VIEW.equals(action)) {
-            final Source source;
             if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
-                source = Source.HOME_SCREEN;
-                boolean blockingEnabled = intent.getBooleanExtra(HomeScreen.BLOCKING_ENABLED, true);
-                createSession(context, source, intent, intent.getDataString(), blockingEnabled);
+                final boolean blockingEnabled = intent.getBooleanExtra(HomeScreen.BLOCKING_ENABLED, true);
+                createSession(context, Source.HOME_SCREEN;, intent, intent.getDataString(), blockingEnabled);
             } else {
-                source = Source.VIEW;
-                createSession(context, source, intent, intent.getDataString());
+                createSession(context, Source.VIEW, intent, intent.getDataString());
             }
         } else if (Intent.ACTION_SEND.equals(action)) {
             final String dataString = intent.getStringExtra(Intent.EXTRA_TEXT);
