@@ -1124,11 +1124,10 @@ MediaStreamGraph::AssertOnGraphThreadOrNotRunning() const
   MediaStreamGraphImpl const * graph =
     static_cast<MediaStreamGraphImpl const *>(this);
   // if all the safety checks fail, assert we own the monitor
-  if (!graph->mDriver->OnThread()) {
-    if (!(graph->mDetectedNotRunning &&
-          NS_IsMainThread())) {
+  if (!(graph->mDetectedNotRunning ?
+        NS_IsMainThread() : graph->mDriver->OnThread()))
+  {
       graph->mMonitor.AssertCurrentThreadOwns();
-    }
   }
 #endif
 }
