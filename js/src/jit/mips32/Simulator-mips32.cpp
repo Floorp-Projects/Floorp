@@ -1334,8 +1334,8 @@ class Redirection
         next_(nullptr)
     {
         next_ = SimulatorProcess::redirection();
-	if (!SimulatorProcess::ICacheCheckingDisableCount) {
-	    FlushICacheLocked(SimulatorProcess::icache(), addressOfSwiInstruction(),
+        if (!SimulatorProcess::ICacheCheckingDisableCount) {
+            FlushICacheLocked(SimulatorProcess::icache(), addressOfSwiInstruction(),
                               SimInstruction::kInstrSize);
         }
         SimulatorProcess::setRedirection(this);
@@ -1619,14 +1619,14 @@ Simulator::get_pc() const
 }
 
 void
-Simulator::startInterrupt(WasmActivation* activation)
+Simulator::startInterrupt(JitActivation* activation)
 {
     JS::ProfilingFrameIterator::RegisterState state;
     state.pc = (void*) get_pc();
     state.fp = (void*) getRegister(fp);
     state.sp = (void*) getRegister(sp);
     state.lr = (void*) getRegister(ra);
-    activation->startInterrupt(state);
+    activation->startWasmInterrupt(state);
 }
 
 // The signal handler only redirects the PC to the interrupt stub when the PC is
@@ -1640,7 +1640,7 @@ Simulator::handleWasmInterrupt()
     void* pc = (void*)get_pc();
     void* fp = (void*)getRegister(Register::fp);
 
-    WasmActivation* activation = wasm::ActivationIfInnermost(TlsContext.get());
+    JitActivation* activation = TlsContext.get()->activation()->asJit();
     const wasm::CodeSegment* segment;
     const wasm::Code* code = activation->compartment()->wasm.lookupCode(pc, &segment);
     if (!code || !segment->containsFunctionPC(pc))
@@ -1665,9 +1665,9 @@ bool
 Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
 {
     JSContext* cx = TlsContext.get();
-    WasmActivation* act = wasm::ActivationIfInnermost(cx);
-    if (!act)
+    if (!cx->activation() || !cx->activation()->isJit())
         return false;
+    JitActivation* act = cx->activation()->asJit();
 
     void* pc = reinterpret_cast<void*>(get_pc());
     uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));

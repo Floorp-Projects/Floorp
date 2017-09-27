@@ -3005,8 +3005,11 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
           case JitFrame_IonICCall:
             JitSpew(JitSpew_IonInvalidate, "#%zu ion IC call frame @ %p", frameno, frame.fp());
             break;
-          case JitFrame_Entry:
+          case JitFrame_CppToJSJit:
             JitSpew(JitSpew_IonInvalidate, "#%zu entry frame @ %p", frameno, frame.fp());
+            break;
+          case JitFrame_WasmToJSJit:
+            JitSpew(JitSpew_IonInvalidate, "#%zu wasm frames @ %p", frameno, frame.fp());
             break;
         }
 #endif // JS_JITSPEW

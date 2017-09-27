@@ -42,7 +42,6 @@
 namespace js {
 
 class PropertyName;
-class WasmActivation;
 class WasmFunctionCallObject;
 namespace jit {
     struct BaselineScript;
@@ -948,6 +947,19 @@ struct CallableOffsets : Offsets
     uint32_t ret;
 };
 
+struct JitExitOffsets : CallableOffsets
+{
+    MOZ_IMPLICIT JitExitOffsets()
+      : CallableOffsets(), untrustedFPStart(0), untrustedFPEnd(0)
+    {}
+
+    // There are a few instructions in the Jit exit where FP may be trash
+    // (because it may have been clobbered by the JS Jit), known as the
+    // untrusted FP zone.
+    uint32_t untrustedFPStart;
+    uint32_t untrustedFPEnd;
+};
+
 struct FuncOffsets : CallableOffsets
 {
     MOZ_IMPLICIT FuncOffsets()
@@ -1000,12 +1012,22 @@ class CodeRange
     uint32_t ret_;
     uint32_t end_;
     union {
-        uint32_t funcIndex_;
+        struct {
+            uint32_t funcIndex_;
+            union {
+                struct {
+                    uint32_t lineOrBytecode_;
+                    uint8_t beginToNormalEntry_;
+                    uint8_t beginToTierEntry_;
+                } func;
+                struct {
+                    uint8_t beginToUntrustedFPStart_;
+                    uint8_t beginToUntrustedFPEnd_;
+                } jitExit;
+            };
+        };
         Trap trap_;
-    };
-    uint32_t funcLineOrBytecode_;
-    uint8_t funcBeginToNormalEntry_;
-    uint8_t funcBeginToTierEntry_;
+    } u;
     Kind kind_ : 8;
 
   public:
@@ -1014,6 +1036,7 @@ class CodeRange
     CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets);
     CodeRange(Kind kind, CallableOffsets offsets);
     CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets);
+    CodeRange(uint32_t funcIndex, JitExitOffsets offsets);
     CodeRange(Trap trap, CallableOffsets offsets);
     CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
 
@@ -1045,6 +1068,9 @@ class CodeRange
     bool isImportExit() const {
         return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinThunk;
     }
+    bool isImportJitExit() const {
+        return kind() == ImportJitExit;
+    }
     bool isTrapExit() const {
         return kind() == TrapExit;
     }
@@ -1072,14 +1098,14 @@ class CodeRange
     }
     uint32_t funcIndex() const {
         MOZ_ASSERT(hasFuncIndex());
-        return funcIndex_;
+        return u.funcIndex_;
     }
 
     // TrapExit CodeRanges have a Trap field.
 
     Trap trap() const {
         MOZ_ASSERT(isTrapExit());
-        return trap_;
+        return u.trap_;
     }
 
     // Function CodeRanges have two entry points: one for normal calls (with a
@@ -1092,15 +1118,27 @@ class CodeRange
     }
     uint32_t funcNormalEntry() const {
         MOZ_ASSERT(isFunction());
-        return begin_ + funcBeginToNormalEntry_;
+        return begin_ + u.func.beginToNormalEntry_;
     }
     uint32_t funcTierEntry() const {
         MOZ_ASSERT(isFunction());
-        return begin_ + funcBeginToTierEntry_;
+        return begin_ + u.func.beginToTierEntry_;
     }
     uint32_t funcLineOrBytecode() const {
         MOZ_ASSERT(isFunction());
-        return funcLineOrBytecode_;
+        return u.func.lineOrBytecode_;
+    }
+
+    // ImportJitExit have a particular range where the value of FP can't be
+    // trusted for profiling and thus must be ignored.
+
+    uint32_t jitExitUntrustedFPStart() const {
+        MOZ_ASSERT(isImportJitExit());
+        return begin_ + u.jitExit.beginToUntrustedFPStart_;
+    }
+    uint32_t jitExitUntrustedFPEnd() const {
+        MOZ_ASSERT(isImportJitExit());
+        return begin_ + u.jitExit.beginToUntrustedFPEnd_;
     }
 
     // A sorted array of CodeRanges can be looked up via BinarySearch and
@@ -1435,7 +1473,6 @@ struct TlsData
     // and are inline in this structure.  16-byte alignment is required for SIMD
     // data.
     MOZ_ALIGNED_DECL(char globalArea, 16);
-
 };
 
 static_assert(offsetof(TlsData, globalArea) % 16 == 0, "aligned");

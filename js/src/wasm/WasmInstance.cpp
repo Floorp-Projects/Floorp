@@ -674,13 +674,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
     }
 
     {
-        // Push a WasmActivation to describe the wasm frames we're about to push
-        // when running this module. Additionally, push a JitActivation so that
-        // the optimized wasm-to-Ion FFI call path (which we want to be very
-        // fast) can avoid doing so. The JitActivation is marked as inactive so
-        // stack iteration will skip over it.
-        WasmActivation activation(cx);
-        JitActivation jitActivation(cx, /* active */ false);
+        JitActivation activation(cx);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
         auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBase(tier) + func.entryOffset());

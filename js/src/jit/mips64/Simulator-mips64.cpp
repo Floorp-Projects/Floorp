@@ -1613,7 +1613,7 @@ Simulator::get_pc() const
 }
 
 void
-Simulator::startInterrupt(WasmActivation* activation)
+Simulator::startInterrupt(JitActivation* activation)
 {
     MOZ_CRASH("NIY");
 }
