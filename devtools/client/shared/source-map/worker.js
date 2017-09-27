@@ -68,7 +68,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  applySourceMap
 	} = __webpack_require__(9);
 
-	const { clearSourceMaps } = __webpack_require__(24);
+	const { clearSourceMaps } = __webpack_require__(23);
 
 	const { workerUtils: { workerHandler } } = __webpack_require__(6);
 
@@ -807,15 +807,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	const { networkRequest } = __webpack_require__(6);
 	const { SourceMapConsumer, SourceMapGenerator } = __webpack_require__(10);
-	const path = __webpack_require__(21);
 
-	const assert = __webpack_require__(22);
-	const { fetchSourceMap } = __webpack_require__(23);
+	const assert = __webpack_require__(21);
+	const { fetchSourceMap } = __webpack_require__(22);
 	const {
 	  getSourceMap,
 	  setSourceMap,
 	  clearSourceMaps
-	} = __webpack_require__(24);
+	} = __webpack_require__(23);
 	const {
 	  originalToGeneratedId,
 	  generatedToOriginalId,
@@ -825,9 +824,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	} = __webpack_require__(1);
 	const {
 	  getLocationScopes: getLocationScopesFromMap
-	} = __webpack_require__(26);
+	} = __webpack_require__(40);
 
-	const { WasmRemap } = __webpack_require__(25);
+	const { WasmRemap } = __webpack_require__(24);
 
 	function applySourceMap(generatedId, url, code, mappings) {
 	  const generator = new SourceMapGenerator({ file: url });
@@ -939,6 +938,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    generator.addMapping(newMapping);
 	  });
 	  aSourceMapConsumer.sources.forEach(function (sourceFile) {
+	    var sourceRelative = sourceFile;
+	    if (sourceRoot !== null) {
+	      sourceRelative = util.relative(sourceRoot, sourceFile);
+	    }
+
+	    if (!generator._sources.has(sourceRelative)) {
+	      generator._sources.add(sourceRelative);
+	    }
+
 	    var content = aSourceMapConsumer.sourceContentFor(sourceFile);
 	    if (content != null) {
 	      generator.setSourceContent(sourceFile, content);
@@ -1117,6 +1125,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * in to one of these categories.
 	 */
 	SourceMapGenerator.prototype._validateMapping = function SourceMapGenerator_validateMapping(aGenerated, aOriginal, aSource, aName) {
+	  // When aOriginal is truthy but has empty values for .line and .column,
+	  // it is most likely a programmer error. In this case we throw a very
+	  // specific error message to try to guide them the right way.
+	  // For example: https://github.com/Polymer/polymer-bundler/pull/519
+	  if (aOriginal && typeof aOriginal.line !== 'number' && typeof aOriginal.column !== 'number') {
+	    throw new Error('original.line and original.column are not numbers -- you probably meant to omit ' + 'the original mapping entirely and only map the generated position. If so, pass ' + 'null for the original mapping instead of an object with empty or null values.');
+	  }
+
 	  if (aGenerated && 'line' in aGenerated && 'column' in aGenerated && aGenerated.line > 0 && aGenerated.column >= 0 && !aOriginal && !aSource && !aName) {
 	    // Case 1.
 	    return;
@@ -1488,7 +1504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	exports.getArg = getArg;
 
-	var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.]*)(?::(\d+))?(\S*)$/;
+	var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.-]*)(?::(\d+))?(.*)$/;
 	var dataUrlRegexp = /^data:.+\,.+$/;
 
 	function urlParse(aUrl) {
@@ -1642,7 +1658,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.join = join;
 
 	exports.isAbsolute = function (aPath) {
-	  return aPath.charAt(0) === '/' || !!aPath.match(urlRegexp);
+	  return aPath.charAt(0) === '/' || urlRegexp.test(aPath);
 	};
 
 	/**
@@ -1754,7 +1770,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * stubbed out mapping.
 	 */
 	function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
-	  var cmp = mappingA.source - mappingB.source;
+	  var cmp = strcmp(mappingA.source, mappingB.source);
 	  if (cmp !== 0) {
 	    return cmp;
 	  }
@@ -1779,7 +1795,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return cmp;
 	  }
 
-	  return mappingA.name - mappingB.name;
+	  return strcmp(mappingA.name, mappingB.name);
 	}
 	exports.compareByOriginalPositions = compareByOriginalPositions;
 
@@ -1803,7 +1819,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return cmp;
 	  }
 
-	  cmp = mappingA.source - mappingB.source;
+	  cmp = strcmp(mappingA.source, mappingB.source);
 	  if (cmp !== 0) {
 	    return cmp;
 	  }
@@ -1818,13 +1834,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return cmp;
 	  }
 
-	  return mappingA.name - mappingB.name;
+	  return strcmp(mappingA.name, mappingB.name);
 	}
 	exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
 
 	function strcmp(aStr1, aStr2) {
 	  if (aStr1 === aStr2) {
 	    return 0;
+	  }
+
+	  if (aStr1 === null) {
+	    return 1; // aStr2 !== null
+	  }
+
+	  if (aStr2 === null) {
+	    return -1; // aStr1 !== null
 	  }
 
 	  if (aStr1 > aStr2) {
@@ -1868,6 +1892,69 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
 
+	/**
+	 * Strip any JSON XSSI avoidance prefix from the string (as documented
+	 * in the source maps specification), and then parse the string as
+	 * JSON.
+	 */
+	function parseSourceMapInput(str) {
+	  return JSON.parse(str.replace(/^\)]}'[^\n]*\n/, ''));
+	}
+	exports.parseSourceMapInput = parseSourceMapInput;
+
+	/**
+	 * Compute the URL of a source given the the source root, the source's
+	 * URL, and the source map's URL.
+	 */
+	function computeSourceURL(sourceRoot, sourceURL, sourceMapURL) {
+	  sourceURL = sourceURL || '';
+
+	  if (sourceRoot) {
+	    // This follows what Chrome does.
+	    if (sourceRoot[sourceRoot.length - 1] !== '/' && sourceURL[0] !== '/') {
+	      sourceRoot += '/';
+	    }
+	    // The spec says:
+	    //   Line 4: An optional source root, useful for relocating source
+	    //   files on a server or removing repeated values in the
+	    //   “sources” entry.  This value is prepended to the individual
+	    //   entries in the “source” field.
+	    sourceURL = sourceRoot + sourceURL;
+	  }
+
+	  // Historically, SourceMapConsumer did not take the sourceMapURL as
+	  // a parameter.  This mode is still somewhat supported, which is why
+	  // this code block is conditional.  However, it's preferable to pass
+	  // the source map URL to SourceMapConsumer, so that this function
+	  // can implement the source URL resolution algorithm as outlined in
+	  // the spec.  This block is basically the equivalent of:
+	  //    new URL(sourceURL, sourceMapURL).toString()
+	  // ... except it avoids using URL, which wasn't available in the
+	  // older releases of node still supported by this library.
+	  //
+	  // The spec says:
+	  //   If the sources are not absolute URLs after prepending of the
+	  //   “sourceRoot”, the sources are resolved relative to the
+	  //   SourceMap (like resolving script src in a html document).
+	  if (sourceMapURL) {
+	    var parsed = urlParse(sourceMapURL);
+	    if (!parsed) {
+	      throw new Error("sourceMapURL could not be parsed");
+	    }
+	    if (parsed.path) {
+	      // Strip the last path component, but keep the "/".
+	      var index = parsed.path.lastIndexOf('/');
+	      if (index >= 0) {
+	        parsed.path = parsed.path.substring(0, index + 1);
+	      }
+	    }
+	    sourceURL = join(urlGenerate(parsed), sourceURL);
+	  }
+
+	  return normalize(sourceURL);
+	}
+	exports.computeSourceURL = computeSourceURL;
+
 /***/ },
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
@@ -1881,6 +1968,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var util = __webpack_require__(14);
 	var has = Object.prototype.hasOwnProperty;
+	var hasNativeMap = typeof Map !== "undefined";
 
 	/**
 	 * A data structure which is a combination of an array and a set. Adding a new
@@ -1890,7 +1978,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function ArraySet() {
 	  this._array = [];
-	  this._set = Object.create(null);
+	  this._set = hasNativeMap ? new Map() : Object.create(null);
 	}
 
 	/**
@@ -1911,7 +1999,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns Number
 	 */
 	ArraySet.prototype.size = function ArraySet_size() {
-	  return Object.getOwnPropertyNames(this._set).length;
+	  return hasNativeMap ? this._set.size : Object.getOwnPropertyNames(this._set).length;
 	};
 
 	/**
@@ -1920,14 +2008,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param String aStr
 	 */
 	ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
-	  var sStr = util.toSetString(aStr);
-	  var isDuplicate = has.call(this._set, sStr);
+	  var sStr = hasNativeMap ? aStr : util.toSetString(aStr);
+	  var isDuplicate = hasNativeMap ? this.has(aStr) : has.call(this._set, sStr);
 	  var idx = this._array.length;
 	  if (!isDuplicate || aAllowDuplicates) {
 	    this._array.push(aStr);
 	  }
 	  if (!isDuplicate) {
-	    this._set[sStr] = idx;
+	    if (hasNativeMap) {
+	      this._set.set(aStr, idx);
+	    } else {
+	      this._set[sStr] = idx;
+	    }
 	  }
 	};
 
@@ -1937,8 +2029,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param String aStr
 	 */
 	ArraySet.prototype.has = function ArraySet_has(aStr) {
-	  var sStr = util.toSetString(aStr);
-	  return has.call(this._set, sStr);
+	  if (hasNativeMap) {
+	    return this._set.has(aStr);
+	  } else {
+	    var sStr = util.toSetString(aStr);
+	    return has.call(this._set, sStr);
+	  }
 	};
 
 	/**
@@ -1947,10 +2043,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param String aStr
 	 */
 	ArraySet.prototype.indexOf = function ArraySet_indexOf(aStr) {
-	  var sStr = util.toSetString(aStr);
-	  if (has.call(this._set, sStr)) {
-	    return this._set[sStr];
+	  if (hasNativeMap) {
+	    var idx = this._set.get(aStr);
+	    if (idx >= 0) {
+	      return idx;
+	    }
+	  } else {
+	    var sStr = util.toSetString(aStr);
+	    if (has.call(this._set, sStr)) {
+	      return this._set[sStr];
+	    }
 	  }
+
 	  throw new Error('"' + aStr + '" is not in the set.');
 	};
 
@@ -2076,17 +2180,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	var base64VLQ = __webpack_require__(12);
 	var quickSort = __webpack_require__(19).quickSort;
 
-	function SourceMapConsumer(aSourceMap) {
+	function SourceMapConsumer(aSourceMap, aSourceMapURL) {
 	  var sourceMap = aSourceMap;
 	  if (typeof aSourceMap === 'string') {
-	    sourceMap = JSON.parse(aSourceMap.replace(/^\)\]\}'/, ''));
+	    sourceMap = util.parseSourceMapInput(aSourceMap);
 	  }
 
-	  return sourceMap.sections != null ? new IndexedSourceMapConsumer(sourceMap) : new BasicSourceMapConsumer(sourceMap);
+	  return sourceMap.sections != null ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL) : new BasicSourceMapConsumer(sourceMap, aSourceMapURL);
 	}
 
-	SourceMapConsumer.fromSourceMap = function (aSourceMap) {
-	  return BasicSourceMapConsumer.fromSourceMap(aSourceMap);
+	SourceMapConsumer.fromSourceMap = function (aSourceMap, aSourceMapURL) {
+	  return BasicSourceMapConsumer.fromSourceMap(aSourceMap, aSourceMapURL);
 	};
 
 	/**
@@ -2126,6 +2230,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	SourceMapConsumer.prototype.__generatedMappings = null;
 	Object.defineProperty(SourceMapConsumer.prototype, '_generatedMappings', {
+	  configurable: true,
+	  enumerable: true,
 	  get: function () {
 	    if (!this.__generatedMappings) {
 	      this._parseMappings(this._mappings, this.sourceRoot);
@@ -2137,6 +2243,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	SourceMapConsumer.prototype.__originalMappings = null;
 	Object.defineProperty(SourceMapConsumer.prototype, '_originalMappings', {
+	  configurable: true,
+	  enumerable: true,
 	  get: function () {
 	    if (!this.__originalMappings) {
 	      this._parseMappings(this._mappings, this.sourceRoot);
@@ -2201,9 +2309,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var sourceRoot = this.sourceRoot;
 	  mappings.map(function (mapping) {
 	    var source = mapping.source === null ? null : this._sources.at(mapping.source);
-	    if (source != null && sourceRoot != null) {
-	      source = util.join(sourceRoot, source);
-	    }
+	    source = util.computeSourceURL(sourceRoot, source, this._sourceMapURL);
 	    return {
 	      source: source,
 	      generatedLine: mapping.generatedLine,
@@ -2226,13 +2332,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * The only argument is an object with the following properties:
 	 *
 	 *   - source: The filename of the original source.
-	 *   - line: The line number in the original source.
+	 *   - line: The line number in the original source.  The line number is 1-based.
 	 *   - column: Optional. the column number in the original source.
+	 *    The column number is 0-based.
 	 *
 	 * and an array of objects is returned, each with the following properties:
 	 *
-	 *   - line: The line number in the generated source, or null.
+	 *   - line: The line number in the generated source, or null.  The
+	 *    line number is 1-based.
 	 *   - column: The column number in the generated source, or null.
+	 *    The column number is 0-based.
 	 */
 	SourceMapConsumer.prototype.allGeneratedPositionsFor = function SourceMapConsumer_allGeneratedPositionsFor(aArgs) {
 	  var line = util.getArg(aArgs, 'line');
@@ -2247,13 +2356,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    originalColumn: util.getArg(aArgs, 'column', 0)
 	  };
 
-	  if (this.sourceRoot != null) {
-	    needle.source = util.relative(this.sourceRoot, needle.source);
-	  }
-	  if (!this._sources.has(needle.source)) {
+	  needle.source = this._findSourceIndex(needle.source);
+	  if (needle.source < 0) {
 	    return [];
 	  }
-	  needle.source = this._sources.indexOf(needle.source);
 
 	  var mappings = [];
 
@@ -2306,7 +2412,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * query for information about the original file positions by giving it a file
 	 * position in the generated source.
 	 *
-	 * The only parameter is the raw source map (either as a JSON string, or
+	 * The first parameter is the raw source map (either as a JSON string, or
 	 * already parsed to an object). According to the spec, source maps have the
 	 * following attributes:
 	 *
@@ -2329,12 +2435,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *       mappings: "AA,AB;;ABCDE;"
 	 *     }
 	 *
+	 * The second parameter, if given, is a string whose value is the URL
+	 * at which the source map was found.  This URL is used to compute the
+	 * sources array.
+	 *
 	 * [0]: https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?pli=1#
 	 */
-	function BasicSourceMapConsumer(aSourceMap) {
+	function BasicSourceMapConsumer(aSourceMap, aSourceMapURL) {
 	  var sourceMap = aSourceMap;
 	  if (typeof aSourceMap === 'string') {
-	    sourceMap = JSON.parse(aSourceMap.replace(/^\)\]\}'/, ''));
+	    sourceMap = util.parseSourceMapInput(aSourceMap);
 	  }
 
 	  var version = util.getArg(sourceMap, 'version');
@@ -2351,6 +2461,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // string rather than a number, so we use loose equality checking here.
 	  if (version != this._version) {
 	    throw new Error('Unsupported version: ' + version);
+	  }
+
+	  if (sourceRoot) {
+	    sourceRoot = util.normalize(sourceRoot);
 	  }
 
 	  sources = sources.map(String)
@@ -2373,9 +2487,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._names = ArraySet.fromArray(names.map(String), true);
 	  this._sources = ArraySet.fromArray(sources, true);
 
+	  this._absoluteSources = this._sources.toArray().map(function (s) {
+	    return util.computeSourceURL(sourceRoot, s, aSourceMapURL);
+	  });
+
 	  this.sourceRoot = sourceRoot;
 	  this.sourcesContent = sourcesContent;
 	  this._mappings = mappings;
+	  this._sourceMapURL = aSourceMapURL;
 	  this.file = file;
 	}
 
@@ -2383,13 +2502,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	BasicSourceMapConsumer.prototype.consumer = SourceMapConsumer;
 
 	/**
+	 * Utility function to find the index of a source.  Returns -1 if not
+	 * found.
+	 */
+	BasicSourceMapConsumer.prototype._findSourceIndex = function (aSource) {
+	  var relativeSource = aSource;
+	  if (this.sourceRoot != null) {
+	    relativeSource = util.relative(this.sourceRoot, relativeSource);
+	  }
+
+	  if (this._sources.has(relativeSource)) {
+	    return this._sources.indexOf(relativeSource);
+	  }
+
+	  // Maybe aSource is an absolute URL as returned by |sources|.  In
+	  // this case we can't simply undo the transform.
+	  var i;
+	  for (i = 0; i < this._absoluteSources.length; ++i) {
+	    if (this._absoluteSources[i] == aSource) {
+	      return i;
+	    }
+	  }
+
+	  return -1;
+	};
+
+	/**
 	 * Create a BasicSourceMapConsumer from a SourceMapGenerator.
 	 *
 	 * @param SourceMapGenerator aSourceMap
 	 *        The source map that will be consumed.
+	 * @param String aSourceMapURL
+	 *        The URL at which the source map can be found (optional)
 	 * @returns BasicSourceMapConsumer
 	 */
-	BasicSourceMapConsumer.fromSourceMap = function SourceMapConsumer_fromSourceMap(aSourceMap) {
+	BasicSourceMapConsumer.fromSourceMap = function SourceMapConsumer_fromSourceMap(aSourceMap, aSourceMapURL) {
 	  var smc = Object.create(BasicSourceMapConsumer.prototype);
 
 	  var names = smc._names = ArraySet.fromArray(aSourceMap._names.toArray(), true);
@@ -2397,6 +2544,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  smc.sourceRoot = aSourceMap._sourceRoot;
 	  smc.sourcesContent = aSourceMap._generateSourcesContent(smc._sources.toArray(), smc.sourceRoot);
 	  smc.file = aSourceMap._file;
+	  smc._sourceMapURL = aSourceMapURL;
+	  smc._absoluteSources = smc._sources.toArray().map(function (s) {
+	    return util.computeSourceURL(smc.sourceRoot, s, aSourceMapURL);
+	  });
 
 	  // Because we are modifying the entries (by converting string sources and
 	  // names to indices into the sources and names ArraySets), we have to make
@@ -2443,9 +2594,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	Object.defineProperty(BasicSourceMapConsumer.prototype, 'sources', {
 	  get: function () {
-	    return this._sources.toArray().map(function (s) {
-	      return this.sourceRoot != null ? util.join(this.sourceRoot, s) : s;
-	    }, this);
+	    return this._absoluteSources.slice();
 	  }
 	});
 
@@ -2618,8 +2767,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * source's line and column positions provided. The only argument is an object
 	 * with the following properties:
 	 *
-	 *   - line: The line number in the generated source.
-	 *   - column: The column number in the generated source.
+	 *   - line: The line number in the generated source.  The line number
+	 *     is 1-based.
+	 *   - column: The column number in the generated source.  The column
+	 *     number is 0-based.
 	 *   - bias: Either 'SourceMapConsumer.GREATEST_LOWER_BOUND' or
 	 *     'SourceMapConsumer.LEAST_UPPER_BOUND'. Specifies whether to return the
 	 *     closest element that is smaller than or greater than the one we are
@@ -2629,8 +2780,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * and an object is returned with the following properties:
 	 *
 	 *   - source: The original source file, or null.
-	 *   - line: The line number in the original source, or null.
-	 *   - column: The column number in the original source, or null.
+	 *   - line: The line number in the original source, or null.  The
+	 *     line number is 1-based.
+	 *   - column: The column number in the original source, or null.  The
+	 *     column number is 0-based.
 	 *   - name: The original identifier, or null.
 	 */
 	BasicSourceMapConsumer.prototype.originalPositionFor = function SourceMapConsumer_originalPositionFor(aArgs) {
@@ -2648,9 +2801,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var source = util.getArg(mapping, 'source', null);
 	      if (source !== null) {
 	        source = this._sources.at(source);
-	        if (this.sourceRoot != null) {
-	          source = util.join(this.sourceRoot, source);
-	        }
+	        source = util.computeSourceURL(this.sourceRoot, source, this._sourceMapURL);
 	      }
 	      var name = util.getArg(mapping, 'name', null);
 	      if (name !== null) {
@@ -2696,12 +2847,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return null;
 	  }
 
-	  if (this.sourceRoot != null) {
-	    aSource = util.relative(this.sourceRoot, aSource);
+	  var index = this._findSourceIndex(aSource);
+	  if (index >= 0) {
+	    return this.sourcesContent[index];
 	  }
 
-	  if (this._sources.has(aSource)) {
-	    return this.sourcesContent[this._sources.indexOf(aSource)];
+	  var relativeSource = aSource;
+	  if (this.sourceRoot != null) {
+	    relativeSource = util.relative(this.sourceRoot, relativeSource);
 	  }
 
 	  var url;
@@ -2710,13 +2863,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // many users. We can help them out when they expect file:// URIs to
 	    // behave like it would if they were running a local HTTP server. See
 	    // https://bugzilla.mozilla.org/show_bug.cgi?id=885597.
-	    var fileUriAbsPath = aSource.replace(/^file:\/\//, "");
+	    var fileUriAbsPath = relativeSource.replace(/^file:\/\//, "");
 	    if (url.scheme == "file" && this._sources.has(fileUriAbsPath)) {
 	      return this.sourcesContent[this._sources.indexOf(fileUriAbsPath)];
 	    }
 
-	    if ((!url.path || url.path == "/") && this._sources.has("/" + aSource)) {
-	      return this.sourcesContent[this._sources.indexOf("/" + aSource)];
+	    if ((!url.path || url.path == "/") && this._sources.has("/" + relativeSource)) {
+	      return this.sourcesContent[this._sources.indexOf("/" + relativeSource)];
 	    }
 	  }
 
@@ -2727,7 +2880,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (nullOnMissing) {
 	    return null;
 	  } else {
-	    throw new Error('"' + aSource + '" is not in the SourceMap.');
+	    throw new Error('"' + relativeSource + '" is not in the SourceMap.');
 	  }
 	};
 
@@ -2737,8 +2890,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * the following properties:
 	 *
 	 *   - source: The filename of the original source.
-	 *   - line: The line number in the original source.
-	 *   - column: The column number in the original source.
+	 *   - line: The line number in the original source.  The line number
+	 *     is 1-based.
+	 *   - column: The column number in the original source.  The column
+	 *     number is 0-based.
 	 *   - bias: Either 'SourceMapConsumer.GREATEST_LOWER_BOUND' or
 	 *     'SourceMapConsumer.LEAST_UPPER_BOUND'. Specifies whether to return the
 	 *     closest element that is smaller than or greater than the one we are
@@ -2747,22 +2902,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * and an object is returned with the following properties:
 	 *
-	 *   - line: The line number in the generated source, or null.
+	 *   - line: The line number in the generated source, or null.  The
+	 *     line number is 1-based.
 	 *   - column: The column number in the generated source, or null.
+	 *     The column number is 0-based.
 	 */
 	BasicSourceMapConsumer.prototype.generatedPositionFor = function SourceMapConsumer_generatedPositionFor(aArgs) {
 	  var source = util.getArg(aArgs, 'source');
-	  if (this.sourceRoot != null) {
-	    source = util.relative(this.sourceRoot, source);
-	  }
-	  if (!this._sources.has(source)) {
+	  source = this._findSourceIndex(source);
+	  if (source < 0) {
 	    return {
 	      line: null,
 	      column: null,
 	      lastColumn: null
 	    };
 	  }
-	  source = this._sources.indexOf(source);
 
 	  var needle = {
 	    source: source,
@@ -2799,7 +2953,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * that it takes "indexed" source maps (i.e. ones with a "sections" field) as
 	 * input.
 	 *
-	 * The only parameter is a raw source map (either as a JSON string, or already
+	 * The first parameter is a raw source map (either as a JSON string, or already
 	 * parsed to an object). According to the spec for indexed source maps, they
 	 * have the following attributes:
 	 *
@@ -2836,12 +2990,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *    }],
 	 *  }
 	 *
+	 * The second parameter, if given, is a string whose value is the URL
+	 * at which the source map was found.  This URL is used to compute the
+	 * sources array.
+	 *
 	 * [0]: https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.535es3xeprgt
 	 */
-	function IndexedSourceMapConsumer(aSourceMap) {
+	function IndexedSourceMapConsumer(aSourceMap, aSourceMapURL) {
 	  var sourceMap = aSourceMap;
 	  if (typeof aSourceMap === 'string') {
-	    sourceMap = JSON.parse(aSourceMap.replace(/^\)\]\}'/, ''));
+	    sourceMap = util.parseSourceMapInput(aSourceMap);
 	  }
 
 	  var version = util.getArg(sourceMap, 'version');
@@ -2880,7 +3038,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        generatedLine: offsetLine + 1,
 	        generatedColumn: offsetColumn + 1
 	      },
-	      consumer: new SourceMapConsumer(util.getArg(s, 'map'))
+	      consumer: new SourceMapConsumer(util.getArg(s, 'map'), aSourceMapURL)
 	    };
 	  });
 	}
@@ -2913,14 +3071,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * source's line and column positions provided. The only argument is an object
 	 * with the following properties:
 	 *
-	 *   - line: The line number in the generated source.
-	 *   - column: The column number in the generated source.
+	 *   - line: The line number in the generated source.  The line number
+	 *     is 1-based.
+	 *   - column: The column number in the generated source.  The column
+	 *     number is 0-based.
 	 *
 	 * and an object is returned with the following properties:
 	 *
 	 *   - source: The original source file, or null.
-	 *   - line: The line number in the original source, or null.
-	 *   - column: The column number in the original source, or null.
+	 *   - line: The line number in the original source, or null.  The
+	 *     line number is 1-based.
+	 *   - column: The column number in the original source, or null.  The
+	 *     column number is 0-based.
 	 *   - name: The original identifier, or null.
 	 */
 	IndexedSourceMapConsumer.prototype.originalPositionFor = function IndexedSourceMapConsumer_originalPositionFor(aArgs) {
@@ -2994,13 +3156,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * the following properties:
 	 *
 	 *   - source: The filename of the original source.
-	 *   - line: The line number in the original source.
-	 *   - column: The column number in the original source.
+	 *   - line: The line number in the original source.  The line number
+	 *     is 1-based.
+	 *   - column: The column number in the original source.  The column
+	 *     number is 0-based.
 	 *
 	 * and an object is returned with the following properties:
 	 *
-	 *   - line: The line number in the generated source, or null.
+	 *   - line: The line number in the generated source, or null.  The
+	 *     line number is 1-based. 
 	 *   - column: The column number in the generated source, or null.
+	 *     The column number is 0-based.
 	 */
 	IndexedSourceMapConsumer.prototype.generatedPositionFor = function IndexedSourceMapConsumer_generatedPositionFor(aArgs) {
 	  for (var i = 0; i < this._sections.length; i++) {
@@ -3008,7 +3174,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // Only consider this section if the requested source is in the list of
 	    // sources of the consumer.
-	    if (section.consumer.sources.indexOf(util.getArg(aArgs, 'source')) === -1) {
+	    if (section.consumer._findSourceIndex(util.getArg(aArgs, 'source')) === -1) {
 	      continue;
 	    }
 	    var generatedPosition = section.consumer.generatedPositionFor(aArgs);
@@ -3042,15 +3208,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var mapping = sectionMappings[j];
 
 	      var source = section.consumer._sources.at(mapping.source);
-	      if (section.consumer.sourceRoot !== null) {
-	        source = util.join(section.consumer.sourceRoot, source);
-	      }
+	      source = util.computeSourceURL(section.consumer.sourceRoot, source, this._sourceMapURL);
 	      this._sources.add(source);
 	      source = this._sources.indexOf(source);
 
-	      var name = section.consumer._names.at(mapping.name);
-	      this._names.add(name);
-	      name = this._names.indexOf(name);
+	      var name = null;
+	      if (mapping.name) {
+	        name = section.consumer._names.at(mapping.name);
+	        this._names.add(name);
+	        name = this._names.indexOf(name);
+	      }
 
 	      // The mappings coming from the consumer for the section have
 	      // generated positions relative to the start of the section, so we
@@ -3375,13 +3542,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // All even indices of this array are one line of the generated code,
 	  // while all odd indices are the newlines between two adjacent lines
 	  // (since `REGEX_NEWLINE` captures its match).
-	  // Processed fragments are removed from this array, by calling `shiftNextLine`.
+	  // Processed fragments are accessed by calling `shiftNextLine`.
 	  var remainingLines = aGeneratedCode.split(REGEX_NEWLINE);
+	  var remainingLinesIndex = 0;
 	  var shiftNextLine = function () {
-	    var lineContents = remainingLines.shift();
+	    var lineContents = getNextLine();
 	    // The last line of a file might not have a newline.
-	    var newLine = remainingLines.shift() || "";
+	    var newLine = getNextLine() || "";
 	    return lineContents + newLine;
+
+	    function getNextLine() {
+	      return remainingLinesIndex < remainingLines.length ? remainingLines[remainingLinesIndex++] : undefined;
+	    }
 	  };
 
 	  // We need to remember the position of "remainingLines"
@@ -3407,9 +3579,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // There is no new line in between.
 	        // Associate the code between "lastGeneratedColumn" and
 	        // "mapping.generatedColumn" with "lastMapping"
-	        var nextLine = remainingLines[0];
+	        var nextLine = remainingLines[remainingLinesIndex] || '';
 	        var code = nextLine.substr(0, mapping.generatedColumn - lastGeneratedColumn);
-	        remainingLines[0] = nextLine.substr(mapping.generatedColumn - lastGeneratedColumn);
+	        remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn - lastGeneratedColumn);
 	        lastGeneratedColumn = mapping.generatedColumn;
 	        addMappingWithCode(lastMapping, code);
 	        // No more remaining code, continue
@@ -3425,21 +3597,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	      lastGeneratedLine++;
 	    }
 	    if (lastGeneratedColumn < mapping.generatedColumn) {
-	      var nextLine = remainingLines[0];
+	      var nextLine = remainingLines[remainingLinesIndex] || '';
 	      node.add(nextLine.substr(0, mapping.generatedColumn));
-	      remainingLines[0] = nextLine.substr(mapping.generatedColumn);
+	      remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn);
 	      lastGeneratedColumn = mapping.generatedColumn;
 	    }
 	    lastMapping = mapping;
 	  }, this);
 	  // We have processed all mappings.
-	  if (remainingLines.length > 0) {
+	  if (remainingLinesIndex < remainingLines.length) {
 	    if (lastMapping) {
 	      // Associate the remaining code in the current line with "lastMapping"
 	      addMappingWithCode(lastMapping, shiftNextLine());
 	    }
 	    // and add the remaining lines without any mapping
-	    node.add(remainingLines.join(""));
+	    node.add(remainingLines.splice(remainingLinesIndex).join(""));
 	  }
 
 	  // Copy sourcesContent into SourceNode
@@ -3704,36 +3876,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-	function dirname(path) {
-	  const idx = path.lastIndexOf("/");
-	  return path.slice(0, idx);
-	}
-
-	function isURL(str) {
-	  try {
-	    new URL(str);
-	    return true;
-	  } catch (e) {
-	    return false;
-	  }
-	}
-
-	function isAbsolute(str) {
-	  return str[0] === "/";
-	}
-
-	module.exports = {
-	  dirname, isURL, isAbsolute
-	};
-
-/***/ },
-/* 22 */
-/***/ function(module, exports) {
-
-	/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 	function assert(condition, message) {
 	  if (!condition) {
 	    throw new Error(`Assertion failure: ${message}`);
@@ -3743,23 +3885,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = assert;
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	let _resolveAndFetch = (() => {
 	  var _ref = _asyncToGenerator(function* (generatedSource) {
 	    // Fetch the sourcemap over the network and create it.
-	    const sourceMapURL = _resolveSourceMapURL(generatedSource);
+	    const { sourceMapURL, baseURL } = _resolveSourceMapURL(generatedSource);
 
 	    const fetched = yield networkRequest(sourceMapURL, { loadFromCache: false });
 
 	    // Create the source map and fix it up.
-	    let map = new SourceMapConsumer(fetched.content);
+	    let map = new SourceMapConsumer(fetched.content, baseURL);
 	    if (generatedSource.isWasm) {
 	      map = new WasmRemap(map);
 	    }
 
-	    _setSourceMapRoot(map, sourceMapURL, generatedSource);
 	    return map;
 	  });
 
@@ -3775,59 +3916,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	const { networkRequest } = __webpack_require__(6);
-	const { getSourceMap, setSourceMap } = __webpack_require__(24);
-	const { WasmRemap } = __webpack_require__(25);
+	const { getSourceMap, setSourceMap } = __webpack_require__(23);
+	const { WasmRemap } = __webpack_require__(24);
 	const { SourceMapConsumer } = __webpack_require__(10);
-
-	const path = __webpack_require__(21);
-
-	/**
-	 * Sets the source map's sourceRoot to be relative to the source map url.
-	 * @memberof utils/source-map-worker
-	 * @static
-	 */
-	function _setSourceMapRoot(sourceMap, absSourceMapURL, source) {
-	  // No need to do this fiddling if we won't be fetching any sources over the
-	  // wire.
-	  if (sourceMap.hasContentsOfAllSources()) {
-	    return;
-	  }
-
-	  // If it's already a URL, just leave it alone.
-	  if (!path.isURL(sourceMap.sourceRoot)) {
-	    // In the odd case where the sourceMap is a data: URL and it does
-	    // not contain the full sources, fall back to using the source's
-	    // URL, if possible.
-	    let parsedSourceMapURL = new URL(absSourceMapURL);
-
-	    if (parsedSourceMapURL.protocol === "data:" && source.url) {
-	      parsedSourceMapURL = new URL(source.url);
-	    }
-
-	    parsedSourceMapURL.pathname = path.dirname(parsedSourceMapURL.pathname);
-	    sourceMap.sourceRoot = new URL(sourceMap.sourceRoot || "", parsedSourceMapURL).toString();
-	  }
-	  return sourceMap.sourceRoot;
-	}
 
 	function _resolveSourceMapURL(source) {
 	  const { url = "", sourceMapURL = "" } = source;
-	  if (path.isURL(sourceMapURL) || url == "") {
-	    // If it's already a full URL or the source doesn't have a URL,
-	    // don't resolve anything.
-	    return sourceMapURL;
+
+	  if (!url) {
+	    // If the source doesn't have a URL, don't resolve anything.
+	    return { sourceMapURL, baseURL: sourceMapURL };
 	  }
 
-	  if (path.isAbsolute(sourceMapURL)) {
-	    // If it's an absolute path, it should be resolved relative to the
-	    // host of the source.
-	    const { protocol = "", host = "" } = new URL(url);
-	    return `${protocol}//${host}${sourceMapURL}`;
+	  const resolvedURL = new URL(sourceMapURL, url);
+	  const resolvedString = resolvedURL.toString();
+
+	  let baseURL = resolvedString;
+	  // When the sourceMap is a data: URL, fall back to using the
+	  // source's URL, if possible.
+	  if (resolvedURL.protocol == "data:") {
+	    baseURL = url;
 	  }
 
-	  // Otherwise, it's a relative path and should be resolved relative
-	  // to the source.
-	  return `${path.dirname(url)}/${sourceMapURL}`;
+	  return { sourceMapURL: resolvedString, baseURL };
 	}
 
 	function fetchSourceMap(generatedSource) {
@@ -3859,7 +3970,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { fetchSourceMap };
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports) {
 
 	
@@ -3884,7 +3995,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -3915,14 +4026,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  get sourceRoot() {
 	    return this._map.sourceRoot;
-	  }
-
-	  /**
-	   * @param url string
-	   */
-	  set sourceRoot(url) {
-	    // important, since sources are using this.
-	    this._map.sourceRoot = url;
 	  }
 
 	  get names() {
@@ -4005,14 +4108,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.WasmRemap = WasmRemap;
 
 /***/ },
-/* 26 */
+/* 25 */,
+/* 26 */,
+/* 27 */,
+/* 28 */,
+/* 29 */,
+/* 30 */,
+/* 31 */,
+/* 32 */,
+/* 33 */,
+/* 34 */,
+/* 35 */,
+/* 36 */,
+/* 37 */,
+/* 38 */,
+/* 39 */,
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-	const { SourceMapConsumer } = __webpack_require__(27);
+	const { SourceMapConsumer } = __webpack_require__(41);
 
 	function comparePositions(a, b) {
 	  if (a.line === b.line) {
@@ -4130,7 +4248,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 27 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -4138,12 +4256,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Licensed under the New BSD license. See LICENSE.txt or:
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
-	exports.SourceMapGenerator = __webpack_require__(28).SourceMapGenerator;
-	exports.SourceMapConsumer = __webpack_require__(34).SourceMapConsumer;
-	exports.SourceNode = __webpack_require__(37).SourceNode;
+	exports.SourceMapGenerator = __webpack_require__(42).SourceMapGenerator;
+	exports.SourceMapConsumer = __webpack_require__(48).SourceMapConsumer;
+	exports.SourceNode = __webpack_require__(51).SourceNode;
 
 /***/ },
-/* 28 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4153,10 +4271,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var base64VLQ = __webpack_require__(29);
-	var util = __webpack_require__(31);
-	var ArraySet = __webpack_require__(32).ArraySet;
-	var MappingList = __webpack_require__(33).MappingList;
+	var base64VLQ = __webpack_require__(43);
+	var util = __webpack_require__(45);
+	var ArraySet = __webpack_require__(46).ArraySet;
+	var MappingList = __webpack_require__(47).MappingList;
 
 	/**
 	 * An instance of the SourceMapGenerator represents a source map which is
@@ -4532,7 +4650,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.SourceMapGenerator = SourceMapGenerator;
 
 /***/ },
-/* 29 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4572,7 +4690,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 */
 
-	var base64 = __webpack_require__(30);
+	var base64 = __webpack_require__(44);
 
 	// A single base 64 digit can contain 6 bits of data. For the base 64 variable
 	// length quantities we use in the source map spec, the first bit is the sign,
@@ -4673,7 +4791,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 30 */
+/* 44 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4745,7 +4863,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 31 */
+/* 45 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5157,7 +5275,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
 
 /***/ },
-/* 32 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5167,7 +5285,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var util = __webpack_require__(31);
+	var util = __webpack_require__(45);
 	var has = Object.prototype.hasOwnProperty;
 	var hasNativeMap = typeof Map !== "undefined";
 
@@ -5283,7 +5401,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.ArraySet = ArraySet;
 
 /***/ },
-/* 33 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5293,7 +5411,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var util = __webpack_require__(31);
+	var util = __webpack_require__(45);
 
 	/**
 	 * Determine whether mappingB is after mappingA with respect to generated
@@ -5365,7 +5483,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.MappingList = MappingList;
 
 /***/ },
-/* 34 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5375,11 +5493,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var util = __webpack_require__(31);
-	var binarySearch = __webpack_require__(35);
-	var ArraySet = __webpack_require__(32).ArraySet;
-	var base64VLQ = __webpack_require__(29);
-	var quickSort = __webpack_require__(36).quickSort;
+	var util = __webpack_require__(45);
+	var binarySearch = __webpack_require__(49);
+	var ArraySet = __webpack_require__(46).ArraySet;
+	var base64VLQ = __webpack_require__(43);
+	var quickSort = __webpack_require__(50).quickSort;
 
 	function SourceMapConsumer(aSourceMap) {
 	  var sourceMap = aSourceMap;
@@ -6384,7 +6502,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
 
 /***/ },
-/* 35 */
+/* 49 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -6497,7 +6615,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 36 */
+/* 50 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -6616,7 +6734,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 37 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -6626,8 +6744,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var SourceMapGenerator = __webpack_require__(28).SourceMapGenerator;
-	var util = __webpack_require__(31);
+	var SourceMapGenerator = __webpack_require__(42).SourceMapGenerator;
+	var util = __webpack_require__(45);
 
 	// Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 	// operating systems these days (capturing the result).
