@@ -133,8 +133,9 @@ JOBS = {'dbs':
          ()),
 
         'callgraph':
-        (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js', '%(typeInfo)s'),
-         'callgraph.txt'),
+        (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js', '%(typeInfo)s',
+          '[callgraph]'),
+         ('callgraph.txt',)),
 
         'gcFunctions':
         (('%(js)s', '%(analysis_scriptdir)s/computeGCFunctions.js', '%(callgraph)s',
