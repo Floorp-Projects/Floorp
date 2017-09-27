@@ -58,7 +58,7 @@ async function runTestCase({extension, openNavTarget, expectedWebNavProps}) {
   is(completedNavMsg.url, url, "Got the expected webNavigation.onCompleted url property");
 }
 
-add_task(async function test_on_created_navigation_target_from_window_open() {
+add_task(async function test_window_open() {
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   gBrowser.selectedTab = tab1;
@@ -74,7 +74,7 @@ add_task(async function test_on_created_navigation_target_from_window_open() {
 
   const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
-  info("open an url in a new tab from a window.open call");
+  info("open a url in a new tab from a window.open call");
 
   await runTestCase({
     extension,
@@ -91,7 +91,7 @@ add_task(async function test_on_created_navigation_target_from_window_open() {
     },
   });
 
-  info("open an url in a new window from a window.open call");
+  info("open a url in a new window from a window.open call");
 
   await runTestCase({
     extension,
@@ -113,7 +113,7 @@ add_task(async function test_on_created_navigation_target_from_window_open() {
   await extension.unload();
 });
 
-add_task(async function test_on_created_navigation_target_from_window_open_subframe() {
+add_task(async function test_window_open_from_subframe() {
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   gBrowser.selectedTab = tab1;
@@ -129,7 +129,7 @@ add_task(async function test_on_created_navigation_target_from_window_open_subfr
 
   const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
-  info("open an url in a new tab from subframe window.open call");
+  info("open a url in a new tab from subframe window.open call");
 
   await runTestCase({
     extension,
@@ -146,7 +146,7 @@ add_task(async function test_on_created_navigation_target_from_window_open_subfr
     },
   });
 
-  info("open an url in a new window from subframe window.open call");
+  info("open a url in a new window from subframe window.open call");
 
   await runTestCase({
     extension,
@@ -160,6 +160,70 @@ add_task(async function test_on_created_navigation_target_from_window_open_subfr
       sourceTabId: expectedSourceTab.sourceTabId,
       sourceFrameId: expectedSourceTab.sourceTabFrames[1].frameId,
       url: `${OPENED_PAGE}#new-win-from-window-open-subframe`,
+    },
+  });
+
+  await BrowserTestUtils.removeTab(tab1);
+
+  await extension.unload();
+});
+
+add_task(async function test_window_open_close_from_browserAction_popup() {
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+
+  gBrowser.selectedTab = tab1;
+
+  function popup() {
+    window.open("", "_self").close();
+
+    browser.test.sendMessage("browserAction_popup_executed");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      browser_action: {
+        default_popup: "popup.html",
+      },
+      permissions: ["webNavigation", "tabs", "<all_urls>"],
+    },
+    files: {
+      "popup.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <script src="popup.js"></script>
+          </body>
+        </html>
+      `,
+      "popup.js": popup,
+    },
+  });
+
+  await extension.startup();
+
+  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
+
+  clickBrowserAction(extension);
+
+  await extension.awaitMessage("browserAction_popup_executed");
+
+  info("open a url in a new tab from a window.open call");
+
+  await runTestCase({
+    extension,
+    openNavTarget() {
+      extension.sendMessage({
+        type: "execute-contentscript",
+        code: `window.open("${OPENED_PAGE}#new-tab-from-window-open"); true;`,
+      });
+    },
+    expectedWebNavProps: {
+      sourceTabId: expectedSourceTab.sourceTabId,
+      sourceFrameId: 0,
+      url: `${OPENED_PAGE}#new-tab-from-window-open`,
     },
   });
 
