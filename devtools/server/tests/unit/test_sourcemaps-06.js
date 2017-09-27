@@ -81,7 +81,7 @@ function testContents(sources, timesCalled, callback) {
       do_check_true(!response.error,
                     "Should not get an error loading the source from sourcesContent");
 
-      let expectedContent = "content for " + source.url;
+      let expectedContent = "content for " + source.url.replace(/^.*\//, "");
       do_check_eq(response.source, expectedContent,
                   "Should have the expected source content");
 

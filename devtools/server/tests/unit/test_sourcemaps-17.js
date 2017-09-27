@@ -54,9 +54,9 @@ function test_source_map() {
       do_check_true(!error);
       do_check_eq(frames.length, 4);
       // b.js should be skipped
-      do_check_eq(frames[0].where.source.url, "http://example.com/www/root/e.js");
-      do_check_eq(frames[1].where.source.url, "http://example.com/www/root/c.js");
-      do_check_eq(frames[2].where.source.url, "http://example.com/www/root/a.js");
+      do_check_eq(frames[0].where.source.url, "http://example.com/www/js/root/e.js");
+      do_check_eq(frames[1].where.source.url, "http://example.com/www/js/root/c.js");
+      do_check_eq(frames[2].where.source.url, "http://example.com/www/js/root/a.js");
       do_check_eq(frames[3].where.source.url, null);
 
       finishClient(gClient);
