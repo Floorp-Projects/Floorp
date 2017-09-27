@@ -1242,6 +1242,15 @@ nsDisplayListBuilder::GetCaret() {
 }
 
 void
+nsDisplayListBuilder::IncrementPresShellPaintCount(nsIPresShell* aPresShell)
+{
+  if (mIsPaintingToWindow) {
+    mReferenceFrame->AddPaintedPresShell(aPresShell);
+    aPresShell->IncrementPaintCount();
+  }
+}
+
+void
 nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
                                      bool aPointerEventsNoneDoc)
 {
@@ -1255,12 +1264,6 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
 #endif
 
   state->mPresShell->UpdateCanvasBackground();
-
-  if (mIsPaintingToWindow) {
-    mReferenceFrame->AddPaintedPresShell(state->mPresShell);
-
-    state->mPresShell->IncrementPaintCount();
-  }
 
   bool buildCaret = mBuildCaret;
   if (mIgnoreSuppression || !state->mPresShell->IsPaintingSuppressed()) {
