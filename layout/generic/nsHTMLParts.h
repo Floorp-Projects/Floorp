@@ -12,6 +12,7 @@
 #include "nsISupports.h"
 #include "nsIFrame.h"
 class nsComboboxControlFrame;
+class nsFormControlFrame;
 class nsIAtom;
 class nsNodeInfoManager;
 class nsIContent;
@@ -131,14 +132,14 @@ NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 // forms
 nsContainerFrame*
 NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsFormControlFrame*
+NS_NewFormControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewNativeButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewImageControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsContainerFrame*
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
-NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewNativeCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsContainerFrame*
@@ -155,8 +156,6 @@ nsIFrame*
 NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
-NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewNativeRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*

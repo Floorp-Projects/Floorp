@@ -27,8 +27,6 @@ UNIFIED_SOURCES += [
     'nsFileControlFrame.cpp',
     'nsFormControlFrame.cpp',
     'nsGfxButtonControlFrame.cpp',
-    'nsGfxCheckboxControlFrame.cpp',
-    'nsGfxRadioControlFrame.cpp',
     'nsHTMLButtonControlFrame.cpp',
     'nsImageControlFrame.cpp',
     'nsLegendFrame.cpp',
