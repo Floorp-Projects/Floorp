@@ -298,14 +298,14 @@ def getEnabledLocales() {
         } else {
             return it
         }
-    } .collect {
+    }.collect {
         return '"' + it + '"'
     }
 
     // en-US is the default language (in "values") and therefore needs to be added separately
     langs << "\"en-US\""
 
-    return langs
+    return langs.sort { it }
 }
 
 def generatedLocaleListDir = 'src/main/java/org/mozilla/focus/generated'
