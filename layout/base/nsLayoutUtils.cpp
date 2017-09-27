@@ -3739,6 +3739,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
 
     builder.LeavePresShell(aFrame, &list);
+    builder.IncrementPresShellPaintCount(presShell);
 
     if (!record.GetStart().IsNull() && gfxPrefs::LayersDrawFPS()) {
       if (RefPtr<LayerManager> lm = builder.GetWidgetLayerManager()) {

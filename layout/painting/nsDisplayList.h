@@ -742,6 +742,8 @@ public:
    */
   void LeavePresShell(nsIFrame* aReferenceFrame, nsDisplayList* aPaintedContents);
 
+  void IncrementPresShellPaintCount(nsIPresShell* aPresShell);
+
   /**
    * Returns true if we're currently building a display list that's
    * directly or indirectly under an nsDisplayTransform.
