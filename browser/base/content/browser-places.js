@@ -1312,6 +1312,8 @@ var LibraryUI = {
       }
     }
     animatableBox.addEventListener("animationend", this._libraryButtonAnimationEndListeners[animation]);
+
+    window.addEventListener("resize", this._onWindowResize)
   },
 
   _libraryButtonAnimationEndListeners: {},
@@ -1323,10 +1325,42 @@ var LibraryUI = {
       animatableBox.removeEventListener("animationend", LibraryUI._libraryButtonAnimationEndListeners[animation]);
       animatableBox.removeAttribute("animate");
       animatableBox.removeAttribute("fade");
+      window.removeEventListener("resize", this._onWindowResize);
       let libraryButton = document.getElementById("library-button");
       // Put the 'fill' back in the normal icon.
       libraryButton.removeAttribute("animate");
     }
+  },
+
+  _windowResizeRunning: false,
+  _onWindowResize(aEvent) {
+    if (LibraryUI._windowResizeRunning) {
+      return;
+    }
+    LibraryUI._windowResizeRunning = true;
+
+    requestAnimationFrame(() => {
+      let libraryButton = document.getElementById("library-button");
+      // Only update the position if the library button remains in the
+      // navbar (not moved to the palette or elsewhere).
+      if (!libraryButton ||
+          libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
+          libraryButton.getAttribute("overflowedItem") == "true" ||
+          !libraryButton.closest("#nav-bar")) {
+        return;
+      }
+
+      let animatableBox = document.getElementById("library-animatable-box");
+      let libraryIcon = document.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
+      let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
+      let iconBounds = dwu.getBoundsWithoutFlushing(libraryIcon);
+
+      // Resizing the window will only have the ability to change the X offset of the
+      // library button.
+      animatableBox.style.setProperty("--library-icon-x", iconBounds.x + "px");
+
+      LibraryUI._windowResizeRunning = false;
+    });
   },
 };
 
