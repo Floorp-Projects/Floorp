@@ -848,6 +848,11 @@ function CheckLayerAssertions(contentRootElement)
     if (!contentRootElement) {
         return;
     }
+    if (gIsWebRenderEnabled) {
+        // WebRender doesn't use layers, so let's not try checking layers
+        // assertions.
+        return;
+    }
 
     var opaqueLayerElements = getOpaqueLayerElements(contentRootElement);
     for (var i = 0; i < opaqueLayerElements.length; ++i) {
