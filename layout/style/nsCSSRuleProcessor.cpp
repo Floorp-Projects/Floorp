@@ -1670,25 +1670,6 @@ StateSelectorMatches(Element* aElement,
   return true;
 }
 
-// Chooses the thread safe version in Servo mode, and
-// the non-thread safe one in Gecko mode. The non thread safe one does
-// some extra caching, and is preferred when possible.
-static inline bool
-IsSignificantChildMaybeThreadSafe(const nsIContent* aContent,
-                                  bool aTextIsSignificant,
-                                  bool aWhitespaceIsSignificant)
-{
-  if (ServoStyleSet::IsInServoTraversal()) {
-    // See bug 1349100 for optimizing this
-    return nsStyleUtil::ThreadSafeIsSignificantChild(aContent,
-                                                     aTextIsSignificant,
-                                                     aWhitespaceIsSignificant);
-  } else {
-    auto content = const_cast<nsIContent*>(aContent);
-    return IsSignificantChild(content, aTextIsSignificant, aWhitespaceIsSignificant);
-  }
-}
-
 /* static */ bool
 nsCSSRuleProcessor::LangPseudoMatches(const mozilla::dom::Element* aElement,
                                       const nsIAtom* aOverrideLang,
@@ -1749,12 +1730,9 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
                                         CSSPseudoClassType aPseudo,
                                         const char16_t* aString,
                                         const nsIDocument* aDocument,
-                                        bool aForStyling,
                                         EventStates aStateMask,
-                                        bool* aSetSlowSelectorFlag,
                                         bool* const aDependence)
 {
-  MOZ_ASSERT(aSetSlowSelectorFlag);
 
   switch (aPseudo) {
     case CSSPseudoClassType::mozLocaleDir:
@@ -2177,18 +2155,12 @@ static bool SelectorMatches(Element* aElement,
     default:
       {
         MOZ_ASSERT(nsCSSPseudoClasses::HasStringArg(pseudoClass->mType));
-        bool setSlowSelectorFlag = false;
         bool matched = nsCSSRuleProcessor::StringPseudoMatches(aElement,
                                                                pseudoClass->mType,
                                                                pseudoClass->u.mString,
                                                                aTreeMatchContext.mDocument,
-                                                               aTreeMatchContext.mForStyling,
                                                                aNodeMatchContext.mStateMask,
-                                                               &setSlowSelectorFlag,
                                                                aDependence);
-        if (setSlowSelectorFlag) {
-          aElement->SetFlags(NODE_HAS_SLOW_SELECTOR);
-        }
 
         if (!matched) {
           return false;
