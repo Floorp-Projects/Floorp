@@ -93,7 +93,7 @@ class DebugModeOSRVolatileJitFrameIter : public JitFrameIter
 
   public:
     explicit DebugModeOSRVolatileJitFrameIter(JSContext* cx)
-      : JitFrameIter(cx->activation())
+      : JitFrameIter(cx->activation()->asJit())
     {
         stack = &cx->liveVolatileJitFrameIter_.ref();
         prev = *stack;

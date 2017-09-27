@@ -22,9 +22,6 @@
 #include "wasm/WasmJS.h"
 
 namespace js {
-
-class WasmActivation;
-
 namespace wasm {
 
 class Code;
@@ -40,8 +37,6 @@ class Compartment
 {
     InstanceVector instances_;
     volatile bool  mutatingInstances_;
-
-    friend class js::WasmActivation;
 
     struct AutoMutateInstances {
         Compartment &c;

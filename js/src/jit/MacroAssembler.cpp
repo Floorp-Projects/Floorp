@@ -3118,10 +3118,11 @@ void
 MacroAssembler::wasmAssertNonExitInvariants(Register activation)
 {
 #ifdef DEBUG
-    // WasmActivation.exitFP should be null when outside any exit frame.
+    // packedExitFP should not be tagged as wasm. Note this includes nullptr.
     Label ok;
-    Address exitFP(activation, WasmActivation::offsetOfExitFP());
-    branchPtr(Assembler::Equal, exitFP, ImmWord(0), &ok);
+    Address packedExitFP(activation, JitActivation::offsetOfPackedExitFP());
+    branchTestPtr(Assembler::Zero, packedExitFP, Imm32(uintptr_t(JitActivation::ExitFpWasmBit)),
+                  &ok);
     breakpoint();
     bind(&ok);
 #endif

@@ -35,8 +35,6 @@ namespace js {
 extern void
 InterruptRunningJitCode(JSContext* cx);
 
-class WasmActivation;
-
 namespace wasm {
 
 // Ensure the given JSRuntime is set up to use signals. Failure to enable signal

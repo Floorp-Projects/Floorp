@@ -26,7 +26,6 @@
 namespace js {
 
 class Debugger;
-class WasmActivation;
 class WasmBreakpoint;
 class WasmBreakpointSite;
 class WasmInstanceObject;
