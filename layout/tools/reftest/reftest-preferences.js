@@ -66,6 +66,10 @@ user_pref("browser.search.geoSpecificDefaults", false);
 // Make sure Shield doesn't hit the network.
 user_pref("extensions.shield-recipe-client.api_url", "https://localhost/selfsupport-dummy/");
 
+// Make sure Ping Centre doesn't hit the network.
+user_pref("browser.ping-centre.staging.endpoint", "https://localhost");
+user_pref("browser.ping-centre.production.endpoint", "https://localhost");
+
 // use about:blank, not browser.startup.homepage
 user_pref("browser.startup.page", 0);
 
