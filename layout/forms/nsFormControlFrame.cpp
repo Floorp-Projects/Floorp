@@ -12,6 +12,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "nsDeviceContext.h"
 #include "nsIContent.h"
+#include "nsThemeConstants.h"
 
 using namespace mozilla;
 
