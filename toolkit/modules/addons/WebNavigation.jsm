@@ -306,19 +306,26 @@ var Manager = {
   },
 
   onCreatedNavigationTarget(browser, data) {
-    const {isSourceTab, createdWindowId, sourceFrameId, url} = data;
+    const {
+      createdOuterWindowId,
+      isSourceTab,
+      sourceFrameId,
+      url,
+    } = data;
 
-    // We are going to potentially received two message manager messages for a single
-    // onCreatedNavigationTarget event that is happening in the child process,
-    // we are going to use the generate uuid to pair them together.
-    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(createdWindowId);
+    // We are going to receive two message manager messages for a single
+    // onCreatedNavigationTarget event related to a window.open that is happening
+    // in the child process (one from the source tab and one from the created tab),
+    // the unique createdWindowId (the outerWindowID of the created docShell)
+    // to pair them together.
+    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(createdOuterWindowId);
 
     if (!pairedMessage) {
-      this.createdNavigationTargetByOuterWindowId.set(createdWindowId, {browser, data});
+      this.createdNavigationTargetByOuterWindowId.set(createdOuterWindowId, {browser, data});
       return;
     }
 
-    this.createdNavigationTargetByOuterWindowId.delete(createdWindowId);
+    this.createdNavigationTargetByOuterWindowId.delete(createdOuterWindowId);
 
     let sourceTabBrowser;
     let createdTabBrowser;
