@@ -5,12 +5,13 @@
 "use strict";
 
 const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
+const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
 const {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
 add_task(async function() {
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
   Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
-  LightweightThemeManager.clearBuiltInThemes();
 
   await startCustomizing();
 
@@ -35,9 +36,14 @@ add_task(async function() {
   let header = document.getElementById("customization-lwtheme-menu-header");
   let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
 
-  is(header.nextSibling.nextSibling, recommendedHeader,
-     "There should only be one theme (default) in the 'My Themes' section by default");
-  is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "That theme should be the default theme");
+  is(header.nextSibling.nextSibling.nextSibling.nextSibling, recommendedHeader,
+     "There should only be three themes (default, light, dark) in the 'My Themes' section by default");
+  is(header.nextSibling.theme.id, DEFAULT_THEME_ID,
+     "The first theme should be the default theme");
+  is(header.nextSibling.nextSibling.theme.id, LIGHT_THEME_ID,
+     "The second theme should be the light theme");
+  is(header.nextSibling.nextSibling.nextSibling.theme.id, DARK_THEME_ID,
+     "The third theme should be the dark theme");
 
   let firstLWTheme = recommendedHeader.nextSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
@@ -52,12 +58,18 @@ add_task(async function() {
   await popupShownPromise;
 
   is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
-  let installedThemeId = header.nextSibling.nextSibling.theme.id;
+  let installedThemeId = header.nextSibling.nextSibling.nextSibling.nextSibling.theme.id;
   ok(installedThemeId.startsWith(firstLWThemeId),
      "The second theme in the 'My Themes' section should be the newly installed theme: " +
      "Installed theme id: " + installedThemeId + "; First theme ID: " + firstLWThemeId);
-  is(header.nextSibling.nextSibling.nextSibling, recommendedHeader,
-     "There should be two themes in the 'My Themes' section");
+  let themeCount = 0;
+  let iterNode = header;
+  while (iterNode.nextSibling && iterNode.nextSibling.theme) {
+    themeCount++;
+    iterNode = iterNode.nextSibling;
+  }
+  is(themeCount, 4,
+     "There should be four themes in the 'My Themes' section");
 
   let defaultTheme = header.nextSibling;
   defaultTheme.doCommand();
@@ -90,11 +102,21 @@ add_task(async function() {
   await popupShownPromise;
   header = document.getElementById("customization-lwtheme-menu-header");
   is(header.hidden, false, "Header should never be hidden");
-  is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
-  is(header.nextSibling.hidden, false, "The default theme should never be hidden");
+  let themeNode = header.nextSibling;
+  is(themeNode.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
+  is(themeNode.hidden, false, "The default theme should never be hidden");
+
+  themeNode = themeNode.nextSibling;
+  is(themeNode.theme.id, LIGHT_THEME_ID, "The second theme should be the Light theme");
+  is(themeNode.hidden, false, "The light theme should never be hidden");
+
+  themeNode = themeNode.nextSibling;
+  is(themeNode.theme.id, DARK_THEME_ID, "The third theme should be the Dark theme");
+  is(themeNode.hidden, false, "The dark theme should never be hidden");
+
   recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
-  is(header.nextSibling.nextSibling, recommendedHeader,
-     "There should only be one theme (default) in the 'My Themes' section by default");
+  is(themeNode.nextSibling, recommendedHeader,
+     "There should only be three themes (default, light, dark) in the 'My Themes' section now");
   let footer = document.getElementById("customization-lwtheme-menu-footer");
   is(recommendedHeader.nextSibling.id, footer.id, "There should be no recommended themes in the menu");
   is(recommendedHeader.hidden, true, "The recommendedHeader should be hidden since there are no recommended themes");
