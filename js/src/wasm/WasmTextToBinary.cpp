@@ -2804,7 +2804,8 @@ ParseLimits(WasmParseContext& c, Limits* limits)
     if (c.ts.getIf(WasmToken::Index, &token))
         maximum.emplace(token.index());
 
-    *limits = Limits(initial.index(), maximum);
+    Limits r = { initial.index(), maximum };
+    *limits = r;
     return true;
 }
 
@@ -2871,7 +2872,8 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
                 return false;
         }
 
-        if (!module->addMemory(name, Limits(pages, Some(pages))))
+        Limits memory = { uint32_t(pages), Some(uint32_t(pages)) };
+        if (!module->addMemory(name, memory))
             return false;
 
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -3163,7 +3165,8 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
     if (numElements != elems.length())
         return false;
 
-    if (!module->addTable(name, Limits(numElements, Some(numElements))))
+    Limits r = { numElements, Some(numElements) };
+    if (!module->addTable(name, r))
         return false;
 
     auto* zero = new(c.lifo) AstConst(Val(uint32_t(0)));

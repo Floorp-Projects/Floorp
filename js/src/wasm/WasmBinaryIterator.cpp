@@ -390,8 +390,6 @@ wasm::Classify(OpBytes op)
             case MozOp::F32x4store2:
             case MozOp::F32x4store3:
               return OpKind::TeeStore;
-            case MozOp::OldCallDirect:
-              return OpKind::OldCallDirect;
             case MozOp::OldCallIndirect:
               return OpKind::OldCallIndirect;
             case MozOp::I32AtomicsLoad:

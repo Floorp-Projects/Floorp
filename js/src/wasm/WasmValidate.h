@@ -44,10 +44,9 @@ struct ModuleEnvironment
     CompileMode               mode_;
     Tier                      tier_;
 
-    // Module fields decoded from the module environment (or initialized while
-    // validating an asm.js module) and immutable during compilation:
+    // Module fields filled out incrementally during decoding:
     MemoryUsage               memoryUsage;
-    uint32_t                  minMemoryLength;
+    Atomic<uint32_t>          minMemoryLength;
     Maybe<uint32_t>           maxMemoryLength;
     SigWithIdVector           sigs;
     SigWithIdPtrVector        funcSigs;
@@ -58,8 +57,6 @@ struct ModuleEnvironment
     ImportVector              imports;
     ExportVector              exports;
     Maybe<uint32_t>           startFuncIndex;
-
-    // Fields decoded as part of the wasm module tail:
     ElemSegmentVector         elemSegments;
     DataSegmentVector         dataSegments;
     NameInBytecodeVector      funcNames;
@@ -101,13 +98,23 @@ struct ModuleEnvironment
         return sigs.length();
     }
     size_t numFuncs() const {
+        // asm.js pre-reserves a bunch of function index space which is
+        // incrementally filled in during function-body validation. Thus, there
+        // are a few possible interpretations of numFuncs() (total index space
+        // size vs.  exact number of imports/definitions encountered so far) and
+        // to simplify things we simply only define this quantity for wasm.
+        MOZ_ASSERT(!isAsmJS());
         return funcSigs.length();
     }
-    size_t numFuncImports() const {
-        return funcImportGlobalDataOffsets.length();
-    }
     size_t numFuncDefs() const {
+        // asm.js overallocates the length of funcSigs and in general does not
+        // know the number of function definitions until it's done compiling.
+        MOZ_ASSERT(!isAsmJS());
         return funcSigs.length() - funcImportGlobalDataOffsets.length();
+    }
+    size_t numFuncImports() const {
+        MOZ_ASSERT(!isAsmJS());
+        return funcImportGlobalDataOffsets.length();
     }
     bool usesMemory() const {
         return UsesMemory(memoryUsage);
