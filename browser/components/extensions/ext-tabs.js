@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
+var {
+  ExtensionError,
+} = ExtensionUtils;
+
 let tabListener = {
   tabReadyInitialized: false,
   tabReadyPromises: new WeakMap(),
@@ -289,11 +293,21 @@ this.tabs = class extends ExtensionAPI {
             }
           };
 
+          let isArticleChangeListener = (eventName, event) => {
+            let {gBrowser} = event.target.ownerGlobal;
+            let tab = tabManager.getWrapper(
+              gBrowser.getTabForBrowser(event.target));
+
+            fireForTab(tab, {isArticle: event.data.isArticle});
+          };
+
           windowTracker.addListener("status", statusListener);
           windowTracker.addListener("TabAttrModified", listener);
           windowTracker.addListener("TabPinned", listener);
           windowTracker.addListener("TabUnpinned", listener);
           windowTracker.addListener("TabBrowserInserted", listener);
+
+          tabTracker.on("tab-isarticle", isArticleChangeListener);
 
           return () => {
             windowTracker.removeListener("status", statusListener);
@@ -301,6 +315,7 @@ this.tabs = class extends ExtensionAPI {
             windowTracker.removeListener("TabPinned", listener);
             windowTracker.removeListener("TabUnpinned", listener);
             windowTracker.removeListener("TabBrowserInserted", listener);
+            tabTracker.off("tab-isarticle", isArticleChangeListener);
           };
         }).api(),
 
@@ -912,6 +927,16 @@ this.tabs = class extends ExtensionAPI {
               }
             });
           });
+        },
+
+        async toggleReaderMode(tabId) {
+          let tab = await promiseTabWhenReady(tabId);
+          if (!tab.isInReaderMode && !tab.isArticle) {
+            throw new ExtensionError("The specified tab cannot be placed into reader mode.");
+          }
+          tab = getTabOrActive(tabId);
+
+          tab.linkedBrowser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
         },
       },
     };

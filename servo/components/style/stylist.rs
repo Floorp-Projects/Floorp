@@ -174,7 +174,7 @@ struct UserAgentCascadeData {
 impl UserAgentCascadeData {
     #[cfg(feature = "gecko")]
     fn add_size_of(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
-        self.cascade_data.add_size_of_children(ops, sizes);
+        self.cascade_data.add_size_of(ops, sizes);
         sizes.mPrecomputedPseudos += self.precomputed_pseudo_element_decls.size_of(ops);
     }
 }
@@ -329,9 +329,9 @@ impl DocumentCascadeData {
 
     /// Measures heap usage.
     #[cfg(feature = "gecko")]
-    pub fn add_size_of_children(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
-        self.user.add_size_of_children(ops, sizes);
-        self.author.add_size_of_children(ops, sizes);
+    pub fn add_size_of(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
+        self.user.add_size_of(ops, sizes);
+        self.author.add_size_of(ops, sizes);
     }
 }
 
@@ -499,8 +499,6 @@ impl Stylist {
 
     /// Flush the list of stylesheets if they changed, ensuring the stylist is
     /// up-to-date.
-    ///
-    /// FIXME(emilio): Move the `ua_sheets` to the Stylist too?
     pub fn flush<E>(
         &mut self,
         guards: &StylesheetGuards,
@@ -1530,8 +1528,8 @@ impl Stylist {
 
     /// Measures heap usage.
     #[cfg(feature = "gecko")]
-    pub fn add_size_of_children(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
-        self.cascade_data.add_size_of_children(ops, sizes);
+    pub fn add_size_of(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
+        self.cascade_data.add_size_of(ops, sizes);
         sizes.mRuleTree += self.rule_tree.size_of(ops);
 
         // We may measure other fields in the future if DMD says it's worth it.
@@ -2225,7 +2223,7 @@ impl CascadeData {
 
     /// Measures heap usage.
     #[cfg(feature = "gecko")]
-    pub fn add_size_of_children(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
+    pub fn add_size_of(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
         sizes.mElementAndPseudosMaps += self.element_map.size_of(ops);
 
         for elem in self.pseudos_map.iter() {

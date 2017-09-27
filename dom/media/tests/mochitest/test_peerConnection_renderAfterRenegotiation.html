@@ -64,16 +64,19 @@
 
     // now verify that actually something gets rendered into the remote video
     // element.
-    .then(() => h.waitForPixelColor(v2, h.blue, 128,
-                                    "pcRemote's video should become blue"))
+    .then(() => h.pixelMustBecome(v2, h.blue, {
+      threshold: 128,
+      infoString: "pcRemote's video should become blue",
+    }))
     // This will verify that new changes to the canvas propagate through
     // the peerconnection
     .then(() => {
       emitter.colors(h.red, h.green)
-      })
-    .then(() => h.waitForPixelColor(v2, h.red, 128,
-                                    "pcRemote's video should become red"))
-
+    })
+    .then(() => h.pixelMustBecome(v2, h.red, {
+      threshold: 128,
+      infoString: "pcRemote's video should become red",
+    }))
     .catch(reason => ok(false, "unexpected failure: " + reason))
     .then(networkTestFinished);
   });

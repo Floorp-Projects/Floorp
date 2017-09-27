@@ -462,7 +462,7 @@ Inspector.prototype = {
     if (!this._InspectorTabPanel) {
       this._InspectorTabPanel =
         this.React.createFactory(this.browserRequire(
-        "devtools/client/inspector/components/inspector-tab-panel"));
+        "devtools/client/inspector/components/InspectorTabPanel"));
     }
     return this._InspectorTabPanel;
   },

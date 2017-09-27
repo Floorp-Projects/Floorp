@@ -130,4 +130,11 @@ EncodedBufferCache::ExtractBlob(nsISupports* aParent,
   return blob.forget();
 }
 
+size_t
+EncodedBufferCache::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+{
+  MutexAutoLock lock(mMutex);
+  return mEncodedBuffers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+}
+
 } // namespace mozilla

@@ -87,12 +87,6 @@ VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
   return image.forget();
 }
 
-VideoChunk::VideoChunk()
-{}
-
-VideoChunk::~VideoChunk()
-{}
-
 void
 VideoSegment::AppendFrame(already_AddRefed<Image>&& aImage,
                           StreamTime aDuration,
@@ -111,6 +105,10 @@ VideoSegment::AppendFrame(already_AddRefed<Image>&& aImage,
 
 VideoSegment::VideoSegment()
   : MediaSegmentBase<VideoSegment, VideoChunk>(VIDEO)
+{}
+
+VideoSegment::VideoSegment(VideoSegment&& aSegment)
+  : MediaSegmentBase<VideoSegment, VideoChunk>(Move(aSegment))
 {}
 
 VideoSegment::~VideoSegment()

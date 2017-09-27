@@ -464,6 +464,8 @@ public:
    */
   void SetInactiveOnFinish();
 
+  TrackRate GraphRate();
+
   /**
    * Returns a principal indicating who may access this stream. The stream contents
    * can only be accessed by principals subsuming this principal.

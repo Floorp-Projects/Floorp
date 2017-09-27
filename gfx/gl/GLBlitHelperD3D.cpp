@@ -112,7 +112,7 @@ public:
                 MOZ_ALWAYS_TRUE( egl.fStreamConsumerAcquireKHR(display, mStreams[i]) );
 
                 auto& mutex = mMutexList[i];
-                texD3DList[i]->QueryInterface(_uuidof(IDXGIKeyedMutex),
+                texD3DList[i]->QueryInterface(IID_IDXGIKeyedMutex,
                                               (void**)getter_AddRefs(mutex));
                 if (mutex) {
                     const auto hr = mutex->AcquireSync(0, 100);
@@ -261,7 +261,7 @@ GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
     if (format != gfx::SurfaceFormat::NV12) {
         gfxCriticalError() << "Non-NV12 format for SurfaceDescriptorD3D10: "
                            << uint32_t(format);
-        return nullptr;
+        return false;
     }
 
     const auto tex = OpenSharedTexture(d3d, handle);

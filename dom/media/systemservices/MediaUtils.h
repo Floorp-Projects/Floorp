@@ -7,9 +7,12 @@
 #ifndef mozilla_MediaUtils_h
 #define mozilla_MediaUtils_h
 
-#include "nsThreadUtils.h"
-#include "nsIAsyncShutdown.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
+#include "nsCOMPtr.h"
+#include "nsIAsyncShutdown.h"
+#include "nsISupportsImpl.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace media {
@@ -360,8 +363,11 @@ private:
   ~Refcountable<UniquePtr<T>>() {}
 };
 
-/* media::ShutdownBlocker - Async shutdown helper.
+/* Async shutdown helpers
  */
+
+already_AddRefed<nsIAsyncShutdownClient>
+GetShutdownBarrier();
 
 class ShutdownBlocker : public nsIAsyncShutdownBlocker
 {
@@ -387,6 +393,21 @@ protected:
   virtual ~ShutdownBlocker() {}
 private:
   const nsString mName;
+};
+
+class ShutdownTicket final
+{
+public:
+  explicit ShutdownTicket(nsIAsyncShutdownBlocker* aBlocker) : mBlocker(aBlocker) {}
+  NS_INLINE_DECL_REFCOUNTING(ShutdownTicket)
+private:
+  ~ShutdownTicket()
+  {
+    nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+    barrier->RemoveBlocker(mBlocker);
+  }
+
+  nsCOMPtr<nsIAsyncShutdownBlocker> mBlocker;
 };
 
 } // namespace media
