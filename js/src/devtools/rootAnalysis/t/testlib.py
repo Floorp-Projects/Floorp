@@ -175,7 +175,7 @@ sixgill_bin = '{bindir}'
     def load_hazards(self):
         def grab_hazard(line):
             m = re.match(
-                r"Function '(.*?)' has unrooted '(.*?)' of type '(.*?)' live across GC call '?(.*?)'? at (.*)", line)  # NOQA: E501
+                r"Function '(.*?)' has unrooted '(.*?)' of type '(.*?)' live across GC call '(.*?)' at (.*)", line)  # NOQA: E501
             if m:
                 info = list(m.groups())
                 info[0] = info[0].split("$")[-1]

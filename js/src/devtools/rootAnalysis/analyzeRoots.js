@@ -355,7 +355,7 @@ function edgeCanGC(edge)
         }
 
         var varName = variable.Name[0];
-        return indirectCallCannotGC(functionName, varName) ? null : "*" + varName;
+        return indirectCallCannotGC(functionName, varName) ? null : "'*" + varName + "'";
     }
 
     if (callee.Kind == "Fld") {
@@ -366,7 +366,7 @@ function edgeCanGC(edge)
             return null;
 
         if (fullFieldName in gcFunctions)
-            return fullFieldName;
+            return "'" + fullFieldName + "'";
 
         return null;
     }
