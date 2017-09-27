@@ -40,8 +40,6 @@ MaybeConvertUnboxedObjectToNative(JSContext* cx, JSObject* obj)
 {
     if (obj->is<UnboxedPlainObject>())
         return UnboxedPlainObject::convertToNative(cx, obj);
-    if (obj->is<UnboxedArrayObject>())
-        return UnboxedArrayObject::convertToNative(cx, obj);
     return true;
 }
 

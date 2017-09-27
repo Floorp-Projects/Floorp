@@ -93,10 +93,6 @@ GetObject(const MDefinition* ins)
       case MDefinition::Opcode::Elements:
       case MDefinition::Opcode::MaybeCopyElementsForWrite:
       case MDefinition::Opcode::MaybeToDoubleElement:
-      case MDefinition::Opcode::UnboxedArrayLength:
-      case MDefinition::Opcode::UnboxedArrayInitializedLength:
-      case MDefinition::Opcode::IncrementUnboxedArrayInitializedLength:
-      case MDefinition::Opcode::SetUnboxedArrayInitializedLength:
       case MDefinition::Opcode::TypedArrayLength:
       case MDefinition::Opcode::SetTypedObjectOffset:
       case MDefinition::Opcode::SetDisjointTypedElements:
