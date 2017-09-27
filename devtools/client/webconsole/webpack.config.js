@@ -90,8 +90,8 @@ webpackConfig.resolve = {
     "devtools/shared/fronts/timeline": path.join(__dirname, "../../client/shared/webpack/shims/fronts-timeline-shim"),
     "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
     "devtools/shared/client/main": path.join(__dirname, "new-console-output/test/fixtures/ObjectClient"),
-    "devtools/shared/platform/clipboard": path.join(__dirname, "../../shared/platform/content/clipboard"),
-    "devtools/shared/platform/stack": path.join(__dirname, "../../shared/platform/content/stack"),
+    "devtools/shared/platform/clipboard": path.join(__dirname, "../../client/shared/webpack/shims/platform-clipboard-stub"),
+    "devtools/shared/platform/stack": path.join(__dirname, "../../client/shared/webpack/shims/platform-stack-stub"),
 
     // Locales need to be explicitly mapped to the en-US subfolder
     "toolkit/locales": path.join(__dirname, "../../../toolkit/locales/en-US"),

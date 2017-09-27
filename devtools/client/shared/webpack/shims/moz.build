@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'clipboard.js',
-    'stack.js',
+    'platform-clipboard-stub.js',
+    'platform-stack-stub.js',
 )
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
