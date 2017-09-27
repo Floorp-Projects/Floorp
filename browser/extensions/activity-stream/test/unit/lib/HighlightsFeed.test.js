@@ -296,10 +296,10 @@ describe("Highlights Feed", () => {
       assert.calledOnce(feed.fetchHighlights);
       assert.calledWith(feed.fetchHighlights, true);
     });
-    it("should fetch highlights on PLACES_LINK_DELETED", async () => {
+    it("should fetch highlights on PLACES_LINKS_DELETED", async () => {
       await feed.fetchHighlights();
       feed.fetchHighlights = sinon.spy();
-      feed.onAction({type: at.PLACES_LINK_DELETED});
+      feed.onAction({type: at.PLACES_LINKS_DELETED});
       assert.calledOnce(feed.fetchHighlights);
       assert.calledWith(feed.fetchHighlights, true);
     });
