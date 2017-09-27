@@ -18,9 +18,14 @@ using namespace mozilla;
 
 //#define FCF_NOISY
 
-nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext,
-                                       nsIFrame::ClassID aID)
-  : nsAtomicContainerFrame(aContext, aID)
+nsFormControlFrame*
+NS_NewFormControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+{
+  return new (aPresShell) nsFormControlFrame(aContext);
+}
+
+nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext)
+  : nsAtomicContainerFrame(aContext, kClassID)
 {
 }
 
@@ -35,6 +40,8 @@ nsFormControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
 }
+
+NS_IMPL_FRAMEARENA_HELPERS(nsFormControlFrame)
 
 NS_QUERYFRAME_HEAD(nsFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
