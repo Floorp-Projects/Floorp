@@ -23,7 +23,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 
-#include "ds/Fifo.h"
 #include "jit/Ion.h"
 #include "threading/ConditionVariable.h"
 #include "vm/MutexIDs.h"
@@ -58,7 +57,7 @@ enum class ParseTaskKind
 namespace wasm {
 
 struct CompileTask;
-typedef Fifo<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrFifo;
+typedef Vector<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrVector;
 
 struct Tier2GeneratorTask
 {
@@ -108,8 +107,8 @@ class GlobalHelperThreadState
     IonBuilderVector ionWorklist_, ionFinishedList_, ionFreeList_;
 
     // wasm worklists.
-    wasm::CompileTaskPtrFifo wasmWorklist_tier1_;
-    wasm::CompileTaskPtrFifo wasmWorklist_tier2_;
+    wasm::CompileTaskPtrVector wasmWorklist_tier1_;
+    wasm::CompileTaskPtrVector wasmWorklist_tier2_;
     wasm::Tier2GeneratorTaskPtrVector wasmTier2GeneratorWorklist_;
 
     // Count of finished Tier2Generator tasks.
@@ -201,7 +200,7 @@ class GlobalHelperThreadState
         return ionFreeList_;
     }
 
-    wasm::CompileTaskPtrFifo& wasmWorklist(const AutoLockHelperThreadState&, wasm::CompileMode m) {
+    wasm::CompileTaskPtrVector& wasmWorklist(const AutoLockHelperThreadState&, wasm::CompileMode m) {
         switch (m) {
           case wasm::CompileMode::Once:
           case wasm::CompileMode::Tier1:

@@ -27,9 +27,6 @@
 namespace js {
 namespace wasm {
 
-struct CompileTask;
-typedef Vector<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrVector;
-
 // FuncCompileInput contains the input for compiling a single function.
 
 struct FuncCompileInput
@@ -146,6 +143,7 @@ struct CompileTask
 class MOZ_STACK_CLASS ModuleGenerator
 {
     typedef Vector<CompileTask, 0, SystemAllocPolicy> CompileTaskVector;
+    typedef Vector<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrVector;
     typedef EnumeratedArray<Trap, Trap::Limit, uint32_t> Uint32TrapArray;
     typedef Vector<jit::CodeOffset, 0, SystemAllocPolicy> CodeOffsetVector;
 
