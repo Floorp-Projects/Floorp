@@ -35,7 +35,6 @@ public:
     , mWidth(0)
     , mHeight(0)
     , mInitDone(false)
-    , mHasDirectListeners(false)
     , mCaptureIndex(aIndex)
     , mTrackID(0)
   {}
@@ -45,7 +44,6 @@ public:
 
   void GetName(nsAString& aName) const override;
   void GetUUID(nsACString& aUUID) const override;
-  void SetDirectListeners(bool aHasListeners) override;
 
   bool IsFake() override
   {
@@ -123,7 +121,6 @@ protected:
 
   int mWidth, mHeight;
   bool mInitDone;
-  bool mHasDirectListeners;
   int mCaptureIndex;
   TrackID mTrackID;
 

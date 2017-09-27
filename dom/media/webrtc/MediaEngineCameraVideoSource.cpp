@@ -401,11 +401,4 @@ MediaEngineCameraVideoSource::GetUUID() const
   return mUniqueId;
 }
 
-void
-MediaEngineCameraVideoSource::SetDirectListeners(bool aHasDirectListeners)
-{
-  LOG((__FUNCTION__));
-  mHasDirectListeners = aHasDirectListeners;
-}
-
 } // namespace mozilla

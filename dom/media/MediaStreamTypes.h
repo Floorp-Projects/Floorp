@@ -14,8 +14,6 @@ namespace mozilla {
 enum MediaStreamGraphEvent : uint32_t {
   EVENT_FINISHED,
   EVENT_REMOVED,
-  EVENT_HAS_DIRECT_LISTENERS, // transition from no direct listeners
-  EVENT_HAS_NO_DIRECT_LISTENERS,  // transition to no direct listeners
 };
 
 // maskable flags, not a simple enumerated value
