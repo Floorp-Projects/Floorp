@@ -113,8 +113,6 @@ class nsSVGIDRenderingObserver : public nsSVGRenderingObserver
 {
 public:
   typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::IDTracker IDTracker;
-
   nsSVGIDRenderingObserver(nsIURI* aURI, nsIContent* aObservingContent,
                          bool aReferenceImage);
   virtual ~nsSVGIDRenderingObserver();
@@ -125,14 +123,14 @@ protected:
   // This is called when the referenced resource changes.
   virtual void DoUpdate() override;
 
-  class SourceReference : public IDTracker
+  class SourceReference : public nsReferencedElement
   {
   public:
     explicit SourceReference(nsSVGIDRenderingObserver* aContainer) : mContainer(aContainer) {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
       mContainer->StopListening();
-      IDTracker::ElementChanged(aFrom, aTo);
+      nsReferencedElement::ElementChanged(aFrom, aTo);
       mContainer->StartListening();
       mContainer->DoUpdate();
     }

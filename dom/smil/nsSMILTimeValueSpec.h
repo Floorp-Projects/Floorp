@@ -86,7 +86,7 @@ protected:
                                           // the target.
   nsSMILTimeValueSpecParams     mParams;
 
-  class TimeReferenceElement : public mozilla::dom::IDTracker
+  class TimeReferenceElement : public nsReferencedElement
   {
   public:
     explicit TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
@@ -99,7 +99,7 @@ protected:
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override
     {
-      IDTracker::ElementChanged(aFrom, aTo);
+      nsReferencedElement::ElementChanged(aFrom, aTo);
       mSpec->UpdateReferencedElement(aFrom, aTo);
     }
     virtual bool IsPersistent() override { return true; }
