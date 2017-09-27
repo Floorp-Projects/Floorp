@@ -295,6 +295,11 @@ const testcases = [
     ["䕮䕵䕶䕱.中国123", "xn--google.xn--123-u68dy61b",           false, true,  true],
     ["xn--accountlogin.䕮䕵䕶䕱", "xn--accountlogin.xn--google", false, true,  true],
     ["䕮䕵䕶䕱.xn--accountlogin", "xn--google.xn--accountlogin", false, true,  true],
+
+    // Arabic diacritic not allowed in Latin text (bug 1370497)
+    ["goo\u0650gle", "xn--google-yri", false, false, false],
+    // ...but Arabic diacritics are allowed on Arabic text
+    ["العَرَبِي", "xn--mgbc0a5a6cxbzabt", false, true, true],
 ];
 
 const profiles = ["ASCII", "high", "moderate"];
