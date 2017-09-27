@@ -66,7 +66,7 @@ public:
   already_AddRefed<SVGAnimatedString> Href();
 
 protected:
-  class PathReference : public mozilla::dom::IDTracker {
+  class PathReference : public nsReferencedElement {
   public:
     explicit PathReference(SVGMPathElement* aMpathElement) :
       mMpathElement(aMpathElement) {}
@@ -75,7 +75,7 @@ protected:
     // (which will clear animation effects that used the old target-path
     // and recompute the animation effects using the new target-path).
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
-      IDTracker::ElementChanged(aFrom, aTo);
+      nsReferencedElement::ElementChanged(aFrom, aTo);
       if (aFrom) {
         aFrom->RemoveMutationObserver(mMpathElement);
       }
