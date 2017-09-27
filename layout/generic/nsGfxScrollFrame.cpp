@@ -3252,9 +3252,9 @@ ClipItemsExceptCaret(nsDisplayList* aList,
       const DisplayItemClipChain* clip = i->GetClipChain();
       const DisplayItemClipChain* intersection = nullptr;
       if (aCache.Get(clip, &intersection)) {
-        i->SetClipChain(intersection);
+        i->SetClipChain(intersection, true);
       } else {
-        i->IntersectClip(aBuilder, aExtraClip);
+        i->IntersectClip(aBuilder, aExtraClip, true);
         aCache.Put(clip, i->GetClipChain());
       }
     }
