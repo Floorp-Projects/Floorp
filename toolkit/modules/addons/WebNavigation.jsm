@@ -320,22 +320,54 @@ var Manager = {
     // to pair them together.
     const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(createdOuterWindowId);
 
+    if (!isSourceTab) {
+      if (pairedMessage) {
+        // This should not happen, print a warning before overwriting the unexpected pending data.
+        Services.console.logStringMessage(
+          `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
+          "unexpected pending data while receiving the created tab data"
+        );
+      }
+
+      // Store a weak reference to the browser XUL element, so that we don't prevent
+      // it to be garbage collected if it has been destroyed.
+      const browserWeakRef = Cu.getWeakReference(browser);
+
+      this.createdNavigationTargetByOuterWindowId.set(createdOuterWindowId, {
+        browserWeakRef,
+        data,
+      });
+
+      return;
+    }
+
     if (!pairedMessage) {
-      this.createdNavigationTargetByOuterWindowId.set(createdOuterWindowId, {browser, data});
+      // The sourceTab should always be received after the message coming from the created
+      // top level frame because the "webNavigation-createdNavigationTarget-from-js" observers
+      // subscribed by WebNavigationContent.js are going to be executed in reverse order
+      // (See http://searchfox.org/mozilla-central/rev/f54c1723be/xpcom/ds/nsObserverList.cpp#76)
+      // and the observer subscribed to the created target will be the last one subscribed
+      // to the ObserverService (and the first one to be triggered).
+      Services.console.logStringMessage(
+        `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
+        "received source tab data without any created tab data available"
+      );
+
       return;
     }
 
     this.createdNavigationTargetByOuterWindowId.delete(createdOuterWindowId);
 
-    let sourceTabBrowser;
-    let createdTabBrowser;
+    let sourceTabBrowser = browser;
+    let createdTabBrowser = pairedMessage.browserWeakRef.get();
 
-    if (isSourceTab) {
-      sourceTabBrowser = browser;
-      createdTabBrowser = pairedMessage.browser;
-    } else {
-      sourceTabBrowser = pairedMessage.browser;
-      createdTabBrowser = browser;
+    if (!createdTabBrowser) {
+      Services.console.logStringMessage(
+        `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
+        "the created tab has been already destroyed"
+      );
+
+      return;
     }
 
     this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {
