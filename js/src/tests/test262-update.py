@@ -321,9 +321,6 @@ def process_test262(test262Dir, test262OutDir, strictTests):
         "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
 
-    # Intl.PluralRules isn't yet enabled by default.
-    localIncludesMap[os.path.join("intl402", "PluralRules")] = ["test262-intl-extras.js"]
-
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):
         relPath = os.path.relpath(dirPath, testDir)
