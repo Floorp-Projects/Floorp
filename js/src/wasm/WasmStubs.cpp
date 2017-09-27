@@ -1051,11 +1051,11 @@ GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel, CallableOff
 // Generate a stub which is only used by the signal handlers to handle out of
 // bounds access by experimental SIMD.js and Atomics and unaligned accesses on
 // ARM. This stub is executed by direct PC transfer from the faulting memory
-// access and thus the stack depth is unknown. Since WasmActivation::exitFP is
-// not set before calling the error reporter, the current wasm activation will
-// be lost. This stub should be removed when SIMD.js and Atomics are moved to
-// wasm and given proper traps and when we use a non-faulting strategy for
-// unaligned ARM access.
+// access and thus the stack depth is unknown. Since
+// JitActivation::packedExitFP() is not set before calling the error reporter,
+// the current wasm activation will be lost. This stub should be removed when
+// SIMD.js and Atomics are moved to wasm and given proper traps and when we use
+// a non-faulting strategy for unaligned ARM access.
 static bool
 GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, Label* throwLabel,
                                 Offsets* offsets)

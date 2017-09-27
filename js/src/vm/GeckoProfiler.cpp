@@ -62,7 +62,7 @@ GeckoProfilerRuntime::setEventMarker(void (*fn)(const char*))
     eventMarker_ = fn;
 }
 
-/* Get a pointer to the top-most profiling frame, given the exit frame pointer. */
+// Get a pointer to the top-most profiling frame, given the exit frame pointer.
 static void*
 GetTopProfilingJitFrame(Activation* act)
 {
@@ -70,11 +70,11 @@ GetTopProfilingJitFrame(Activation* act)
         return nullptr;
 
     // For null exitFrame, there is no previous exit frame, just return.
-    uint8_t* exitFP = act->asJit()->exitFP();
-    if (!exitFP)
+    uint8_t* jsExitFP = act->asJit()->jsExitFP();
+    if (!jsExitFP)
         return nullptr;
 
-    jit::JitProfilingFrameIterator iter(exitFP);
+    jit::JitProfilingFrameIterator iter(jsExitFP);
     MOZ_ASSERT(!iter.done());
     return iter.fp();
 }

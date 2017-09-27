@@ -724,8 +724,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void leaveExitFrame(size_t extraFrame = 0);
 
   private:
-    // Save the top of the stack into JitActivation::exitFP of the current
-    // thread, which should be the location of the latest exit frame.
+    // Save the top of the stack into JitActivation::packedExitFP of the
+    // current thread, which should be the location of the latest exit frame.
     void linkExitFrame(Register cxreg, Register scratch);
 
     // Patch the value of PushStubCode with the pointer to the finalized code.

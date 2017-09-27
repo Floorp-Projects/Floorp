@@ -822,8 +822,8 @@ bool
 DebugEpilogueOnBaselineReturn(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
 {
     if (!DebugEpilogue(cx, frame, pc, true)) {
-        // DebugEpilogue popped the frame by updating exitFP, so run the stop
-        // event here before we enter the exception handler.
+        // DebugEpilogue popped the frame by updating packedExitFP, so run the
+        // stop event here before we enter the exception handler.
         TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
         TraceLogStopEvent(logger, TraceLogger_Baseline);
         TraceLogStopEvent(logger, TraceLogger_Scripts);
@@ -849,8 +849,8 @@ DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool ok)
     frame->setOverridePc(script->lastPC());
 
     if (!ok) {
-        // Pop this frame by updating exitFP, so that the exception handling
-        // code will start at the previous frame.
+        // Pop this frame by updating packedExitFP, so that the exception
+        // handling code will start at the previous frame.
         JitFrameLayout* prefix = frame->framePrefix();
         EnsureBareExitFrame(cx, prefix);
         return false;

@@ -14,7 +14,7 @@ using namespace js;
 using namespace js::jit;
 
 JSJitFrameIter::JSJitFrameIter(const JitActivation* activation)
-  : current_(activation->exitFP()),
+  : current_(activation->jsExitFP()),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
