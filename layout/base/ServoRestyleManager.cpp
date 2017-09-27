@@ -415,7 +415,8 @@ ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement)
 /* static */ void
 ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
 {
-  if (aElement->HasAnyOfFlags(Element::kAllServoDescendantBits)) {
+  if (aElement->HasDirtyDescendantsForServo() ||
+      aElement->HasAnimationOnlyDirtyDescendantsForServo()) {
     StyleChildrenIterator it(aElement);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (n->IsElement()) {
