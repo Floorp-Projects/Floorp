@@ -1311,7 +1311,9 @@ CustomizeMode.prototype = {
 
   onLWThemesMenuShowing(aEvent) {
     const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
-    const RECENT_LWT_COUNT = 5;
+    const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
+    const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
+    const MAX_THEME_COUNT = 6;
 
     this._clearLWThemesMenu(aEvent.target);
 
@@ -1366,19 +1368,27 @@ CustomizeMode.prototype = {
       let themes = [aDefaultTheme];
       let lwts = LightweightThemeManager.usedThemes;
       let currentLwt = LightweightThemeManager.currentTheme;
-      let currentLwtIndex = lwts.indexOf(currentLwt);
-      if (currentLwtIndex > -1) {
-        // Make sure that the current lightweight theme
-        // is at the beginning of the array to avoid truncation
-        // in the next step.
-        lwts = lwts.splice(currentLwtIndex, 1).concat(lwts);
-      }
-      if (lwts.length > RECENT_LWT_COUNT)
-        lwts.length = RECENT_LWT_COUNT;
+      // The lwts besides the builtin themes don't have an isActive property:
       for (let lwt of lwts) {
-        lwt.isActive = !!currentLwt && (lwt.id == currentLwt.id);
-        themes.push(lwt);
+        if (!lwt.hasOwnProperty("isActive")) {
+          lwt.isActive = !!currentLwt && (lwt.id == currentLwt.id);
+        }
       }
+
+      // Move the current theme (if any) and the light/dark themes to the start:
+      let importantThemes = [LIGHT_THEME_ID, DARK_THEME_ID];
+      if (currentLwt && !importantThemes.includes(currentLwt.id)) {
+        importantThemes.push(currentLwt.id);
+      }
+      for (let importantTheme of importantThemes) {
+        let themeIndex = lwts.findIndex(theme => theme.id == importantTheme);
+        if (themeIndex > -1) {
+          themes.push(...lwts.splice(themeIndex, 1));
+        }
+      }
+      themes = themes.concat(lwts);
+      if (themes.length > MAX_THEME_COUNT)
+        themes.length = MAX_THEME_COUNT;
 
       let footer = doc.getElementById("customization-lwtheme-menu-footer");
       let panel = footer.parentNode;
@@ -1400,8 +1410,15 @@ CustomizeMode.prototype = {
       recommendedThemes = JSON.parse(recommendedThemes);
       let sb = Services.strings.createBundle("chrome://browser/locale/lightweightThemes.properties");
       for (let theme of recommendedThemes) {
-        theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
-        theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
+        try {
+          theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
+          theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
+        } catch (ex) {
+          // If finding strings for this failed, just don't build it. This can
+          // happen for users with 'older' recommended themes lists, some of which
+          // have since been removed from Firefox.
+          continue;
+        }
         let button = buildToolbarButton(theme);
         button.addEventListener("command", () => {
           LightweightThemeManager.setLocalTheme(button.theme);
