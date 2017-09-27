@@ -11,6 +11,9 @@ if (scriptArgs[0] == '--function') {
 }
 
 var typeInfo_filename = scriptArgs[0] || "typeInfo.txt";
+var callgraphOut_filename = scriptArgs[1] || "callgraph.txt";
+
+var origOut = os.file.redirect(callgraphOut_filename);
 
 var memoized = new Map();
 var memoizedCount = 0;
@@ -270,3 +273,5 @@ for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
     xdb.free_string(name);
     xdb.free_string(data);
 }
+
+os.file.close(os.file.redirect(origOut));
