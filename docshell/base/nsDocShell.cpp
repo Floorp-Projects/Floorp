@@ -135,7 +135,6 @@
 #include "nsStreamUtils.h"
 #include "nsIController.h"
 #include "nsPICommandUpdater.h"
-#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIWebBrowserChrome3.h"
 #include "nsITabChild.h"
 #include "nsISiteSecurityService.h"
@@ -14435,7 +14434,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
 
   // If this is an anchor element, grab its type property to use as a hint
   nsAutoString typeHint;
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aContent));
+  RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContent(aContent);
   if (anchor) {
     anchor->GetType(typeHint);
     NS_ConvertUTF16toUTF8 utf8Hint(typeHint);

@@ -608,11 +608,14 @@ WebRenderDebugPrefChangeCallback(const char* aPrefName, void*)
   if (Preferences::GetBool(WR_DEBUG_PREF".profiler", false)) {
     flags |= (1 << 0);
   }
-  if (Preferences::GetBool(WR_DEBUG_PREF".texture-cache", false)) {
+  if (Preferences::GetBool(WR_DEBUG_PREF".render-targets", false)) {
     flags |= (1 << 1);
   }
-  if (Preferences::GetBool(WR_DEBUG_PREF".render-targets", false)) {
+  if (Preferences::GetBool(WR_DEBUG_PREF".texture-cache", false)) {
     flags |= (1 << 2);
+  }
+  if (Preferences::GetBool(WR_DEBUG_PREF".alpha-primitives", false)) {
+    flags |= (1 << 3);
   }
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags);

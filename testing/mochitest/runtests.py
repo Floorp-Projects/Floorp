@@ -2326,9 +2326,9 @@ toolbar#nav-bar {
         """
 
         # Number of times to repeat test(s) when running with --repeat
-        VERIFY_REPEAT = 20
+        VERIFY_REPEAT = 10
         # Number of times to repeat test(s) when running test in
-        VERIFY_REPEAT_SINGLE_BROWSER = 10
+        VERIFY_REPEAT_SINGLE_BROWSER = 5
 
         def step1():
             stepOptions = copy.deepcopy(options)
@@ -2352,12 +2352,41 @@ toolbar#nav-bar {
                     break
             return result
 
+        def step3():
+            stepOptions = copy.deepcopy(options)
+            stepOptions.repeat = VERIFY_REPEAT
+            stepOptions.keep_open = False
+            stepOptions.environment.append("MOZ_CHAOSMODE=3")
+            result = self.runTests(stepOptions)
+            result = result or (-2 if self.countfail > 0 else 0)
+            self.message_logger.finish()
+            return result
+
+        def step4():
+            stepOptions = copy.deepcopy(options)
+            stepOptions.repeat = 0
+            stepOptions.keep_open = False
+            stepOptions.environment.append("MOZ_CHAOSMODE=3")
+            for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+                result = self.runTests(stepOptions)
+                result = result or (-2 if self.countfail > 0 else 0)
+                self.message_logger.finish()
+                if result != 0:
+                    break
+            return result
+
         steps = [
             ("1. Run each test %d times in one browser." % VERIFY_REPEAT,
              step1),
             ("2. Run each test %d times in a new browser each time." %
              VERIFY_REPEAT_SINGLE_BROWSER,
              step2),
+            ("3. Run each test %d times in one browser, in chaos mode." %
+             VERIFY_REPEAT,
+             step3),
+            ("4. Run each test %d times in a new browser each time, "
+             "in chaos mode." % VERIFY_REPEAT_SINGLE_BROWSER,
+             step4),
         ]
 
         stepResults = {}

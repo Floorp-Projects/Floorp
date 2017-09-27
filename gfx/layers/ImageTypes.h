@@ -56,11 +56,6 @@ enum class ImageFormat {
   SURFACE_TEXTURE,
 
   /**
-   * An EGL Image that can be shared across threads.
-   */
-  EGLIMAGE,
-
-  /**
    * The D3D9_RGB32_TEXTURE format creates a D3D9SurfaceImage, and wraps a
    * IDirect3DTexture9 in RGB32 layout.
    */
