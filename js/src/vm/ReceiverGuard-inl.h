@@ -28,7 +28,7 @@ ReceiverGuard::ReceiverGuard(JSObject* obj)
                 shape = expando->lastProperty();
             return;
         }
-        if (obj->is<UnboxedArrayObject>() || obj->is<TypedObject>()) {
+        if (obj->is<TypedObject>()) {
             group = obj->group();
             return;
         }
@@ -44,7 +44,7 @@ ReceiverGuard::ReceiverGuard(ObjectGroup* group, Shape* shape)
         const Class* clasp = group->clasp();
         if (clasp == &UnboxedPlainObject::class_) {
             // Keep both group and shape.
-        } else if (clasp == &UnboxedArrayObject::class_ || IsTypedObjectClass(clasp)) {
+        } else if (IsTypedObjectClass(clasp)) {
             this->shape = nullptr;
         } else {
             this->group = nullptr;

@@ -1530,6 +1530,14 @@ SpecialPowersAPI.prototype = {
     Cu.schedulePreciseGC(genGCCallback(callback));
   },
 
+  getMemoryReports() {
+    try {
+      Cc["@mozilla.org/memory-reporter-manager;1"]
+        .getService(Ci.nsIMemoryReporterManager)
+        .getReports(() => {}, null, () => {}, null, false);
+    } catch (e) { }
+  },
+
   setGCZeal(zeal) {
     Cu.setGCZeal(zeal);
   },

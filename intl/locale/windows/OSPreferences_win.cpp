@@ -209,9 +209,9 @@ OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
     start = str->BeginReading(pos);
     str->EndReading(end);
     if (FindInReadable(NS_LITERAL_STRING("dddd"), pos, end)) {
-      str->Replace(pos - start, 4, NS_LITERAL_STRING("EEEE"));
+      str->ReplaceLiteral(pos - start, 4, u"EEEE");
     } else if (FindInReadable(NS_LITERAL_STRING("ddd"), pos, end)) {
-      str->Replace(pos - start, 3, NS_LITERAL_STRING("EEE"));
+      str->ReplaceLiteral(pos - start, 3, u"EEE");
     }
 
     // Also, Windows uses lowercase "g" or "gg" for era, but ICU wants uppercase "G"

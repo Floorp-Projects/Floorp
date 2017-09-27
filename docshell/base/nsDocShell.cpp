@@ -10983,7 +10983,7 @@ IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   rv = resultURI->GetSpec(tmpResultSpec);
   NS_ENSURE_SUCCESS(rv, false);
   // replace http with https
-  tmpResultSpec.Replace(0, 4, "https");
+  tmpResultSpec.ReplaceLiteral(0, 4, "https");
 
   nsCOMPtr<nsIURI> tmpResultURI;
   rv = NS_NewURI(getter_AddRefs(tmpResultURI), tmpResultSpec);

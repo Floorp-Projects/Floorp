@@ -429,7 +429,7 @@ this.downloads = class extends ExtensionAPI {
               return Promise.reject({message: "filename must not contain back-references (..)"});
             }
 
-            if (AppConstants.platform === "win" && /[|"*?:<>]/.test(filename)) {
+            if (path.components.some(component => component != DownloadPaths.sanitize(component))) {
               return Promise.reject({message: "filename must not contain illegal characters"});
             }
           }
@@ -472,18 +472,14 @@ this.downloads = class extends ExtensionAPI {
           }
 
           async function createTarget(downloadsDir) {
-            let target;
-            if (filename) {
-              target = OS.Path.join(downloadsDir, filename);
-            } else {
+            if (!filename) {
               let uri = Services.io.newURI(options.url);
-
-              let remote;
               if (uri instanceof Ci.nsIURL) {
-                remote = uri.fileName;
+                filename = DownloadPaths.sanitize(uri.fileName);
               }
-              target = OS.Path.join(downloadsDir, remote || "download");
             }
+
+            let target = OS.Path.join(downloadsDir, filename || "download");
 
             // Create any needed subdirectories if required by filename.
             const dir = OS.Path.dirname(target);

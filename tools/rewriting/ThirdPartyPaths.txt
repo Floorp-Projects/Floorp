@@ -93,5 +93,7 @@ third_party/python/which/
 third_party/rust/
 toolkit/components/jsoncpp/
 toolkit/components/protobuf/
+toolkit/components/url-classifier/chromium/
+toolkit/components/url-classifier/protobuf/
 toolkit/crashreporter/google-breakpad/
 tools/fuzzing/libfuzzer

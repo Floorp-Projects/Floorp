@@ -574,9 +574,6 @@ jit::LinkIonScript(JSContext* cx, HandleScript calleeScript)
             // doesn't has code to handle it after linking happened. So it's
             // not OK to throw a catchable exception from there.
             cx->clearPendingException();
-
-            // Reset the TypeZone's compiler output for this script, if any.
-            InvalidateCompilerOutputsForScript(cx, calleeScript);
         }
     }
 

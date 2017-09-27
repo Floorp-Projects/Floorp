@@ -258,32 +258,32 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
       // Do nothing.
     } else if (scheme.LowerCaseEqualsLiteral("ttp")) {
       // ttp -> http.
-      uriString.Replace(0, 3, "http");
+      uriString.ReplaceLiteral(0, 3, "http");
       scheme.AssignLiteral("http");
       info->mFixupChangedProtocol = true;
     } else if (scheme.LowerCaseEqualsLiteral("ttps")) {
       // ttps -> https.
-      uriString.Replace(0, 4, "https");
+      uriString.ReplaceLiteral(0, 4, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
     } else if (scheme.LowerCaseEqualsLiteral("tps")) {
       // tps -> https.
-      uriString.Replace(0, 3, "https");
+      uriString.ReplaceLiteral(0, 3, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
     } else if (scheme.LowerCaseEqualsLiteral("ps")) {
       // ps -> https.
-      uriString.Replace(0, 2, "https");
+      uriString.ReplaceLiteral(0, 2, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
     } else if (scheme.LowerCaseEqualsLiteral("ile")) {
       // ile -> file.
-      uriString.Replace(0, 3, "file");
+      uriString.ReplaceLiteral(0, 3, "file");
       scheme.AssignLiteral("file");
       info->mFixupChangedProtocol = true;
     } else if (scheme.LowerCaseEqualsLiteral("le")) {
       // le -> file.
-      uriString.Replace(0, 2, "file");
+      uriString.ReplaceLiteral(0, 2, "file");
       scheme.AssignLiteral("file");
       info->mFixupChangedProtocol = true;
     }

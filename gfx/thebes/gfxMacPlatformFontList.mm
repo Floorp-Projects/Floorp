@@ -312,7 +312,11 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mIsCFF(false),
       mIsCFFInitialized(false),
       mHasVariations(false),
-      mHasVariationsInitialized(false)
+      mHasVariationsInitialized(false),
+      mCheckedForTracking(false),
+      mTrakTable(nullptr),
+      mTrakValues(nullptr),
+      mTrakSizeTable(nullptr)
 {
     mWeight = aWeight;
 }
@@ -331,7 +335,11 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mIsCFF(false),
       mIsCFFInitialized(false),
       mHasVariations(false),
-      mHasVariationsInitialized(false)
+      mHasVariationsInitialized(false),
+      mCheckedForTracking(false),
+      mTrakTable(nullptr),
+      mTrakValues(nullptr),
+      mTrakSizeTable(nullptr)
 {
     mFontRef = aFontRef;
     mFontRefInitialized = true;
@@ -462,6 +470,142 @@ MacOSFontEntry::HasFontTable(uint32_t aTableTag)
     }
 
     return mAvailableTables.GetEntry(aTableTag);
+}
+
+typedef struct {
+    AutoSwap_PRUint32 version;
+    AutoSwap_PRUint16 format;
+    AutoSwap_PRUint16 horizOffset;
+    AutoSwap_PRUint16 vertOffset;
+    AutoSwap_PRUint16 reserved;
+//  TrackData horizData;
+//  TrackData vertData;
+} TrakHeader;
+
+typedef struct {
+    AutoSwap_PRUint16 nTracks;
+    AutoSwap_PRUint16 nSizes;
+    AutoSwap_PRUint32 sizeTableOffset;
+//  trackTableEntry trackTable[];
+//  fixed32 sizeTable[];
+} TrackData;
+
+typedef struct {
+    AutoSwap_PRUint32 track;
+    AutoSwap_PRUint16 nameIndex;
+    AutoSwap_PRUint16 offset;
+} TrackTableEntry;
+
+bool
+MacOSFontEntry::HasTrackingTable()
+{
+    if (!mCheckedForTracking) {
+        mCheckedForTracking = true;
+        mTrakTable = GetFontTable(TRUETYPE_TAG('t','r','a','k'));
+        if (mTrakTable) {
+            if (!ParseTrakTable()) {
+                hb_blob_destroy(mTrakTable);
+                mTrakTable = nullptr;
+            }
+        }
+    }
+    return mTrakTable != nullptr;
+}
+
+bool
+MacOSFontEntry::ParseTrakTable()
+{
+    // Check table validity and set up the subtable pointers we need;
+    // if 'trak' table is invalid, or doesn't contain a 'normal' track,
+    // return false to tell the caller not to try using it.
+    unsigned int len;
+    const char* data = hb_blob_get_data(mTrakTable, &len);
+    if (len < sizeof(TrakHeader)) {
+        return false;
+    }
+    auto trak = reinterpret_cast<const TrakHeader*>(data);
+    uint16_t horizOffset = trak->horizOffset;
+    if (trak->version != 0x00010000 ||
+        uint16_t(trak->format) != 0 ||
+        horizOffset == 0 ||
+        uint16_t(trak->reserved) != 0) {
+        return false;
+    }
+    // Find the horizontal trackData, and check it doesn't overrun the buffer.
+    if (horizOffset > len - sizeof(TrackData)) {
+        return false;
+    }
+    auto trackData = reinterpret_cast<const TrackData*>(data + horizOffset);
+    uint16_t nTracks = trackData->nTracks;
+    mNumTrakSizes = trackData->nSizes;
+    if (nTracks == 0 || mNumTrakSizes < 2) {
+        return false;
+    }
+    uint32_t sizeTableOffset = trackData->sizeTableOffset;
+    // Find the trackTable, and check it doesn't overrun the buffer.
+    if (horizOffset >
+        len - (sizeof(TrackData) + nTracks * sizeof(TrackTableEntry))) {
+        return false;
+    }
+    auto trackTable = reinterpret_cast<const TrackTableEntry*>
+        (data + horizOffset + sizeof(TrackData));
+    // Look for 'normal' tracking, bail out if no such track is present.
+    unsigned trackIndex;
+    for (trackIndex = 0; trackIndex < nTracks; ++trackIndex) {
+        if (trackTable[trackIndex].track == 0x00000000) {
+            break;
+        }
+    }
+    if (trackIndex == nTracks) {
+        return false;
+    }
+    // Find list of tracking values, and check they won't overrun.
+    uint16_t offset = trackTable[trackIndex].offset;
+    if (offset > len - mNumTrakSizes * sizeof(uint16_t)) {
+        return false;
+    }
+    mTrakValues = reinterpret_cast<const AutoSwap_PRInt16*>(data + offset);
+    // Find the size subtable, and check it doesn't overrun the buffer.
+    mTrakSizeTable =
+        reinterpret_cast<const AutoSwap_PRInt32*>(data + sizeTableOffset);
+    if (mTrakSizeTable + mNumTrakSizes >
+        reinterpret_cast<const AutoSwap_PRInt32*>(data + len)) {
+        return false;
+    }
+    return true;
+}
+
+float
+MacOSFontEntry::TrackingForCSSPx(float aSize) const
+{
+    MOZ_ASSERT(mTrakTable && mTrakValues && mTrakSizeTable);
+
+    // Find index of first sizeTable entry that is >= the requested size.
+    Fixed fixedSize = X2Fix(aSize);
+    unsigned sizeIndex;
+    for (sizeIndex = 0; sizeIndex < mNumTrakSizes; ++sizeIndex) {
+        if (mTrakSizeTable[sizeIndex] >= fixedSize) {
+            break;
+        }
+    }
+    // Return the tracking value for the requested size, or an interpolated
+    // value if the exact size isn't found.
+    if (sizeIndex == mNumTrakSizes) {
+        // Request is larger than last entry in the table, so just use that.
+        // (We don't attempt to extrapolate more extreme tracking values than
+        // the largest or smallest present in the table.)
+        return int16_t(mTrakValues[mNumTrakSizes - 1]);
+    }
+    if (sizeIndex == 0 || mTrakSizeTable[sizeIndex] == fixedSize) {
+        // Found an exact match, or size was smaller than the first entry.
+        return int16_t(mTrakValues[sizeIndex]);
+    }
+    // Requested size falls between two entries: interpolate value.
+    double s0 = Fix2X(mTrakSizeTable[sizeIndex - 1]);
+    double s1 = Fix2X(mTrakSizeTable[sizeIndex]);
+    double t = (aSize - s0) / (s1 - s0);
+    return (1.0 - t) * int16_t(mTrakValues[sizeIndex - 1]) +
+           t * int16_t(mTrakValues[sizeIndex]);
 }
 
 void

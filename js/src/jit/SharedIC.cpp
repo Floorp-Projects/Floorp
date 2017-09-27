@@ -1962,9 +1962,6 @@ CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id)
     } else if (obj->is<UnboxedPlainObject>()) {
         if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
             return false;
-    } else if (obj->is<UnboxedArrayObject>()) {
-        if (JSID_IS_ATOM(id, cx->names().length))
-            return false;
     } else if (obj->is<TypedObject>()) {
         if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
             return false;
