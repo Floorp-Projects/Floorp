@@ -59,6 +59,7 @@
 #include "gfxPrefs.h"
 #include "ScrollAnimationPhysics.h"
 #include "ScrollAnimationBezierPhysics.h"
+#include "ScrollAnimationMSDPhysics.h"
 #include "ScrollSnap.h"
 #include "UnitTransforms.h"
 #include "nsPluginFrame.h"
@@ -1912,7 +1913,7 @@ private:
  * (also maintain previous timestamps - which are only used here).
  */
 static ScrollAnimationBezierPhysicsSettings
-ComputeAnimationSettingsForOrigin(nsIAtom *aOrigin)
+ComputeBezierAnimationSettingsForOrigin(nsIAtom *aOrigin)
 {
   int32_t minMS = 0;
   int32_t maxMS = 0;
@@ -1972,9 +1973,14 @@ ScrollFrameHelper::AsyncScroll::InitSmoothScroll(TimeStamp aTime,
   // Read preferences only on first iteration or for a different event origin.
   if (!mAnimationPhysics || aOrigin != mOrigin) {
     mOrigin = aOrigin;
-    ScrollAnimationBezierPhysicsSettings settings = ComputeAnimationSettingsForOrigin(mOrigin);
-    mAnimationPhysics =
-      MakeUnique<ScrollAnimationBezierPhysics>(aInitialPosition, settings);
+    if (gfxPrefs::SmoothScrollMSDPhysicsEnabled()) {
+      mAnimationPhysics = MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
+    } else {
+      ScrollAnimationBezierPhysicsSettings settings =
+        ComputeBezierAnimationSettingsForOrigin(mOrigin);
+      mAnimationPhysics =
+        MakeUnique<ScrollAnimationBezierPhysics>(aInitialPosition, settings);
+    }
   }
 
   mRange = aRange;
