@@ -89,25 +89,19 @@ Damp.prototype = {
     });
   },
 
-  async openToolbox(tool = "webconsole", onLoad) {
+  openToolbox(tool = "webconsole") {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = TargetFactory.forTab(tab);
     let startRecordTimestamp = performance.now();
-    let onToolboxCreated = gDevTools.once("toolbox-created");
     let showPromise = gDevTools.showToolbox(target, tool);
-    let toolbox = await onToolboxCreated;
 
-    if (typeof(onLoad) == "function") {
-      let panel = await toolbox.getPanelWhenReady(tool);
-      await onLoad(toolbox, panel);
-    }
-    await showPromise;
-
-    let stopRecordTimestamp = performance.now();
-    return {
-      toolbox,
-      time: stopRecordTimestamp - startRecordTimestamp
-    };
+    return showPromise.then(toolbox => {
+      let stopRecordTimestamp = performance.now();
+      return {
+        toolbox,
+        time: stopRecordTimestamp - startRecordTimestamp
+      };
+    });
   },
 
   closeToolbox: Task.async(function* () {
@@ -295,21 +289,18 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
-  async openToolboxAndLog(name, tool, onLoad) {
-    dump("Open toolbox on '" + name + "'\n");
-    let {time, toolbox} = await this.openToolbox(tool, onLoad);
+  async openToolboxAndLog(name, tool) {
+    let {time, toolbox} = await this.openToolbox(tool);
     this._results.push({name: name + ".open.DAMP", value: time });
     return toolbox;
   },
 
   async closeToolboxAndLog(name) {
-    dump("Close toolbox on '" + name + "'\n");
     let {time} = await this.closeToolbox();
     this._results.push({name: name + ".close.DAMP", value: time });
   },
 
   async reloadPageAndLog(name, onReload) {
-    dump("Reload page on '" + name + "'\n");
     let {time} = await this.reloadPage(onReload);
     this._results.push({name: name + ".reload.DAMP", value: time });
   },
@@ -361,34 +352,20 @@ Damp.prototype = {
 
       debuggerOpen: Task.async(function* () {
         yield this.testSetup(url);
-        let onLoad = async function(toolbox, dbg) {
+        let toolbox = yield this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger");
+        let onReload = async function() {
+          let dbg = toolbox.getPanel("jsdebugger");
           await new Promise(done => {
             let { selectors, store } = dbg.panelWin.getGlobalsForTesting();
             let unsubscribe;
             function countSources() {
               const sources = selectors.getSources(store.getState());
-              if (sources.size >= expectedSources) {
+              if (sources.size == expectedSources) {
                 unsubscribe();
                 done();
               }
             }
             unsubscribe = store.subscribe(countSources);
-            countSources();
-          });
-        };
-        let toolbox = yield this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger", onLoad);
-        let onReload = async function() {
-          let dbg = toolbox.getPanel("jsdebugger");
-          await new Promise(done => {
-            let count = 0;
-            let { client } = toolbox.target;
-            let onSource = async (_,actor) => {
-              if (++count >= expectedSources) {
-                client.removeListener("newSource", onSource);
-                done();
-              }
-            };
-            client.addListener("newSource", onSource);
           });
         };
         yield this.reloadPageAndLog(label + ".jsdebugger", onReload);
@@ -605,6 +582,7 @@ Damp.prototype = {
     TalosParentProfiler.resume("DAMP - start");
 
     let tests = [];
+
     if (config.subtests.indexOf("inspectorOpen") > -1) {
       // Run cold test only once
       let topWindow = getMostRecentBrowserWindow();
@@ -614,15 +592,9 @@ Damp.prototype = {
       }
     }
 
-    tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple", {
-      expectedMessages: 1,
-      expectedSources: 1,
-    }));
+    tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple", { expectedMessages: 1, expectedSources: 1 }));
 
-    tests = tests.concat(this._getToolLoadingTests(COMPLICATED_URL, "complicated", {
-      expectedMessages: 7,
-      expectedSources: 14,
-    }));
+    tests = tests.concat(this._getToolLoadingTests(COMPLICATED_URL, "complicated", { expectedMessages: 7, expectedSources: 32 }));
 
     if (config.subtests.indexOf("consoleBulkLogging") > -1) {
       tests = tests.concat(this._consoleBulkLoggingTest);
@@ -630,7 +602,6 @@ Damp.prototype = {
     if (config.subtests.indexOf("consoleStreamLogging") > -1) {
       tests = tests.concat(this._consoleStreamLoggingTest);
     }
-
     this._doSequence(tests, this._doneInternal);
   }
 }
