@@ -663,8 +663,8 @@ private:
   DECL_GFX_PREF(Once, "media.hardware-video-decoding.force-enabled",
                                                                HardwareVideoDecodingForceEnabled, bool, false);
 #ifdef XP_WIN
-  DECL_GFX_PREF(Live, "media.wmf.dxva.d3d11.enabled", PDMWMFAllowD3D11, bool, true);
-  DECL_GFX_PREF(Live, "media.wmf.dxva.max-videos", PDMWMFMaxDXVAVideos, uint32_t, 8);
+  DECL_GFX_PREF(Live, "media.wmf.allow-d3d11-dxva", PDMWMFAllowD3D11, bool, true);
+  DECL_GFX_PREF(Live, "media.wmf.max-dxva-videos", PDMWMFMaxDXVAVideos, uint32_t, 8);
   DECL_GFX_PREF(Live, "media.wmf.use-nv12-format", PDMWMFUseNV12Format, bool, true);
   DECL_GFX_PREF(Once, "media.wmf.use-sync-texture", PDMWMFUseSyncTexture, bool, true);
   DECL_GFX_PREF(Live, "media.wmf.low-latency.enabled", PDMWMFLowLatencyEnabled, bool, false);
