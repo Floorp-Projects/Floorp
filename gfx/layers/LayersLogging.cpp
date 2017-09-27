@@ -400,8 +400,6 @@ AppendToString(std::stringstream& aStream, ImageFormat format,
     aStream << "ImageFormat::MAC_IOSURFACE"; break;
   case ImageFormat::SURFACE_TEXTURE:
     aStream << "ImageFormat::SURFACE_TEXTURE"; break;
-  case ImageFormat::EGLIMAGE:
-    aStream << "ImageFormat::EGLIMAGE"; break;
   case ImageFormat::D3D9_RGB32_TEXTURE:
     aStream << "ImageFormat::D3D9_RBG32_TEXTURE"; break;
   case ImageFormat::OVERLAY_IMAGE:

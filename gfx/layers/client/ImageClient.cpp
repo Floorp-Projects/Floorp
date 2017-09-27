@@ -118,24 +118,14 @@ ImageClient::CreateTextureClientForImage(Image* aImage, KnowsCompositor* aForwar
     if (!status) {
       return nullptr;
     }
-  } else if (aImage->GetFormat() == ImageFormat::SURFACE_TEXTURE ||
-             aImage->GetFormat() == ImageFormat::EGLIMAGE) {
-    gfx::IntSize size = aImage->GetSize();
-
-    if (aImage->GetFormat() == ImageFormat::EGLIMAGE) {
-      EGLImageImage* typedImage = aImage->AsEGLImageImage();
-      texture = EGLImageTextureData::CreateTextureClient(
-        typedImage, size, aForwarder->GetTextureForwarder(), TextureFlags::DEFAULT);
 #ifdef MOZ_WIDGET_ANDROID
-    } else if (aImage->GetFormat() == ImageFormat::SURFACE_TEXTURE) {
-      SurfaceTextureImage* typedImage = aImage->AsSurfaceTextureImage();
-      texture = AndroidSurfaceTextureData::CreateTextureClient(
-        typedImage->GetHandle(), size, typedImage->GetContinuous(), typedImage->GetOriginPos(),
-        aForwarder->GetTextureForwarder(), TextureFlags::DEFAULT);
+  } else if (aImage->GetFormat() == ImageFormat::SURFACE_TEXTURE) {
+    gfx::IntSize size = aImage->GetSize();
+    SurfaceTextureImage* typedImage = aImage->AsSurfaceTextureImage();
+    texture = AndroidSurfaceTextureData::CreateTextureClient(
+      typedImage->GetHandle(), size, typedImage->GetContinuous(), typedImage->GetOriginPos(),
+      aForwarder->GetTextureForwarder(), TextureFlags::DEFAULT);
 #endif
-    } else {
-      MOZ_ASSERT(false, "Bad ImageFormat.");
-    }
   } else {
     RefPtr<gfx::SourceSurface> surface = aImage->GetAsSourceSurface();
     MOZ_ASSERT(surface);
