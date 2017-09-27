@@ -608,10 +608,6 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
     case ImageFormat::SURFACE_TEXTURE:
         return BlitImage(static_cast<layers::SurfaceTextureImage*>(srcImage), destSize,
                          destOrigin);
-
-    case ImageFormat::EGLIMAGE:
-        return BlitImage(static_cast<layers::EGLImageImage*>(srcImage), destSize,
-                         destOrigin);
 #endif
 #ifdef XP_MACOSX
     case ImageFormat::MAC_IOSURFACE:
@@ -646,41 +642,6 @@ GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage, const gfx::IntSiz
     (void)srcOrigin;
     gfxCriticalError() << "BlitImage(SurfaceTextureImage) not implemented.";
     return false;
-}
-
-bool
-GLBlitHelper::BlitImage(layers::EGLImageImage* const srcImage,
-                        const gfx::IntSize& destSize, const OriginPos destOrigin) const
-{
-    const EGLImage eglImage = srcImage->GetImage();
-    const EGLSync eglSync = srcImage->GetSync();
-    if (eglSync) {
-        EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), eglSync, 0, LOCAL_EGL_FOREVER);
-        if (status != LOCAL_EGL_CONDITION_SATISFIED) {
-            return false;
-        }
-    }
-
-    GLuint tex = 0;
-    mGL->fGenTextures(1, &tex);
-
-    const ScopedSaveMultiTex saveTex(mGL, 1, LOCAL_GL_TEXTURE_2D);
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, tex);
-    mGL->TexParams_SetClampNoMips();
-    mGL->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, eglImage);
-
-    const auto& srcOrigin = srcImage->GetOriginPos();
-    const bool yFlip = destOrigin != srcOrigin;
-    const gfx::IntRect srcRect(0, 0, 1, 1);
-    const gfx::IntSize srcSize(1, 1);
-    const DrawBlitProg::BaseArgs baseArgs = { destSize, yFlip, srcRect, srcSize };
-
-    const auto& prog = GetDrawBlitProg({kFragHeader_Tex2D, kFragBody_RGBA});
-    MOZ_RELEASE_ASSERT(prog);
-    prog->Draw(baseArgs);
-
-    mGL->fDeleteTextures(1, &tex);
-    return true;
 }
 #endif
 

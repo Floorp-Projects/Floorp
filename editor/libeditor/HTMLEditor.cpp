@@ -27,7 +27,6 @@
 #include "nsIDocumentInlines.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMHTMLAnchorElement.h"
 #include "nsISelectionController.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsILinkHandler.h"
@@ -2594,19 +2593,21 @@ HTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
     return NS_OK;
   }
 
+
   // Be sure we were given an anchor element
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aAnchorElement);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aAnchorElement);
+  RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContentOrNull(content);
   if (!anchor) {
     return NS_OK;
   }
 
   nsAutoString href;
-  nsresult rv = anchor->GetHref(href);
-  NS_ENSURE_SUCCESS(rv, rv);
+  anchor->GetHref(href);
   if (href.IsEmpty()) {
     return NS_OK;
   }
 
+  nsresult rv;
   AutoPlaceholderBatch beginBatching(this);
 
   // Set all attributes found on the supplied anchor element

@@ -195,10 +195,8 @@ js::SetPropertyIgnoringNamedGetter(JSContext* cx, HandleObject obj, HandleId id,
         RootedObject receiverObj(cx, &receiver.toObject());
 
         // Nonstandard SpiderMonkey special case: setter ops.
-        if (SetterOp setter = ownDesc.setter()) {
-            RootedValue valCopy(cx, v);
-            return CallJSSetterOp(cx, setter, receiverObj, id, &valCopy, result);
-        }
+        if (SetterOp setter = ownDesc.setter())
+            return CallJSSetterOp(cx, setter, receiverObj, id, v, result);
 
         // Steps 5.c-d.
         Rooted<PropertyDescriptor> existingDescriptor(cx);

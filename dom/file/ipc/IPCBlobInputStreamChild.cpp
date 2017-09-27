@@ -187,6 +187,8 @@ IPCBlobInputStreamChild::ActorDestroy(IProtocol::ActorDestroyReason aReason)
     // thread.
     RefPtr<IPCBlobInputStreamThread> thread =
       IPCBlobInputStreamThread::GetOrCreate();
+    MOZ_ASSERT(thread, "We cannot continue without DOMFile thread.");
+
     ResetManager();
     thread->MigrateActor(this);
     return;

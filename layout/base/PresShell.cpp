@@ -762,7 +762,7 @@ nsIPresShell::nsIPresShell()
     , mFrozen(false)
     , mIsFirstPaint(false)
     , mObservesMutationsForPrint(false)
-    , mSuppressInterruptibleReflows(false)
+    , mWasLastReflowInterrupted(false)
     , mScrollPositionClampingScrollPortSizeSet(false)
     , mNeedLayoutFlush(true)
     , mNeedStyleFlush(true)
@@ -4197,7 +4197,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     // worry about them.  They can't be triggered during reflow, so we should
     // be good.
 
-    if (flushType >= (mSuppressInterruptibleReflows
+    if (flushType >= (SuppressInterruptibleReflows()
                         ? FlushType::Layout
                         : FlushType::InterruptibleLayout) &&
         !mIsDestroying) {
@@ -4232,7 +4232,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   if (!didLayoutFlush && flushType >= FlushType::InterruptibleLayout &&
       !mIsDestroying) {
     // We suppressed this flush either due to it not being safe to flush,
-    // or due to mSuppressInterruptibleReflows.  Either way, the
+    // or due to SuppressInterruptibleReflows().  Either way, the
     // mNeedLayoutFlush flag needs to be re-set.
     SetNeedLayoutFlush();
   }
@@ -9457,7 +9457,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     // Any FlushPendingNotifications with interruptible reflows
     // should be suppressed now. We don't want to do extra reflow work
     // before our reflow event happens.
-    mSuppressInterruptibleReflows = true;
+    mWasLastReflowInterrupted = true;
     MaybeScheduleReflow();
   }
 

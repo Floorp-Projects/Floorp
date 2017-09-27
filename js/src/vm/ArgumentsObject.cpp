@@ -476,7 +476,7 @@ MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
 }
 
 static bool
-MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
                 ObjectOpResult& result)
 {
     if (!obj->is<MappedArgumentsObject>())
@@ -499,9 +499,9 @@ MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg)) {
-            argsobj->setElement(cx, arg, vp);
+            argsobj->setElement(cx, arg, v);
             if (arg < script->functionNonDelazifying()->nargs())
-                TypeScript::SetArgument(cx, script, arg, vp);
+                TypeScript::SetArgument(cx, script, arg, v);
             return result.succeed();
         }
     } else {
@@ -518,7 +518,7 @@ MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
      */
     ObjectOpResult ignored;
     return NativeDeleteProperty(cx, argsobj, id, ignored) &&
-           NativeDefineDataProperty(cx, argsobj, id, vp, attrs, result);
+           NativeDefineDataProperty(cx, argsobj, id, v, attrs, result);
 }
 
 static bool
@@ -726,7 +726,7 @@ UnmappedArgGetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleVal
 }
 
 static bool
-UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
                   ObjectOpResult& result)
 {
     if (!obj->is<UnmappedArgumentsObject>())
@@ -744,7 +744,7 @@ UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleVal
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj->initialLength()) {
-            argsobj->setElement(cx, arg, vp);
+            argsobj->setElement(cx, arg, v);
             return result.succeed();
         }
     } else {
@@ -758,7 +758,7 @@ UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleVal
      */
     ObjectOpResult ignored;
     return NativeDeleteProperty(cx, argsobj, id, ignored) &&
-           NativeDefineDataProperty(cx, argsobj, id, vp, attrs, result);
+           NativeDefineDataProperty(cx, argsobj, id, v, attrs, result);
 }
 
 /* static */ bool

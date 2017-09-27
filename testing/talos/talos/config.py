@@ -194,7 +194,9 @@ DEFAULTS = dict(
         'identity.fxaccounts.migrateToDevEdition': False,
         'plugin.state.flash': 0,
         'media.libavcodec.allow-obsolete': True,
-        'extensions.legacy.enabled': True
+        'extensions.legacy.enabled': True,
+        'xpinstall.signatures.required': False,
+        'extensions.allow-non-mpc-extensions': True
     }
 )
 

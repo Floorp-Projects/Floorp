@@ -1,0 +1,15 @@
+<html>
+<script>
+window.onload=function(){
+  document.getElementById('b').textContent='Or';
+  document.getElementById('a').insertBefore(document.getElementById('c'), undefined);
+  document.getElementById('b').dir='ltr';
+  let o=document.getElementById('b');
+  o.parentNode.replaceChild(document.createElement('code'), o);
+}
+</script>
+<body dir='auto' id='a'>
+<bdi id='b' dir='auto'>
+</bdi>
+<q id='c'>
+</html>
