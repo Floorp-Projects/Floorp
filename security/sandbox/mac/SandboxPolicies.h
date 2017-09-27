@@ -262,8 +262,8 @@ static const char contentSandboxRules[] = R"(
 
 ; Per-user and system-wide Extensions dir
   (allow file-read*
-      (home-regex "/Library/Application Support/[^/]+/Extensions/[^/]/")
-      (regex #"^/Library/Application Support/[^/]+/Extensions/[^/]/"))
+      (home-regex "/Library/Application Support/[^/]+/Extensions/")
+      (regex "^/Library/Application Support/[^/]+/Extensions/"))
 
 ; The following rules impose file access restrictions which get
 ; more restrictive in higher levels. When file-origin-specific
