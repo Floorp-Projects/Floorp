@@ -5075,12 +5075,6 @@ pref("dom.battery.enabled", true);
 // Streams API
 pref("dom.streams.enabled", false);
 
-// Abort API
-pref("dom.abortController.enabled", true);
-
-// Fetch + Abort API
-pref("dom.abortController.fetch.enabled", true);
-
 // Push
 
 pref("dom.push.enabled", false);
