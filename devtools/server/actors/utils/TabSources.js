@@ -465,9 +465,8 @@ TabSources.prototype = {
 
     let fetching = fetch(absSourceMapURL, { loadFromCache: false })
       .then(({ content }) => {
-        let map = new SourceMapConsumer(content);
-        this._setSourceMapRoot(map, absSourceMapURL, sourceURL);
-        return map;
+        return new SourceMapConsumer(content,
+                                     this._getSourceMapRoot(absSourceMapURL, sourceURL));
       })
       .catch(error => {
         if (!DevToolsUtils.reportingDisabled) {
@@ -480,28 +479,16 @@ TabSources.prototype = {
   },
 
   /**
-   * Sets the source map's sourceRoot to be relative to the source map url.
+   * Compute the URL to pass to the SourceMapConsumer constructor as
+   * the "source map's URL".
    */
-  _setSourceMapRoot: function (sourceMap, absSourceMapURL, scriptURL) {
-    // No need to do this fiddling if we won't be fetching any sources over the
-    // wire.
-    if (sourceMap.hasContentsOfAllSources()) {
-      return;
+  _getSourceMapRoot: function (absSourceMapURL, scriptURL) {
+    // Pass in the source map URL; except if it is a data: URL, fall
+    // back to using the source's URL, if possible.
+    if (scriptURL && absSourceMapURL.startsWith("data:")) {
+      return scriptURL;
     }
-
-    const base = this._dirname(
-      absSourceMapURL.indexOf("data:") === 0
-        ? scriptURL
-        : absSourceMapURL);
-    sourceMap.sourceRoot = sourceMap.sourceRoot
-      ? joinURI(base, sourceMap.sourceRoot)
-      : base;
-  },
-
-  _dirname: function (path) {
-    let url = new URL(path);
-    let href = url.href;
-    return href.slice(0, href.lastIndexOf("/"));
+    return absSourceMapURL;
   },
 
   /**
