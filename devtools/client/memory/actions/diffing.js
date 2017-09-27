@@ -6,7 +6,6 @@
 
 const { assert, reportException } = require("devtools/shared/DevToolsUtils");
 const { actions, diffingState, viewState } = require("../constants");
-const telemetry = require("../telemetry");
 const {
   getSnapshot,
   censusIsUpToDate,
@@ -112,8 +111,6 @@ const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, sec
       filter,
       display,
     });
-
-    telemetry.countDiff({ filter, display });
   };
 };
 

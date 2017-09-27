@@ -52,6 +52,19 @@
           }
         }
       ]
+    },
+    "update_origins@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/browser/browser/base/content/test/webextensions/browser_webext_update_origins2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1"
+            }
+          }
+        }
+      ]
     }
   }
 }
