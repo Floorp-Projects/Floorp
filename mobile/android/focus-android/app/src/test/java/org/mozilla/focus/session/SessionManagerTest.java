@@ -67,6 +67,21 @@ public class SessionManagerTest {
         assertTrue(sessionManager.hasSession());
     }
 
+    /**
+     * In production we see apps send VIEW intents without an URL. (#1373)
+     */
+    @Test
+    public void testViewIntentWithNullURL() {
+        final SessionManager sessionManager = SessionManager.getInstance();
+        assertFalse(sessionManager.hasSession());
+
+        final SafeIntent intent = new SafeIntent(new Intent(Intent.ACTION_VIEW, null));
+        sessionManager.handleIntent(RuntimeEnvironment.application, intent, null);
+
+        // We ignored the Intent and no session has been created.
+        assertFalse(sessionManager.hasSession());
+    }
+
     @Test
     public void testCustomTabIntent() {
         final SessionManager sessionManager = SessionManager.getInstance();
