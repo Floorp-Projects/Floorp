@@ -216,54 +216,30 @@ function loadCallgraph(file)
     // are *always* called within some sort of limited context (eg GC
     // suppression).
 
-    // Initialize functionLimits to the set of all functions, where each one
-    // is maximally limited, and initialize the worklist to all toplevel
-    // callers with dummy unlimited edges.
-    var worklist = [];
-    for (let callee in callersOf)
-        functionLimits[callee] = LIMIT_UNVISITED;
-    for (var caller in calleesOf) {
-        if (!(caller in callersOf)) {
-            functionLimits[caller] = LIMIT_UNVISITED;
-            worklist.push([caller, LIMIT_NONE, 'root']);
-        }
-    }
-
-    // Add in limited field calls.
+    // Initialize to limited field calls.
     for (var [name, limits] of Object.entries(fieldCallLimits)) {
         if (limits)
             functionLimits[name] = limits;
     }
 
-    // Recursively traverse the callgraph from the roots. Recurse through every
-    // edge that weakens the limits. (Limits that entirely disappear, aka go to
-    // a zero intset, will be removed from functionLimits.)
-    while (worklist.length > 0) {
-        // Consider caller where (graph) -> caller -> (0 or more callees)
-        // 'callercaller' is for debugging.
-        const [caller, edge_limits, callercaller] = worklist.pop();
-        const prev_limits = functionLimits[caller];
-        if (prev_limits & ~edge_limits) {
-            // Turning off a limit (or unvisited marker). Must recurse to the
-            // children. But first, update this caller's limits: we just found
-            // out it is reachable by an unlimited path, so it must be treated
-            // as unlimited (with respect to that bit).
-            const new_limits = prev_limits & edge_limits;
-            if (new_limits)
-                functionLimits[caller] = new_limits;
-            else
-                delete functionLimits[caller];
-            for (const {callee, limits} of (calleesOf[caller] || []))
-                worklist.push([callee, limits | edge_limits, caller]);
-        }
-    }
+    // Initialize functionLimits to the set of all functions, where each one is
+    // maximally limited, and return a worklist containing all simple roots
+    // (nodes with no callers).
+    var roots = gather_simple_roots(functionLimits, callersOf);
 
-    // Not all functions are reachable by searching backwards from GC
-    // functions, so some functions will be LIMIT_UNVISITED. Remove them.
-    for (var func in functionLimits) {
-        if (functionLimits[func] == LIMIT_UNVISITED)
-            delete functionLimits[func];
-    }
+    // Traverse the graph, spreading the limits down from the roots.
+    propagate_limits(roots, functionLimits, calleesOf);
+
+    // There are a surprising number of "recursive roots", where there is a
+    // cycle of functions calling each other but not called by anything else,
+    // and these roots may also have descendants. Now that the above traversal
+    // has eliminated everything reachable from simple roots, traverse the
+    // remaining graph to gather up a representative function from each root
+    // cycle.
+    roots = gather_recursive_roots(roots, functionLimits, callersOf);
+
+    // And do a final traversal starting with the recursive roots.
+    propagate_limits(roots, functionLimits, calleesOf);
 
     // Eliminate GC-limited functions from the set of functions known to GC.
     for (var name in gcFunctions) {
@@ -321,6 +297,106 @@ function loadCallgraph(file)
     // mangled names. Rewrite the various data structures to convert ids to
     // mangled names.
     remap_ids_to_mangled_names();
+}
+
+// Return a worklist of functions with no callers, and also initialize
+// functionLimits to the set of all functions, each mapped to LIMIT_UNVISTED.
+function gather_simple_roots(functionLimits, callersOf) {
+    const roots = [];
+    for (let callee in callersOf)
+        functionLimits[callee] = LIMIT_UNVISITED;
+    for (let caller in calleesOf) {
+        if (!(caller in callersOf)) {
+            functionLimits[caller] = LIMIT_UNVISITED;
+            roots.push([caller, LIMIT_NONE, 'root']);
+        }
+    }
+
+    return roots;
+}
+
+// Recursively traverse the callgraph from the roots. Recurse through every
+// edge that weakens the limits. (Limits that entirely disappear, aka go to a
+// zero intset, will be removed from functionLimits.)
+function propagate_limits(worklist, functionLimits, calleesOf) {
+    let top = worklist.length;
+    while (top > 0) {
+        // Consider caller where (graph) -> caller -> (0 or more callees)
+        // 'callercaller' is for debugging.
+        const [caller, edge_limits, callercaller] = worklist[--top];
+        const prev_limits = functionLimits[caller];
+        if (prev_limits & ~edge_limits) {
+            // Turning off a limit (or unvisited marker). Must recurse to the
+            // children. But first, update this caller's limits: we just found
+            // out it is reachable by an unlimited path, so it must be treated
+            // as unlimited (with respect to that bit).
+            const new_limits = prev_limits & edge_limits;
+            if (new_limits)
+                functionLimits[caller] = new_limits;
+            else
+                delete functionLimits[caller];
+            for (const {callee, limits} of (calleesOf[caller] || []))
+                worklist[top++] = [callee, limits | edge_limits, caller];
+        }
+    }
+}
+
+// Mutually-recursive roots and their descendants will not have been visited,
+// and will still be set to LIMIT_UNVISITED. Scan through and gather them.
+function gather_recursive_roots(functionLimits, callersOf) {
+    const roots = [];
+
+    // 'seen' maps functions to the most recent starting function that each was
+    // first reachable from, to distinguish between the current pass and passes
+    // for preceding functions.
+    //
+    // Consider:
+    //
+    //   A <--> B --> C <-- D <--> E
+    //                C --> F
+    //                C --> G
+    //
+    // So there are two root cycles AB and DE, both calling C that in turn
+    // calls F and G. If we start at F and scan up through callers, we will
+    // keep going until A loops back to B and E loops back to D, and will add B
+    // and D as roots. Then if we scan from G, we encounter C and see that it
+    // was already been seen on an earlier pass. So C and everything reachable
+    // from it is already reachable by some root. (We need to label nodes with
+    // their pass because otherwise we couldn't distinguish "already seen C,
+    // done" from "already seen B, must be a root".)
+    //
+    const seen = new Map();
+    for (var func in functionLimits) {
+        if (functionLimits[func] != LIMIT_UNVISITED)
+            continue;
+
+        // We should only be looking at nodes with callers, since otherwise
+        // they would have been handled in the previous pass!
+        assert(callersOf[func].length > 0);
+
+        const work = [func];
+        while (work.length > 0) {
+            const f = work.pop();
+            if (seen.has(f)) {
+                if (seen.get(f) == func) {
+                    // We have traversed a cycle and reached an already-seen
+                    // node. Treat it as a root.
+                    roots.push([f, LIMIT_NONE, 'root']);
+                    print(`recursive root? ${f} = ${functionNames[f]}`);
+                } else {
+                    // Otherwise we hit the portion of the graph that is
+                    // reachable from a past root.
+                    seen.set(f, func);
+                }
+            } else {
+                print(`retained by recursive root? ${f} = ${functionNames[f]}`);
+                work.push(...callersOf[f]);
+                seen.set(f, func);
+            }
+        }
+    }
+
+    return roots;
 }
 
 function remap_ids_to_mangled_names() {
