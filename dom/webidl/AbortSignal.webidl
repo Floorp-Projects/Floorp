@@ -7,8 +7,7 @@
  * https://dom.spec.whatwg.org/#abortsignal
  */
 
-[Exposed=(Window,Worker),
- Func="AbortController::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface AbortSignal : EventTarget {
   readonly attribute boolean aborted;
 
