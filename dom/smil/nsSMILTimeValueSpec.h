@@ -8,9 +8,9 @@
 #define NS_SMILTIMEVALUESPEC_H_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/IDTracker.h"
 #include "nsSMILTimeValueSpecParams.h"
 #include "nsStringFwd.h"
+#include "nsReferencedElement.h"
 #include "nsIDOMEventListener.h"
 
 class nsSMILTimeValue;
