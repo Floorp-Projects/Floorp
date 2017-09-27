@@ -51,6 +51,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PdfJs: "resource://pdf.js/PdfJs.jsm",
   PermissionUI: "resource:///modules/PermissionUI.jsm",
+  PingCentre: "resource:///modules/PingCentre.jsm",
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
@@ -300,6 +301,30 @@ BrowserGlue.prototype = {
     Weave.Service.scheduler.delayedAutoConnect(delay);
   },
 
+  /**
+   * Lazily initialize PingCentre
+   */
+  get pingCentre() {
+    const MAIN_TOPIC_ID = "main";
+    Object.defineProperty(this, "pingCentre", {
+      value: new PingCentre({ topic: MAIN_TOPIC_ID })
+    });
+    return this.pingCentre;
+  },
+
+  _sendMainPingCentrePing() {
+    const ACTIVITY_STREAM_ENABLED_PREF = "browser.newtabpage.activity-stream.enabled";
+    const ACTIVITY_STREAM_ID = "activity-stream";
+    let asEnabled = Services.prefs.getBoolPref(ACTIVITY_STREAM_ENABLED_PREF, false);
+
+    const payload = {
+      event: "AS_ENABLED",
+      value: asEnabled
+    };
+    const options = {filter: ACTIVITY_STREAM_ID};
+    this.pingCentre.sendPing(payload, options);
+  },
+
   // nsIObserver implementation
   observe: function BG_observe(subject, topic, data) {
     switch (topic) {
@@ -496,6 +521,9 @@ BrowserGlue.prototype = {
         // shim for privileged api access.
         PdfJs.init(true);
         break;
+      case "shield-init-complete":
+        this._sendMainPingCentrePing();
+        break;
     }
   },
 
@@ -532,6 +560,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "xpi-signature-changed");
     os.addObserver(this, "sync-ui-state:update");
     os.addObserver(this, "handlersvc-store-initialized");
+    os.addObserver(this, "shield-init-complete");
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
@@ -584,6 +613,7 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "flash-plugin-hang");
     os.removeObserver(this, "xpi-signature-changed");
     os.removeObserver(this, "sync-ui-state:update");
+    os.removeObserver(this, "shield-init-complete");
   },
 
   _onAppDefaults: function BG__onAppDefaults() {
@@ -970,6 +1000,10 @@ BrowserGlue.prototype = {
     }
 
     BrowserUsageTelemetry.uninit();
+    // Only uninit PingCentre if the getter has initialized it
+    if (Object.prototype.hasOwnProperty.call(this, "pingCentre")) {
+      this.pingCentre.uninit();
+    }
 
     PageThumbs.uninit();
     NewTabUtils.uninit();

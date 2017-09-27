@@ -167,6 +167,10 @@ DEFAULTS = dict(
             'http://127.0.0.1/dummy-system-addons.xml',
         'extensions.shield-recipe-client.api_url':
             'https://127.0.0.1/selfsupport-dummy/',
+        'browser.ping-centre.staging.endpoint':
+            'https://127.0.0.1/pingcentre/dummy/',
+        'browser.ping-centre.production.endpoint':
+            'https://127.0.0.1/pingcentre/dummy/',
         'media.navigator.enabled': True,
         'media.peerconnection.enabled': True,
         'media.navigator.permission.disabled': True,
