@@ -42,6 +42,9 @@ public:
   void AppendBuffer(nsTArray<uint8_t> & aBuf);
   // Read all buffer from memory or file System, also Remove the temporary file or clean the buffers in memory.
   already_AddRefed<dom::Blob> ExtractBlob(nsISupports* aParent, const nsAString &aContentType);
+  // Returns the heap size in bytes of our internal buffers.
+  // Note that this intentionally ignores the data in the temp file.
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
   //array for storing the encoded data.

@@ -60,12 +60,14 @@ runNetworkTest(() => {
 
       // We're regarding black as disabled here, and we're setting the alpha
       // channel of the pixel to 255 to disregard alpha when testing.
-      var checkVideoEnabled = video =>
-        h.waitForPixel(video, offsetX, offsetY,
-                       px => (px[3] = 255, h.isPixelNot(px, h.black, threshold)));
-      var checkVideoDisabled = video =>
-        h.waitForPixel(video, offsetX, offsetY,
-                       px => (px[3] = 255, h.isPixel(px, h.black, threshold)));
+      var checkVideoEnabled = video => h.waitForPixel(video,
+        px => (px[3] = 255, h.isPixelNot(px, h.black, threshold)),
+        { offsetX, offsetY }
+      );
+      var checkVideoDisabled = video => h.waitForPixel(video,
+        px => (px[3] = 255, h.isPixel(px, h.black, threshold)),
+        { offsetX, offsetY }
+      );
 
       return Promise.resolve()
         .then(() => info("Checking local original enabled"))

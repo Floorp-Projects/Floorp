@@ -253,6 +253,19 @@ ExtensionStreamGetter::GetAsync(nsIStreamListener* aListener,
   return Ok();
 }
 
+static void
+CancelRequest(nsIStreamListener* aListener,
+              nsIChannel* aChannel,
+              nsresult aResult)
+{
+  MOZ_ASSERT(aListener);
+  MOZ_ASSERT(aChannel);
+
+  aListener->OnStartRequest(aChannel, nullptr);
+  aListener->OnStopRequest(aChannel, nullptr, aResult);
+  aChannel->Cancel(NS_BINDING_ABORTED);
+}
+
 // Handle an input stream sent from the parent.
 void
 ExtensionStreamGetter::OnStream(nsIInputStream* aStream)
@@ -269,9 +282,7 @@ ExtensionStreamGetter::OnStream(nsIInputStream* aStream)
 
   if (!aStream) {
     // The parent didn't send us back a stream.
-    listener->OnStartRequest(mChannel, nullptr);
-    listener->OnStopRequest(mChannel, nullptr, NS_ERROR_FILE_ACCESS_DENIED);
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    CancelRequest(listener, mChannel, NS_ERROR_FILE_ACCESS_DENIED);
     return;
   }
 
@@ -279,13 +290,13 @@ ExtensionStreamGetter::OnStream(nsIInputStream* aStream)
   nsresult rv = NS_NewInputStreamPump(getter_AddRefs(pump), aStream, 0, 0,
                                       false, mMainThreadEventTarget);
   if (NS_FAILED(rv)) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    CancelRequest(listener, mChannel, rv);
     return;
   }
 
   rv = pump->AsyncRead(listener, nullptr);
   if (NS_FAILED(rv)) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    CancelRequest(listener, mChannel, rv);
   }
 }
 
@@ -310,7 +321,7 @@ ExtensionStreamGetter::OnFD(const FileDescriptor& aFD)
   mJarChannel->SetJarFile(fdFile);
   nsresult rv = mJarChannel->AsyncOpen2(listener);
   if (NS_FAILED(rv)) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    CancelRequest(listener, mChannel, rv);
   }
 }
 

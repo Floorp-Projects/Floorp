@@ -61,7 +61,7 @@
           if (!vremote) {
             return Promise.reject(new Error("Couldn't find video element"));
           }
-          return addFinallyToPromise(helper.checkVideoPlaying(vremote, 10, 10, 16))
+          return addFinallyToPromise(helper.checkVideoPlaying(vremote))
             .finally(() => emitter2.stop())
             .then(() => {
               const px = helper._helper.getPixel(vremote, 10, 10);
@@ -78,7 +78,7 @@
           if (!vremote) {
             return Promise.reject(new Error("Couldn't find video element"));
           }
-          return helper.checkVideoPlaying(vremote, 10, 10, 16);
+          return helper.checkVideoPlaying(vremote);
         },
       ]
     );

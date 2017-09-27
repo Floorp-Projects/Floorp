@@ -633,19 +633,28 @@ AudioNodeStream::AdvanceOutputSegment()
 
   AudioSegment* segment = track->Get<AudioSegment>();
 
-  if (!mLastChunks[0].IsNull()) {
-    segment->AppendAndConsumeChunk(mLastChunks[0].AsMutableChunk());
-  } else {
-    segment->AppendNullData(mLastChunks[0].GetDuration());
-  }
+  AudioChunk copyChunk = *mLastChunks[0].AsMutableChunk();
+  AudioSegment tmpSegment;
+  tmpSegment.AppendAndConsumeChunk(&copyChunk);
 
   for (uint32_t j = 0; j < mListeners.Length(); ++j) {
     MediaStreamListener* l = mListeners[j];
-    AudioChunk copyChunk = mLastChunks[0].AsAudioChunk();
-    AudioSegment tmpSegment;
-    tmpSegment.AppendAndConsumeChunk(&copyChunk);
+    // Notify MediaStreamListeners.
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
                                 segment->GetDuration(), TrackEventCommand::TRACK_EVENT_NONE, tmpSegment);
+  }
+  for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
+    // Notify MediaStreamTrackListeners.
+    if (b.mTrackID != AUDIO_TRACK) {
+      continue;
+    }
+    b.mListener->NotifyQueuedChanges(Graph(), segment->GetDuration(), tmpSegment);
+  }
+
+  if (mLastChunks[0].IsNull()) {
+    segment->AppendNullData(tmpSegment.GetDuration());
+  } else {
+    segment->AppendFrom(&tmpSegment);
   }
 }
 
@@ -661,6 +670,13 @@ AudioNodeStream::FinishOutput()
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
                                 track->GetSegment()->GetDuration(),
                                 TrackEventCommand::TRACK_EVENT_ENDED, emptySegment);
+  }
+  for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
+    // Notify MediaStreamTrackListeners.
+    if (b.mTrackID != AUDIO_TRACK) {
+      continue;
+    }
+    b.mListener->NotifyEnded();
   }
 }
 

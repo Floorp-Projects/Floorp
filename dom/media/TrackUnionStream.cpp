@@ -311,6 +311,7 @@ TrackUnionStream::TrackUnionStream()
           aInputTrack->GetEnd() <= inputEnd) {
         inputTrackEndPoint = aInputTrack->GetEnd();
         *aOutputTrackFinished = true;
+        break;
       }
 
       if (interval.mStart >= interval.mEnd) {
@@ -322,7 +323,6 @@ TrackUnionStream::TrackUnionStream()
       StreamTime outputStart = outputTrack->GetEnd();
 
       if (interval.mInputIsBlocked) {
-        // Maybe the input track ended?
         segment->AppendNullData(ticks);
         STREAM_LOG(LogLevel::Verbose, ("TrackUnionStream %p appending %lld ticks of null data to track %d",
                    this, (long long)ticks, outputTrack->GetID()));

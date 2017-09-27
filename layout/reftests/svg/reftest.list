@@ -29,7 +29,7 @@ include svg-integration/reftest.list
 == background-svg-without-height-width.html background-ref.html
 == background-svg-without-width.html background-ref.html
 
-== baseline-middle-01.svg pass.svg
+fails-if(webrender) == baseline-middle-01.svg pass.svg
 
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
@@ -69,8 +69,8 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-differenc
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(OSX,1,6) fuzzy-if(skiaContent,1,630) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-and-transform-01.svg pass.svg
 == clipPath-basic-01.svg pass.svg
-== clipPath-basic-02.svg pass.svg
-== clipPath-basic-03.svg pass.svg
+fails-if(webrender) == clipPath-basic-02.svg pass.svg
+fails-if(webrender) == clipPath-basic-03.svg pass.svg
 == clipPath-basic-04.svg pass.svg
 == clipPath-basic-05.svg pass.svg
 == clipPath-basic-06.svg pass.svg
@@ -81,7 +81,7 @@ fuzzy(1,32400) == clipPath-on-outflowElement-02a.html clipPath-on-outflowElement
 fuzzy(1,32400) == clipPath-on-outflowElement-02b.html clipPath-on-outflowElement-02-ref.html
 == clipPath-polygon-01.svg pass.svg
 == clipPath-polygon-elementFromPoint-01.svg pass.svg
-!= clipPath-on-thin-object.svg about:blank
+fails-if(webrender) != clipPath-on-thin-object.svg about:blank
 == clipPath-winding-01.svg pass.svg
 
 == comments-in-pres-attrs.svg pass.svg
@@ -260,19 +260,19 @@ fuzzy-if(skiaContent,1,800000) == markers-and-group-opacity-01.svg markers-and-g
 == marker-dynamic-opacity.html marker-dynamic-opacity-ref.html
 == marker-effects-01.svg marker-effects-01-ref.svg
 fuzzy-if(skiaContent,1,100) == marker-viewBox-01.svg marker-viewBox-01-ref.svg
-fuzzy-if(skiaContent,1,100) == marker-orientation-01.svg marker-orientation-01-ref.svg
-fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-orientation-02.svg marker-orientation-02-ref.svg
+fuzzy-if(skiaContent,1,100) fails-if(webrender) == marker-orientation-01.svg marker-orientation-01-ref.svg
+fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) fails-if(webrender) == marker-orientation-02.svg marker-orientation-02-ref.svg
 == marker-orientation-03.svg pass.svg
 == marker-orientation-04.svg pass.svg
 
-fuzzy(28,28) == mask-and-clipPath.html mask-and-clipPath-ref.html
-== mask-and-clipPath-2.svg pass.svg
+fuzzy(28,28) fails-if(webrender) == mask-and-clipPath.html mask-and-clipPath-ref.html
+fails-if(webrender) == mask-and-clipPath-2.svg pass.svg
 == mask-ref-loop-01.svg pass.svg
-== mask-basic-01.svg pass.svg
+fails-if(webrender) == mask-basic-01.svg pass.svg
 fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-basic-03.svg pass.svg
 == mask-basic-04.svg pass.svg
-== mask-basic-05.svg pass.svg
+fails-if(webrender) == mask-basic-05.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-contains-inner-svg-01.svg pass.svg
 == mask-contains-inner-svg-02.svg pass.svg
@@ -297,9 +297,9 @@ fuzzy-if(d2d||skiaContent,1,6400) == mask-type-04.svg mask-type-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 fuzzy-if(skiaContent,3,448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 
-fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
-fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android,9,586) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
-== non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
+fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) fails-if(webrender) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
+fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android,9,586) fails-if(webrender) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
+fails-if(webrender) == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
@@ -320,7 +320,7 @@ fuzzy-if(skiaContent,1,10000) == opacity-and-transform-01.svg opacity-and-transf
 
 fuzzy-if(Android,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-fuzzy-if(skiaContent,7,175) fuzzy-if(skiaContent&&webrender,7-7,154-154) == outline.html outline-ref.html
+fuzzy-if(skiaContent,7,175) == outline.html outline-ref.html
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -333,9 +333,9 @@ fuzzy-if(skiaContent,7,175) fuzzy-if(skiaContent&&webrender,7-7,154-154) == outl
 == paint-on-maskLayer-1a.html paint-on-maskLayer-1-ref.html
 == paint-on-maskLayer-1b.html paint-on-maskLayer-1-ref.html
 == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
-pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
-pref(svg.paint-order.enabled,true) fuzzy-if(webrender,1-1,112-112) == paint-order-02.svg paint-order-02-ref.svg
-pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
+pref(svg.paint-order.enabled,true) fails-if(webrender) == paint-order-01.svg paint-order-01-ref.svg
+pref(svg.paint-order.enabled,true) fuzzy-if(webrender,1-1,129-129) == paint-order-02.svg paint-order-02-ref.svg
+pref(svg.paint-order.enabled,true) fails-if(webrender) == paint-order-03.svg paint-order-03-ref.svg
 
 #fuzzy(23,60) fails-if(d2d) == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
@@ -346,19 +346,19 @@ fuzzy-if(skiaContent,1,400) == path-06.svg path-06-ref.svg
 == path-07.svg path-07-ref.svg
 == path-08.svg pass.svg
 
-== pathLength-01.svg pass.svg
-== pathLength-02.svg pass.svg
+fails-if(webrender) == pathLength-01.svg pass.svg
+fails-if(webrender) == pathLength-02.svg pass.svg
 
 == pattern-basic-01.svg pass.svg
-fuzzy(1,5) skip-if(Android) == pattern-big-image.html pattern-big-image-ref.html
+fuzzy(1,5) skip-if(Android) fails-if(webrender) == pattern-big-image.html pattern-big-image-ref.html
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-live-01a.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-live-01b.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-live-01c.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-scale-01a.svg pattern-scale-01-ref.svg
-== pattern-scale-01b.svg pattern-scale-01-ref.svg
+fails-if(webrender) == pattern-scale-01b.svg pattern-scale-01-ref.svg
 fuzzy-if(skiaContent,3,5) == pattern-scale-01c.svg pattern-scale-01-ref.svg
-== pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
+fuzzy-if(webrender,0-2,0-227) == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
 == pattern-transformed-01.svg pattern-transformed-01-ref.svg
 
 == polygon-01.svg polygon-01-ref.svg
@@ -393,9 +393,9 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg pass.svg
 == selector-01.svg pass.svg
 
 == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg
-fuzzy-if(skiaContent,1,340) == stroke-dasharray-02.svg pass.svg
+fuzzy-if(skiaContent,1,340) fails-if(webrender) == stroke-dasharray-02.svg pass.svg
 fuzzy-if(skiaContent,1,340) == stroke-dasharray-03.svg pass.svg
-== stroke-dasharray-and-pathLength-01.svg pass.svg
+fails-if(webrender) == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
 == stroke-dashoffset-01.svg pass.svg
 == stroke-dashoffset-and-pathLength-01.svg pass.svg
@@ -433,7 +433,7 @@ fuzzy-if(skiaContent,1,2600) == svg-in-foreignObject-02.xhtml svg-in-foreignObje
 == svg-transform-01.svg pass.svg
 == svg-transform-02.svg pass.svg
 
-== symbol-01.svg symbol-01-ref.svg
+fails-if(webrender) == symbol-01.svg symbol-01-ref.svg
 
 == text-font-size-01.svg pass.svg
 random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
@@ -447,7 +447,7 @@ HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 != text-language-00.xhtml text-language-00-ref.xhtml
 random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
-== text-layout-01.svg text-layout-01-ref.svg
+fails-if(webrender) == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-layout-03.svg text-layout-03-ref.svg
 == text-layout-04.svg text-layout-04-ref.svg
@@ -455,7 +455,7 @@ random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fail
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) == text-layout-06.svg text-layout-06-ref.svg
 == text-layout-07.svg text-layout-07-ref.svg
 == text-layout-08.svg text-layout-08-ref.svg
-== text-scale-01.svg text-scale-01-ref.svg
+fails-if(webrender) == text-scale-01.svg text-scale-01-ref.svg
 fuzzy-if(skiaContent,2,1000) HTTP(..) == text-scale-02.svg text-scale-02-ref.svg
 HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 
@@ -465,7 +465,7 @@ HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 == text-style-01d.svg text-style-01-ref.svg
 == text-style-01e.svg text-style-01-ref.svg
 
-== text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
+fails-if(webrender) == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
 fuzzy(16,3) == text-stroke-scaling-02a.html text-stroke-scaling-02-ref.html # antialiasing
 fuzzy(16,3) == text-stroke-scaling-02b.html text-stroke-scaling-02-ref.html # antialiasing
 == text-stroke-scaling-02a.html text-stroke-scaling-02b.html
@@ -529,7 +529,7 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-re
 
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-and-pattern-02.svg pass.svg
-== viewBox-and-pattern-03.svg pass.svg
+fails-if(webrender) == viewBox-and-pattern-03.svg pass.svg
 == viewBox-and-pattern-04.svg pass.svg
 == viewBox-invalid-01.svg pass.svg
 == viewBox-invalid-02.svg pass.svg

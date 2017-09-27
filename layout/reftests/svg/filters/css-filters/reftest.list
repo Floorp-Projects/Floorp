@@ -69,4 +69,4 @@ fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) fails-if(stylo&&webrender) == 
 fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
 == sepia-zero.html sepia-zero-ref.html
 
-fuzzy(2,125000) == scale-filtered-content-01.html scale-filtered-content-01-ref.html
+fuzzy(2,125000) fails-if(webrender) == scale-filtered-content-01.html scale-filtered-content-01-ref.html

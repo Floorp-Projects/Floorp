@@ -96,7 +96,7 @@
           const vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
           emitter.start();
-          await helper.checkVideoPlaying(vremote, 10, 10, 16);
+          await helper.checkVideoPlaying(vremote);
           emitter.stop();
         },
         function PC_REMOTE_CHECK_SIZE_1() {
@@ -121,7 +121,7 @@
           const vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
           emitter.start();
-          await helper.checkVideoPlaying(vremote, 10, 10, 16);
+          await helper.checkVideoPlaying(vremote);
           emitter.stop();
         },
         // For some reason, even though we're getting a 25x25 stream, sometimes
@@ -130,7 +130,7 @@
           const vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
           emitter.start();
-          await helper.checkVideoPlaying(vremote, 10, 10, 16);
+          await helper.checkVideoPlaying(vremote);
           emitter.stop();
         },
         function PC_REMOTE_CHECK_SIZE_2() {
