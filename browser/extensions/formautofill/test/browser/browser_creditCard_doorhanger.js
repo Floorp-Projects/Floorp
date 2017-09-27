@@ -45,8 +45,9 @@ add_task(async function test_submit_creditCard_saved() {
         name.focus();
         name.setUserInput("User 1");
 
-        let number = form.querySelector("#cc-number");
-        number.setUserInput("1111222233334444");
+        form.querySelector("#cc-number").setUserInput("1111222233334444");
+        form.querySelector("#cc-exp-month").setUserInput("12");
+        form.querySelector("#cc-exp-year").setUserInput("2017");
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -61,6 +62,120 @@ add_task(async function test_submit_creditCard_saved() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
+});
+
+add_task(async function test_submit_untouched_creditCard_form() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      await openPopupOn(browser, "form #cc-name");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "Still 1 credit card in storage");
+  is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
+  is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
+});
+
+add_task(async function test_submit_changed_creditCard_form() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      await openPopupOn(browser, "form #cc-name");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+
+        name.focus();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        name.setUserInput("");
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "Still 1 credit card in storage");
+  is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
+});
+
+add_task(async function test_submit_duplicate_creditCard_form() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+
+        name.setUserInput("User 1");
+        form.querySelector("#cc-number").setUserInput("1111222233334444");
+        form.querySelector("#cc-exp-month").setUserInput("12");
+        form.querySelector("#cc-exp-year").setUserInput("2017");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "Still 1 credit card in storage");
+  is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
+  is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
+});
+
+add_task(async function test_submit_unnormailzed_creditCard_form() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+
+        name.setUserInput("User 1");
+
+        form.querySelector("#cc-number").setUserInput("1111222233334444");
+        form.querySelector("#cc-exp-month").setUserInput("12");
+        // Set unnormalized year
+        form.querySelector("#cc-exp-year").setUserInput("17");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
+
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "Still 1 credit card in storage");
+  is(creditCards[0]["cc-exp-year"], "2017", "Verify the expiry year field");
 });
 
 add_task(async function test_submit_creditCard_never_save() {
