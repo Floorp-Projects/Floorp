@@ -1213,7 +1213,9 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
           line = parseHeader();
         }
 
-        while (self.buffer) {
+        var nextIteration = false;
+        while (nextIteration || self.buffer) {
+          nextIteration = false;
           if (!line) {
             // Since the data receiving is async, we need to wait until the
             // buffer gets the full line.
@@ -1232,6 +1234,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
             // If there is no cue identifier, keep the line and reuse this line
             // in next iteration.
             if (!parseCueIdentifier(line)) {
+              nextIteration = true;
               continue;
             }
             break;
@@ -1246,6 +1249,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
               self.cue = null;
               self.state = "ID";
               // Keep the line and reuse this line in next iteration.
+              nextIteration = true;
               continue;
             }
             if (self.cue.text) {
