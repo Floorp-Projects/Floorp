@@ -142,6 +142,7 @@ For both event types, in addition to global extras, the following information is
     }
 
 Subtype indicates reason an item being which is being interacted with appeared in the Highlights:
+
 - "visited": a website has been visited recently
 - "bookmarked": a website has been bookmarked recently
 
