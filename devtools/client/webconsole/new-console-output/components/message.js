@@ -20,8 +20,8 @@ const CollapseButton = require("devtools/client/webconsole/new-console-output/co
 const MessageIndent = require("devtools/client/webconsole/new-console-output/components/message-indent").MessageIndent;
 const MessageIcon = require("devtools/client/webconsole/new-console-output/components/message-icon");
 const MessageRepeat = require("devtools/client/webconsole/new-console-output/components/message-repeat");
-const FrameView = createFactory(require("devtools/client/shared/components/frame"));
-const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
+const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
+const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
 
 const Message = createClass({
   displayName: "Message",

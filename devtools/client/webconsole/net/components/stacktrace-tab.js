@@ -4,7 +4,7 @@
 "use strict";
 
 const { PropTypes, createClass, createFactory } = require("devtools/client/shared/vendor/react");
-const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
+const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
 
 const StackTraceTab = createClass({
   displayName: "StackTraceTab",

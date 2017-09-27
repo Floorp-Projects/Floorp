@@ -5,7 +5,7 @@
 
 const React = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("devtools/client/shared/react-utils");
-const { Tabs, TabPanel } = createFactories(require("devtools/client/shared/components/tabs/tabs"));
+const { Tabs, TabPanel } = createFactories(require("devtools/client/shared/components/tabs/Tabs"));
 
 // Network
 const HeadersTab = React.createFactory(require("./headers-tab"));

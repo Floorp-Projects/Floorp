@@ -8,7 +8,7 @@
 
 define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-  const TreeViewClass = require("devtools/client/shared/components/tree/tree-view");
+  const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
   const TreeView = createFactory(TreeViewClass);
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");

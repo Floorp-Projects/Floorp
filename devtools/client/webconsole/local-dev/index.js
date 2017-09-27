@@ -26,8 +26,8 @@ require("../../themes/webconsole.css");
 require("../../themes/components-frame.css");
 require("../../themes/light-theme.css");
 require("../../shared/components/reps/reps.css");
-require("../../shared/components/tabs/tabs.css");
-require("../../shared/components/tabs/tabbar.css");
+require("../../shared/components/tabs/Tabs.css");
+require("../../shared/components/tabs/TabBar.css");
 require("../../netmonitor/src/assets/styles/netmonitor.css");
 
 pref("devtools.debugger.remote-timeout", 10000);
