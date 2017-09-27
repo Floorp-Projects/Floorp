@@ -648,7 +648,7 @@ class ContextMenu {
     cleanTarget.ownerDocument = {
       // used for nsContextMenu.initLeaveDOMFullScreenItems and
       // nsContextMenu.initMediaPlayerItems
-      fullscreenElement: context.target.ownerDocument.fullscreenElement,
+      fullscreen: context.target.ownerDocument.fullscreen,
 
       // used for nsContextMenu.initMiscItems
       contentType: context.target.ownerDocument.contentType,
