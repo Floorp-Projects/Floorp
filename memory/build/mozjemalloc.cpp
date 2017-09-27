@@ -301,8 +301,6 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 #endif
 
-#include "rb.h"
-
 #ifdef MOZ_DEBUG
    /* Disable inlining to make debugging easier. */
 #ifdef inline
@@ -324,6 +322,8 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 
 #define	SIZEOF_PTR		(1U << SIZEOF_PTR_2POW)
+
+#include "rb.h"
 
 /* sizeof(int) == (1U << SIZEOF_INT_2POW). */
 #ifndef SIZEOF_INT_2POW
@@ -2822,9 +2822,9 @@ arena_t::Purge(bool aAll)
   size_t dirty_max = aAll ? 1 : mMaxDirty;
 #ifdef MOZ_DEBUG
   size_t ndirty = 0;
-  rb_foreach_begin(arena_chunk_t, ArenaChunkLinkDirty::GetTreeNode, &mChunksDirty, chunk) {
+  for (auto chunk : mChunksDirty.iter()) {
     ndirty += chunk->ndirty;
-  } rb_foreach_end(arena_chunk_t, ArenaChunkLinkDirty::GetTreeNode, &mChunksDirty, chunk)
+  }
   MOZ_ASSERT(ndirty == mNumDirty);
 #endif
   MOZ_DIAGNOSTIC_ASSERT(aAll || (mNumDirty > mMaxDirty));
@@ -4986,7 +4986,6 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
     size_t arena_mapped, arena_allocated, arena_committed, arena_dirty, j,
            arena_unused, arena_headers;
     arena_run_t* run;
-    arena_chunk_map_t* mapelm;
 
     if (!arena) {
       continue;
@@ -5011,10 +5010,10 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
       arena_bin_t* bin = &arena->mBins[j];
       size_t bin_unused = 0;
 
-      rb_foreach_begin(arena_chunk_map_t, ArenaChunkMapLink::GetTreeNode, &bin->runs, mapelm) {
+      for (auto mapelm : bin->runs.iter()) {
         run = (arena_run_t*)(mapelm->bits & ~pagesize_mask);
         bin_unused += run->nfree * bin->reg_size;
-      } rb_foreach_end(arena_chunk_map_t, ArenaChunkMapLink::GetTreeNode, &bin->runs, mapelm)
+      }
 
       if (bin->runcur) {
         bin_unused += bin->runcur->nfree * bin->reg_size;
