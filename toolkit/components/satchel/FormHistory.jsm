@@ -1037,7 +1037,7 @@ this.FormHistory = {
      */
 
     let query = "/* do not warn (bug 496471): can't use an index */ " +
-                "SELECT value, guid, " +
+                "SELECT value, " +
                 "ROUND( " +
                     "timesUsed / MAX(1.0, (lastUsed - firstUsed) / :timeGroupingSize) * " +
                     "MAX(1.0, :maxTimeGroupings - (:now - lastUsed) / :timeGroupingSize) * " +
@@ -1073,11 +1073,9 @@ this.FormHistory = {
       handleResult(aResultSet) {
         for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
           let value = row.getResultByName("value");
-          let guid = row.getResultByName("guid");
           let frecency = row.getResultByName("frecency");
           let entry = {
             text:          value,
-            guid,
             textLowerCase: value.toLowerCase(),
             frecency,
             totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses")),
