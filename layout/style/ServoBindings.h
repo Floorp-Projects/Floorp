@@ -645,6 +645,9 @@ int32_t Gecko_RegisterNamespace(nsIAtom* ns);
 // Returns true if this process should create a rayon thread pool for styling.
 bool Gecko_ShouldCreateStyleThreadPool();
 
+// Returns the page size on this system.
+size_t Gecko_GetSystemPageSize();
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   void Gecko_Construct_Default_nsStyle##name(                                  \
