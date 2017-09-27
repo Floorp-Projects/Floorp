@@ -817,8 +817,6 @@ public:
    */
   void MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame);
 
-  const nsTArray<ThemeGeometry>& GetThemeGeometries() { return mThemeGeometries; }
-
   /**
    * Returns true if we need to descend into this frame when building
    * the display list, even though it doesn't intersect the dirty
@@ -829,6 +827,20 @@ public:
       (aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
       (aVisible && aFrame->ForceDescendIntoIfVisible()) ||
       GetIncludeAllOutOfFlows();
+  }
+
+  /**
+   * Returns the list of registered theme geometries.
+   */
+  nsTArray<ThemeGeometry> GetThemeGeometries() const
+  {
+    nsTArray<ThemeGeometry> geometries;
+
+    for (auto iter = mThemeGeometries.ConstIter(); !iter.Done(); iter.Next()) {
+      geometries.AppendElements(*iter.Data());
+    }
+
+    return geometries;
   }
 
   /**
@@ -844,11 +856,22 @@ public:
    * @param aRect the device-pixel rect relative to the widget's displayRoot
    * for the themed widget
    */
-  void RegisterThemeGeometry(uint8_t aWidgetType,
+  void RegisterThemeGeometry(uint8_t aWidgetType, nsIFrame* aFrame,
                              const mozilla::LayoutDeviceIntRect& aRect) {
     if (mIsPaintingToWindow) {
-      mThemeGeometries.AppendElement(ThemeGeometry(aWidgetType, aRect));
+      nsTArray<ThemeGeometry>* geometries =
+        mThemeGeometries.LookupOrAdd(aFrame);
+
+      geometries->AppendElement(ThemeGeometry(aWidgetType, aRect));
     }
+  }
+
+  /**
+   * Removes theme geometries associated with the given frame.
+   */
+  void UnregisterThemeGeometry(nsIFrame* aFrame)
+  {
+    mThemeGeometries.Remove(aFrame);
   }
 
   /**
@@ -1625,7 +1648,7 @@ private:
   nsCOMPtr<nsISelection>         mBoundingSelection;
   AutoTArray<PresShellState,8> mPresShellStates;
   AutoTArray<nsIFrame*,400>    mFramesMarkedForDisplay;
-  AutoTArray<ThemeGeometry,2>  mThemeGeometries;
+  nsClassHashtable<nsPtrHashKey<nsIFrame>, nsTArray<ThemeGeometry>> mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
   DisplayListClipState           mClipState;
   const ActiveScrolledRoot*      mCurrentActiveScrolledRoot;
@@ -3696,6 +3719,12 @@ public:
   nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             const nsRect& aBackgroundRect);
   virtual ~nsDisplayThemedBackground();
+
+  void Destroy(nsDisplayListBuilder* aBuilder) override
+  {
+    aBuilder->UnregisterThemeGeometry(mFrame);
+    nsDisplayItem::Destroy(aBuilder);
+  }
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
