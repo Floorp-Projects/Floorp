@@ -16,12 +16,9 @@
 #include "nsIDOMElement.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace dom {
-
 void
-IDTracker::Reset(nsIContent* aFromContent, nsIURI* aURI,
-                 bool aWatch, bool aReferenceImage)
+nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
+                           bool aWatch, bool aReferenceImage)
 {
   MOZ_ASSERT(aFromContent, "Reset() expects non-null content pointer");
 
@@ -132,8 +129,8 @@ IDTracker::Reset(nsIContent* aFromContent, nsIURI* aURI,
 }
 
 void
-IDTracker::ResetWithID(nsIContent* aFromContent, const nsString& aID,
-                       bool aWatch)
+nsReferencedElement::ResetWithID(nsIContent* aFromContent, const nsString& aID,
+                                 bool aWatch)
 {
   nsIDocument *doc = aFromContent->OwnerDoc();
   if (!doc)
@@ -154,8 +151,8 @@ IDTracker::ResetWithID(nsIContent* aFromContent, const nsString& aID,
 }
 
 void
-IDTracker::HaveNewDocument(nsIDocument* aDocument, bool aWatch,
-                           const nsString& aRef)
+nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, bool aWatch,
+                                     const nsString& aRef)
 {
   if (aWatch) {
     mWatchDocument = aDocument;
@@ -178,7 +175,7 @@ IDTracker::HaveNewDocument(nsIDocument* aDocument, bool aWatch,
 }
 
 void
-IDTracker::Traverse(nsCycleCollectionTraversalCallback* aCB)
+nsReferencedElement::Traverse(nsCycleCollectionTraversalCallback* aCB)
 {
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCB, "mWatchDocument");
   aCB->NoteXPCOMChild(mWatchDocument);
@@ -187,7 +184,7 @@ IDTracker::Traverse(nsCycleCollectionTraversalCallback* aCB)
 }
 
 void
-IDTracker::Unlink()
+nsReferencedElement::Unlink()
 {
   if (mWatchDocument && mWatchID) {
     mWatchDocument->RemoveIDTargetObserver(mWatchID, Observe, this,
@@ -204,10 +201,10 @@ IDTracker::Unlink()
 }
 
 bool
-IDTracker::Observe(Element* aOldElement,
-                   Element* aNewElement, void* aData)
+nsReferencedElement::Observe(Element* aOldElement,
+                             Element* aNewElement, void* aData)
 {
-  IDTracker* p = static_cast<IDTracker*>(aData);
+  nsReferencedElement* p = static_cast<nsReferencedElement*>(aData);
   if (p->mPendingNotification) {
     p->mPendingNotification->SetTo(aNewElement);
   } else {
@@ -225,16 +222,16 @@ IDTracker::Observe(Element* aOldElement,
   return keepTracking;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(IDTracker::ChangeNotification,
+NS_IMPL_ISUPPORTS_INHERITED0(nsReferencedElement::ChangeNotification,
                              mozilla::Runnable)
 
-NS_IMPL_ISUPPORTS(IDTracker::DocumentLoadNotification,
+NS_IMPL_ISUPPORTS(nsReferencedElement::DocumentLoadNotification,
                   nsIObserver)
 
 NS_IMETHODIMP
-IDTracker::DocumentLoadNotification::Observe(nsISupports* aSubject,
-                                             const char* aTopic,
-                                             const char16_t* aData)
+nsReferencedElement::DocumentLoadNotification::Observe(nsISupports* aSubject,
+                                                       const char* aTopic,
+                                                       const char16_t* aData)
 {
   NS_ASSERTION(PL_strcmp(aTopic, "external-resource-document-created") == 0,
                "Unexpected topic");
@@ -249,6 +246,3 @@ IDTracker::DocumentLoadNotification::Observe(nsISupports* aSubject,
   }
   return NS_OK;
 }
-
-} // namespace dom
-} // namespace mozilla
