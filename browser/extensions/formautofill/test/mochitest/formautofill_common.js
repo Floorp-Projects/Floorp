@@ -164,8 +164,10 @@ function formAutoFillCommonSetup() {
     }
   });
 
-  SimpleTest.registerCleanupFunction(() => {
+  SimpleTest.registerCleanupFunction(async () => {
     formFillChromeScript.sendAsyncMessage("cleanup");
+    await formFillChromeScript.promiseOneMessage("cleanup-finished");
+
     formFillChromeScript.destroy();
     expectingPopup = null;
   });
