@@ -407,3 +407,47 @@ add_task(async function testDefaultTitle() {
     },
   });
 });
+
+add_task(async function testBadgeColorPersistence() {
+  const extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.onMessage.addListener((msg, arg) => {
+        browser.browserAction[msg](arg);
+      });
+    },
+    manifest: {
+      browser_action: {},
+    },
+  });
+  await extension.startup();
+
+  function getBadgeForWindow(win) {
+    const widget = getBrowserActionWidget(extension).forWindow(win).node;
+    return document.getAnonymousElementByAttribute(widget, "class", "toolbarbutton-badge");
+  }
+
+  let badge = getBadgeForWindow(window);
+  const badgeChanged = new Promise((resolve) => {
+    const observer = new MutationObserver(() => resolve());
+    observer.observe(badge, {attributes: true, attributeFilter: ["style"]});
+  });
+
+  extension.sendMessage("setBadgeText", {text: "hi"});
+  extension.sendMessage("setBadgeBackgroundColor", {color: [0, 255, 0, 255]});
+
+  await badgeChanged;
+
+  is(badge.value, "hi", "badge text is set in first window");
+  is(badge.style.backgroundColor, "rgb(0, 255, 0)", "badge color is set in first window");
+
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
+  let win = OpenBrowserWindow();
+  await windowOpenedPromise;
+
+  badge = getBadgeForWindow(win);
+  is(badge.value, "hi", "badge text is set in new window");
+  is(badge.style.backgroundColor, "rgb(0, 255, 0)", "badge color is set in new window");
+
+  await BrowserTestUtils.closeWindow(win);
+  await extension.unload();
+});

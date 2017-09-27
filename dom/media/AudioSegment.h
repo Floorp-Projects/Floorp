@@ -150,7 +150,9 @@ DownmixAndInterleave(const nsTArray<const SrcT*>& aChannelData,
 struct AudioChunk {
   typedef mozilla::AudioSampleFormat SampleFormat;
 
-  AudioChunk() : mPrincipalHandle(PRINCIPAL_HANDLE_NONE) {}
+  AudioChunk()
+    : mPrincipalHandle(PRINCIPAL_HANDLE_NONE)
+  {}
 
   // Generic methods
   void SliceTo(StreamTime aStart, StreamTime aEnd)
@@ -270,6 +272,15 @@ public:
   typedef mozilla::AudioSampleFormat SampleFormat;
 
   AudioSegment() : MediaSegmentBase<AudioSegment, AudioChunk>(AUDIO) {}
+
+  AudioSegment(AudioSegment&& aSegment)
+    : MediaSegmentBase<AudioSegment, AudioChunk>(Move(aSegment))
+  {}
+
+  AudioSegment(const AudioSegment&)=delete;
+  AudioSegment& operator= (const AudioSegment&)=delete;
+
+  ~AudioSegment() {}
 
   // Resample the whole segment in place.
   template<typename T>
@@ -395,16 +406,6 @@ public:
       }
     }
     return 0;
-  }
-
-  bool IsNull() const {
-    for (ChunkIterator ci(*const_cast<AudioSegment*>(this)); !ci.IsEnded();
-         ci.Next()) {
-      if (!ci->IsNull()) {
-        return false;
-      }
-    }
-    return true;
   }
 
   static Type StaticType() { return AUDIO; }

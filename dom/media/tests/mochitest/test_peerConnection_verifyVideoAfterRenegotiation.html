@@ -58,12 +58,16 @@ runNetworkTest(() => {
       ok(!!vremote1, "Should have remote video element for pcRemote");
     },
     function WAIT_FOR_REMOTE_GREEN() {
-      return h1.waitForPixelColor(vremote1, h1.green, 128,
-                                 "pcRemote's remote should become green");
+      return h1.pixelMustBecome(vremote1, h1.green, {
+        threshold: 128,
+        infoString: "pcRemote's remote should become green",
+      });
     },
     function WAIT_FOR_REMOTE_RED() {
-      return h1.waitForPixelColor(vremote1, h1.red, 128,
-                                 "pcRemote's remote should become red");
+      return h1.pixelMustBecome(vremote1, h1.red, {
+        threshold: 128,
+        infoString: "pcRemote's remote should become red",
+      });
     }
   ]);
 
@@ -87,16 +91,20 @@ runNetworkTest(() => {
       ok(!!vremote2, "Should have remote2 video element for pcRemote");
     },
     function WAIT_FOR_REMOTE2_BLUE() {
-      return h2.waitForPixelColor(vremote2, h2.blue, 128,
-                                 "pcRemote's remote2 should become blue");
+      return h2.pixelMustBecome(vremote2, h2.blue, {
+        threshold: 128,
+        infoString: "pcRemote's remote2 should become blue",
+      });
     },
     function DRAW_NEW_LOCAL_GREEN(test) {
       stream1.requestFrame();
       h1.drawColor(canvas1, h1.green);
     },
     function WAIT_FOR_REMOTE1_GREEN() {
-      return h1.waitForPixelColor(vremote1, h1.green, 128,
-                                 "pcRemote's remote1 should become green");
+      return h1.pixelMustBecome(vremote1, h1.green, {
+        threshold: 128,
+        infoString: "pcRemote's remote1 should become green",
+      });
     }
   ]);
 

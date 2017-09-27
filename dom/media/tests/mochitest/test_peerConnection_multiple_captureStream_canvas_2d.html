@@ -28,6 +28,8 @@ runNetworkTest(() => {
   var stream2;
   var canvas2 = h.createAndAppendElement('canvas', 'source_canvas2');
 
+  const threshold = 128;
+
   test.setMediaConstraints([{video: true}, {video: true}], []);
   test.chain.replace("PC_LOCAL_GUM", [
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
@@ -65,25 +67,37 @@ runNetworkTest(() => {
       // green and one is blue
       return Promise.race([
                Promise.all([
-                 h.waitForPixelColor(vremote1, h.red, 128,
-                                     "pcRemote's remote1 should become red"),
-                 h.waitForPixelColor(vremote2, h.blue, 128,
-                                     "pcRemote's remote2 should become blue")
+                 h.pixelMustBecome(vremote1, h.red, {
+                   threshold,
+                   infoString: "pcRemote's remote1 should become red",
+                 }),
+                 h.pixelMustBecome(vremote2, h.blue, {
+                   threshold,
+                   infoString: "pcRemote's remote2 should become blue",
+                 }),
                ]),
                Promise.all([
-                 h.waitForPixelColor(vremote2, h.red, 128,
-                                     "pcRemote's remote2 should become red"),
-                 h.waitForPixelColor(vremote1, h.blue, 128,
-                                     "pcRemote's remote1 should become blue")
+                 h.pixelMustBecome(vremote2, h.red, {
+                   threshold,
+                   infoString: "pcRemote's remote2 should become red",
+                 }),
+                 h.pixelMustBecome(vremote1, h.blue, {
+                   threshold,
+                   infoString: "pcRemote's remote1 should become blue",
+                 }),
                ])
              ]);
     },
     function WAIT_FOR_REMOTE_BOTH_GREEN() {
       return Promise.all([
-               h.waitForPixelColor(vremote1, h.green, 128,
-                                   "pcRemote's remote1 should become green"),
-               h.waitForPixelColor(vremote2, h.green, 128,
-                                 "pcRemote's remote2 should become green")
+               h.pixelMustBecome(vremote1, h.green, {
+                   threshold,
+                   infoString: "pcRemote's remote1 should become green",
+               }),
+               h.pixelMustBecome(vremote2, h.green, {
+                   threshold,
+                   infoString: "pcRemote's remote2 should become green",
+               }),
              ])
     },
   ]);

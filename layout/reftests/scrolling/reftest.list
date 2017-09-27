@@ -25,8 +25,8 @@ HTTP == simple-1.html simple-1.html?ref
 skip-if(styloVsGecko) HTTP == subpixel-1.html#d subpixel-1-ref.html#d # bug 1354406
 fuzzy-if(Android,4,120) HTTP == text-1.html text-1.html?ref
 fuzzy-if(Android,4,120) HTTP == text-2.html?up text-2.html?ref
-fuzzy-if(d2d,1,4) HTTP == transformed-1.html transformed-1.html?ref
-HTTP == transformed-1.html?up transformed-1.html?ref
+fuzzy-if(d2d,1,4) fuzzy-if(webrender,0-1,0-42) HTTP == transformed-1.html transformed-1.html?ref
+fuzzy-if(webrender,0-1,0-43) HTTP == transformed-1.html?up transformed-1.html?ref
 fuzzy-if(Android,5,20000) == uncovering-1.html uncovering-1-ref.html
 fuzzy-if(Android,5,20000) == uncovering-2.html uncovering-2-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,149,4520) == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html

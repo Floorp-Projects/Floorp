@@ -9,18 +9,15 @@
 
 #include "mozilla/dom/MediaRecorderBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/MemoryReporting.h"
 #include "nsIDocumentActivity.h"
 
 // Max size for allowing queue encoded data in memory
 #define MAX_ALLOW_MEMORY_BUFFER 1024000
 namespace mozilla {
 
-class AbstractThread;
 class AudioNodeStream;
 class DOMMediaStream;
 class ErrorResult;
-class MediaInputPort;
 struct MediaRecorderOptions;
 class MediaStream;
 class GlobalObject;
@@ -44,13 +41,15 @@ class DOMException;
 class MediaRecorder final : public DOMEventTargetHelper,
                             public nsIDocumentActivity
 {
+public:
   class Session;
 
-public:
   MediaRecorder(DOMMediaStream& aSourceMediaStream,
                 nsPIDOMWindowInner* aOwnerWindow);
   MediaRecorder(AudioNode& aSrcAudioNode, uint32_t aSrcOutput,
                 nsPIDOMWindowInner* aOwnerWindow);
+
+  static nsTArray<RefPtr<Session>> GetSessions();
 
   // nsWrapperCache
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -68,9 +67,9 @@ public:
   void Start(const Optional<int32_t>& timeSlice, ErrorResult & aResult);
   // Stop the recording activiy. Including stop the Media Encoder thread, un-hook the mediaStreamListener to encoder.
   void Stop(ErrorResult& aResult);
-  // Pause the mTrackUnionStream
+  // Pause a recording.
   void Pause(ErrorResult& aResult);
-
+  // Resume a paused recording.
   void Resume(ErrorResult& aResult);
   // Extract encoded data Blob from EncodedBufferCache.
   void RequestData(ErrorResult& aResult);
@@ -99,10 +98,11 @@ public:
               ErrorResult& aRv);
 
   /*
-   * Measure the size of the buffer, and memory occupied by mAudioEncoder
-   * and mVideoEncoder
+   * Measure the size of the buffer, and heap memory in bytes occupied by
+   * mAudioEncoder and mVideoEncoder.
    */
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  typedef MozPromise<size_t, size_t, true> SizeOfPromise;
+  RefPtr<SizeOfPromise> SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
   // EventHandler
   IMPL_EVENT_HANDLER(dataavailable)
   IMPL_EVENT_HANDLER(error)
@@ -132,8 +132,6 @@ protected:
   MediaRecorder(const MediaRecorder& x) = delete; // prevent bad usage
   // Remove session pointer.
   void RemoveSession(Session* aSession);
-  // Functions for Session to query input source info.
-  MediaStream* GetSourceMediaStream();
   // Create DOMExceptions capturing the JS stack for async errors. These are
   // created ahead of time rather than on demand when firing an error as the JS
   // stack of the operation that started the async behavior will not be
@@ -151,12 +149,8 @@ protected:
   RefPtr<DOMMediaStream> mDOMStream;
   // Source audio node. Will be null when input is a media stream.
   RefPtr<AudioNode> mAudioNode;
-  // Pipe stream connecting non-destination source node and session track union
-  // stream of recorder. Will be null when input is media stream or destination
-  // node.
-  RefPtr<AudioNodeStream> mPipeStream;
-  // Connect source node to the pipe stream.
-  RefPtr<MediaInputPort> mInputPort;
+  // Source audio node's output index. Will be zero when input is a media stream.
+  const uint32_t mAudioNodeOutput;
 
   // The current state of the MediaRecorder object.
   RecordingState mState;

@@ -37,7 +37,7 @@
           is(test.pcRemote.remoteMediaElements.length, 2,
              "Should have two remote media elements after renegotiation");
           return Promise.all(test.pcRemote.remoteMediaElements.map(video =>
-            h.checkVideoPlaying(video, 10, 10, 16)));
+            h.checkVideoPlaying(video)));
         },
       ]
     );

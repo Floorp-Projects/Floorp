@@ -24,6 +24,7 @@
 #endif
 #include "MediaStreamGraph.h"
 #include "MediaTrackConstraints.h"
+#include "SineWaveGenerator.h"
 
 namespace mozilla {
 

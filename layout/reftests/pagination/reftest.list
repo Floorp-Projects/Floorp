@@ -16,8 +16,8 @@ pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html a
 == abspos-breaking-dynamic-001.html abspos-breaking-dynamic-001-ref.html
 == abspos-breaking-dynamic-002.html abspos-breaking-dynamic-002-ref.html
 == abspos-breaking-dynamic-003.html abspos-breaking-dynamic-003-ref.html
-== abspos-overflow-01.xhtml abspos-overflow-01.ref.xhtml
-== abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.ref.xhtml
+fails-if(webrender) == abspos-overflow-01.xhtml abspos-overflow-01.ref.xhtml
+fails-if(webrender) == abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.ref.xhtml
 == border-breaking-000-cols.xhtml border-breaking-000-cols.ref.xhtml
 == border-breaking-001-cols.xhtml border-breaking-001-cols.ref.xhtml
 == border-breaking-002-cols.xhtml border-breaking-002-cols.ref.xhtml
@@ -33,7 +33,7 @@ fails == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
 == content-inserted-007.xhtml content-inserted-002.ref.xhtml
 == content-inserted-008.xhtml content-inserted-001.ref.xhtml
 == content-inserted-009.xhtml content-inserted-002.ref.xhtml
-== dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.ref.xhtml
+fails-if(webrender) == dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.ref.xhtml
 test-pref(layout.float-fragments-inside-column.enabled,false) fails == float-clear-000.html float-clear-000.ref.html
 test-pref(layout.float-fragments-inside-column.enabled,true) == float-clear-000.html float-clear-000.ref.html
 fails == float-clear-001.html float-clear-000.ref.html
@@ -103,7 +103,7 @@ fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.ref.html
 == 115199-2a.html 115199-2-ref.html
 == 115199-2b.html 115199-2-ref.html
 == 652178-1.html 652178-1-ref2.html
-fuzzy-if(cocoaWidget,1,5000) == 745025-1.html 745025-1-ref.html
+fuzzy-if(cocoaWidget,1,5000) skip-if(webrender) == 745025-1.html 745025-1-ref.html
 == 820496-1.html 820496-1-ref.html
 
 # NOTE: These tests don't yet rigorously test what they're

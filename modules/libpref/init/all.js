@@ -874,7 +874,7 @@ pref("gfx.webrender.force-angle", true);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
-pref("gfx.webrender.layers-free", false);
+pref("gfx.webrender.layers-free", true);
 pref("gfx.webrender.blob-images", false);
 
 // WebRender debugging utilities.
