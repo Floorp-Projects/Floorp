@@ -65,24 +65,12 @@ nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-
-  nsCOMPtr<nsIProperties> dirService;
-  rv = nsDirectoryService::Create(nullptr,
-                                  NS_GET_IID(nsIProperties),
-                                  getter_AddRefs(dirService));  // needs to be around for life of product
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (dirService) {
-    nsCOMPtr<nsIFile> localFile;
-    dirService->Get(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
-                    getter_AddRefs(localFile));
-    if (localFile) {
-      localFile.forget(aFile);
-      return NS_OK;
-    }
+  nsCOMPtr<nsIFile> file;
+  gService->Get(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
+                getter_AddRefs(file));
+  if (file) {
+    file.forget(aFile);
+    return NS_OK;
   }
 
   RefPtr<nsLocalFile> localFile = new nsLocalFile;
@@ -121,7 +109,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
 #ifdef DEBUG_conrad
           printf("nsDirectoryService - CurrentProcessDir is: %s\n", buffer);
 #endif
-          rv = localFile->InitWithNativePath(nsDependentCString(buffer));
+          nsresult rv = localFile->InitWithNativePath(nsDependentCString(buffer));
           if (NS_SUCCEEDED(rv)) {
             localFile.forget(aFile);
           }
