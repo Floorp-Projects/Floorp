@@ -24,12 +24,13 @@ class CompositorManagerChild : public PCompositorManagerChild
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerChild)
 
 public:
-  static bool IsInitialized(base::ProcessId aPid);
-  static bool InitSameProcess(uint32_t aNamespace);
+  static bool IsInitialized(uint64_t aProcessToken);
+  static void InitSameProcess(uint32_t aNamespace, uint64_t aProcessToken);
   static bool Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
-                   uint32_t aNamespace);
+                   uint32_t aNamespace,
+                   uint64_t aProcessToken = 0);
   static void Shutdown();
-  static void OnGPUProcessLost();
+  static void OnGPUProcessLost(uint64_t aProcessToken);
 
   static bool
   CreateContentCompositorBridge(uint32_t aNamespace);
@@ -73,9 +74,11 @@ private:
   static StaticRefPtr<CompositorManagerChild> sInstance;
 
   CompositorManagerChild(CompositorManagerParent* aParent,
+                         uint64_t aProcessToken,
                          uint32_t aNamespace);
 
   CompositorManagerChild(Endpoint<PCompositorManagerChild>&& aEndpoint,
+                         uint64_t aProcessToken,
                          uint32_t aNamespace);
 
   ~CompositorManagerChild() override
@@ -95,9 +98,10 @@ private:
 
   void SetReplyTimeout();
 
-  bool mCanSend;
+  uint64_t mProcessToken;
   uint32_t mNamespace;
   uint32_t mResourceId;
+  bool mCanSend;
 };
 
 } // namespace layers

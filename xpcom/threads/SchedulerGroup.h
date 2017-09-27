@@ -113,7 +113,7 @@ public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
              SchedulerGroup* aGroup);
 
-    bool GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups) override;
+    bool GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups) override;
 
     SchedulerGroup* Group() const { return mGroup; }
 

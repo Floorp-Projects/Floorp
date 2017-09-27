@@ -282,7 +282,7 @@ PresentationTCPSessionTransport::CreateInputStreamPump()
     return rv;
   }
 
-  rv = mInputStreamPump->Init(mSocketInputStream, -1, -1, 0, 0, false, nullptr);
+  rv = mInputStreamPump->Init(mSocketInputStream, 0, 0, false, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

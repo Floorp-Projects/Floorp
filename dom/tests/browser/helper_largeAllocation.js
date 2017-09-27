@@ -54,7 +54,7 @@ function getInLAProc(aBrowser) {
 
 async function largeAllocSuccessTests() {
   // I'm terrible and put this set of tests into a single file, so I need a longer timeout
-  requestLongerTimeout(2);
+  requestLongerTimeout(4);
 
   // Check if we are on win32
   let isWin32 = /Windows/.test(navigator.userAgent) && !/x64/.test(navigator.userAgent);

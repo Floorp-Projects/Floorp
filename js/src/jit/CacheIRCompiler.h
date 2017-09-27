@@ -24,6 +24,7 @@ namespace jit {
     _(GuardClass)                         \
     _(GuardIsNativeFunction)              \
     _(GuardIsProxy)                       \
+    _(GuardIsCrossCompartmentWrapper)     \
     _(GuardNotDOMProxy)                   \
     _(GuardSpecificInt32Immediate)        \
     _(GuardMagicValue)                    \
@@ -32,7 +33,6 @@ namespace jit {
     _(GuardNoDetachedTypedObjects)        \
     _(GuardNoDenseElements)               \
     _(GuardAndGetIndexFromString)         \
-    _(GuardIndexIsNonNegative)            \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
     _(LoadWrapperTarget)                  \

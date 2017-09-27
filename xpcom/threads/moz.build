@@ -87,6 +87,7 @@ UNIFIED_SOURCES += [
     'LazyIdleThread.cpp',
     'MainThreadIdlePeriod.cpp',
     'nsEnvironment.cpp',
+    'nsILabelableRunnable.cpp',
     'nsMemoryPressure.cpp',
     'nsProcessCommon.cpp',
     'nsProxyRelease.cpp',

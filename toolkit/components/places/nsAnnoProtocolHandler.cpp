@@ -145,8 +145,8 @@ public:
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (NS_SUCCEEDED(rv)) {
         RefPtr<nsInputStreamPump> pump;
-        rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream, -1, -1, 0, 0,
-                                       true, target);
+        rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream, 0, 0, true,
+                                       target);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv)) {
           return pump->AsyncRead(mListener, nullptr);

@@ -16,7 +16,7 @@ BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
 
     CHECK(JS_DefineProperty(cx, obj, "prop",
                             JS_PROPERTYOP_GETTER(NativeGet), nullptr,
-                            JSPROP_SHARED | JSPROP_PROPOP_ACCESSORS));
+                            JSPROP_PROPOP_ACCESSORS));
 
     EXEC("'use strict';                                     \n"
          "var error, passed = false;                        \n"

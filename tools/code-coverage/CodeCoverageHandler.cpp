@@ -12,7 +12,6 @@
 #include "nsAppRunner.h"
 
 using namespace mozilla;
-using namespace mozilla::ipc;
 
 // The __gcov_dump function writes the coverage counters to gcda files.
 // The __gcov_reset function resets the coverage counters to zero.

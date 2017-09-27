@@ -1013,7 +1013,7 @@ class Shape : public gc::TenuredCell
     BaseShape* base() const { return base_.get(); }
 
     bool hasSlot() const {
-        return (attrs & JSPROP_SHARED) == 0;
+        return !isEmptyShape() && !getter() && !setter();
     }
     uint32_t slot() const { MOZ_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
     uint32_t maybeSlot() const {
@@ -1450,7 +1450,6 @@ struct StackShape
         MOZ_ASSERT(base);
         MOZ_ASSERT(!JSID_IS_VOID(propid));
         MOZ_ASSERT(slot <= SHAPE_INVALID_SLOT);
-        MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
     }
 
     explicit StackShape(Shape* shape)
@@ -1473,7 +1472,10 @@ struct StackShape
         this->rawSetter = rawSetter;
     }
 
-    bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
+    bool hasSlot() const {
+        MOZ_ASSERT(!JSID_IS_EMPTY(propid));
+        return !rawGetter && !rawSetter;
+    }
     bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
     uint32_t slot() const { MOZ_ASSERT(hasSlot() && !hasMissingSlot()); return slot_; }
@@ -1546,7 +1548,6 @@ Shape::Shape(const StackShape& other, uint32_t nfixed)
 
     MOZ_ASSERT_IF(!isEmptyShape(), AtomIsMarked(zone(), propid()));
 
-    MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
     kids.setNull();
 }
 
@@ -1567,7 +1568,7 @@ Shape::Shape(UnownedBaseShape* base, uint32_t nfixed)
   : base_(base),
     propid_(JSID_EMPTY),
     slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
-    attrs(JSPROP_SHARED),
+    attrs(0),
     flags(0),
     parent(nullptr)
 {

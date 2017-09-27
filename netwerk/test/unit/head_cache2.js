@@ -58,7 +58,7 @@ function pumpReadStream(inputStream, goon)
     // non-blocking stream, must read via pump
     var pump = Cc["@mozilla.org/network/input-stream-pump;1"]
                .createInstance(Ci.nsIInputStreamPump);
-    pump.init(inputStream, -1, -1, 0, 0, true);
+    pump.init(inputStream, 0, 0, true);
     var data = "";
     pump.asyncRead({
       onStartRequest: function (aRequest, aContext) { },

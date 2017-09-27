@@ -212,7 +212,7 @@ function promisePumpToSaver(aSourceString, aSaverStreamListener,
     let inputStream = new StringInputStream(aSourceString, aSourceString.length);
     let pump = Cc["@mozilla.org/network/input-stream-pump;1"]
                .createInstance(Ci.nsIInputStreamPump);
-    pump.init(inputStream, -1, -1, 0, 0, true);
+    pump.init(inputStream, 0, 0, true);
     pump.asyncRead({
       onStartRequest: function PPTS_onStartRequest(aRequest, aContext)
       {

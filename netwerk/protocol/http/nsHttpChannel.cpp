@@ -4976,8 +4976,7 @@ nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBufferi
     nsCOMPtr<nsIStreamTransportService> sts(services::GetStreamTransportService());
     rv = sts ? NS_OK : NS_ERROR_NOT_AVAILABLE;
     if (NS_SUCCEEDED(rv)) {
-        rv = sts->CreateInputTransport(stream, int64_t(-1), int64_t(-1),
-                                        true, getter_AddRefs(transport));
+        rv = sts->CreateInputTransport(stream, true, getter_AddRefs(transport));
     }
     if (NS_SUCCEEDED(rv)) {
         rv = transport->OpenInputStream(0, 0, 0, getter_AddRefs(wrapper));
@@ -5116,7 +5115,7 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
     nsCOMPtr<nsIInputStream> inputStream = mCacheInputStream.forget();
 
     rv = nsInputStreamPump::Create(getter_AddRefs(mCachePump), inputStream,
-                                   int64_t(-1), int64_t(-1), 0, 0, true);
+                                   0, 0, true);
     if (NS_FAILED(rv)) {
         inputStream->Close();
         return rv;

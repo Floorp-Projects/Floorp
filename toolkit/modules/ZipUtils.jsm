@@ -41,7 +41,7 @@ function saveStreamAsync(aPath, aStream, aFile) {
     // Read the input stream on a background thread
     let sts = Cc["@mozilla.org/network/stream-transport-service;1"].
               getService(Ci.nsIStreamTransportService);
-    let transport = sts.createInputTransport(aStream, -1, -1, true);
+    let transport = sts.createInputTransport(aStream, true);
     let input = transport.openInputStream(0, 0, 0)
                          .QueryInterface(Ci.nsIAsyncInputStream);
     let source = Cc["@mozilla.org/binaryinputstream;1"].

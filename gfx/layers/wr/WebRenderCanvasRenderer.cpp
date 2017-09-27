@@ -24,16 +24,6 @@ void
 WebRenderCanvasRenderer::Initialize(const CanvasInitializeData& aData)
 {
   ShareableCanvasRenderer::Initialize(aData);
-
-  // XXX: Use basic surface factory until we support shared surface.
-  if (!mGLContext || mGLFrontbuffer)
-    return;
-
-  gl::GLScreenBuffer* screen = mGLContext->Screen();
-  auto factory = MakeUnique<gl::SurfaceFactory_Basic>(mGLContext,
-                                                      screen->mCaps,
-                                                      mFlags);
-  screen->Morph(Move(factory));
 }
 
 WebRenderCanvasRendererSync::~WebRenderCanvasRendererSync()

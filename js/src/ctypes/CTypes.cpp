@@ -6120,7 +6120,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
              nameChars.twoByteChars(), name->length(),
              JS_DATA_TO_FUNC_PTR(JSNative, getterObj.get()),
              JS_DATA_TO_FUNC_PTR(JSNative, setterObj.get()),
-             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER))
+             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER))
       {
         return false;
       }

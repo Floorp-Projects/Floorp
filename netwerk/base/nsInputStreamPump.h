@@ -37,8 +37,6 @@ public:
     static nsresult
                       Create(nsInputStreamPump  **result,
                              nsIInputStream      *stream,
-                             int64_t              streamPos = -1,
-                             int64_t              streamLen = -1,
                              uint32_t             segsize = 0,
                              uint32_t             segcount = 0,
                              bool                 closeWhenDone = false,

@@ -48,6 +48,9 @@ class nsIDOMWindowUtils;
 class nsIHttpChannel;
 class nsISerialEventTarget;
 
+template<typename T> class nsTHashtable;
+template<typename T> class nsPtrHashKey;
+
 namespace mozilla {
 class AbstractThread;
 namespace layout {
@@ -762,7 +765,7 @@ public:
   // open. There can also be zero foreground TabChilds if the foreground tab is
   // in a different content process. Note that this function should only be
   // called if HasActiveTabs() returns true.
-  static const nsTArray<TabChild*>& GetActiveTabs()
+  static const nsTHashtable<nsPtrHashKey<TabChild>>& GetActiveTabs()
   {
     MOZ_ASSERT(HasActiveTabs());
     return *sActiveTabs;
@@ -964,7 +967,7 @@ private:
   // the foreground). There may be more than one if there are multiple browser
   // windows open. There may be none if this process does not host any
   // foreground tabs.
-  static nsTArray<TabChild*>* sActiveTabs;
+  static nsTHashtable<nsPtrHashKey<TabChild>>* sActiveTabs;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

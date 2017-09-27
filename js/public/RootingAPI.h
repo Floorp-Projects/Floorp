@@ -402,7 +402,7 @@ class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>>
 
     void setPtr(T newPtr) {
         MOZ_ASSERT((reinterpret_cast<uintptr_t>(newPtr) & flagsMask) == 0);
-        MOZ_ASSERT(js::gc::IsCellPointerValid(newPtr));
+        MOZ_ASSERT(js::gc::IsCellPointerValidOrNull(newPtr));
         if (newPtr)
             AssertGCThingMustBeTenured(newPtr);
         bits = (bits & flagsMask) | reinterpret_cast<uintptr_t>(newPtr);

@@ -397,6 +397,15 @@ CssRuleView.prototype = {
    * Context menu handler.
    */
   _onContextMenu: function (event) {
+    if (event.originalTarget.closest("input[type=text]") ||
+        event.originalTarget.closest("input:not([type])") ||
+        event.originalTarget.closest("textarea")) {
+      return;
+    }
+
+    event.stopPropagation();
+    event.preventDefault();
+
     this._contextmenu.show(event);
   },
 
