@@ -28,38 +28,6 @@ public:
   }
 };
 
-class EGLImageImage : public GLImage {
-public:
-  EGLImageImage(EGLImage aImage, EGLSync aSync,
-                const gfx::IntSize& aSize, const gl::OriginPos& aOrigin,
-                bool aOwns);
-
-  gfx::IntSize GetSize() override { return mSize; }
-  gl::OriginPos GetOriginPos() const {
-    return mPos;
-  }
-  EGLImage GetImage() const {
-    return mImage;
-  }
-  EGLSync GetSync() const {
-    return mSync;
-  }
-
-  EGLImageImage* AsEGLImageImage() override {
-    return this;
-  }
-
-protected:
-  virtual ~EGLImageImage();
-
-private:
-  EGLImage mImage;
-  EGLSync mSync;
-  gfx::IntSize mSize;
-  gl::OriginPos mPos;
-  bool mOwns;
-};
-
 #ifdef MOZ_WIDGET_ANDROID
 
 class SurfaceTextureImage : public GLImage {

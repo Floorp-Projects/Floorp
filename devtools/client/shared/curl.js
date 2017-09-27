@@ -39,8 +39,6 @@
 
 const Services = require("Services");
 
-const DEFAULT_HTTP_VERSION = "HTTP/1.1";
-
 const Curl = {
   /**
    * Generates a cURL command string which can be used from the command line etc.
@@ -104,11 +102,6 @@ const Curl = {
     // This will fetch the header of a document only.
     if (data.method == "HEAD") {
       command.push("-I");
-    }
-
-    // Add http version.
-    if (data.httpVersion && data.httpVersion != DEFAULT_HTTP_VERSION) {
-      command.push("--" + data.httpVersion.split("/")[1]);
     }
 
     // Add request headers.

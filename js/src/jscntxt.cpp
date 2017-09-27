@@ -1327,7 +1327,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     suppressProfilerSampling(false),
     tempLifoAlloc_((size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     debuggerMutations(0),
-    propertyRemovals(0),
     ionPcScriptCache(nullptr),
     throwing(false),
     overRecursed_(false),

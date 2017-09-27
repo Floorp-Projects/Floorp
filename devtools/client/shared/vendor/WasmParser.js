@@ -1400,4 +1400,3 @@ if (!exports.bytesToString) {
         return decodeURIComponent(escape(str));
     };
 }
-//# sourceMappingURL=WasmParser.js.map

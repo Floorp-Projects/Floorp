@@ -64,6 +64,8 @@ function startup() {
                     "GeckoViewScroll");
   ModuleManager.add("resource://gre/modules/GeckoViewTab.jsm",
                     "GeckoViewTab");
+  ModuleManager.add("resource://gre/modules/GeckoViewRemoteDebugger.jsm",
+                    "GeckoViewRemoteDebugger");
 
   // Move focus to the content window at the end of startup,
   // so things like text selection can work properly.

@@ -1581,6 +1581,21 @@ public:
     mFontSizeInflationEnabledIsDirty = true;
   }
 
+  /**
+   * Return true if the most recent interruptible reflow was interrupted.
+   */
+  bool IsReflowInterrupted() const {
+    return mWasLastReflowInterrupted;
+  }
+
+  /**
+   * Return true if the the interruptible reflows have to be suppressed.
+   * This may happen only if if the most recent reflow was interrupted.
+   */
+  bool SuppressInterruptibleReflows() const {
+    return mWasLastReflowInterrupted;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // Approximate frame visibility tracking public API.
   //////////////////////////////////////////////////////////////////////////////
@@ -1794,7 +1809,8 @@ protected:
   bool                      mIsFirstPaint : 1;
   bool                      mObservesMutationsForPrint : 1;
 
-  bool                      mSuppressInterruptibleReflows : 1;
+  // Whether the most recent interruptible reflow was actually interrupted:
+  bool                      mWasLastReflowInterrupted : 1;
   bool                      mScrollPositionClampingScrollPortSizeSet : 1;
 
   // True if a layout flush might not be a no-op

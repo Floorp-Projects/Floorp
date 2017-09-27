@@ -87,6 +87,8 @@ RootAccessibleWrap::GetInternalUnknown()
 void
 RootAccessibleWrap::DocumentActivated(DocAccessible* aDocument)
 {
+  // This check will never work with e10s enabled, in other words, as of
+  // Firefox 57.
   if (Compatibility::IsDolphin() &&
       nsCoreUtils::IsTabDocument(aDocument->DocumentNode())) {
     uint32_t count = mChildDocuments.Length();

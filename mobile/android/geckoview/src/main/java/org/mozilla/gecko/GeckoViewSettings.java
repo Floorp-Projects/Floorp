@@ -65,6 +65,11 @@ public final class GeckoViewSettings {
     public static final Key<Integer> DISPLAY_MODE =
         new Key<Integer>("displayMode");
 
+    public static final Key<Boolean> USE_REMOTE_DEBUGGER =
+        new Key<Boolean>("useRemoteDebugger");
+
+    public static final Key<String> DEBUGGER_SOCKET_DIR =
+        new Key<String>("debuggerSocketDir");
 
     private final EventDispatcher mEventDispatcher;
     private final GeckoBundle mBundle;
@@ -81,6 +86,9 @@ public final class GeckoViewSettings {
         setBoolean(USE_PRIVATE_MODE, false);
         setBoolean(USE_MULTIPROCESS, true);
         setInt(DISPLAY_MODE, DisplayMode.BROWSER.value());
+        setBoolean(USE_REMOTE_DEBUGGER, false);
+        // Set in GeckoView.init().
+        setString(DEBUGGER_SOCKET_DIR, "");
     }
 
     /* package */ GeckoViewSettings(GeckoViewSettings settings, EventDispatcher eventDispatcher) {
@@ -119,6 +127,23 @@ public final class GeckoViewSettings {
     public int getInt(final Key<Integer> key) {
         synchronized (mBundle) {
             return mBundle.getInt(key.text);
+        }
+    }
+
+    public void setString(final Key<String> key, final String value) {
+        synchronized (mBundle) {
+            final Object old = mBundle.get(key.text);
+            if (old != null && old.equals(value)) {
+                return;
+            }
+            mBundle.putString(key.text, value);
+        }
+        dispatchUpdate();
+    }
+
+    public String getString(final Key<String> key) {
+        synchronized (mBundle) {
+            return mBundle.getString(key.text);
         }
     }
 

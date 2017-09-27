@@ -496,6 +496,9 @@ public class GeckoView extends LayerView {
         } else {
             mSettings = settings;
         }
+        mSettings.setString(GeckoViewSettings.DEBUGGER_SOCKET_DIR,
+                            context.getApplicationInfo().dataDir);
+
     }
 
     @Override

@@ -77,80 +77,79 @@ ObjectActor.prototype = {
    * Returns a grip for this actor for returning in a protocol message.
    */
   grip: function () {
-    this.hooks.incrementGripDepth();
-
     let g = {
       "type": "object",
       "actor": this.actorID
     };
 
-    // If it's a proxy, lie and tell that it belongs to an invented "Proxy" class.
-    // The `isProxy` function detects them even behind non-opaque security wrappers,
-    // which is useful to avoid running proxy traps through transparent wrappers.
-    if (isProxy(this.obj)) {
+    // Check if the object has a wrapper which denies access. It may be a CPOW or a
+    // security wrapper. Change the class so that this will be visible in the UI.
+    let unwrapped = unwrap(this.obj);
+    if (!unwrapped) {
+      if (DevToolsUtils.isCPOW(this.obj)) {
+        g.class = "CPOW: " + g.class;
+      } else {
+        g.class = "Inaccessible";
+      }
+      return g;
+    }
+
+    // Dead objects also deny access.
+    if (this.obj.class == "DeadObject") {
+      g.class = "DeadObject";
+      return g;
+    }
+
+    // Otherwise, increment grip depth and attempt to create a preview.
+    this.hooks.incrementGripDepth();
+
+    // The `isProxy` getter is called on `unwrapped` instead of `this.obj` in order
+    // to detect proxies behind transparent wrappers, and thus avoid running traps.
+    if (unwrapped.isProxy) {
       g.class = "Proxy";
     } else {
-      try {
-        g.class = this.obj.class;
-        g.extensible = this.obj.isExtensible();
-        g.frozen = this.obj.isFrozen();
-        g.sealed = this.obj.isSealed();
-      } catch (e) {
-        // Handle cases where the underlying object's calls to isExtensible, etc throw.
-        // This is possible with ProxyObjects like CPOWs. Note these are different from
-        // scripted Proxies created via `new Proxy`, which match isProxy(this.obj) above.
-      }
+      g.class = this.obj.class;
+      g.extensible = this.obj.isExtensible();
+      g.frozen = this.obj.isFrozen();
+      g.sealed = this.obj.isSealed();
     }
 
-    // Changing the class so that CPOWs will be visible in the UI
-    let isCPOW = DevToolsUtils.isCPOW(this.obj);
-    if (isCPOW) {
-      g.class = "CPOW: " + g.class;
+    if (g.class == "Promise") {
+      g.promiseState = this._createPromiseState();
     }
 
-    if (g.class != "DeadObject" && !isCPOW) {
-      if (g.class == "Promise") {
-        g.promiseState = this._createPromiseState();
-      }
+    // FF40+: Allow to know how many properties an object has to lazily display them
+    // when there is a bunch.
+    if (TYPED_ARRAY_CLASSES.indexOf(g.class) != -1) {
+      // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
+      let length = DevToolsUtils.getProperty(this.obj, "length");
+      g.ownPropertyLength = length;
+    } else if (g.class != "Proxy") {
+      g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
+    }
 
-      // FF40+: Allow to know how many properties an object has
-      // to lazily display them when there is a bunch.
-      // Throws on some MouseEvent object in tests.
+    let raw = this.obj.unsafeDereference();
+
+    // If Cu is not defined, we are running on a worker thread, where xrays
+    // don't exist.
+    if (Cu) {
+      raw = Cu.unwaiveXrays(raw);
+    }
+
+    if (!DevToolsUtils.isSafeJSObject(raw)) {
+      raw = null;
+    }
+
+    let previewers = DebuggerServer.ObjectActorPreviewers[g.class] ||
+                     DebuggerServer.ObjectActorPreviewers.Object;
+    for (let fn of previewers) {
       try {
-        if (TYPED_ARRAY_CLASSES.indexOf(g.class) != -1) {
-          // Bug 1348761: getOwnPropertyNames is unecessary slow on TypedArrays
-          let length = DevToolsUtils.getProperty(this.obj, "length");
-          g.ownPropertyLength = length;
-        } else if (g.class != "Proxy") {
-          g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
+        if (fn(this, g, raw)) {
+          break;
         }
       } catch (e) {
-        // ignored
-      }
-
-      let raw = this.obj.unsafeDereference();
-
-      // If Cu is not defined, we are running on a worker thread, where xrays
-      // don't exist.
-      if (Cu) {
-        raw = Cu.unwaiveXrays(raw);
-      }
-
-      if (!DevToolsUtils.isSafeJSObject(raw)) {
-        raw = null;
-      }
-
-      let previewers = DebuggerServer.ObjectActorPreviewers[g.class] ||
-                       DebuggerServer.ObjectActorPreviewers.Object;
-      for (let fn of previewers) {
-        try {
-          if (fn(this, g, raw)) {
-            break;
-          }
-        } catch (e) {
-          let msg = "ObjectActor.prototype.grip previewer function";
-          DevToolsUtils.reportException(msg, e);
-        }
+        let msg = "ObjectActor.prototype.grip previewer function";
+        DevToolsUtils.reportException(msg, e);
       }
     }
 
@@ -290,20 +289,20 @@ ObjectActor.prototype = {
   onPrototypeAndProperties: function () {
     let ownProperties = Object.create(null);
     let ownSymbols = [];
-    let names;
-    let symbols;
-    try {
-      names = this.obj.getOwnPropertyNames();
-      symbols = this.obj.getOwnPropertySymbols();
-    } catch (ex) {
-      // The above can throw if this.obj points to a dead object.
-      // TODO: we should use Cu.isDeadWrapper() - see bug 885800.
+
+    // Inaccessible, proxy and dead objects should not be accessed.
+    let unwrapped = unwrap(this.obj);
+    if (!unwrapped || unwrapped.isProxy || this.obj.class == "DeadObject") {
       return { from: this.actorID,
                prototype: this.hooks.createValueGrip(null),
                ownProperties,
                ownSymbols,
                safeGetterValues: Object.create(null) };
     }
+
+    let names = this.obj.getOwnPropertyNames();
+    let symbols = this.obj.getOwnPropertySymbols();
+
     for (let name of names) {
       ownProperties[name] = this._propertyDescriptor(name);
     }
@@ -340,8 +339,9 @@ ObjectActor.prototype = {
     let obj = this.obj;
     let level = 0, i = 0;
 
-    // Do not search safe getters in proxy objects.
-    if (isProxy(obj)) {
+    // Do not search safe getters in inaccessible nor proxy objects.
+    let unwrapped = unwrap(obj);
+    if (!unwrapped || unwrapped.isProxy) {
       return safeGetterValues;
     }
 
@@ -355,8 +355,13 @@ ObjectActor.prototype = {
       level++;
     }
 
-    // Stop iterating when the prototype chain ends or a proxy is found.
-    while (obj && !isProxy(obj)) {
+    while (obj) {
+      // Stop iterating when an inaccessible or a proxy object is found.
+      unwrapped = unwrap(obj);
+      if (!unwrapped || unwrapped.isProxy) {
+        break;
+      }
+
       let getters = this._findSafeGetters(obj);
       for (let name of getters) {
         // Avoid overwriting properties from prototypes closer to this.obj. Also
@@ -2455,38 +2460,33 @@ function arrayBufferGrip(buffer, pool) {
 }
 
 /**
- * Determines whether the referent of a debuggee object is a scripted proxy.
- * Non-opaque security wrappers are unwrapped first before the check.
+ * Removes all the non-opaque security wrappers of a debuggee object.
+ * Returns null if some wrapper can't be removed.
  *
  * @param obj Debugger.Object
- *        The debuggee object to be checked.
+ *        The debuggee object to be unwrapped.
  */
-function isProxy(obj) {
-  // Check if the object is a proxy without security wrappers.
-  if (obj.isProxy) {
-    return true;
-  }
-
-  // No need to remove opaque wrappers since they prevent proxy traps from running.
+function unwrap(obj) {
+  // Check if `obj` has an opaque wrapper.
   if (obj.class === "Opaque") {
-    return false;
+    return obj;
   }
 
-  // Attempt to unwrap. If the debugger can't unwrap, then proxy traps won't be
-  // allowed to run either, so the object can be safely assumed to not be a proxy.
+  // Attempt to unwrap. If this operation is not allowed, it may return null or throw.
   let unwrapped;
   try {
     unwrapped = obj.unwrap();
   } catch (err) {
-    return false;
+    unwrapped = null;
   }
 
+  // Check if further unwrapping is not possible.
   if (!unwrapped || unwrapped === obj) {
-    return false;
+    return unwrapped;
   }
 
-  // Recursively check whether the unwrapped object is a proxy.
-  return isProxy(unwrapped);
+  // Recursively remove additional security wrappers.
+  return unwrap(unwrapped);
 }
 
 exports.ObjectActor = ObjectActor;

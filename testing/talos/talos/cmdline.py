@@ -101,8 +101,8 @@ def create_parser(mach_interface=False):
     add_arg('--geckoProfileEntries', dest="gecko_profile_entries", type=int,
             help="How many samples to take with the profiler")
     add_arg('--extension', dest='extensions', action='append',
-            default=['${talos}/talos-powers/talos-powers-signed.xpi',
-                     '${talos}/pageloader/pageloader-signed.xpi'],
+            default=['${talos}/talos-powers',
+                     '${talos}/pageloader'],
             help="Extension to install while running")
     add_arg('--fast', action='store_true',
             help="Run tp tests as tp_fast")
