@@ -60,8 +60,7 @@ NewConsoleOutputWrapper.prototype = {
       }
 
       // Do not focus if something other than the output region was clicked
-      // (including e.g. the clear messages button in toolbar)
-      if (!target.closest(".webconsole-output-wrapper")) {
+      if (!target.closest(".webconsole-output")) {
         return;
       }
 
