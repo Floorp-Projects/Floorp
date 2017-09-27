@@ -1071,8 +1071,6 @@ DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
   MOZ_ASSERT(mHandle);
   auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
                                               : &wr::ResourceUpdateQueue::UpdateExternalImage;
-  auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
-
   switch (mFormat) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -1081,6 +1079,7 @@ DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
       MOZ_ASSERT(aImageKeys.length() == 1);
 
       wr::ImageDescriptor descriptor(GetSize(), GetFormat());
+      auto bufferType = wr::WrExternalImageBufferType::Texture2DHandle;
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
       break;
     }
@@ -1089,6 +1088,7 @@ DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
 
       wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
       wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::R8G8);
+      auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
       break;
