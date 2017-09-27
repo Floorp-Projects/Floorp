@@ -31,6 +31,11 @@ tasks:
           && git checkout {{event.head.sha}}
           && export ADJUST_TOKEN_FOCUS='..no..value..'
           && ./gradlew clean assemble test lint pmd checkstyle findbugs
+      artifacts:
+        'public':
+          type: 'directory'
+          path: '/opt/focus-android/app/build/reports'
+          expires: "{{ '1 week' | $fromNow }}"
     metadata:
       name: Focus for Android - Build - Pull Request
       description: Building Focus for Android (via Gradle) - triggered by a pull request.
@@ -61,6 +66,11 @@ tasks:
           && git checkout {{event.head.sha}}
           && export ADJUST_TOKEN_FOCUS='..no..value..'
           && ./gradlew clean assemble test lint pmd checkstyle findbugs
+      artifacts:
+        'public':
+          type: 'directory'
+          path: '/opt/focus-android/app/build/reports'
+          expires: "{{ '1 week' | $fromNow }}"
     metadata:
       name: Focus for Android - Build - Master
       description: Building Focus for Android (via Gradle) - Master
