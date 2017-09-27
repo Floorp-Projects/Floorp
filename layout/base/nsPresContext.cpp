@@ -1364,6 +1364,12 @@ nsPresContext::UpdateEffectiveTextZoom()
   }
 }
 
+float
+nsPresContext::GetDeviceFullZoom()
+{
+  return mDeviceContext->GetFullZoom();
+}
+
 void
 nsPresContext::SetFullZoom(float aZoom)
 {
