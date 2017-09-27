@@ -486,6 +486,14 @@ SurfaceTextureHost::Lock()
                                               mSize);
   }
 
+  if (!mSurfTex->IsAttachedToGLContext((int64_t)gl)) {
+    GLuint texName;
+    gl->fGenTextures(1, &texName);
+    if (NS_FAILED(mSurfTex->AttachToGLContext((int64_t)gl, texName))) {
+      return false;
+    }
+  }
+
   return true;
 }
 
