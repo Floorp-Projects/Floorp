@@ -9,8 +9,7 @@
 
 #include "mozilla/Move.h"
 
-#include "jsutil.h"
-
+#include "js/Utility.h"
 #include "js/Vector.h"
 
 namespace js {
@@ -121,26 +120,10 @@ class Fifo
         fixup();
     }
 
-    // Convenience utility.
-    T popCopyFront() {
-        T ret = front();
-        popFront();
-        return ret;
-    }
-
     // Clear all elements from the queue.
     void clear() {
         front_.clear();
         rear_.clear();
-    }
-
-    // Clear all elements for which the given predicate returns 'true'. Return
-    // the number of elements removed.
-    template <class Pred>
-    size_t eraseIf(Pred pred) {
-        size_t erased = EraseIf(front_, pred);
-        erased += EraseIf(rear_, pred);
-        return erased;
     }
 };
 
