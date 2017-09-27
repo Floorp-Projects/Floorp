@@ -74,7 +74,6 @@ VP8TrackEncoder::~VP8TrackEncoder()
 void
 VP8TrackEncoder::Destroy()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (mInitialized) {
     vpx_codec_destroy(mVPXContext);
   }
@@ -93,7 +92,6 @@ VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
     return NS_ERROR_FAILURE;
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (mInitialized) {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
@@ -121,8 +119,7 @@ VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
   vpx_codec_control(mVPXContext, VP8E_SET_TOKEN_PARTITIONS,
                     VP8_ONE_TOKENPARTITION);
 
-  mInitialized = true;
-  mon.NotifyAll();
+  SetInitialized();
 
   return NS_OK;
 }
@@ -136,13 +133,11 @@ VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
     return NS_ERROR_FAILURE;
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (!mInitialized) {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
   }
 
-  mInitialized = false;
   // Recreate image wrapper
   vpx_img_free(mVPXImageWrapper);
   vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight, 1, nullptr);
@@ -155,7 +150,6 @@ VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
     VP8LOG(LogLevel::Error, "Failed to set new configuration");
     return NS_ERROR_FAILURE;
   }
-  mInitialized = true;
   return NS_OK;
 }
 
@@ -224,15 +218,14 @@ already_AddRefed<TrackMetadataBase>
 VP8TrackEncoder::GetMetadata()
 {
   AUTO_PROFILER_LABEL("VP8TrackEncoder::GetMetadata", OTHER);
-  {
-    // Wait if mEncoder is not initialized.
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    while (!mCanceled && !mInitialized) {
-      mon.Wait();
-    }
-  }
+
+  MOZ_ASSERT(mInitialized || mCanceled);
 
   if (mCanceled || mEncodingComplete) {
+    return nullptr;
+  }
+
+  if (!mInitialized) {
     return nullptr;
   }
 
@@ -241,6 +234,10 @@ VP8TrackEncoder::GetMetadata()
   meta->mHeight = mFrameHeight;
   meta->mDisplayWidth = mDisplayWidth;
   meta->mDisplayHeight = mDisplayHeight;
+
+  VP8LOG(LogLevel::Info, "GetMetadata() width=%d, height=%d, "
+                         "displayWidht=%d, displayHeight=%d",
+         meta->mWidth, meta->mHeight, meta->mDisplayWidth, meta->mDisplayHeight);
 
   return meta.forget();
 }
@@ -613,24 +610,18 @@ nsresult
 VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
 {
   AUTO_PROFILER_LABEL("VP8TrackEncoder::GetEncodedTrack", OTHER);
-  bool EOS;
-  {
-    // Move all the samples from mRawSegment to mSourceSegment. We only hold
-    // the monitor in this block.
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    // Wait if mEncoder is not initialized, or when not enough raw data, but is
-    // not the end of stream nor is being canceled.
-    while (!mCanceled && (!mInitialized ||
-           (mRawSegment.GetDuration() + mSourceSegment.GetDuration() == 0 &&
-            !mEndOfStream))) {
-      mon.Wait();
-    }
-    if (mCanceled || mEncodingComplete) {
-      return NS_ERROR_FAILURE;
-    }
-    mSourceSegment.AppendFrom(&mRawSegment);
-    EOS = mEndOfStream;
+
+  MOZ_ASSERT(mInitialized || mCanceled);
+
+  if (mCanceled || mEncodingComplete) {
+    return NS_ERROR_FAILURE;
   }
+
+  if (!mInitialized) {
+    return NS_ERROR_FAILURE;
+  }
+
+  TakeTrackData(mSourceSegment);
 
   StreamTime totalProcessedDuration = 0;
   TimeStamp timebase = TimeStamp::Now();
@@ -701,12 +692,11 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   mSourceSegment.Clear();
 
   // End of stream, pull the rest frames in encoder.
-  if (EOS) {
+  if (mEndOfStream) {
     VP8LOG(LogLevel::Debug, "mEndOfStream is true");
     mEncodingComplete = true;
     // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
     // until vpx_codec_get_cx_data return null.
-
     do {
       if (vpx_codec_encode(mVPXContext, nullptr, mEncodedTimestamp,
                            0, 0, VPX_DL_REALTIME)) {

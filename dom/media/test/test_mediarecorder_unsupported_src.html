@@ -33,6 +33,7 @@ function startTest() {
 
       mediaRecorder.onerror = function (e) {
         callbackStep++;
+        info('onerror callback fired');
         if (callbackStep == 1) {
           try {
             mediaRecorder.pause();
@@ -50,7 +51,6 @@ function startTest() {
           'an error in this test');
         is(mediaRecorder.mimeType, '', 'mimetype should be empty');
         is(mediaRecorder.state, 'inactive', 'state is inactive');
-        info('onerror callback fired');
       };
 
       mediaRecorder.onwarning = function () {

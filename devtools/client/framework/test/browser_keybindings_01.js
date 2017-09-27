@@ -16,6 +16,8 @@ registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
 });
 
+const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+
 function test()
 {
   waitForExplicitFinish();

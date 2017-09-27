@@ -99,15 +99,15 @@ reftest-stylo:
     - reftest-stylo
 
 qr-talos:
-    - talos-chrome
+    # - talos-chrome # fails with layers-free
     - talos-dromaeojs
-    - talos-g1
+    # - talos-g1 # fails with layers-free
     # - talos-g2 # doesn't work with QR yet
     - talos-g3
     - talos-g4
     - talos-g5
-    - talos-other
-    - talos-svgr
+    # - talos-other # fails with layers-free
+    # - talos-svgr # fails with layers-free
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons

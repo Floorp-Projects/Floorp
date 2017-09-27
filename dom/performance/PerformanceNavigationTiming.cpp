@@ -83,7 +83,8 @@ PerformanceNavigationTiming::Type()
       return NavigationType::Back_forward;
       break;
     default:
-      MOZ_CRASH(); // Should not happen
+      // The type is TYPE_RESERVED or some other value that was later added.
+      // We fallback to the default of Navigate.
       return NavigationType::Navigate;
   }
 }

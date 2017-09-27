@@ -1024,7 +1024,7 @@ MediaStreamGraphImpl::OpenAudioInput(int aID,
     Message(MediaStreamGraphImpl *aGraph, int aID,
             AudioDataListener *aListener) :
       ControlMessage(nullptr), mGraph(aGraph), mID(aID), mListener(aListener) {}
-    virtual void Run()
+    void Run() override
     {
       mGraph->OpenAudioInputImpl(mID, mListener);
     }
@@ -1095,7 +1095,7 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
   public:
     Message(MediaStreamGraphImpl *aGraph, AudioDataListener *aListener) :
       ControlMessage(nullptr), mGraph(aGraph), mListener(aListener) {}
-    virtual void Run()
+    void Run() override
     {
       mGraph->CloseAudioInputImpl(mListener);
     }
@@ -1488,7 +1488,7 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
 }
 
 void
-MediaStreamGraphImpl::ForceShutDown(ShutdownTicket* aShutdownTicket)
+MediaStreamGraphImpl::ForceShutDown(media::ShutdownTicket* aShutdownTicket)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
   LOG(LogLevel::Debug, ("MediaStreamGraph %p ForceShutdown", this));
@@ -2432,6 +2432,10 @@ MediaStream::AddTrackListenerImpl(already_AddRefed<MediaStreamTrackListener> aLi
   PrincipalHandle lastPrincipalHandle =
     track->GetSegment()->GetLastPrincipalHandle();
   l->mListener->NotifyPrincipalHandleChanged(Graph(), lastPrincipalHandle);
+  if (track->IsEnded() &&
+      track->GetEnd() <= GraphTimeToStreamTime(GraphImpl()->mStateComputedTime)) {
+    l->mListener->NotifyEnded();
+  }
 }
 
 void
@@ -2443,7 +2447,7 @@ MediaStream::AddTrackListener(MediaStreamTrackListener* aListener,
     Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->AddTrackListenerImpl(mListener.forget(), mTrackID);
     }
@@ -2476,9 +2480,15 @@ MediaStream::RemoveTrackListener(MediaStreamTrackListener* aListener,
     Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveTrackListenerImpl(mListener, mTrackID);
+    }
+    void RunDuringShutdown() override
+    {
+      // During shutdown we still want the listener's NotifyRemoved to be
+      // called, since not doing that might block shutdown of other modules.
+      Run();
     }
     RefPtr<MediaStreamTrackListener> mListener;
     TrackID mTrackID;
@@ -2505,7 +2515,7 @@ MediaStream::AddDirectTrackListener(DirectMediaStreamTrackListener* aListener,
     Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->AddDirectTrackListenerImpl(mListener.forget(), mTrackID);
     }
@@ -2532,9 +2542,16 @@ MediaStream::RemoveDirectTrackListener(DirectMediaStreamTrackListener* aListener
     Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveDirectTrackListenerImpl(mListener, mTrackID);
+    }
+    void RunDuringShutdown() override
+    {
+      // During shutdown we still want the listener's
+      // NotifyDirectListenerUninstalled to be called, since not doing that
+      // might block shutdown of other modules.
+      Run();
     }
     RefPtr<DirectMediaStreamTrackListener> mListener;
     TrackID mTrackID;
@@ -2956,10 +2973,8 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
                                               TrackID aTrackID)
 {
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
-  TrackData* updateData = nullptr;
-  StreamTracks::Track* track = nullptr;
-  bool isAudio = false;
-  bool isVideo = false;
+  MutexAutoLock lock(mMutex);
+
   RefPtr<DirectMediaStreamTrackListener> listener = aListener;
   LOG(LogLevel::Debug,
       ("Adding direct track listener %p bound to track %d to source stream %p",
@@ -2967,46 +2982,8 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
        aTrackID,
        this));
 
-  {
-    MutexAutoLock lock(mMutex);
-    updateData = FindDataForTrack(aTrackID);
-    track = FindTrack(aTrackID);
-    if (track) {
-      isAudio = track->GetType() == MediaSegment::AUDIO;
-      isVideo = track->GetType() == MediaSegment::VIDEO;
-    }
+  StreamTracks::Track* track = FindTrack(aTrackID);
 
-    if (track && isVideo && listener->AsMediaStreamVideoSink()) {
-      // Re-send missed VideoSegment to new added MediaStreamVideoSink.
-      VideoSegment* trackSegment = static_cast<VideoSegment*>(track->GetSegment());
-      VideoSegment videoSegment;
-      if (mTracks.GetForgottenDuration() < trackSegment->GetDuration()) {
-        videoSegment.AppendSlice(*trackSegment,
-                                 mTracks.GetForgottenDuration(),
-                                 trackSegment->GetDuration());
-      }
-      if (updateData) {
-        videoSegment.AppendSlice(*updateData->mData, 0, updateData->mData->GetDuration());
-      }
-      listener->NotifyRealtimeTrackData(Graph(), 0, videoSegment);
-    }
-
-    if (track && (isAudio || isVideo)) {
-      for (auto entry : mDirectTrackListeners) {
-        if (entry.mListener == listener &&
-            (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
-          listener->NotifyDirectListenerInstalled(
-            DirectMediaStreamTrackListener::InstallationResult::ALREADY_EXISTS);
-          return;
-        }
-      }
-
-      TrackBound<DirectMediaStreamTrackListener>* sourceListener =
-        mDirectTrackListeners.AppendElement();
-      sourceListener->mListener = listener;
-      sourceListener->mTrackID = aTrackID;
-    }
-  }
   if (!track) {
     LOG(LogLevel::Warning,
         ("Couldn't find source track for direct track listener %p",
@@ -3015,23 +2992,55 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
       DirectMediaStreamTrackListener::InstallationResult::TRACK_NOT_FOUND_AT_SOURCE);
     return;
   }
+
+  bool isAudio = track->GetType() == MediaSegment::AUDIO;
+  bool isVideo = track->GetType() == MediaSegment::VIDEO;
   if (!isAudio && !isVideo) {
     LOG(
       LogLevel::Warning,
       ("Source track for direct track listener %p is unknown", listener.get()));
-    // It is not a video or audio track.
     MOZ_ASSERT(false);
     return;
   }
-  LOG(
-    LogLevel::Debug,
-    ("Added direct track listener %p. ended=%d", listener.get(), !updateData));
+
+  for (auto entry : mDirectTrackListeners) {
+    if (entry.mListener == listener &&
+        (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
+      listener->NotifyDirectListenerInstalled(
+        DirectMediaStreamTrackListener::InstallationResult::ALREADY_EXISTS);
+      return;
+    }
+  }
+
+  TrackBound<DirectMediaStreamTrackListener>* sourceListener =
+    mDirectTrackListeners.AppendElement();
+  sourceListener->mListener = listener;
+  sourceListener->mTrackID = aTrackID;
+
+  LOG(LogLevel::Debug, ("Added direct track listener %p", listener.get()));
   listener->NotifyDirectListenerInstalled(
     DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
-  if (!updateData) {
-    // The track exists but the mUpdateTracks entry was removed.
-    // This means that the track has ended.
-    listener->NotifyEnded();
+
+  // Pass buffered data to the listener
+  AudioSegment bufferedAudio;
+  VideoSegment bufferedVideo;
+  MediaSegment& bufferedData =
+    isAudio ? static_cast<MediaSegment&>(bufferedAudio)
+            : static_cast<MediaSegment&>(bufferedVideo);
+
+  MediaSegment& trackSegment = *track->GetSegment();
+  if (mTracks.GetForgottenDuration() < trackSegment.GetDuration()) {
+    bufferedData.AppendSlice(trackSegment,
+                             mTracks.GetForgottenDuration(),
+                             trackSegment.GetDuration());
+  }
+
+  if (TrackData* updateData = FindDataForTrack(aTrackID)) {
+    bufferedData.AppendSlice(*updateData->mData, 0, updateData->mData->GetDuration());
+  }
+
+  if (bufferedData.GetDuration() != 0) {
+    listener->NotifyRealtimeTrackData(Graph(), 0, bufferedData);
   }
 }
 
@@ -3544,8 +3553,8 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
         {
           // Distribute the global async shutdown blocker in a ticket. If there
           // are zero graphs then shutdown is unblocked when we go out of scope.
-          RefPtr<MediaStreamGraphImpl::ShutdownTicket> ticket =
-              new MediaStreamGraphImpl::ShutdownTicket(gMediaStreamGraphShutdownBlocker.get());
+          auto ticket = MakeRefPtr<media::ShutdownTicket>(
+              gMediaStreamGraphShutdownBlocker.get());
           gMediaStreamGraphShutdownBlocker = nullptr;
 
           for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
@@ -3556,7 +3565,7 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
       };
 
       gMediaStreamGraphShutdownBlocker = new Blocker();
-      nsCOMPtr<nsIAsyncShutdownClient> barrier = MediaStreamGraphImpl::GetShutdownBarrier();
+      nsCOMPtr<nsIAsyncShutdownClient> barrier = media::GetShutdownBarrier();
       nsresult rv = barrier->
           AddBlocker(gMediaStreamGraphShutdownBlocker,
                      NS_LITERAL_STRING(__FILE__), __LINE__,

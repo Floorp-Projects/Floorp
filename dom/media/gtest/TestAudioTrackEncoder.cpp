@@ -5,27 +5,45 @@
 
 #include "gtest/gtest.h"
 #include "OpusTrackEncoder.h"
+#include "SineWaveGenerator.h"
 
 using namespace mozilla;
+
+class AudioGenerator
+{
+public:
+  AudioGenerator(int32_t aChannels, int32_t aSampleRate)
+    : mGenerator(aSampleRate, 1000)
+    , mChannels(aChannels)
+  {}
+
+  void Generate(AudioSegment& aSegment, const int32_t& aSamples)
+  {
+    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(aSamples * sizeof(int16_t));
+    int16_t* dest = static_cast<int16_t*>(buffer->Data());
+    mGenerator.generate(dest, aSamples);
+    AutoTArray<const int16_t*, 1> channels;
+    for (int32_t i = 0; i < mChannels; i++) {
+      channels.AppendElement(dest);
+    }
+    aSegment.AppendFrames(buffer.forget(), channels, aSamples, PRINCIPAL_HANDLE_NONE);
+  }
+
+private:
+  SineWaveGenerator mGenerator;
+  const int32_t mChannels;
+};
 
 class TestOpusTrackEncoder : public OpusTrackEncoder
 {
 public:
+  TestOpusTrackEncoder() : OpusTrackEncoder(90000) {}
+
   // Return true if it has successfully initialized the Opus encoder.
-  bool TestOpusCreation(int aChannels, int aSamplingRate)
+  bool TestOpusRawCreation(int aChannels, int aSamplingRate)
   {
     if (Init(aChannels, aSamplingRate) == NS_OK) {
-      if (GetPacketDuration()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool TestOpusTryCreation(const AudioSegment& aSegment, int aSamplingRate)
-  {
-    if (TryInit(aSegment, aSamplingRate) == NS_OK) {
-      if (GetPacketDuration()) {
+      if (IsInitialized()) {
         return true;
       }
     }
@@ -41,36 +59,14 @@ public:
   }
 };
 
-static AudioSegment
-CreateTestSegment()
-{
-  RefPtr<SharedBuffer> dummyBuffer = SharedBuffer::Create(2);
-  AutoTArray<const int16_t*, 1> channels;
-  const int16_t* channelData = static_cast<const int16_t*>(dummyBuffer->Data());
-  channels.AppendElement(channelData);
-
-  AudioSegment testSegment;
-  testSegment.AppendFrames(
-    dummyBuffer.forget(), channels, 1 /* #samples */, PRINCIPAL_HANDLE_NONE);
-  return testSegment;
-}
-
 static bool
 TestOpusInit(int aChannels, int aSamplingRate)
 {
   TestOpusTrackEncoder encoder;
-  return encoder.TestOpusCreation(aChannels, aSamplingRate);
+  return encoder.TestOpusRawCreation(aChannels, aSamplingRate);
 }
 
-static int
-TestOpusResampler(int aChannels, int aSamplingRate)
-{
-  TestOpusTrackEncoder encoder;
-  EXPECT_TRUE(encoder.TestOpusCreation(aChannels, aSamplingRate));
-  return encoder.TestGetOutputSampleRate();
-}
-
-TEST(Media, OpusEncoder_Init)
+TEST(OpusAudioTrackEncoder, InitRaw)
 {
   // Expect false with 0 or negative channels of input signal.
   EXPECT_FALSE(TestOpusInit(0, 16000));
@@ -101,70 +97,96 @@ TEST(Media, OpusEncoder_Init)
   EXPECT_FALSE(TestOpusInit(2, 200000));
 }
 
-TEST(Media, OpusEncoder_TryInit)
+TEST(OpusAudioTrackEncoder, Init)
 {
   {
     // The encoder does not normally recieve enough info from null data to
     // init. However, multiple attempts to do so, with sufficiently long
     // duration segments, should result in a best effort attempt. The first
     // attempt should never do this though, even if the duration is long:
-    TestOpusTrackEncoder encoder;
-    AudioSegment testSegment;
-    testSegment.AppendNullData(48000 * 100);
-    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 48000));
+    OpusTrackEncoder encoder(48000);
+    AudioSegment segment;
+    segment.AppendNullData(48000 * 100);
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_FALSE(encoder.IsInitialized());
 
     // Multiple init attempts should result in best effort init:
-    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 48000));
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_TRUE(encoder.IsInitialized());
   }
 
   {
     // If the duration of the segments given to the encoder is not long then
     // we shouldn't try a best effort init:
-    TestOpusTrackEncoder encoder;
-    AudioSegment testSegment;
-    testSegment.AppendNullData(1);
-    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 48000));
-    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 48000));
+    OpusTrackEncoder encoder(48000);
+    AudioSegment segment;
+    segment.AppendNullData(1);
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_FALSE(encoder.IsInitialized());
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_FALSE(encoder.IsInitialized());
   }
 
   {
     // For non-null segments we should init immediately
-    TestOpusTrackEncoder encoder;
-    AudioSegment testSegment = CreateTestSegment();
-    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 48000));
+    OpusTrackEncoder encoder(48000);
+    AudioSegment segment;
+    AudioGenerator generator(2, 48000);
+    generator.Generate(segment, 1);
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_TRUE(encoder.IsInitialized());
   }
 
   {
     // Test low sample rate bound
-    TestOpusTrackEncoder encoder;
-    AudioSegment testSegment = CreateTestSegment();
-    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 7999));
+    OpusTrackEncoder encoder(7999);
+    AudioSegment segment;
+    AudioGenerator generator(2, 7999);
+    generator.Generate(segment, 1);
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_FALSE(encoder.IsInitialized());
   }
 
   {
     // Test low sample rate bound
-    TestOpusTrackEncoder encoder;
-    AudioSegment testSegment = CreateTestSegment();
-    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 7999));
-    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 8000));
+    OpusTrackEncoder encoder(8000);
+    AudioSegment segment;
+    AudioGenerator generator(2, 8000);
+    generator.Generate(segment, 1);
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_TRUE(encoder.IsInitialized());
   }
 
   {
     // Test high sample rate bound
-    TestOpusTrackEncoder encoder;
-    AudioSegment testSegment = CreateTestSegment();
-    EXPECT_FALSE(encoder.TestOpusTryCreation(testSegment, 192001));
+    OpusTrackEncoder encoder(192001);
+    AudioSegment segment;
+    AudioGenerator generator(2, 192001);
+    generator.Generate(segment, 1);
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_FALSE(encoder.IsInitialized());
   }
 
   {
     // Test high sample rate bound
-    TestOpusTrackEncoder encoder;
-    AudioSegment testSegment = CreateTestSegment();
-    EXPECT_TRUE(encoder.TestOpusTryCreation(testSegment, 192000));
+    OpusTrackEncoder encoder(192000);
+    AudioSegment segment;
+    AudioGenerator generator(2, 192000);
+    generator.Generate(segment, 1);
+    encoder.TryInit(segment, segment.GetDuration());
+    EXPECT_TRUE(encoder.IsInitialized());
   }
 }
 
-TEST(Media, OpusEncoder_Resample)
+static int
+TestOpusResampler(int aChannels, int aSamplingRate)
+{
+  TestOpusTrackEncoder encoder;
+  EXPECT_TRUE(encoder.TestOpusRawCreation(aChannels, aSamplingRate));
+  return encoder.TestGetOutputSampleRate();
+}
+
+TEST(OpusAudioTrackEncoder, Resample)
 {
   // Sampling rates of data to be fed to Opus encoder, should remain unchanged
   // if it is one of Opus supported rates (8000, 12000, 16000, 24000 and 48000
@@ -176,6 +198,52 @@ TEST(Media, OpusEncoder_Resample)
   EXPECT_TRUE(TestOpusResampler(1, 48000) == 48000);
 
   // Otherwise, it should be resampled to 48kHz by resampler.
-  EXPECT_FALSE(TestOpusResampler(1, 9600) == 9600);
-  EXPECT_FALSE(TestOpusResampler(1, 44100) == 44100);
+  EXPECT_TRUE(TestOpusResampler(1, 9600) == 48000);
+  EXPECT_TRUE(TestOpusResampler(1, 44100) == 48000);
+}
+
+TEST(OpusAudioTrackEncoder, FetchMetadata)
+{
+  const int32_t channels = 1;
+  const int32_t sampleRate = 44100;
+  TestOpusTrackEncoder encoder;
+  EXPECT_TRUE(encoder.TestOpusRawCreation(channels, sampleRate));
+
+  RefPtr<TrackMetadataBase> metadata = encoder.GetMetadata();
+  ASSERT_EQ(TrackMetadataBase::METADATA_OPUS, metadata->GetKind());
+
+  RefPtr<OpusMetadata> opusMeta =
+    static_cast<OpusMetadata*>(metadata.get());
+  EXPECT_EQ(channels, opusMeta->mChannels);
+  EXPECT_EQ(sampleRate, opusMeta->mSamplingFrequency);
+}
+
+TEST(OpusAudioTrackEncoder, FrameEncode)
+{
+  const int32_t channels = 1;
+  const int32_t sampleRate = 44100;
+  TestOpusTrackEncoder encoder;
+  EXPECT_TRUE(encoder.TestOpusRawCreation(channels, sampleRate));
+
+  // Generate five seconds of raw audio data.
+  AudioGenerator generator(channels, sampleRate);
+  AudioSegment segment;
+  const int32_t samples = sampleRate * 5;
+  generator.Generate(segment, samples);
+
+  encoder.SetStartOffset(0);
+  encoder.AppendAudioSegment(Move(segment));
+  encoder.AdvanceCurrentTime(samples);
+
+  EncodedFrameContainer container;
+  EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  // Verify that encoded data is 5 seconds long.
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  // 44100 as used above gets resampled to 48000 for opus.
+  const uint64_t five = 48000 * 5;
+  EXPECT_EQ(five, totalDuration);
 }
