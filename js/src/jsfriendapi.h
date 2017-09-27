@@ -3062,12 +3062,6 @@ ToWindowProxyIfWindow(JSObject* obj)
 extern JS_FRIEND_API(JSObject*)
 ToWindowIfWindowProxy(JSObject* obj);
 
-// Create and add the Intl.PluralRules constructor function to the provided
-// object.  This function throws if called more than once per realm/global
-// object.
-extern bool
-AddPluralRulesConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
-
 // Create and add the Intl.MozDateTimeFormat constructor function to the provided
 // object.
 //
