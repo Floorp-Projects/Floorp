@@ -6,8 +6,6 @@
 
 UNIFIED_SOURCES += [
     'nsPrintingPromptService.cpp',
-    'nsPrintProgress.cpp',
-    'nsPrintProgressParams.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
