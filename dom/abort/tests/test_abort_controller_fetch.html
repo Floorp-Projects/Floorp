@@ -12,28 +12,68 @@
 <body>
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.pushPrefEnv({"set": [["dom.abortController.enabled", true ],
-                                   ["dom.abortController.fetch.enabled", true]]}, () => {
-  let ifr = document.createElement("iframe");
-  ifr.src = "file_abort_controller_fetch.html";
-  document.body.appendChild(ifr);
+function testAbortedFetch() {
+  var ac = new AbortController();
+  ac.abort();
 
-  window.onmessage = function(e) {
-    if (e.data.type == "finish") {
-      SimpleTest.finish();
-      return;
-    }
+  fetch("slow.sjs", { signal: ac.signal }).then(() => {
+    ok(false, "Fetch should not return a resolved promise");
+  }, e => {
+    is(e.name, "AbortError", "We have an abort error");
+  }).then(next);
+}
 
-    if (e.data.type == "check") {
-      ok(e.data.status, e.data.message);
-      return;
-    }
+function testFetchAndAbort() {
+  var ac = new AbortController();
 
-    ok(false, "Something when wrong.");
+  var p = fetch("slow.sjs", { signal: ac.signal });
+  ac.abort();
+
+  p.then(() => {
+    ok(false, "Fetch should not return a resolved promise");
+  }, e => {
+    is(e.name, "AbortError", "We have an abort error");
+  }).then(next);
+}
+
+function testWorkerAbortedFetch() {
+  var w = new Worker("worker_abort_controller_fetch.js");
+  w.onmessage = function(e) {
+    ok(e.data, "Abort + Fetch works in workers");
+    next();
   }
-});
+  w.postMessage("testWorkerAbortedFetch");
+}
+
+function testWorkerFetchAndAbort() {
+  var w = new Worker("worker_abort_controller_fetch.js");
+  w.onmessage = function(e) {
+    ok(e.data, "Abort + Fetch works in workers");
+    next();
+  }
+  w.postMessage("testWorkerFetchAndAbort");
+}
+
+var steps = [
+  // fetch + signaling
+  testAbortedFetch,
+  testFetchAndAbort,
+  testWorkerAbortedFetch,
+  testWorkerFetchAndAbort,
+];
+
+function next() {
+  if (!steps.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
 
 SimpleTest.waitForExplicitFinish();
+next();
 
 </script>
 </body>
