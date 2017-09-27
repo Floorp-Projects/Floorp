@@ -1255,10 +1255,30 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
       return;
     }
 
+    RefPtr<RawServoDeclarationBlock> customProperties;
+    // A workaround for CSS Animations in servo backend, custom properties in
+    // keyframe are stored in a servo's declaration block. Find the declaration
+    // block to resolve CSS variables in the keyframe.
+    // This workaround will be solved by bug 1391537.
+    if (isServo && isCSSAnimation) {
+      for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
+        if (propertyValue.mProperty ==
+              nsCSSPropertyID::eCSSPropertyExtra_variable) {
+          customProperties = propertyValue.mServoDeclarationBlock;
+          break;
+        }
+      }
+    }
+
     JS::Rooted<JSObject*> keyframeObject(aCx, &keyframeJSValue.toObject());
     for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
       nsAutoString stringValue;
       if (isServo) {
+        // Don't serialize the custom properties for this keyframe.
+        if (propertyValue.mProperty ==
+              nsCSSPropertyID::eCSSPropertyExtra_variable) {
+          continue;
+        }
         if (propertyValue.mServoDeclarationBlock) {
           const ServoStyleContext* servoStyleContext =
             styleContext ? styleContext->AsServo() : nullptr;
@@ -1266,7 +1286,8 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
             propertyValue.mServoDeclarationBlock,
             propertyValue.mProperty,
             &stringValue,
-            servoStyleContext);
+            servoStyleContext,
+            customProperties);
         } else {
           RawServoAnimationValue* value =
             mBaseStyleValuesForServo.GetWeak(propertyValue.mProperty);
