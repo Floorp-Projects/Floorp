@@ -440,6 +440,10 @@ bool
 VRDisplay::GetFrameData(VRFrameData& aFrameData)
 {
   UpdateFrameInfo();
+  if (!(mFrameInfo.mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation)) {
+    // We must have at minimum Cap_Orientation for a valid pose.
+    return false;
+  }
   aFrameData.Update(mFrameInfo);
   return true;
 }
