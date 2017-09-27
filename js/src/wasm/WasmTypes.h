@@ -164,29 +164,6 @@ struct ShareableBase : AtomicRefCounted<T>
 
 // ValType utilities
 
-static inline unsigned
-SizeOf(ValType vt)
-{
-    switch (vt) {
-      case ValType::I32:
-      case ValType::F32:
-        return 4;
-      case ValType::I64:
-      case ValType::F64:
-        return 8;
-      case ValType::I8x16:
-      case ValType::I16x8:
-      case ValType::I32x4:
-      case ValType::F32x4:
-      case ValType::B8x16:
-      case ValType::B16x8:
-      case ValType::B32x4:
-        return 16;
-      default:
-        MOZ_CRASH("Invalid ValType");
-    }
-}
-
 static inline bool
 IsSimdType(ValType vt)
 {
@@ -878,8 +855,7 @@ struct SigWithId : Sig
     SigIdDesc id;
 
     SigWithId() = default;
-    explicit SigWithId(Sig&& sig) : Sig(Move(sig)), id() {}
-    SigWithId(Sig&& sig, SigIdDesc id) : Sig(Move(sig)), id(id) {}
+    explicit SigWithId(Sig&& sig, SigIdDesc id) : Sig(Move(sig)), id(id) {}
     void operator=(Sig&& rhs) { Sig::operator=(Move(rhs)); }
 
     WASM_DECLARE_SERIALIZABLE(SigWithId)
@@ -1352,11 +1328,6 @@ struct Limits
 {
     uint32_t initial;
     Maybe<uint32_t> maximum;
-
-    Limits() = default;
-    explicit Limits(uint32_t initial, const Maybe<uint32_t>& maximum = Nothing())
-      : initial(initial), maximum(maximum)
-    {}
 };
 
 // TableDesc describes a table as well as the offset of the table's base pointer
