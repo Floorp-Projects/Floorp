@@ -7,6 +7,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   DownloadLastDir: "resource://gre/modules/DownloadLastDir.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -1000,19 +1001,17 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
   }
 
   let docTitle;
-  if (aDocument) {
+  if (aDocument && aDocument.title && aDocument.title.trim()) {
     // If the document looks like HTML or XML, try to use its original title.
-    docTitle = validateFileName(aDocument.title).trim();
-    if (docTitle) {
-      let contentType = aDocument.contentType;
-      if (contentType == "application/xhtml+xml" ||
-          contentType == "application/xml" ||
-          contentType == "image/svg+xml" ||
-          contentType == "text/html" ||
-          contentType == "text/xml") {
-        // 2) Use the document title
-        return docTitle;
-      }
+    docTitle = validateFileName(aDocument.title);
+    let contentType = aDocument.contentType;
+    if (contentType == "application/xhtml+xml" ||
+        contentType == "application/xml" ||
+        contentType == "image/svg+xml" ||
+        contentType == "text/html" ||
+        contentType == "text/xml") {
+      // 2) Use the document title
+      return docTitle;
     }
   }
 
@@ -1059,29 +1058,8 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
 }
 
 function validateFileName(aFileName) {
-  var re = /[\/]+/g;
-  if (navigator.appVersion.indexOf("Windows") != -1) {
-    re = /[\\\/\|]+/g;
-    aFileName = aFileName.replace(/[\"]+/g, "'");
-    aFileName = aFileName.replace(/[\*\:\?]+/g, " ");
-    aFileName = aFileName.replace(/[\<]+/g, "(");
-    aFileName = aFileName.replace(/[\>]+/g, ")");
-  } else if (navigator.appVersion.indexOf("Macintosh") != -1)
-    re = /[\:\/]+/g;
-  else if (navigator.appVersion.indexOf("Android") != -1) {
-    // On mobile devices, the filesystem may be very limited in what
-    // it considers valid characters. To avoid errors, we sanitize
-    // conservatively.
-    const dangerousChars = "*?<>|\":/\\[];,+=";
-    var processed = "";
-    for (var i = 0; i < aFileName.length; i++)
-      processed += aFileName.charCodeAt(i) >= 32 &&
-                   !(dangerousChars.indexOf(aFileName[i]) >= 0) ? aFileName[i]
-                                                                : "_";
-
-    // Last character should not be a space
-    processed = processed.trim();
-
+  let processed = DownloadPaths.sanitize(aFileName) || "_";
+  if (AppConstants.platform == "android") {
     // If a large part of the filename has been sanitized, then we
     // will use a default filename instead
     if (processed.replace(/_/g, "").length <= processed.length / 2) {
@@ -1099,10 +1077,8 @@ function validateFileName(aFileName) {
           processed += "." + suffix;
       }
     }
-    return processed;
   }
-
-  return aFileName.replace(re, "_");
+  return processed;
 }
 
 function getNormalizedLeafName(aFile, aDefaultExtension) {
