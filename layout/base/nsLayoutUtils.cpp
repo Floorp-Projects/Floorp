@@ -4485,6 +4485,10 @@ nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
   return nsRect(imageTopLeftPt, concreteObjectSize);
 }
 
+// Bug 1403220: Suspected MSVC PGO miscompilation
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
 already_AddRefed<nsFontMetrics>
 nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame, float aInflation)
 {
@@ -4504,6 +4508,9 @@ nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame, float aInflation)
   }
   return GetFontMetricsForStyleContext(styleContext, aInflation, variantWidth);
 }
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
 
 already_AddRefed<nsFontMetrics>
 nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
