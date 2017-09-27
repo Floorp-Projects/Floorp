@@ -71,7 +71,7 @@ let webpackConfig = {
       "Services": "devtools-modules/src/Services",
       "react": path.join(__dirname, "node_modules/react"),
 
-      "devtools/client/framework/devtools": path.join(__dirname, "../../client/shims/devtools"),
+      "devtools/client/framework/devtools": path.join(__dirname, "../../client/shared/webpack/shims/framework-devtools-shim"),
       "devtools/client/framework/menu": "devtools-modules/src/menu",
       "devtools/client/netmonitor/src/utils/menu": "devtools-contextmenu",
 
@@ -86,7 +86,7 @@ let webpackConfig = {
       "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
 
       "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
-      "devtools/shared/fronts/timeline": path.join(__dirname, "../../shared/shims/fronts/timeline"),
+      "devtools/shared/fronts/timeline": path.join(__dirname, "../../client/shared/webpack/shims/fronts-timeline-shim"),
       "devtools/shared/platform/clipboard": path.join(__dirname, "../../shared/platform/content/clipboard"),
 
       // Locales need to be explicitly mapped to the en-US subfolder
