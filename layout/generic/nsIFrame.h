@@ -625,6 +625,7 @@ public:
     , mIsWrapperBoxNeedingRestyle(false)
     , mReflowRequestedForCharDataChange(false)
     , mForceDescendIntoIfVisible(false)
+    , mBuiltDisplayList(false)
     , mIsPrimaryFrame(false)
   {
     mozilla::PodZero(&mOverflow);
@@ -3838,6 +3839,10 @@ public:
   // clears this bit if so.
   bool CheckAndClearPaintedState();
 
+  // Checks if we (or any of our descendents) have mBuiltDisplayList set, and
+  // clears this bit if so.
+  bool CheckAndClearDisplayListState();
+
   // CSS visibility just doesn't cut it because it doesn't inherit through
   // documents. Also if this frame is in a hidden card of a deck then it isn't
   // visible either and that isn't expressed using CSS visibility. Also if it
@@ -4091,6 +4096,9 @@ public:
   bool ForceDescendIntoIfVisible() { return mForceDescendIntoIfVisible; }
   void SetForceDescendIntoIfVisible(bool aForce) { mForceDescendIntoIfVisible = aForce; }
 
+  bool BuiltDisplayList() { return mBuiltDisplayList; }
+  void SetBuiltDisplayList(bool aBuilt) { mBuiltDisplayList = aBuilt; }
+
 protected:
 
   /**
@@ -4259,6 +4267,14 @@ protected:
    */
   bool mForceDescendIntoIfVisible : 1;
 
+  /**
+   * True if we have built display items for this frame since
+   * the last call to CheckAndClearDisplayListState, false
+   * otherwise. Used for the reftest harness to verify minimal
+   * display list building.
+   */
+  bool mBuiltDisplayList : 1;
+
 private:
   /**
    * True if this is the primary frame for mContent.
@@ -4267,7 +4283,7 @@ private:
 
 protected:
 
-  // There is a 8-bit gap left here.
+  // There is a 7-bit gap left here.
 
   // Helpers
   /**

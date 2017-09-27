@@ -389,6 +389,25 @@ nsIFrame::CheckAndClearPaintedState()
 }
 
 bool
+nsIFrame::CheckAndClearDisplayListState()
+{
+  bool result = BuiltDisplayList();
+  SetBuiltDisplayList(false);
+
+  nsIFrame::ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
+      if (child->CheckAndClearDisplayListState()) {
+        result = true;
+      }
+    }
+  }
+  return result;
+}
+
+bool
 nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const
 {
   if (!StyleVisibility()->IsVisible()) {
@@ -3186,6 +3205,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     child->PresContext()->PresShell()->EnsureFrameInApproximatelyVisibleList(child);
     awayFromCommonPath = true;
   }
+
+  child->SetBuiltDisplayList(true);
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..

@@ -1607,6 +1607,12 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
 
   /**
+   * Check if any display list building has been done for this element,
+   * clears the display list flags if they have.
+   */
+  boolean checkAndClearDisplayListState(in nsIDOMElement aElement);
+
+  /**
    * Check whether all display items of the primary frame of aElement have been
    * assigned to the same single PaintedLayer in the last paint. If that is the
    * case, returns whether that PaintedLayer is opaque; if it's not the case, an
