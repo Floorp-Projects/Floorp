@@ -17,6 +17,8 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -1124,7 +1126,29 @@ ServiceWorkerRegistrar::GetShutdownPhase() const
   MOZ_RELEASE_ASSERT(svc);
 
   nsCOMPtr<nsIAsyncShutdownClient> client;
-  Unused << svc->GetProfileBeforeChange(getter_AddRefs(client));
+  nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
+  // If this fails, something is very wrong on the JS side (or we're out of
+  // memory), and there's no point in continuing startup. Include as much
+  // information as possible in the crash report.
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {
+      if (auto* context = CycleCollectedJSContext::Get()) {
+        if (nsCOMPtr<nsIException> exn = context->GetPendingException()) {
+          nsAutoCString msg;
+          if (NS_SUCCEEDED(exn->GetMessageMoz(msg))) {
+            MOZ_CRASH_UNSAFE_PRINTF("Failed to get profileBeforeChange shutdown blocker: %s",
+                                    msg.get());
+
+          }
+        }
+      }
+    }
+
+    nsAutoCString errorName;
+    GetErrorName(rv, errorName);
+    MOZ_CRASH_UNSAFE_PRINTF("Failed to get profileBeforeChange shutdown blocker: %s",
+                            errorName.get());
+  }
   MOZ_RELEASE_ASSERT(client);
   return Move(client);
 }
