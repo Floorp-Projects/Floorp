@@ -95,7 +95,7 @@
             android:paddingStart="16dp"
             android:paddingRight="16dp"
             android:paddingEnd="16dp"
-            android:text="@string/promotion_add_to_homescreen"
+            android:text="@string/promotion_add_page_shortcut"
             android:maxLines="2"
             android:ellipsize="end"
             android:textColor="@android:color/white"
