@@ -288,7 +288,9 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           return item;
         })
       }));
-    case at.PLACES_LINK_DELETED:
+    case at.PLACES_LINKS_DELETED:
+      return prevState.map(section => Object.assign({}, section,
+        {rows: section.rows.filter(site => !action.data.includes(site.url))}));
     case at.PLACES_LINK_BLOCKED:
       return prevState.map(section =>
         Object.assign({}, section, {rows: section.rows.filter(site => site.url !== action.data.url)}));
