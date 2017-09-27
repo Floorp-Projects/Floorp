@@ -431,22 +431,37 @@ FormAutofillParent.prototype = {
   async _onCreditCardSubmit(creditCard, target, timeStartedFillingMS) {
     // We'll show the credit card doorhanger if:
     //   - User applys autofill and changed
-    //   - User fills form manually
-    if (creditCard.guid &&
-        Object.keys(creditCard.record).every(key => creditCard.untouchedFields.includes(key))) {
-      // Add probe to record credit card autofill(without modification).
-      Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_autofill", 1);
-      this._recordFormFillingTime("creditCard", "autofill", timeStartedFillingMS);
-      return;
-    }
-
-    // Add the probe to record credit card manual filling or autofill but modified case.
+    //   - User fills form manually and the filling data is not duplicated to storage
     if (creditCard.guid) {
+      let originalCCData = this.profileStorage.creditCards.get(creditCard.guid);
+      let unchanged = Object.keys(creditCard.record).every(field => {
+        if (creditCard.record[field] === "" && !originalCCData[field]) {
+          return true;
+        }
+        return creditCard.untouchedFields.includes(field);
+      });
+
+      if (unchanged) {
+        this.profileStorage.creditCards.notifyUsed(creditCard.guid);
+        // Add probe to record credit card autofill(without modification).
+        Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_autofill", 1);
+        this._recordFormFillingTime("creditCard", "autofill", timeStartedFillingMS);
+        return;
+      }
+      // Add the probe to record credit card autofill with modification.
       Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_autofill_modified", 1);
       this._recordFormFillingTime("creditCard", "autofill-update", timeStartedFillingMS);
     } else {
+      // Add the probe to record credit card manual filling.
       Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_manual", 1);
       this._recordFormFillingTime("creditCard", "manual", timeStartedFillingMS);
+    }
+
+    // Early return if it's a duplicate data
+    let dupGuid = this.profileStorage.creditCards.getDuplicateGuid(creditCard.record);
+    if (dupGuid) {
+      this.profileStorage.creditCards.notifyUsed(dupGuid);
+      return;
     }
 
     let state = await FormAutofillDoorhanger.show(target, "creditCard");
