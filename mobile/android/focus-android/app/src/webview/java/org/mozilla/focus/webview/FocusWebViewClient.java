@@ -167,7 +167,7 @@ import org.mozilla.focus.web.IWebView;
     }
 
     /* package */ void restoreState(Bundle bundle) {
-        if (bundle.containsKey(STATE_KEY_CERTIFICATE)) {
+        if (bundle != null && bundle.containsKey(STATE_KEY_CERTIFICATE)) {
             restoredUrl = bundle.getString(STATE_KEY_URL);
             restoredCertificate = SslCertificate.restoreState(bundle.getBundle("client_last_certificate"));
         }

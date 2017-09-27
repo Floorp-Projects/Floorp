@@ -15,7 +15,8 @@
     </issue>
 
     <!-- This lint rule makes sure that all launcher icons are in PNG format. However Android O
-         introduced adaptive icons that are defined in XML. This lint rule needs to be updated. -->
+         introduced adaptive icons that are defined in XML. This lint rule needs to be updated.
+         (Issue #1435) -->
     <issue id="IconLauncherFormat">
         <ignore path="**/res/mipmap-anydpi-v26/ic_launcher.xml" />
     </issue>

@@ -82,8 +82,8 @@ public class FloatingSessionsButton extends FloatingActionButton {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        final int x = canvas.getWidth() / 2;
-        final int y = (int) ((canvas.getHeight() / 2) - ((textPaint.descent() + textPaint.ascent()) / 2));
+        final float x = canvas.getWidth() / 2f;
+        final float y = (canvas.getHeight() / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f);
 
         final String text = tabCount < TOO_MANY_TABS ? String.valueOf(tabCount) : TOO_MANY_TABS_SYMBOL;
 
