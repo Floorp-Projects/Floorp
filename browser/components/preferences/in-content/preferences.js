@@ -60,6 +60,7 @@ function init_all() {
   register_module("paneSync", gSyncPane);
   register_module("paneSearchResults", gSearchResultsPane);
   gSearchResultsPane.init();
+  gMainPane.preInit();
 
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
