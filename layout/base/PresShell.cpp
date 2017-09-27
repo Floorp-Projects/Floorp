@@ -4776,7 +4776,7 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
           const DisplayItemClipChain* newClipChain =
             aBuilder->AllocateDisplayItemClipChain(newClip, asr, nullptr);
 
-          i->IntersectClip(aBuilder, newClipChain);
+          i->IntersectClip(aBuilder, newClipChain, true);
           itemToInsert = i;
         }
       }

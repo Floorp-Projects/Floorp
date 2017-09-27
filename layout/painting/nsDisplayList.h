@@ -1807,6 +1807,14 @@ public:
     aBuilder->Destroy(type, this);
   }
 
+  virtual void RestoreState()
+  {
+    mVisibleRect = mState.mVisibleRect;
+    mClipChain = mState.mClipChain;
+    mClip = mState.mClip;
+    mDisableSubpixelAA = false;
+  }
+
   virtual void RemoveFrame(nsIFrame* aFrame)
   {
     if (aFrame == mFrame) {
@@ -2323,6 +2331,15 @@ public:
    */
   const nsRect& GetVisibleRect() const { return mVisibleRect; }
 
+  void SetVisibleRect(const nsRect& aVisibleRect, bool aStore)
+  {
+    mVisibleRect = aVisibleRect;
+
+    if (aStore) {
+      mState.mVisibleRect = mVisibleRect;
+    }
+  }
+
   /**
    * Returns the visible rect for the children, relative to their
    * reference frame. Can be different from mVisibleRect for nsDisplayTransform,
@@ -2428,12 +2445,13 @@ public:
   {
     return mClip ? *mClip : DisplayItemClip::NoClip();
   }
-  void IntersectClip(nsDisplayListBuilder* aBuilder, const DisplayItemClipChain* aOther);
+  void IntersectClip(nsDisplayListBuilder* aBuilder, const DisplayItemClipChain* aOther, bool aStore);
 
   void SetActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot) { mActiveScrolledRoot = aActiveScrolledRoot; }
   const ActiveScrolledRoot* GetActiveScrolledRoot() const { return mActiveScrolledRoot; }
 
-  virtual void SetClipChain(const DisplayItemClipChain* aClipChain);
+  virtual void SetClipChain(const DisplayItemClipChain* aClipChain,
+                            bool aStore);
   const DisplayItemClipChain* GetClipChain() const { return mClipChain; }
 
   /**
@@ -2462,7 +2480,6 @@ public:
   }
 
 protected:
-  friend class nsDisplayList;
   nsDisplayItem() = delete;
 
   typedef bool (*PrefFunc)(void);
@@ -2491,6 +2508,12 @@ protected:
   // True if this frame has been painted.
   bool      mPainted;
 #endif
+
+  struct {
+    nsRect mVisibleRect;
+    const DisplayItemClipChain* mClipChain;
+    const DisplayItemClip* mClip;
+  } mState;
 };
 
 /**
@@ -2809,6 +2832,12 @@ public:
   }
 
   nsDisplayListBuilder* mBuilder;
+  
+  void RestoreState() {
+    mIsOpaque = false;
+    mForceTransparentSurface = false;
+  }
+
 private:
   // This class is only used on stack, so we don't have to worry about leaking
   // it.  Don't let us be heap-allocated!
@@ -3697,7 +3726,15 @@ public:
     , mBackgroundRect(aBackgroundRect)
     , mBackgroundStyle(aBackgroundStyle)
     , mColor(Color::FromABGR(aColor))
-  { }
+  {
+    mState.mColor = mColor;
+  }
+
+  virtual void RestoreState() override
+  {
+    nsDisplayItem::RestoreState();
+    mColor = mState.mColor;
+  }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
@@ -3754,6 +3791,9 @@ protected:
   const nsRect mBackgroundRect;
   const nsStyleBackground* mBackgroundStyle;
   mozilla::gfx::Color mColor;
+  struct {
+    mozilla::gfx::Color mColor;
+  } mState;
 };
 
 class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor
@@ -3856,11 +3896,18 @@ public:
   {
     NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
     mOpacity = aOpacity;
-    IntersectClip(aBuilder, aClip);
+    IntersectClip(aBuilder, aClip, false);
   }
   virtual bool CanApplyOpacity() const override
   {
     return true;
+  }
+
+  virtual void RestoreState() override
+  {
+    nsDisplayItem::RestoreState();
+    mVisibleRegion.SetEmpty();
+    mOpacity = 1.0f;
   }
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
@@ -3903,6 +3950,12 @@ public:
     MOZ_COUNT_DTOR(nsDisplayBoxShadowInner);
   }
 #endif
+
+  virtual void RestoreState() override
+  {
+    nsDisplayItem::RestoreState();
+    mVisibleRegion.SetEmpty();
+  }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -4202,6 +4255,7 @@ public:
     // frame contains placeholders for out-of-flows that aren't descendants of
     // the frame.
     mVisibleRect.UnionRect(mBaseVisibleRect, visibleRect);
+    mState.mVisibleRect = mVisibleRect;
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
@@ -4276,8 +4330,6 @@ public:
     mHasZIndexOverride = true;
     mOverrideZIndex = aZIndex;
   }
-
-  void SetVisibleRect(const nsRect& aRect);
 
   void SetReferenceFrame(const nsIFrame* aFrame);
 
@@ -4369,6 +4421,12 @@ public:
   virtual ~nsDisplayOpacity();
 #endif
 
+  virtual void RestoreState() override
+  {
+    nsDisplayItem::RestoreState();
+    mOpacity = mState.mOpacity;
+  }
+
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
     MOZ_COUNT_CTOR(nsDisplayOpacity);
@@ -4427,6 +4485,10 @@ public:
 private:
   float mOpacity;
   bool mForEventsAndPluginsOnly;
+
+  struct {
+    float mOpacity;
+  } mState;
 };
 
 class nsDisplayBlendMode : public nsDisplayWrapList {
@@ -4729,7 +4791,7 @@ public:
   virtual ~nsDisplayStickyPosition();
 #endif
 
-  void SetClipChain(const DisplayItemClipChain* aClipChain) override;
+  void SetClipChain(const DisplayItemClipChain* aClipChain, bool aStore) override;
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
     MOZ_COUNT_CTOR(nsDisplayStickyPosition);
@@ -5256,6 +5318,13 @@ public:
   }
 #endif
 
+  virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
+  {
+    mStoredList.UpdateBounds(aBuilder);
+    mHasBounds = false;
+    UpdateBoundsFor3D(aBuilder);
+  }
+
   virtual void Destroy(nsDisplayListBuilder* aBuilder) override
   {
     mStoredList.GetChildren()->DeleteAll(aBuilder);
@@ -5605,6 +5674,11 @@ public:
     return mList.GetBounds(aBuilder, aSnap);
   }
 
+  virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
+  {
+    mList.UpdateBounds(aBuilder);
+  }
+
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) const override
@@ -5706,6 +5780,12 @@ public:
 
   explicit nsCharClipDisplayItem(nsIFrame* aFrame)
     : nsDisplayItem(aFrame), mVisIStartEdge(0), mVisIEndEdge(0) {}
+
+  virtual void RestoreState() override
+  {
+    nsDisplayItem::RestoreState();
+    mIsFrameSelected.reset();
+  }
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
 
