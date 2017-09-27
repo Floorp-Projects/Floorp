@@ -37,8 +37,13 @@ function printOnce(line)
     }
 }
 
-// Returns a table mapping function name to lists of [annotation-name,
-// annotation-value] pairs: { function-name => [ [annotation-name, annotation-value] ] }
+// Returns a table mapping function name to lists of
+// [annotation-name, annotation-value] pairs:
+//   { function-name => [ [annotation-name, annotation-value] ] }
+//
+// Note that sixgill will only store certain attributes (annotation-names), so
+// this won't be *all* the attributes in the source, just the ones that sixgill
+// watches for.
 function getAnnotations(body)
 {
     var all_annotations = {};
@@ -56,6 +61,7 @@ function getAnnotations(body)
     return all_annotations;
 }
 
+// Get just the annotations understood by the hazard analysis.
 function getTags(functionName, body) {
     var tags = new Set();
     var annotations = getAnnotations(body);
@@ -68,6 +74,8 @@ function getTags(functionName, body) {
     return tags;
 }
 
+// Scan through a function body, pulling out all annotations and calls and
+// recording them in callgraph.txt.
 function processBody(functionName, body)
 {
     if (!('PEdge' in body))
@@ -77,36 +85,46 @@ function processBody(functionName, body)
         print("T " + memo(functionName) + " " + tag);
 
     // Set of all callees that have been output so far, in order to suppress
-    // repeated callgraph edges from being recorded. Use a separate set for
-    // suppressed callees, since we don't want a suppressed edge (within one
-    // RAII scope) to prevent an unsuppressed edge from being recorded. The
-    // seen array is indexed by a boolean 'suppressed' variable.
-    var seen = [ new Set(), new Set() ];
+    // repeated callgraph edges from being recorded. This uses a Map from
+    // callees to limit sets, because we don't want a limited edge to prevent
+    // an unlimited edge from being recorded later. (So an edge will be skipped
+    // if it exists and is at least as limited as the previously seen edge.)
+    //
+    // Limit sets are implemented as integers interpreted as bitfields.
+    //
+    var seen = new Map();
 
     lastline = null;
     for (var edge of body.PEdge) {
         if (edge.Kind != "Call")
             continue;
 
-        // Whether this call is within the RAII scope of a GC suppression class
-        var edgeSuppressed = (edge.Index[0] in body.suppressed);
+        // The limits (eg LIMIT_CANNOT_GC) are determined by whatever RAII
+        // scopes might be active, which have been computed previously for all
+        // points in the body.
+        var edgeLimited = body.limits[edge.Index[0]] | 0;
 
         for (var callee of getCallees(edge)) {
-            var suppressed = Boolean(edgeSuppressed || callee.suppressed);
-            var prologue = suppressed ? "SUPPRESS_GC " : "";
+            // Individual callees may have additional limits. The only such
+            // limit currently is that nsISupports.{AddRef,Release} are assumed
+            // to never GC.
+            const limits = edgeLimited | callee.limits;
+            let prologue = limits ? `/${limits} ` : "";
             prologue += memo(functionName) + " ";
             if (callee.kind == 'direct') {
-                if (!seen[+suppressed].has(callee.name)) {
-                    seen[+suppressed].add(callee.name);
+                const prev_limits = seen.has(callee.name) ? seen.get(callee.name) : LIMIT_UNVISITED;
+                if (prev_limits & ~limits) {
+                    // Only output an edge if it loosens a limit.
+                    seen.set(callee.name, prev_limits & limits);
                     printOnce("D " + prologue + memo(callee.name));
                 }
             } else if (callee.kind == 'field') {
                 var { csu, field, isVirtual } = callee;
                 const tag = isVirtual ? 'V' : 'F';
-                printOnce(tag + " " + prologue + "CLASS " + csu + " FIELD " + field);
+                printOnce(tag + " " + prologue + memo(`${csu}.${field}`) + " CLASS " + csu + " FIELD " + field);
             } else if (callee.kind == 'resolved-field') {
                 // Fully-resolved field (virtual method) call. Record the
-                // callgraph edges. Do not consider suppression, since it is
+                // callgraph edges. Do not consider limits, since they are
                 // local to this callsite and we are writing out a global
                 // record here.
                 //
@@ -155,11 +173,12 @@ if (theFunctionNameToFind) {
 function process(functionName, functionBodies)
 {
     for (var body of functionBodies)
-        body.suppressed = [];
+        body.limits = [];
 
     for (var body of functionBodies) {
-        for (var [pbody, id] of allRAIIGuardedCallPoints(typeInfo, functionBodies, body, isSuppressConstructor))
-            pbody.suppressed[id] = true;
+        for (var [pbody, id, limits] of allRAIIGuardedCallPoints(typeInfo, functionBodies, body, isLimitConstructor)) {
+            pbody.limits[id] = limits;
+        }
     }
 
     for (var body of functionBodies)
