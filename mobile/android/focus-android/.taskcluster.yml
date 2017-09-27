@@ -19,7 +19,7 @@ tasks:
           - pull_request.reopened
     payload:
       maxRunTime: 3600
-      deadline: "{{ '30 minutes' | $fromNow }}"
+      deadline: "{{ '2 hours' | $fromNow }}"
       image: 'mozillamobile/focus-android'
       command:
         - /bin/bash
@@ -29,7 +29,8 @@ tasks:
           git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
-          && ./gradlew assemble
+          && export ADJUST_TOKEN_FOCUS='..no..value..'
+          && ./gradlew clean assemble test lint pmd checkstyle findbugs
     metadata:
       name: Focus for Android - Build - Pull Request
       description: Building Focus for Android (via Gradle) - triggered by a pull request.
@@ -48,7 +49,7 @@ tasks:
           - master
     payload:
       maxRunTime: 3600
-      deadline: "{{ '30 minutes' | $fromNow }}"
+      deadline: "{{ '2 hours' | $fromNow }}"
       image: 'mozillamobile/focus-android'
       command:
         - /bin/bash
@@ -58,7 +59,8 @@ tasks:
           git fetch origin
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
-          && ./gradlew assemble
+          && export ADJUST_TOKEN_FOCUS='..no..value..'
+          && ./gradlew clean assemble test lint pmd checkstyle findbugs
     metadata:
       name: Focus for Android - Build - Master
       description: Building Focus for Android (via Gradle) - Master
