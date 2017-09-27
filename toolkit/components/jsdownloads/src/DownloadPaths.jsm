@@ -14,7 +14,70 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
+
+/**
+ * Platform-dependent regular expression used by the "sanitize" method.
+ */
+XPCOMUtils.defineLazyGetter(this, "gConvertToSpaceRegExp", () => {
+  /* eslint-disable no-control-regex */
+  switch (AppConstants.platform) {
+    // On mobile devices, the file system may be very limited in what it
+    // considers valid characters. To avoid errors, sanitize conservatively.
+    case "android":
+      return /[\x00-\x1f\x7f-\x9f:*?|"<>;,+=\[\]]+/g;
+    case "win":
+      return /[\x00-\x1f\x7f-\x9f:*?|]+/g;
+    case "macosx":
+      return /[\x00-\x1f\x7f-\x9f:]+/g;
+    default:
+      return /[\x00-\x1f\x7f-\x9f]+/g;
+  }
+  /* eslint-enable no-control-regex */
+});
+
 this.DownloadPaths = {
+  /**
+   * Sanitizes an arbitrary string for use as the local file name of a download.
+   * The input is often a document title or a manually edited name. The output
+   * can be an empty string if the input does not include any valid character.
+   *
+   * The length of the resulting string is not limited, because restrictions
+   * apply to the full path name after the target folder has been added.
+   *
+   * Splitting the base name and extension to add a counter or to identify the
+   * file type should only be done after the sanitization process, because it
+   * can alter the final part of the string or remove leading dots.
+   *
+   * Runs of slashes and backslashes are replaced with an underscore.
+   *
+   * On Windows, the angular brackets `<` and `>` are replaced with parentheses,
+   * and double quotes are replaced with single quotes.
+   *
+   * Runs of control characters are replaced with a space. On Mac, colons are
+   * also included in this group. On Windows, stars, question marks, and pipes
+   * are additionally included. On Android, semicolons, commas, plus signs,
+   * equal signs, and brackets are additionally included.
+   *
+   * Leading and trailing dots and whitespace are removed on all platforms. This
+   * avoids the accidental creation of hidden files on Unix and invalid or
+   * inaccessible file names on Windows. These characters are not removed when
+   * located at the end of the base name or at the beginning of the extension.
+   */
+  sanitize(leafName) {
+    if (AppConstants.platform == "win") {
+      leafName = leafName.replace(/</g, "(")
+                         .replace(/>/g, ")")
+                         .replace(/"/g, "'");
+    }
+    return leafName.replace(/[\\/]+/g, "_")
+                   .replace(gConvertToSpaceRegExp, " ")
+                   .replace(/^[\s\u180e.]+|[\s\u180e.]+$/g, "");
+  },
+
   /**
    * Creates a uniquely-named file starting from the name of the provided file.
    * If a file with the provided name already exists, the function attempts to
