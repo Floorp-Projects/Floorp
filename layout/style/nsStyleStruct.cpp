@@ -1039,6 +1039,88 @@ StyleBasicShape::GetShapeTypeName() const
 }
 
 // --------------------
+// StyleShapeSource
+
+StyleShapeSource::StyleShapeSource(const StyleShapeSource& aSource)
+  : StyleShapeSource()
+{
+  if (aSource.mType == StyleShapeSourceType::URL) {
+    SetURL(aSource.mURL);
+  } else if (aSource.mType == StyleShapeSourceType::Shape) {
+    SetBasicShape(aSource.mBasicShape, aSource.mReferenceBox);
+  } else if (aSource.mType == StyleShapeSourceType::Box) {
+    SetReferenceBox(aSource.mReferenceBox);
+  }
+}
+
+StyleShapeSource&
+StyleShapeSource::operator=(const StyleShapeSource& aOther)
+{
+  if (this == &aOther) {
+    return *this;
+  }
+
+  if (aOther.mType == StyleShapeSourceType::URL) {
+    SetURL(aOther.mURL);
+  } else if (aOther.mType == StyleShapeSourceType::Shape) {
+    SetBasicShape(aOther.mBasicShape, aOther.mReferenceBox);
+  } else if (aOther.mType == StyleShapeSourceType::Box) {
+    SetReferenceBox(aOther.mReferenceBox);
+  } else {
+    ReleaseRef();
+    mReferenceBox = StyleGeometryBox::NoBox;
+    mType = StyleShapeSourceType::None;
+  }
+  return *this;
+}
+
+bool
+StyleShapeSource::SetURL(css::URLValue* aValue)
+{
+  MOZ_ASSERT(aValue);
+  ReleaseRef();
+  mURL = aValue;
+  mURL->AddRef();
+  mType = StyleShapeSourceType::URL;
+  return true;
+}
+
+void
+StyleShapeSource::SetBasicShape(StyleBasicShape* aBasicShape,
+                                StyleGeometryBox aReferenceBox)
+{
+  NS_ASSERTION(aBasicShape, "expected pointer");
+  ReleaseRef();
+  mBasicShape = aBasicShape;
+  mBasicShape->AddRef();
+  mReferenceBox = aReferenceBox;
+  mType = StyleShapeSourceType::Shape;
+}
+
+void
+StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
+{
+  ReleaseRef();
+  mReferenceBox = aReferenceBox;
+  mType = StyleShapeSourceType::Box;
+}
+
+void
+StyleShapeSource::ReleaseRef()
+{
+  if (mType == StyleShapeSourceType::Shape) {
+    NS_ASSERTION(mBasicShape, "expected pointer");
+    mBasicShape->Release();
+  } else if (mType == StyleShapeSourceType::URL) {
+    NS_ASSERTION(mURL, "expected pointer");
+    mURL->Release();
+  }
+  // Both mBasicShape and mURL are pointers in a union. Nulling one of them
+  // nulls both of them.
+  mURL = nullptr;
+}
+
+// --------------------
 // nsStyleFilter
 //
 nsStyleFilter::nsStyleFilter()
