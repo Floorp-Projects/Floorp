@@ -170,7 +170,7 @@ class WidgetRenderingContext;
 
   NSOpenGLContext *mGLContext;
 
-  // Simple gestures support
+  // Gestures support
   //
   // mCumulativeMagnification keeps track of the total amount of
   // magnification peformed during a magnify gesture so that we can
@@ -236,16 +236,15 @@ class WidgetRenderingContext;
 
 - (NSColor*)vibrancyFillColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType;
 
-// Simple gestures support
-//
-// XXX - The swipeWithEvent, beginGestureWithEvent,
-// rotateWithEvent, and endGestureWithEvent methods are part of a
-// PRIVATE interface exported by nsResponder and reverse-engineering
-// was necessary to obtain the methods' prototypes. Thus, Apple may
-// change the interface in the future without notice.
-//
-// The prototypes were obtained from the following link:
-// http://cocoadex.com/2008/02/nsevent-modifications-swipe-ro.html
+/*
+ * Gestures support
+ *
+ * The prototypes swipeWithEvent, beginGestureWithEvent, smartMagnifyWithEvent,
+ * rotateWithEvent and endGestureWithEvent were obtained from the following
+ * links:
+ * https://developer.apple.com/library/mac/#documentation/Cocoa/Reference/ApplicationKit/Classes/NSResponder_Class/Reference/Reference.html
+ * https://developer.apple.com/library/mac/#releasenotes/Cocoa/AppKit.html
+ */
 - (void)swipeWithEvent:(NSEvent *)anEvent;
 - (void)beginGestureWithEvent:(NSEvent *)anEvent;
 - (void)smartMagnifyWithEvent:(NSEvent *)anEvent;

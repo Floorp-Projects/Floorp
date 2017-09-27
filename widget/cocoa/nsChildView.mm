@@ -4166,17 +4166,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-/*
- * In OS X Mountain Lion and above, smart zoom gestures are implemented in
- * smartMagnifyWithEvent.
- *
- * The prototypes swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
- * smartMagnifyWithEvent, rotateWithEvent, and endGestureWithEvent were
- * obtained from the following links:
- * https://developer.apple.com/library/mac/#documentation/Cocoa/Reference/ApplicationKit/Classes/NSResponder_Class/Reference/Reference.html
- * https://developer.apple.com/library/mac/#releasenotes/Cocoa/AppKit.html
- */
-
 - (void)swipeWithEvent:(NSEvent *)anEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
