@@ -634,8 +634,7 @@ nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
 
 bool Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed element,
                                 mozilla::CSSPseudoClassType type,
-                                const char16_t* ident,
-                                bool* set_slow_selector);
+                                const char16_t* ident);
 
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut, nsCSSPropertyID);
 
