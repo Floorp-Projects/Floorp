@@ -323,7 +323,7 @@ BEGIN_TEST(testTraceableFifo)
         bool match;
         CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes.front()->propid()), buffer, &match));
         CHECK(match);
-        shapes.popFront();
+        CHECK(shapes.popFront());
     }
 
     CHECK(shapes.empty());

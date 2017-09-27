@@ -238,7 +238,10 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         // Pop the front queue entry, and delete it immediately, so that the GC
         // sees the AllocationsLogEntry's HeapPtr barriers run atomically with
         // the change to the graph (the queue link).
-        dbg->allocationsLog.popFront();
+        if (!dbg->allocationsLog.popFront()) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
     }
 
     dbg->allocationsLogOverflowed = false;
@@ -275,8 +278,12 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext* cx, unsigned argc, Value* 
     Debugger* dbg = memory->getDebugger();
     dbg->maxAllocationsLogLength = max;
 
-    while (dbg->allocationsLog.length() > dbg->maxAllocationsLogLength)
-        dbg->allocationsLog.popFront();
+    while (dbg->allocationsLog.length() > dbg->maxAllocationsLogLength) {
+        if (!dbg->allocationsLog.popFront()) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    }
 
     args.rval().setUndefined();
     return true;
