@@ -421,6 +421,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     aBuilder->EnterPresShell(subdocRootFrame, pointerEventsNone);
+    aBuilder->IncrementPresShellPaintCount(presShell);
   } else {
     visible = aBuilder->GetVisibleRect();
     dirty = aBuilder->GetDirtyRect();
