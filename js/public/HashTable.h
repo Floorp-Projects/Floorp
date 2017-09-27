@@ -1797,7 +1797,9 @@ class HashTable : private AllocPolicy
             return false;
 
         MOZ_ASSERT(p.generation == generation());
+#ifdef JS_DEBUG
         MOZ_ASSERT(p.mutationCount == mutationCount);
+#endif
 
         // Changing an entry from removed to live does not affect whether we
         // are overloaded and can be handled separately.

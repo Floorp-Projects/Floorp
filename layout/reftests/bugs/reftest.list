@@ -206,7 +206,7 @@ fuzzy-if(skiaContent,1,5) == 212563-2.html 212563-2-ref.html
 == 214077-1a.html 214077-1-ref.html
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
-fuzzy-if(skiaContent,1,4) == 220165-1.svg 220165-1-ref.svg
+fuzzy-if(skiaContent,1,4) fuzzy-if(webrender&&debug,1,6) == 220165-1.svg 220165-1-ref.svg
 == 223809-1.html 223809-1-ref.html
 == 228856-1.html 228856-1-ref.html
 == 228856-2.html 228856-2-ref.html
@@ -693,8 +693,8 @@ fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test
 # fuzzy because of different border rendering approach in bug 1185636
 fuzzy(37,20) == 379349-1b.xhtml 379349-1-ref.xhtml
 fuzzy(37,20) == 379349-1c.xhtml 379349-1-ref.xhtml
-== 379349-2a.xhtml 379349-2-ref.xhtml
-== 379349-2b.xhtml 379349-2-ref.xhtml
+fails-if(webrender) == 379349-2a.xhtml 379349-2-ref.xhtml
+fails-if(webrender) == 379349-2b.xhtml 379349-2-ref.xhtml
 fuzzy-if(Android,2,140) == 379349-3a.xhtml 379349-3-ref.xhtml
 fuzzy-if(Android,2,140) == 379349-3b.xhtml 379349-3-ref.xhtml
 == 379361-1.html 379361-1-ref.html
@@ -1196,9 +1196,9 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) != 449149-1b.html about:blank
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
 fails-if(Android||cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,799-799) == 456219-1a.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,799-799) == 456219-1b.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,799-799) == 456219-1c.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,732-732) == 456219-1a.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,732-732) == 456219-1b.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,732-732) == 456219-1c.html 456219-1-ref.html # bug 1128229
 fuzzy-if(skiaContent,1,45) fuzzy-if(webrender,43-43,8-8) == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html
@@ -1235,7 +1235,7 @@ fuzzy-if(skiaContent,1,12000) fails-if(webrender) == 461512-1.html 461512-1-ref.
 == 463204-1.html 463204-1-ref.html
 fuzzy-if(webrender,16-16,3425-3425) == 463217-1.xul 463217-1-ref.xul
 == 463952-1.html 463952-1-ref.html
-== 464811-1.html 464811-1-ref.html
+fails-if(webrender) == 464811-1.html 464811-1-ref.html
 == 465574-1.html 465574-1-ref.html # bug 421436
 == 466258-1.html 466258-1-ref.html
 == 466395-1.html 466395-1-ref.html
@@ -1591,7 +1591,7 @@ fuzzy-if(d2d,52,1051) == 586683-1.html 586683-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
 != 589682-1.html 589682-1-notref.html
-pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-1.html 593243-1-ref.html # bug 593168
+pref(dom.meta-viewport.enabled,true) skip-if(Android) skip-if(webrender) == 593243-1.html 593243-1-ref.html # bug 593168
 pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-2.html 593243-2-ref.html # bug 593168
 == 593544-1.html 593544-1-ref.html
 random-if(Android) == 594333-1.html 594333-1-ref.html
@@ -1643,7 +1643,7 @@ skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
 skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
 HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
-random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
+random-if(winWidget) fails-if(webrender) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 fuzzy-if(d2d,5,1) == 622585-1.html 622585-1-ref.html # bug 789402
 fuzzy-if(Android,8,300) fuzzy-if(skiaContent,1,40000) == 625409-1.html 625409-1-ref.html
@@ -1651,23 +1651,21 @@ fuzzy-if(Android,8,300) fuzzy-if(skiaContent,1,40000) == 625409-1.html 625409-1-
 fuzzy-if(skiaContent,1,500) == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
 skip-if(!haveTestPlugin) fails-if(Android) fuzzy-if(winWidget&&!layersGPUAccelerated,102,535) fuzzy-if(skiaContent&&!Android,102,11000) HTTP == 632423-1.html 632423-1-ref.html
-pref(gfx.webrender.layers-free,true) skip-if(!webrender) == 632423-1.html 632423-1-ref.html
 skip-if(Android) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,559) fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),102,140) == 633344-1.html 633344-1-ref.html # bug 1103623, Linux32 from GCC update
 fuzzy-if(skiaContent,1,500) == 634232-1.html 634232-1-ref.html
 fuzzy-if(skiaContent,3,120000) == 635302-1.html 635302-1-ref.html
-pref(gfx.webrender.layers-free,true) skip-if(!webrender) == 635302-1.html 635302-1-ref.html
 fuzzy(1,68) fuzzy-if(gtkWidget,1,70) fails-if(Android) fuzzy-if(skiaContent&&!Android,1,300) == 635373-1.html 635373-1-ref.html
 random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,20,118) fuzzy-if(skiaContent&&!Android,2,550) == 635373-2.html 635373-2-ref.html
 random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,20,116) fuzzy-if(skiaContent&&!Android,2,650) == 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
-fuzzy-if(Android,8,500) == 637852-1.html 637852-1-ref.html
+fuzzy-if(Android,8,500) fuzzy-if(webrender,0-1,0-19) == 637852-1.html 637852-1-ref.html
 fuzzy-if(Android,8,500) fuzzy-if(skiaContent,3,1) fuzzy-if(webrender,3,19) == 637852-2.html 637852-2-ref.html
-fuzzy-if(Android,8,500) fails-if(webrender) == 637852-3.html 637852-3-ref.html # bug 1363060 for webrender
-fails-if(webrender&&asyncPan) == 641770-1.html 641770-1-ref.html # bug 1374326 for webrender+APZ
+fuzzy-if(Android,8,500) == 637852-3.html 637852-3-ref.html
+== 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
 == 645647-1.html 645647-1-ref.html
@@ -1749,7 +1747,7 @@ fuzzy-if(true,17,5886) fuzzy-if(skiaContent,9,5894) == 759036-2.html 759036-2-re
 == 776443-2.html 776443-2-ref.html
 == 786254-1.html 786254-1-ref.html
 == 787947-1.html 787947-1-ref.html
-pref(gfx.webrender.layers-free,true) == 796847-1.svg 796847-1-ref.svg
+== 796847-1.svg 796847-1-ref.svg
 fuzzy(40,875) fuzzy-if(skiaContent,1,2500) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 fuzzy(40,850) fuzzy-if(skiaContent,2,2310) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 == 801994-1.html 801994-1-ref.html
@@ -1793,7 +1791,7 @@ fails-if(styloVsGecko||stylo) == 883987-1c.html 883987-1-ref.html
 == 897491-1.html 897491-1-ref.html
 == 897491-2.html 897491-2-ref.html
 fuzzy(2,10000) fuzzy-if(Android,5,10000) == 902330-1.html 902330-1-ref.html
-fuzzy-if(Android,8,400) fails-if(webrender) == 906199-1.html 906199-1-ref.html
+fuzzy-if(Android,8,400) == 906199-1.html 906199-1-ref.html
 == 921716-1.html 921716-1-ref.html
 == 926155-1.html 926155-1-ref.html
 fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
@@ -1809,12 +1807,12 @@ fuzzy-if(Android,1,1) fuzzy-if(skiaContent,1,160000) fails-if(webrender) == 9426
 fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html
 == 950436-1.html 950436-1-ref.html
-== 957770-1.svg 957770-1-ref.svg
+fails-if(webrender) == 957770-1.svg 957770-1-ref.svg
 == 960277-1.html 960277-1-ref.html
 fuzzy-if(skiaContent,1,80) == 961887-1.html 961887-1-ref.html
 == 961887-2.html 961887-2-ref.html
 == 961887-3.html 961887-3-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,3712) == 966992-1.html 966992-1-ref.html
+pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,3712) fails-if(webrender) == 966992-1.html 966992-1-ref.html
 skip-if(Android) == 966510-1.html 966510-1-ref.html # scrollable elements other than the root probably won't work well on android until bug 776030 is fixed
 skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1-ref.svg
@@ -1841,7 +1839,7 @@ pref(layout.css.overflow-clip-box.enabled,true) fuzzy-if(skiaContent,2,845) == 9
 == 1021564-3.html 1021564-ref.html
 == 1021564-4.html 1021564-ref.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
-fuzzy-if(d2d,1,125200) fuzzy-if(skiaContent,1,126000) == 1022612-1.html 1022612-1-ref.html
+fuzzy-if(d2d,1,125200) fuzzy-if(skiaContent,1,126000) fails-if(webrender) == 1022612-1.html 1022612-1-ref.html
 skip-if(styloVsGecko) == 1024473-1.html 1024473-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
 fuzzy-if(skiaContent,1,24000) == 1025914-1.html 1025914-1-ref.html
 == 1042104-1.html 1042104-1-ref.html
@@ -1861,7 +1859,7 @@ test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.htm
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 test-pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
-fails-if(webrender) == 1078262-1.html about:blank
+random-if(webrender) == 1078262-1.html about:blank
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
 == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
@@ -1986,9 +1984,9 @@ fuzzy-if(Android,27,874) fuzzy-if(gtkWidget,14,29) == 1313772.xhtml 1313772-ref.
 fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
 fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html
-fuzzy(2,40000) fuzzy-if(webrender,1-2,349-349) == 1316719-1a.html 1316719-1-ref.html
-fuzzy(2,40000) fuzzy-if(webrender,1-2,349-349) == 1316719-1b.html 1316719-1-ref.html
-fuzzy(2,40000) fuzzy-if(webrender,1-1,323-323) == 1316719-1c.html 1316719-1-ref.html
+fuzzy(2,40000) fails-if(webrender) == 1316719-1a.html 1316719-1-ref.html
+fuzzy(2,40000) fails-if(webrender) == 1316719-1b.html 1316719-1-ref.html
+fuzzy(2,40000) fails-if(webrender) == 1316719-1c.html 1316719-1-ref.html
 skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 == 1322512-1.html 1322512-1-ref.html
 skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg

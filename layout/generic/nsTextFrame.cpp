@@ -7262,6 +7262,10 @@ DrawTextRun(const gfxTextRun* aTextRun,
 
     if ((NS_GET_A(aParams.textStrokeColor) != 0 || textDrawer) &&
         aParams.textStrokeWidth != 0.0f) {
+      if (textDrawer) {
+        textDrawer->FoundUnsupportedFeature();
+        return;
+      }
       StrokeOptions strokeOpts;
       params.drawMode |= DrawMode::GLYPH_STROKE;
       params.textStrokeColor = aParams.textStrokeColor;

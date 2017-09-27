@@ -17,12 +17,6 @@ add_task(async function() {
   let PlacesOrganizer = organizer.PlacesOrganizer;
   let ContentTree = organizer.ContentTree;
 
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils in scope");
-  ok(PlacesUIUtils, "PlacesUIUtils in scope");
-  ok(PlacesOrganizer, "PlacesOrganizer in scope");
-  ok(ContentTree, "ContentTree is in scope");
-
   // Test with multiple entries to ensure they retain their order.
   let bookmarks = [];
   bookmarks.push(await PlacesUtils.bookmarks.insert({

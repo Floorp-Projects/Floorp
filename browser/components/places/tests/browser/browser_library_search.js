@@ -141,41 +141,32 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
   }
 }
 
-/**
- * test() contains window-launching boilerplate that calls this to really kick
- * things off.  Add functions to the testCases array, and this will call them.
- */
-function onLibraryAvailable() {
-  testCases.forEach(aTest => aTest());
-
-  gLibrary.close();
-  gLibrary = null;
-
-  // Cleanup.
-  PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
-  PlacesTestUtils.clearHistory().then(finish);
-}
-
-function test() {
-  waitForExplicitFinish();
-
-  // Sanity:
-  ok(PlacesUtils, "PlacesUtils in context");
-
+add_task(async function test() {
   // Add visits, a bookmark and a tag.
-  PlacesTestUtils.addVisits(
+  await PlacesTestUtils.addVisits(
     [{ uri: PlacesUtils._uri(TEST_URL), visitDate: Date.now() * 1000,
        transition: PlacesUtils.history.TRANSITION_TYPED },
      { uri: PlacesUtils._uri(TEST_DOWNLOAD_URL), visitDate: Date.now() * 1000,
        transition: PlacesUtils.history.TRANSITION_DOWNLOAD }]
-    ).then(() => {
-      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                           PlacesUtils._uri(TEST_URL),
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                           "dummy");
-      PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
+    );
 
-      gLibrary = openLibrary(onLibraryAvailable);
-    });
-}
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "dummy",
+    url: TEST_URL,
+  });
+
+  PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
+
+  gLibrary = await promiseLibrary();
+
+  testCases.forEach(aTest => aTest());
+
+  await promiseLibraryClosed(gLibrary);
+
+  // Cleanup.
+  PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+});

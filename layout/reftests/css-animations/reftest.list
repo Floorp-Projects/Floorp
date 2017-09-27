@@ -30,7 +30,7 @@ test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-co
 == stacking-context-transform-none-animation.html stacking-context-animation-ref.html
 == stacking-context-transform-none-animation-on-svg.html  stacking-context-animation-ref.html
 == stacking-context-transform-none-animation-with-backface-visibility.html stacking-context-animation-ref.html
-fails-if(webrender) == stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-animation-ref.html
+== stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-animation-ref.html
 == stacking-context-transform-none-with-fill-backwards.html stacking-context-animation-ref.html
 == stacking-context-transform-none-with-fill-forwards.html stacking-context-animation-ref.html
 == stacking-context-opacity-1-in-delay.html stacking-context-animation-ref.html
@@ -43,7 +43,6 @@ fails == background-position-running.html background-position-ref.html # This te
 fails == background-position-important.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position overridden by a non-animated !important style also creates an active layer, and reftest-opaque-layer only handles items that are assigned to PaintedLayers.
 
 == mask-position-after-finish-1a.html mask-anim-ref.html
-pref(gfx.webrender.layers-free,true) skip-if(!webrender) == mask-position-after-finish-1a.html mask-anim-ref.html
 == mask-position-after-finish-1b.html mask-anim-ref.html
 == mask-position-in-delay-1a.html mask-anim-ref.html
 == mask-position-in-delay-1b.html mask-anim-ref.html

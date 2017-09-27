@@ -475,6 +475,14 @@ class DesktopInstance(GeckoInstance):
         # Disable the UI tour
         "browser.uitour.enabled": False,
 
+        # Turn off search suggestions in the location bar so as not to trigger network
+        # connections.
+        "browser.urlbar.suggest.searches": False,
+
+        # Turn off the location bar search suggestions opt-in.  It interferes with
+        # tests that don't expect it to be there.
+        "browser.urlbar.userMadeSearchSuggestionsChoice": True,
+
         # Disable first-run welcome page
         "startup.homepage_welcome_url": "about:blank",
         "startup.homepage_welcome_url.additional": "",

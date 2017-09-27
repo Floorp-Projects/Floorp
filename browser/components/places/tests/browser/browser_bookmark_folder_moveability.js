@@ -3,171 +3,183 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-  // sanity check
-  ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
-  ok(PlacesUIUtils, "checking PlacesUIUtils, running in chrome context?");
-  ok(PlacesControllerDragHelper, "checking PlacesControllerDragHelper, running in chrome context?");
+"use strict";
 
-  const IDX = PlacesUtils.bookmarks.DEFAULT_INDEX;
+let rootFolder;
+let rootNode;
 
-  // setup
-  var rootId = PlacesUtils.bookmarks.createFolder(PlacesUtils.toolbarFolderId, "", IDX);
-  var rootNode = PlacesUtils.getFolderContents(rootId, false, true).root;
-  is(rootNode.childCount, 0, "confirm test root is empty");
-
-  var tests = [];
-
-  // add a regular folder, should be moveable
-  tests.push({
-    populate() {
-      this.id =
-        PlacesUtils.bookmarks.createFolder(rootId, "", IDX);
-    },
-    validate() {
-      is(rootNode.childCount, 1,
-        "populate added data to the test root");
-      is(PlacesControllerDragHelper.canMoveNode(rootNode.getChild(0)),
-         true, "can move regular folder node");
-    }
+add_task(async function setup() {
+  rootFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
-  // add a regular folder shortcut, should be moveable
-  tests.push({
-    populate() {
-      this.folderId =
-        PlacesUtils.bookmarks.createFolder(rootId, "foo", IDX);
-      this.shortcutId =
-        PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:folder=" + this.folderId), IDX, "bar");
-    },
-    validate() {
-      is(rootNode.childCount, 2,
-        "populated data to the test root");
+  let rootId = await PlacesUtils.promiseItemId(rootFolder.guid);
+  rootNode = PlacesUtils.getFolderContents(rootId, false, true).root;
 
-      var folderNode = rootNode.getChild(0);
-      is(folderNode.type, 6, "node is folder");
-      is(this.folderId, folderNode.itemId, "folder id and folder node item id match");
+  Assert.equal(rootNode.childCount, 0, "confirm test root is empty");
 
-      var shortcutNode = rootNode.getChild(1);
-      is(shortcutNode.type, 9, "node is folder shortcut");
-      is(this.shortcutId, shortcutNode.itemId, "shortcut id and shortcut node item id match");
+  registerCleanupFunction(async () => {
+    await PlacesUtils.bookmarks.eraseEverything();
+  });
+});
 
-      var concreteId = PlacesUtils.getConcreteItemId(shortcutNode);
-      is(concreteId, folderNode.itemId, "shortcut node id and concrete id match");
-
-      is(PlacesControllerDragHelper.canMoveNode(shortcutNode),
-         true, "can move folder shortcut node");
-    }
+add_task(async function test_regular_folder() {
+  let regularFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: rootFolder.guid,
+    title: "",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
-  // add a regular query, should be moveable
-  tests.push({
-    populate() {
-      this.bookmarkId =
-        PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("http://foo.com"), IDX, "foo");
-      this.queryId =
-        PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:terms=foo"), IDX, "bar");
-    },
-    validate() {
-      is(rootNode.childCount, 2,
-        "populated data to the test root");
+  Assert.equal(rootNode.childCount, 1,
+    "populate added data to the test root");
+  Assert.equal(PlacesControllerDragHelper.canMoveNode(rootNode.getChild(0)),
+     true, "can move regular folder node");
 
-      var bmNode = rootNode.getChild(0);
-      is(bmNode.itemId, this.bookmarkId, "bookmark id and bookmark node item id match");
+  await PlacesUtils.bookmarks.remove(regularFolder);
+});
 
-      var queryNode = rootNode.getChild(1);
-      is(queryNode.itemId, this.queryId, "query id and query node item id match");
+add_task(async function test_folder_shortcut() {
+  let regularFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: rootFolder.guid,
+    title: "",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
+  let regularFolderId = await PlacesUtils.promiseItemId(regularFolder.guid);
 
-      is(PlacesControllerDragHelper.canMoveNode(queryNode),
-         true, "can move query node");
-    }
+  let shortcut = await PlacesUtils.bookmarks.insert({
+    parentGuid: rootFolder.guid,
+    title: "bar",
+    url: `place:folder=${regularFolderId}`
   });
 
-  // test that special folders cannot be moved
-  // test that special folders shortcuts can be moved
-  tests.push({
-    folders: [PlacesUtils.bookmarksMenuFolderId,
-              PlacesUtils.tagsFolderId, PlacesUtils.unfiledBookmarksFolderId,
-              PlacesUtils.toolbarFolderId],
-    shortcuts: {},
-    populate() {
-      for (var i = 0; i < this.folders.length; i++) {
-        var id = this.folders[i];
-        this.shortcuts[id] =
-          PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:folder=" + id), IDX, "");
-      }
-    },
-    validate() {
-      // test toolbar shortcut node
-      is(rootNode.childCount, this.folders.length,
-        "populated data to the test root");
+  Assert.equal(rootNode.childCount, 2,
+    "populated data to the test root");
 
-      function getRootChildNode(aId) {
-        var node = PlacesUtils.getFolderContents(PlacesUtils.placesRootId, false, true).root;
-        for (var i = 0; i < node.childCount; i++) {
-          var child = node.getChild(i);
-          if (child.itemId == aId) {
-            node.containerOpen = false;
-            return child;
-          }
-        }
+  let folderNode = rootNode.getChild(0);
+  Assert.equal(folderNode.type, 6, "node is folder");
+  Assert.equal(regularFolder.guid, folderNode.bookmarkGuid, "folder guid and folder node item guid match");
+
+  let shortcutNode = rootNode.getChild(1);
+  Assert.equal(shortcutNode.type, 9, "node is folder shortcut");
+  Assert.equal(shortcut.guid, shortcutNode.bookmarkGuid, "shortcut guid and shortcut node item guid match");
+
+  let concreteId = PlacesUtils.getConcreteItemGuid(shortcutNode);
+  Assert.equal(concreteId, folderNode.bookmarkGuid, "shortcut node id and concrete id match");
+
+  Assert.equal(PlacesControllerDragHelper.canMoveNode(shortcutNode), true,
+   "can move folder shortcut node");
+
+  await PlacesUtils.bookmarks.remove(shortcut);
+  await PlacesUtils.bookmarks.remove(regularFolder);
+});
+
+add_task(async function test_regular_query() {
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: rootFolder.guid,
+    title: "",
+    url: "http://foo.com",
+  });
+
+  let query = await PlacesUtils.bookmarks.insert({
+    parentGuid: rootFolder.guid,
+    title: "bar",
+    url: `place:terms=foo`
+  });
+
+  Assert.equal(rootNode.childCount, 2,
+    "populated data to the test root");
+
+  let bmNode = rootNode.getChild(0);
+  Assert.equal(bmNode.bookmarkGuid, bookmark.guid, "bookmark guid and bookmark node item guid match");
+
+  let queryNode = rootNode.getChild(1);
+  Assert.equal(queryNode.bookmarkGuid, query.guid, "query guid and query node item guid match");
+
+  Assert.equal(PlacesControllerDragHelper.canMoveNode(queryNode),
+     true, "can move query node");
+
+  await PlacesUtils.bookmarks.remove(query);
+  await PlacesUtils.bookmarks.remove(bookmark);
+});
+
+add_task(async function test_special_folders() {
+  // Test that special folders and special folder shortcuts cannot be moved.
+  let folders = [
+    PlacesUtils.bookmarksMenuFolderId,
+    PlacesUtils.tagsFolderId,
+    PlacesUtils.unfiledBookmarksFolderId,
+    PlacesUtils.toolbarFolderId
+  ];
+
+  let children = folders.map(folderId => {
+    return {
+      title: "",
+      url: `place:folder=${folderId}`
+    };
+  });
+
+  let shortcuts = await PlacesUtils.bookmarks.insertTree({
+    guid: rootFolder.guid,
+    children
+  });
+
+  // test toolbar shortcut node
+  Assert.equal(rootNode.childCount, folders.length,
+    "populated data to the test root");
+
+  function getRootChildNode(aId) {
+    let node = PlacesUtils.getFolderContents(PlacesUtils.placesRootId, false, true).root;
+    for (let i = 0; i < node.childCount; i++) {
+      let child = node.getChild(i);
+      if (child.itemId == aId) {
         node.containerOpen = false;
-        ok(false, "Unable to find child node");
-        return null;
-      }
-
-      for (var i = 0; i < this.folders.length; i++) {
-        var id = this.folders[i];
-
-        var node = getRootChildNode(id);
-        isnot(node, null, "Node found");
-        is(PlacesControllerDragHelper.canMoveNode(node),
-           false, "shouldn't be able to move special folder node");
-
-        var shortcutId = this.shortcuts[id];
-        var shortcutNode = rootNode.getChild(i);
-
-        is(shortcutNode.itemId, shortcutId, "shortcut id and shortcut node item id match");
-
-        dump("can move shortcut node?\n");
-        is(PlacesControllerDragHelper.canMoveNode(shortcutNode),
-           true, "should be able to move special folder shortcut node");
+        return child;
       }
     }
-  });
+    node.containerOpen = false;
+    ok(false, "Unable to find child node");
+    return null;
+  }
 
-  // test that a tag container cannot be moved
-  tests.push({
-    populate() {
-      // tag a uri
-      this.uri = makeURI("http://foo.com");
-      PlacesUtils.tagging.tagURI(this.uri, ["bar"]);
-      registerCleanupFunction(() => PlacesUtils.tagging.untagURI(this.uri, ["bar"]));
-    },
-    validate() {
-      // get tag root
-      var query = PlacesUtils.history.getNewQuery();
-      var options = PlacesUtils.history.getNewQueryOptions();
-      options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY;
-      var tagsNode = PlacesUtils.history.executeQuery(query, options).root;
+  for (let i = 0; i < folders.length; i++) {
+    let id = folders[i];
 
-      tagsNode.containerOpen = true;
-      is(tagsNode.childCount, 1, "has new tag");
+    let node = getRootChildNode(id);
+    isnot(node, null, "Node found");
+    Assert.equal(PlacesControllerDragHelper.canMoveNode(node),
+       false, "shouldn't be able to move special folder node");
 
-      var tagNode = tagsNode.getChild(0);
+    let shortcut = shortcuts[i];
+    let shortcutNode = rootNode.getChild(i);
 
-      is(PlacesControllerDragHelper.canMoveNode(tagNode),
-         false, "should not be able to move tag container node");
-      tagsNode.containerOpen = false;
-    }
-  });
+    Assert.equal(shortcutNode.bookmarkGuid, shortcut.guid,
+      "shortcut guid and shortcut node item guid match");
 
-  tests.forEach(function(aTest) {
-    PlacesUtils.bookmarks.removeFolderChildren(rootId);
-    aTest.populate();
-    aTest.validate();
-  });
+    Assert.equal(PlacesControllerDragHelper.canMoveNode(shortcutNode),
+       true, "should be able to move special folder shortcut node");
+  }
+});
 
-  rootNode.containerOpen = false;
-  PlacesUtils.bookmarks.removeItem(rootId);
-}
+add_task(async function test_tag_container() {
+  // tag a uri
+  this.uri = makeURI("http://foo.com");
+  PlacesUtils.tagging.tagURI(this.uri, ["bar"]);
+  registerCleanupFunction(() => PlacesUtils.tagging.untagURI(this.uri, ["bar"]));
+
+  // get tag root
+  let query = PlacesUtils.history.getNewQuery();
+  let options = PlacesUtils.history.getNewQueryOptions();
+  options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY;
+  let tagsNode = PlacesUtils.history.executeQuery(query, options).root;
+
+  tagsNode.containerOpen = true;
+  Assert.equal(tagsNode.childCount, 1, "has new tag");
+
+  let tagNode = tagsNode.getChild(0);
+
+  Assert.equal(PlacesControllerDragHelper.canMoveNode(tagNode),
+     false, "should not be able to move tag container node");
+  tagsNode.containerOpen = false;
+});

@@ -360,10 +360,6 @@ add_task(async function test_setup() {
   // This test can take some time, if we timeout too early it could run
   // in the middle of other tests, or hang them.
   requestLongerTimeout(2);
-
-  // Sanity checks.
-  Assert.ok(PlacesUtils, "PlacesUtils in context");
-  Assert.ok(PlacesUIUtils, "PlacesUIUtils in context");
 });
 
 add_task(async function test_run() {

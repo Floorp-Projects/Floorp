@@ -910,25 +910,12 @@ VRDisplayOculus::GetSensorState(double absTime)
 void
 VRDisplayOculus::StartPresentation()
 {
+  if (!CreateD3DObjects()) {
+    return;
+  }
   mSession->StartPresentation(IntSize(mDisplayInfo.mEyeResolution.width * 2, mDisplayInfo.mEyeResolution.height));
   if (!mSession->IsRenderReady()) {
     return;
-  }
-
-  if (!mDevice) {
-    mDevice = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-    if (!mDevice) {
-      NS_WARNING("Failed to get a D3D11Device for Oculus");
-      return;
-    }
-  }
-
-  if (!mContext) {
-    mDevice->GetImmediateContext(getter_AddRefs(mContext));
-    if (!mContext) {
-      NS_WARNING("Failed to get immediate context for Oculus");
-      return;
-    }
   }
 
   if (!mQuadVS) {
@@ -1048,7 +1035,16 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   const gfx::Rect& aLeftEyeRect,
   const gfx::Rect& aRightEyeRect)
 {
-  if (!mSession->IsRenderReady() || !mDevice || !mContext) {
+  if (!CreateD3DObjects()) {
+    return false;
+  }
+
+  AutoRestoreRenderState restoreState(this);
+  if (!restoreState.IsSuccess()) {
+    return false;
+  }
+
+  if (!mSession->IsRenderReady()) {
     return false;
   }
   /**

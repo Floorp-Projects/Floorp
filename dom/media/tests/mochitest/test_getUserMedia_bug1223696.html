@@ -40,8 +40,10 @@
       };
 
       return listenUntil(video, "loadeddata", () => true)
-        .then(() => h.waitForPixelColor(video, h.grey, 5,
-            "The canvas track should be rendered by the media element"))
+        .then(() => h.pixelMustBecome(video, h.grey, {
+          threshold: 5,
+          infoString: "The canvas track should be rendered by the media element",
+        }))
         .then(() => {
           [removedTrack, ...stream.getAudioTracks()].forEach(t => t.stop());
         });

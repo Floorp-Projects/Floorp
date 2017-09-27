@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 
 let gPanelViewInstances = new WeakMap();
 const kEvents = ["ViewShowing", "ViewHiding", "click", "command"];
+const kRefreshBatchSize = 10;
+const kMaxWaitForIdleMs = 200;
 XPCOMUtils.defineLazyGetter(this, "kButtonLabels", () => {
   return {
     show: DownloadsCommon.strings[AppConstants.platform == "macosx" ? "showMacLabel" : "showLabel"],
@@ -78,6 +80,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     this.panelview.removeEventListener("ViewHiding", DownloadsSubview.onViewHiding);
     this._downloadsData.removeView(this);
     gPanelViewInstances.delete(this);
+    this.destroyed = true;
   }
 
   /**
@@ -104,8 +107,10 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     }
     // Wait a wee bit to dispatch the event, because another batch may start
     // right away.
-    this._batchTimeout = window.setTimeout(() =>
-      this.panelview.dispatchEvent(new window.CustomEvent("DownloadsLoaded")), waitForMs);
+    this._batchTimeout = window.setTimeout(() => {
+      this._updateStatsFromDisk();
+      this.panelview.dispatchEvent(new window.CustomEvent("DownloadsLoaded"));
+    }, waitForMs);
     this.batchFragment = null;
   }
 
@@ -148,6 +153,46 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
    */
   onDownloadRemoved(download) {
     this._viewItemsForDownloads.get(download).element.remove();
+  }
+
+  /**
+   * Schedule a refresh of the downloads that were added, which is mainly about
+   * checking whether the target file still exists.
+   * We're doing this during idle time and in chunks.
+   */
+  async _updateStatsFromDisk() {
+    if (this._updatingStats)
+      return;
+
+    this._updatingStats = true;
+
+    try {
+      let idleOptions = { timeout: kMaxWaitForIdleMs };
+      // Start with getting an idle moment to (maybe) refresh the list of downloads.
+      await new Promise(resolve => this.window.requestIdleCallback(resolve), idleOptions);
+      // In the meantime, this instance could have been destroyed, so take note.
+      if (this.destroyed)
+        return;
+
+      let count = 0;
+      for (let button of this.container.childNodes) {
+        if (this.destroyed)
+          return;
+        if (!button._shell)
+          continue;
+
+        await button._shell.refresh();
+
+        // Make sure to request a new idle moment every `kRefreshBatchSize` buttons.
+        if (++count % kRefreshBatchSize === 0) {
+          await new Promise(resolve => this.window.requestIdleCallback(resolve, idleOptions));
+        }
+      }
+    } catch (ex) {
+      Cu.reportError(ex);
+    } finally {
+      this._updatingStats = false;
+    }
   }
 
   // ----- Static methods. -----
@@ -344,6 +389,19 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
     return this.element.ownerGlobal;
   }
 
+  async refresh() {
+    if (this._targetFileChecked)
+      return;
+
+    try {
+      await this.download.refresh();
+    } catch (ex) {
+      Cu.reportError(ex);
+    } finally {
+      this._targetFileChecked = true;
+    }
+  }
+
   /**
    * Handle state changes of a download.
    */
@@ -358,7 +416,6 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
    * Handler method; invoked when any state attribute of a download changed.
    */
   onChanged() {
-    // TODO: implement "file moved or missing" check - bug 1395615.
     let newState = DownloadsCommon.stateOfDownload(this.download);
     if (this._downloadState !== newState) {
       this._downloadState = newState;
@@ -385,8 +442,15 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
     if (this.isCommandEnabled("downloadsCmd_show")) {
       this.element.setAttribute("openLabel", kButtonLabels.open);
       this.element.setAttribute("showLabel", kButtonLabels.show);
+      this.element.removeAttribute("retryLabel");
     } else if (this.isCommandEnabled("downloadsCmd_retry")) {
       this.element.setAttribute("retryLabel", kButtonLabels.retry);
+      this.element.removeAttribute("openLabel");
+      this.element.removeAttribute("showLabel");
+    } else {
+      this.element.removeAttribute("openLabel");
+      this.element.removeAttribute("retryLabel");
+      this.element.removeAttribute("showLabel");
     }
 
     this._updateVisibility();

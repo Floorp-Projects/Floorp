@@ -316,8 +316,8 @@ protected:
                               nsIContent** aOutLeftNode,
                               nsIContent** aOutRightNode);
 
-  nsresult ConvertListType(Element* aList, Element** aOutList,
-                           nsIAtom* aListType, nsIAtom* aItemType);
+  already_AddRefed<Element> ConvertListType(Element* aList, nsIAtom* aListType,
+                                            nsIAtom* aItemType);
 
   nsresult CreateStyleForInsertText(Selection& aSelection, nsIDocument& aDoc);
   enum class MozBRCounts { yes, no };

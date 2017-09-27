@@ -1,8 +1,3 @@
-# this pref is only meaningful if webrender is enabled. it is reset by the
-# default-preferences line at the end of the file, and so only affects the
-# tests in this folder.
-default-preferences pref(gfx.webrender.layers-free,true)
-
 == scalez-1a.html scalez-1-ref.html
 fuzzy-if(webrender,0-1,0-6) == rotatey-1a.html rotatey-1-ref.html
 == rotatex-1a.html rotatex-1-ref.html
@@ -37,7 +32,7 @@ fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget&&stylo,154,
 fuzzy-if(skiaContent,1,4) == matrix3d-1a.html matrix3d-1-ref.html
 == matrix3d-2a.html matrix3d-2-ref.html
 == rotate3d-1a.html rotatex-1-ref.html
-== rotate3d-2a.html rotatey-1-ref.html
+fuzzy-if(webrender,0-1,0-6) == rotate3d-2a.html rotatey-1-ref.html
 != backface-visibility-1a.html about:blank
 == backface-visibility-1b.html about:blank
 == backface-visibility-1c.html about:blank
@@ -95,6 +90,3 @@ fuzzy-if(winWidget,150,120) == component-alpha-1.html component-alpha-1-ref.html
 == nested-transform-1.html nested-transform-1-ref.html
 == transform-geometry-1.html transform-geometry-1-ref.html
 == intermediate-1.html intermediate-1-ref.html
-
-# reset gfx.webrender.layers-free,true
-default-preferences

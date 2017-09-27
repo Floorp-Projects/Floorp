@@ -1472,7 +1472,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioChannelWrapper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mErrorSink->mError)
   for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mStream);
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mStream)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlayed);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextTrackManager)
@@ -1502,9 +1502,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioChannelWrapper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mErrorSink->mError)
-  for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputStreams[i].mStream)
-  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputStreams)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlayed)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextTrackManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioTrackList)
@@ -4912,7 +4910,6 @@ public:
     WatchTarget(aName),
     mElement(aElement),
     mHaveCurrentData(false),
-    mBlocked(false),
     mFinished(false),
     mMutex(aName),
     mPendingNotifyOutput(false)
@@ -4930,21 +4927,9 @@ public:
     if (!mElement || !mHaveCurrentData || mFinished) {
       return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
     }
-    return mBlocked
-        ? MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING
-        : MediaDecoderOwner::NEXT_FRAME_AVAILABLE;
+    return MediaDecoderOwner::NEXT_FRAME_AVAILABLE;
   }
 
-  void DoNotifyBlocked()
-  {
-    mBlocked = true;
-    NotifyWatchers();
-  }
-  void DoNotifyUnblocked()
-  {
-    mBlocked = false;
-    NotifyWatchers();
-  }
   void DoNotifyOutput()
   {
     {
@@ -4969,22 +4954,6 @@ public:
 
   // These notifications run on the media graph thread so we need to
   // dispatch events to the main thread.
-  virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked) override
-  {
-    nsCOMPtr<nsIRunnable> event;
-    if (aBlocked == BLOCKED) {
-      event = NewRunnableMethod(
-        "dom::HTMLMediaElement::StreamListener::DoNotifyBlocked",
-        this,
-        &StreamListener::DoNotifyBlocked);
-    } else {
-      event = NewRunnableMethod(
-        "dom::HTMLMediaElement::StreamListener::DoNotifyUnblocked",
-        this,
-        &StreamListener::DoNotifyUnblocked);
-    }
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
-  }
   virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph) override
   {
     MutexAutoLock lock(mMutex);
@@ -5011,7 +4980,6 @@ private:
   // These fields may only be accessed on the main thread
   HTMLMediaElement* mElement;
   bool mHaveCurrentData;
-  bool mBlocked;
   bool mFinished;
 
   // mMutex protects the fields below; they can be accessed on any thread
