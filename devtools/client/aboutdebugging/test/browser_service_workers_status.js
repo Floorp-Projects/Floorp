@@ -7,7 +7,7 @@
 // but http:// is ok with dom.serviceWorkers.testing.enabled turned on.
 const SERVICE_WORKER = URL_ROOT + "service-workers/delay-sw.js";
 const TAB_URL = URL_ROOT + "service-workers/delay-sw.html";
-const SW_TIMEOUT = 5000;
+const SW_TIMEOUT = 2000;
 
 requestLongerTimeout(2);
 
