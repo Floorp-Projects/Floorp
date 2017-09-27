@@ -100,8 +100,6 @@ public:
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
                    const char** aOutBadConstraint) override;
-  void SetDirectListeners(bool aDirect) override
-  {}
   void NotifyOutputData(MediaStreamGraph* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
                         TrackRate aRate, uint32_t aChannels) override
@@ -516,7 +514,6 @@ public:
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
                    const char** aOutBadConstraint) override;
-  void SetDirectListeners(bool aHasDirectListeners) override {};
 
   void NotifyPull(MediaStreamGraph* aGraph,
                   SourceMediaStream* aSource,
