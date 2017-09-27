@@ -880,6 +880,7 @@ pref("gfx.webrender.blob-images", false);
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);
 pref("gfx.webrender.debug.render-targets", false);
+pref("gfx.webrender.debug.alpha-primitives", false);
 pref("gfx.webrender.debug.profiler", false);
 
 // Whether webrender should be used as much as possible.
