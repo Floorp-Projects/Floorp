@@ -71,6 +71,11 @@ public class SessionManager {
         final String action = intent.getAction();
 
         if (Intent.ACTION_VIEW.equals(action)) {
+            final String dataString = intent.getDataString();
+            if (TextUtils.isEmpty(dataString)) {
+                return; // If there's no URL in the Intent then we can't create a session.
+            }
+
             if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
                 final boolean blockingEnabled = intent.getBooleanExtra(HomeScreen.BLOCKING_ENABLED, true);
                 createSession(context, Source.HOME_SCREEN;, intent, intent.getDataString(), blockingEnabled);
