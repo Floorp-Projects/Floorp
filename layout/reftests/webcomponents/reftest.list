@@ -9,7 +9,7 @@ pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == fallback-c
 pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == remove-insertion-point-1.html remove-insertion-point-1-ref.html
 pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == nested-insertion-point-1.html nested-insertion-point-1-ref.html
 pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html
-pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) fuzzy-if(Android,2,7) == input-transition-1.html input-transition-1-ref.html
+pref(dom.webcomponents.enabled,true) fuzzy-if(Android,2,7) fails-if(stylo||styloVsGecko) == input-transition-1.html input-transition-1-ref.html
 pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
 pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html
 pref(dom.webcomponents.enabled,true) fails-if(stylo||styloVsGecko) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html
