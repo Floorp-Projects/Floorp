@@ -98,7 +98,7 @@ var FormDB = {
           resolve(result);
         }
       }
-      FormHistory.search(["guid", "lastUsed", "firstUsed"], { fieldname, value }, handlers);
+      FormHistory.search(["guid", "lastUsed", "firstUsed"], { fieldname }, handlers);
     });
   },
 
@@ -212,11 +212,8 @@ FormData.prototype = {
    * @return nothing
    */
   Remove() {
-    return FormDB.getDataForValue(this.fieldname, this.value).then(formdata => {
-      if (!formdata) {
-        return;
-      }
-      return FormDB.remove(formdata.guid);
-    });
+    /* Right now Weave doesn't handle this correctly, see bug 568363.
+     */
+    return FormDB.remove(this.id);
   },
 };
