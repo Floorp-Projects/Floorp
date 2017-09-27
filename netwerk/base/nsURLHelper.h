@@ -221,7 +221,7 @@ void net_ParseContentType(const nsACString &aHeaderStr,
 /* inline versions */
 
 /* remember the 64-bit platforms ;-) */
-#define NET_MAX_ADDRESS (((char*)0)-1)
+#define NET_MAX_ADDRESS ((char*)UINTPTR_MAX)
 
 inline char *net_FindCharInSet(const char *str, const char *set)
 {
