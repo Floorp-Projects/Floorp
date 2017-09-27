@@ -113,10 +113,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/DoublyLinkedList.h"
 
-#ifdef ANDROID
-#define NO_TLS
-#endif
-
 /*
  * On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
  * operating system.  If we release 1MB of live pages with MADV_DONTNEED, our
@@ -1110,7 +1106,6 @@ static RedBlackTree<arena_t, ArenaTreeTrait> gArenaTree;
 static unsigned narenas;
 static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
 
-#ifndef NO_TLS
 /*
  * The arena associated with the current thread (per jemalloc_thread_local_arena)
  * On OSX, __thread/thread_local circles back calling malloc to allocate storage
@@ -1121,7 +1116,6 @@ static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
 static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
 #else
 static mozilla::detail::ThreadLocal<arena_t*, mozilla::detail::ThreadLocalKeyStorage> thread_arena;
-#endif
 #endif
 
 /*******************************/
@@ -2337,7 +2331,6 @@ chunk_dealloc(void *chunk, size_t size, ChunkType type)
 static inline arena_t *
 thread_local_arena(bool enabled)
 {
-#ifndef NO_TLS
   arena_t *arena;
 
   if (enabled) {
@@ -2353,9 +2346,6 @@ thread_local_arena(bool enabled)
   }
   thread_arena.set(arena);
   return arena;
-#else
-  return arenas[0];
-#endif
 }
 
 template<> inline void
@@ -2377,7 +2367,6 @@ choose_arena(size_t size)
    * library version, libc's malloc is used by TLS allocation, which
    * introduces a bootstrapping issue.
    */
-#ifndef NO_TLS
   // Only use a thread local arena for small sizes.
   if (size <= small_max) {
     ret = thread_arena.get();
@@ -2386,9 +2375,6 @@ choose_arena(size_t size)
   if (!ret) {
     ret = thread_local_arena(false);
   }
-#else
-  ret = arenas[0];
-#endif
   MOZ_DIAGNOSTIC_ASSERT(ret);
   return (ret);
 }
@@ -4416,11 +4402,9 @@ malloc_init_hard(void)
     return false;
   }
 
-#ifndef NO_TLS
   if (!thread_arena.init()) {
     return false;
   }
-#endif
 
   /* Get page size and number of CPUs */
   result = GetKernelPageSize();
@@ -4620,12 +4604,10 @@ MALLOC_OUT:
    * reset to the default value for the main arenas */
   arenas[0]->mMaxDirty = opt_dirty_max;
 
-#ifndef NO_TLS
   /*
    * Assign the initial arena to the initial thread.
    */
   thread_arena.set(arenas[0]);
-#endif
 
   chunk_rtree = malloc_rtree_new((SIZEOF_PTR << 3) - opt_chunk_2pow);
   if (!chunk_rtree) {
