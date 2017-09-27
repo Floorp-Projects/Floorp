@@ -107,7 +107,7 @@ add_task(async function test_aggregation() {
   // Register test scalars before spawning the content process: the scalar
   // definitions will propagate to it. Also cheat TelemetrySession to put
   // the test scalar in the payload by using "cheattest" instead of "test" in
-  // the scalar group name.
+  // the scalar category name.
   Services.telemetry.registerScalars("telemetry.cheattest.dynamic", {
     "test_aggregation": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
