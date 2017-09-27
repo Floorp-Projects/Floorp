@@ -96,6 +96,20 @@ For "loadurl.1" event, the following extra information is also recorded:
         "count": number, /* total number of stories displayed */
     }
 
+For "show.1" event, the following extra information is also recorded:
+
+.. code-block:: js
+
+    extras: {
+        ...
+        "interaction": "menu_button"/"long_click"
+    }
+
+When the user opens the context menu with...
+
+- the 3-dot menu, "menu_button" is recorded
+- a long click, "long_click" is recorded
+
 One event type is recorded for interaction with the Top Stories section title UI:
 1) User clicks on the "MORE" link in the Top Stories section title: event="action.1", method="button"
 
@@ -139,6 +153,20 @@ For "loadurl.1" event, the following extra information is also recorded:
         ...
         "count": number /* total number of highlights displayed */
     }
+
+For "show.1" event, the following extra information is also recorded:
+
+.. code-block:: js
+
+    extras: {
+        ...
+        "interaction": "menu_button"/"long_click"
+    }
+
+When the user opens the context menu with...
+
+- the 3-dot menu, "menu_button" is recorded
+- a long click, "long_click" is recorded
 
 Context Menu interactions
 -------------------------
@@ -185,7 +213,7 @@ Full Examples
 =============
 Following examples of events are here to provide a better feel for the overall shape of telemetry data being recorded.
 
-1) User with an active Firefox Account clicked on a menu item for a third highlight ("visited") [prefs enabled: top-stories, bookmarks, visited] :
+1) User with an active Firefox Account clicked on a menu button for the third highlight ("visited") [prefs enabled: top-stories, bookmarks, visited] :
     ::
 
         session="activitystream.1"
@@ -196,7 +224,8 @@ Following examples of events are here to provide a better feel for the overall s
             'as_user_preferences': 28,
             'source_type': 'highlights',
             'source_subtype': 'visited',
-            'action_position': 2
+            'action_position': 2,
+            'interaction': 'menu_button'
         }"
 
 2) User with no active Firefox Account clicked on a second highlight (recent bookmark), with total of 7 highlights being displayed [prefs enabled: bookmarks] :
