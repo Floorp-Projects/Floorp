@@ -507,9 +507,9 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(feed.refresh);
       assert.equal(feed.refresh.firstCall.args[0], null);
     });
-    it("should call refresh without a target on PLACES_LINK_DELETED action", async () => {
+    it("should call refresh without a target on PLACES_LINKS_DELETED action", async () => {
       sinon.stub(feed, "refresh");
-      await feed.onAction({type: at.PLACES_LINK_DELETED});
+      await feed.onAction({type: at.PLACES_LINKS_DELETED});
       assert.calledOnce(feed.refresh);
       assert.equal(feed.refresh.firstCall.args[0], null);
     });
