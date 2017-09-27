@@ -167,7 +167,7 @@ var DebuggerServer = {
    * window (i.e the global style editor). Set this to your main window type,
    * for example "navigator:browser".
    */
-  chromeWindowType: null,
+  chromeWindowType: "navigator:browser",
 
   /**
    * Allow debugging chrome of (parent or child) processes.
@@ -266,11 +266,13 @@ var DebuggerServer = {
    *        actors to retrieve them.
    */
   registerActors({ root = true, browser = true, tab = true,
-                   windowType = "navigator:browser" }) {
-    this.chromeWindowType = windowType;
+                   windowType = null }) {
+    if (windowType) {
+      this.chromeWindowType = windowType;
+    }
 
     if (browser) {
-      this.addBrowserActors(windowType);
+      this.addBrowserActors(this.chromeWindowType);
     }
 
     if (root) {
@@ -420,8 +422,10 @@ var DebuggerServer = {
    * restrictPrivileges=true, to prevent exposing them on b2g parent process's
    * root actor.
    */
-  addBrowserActors(windowType = "navigator:browser", restrictPrivileges = false) {
-    this.chromeWindowType = windowType;
+  addBrowserActors(windowType = null, restrictPrivileges = false) {
+    if (windowType) {
+      this.chromeWindowType = windowType;
+    }
     this.registerModule("devtools/server/actors/webbrowser");
 
     if (!restrictPrivileges) {

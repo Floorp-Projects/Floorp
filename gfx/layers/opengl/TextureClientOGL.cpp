@@ -18,62 +18,6 @@ namespace layers {
 class CompositableForwarder;
 
 ////////////////////////////////////////////////////////////////////////
-// EGLImage
-
-EGLImageTextureData::EGLImageTextureData(EGLImageImage* aImage, gfx::IntSize aSize)
-: mImage(aImage)
-, mSize(aSize)
-{
-  MOZ_ASSERT(aImage);
-}
-
-already_AddRefed<TextureClient>
-EGLImageTextureData::CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSize,
-                                         LayersIPCChannel* aAllocator, TextureFlags aFlags)
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Can't pass an `EGLImage` between processes.");
-
-  if (!aImage || !XRE_IsParentProcess()) {
-    return nullptr;
-  }
-
-  // XXX - This is quite sad and slow.
-  aFlags |= TextureFlags::DEALLOCATE_CLIENT;
-
-  if (aImage->GetOriginPos() == gl::OriginPos::BottomLeft) {
-    aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
-  }
-
-  return TextureClient::CreateWithData(
-    new EGLImageTextureData(aImage, aSize),
-    aFlags, aAllocator
-  );
-}
-
-void
-EGLImageTextureData::FillInfo(TextureData::Info& aInfo) const
-{
-  aInfo.size = mSize;
-  aInfo.format = gfx::SurfaceFormat::UNKNOWN;
-  aInfo.hasIntermediateBuffer = false;
-  aInfo.hasSynchronization = false;
-  aInfo.supportsMoz2D = false;
-  aInfo.canExposeMappedData = false;
-}
-
-bool
-EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
-{
-  const bool hasAlpha = true;
-  aOutDescriptor =
-    EGLImageDescriptor((uintptr_t)mImage->GetImage(),
-                       (uintptr_t)mImage->GetSync(),
-                       mImage->GetSize(), hasAlpha);
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////
 // AndroidSurface
 
 #ifdef MOZ_WIDGET_ANDROID
