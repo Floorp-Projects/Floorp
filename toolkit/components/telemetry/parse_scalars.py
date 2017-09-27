@@ -24,13 +24,13 @@ SCALAR_TYPES_MAP = {
 class ScalarType:
     """A class for representing a scalar definition."""
 
-    def __init__(self, group_name, probe_name, definition, strict_type_checks):
+    def __init__(self, category_name, probe_name, definition, strict_type_checks):
         # Validate and set the name, so we don't need to pass it to the other
         # validation functions.
         self._strict_type_checks = strict_type_checks
-        self.validate_names(group_name, probe_name)
+        self.validate_names(category_name, probe_name)
         self._name = probe_name
-        self._group_name = group_name
+        self._category_name = category_name
 
         # Validating the scalar definition.
         self.validate_types(definition)
@@ -40,20 +40,20 @@ class ScalarType:
         self._definition = definition
         self._expires = utils.add_expiration_postfix(definition['expires'])
 
-    def validate_names(self, group_name, probe_name):
-        """Validate the group and probe name:
-            - Group name must be alpha-numeric + '.', no leading/trailing digit or '.'.
+    def validate_names(self, category_name, probe_name):
+        """Validate the category and probe name:
+            - Category name must be alpha-numeric + '.', no leading/trailing digit or '.'.
             - Probe name must be alpha-numeric + '_', no leading/trailing digit or '_'.
 
-        :param group_name: the name of the group the probe is in.
+        :param category_name: the name of the category the probe is in.
         :param probe_name: the name of the scalar probe.
         :raises ParserError: if the length of the names exceeds the limit or they don't
                 conform our name specification.
         """
 
-        # Enforce a maximum length on group and probe names.
+        # Enforce a maximum length on category and probe names.
         MAX_NAME_LENGTH = 40
-        for n in [group_name, probe_name]:
+        for n in [category_name, probe_name]:
             if len(n) > MAX_NAME_LENGTH:
                 raise ParserError(("Name '{}' exceeds maximum name length of {} characters.\n"
                                    "See: {}#the-yaml-definition-file")
@@ -72,7 +72,7 @@ class ScalarType:
                                    "digit, a dot or underscore. Got: '{}'.\n"
                                    " See: {}#the-yaml-definition-file").format(name, BASE_DOC_URL))
 
-        check_name(group_name, 'Group', r'\.')
+        check_name(category_name, 'Category', r'\.')
         check_name(probe_name, 'Probe', r'_')
 
     def validate_types(self, definition):
@@ -202,12 +202,12 @@ class ScalarType:
 
     @property
     def label(self):
-        """Get the scalar label generated from the scalar and group names."""
-        return self._group_name + '.' + self._name
+        """Get the scalar label generated from the scalar and category names."""
+        return self._category_name + '.' + self._name
 
     @property
     def enum_label(self):
-        """Get the enum label generated from the scalar and group names. This is used to
+        """Get the enum label generated from the scalar and category names. This is used to
         generate the enum tables."""
 
         # The scalar name can contain informations about its hierarchy (e.g. 'a.b.scalar').
@@ -303,19 +303,20 @@ def load_scalars(filename, strict_type_checks=True):
     scalar_list = []
 
     # Scalars are defined in a fixed two-level hierarchy within the definition file.
-    # The first level contains the group name, while the second level contains the
-    # probe name (e.g. "group.name: probe: ...").
-    for group_name in scalars:
-        group = scalars[group_name]
+    # The first level contains the category name, while the second level contains the
+    # probe name (e.g. "category.name: probe: ...").
+    for category_name in scalars:
+        category = scalars[category_name]
 
-        # Make sure that the group has at least one probe in it.
-        if not group or len(group) == 0:
+        # Make sure that the category has at least one probe in it.
+        if not category or len(category) == 0:
             raise ParserError('Category "{}" must have at least one probe in it' +
-                              '.\nSee: {}'.format(group_name, BASE_DOC_URL))
+                              '.\nSee: {}'.format(category_name, BASE_DOC_URL))
 
-        for probe_name in group:
+        for probe_name in category:
             # We found a scalar type. Go ahead and parse it.
-            scalar_info = group[probe_name]
-            scalar_list.append(ScalarType(group_name, probe_name, scalar_info, strict_type_checks))
+            scalar_info = category[probe_name]
+            scalar_list.append(
+                ScalarType(category_name, probe_name, scalar_info, strict_type_checks))
 
     return scalar_list
