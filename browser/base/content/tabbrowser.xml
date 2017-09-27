@@ -759,6 +759,7 @@
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
                       aWebProgress && aWebProgress.isTopLevel) {
                     this.mTab.setAttribute("busy", "true");
+                    this.mTab._notselectedsinceload = !this.mTab.selected;
                     this._syncThrobberAnimations();
                   }
 
@@ -778,6 +779,12 @@
                       Components.isSuccessCode(aStatus) &&
                       !this.mTabBrowser.tabAnimationsInProgress &&
                       Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+                    if (this.mTab._notselectedsinceload) {
+                      this.mTab.setAttribute("notselectedsinceload", "true");
+                    } else {
+                      this.mTab.removeAttribute("notselectedsinceload");
+                    }
+
                     this.mTab.setAttribute("bursting", "true");
                   }
 
@@ -6598,6 +6605,8 @@
         <body><![CDATA[
           if (this.getAttribute("overflow") == "true")
             this.mTabstrip.ensureElementIsVisible(this.selectedItem, aInstant);
+
+          this.selectedItem._notselectedsinceload = false;
         ]]></body>
       </method>
 
@@ -7670,7 +7679,7 @@
           <xul:spacer flex="1"/>
           <xul:hbox class="tab-bottom-line"/>
         </xul:vbox>
-        <xul:hbox xbl:inherits="pinned,bursting"
+        <xul:hbox xbl:inherits="pinned,bursting,notselectedsinceload"
                   anonid="tab-loading-burst"
                   class="tab-loading-burst"/>
         <xul:hbox xbl:inherits="pinned,selected=visuallyselected,titlechanged,attention"
