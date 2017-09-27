@@ -169,12 +169,12 @@ WasmHandleThrow()
     JSContext* cx = activation->cx();
 
     // WasmFrameIter iterates down wasm frames in the activation starting at
-    // WasmActivation::exitFP. Pass Unwind::True to pop WasmActivation::exitFP
-    // once each time WasmFrameIter is incremented, ultimately leaving exitFP
-    // null when the WasmFrameIter is done().  This is necessary to prevent a
-    // DebugFrame from being observed again after we just called onLeaveFrame
-    // (which would lead to the frame being re-added to the map of live frames,
-    // right as it becomes trash).
+    // JitActivation::wasmExitFP(). Pass Unwind::True to pop
+    // JitActivation::wasmExitFP() once each time WasmFrameIter is incremented,
+    // ultimately leaving exit FP null when the WasmFrameIter is done().  This
+    // is necessary to prevent a DebugFrame from being observed again after we
+    // just called onLeaveFrame (which would lead to the frame being re-added
+    // to the map of live frames, right as it becomes trash).
     //
     // TODO(bug 1360211): when JitActivation and WasmActivation get merged,
     // we'll be able to switch to ion / other wasm state from here, and we'll
