@@ -7,7 +7,7 @@
 const { Ci } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { emulationSpec } = require("devtools/shared/specs/emulation");
-const { SimulatorCore } = require("devtools/shared/touch/simulator-core");
+const { TouchSimulator } = require("devtools/server/actors/emulation/touch-simulator");
 
 /**
  * This actor overrides various browser features to simulate different environments to
@@ -28,7 +28,7 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
     this.docShell = tabActor.docShell;
-    this.simulatorCore = new SimulatorCore(tabActor.chromeEventHandler);
+    this.touchSimulator = new TouchSimulator(tabActor.chromeEventHandler);
   },
 
   destroy() {
@@ -38,7 +38,7 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     this.clearUserAgentOverride();
     this.tabActor = null;
     this.docShell = null;
-    this.simulatorCore = null;
+    this.touchSimulator = null;
     protocol.Actor.prototype.destroy.call(this);
   },
 
@@ -186,9 +186,9 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
 
     // Start or stop the touch simulator depending on the override flag
     if (flag == Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED) {
-      this.simulatorCore.start();
+      this.touchSimulator.start();
     } else {
-      this.simulatorCore.stop();
+      this.touchSimulator.stop();
     }
 
     this.docShell.touchEventsOverride = flag;
