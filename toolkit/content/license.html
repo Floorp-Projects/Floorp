@@ -7,20 +7,20 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <title>Licenses</title>
-
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css">
+    <link rel="stylesheet" href="chrome://global/skin/aboutLicense.css" type="text/css"/>
   </head>
 
   <body id="lic-info">
-    <div class="container">
+  <div class="license-header">
+    <div>
       <h1><a id="top"></a>Licenses</h1>
-
-      <div>
-
 #ifdef APP_LICENSE_BLOCK
 #includesubst @APP_LICENSE_BLOCK@
 #endif
-
+    </div>
+  </div>
+  <div>
     <p>All of the <b>source code</b> to this product is
        available under licenses which are both
        <a href="http://www.gnu.org/philosophy/free-sw.html">free</a> and
