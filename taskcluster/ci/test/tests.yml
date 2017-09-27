@@ -907,13 +907,10 @@ mochitest-webgl:
     suite: mochitest/mochitest-gl
     treeherder-symbol: tc-M(gl)
     virtualization: virtual-with-gpu
-    worker-type:
-        by-test-platform:
-            windows10-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     chunks:
         by-test-platform:
             android.*: 10
+            windows.*: 8
             default: 3
     e10s:
         by-test-platform:
