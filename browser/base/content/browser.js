@@ -3724,16 +3724,8 @@ const DOMEventHandler = {
     let loadingPrincipal = aLoadingPrincipal ||
                            Services.scriptSecurityManager.getSystemPrincipal();
     if (aURL) {
-      try {
-        if (!(aURL instanceof Ci.nsIURI)) {
-          aURL = makeURI(aURL);
-        }
-        PlacesUIUtils.loadFavicon(aBrowser, loadingPrincipal, aURL, aRequestContextID);
-      } catch (ex) {
-        Components.utils.reportError(ex);
-      }
+      gBrowser.storeIcon(aBrowser, aURL, loadingPrincipal, aRequestContextID);
     }
-
     if (aCanUseForTab) {
       gBrowser.setIcon(tab, aURL, loadingPrincipal, aRequestContextID);
     }

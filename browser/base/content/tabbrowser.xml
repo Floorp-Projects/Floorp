@@ -971,6 +971,25 @@
         null
       </field>
 
+      <method name="storeIcon">
+        <parameter name="aBrowser"/>
+        <parameter name="aURI"/>
+        <parameter name="aLoadingPrincipal"/>
+        <parameter name="aRequestContextID"/>
+        <body>
+          <![CDATA[
+          try {
+            if (!(aURI instanceof Ci.nsIURI)) {
+              aURI = makeURI(aURI);
+            }
+            PlacesUIUtils.loadFavicon(aBrowser, aLoadingPrincipal, aURI, aRequestContextID);
+          } catch (ex) {
+            Components.utils.reportError(ex);
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="setIcon">
         <parameter name="aTab"/>
         <parameter name="aURI"/>
@@ -1047,15 +1066,19 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            var browser = this.getBrowserForTab(aTab);
-            var documentURI = browser.documentURI;
-            var icon = null;
+            let browser = this.getBrowserForTab(aTab);
+            let documentURI = browser.documentURI;
+            let requestContextID = browser.contentRequestContextID;
+            let loadingPrincipal = browser.contentPrincipal;
+            let icon = null;
 
             if (browser.imageDocument) {
               if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
                 let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
                 if (browser.imageDocument.width <= sz &&
                     browser.imageDocument.height <= sz) {
+                  // Don't try to store the icon in Places, regardless it would
+                  // be skipped (see Bug 403651).
                   icon = browser.currentURI;
                 }
               }
@@ -1065,10 +1088,13 @@
             // do the right thing with about:-style error pages.  Bug 453442
             if (!icon && this.shouldLoadFavIcon(documentURI)) {
               let url = documentURI.prePath + "/favicon.ico";
-              if (!this.isFailedIcon(url))
+              if (!this.isFailedIcon(url)) {
                 icon = url;
+                this.storeIcon(browser, icon, loadingPrincipal, requestContextID);
+              }
             }
-            this.setIcon(aTab, icon, browser.contentPrincipal, browser.contentRequestContextID);
+
+            this.setIcon(aTab, icon, loadingPrincipal, requestContextID);
           ]]>
         </body>
       </method>
