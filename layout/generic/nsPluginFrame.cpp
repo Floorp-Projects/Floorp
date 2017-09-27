@@ -915,6 +915,11 @@ public:
   {
     return LAYER_ACTIVE;
   }
+
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayPluginGeometry(this, aBuilder);
+  }
 };
 
 static nsRect
