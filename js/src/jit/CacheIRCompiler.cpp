@@ -1436,6 +1436,22 @@ CacheIRCompiler::emitGuardIsProxy()
 }
 
 bool
+CacheIRCompiler::emitGuardIsCrossCompartmentWrapper()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address handlerAddr(obj, ProxyObject::offsetOfHandler());
+    masm.branchPtr(Assembler::NotEqual, handlerAddr, ImmPtr(&CrossCompartmentWrapper::singleton),
+                   failure->label());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardNotDOMProxy()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1909,19 +1925,6 @@ CacheIRCompiler::emitLoadDenseElementResult()
     BaseObjectElementIndex element(scratch, index);
     masm.branchTestMagic(Assembler::Equal, element, failure->label());
     masm.loadTypedOrValue(element, output);
-    return true;
-}
-
-bool
-CacheIRCompiler::emitGuardIndexIsNonNegative()
-{
-    Register index = allocator.useRegister(masm, reader.int32OperandId());
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    masm.branch32(Assembler::LessThan, index, Imm32(0), failure->label());
     return true;
 }
 

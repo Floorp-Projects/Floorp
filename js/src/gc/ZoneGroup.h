@@ -43,7 +43,7 @@ class ZoneGroup
 
     // If this flag is true, then we may need to block before entering this zone
     // group. Blocking happens using JSContext::yieldToEmbedding.
-    UnprotectedData<bool> useExclusiveLocking;
+    UnprotectedData<bool> useExclusiveLocking_;
 
   public:
     CooperatingContext& ownerContext() { return ownerContext_.ref(); }
@@ -102,8 +102,9 @@ class ZoneGroup
     inline bool isCollecting();
     inline bool isGCScheduled();
 
-    // See the useExclusiveLocking field above.
-    void setUseExclusiveLocking() { useExclusiveLocking = true; }
+    // See the useExclusiveLocking_ field above.
+    void setUseExclusiveLocking() { useExclusiveLocking_ = true; }
+    bool useExclusiveLocking() { return useExclusiveLocking_; }
 
     // Delete an empty zone after its contents have been merged.
     void deleteEmptyZone(Zone* zone);

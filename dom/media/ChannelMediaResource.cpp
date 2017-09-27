@@ -750,15 +750,35 @@ ChannelMediaResource::RecreateChannel()
   nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
     nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
 
-  nsresult rv = NS_NewChannel(getter_AddRefs(mChannel),
-                              mURI,
-                              element,
-                              securityFlags,
-                              contentPolicyType,
-                              loadGroup,
-                              nullptr,  // aCallbacks
-                              loadFlags);
+  // If element has 'loadingprincipal' attribute, we will use the value as
+  // loadingPrincipal for the channel, otherwise it will default to use
+  // aElement->NodePrincipal().
+  // This function returns true when element has 'loadingprincipal', so if
+  // setAttrs is true we will override the origin attributes on the channel
+  // later.
+  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  bool setAttrs =
+    nsContentUtils::GetLoadingPrincipalForXULNode(element,
+                                                  getter_AddRefs(loadingPrincipal));
+
+  nsresult rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(mChannel),
+                                                     mURI,
+                                                     element,
+                                                     loadingPrincipal,
+                                                     securityFlags,
+                                                     contentPolicyType,
+                                                     loadGroup,
+                                                     nullptr,  // aCallbacks
+                                                     loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (setAttrs) {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    if (loadInfo) {
+      // The function simply returns NS_OK, so we ignore the return value.
+      Unused << loadInfo->SetOriginAttributes(loadingPrincipal->OriginAttributesRef());
+   }
+  }
 
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(mChannel));
   if (cos) {

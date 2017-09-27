@@ -46,6 +46,8 @@ std::map<base::ProcessId, ImageBridgeParent*> ImageBridgeParent::sImageBridges;
 
 StaticAutoPtr<mozilla::Monitor> sImageBridgesLock;
 
+static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
+
 // defined in CompositorBridgeParent.cpp
 CompositorThreadHolder* GetCompositorThreadHolder();
 
@@ -81,12 +83,6 @@ ImageBridgeParent::~ImageBridgeParent()
 {
 }
 
-static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
-
-void ReleaseImageBridgeParentSingleton() {
-  sImageBridgeParentSingleton = nullptr;
-}
-
 /* static */ ImageBridgeParent*
 ImageBridgeParent::CreateSameProcess()
 {
@@ -114,6 +110,36 @@ ImageBridgeParent::CreateForGPUProcess(Endpoint<PImageBridgeParent>&& aEndpoint)
 
   sImageBridgeParentSingleton = parent;
   return true;
+}
+
+/* static */ void
+ImageBridgeParent::ShutdownInternal()
+{
+  // We make a copy because we don't want to hold the lock while closing and we
+  // don't want the object to get freed underneath us.
+  nsTArray<RefPtr<ImageBridgeParent>> actors;
+  {
+    MonitorAutoLock lock(*sImageBridgesLock);
+    for (const auto& iter : sImageBridges) {
+      actors.AppendElement(iter.second);
+    }
+  }
+
+  for (auto const& actor : actors) {
+    MOZ_RELEASE_ASSERT(!actor->mClosed);
+    actor->Close();
+  }
+
+  sImageBridgeParentSingleton = nullptr;
+}
+
+/* static */ void
+ImageBridgeParent::Shutdown()
+{
+  CompositorThreadHolder::Loop()->PostTask(
+    NS_NewRunnableFunction("ImageBridgeParent::Shutdown", []() -> void {
+      ImageBridgeParent::ShutdownInternal();
+  }));
 }
 
 void
