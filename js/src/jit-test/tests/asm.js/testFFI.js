@@ -127,7 +127,7 @@ for (var i = 0; i < 15; i++)
     assertEq(f(i), i+10);
 
 // Test the throw path
-function ffiThrow(n) { if (n == 14) throw 'yolo'; }
+function ffiThrow(n) { if (n == 14) throw new Error('yolo'); }
 var f = asmLink(asmCompile('glob', 'imp', USE_ASM + 'var ffi=imp.ffi; function f(i) { i=i|0; ffi(i >> 0); } return f'), null, {ffi:ffiThrow});
 var i = 0;
 try {
@@ -135,7 +135,7 @@ try {
         f(i);
     throw 'assume unreachable';
 } catch (e) {
-    assertEq(e, 'yolo');
+    assertEq(e.message, 'yolo');
     assertEq(i, 14);
 }
 
@@ -148,8 +148,19 @@ for (var i = 0; i < 40; i++)
 valueToConvert = INT32_MAX + 1;
 assertEq(f(40), INT32_MAX + 1 | 0);
 function testBadConversions(f) {
+    valueToConvert = {valueOf: function () { throw new Error("FAIL"); }};
+
+    var errMsg;
+    try {
+        f(40);
+    } catch(e) {
+        errMsg = e.message;
+    }
+    assertEq(errMsg, "FAIL");
+
     valueToConvert = {valueOf: function () { throw "FAIL"; }};
     assertThrowsValue(() => f(40), "FAIL");
+
     valueToConvert = Symbol();
     assertThrowsInstanceOf(() => f(40), TypeError);
 }
