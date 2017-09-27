@@ -2298,10 +2298,7 @@ Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame
     }
 
     if (allocationsLog.length() > maxAllocationsLogLength) {
-        if (!allocationsLog.popFront()) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
+        allocationsLog.popFront();
         MOZ_ASSERT(allocationsLog.length() == maxAllocationsLogLength);
         allocationsLogOverflowed = true;
     }
