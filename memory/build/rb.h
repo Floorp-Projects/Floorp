@@ -136,55 +136,142 @@ public:
 
 /* Tree structure. */
 template<typename T, typename Trait>
-struct RedBlackTree
+class RedBlackTree
 {
-  T* rbt_root;
-  T rbt_nil;
-
+public:
   void Init()
   {
     rbt_root = &rbt_nil;
-    Trait::GetTreeNode(&rbt_nil).SetLeft(&rbt_nil);
-    Trait::GetTreeNode(&rbt_nil).SetRight(&rbt_nil);
-    Trait::GetTreeNode(&rbt_nil).SetColor(NodeColor::Black);
+    rbt_nil.SetLeft(&rbt_nil);
+    rbt_nil.SetRight(&rbt_nil);
+    rbt_nil.SetColor(NodeColor::Black);
   }
 
   T* First(T* aStart = nullptr)
   {
-    T* ret;
-    for (ret = aStart ? aStart : rbt_root;
-         Trait::GetTreeNode(ret).Left() != &rbt_nil;
-         ret = Trait::GetTreeNode(ret).Left()) {
-    }
-    return (ret == &rbt_nil) ? nullptr : ret;
+    return First(reinterpret_cast<TreeNode*>(aStart));
   }
 
   T* Last(T* aStart = nullptr)
   {
-    T* ret;
-    for (ret = aStart ? aStart : rbt_root;
-         Trait::GetTreeNode(ret).Right() != &rbt_nil;
-         ret = Trait::GetTreeNode(ret).Right()) {
-    }
-    return (ret == &rbt_nil) ? nullptr : ret;
+    return Last(reinterpret_cast<TreeNode*>(aStart));
   }
 
   T* Next(T* aNode)
   {
-    T* ret;
-    if (Trait::GetTreeNode(aNode).Right() != &rbt_nil) {
-      ret = First(Trait::GetTreeNode(aNode).Right());
+    return Next(reinterpret_cast<TreeNode*>(aNode));
+  }
+
+  T* Prev(T* aNode)
+  {
+    return Prev(reinterpret_cast<TreeNode*>(aNode));
+  }
+
+  T* Search(T* aKey)
+  {
+    return Search(reinterpret_cast<TreeNode*>(aKey));
+  }
+
+  /* Find a match if it exists. Otherwise, find the next greater node, if one
+   * exists */
+  T* SearchOrNext(T* aKey)
+  {
+    return SearchOrNext(reinterpret_cast<TreeNode*>(aKey));
+  }
+
+  void Insert(T* aNode)
+  {
+    Insert(reinterpret_cast<TreeNode*>(aNode));
+  }
+
+  void Remove(T* aNode)
+  {
+    return Remove(reinterpret_cast<TreeNode*>(aNode));
+  }
+
+private:
+  /* Helper class to avoid having all the tree traversal code further below
+   * have to use Trait::GetTreeNode, adding visual noise. */
+  struct TreeNode : public T
+  {
+    TreeNode* Left()
+    {
+      return (TreeNode*)Trait::GetTreeNode(this).Left();
+    }
+
+    void SetLeft(T* aValue)
+    {
+      Trait::GetTreeNode(this).SetLeft(aValue);
+    }
+
+    TreeNode* Right()
+    {
+      return (TreeNode*)Trait::GetTreeNode(this).Right();
+    }
+
+    void SetRight(T* aValue)
+    {
+      Trait::GetTreeNode(this).SetRight(aValue);
+    }
+
+    NodeColor Color()
+    {
+      return Trait::GetTreeNode(this).Color();
+    }
+
+    bool IsRed()
+    {
+      return Trait::GetTreeNode(this).IsRed();
+    }
+
+    bool IsBlack()
+    {
+      return Trait::GetTreeNode(this).IsBlack();
+    }
+
+    void SetColor(NodeColor aColor)
+    {
+      Trait::GetTreeNode(this).SetColor(aColor);
+    }
+  };
+
+  TreeNode* rbt_root;
+  TreeNode rbt_nil;
+
+  TreeNode* First(TreeNode* aStart)
+  {
+    TreeNode* ret;
+    for (ret = aStart ? aStart : rbt_root; ret->Left() != &rbt_nil;
+         ret = ret->Left()) {
+    }
+    return (ret == &rbt_nil) ? nullptr : ret;
+  }
+
+  TreeNode* Last(TreeNode* aStart)
+  {
+    TreeNode* ret;
+    for (ret = aStart ? aStart : rbt_root; ret->Right() != &rbt_nil;
+         ret = ret->Right()) {
+    }
+    return (ret == &rbt_nil) ? nullptr : ret;
+  }
+
+  TreeNode* Next(TreeNode* aNode)
+  {
+    TreeNode* ret;
+    if (aNode->Right() != &rbt_nil) {
+      ret = First(aNode->Right());
     } else {
-      T* rbp_n_t = rbt_root;
+      TreeNode* rbp_n_t = rbt_root;
       MOZ_ASSERT(rbp_n_t != &rbt_nil);
       ret = &rbt_nil;
       while (true) {
         int rbp_n_cmp = Trait::Compare(aNode, rbp_n_t);
         if (rbp_n_cmp < 0) {
           ret = rbp_n_t;
-          rbp_n_t = Trait::GetTreeNode(rbp_n_t).Left();
+          rbp_n_t = rbp_n_t->Left();
         } else if (rbp_n_cmp > 0) {
-          rbp_n_t = Trait::GetTreeNode(rbp_n_t).Right();
+          rbp_n_t = rbp_n_t->Right();
         } else {
           break;
         }
@@ -194,22 +281,22 @@ struct RedBlackTree
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
-  T* Prev(T* aNode)
+  TreeNode* Prev(TreeNode* aNode)
   {
-    T* ret;
-    if (Trait::GetTreeNode(aNode).Left() != &rbt_nil) {
-      ret = Last(Trait::GetTreeNode(aNode).Left());
+    TreeNode* ret;
+    if (aNode->Left() != &rbt_nil) {
+      ret = Last(aNode->Left());
     } else {
-      T* rbp_p_t = rbt_root;
+      TreeNode* rbp_p_t = rbt_root;
       MOZ_ASSERT(rbp_p_t != &rbt_nil);
       ret = &rbt_nil;
       while (true) {
         int rbp_p_cmp = Trait::Compare(aNode, rbp_p_t);
         if (rbp_p_cmp < 0) {
-          rbp_p_t = Trait::GetTreeNode(rbp_p_t).Left();
+          rbp_p_t = rbp_p_t->Left();
         } else if (rbp_p_cmp > 0) {
           ret = rbp_p_t;
-          rbp_p_t = Trait::GetTreeNode(rbp_p_t).Right();
+          rbp_p_t = rbp_p_t->Right();
         } else {
           break;
         }
@@ -219,33 +306,31 @@ struct RedBlackTree
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
-  T* Search(T* aKey)
+  TreeNode* Search(TreeNode* aKey)
   {
-    T* ret = rbt_root;
+    TreeNode* ret = rbt_root;
     int rbp_se_cmp;
     while (ret != &rbt_nil && (rbp_se_cmp = Trait::Compare(aKey, ret)) != 0) {
       if (rbp_se_cmp < 0) {
-        ret = Trait::GetTreeNode(ret).Left();
+        ret = ret->Left();
       } else {
-        ret = Trait::GetTreeNode(ret).Right();
+        ret = ret->Right();
       }
     }
     return (ret == &rbt_nil) ? nullptr : ret;
   }
 
-  /* Find a match if it exists. Otherwise, find the next greater node, if one
-   * exists */
-  T* SearchOrNext(T* aKey)
+  TreeNode* SearchOrNext(TreeNode* aKey)
   {
-    T* ret = nullptr;
-    T* rbp_ns_t = rbt_root;
+    TreeNode* ret = nullptr;
+    TreeNode* rbp_ns_t = rbt_root;
     while (rbp_ns_t != &rbt_nil) {
       int rbp_ns_cmp = Trait::Compare(aKey, rbp_ns_t);
       if (rbp_ns_cmp < 0) {
         ret = rbp_ns_t;
-        rbp_ns_t = Trait::GetTreeNode(rbp_ns_t).Left();
+        rbp_ns_t = rbp_ns_t->Left();
       } else if (rbp_ns_cmp > 0) {
-        rbp_ns_t = Trait::GetTreeNode(rbp_ns_t).Right();
+        rbp_ns_t = rbp_ns_t->Right();
       } else {
         ret = rbp_ns_t;
         break;
@@ -254,15 +339,15 @@ struct RedBlackTree
     return ret;
   }
 
-  void Insert(T* aNode)
+  void Insert(TreeNode* aNode)
   {
-    T rbp_i_s;
-    T *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;
+    TreeNode rbp_i_s;
+    TreeNode *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;
     int rbp_i_cmp = 0;
     rbp_i_g = &rbt_nil;
-    Trait::GetTreeNode(&rbp_i_s).SetLeft(rbt_root);
-    Trait::GetTreeNode(&rbp_i_s).SetRight(&rbt_nil);
-    Trait::GetTreeNode(&rbp_i_s).SetColor(NodeColor::Black);
+    rbp_i_s.SetLeft(rbt_root);
+    rbp_i_s.SetRight(&rbt_nil);
+    rbp_i_s.SetColor(NodeColor::Black);
     rbp_i_p = &rbp_i_s;
     rbp_i_c = rbt_root;
     /* Iteratively search down the tree for the insertion point,
@@ -270,10 +355,9 @@ struct RedBlackTree
      * iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down
      * the tree, assuming a sufficiently deep tree. */
     while (rbp_i_c != &rbt_nil) {
-      rbp_i_t = Trait::GetTreeNode(rbp_i_c).Left();
-      rbp_i_u = Trait::GetTreeNode(rbp_i_t).Left();
-      if (Trait::GetTreeNode(rbp_i_t).IsRed() &&
-          Trait::GetTreeNode(rbp_i_u).IsRed()) {
+      rbp_i_t = rbp_i_c->Left();
+      rbp_i_u = rbp_i_t->Left();
+      if (rbp_i_t->IsRed() && rbp_i_u->IsRed()) {
         /* rbp_i_c is the top of a logical 4-node, so split it.
          * This iteration does not move down the tree, due to the
          * disruptiveness of node splitting.
@@ -281,30 +365,30 @@ struct RedBlackTree
          * Rotate right. */
         rbp_i_t = RotateRight(rbp_i_c);
         /* Pass red links up one level. */
-        rbp_i_u = Trait::GetTreeNode(rbp_i_t).Left();
-        Trait::GetTreeNode(rbp_i_u).SetColor(NodeColor::Black);
-        if (Trait::GetTreeNode(rbp_i_p).Left() == rbp_i_c) {
-          Trait::GetTreeNode(rbp_i_p).SetLeft(rbp_i_t);
+        rbp_i_u = rbp_i_t->Left();
+        rbp_i_u->SetColor(NodeColor::Black);
+        if (rbp_i_p->Left() == rbp_i_c) {
+          rbp_i_p->SetLeft(rbp_i_t);
           rbp_i_c = rbp_i_t;
         } else {
           /* rbp_i_c was the right child of rbp_i_p, so rotate
            * left in order to maintain the left-leaning invariant. */
-          MOZ_ASSERT(Trait::GetTreeNode(rbp_i_p).Right() == rbp_i_c);
-          Trait::GetTreeNode(rbp_i_p).SetRight(rbp_i_t);
+          MOZ_ASSERT(rbp_i_p->Right() == rbp_i_c);
+          rbp_i_p->SetRight(rbp_i_t);
           rbp_i_u = LeanLeft(rbp_i_p);
-          if (Trait::GetTreeNode(rbp_i_g).Left() == rbp_i_p) {
-            Trait::GetTreeNode(rbp_i_g).SetLeft(rbp_i_u);
+          if (rbp_i_g->Left() == rbp_i_p) {
+            rbp_i_g->SetLeft(rbp_i_u);
           } else {
-            MOZ_ASSERT(Trait::GetTreeNode(rbp_i_g).Right() == rbp_i_p);
-            Trait::GetTreeNode(rbp_i_g).SetRight(rbp_i_u);
+            MOZ_ASSERT(rbp_i_g->Right() == rbp_i_p);
+            rbp_i_g->SetRight(rbp_i_u);
           }
           rbp_i_p = rbp_i_u;
           rbp_i_cmp = Trait::Compare(aNode, rbp_i_p);
           if (rbp_i_cmp < 0) {
-            rbp_i_c = Trait::GetTreeNode(rbp_i_p).Left();
+            rbp_i_c = rbp_i_p->Left();
           } else {
             MOZ_ASSERT(rbp_i_cmp > 0);
-            rbp_i_c = Trait::GetTreeNode(rbp_i_p).Right();
+            rbp_i_c = rbp_i_p->Right();
           }
           continue;
         }
@@ -313,40 +397,40 @@ struct RedBlackTree
       rbp_i_p = rbp_i_c;
       rbp_i_cmp = Trait::Compare(aNode, rbp_i_c);
       if (rbp_i_cmp < 0) {
-        rbp_i_c = Trait::GetTreeNode(rbp_i_c).Left();
+        rbp_i_c = rbp_i_c->Left();
       } else {
         MOZ_ASSERT(rbp_i_cmp > 0);
-        rbp_i_c = Trait::GetTreeNode(rbp_i_c).Right();
+        rbp_i_c = rbp_i_c->Right();
       }
     }
     /* rbp_i_p now refers to the node under which to insert. */
-    Trait::GetTreeNode(aNode).SetLeft(&rbt_nil);
-    Trait::GetTreeNode(aNode).SetRight(&rbt_nil);
-    Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+    aNode->SetLeft(&rbt_nil);
+    aNode->SetRight(&rbt_nil);
+    aNode->SetColor(NodeColor::Red);
     if (rbp_i_cmp > 0) {
-      Trait::GetTreeNode(rbp_i_p).SetRight(aNode);
+      rbp_i_p->SetRight(aNode);
       rbp_i_t = LeanLeft(rbp_i_p);
-      if (Trait::GetTreeNode(rbp_i_g).Left() == rbp_i_p) {
-        Trait::GetTreeNode(rbp_i_g).SetLeft(rbp_i_t);
-      } else if (Trait::GetTreeNode(rbp_i_g).Right() == rbp_i_p) {
-        Trait::GetTreeNode(rbp_i_g).SetRight(rbp_i_t);
+      if (rbp_i_g->Left() == rbp_i_p) {
+        rbp_i_g->SetLeft(rbp_i_t);
+      } else if (rbp_i_g->Right() == rbp_i_p) {
+        rbp_i_g->SetRight(rbp_i_t);
       }
     } else {
-      Trait::GetTreeNode(rbp_i_p).SetLeft(aNode);
+      rbp_i_p->SetLeft(aNode);
     }
     /* Update the root and make sure that it is black. */
-    rbt_root = Trait::GetTreeNode(&rbp_i_s).Left();
-    Trait::GetTreeNode(rbt_root).SetColor(NodeColor::Black);
+    rbt_root = rbp_i_s.Left();
+    rbt_root->SetColor(NodeColor::Black);
   }
 
-  void Remove(T* aNode)
+  void Remove(TreeNode* aNode)
   {
-    T rbp_r_s;
-    T *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;
+    TreeNode rbp_r_s;
+    TreeNode *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;
     int rbp_r_cmp;
-    Trait::GetTreeNode(&rbp_r_s).SetLeft(rbt_root);
-    Trait::GetTreeNode(&rbp_r_s).SetRight(&rbt_nil);
-    Trait::GetTreeNode(&rbp_r_s).SetColor(NodeColor::Black);
+    rbp_r_s.SetLeft(rbt_root);
+    rbp_r_s.SetRight(&rbt_nil);
+    rbp_r_s.SetColor(NodeColor::Black);
     rbp_r_p = &rbp_r_s;
     rbp_r_c = rbt_root;
     rbp_r_xp = &rbt_nil;
@@ -357,32 +441,31 @@ struct RedBlackTree
      * be no way to convert it from a 2-node to a 3-node. */
     rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
     if (rbp_r_cmp < 0) {
-      rbp_r_t = Trait::GetTreeNode(rbp_r_c).Left();
-      rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
-      if (Trait::GetTreeNode(rbp_r_t).IsBlack() &&
-          Trait::GetTreeNode(rbp_r_u).IsBlack()) {
+      rbp_r_t = rbp_r_c->Left();
+      rbp_r_u = rbp_r_t->Left();
+      if (rbp_r_t->IsBlack() && rbp_r_u->IsBlack()) {
         /* Apply standard transform to prepare for left move. */
         rbp_r_t = MoveRedLeft(rbp_r_c);
-        Trait::GetTreeNode(rbp_r_t).SetColor(NodeColor::Black);
-        Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+        rbp_r_t->SetColor(NodeColor::Black);
+        rbp_r_p->SetLeft(rbp_r_t);
         rbp_r_c = rbp_r_t;
       } else {
         /* Move left. */
         rbp_r_p = rbp_r_c;
-        rbp_r_c = Trait::GetTreeNode(rbp_r_c).Left();
+        rbp_r_c = rbp_r_c->Left();
       }
     } else {
       if (rbp_r_cmp == 0) {
         MOZ_ASSERT(aNode == rbp_r_c);
-        if (Trait::GetTreeNode(rbp_r_c).Right() == &rbt_nil) {
+        if (rbp_r_c->Right() == &rbt_nil) {
           /* Delete root node (which is also a leaf node). */
-          if (Trait::GetTreeNode(rbp_r_c).Left() != &rbt_nil) {
+          if (rbp_r_c->Left() != &rbt_nil) {
             rbp_r_t = LeanRight(rbp_r_c);
-            Trait::GetTreeNode(rbp_r_t).SetRight(&rbt_nil);
+            rbp_r_t->SetRight(&rbt_nil);
           } else {
             rbp_r_t = &rbt_nil;
           }
-          Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+          rbp_r_p->SetLeft(rbp_r_t);
         } else {
           /* This is the node we want to delete, but we will
            * instead swap it with its successor and delete the
@@ -393,33 +476,31 @@ struct RedBlackTree
         }
       }
       if (rbp_r_cmp == 1) {
-        if (Trait::GetTreeNode(
-              Trait::GetTreeNode(Trait::GetTreeNode(rbp_r_c).Right()).Left())
-              .IsBlack()) {
-          rbp_r_t = Trait::GetTreeNode(rbp_r_c).Left();
-          if (Trait::GetTreeNode(rbp_r_t).IsRed()) {
+        if (rbp_r_c->Right()->Left()->IsBlack()) {
+          rbp_r_t = rbp_r_c->Left();
+          if (rbp_r_t->IsRed()) {
             /* Standard transform. */
             rbp_r_t = MoveRedRight(rbp_r_c);
           } else {
             /* Root-specific transform. */
-            Trait::GetTreeNode(rbp_r_c).SetColor(NodeColor::Red);
-            rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
-            if (Trait::GetTreeNode(rbp_r_u).IsRed()) {
-              Trait::GetTreeNode(rbp_r_u).SetColor(NodeColor::Black);
+            rbp_r_c->SetColor(NodeColor::Red);
+            rbp_r_u = rbp_r_t->Left();
+            if (rbp_r_u->IsRed()) {
+              rbp_r_u->SetColor(NodeColor::Black);
               rbp_r_t = RotateRight(rbp_r_c);
               rbp_r_u = RotateLeft(rbp_r_c);
-              Trait::GetTreeNode(rbp_r_t).SetRight(rbp_r_u);
+              rbp_r_t->SetRight(rbp_r_u);
             } else {
-              Trait::GetTreeNode(rbp_r_t).SetColor(NodeColor::Red);
+              rbp_r_t->SetColor(NodeColor::Red);
               rbp_r_t = RotateLeft(rbp_r_c);
             }
           }
-          Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+          rbp_r_p->SetLeft(rbp_r_t);
           rbp_r_c = rbp_r_t;
         } else {
           /* Move right. */
           rbp_r_p = rbp_r_c;
-          rbp_r_c = Trait::GetTreeNode(rbp_r_c).Right();
+          rbp_r_c = rbp_r_c->Right();
         }
       }
     }
@@ -428,62 +509,58 @@ struct RedBlackTree
         MOZ_ASSERT(rbp_r_p != &rbt_nil);
         rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
         if (rbp_r_cmp < 0) {
-          rbp_r_t = Trait::GetTreeNode(rbp_r_c).Left();
+          rbp_r_t = rbp_r_c->Left();
           if (rbp_r_t == &rbt_nil) {
             /* rbp_r_c now refers to the successor node to
              * relocate, and rbp_r_xp/aNode refer to the
              * context for the relocation. */
-            if (Trait::GetTreeNode(rbp_r_xp).Left() == (aNode)) {
-              Trait::GetTreeNode(rbp_r_xp).SetLeft(rbp_r_c);
+            if (rbp_r_xp->Left() == (aNode)) {
+              rbp_r_xp->SetLeft(rbp_r_c);
             } else {
-              MOZ_ASSERT(Trait::GetTreeNode(rbp_r_xp).Right() == (aNode));
-              Trait::GetTreeNode(rbp_r_xp).SetRight(rbp_r_c);
+              MOZ_ASSERT(rbp_r_xp->Right() == (aNode));
+              rbp_r_xp->SetRight(rbp_r_c);
             }
-            Trait::GetTreeNode(rbp_r_c).SetLeft(
-              Trait::GetTreeNode(aNode).Left());
-            Trait::GetTreeNode(rbp_r_c).SetRight(
-              Trait::GetTreeNode(aNode).Right());
-            Trait::GetTreeNode(rbp_r_c).SetColor(
-              Trait::GetTreeNode(aNode).Color());
-            if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
-              Trait::GetTreeNode(rbp_r_p).SetLeft(&rbt_nil);
+            rbp_r_c->SetLeft(aNode->Left());
+            rbp_r_c->SetRight(aNode->Right());
+            rbp_r_c->SetColor(aNode->Color());
+            if (rbp_r_p->Left() == rbp_r_c) {
+              rbp_r_p->SetLeft(&rbt_nil);
             } else {
-              MOZ_ASSERT(Trait::GetTreeNode(rbp_r_p).Right() == rbp_r_c);
-              Trait::GetTreeNode(rbp_r_p).SetRight(&rbt_nil);
+              MOZ_ASSERT(rbp_r_p->Right() == rbp_r_c);
+              rbp_r_p->SetRight(&rbt_nil);
             }
             break;
           }
-          rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
-          if (Trait::GetTreeNode(rbp_r_t).IsBlack() &&
-              Trait::GetTreeNode(rbp_r_u).IsBlack()) {
+          rbp_r_u = rbp_r_t->Left();
+          if (rbp_r_t->IsBlack() && rbp_r_u->IsBlack()) {
             rbp_r_t = MoveRedLeft(rbp_r_c);
-            if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
-              Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+            if (rbp_r_p->Left() == rbp_r_c) {
+              rbp_r_p->SetLeft(rbp_r_t);
             } else {
-              Trait::GetTreeNode(rbp_r_p).SetRight(rbp_r_t);
+              rbp_r_p->SetRight(rbp_r_t);
             }
             rbp_r_c = rbp_r_t;
           } else {
             rbp_r_p = rbp_r_c;
-            rbp_r_c = Trait::GetTreeNode(rbp_r_c).Left();
+            rbp_r_c = rbp_r_c->Left();
           }
         } else {
           /* Check whether to delete this node (it has to be
            * the correct node and a leaf node). */
           if (rbp_r_cmp == 0) {
             MOZ_ASSERT(aNode == rbp_r_c);
-            if (Trait::GetTreeNode(rbp_r_c).Right() == &rbt_nil) {
+            if (rbp_r_c->Right() == &rbt_nil) {
               /* Delete leaf node. */
-              if (Trait::GetTreeNode(rbp_r_c).Left() != &rbt_nil) {
+              if (rbp_r_c->Left() != &rbt_nil) {
                 rbp_r_t = LeanRight(rbp_r_c);
-                Trait::GetTreeNode(rbp_r_t).SetRight(&rbt_nil);
+                rbp_r_t->SetRight(&rbt_nil);
               } else {
                 rbp_r_t = &rbt_nil;
               }
-              if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
-                Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+              if (rbp_r_p->Left() == rbp_r_c) {
+                rbp_r_p->SetLeft(rbp_r_t);
               } else {
-                Trait::GetTreeNode(rbp_r_p).SetRight(rbp_r_t);
+                rbp_r_p->SetRight(rbp_r_t);
               }
               break;
             } else {
@@ -495,125 +572,122 @@ struct RedBlackTree
               rbp_r_xp = rbp_r_p;
             }
           }
-          rbp_r_t = Trait::GetTreeNode(rbp_r_c).Right();
-          rbp_r_u = Trait::GetTreeNode(rbp_r_t).Left();
-          if (Trait::GetTreeNode(rbp_r_u).IsBlack()) {
+          rbp_r_t = rbp_r_c->Right();
+          rbp_r_u = rbp_r_t->Left();
+          if (rbp_r_u->IsBlack()) {
             rbp_r_t = MoveRedRight(rbp_r_c);
-            if (Trait::GetTreeNode(rbp_r_p).Left() == rbp_r_c) {
-              Trait::GetTreeNode(rbp_r_p).SetLeft(rbp_r_t);
+            if (rbp_r_p->Left() == rbp_r_c) {
+              rbp_r_p->SetLeft(rbp_r_t);
             } else {
-              Trait::GetTreeNode(rbp_r_p).SetRight(rbp_r_t);
+              rbp_r_p->SetRight(rbp_r_t);
             }
             rbp_r_c = rbp_r_t;
           } else {
             rbp_r_p = rbp_r_c;
-            rbp_r_c = Trait::GetTreeNode(rbp_r_c).Right();
+            rbp_r_c = rbp_r_c->Right();
           }
         }
       }
     }
     /* Update root. */
-    rbt_root = Trait::GetTreeNode(&rbp_r_s).Left();
+    rbt_root = rbp_r_s.Left();
   }
 
-private:
-  T* RotateLeft(T* aNode)
+  TreeNode* RotateLeft(TreeNode* aNode)
   {
-    T* node = Trait::GetTreeNode(aNode).Right();
-    Trait::GetTreeNode(aNode).SetRight(Trait::GetTreeNode(node).Left());
-    Trait::GetTreeNode(node).SetLeft(aNode);
+    TreeNode* node = aNode->Right();
+    aNode->SetRight(node->Left());
+    node->SetLeft(aNode);
     return node;
   }
 
-  T* RotateRight(T* aNode)
+  TreeNode* RotateRight(TreeNode* aNode)
   {
-    T* node = Trait::GetTreeNode(aNode).Left();
-    Trait::GetTreeNode(aNode).SetLeft(Trait::GetTreeNode(node).Right());
-    Trait::GetTreeNode(node).SetRight(aNode);
+    TreeNode* node = aNode->Left();
+    aNode->SetLeft(node->Right());
+    node->SetRight(aNode);
     return node;
   }
 
-  T* LeanLeft(T* aNode)
+  TreeNode* LeanLeft(TreeNode* aNode)
   {
-    T* node = RotateLeft(aNode);
-    NodeColor color = Trait::GetTreeNode(aNode).Color();
-    Trait::GetTreeNode(node).SetColor(color);
-    Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+    TreeNode* node = RotateLeft(aNode);
+    NodeColor color = aNode->Color();
+    node->SetColor(color);
+    aNode->SetColor(NodeColor::Red);
     return node;
   }
 
-  T* LeanRight(T* aNode)
+  TreeNode* LeanRight(TreeNode* aNode)
   {
-    T* node = RotateRight(aNode);
-    NodeColor color = Trait::GetTreeNode(aNode).Color();
-    Trait::GetTreeNode(node).SetColor(color);
-    Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+    TreeNode* node = RotateRight(aNode);
+    NodeColor color = aNode->Color();
+    node->SetColor(color);
+    aNode->SetColor(NodeColor::Red);
     return node;
   }
 
-  T* MoveRedLeft(T* aNode)
+  TreeNode* MoveRedLeft(TreeNode* aNode)
   {
-    T* node;
-    T *rbp_mrl_t, *rbp_mrl_u;
-    rbp_mrl_t = Trait::GetTreeNode(aNode).Left();
-    Trait::GetTreeNode(rbp_mrl_t).SetColor(NodeColor::Red);
-    rbp_mrl_t = Trait::GetTreeNode(aNode).Right();
-    rbp_mrl_u = Trait::GetTreeNode(rbp_mrl_t).Left();
-    if (Trait::GetTreeNode(rbp_mrl_u).IsRed()) {
+    TreeNode* node;
+    TreeNode *rbp_mrl_t, *rbp_mrl_u;
+    rbp_mrl_t = aNode->Left();
+    rbp_mrl_t->SetColor(NodeColor::Red);
+    rbp_mrl_t = aNode->Right();
+    rbp_mrl_u = rbp_mrl_t->Left();
+    if (rbp_mrl_u->IsRed()) {
       rbp_mrl_u = RotateRight(rbp_mrl_t);
-      Trait::GetTreeNode(aNode).SetRight(rbp_mrl_u);
+      aNode->SetRight(rbp_mrl_u);
       node = RotateLeft(aNode);
-      rbp_mrl_t = Trait::GetTreeNode(aNode).Right();
-      if (Trait::GetTreeNode(rbp_mrl_t).IsRed()) {
-        Trait::GetTreeNode(rbp_mrl_t).SetColor(NodeColor::Black);
-        Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+      rbp_mrl_t = aNode->Right();
+      if (rbp_mrl_t->IsRed()) {
+        rbp_mrl_t->SetColor(NodeColor::Black);
+        aNode->SetColor(NodeColor::Red);
         rbp_mrl_t = RotateLeft(aNode);
-        Trait::GetTreeNode(node).SetLeft(rbp_mrl_t);
+        node->SetLeft(rbp_mrl_t);
       } else {
-        Trait::GetTreeNode(aNode).SetColor(NodeColor::Black);
+        aNode->SetColor(NodeColor::Black);
       }
     } else {
-      Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+      aNode->SetColor(NodeColor::Red);
       node = RotateLeft(aNode);
     }
     return node;
   }
 
-  T* MoveRedRight(T* aNode)
+  TreeNode* MoveRedRight(TreeNode* aNode)
   {
-    T* node;
-    T* rbp_mrr_t;
-    rbp_mrr_t = Trait::GetTreeNode(aNode).Left();
-    if (Trait::GetTreeNode(rbp_mrr_t).IsRed()) {
-      T *rbp_mrr_u, *rbp_mrr_v;
-      rbp_mrr_u = Trait::GetTreeNode(rbp_mrr_t).Right();
-      rbp_mrr_v = Trait::GetTreeNode(rbp_mrr_u).Left();
-      if (Trait::GetTreeNode(rbp_mrr_v).IsRed()) {
-        Trait::GetTreeNode(rbp_mrr_u).SetColor(
-          Trait::GetTreeNode(aNode).Color());
-        Trait::GetTreeNode(rbp_mrr_v).SetColor(NodeColor::Black);
+    TreeNode* node;
+    TreeNode* rbp_mrr_t;
+    rbp_mrr_t = aNode->Left();
+    if (rbp_mrr_t->IsRed()) {
+      TreeNode *rbp_mrr_u, *rbp_mrr_v;
+      rbp_mrr_u = rbp_mrr_t->Right();
+      rbp_mrr_v = rbp_mrr_u->Left();
+      if (rbp_mrr_v->IsRed()) {
+        rbp_mrr_u->SetColor(aNode->Color());
+        rbp_mrr_v->SetColor(NodeColor::Black);
         rbp_mrr_u = RotateLeft(rbp_mrr_t);
-        Trait::GetTreeNode(aNode).SetLeft(rbp_mrr_u);
+        aNode->SetLeft(rbp_mrr_u);
         node = RotateRight(aNode);
         rbp_mrr_t = RotateLeft(aNode);
-        Trait::GetTreeNode(node).SetRight(rbp_mrr_t);
+        node->SetRight(rbp_mrr_t);
       } else {
-        Trait::GetTreeNode(rbp_mrr_t).SetColor(
-          Trait::GetTreeNode(aNode).Color());
-        Trait::GetTreeNode(rbp_mrr_u).SetColor(NodeColor::Red);
+        rbp_mrr_t->SetColor(aNode->Color());
+        rbp_mrr_u->SetColor(NodeColor::Red);
         node = RotateRight(aNode);
         rbp_mrr_t = RotateLeft(aNode);
-        Trait::GetTreeNode(node).SetRight(rbp_mrr_t);
+        node->SetRight(rbp_mrr_t);
       }
-      Trait::GetTreeNode(aNode).SetColor(NodeColor::Red);
+      aNode->SetColor(NodeColor::Red);
     } else {
-      Trait::GetTreeNode(rbp_mrr_t).SetColor(NodeColor::Red);
-      rbp_mrr_t = Trait::GetTreeNode(rbp_mrr_t).Left();
-      if (Trait::GetTreeNode(rbp_mrr_t).IsRed()) {
-        Trait::GetTreeNode(rbp_mrr_t).SetColor(NodeColor::Black);
+      rbp_mrr_t->SetColor(NodeColor::Red);
+      rbp_mrr_t = rbp_mrr_t->Left();
+      if (rbp_mrr_t->IsRed()) {
+        rbp_mrr_t->SetColor(NodeColor::Black);
         node = RotateRight(aNode);
         rbp_mrr_t = RotateLeft(aNode);
-        Trait::GetTreeNode(node).SetRight(rbp_mrr_t);
+        node->SetRight(rbp_mrr_t);
       } else {
         node = RotateLeft(aNode);
       }
@@ -650,8 +724,8 @@ private:
 public:
   class Iterator
   {
-    T* mSentinel;
-    T* mPath[3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1))];
+    TreeNode* mSentinel;
+    TreeNode* mPath[3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1))];
     unsigned mDepth;
 
   public:
@@ -661,10 +735,9 @@ public:
     {
       /* Initialize the path to contain the left spine. */
       if (aTree->rbt_root != mSentinel) {
-        T* node;
+        TreeNode* node;
         mPath[mDepth++] = aTree->rbt_root;
-        while ((node = Trait::GetTreeNode(mPath[mDepth - 1]).Left()) !=
-               mSentinel) {
+        while ((node = mPath[mDepth - 1]->Left()) != mSentinel) {
           mPath[mDepth++] = node;
         }
       }
@@ -705,22 +778,20 @@ public:
       return Item(this, nullptr);
     }
 
-    T* Next()
+    TreeNode* Next()
     {
-      T* node;
-      if ((node = Trait::GetTreeNode(mPath[mDepth - 1]).Right()) !=
-          mSentinel) {
+      TreeNode* node;
+      if ((node = mPath[mDepth - 1]->Right()) != mSentinel) {
         /* The successor is the left-most node in the right subtree. */
         mPath[mDepth++] = node;
-        while ((node = Trait::GetTreeNode(mPath[mDepth - 1]).Left()) !=
-               mSentinel) {
+        while ((node = mPath[mDepth - 1]->Left()) != mSentinel) {
           mPath[mDepth++] = node;
         }
       } else {
         /* The successor is above the current node.  Unwind until a
          * left-leaning edge is removed from the path, of the path is empty. */
         for (mDepth--; mDepth > 0; mDepth--) {
-          if (Trait::GetTreeNode(mPath[mDepth - 1]).Left() == mPath[mDepth]) {
+          if (mPath[mDepth - 1]->Left() == mPath[mDepth]) {
             break;
           }
         }
