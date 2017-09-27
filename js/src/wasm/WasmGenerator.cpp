@@ -100,9 +100,9 @@ ModuleGenerator::~ModuleGenerator()
             // Remove any pending compilation tasks from the worklist.
             {
                 AutoLockHelperThreadState lock;
-                CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock, mode());
+                CompileTaskPtrFifo& worklist = HelperThreadState().wasmWorklist(lock, mode());
                 auto pred = [this](CompileTask* task) { return &task->state == &taskState_; };
-                size_t removed = EraseIf(worklist, pred);
+                size_t removed = worklist.eraseIf(pred);
                 MOZ_ASSERT(outstanding_ >= removed);
                 outstanding_ -= removed;
             }
