@@ -162,7 +162,8 @@ CSS_STATE_PSEUDO_CLASS(target, ":target", 0, "", NS_EVENT_STATE_URLTARGET)
 CSS_STATE_PSEUDO_CLASS(indeterminate, ":indeterminate", 0, "",
                        NS_EVENT_STATE_INDETERMINATE)
 
-CSS_STATE_PSEUDO_CLASS(mozDevtoolsHighlighted, ":-moz-devtools-highlighted", 0, "",
+CSS_STATE_PSEUDO_CLASS(mozDevtoolsHighlighted, ":-moz-devtools-highlighted",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS, "",
                        NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED)
 CSS_STATE_PSEUDO_CLASS(mozStyleeditorTransitioning, ":-moz-styleeditor-transitioning", 0, "",
                        NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING)
