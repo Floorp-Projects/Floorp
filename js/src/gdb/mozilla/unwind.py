@@ -438,13 +438,13 @@ class UnwinderState(object):
         else:
             self.activation = self.activation['prevJitActivation_']
 
-        exitFP = self.activation['exitFP_']
-        if exitFP == 0:
+        packedExitFP = self.activation['packedExitFP_']
+        if packedExitFP == 0:
             return None
 
         exit_sp = pending_frame.read_register(self.SP_REGISTER)
         frame_type = self.typecache.JitFrame_Exit
-        return self.create_frame(pc, exit_sp, exitFP, frame_type, pending_frame)
+        return self.create_frame(pc, exit_sp, packedExitFP, frame_type, pending_frame)
 
     # A wrapper for unwind_entry_frame_registers that handles
     # architecture-independent boilerplate.

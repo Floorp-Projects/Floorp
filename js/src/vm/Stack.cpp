@@ -1490,7 +1490,7 @@ ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken e
 
 jit::JitActivation::JitActivation(JSContext* cx, bool active)
   : Activation(cx, Jit),
-    exitFP_(nullptr),
+    packedExitFP_(nullptr),
     prevJitActivation_(cx->jitActivation),
     active_(active),
     rematerializedFrames_(nullptr),
