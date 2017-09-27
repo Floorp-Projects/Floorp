@@ -176,40 +176,44 @@ for (let type of ['f32', 'f64']) {
     }
 }
 
-function testError(code, error, expect)
-{
-    enableGeckoProfiling();
-    var f = wasmEvalText(code).exports[""];
-    enableSingleStepProfiling();
-    assertThrowsInstanceOf(f, error);
-    assertEqStacks(disableSingleStepProfiling(), expect);
-    disableGeckoProfiling();
-}
+(function() {
+    // Error handling.
+    function testError(code, error, expect)
+    {
+        enableGeckoProfiling();
+        var f = wasmEvalText(code).exports[""];
+        enableSingleStepProfiling();
+        assertThrowsInstanceOf(f, error);
+        assertEqStacks(disableSingleStepProfiling(), expect);
+        disableGeckoProfiling();
+    }
 
-testError(
-`(module
-    (func $foo (unreachable))
-    (func (export "") (call $foo))
-)`,
-WebAssembly.RuntimeError,
-["", ">", "1,>", "0,1,>", "interstitial,0,1,>", "trap handling,0,1,>", "", ">", ""]);
+    testError(
+    `(module
+        (func $foo (unreachable))
+        (func (export "") (call $foo))
+    )`,
+    WebAssembly.RuntimeError,
+    ["", ">", "1,>", "0,1,>", "interstitial,0,1,>", "trap handling,0,1,>", "", ">", ""]);
 
-testError(
-`(module
-    (type $good (func))
-    (type $bad (func (param i32)))
-    (func $foo (call_indirect $bad (i32.const 1) (i32.const 0)))
-    (func $bar (type $good))
-    (table anyfunc (elem $bar))
-    (export "" $foo)
-)`,
-WebAssembly.RuntimeError,
-// Technically we have this one *one-instruction* interval where
-// the caller is lost (the stack with "1,>"). It's annoying to fix and shouldn't
-// mess up profiles in practice so we ignore it.
-["", ">", "0,>", "1,0,>", "1,>", "trap handling,0,>", "", ">", ""]);
+    testError(
+    `(module
+        (type $good (func))
+        (type $bad (func (param i32)))
+        (func $foo (call_indirect $bad (i32.const 1) (i32.const 0)))
+        (func $bar (type $good))
+        (table anyfunc (elem $bar))
+        (export "" $foo)
+    )`,
+    WebAssembly.RuntimeError,
+    // Technically we have this one *one-instruction* interval where
+    // the caller is lost (the stack with "1,>"). It's annoying to fix and shouldn't
+    // mess up profiles in practice so we ignore it.
+    ["", ">", "0,>", "1,0,>", "1,>", "trap handling,0,>", "", ">", ""]);
+})();
 
 (function() {
+    // Tables fun.
     var e = wasmEvalText(`
     (module
         (func $foo (result i32) (i32.const 42))
@@ -280,6 +284,7 @@ WebAssembly.RuntimeError,
 })();
 
 (function() {
+    // Optimized wasm->wasm import.
     var m1 = new Module(wasmTextToBinary(`(module
         (func $foo (result i32) (i32.const 42))
         (export "foo" $foo)
@@ -309,4 +314,75 @@ WebAssembly.RuntimeError,
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableGeckoProfiling();
     assertEq(e4.bar(), 42);
+})();
+
+(function() {
+    // FFIs test.
+    let prevOptions = getJitCompilerOptions();
+
+    // Skip tests if baseline isn't enabled, since the stacks might differ by
+    // a few instructions.
+    if (prevOptions['baseline.enable'] === 0)
+        return;
+
+    setJitCompilerOption("baseline.warmup.trigger", 10);
+
+    enableGeckoProfiling();
+
+    var m = new Module(wasmTextToBinary(`(module
+        (import $ffi "a" "ffi" (param i32) (result i32))
+        (func $foo (export "foo") (param i32) (result i32)
+         get_local 0
+         call $ffi)
+    )`));
+
+    var valueToConvert = 0;
+    function ffi(n) {
+        new Error().stack; // enter VM to clobber FP register.
+        if (n == 1337) { return valueToConvert };
+        return 42;
+    }
+
+    // Baseline compile ffi.
+    for (var i = 20; i --> 0;)
+        ffi(i);
+
+    var imports = { a: { ffi }};
+
+    var i = new Instance(m, imports).exports;
+
+    // Enable the jit exit.
+    assertEq(i.foo(0), 42);
+
+    enableSingleStepProfiling();
+    assertEq(i.foo(0), 42);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "<,1,>",
+        // Losing stack information while the JIT func prologue sets profiler
+        // virtual FP.
+        "",
+        // Callee time.
+        "<,1,>",
+        // Losing stack information while we're exiting JIT func epilogue and
+        // recovering wasm FP.
+        "",
+        // Back into the jit exit (frame info has been recovered).
+        "<,1,>",
+        // Normal unwinding.
+        "1,>", ">", ""]);
+
+    // Test OOL coercion path.
+    valueToConvert = 2**31;
+
+    enableSingleStepProfiling();
+    assertEq(i.foo(1337), -(2**31));
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "<,1,>", "", "<,1,>", "",
+        // Back into the jit exit (frame info has been recovered).
+        // Inline conversion fails, we skip to the OOL path, call from there
+        // and get back to the jit exit.
+        "<,1,>",
+        // Normal unwinding.
+        "1,>", ">", ""]);
+
+    disableGeckoProfiling();
+    setJitCompilerOption("baseline.warmup.trigger", prevOptions["baseline.warmup.trigger"]);
 })();
