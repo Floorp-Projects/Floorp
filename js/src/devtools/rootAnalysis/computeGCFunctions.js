@@ -7,7 +7,7 @@ loadRelativeToScript('annotations.js');
 loadRelativeToScript('loadCallgraph.js');
 
 if (typeof scriptArgs[0] != 'string')
-    throw "Usage: computeGCFunctions.js <callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:suppressedFunctions.lst>";
+    throw "Usage: computeGCFunctions.js <callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:limitedFunctions.lst>";
 
 var start = "Time: " + new Date;
 
@@ -15,7 +15,7 @@ var callgraph_filename = scriptArgs[0];
 var gcFunctions_filename = scriptArgs[1] || "gcFunctions.txt";
 var gcFunctionsList_filename = scriptArgs[2] || "gcFunctions.lst";
 var gcEdges_filename = scriptArgs[3] || "gcEdges.txt";
-var suppressedFunctionsList_filename = scriptArgs[4] || "suppressedFunctions.lst";
+var limitedFunctionsList_filename = scriptArgs[4] || "limitedFunctions.lst";
 
 loadCallgraph(callgraph_filename);
 
@@ -62,8 +62,7 @@ for (var block in gcEdges) {
   }
 }
 
-printErr("Writing " + suppressedFunctionsList_filename);
-redirect(suppressedFunctionsList_filename);
-for (var name in suppressedFunctions) {
-    print(name);
-}
+printErr("Writing " + limitedFunctionsList_filename);
+redirect(limitedFunctionsList_filename);
+for (const [name, limits] of Object.entries(limitedFunctions))
+    print(`${limits} ${name}`);
