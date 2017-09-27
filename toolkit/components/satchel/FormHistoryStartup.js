@@ -126,12 +126,11 @@ FormHistoryStartup.prototype = {
       }
 
       case "FormHistory:RemoveEntry": {
-        let { inputName, value, guid } = message.data;
+        let { inputName, value } = message.data;
         FormHistory.update({
           op: "remove",
           fieldname: inputName,
           value,
-          guid,
         });
         break;
       }
