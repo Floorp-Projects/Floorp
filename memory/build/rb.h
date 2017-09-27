@@ -672,7 +672,6 @@ private:
       /* Initialize the path to contain the left spine.             */         \
       a_type* rbp_f_path[rbp_f_height];                                        \
       a_type* rbp_f_node;                                                      \
-      bool rbp_f_synced = false;                                               \
       unsigned rbp_f_depth = 0;                                                \
       if ((a_tree)->rbt_root != &(a_tree)->rbt_nil) {                          \
         rbp_f_path[rbp_f_depth] = (a_tree)->rbt_root;                          \
@@ -688,10 +687,6 @@ private:
         (a_var) = rbp_f_path[rbp_f_depth - 1];
 
 #define rb_foreach_end(a_type, a_field, a_tree, a_var)                         \
-  if (rbp_f_synced) {                                                          \
-    rbp_f_synced = false;                                                      \
-    continue;                                                                  \
-  }                                                                            \
   /* Find the successor.                                    */                 \
   if ((rbp_f_node = a_field(rbp_f_path[rbp_f_depth - 1]).Right()) !=           \
       &(a_tree)->rbt_nil) {                                                    \
