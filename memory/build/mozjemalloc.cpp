@@ -789,9 +789,6 @@ struct ArenaAvailTreeTrait : public ArenaChunkMapLink
   }
 };
 
-typedef RedBlackTree<arena_chunk_map_t, ArenaAvailTreeTrait> arena_avail_tree_t;
-typedef RedBlackTree<arena_chunk_map_t, ArenaRunTreeTrait> arena_run_tree_t;
-
 /* Arena chunk header. */
 struct arena_chunk_t {
 	/* Arena that owns the chunk. */
@@ -831,8 +828,6 @@ struct ArenaDirtyChunkTrait
     return CompareAddr(aNode, aOther);
   }
 };
-
-typedef RedBlackTree<arena_chunk_t, ArenaDirtyChunkTrait> arena_chunk_tree_t;
 
 #ifdef MALLOC_DOUBLE_PURGE
 namespace mozilla {
@@ -882,7 +877,7 @@ struct arena_bin_t {
 	 * objects packed well, and it can also help reduce the number of
 	 * almost-empty chunks.
 	 */
-	arena_run_tree_t runs;
+	RedBlackTree<arena_chunk_map_t, ArenaRunTreeTrait> runs;
 
 	/* Size of regions in a run for this bin's size class. */
 	size_t		reg_size;
@@ -920,7 +915,7 @@ struct arena_t {
 
 private:
   /* Tree of dirty-page-containing chunks this arena manages. */
-  arena_chunk_tree_t mChunksDirty;
+  RedBlackTree<arena_chunk_t, ArenaDirtyChunkTrait> mChunksDirty;
 
 #ifdef MALLOC_DOUBLE_PURGE
   /* Head of a linked list of MADV_FREE'd-page-containing chunks this
@@ -958,7 +953,7 @@ private:
    * Size/address-ordered tree of this arena's available runs.  This tree
    * is used for first-best-fit run allocation.
    */
-  arena_avail_tree_t mRunsAvail;
+  RedBlackTree<arena_chunk_map_t, ArenaAvailTreeTrait> mRunsAvail;
 
 public:
   /*
@@ -1048,8 +1043,6 @@ struct ArenaTreeTrait
   }
 };
 
-typedef RedBlackTree<arena_t, ArenaTreeTrait> arena_tree_t;
-
 /********/
 /*
  * Chunks.
@@ -1113,7 +1106,7 @@ static arena_t** arenas;
 // A tree of arenas, arranged by id.
 // TODO: Move into arena_t as a static member when rb_tree doesn't depend on
 // the type being defined anymore.
-static arena_tree_t gArenaTree;
+static RedBlackTree<arena_t, ArenaTreeTrait> gArenaTree;
 static unsigned narenas;
 static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
 
