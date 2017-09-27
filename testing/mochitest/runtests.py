@@ -2066,6 +2066,9 @@ toolbar#nav-bar {
         # copy env so we don't munge the caller's environment
         env = env.copy()
 
+        # Used to defer a possible IOError exception from Marionette
+        marionette_exception = None
+
         # make sure we clean up after ourselves.
         try:
             # set process log environment variable
@@ -2150,25 +2153,34 @@ toolbar#nav-bar {
             self.log.process_start(gecko_id)
             self.message_logger.gecko_id = gecko_id
 
-            # start marionette and kick off the tests
-            marionette_args = marionette_args or {}
-            self.marionette = Marionette(**marionette_args)
-            self.marionette.start_session()
+            try:
+                # start marionette and kick off the tests
+                marionette_args = marionette_args or {}
+                self.marionette = Marionette(**marionette_args)
+                self.marionette.start_session()
 
-            # install specialpowers and mochikit addons
-            addons = Addons(self.marionette)
+                # install specialpowers and mochikit addons
+                addons = Addons(self.marionette)
 
-            addons.install(create_zip(
-                os.path.join(here, 'extensions', 'specialpowers')
-            ))
-            addons.install(create_zip(self.mochijar))
+                addons.install(create_zip(
+                    os.path.join(here, 'extensions', 'specialpowers')
+                ))
+                addons.install(create_zip(self.mochijar))
 
-            self.execute_start_script()
+                self.execute_start_script()
 
-            # an open marionette session interacts badly with mochitest,
-            # delete it until we figure out why.
-            self.marionette.delete_session()
-            del self.marionette
+                # an open marionette session interacts badly with mochitest,
+                # delete it until we figure out why.
+                self.marionette.delete_session()
+                del self.marionette
+
+            except IOError:
+                # Any IOError as thrown by Marionette means that something is
+                # wrong with the process, like a crash or the socket is no
+                # longer open. We defer raising this specific error so that
+                # post-test checks for leaks and crashes are performed and
+                # reported first.
+                marionette_exception = sys.exc_info()
 
             # wait until app is finished
             # XXX copy functionality from
@@ -2217,6 +2229,10 @@ toolbar#nav-bar {
             if os.path.exists(processLog):
                 os.remove(processLog)
             self.urlOpts = []
+
+        if marionette_exception is not None:
+            exc, value, tb = marionette_exception
+            raise exc, value, tb
 
         return status, self.lastTestSeen
 
