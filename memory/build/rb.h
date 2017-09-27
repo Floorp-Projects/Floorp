@@ -620,98 +620,116 @@ private:
     }
     return node;
   }
+
+  /*
+   * The iterator simulates recursion via an array of pointers that store the
+   * current path.  This is critical to performance, since a series of calls to
+   * rb_{next,prev}() would require time proportional to (n lg n), whereas this
+   * implementation only requires time proportional to (n).
+   *
+   * Since the iterator caches a path down the tree, any tree modification may
+   * cause the cached path to become invalid. Don't modify the tree during an
+   * iteration.
+   */
+
+  /*
+   * Size the path arrays such that they are always large enough, even if a
+   * tree consumes all of memory.  Since each node must contain a minimum of
+   * two pointers, there can never be more nodes than:
+   *
+   *   1 << ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1))
+   *
+   * Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
+   * is:
+   *
+   *   (3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
+   *
+   * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
+   * systems, respectively (approximately 348 and 1440 bytes, respectively).
+   */
+public:
+  class Iterator
+  {
+    T* mSentinel;
+    T* mPath[3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1))];
+    unsigned mDepth;
+
+  public:
+    explicit Iterator(RedBlackTree<T, Trait>* aTree)
+      : mSentinel(&aTree->rbt_nil)
+      , mDepth(0)
+    {
+      /* Initialize the path to contain the left spine. */
+      if (aTree->rbt_root != mSentinel) {
+        T* node;
+        mPath[mDepth++] = aTree->rbt_root;
+        while ((node = Trait::GetTreeNode(mPath[mDepth - 1]).Left()) !=
+               mSentinel) {
+          mPath[mDepth++] = node;
+        }
+      }
+    }
+
+    class Item
+    {
+      Iterator* mIterator;
+      T* mItem;
+
+    public:
+      Item(Iterator* aIterator, T* aItem)
+        : mIterator(aIterator)
+        , mItem(aItem)
+      { }
+
+      bool operator!=(const Item& aOther) const
+      {
+        return (mIterator != aOther.mIterator) || (mItem != aOther.mItem);
+      }
+
+      T* operator*() const { return mItem; }
+
+      const Item& operator++()
+      {
+        mItem = mIterator->Next();
+        return *this;
+      }
+    };
+
+    Item begin()
+    {
+      return Item(this, mDepth > 0 ? mPath[mDepth - 1] : nullptr);
+    }
+
+    Item end()
+    {
+      return Item(this, nullptr);
+    }
+
+    T* Next()
+    {
+      T* node;
+      if ((node = Trait::GetTreeNode(mPath[mDepth - 1]).Right()) !=
+          mSentinel) {
+        /* The successor is the left-most node in the right subtree. */
+        mPath[mDepth++] = node;
+        while ((node = Trait::GetTreeNode(mPath[mDepth - 1]).Left()) !=
+               mSentinel) {
+          mPath[mDepth++] = node;
+        }
+      } else {
+        /* The successor is above the current node.  Unwind until a
+         * left-leaning edge is removed from the path, of the path is empty. */
+        for (mDepth--; mDepth > 0; mDepth--) {
+          if (Trait::GetTreeNode(mPath[mDepth - 1]).Left() == mPath[mDepth]) {
+            break;
+          }
+        }
+      }
+      return mDepth > 0 ? mPath[mDepth - 1] : nullptr;
+    }
+  };
+
+  Iterator iter() { return Iterator(this); }
 };
-
-/*
- * The iterators simulate recursion via an array of pointers that store the
- * current path.  This is critical to performance, since a series of calls to
- * rb_{next,prev}() would require time proportional to (n lg n), whereas this
- * implementation only requires time proportional to (n).
- *
- * Since the iterators cache a path down the tree, any tree modification may
- * cause the cached path to become invalid.  In order to continue iteration,
- * use something like the following sequence:
- *
- *   {
- *       a_type *node, *tnode;
- *
- *       rb_foreach_begin(a_type, a_field, a_tree, node) {
- *           ...
- *           rb_next(a_type, a_field, a_cmp, a_tree, node, tnode);
- *           rb_remove(a_type, a_field, a_cmp, a_tree, node);
- *           ...
- *       } rb_foreach_end(a_type, a_field, a_tree, node)
- *   }
- *
- * Note that this idiom is not advised if every iteration modifies the tree,
- * since in that case there is no algorithmic complexity improvement over a
- * series of rb_{next,prev}() calls, thus making the setup overhead wasted
- * effort.
- */
-
-/*
- * Size the path arrays such that they are always large enough, even if a
- * tree consumes all of memory.  Since each node must contain a minimum of
- * two pointers, there can never be more nodes than:
- *
- *   1 << ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1))
- *
- * Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
- * is:
- *
- *   (3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
- *
- * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
- * systems, respectively (approximately 348 and 1440 bytes, respectively).
- */
-#define rbp_f_height (3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1)))
-
-#define rb_foreach_begin(a_type, a_field, a_tree, a_var)                       \
-  {                                                                            \
-    {                                                                          \
-      /* Initialize the path to contain the left spine.             */         \
-      a_type* rbp_f_path[rbp_f_height];                                        \
-      a_type* rbp_f_node;                                                      \
-      unsigned rbp_f_depth = 0;                                                \
-      if ((a_tree)->rbt_root != &(a_tree)->rbt_nil) {                          \
-        rbp_f_path[rbp_f_depth] = (a_tree)->rbt_root;                          \
-        rbp_f_depth++;                                                         \
-        while ((rbp_f_node = a_field(rbp_f_path[rbp_f_depth - 1]).Left()) !=   \
-               &(a_tree)->rbt_nil) {                                           \
-          rbp_f_path[rbp_f_depth] = rbp_f_node;                                \
-          rbp_f_depth++;                                                       \
-        }                                                                      \
-      }                                                                        \
-      /* While the path is non-empty, iterate.                      */         \
-      while (rbp_f_depth > 0) {                                                \
-        (a_var) = rbp_f_path[rbp_f_depth - 1];
-
-#define rb_foreach_end(a_type, a_field, a_tree, a_var)                         \
-  /* Find the successor.                                    */                 \
-  if ((rbp_f_node = a_field(rbp_f_path[rbp_f_depth - 1]).Right()) !=           \
-      &(a_tree)->rbt_nil) {                                                    \
-    /* The successor is the left-most node in the right   */                   \
-    /* subtree.                                           */                   \
-    rbp_f_path[rbp_f_depth] = rbp_f_node;                                      \
-    rbp_f_depth++;                                                             \
-    while ((rbp_f_node = a_field(rbp_f_path[rbp_f_depth - 1]).Left()) !=       \
-           &(a_tree)->rbt_nil) {                                               \
-      rbp_f_path[rbp_f_depth] = rbp_f_node;                                    \
-      rbp_f_depth++;                                                           \
-    }                                                                          \
-  } else {                                                                     \
-    /* The successor is above the current node.  Unwind   */                   \
-    /* until a left-leaning edge is removed from the      */                   \
-    /* path, or the path is empty.                        */                   \
-    for (rbp_f_depth--; rbp_f_depth > 0; rbp_f_depth--) {                      \
-      if (a_field(rbp_f_path[rbp_f_depth - 1]).Left() ==                       \
-          rbp_f_path[rbp_f_depth]) {                                           \
-        break;                                                                 \
-      }                                                                        \
-    }                                                                          \
-  }                                                                            \
-  }                                                                            \
-  }                                                                            \
-  }
 
 #endif /* RB_H_ */
