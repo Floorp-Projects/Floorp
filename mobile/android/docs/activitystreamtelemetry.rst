@@ -65,6 +65,11 @@ Subtype indicates a reason an item which is being interacted with appeared in th
 - "suggested": a suggested top site, one of the default ones displayed when there's not enough browsing history available
 - "top": a frecency-based top site, based on browsing history. Neither "pinned" nor "suggested".
 
+**Important note on the suggested source_subtype:** "suggested" will only be returned the first time a user clicks on a
+particular suggested site: for all subsequent clicks on this same site, "top" will be returned (assuming the site is
+never pinned). The reason is that once a suggested site has been visited once, it becomes part of a user's history and
+is no longer suggested.
+
 Top Stories (Pocket) interactions
 ---------------------------------
 
