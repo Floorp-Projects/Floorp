@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGUseElement_h
 
 #include "mozilla/dom/FromParser.h"
-#include "mozilla/dom/IDTracker.h"
+#include "nsReferencedElement.h"
 #include "nsStubMutationObserver.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
 #include "nsSVGLength2.h"
