@@ -179,20 +179,9 @@ describe("PlacesFeed", () => {
       assert.property(observer, "QueryInterface");
     });
     describe("#onDeleteURI", () => {
-      it("should dispatch a PLACES_LINKS_DELETED action with the right url", async() => {
-        await observer.onDeleteURI({spec: "foo.com"});
-
-        assert.calledWith(dispatch, {type: at.PLACES_LINKS_DELETED, data: ["foo.com"]});
-      });
-      it("should dispatch a PLACES_LINKS_DELETED action with multiple urls", async() => {
-        const promise = observer.onDeleteURI({spec: "bar.com"});
+      it("should dispatch a PLACES_LINK_DELETED action with the right url", () => {
         observer.onDeleteURI({spec: "foo.com"});
-        await promise;
-
-        const result = dispatch.firstCall.args[0].data;
-        assert.lengthOf(result, 2);
-        assert.equal(result[0], "bar.com");
-        assert.equal(result[1], "foo.com");
+        assert.calledWith(dispatch, {type: at.PLACES_LINK_DELETED, data: {url: "foo.com"}});
       });
     });
     describe("#onClearHistory", () => {

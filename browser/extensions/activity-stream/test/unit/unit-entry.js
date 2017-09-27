@@ -27,8 +27,6 @@ overrider.set({
   ContentSearchUIController: function() {}, // NB: This is a function/constructor
   dump() {},
   fetch() {},
-  // eslint-disable-next-line object-shorthand
-  Image: function() {}, // NB: This is a function/constructor
   Preferences: FakePrefs,
   Services: {
     locale: {
