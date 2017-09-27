@@ -12,6 +12,7 @@ add_task(async function testTelemetry() {
   // setup
   await TelemetryController.submitExternalPing("testfoo", {foo: 1});
   await TelemetryController.submitExternalPing("testbar", {bar: 2});
+  await TelemetryController.submitExternalPing("testfoo", {foo: 3});
   const environment = ClientEnvironment.getEnvironment();
 
   // Test it can access telemetry
@@ -19,8 +20,8 @@ add_task(async function testTelemetry() {
   is(typeof telemetry, "object", "Telemetry is accesible");
 
   // Test it reads different types of telemetry
-  is(telemetry.testfoo.payload.foo, 1, "value 'foo' is in mock telemetry");
-  is(telemetry.testbar.payload.bar, 2, "value 'bar' is in mock telemetry");
+  is(telemetry.testfoo.payload.foo, 3, "telemetry filters pull the latest ping from a type");
+  is(telemetry.testbar.payload.bar, 2, "telemetry filters pull from submitted telemetry pings");
 });
 
 add_task(async function testUserId() {
