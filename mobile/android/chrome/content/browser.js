@@ -3201,7 +3201,7 @@ var LightWeightThemeWebInstaller = {
 
     let allowButtonText = Strings.browser.GetStringFromName("lwthemeInstallRequest.allowButton");
     let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
-    let hostname = IDNService.convertToDisplayIDN(node.ownerDocument.location.hostname);
+    let hostname = IDNService.convertToDisplayIDN(node.ownerDocument.location.hostname, {});
     let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [hostname], 1);
     let buttons = [{
       label: allowButtonText,
