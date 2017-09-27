@@ -343,7 +343,7 @@ public class ScreenGrabTest {
 
         floatingEraseButton.click();
 
-        device.wait(Until.findObject(By.res("org.mozilla.focus.debug","snackbar_text")), waitingTime);
+        device.wait(Until.findObject(By.res("org.mozilla.focus.debug", "snackbar_text")), waitingTime);
         Screengrab.screenshot("YourBrowsingHistoryHasBeenErased");
     }
 
@@ -428,7 +428,7 @@ public class ScreenGrabTest {
         assertTrue(titleMsg.waitForExists(waitingTime));
         assertTrue("Website title loaded", titleMsg.exists());
         Assert.assertTrue(mozillaImage.exists());
-        mozillaImage.dragTo(mozillaImage,7);
+        mozillaImage.dragTo(mozillaImage, 7);
         assertTrue(imageMenuTitle.waitForExists(waitingTime));
         Assert.assertTrue(imageMenuTitle.exists());
         Screengrab.screenshot("Image_Context_Menu");
@@ -477,7 +477,7 @@ public class ScreenGrabTest {
         for (ScreenGrabTest.ErrorTypes error: ScreenGrabTest.ErrorTypes.values()) {
             assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
 
-            TestHelper.inlineAutocompleteEditText.setText("error:"+ error.value);
+            TestHelper.inlineAutocompleteEditText.setText("error:" + error.value);
             device.pressKeyCode(KEYCODE_ENTER);
 
             assertTrue(TestHelper.webView.waitForExists(waitingTime));
