@@ -1268,7 +1268,7 @@ Element::SetAttribute(const nsAString& aName,
   nsAutoString nameToUse;
   const nsAttrName* name = InternalGetAttrNameFromQName(aName, &nameToUse);
   if (!name) {
-    nsCOMPtr<nsIAtom> nameAtom = NS_AtomizeMainThread(nameToUse);
+    RefPtr<nsIAtom> nameAtom = NS_AtomizeMainThread(nameToUse);
     if (!nameAtom) {
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
@@ -1349,7 +1349,7 @@ Element::GetAttributeNS(const nsAString& aNamespaceURI,
     return;
   }
 
-  nsCOMPtr<nsIAtom> name = NS_AtomizeMainThread(aLocalName);
+  RefPtr<nsIAtom> name = NS_AtomizeMainThread(aLocalName);
   bool hasAttr = GetAttr(nsid, name, aReturn);
   if (!hasAttr) {
     SetDOMStringToNull(aReturn);
@@ -1381,7 +1381,7 @@ Element::RemoveAttributeNS(const nsAString& aNamespaceURI,
                            const nsAString& aLocalName,
                            ErrorResult& aError)
 {
-  nsCOMPtr<nsIAtom> name = NS_AtomizeMainThread(aLocalName);
+  RefPtr<nsIAtom> name = NS_AtomizeMainThread(aLocalName);
   int32_t nsid =
     nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
                                                        nsContentUtils::IsChromeDoc(OwnerDoc()));
@@ -1454,7 +1454,7 @@ Element::HasAttributeNS(const nsAString& aNamespaceURI,
     return false;
   }
 
-  nsCOMPtr<nsIAtom> name = NS_AtomizeMainThread(aLocalName);
+  RefPtr<nsIAtom> name = NS_AtomizeMainThread(aLocalName);
   return HasAttr(nsid, name);
 }
 
@@ -2628,7 +2628,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
             nsContentUtils::GetElementDefinitionIfObservingAttr(this,
                                                                 data->mType,
                                                                 aName)) {
-        nsCOMPtr<nsIAtom> oldValueAtom;
+        RefPtr<nsIAtom> oldValueAtom;
         if (oldValue) {
           oldValueAtom = oldValue->GetAsAtom();
         } else {
@@ -2636,7 +2636,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
           // attribute that was swapped with aParsedValue.
           oldValueAtom = aParsedValue.GetAsAtom();
         }
-        nsCOMPtr<nsIAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
+        RefPtr<nsIAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
         nsAutoString ns;
         nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
 
@@ -2935,7 +2935,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         nsAutoString ns;
         nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
 
-        nsCOMPtr<nsIAtom> oldValueAtom = oldValue.GetAsAtom();
+        RefPtr<nsIAtom> oldValueAtom = oldValue.GetAsAtom();
         LifecycleCallbackArgs args = {
           nsDependentAtomString(aName),
           nsDependentAtomString(oldValueAtom),

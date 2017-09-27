@@ -1732,12 +1732,12 @@ HttpChannelParent::NotifyTrackingProtectionDisabled()
 NS_IMETHODIMP
 HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aProvider,
-                                            const nsACString& aPrefix)
+                                            const nsACString& aFullHash)
 {
   LOG(("HttpChannelParent::SetClassifierMatchedInfo [this=%p]\n", this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnSetClassifierMatchedInfo(aList, aProvider, aPrefix);
+    Unused << mBgParent->OnSetClassifierMatchedInfo(aList, aProvider, aFullHash);
   }
   return NS_OK;
 }

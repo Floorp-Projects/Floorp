@@ -64,7 +64,7 @@ public:
     }
 
     int32_t mNamespaceID;
-    nsCOMPtr<nsIAtom> mLocalName;
+    RefPtr<nsIAtom> mLocalName;
 };
 
 #endif

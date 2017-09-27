@@ -501,6 +501,21 @@ var basicShapeUnbalancedValues = [
   "inset(1px 2px 3px 4px round 5px / 6px",
 ];
 
+
+// Gradient values that are incorrectly accepted in Gecko, but are correctly
+// rejected with Servo's style-system backend (stylo):
+let gradientsNewlyRejectedInStylo = [
+    "radial-gradient(circle red, blue)",
+];
+if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
+  invalidGradientAndElementValues.push(...gradientsNewlyRejectedInStylo);
+} else {
+  // NOTE: These are technically invalid, but Gecko's CSS parser thinks they're
+  // valid. So, if we're using Gecko's style system, we add them to the
+  // "valid" list, so we can at least detect if the behavior changes.
+  validGradientAndElementValues.push(...gradientsNewlyRejectedInStylo);
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   // Extend gradient lists with valid/invalid webkit-prefixed expressions:
   validGradientAndElementValues.push(

@@ -4,11 +4,8 @@
 
 "use strict";
 
-const {Task} = require("devtools/shared/task");
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
-
-const {extend} = require("devtools/shared/extend");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -27,22 +24,24 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  *        A function to check that css declaration's name and values are valid together.
  *        This can be obtained from "shared/fronts/css-properties.js".
  */
-function SwatchFilterTooltip(document, cssIsValid) {
-  SwatchBasedEditorTooltip.call(this, document);
-  this._cssIsValid = cssIsValid;
 
-  // Creating a filter editor instance.
-  this.widget = this.setFilterContent("none");
-  this._onUpdate = this._onUpdate.bind(this);
-}
+class SwatchFilterTooltip extends SwatchBasedEditorTooltip {
+  constructor(document, cssIsValid) {
+    super(document);
+    this._cssIsValid = cssIsValid;
 
-SwatchFilterTooltip.prototype = extend(SwatchBasedEditorTooltip.prototype, {
+    // Creating a filter editor instance.
+    this.widget = this.setFilterContent("none");
+    this._onUpdate = this._onUpdate.bind(this);
+  }
+
   /**
    * Fill the tooltip with a new instance of the CSSFilterEditorWidget
    * widget initialized with the given filter value, and return a promise
    * that resolves to the instance of the widget when ready.
    */
-  setFilterContent: function (filter) {
+
+  setFilterContent(filter) {
     let { doc } = this.tooltip;
 
     let container = doc.createElementNS(XHTML_NS, "div");
@@ -51,11 +50,11 @@ SwatchFilterTooltip.prototype = extend(SwatchBasedEditorTooltip.prototype, {
     this.tooltip.setContent(container, { width: 510, height: 200 });
 
     return new CSSFilterEditorWidget(container, filter, this._cssIsValid);
-  },
+  }
 
-  show: Task.async(function* () {
+  async show() {
     // Call the parent class' show function
-    yield SwatchBasedEditorTooltip.prototype.show.call(this);
+    await super.show();
     // Then set the filter value and listen to changes to preview them
     if (this.activeSwatch) {
       this.currentFilterValue = this.activeSwatch.nextSibling;
@@ -65,9 +64,9 @@ SwatchFilterTooltip.prototype = extend(SwatchBasedEditorTooltip.prototype, {
       this.widget.render();
       this.emit("ready");
     }
-  }),
+  }
 
-  _onUpdate: function (event, filters) {
+  _onUpdate(event, filters) {
     if (!this.activeSwatch) {
       return;
     }
@@ -81,14 +80,14 @@ SwatchFilterTooltip.prototype = extend(SwatchBasedEditorTooltip.prototype, {
     this.currentFilterValue.appendChild(node);
 
     this.preview();
-  },
+  }
 
-  destroy: function () {
-    SwatchBasedEditorTooltip.prototype.destroy.call(this);
+  destroy() {
+    super.destroy();
     this.currentFilterValue = null;
     this.widget.off("updated", this._onUpdate);
     this.widget.destroy();
-  },
+  }
 
   /**
    * Like SwatchBasedEditorTooltip.addSwatch, but accepts a parser object
@@ -104,12 +103,11 @@ SwatchFilterTooltip.prototype = extend(SwatchBasedEditorTooltip.prototype, {
    *        options to pass to the output parser, with
    *          the option |filterSwatch| set.
    */
-  addSwatch: function (swatchEl, callbacks, parser, options) {
-    SwatchBasedEditorTooltip.prototype.addSwatch.call(this, swatchEl,
-                                                      callbacks);
+  addSwatch(swatchEl, callbacks, parser, options) {
+    super.addSwatch(swatchEl, callbacks);
     this._parser = parser;
     this._options = options;
   }
-});
+}
 
 module.exports = SwatchFilterTooltip;

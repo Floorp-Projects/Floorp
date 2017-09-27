@@ -194,8 +194,8 @@ private:
 struct txStylesheetAttr
 {
     int32_t mNamespaceID;
-    nsCOMPtr<nsIAtom> mLocalName;
-    nsCOMPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mLocalName;
+    RefPtr<nsIAtom> mPrefix;
     nsString mValue;
 };
 

@@ -1975,7 +1975,7 @@ NativeKey::MaybeInitPluginEventOfKeyEvent(WidgetKeyboardEvent& aKeyEvent,
 bool
 NativeKey::DispatchCommandEvent(uint32_t aEventCommand) const
 {
-  nsCOMPtr<nsIAtom> command;
+  RefPtr<nsIAtom> command;
   switch (aEventCommand) {
     case APPCOMMAND_BROWSER_BACKWARD:
       command = nsGkAtoms::Back;

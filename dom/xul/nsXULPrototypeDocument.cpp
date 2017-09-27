@@ -156,7 +156,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     }
     nsAutoString namespaceURI, prefixStr, localName;
     bool prefixIsNull;
-    nsCOMPtr<nsIAtom> prefix;
+    RefPtr<nsIAtom> prefix;
     for (i = 0; i < count; ++i) {
         tmp = aStream->ReadString(namespaceURI);
         if (NS_FAILED(tmp)) {

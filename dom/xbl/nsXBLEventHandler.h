@@ -105,7 +105,7 @@ private:
                               const IgnoreModifierState& aIgnoreModifierState);
 
   nsTArray<nsXBLPrototypeHandler*> mProtoHandlers;
-  nsCOMPtr<nsIAtom> mEventType;
+  RefPtr<nsIAtom> mEventType;
   uint8_t mPhase;
   uint8_t mType;
   bool mIsBoundToChrome;

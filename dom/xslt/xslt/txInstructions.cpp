@@ -113,7 +113,7 @@ txAttribute::execute(txExecutionState& aEs)
         return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> prefix;
+    RefPtr<nsIAtom> prefix;
     uint32_t lnameStart = 0;
     if (colon) {
         prefix = NS_Atomize(Substring(name.get(), colon));
@@ -229,7 +229,7 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
             nsAutoString nodeValue;
             txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
 
-            nsCOMPtr<nsIAtom> localName =
+            RefPtr<nsIAtom> localName =
                 txXPathNodeUtils::getLocalName(aNode);
             return aEs.mResultHandler->
                 attribute(txXPathNodeUtils::getPrefix(aNode),
@@ -257,7 +257,7 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
         }
         case txXPathNodeType::ELEMENT_NODE:
         {
-            nsCOMPtr<nsIAtom> localName =
+            RefPtr<nsIAtom> localName =
                 txXPathNodeUtils::getLocalName(aNode);
             nsresult rv = aEs.mResultHandler->
                 startElement(txXPathNodeUtils::getPrefix(aNode),
@@ -340,7 +340,7 @@ txCopy::execute(txExecutionState& aEs)
         }
         case txXPathNodeType::ELEMENT_NODE:
         {
-            nsCOMPtr<nsIAtom> localName =
+            RefPtr<nsIAtom> localName =
                 txXPathNodeUtils::getLocalName(node);
             rv = aEs.mResultHandler->
                 startElement(txXPathNodeUtils::getPrefix(node),
@@ -826,7 +826,7 @@ txStartElement::execute(txExecutionState& aEs)
 
 
     int32_t nsId = kNameSpaceID_None;
-    nsCOMPtr<nsIAtom> prefix;
+    RefPtr<nsIAtom> prefix;
     uint32_t lnameStart = 0;
 
     const char16_t* colon;

@@ -962,7 +962,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChil
   nsMargin margin(0,0,0,0);
   aChildBox->GetXULMargin(margin);
 
-  nsCOMPtr<nsIAtom> attribute;
+  RefPtr<nsIAtom> attribute;
 
   if (aIsHorizontal) {
     pref -= (margin.left + margin.right);

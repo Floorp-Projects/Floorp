@@ -1277,5 +1277,5 @@ telemetry.test:
       - 'all_childs'
 
 # NOTE: Please don't add new definitions below this point. Consider adding
-# them earlier in the file and leave the telemetry.test group as the last
+# them earlier in the file and leave the telemetry.test category as the last
 # one for readability.

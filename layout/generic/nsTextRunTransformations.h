@@ -27,7 +27,7 @@ struct nsTransformedCharStyle final {
     , mExplicitLanguage(aContext->StyleFont()->mExplicitLanguage) {}
 
   nsFont                  mFont;
-  nsCOMPtr<nsIAtom>       mLanguage;
+  RefPtr<nsIAtom>       mLanguage;
   RefPtr<nsPresContext> mPresContext;
   float                   mScriptSizeMultiplier;
   uint8_t                 mTextTransform;

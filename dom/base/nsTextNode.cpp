@@ -90,7 +90,7 @@ private:
   nsIContent* mGrandparent;
   // What attribute we're showing
   int32_t mNameSpaceID;
-  nsCOMPtr<nsIAtom> mAttrName;
+  RefPtr<nsIAtom> mAttrName;
 };
 
 nsTextNode::~nsTextNode()

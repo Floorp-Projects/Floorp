@@ -79,7 +79,7 @@ public:
 
 protected:
     nsXULTemplateQueryProcessorRDF* mProcessor;
-    nsCOMPtr<nsIAtom> mContainerVariable;
+    RefPtr<nsIAtom> mContainerVariable;
     Test mContainer;
     Test mEmpty;
 };

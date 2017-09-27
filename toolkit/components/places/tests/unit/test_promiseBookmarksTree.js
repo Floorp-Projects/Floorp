@@ -28,10 +28,12 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   }
 
   // Bug 1013053 - bookmarkIndex is unavailable for the query's root
-  if (aNode.bookmarkIndex == -1)
-    Assert.strictEqual(aItem.index, PlacesUtils.bookmarks.getItemIndex(aNode.itemId));
-  else
+  if (aNode.bookmarkIndex == -1) {
+    let bookmark = await PlacesUtils.bookmarks.fetch(aNode.bookmarkGuid);
+    Assert.strictEqual(aItem.index, bookmark.index);
+  } else {
     compare_prop("index", "bookmarkIndex");
+  }
 
   compare_prop("dateAdded");
   compare_prop("lastModified");

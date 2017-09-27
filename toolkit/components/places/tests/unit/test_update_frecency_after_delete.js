@@ -105,7 +105,7 @@ add_task(async function cleared_parent_of_visited_bookmark() {
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   await PlacesTestUtils.addVisits(TEST_URI);
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+  await PlacesUtils.bookmarks.eraseEverything();
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("*Visited* URI no longer bookmarked => frecency should != 0");

@@ -73,9 +73,9 @@ private:
   nsresult AddDisabledNameSpace(already_AddRefed<nsIAtom> aURI, const int32_t aNameSpaceID);
   ~nsNameSpaceManager() {};
 
-  nsDataHashtable<nsISupportsHashKey, int32_t> mURIToIDTable;
-  nsDataHashtable<nsISupportsHashKey, int32_t> mDisabledURIToIDTable;
-  nsTArray<nsCOMPtr<nsIAtom>> mURIArray;
+  nsDataHashtable<nsRefPtrHashKey<nsIAtom>, int32_t> mURIToIDTable;
+  nsDataHashtable<nsRefPtrHashKey<nsIAtom>, int32_t> mDisabledURIToIDTable;
+  nsTArray<RefPtr<nsIAtom>> mURIArray;
 
   static mozilla::StaticRefPtr<nsNameSpaceManager> sInstance;
 };

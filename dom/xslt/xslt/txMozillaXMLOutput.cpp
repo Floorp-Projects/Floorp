@@ -105,7 +105,7 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
                               const int32_t aNsID,
                               const nsString& aValue)
 {
-    nsCOMPtr<nsIAtom> owner;
+    RefPtr<nsIAtom> owner;
     if (mOpenedElementIsHTML && aNsID == kNameSpaceID_None) {
         if (aLowercaseLocalName) {
             aLocalName = aLowercaseLocalName;
@@ -127,7 +127,7 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
                               const int32_t aNsID,
                               const nsString& aValue)
 {
-    nsCOMPtr<nsIAtom> lname;
+    RefPtr<nsIAtom> lname;
 
     if (mOpenedElementIsHTML && aNsID == kNameSpaceID_None) {
         nsAutoString lnameStr;
@@ -436,7 +436,7 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
                     "Can't have prefix without namespace");
 
     if (mOutputFormat.mMethod == eHTMLOutput && aNsID == kNameSpaceID_None) {
-        nsCOMPtr<nsIAtom> owner;
+        RefPtr<nsIAtom> owner;
         if (!aLowercaseLocalName) {
             owner = TX_ToLowerCaseAtom(aLocalName);
             NS_ENSURE_TRUE(owner, NS_ERROR_OUT_OF_MEMORY);
@@ -457,7 +457,7 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
                                  const int32_t aNsID)
 {
     int32_t nsId = aNsID;
-    nsCOMPtr<nsIAtom> lname;
+    RefPtr<nsIAtom> lname;
 
     if (mOutputFormat.mMethod == eHTMLOutput && aNsID == kNameSpaceID_None) {
         nsId = kNameSpaceID_XHTML;
@@ -758,7 +758,7 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
             aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
             if (!value.IsEmpty()) {
                 nsContentUtils::ASCIIToLower(httpEquiv);
-                nsCOMPtr<nsIAtom> header = NS_Atomize(httpEquiv);
+                RefPtr<nsIAtom> header = NS_Atomize(httpEquiv);
                 processHTTPEquiv(header, value);
             }
         }
@@ -893,7 +893,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
 
         nsresult rv = nsContentUtils::CheckQName(qName);
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIAtom> doctypeName = NS_Atomize(qName);
+            RefPtr<nsIAtom> doctypeName = NS_Atomize(qName);
             if (!doctypeName) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }

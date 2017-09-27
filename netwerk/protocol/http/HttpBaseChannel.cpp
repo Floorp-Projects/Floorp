@@ -3690,21 +3690,21 @@ HttpBaseChannel::GetMatchedProvider(nsACString& aProvider)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetMatchedPrefix(nsACString& aPrefix)
+HttpBaseChannel::GetMatchedFullHash(nsACString& aFullHash)
 {
-  aPrefix = mMatchedPrefix;
+  aFullHash = mMatchedFullHash;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::SetMatchedInfo(const nsACString& aList,
                                 const nsACString& aProvider,
-                                const nsACString& aPrefix) {
+                                const nsACString& aFullHash) {
   NS_ENSURE_ARG(!aList.IsEmpty());
 
   mMatchedList = aList;
   mMatchedProvider = aProvider;
-  mMatchedPrefix = aPrefix;
+  mMatchedFullHash = aFullHash;
   return NS_OK;
 }
 

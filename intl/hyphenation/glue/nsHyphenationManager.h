@@ -45,9 +45,9 @@ protected:
   void LoadPatternListFromDir(nsIFile *aDir);
   void LoadAliases();
 
-  nsInterfaceHashtable<nsISupportsHashKey,nsIAtom> mHyphAliases;
-  nsInterfaceHashtable<nsISupportsHashKey,nsIURI> mPatternFiles;
-  nsRefPtrHashtable<nsISupportsHashKey,nsHyphenator> mHyphenators;
+  nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, nsIAtom> mHyphAliases;
+  nsInterfaceHashtable<nsRefPtrHashKey<nsIAtom>, nsIURI> mPatternFiles;
+  nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, nsHyphenator> mHyphenators;
 
   static nsHyphenationManager *sInstance;
 };

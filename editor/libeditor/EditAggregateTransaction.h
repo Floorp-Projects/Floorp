@@ -50,7 +50,7 @@ protected:
   virtual ~EditAggregateTransaction();
 
   nsTArray<RefPtr<EditTransactionBase>> mChildren;
-  nsCOMPtr<nsIAtom> mName;
+  RefPtr<nsIAtom> mName;
 };
 
 } // namespace mozilla

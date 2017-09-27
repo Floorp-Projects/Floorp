@@ -400,10 +400,9 @@ HttpBackgroundChannelParent::OnNotifyTrackingResource()
 }
 
 bool
-HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
-                                                    const nsACString& aList,
-                                                    const nsACString& aProvider,
-                                                    const nsACString& aPrefix)
+HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(const nsACString& aList,
+                                                        const nsACString& aProvider,
+                                                        const nsACString& aFullHash)
 {
   LOG(("HttpBackgroundChannelParent::OnSetClassifierMatchedInfo [this=%p]\n", this));
   AssertIsInMainProcess();
@@ -421,7 +420,7 @@ HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
         &HttpBackgroundChannelParent::OnSetClassifierMatchedInfo,
         aList,
         aProvider,
-        aPrefix),
+        aFullHash),
       NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -431,7 +430,7 @@ HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
 
   ClassifierInfo info;
   info.list() = aList;
-  info.prefix() = aPrefix;
+  info.fullhash() = aFullHash;
   info.provider() = aProvider;
 
   return SendSetClassifierMatchedInfo(info);

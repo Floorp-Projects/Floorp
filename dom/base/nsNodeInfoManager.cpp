@@ -281,7 +281,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
 {
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIAtom> nameAtom = NS_Atomize(aName);
+    RefPtr<nsIAtom> nameAtom = NS_Atomize(aName);
     CheckValidNodeInfo(aNodeType, nameAtom, aNamespaceID, nullptr);
   }
 #endif
@@ -307,7 +307,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> nameAtom = NS_Atomize(aName);
+  RefPtr<nsIAtom> nameAtom = NS_Atomize(aName);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
   RefPtr<NodeInfo> newNodeInfo =

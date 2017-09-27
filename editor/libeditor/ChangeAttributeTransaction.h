@@ -52,7 +52,7 @@ private:
   nsCOMPtr<dom::Element> mElement;
 
   // The attribute to change
-  nsCOMPtr<nsIAtom> mAttribute;
+  RefPtr<nsIAtom> mAttribute;
 
   // The value to set the attribute to (ignored if mRemoveAttribute==true)
   nsString mValue;

@@ -52,7 +52,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
-  nsCOMPtr<nsIAtom> mPrefix;
+  RefPtr<nsIAtom> mPrefix;
   nsString          mURLSpec;
 };
 

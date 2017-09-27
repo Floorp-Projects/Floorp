@@ -260,7 +260,7 @@ protected:
   virtual ~JSEventHandler();
 
   nsISupports* mTarget;
-  nsCOMPtr<nsIAtom> mEventName;
+  RefPtr<nsIAtom> mEventName;
   TypedEventHandler mTypedHandler;
 };
 

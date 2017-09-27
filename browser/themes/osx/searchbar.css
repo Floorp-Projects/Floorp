@@ -11,12 +11,6 @@
   margin-inline-start: 3px;
 }
 
-.searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
-  margin: 0;
-  padding: 3px 0 2px;
-  height: 20px;
-}
-
 .searchbar-engine-image {
   width: 16px;
   height: 16px;

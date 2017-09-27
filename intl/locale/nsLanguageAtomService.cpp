@@ -42,7 +42,7 @@ nsLanguageAtomService::LookupLanguage(const nsACString &aLanguage)
   nsAutoCString lowered(aLanguage);
   ToLowerCase(lowered);
 
-  nsCOMPtr<nsIAtom> lang = NS_Atomize(lowered);
+  RefPtr<nsIAtom> lang = NS_Atomize(lowered);
   return GetLanguageGroup(lang);
 }
 
@@ -93,7 +93,7 @@ nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage, bool* aNeedsToCache)
       *aNeedsToCache = true;
       return nullptr;
     }
-    nsCOMPtr<nsIAtom> uncached = GetUncachedLanguageGroup(aLanguage);
+    RefPtr<nsIAtom> uncached = GetUncachedLanguageGroup(aLanguage);
     retVal = uncached.get();
 
     AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
@@ -128,7 +128,7 @@ nsLanguageAtomService::GetUncachedLanguageGroup(nsIAtom* aLanguage) const
                                                      langStr, langGroupStr);
   }
 
-  nsCOMPtr<nsIAtom> langGroup = NS_Atomize(langGroupStr);
+  RefPtr<nsIAtom> langGroup = NS_Atomize(langGroupStr);
 
   return langGroup.forget();
 }

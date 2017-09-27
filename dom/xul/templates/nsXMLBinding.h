@@ -28,7 +28,7 @@ class XPathResult;
  * a <binding> description
  */
 struct nsXMLBinding {
-  nsCOMPtr<nsIAtom> mVar;
+  RefPtr<nsIAtom> mVar;
   nsAutoPtr<mozilla::dom::XPathExpression> mExpr;
 
   nsAutoPtr<nsXMLBinding> mNext;

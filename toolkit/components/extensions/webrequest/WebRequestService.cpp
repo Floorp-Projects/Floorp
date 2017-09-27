@@ -73,7 +73,7 @@ WebRequestService::RegisterTraceableChannel(uint64_t aChannelId,
   nsCOMPtr<nsITraceableChannel> traceableChannel = do_QueryInterface(aChannel);
   NS_ENSURE_TRUE(traceableChannel, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIAtom> addonId = NS_Atomize(aAddonId);
+  RefPtr<nsIAtom> addonId = NS_Atomize(aAddonId);
   ChannelParent* entry = new ChannelParent(aChannelId, aChannel,
                                            addonId, aTabParent);
 
