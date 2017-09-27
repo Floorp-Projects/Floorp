@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gmp-test-decryptor.h"
-#include "gmp-test-storage.h"
-#include "gmp-test-output-protection.h"
+#include "cdm-test-decryptor.h"
+#include "cdm-test-storage.h"
+#include "cdm-test-output-protection.h"
 
 #include <mutex>
 #include <string>
@@ -301,7 +301,7 @@ DoTestStorage(const string& aPrefix, TestManager* aTestManager)
 {
   MOZ_ASSERT(FakeDecryptor::sInstance->mHost, "FakeDecryptor::sInstance->mHost should not be null");
   // Basic I/O tests. We run three cases concurrently. The tests, like
-  // GMPStorage run asynchronously. When they've all passed, we send
+  // CDMStorage run asynchronously. When they've all passed, we send
   // a message back to the parent process, or a failure message if not.
 
   // Test 1: Basic I/O test, and test that writing 0 bytes in a record
@@ -469,6 +469,6 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
                "shutdown-token",
                ReportReadRecordContinuation("shutdown-token"));
   } else if (task == "test-op-apis") {
-    mozilla::gmptest::TestOuputProtectionAPIs();
+    mozilla::cdmtest::TestOuputProtectionAPIs();
   }
 }

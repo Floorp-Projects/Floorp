@@ -34,9 +34,9 @@
  */
 
 #include "stddef.h"
+#include "cdm-test-decryptor.h"
 #include "content_decryption_module.h"
 #include "content_decryption_module_ext.h"
-#include "gmp-test-decryptor.h"
 
 extern "C" {
 
