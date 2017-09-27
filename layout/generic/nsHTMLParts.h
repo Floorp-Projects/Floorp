@@ -12,7 +12,7 @@
 #include "nsISupports.h"
 #include "nsIFrame.h"
 class nsComboboxControlFrame;
-class nsFormControlFrame;
+class nsCheckboxRadioFrame;
 class nsIAtom;
 class nsNodeInfoManager;
 class nsIContent;
@@ -132,8 +132,8 @@ NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 // forms
 nsContainerFrame*
 NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsFormControlFrame*
-NS_NewFormControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsCheckboxRadioFrame*
+NS_NewCheckboxRadioFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewImageControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsContainerFrame*
