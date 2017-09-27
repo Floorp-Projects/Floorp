@@ -4181,8 +4181,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!anEvent || !mGeckoChild ||
-      [self beginOrEndGestureForEventPhase:anEvent]) {
+  if (!anEvent || !mGeckoChild) {
     return;
   }
 
