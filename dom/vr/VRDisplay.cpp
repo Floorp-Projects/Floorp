@@ -977,7 +977,7 @@ VRSubmitFrameResult::WrapObject(JSContext* aCx,
 }
 
 void
-VRSubmitFrameResult::Update(uint32_t aFrameNum, const nsACString& aBase64Image)
+VRSubmitFrameResult::Update(uint64_t aFrameNum, const nsACString& aBase64Image)
 {
   mFrameNum = aFrameNum;
   mBase64Image = NS_ConvertASCIItoUTF16(aBase64Image);

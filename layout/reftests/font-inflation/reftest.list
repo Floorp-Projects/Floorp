@@ -36,7 +36,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-2.html textarea-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-3.html textarea-3-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == css-transform-1.html css-transform-1-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == css-transform-2.html css-transform-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fuzzy-if(webrender,0-1,0-19) == css-transform-2.html css-transform-2-ref.html
 # skipped - bug 1380830
 fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1764) skip test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == container-with-clamping.html container-with-clamping-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) skip-if(styloVsGecko) load video-1.html

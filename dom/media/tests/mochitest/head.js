@@ -119,27 +119,29 @@ AudioStreamAnalyser.prototype = {
   /**
    * Return a Promise, that will be resolved when the function passed as
    * argument, when called, returns true (meaning the analysis was a
-   * success).
+   * success). The promise is rejected if the cancel promise resolves first.
    *
    * @param {function} analysisFunction
-   *        A fonction that performs an analysis, and returns true if the
+   *        A function that performs an analysis, and resolves with true if the
    *        analysis was a success (i.e. it found what it was looking for)
+   * @param {promise} cancel
+   *        A promise that on resolving will reject the promise we returned.
    */
-  waitForAnalysisSuccess: function(analysisFunction) {
-    var self = this;
-    return new Promise((resolve, reject) => {
-      function analysisLoop() {
-        var success = analysisFunction(self.getByteFrequencyData());
-        if (success) {
-          resolve();
-          return;
-        }
-        // else, we need more time
-        requestAnimationFrame(analysisLoop);
+  waitForAnalysisSuccess: async function(analysisFunction,
+                                         cancel = wait(60000, new Error("Audio analysis timed out"))) {
+    let aborted = false;
+    cancel.then(() => aborted = true);
+
+    // We need to give the Analyser some time to start gathering data.
+    await wait(200);
+
+    do {
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      if (aborted) {
+        throw await cancel;
       }
-      // We need to give the Analyser some time to start gathering data.
-      wait(200).then(analysisLoop);
-    });
+    }
+    while (!analysisFunction(this.getByteFrequencyData()));
   },
 
   /**
@@ -632,7 +634,7 @@ function createOneShotEventWrapper(wrapper, obj, event) {
 /**
  * Returns a promise that resolves when `target` has raised an event with the
  * given name the given number of times. Cancel the returned promise by passing
- * in a `cancelPromise` and resolve it.
+ * in a `cancel` promise and resolving it.
  *
  * @param {object} target
  *        The target on which the event should occur.
@@ -640,16 +642,16 @@ function createOneShotEventWrapper(wrapper, obj, event) {
  *        The name of the event that should occur.
  * @param {integer} count
  *        Optional number of times the event should be raised before resolving.
- * @param {promise} cancelPromise
+ * @param {promise} cancel
  *        Optional promise that on resolving rejects the returned promise,
  *        so we can avoid logging results after a test has finished.
  * @returns {promise} A promise that resolves to the last of the seen events.
  */
-function haveEvents(target, name, count, cancelPromise) {
+function haveEvents(target, name, count, cancel) {
   var listener;
   var counter = count || 1;
   return Promise.race([
-    (cancelPromise || new Promise(() => {})).then(e => Promise.reject(e)),
+    (cancel || new Promise(() => {})).then(e => Promise.reject(e)),
     new Promise(resolve =>
         target.addEventListener(name, listener = e => (--counter < 1 && resolve(e))))
   ])
@@ -658,20 +660,20 @@ function haveEvents(target, name, count, cancelPromise) {
 
 /**
  * Returns a promise that resolves when `target` has raised an event with the
- * given name. Cancel the returned promise by passing in a `cancelPromise` and
- * resolve it.
+ * given name. Cancel the returned promise by passing in a `cancel` promise and
+ * resolving it.
  *
  * @param {object} target
  *        The target on which the event should occur.
  * @param {string} name
  *        The name of the event that should occur.
- * @param {promise} cancelPromise
+ * @param {promise} cancel
  *        Optional promise that on resolving rejects the returned promise,
  *        so we can avoid logging results after a test has finished.
  * @returns {promise} A promise that resolves to the seen event.
  */
-function haveEvent(target, name, cancelPromise) {
-  return haveEvents(target, name, 1, cancelPromise);
+function haveEvent(target, name, cancel) {
+  return haveEvents(target, name, 1, cancel);
 };
 
 /**
@@ -704,13 +706,13 @@ function haveNoEvent(target, name, timeoutPromise) {
  *        The name of the event that should occur.
  * @param {integer} count
  *        Optional number of times the event should be raised before resolving.
- * @param {promise} cancelPromise
+ * @param {promise} cancel
  *        Optional promise that on resolving rejects the returned promise,
  *        so we can avoid logging results after a test has finished.
  * @returns {promise} A promise that resolves to the last of the seen events.
  */
-function haveEventsButNoMore(target, name, count, cancelPromise) {
-  return haveEvents(target, name, count, cancelPromise)
+function haveEventsButNoMore(target, name, count, cancel) {
+  return haveEvents(target, name, count, cancel)
     .then(e => haveNoEvent(target, name).then(() => e));
 };
 
@@ -973,47 +975,57 @@ class VideoStreamHelper {
     this._helper = new CaptureStreamTestHelper2D(50,50);
   }
 
-  checkHasFrame(video, offsetX, offsetY, threshold) {
+  async checkHasFrame(video, { offsetX, offsetY, threshold } = {}) {
     const h = this._helper;
-    return h.waitForPixel(video, offsetX, offsetY, px => {
+    await h.waitForPixel(video, px => {
       let result = h.isOpaquePixelNot(px, h.black, threshold);
       info("Checking that we have a frame, got [" +
            Array.slice(px) + "]. Ref=[" +
            Array.slice(h.black.data) + "]. Threshold=" + threshold +
            ". Pass=" + result);
       return result;
-    });
+    }, { offsetX, offsetY });
   }
 
-  async checkVideoPlaying(video, offsetX, offsetY, threshold) {
+  async checkVideoPlaying(video, { offsetX = 10, offsetY = 10,
+                                   threshold = 16,
+                                 } = {}) {
     const h = this._helper;
-    await this.checkHasFrame(video, offsetX, offsetY, threshold);
-    let startPixel = { data: h.getPixel(video, offsetX, offsetY)
-                     , name: "startcolor"
-                     };
-    return h.waitForPixel(video, offsetX, offsetY, px => {
-      let result = h.isPixelNot(px, startPixel, threshold)
+    await this.checkHasFrame(video, { offsetX, offsetY, threshold });
+    let startPixel = {
+      data: h.getPixel(video, offsetX, offsetY),
+      name: "startcolor",
+    };
+    await h.waitForPixel(video, px => {
+      let result = h.isPixelNot(px, startPixel, threshold);
       info("Checking playing, [" +
            Array.slice(px) + "] vs [" + Array.slice(startPixel.data) +
            "]. Threshold=" + threshold + " Pass=" + result);
       return result;
-    });
+    }, { offsetX, offsetY });
   }
 
-  async checkVideoPaused(video, offsetX, offsetY, threshold, timeout) {
+  async checkVideoPaused(video, { offsetX = 10, offsetY = 10,
+                                  threshold = 16, time = 5000,
+                                }={}) {
     const h = this._helper;
-    await this.checkHasFrame(video, offsetX, offsetY, threshold);
-    let startPixel = { data: h.getPixel(video, offsetX, offsetY)
-                     , name: "startcolor"
-                     };
-    const changed = await h.waitForPixel(video, offsetX, offsetY, px => {
-      let result = h.isOpaquePixelNot(px, startPixel, threshold);
-      info("Checking paused, [" +
-           Array.slice(px) + "] vs [" + Array.slice(startPixel.data) +
-           "]. Threshold=" + threshold + " Pass=" + result);
-      return result;
-    }, timeout);
-    ok(!changed, "Frame shouldn't change within " + timeout / 1000 + " seconds.");
+    await this.checkHasFrame(video, { offsetX, offsetY, threshold });
+    let startPixel = {
+      data: h.getPixel(video, offsetX, offsetY),
+      name: "startcolor",
+    };
+    try {
+      await h.waitForPixel(video, px => {
+          let result = h.isOpaquePixelNot(px, startPixel, threshold);
+          info("Checking paused, [" +
+               Array.slice(px) + "] vs [" + Array.slice(startPixel.data) +
+               "]. Threshold=" + threshold + " Pass=" + result);
+          return result;
+        }, { offsetX, offsetY, cancel: wait(time, "timeout") });
+      ok(false, "Frame changed within " + time/1000 + " seconds");
+    } catch (e) {
+      is(e, "timeout", "Frame shouldn't change for " + time/1000 + " seconds");
+    }
   }
 }
 

@@ -121,8 +121,8 @@ SerializeOpusCommentHeader(const nsCString& aVendor,
 
 }  // Anonymous namespace.
 
-OpusTrackEncoder::OpusTrackEncoder()
-  : AudioTrackEncoder()
+OpusTrackEncoder::OpusTrackEncoder(TrackRate aTrackRate)
+  : AudioTrackEncoder(aTrackRate)
   , mEncoder(nullptr)
   , mLookahead(0)
   , mResampler(nullptr)
@@ -144,10 +144,6 @@ OpusTrackEncoder::~OpusTrackEncoder()
 nsresult
 OpusTrackEncoder::Init(int aChannels, int aSamplingRate)
 {
-  // This monitor is used to wake up other methods that are waiting for encoder
-  // to be completely initialized.
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
   NS_ENSURE_TRUE((aChannels <= MAX_SUPPORTED_AUDIO_CHANNELS) && (aChannels > 0),
                  NS_ERROR_FAILURE);
 
@@ -186,13 +182,13 @@ OpusTrackEncoder::Init(int aChannels, int aSamplingRate)
                                  OPUS_APPLICATION_AUDIO, &error);
 
 
-  mInitialized = (error == OPUS_OK);
+  if (error == OPUS_OK) {
+    SetInitialized();
+  }
 
   if (mAudioBitrate) {
     opus_encoder_ctl(mEncoder, OPUS_SET_BITRATE(static_cast<int>(mAudioBitrate)));
   }
-
-  mReentrantMonitor.NotifyAll();
 
   return error == OPUS_OK ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -213,15 +209,14 @@ already_AddRefed<TrackMetadataBase>
 OpusTrackEncoder::GetMetadata()
 {
   AUTO_PROFILER_LABEL("OpusTrackEncoder::GetMetadata", OTHER);
-  {
-    // Wait if mEncoder is not initialized.
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    while (!mCanceled && !mInitialized) {
-      mReentrantMonitor.Wait();
-    }
-  }
+
+  MOZ_ASSERT(mInitialized || mCanceled);
 
   if (mCanceled || mEncodingComplete) {
+    return nullptr;
+  }
+
+  if (!mInitialized) {
     return nullptr;
   }
 
@@ -256,23 +251,22 @@ nsresult
 OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
 {
   AUTO_PROFILER_LABEL("OpusTrackEncoder::GetEncodedTrack", OTHER);
-  {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    // Wait until initialized or cancelled.
-    while (!mCanceled && !mInitialized) {
-      mReentrantMonitor.Wait();
-    }
-    if (mCanceled || mEncodingComplete) {
-      return NS_ERROR_FAILURE;
-    }
+
+  MOZ_ASSERT(mInitialized || mCanceled);
+
+  if (mCanceled || mEncodingComplete) {
+    return NS_ERROR_FAILURE;
   }
 
-  // calculation below depends on the truth that mInitialized is true.
-  MOZ_ASSERT(mInitialized);
+  if (!mInitialized) {
+    // calculation below depends on the truth that mInitialized is true.
+    return NS_ERROR_FAILURE;
+  }
 
-  bool wait = true;
+  TakeTrackData(mSourceSegment);
+
   int result = 0;
-  // Only wait once, then loop until we run out of packets of input data
+  // Loop until we run out of packets of input data
   while (result >= 0 && !mEncodingComplete) {
     // re-sampled frames left last time which didn't fit into an Opus packet duration.
     const int framesLeft = mResampledLeftover.Length() / mChannels;
@@ -288,44 +282,28 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     const int framesToFetch = !mResampler ? GetPacketDuration()
                               : (GetPacketDuration() - framesLeft) * mSamplingRate / kOpusSamplingRate
                               + frameRoundUp;
-    {
-      // Move all the samples from mRawSegment to mSourceSegment. We only hold
-      // the monitor in this block.
-      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-      // Wait until enough raw data, end of stream or cancelled.
-      while (!mCanceled && mRawSegment.GetDuration() +
-             mSourceSegment.GetDuration() < framesToFetch &&
-             !mEndOfStream) {
-        if (wait) {
-          mReentrantMonitor.Wait();
-          wait = false;
-        } else {
-          goto done; // nested while's...
-        }
-      }
+    if (!mEndOfStream && mSourceSegment.GetDuration() < framesToFetch) {
+      // Not enough raw data
+      return NS_OK;
+    }
 
-      if (mCanceled) {
-        return NS_ERROR_FAILURE;
-      }
-
-      mSourceSegment.AppendFrom(&mRawSegment);
-
-      // Pad |mLookahead| samples to the end of source stream to prevent lost of
-      // original data, the pcm duration will be calculated at rate 48K later.
-      if (mEndOfStream && !mEosSetInEncoder) {
-        mEosSetInEncoder = true;
-        mSourceSegment.AppendNullData(mLookahead);
-      }
+    // Pad |mLookahead| samples to the end of source stream to prevent lost of
+    // original data, the pcm duration will be calculated at rate 48K later.
+    if (mEndOfStream && !mEosSetInEncoder) {
+      mEosSetInEncoder = true;
+      mSourceSegment.AppendNullData(mLookahead);
     }
 
     // Start encoding data.
     AutoTArray<AudioDataValue, 9600> pcm;
     pcm.SetLength(GetPacketDuration() * mChannels);
-    AudioSegment::ChunkIterator iter(mSourceSegment);
+
     int frameCopied = 0;
 
-    while (!iter.IsEnded() && frameCopied < framesToFetch) {
+    for (AudioSegment::ChunkIterator iter(mSourceSegment);
+         !iter.IsEnded() && frameCopied < framesToFetch;
+         iter.Next()) {
       AudioChunk chunk = *iter;
 
       // Chunk to the required frame size.
@@ -357,7 +335,6 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       }
 
       frameCopied += frameToCopy;
-      iter.Next();
     }
 
     // Possible greatest value of framesToFetch = 3844: see
@@ -468,7 +445,7 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     LOG("[Opus] mOutputTimeStamp %lld.",mOutputTimeStamp);
     aData.AppendEncodedFrame(audiodata);
   }
-done:
+
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 

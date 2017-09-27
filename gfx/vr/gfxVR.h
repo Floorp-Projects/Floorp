@@ -137,7 +137,7 @@ struct VRHMDSensorState {
   {
     Clear();
   }
-  int32_t inputFrameID;
+  int64_t inputFrameID;
   double timestamp;
   VRDisplayCapabilityFlags flags;
 
@@ -199,7 +199,7 @@ struct VRDisplayInfo
   uint32_t GetGroupMask() const { return mGroupMask; }
   const Size& GetStageSize() const { return mStageSize; }
   const Matrix4x4& GetSittingToStandingTransform() const { return mSittingToStandingTransform; }
-  uint32_t GetFrameId() const { return mFrameId; }
+  uint64_t GetFrameId() const { return mFrameId; }
 
   enum Eye {
     Eye_Left,
@@ -220,7 +220,7 @@ struct VRDisplayInfo
   uint32_t mGroupMask;
   Size mStageSize;
   Matrix4x4 mSittingToStandingTransform;
-  uint32_t mFrameId;
+  uint64_t mFrameId;
   VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
 
   bool operator==(const VRDisplayInfo& other) const {
@@ -267,7 +267,7 @@ struct VRSubmitFrameResultInfo
 
   nsCString mBase64Image;
   SurfaceFormat mFormat;
-  uint32_t mFrameNum;
+  uint64_t mFrameNum;
   uint32_t mWidth;
   uint32_t mHeight;
 };

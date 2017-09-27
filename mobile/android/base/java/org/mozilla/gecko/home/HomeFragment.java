@@ -208,7 +208,11 @@ public abstract class HomeFragment extends Fragment {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
             menu.findItem(R.id.home_copyurl).setVisible(false);
             menu.findItem(R.id.home_share).setVisible(false);
-            menu.findItem(R.id.home_add_to_launcher).setVisible(false);
+
+            final MenuItem addToLauncherItem = menu.findItem(R.id.home_add_to_launcher);
+            if (addToLauncherItem != null) {
+                addToLauncherItem.setVisible(false);
+            }
             menu.findItem(R.id.home_set_as_homepage).setVisible(false);
 
             menu.findItem(R.id.home_as_pin).setVisible(false);

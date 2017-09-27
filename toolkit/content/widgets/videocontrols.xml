@@ -213,7 +213,6 @@
       controlsOverlay: null,
       fullscreenButton: null,
       layoutControls: null,
-      currentTextTrackIndex: 0,
 
       textTracksCount: 0,
       randomID: 0,
@@ -1476,6 +1475,13 @@
         return Array.prototype.filter.call(this.video.textTracks, this.isSupportedTextTrack);
       },
 
+      get currentTextTrackIndex() {
+        const showingTT = this.overlayableTextTracks.find(tt => tt.mode == "showing");
+
+        // fallback to off button if there's no showing track.
+        return showingTT ? showingTT.index : 0;
+      },
+
       isClosedCaptionOn() {
         for (let tt of this.overlayableTextTracks) {
           if (tt.mode === "showing") {
@@ -1551,20 +1557,12 @@
         for (let tt of this.overlayableTextTracks) {
           if (tt.index === index) {
             tt.mode = "showing";
-
-            this.currentTextTrackIndex = tt.index;
           } else {
             tt.mode = "disabled";
           }
         }
 
-        // should fallback to off
-        if (this.currentTextTrackIndex !== index) {
-          this.currentTextTrackIndex = 0;
-        }
-
         this.textTrackList.setAttribute("hidden", "true");
-        this.setClosedCaptionButtonState();
       },
 
       onControlBarTransitioned() {
@@ -1602,11 +1600,7 @@
             this.textTracksCount--;
           }
 
-          if (idx === this.currentTextTrackIndex) {
-            this.currentTextTrackIndex = 0;
-
-            this.video.dispatchEvent(new CustomEvent("texttrackchange"));
-          }
+          this.video.dispatchEvent(new CustomEvent("texttrackchange"));
         }
 
         this.setClosedCaptionButtonState();
@@ -1850,6 +1844,7 @@
           addListener(this.volumeControl, "input", this.updateVolume);
           addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
           addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
+          addListener(this.video.textTracks, "change", this.setClosedCaptionButtonState);
         }
 
         this.log("--- videocontrols initialized ---");

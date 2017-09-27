@@ -6,49 +6,94 @@
 #ifndef TrackEncoder_h_
 #define TrackEncoder_h_
 
-#include "mozilla/ReentrantMonitor.h"
-
 #include "AudioSegment.h"
 #include "EncodedFrameContainer.h"
+#include "MediaStreamGraph.h"
 #include "StreamTracks.h"
 #include "TrackMetadataBase.h"
 #include "VideoSegment.h"
-#include "MediaStreamGraph.h"
 
 namespace mozilla {
 
+class AbstractThread;
+class TrackEncoder;
+
+class TrackEncoderListener
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackEncoderListener)
+
+  /**
+   * Called when the TrackEncoder's underlying encoder has been successfully
+   * initialized and there's non-null data ready to be encoded.
+   */
+  virtual void Initialized(TrackEncoder* aEncoder) = 0;
+
+  /**
+   * Called when there's new data ready to be encoded.
+   * Always called after Initialized().
+   */
+  virtual void DataAvailable(TrackEncoder* aEncoder) = 0;
+
+  /**
+   * Called after the TrackEncoder hit an unexpected error, causing it to
+   * abort operation.
+   */
+  virtual void Error(TrackEncoder* aEncoder) = 0;
+protected:
+  virtual ~TrackEncoderListener() {}
+};
+
 /**
- * Base class of AudioTrackEncoder and VideoTrackEncoder. Lifetimes managed by
- * MediaEncoder. Most methods can only be called on the MediaEncoder's thread,
- * but some subclass methods can be called on other threads when noted.
+ * Base class of AudioTrackEncoder and VideoTrackEncoder. Lifetime managed by
+ * MediaEncoder. All methods are to be called only on the worker thread.
  *
- * NotifyQueuedTrackChanges is called on subclasses of this class from the
- * MediaStreamGraph thread, and AppendAudioSegment/AppendVideoSegment is then
- * called to store media data in the TrackEncoder. Later on, GetEncodedTrack is
- * called on MediaEncoder's thread to encode and retrieve the encoded data.
+ * MediaStreamTrackListeners will get store raw data in mIncomingBuffer, so
+ * mIncomingBuffer is protected by a lock. The control APIs are all called by
+ * MediaEncoder on its dedicated thread, where GetEncodedTrack is called
+ * periodically to swap out mIncomingBuffer, feed it to the encoder, and return
+ * the encoded data.
  */
 class TrackEncoder
 {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackEncoder);
+
 public:
-  TrackEncoder();
+  explicit TrackEncoder(TrackRate aTrackRate);
 
-  virtual ~TrackEncoder() {}
+  virtual void Suspend(TimeStamp aTime) = 0;
 
-  /**
-   * Notified by the same callbcak of MediaEncoder when it has received a track
-   * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
-   */
-  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        StreamTime aTrackOffset,
-                                        uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) = 0;
+  virtual void Resume(TimeStamp aTime) = 0;
 
   /**
-   * Notified by the same callback of MediaEncoder when it has been removed from
-   * MediaStreamGraph. Called on the MediaStreamGraph thread.
+   * Called by MediaEncoder to cancel the encoding.
    */
-  void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamGraphEvent event);
+  virtual void Cancel() = 0;
+
+  /**
+   * Notifies us that we have reached the end of the stream and no more data
+   * will be appended.
+   */
+  virtual void NotifyEndOfStream() = 0;
+
+  /**
+   * MediaStreamGraph notifies us about the time of the track's start.
+   * This gets called on the MediaEncoder thread after a dispatch.
+   */
+  virtual void SetStartOffset(StreamTime aStartOffset) = 0;
+
+  /**
+   * Dispatched from MediaStreamGraph when it has run an iteration where the
+   * input track of the track this TrackEncoder is associated with didn't have
+   * any data.
+   */
+  virtual void AdvanceBlockedInput(StreamTime aDuration) = 0;
+
+  /**
+   * MediaStreamGraph notifies us about the duration of data that has just been
+   * processed. This gets called on the MediaEncoder thread after a dispatch.
+   */
+  virtual void AdvanceCurrentTime(StreamTime aDuration) = 0;
 
   /**
    * Creates and sets up meta data for a specific codec, called on the worker
@@ -63,38 +108,62 @@ public:
   virtual nsresult GetEncodedTrack(EncodedFrameContainer& aData) = 0;
 
   /**
+   * Returns true once this TrackEncoder is initialized.
+   */
+  bool IsInitialized();
+
+  /**
    * True if the track encoder has encoded all source segments coming from
    * MediaStreamGraph. Call on the worker thread.
    */
-  bool IsEncodingComplete() { return mEncodingComplete; }
+  bool IsEncodingComplete();
 
   /**
-   * Notifies from MediaEncoder to cancel the encoding, and wakes up
-   * mReentrantMonitor if encoder is waiting on it.
+   * If this TrackEncoder was not already initialized, it is set to initialized
+   * and listeners are notified.
    */
-  void NotifyCancel()
-  {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mCanceled = true;
-    NotifyEndOfStream();
-  }
+  void SetInitialized();
 
-  virtual void SetBitrate(const uint32_t aBitrate) {}
+  /**
+   * Notifies listeners that there is data available for encoding.
+   */
+  void OnDataAvailable();
+
+  /**
+   * Called after an error. Cancels the encoding and notifies listeners.
+   */
+  void OnError();
+
+  /**
+   * Registers a listener to events from this TrackEncoder.
+   * We hold a strong reference to the listener.
+   */
+  void RegisterListener(TrackEncoderListener* aListener);
+
+  /**
+   * Unregisters a listener from events from this TrackEncoder.
+   * The listener will stop receiving events synchronously.
+   */
+  bool UnregisterListener(TrackEncoderListener* aListener);
+
+  virtual void SetBitrate(const uint32_t aBitrate) = 0;
+
+  /**
+   * It's optional to set the worker thread, but if you do we'll assert that
+   * we are in the worker thread in every method that gets called.
+   */
+  void SetWorkerThread(AbstractThread* aWorkerThread);
+
+  /**
+   * Measure size of internal buffers.
+   */
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) = 0;
 
 protected:
-  /**
-   * Notifies track encoder that we have reached the end of source stream, and
-   * wakes up mReentrantMonitor if encoder is waiting for any source data.
-   */
-  virtual void NotifyEndOfStream() = 0;
-
-  /**
-   * A ReentrantMonitor to protect the pushing and pulling of mRawSegment which
-   * is declared in its subclasses, and the following flags: mInitialized,
-   * EndOfStream and mCanceled. The control of protection is managed by its
-   * subclasses.
-   */
-  ReentrantMonitor mReentrantMonitor;
+  virtual ~TrackEncoder()
+  {
+    MOZ_ASSERT(mListeners.IsEmpty());
+  }
 
   /**
    * True if the track encoder has encoded all source data.
@@ -108,43 +177,75 @@ protected:
   bool mEosSetInEncoder;
 
   /**
-   * True if the track encoder has initialized successfully, protected by
-   * mReentrantMonitor.
+   * True if the track encoder has been initialized successfully.
    */
   bool mInitialized;
 
   /**
-   * True if the TrackEncoder has received an event of TRACK_EVENT_ENDED from
-   * MediaStreamGraph, or the MediaEncoder is removed from its source stream,
-   * protected by mReentrantMonitor.
+   * True once all data until the end of the input track has been received.
    */
   bool mEndOfStream;
 
   /**
-   * True if a cancellation of encoding is sent from MediaEncoder, protected by
-   * mReentrantMonitor.
+   * True once this encoding has been cancelled.
    */
   bool mCanceled;
+
+  /**
+   * The latest current time reported to us from the MSG.
+   */
+  StreamTime mCurrentTime;
 
   // How many times we have tried to initialize the encoder.
   uint32_t mInitCounter;
   StreamTime mNotInitDuration;
+
+  bool mSuspended;
+
+  /**
+   * The track rate of source media.
+   */
+  TrackRate mTrackRate;
+
+  /**
+   * If set we assert that all methods are called on this thread.
+   */
+  RefPtr<AbstractThread> mWorkerThread;
+
+  nsTArray<RefPtr<TrackEncoderListener>> mListeners;
 };
 
 class AudioTrackEncoder : public TrackEncoder
 {
 public:
-  AudioTrackEncoder()
-    : TrackEncoder()
+  explicit AudioTrackEncoder(TrackRate aTrackRate)
+    : TrackEncoder(aTrackRate)
     , mChannels(0)
     , mSamplingRate(0)
     , mAudioBitrate(0)
   {}
 
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset,
-                                uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia) override;
+  /**
+   * Suspends encoding from mCurrentTime, i.e., all audio data until the next
+   * Resume() will be dropped.
+   */
+  void Suspend(TimeStamp aTime) override;
+
+  /**
+   * Resumes encoding starting at mCurrentTime.
+   */
+  void Resume(TimeStamp aTime) override;
+
+  /**
+   * Appends and consumes track data from aSegment.
+   */
+  void AppendAudioSegment(AudioSegment&& aSegment);
+
+  /**
+   * Takes track data from the last time TakeTrackData ran until mCurrentTime
+   * and moves it to aSegment.
+   */
+  void TakeTrackData(AudioSegment& aSegment);
 
   template<typename T>
   static
@@ -184,60 +285,69 @@ public:
    */
   static void DeInterleaveTrackData(AudioDataValue* aInput, int32_t aDuration,
                                     int32_t aChannels, AudioDataValue* aOutput);
+
   /**
-  * Measure size of mRawSegment
-  */
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+   * Measure size of internal buffers.
+   */
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
 
   void SetBitrate(const uint32_t aBitrate) override
   {
     mAudioBitrate = aBitrate;
   }
+
+  /**
+   * Tries to initiate the AudioEncoder based on data in aSegment.
+   * This can be re-called often, as it will exit early should we already be
+   * initiated. mInitiated will only be set if there was enough data in
+   * aSegment to infer metadata. If mInitiated gets set, listeners are notified.
+   *
+   * Not having enough data in aSegment to initiate the encoder for an accumulated aDuration of one second will make us initiate with a default number of channels.
+   *
+   * If we attempt to initiate the underlying encoder but fail, we Cancel() and
+   * notify listeners.
+   */
+  void TryInit(const AudioSegment& aSegment, StreamTime aDuration);
+
+  void Cancel() override;
+
+  /**
+   * Dispatched from MediaStreamGraph when we have finished feeding data to
+   * mIncomingBuffer.
+   */
+  void NotifyEndOfStream() override;
+
+  void SetStartOffset(StreamTime aStartOffset) override;
+
+  /**
+   * Dispatched from MediaStreamGraph when it has run an iteration where the
+   * input track of the track this TrackEncoder is associated with didn't have
+   * any data.
+   *
+   * Since we sometimes use a direct listener for AudioSegments we miss periods
+   * of time for which the source didn't have any data. This ensures that the
+   * latest frame gets displayed while we wait for more data to be pushed.
+   */
+  void AdvanceBlockedInput(StreamTime aDuration) override;
+
+  /**
+   * Dispatched from MediaStreamGraph when it has run an iteration so we can
+   * hand more data to the encoder.
+   */
+  void AdvanceCurrentTime(StreamTime aDuration) override;
 protected:
   /**
    * Number of samples per channel in a pcm buffer. This is also the value of
-   * frame size required by audio encoder, and mReentrantMonitor will be
-   * notified when at least this much data has been added to mRawSegment.
+   * frame size required by audio encoder, and listeners will be notified when
+   * at least this much data has been added to mOutgoingBuffer.
    */
   virtual int GetPacketDuration() { return 0; }
 
   /**
-   * Attempt to initialize the audio encoder. The call of this method is
-   * delayed until we have received the first valid track from
-   * MediaStreamGraph, and the mReentrantMonitor will be notified if other
-   * methods is waiting for encoder to be completely initialized. This method
-   * is called on the MediaStreamGraph thread. This method will attempt to
-   * initialize with best effort if all the following are met:
-   * - it has been called multiple times
-   * - reached a threshold duration of audio data
-   * - the encoder has not yet initialized.
-   * Returns NS_OK on init, as well as when deferring for more data, so check
-   * mInitialized after calling as necessary.
-   */
-  virtual nsresult TryInit(const AudioSegment& aSegment, int aSamplingRate);
-
-  /**
    * Initializes the audio encoder. The call of this method is delayed until we
-   * have received the first valid track from MediaStreamGraph, and the
-   * mReentrantMonitor will be notified if other methods is waiting for encoder
-   * to be completely initialized. This method is called on the MediaStreamGraph
-   * thread.
+   * have received the first valid track from MediaStreamGraph.
    */
   virtual nsresult Init(int aChannels, int aSamplingRate) = 0;
-
-  /**
-   * Appends and consumes track data from aSegment, this method is called on
-   * the MediaStreamGraph thread. mReentrantMonitor will be notified when at
-   * least GetPacketDuration() data has been added to mRawSegment, wake up other
-   * method which is waiting for more data from mRawSegment.
-   */
-  nsresult AppendAudioSegment(const AudioSegment& aSegment);
-
-  /**
-   * Notifies the audio encoder that we have reached the end of source stream,
-   * and wakes up mReentrantMonitor if encoder is waiting for more track data.
-   */
-  void NotifyEndOfStream() override;
 
   /**
    * The number of channels are used for processing PCM data in the audio encoder.
@@ -253,23 +363,37 @@ protected:
   int mSamplingRate;
 
   /**
-   * A segment queue of audio track data, protected by mReentrantMonitor.
+   * A segment queue of incoming audio track data, from listeners.
+   * The duration of mIncomingBuffer is strictly increasing as it gets fed more
+   * data. Consumed data is replaced by null data.
    */
-  AudioSegment mRawSegment;
+  AudioSegment mIncomingBuffer;
+
+  /**
+   * A segment queue of outgoing audio track data to the encoder.
+   * The contents of mOutgoingBuffer will always be what has been consumed from
+   * mIncomingBuffer (up to mCurrentTime) but not yet consumed by the encoder
+   * sub class.
+   */
+  AudioSegment mOutgoingBuffer;
 
   uint32_t mAudioBitrate;
+
+  // This may only be accessed on the MSG thread.
+  // I.e., in the regular NotifyQueuedChanges for audio to avoid adding data
+  // from that callback when the direct one is active.
+  bool mDirectConnected;
 };
 
 class VideoTrackEncoder : public TrackEncoder
 {
 public:
   explicit VideoTrackEncoder(TrackRate aTrackRate)
-    : TrackEncoder()
+    : TrackEncoder(aTrackRate)
     , mFrameWidth(0)
     , mFrameHeight(0)
     , mDisplayWidth(0)
     , mDisplayHeight(0)
-    , mTrackRate(aTrackRate)
     , mEncodedTicks(0)
     , mVideoBitrate(0)
   {
@@ -277,26 +401,49 @@ public:
   }
 
   /**
-   * Notified by the same callback of MediaEncoder when it has received a track
-   * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
+   * Suspends encoding from aTime, i.e., all video frame with a timestamp
+   * between aTime and the timestamp of the next Resume() will be dropped.
    */
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset,
-                                uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia) override;
+  void Suspend(TimeStamp aTime) override;
+
   /**
-  * Measure size of mRawSegment
-  */
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+   * Resumes encoding starting at aTime.
+   */
+  void Resume(TimeStamp aTime) override;
+
+  /**
+   * Appends source video frames to mIncomingBuffer. We only append the source
+   * chunk if the image is different from mLastChunk's image. Called on the
+   * MediaStreamGraph thread.
+   */
+  void AppendVideoSegment(VideoSegment&& aSegment);
+
+  /**
+   * Takes track data from the last time TakeTrackData ran until mCurrentTime
+   * and moves it to aSegment.
+   */
+  void TakeTrackData(VideoSegment& aSegment);
+
+  /**
+   * Measure size of internal buffers.
+   */
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
 
   void SetBitrate(const uint32_t aBitrate) override
   {
     mVideoBitrate = aBitrate;
   }
 
-  void Init(const VideoSegment& aSegment);
-
-  void SetCurrentFrames(const VideoSegment& aSegment);
+  /**
+   * Tries to initiate the VideoEncoder based on data in aSegment.
+   * This can be re-called often, as it will exit early should we already be
+   * initiated. mInitiated will only be set if there was enough data in
+   * aSegment to infer metadata. If mInitiated gets set, listeners are notified.
+   *
+   * Failing to initiate the encoder for an accumulated aDuration of 30 seconds
+   * is seen as an error and will cancel the current encoding.
+   */
+  void Init(const VideoSegment& aSegment, StreamTime aDuration);
 
   StreamTime SecondsToMediaTime(double aS) const
   {
@@ -305,29 +452,42 @@ public:
     return mTrackRate * aS;
   }
 
+  void Cancel() override;
+
+  /**
+   * Notifies us that we have reached the end of the stream and no more data
+   * will be appended to mIncomingBuffer.
+   */
+  void NotifyEndOfStream() override;
+
+  void SetStartOffset(StreamTime aStartOffset) override;
+
+  /**
+   * Dispatched from MediaStreamGraph when it has run an iteration where the
+   * input track of the track this TrackEncoder is associated with didn't have
+   * any data.
+   *
+   * Since we use a direct listener for VideoSegments we miss periods of time
+   * for which the source didn't have any data. This ensures that the latest
+   * frame gets displayed while we wait for more data to be pushed.
+   */
+  void AdvanceBlockedInput(StreamTime aDuration) override;
+
+  /**
+   * Dispatched from MediaStreamGraph when it has run an iteration so we can
+   * hand more data to the encoder.
+   */
+  void AdvanceCurrentTime(StreamTime aDuration) override;
+
 protected:
   /**
-   * Initialized the video encoder. In order to collect the value of width and
+   * Initialize the video encoder. In order to collect the value of width and
    * height of source frames, this initialization is delayed until we have
-   * received the first valid video frame from MediaStreamGraph;
-   * mReentrantMonitor will be notified after it has successfully initialized,
-   * and this method is called on the MediaStramGraph thread.
+   * received the first valid video frame from MediaStreamGraph.
+   * Listeners will be notified after it has been successfully initialized.
    */
   virtual nsresult Init(int aWidth, int aHeight, int aDisplayWidth,
                         int aDisplayHeight) = 0;
-
-  /**
-   * Appends source video frames to mRawSegment. We only append the source chunk
-   * if it is unique to mLastChunk. Called on the MediaStreamGraph thread.
-   */
-  nsresult AppendVideoSegment(const VideoSegment& aSegment);
-
-  /**
-   * Tells the video track encoder that we've reached the end of source stream,
-   * and wakes up mReentrantMonitor if encoder is waiting for more track data.
-   * Called on the MediaStreamGraph thread.
-   */
-  void NotifyEndOfStream() override;
 
   /**
    * The width of source video frame, ceiled if the source width is odd.
@@ -350,32 +510,45 @@ protected:
   int mDisplayHeight;
 
   /**
-   * The track rate of source video.
-   */
-  TrackRate mTrackRate;
-
-  /**
-   * The last unique frame and duration we've sent to track encoder,
-   * kept track of in subclasses.
+   * The last unique frame and duration so far handled by NotifyAdvanceCurrentTime.
+   * When a new frame is detected, mLastChunk is added to mOutgoingBuffer.
    */
   VideoChunk mLastChunk;
 
   /**
-   * A segment queue of audio track data, protected by mReentrantMonitor.
+   * A segment queue of incoming video track data, from listeners.
+   * The duration of mIncomingBuffer is strictly increasing as it gets fed more
+   * data. Consumed data is replaced by null data.
    */
-  VideoSegment mRawSegment;
+  VideoSegment mIncomingBuffer;
 
   /**
-   * The number of mTrackRate ticks we have passed to the encoder.
-   * Only accessed in AppendVideoSegment().
+   * A segment queue of outgoing video track data to the encoder.
+   * The contents of mOutgoingBuffer will always be what has been consumed from
+   * mIncomingBuffer (up to mCurrentTime) but not yet consumed by the encoder
+   * sub class. There won't be any null data at the beginning of mOutgoingBuffer
+   * unless explicitly pushed by the producer.
+   */
+  VideoSegment mOutgoingBuffer;
+
+  /**
+   * The number of mTrackRate ticks we have passed to mOutgoingBuffer.
    */
   StreamTime mEncodedTicks;
 
   /**
-   * The time of the first real video frame passed to the encoder.
-   * Only accessed in AppendVideoSegment().
+   * The time of the first real video frame passed to mOutgoingBuffer (at t=0).
+   *
+   * Note that this time will progress during suspension, to make sure the
+   * incoming frames stay in sync with the output.
    */
-  TimeStamp mStartOffset;
+  TimeStamp mStartTime;
+
+  /**
+   * The time Suspend was called on the MediaRecorder, so we can calculate the
+   * duration on the next Resume().
+   */
+  TimeStamp mSuspendTime;
 
   uint32_t mVideoBitrate;
 };

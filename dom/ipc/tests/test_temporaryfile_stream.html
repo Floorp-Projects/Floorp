@@ -57,8 +57,10 @@ function startTest() {
         SimpleTest.finish();
       };
       document.getElementById("content").appendChild(video);
-      helper.waitForPixelColor(video, helper.red, 128, "Should become red")
-        .then(SimpleTest.finish);
+      helper.pixelMustBecome(video, helper.red, {
+        threshold: 128,
+        infoString: "Should become red"
+      }).then(SimpleTest.finish);
     };
     xhr.onerror = () => {
       ok(false, "XHR error");

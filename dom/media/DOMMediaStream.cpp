@@ -865,6 +865,17 @@ DOMMediaStream::IsFinished() const
   return !mPlaybackStream || mPlaybackStream->IsFinished();
 }
 
+TrackRate
+DOMMediaStream::GraphRate()
+{
+  if (mPlaybackStream) { return mPlaybackStream->GraphRate(); }
+  if (mOwnedStream) { return mOwnedStream->GraphRate(); }
+  if (mInputStream) { return mInputStream->GraphRate(); }
+
+  MOZ_ASSERT(false, "Not hooked up to a graph");
+  return 0;
+}
+
 void
 DOMMediaStream::SetInactiveOnFinish()
 {
