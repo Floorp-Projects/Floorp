@@ -107,9 +107,24 @@ tabbrowser {
   fill: var(--tab-loading-fill);
 }
 
+:root[sessionrestored] .tab-loading-burst[bursting][notselectedsinceload]::before {
+  animation-name: tab-burst-animation-light;
+}
+
 @keyframes tab-burst-animation {
   0% {
     opacity: 0.4;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40);
+  }
+}
+
+@keyframes tab-burst-animation-light {
+  0% {
+    opacity: 0.2;
     transform: scale(1);
   }
   100% {
