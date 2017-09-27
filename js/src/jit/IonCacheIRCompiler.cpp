@@ -1849,20 +1849,6 @@ IonCacheIRCompiler::emitStoreTypedElement()
 }
 
 bool
-IonCacheIRCompiler::emitStoreUnboxedArrayElement()
-{
-    // --unboxed-arrays is currently untested and broken.
-    MOZ_CRASH("Baseline-specific op");
-}
-
-bool
-IonCacheIRCompiler::emitStoreUnboxedArrayElementHole()
-{
-    // --unboxed-arrays is currently untested and broken.
-    MOZ_CRASH("Baseline-specific op");
-}
-
-bool
 IonCacheIRCompiler::emitCallNativeSetter()
 {
     AutoSaveLiveRegisters save(*this);

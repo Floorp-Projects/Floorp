@@ -170,12 +170,7 @@ class WidgetRenderingContext;
 
   NSOpenGLContext *mGLContext;
 
-  // Simple gestures support
-  //
-  // mGestureState is used to detect when Cocoa has called both
-  // magnifyWithEvent and rotateWithEvent within the same
-  // beginGestureWithEvent and endGestureWithEvent sequence. We
-  // discard the spurious gesture event so as not to confuse Gecko.
+  // Gestures support
   //
   // mCumulativeMagnification keeps track of the total amount of
   // magnification peformed during a magnify gesture so that we can
@@ -187,7 +182,6 @@ class WidgetRenderingContext;
   enum {
     eGestureState_None,
     eGestureState_StartGesture,
-    eGestureState_MagnifyGesture,
     eGestureState_RotateGesture
   } mGestureState;
   float mCumulativeMagnification;
@@ -242,19 +236,17 @@ class WidgetRenderingContext;
 
 - (NSColor*)vibrancyFillColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType;
 
-// Simple gestures support
-//
-// XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
-// rotateWithEvent, and endGestureWithEvent methods are part of a
-// PRIVATE interface exported by nsResponder and reverse-engineering
-// was necessary to obtain the methods' prototypes. Thus, Apple may
-// change the interface in the future without notice.
-//
-// The prototypes were obtained from the following link:
-// http://cocoadex.com/2008/02/nsevent-modifications-swipe-ro.html
+/*
+ * Gestures support
+ *
+ * The prototypes swipeWithEvent, beginGestureWithEvent, smartMagnifyWithEvent,
+ * rotateWithEvent and endGestureWithEvent were obtained from the following
+ * links:
+ * https://developer.apple.com/library/mac/#documentation/Cocoa/Reference/ApplicationKit/Classes/NSResponder_Class/Reference/Reference.html
+ * https://developer.apple.com/library/mac/#releasenotes/Cocoa/AppKit.html
+ */
 - (void)swipeWithEvent:(NSEvent *)anEvent;
 - (void)beginGestureWithEvent:(NSEvent *)anEvent;
-- (void)magnifyWithEvent:(NSEvent *)anEvent;
 - (void)smartMagnifyWithEvent:(NSEvent *)anEvent;
 - (void)rotateWithEvent:(NSEvent *)anEvent;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;

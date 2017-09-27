@@ -14,7 +14,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
-#include "nsFormControlFrame.h"
+#include "nsCheckboxRadioFrame.h"
 #include "nsFontMetrics.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
@@ -53,7 +53,7 @@ nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot)
   NS_ASSERTION(!GetPrevContinuation(),
                "nsMeterFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
-  nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   DestroyAnonymousContent(mBarDiv.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
@@ -107,7 +107,7 @@ nsMeterFrame::Reflow(nsPresContext*           aPresContext,
                "need to call RegUnregAccessKey only for the first.");
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    nsFormControlFrame::RegUnRegAccessKey(this, true);
+    nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
   }
 
   nsIFrame* barFrame = mBarDiv->GetPrimaryFrame();

@@ -1511,18 +1511,6 @@ js::FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList
     return true;
 }
 
-void
-js::InvalidateCompilerOutputsForScript(JSContext* cx, HandleScript script)
-{
-    TypeZone& types = cx->zone()->types;
-    if (types.compilerOutputs) {
-        for (auto& co : *types.compilerOutputs) {
-            if (co.script() == script)
-                co.invalidate();
-        }
-    }
-}
-
 static void
 CheckDefinitePropertiesTypeSet(JSContext* cx, TemporaryTypeSet* frozen, StackTypeSet* actual)
 {
@@ -2518,7 +2506,7 @@ TemporaryTypeSet::propertyNeedsBarrier(CompilerConstraintList* constraints, jsid
 bool
 js::ClassCanHaveExtraProperties(const Class* clasp)
 {
-    if (clasp == &UnboxedPlainObject::class_ || clasp == &UnboxedArrayObject::class_)
+    if (clasp == &UnboxedPlainObject::class_)
         return false;
     return clasp->getResolve()
         || clasp->getOpsLookupProperty()

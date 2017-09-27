@@ -7,12 +7,16 @@
 #ifndef mozilla_dom_timeoutexecutor_h
 #define mozilla_dom_timeoutexecutor_h
 
+#include "mozilla/TimeStamp.h"
+#include "nsCOMPtr.h"
 #include "nsIRunnable.h"
 #include "nsITimer.h"
 #include "nsINamed.h"
 
 namespace mozilla {
 namespace dom {
+
+class TimeoutManager;
 
 class TimeoutExecutor final : public nsIRunnable
                             , public nsITimerCallback

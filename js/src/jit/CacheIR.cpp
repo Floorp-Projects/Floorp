@@ -227,8 +227,6 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachDenseElementHole(obj, objId, index, indexId))
                 return true;
-            if (tryAttachUnboxedArrayElement(obj, objId, index, indexId))
-                return true;
             if (tryAttachArgumentsObjectArg(obj, objId, index, indexId))
                 return true;
 
@@ -536,7 +534,7 @@ TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId,
         } else {
             writer.guardNoUnboxedExpando(objId);
         }
-    } else if (obj->is<UnboxedArrayObject>() || obj->is<TypedObject>()) {
+    } else if (obj->is<TypedObject>()) {
         writer.guardGroup(objId, obj->group());
     } else {
         Shape* shape = obj->maybeShape();
@@ -1269,16 +1267,6 @@ GetPropIRGenerator::tryAttachObjectLength(HandleObject obj, ObjOperandId objId, 
         return true;
     }
 
-    if (obj->is<UnboxedArrayObject>()) {
-        maybeEmitIdGuard(id);
-        writer.guardClass(objId, GuardClassKind::UnboxedArray);
-        writer.loadUnboxedArrayLengthResult(objId);
-        writer.returnFromIC();
-
-        trackAttached("UnboxedArrayLength");
-        return true;
-    }
-
     if (obj->is<ArgumentsObject>() && !obj->as<ArgumentsObject>().hasOverriddenLength()) {
         maybeEmitIdGuard(id);
         if (obj->is<MappedArgumentsObject>()) {
@@ -1617,31 +1605,6 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
     writer.typeMonitorResult();
 
     trackAttached("DenseElementHole");
-    return true;
-}
-
-bool
-GetPropIRGenerator::tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
-                                                 uint32_t index, Int32OperandId indexId)
-{
-    if (!obj->is<UnboxedArrayObject>())
-        return false;
-
-    if (index >= obj->as<UnboxedArrayObject>().initializedLength())
-        return false;
-
-    writer.guardGroup(objId, obj->group());
-
-    JSValueType elementType = obj->group()->unboxedLayoutDontCheckGeneration().elementType();
-    writer.loadUnboxedArrayElementResult(objId, indexId, elementType);
-
-    // Only monitor the result if its type might change.
-    if (elementType == JSVAL_TYPE_OBJECT)
-        writer.typeMonitorResult();
-    else
-        writer.returnFromIC();
-
-    trackAttached("UnboxedArrayElement");
     return true;
 }
 
@@ -2572,10 +2535,6 @@ SetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachSetDenseElementHole(obj, objId, index, indexId, rhsValId))
                 return true;
-            if (tryAttachSetUnboxedArrayElement(obj, objId, index, indexId, rhsValId))
-                return true;
-            if (tryAttachSetUnboxedArrayElementHole(obj, objId, index, indexId, rhsValId))
-                return true;
             if (tryAttachSetTypedElement(obj, objId, index, indexId, rhsValId))
                 return true;
             return false;
@@ -3042,7 +3001,7 @@ CanAttachAddElement(JSObject* obj, bool isInit)
             return false;
 
         const Class* clasp = obj->getClass();
-        if ((clasp != &ArrayObject::class_ && clasp != &UnboxedArrayObject::class_) &&
+        if (clasp != &ArrayObject::class_ &&
             (clasp->getAddProperty() ||
              clasp->getResolve() ||
              clasp->getOpsLookupProperty() ||
@@ -3152,35 +3111,6 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
 }
 
 bool
-SetPropIRGenerator::tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
-                                                    uint32_t index, Int32OperandId indexId,
-                                                    ValOperandId rhsId)
-{
-    if (!obj->is<UnboxedArrayObject>())
-        return false;
-
-    if (!cx_->runtime()->jitSupportsFloatingPoint)
-        return false;
-
-    if (index >= obj->as<UnboxedArrayObject>().initializedLength())
-        return false;
-
-    writer.guardGroup(objId, obj->group());
-
-    JSValueType elementType = obj->group()->unboxedLayoutDontCheckGeneration().elementType();
-    EmitGuardUnboxedPropertyType(writer, elementType, rhsId);
-
-    writer.storeUnboxedArrayElement(objId, indexId, rhsId, elementType);
-    writer.returnFromIC();
-
-    // Type inference uses JSID_VOID for the element types.
-    typeCheckInfo_.set(obj->group(), JSID_VOID);
-
-    trackAttached("SetUnboxedArrayElement");
-    return true;
-}
-
-bool
 SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId,
                                              uint32_t index, Int32OperandId indexId,
                                              ValOperandId rhsId)
@@ -3224,52 +3154,6 @@ SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objI
         attachedTypedArrayOOBStub_ = true;
 
     trackAttached(handleOutOfBounds ? "SetTypedElementOOB" : "SetTypedElement");
-    return true;
-}
-
-bool
-SetPropIRGenerator::tryAttachSetUnboxedArrayElementHole(HandleObject obj, ObjOperandId objId,
-                                                        uint32_t index, Int32OperandId indexId,
-                                                        ValOperandId rhsId)
-{
-    if (!obj->is<UnboxedArrayObject>() || rhsVal_.isMagic(JS_ELEMENTS_HOLE))
-        return false;
-
-    if (!cx_->runtime()->jitSupportsFloatingPoint)
-        return false;
-
-    JSOp op = JSOp(*pc_);
-    MOZ_ASSERT(IsPropertySetOp(op) || IsPropertyInitOp(op));
-
-    if (op == JSOP_INITHIDDENELEM)
-        return false;
-
-    // Optimize if we're adding an element at initLength. Unboxed arrays don't
-    // have holes at indexes < initLength.
-    UnboxedArrayObject* aobj = &obj->as<UnboxedArrayObject>();
-    if (index != aobj->initializedLength() || index >= aobj->capacity())
-        return false;
-
-    // Check for other indexed properties or class hooks.
-    if (!CanAttachAddElement(aobj, IsPropertyInitOp(op)))
-        return false;
-
-    writer.guardGroup(objId, aobj->group());
-
-    JSValueType elementType = aobj->group()->unboxedLayoutDontCheckGeneration().elementType();
-    EmitGuardUnboxedPropertyType(writer, elementType, rhsId);
-
-    // Also shape guard the proto chain, unless this is an INITELEM.
-    if (IsPropertySetOp(op))
-        ShapeGuardProtoChain(writer, aobj, objId);
-
-    writer.storeUnboxedArrayElementHole(objId, indexId, rhsId, elementType);
-    writer.returnFromIC();
-
-    // Type inference uses JSID_VOID for the element types.
-    typeCheckInfo_.set(aobj->group(), JSID_VOID);
-
-    trackAttached("StoreUnboxedArrayElementHole");
     return true;
 }
 

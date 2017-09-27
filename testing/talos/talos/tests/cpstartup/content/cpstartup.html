@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <script>
+      const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+      function init() {
+        if (document.location.hash.indexOf("#auto") == 0) {
+          let mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIContentFrameMessageManager);
+
+          mm.addMessageListener("CPStartup:FinalResults", function onResults(msg) {
+            mm.removeMessageListener("CPStartup:FinalResults", onResults);
+            let results = msg.data;
+
+            tpRecordTime(results, 0, "content-process-startup");
+          });
+
+          mm.sendAsyncMessage("CPStartup:Go");
+        }
+      }
+
+    </script>
+  </head>
+  <body onload="init();">
+    Hello, Talos!
+
+    <a href="#" id="target" target="_blank">I'll open a new tab</a>
+  </body>
+</html>

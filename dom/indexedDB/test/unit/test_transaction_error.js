@@ -88,23 +88,6 @@ function* testSteps() {
 
   info("Adding duplicate entry without preventDefault()");
 
-  if ("SimpleTest" in this) {
-    /* global SimpleTest */
-    SimpleTest.expectUncaughtException();
-  } else if ("DedicatedWorkerGlobalScope" in self &&
-             self instanceof DedicatedWorkerGlobalScope) {
-    let oldErrorFunction = self.onerror;
-    self.onerror = function(message, file, line) {
-      self.onerror = oldErrorFunction;
-      oldErrorFunction = null;
-
-      is(message,
-        "ConstraintError",
-        "Got expected ConstraintError on DedicatedWorkerGlobalScope");
-      return true;
-    };
-  }
-
   request = objectStore.add(data, dataKey);
   request.onsuccess = unexpectedSuccessHandler;
   request.onerror = grabEventAndContinueHandler;

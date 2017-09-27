@@ -172,7 +172,6 @@ private:
 
     nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsPIDNSService>             mDNSService;
-    nsCOMPtr<nsIProtocolProxyService2>   mProxyService;
     nsCOMPtr<nsICaptivePortalService>    mCaptivePortalService;
     nsCOMPtr<nsINetworkLinkService>      mNetworkLinkService;
     bool                                 mNetworkLinkServiceInitialized;

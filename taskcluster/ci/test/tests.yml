@@ -1792,8 +1792,8 @@ talos-tp6-stylo-disabled:
     virtualization: hardware
     run-on-projects:
         by-test-platform:
-            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-            macosx.*: ['mozilla-beta', 'autoland', 'try']
+            windows.*: ['mozilla-beta', 'mozilla-central', 'try']
+            macosx.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:

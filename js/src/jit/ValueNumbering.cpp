@@ -999,6 +999,9 @@ ValueNumberer::visitBlock(MBasicBlock* block, const MBasicBlock* dominatorRoot)
     }
     nextDef_ = nullptr;
 
+    if (!graph_.alloc().ensureBallast())
+        return false;
+
     return visitControlInstruction(block, dominatorRoot);
 }
 

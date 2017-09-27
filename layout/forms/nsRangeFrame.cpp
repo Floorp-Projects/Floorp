@@ -13,7 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
-#include "nsFormControlFrame.h"
+#include "nsCheckboxRadioFrame.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsNameSpaceManager.h"
@@ -102,7 +102,7 @@ nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
   mContent->RemoveEventListener(NS_LITERAL_STRING("touchstart"), mDummyTouchListener, false);
 
-  nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   DestroyAnonymousContent(mTrackDiv.forget());
   DestroyAnonymousContent(mProgressDiv.forget());
   DestroyAnonymousContent(mThumbDiv.forget());
@@ -326,7 +326,7 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
                "need to call RegUnregAccessKey only for the first.");
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    nsFormControlFrame::RegUnRegAccessKey(this, true);
+    nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
   }
 
   WritingMode wm = aReflowInput.GetWritingMode();

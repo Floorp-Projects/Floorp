@@ -1144,10 +1144,6 @@ nsIOService::SetOffline(bool offline)
             mOffline = false;    // indicate success only AFTER we've
                                     // brought up the services
 
-            // trigger a PAC reload when we come back online
-            if (mProxyService)
-                mProxyService->ReloadPAC();
-
             mLastOfflineStateChange = PR_IntervalNow();
             // don't care if notification fails
             // Only send the ONLINE notification if there is connectivity
@@ -1512,8 +1508,6 @@ nsIOService::Observe(nsISupports *subject,
             mCaptivePortalService = nullptr;
         }
 
-        // Break circular reference.
-        mProxyService = nullptr;
     } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
         OnNetworkLinkEvent(NS_ConvertUTF16toUTF8(data).get());
     } else if (!strcmp(topic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {

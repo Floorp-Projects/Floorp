@@ -147,9 +147,8 @@ class IonBuilder
 
     MConstant* constant(const Value& v);
     MConstant* constantInt(int32_t i);
-    MInstruction* initializedLength(MDefinition* obj, MDefinition* elements,
-                                    JSValueType unboxedType);
-    MInstruction* setInitializedLength(MDefinition* obj, JSValueType unboxedType, size_t count);
+    MInstruction* initializedLength(MDefinition* obj, MDefinition* elements);
+    MInstruction* setInitializedLength(MDefinition* obj, size_t count);
 
     // Improve the type information at tests
     AbortReasonOr<Ok> improveTypesAtTest(MDefinition* ins, bool trueBranch, MTest* test);
@@ -416,7 +415,6 @@ class IonBuilder
                                                         TypedObjectPrediction elemTypeReprs,
                                                         uint32_t elemSize);
     AbortReasonOr<Ok> initializeArrayElement(MDefinition* obj, size_t index, MDefinition* value,
-                                             JSValueType unboxedType,
                                              bool addResumePointAndIncrementInitializedLength);
 
     // jsop_getelem() helpers.
@@ -527,15 +525,13 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_bindname(PropertyName* name);
     AbortReasonOr<Ok> jsop_bindvar();
     AbortReasonOr<Ok> jsop_getelem();
-    AbortReasonOr<Ok> jsop_getelem_dense(MDefinition* obj, MDefinition* index,
-                                         JSValueType unboxedType);
+    AbortReasonOr<Ok> jsop_getelem_dense(MDefinition* obj, MDefinition* index);
     AbortReasonOr<Ok> jsop_getelem_typed(MDefinition* obj, MDefinition* index,
                                          ScalarTypeDescr::Type arrayType);
     AbortReasonOr<Ok> jsop_setelem();
     AbortReasonOr<Ok> initOrSetElemDense(TemporaryTypeSet::DoubleConversion conversion,
                                          MDefinition* object, MDefinition* index,
-                                         MDefinition* value, JSValueType unboxedType,
-                                         bool writeHole, bool* emitted);
+                                         MDefinition* value, bool writeHole, bool* emitted);
     AbortReasonOr<Ok> jsop_setelem_typed(ScalarTypeDescr::Type arrayType,
                                          MDefinition* object, MDefinition* index,
                                          MDefinition* value);

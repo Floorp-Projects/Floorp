@@ -932,11 +932,6 @@ IsArrayEscaped(MInstruction* ins)
         return true;
     }
 
-    if (obj->is<UnboxedArrayObject>()) {
-        JitSpew(JitSpew_Escape, "Template object is an unboxed plain object.");
-        return true;
-    }
-
     if (length >= 16) {
         JitSpew(JitSpew_Escape, "Array has too many elements");
         return true;

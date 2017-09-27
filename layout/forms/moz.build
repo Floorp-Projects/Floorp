@@ -20,15 +20,13 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'nsButtonFrameRenderer.cpp',
+    'nsCheckboxRadioFrame.cpp',
     'nsColorControlFrame.cpp',
     'nsComboboxControlFrame.cpp',
     'nsDateTimeControlFrame.cpp',
     'nsFieldSetFrame.cpp',
     'nsFileControlFrame.cpp',
-    'nsFormControlFrame.cpp',
     'nsGfxButtonControlFrame.cpp',
-    'nsGfxCheckboxControlFrame.cpp',
-    'nsGfxRadioControlFrame.cpp',
     'nsHTMLButtonControlFrame.cpp',
     'nsImageControlFrame.cpp',
     'nsLegendFrame.cpp',

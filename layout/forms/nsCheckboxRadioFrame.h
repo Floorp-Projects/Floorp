@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFormControlFrame_h___
-#define nsFormControlFrame_h___
+#ifndef nsCheckboxRadioFrame_h___
+#define nsCheckboxRadioFrame_h___
 
 #include "mozilla/Attributes.h"
 #include "nsIFormControlFrame.h"
@@ -12,34 +12,29 @@
 #include "nsDisplayList.h"
 
 /**
- * nsFormControlFrame is the base class for radio buttons and
- * checkboxes.  It also has two static methods (RegUnRegAccessKey and
+ * nsCheckboxRadioFrame is used for radio buttons and checkboxes.
+ * It also has two static methods (RegUnRegAccessKey and
  * GetScreenHeight) that are used by other form controls.
  */
-class nsFormControlFrame : public nsAtomicContainerFrame,
-                           public nsIFormControlFrame
+class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
+                                   public nsIFormControlFrame
 {
 public:
-  /**
-    * Main constructor
-    * @param aContent the content representing this frame
-    * @param aParentFrame the parent frame
-    */
-  nsFormControlFrame(nsStyleContext*, nsIFrame::ClassID);
+  NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)
 
+  explicit nsCheckboxRadioFrame(nsStyleContext* aContext);
+
+  // nsIFrame replacements
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsAtomicContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  NS_DECL_QUERYFRAME
-  NS_DECL_ABSTRACT_FRAME(nsFormControlFrame)
-
-  // nsIFrame replacements
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override {
-    DO_GLOBAL_REFLOW_COUNT_DSP("nsFormControlFrame");
+    DO_GLOBAL_REFLOW_COUNT_DSP("nsCheckboxRadioFrame");
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
@@ -103,7 +98,7 @@ public:
 
 protected:
 
-  virtual ~nsFormControlFrame();
+  virtual ~nsCheckboxRadioFrame();
 
   static nscoord DefaultSize()
   {

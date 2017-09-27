@@ -164,6 +164,11 @@ var tests = [
     copyVal: "<example.com/?\xf7>\xf7",
     copyExpected: "http://example.com/?\xf7"
   },
+  {
+    loadURL: "http://example.com/%20%20%20",
+    expectedURL: "example.com/   ",
+    copyExpected: "http://example.com/%20%20%20"
+  },
 
   // data: and javsacript: URIs shouldn't be encoded
   {

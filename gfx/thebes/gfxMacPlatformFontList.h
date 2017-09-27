@@ -40,6 +40,9 @@ public:
                    bool aIsDataUserFont, bool aIsLocal);
 
     virtual ~MacOSFontEntry() {
+        if (mTrakTable) {
+            hb_blob_destroy(mTrakTable);
+        }
         ::CGFontRelease(mFontRef);
     }
 
@@ -61,11 +64,25 @@ public:
     bool HasVariations();
     bool IsCFF();
 
+    // Return true if the font has a 'trak' table (and we can successfully
+    // interpret it), otherwise false. This will load and cache the table
+    // the first time it is called.
+    bool HasTrackingTable();
+
+    // Return the tracking (in font units) to be applied for the given size.
+    // (This is a floating-point number because of possible interpolation.)
+    float TrackingForCSSPx(float aPointSize) const;
+
 protected:
     gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle,
                                 bool aNeedsBold) override;
 
     bool HasFontTable(uint32_t aTableTag) override;
+
+    // Helper for HasTrackingTable; check/parse the table and cache pointers
+    // to the subtables we need. Returns false on failure, in which case the
+    // table is unusable.
+    bool ParseTrakTable();
 
     static void DestroyBlobFunc(void* aUserData);
 
@@ -79,9 +96,18 @@ protected:
     bool mIsCFFInitialized;
     bool mHasVariations;
     bool mHasVariationsInitialized;
+    bool mCheckedForTracking;
     nsTHashtable<nsUint32HashKey> mAvailableTables;
 
     mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
+
+    // For AAT font being shaped by Core Text, a strong reference to the 'trak'
+    // table (if present).
+    hb_blob_t* mTrakTable;
+    // Cached pointers to tables within 'trak', initialized by ParseTrakTable.
+    const mozilla::AutoSwap_PRInt16* mTrakValues;
+    const mozilla::AutoSwap_PRInt32* mTrakSizeTable;
+    uint16_t mNumTrakSizes;
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {
