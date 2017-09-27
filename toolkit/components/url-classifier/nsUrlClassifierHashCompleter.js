@@ -185,6 +185,8 @@ function HashCompleter() {
 
   Services.obs.addObserver(this, "quit-application");
   Services.prefs.addObserver(PREF_DEBUG_ENABLED, this);
+
+  loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
 }
 
 HashCompleter.prototype = {
