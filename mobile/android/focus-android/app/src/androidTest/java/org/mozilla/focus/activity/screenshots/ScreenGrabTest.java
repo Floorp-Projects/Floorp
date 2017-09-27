@@ -409,6 +409,9 @@ public class ScreenGrabTest {
         UiObject multiTabBtn = device.findObject(new UiSelector()
                 .resourceId("org.mozilla.focus.debug:id/tabs")
                 .enabled(true));
+        UiObject eraseHistoryBtn = device.findObject(new UiSelector()
+                .text(context.getString(R.string.tabs_tray_action_erase))
+                .enabled(true));
 
         assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         TestHelper.inlineAutocompleteEditText.clearTextField();
@@ -434,6 +437,7 @@ public class ScreenGrabTest {
         openNewTabTitle.click();
         assertTrue(multiTabBtn.waitForExists(waitingTime));
         multiTabBtn.click();
+        assertTrue(eraseHistoryBtn.waitForExists(waitingTime));
         Screengrab.screenshot("Multi_Tab_Menu");
         TestHelper.pressBackKey();
         device.openNotification();
