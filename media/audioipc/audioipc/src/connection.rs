@@ -1,26 +1,19 @@
-use bincode::{self, deserialize, serialize};
+use {AutoCloseFd, RecvFd, SendFd};
+use async::{Async, AsyncRecvFd};
+use bytes::{BufMut, BytesMut};
+use codec::{Decoder, encode};
 use errors::*;
-use msg;
 use mio::{Poll, PollOpt, Ready, Token};
 use mio::event::Evented;
 use mio::unix::EventedFd;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
+use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::io::{self, Read};
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::os::unix::net;
 use std::os::unix::prelude::*;
-use libc;
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-
-pub trait RecvFd {
-    fn recv_fd(&mut self, bytes: &mut [u8]) -> io::Result<(usize, Option<RawFd>)>;
-}
-
-pub trait SendFd {
-    fn send_fd<FD: IntoRawFd>(&mut self, bytes: &[u8], fd: Option<FD>) -> io::Result<(usize)>;
-}
 
 // Because of the trait implementation rules in Rust, this needs to be
 // a wrapper class to allow implementation of a trait from another
@@ -30,14 +23,23 @@ pub trait SendFd {
 
 #[derive(Debug)]
 pub struct Connection {
-    stream: net::UnixStream
+    stream: net::UnixStream,
+    recv_buffer: BytesMut,
+    recv_fd: VecDeque<AutoCloseFd>,
+    send_buffer: BytesMut,
+    decoder: Decoder
 }
 
 impl Connection {
     pub fn new(stream: net::UnixStream) -> Connection {
         info!("Create new connection");
+        stream.set_nonblocking(false).unwrap();
         Connection {
-            stream: stream
+            stream: stream,
+            recv_buffer: BytesMut::with_capacity(1024),
+            recv_fd: VecDeque::new(),
+            send_buffer: BytesMut::with_capacity(1024),
+            decoder: Decoder::new()
         }
     }
 
@@ -60,49 +62,72 @@ impl Connection {
     /// ```
     pub fn pair() -> io::Result<(Connection, Connection)> {
         let (s1, s2) = net::UnixStream::pair()?;
-        Ok((
-            Connection {
-                stream: s1
-            },
-            Connection {
-                stream: s2
-            }
-        ))
+        Ok((Connection::new(s1), Connection::new(s2)))
+    }
+
+    pub fn take_fd(&mut self) -> Option<RawFd> {
+        self.recv_fd.pop_front().map(|fd| fd.into_raw_fd())
     }
 
     pub fn receive<RT>(&mut self) -> Result<RT>
     where
         RT: DeserializeOwned + Debug,
     {
-        match self.receive_with_fd() {
-            Ok((r, None)) => Ok(r),
-            Ok((_, Some(_))) => panic!("unexpected fd received"),
-            Err(e) => Err(e),
-        }
+        self.receive_with_fd()
     }
 
-    pub fn receive_with_fd<RT>(&mut self) -> Result<(RT, Option<RawFd>)>
+    pub fn receive_with_fd<RT>(&mut self) -> Result<RT>
     where
         RT: DeserializeOwned + Debug,
     {
-        // TODO: Check deserialize_from and serialize_into.
-        let mut encoded = vec![0; 32 * 1024]; // TODO: Get max size from bincode, or at least assert.
-        // TODO: Read until block, EOF, or error.
-        // TODO: Switch back to recv_fd.
-        match self.stream.recv_fd(&mut encoded) {
-            Ok((0, _)) => Err(ErrorKind::Disconnected.into()),
-            // TODO: Handle partial read?
-            Ok((n, fd)) => {
-                let r = deserialize(&encoded[..n]);
-                debug!("receive {:?}", r);
+        trace!("received_with_fd...");
+        loop {
+            trace!("   recv_buffer = {:?}", self.recv_buffer);
+            if !self.recv_buffer.is_empty() {
+                let r = self.decoder.decode(&mut self.recv_buffer);
+                trace!("receive {:?}", r);
                 match r {
-                    Ok(r) => Ok((r, fd)),
-                    Err(e) => Err(e).chain_err(|| "Failed to deserialize message"),
+                    Ok(Some(r)) => return Ok(r),
+                    Ok(None) => {
+                        /* Buffer doesn't contain enough data for a complete
+                         * message, so need to enter recv_buf_fd to get more. */
+                    },
+                    Err(e) => return Err(e).chain_err(|| "Failed to deserialize message"),
                 }
-            },
-            // TODO: Handle dropped message.
-            // Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => panic!("wouldblock"),
-            _ => bail!("socket write"),
+            }
+
+            // Otherwise, try to read more data and try again. Make sure we've
+            // got room for at least one byte to read to ensure that we don't
+            // get a spurious 0 that looks like EOF
+
+            // The decoder.decode should have reserved an amount for
+            // the next bit it needs to read.  Check that we reserved
+            // enough space for, at least the 2 byte size prefix.
+            assert!(self.recv_buffer.remaining_mut() > 2);
+
+            // TODO: Read until block, EOF, or error.
+            // TODO: Switch back to recv_fd.
+            match self.stream.recv_buf_fd(&mut self.recv_buffer) {
+                Ok(Async::Ready((0, _))) => return Err(ErrorKind::Disconnected.into()),
+                // TODO: Handle partial read?
+                Ok(Async::Ready((_, fd))) => {
+                    trace!(
+                        "   recv_buf_fd: recv_buffer: {:?}, recv_fd: {:?}, fd: {:?}",
+                        self.recv_buffer,
+                        self.recv_fd,
+                        fd
+                    );
+                    if let Some(fd) = fd {
+                        self.recv_fd.push_back(
+                            unsafe { AutoCloseFd::from_raw_fd(fd) }
+                        );
+                    }
+                },
+                Ok(Async::NotReady) => bail!("Socket should be blocking."),
+                // TODO: Handle dropped message.
+                // Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => panic!("wouldblock"),
+                _ => bail!("socket write"),
+            }
         }
     }
 
@@ -118,9 +143,11 @@ impl Connection {
         ST: Serialize + Debug,
         FD: IntoRawFd + Debug,
     {
-        let encoded: Vec<u8> = serialize(&msg, bincode::Infinite)?;
-        info!("send_with_fd {:?}, {:?}", msg, fd_to_send);
-        self.stream.send_fd(&encoded, fd_to_send).chain_err(
+        trace!("send_with_fd {:?}, {:?}", msg, fd_to_send);
+        try!(encode(&mut self.send_buffer, &msg));
+        let fd_to_send = fd_to_send.map(|fd| fd.into_raw_fd());
+        let send = self.send_buffer.take().freeze();
+        self.stream.send_fd(send.as_ref(), fd_to_send).chain_err(
             || "Failed to send message with fd"
         )
     }
@@ -153,14 +180,6 @@ impl<'a> Read for &'a Connection {
     }
 }
 
-impl RecvFd for net::UnixStream {
-    fn recv_fd(&mut self, buf_to_recv: &mut [u8]) -> io::Result<(usize, Option<RawFd>)> {
-        let length = self.read_u32::<LittleEndian>()?;
-
-        msg::recvmsg(self.as_raw_fd(), &mut buf_to_recv[..length as usize])
-    }
-}
-
 impl RecvFd for Connection {
     fn recv_fd(&mut self, buf_to_recv: &mut [u8]) -> io::Result<(usize, Option<RawFd>)> {
         self.stream.recv_fd(buf_to_recv)
@@ -169,9 +188,7 @@ impl RecvFd for Connection {
 
 impl FromRawFd for Connection {
     unsafe fn from_raw_fd(fd: RawFd) -> Connection {
-        Connection {
-            stream: net::UnixStream::from_raw_fd(fd)
-        }
+        Connection::new(net::UnixStream::from_raw_fd(fd))
     }
 }
 
@@ -181,19 +198,8 @@ impl IntoRawFd for Connection {
     }
 }
 
-impl SendFd for net::UnixStream {
-    fn send_fd<FD: IntoRawFd>(&mut self, buf_to_send: &[u8], fd_to_send: Option<FD>) -> io::Result<usize> {
-        self.write_u32::<LittleEndian>(buf_to_send.len() as u32)?;
-
-        let fd_to_send = fd_to_send.map(|fd| fd.into_raw_fd());
-        let r = msg::sendmsg(self.as_raw_fd(), buf_to_send, fd_to_send);
-        fd_to_send.map(|fd| unsafe { libc::close(fd) });
-        r
-    }
-}
-
 impl SendFd for Connection {
-    fn send_fd<FD: IntoRawFd>(&mut self, buf_to_send: &[u8], fd_to_send: Option<FD>) -> io::Result<usize> {
+    fn send_fd(&mut self, buf_to_send: &[u8], fd_to_send: Option<RawFd>) -> io::Result<usize> {
         self.stream.send_fd(buf_to_send, fd_to_send)
     }
 }

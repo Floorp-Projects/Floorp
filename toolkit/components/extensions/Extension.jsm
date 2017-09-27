@@ -487,13 +487,9 @@ this.ExtensionData = class {
   // Compute the difference between two sets of permissions, suitable
   // for presenting to the user.
   static comparePermissions(oldPermissions, newPermissions) {
-    // See bug 1331769: should we do something more complicated to
-    // compare host permissions?
-    // e.g., if we go from <all_urls> to a specific host or from
-    // a *.domain.com to specific-host.domain.com that's actually a
-    // drop in permissions but the simple test below will cause a prompt.
+    let oldMatcher = new MatchPatternSet(oldPermissions.origins);
     return {
-      origins: newPermissions.origins.filter(perm => !oldPermissions.origins.includes(perm)),
+      origins: newPermissions.origins.filter(perm => !oldMatcher.subsumes(new MatchPattern(perm))),
       permissions: newPermissions.permissions.filter(perm => !oldPermissions.permissions.includes(perm)),
     };
   }

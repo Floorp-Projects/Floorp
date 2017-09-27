@@ -327,7 +327,6 @@ static const char contentSandboxRules[] = R"(
       (iokit-user-client-class "IOSurfaceRootUserClient")
       (iokit-user-client-class "IOSurfaceSendRight")
       (iokit-user-client-class "IOFramebufferSharedUserClient")
-      (iokit-user-client-class "AppleSNBFBUserClient")
       (iokit-user-client-class "AGPMClient")
       (iokit-user-client-class "AppleGraphicsControlClient")
       (iokit-user-client-class "AppleGraphicsPolicyClient"))

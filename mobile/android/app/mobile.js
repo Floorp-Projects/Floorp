@@ -652,7 +652,15 @@ pref("media.suspend-bkgnd-video.enabled", true);
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 
+// The download protection UI is not implemented yet (bug 1239094).
 pref("browser.safebrowsing.downloads.enabled", false);
+
+// The application reputation lists are not available on Android.
+pref("urlclassifier.downloadAllowTable", "");
+pref("urlclassifier.downloadBlockTable", "");
+
+// The Potentially Harmful Apps list replaces the malware one on Android.
+pref("urlclassifier.malwareTable", "goog-harmful-proto,goog-unwanted-proto,test-harmful-simple,test-malware-simple,test-unwanted-simple");
 
 // True if this is the first time we are showing about:firstrun
 pref("browser.firstrun.show.uidiscovery", true);
