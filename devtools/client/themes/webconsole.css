@@ -407,21 +407,6 @@ html #webconsole-notificationbox {
   border-top: 1px solid var(--theme-splitter-color);
 }
 
-.jsterm-input-node {
-  /* Always allow scrolling on input - it auto expands in js by setting height,
-     but don't want it to get bigger than the window. 24px = toolbar height. */
-  max-height: calc(90vh - 24px);
-  background-image: var(--theme-command-line-image);
-  background-repeat: no-repeat;
-  background-size: 16px 16px;
-  background-position: 4px 50%;
-  color: var(--theme-content-color1);
-}
-
-.jsterm-complete-node {
-  color: var(--theme-comment);
-}
-
 .theme-light .jsterm-input-container {
   /* For light theme use a white background for the input - it looks better
      than off-white */
@@ -433,46 +418,8 @@ html #webconsole-notificationbox {
   border-top: 1px solid #ccc;
 }
 
-/*  styles for the new HTML frontend */
-
-html .jsterm-stack-node {
-  position: relative;
-}
-
-textarea.jsterm-input-node,
-textarea.jsterm-complete-node {
-  width: 100%;
-  border: none;
-  margin: 0;
-  background-color: transparent;
-  resize: none;
-  font-size: var(--theme-toolbar-font-size);
-  line-height: 16px;
-  overflow-x: hidden;
-  /* Set padding for console input on textarea to make sure it is included in
-     scrollHeight that is used when resizing JSTerminal's input. */
-  padding: 4px 0;
-  padding-inline-start: 20px;
-}
-
-textarea.jsterm-complete-node {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  pointer-events: none;
-}
-
-textarea.jsterm-input-node:focus {
-  background-image: var(--theme-command-line-image-focus);
-  box-shadow: none;
-}
-
-
-/*  styles for the old frontend, which can be removed in Bug 1381834 */
-
-textbox.jsterm-input-node,
-textbox.jsterm-complete-node {
+.jsterm-input-node,
+.jsterm-complete-node {
   border: none;
   padding: 0;
   padding-inline-start: 20px;
@@ -481,18 +428,33 @@ textbox.jsterm-complete-node {
   background-color: transparent;
 }
 
-:-moz-any(textbox.jsterm-input-node,
-          textbox.jsterm-complete-node) > .textbox-input-box > .textbox-textarea {
+.jsterm-input-node[focused="true"] {
+  background-image: var(--theme-command-line-image-focus);
+  box-shadow: none;
+}
+
+.jsterm-complete-node {
+  color: var(--theme-comment);
+}
+
+.jsterm-input-node {
+  /* Always allow scrolling on input - it auto expands in js by setting height,
+     but don't want it to get bigger than the window. 24px = toolbar height. */
+  max-height: calc(90vh - 24px);
+  background-image: var(--theme-command-line-image);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: 4px 50%;
+  color: var(--theme-content-color1);
+}
+
+:-moz-any(.jsterm-input-node,
+          .jsterm-complete-node) > .textbox-input-box > .textbox-textarea {
   overflow-x: hidden;
-  /* Set padding for console input on textbox to make sure it is included in
+  /* Set padding for console input on textbox to make sure it is inlcuded in
      scrollHeight that is used when resizing JSTerminal's input. Note: textbox
      default style has important already */
   padding: 4px 0 !important;
-}
-
-textbox.jsterm-input-node[focused="true"] {
-  background-image: var(--theme-command-line-image-focus);
-  box-shadow: none;
 }
 
 .inlined-variables-view .message-body {
