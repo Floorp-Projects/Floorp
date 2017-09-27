@@ -124,4 +124,6 @@
   <string name="tabs_tray_action_erase">Hapus riwayat penjelajahan</string>
   <string name="download_firefox">Unduh Firefox</string>
   <string name="your_rights_content1">%1$s adalah perangkat lunak bebas dan sumber terbuka yang dibuat oleh Mozilla dan kontributor lainnya.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s tersedia untuk Anda di bawah persyaratan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lisensi Publik Mozilla</a>" dan lisensi sumber terbuka lainnya."]]></string>
+  <string name="your_rights_content4"><![CDATA["Kode sumber tambahan untuk %1$s tersedia dengan berbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensi</a>" bebas dan sumber terbuka lainnya."]]></string>
 </resources>

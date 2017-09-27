@@ -60,6 +60,7 @@
   <string name="errorpage_refresh">Prøv igen</string>
   <string name="error_connectionfailure_title">Ude af stand til at oprette forbindelse</string>
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Siden kan v&#230;re midlertidigt utilg&#230;ngelig eller travlt optaget. Pr&#248;v igen om et &#248;jeblik.</li>"\n        "<li>Hvis du ikke kan indl&#230;se nogen websider overhovedet, kontroll&#233;r da din enheds data- eller wi-fi-forbindelse.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Forbindelsens tidsfrist udløb</string>
   <string name="error_hostLookup_title">Serveren blev ikke fundet</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontroll&#233;r, om adressen indeholder tastefejl, fx\n          "<strong>ww</strong>".eksempel.dk i stedet for\n          "<strong>www</strong>.eksempel.dk</li>"\n        "<li>Hvis du ikke kan indl&#230;se nogen websider overhovedet, kontroll&#233;r da din enheds data- eller wi-fi-forbindelse.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Adressen er ikke gyldig</string>

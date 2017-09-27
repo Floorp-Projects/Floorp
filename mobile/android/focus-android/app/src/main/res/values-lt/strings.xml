@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Atsisakyti</string>
+  <string name="action_ok">Gerai</string>
+  <string name="urlbar_hint">Įveskite adresą arba paieškos žodžius</string>
+</resources>

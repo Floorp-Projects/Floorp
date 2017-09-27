@@ -120,4 +120,8 @@
   <string name="notification_browsing_session_channel_name">Sesión de navegación privada</string>
   <string name="notification_browsing_session_channel_description">Las notificaciones permiten borrar la sesión de %1$s con un toque. No necesitas abrir la aplicación o ver lo que está funcionando en el navegador.</string>
   <string name="tabs_tray_action_erase">Borrar historial de navegación</string>
+  <string name="download_firefox">Descarga Firefox</string>
+  <string name="your_rights_content1">%1$s es software libre de código abierto hecho por Mozilla y por otros contribuidores.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s está disponible bajo los términos de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencia p&#250;blica de Mozilla</a>" y otras licencias de código abierto."]]></string>
+  <string name="your_rights_content3"><![CDATA["No se le otorgan derechos o licencias a las marcas comerciales de la Fundación Mozilla o cualquier parte, incluyendo los nombres y logotipos de Mozilla, Firefox o %1$s. Se puede encontrar información adicional "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
 </resources>

@@ -42,10 +42,15 @@
   <string name="preference_performance_block_images">نقوش بلاک کریں</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">مزید سیکھیں</string>
+  <string name="preference_privacy_notice">رازداری کا نوٹس</string>
   <string name="preference_about">کے بارے میں%1$s</string>
   <string name="content_description_clear_input">ان پٹ صاف کریں</string>
   <string name="content_description_dismiss_input">برخاست کریں</string>
   <string name="content_description_erase">برائوزنگ سابقات مٹائیں</string>
+  <string name="content_description_fab_expand">وسیع کریں</string>
+  <string name="content_description_tab_counter">%1$s ٹیبس کھلے ہیں</string>
+  <string name="content_description_open_tab">ٹیب کھولیں</string>
+  <string name="content_description_close_tab">ٹیب بند کریں</string>
   <string name="content_description_lock">قابل بھروسا کنکشن</string>
   <string name="accessibility_announcement_loading">لوڈ ہو رہا ہے</string>
   <string name="accessibility_announcement_loading_finished">ویبسائٹ لوڈ ہو گئی ہے</string>
@@ -91,6 +96,7 @@
   <string name="contextmenu_image_save">نقش محفوظ کریں</string>
   <string name="contextmenu_image_warning"><![CDATA["محفوظ اور شیئر کردہ تصاویر "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1581;&#1592;&#1601; &#1606;&#1729;&#1740;&#1722; &#1705;&#1740; &#1580;&#1575;&#1574;&#1746;&#1711;&#1740;</b>" جب آپ اپنی %1$s تاریخ مٹاتے ہے۔"]]></string>
   <string name="firstrun_defaultbrowser_title">آپ کی نجی نوعیت کو پاور اپ کرے</string>
+  <string name="firstrun_privacy_title">رازداری کو عادت بنائیں</string>
   <string name="firstrun_close_button">ٹھیک ہے، مجھے سمجھ آگئی ہے!</string>
   <string name="firstrun_skip_button">چھوڈیں</string>
   <string name="firstrun_next_button">آگے</string>
@@ -98,4 +104,8 @@
   <string name="dialog_addtohomescreen_title">ابتدائی اسکرین پر اظافہ کریں</string>
   <string name="dialog_addtohomescreen_action_add">اظافہ کریں</string>
   <string name="dialog_addtohomescreen_action_cancel">منسوخ کریں</string>
+  <string name="dialog_opentab_action_open">کھولیں</string>
+  <string name="notification_browsing_session_channel_name">نجی برائوزنگ سیشن</string>
+  <string name="tabs_tray_action_erase">برائوزنگ سابقات مٹائیں</string>
+  <string name="download_firefox">Firefox ڈائونلوڈ کریں</string>
 </resources>

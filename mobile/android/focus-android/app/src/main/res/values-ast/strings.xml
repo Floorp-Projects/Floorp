@@ -36,6 +36,7 @@
   <string name="preference_performance_block_images">Bloquiar imáxenes</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Deprendi más</string>
+  <string name="preference_privacy_notice">Avisu de privacidá</string>
   <string name="preference_about">Tocante a %1$s</string>
   <string name="content_description_clear_input">Llimpiar entrada</string>
   <string name="content_description_dismiss_input">Escartar</string>

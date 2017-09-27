@@ -40,13 +40,16 @@
   <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
   <string name="preference_performance_block_webfonts_summary">ອາດຈະສົ່ງຜົນເຮັດໃຫ້ໄອຄອນ ຫລື ຮູບພາບຂາດຫາຍໄປ</string>
   <string name="preference_performance_block_images">ບັອກຮູບພາບ</string>
+  <string name="preference_default_browser2">ຕັ້ງ %1$s ໃຫ້ເປັນບຣາວເຊີຫລັກ</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">ສົ່ງຂໍ້ມູນການນຳໃຊ້</string>
   <string name="preference_mozilla_telemetry_summary">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
   <string name="preference_about">ກ່ຽວກັບ %1$s</string>
   <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
   <string name="content_description_dismiss_input">ຍົກເລີກ</string>
   <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
   <string name="content_description_fab_expand">ຂະຫຍາຍ</string>
+  <string name="content_description_tab_counter">ແທັບທີ່ເປີດ: %1$s</string>
   <string name="content_description_open_tab">ເປີດແທັບ</string>
   <string name="content_description_close_tab">ປິດແທັບ</string>
   <string name="content_description_lock">ການເຊື່ອມຕໍ່ທີ່ປອດໄພ</string>
@@ -94,6 +97,7 @@
   <string name="contextmenu_image_share">ແບ່ງປັນຮູບພາບ</string>
   <string name="contextmenu_image_copy">ສຳເນົາທີ່ຢູ່ຂອງຮູບພາບ</string>
   <string name="contextmenu_image_save">ບັນທຶກຮູບພາບ</string>
+  <string name="contextmenu_open_in_new_tab">ເປີດລີ້ງໃນແທັບໃຫມ່</string>
   <string name="contextmenu_image_warning"><![CDATA["ບັນທຶກໄວ້ ແລະ ໄດ້ແບ່ງປັນຮູບພາບ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3720;&#3760;&#3738;&#3789;&#3784;&#3734;&#3767;&#3713;&#3749;&#3771;&#3738;</b>" ເມື່ອທ່ານລຶບປະຫວັດການນຳໃຊ້ຂອງ %1$s"]]></string>
   <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>
   <string name="firstrun_close_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
@@ -103,4 +107,7 @@
   <string name="dialog_addtohomescreen_title">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
   <string name="dialog_addtohomescreen_action_add">ເພີ່ມ</string>
   <string name="dialog_addtohomescreen_action_cancel">ຍົກເລີກ</string>
+  <string name="dialog_opentab_title">ເປີດລີ້ງໃນແທັບທີ່ໄດ້ເລືອກເອົາໄວ້</string>
+  <string name="dialog_opentab_action_open">ເປີດ</string>
+  <string name="download_firefox">ດາວໂຫລດ Firefox</string>
 </resources>
