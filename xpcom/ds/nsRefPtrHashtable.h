@@ -42,6 +42,11 @@ public:
   bool Get(KeyType aKey, UserDataType* aData) const;
 
   /**
+   * @copydoc nsBaseHashtable::Get
+   */
+  already_AddRefed<PtrType> Get(KeyType aKey) const;
+
+  /**
    * Gets a weak reference to the hashtable entry.
    * @param aFound If not nullptr, will be set to true if the entry is found,
    *               to false otherwise.
@@ -116,6 +121,19 @@ nsRefPtrHashtable<KeyClass, PtrType>::Get(KeyType aKey,
   }
 
   return false;
+}
+
+template<class KeyClass, class PtrType>
+already_AddRefed<PtrType>
+nsRefPtrHashtable<KeyClass, PtrType>::Get(KeyType aKey) const
+{
+  typename base_type::EntryType* ent = this->GetEntry(aKey);
+  if (!ent) {
+    return nullptr;
+  }
+
+  RefPtr<PtrType> copy = ent->mData;
+  return copy.forget();
 }
 
 template<class KeyClass, class PtrType>

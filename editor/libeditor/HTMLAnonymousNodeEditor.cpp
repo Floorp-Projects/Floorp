@@ -359,7 +359,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection* aSelection)
   rv = focusElement->GetTagName(focusTagName);
   NS_ENSURE_SUCCESS(rv, rv);
   ToLowerCase(focusTagName);
-  nsCOMPtr<nsIAtom> focusTagAtom = NS_Atomize(focusTagName);
+  RefPtr<nsIAtom> focusTagAtom = NS_Atomize(focusTagName);
 
   nsCOMPtr<nsIDOMElement> absPosElement;
   if (mIsAbsolutelyPositioningEnabled) {

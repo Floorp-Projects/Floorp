@@ -15,6 +15,9 @@ import sys
 import os
 import json
 import io
+import datetime
+import requests
+import mozversioncontrol
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestLocale,
@@ -26,6 +29,75 @@ from mozbuild.preprocessor import Preprocessor
 def write_file(path, content):
     with io.open(path, 'w', encoding='utf-8') as out:
         out.write(content + '\n')
+
+
+pushlog_api_url = "{0}/json-rev/{1}"
+
+
+###
+# Retrievers a UTC datetime of the push for the current commit
+# from a mercurial clone directory.
+#
+# Args:
+#    path (str) - path to a directory
+#
+# Returns:
+#    (datetime) - a datetime object
+#
+# Example:
+#    dt = get_dt_from_hg("/var/vcs/l10n-central/pl")
+#    dt == datetime(2017, 10, 11, 23, 31, 54, 0)
+###
+def get_dt_from_hg(path):
+    with mozversioncontrol.get_repository_object(path=path) as repo:
+        repo_url = repo._run_in_client(["paths", "default"])
+        repo_url = repo_url.strip().replace("ssh://", "https://")
+        repo_url = repo_url.replace("hg://", "https://")
+        cs = repo._run_in_client(["log", "-r", ".", "-T" "{node}"])
+
+    url = pushlog_api_url.format(repo_url, cs)
+    session = requests.Session()
+    try:
+        response = session.get(url)
+    except Exception as e:
+        msg = "Failed to retrieve push timestamp using {}\nError: {}".format(url, e)
+        raise Exception(msg)
+
+    data = response.json()
+
+    date = data['pushdate'][0]
+
+    return datetime.datetime.utcfromtimestamp(date)
+
+
+###
+# Generates timestamp for a locale based on its path.
+# If possible, will use the commit timestamp from HG repository,
+# and if that fails, will generate the timestamp for `now`.
+#
+# The timestamp format is "{year}{month}{day}{hour}{minute}{second}" and
+# the datetime stored in it is using UTC timezone.
+#
+# Args:
+#    path (str) - path to the locale directory
+#
+# Returns:
+#    (str) - a timestamp string
+#
+# Example:
+#    ts = get_timestamp_for_locale("/var/vcs/l10n-central/pl")
+#    ts == "20170914215617"
+###
+def get_timestamp_for_locale(path):
+    dt = None
+    if os.path.isdir(os.path.join(path, '.hg')):
+        dt = get_dt_from_hg(path)
+
+    if dt is None:
+        dt = datetime.datetime.utcnow()
+
+    dt = dt.replace(microsecond=0)
+    return dt.strftime("%Y%m%d%H%M%S")
 
 
 ###
@@ -238,6 +310,7 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #      '57.0',
 #      '57.0.*',
 #      'Firefox',
+#      '/var/vcs/l10n-central',
 #      {'MOZ_LANG_TITLE': 'Polski'},
 #      chrome_entries
 #    )
@@ -277,7 +350,7 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #    }
 ###
 def create_webmanifest(locstr, min_app_ver, max_app_ver, app_name,
-                       defines, chrome_entries):
+                       l10n_basedir, defines, chrome_entries):
     locales = map(lambda loc: loc.strip(), locstr.split(','))
     main_locale = locales[0]
 
@@ -325,7 +398,7 @@ def create_webmanifest(locstr, min_app_ver, max_app_ver, app_name,
 
     for loc in locales:
         manifest['languages'][loc] = {
-            'version': min_app_ver,
+            'version': get_timestamp_for_locale(os.path.join(l10n_basedir, loc)),
             'chrome_resources': cr
         }
 
@@ -342,6 +415,8 @@ def main(args):
                         help='Max version of the application the langpack is for')
     parser.add_argument('--app-name',
                         help='Name of the application the langpack is for')
+    parser.add_argument('--l10n-basedir',
+                        help='Base directory for locales used in the language pack')
     parser.add_argument('--defines', default=[], nargs='+',
                         help='List of defines files to load data from')
     parser.add_argument('--input',
@@ -360,6 +435,7 @@ def main(args):
         args.min_app_ver,
         args.max_app_ver,
         args.app_name,
+        args.l10n_basedir,
         defines,
         chrome_entries
     )

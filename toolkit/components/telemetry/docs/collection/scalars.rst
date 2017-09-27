@@ -39,11 +39,11 @@ additional information.
 
 .. code-block:: js
 
-  Services.telemetry.registerScalars(group, scalarData);
+  Services.telemetry.registerScalars(category, scalarData);
 
 Register new scalars from add-ons.
 
-* ``group`` - *(required, string)* The unique group the scalars are registered in (see :ref:`limitations <scalar-limitations>`).
+* ``category`` - *(required, string)* The unique category the scalars are registered in (see :ref:`limitations <scalar-limitations>`).
 * ``scalarData`` - *(required, object)* An object of the form ``{scalarName1: scalar1Data, ...}`` that contains registration data for multiple scalars; ``scalarName1`` is subject to :ref:`limitations <scalar-limitations>`; each scalar is an object with the following properties:
 
   * ``kind`` - *(required, uint)*  One of the scalar types (nsITelemetry::SCALAR_TYPE_*).
@@ -59,13 +59,13 @@ After registration, the scalars can be recorded through the usual scalar JS API.
 
     Accumulating in dynamic scalars only works in content child processes and in the parent process. All the accumulations (parent and content chldren) are aggregated together .
 
-New scalars registered here are subject to the same :ref:`limitations <scalar-limitations>` as the ones registered through ``Scalars.yaml``, e.g. the length of the group name or the allowed characters.
+New scalars registered here are subject to the same :ref:`limitations <scalar-limitations>` as the ones registered through ``Scalars.yaml``, e.g. the length of the category name or the allowed characters.
 
 Example:
 
 .. code-block:: js
 
-  Services.telemetry.registerScalars("myAddon.group", {
+  Services.telemetry.registerScalars("myAddon.category", {
     "counter_scalar": {
       kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
       keyed: false,
@@ -73,7 +73,7 @@ Example:
     },
   });
   // Now scalars can be recorded.
-  Services.telemetry.scalarSet("myAddon.group.counter_scalar", 37);
+  Services.telemetry.scalarSet("myAddon.category.counter_scalar", 37);
 
 C++ API
 -------
@@ -106,8 +106,8 @@ The probes in the definition file are represented in a fixed-depth, two-level st
 
 .. code-block:: yaml
 
-    # The following is a group.
-    a.group.hierarchy:
+    # The following is a category.
+    a.category.hierarchy:
       a_probe_name:
         kind: uint
         ...
@@ -115,24 +115,24 @@ The probes in the definition file are represented in a fixed-depth, two-level st
         kind: string
         ...
       ...
-    group2:
+    category2:
       probe:
         kind: int
         ...
 
 .. _scalar-limitations:
 
-Group and probe names need to follow a few rules:
+Category and probe names need to follow a few rules:
 
 - they cannot exceed 40 characters each;
-- group names must be alpha-numeric + ``.``, with no leading/trailing digit or ``.``;
+- category names must be alpha-numeric + ``.``, with no leading/trailing digit or ``.``;
 - probe names must be alpha-numeric + ``_``, with no leading/trailing digit or ``_``.
 
 A probe can be defined as follows:
 
 .. code-block:: yaml
 
-    a.group.hierarchy:
+    a.category.hierarchy:
       a_scalar:
         bug_numbers:
           - 1276190

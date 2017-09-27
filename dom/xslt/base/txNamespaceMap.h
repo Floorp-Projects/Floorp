@@ -36,7 +36,7 @@ public:
 
 private:
     nsAutoRefCnt mRefCnt;
-    nsCOMArray<nsIAtom> mPrefixes;
+    nsTArray<RefPtr<nsIAtom>> mPrefixes;
     nsTArray<int32_t> mNamespaces;
 };
 

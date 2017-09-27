@@ -3131,12 +3131,16 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
 
   if (HasAudio()) {
     MutexAutoLock lock(mAudio.mMutex);
-    audioDecoderName = mAudio.mDescription;
+    audioDecoderName = mAudio.mDecoder
+                       ? mAudio.mDecoder->GetDescriptionName()
+                       : mAudio.mDescription;
     audioType = mInfo.mAudio.mMimeType;
   }
   if (HasVideo()) {
     MutexAutoLock mon(mVideo.mMutex);
-    videoDecoderName = mVideo.mDescription;
+    videoDecoderName = mVideo.mDecoder
+                       ? mVideo.mDecoder->GetDescriptionName()
+                       : mVideo.mDescription;
     videoType = mInfo.mVideo.mMimeType;
   }
 

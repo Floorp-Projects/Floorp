@@ -188,7 +188,7 @@ const MAYBE_CACHED_EVENTS = new Set([
 
 const OPTIONAL_PROPERTIES = [
   "requestHeaders", "responseHeaders", "statusCode", "statusLine", "error", "redirectUrl",
-  "requestBody", "scheme", "realm", "isProxy", "challenger", "proxyInfo", "ip",
+  "requestBody", "scheme", "realm", "isProxy", "challenger", "proxyInfo", "ip", "frameAncestors",
 ];
 
 function serializeRequestData(eventName) {
@@ -736,6 +736,13 @@ HttpObserverManager = {
 
       serialize: serializeRequestData,
     };
+
+    try {
+      let {frameAncestors} = channel;
+      if (frameAncestors !== null) {
+        data.frameAncestors = frameAncestors;
+      }
+    } catch (e) {}
 
     // force the protocol to be ws again.
     if (data.type == "websocket" && data.url.startsWith("http")) {

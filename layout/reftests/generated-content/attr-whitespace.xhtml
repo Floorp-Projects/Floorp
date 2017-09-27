@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Whitespace in attributes</title>
+    <link rel="author" title="Manish Goregaokar" href="mailto:manishearth@gmail.com" />
+    <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+    <link rel="help" href="https://drafts.csswg.org/css-values-3/#attr-notation"/>
+<style>
+@namespace ns url(http://www.example.com/ns);
+/* Spaces within attr() are fine*/
+#a::after {
+
+  content: attr(          
+      data-text  
+
+
+          );
+}
+#b::after {
+
+  content: attr(ns|data-text);
+}
+#c::after {
+
+  content: attr(          
+      ns|data-text  
+
+
+          );
+}
+
+/* No whitespace around the | */
+#d::after {
+
+  content: attr(          
+      ns      |data-text
+
+
+          );
+}
+#e::after {
+
+  content: attr(          
+      ns|       data-text
+
+
+          );
+}
+</style>
+</head>
+<body xmlns:ns="http://www.example.com/ns">
+<div id="a" data-text="World">Hello</div>
+<div id="b" ns:data-text="World">Hello</div>
+<div id="b" ns:data-text="World">Hello</div>
+<div id="d" ns:data-text="World">Hello</div>
+<div id="e" ns:data-text="World">Hello</div>
+</body>
+</html>

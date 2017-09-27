@@ -59,9 +59,11 @@ job-defaults:
         by-worker-type:
             .*-b-win2012:
                 - win64-clang-cl
+                - win64-rust
             default:
                 - linux64-clang
                 - linux64-gcc
+                - linux64-rust
 
 jobs:
     sm-package/opt:

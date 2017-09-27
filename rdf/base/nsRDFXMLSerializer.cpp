@@ -121,7 +121,7 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
     mDataSource->GetURI(getter_Copies(mBaseURLSpec));
 
     // Add the ``RDF'' prefix, by default.
-    nsCOMPtr<nsIAtom> prefix;
+    RefPtr<nsIAtom> prefix;
 
     prefix = NS_Atomize("RDF");
     AddNameSpace(prefix, NS_LITERAL_STRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
@@ -137,7 +137,7 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
 NS_IMETHODIMP
 nsRDFXMLSerializer::AddNameSpace(nsIAtom* aPrefix, const nsAString& aURI)
 {
-    nsCOMPtr<nsIAtom> prefix = aPrefix;
+    RefPtr<nsIAtom> prefix = aPrefix;
     if (!prefix) {
         // Make up a prefix, we don't want default namespaces, so
         // that we can use QNames for elements and attributes alike.
@@ -182,7 +182,7 @@ already_AddRefed<nsIAtom>
 nsRDFXMLSerializer::EnsureNewPrefix()
 {
     nsAutoString qname;
-    nsCOMPtr<nsIAtom> prefix;
+    RefPtr<nsIAtom> prefix;
     bool isNewPrefix;
     do {
         isNewPrefix = true;
@@ -233,7 +233,7 @@ nsRDFXMLSerializer::RegisterQName(nsIRDFResource* aResource)
 
     // Take whatever is to the right of the '#' or '/' and call it the
     // local name, make up a prefix.
-    nsCOMPtr<nsIAtom> prefix = EnsureNewPrefix();
+    RefPtr<nsIAtom> prefix = EnsureNewPrefix();
     mNameSpaces.Put(StringHead(uri, i+1), prefix);
     prefix->ToUTF8String(qname);
     qname.Append(':');

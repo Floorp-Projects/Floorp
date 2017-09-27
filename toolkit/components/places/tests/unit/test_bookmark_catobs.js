@@ -16,6 +16,11 @@ add_task(async function test_observers() {
     dummyReceivedOnItemAdded = true;
   }, "dummy-observer-item-added");
 
+  // This causes various Async API helpers to be initialised before the main
+  // part of the test runs - the helpers add their own listeners, which we don't
+  // want to count within the test (e.g. gKeywordsCachePromise & GuidHelper).
+  await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid);
+
   let initialObservers = PlacesUtils.bookmarks.getObservers();
 
   // Add a common observer, it should be invoked after the category observer.
@@ -44,10 +49,11 @@ add_task(async function test_observers() {
   });
 
   // Add a bookmark
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       uri("http://typed.mozilla.org"),
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "bookmark");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "bookmark",
+    url: "http://typed.mozilla.org",
+  });
 
   await notificationsPromised;
 });

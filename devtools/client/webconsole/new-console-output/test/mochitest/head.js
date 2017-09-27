@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../framework/test/shared-head.js */
 /* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitFor, findMessage,
-   openContextMenu, hideContextMenu, loadDocument,
+   openContextMenu, hideContextMenu, loadDocument, hasFocus,
    waitForNodeMutation, testOpenInDebugger, checkClickOnNode */
 
 "use strict";
@@ -253,4 +253,11 @@ function* checkClickOnNode(hud, toolbox, frameLinkNode) {
     url,
     "expected source url"
   );
+}
+
+/**
+ * Returns true if the give node is currently focused.
+ */
+function hasFocus(node) {
+  return node.ownerDocument.activeElement == node;
 }

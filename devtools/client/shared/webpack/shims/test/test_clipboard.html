@@ -39,7 +39,7 @@ async function pre_do_tests() {
   await (() => new Promise((resolve) => {
     var script = document.createElement("script");
     script.onload = resolve;
-    script.src = "resource://devtools/shared/platform/content/clipboard.js";
+    script.src = "resource://devtools/client/shared/webpack/shims/platform-clipboard-stub.js";
     document.head.appendChild(script);
   }))();
 

@@ -40,12 +40,12 @@ interface nsIParentChannel : nsIStreamListener
    *        Name of the list that matched
    * @param aProvider
    *        Name of provider that matched
-   * @param aPrefix
-   *        String represents hash prefix that matched
+   * @param aFullHash
+   *        String represents full hash that matched
    */
   [noscript] void setClassifierMatchedInfo(in ACString aList,
                                            in ACString aProvider,
-                                           in ACString aPrefix);
+                                           in ACString aFullHash);
 
   /**
    * Called to notify the HttpChannelChild that the resource being loaded

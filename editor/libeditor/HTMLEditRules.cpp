@@ -996,7 +996,7 @@ HTMLEditRules::GetIndentState(bool* aCanIndent,
       mHTMLEditor->mCSSEditUtils->GetSpecifiedProperty(*curNode,
                                                        marginProperty, value);
       float f;
-      nsCOMPtr<nsIAtom> unit;
+      RefPtr<nsIAtom> unit;
       // get its number part and its unit
       NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mCSSEditUtils->ParseLength(value, &f, getter_AddRefs(unit));
@@ -1186,7 +1186,7 @@ HTMLEditRules::GetFormatString(nsIDOMNode* aNode,
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
   if (HTMLEditUtils::IsFormatNode(aNode)) {
-    nsCOMPtr<nsIAtom> atom = EditorBase::GetTag(aNode);
+    RefPtr<nsIAtom> atom = EditorBase::GetTag(aNode);
     atom->ToString(outFormat);
   } else {
     outFormat.Truncate();
@@ -3183,7 +3183,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
   *aHandled = false;
 
   // deduce what tag to use for list items
-  nsCOMPtr<nsIAtom> itemType;
+  RefPtr<nsIAtom> itemType;
   if (aItemType) {
     itemType = NS_Atomize(*aItemType);
     NS_ENSURE_TRUE(itemType, NS_ERROR_OUT_OF_MEMORY);
@@ -4217,7 +4217,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
                                                          marginProperty,
                                                          value);
         float f;
-        nsCOMPtr<nsIAtom> unit;
+        RefPtr<nsIAtom> unit;
         NS_ENSURE_STATE(htmlEditor);
         htmlEditor->mCSSEditUtils->ParseLength(value, &f,
                                                getter_AddRefs(unit));
@@ -4295,7 +4295,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
           htmlEditor->mCSSEditUtils->GetSpecifiedProperty(*n, marginProperty,
                                                            value);
           float f;
-          nsCOMPtr<nsIAtom> unit;
+          RefPtr<nsIAtom> unit;
           htmlEditor->mCSSEditUtils->ParseLength(value, &f, getter_AddRefs(unit));
           if (f > 0 && !(HTMLEditUtils::IsList(curParent) &&
                          HTMLEditUtils::IsList(curNode))) {
@@ -6701,7 +6701,7 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       rv = htmlEditor->IsEmptyNode(&aListItem, &isEmptyNode, true);
       NS_ENSURE_SUCCESS(rv, rv);
       if (isEmptyNode) {
-        nsCOMPtr<nsIAtom> nodeAtom = aListItem.NodeInfo()->NameAtom();
+        RefPtr<nsIAtom> nodeAtom = aListItem.NodeInfo()->NameAtom();
         if (nodeAtom == nsGkAtoms::dd || nodeAtom == nsGkAtoms::dt) {
           nsCOMPtr<nsINode> list = aListItem.GetParentNode();
           int32_t itemOffset = list ? list->IndexOf(&aListItem) : -1;
@@ -8621,7 +8621,7 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
   htmlEditor->mCSSEditUtils->GetSpecifiedProperty(aElement, marginProperty,
                                                   value);
   float f;
-  nsCOMPtr<nsIAtom> unit;
+  RefPtr<nsIAtom> unit;
   htmlEditor->mCSSEditUtils->ParseLength(value, &f, getter_AddRefs(unit));
   if (!f) {
     nsAutoString defaultLengthUnit;

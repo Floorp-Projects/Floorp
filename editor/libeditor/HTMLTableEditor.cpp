@@ -1961,7 +1961,7 @@ HTMLEditor::SwitchTableCellHeaderType(nsIDOMElement* aSourceCell,
   AutoSelectionRestorer selectionRestorer(selection, this);
 
   // Set to the opposite of current type
-  nsCOMPtr<nsIAtom> atom = EditorBase::GetTag(aSourceCell);
+  RefPtr<nsIAtom> atom = EditorBase::GetTag(aSourceCell);
   nsIAtom* newCellType = atom == nsGkAtoms::td ? nsGkAtoms::th : nsGkAtoms::td;
 
   // This creates new node, moves children, copies attributes (true)

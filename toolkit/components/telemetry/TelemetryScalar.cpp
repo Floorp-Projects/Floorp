@@ -91,10 +91,10 @@ namespace {
 const uint32_t kMaximumNumberOfKeys = 100;
 const uint32_t kMaximumKeyStringLength = 70;
 const uint32_t kMaximumStringValueLength = 50;
-// The group and scalar name maximum lengths are used by the dynamic
+// The category and scalar name maximum lengths are used by the dynamic
 // scalar registration function and must match the constants used by
 // the 'parse_scalars.py' script for static scalars.
-const uint32_t kMaximumGroupNameLength = 40;
+const uint32_t kMaximumCategoryNameLength = 40;
 const uint32_t kMaximumScalarNameLength = 40;
 const uint32_t kScalarCount =
   static_cast<uint32_t>(mozilla::Telemetry::ScalarID::ScalarCount);
@@ -2051,7 +2051,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
 /**
  * Serializes the scalars from the given dataset to a json-style object and resets them.
  * The returned structure looks like:
- *    {"process": {"group1.probe":1,"group1.other_probe":false,...}, ... }.
+ *    {"process": {"category1.probe":1,"category1.other_probe":false,...}, ... }.
  *
  * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
  * @param aClear Whether to clear out the scalars after snapshotting.
@@ -2158,7 +2158,7 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
 /**
  * Serializes the scalars from the given dataset to a json-style object and resets them.
  * The returned structure looks like:
- *   { "process": { "group1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
+ *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
  *
  * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
  * @param aClear Whether to clear out the keyed scalars after snapshotting.
@@ -2280,16 +2280,16 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
 }
 
 nsresult
-TelemetryScalar::RegisterScalars(const nsACString& aGroupName,
+TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
                                  JS::Handle<JS::Value> aScalarData,
                                  JSContext* cx)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Dynamic scalars should only be created in the parent process.");
 
-  if (!IsValidIdentifierString(aGroupName, kMaximumGroupNameLength, true, false)) {
-    JS_ReportErrorASCII(cx, "Invalid group name %s.",
-                        PromiseFlatCString(aGroupName).get());
+  if (!IsValidIdentifierString(aCategoryName, kMaximumCategoryNameLength, true, false)) {
+    JS_ReportErrorASCII(cx, "Invalid category name %s.",
+                        PromiseFlatCString(aCategoryName).get());
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -2322,9 +2322,9 @@ TelemetryScalar::RegisterScalars(const nsACString& aGroupName,
       return NS_ERROR_INVALID_ARG;
     }
 
-    // Join the group and the probe names.
+    // Join the category and the probe names.
     nsPrintfCString fullName("%s.%s",
-                             PromiseFlatCString(aGroupName).get(),
+                             PromiseFlatCString(aCategoryName).get(),
                              NS_ConvertUTF16toUTF8(scalarName).get());
 
     JS::RootedValue value(cx);

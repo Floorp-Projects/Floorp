@@ -1,0 +1,252 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test threathit repoty </title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script src="head.js"></script>
+<script class="testbody" type="text/javascript">
+/* import-globals-from classifierHelper.js */
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cc = Components.classes;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow);
+
+var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
+                    getService(Ci.nsIUrlListManager);
+const SJS = "mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/threathit.sjs";
+
+function hash(str) {
+  function bytesFromString(str1) {
+    let converter =
+      Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                       .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    return converter.convertToByteArray(str1);
+  }
+
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+                               .createInstance(Ci.nsICryptoHash);
+
+  let data = bytesFromString(str);
+  hasher.init(hasher.SHA256);
+  hasher.update(data, data.length);
+
+  return hasher.finish(false);
+}
+
+var testDatas = [
+  { url: "itisaphishingsite1.org/phishing.html",
+    list: "test-phish-proto",
+    provider: "test",
+    // The base64 of binary protobuf representation of response:
+    //
+    // [
+    //   {
+    //     'threat_type': 2, // SOCIAL_ENGINEERING_PUBLIC
+    //     'response_type': 2, // FULL_UPDATE
+    //     'new_client_state': 'sta\x0te', // NEW_CLIENT_STATE
+    //     'additions': { 'compression_type': RAW,
+    //                    'prefix_size': 1,
+    //                    'raw_hashes': "xxxx"}  // hash prefix of url itisaphishingsite.org/phishing.html
+    //     'minimumWaitDuration': "8.1s",
+    //   }
+    // ]
+    //
+    updateProtobuf: "ChoIAiACKgwIARIICAQSBM9UdYs6BnN0YQB0ZRIECAwQCg==",
+    //  The base64 of binary protobuf representation of response:
+    //  {
+    //  "matches": [
+    //    {
+    //      "threat_type": 2, // SOCIAL_ENGINEERING_PUBLIC
+    //      "threat": {
+    //         "hash": string,
+    //      },
+    //      "cacheDuration": "8.1",
+    //    }
+    //  ],
+    //  "minimumWaitDuration": 12.0..1,
+    //  "negativeCacheDuration": 12.0..1,
+    //  }
+    fullhashProtobuf: "CiwIAhoiCiDPVHWLptJSc/UYiabk1/wo5OkJqbggiylVKISK28bfeSoECAwQChIECAwQChoECAwQCg==",
+  },
+];
+
+function addDataV4ToServer(list, type, data) {
+  return new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest;
+    let params = new URLSearchParams();
+    params.append("action", "store");
+    params.append("list", list);
+    params.append("type", type);
+    params.append("data", data);
+
+    xhr.open("PUT", "http://" + SJS + "?" + params.toString(), true);
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    xhr.onreadystatechange = function() {
+      if (this.readyState == this.DONE) {
+        resolve();
+      }
+    };
+    xhr.send();
+  });
+}
+/**
+ * Grabs the results via XHR
+ */
+function checkResults(aTestdata, aExpected) {
+  let xhr = new XMLHttpRequest();
+  xhr.responseType = "text";
+  xhr.onload = function() {
+    is(aExpected, xhr.response, "Correct report request");
+    SimpleTest.finish();
+  };
+  xhr.onerror = function() {
+    ok(false, "Can't get results from server.");
+    SimpleTest.finish();
+  };
+  let params = new URLSearchParams();
+  params.append("action", "getreport");
+  params.append("list", aTestdata.list);
+  let url = "http://" + SJS + "?" + params.toString();
+
+  xhr.open("GET", url, true);
+  xhr.setRequestHeader("Content-Type", "text/plain");
+  xhr.send();
+}
+
+function waitForUpdate(data) {
+  listmanager.checkForUpdates(data.updateUrl);
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observer(aSubject, aTopic) {
+      Services.obs.removeObserver(observer, aTopic);
+      resolve();
+    }, "safebrowsing-update-finished");
+  });
+}
+
+function addUpdateDataV4ToServer(list, data) {
+  return addDataV4ToServer(list, "update", data);
+}
+
+function addFullhashV4DataToServer(list, data) {
+  return addDataV4ToServer(list, "fullhash", data);
+}
+
+function setupTestData(data) {
+  let updateParams = new URLSearchParams();
+  updateParams.append("action", "get");
+  updateParams.append("list", data.list);
+  updateParams.append("type", "update");
+  data.updateUrl = "http://" + SJS + "?" + updateParams.toString();
+
+  let gethashParams = new URLSearchParams();
+  gethashParams.append("action", "get");
+  gethashParams.append("list", data.list);
+  gethashParams.append("type", "fullhash");
+  data.gethashUrl = "http://" + SJS + "?" + gethashParams.toString();
+
+  listmanager.registerTable(data.list,
+                            data.provider,
+                            data.updateUrl,
+                            data.gethashUrl);
+
+  let promises = [];
+  let activeTablePref = "urlclassifier.phishTable";
+  let activeTable = SpecialPowers.getCharPref(activeTablePref);
+      activeTable += "," + data.list;
+
+  let reportPref = "browser.safebrowsing.provider." + data.provider + ".dataSharingURL";
+  let reportParams = new URLSearchParams();
+  reportParams.append("action", "report");
+  reportParams.append("list", data.list);
+  data.reportUrl = "http://" + SJS + "?" + reportParams.toString();
+
+  let reportEnabledPref = "browser.safebrowsing.provider." + data.provider + ".dataSharing.enabled";
+
+  promises.push(pushPrefs([reportPref, data.reportUrl]));
+  promises.push(pushPrefs([reportEnabledPref, true]));
+  promises.push(pushPrefs([activeTablePref, activeTable]));
+  promises.push(addUpdateDataV4ToServer(data.list, data.updateProtobuf));
+  promises.push(addFullhashV4DataToServer(data.list, data.fullhashProtobuf));
+  return Promise.all(promises);
+}
+
+function testOnWindow(aTestData) {
+  return new Promise(resolve => {
+    let win = mainWindow.OpenBrowserWindow();
+
+    (async function() {
+      await new Promise(rs => whenDelayedStartupFinished(win, rs));
+
+      let expected;
+      let browser = win.gBrowser.selectedBrowser;
+      let wp = win.gBrowser.contentDocument.docShell.QueryInterface(Ci.nsIWebProgress);
+      let progressListener = {
+        onSecurityChange(aWebProgress, aRequest, aState) {
+          let utils = Cc["@mozilla.org/url-classifier/utils;1"].
+            getService(Ci.nsIUrlClassifierUtils);
+          expected = aTestData.reportUrl + "&$req=" +
+            utils.makeThreatHitReport(aRequest,
+                                      aTestData.list,
+                                      btoa(hash(aTestData.url)));
+
+        },
+        QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
+      };
+      wp.addProgressListener(progressListener, wp.NOTIFY_SECURITY);
+
+      await BrowserTestUtils.loadURI(browser, aTestData.url);
+      await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
+      checkResults(aTestData, expected);
+      win.close();
+      resolve();
+    })();
+  });
+}
+SpecialPowers.pushPrefEnv(
+  {"set": [["browser.safebrowsing.phishing.enabled", true]]},
+  test);
+
+function test() {
+  (async function() {
+    await classifierHelper.waitForInit();
+
+    for (let testData of testDatas) {
+      await setupTestData(testData);
+      await waitForUpdate(testData);
+      await testOnWindow(testData);
+      await classifierHelper._cleanup();
+    }
+  })();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>

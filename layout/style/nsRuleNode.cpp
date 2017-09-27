@@ -1467,7 +1467,7 @@ static void SetStyleImage(GeckoStyleContext* aStyleContext,
     }
     case eCSSUnit_Element:
     {
-      nsCOMPtr<nsIAtom> atom = NS_Atomize(aValue.GetStringBufferValue());
+      RefPtr<nsIAtom> atom = NS_Atomize(aValue.GetStringBufferValue());
       aResult.SetElementId(atom.forget());
       break;
     }
@@ -8107,7 +8107,7 @@ nsRuleNode::ComputeListData(void* aStartStruct,
       // from the items in EnumTable listed in HTMLLIElement.cpp and
       // HTMLSharedListElement.cpp.
       int32_t intValue = typeValue->GetIntValue();
-      nsCOMPtr<nsIAtom> name;
+      RefPtr<nsIAtom> name;
       switch (intValue) {
         case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
           name = nsGkAtoms::lowerRoman;

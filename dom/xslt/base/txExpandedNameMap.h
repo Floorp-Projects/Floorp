@@ -94,7 +94,7 @@ protected:
     friend class txMapItemComparator;
     struct MapItem {
         int32_t mNamespaceID;
-        nsCOMPtr<nsIAtom> mLocalName;
+        RefPtr<nsIAtom> mLocalName;
         void* mValue;
     };
 

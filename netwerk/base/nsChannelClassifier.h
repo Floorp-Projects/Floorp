@@ -45,7 +45,7 @@ public:
     nsresult OnClassifyCompleteInternal(nsresult aErrorCode,
                                         const nsACString& aList,
                                         const nsACString& aProvider,
-                                        const nsACString& aPrefix);
+                                        const nsACString& aFullHash);
 
     // Check a tracking URI against the local blacklist and whitelist.
     // Returning NS_OK means the check will be processed
@@ -89,6 +89,8 @@ private:
     bool AddonMayLoad(nsIChannel *aChannel, nsIURI *aUri);
     void AddShutdownObserver();
     void RemoveShutdownObserver();
+    nsresult SendThreatHitReport(nsIChannel *aChannel,
+                                 const nsACString& aProvider);
 public:
     // If we are blocking content, update the corresponding flag in the respective
     // docshell and call nsISecurityEventSink::onSecurityChange.
@@ -96,7 +98,7 @@ public:
                                       nsresult aErrorCode,
                                       const nsACString& aList,
                                       const nsACString& aProvider,
-                                      const nsACString& aPrefix);
+                                      const nsACString& aFullHash);
     static nsresult NotifyTrackingProtectionDisabled(nsIChannel *aChannel);
 };
 

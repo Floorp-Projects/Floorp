@@ -325,7 +325,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
   // Forbid playing media in video documents if the user has opted
   // not to, using either the legacy WMF specific pref, or the newer
   // catch-all pref.
-  if (!Preferences::GetBool("media.windows-media-foundation.play-stand-alone", true) ||
+  if (!Preferences::GetBool("media.wmf.play-stand-alone", true) ||
       !Preferences::GetBool("media.play-stand-alone", true)) {
     return false;
   }

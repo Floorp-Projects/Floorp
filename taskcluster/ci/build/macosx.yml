@@ -26,6 +26,7 @@ macosx64/debug:
         - linux64-clang
         - linux64-hfsplus
         - linux64-libdmg
+        - linux64-rust-macos
         - linux64-sccache
 
 macosx64/opt:
@@ -55,6 +56,7 @@ macosx64/opt:
         - linux64-clang
         - linux64-hfsplus
         - linux64-libdmg
+        - linux64-rust-macos
         - linux64-sccache
 
 macosx64-dmd/opt:
@@ -86,6 +88,7 @@ macosx64-dmd/opt:
         - linux64-clang
         - linux64-hfsplus
         - linux64-libdmg
+        - linux64-rust-macos
         - linux64-sccache
 
 macosx64-devedition-nightly/opt:
@@ -122,6 +125,7 @@ macosx64-devedition-nightly/opt:
         - linux64-clang
         - linux64-hfsplus
         - linux64-libdmg
+        - linux64-rust-macos
         - linux64-sccache
 
 macosx64-noopt/debug:
@@ -156,6 +160,7 @@ macosx64-noopt/debug:
         - linux64-clang
         - linux64-hfsplus
         - linux64-libdmg
+        - linux64-rust-macos
         - linux64-sccache
 
 macosx64-add-on-devel/opt:
@@ -188,6 +193,7 @@ macosx64-add-on-devel/opt:
         - linux64-clang
         - linux64-hfsplus
         - linux64-libdmg
+        - linux64-rust-macos
         - linux64-sccache
 
 macosx64-nightly/opt:
@@ -222,4 +228,5 @@ macosx64-nightly/opt:
         - linux64-clang
         - linux64-hfsplus
         - linux64-libdmg
+        - linux64-rust-macos
         - linux64-sccache

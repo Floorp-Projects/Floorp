@@ -66,11 +66,11 @@ protected:
   nsCOMPtr<nsIContentIterator> mIterator;
   nsCOMPtr<nsIContentIterator> mPreIterator;
 
-  nsCOMPtr<nsIAtom> mBlockQuoteAtom;
-  nsCOMPtr<nsIAtom> mScriptAtom;
-  nsCOMPtr<nsIAtom> mTextAreaAtom;
-  nsCOMPtr<nsIAtom> mSelectAreaAtom;
-  nsCOMPtr<nsIAtom> mMapAtom;
+  RefPtr<nsIAtom> mBlockQuoteAtom;
+  RefPtr<nsIAtom> mScriptAtom;
+  RefPtr<nsIAtom> mTextAreaAtom;
+  RefPtr<nsIAtom> mSelectAreaAtom;
+  RefPtr<nsIAtom> mMapAtom;
 
   nsCOMPtr<nsITextServicesFilter> mFilter;
   RefPtr<nsRange>               mRange;

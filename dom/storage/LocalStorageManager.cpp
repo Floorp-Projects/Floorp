@@ -375,9 +375,14 @@ LocalStorageManager::Observe(const char* aTopic,
   }
 
   // Clear everything, caches + database
-  if (!strcmp(aTopic, "cookie-cleared") ||
-      !strcmp(aTopic, "extension:purge-localStorage-caches")) {
+  if (!strcmp(aTopic, "cookie-cleared")) {
     ClearCaches(LocalStorageCache::kUnloadComplete, pattern, EmptyCString());
+    return NS_OK;
+  }
+
+  // Clear everything, caches + database
+  if (!strcmp(aTopic, "extension:purge-localStorage-caches")) {
+    ClearCaches(LocalStorageCache::kUnloadComplete, pattern, aOriginScope);
     return NS_OK;
   }
 

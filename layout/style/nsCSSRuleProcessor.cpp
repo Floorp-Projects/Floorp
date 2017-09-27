@@ -66,7 +66,7 @@ typedef ArenaAllocator<4096, 8> CascadeAllocator;
 
 static bool gSupportVisitedPseudo = true;
 
-static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
+static nsTArray< RefPtr<nsIAtom> >* sSystemMetrics = 0;
 
 #ifdef XP_WIN
 uint8_t nsCSSRuleProcessor::sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
@@ -182,7 +182,7 @@ struct RuleHashTableEntry : public PLDHashEntryHdr {
 struct RuleHashTagTableEntry : public RuleHashTableEntry {
   // If you add members that have heap allocated memory be sure to change the
   // logic in RuleHash::SizeOf{In,Ex}cludingThis.
-  nsCOMPtr<nsIAtom> mTag;
+  RefPtr<nsIAtom> mTag;
 };
 
 static PLDHashNumber
@@ -1082,7 +1082,7 @@ nsCSSRuleProcessor::InitSystemMetrics()
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  sSystemMetrics = new nsTArray< nsCOMPtr<nsIAtom> >;
+  sSystemMetrics = new nsTArray< RefPtr<nsIAtom> >;
 
   /***************************************************************************
    * ANY METRICS ADDED HERE SHOULD ALSO BE ADDED AS MEDIA QUERIES IN         *
@@ -1788,7 +1788,7 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
 
     case CSSPseudoClassType::mozSystemMetric:
       {
-        nsCOMPtr<nsIAtom> metric = NS_Atomize(aString);
+        RefPtr<nsIAtom> metric = NS_Atomize(aString);
         if (!nsCSSRuleProcessor::HasSystemMetric(metric)) {
           return false;
         }

@@ -136,12 +136,20 @@
 
 :root {
   --var-100px: 100px;
+  --end-color: rgb(255, 0, 0);
 }
 @keyframes anim-variables {
   to { transform: translate(var(--var-100px), 0) }
 }
 @keyframes anim-variables-shorthand {
   to { margin: var(--var-100px) }
+}
+@keyframes anim-custom-property-in-keyframe {
+  to { --end-color: rgb(0, 255, 0); color: var(--end-color) }
+}
+@keyframes anim-only-custom-property-in-keyframe {
+  from { transform: translate(100px, 0) }
+  to { --not-used: 200px }
 }
 </style>
 <body>
@@ -660,6 +668,8 @@ test(function(t) {
 
   var frames = getKeyframes(div);
 
+  assert_equals(frames.length, 2, "number of frames");
+
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
       transform: "none" },
@@ -678,6 +688,8 @@ test(function(t) {
 
   var frames = getKeyframes(div);
 
+  assert_equals(frames.length, 2, "number of frames");
+
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
       marginBottom: "0px",
@@ -695,6 +707,47 @@ test(function(t) {
   }
 }, 'KeyframeEffectReadOnly.getKeyframes() returns expected values for ' +
    'animations with CSS variables as keyframe values in a shorthand property');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim-custom-property-in-keyframe 100s';
+
+  var frames = getKeyframes(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease",
+      color: "rgb(0, 0, 0)" },
+    { offset: 1, computedOffset: 1, easing: "ease",
+      color: "rgb(0, 255, 0)" },
+  ];
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getKeyframes() returns expected values for ' +
+   'animations with a CSS variable which is overriden by the value in keyframe');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim-only-custom-property-in-keyframe 100s';
+
+  var frames = getKeyframes(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease",
+      transform: "translate(100px, 0px)" },
+    { offset: 1, computedOffset: 1, easing: "ease",
+      transform: "none" },
+  ];
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getKeyframes() returns expected values for ' +
+   'animations with only custom property in a keyframe');
+
 done();
 </script>
 </body>

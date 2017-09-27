@@ -71,12 +71,6 @@ private:
   // Fetches the next request, from mPendingRequests
   nsresult FetchNextRequest();
 
-  enum UpdateTimeout {
-    eNoTimeout = 0,
-    eResponseTimeout = 1,
-    eDownloadTimeout = 2,
-  };
-
   bool mIsUpdating;
   bool mInitialized;
   bool mDownloadError;

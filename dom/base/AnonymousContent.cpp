@@ -187,7 +187,7 @@ Element*
 AnonymousContent::GetElementById(const nsAString& aElementId)
 {
   // This can be made faster in the future if needed.
-  nsCOMPtr<nsIAtom> elementId = NS_Atomize(aElementId);
+  RefPtr<nsIAtom> elementId = NS_Atomize(aElementId);
   for (nsIContent* node = mContentNode; node;
        node = node->GetNextNode(mContentNode)) {
     if (!node->IsElement()) {

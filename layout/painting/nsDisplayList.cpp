@@ -8969,17 +8969,36 @@ nsDisplayMask::~nsDisplayMask()
 }
 #endif
 
+static bool
+CanMergeDisplayMaskFrame(nsIFrame* aFrame)
+{
+  // Do not merge items for box-decoration-break:clone elements,
+  // since each box should have its own mask in that case.
+  if (aFrame->StyleBorder()->mBoxDecorationBreak ==
+        mozilla::StyleBoxDecorationBreak::Clone) {
+    return false;
+  }
+
+  // Do not merge if either frame has a mask. Continuation frames should apply
+  // the mask independently (just like nsDisplayBackgroundImage).
+  if (aFrame->StyleSVGReset()->HasMask()) {
+    return false;
+  }
+
+  return true;
+}
+
 bool
 nsDisplayMask::CanMerge(const nsDisplayItem* aItem) const
 {
   // Items for the same content element should be merged into a single
   // compositing group.
-  // Do not merge if mFrame has mask. Continuation frames should apply mask
-  // independently (just like nsDisplayBackgroundImage).
-  return HasSameTypeAndClip(aItem) && HasSameContent(aItem) &&
-         !mFrame->StyleSVGReset()->HasMask() &&
-         (mFrame->StyleBorder()->mBoxDecorationBreak !=
-            mozilla::StyleBoxDecorationBreak::Clone);
+  if (!HasSameTypeAndClip(aItem) || !HasSameContent(aItem)) {
+    return false;
+  }
+
+  return CanMergeDisplayMaskFrame(mFrame) &&
+         CanMergeDisplayMaskFrame(aItem->Frame());
 }
 
 already_AddRefed<Layer>

@@ -782,7 +782,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const char16_t** aAttributes,
 
     nsAutoString nodeID;
 
-    nsCOMPtr<nsIAtom> localName;
+    RefPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
         const nsDependentSubstring& nameSpaceURI =
             SplitExpatName(aAttributes[0], getter_AddRefs(localName));
@@ -870,7 +870,7 @@ nsresult
 RDFContentSinkImpl::GetResourceAttribute(const char16_t** aAttributes,
                                          nsIRDFResource** aResource)
 {
-  nsCOMPtr<nsIAtom> localName;
+  RefPtr<nsIAtom> localName;
 
   nsAutoString nodeID;
 
@@ -938,7 +938,7 @@ RDFContentSinkImpl::AddProperties(const char16_t** aAttributes,
   if (aCount)
       *aCount = 0;
 
-  nsCOMPtr<nsIAtom> localName;
+  RefPtr<nsIAtom> localName;
   for (; *aAttributes; aAttributes += 2) {
       const nsDependentSubstring& nameSpaceURI =
           SplitExpatName(aAttributes[0], getter_AddRefs(localName));
@@ -987,7 +987,7 @@ RDFContentSinkImpl::AddProperties(const char16_t** aAttributes,
 void
 RDFContentSinkImpl::SetParseMode(const char16_t **aAttributes)
 {
-    nsCOMPtr<nsIAtom> localName;
+    RefPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
         const nsDependentSubstring& nameSpaceURI =
             SplitExpatName(aAttributes[0], getter_AddRefs(localName));
@@ -1023,7 +1023,7 @@ RDFContentSinkImpl::OpenRDF(const char16_t* aName)
     // ensure that we're actually reading RDF by making sure that the
     // opening tag is <rdf:RDF>, where "rdf:" corresponds to whatever
     // they've declared the standard RDF namespace to be.
-    nsCOMPtr<nsIAtom> localName;
+    RefPtr<nsIAtom> localName;
     const nsDependentSubstring& nameSpaceURI =
         SplitExpatName(aName, getter_AddRefs(localName));
 
@@ -1047,7 +1047,7 @@ RDFContentSinkImpl::OpenObject(const char16_t* aName,
     // an "object" non-terminal is either a "description", a "typed
     // node", or a "container", so this change the content sink's
     // state appropriately.
-    nsCOMPtr<nsIAtom> localName;
+    RefPtr<nsIAtom> localName;
     const nsDependentSubstring& nameSpaceURI =
         SplitExpatName(aName, getter_AddRefs(localName));
 
@@ -1122,7 +1122,7 @@ RDFContentSinkImpl::OpenProperty(const char16_t* aName, const char16_t** aAttrib
     // an "object" non-terminal is either a "description", a "typed
     // node", or a "container", so this change the content sink's
     // state appropriately.
-    nsCOMPtr<nsIAtom> localName;
+    RefPtr<nsIAtom> localName;
     const nsDependentSubstring& nameSpaceURI =
         SplitExpatName(aName, getter_AddRefs(localName));
 
@@ -1196,7 +1196,7 @@ RDFContentSinkImpl::OpenMember(const char16_t* aName,
     // to whatever they've declared the standard RDF namespace to be.
     nsresult rv;
 
-    nsCOMPtr<nsIAtom> localName;
+    RefPtr<nsIAtom> localName;
     const nsDependentSubstring& nameSpaceURI =
         SplitExpatName(aName, getter_AddRefs(localName));
 
@@ -1279,7 +1279,7 @@ RDFContentSinkImpl::RegisterNamespaces(const char16_t **aAttributes)
             ++endLocal;
         }
         nsDependentSubstring lname(attr, endLocal);
-        nsCOMPtr<nsIAtom> preferred = NS_Atomize(lname);
+        RefPtr<nsIAtom> preferred = NS_Atomize(lname);
         if (preferred == kXMLNSAtom) {
             preferred = nullptr;
         }

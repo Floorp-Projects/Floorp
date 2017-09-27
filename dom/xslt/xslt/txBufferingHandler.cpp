@@ -100,9 +100,9 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txStartElementAtomTransaction, txOutputTransaction);
     }
-    nsCOMPtr<nsIAtom> mPrefix;
-    nsCOMPtr<nsIAtom> mLocalName;
-    nsCOMPtr<nsIAtom> mLowercaseLocalName;
+    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mLocalName;
+    RefPtr<nsIAtom> mLowercaseLocalName;
     int32_t mNsID;
 };
 
@@ -122,7 +122,7 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txStartElementTransaction, txOutputTransaction);
     }
-    nsCOMPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mPrefix;
     nsString mLocalName;
     int32_t mNsID;
 };
@@ -145,7 +145,7 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txAttributeTransaction, txOutputTransaction);
     }
-    nsCOMPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mPrefix;
     nsString mLocalName;
     int32_t mNsID;
     nsString mValue;
@@ -170,9 +170,9 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txAttributeAtomTransaction, txOutputTransaction);
     }
-    nsCOMPtr<nsIAtom> mPrefix;
-    nsCOMPtr<nsIAtom> mLocalName;
-    nsCOMPtr<nsIAtom> mLowercaseLocalName;
+    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mLocalName;
+    RefPtr<nsIAtom> mLowercaseLocalName;
     int32_t mNsID;
     nsString mValue;
 };
