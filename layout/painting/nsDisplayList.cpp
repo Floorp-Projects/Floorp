@@ -3101,7 +3101,7 @@ RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     nsPoint offset = aBuilder->IsInSubdocument() ? aBuilder->ToReferenceFrame(aFrame)
                                                  : aFrame->GetOffsetTo(displayRoot);
     nsRect borderBox = nsRect(offset, aFrame->GetSize());
-    aBuilder->RegisterThemeGeometry(aType,
+    aBuilder->RegisterThemeGeometry(aType, aFrame,
       LayoutDeviceIntRect::FromUnknownRect(
         borderBox.ToNearestPixels(
           aFrame->PresContext()->AppUnitsPerDevPixel())));
