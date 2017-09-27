@@ -10,7 +10,7 @@
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsFormControlFrame.h"
+#include "nsCheckboxRadioFrame.h"
 
 nsIFrame*
 NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -31,7 +31,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsLegendFrame)
 void
 nsLegendFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
@@ -49,7 +49,7 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
+    nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 }

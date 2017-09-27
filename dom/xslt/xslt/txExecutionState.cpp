@@ -90,11 +90,6 @@ txExecutionState::~txExecutionState()
         delete (txAXMLEventHandler*)handlerIter.next();
     }
 
-    txStackIterator paramIter(&mParamStack);
-    while (paramIter.hasNext()) {
-        delete (txVariableMap*)paramIter.next();
-    }
-
     delete mInitialEvalContext;
 }
 
@@ -381,7 +376,7 @@ txExecutionState::popResultHandler()
 void
 txExecutionState::pushTemplateRule(txStylesheet::ImportFrame* aFrame,
                                    const txExpandedName& aMode,
-                                   txVariableMap* aParams)
+                                   txParameterMap* aParams)
 {
     TemplateRule* rule = mTemplateRules.AppendElement();
     rule->mFrame = aFrame;
@@ -521,23 +516,19 @@ txExecutionState::removeVariable(const txExpandedName& aName)
     mLocalVariables->removeVariable(aName);
 }
 
-nsresult
-txExecutionState::pushParamMap(txVariableMap* aParams)
+void
+txExecutionState::pushParamMap(txParameterMap* aParams)
 {
-    nsresult rv = mParamStack.push(mTemplateParams);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mTemplateParams.forget();
+    mParamStack.AppendElement(mTemplateParams.forget());
     mTemplateParams = aParams;
-
-    return NS_OK;
 }
 
-txVariableMap*
+already_AddRefed<txParameterMap>
 txExecutionState::popParamMap()
 {
-    txVariableMap* oldParams = mTemplateParams.forget();
-    mTemplateParams = (txVariableMap*)mParamStack.pop();
+    RefPtr<txParameterMap> oldParams = mTemplateParams.forget();
+    mTemplateParams = mParamStack.LastElement();
+    mParamStack.RemoveElementAt(mParamStack.Length() - 1);
 
-    return oldParams;
+    return oldParams.forget();
 }

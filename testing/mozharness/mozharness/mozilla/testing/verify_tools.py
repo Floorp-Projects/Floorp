@@ -147,8 +147,18 @@ class VerifyToolsMixin(object):
             for file in files:
                 if suite in ['reftest', 'crashtest']:
                     file = os.path.join(self.reftest_test_dir, file)
-                args.append(['--verify-max-time=%d' % MAX_TIME_PER_TEST, '--verify', file])
-            self.info("Verification file for '%s': %s" % (suite, files))
+                if suite == 'reftest':
+                    # Special handling for modified reftest reference files:
+                    #  - if both test and reference modified, verify the test file
+                    #  - if only reference modified, verify the test file
+                    nonref = file.replace('-ref.', '.')
+                    if nonref != file:
+                        file = None
+                        if nonref not in files and os.path.exists(nonref):
+                            file = nonref
+                if file:
+                    args.append(['--verify-max-time=%d' % MAX_TIME_PER_TEST, '--verify', file])
+            self.info("Verification file(s) for '%s': %s" % (suite, files))
         return args
 
     def query_verify_category_suites(self, category, all_suites):

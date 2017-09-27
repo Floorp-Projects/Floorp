@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsFormControlFrame.h"
+#include "nsCheckboxRadioFrame.h"
 
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
@@ -12,35 +12,43 @@
 #include "mozilla/LookAndFeel.h"
 #include "nsDeviceContext.h"
 #include "nsIContent.h"
+#include "nsThemeConstants.h"
 
 using namespace mozilla;
 
 //#define FCF_NOISY
 
-nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext,
-                                       nsIFrame::ClassID aID)
-  : nsAtomicContainerFrame(aContext, aID)
+nsCheckboxRadioFrame*
+NS_NewCheckboxRadioFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+{
+  return new (aPresShell) nsCheckboxRadioFrame(aContext);
+}
+
+nsCheckboxRadioFrame::nsCheckboxRadioFrame(nsStyleContext* aContext)
+  : nsAtomicContainerFrame(aContext, kClassID)
 {
 }
 
-nsFormControlFrame::~nsFormControlFrame()
+nsCheckboxRadioFrame::~nsCheckboxRadioFrame()
 {
 }
 
 void
-nsFormControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsCheckboxRadioFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Unregister the access key registered in reflow
-  nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
 }
 
-NS_QUERYFRAME_HEAD(nsFormControlFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)
+
+NS_QUERYFRAME_HEAD(nsCheckboxRadioFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 /* virtual */ nscoord
-nsFormControlFrame::GetMinISize(gfxContext *aRenderingContext)
+nsCheckboxRadioFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -49,7 +57,7 @@ nsFormControlFrame::GetMinISize(gfxContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsFormControlFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsCheckboxRadioFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -59,14 +67,14 @@ nsFormControlFrame::GetPrefISize(gfxContext *aRenderingContext)
 
 /* virtual */
 LogicalSize
-nsFormControlFrame::ComputeAutoSize(gfxContext*         aRC,
-                                    WritingMode         aWM,
-                                    const LogicalSize&  aCBSize,
-                                    nscoord             aAvailableISize,
-                                    const LogicalSize&  aMargin,
-                                    const LogicalSize&  aBorder,
-                                    const LogicalSize&  aPadding,
-                                    ComputeSizeFlags    aFlags)
+nsCheckboxRadioFrame::ComputeAutoSize(gfxContext*         aRC,
+                                      WritingMode         aWM,
+                                      const LogicalSize&  aCBSize,
+                                      nscoord             aAvailableISize,
+                                      const LogicalSize&  aMargin,
+                                      const LogicalSize&  aBorder,
+                                      const LogicalSize&  aPadding,
+                                      ComputeSizeFlags    aFlags)
 {
   LogicalSize size(aWM, 0, 0);
   if (StyleDisplay()->mAppearance == NS_THEME_NONE) {
@@ -82,7 +90,7 @@ nsFormControlFrame::ComputeAutoSize(gfxContext*         aRC,
 }
 
 nscoord
-nsFormControlFrame::GetLogicalBaseline(WritingMode aWritingMode) const
+nsCheckboxRadioFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   NS_ASSERTION(!NS_SUBTREE_DIRTY(this),
                "frame must not be dirty");
@@ -106,17 +114,17 @@ nsFormControlFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 }
 
 void
-nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
-                           ReflowOutput&     aDesiredSize,
-                           const ReflowInput& aReflowInput,
-                           nsReflowStatus&          aStatus)
+nsCheckboxRadioFrame::Reflow(nsPresContext*     aPresContext,
+                             ReflowOutput&      aDesiredSize,
+                             const ReflowInput& aReflowInput,
+                             nsReflowStatus&    aStatus)
 {
   MarkInReflow();
-  DO_GLOBAL_REFLOW_COUNT("nsFormControlFrame");
+  DO_GLOBAL_REFLOW_COUNT("nsCheckboxRadioFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("enter nsFormControlFrame::Reflow: aMaxSize=%d,%d",
+                 ("enter nsCheckboxRadioFrame::Reflow: aMaxSize=%d,%d",
                   aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
@@ -133,7 +141,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit nsFormControlFrame::Reflow: size=%d,%d",
+                 ("exit nsCheckboxRadioFrame::Reflow: size=%d,%d",
                   aDesiredSize.Width(), aDesiredSize.Height()));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 
@@ -142,7 +150,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 nsresult
-nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
+nsCheckboxRadioFrame::RegUnRegAccessKey(nsIFrame* aFrame, bool aDoReg)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
 
@@ -167,14 +175,14 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
 }
 
 void
-nsFormControlFrame::SetFocus(bool aOn, bool aRepaint)
+nsCheckboxRadioFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
 nsresult
-nsFormControlFrame::HandleEvent(nsPresContext* aPresContext,
-                                WidgetGUIEvent* aEvent,
-                                nsEventStatus* aEventStatus)
+nsCheckboxRadioFrame::HandleEvent(nsPresContext* aPresContext,
+                                  WidgetGUIEvent* aEvent,
+                                  nsEventStatus* aEventStatus)
 {
   // Check for user-input:none style
   const nsStyleUserInterface* uiStyle = StyleUserInterface();
@@ -186,7 +194,7 @@ nsFormControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void
-nsFormControlFrame::GetCurrentCheckState(bool *aState)
+nsCheckboxRadioFrame::GetCurrentCheckState(bool* aState)
 {
   nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
   if (inputElement) {
@@ -195,14 +203,14 @@ nsFormControlFrame::GetCurrentCheckState(bool *aState)
 }
 
 nsresult
-nsFormControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
+nsCheckboxRadioFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
 {
   return NS_OK;
 }
 
 // static
 nsRect
-nsFormControlFrame::GetUsableScreenRect(nsPresContext* aPresContext)
+nsCheckboxRadioFrame::GetUsableScreenRect(nsPresContext* aPresContext)
 {
   nsRect screen;
 

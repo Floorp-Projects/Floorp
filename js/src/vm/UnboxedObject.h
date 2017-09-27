@@ -99,17 +99,11 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     // from an array of values.
     GCPtrJitCode constructorCode_;
 
-    // The following members are only used for unboxed arrays.
-
-    // The type of array elements.
-    JSValueType elementType_;
-
   public:
     explicit UnboxedLayout(Zone* zone)
       : zone_(zone), nativeGroup_(nullptr), nativeShape_(nullptr),
         allocationScript_(nullptr), allocationPc_(nullptr), replacementGroup_(nullptr),
-        size_(0), newScript_(nullptr), traceList_(nullptr), constructorCode_(nullptr),
-        elementType_(JSVAL_TYPE_MAGIC)
+        size_(0), newScript_(nullptr), traceList_(nullptr), constructorCode_(nullptr)
     {}
 
     Zone* zone() const { return zone_; }
@@ -117,10 +111,6 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     bool initProperties(const PropertyVector& properties, size_t size) {
         size_ = size;
         return properties_.appendAll(properties);
-    }
-
-    void initArray(JSValueType elementType) {
-        elementType_ = elementType;
     }
 
     ~UnboxedLayout() {
@@ -133,10 +123,6 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
         nativeShape_.init(nullptr);
         replacementGroup_.init(nullptr);
         constructorCode_.init(nullptr);
-    }
-
-    bool isArray() const {
-        return elementType_ != JSVAL_TYPE_MAGIC;
     }
 
     void detachFromCompartment();
@@ -204,10 +190,6 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 
     void setConstructorCode(jit::JitCode* code) {
         constructorCode_ = code;
-    }
-
-    JSValueType elementType() const {
-        return elementType_;
     }
 
     inline gc::AllocKind getAllocKind() const;
@@ -343,190 +325,6 @@ UnboxedLayout::getAllocKind() const
     MOZ_ASSERT(size());
     return gc::GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + size());
 }
-
-// Class for an array object using an unboxed representation.
-class UnboxedArrayObject : public UnboxedObject
-{
-    // Elements pointer for the object.
-    uint8_t* elements_;
-
-    // The nominal array length. This always fits in an int32_t.
-    uint32_t length_;
-
-    // Value indicating the allocated capacity and initialized length of the
-    // array. The top CapacityBits bits are an index into CapacityArray, which
-    // indicates the elements capacity. The low InitializedLengthBits store the
-    // initialized length of the array.
-    uint32_t capacityIndexAndInitializedLength_;
-
-    // If the elements are inline, they will point here.
-    uint8_t inlineElements_[1];
-
-  public:
-    static const uint32_t CapacityBits = 6;
-    static const uint32_t CapacityShift = 26;
-
-    static const uint32_t CapacityMask = uint32_t(-1) << CapacityShift;
-    static const uint32_t InitializedLengthMask = (1 << CapacityShift) - 1;
-
-    static const uint32_t MaximumCapacity = InitializedLengthMask;
-    static const uint32_t MinimumDynamicCapacity = 8;
-
-    static const uint32_t CapacityArray[];
-
-    // Capacity index which indicates the array's length is also its capacity.
-    static const uint32_t CapacityMatchesLengthIndex = 0;
-
-  private:
-    static inline uint32_t computeCapacity(uint32_t index, uint32_t length) {
-        if (index == CapacityMatchesLengthIndex)
-            return length;
-        return CapacityArray[index];
-    }
-
-    static uint32_t chooseCapacityIndex(uint32_t capacity, uint32_t length);
-    static uint32_t exactCapacityIndex(uint32_t capacity);
-
-  public:
-    static const Class class_;
-
-    static bool obj_lookupProperty(JSContext* cx, HandleObject obj,
-                                   HandleId id, MutableHandleObject objp,
-                                   MutableHandle<PropertyResult> propp);
-
-    static bool obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                                   Handle<PropertyDescriptor> desc,
-                                   ObjectOpResult& result);
-
-    static bool obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp);
-
-    static bool obj_getProperty(JSContext* cx, HandleObject obj, HandleValue receiver,
-                                HandleId id, MutableHandleValue vp);
-
-    static bool obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
-                                HandleValue receiver, ObjectOpResult& result);
-
-    static bool obj_getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                                             MutableHandle<PropertyDescriptor> desc);
-
-    static bool obj_deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
-                                   ObjectOpResult& result);
-
-    static bool newEnumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
-                             bool enumerableOnly);
-    static bool obj_watch(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable);
-
-    inline const UnboxedLayout& layout() const;
-
-    const UnboxedLayout& layoutDontCheckGeneration() const {
-        return group()->unboxedLayoutDontCheckGeneration();
-    }
-
-    JSValueType elementType() const {
-        return layoutDontCheckGeneration().elementType();
-    }
-
-    uint32_t elementSize() const {
-        return UnboxedTypeSize(elementType());
-    }
-
-    static bool convertToNative(JSContext* cx, JSObject* obj);
-    static UnboxedArrayObject* create(JSContext* cx, HandleObjectGroup group,
-                                      uint32_t length, NewObjectKind newKind,
-                                      uint32_t maxLength = MaximumCapacity);
-
-    static bool convertToNativeWithGroup(JSContext* cx, JSObject* obj,
-                                         ObjectGroup* group, Shape* shape);
-    bool convertInt32ToDouble(JSContext* cx, ObjectGroup* group);
-
-    void fillAfterConvert(JSContext* cx,
-                          Handle<GCVector<Value>> values, size_t* valueCursor);
-
-    static void trace(JSTracer* trc, JSObject* object);
-    static size_t objectMoved(JSObject* obj, JSObject* old);
-    static void finalize(FreeOp* fop, JSObject* obj);
-
-    uint8_t* elements() {
-        return elements_;
-    }
-
-    bool hasInlineElements() const {
-        return elements_ == &inlineElements_[0];
-    }
-
-    uint32_t length() const {
-        return length_;
-    }
-
-    uint32_t initializedLength() const {
-        return capacityIndexAndInitializedLength_ & InitializedLengthMask;
-    }
-
-    uint32_t capacityIndex() const {
-        return (capacityIndexAndInitializedLength_ & CapacityMask) >> CapacityShift;
-    }
-
-    uint32_t capacity() const {
-        return computeCapacity(capacityIndex(), length());
-    }
-
-    bool containsProperty(JSContext* cx, jsid id);
-
-    bool setElement(JSContext* cx, size_t index, const Value& v);
-    bool initElement(JSContext* cx, size_t index, const Value& v);
-    void initElementNoTypeChange(size_t index, const Value& v);
-    Value getElement(size_t index);
-
-    template <JSValueType Type> inline bool setElementSpecific(JSContext* cx, size_t index,
-                                                               const Value& v);
-    template <JSValueType Type> inline void setElementNoTypeChangeSpecific(size_t index, const Value& v);
-    template <JSValueType Type> inline bool initElementSpecific(JSContext* cx, size_t index,
-                                                                const Value& v);
-    template <JSValueType Type> inline void initElementNoTypeChangeSpecific(size_t index, const Value& v);
-    template <JSValueType Type> inline Value getElementSpecific(size_t index);
-    template <JSValueType Type> inline void triggerPreBarrier(size_t index);
-
-    bool growElements(JSContext* cx, size_t cap);
-    void shrinkElements(JSContext* cx, size_t cap);
-
-    static uint32_t offsetOfElements() {
-        return offsetof(UnboxedArrayObject, elements_);
-    }
-    static uint32_t offsetOfLength() {
-        return offsetof(UnboxedArrayObject, length_);
-    }
-    static uint32_t offsetOfCapacityIndexAndInitializedLength() {
-        return offsetof(UnboxedArrayObject, capacityIndexAndInitializedLength_);
-    }
-    static uint32_t offsetOfInlineElements() {
-        return offsetof(UnboxedArrayObject, inlineElements_);
-    }
-
-    void setLengthInt32(uint32_t length) {
-        MOZ_ASSERT(length <= INT32_MAX);
-        length_ = length;
-    }
-
-    inline void setLength(JSContext* cx, uint32_t len);
-    inline void setInitializedLength(uint32_t initlen);
-
-    inline void setInitializedLengthNoBarrier(uint32_t initlen) {
-        MOZ_ASSERT(initlen <= InitializedLengthMask);
-        capacityIndexAndInitializedLength_ =
-            (capacityIndexAndInitializedLength_ & CapacityMask) | initlen;
-    }
-
-  private:
-    void setInlineElements() {
-        elements_ = &inlineElements_[0];
-    }
-
-    void setCapacityIndex(uint32_t index) {
-        MOZ_ASSERT(index <= (CapacityMask >> CapacityShift));
-        capacityIndexAndInitializedLength_ =
-            (index << CapacityShift) | initializedLength();
-    }
-};
 
 } // namespace js
 

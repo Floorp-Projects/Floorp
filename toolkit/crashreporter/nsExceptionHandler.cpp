@@ -3047,7 +3047,7 @@ bool
 GetIDFromMinidump(nsIFile* minidump, nsAString& id)
 {
   if (minidump && NS_SUCCEEDED(minidump->GetLeafName(id))) {
-    id.Replace(id.Length() - 4, 4, NS_LITERAL_STRING(""));
+    id.ReplaceLiteral(id.Length() - 4, 4, u"");
     return true;
   }
   return false;

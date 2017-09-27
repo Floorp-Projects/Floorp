@@ -8,9 +8,9 @@
 #define NS_SMILTIMEVALUESPEC_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/IDTracker.h"
 #include "nsSMILTimeValueSpecParams.h"
 #include "nsStringFwd.h"
-#include "nsReferencedElement.h"
 #include "nsIDOMEventListener.h"
 
 class nsSMILTimeValue;
@@ -86,7 +86,7 @@ protected:
                                           // the target.
   nsSMILTimeValueSpecParams     mParams;
 
-  class TimeReferenceElement : public nsReferencedElement
+  class TimeReferenceElement : public mozilla::dom::IDTracker
   {
   public:
     explicit TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
@@ -99,7 +99,7 @@ protected:
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override
     {
-      nsReferencedElement::ElementChanged(aFrom, aTo);
+      IDTracker::ElementChanged(aFrom, aTo);
       mSpec->UpdateReferencedElement(aFrom, aTo);
     }
     virtual bool IsPersistent() override { return true; }

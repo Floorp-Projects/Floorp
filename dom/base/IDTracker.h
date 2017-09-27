@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NSREFERENCEDELEMENT_H_
-#define NSREFERENCEDELEMENT_H_
+#ifndef mozilla_dom_IDTracker_h_
+#define mozilla_dom_IDTracker_h_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
@@ -14,6 +14,9 @@
 #include "nsThreadUtils.h"
 
 class nsIURI;
+
+namespace mozilla {
+namespace dom {
 
 /**
  * Class to track what element is referenced by a given ID.
@@ -32,14 +35,14 @@ class nsIURI;
  * Override IsPersistent to return true if you want to keep tracking after
  * the first change.
  */
-class nsReferencedElement {
+class IDTracker {
 public:
   typedef mozilla::dom::Element Element;
 
-  nsReferencedElement()
+  IDTracker()
     : mReferencingImage(false)
   {}
-  ~nsReferencedElement() {
+  ~IDTracker() {
     Unlink();
   }
 
@@ -116,22 +119,22 @@ private:
     virtual void Clear() { mTarget = nullptr; }
     virtual ~Notification() {}
   protected:
-    explicit Notification(nsReferencedElement* aTarget)
+    explicit Notification(IDTracker* aTarget)
       : mTarget(aTarget)
     {
       NS_PRECONDITION(aTarget, "Must have a target");
     }
-    nsReferencedElement* mTarget;
+    IDTracker* mTarget;
   };
 
   class ChangeNotification : public mozilla::Runnable,
                              public Notification
   {
   public:
-    ChangeNotification(nsReferencedElement* aTarget,
+    ChangeNotification(IDTracker* aTarget,
                        Element* aFrom,
                        Element* aTo)
-      : mozilla::Runnable("nsReferencedElement::ChangeNotification")
+      : mozilla::Runnable("IDTracker::ChangeNotification")
       , Notification(aTarget)
       , mFrom(aFrom)
       , mTo(aTo)
@@ -162,7 +165,7 @@ private:
                                    public nsIObserver
   {
   public:
-    DocumentLoadNotification(nsReferencedElement* aTarget,
+    DocumentLoadNotification(IDTracker* aTarget,
                              const nsString& aRef) :
       Notification(aTarget)
     {
@@ -190,18 +193,21 @@ private:
 };
 
 inline void
-ImplCycleCollectionUnlink(nsReferencedElement& aField)
+ImplCycleCollectionUnlink(IDTracker& aField)
 {
   aField.Unlink();
 }
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsReferencedElement& aField,
+                            IDTracker& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
   aField.Traverse(&aCallback);
 }
 
-#endif /*NSREFERENCEDELEMENT_H_*/
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_IDTracker_h_ */

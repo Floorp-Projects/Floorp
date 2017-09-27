@@ -1540,6 +1540,7 @@ GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool *_retval)
     gpm->LaunchGPUProcess();
     gpm->EnsureGPUReady();
   } else {
+    gfxConfig::UserDisable(Feature::GPU_PROCESS, "xpcshell-test");
     gpm->KillProcess();
   }
 
