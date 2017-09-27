@@ -69,7 +69,7 @@ webpackConfig.resolve = {
   alias: {
     "Services": "devtools-modules/src/Services",
 
-    "devtools/client/webconsole/jsterm": path.join(projectPath, "jsterm-stub"),
+    "devtools/client/webconsole/jsterm": path.join(__dirname, "../../client/shared/webpack/shims/jsterm-stub"),
     "devtools/client/webconsole/utils": path.join(__dirname, "new-console-output/test/fixtures/WebConsoleUtils"),
 
     "devtools/client/shared/vendor/immutable": "immutable",
@@ -79,15 +79,15 @@ webpackConfig.resolve = {
     "devtools/client/shared/vendor/redux": "redux",
     "devtools/client/shared/vendor/reselect": "reselect",
 
-    "devtools/shared/system": path.join(projectPath, "system-stub"),
+    "devtools/shared/system": path.join(__dirname, "../../client/shared/webpack/shims/system-stub"),
 
-    "devtools/client/framework/devtools": path.join(__dirname, "../../client/shims/devtools"),
+    "devtools/client/framework/devtools": path.join(__dirname, "../../client/shared/webpack/shims/framework-devtools-shim"),
     "devtools/client/framework/menu": "devtools-modules/src/menu",
     "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
 
     "devtools/client/shared/zoom-keys": "devtools-modules/src/zoom-keys",
 
-    "devtools/shared/fronts/timeline": path.join(__dirname, "../../shared/shims/fronts/timeline"),
+    "devtools/shared/fronts/timeline": path.join(__dirname, "../../client/shared/webpack/shims/fronts-timeline-shim"),
     "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
     "devtools/shared/client/main": path.join(__dirname, "new-console-output/test/fixtures/ObjectClient"),
     "devtools/shared/platform/clipboard": path.join(__dirname, "../../shared/platform/content/clipboard"),
