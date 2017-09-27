@@ -15,11 +15,11 @@
             "tests": ["dromaeo_css", "kraken"]
         },
         "other-e10s": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint"]
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup"]
         },
         "other-stylo-disabled-e10s": {
             "talos_options": ["--disable-stylo"],
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint"]
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup"]
         },
         "g1-e10s": {
             "tests": ["tp5o_scroll", "glterrain"],
