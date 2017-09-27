@@ -5055,8 +5055,7 @@ var CombinedStopReload = {
   },
 
   switchToReload(aRequest, aWebProgress) {
-    if (!this.ensureInitialized() || !this._shouldSwitch(aRequest, aWebProgress) ||
-        !this.reload.hasAttribute("displaystop")) {
+    if (!this.ensureInitialized() || !this.reload.hasAttribute("displaystop")) {
       return;
     }
 
