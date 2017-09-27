@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function
 import copy
 import os
 import sys
+import time
 
 from mozlog.commandline import setup_logging
 from talos import utils, test
@@ -15,6 +16,8 @@ from talos.cmdline import parse_args
 class ConfigurationError(Exception):
     pass
 
+
+FAR_IN_FUTURE = 7258114800
 
 DEFAULTS = dict(
     # args to pass to browser
@@ -92,6 +95,9 @@ DEFAULTS = dict(
         'network.proxy.http': 'localhost',
         'network.proxy.http_port': 80,
         'network.proxy.type': 1,
+        # Bug 1383896 - reduces noise in tests
+        'idle.lastDailyNotification': int(time.time()),
+        'places.database.lastMaintenance': FAR_IN_FUTURE,
         'security.enable_java': False,
         'security.fileuri.strict_origin_policy': False,
         'dom.send_after_paint_to_content': True,
