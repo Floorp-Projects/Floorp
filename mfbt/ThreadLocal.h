@@ -85,7 +85,16 @@ struct Helper<S *>
   typedef S *Type;
 };
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
+/*
+ * ThreadLocalKeyStorage uses Thread Local APIs that are declared in
+ * processthreadsapi.h. To use this class on Windows, include that file
+ * (or windows.h) before including ThreadLocal.h.
+ *
+ * TLS_OUT_OF_INDEXES is a #define that is used to detect whether
+ * an appropriate header has been included prior to this file
+ */
+#if defined(TLS_OUT_OF_INDEXES)
 /* Despite not being used for MOZ_THREAD_LOCAL, we expose an implementation for
  * Windows for cases where it's not desirable to use thread_local */
 template<typename T>
@@ -117,6 +126,7 @@ public:
 private:
   unsigned long mKey;
 };
+#endif
 #else
 template<typename T>
 class ThreadLocalKeyStorage
