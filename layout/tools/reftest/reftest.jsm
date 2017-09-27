@@ -727,7 +727,6 @@ function BuildConditionSandbox(aURL) {
       gWindowUtils.layerManagerRemote == true;
     sandbox.advancedLayers =
       gWindowUtils.usingAdvancedLayers == true;
-    sandbox.layerChecksEnabled = !sandbox.webrender;
 
     // Shortcuts for widget toolkits.
     sandbox.Android = xr.OS == "Android";
