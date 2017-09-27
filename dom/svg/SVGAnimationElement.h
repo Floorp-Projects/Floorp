@@ -8,8 +8,8 @@
 #define mozilla_dom_SVGAnimationElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/SVGTests.h"
+#include "nsReferencedElement.h"
 #include "nsSMILTimedElement.h"
 #include "nsSVGElement.h"
 
