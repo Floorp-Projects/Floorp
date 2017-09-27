@@ -261,6 +261,7 @@ var HeuristicsRegExp = {
       "|有効期限" +           // ja-JP
       "|validade" +           // pt-BR, pt-PT
       "|Срок действия карты", // ru
+      "iu"
     ),
   },
 };
