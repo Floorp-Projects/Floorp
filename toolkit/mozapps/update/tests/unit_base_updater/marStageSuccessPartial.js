@@ -17,7 +17,6 @@ function run_test() {
   gTestFiles[gTestFiles.length - 2].comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
   preventDistributionFiles();
-  setupDistributionDir();
   setupUpdaterTest(FILE_PARTIAL_MAR, true);
 }
 
@@ -55,7 +54,6 @@ function checkPostUpdateAppLogFinished() {
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true, true);
-  checkDistributionDir();
   do_execute_soon(waitForUpdateXMLFiles);
 }
 
@@ -65,48 +63,4 @@ function checkPostUpdateAppLogFinished() {
 function waitForUpdateXMLFilesFinished() {
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
-}
-
-/**
- * Setup the state of the distribution directory for the test.
- */
-function setupDistributionDir() {
-  if (IS_MACOSX) {
-    // Create files in the old distribution directory location to verify that
-    // the directory and its contents are moved to the new location on update.
-    let testFile = getApplyDirFile(DIR_MACOS + "distribution/testFile", true);
-    writeFile(testFile, "test\n");
-    testFile = getApplyDirFile(DIR_MACOS + "distribution/test/testFile", true);
-    writeFile(testFile, "test\n");
-  }
-}
-
-/**
- * Checks the state of the distribution directory.
- */
-function checkDistributionDir() {
-  let distributionDir = getApplyDirFile(DIR_RESOURCES + "distribution", true);
-  if (IS_MACOSX) {
-    Assert.ok(distributionDir.exists(),
-              MSG_SHOULD_EXIST + getMsgPath(distributionDir.path));
-
-    let testFile = getApplyDirFile(DIR_RESOURCES + "distribution/testFile", true);
-    Assert.ok(testFile.exists(),
-              MSG_SHOULD_EXIST + getMsgPath(testFile.path));
-
-    testFile = getApplyDirFile(DIR_RESOURCES + "distribution/test/testFile", true);
-    Assert.ok(testFile.exists(),
-              MSG_SHOULD_EXIST + getMsgPath(testFile.path));
-
-    distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
-    Assert.ok(!distributionDir.exists(),
-              MSG_SHOULD_NOT_EXIST + getMsgPath(distributionDir.path));
-
-    checkUpdateLogContains(MOVE_OLD_DIST_DIR);
-  } else {
-    debugDump("testing that files aren't added with an add-if instruction " +
-              "when the file's destination directory doesn't exist");
-    Assert.ok(!distributionDir.exists(),
-              MSG_SHOULD_NOT_EXIST + getMsgPath(distributionDir.path));
-  }
 }

@@ -322,7 +322,8 @@ enum class Op
 };
 
 inline bool
-IsPrefixByte(uint8_t b) {
+IsPrefixByte(uint8_t b)
+{
     return b >= uint8_t(Op::AtomicPrefix);
 }
 
@@ -364,6 +365,7 @@ enum class MozOp
     F64Atan2,
 
     // asm.js-style call_indirect with the callee evaluated first.
+    OldCallDirect,
     OldCallIndirect,
 
     // Atomics
@@ -503,22 +505,6 @@ static const unsigned MaxMemoryInitialPages  = 16384;
 static const unsigned MaxMemoryMaximumPages  = 65536;
 static const unsigned MaxModuleBytes         = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes       =         128 * 1024;
-
-// To be able to assign function indices during compilation while the number of
-// imports is still unknown, asm.js sets a maximum number of imports so it can
-// immediately start handing out function indices starting at the maximum + 1.
-// this means that there is a "hole" between the last import and the first
-// definition, but that's fine.
-
-static const unsigned AsmJSMaxTypes          =   4 * 1024;
-static const unsigned AsmJSMaxFuncs          = 512 * 1024;
-static const unsigned AsmJSMaxImports        =   4 * 1024;
-static const unsigned AsmJSMaxTables         =   4 * 1024;
-static const unsigned AsmJSFirstDefFuncIndex = AsmJSMaxImports + 1;
-
-static_assert(AsmJSMaxTypes <= MaxTypes, "conservative");
-static_assert(AsmJSMaxImports <= MaxImports, "conservative");
-static_assert(AsmJSFirstDefFuncIndex < MaxFuncs, "conservative");
 
 } // namespace wasm
 } // namespace js

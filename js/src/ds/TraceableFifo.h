@@ -79,7 +79,7 @@ class MutableWrappedPtrOperations<TraceableFifo<T, Capacity, AllocPolicy>, Wrapp
         return fifo().emplaceBack(mozilla::Forward<Args...>(args...));
     }
 
-    bool popFront() { return fifo().popFront(); }
+    void popFront() { fifo().popFront(); }
     void clear() { fifo().clear(); }
 };
 
