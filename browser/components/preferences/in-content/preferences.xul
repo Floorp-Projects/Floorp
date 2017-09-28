@@ -122,63 +122,68 @@
   <stack flex="1">
   <hbox flex="1">
 
-    <!-- category list -->
-    <richlistbox id="categories">
-      <richlistitem id="category-general"
-                    class="category"
-                    value="paneGeneral"
-                    helpTopic="prefs-main"
-                    tooltiptext="&paneGeneral.title;"
-                    align="center">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneGeneral.title;</label>
-      </richlistitem>
+    <vbox class="navigation">
+      <!-- category list -->
+      <richlistbox id="categories">
+        <richlistitem id="category-general"
+                      class="category"
+                      value="paneGeneral"
+                      helpTopic="prefs-main"
+                      tooltiptext="&paneGeneral.title;"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1">&paneGeneral.title;</label>
+        </richlistitem>
 
-      <richlistitem id="category-search"
-                    class="category"
-                    value="paneSearch"
-                    helpTopic="prefs-search"
-                    tooltiptext="&paneSearch.title;"
-                    align="center">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSearch.title;</label>
-      </richlistitem>
+        <richlistitem id="category-search"
+                      class="category"
+                      value="paneSearch"
+                      helpTopic="prefs-search"
+                      tooltiptext="&paneSearch.title;"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1">&paneSearch.title;</label>
+        </richlistitem>
 
-      <richlistitem id="category-containers"
-                    class="category"
-                    value="paneContainers"
-                    helpTopic="prefs-containers"
-                    hidden="true"/>
+        <richlistitem id="category-containers"
+                      class="category"
+                      value="paneContainers"
+                      helpTopic="prefs-containers"
+                      hidden="true"/>
 
-      <richlistitem id="category-privacy"
-                    class="category"
-                    value="panePrivacy"
-                    helpTopic="prefs-privacy"
-                    tooltiptext="&panePrivacySecurity.title;"
-                    align="center">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&panePrivacySecurity.title;</label>
-      </richlistitem>
+        <richlistitem id="category-privacy"
+                      class="category"
+                      value="panePrivacy"
+                      helpTopic="prefs-privacy"
+                      tooltiptext="&panePrivacySecurity.title;"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1">&panePrivacySecurity.title;</label>
+        </richlistitem>
 
-      <richlistitem id="category-sync"
-                    class="category"
-                    value="paneSync"
-                    helpTopic="prefs-weave"
-                    tooltiptext="&paneSync1.title;"
-                    align="center">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSync1.title;</label>
-      </richlistitem>
-    </richlistbox>
+        <richlistitem id="category-sync"
+                      class="category"
+                      value="paneSync"
+                      helpTopic="prefs-weave"
+                      tooltiptext="&paneSync1.title;"
+                      align="center">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1">&paneSync1.title;</label>
+        </richlistitem>
+      </richlistbox>
+
+      <spacer flex="1"/>
+
+      <hbox class="help-button" pack="center">
+        <label class="text-link">
+          <image class="help-icon"/><label class="help-label" flex="1">&helpButton2.label;</label>
+        </label>
+      </hbox>
+    </vbox>
 
     <keyset>
       <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
     </keyset>
-
-    <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">
-      <html:img class="help-icon" src="chrome://global/skin/icons/help.svg"/>
-      <html:span class="help-label">&helpButton2.label;</html:span>
-    </html:a>
 
     <vbox class="main-content" flex="1" align="start">
       <vbox class="pane-container">
