@@ -13,11 +13,6 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-var HTMLInputElement = Ci.nsIDOMHTMLInputElement;
-var HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
-var HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
-var HTMLButtonElement = Ci.nsIDOMHTMLButtonElement;
-
 this.EXPORTED_SYMBOLS = [ "FormSubmitObserver" ];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -110,10 +105,10 @@ FormSubmitObserver.prototype =
         return;
       }
 
-      if (!(element instanceof HTMLInputElement ||
-            element instanceof HTMLTextAreaElement ||
-            element instanceof HTMLSelectElement ||
-            element instanceof HTMLButtonElement)) {
+      if (!(ChromeUtils.getClassName(element) === "HTMLInputElement" ||
+            ChromeUtils.getClassName(element) === "HTMLTextAreaElement" ||
+            ChromeUtils.getClassName(element) === "HTMLSelectElement" ||
+            ChromeUtils.getClassName(element) === "HTMLButtonElement")) {
         continue;
       }
 
