@@ -542,6 +542,33 @@ GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDes
     return FinishOffsets(masm, offsets);
 }
 
+static const unsigned STUBS_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
+
+bool
+wasm::GenerateImportFunctions(const ModuleEnvironment& env, const FuncImportVector& imports,
+                              CompiledCode* code)
+{
+    LifoAlloc lifo(STUBS_LIFO_DEFAULT_CHUNK_SIZE);
+    TempAllocator alloc(&lifo);
+    MacroAssembler masm(MacroAssembler::WasmToken(), alloc);
+
+    for (uint32_t funcIndex = 0; funcIndex < imports.length(); funcIndex++) {
+        const FuncImport& fi = imports[funcIndex];
+
+        FuncOffsets offsets;
+        if (!GenerateImportFunction(masm, fi, env.funcSigs[funcIndex]->id, &offsets))
+            return false;
+        if (!code->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0, offsets))
+            return false;
+    }
+
+    masm.finish();
+    if (masm.oom())
+        return false;
+
+    return code->swap(masm);
+}
+
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into an appropriate callImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
@@ -1313,8 +1340,6 @@ GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel, CallableOffsets* 
     return FinishOffsets(masm, offsets);
 }
 
-static const unsigned STUBS_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
-
 bool
 wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& imports,
                     const FuncExportVector& exports, CompiledCode* code)
@@ -1343,14 +1368,6 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
             return false;
         if (!code->codeRanges.emplaceBack(CodeRange::ImportJitExit, funcIndex, offsets))
             return false;
-
-        if (!env.isAsmJS()) {
-            FuncOffsets offsets;
-            if (!GenerateImportFunction(masm, fi, env.funcSigs[funcIndex]->id, &offsets))
-                return false;
-            if (!code->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0, offsets))
-                return false;
-        }
     }
 
     for (const FuncExport& fe : exports) {

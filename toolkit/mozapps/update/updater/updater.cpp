@@ -13,21 +13,17 @@
  *
  *  Available methods for the manifest file:
  *
- *  updatev2.manifest
- *  -----------------
- *  method   = "add" | "add-if" | "patch" | "patch-if" | "remove" |
- *             "rmdir" | "rmrfdir" | type
- *
- *  'type' is the update type (e.g. complete or partial) and when present MUST
- *  be the first entry in the update manifest. The type is used to support
- *  downgrades by causing the actions defined in precomplete to be performed.
- *
  *  updatev3.manifest
  *  -----------------
  *  method   = "add" | "add-if" | "add-if-not" | "patch" | "patch-if" |
  *             "remove" | "rmdir" | "rmrfdir" | type
  *
  *  'add-if-not' adds a file if it doesn't exist.
+ *
+ *  'type' is the update type (e.g. complete or partial) and when present MUST
+ *  be the first entry in the update manifest. The type is used to support
+ *  removing files that no longer exist when when applying a complete update by
+ *  causing the actions defined in the precomplete file to be performed.
  *
  *  precomplete
  *  -----------
@@ -2491,42 +2487,7 @@ UpdateThreadFunc(void *param)
 
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
     if (rv == OK) {
-#ifdef XP_WIN
-      HKEY baseKey = nullptr;
-      wchar_t valueName[] = L"Image Path";
-      wchar_t rasenh[] = L"rsaenh.dll";
-      bool reset = false;
-      if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                        L"SOFTWARE\\Microsoft\\Cryptography\\Defaults\\Provider\\Microsoft Enhanced Cryptographic Provider v1.0",
-                        0, KEY_READ | KEY_WRITE,
-                        &baseKey) == ERROR_SUCCESS) {
-        wchar_t path[MAX_PATH + 1];
-        DWORD size = sizeof(path);
-        DWORD type;
-        if (RegQueryValueExW(baseKey, valueName, 0, &type,
-                             (LPBYTE)path, &size) == ERROR_SUCCESS) {
-          if (type == REG_SZ && wcscmp(path, rasenh) == 0) {
-            wchar_t rasenhFullPath[] = L"%SystemRoot%\\System32\\rsaenh.dll";
-            if (RegSetValueExW(baseKey, valueName, 0, REG_SZ,
-                               (const BYTE*)rasenhFullPath,
-                               sizeof(rasenhFullPath)) == ERROR_SUCCESS) {
-              reset = true;
-            }
-          }
-        }
-      }
-#endif
       rv = gArchiveReader.VerifySignature();
-#ifdef XP_WIN
-      if (baseKey) {
-        if (reset) {
-          RegSetValueExW(baseKey, valueName, 0, REG_SZ,
-                         (const BYTE*)rasenh,
-                         sizeof(rasenh));
-        }
-        RegCloseKey(baseKey);
-      }
-#endif
     }
 
     if (rv == OK) {
@@ -3638,44 +3599,6 @@ int NS_main(int argc, NS_tchar **argv)
 #endif /* XP_WIN */
 
 #ifdef XP_MACOSX
-  // When the update is successful remove the precomplete file in the root of
-  // the application bundle and move the distribution directory from
-  // Contents/MacOS to Contents/Resources and if both exist delete the
-  // directory under Contents/MacOS (see Bug 1068439).
-  if (gSucceeded && !sStagedUpdate) {
-    NS_tchar oldPrecomplete[MAXPATHLEN];
-    NS_tsnprintf(oldPrecomplete, sizeof(oldPrecomplete)/sizeof(oldPrecomplete[0]),
-                 NS_T("%s/precomplete"), gInstallDirPath);
-    NS_tremove(oldPrecomplete);
-
-    NS_tchar oldDistDir[MAXPATHLEN];
-    NS_tsnprintf(oldDistDir, sizeof(oldDistDir)/sizeof(oldDistDir[0]),
-                 NS_T("%s/Contents/MacOS/distribution"), gInstallDirPath);
-    int rv = NS_taccess(oldDistDir, F_OK);
-    if (!rv) {
-      NS_tchar newDistDir[MAXPATHLEN];
-      NS_tsnprintf(newDistDir, sizeof(newDistDir)/sizeof(newDistDir[0]),
-                   NS_T("%s/Contents/Resources/distribution"), gInstallDirPath);
-      rv = NS_taccess(newDistDir, F_OK);
-      if (!rv) {
-        LOG(("New distribution directory already exists... removing old " \
-             "distribution directory: " LOG_S, oldDistDir));
-        rv = ensure_remove_recursive(oldDistDir);
-        if (rv) {
-          LOG(("Removing old distribution directory failed - err: %d", rv));
-        }
-      } else {
-        LOG(("Moving old distribution directory to new location. src: " LOG_S \
-             ", dst:" LOG_S, oldDistDir, newDistDir));
-        rv = rename_file(oldDistDir, newDistDir, true);
-        if (rv) {
-          LOG(("Moving old distribution directory to new location failed - " \
-               "err: %d", rv));
-        }
-      }
-    }
-  }
-
   if (isElevated) {
     SetGroupOwnershipAndPermissions(gInstallDirPath);
     freeArguments(argc, argv);
@@ -4216,11 +4139,8 @@ int DoUpdate()
   // extract the manifest
   int rv = gArchiveReader.ExtractFile("updatev3.manifest", manifest);
   if (rv) {
-    rv = gArchiveReader.ExtractFile("updatev2.manifest", manifest);
-    if (rv) {
-      LOG(("DoUpdate: error extracting manifest file"));
-      return rv;
-    }
+    LOG(("DoUpdate: error extracting manifest file"));
+    return rv;
   }
 
   NS_tchar *rb = GetManifestContents(manifest);

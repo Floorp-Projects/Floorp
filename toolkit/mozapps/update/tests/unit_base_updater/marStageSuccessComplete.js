@@ -16,7 +16,6 @@ function run_test() {
   gTestFiles[gTestFiles.length - 1].compareContents = "FromComplete\n";
   gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupDistributionDir();
   setupSymLinks();
   setupUpdaterTest(FILE_COMPLETE_MAR, false);
 }
@@ -56,7 +55,6 @@ function checkPostUpdateAppLogFinished() {
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
-  checkDistributionDir();
   do_execute_soon(waitForUpdateXMLFiles);
 }
 
@@ -66,33 +64,6 @@ function checkPostUpdateAppLogFinished() {
 function waitForUpdateXMLFilesFinished() {
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
-}
-
-/**
- * Setup the state of the distribution directory for the test.
- */
-function setupDistributionDir() {
-  if (IS_MACOSX) {
-    // Create files in the old distribution directory location to verify that
-    // the directory and its contents are removed when there is a distribution
-    // directory in the new location.
-    let testFile = getApplyDirFile(DIR_MACOS + "distribution/testFile", true);
-    writeFile(testFile, "test\n");
-    testFile = getApplyDirFile(DIR_MACOS + "distribution/test1/testFile", true);
-    writeFile(testFile, "test\n");
-  }
-}
-
-/**
- * Checks the state of the distribution directory for the test.
- */
-function checkDistributionDir() {
-  if (IS_MACOSX) {
-    let distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
-    Assert.ok(!distributionDir.exists(),
-              MSG_SHOULD_NOT_EXIST + getMsgPath(distributionDir.path));
-    checkUpdateLogContains(REMOVE_OLD_DIST_DIR);
-  }
 }
 
 /**

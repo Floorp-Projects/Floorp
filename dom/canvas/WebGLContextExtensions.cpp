@@ -279,37 +279,6 @@ WebGLContext::GetExtension(JSContext* cx,
         }
     }
 
-    if (ext == WebGLExtensionID::Unknown) {
-        // We keep backward compatibility for these deprecated vendor-prefixed
-        // alias. Do not add new ones anymore. Hide it behind the
-        // webgl.enable-draft-extensions flag instead.
-
-        if (CompareWebGLExtensionName(name, "MOZ_WEBGL_lose_context")) {
-            ext = WebGLExtensionID::WEBGL_lose_context;
-
-        } else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_s3tc")) {
-            ext = WebGLExtensionID::WEBGL_compressed_texture_s3tc;
-
-        } else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_atc")) {
-            ext = WebGLExtensionID::WEBGL_compressed_texture_atc;
-
-        } else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_pvrtc")) {
-            ext = WebGLExtensionID::WEBGL_compressed_texture_pvrtc;
-
-        } else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_depth_texture")) {
-            ext = WebGLExtensionID::WEBGL_depth_texture;
-        }
-
-        if (ext != WebGLExtensionID::Unknown) {
-            GenerateWarning("getExtension('%s'): MOZ_ prefixed WebGL extension"
-                            " strings are deprecated. Support for them will be"
-                            " removed in the future. Use unprefixed extension"
-                            " strings. To get draft extensions, set the"
-                            " webgl.enable-draft-extensions preference.",
-                            name.get());
-        }
-    }
-
     if (ext == WebGLExtensionID::Unknown)
         return;
 
@@ -475,26 +444,6 @@ WebGLContext::GetSupportedExtensions(dom::Nullable< nsTArray<nsString> >& retval
             arr.AppendElement(NS_ConvertUTF8toUTF16(extStr));
         }
     }
-
-    /**
-     * We keep backward compatibility for these deprecated vendor-prefixed
-     * alias. Do not add new ones anymore. Hide it behind the
-     * webgl.enable-draft-extensions flag instead.
-     */
-    if (IsExtensionSupported(callerType, WebGLExtensionID::WEBGL_lose_context))
-        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
-    if (IsExtensionSupported(callerType,
-                             WebGLExtensionID::WEBGL_compressed_texture_s3tc))
-        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"));
-    if (IsExtensionSupported(callerType,
-                             WebGLExtensionID::WEBGL_compressed_texture_atc))
-        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_atc"));
-    if (IsExtensionSupported(callerType,
-                             WebGLExtensionID::WEBGL_compressed_texture_pvrtc))
-        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_pvrtc"));
-    if (IsExtensionSupported(callerType,
-                             WebGLExtensionID::WEBGL_depth_texture))
-        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"));
 }
 
 } // namespace mozilla
