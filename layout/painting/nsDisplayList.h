@@ -2001,7 +2001,18 @@ public:
     return mFrame;
   }
 
+  /**
+   * @return the nsIFrame that provides the style data, and should
+   * be checked when deciding if this display item can be reused.
+   */
+  virtual nsIFrame* FrameForInvalidation() const
+  {
+    return mFrame;
+  }
+
   bool HasDeletedFrame() const { return !mFrame; }
+
+  virtual nsIFrame* StyleFrame() const { return mFrame; }
 
   /**
    * Compute the used z-index of our frame; returns zero for elements to which
@@ -3727,8 +3738,6 @@ protected:
   void PaintInternal(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
 
-  virtual nsIFrame* StyleFrame() { return mFrame; }
-
   // Determine whether we want to be separated into our own layer, independent
   // of whether this item can actually be layerized.
   enum ImageLayerization {
@@ -3799,8 +3808,12 @@ public:
   }
 
   virtual bool IsInvalid(nsRect& aRect) const override;
+
+  virtual nsIFrame* FrameForInvalidation() const override { return mStyleFrame; }
+
+  NS_DISPLAY_DECL_NAME("TableBackgroundImage", TYPE_TABLE_BACKGROUND_IMAGE)
 protected:
-  virtual nsIFrame* StyleFrame() override { return mStyleFrame; }
+  virtual nsIFrame* StyleFrame() const override { return mStyleFrame; }
 
   nsIFrame* mStyleFrame;
   TableType mTableType;
@@ -3996,14 +4009,20 @@ public:
                                 nscolor aColor,
                                 nsIFrame* aAncestorFrame)
     : nsDisplayBackgroundColor(aBuilder, aFrame, aBackgroundRect, aBackgroundStyle, aColor)
+    , mAncestorFrame(aAncestorFrame)
     , mTableType(GetTableTypeFromFrame(aAncestorFrame))
   { }
+
+  virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
   virtual uint32_t GetPerFrameKey() const override {
     return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
            nsDisplayItem::GetPerFrameKey();
   }
+
+  NS_DISPLAY_DECL_NAME("TableBackgroundColor", TYPE_TABLE_BACKGROUND_COLOR)
 protected:
+  nsIFrame* mAncestorFrame;
   TableType mTableType;
 };
 
@@ -5022,7 +5041,8 @@ protected:
  */
 class nsDisplaySubDocument : public nsDisplayOwnLayer {
 public:
-  nsDisplaySubDocument(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+  nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
+                       nsIFrame* aFrame, nsSubDocumentFrame* aSubDocFrame,
                        nsDisplayList* aList, uint32_t aFlags);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySubDocument();
@@ -5034,6 +5054,8 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
+
+  virtual nsSubDocumentFrame* SubDocumentFrame() { return mSubDocFrame; }
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
@@ -5051,6 +5073,7 @@ public:
 protected:
   ViewID mScrollParentId;
   bool mForceDispatchToContentRegion;
+  nsSubDocumentFrame* mSubDocFrame;
 };
 
 /**
@@ -5207,15 +5230,20 @@ public:
                                                                uint32_t aIndex,
                                                                nsIFrame* aAncestorFrame);
 
+  virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
+
   virtual uint32_t GetPerFrameKey() const override {
     return (mIndex << (TYPE_BITS + static_cast<uint8_t>(TableTypeBits::COUNT))) |
            (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
            nsDisplayItem::GetPerFrameKey();
   }
+
+  NS_DISPLAY_DECL_NAME("TableFixedPosition", TYPE_TABLE_FIXED_POSITION)
 protected:
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               nsDisplayList* aList, uint32_t aIndex, nsIFrame* aAncestorFrame);
 
+  nsIFrame* mAncestorFrame;
   TableType mTableType;
 };
 

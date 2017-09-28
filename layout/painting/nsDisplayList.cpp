@@ -6803,10 +6803,12 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
 }
 
 nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
-                                           nsIFrame* aFrame, nsDisplayList* aList,
-                                           uint32_t aFlags)
+                                           nsIFrame* aFrame,
+                                           nsSubDocumentFrame* aSubDocFrame,
+                                           nsDisplayList* aList, uint32_t aFlags)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aBuilder->CurrentActiveScrolledRoot(), aFlags)
     , mScrollParentId(aBuilder->GetCurrentScrollParentId())
+    , mSubDocFrame(aSubDocFrame)
 {
   MOZ_COUNT_CTOR(nsDisplaySubDocument);
   mForceDispatchToContentRegion =
@@ -6959,7 +6961,7 @@ nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList,
                                          uint32_t aFlags)
-    : nsDisplaySubDocument(aBuilder, aFrame, aList, aFlags) {
+    : nsDisplaySubDocument(aBuilder, aFrame, nullptr, aList, aFlags) {
   MOZ_COUNT_CTOR(nsDisplayResolution);
 }
 
@@ -7138,6 +7140,7 @@ nsDisplayTableFixedPosition::nsDisplayTableFixedPosition(nsDisplayListBuilder* a
                                                          uint32_t aIndex,
                                                          nsIFrame* aAncestorFrame)
   : nsDisplayFixedPosition(aBuilder, aFrame, aList, aIndex)
+  , mAncestorFrame(aAncestorFrame)
   , mTableType(GetTableTypeFromFrame(aAncestorFrame))
 {
 }
@@ -7434,7 +7437,7 @@ nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
                              int32_t aAPD, int32_t aParentAPD,
                              uint32_t aFlags)
-    : nsDisplaySubDocument(aBuilder, aFrame, aList, aFlags)
+    : nsDisplaySubDocument(aBuilder, aFrame, nullptr, aList, aFlags)
     , mAPD(aAPD), mParentAPD(aParentAPD) {
   MOZ_COUNT_CTOR(nsDisplayZoom);
 }
