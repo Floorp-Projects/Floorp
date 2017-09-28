@@ -2590,7 +2590,9 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
 #endif
 
   if (!count) {
-    gDoMigration = true;
+    // For a fresh install, we would like to let users decide
+    // to do profile migration on their own later after using.
+    gDoMigration = false;
     gDoProfileReset = false;
 
     // create a default profile
