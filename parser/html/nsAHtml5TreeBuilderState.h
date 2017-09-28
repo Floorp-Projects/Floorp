@@ -31,6 +31,8 @@ class nsAHtml5TreeBuilderState {
     
     virtual nsIContentHandle* getHeadPointer() = 0;
 
+    virtual nsIContentHandle* getDeepTreeSurrogateParent() = 0;
+
     virtual int32_t getMode() = 0;
 
     virtual int32_t getOriginalMode() = 0;

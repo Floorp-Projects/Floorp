@@ -92,12 +92,6 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
      */
     bool                          mAlreadyComplainedAboutCharset;
 
-    /**
-     * Whether this executor has already complained about the tree being too
-     * deep.
-     */
-    bool mAlreadyComplainedAboutDeepTree;
-
   public:
 
     nsHtml5TreeOpExecutor();
@@ -201,8 +195,6 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
                                    uint32_t aLineNumber);
 
     void ComplainAboutBogusProtocolCharset(nsIDocument* aDoc);
-
-    void MaybeComplainAboutDeepTree(uint32_t aLineNumber);
 
     bool IsComplete()
     {
