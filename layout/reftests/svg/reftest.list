@@ -29,7 +29,7 @@ include svg-integration/reftest.list
 == background-svg-without-height-width.html background-ref.html
 == background-svg-without-width.html background-ref.html
 
-== baseline-middle-01.svg pass.svg
+fails-if(webrender) == baseline-middle-01.svg pass.svg
 
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
@@ -298,7 +298,7 @@ fuzzy-if(d2d||skiaContent,1,6400) == mask-type-04.svg mask-type-01-ref.svg
 fuzzy-if(skiaContent,3,448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 
 fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) fails-if(webrender) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
-fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android,9,586) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
+fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android,9,586) fails-if(webrender) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 fails-if(webrender) == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 
 == objectBoundingBox-and-clipPath.svg pass.svg
@@ -346,8 +346,8 @@ fuzzy-if(skiaContent,1,400) == path-06.svg path-06-ref.svg
 == path-07.svg path-07-ref.svg
 == path-08.svg pass.svg
 
-== pathLength-01.svg pass.svg
-== pathLength-02.svg pass.svg
+fails-if(webrender) == pathLength-01.svg pass.svg
+fails-if(webrender) == pathLength-02.svg pass.svg
 
 == pattern-basic-01.svg pass.svg
 fuzzy(1,5) skip-if(Android) fails-if(webrender) == pattern-big-image.html pattern-big-image-ref.html
@@ -356,7 +356,7 @@ fuzzy-if(skiaContent,1,5) == pattern-live-01a.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-live-01b.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-live-01c.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-scale-01a.svg pattern-scale-01-ref.svg
-== pattern-scale-01b.svg pattern-scale-01-ref.svg
+fails-if(webrender) == pattern-scale-01b.svg pattern-scale-01-ref.svg
 fuzzy-if(skiaContent,3,5) == pattern-scale-01c.svg pattern-scale-01-ref.svg
 fuzzy-if(webrender,0-2,0-227) == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
 == pattern-transformed-01.svg pattern-transformed-01-ref.svg
@@ -395,7 +395,7 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg pass.svg
 == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg
 fuzzy-if(skiaContent,1,340) fails-if(webrender) == stroke-dasharray-02.svg pass.svg
 fuzzy-if(skiaContent,1,340) == stroke-dasharray-03.svg pass.svg
-== stroke-dasharray-and-pathLength-01.svg pass.svg
+fails-if(webrender) == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
 == stroke-dashoffset-01.svg pass.svg
 == stroke-dashoffset-and-pathLength-01.svg pass.svg
@@ -433,7 +433,7 @@ fuzzy-if(skiaContent,1,2600) == svg-in-foreignObject-02.xhtml svg-in-foreignObje
 == svg-transform-01.svg pass.svg
 == svg-transform-02.svg pass.svg
 
-== symbol-01.svg symbol-01-ref.svg
+fails-if(webrender) == symbol-01.svg symbol-01-ref.svg
 
 == text-font-size-01.svg pass.svg
 random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
@@ -529,7 +529,7 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-re
 
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-and-pattern-02.svg pass.svg
-== viewBox-and-pattern-03.svg pass.svg
+fails-if(webrender) == viewBox-and-pattern-03.svg pass.svg
 == viewBox-and-pattern-04.svg pass.svg
 == viewBox-invalid-01.svg pass.svg
 == viewBox-invalid-02.svg pass.svg
