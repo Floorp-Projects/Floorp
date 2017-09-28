@@ -1296,6 +1296,11 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
     return rv;
   }
 
+  rv = CheckForSmartCardChanges();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsCOMPtr<nsIX509CertList> nssCertList;
   UniqueCERTCertList certList(PK11_ListCerts(PK11CertListUnique, ctx));
