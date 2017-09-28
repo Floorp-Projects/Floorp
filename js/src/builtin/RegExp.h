@@ -118,7 +118,7 @@ extern MOZ_MUST_USE bool
 RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto);
 
 extern MOZ_MUST_USE bool
-RegExpGetSubstitution(JSContext* cx, HandleObject matchResult, HandleLinearString string,
+RegExpGetSubstitution(JSContext* cx, HandleArrayObject matchResult, HandleLinearString string,
                       size_t position, HandleLinearString replacement, size_t firstDollarIndex,
                       MutableHandleValue rval);
 

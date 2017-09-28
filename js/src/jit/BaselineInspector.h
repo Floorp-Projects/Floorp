@@ -123,7 +123,7 @@ class BaselineInspector
     bool hasSeenNonStringIterMore(jsbytecode* pc);
 
     MOZ_MUST_USE bool isOptimizableConstStringSplit(jsbytecode* pc, JSString** strOut,
-                                                    JSString** sepOut, JSObject** objOut);
+                                                    JSString** sepOut, ArrayObject** objOut);
     JSObject* getTemplateObject(jsbytecode* pc);
     JSObject* getTemplateObjectForNative(jsbytecode* pc, Native native);
     JSObject* getTemplateObjectForClassHook(jsbytecode* pc, const Class* clasp);
