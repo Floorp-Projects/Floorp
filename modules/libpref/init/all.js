@@ -3329,13 +3329,8 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 // Force the accelerated direct path for a subset of Flash wmode values
 pref("dom.ipc.plugins.forcedirect.enabled", true);
 
-// Enable multi by default for Nightly and DevEdition only.
-// For Beta and Release builds, multi is controlled by the e10srollout addon.
-#if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
-pref("dom.ipc.processCount", 1);
-#else
+// Enable multi by default.
 pref("dom.ipc.processCount", 4);
-#endif
 
 // Default to allow only one file:// URL content process.
 pref("dom.ipc.processCount.file", 1);
