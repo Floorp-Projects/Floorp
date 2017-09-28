@@ -1169,7 +1169,6 @@ inline void CheckValueAfterMovingGC(const JS::Value& value);
             D(FrameGC, 3)                      \
             D(VerifierPre, 4)                  \
             D(FrameVerifierPre, 5)             \
-            D(StackRooting, 6)                 \
             D(GenerationalGC, 7)               \
             D(IncrementalRootsThenFinish, 8)   \
             D(IncrementalMarkAllThenFinish, 9) \
