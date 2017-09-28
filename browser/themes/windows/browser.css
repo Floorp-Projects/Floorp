@@ -295,10 +295,6 @@
   }
 }
 
-.titlebar-placeholder[type="caption-buttons"] {
-  margin-left: 22px; /* space needed for Aero Snap */
-}
-
 /* titlebar command buttons */
 
 #titlebar-min {
