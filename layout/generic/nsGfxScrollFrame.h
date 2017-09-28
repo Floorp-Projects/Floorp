@@ -416,7 +416,8 @@ public:
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aVisibleRect,
                              nsRect* aDirtyRect,
-                             bool aSetBase);
+                             bool aSetBase,
+                             bool* aDirtyRectHasBeenOverriden = nullptr);
   void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort);
   bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(nsRect* aDisplayPort);
 
