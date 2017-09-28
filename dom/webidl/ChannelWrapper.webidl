@@ -4,6 +4,7 @@
 
 interface LoadInfo;
 interface MozChannel;
+interface TabParent;
 interface URI;
 interface nsISupports;
 
@@ -132,6 +133,12 @@ interface ChannelWrapper : EventTarget {
                   optional WebExtensionPolicy? extension = null,
                   optional MozRequestMatchOptions options);
 
+
+  /**
+   * Register's this channel as traceable by the given add-on when accessed
+   * via the process of the given TabParent.
+   */
+  void registerTraceableChannel(WebExtensionPolicy extension, TabParent? tabParent);
 
   /**
    * The current HTTP status code of the request. This will be 0 if a response
