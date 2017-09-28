@@ -117,7 +117,8 @@ var tests = [
       is(e.type, "error", "correct type during error");
       is(e.target, req, "correct target during error");
       is(req.readyState, "done", "correct readyState after error");
-      is(req.error.name, "error msg", "correct error after error");
+      is(req.error.name, "UnknownError", "correct error name after error");
+      is(req.error.message, "error msg", "correct error message after error");
       is(req.result, undefined, "correct result after error");
       try {
         req.continue();

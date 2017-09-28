@@ -882,14 +882,22 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
       return;
     }
 
-    if (!mContext->IsWebGL2() && !baseImageInfo.IsPowerOfTwo()) {
-        mContext->ErrorInvalidOperation("%s: The base level of the texture does not have"
-                                        " power-of-two dimensions.",
-                                        funcName);
-        return;
+    const auto format = baseImageInfo.mFormat->format;
+    if (!mContext->IsWebGL2()) {
+        if (!baseImageInfo.IsPowerOfTwo()) {
+            mContext->ErrorInvalidOperation("%s: The base level of the texture does not"
+                                            " have power-of-two dimensions.",
+                                            funcName);
+            return;
+        }
+        if (format->isSRGB) {
+            mContext->ErrorInvalidOperation("%s: EXT_sRGB forbids GenerateMipmap with"
+                                            " sRGB.",
+                                            funcName);
+            return;
+        }
     }
 
-    auto format = baseImageInfo.mFormat->format;
     if (format->compression) {
         mContext->ErrorInvalidOperation("%s: Texture data at base level is compressed.",
                                         funcName);

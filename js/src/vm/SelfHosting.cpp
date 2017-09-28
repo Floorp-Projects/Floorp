@@ -1651,7 +1651,7 @@ intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 5);
 
-    RootedObject matchResult(cx, &args[0].toObject());
+    RootedArrayObject matchResult(cx, &args[0].toObject().as<ArrayObject>());
 
     RootedLinearString string(cx, args[1].toString()->ensureLinear(cx));
     if (!string)

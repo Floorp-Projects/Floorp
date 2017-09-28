@@ -76,30 +76,30 @@ extern ArrayObject*
 NewDenseFullyAllocatedArrayWithTemplate(JSContext* cx, uint32_t length, JSObject* templateObject);
 
 /* Create a dense array with the same copy-on-write elements as another object. */
-extern JSObject*
+extern ArrayObject*
 NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc::InitialHeap heap);
 
 // The methods below can create either boxed or unboxed arrays.
 
-extern JSObject*
+extern ArrayObject*
 NewFullyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
                                   NewObjectKind newKind = GenericObject);
 
-extern JSObject*
+extern ArrayObject*
 NewPartlyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length);
 
-extern JSObject*
+extern ArrayObject*
 NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length,
                                     NewObjectKind newKind = GenericObject);
 
-extern JSObject*
+extern ArrayObject*
 NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length);
 
-extern JSObject*
+extern ArrayObject*
 NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
                                                NewObjectKind newKind = GenericObject);
 
-extern JSObject*
+extern ArrayObject*
 NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length, HandleObject proto);
 
 enum class ShouldUpdateTypes
@@ -108,17 +108,13 @@ enum class ShouldUpdateTypes
     DontUpdate
 };
 
-extern bool
-MaybeAnalyzeBeforeCreatingLargeArray(JSContext* cx, HandleObjectGroup group,
-                                     const Value* vp, size_t length);
-
-extern JSObject*
+extern ArrayObject*
 NewCopiedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group,
                           const Value* vp, size_t length,
                           NewObjectKind newKind = GenericObject,
                           ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
 
-extern JSObject*
+extern ArrayObject*
 NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length,
                                        HandleObject proto = nullptr);
 
@@ -170,7 +166,7 @@ extern bool
 array_join(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern void
-ArrayShiftMoveElements(JSObject* obj);
+ArrayShiftMoveElements(NativeObject* obj);
 
 extern bool
 array_shift(JSContext* cx, unsigned argc, js::Value* vp);
@@ -202,7 +198,7 @@ extern const JSJitInfo array_splice_info;
 extern bool
 NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v);
 
-extern JSObject*
+extern ArrayObject*
 ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group, int32_t lengthInt);
 
 #ifdef DEBUG

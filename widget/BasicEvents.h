@@ -613,13 +613,9 @@ public:
    */
   void StopPropagation() { mFlags.StopPropagation(); }
   void StopImmediatePropagation() { mFlags.StopImmediatePropagation(); }
-  void PreventDefault(bool aCalledByDefaultHandler = true)
-  {
-    // Legacy mouse events shouldn't be prevented on ePointerDown by default
-    // handlers.
-    MOZ_RELEASE_ASSERT(!aCalledByDefaultHandler || mMessage != ePointerDown);
-    mFlags.PreventDefault(aCalledByDefaultHandler);
-  }
+  void PreventDefault(bool aCalledByDefaultHandler = true,
+                      nsIPrincipal* aPrincipal = nullptr);
+
   void PreventDefaultBeforeDispatch() { mFlags.PreventDefaultBeforeDispatch(); }
   bool DefaultPrevented() const { return mFlags.DefaultPrevented(); }
   bool DefaultPreventedByContent() const

@@ -143,13 +143,13 @@ public:
     // Report any exception and don't throw it to the caller code.
     eReportExceptions,
     // Throw an exception to the caller code if the thrown exception is a
-    // binding object for a DOMError or DOMException from the caller's scope,
-    // otherwise report it.
+    // binding object for a DOMException from the caller's scope, otherwise
+    // report it.
     eRethrowContentExceptions,
     // Throw exceptions to the caller code, unless the caller compartment is
-    // provided, the exception is not a DOMError or DOMException from the
-    // caller compartment, and the caller compartment does not subsume our
-    // unwrapped callback.
+    // provided, the exception is not a DOMException from the caller
+    // compartment, and the caller compartment does not subsume our unwrapped
+    // callback.
     eRethrowExceptions
   };
 

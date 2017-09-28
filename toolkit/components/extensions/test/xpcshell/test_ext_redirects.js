@@ -5,12 +5,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
                                   "resource://testing-common/TestUtils.jsm");
 const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
 
-// nsIWebRequestListener is a nsIThreadRetargetableStreamListener that handles
-// forwarding of nsIRequestObserver for JS consumers.  It does nothing more
-// than that.
-let WebRequestListener = Components.Constructor("@mozilla.org/webextensions/webRequestListener;1",
-                                                "nsIWebRequestListener", "init");
-
 const server = createHttpServer();
 const gServerUrl = `http://localhost:${server.identity.primaryPort}`;
 
@@ -27,20 +21,25 @@ server.registerPathHandler("/dummy", (request, response) => {
 
 function onStopListener(channel) {
   return new Promise(resolve => {
-    new WebRequestListener({
+    let orig = channel.QueryInterface(Ci.nsITraceableChannel).setNewListener({
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
                                              Ci.nsIStreamListener]),
       getFinalURI(request) {
         let {loadInfo} = request;
         return (loadInfo && loadInfo.resultPrincipalURI) || request.originalURI;
       },
+      onDataAvailable(...args) {
+        orig.onDataAvailable(...args);
+      },
       onStartRequest(request, context) {
+        orig.onStartRequest(request, context);
       },
       onStopRequest(request, context, statusCode) {
+        orig.onStopRequest(request, context, statusCode);
         let URI = this.getFinalURI(request.QueryInterface(Ci.nsIChannel));
         resolve(URI && URI.spec);
       },
-    }, channel);
+    });
   });
 }
 
