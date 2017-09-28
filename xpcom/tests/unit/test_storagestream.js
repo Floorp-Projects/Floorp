@@ -39,8 +39,12 @@ function test1()
   var threw = false;
   try {
     sis.read(1);
-  } catch (ex if ex.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
-    threw = true;
+  } catch (ex) {
+    if (ex.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
+      threw = true;
+    } else {
+      throw ex;
+    }
   }
   do_check_true(threw);
 }

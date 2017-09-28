@@ -52,8 +52,10 @@ function setup_test_run(testKey, keyName)
         do_print("Test key exists. Needs cleanup.");
         cleanup_test_run(testKey, keyName);
     }
-    catch (e if (e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE))
-    {
+    catch (e) {
+        if (!(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+            throw e;
+        }
     }
 
     testKey.create(nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, keyName, nsIWindowsRegKey.ACCESS_ALL);
@@ -106,25 +108,37 @@ function test_invalidread_functions(testKey)
     try {
         testKey.readIntValue(TESTDATA_STRNAME);
         do_throw("Reading an integer from a string registry value should throw.");
-    } catch (e if (e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+    } catch (e) {
+        if (!(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+            throw e;
+        }
     }
 
     try {
         let val = testKey.readStringValue(TESTDATA_INTNAME);
         do_throw("Reading an string from an Int registry value should throw." + val);
-    } catch (e if (e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+    } catch (e) {
+        if (!(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+            throw e;
+        }
     }
 
     try {
         testKey.readStringValue(TESTDATA_INT64NAME);
         do_throw("Reading an string from an Int64 registry value should throw.");
-    } catch (e if (e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+    } catch (e) {
+        if (!(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+            throw e;
+        }
     }
 
     try {
         testKey.readStringValue(TESTDATA_BINARYNAME);
         do_throw("Reading a string from an Binary registry value should throw.");
-    } catch (e if (e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+    } catch (e) {
+        if (!(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_FAILURE)) {
+            throw e;
+        }
     }
 
 }
