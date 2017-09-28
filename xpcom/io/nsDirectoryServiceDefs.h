@@ -31,8 +31,6 @@
 #define NS_OS_DESKTOP_DIR                       "Desk"
 
 /* Property returns the directory in which the procces was started from.
- * On Unix this will be the path in the MOZILLA_FIVE_HOME env var and if
- * unset will be the current working directory.
  */
 #define NS_OS_CURRENT_PROCESS_DIR               "CurProcD"
 
