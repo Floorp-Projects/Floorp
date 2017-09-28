@@ -8,8 +8,8 @@
 #define mozilla_dom_SVGAnimationElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/SVGTests.h"
-#include "nsReferencedElement.h"
 #include "nsSMILTimedElement.h"
 #include "nsSVGElement.h"
 
@@ -99,7 +99,7 @@ public:
                         const nsAString& aHrefStr);
   void AnimationTargetChanged();
 
-  class TargetReference : public nsReferencedElement {
+  class TargetReference : public mozilla::dom::IDTracker {
   public:
     explicit TargetReference(SVGAnimationElement* aAnimationElement) :
       mAnimationElement(aAnimationElement) {}
@@ -108,7 +108,7 @@ public:
     // sample (which will clear animation effects from old target and apply
     // them to the new target) and update any event registrations.
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
-      nsReferencedElement::ElementChanged(aFrom, aTo);
+      IDTracker::ElementChanged(aFrom, aTo);
       mAnimationElement->AnimationTargetChanged();
     }
 

@@ -6,6 +6,10 @@
 
 #include "TimeoutExecutor.h"
 
+#include "mozilla/dom/TimeoutManager.h"
+#include "nsComponentManagerUtils.h"
+#include "nsString.h"
+
 namespace mozilla {
 namespace dom {
 

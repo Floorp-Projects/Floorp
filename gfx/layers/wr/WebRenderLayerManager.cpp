@@ -622,9 +622,8 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(clippedBounds);
 
       RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
-      // TODO: should use 'format' to replace gfx::SurfaceFormat::B8G8R8A8. Currently blob image doesn't support A8 format.
       RefPtr<gfx::DrawTarget> dummyDt =
-        gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8);
+        gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
       PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder,
                             fallbackData->mBasicLayerManager, this);

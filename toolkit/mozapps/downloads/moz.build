@@ -16,7 +16,6 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'DownloadLastDir.jsm',
-    'DownloadPaths.jsm',
     'DownloadUtils.jsm',
 ]
 

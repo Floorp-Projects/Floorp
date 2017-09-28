@@ -11,8 +11,8 @@
 #include "gfxUtils.h"
 #include "nsSVGDisplayableFrame.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/SVGFilterElement.h"
-#include "nsReferencedElement.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGUtils.h"
@@ -135,7 +135,7 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
   }
 
   // Look up the filter element by URL.
-  nsReferencedElement filterElement;
+  IDTracker filterElement;
   bool watch = false;
   filterElement.Reset(mTargetContent, url, watch);
   Element* element = filterElement.get();

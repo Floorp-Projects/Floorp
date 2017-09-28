@@ -1,22 +1,11 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
-/* ***** BEGIN LICENSE BLOCK *****
- *
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- *
- * ***** END LICENSE BLOCK ***** */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
  * Tests for the "DownloadPaths.jsm" JavaScript module.
  */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-
-Cu.import("resource://gre/modules/DownloadPaths.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 /**
  * Provides a temporary save directory.
@@ -31,6 +20,10 @@ function createTemporarySaveDirectory() {
     saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   }
   return saveDir;
+}
+
+function testSanitize(leafName, expectedLeafName) {
+  do_check_eq(DownloadPaths.sanitize(leafName), expectedLeafName);
 }
 
 function testSplitBaseNameAndExtension(aLeafName, [aBase, aExt]) {
@@ -54,7 +47,54 @@ function testCreateNiceUniqueFile(aTempFile, aExpectedLeafName) {
   do_check_eq(createdFile.leafName, aExpectedLeafName);
 }
 
-function run_test() {
+add_task(async function test_sanitize() {
+  // Platform-dependent conversion of special characters to spaces.
+  const kSpecialChars = "A:*?|\"\"<<>>;,+=[]B][=+,;>><<\"\"|?*:C";
+  if (AppConstants.platform == "android") {
+    testSanitize(kSpecialChars, "A B C");
+    testSanitize(" :: Website :: ", "Website");
+    testSanitize("* Website!", "Website!");
+    testSanitize("Website | Page!", "Website   Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
+  } else if (AppConstants.platform == "win") {
+    testSanitize(kSpecialChars, "A ''(());,+=[]B][=+,;))(('' C");
+    testSanitize(" :: Website :: ", "Website");
+    testSanitize("* Website!", "Website!");
+    testSanitize("Website | Page!", "Website   Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
+  } else if (AppConstants.platform == "macosx") {
+    testSanitize(kSpecialChars, "A *?|\"\"<<>>;,+=[]B][=+,;>><<\"\"|?* C");
+    testSanitize(" :: Website :: ", "Website");
+    testSanitize("* Website!", "* Website!");
+    testSanitize("Website | Page!", "Website | Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing  _a_b_");
+  } else {
+    testSanitize(kSpecialChars, kSpecialChars);
+    testSanitize(" :: Website :: ", ":: Website ::");
+    testSanitize("* Website!", "* Website!");
+    testSanitize("Website | Page!", "Website | Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing: _a_b_");
+  }
+
+  // Conversion of consecutive runs of slashes and backslashes to underscores.
+  testSanitize("\\ \\\\Website\\/Page// /", "_ _Website_Page_ _");
+
+  // Removal of leading and trailing whitespace and dots after conversion.
+  testSanitize("  Website  ", "Website");
+  testSanitize(". . Website . Page . .", "Website . Page");
+  testSanitize(" File . txt ", "File . txt");
+  testSanitize("\f\n\r\t\v\x00\x1f\x7f\x80\x9f\xa0 . txt", "txt");
+  testSanitize("\u1680\u180e\u2000\u2008\u200a . txt", "txt");
+  testSanitize("\u2028\u2029\u202f\u205f\u3000\ufeff . txt", "txt");
+
+  // Strings with whitespace and dots only.
+  testSanitize(".", "");
+  testSanitize("..", "");
+  testSanitize(" ", "");
+  testSanitize(" . ", "");
+});
+
+add_task(async function test_splitBaseNameAndExtension() {
   // Usual file names.
   testSplitBaseNameAndExtension("base", ["base", ""]);
   testSplitBaseNameAndExtension("base.ext", ["base", ".ext"]);
@@ -88,7 +128,9 @@ function run_test() {
   testSplitBaseNameAndExtension(" .ext", [" ", ".ext"]);
   testSplitBaseNameAndExtension(" .ext. ", [" .ext", ". "]);
   testSplitBaseNameAndExtension(" .ext.gz ", [" .ext", ".gz "]);
+});
 
+add_task(async function test_createNiceUniqueFile() {
   var destDir = createTemporarySaveDirectory();
   try {
     // Single extension.
@@ -124,4 +166,4 @@ function run_test() {
     // Clean up the temporary directory.
     destDir.remove(true);
   }
-}
+});
