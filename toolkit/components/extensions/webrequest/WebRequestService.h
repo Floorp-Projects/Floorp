@@ -7,33 +7,47 @@
 #ifndef mozilla_WebRequestService_h
 #define mozilla_WebRequestService_h
 
-#include "mozIWebRequestService.h"
-
 #include "mozilla/LinkedList.h"
-#include "mozilla/Mutex.h"
-#include "nsCOMPtr.h"
-#include "nsHashKeys.h"
-#include "nsClassHashtable.h"
-#include "nsIAtom.h"
-#include "nsIDOMWindowUtils.h"
-#include "nsWeakPtr.h"
+#include "mozilla/UniquePtr.h"
 
-using namespace mozilla;
+#include "mozilla/extensions/ChannelWrapper.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
+
+#include "nsHashKeys.h"
+#include "nsDataHashtable.h"
+
+class nsIAtom;
+class nsITabParent;
+class nsITraceableChannel;
 
 namespace mozilla {
 namespace dom {
   class TabParent;
   class nsIContentParent;
 }
-}
 
-class WebRequestService : public mozIWebRequestService
+namespace extensions {
+
+class WebRequestChannelEntry final
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_MOZIWEBREQUESTSERVICE
+  ~WebRequestChannelEntry();
 
-  explicit WebRequestService();
+private:
+  friend class WebRequestService;
+
+  explicit WebRequestChannelEntry(ChannelWrapper* aChannel);
+
+  uint64_t mChannelId;
+  WeakPtr<ChannelWrapper> mChannel;
+};
+
+class WebRequestService final
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(WebRequestService)
+
+  WebRequestService() = default;
 
   static already_AddRefed<WebRequestService> GetInstance()
   {
@@ -42,63 +56,25 @@ public:
 
   static WebRequestService& GetSingleton();
 
-  already_AddRefed<nsIChannel>
+  using ChannelEntry = WebRequestChannelEntry;
+
+  UniquePtr<ChannelEntry> RegisterChannel(ChannelWrapper* aChannel);
+
+  void UnregisterTraceableChannel(uint64_t aChannelId);
+
+  already_AddRefed<nsITraceableChannel>
   GetTraceableChannel(uint64_t aChannelId, nsIAtom* aAddonId,
                       dom::nsIContentParent* aContentParent);
 
-protected:
-  virtual ~WebRequestService();
-
 private:
-  class ChannelParent : public LinkedListElement<ChannelParent>
-  {
-  public:
-    explicit ChannelParent(uint64_t aChannelId, nsIChannel* aChannel, nsIAtom* aAddonId, nsITabParent* aTabParent);
-    ~ChannelParent();
+  ~WebRequestService();
 
-    void Detach();
+  friend ChannelEntry;
 
-    const RefPtr<dom::TabParent> mTabParent;
-    const RefPtr<nsIAtom> mAddonId;
-
-  private:
-    const uint64_t mChannelId;
-    bool mDetached = false;
-  };
-
-  class Destructor : public nsIJSRAIIHelper
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIJSRAIIHELPER
-
-    explicit Destructor(ChannelParent* aChannelParent)
-      : mChannelParent(aChannelParent)
-      , mDestructCalled(false)
-    {}
-
-  protected:
-    virtual ~Destructor();
-
-  private:
-    ChannelParent* mChannelParent;
-    bool mDestructCalled;
-  };
-
-  class ChannelEntry
-  {
-  public:
-    void DetachAll();
-
-    // Note: We can't keep a strong pointer to the channel here, since channels
-    // are not cycle collected, and a reference to this object will be stored on
-    // the channel in order to keep the entry alive.
-    nsWeakPtr mChannel;
-    LinkedList<ChannelParent> mTabParents;
-  };
-
-  nsClassHashtable<nsUint64HashKey, ChannelEntry> mChannelEntries;
-  Mutex mDataLock;
+  nsDataHashtable<nsUint64HashKey, ChannelEntry*> mChannelEntries;
 };
+
+}
+}
 
 #endif // mozilla_WebRequestService_h

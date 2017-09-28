@@ -352,7 +352,7 @@ ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval)
 bool
 ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length)
 {
-    *length = GetAnyBoxedOrUnboxedArrayLength(obj);
+    *length = obj->as<ArrayObject>().length();
     DenseElementResult result =
         SetOrExtendBoxedOrUnboxedDenseElements(cx, obj, *length, v.address(), 1,
                                                ShouldUpdateTypes::DontUpdate);
@@ -542,10 +542,10 @@ InterruptCheck(JSContext* cx)
 }
 
 void*
-MallocWrapper(JSRuntime* rt, size_t nbytes)
+MallocWrapper(JS::Zone* zone, size_t nbytes)
 {
     AutoUnsafeCallWithABI unsafe;
-    return rt->pod_malloc<uint8_t>(nbytes);
+    return zone->pod_malloc<uint8_t>(nbytes);
 }
 
 JSObject*

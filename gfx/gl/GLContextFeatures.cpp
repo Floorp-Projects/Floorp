@@ -546,24 +546,13 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "sRGB_framebuffer",
+        "sRGB",
         GLVersion::GL3,
         GLESVersion::ES3,
         GLContext::ARB_framebuffer_sRGB,
         {
-            GLContext::EXT_framebuffer_sRGB,
-            GLContext::EXT_sRGB_write_control,
-            GLContext::Extensions_End
-        }
-    },
-    {
-        "sRGB_texture",
-        GLVersion::GL2_1,
-        GLESVersion::ES3,
-        GLContext::Extension_None,
-        {
             GLContext::EXT_sRGB,
-            GLContext::EXT_texture_sRGB,
+            GLContext::EXT_framebuffer_sRGB,
             GLContext::Extensions_End
         }
     },

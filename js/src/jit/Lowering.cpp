@@ -3336,20 +3336,16 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole* ins)
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegisterOrConstant(ins->index());
 
-    // Use a temp register when adding new elements to unboxed arrays.
-    LDefinition tempDef = LDefinition::BogusTemp();
-
     LInstruction* lir;
     switch (ins->value()->type()) {
       case MIRType::Value:
-        lir = new(alloc()) LStoreElementHoleV(object, elements, index, useBox(ins->value()),
-                                              tempDef);
+        lir = new(alloc()) LStoreElementHoleV(object, elements, index, useBox(ins->value()));
         break;
 
       default:
       {
         const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-        lir = new(alloc()) LStoreElementHoleT(object, elements, index, value, tempDef);
+        lir = new(alloc()) LStoreElementHoleT(object, elements, index, value);
         break;
       }
     }
@@ -3368,18 +3364,14 @@ LIRGenerator::visitFallibleStoreElement(MFallibleStoreElement* ins)
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegisterOrConstant(ins->index());
 
-    // Use a temp register when adding new elements to unboxed arrays.
-    LDefinition tempDef = LDefinition::BogusTemp();
-
     LInstruction* lir;
     switch (ins->value()->type()) {
       case MIRType::Value:
-        lir = new(alloc()) LFallibleStoreElementV(object, elements, index, useBox(ins->value()),
-                                                  tempDef);
+        lir = new(alloc()) LFallibleStoreElementV(object, elements, index, useBox(ins->value()));
         break;
       default:
         const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-        lir = new(alloc()) LFallibleStoreElementT(object, elements, index, value, tempDef);
+        lir = new(alloc()) LFallibleStoreElementT(object, elements, index, value);
         break;
     }
 

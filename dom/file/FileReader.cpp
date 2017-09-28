@@ -14,7 +14,7 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ProgressEvent.h"
@@ -254,9 +254,12 @@ FileReader::OnLoadEndArrayBuffer()
     AssignJSFlatString(errorName, name);
   }
 
+  nsAutoCString errorMsg(er->message().c_str());
+  nsAutoCString errorNameC = NS_LossyConvertUTF16toASCII(errorName);
+  // XXX Code selected arbitrarily
   mError =
-    new DOMError(GetOwner(), errorName,
-                 NS_ConvertUTF8toUTF16(er->message().c_str()));
+    new DOMException(NS_ERROR_DOM_INVALID_STATE_ERR, errorMsg,
+                     errorNameC, DOMException::INVALID_STATE_ERR);
 
   FreeDataAndDispatchError();
 }
@@ -585,13 +588,13 @@ FileReader::FreeDataAndDispatchError(nsresult aRv)
   // Set the status attribute, and dispatch the error event
   switch (aRv) {
   case NS_ERROR_FILE_NOT_FOUND:
-    mError = new DOMError(GetOwner(), NS_LITERAL_STRING("NotFoundError"));
+    mError = DOMException::Create(NS_ERROR_DOM_NOT_FOUND_ERR);
     break;
   case NS_ERROR_FILE_ACCESS_DENIED:
-    mError = new DOMError(GetOwner(), NS_LITERAL_STRING("SecurityError"));
+    mError = DOMException::Create(NS_ERROR_DOM_SECURITY_ERR);
     break;
   default:
-    mError = new DOMError(GetOwner(), NS_LITERAL_STRING("NotReadableError"));
+    mError = DOMException::Create(NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
     break;
   }
 
@@ -759,7 +762,7 @@ FileReader::Abort()
   mReadyState = DONE;
 
   // XXX The spec doesn't say this
-  mError = new DOMError(GetOwner(), NS_LITERAL_STRING("AbortError"));
+  mError = DOMException::Create(NS_ERROR_DOM_ABORT_ERR);
 
   // Revert status and result attributes
   SetDOMStringToNull(mResult);

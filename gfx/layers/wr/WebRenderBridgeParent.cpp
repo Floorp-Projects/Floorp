@@ -551,8 +551,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
       LayoutDeviceIntSize size = mWidget->GetClientSize();
       mApi->SetWindowParameters(size);
     }
-    gfx::Color color = mWidget ? gfx::Color(0.3f, 0.f, 0.f, 1.f) : gfx::Color(0.f, 0.f, 0.f, 0.f);
-    mApi->SetDisplayList(color, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
+    gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
+    mApi->SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
                         mPipelineId, aContentSize,
                         dlDesc, dl.mData, dl.mLength,
                         resources);

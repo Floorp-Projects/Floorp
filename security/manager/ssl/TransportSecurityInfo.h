@@ -66,8 +66,6 @@ public:
   }
   void SetOriginAttributes(const OriginAttributes& aOriginAttributes);
 
-  PRErrorCode GetErrorCode() const;
-
   void GetErrorLogMessage(PRErrorCode errorCode,
                           ::mozilla::psm::SSLErrorMessageType errorMessageType,
                           nsString &result);

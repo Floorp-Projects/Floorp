@@ -484,11 +484,15 @@ Event::PreventDefault(JSContext* aCx, CallerType aCallerType)
   // Then, JS in content mey be call preventDefault()
   // even in the event is in system event group.  Therefore, don't refer
   // mInSystemGroup here.
-  PreventDefaultInternal(aCallerType == CallerType::System);
+  nsIPrincipal* principal = mIsMainThreadEvent ?
+                              nsContentUtils::SubjectPrincipal(aCx) : nullptr;
+
+  PreventDefaultInternal(aCallerType == CallerType::System, principal);
 }
 
 void
-Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
+Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
+                              nsIPrincipal* aPrincipal)
 {
   if (!mEvent->mFlags.mCancelable) {
     return;
@@ -507,7 +511,7 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
     return;
   }
 
-  mEvent->PreventDefault(aCalledByDefaultHandler);
+  mEvent->PreventDefault(aCalledByDefaultHandler, aPrincipal);
 
   if (!IsTrusted()) {
     return;

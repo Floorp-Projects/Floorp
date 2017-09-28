@@ -9,6 +9,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
                                   "resource://gre/modules/ExtensionUtils.jsm");
 
+Cu.import("resource://testing-common/PromiseTestUtils.jsm");
+
+PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+
 add_task(async function test_delete() {
   function background() {
     let historyClearedCount = 0;

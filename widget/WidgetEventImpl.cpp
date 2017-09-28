@@ -13,6 +13,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPrintfCString.h"
@@ -513,6 +514,30 @@ WidgetEvent::GetOriginalDOMEventTarget() const
     return GetTargetForDOMEvent(mOriginalTarget);
   }
   return GetDOMEventTarget();
+}
+
+void
+WidgetEvent::PreventDefault(bool aCalledByDefaultHandler,
+                            nsIPrincipal* aPrincipal)
+{
+  if (mMessage == ePointerDown) {
+    if (aCalledByDefaultHandler) {
+      // Shouldn't prevent default on pointerdown by default handlers to stop
+      // firing legacy mouse events. Use MOZ_ASSERT to catch incorrect usages
+      // in debug builds.
+      MOZ_ASSERT(false);
+      return;
+    }
+    if (aPrincipal) {
+      nsAutoString addonId;
+      Unused << NS_WARN_IF(NS_FAILED(aPrincipal->GetAddonId(addonId)));
+      if (!addonId.IsEmpty()) {
+        // Ignore the case that it's called by a web extension.
+        return;
+      }
+    }
+  }
+  mFlags.PreventDefault(aCalledByDefaultHandler);
 }
 
 /******************************************************************************

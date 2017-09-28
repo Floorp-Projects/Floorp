@@ -158,14 +158,20 @@ URLInfo::Path() const
   return mPath;
 }
 
+const nsCString&
+URLInfo::CSpec() const
+{
+  if (mCSpec.IsEmpty()) {
+    Unused << URINoRef()->GetSpec(mCSpec);
+  }
+  return mCSpec;
+}
+
 const nsString&
 URLInfo::Spec() const
 {
   if (mSpec.IsEmpty()) {
-    nsCString spec;
-    if (NS_SUCCEEDED(URINoRef()->GetSpec(spec))) {
-      AppendUTF8toUTF16(spec, mSpec);
-    }
+    AppendUTF8toUTF16(CSpec(), mSpec);
   }
   return mSpec;
 }

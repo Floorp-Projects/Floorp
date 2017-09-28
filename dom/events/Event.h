@@ -244,7 +244,8 @@ public:
    *                                    by a call of Event.preventDefault() in
    *                                    content script, false.
    */
-  void PreventDefaultInternal(bool aCalledByDefaultHandler);
+  void PreventDefaultInternal(bool aCalledByDefaultHandler,
+                              nsIPrincipal* aPrincipal = nullptr);
 
   bool IsMainThreadEvent()
   {

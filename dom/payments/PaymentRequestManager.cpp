@@ -416,15 +416,17 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
   /*
    * Set request's |mShippingType| and |mShippingOption| if shipping is required.
    * Set request's mShippingOption to last selected option's ID if
-   * details.shippingOptions exists.
+   * details.shippingOptions exists, otherwise set it as null.
    */
+  nsAutoString shippingOption;
+  SetDOMStringToNull(shippingOption);
   if (aOptions.mRequestShipping) {
     request->SetShippingType(
         Nullable<PaymentShippingType>(aOptions.mShippingType));
-    nsAutoString shippingOption;
     GetSelectedShippingOption(aDetails, shippingOption);
-    request->SetShippingOption(shippingOption);
   }
+  request->SetShippingOption(shippingOption);
+
 
   nsAutoString internalId;
   request->GetInternalId(internalId);

@@ -23,11 +23,6 @@
 #include "nsIFile.h"
 
 #ifdef XP_WIN
-#ifdef MOZ_ASAN
-// ASAN requires firefox.exe to be built with -MD, and it's OK if we don't
-// support Windows XP SP2 in ASAN builds.
-#define XRE_DONT_SUPPORT_XPSP2
-#endif
 #define XRE_WANT_ENVIRON
 #define strcasecmp _stricmp
 #ifdef MOZ_SANDBOX

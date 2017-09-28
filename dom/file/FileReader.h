@@ -27,7 +27,7 @@ namespace mozilla {
 namespace dom {
 
 class Blob;
-class DOMError;
+class DOMException;
 
 namespace workers {
 class WorkerPrivate;
@@ -89,7 +89,7 @@ public:
     return static_cast<uint16_t>(mReadyState);
   }
 
-  DOMError* GetError() const
+  DOMException* GetError() const
   {
     return mError;
   }
@@ -185,7 +185,7 @@ private:
   nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
   nsCOMPtr<nsIInputStream> mBufferedStream;
 
-  RefPtr<DOMError> mError;
+  RefPtr<DOMException> mError;
 
   eReadyState mReadyState;
 

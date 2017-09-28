@@ -1002,7 +1002,7 @@ CssRuleView.prototype = {
     header.textContent = label;
 
     let twisty = this.styleDocument.createElementNS(HTML_NS, "span");
-    twisty.className = "ruleview-expander theme-twisty";
+    twisty.className = "theme-twisty";
     twisty.setAttribute("open", "true");
 
     header.insertBefore(twisty, header.firstChild);

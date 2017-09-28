@@ -415,7 +415,9 @@ PaymentRequest::IsValidCurrencyAmount(const nsAString& aItem,
 }
 
 nsresult
-PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails, nsAString& aErrorMsg)
+PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails,
+                                   const bool aRequestShipping,
+                                   nsAString& aErrorMsg)
 {
   // Check the amount.value and amount.currency of detail.total
   nsresult rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.total"),
@@ -425,11 +427,12 @@ PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails, nsAString
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return IsValidDetailsBase(aDetails, aErrorMsg);
+  return IsValidDetailsBase(aDetails, aRequestShipping, aErrorMsg);
 }
 
 nsresult
-PaymentRequest::IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails)
+PaymentRequest::IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails,
+                                     const bool aRequestShipping)
 {
   nsAutoString message;
   // Check the amount.value and amount.currency of detail.total
@@ -440,11 +443,13 @@ PaymentRequest::IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return IsValidDetailsBase(aDetails, message);
+  return IsValidDetailsBase(aDetails, aRequestShipping, message);
 }
 
 nsresult
-PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString& aErrorMsg)
+PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails,
+                                   const bool aRequestShipping,
+                                   nsAString& aErrorMsg)
 {
   nsresult rv;
   // Check the amount.value of each item in the display items
@@ -462,7 +467,7 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString
   }
 
   // Check the shipping option
-  if (aDetails.mShippingOptions.WasPassed()) {
+  if (aDetails.mShippingOptions.WasPassed() && aRequestShipping) {
     const Sequence<PaymentShippingOption>& shippingOptions = aDetails.mShippingOptions.Value();
     nsTArray<nsString> seenIDs;
     for (const PaymentShippingOption& shippingOption : shippingOptions) {
@@ -576,7 +581,7 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
     }
     return nullptr;
   }
-  rv = IsValidDetailsInit(aDetails, message);
+  rv = IsValidDetailsInit(aDetails, aOptions.mRequestShipping, message);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_TYPE_ERR) {
       aRv.ThrowTypeError<MSG_ILLEGAL_TYPE_PR_CONSTRUCTOR>(message);

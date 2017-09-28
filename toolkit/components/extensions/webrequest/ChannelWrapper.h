@@ -10,13 +10,25 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChannelWrapperBinding.h"
 
+#include "mozilla/WebRequestService.h"
+#include "mozilla/extensions/MatchPattern.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIStreamListener.h"
+#include "nsITabParent.h"
+#include "nsIThreadRetargetableStreamListener.h"
+#include "nsPointerHashKeys.h"
+#include "nsInterfaceHashtable.h"
 #include "nsWeakPtr.h"
 #include "nsWrapperCache.h"
 
@@ -26,8 +38,12 @@
 
 class nsIDOMElement;
 class nsILoadContext;
+class nsITraceableChannel;
 
 namespace mozilla {
+namespace dom {
+  class nsIContentParent;
+}
 namespace extensions {
 
 namespace detail {
@@ -91,13 +107,16 @@ namespace detail {
   };
 }
 
-class ChannelWrapper final : public nsISupports
-                           , public nsWrapperCache
+class WebRequestChannelEntry;
+
+class ChannelWrapper final : public DOMEventTargetHelper
+                           , public SupportsWeakPtr<ChannelWrapper>
                            , private detail::ChannelHolder
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ChannelWrapper)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ChannelWrapper)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ChannelWrapper, DOMEventTargetHelper)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CHANNELWRAPPER_IID)
 
@@ -125,6 +144,11 @@ public:
   void SetContentType(const nsACString& aContentType);
 
 
+  void RegisterTraceableChannel(const WebExtensionPolicy& aAddon, nsITabParent* aTabParent);
+
+  already_AddRefed<nsITraceableChannel> GetTraceableChannel(nsIAtom* aAddonId, dom::nsIContentParent* aContentParent) const;
+
+
   void GetMethod(nsCString& aRetVal) const;
 
   dom::MozContentPolicyType Type() const;
@@ -134,10 +158,23 @@ public:
 
   void GetStatusLine(nsCString& aRetVal) const;
 
+  void GetErrorString(nsString& aRetVal) const;
 
-  already_AddRefed<nsIURI> GetFinalURI(ErrorResult& aRv) const;
+  void ErrorCheck();
 
-  void GetFinalURL(nsCString& aRetVal, ErrorResult& aRv) const;
+  IMPL_EVENT_HANDLER(error);
+  IMPL_EVENT_HANDLER(start);
+  IMPL_EVENT_HANDLER(stop);
+
+
+  already_AddRefed<nsIURI> FinalURI() const;
+
+  void GetFinalURL(nsString& aRetVal) const;
+
+
+  bool Matches(const dom::MozRequestFilter& aFilter,
+               const WebExtensionPolicy* aExtension,
+               const dom::MozRequestMatchOptions& aOptions) const;
 
 
   already_AddRefed<nsILoadInfo> GetLoadInfo() const
@@ -177,13 +214,19 @@ public:
   void GetRemoteAddress(nsCString& aRetVal) const;
 
 
-  void GetRequestHeaders(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv) const;
+  void GetRequestHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal, ErrorResult& aRv) const;
 
-  void GetResponseHeaders(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv) const;
+  void GetResponseHeaders(nsTArray<dom::MozHTTPHeader>& aRetVal, ErrorResult& aRv) const;
 
   void SetRequestHeader(const nsCString& header, const nsCString& value, ErrorResult& aRv);
 
   void SetResponseHeader(const nsCString& header, const nsCString& value, ErrorResult& aRv);
+
+
+  using EventTarget::EventListenerAdded;
+  using EventTarget::EventListenerRemoved;
+  virtual void EventListenerAdded(nsIAtom* aType) override;
+  virtual void EventListenerRemoved(nsIAtom* aType) override;
 
 
   nsISupports* GetParentObject() const { return mParent; }
@@ -210,6 +253,13 @@ private:
     return true;
   }
 
+  void FireEvent(const nsAString& aType);
+
+
+  const URLInfo& FinalURLInfo() const;
+  const URLInfo* DocumentURLInfo() const;
+
+
   uint64_t WindowId(nsILoadInfo* aLoadInfo) const;
 
   static uint64_t GetNextId()
@@ -218,10 +268,48 @@ private:
     return ++sNextId;
   }
 
+  void CheckEventListeners();
+
+  mutable Maybe<URLInfo> mFinalURLInfo;
+  mutable Maybe<URLInfo> mDocumentURLInfo;
+
+  UniquePtr<WebRequestChannelEntry> mChannelEntry;
+
+  // The overridden Content-Type header value.
+  nsCString mContentTypeHdr = VoidCString();
+
   const uint64_t mId = GetNextId();
   nsCOMPtr<nsISupports> mParent;
 
+  bool mAddedStreamListener = false;
+  bool mFiredErrorEvent = false;
   bool mSuspended = false;
+
+
+  nsInterfaceHashtable<nsPtrHashKey<const nsIAtom>, nsITabParent> mAddonEntries;
+
+
+  class RequestListener final : public nsIStreamListener
+                              , public nsIThreadRetargetableStreamListener
+  {
+  public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+
+    explicit RequestListener(ChannelWrapper* aWrapper)
+      : mChannelWrapper(aWrapper) {}
+
+    nsresult Init();
+
+  protected:
+    virtual ~RequestListener();
+
+  private:
+    RefPtr<ChannelWrapper> mChannelWrapper;
+    nsCOMPtr<nsIStreamListener> mOrigStreamListener;
+  };
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ChannelWrapper,

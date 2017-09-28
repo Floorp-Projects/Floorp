@@ -2077,6 +2077,7 @@ GK_ATOM(tabs, "tabs")
 GK_ATOM(webRequestBlocking, "webRequestBlocking")
 GK_ATOM(http, "http")
 GK_ATOM(https, "https")
+GK_ATOM(proxy, "proxy")
 
 //---------------------------------------------------------------------------
 // Special atoms

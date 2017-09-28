@@ -29,7 +29,7 @@ CFLAGS += ['-DBROTLI_BUILD_PORTABLE']
 
 Library('brotli')
 
-HostProgram('bro')
+HostProgram('brotli')
 
 HOST_SOURCES += UNIFIED_SOURCES
 
@@ -51,7 +51,7 @@ HOST_SOURCES += [
     'enc/metablock.c',
     'enc/static_dict.c',
     'enc/utf8_util.c',
-    'tools/bro.c',
+    'tools/brotli.c',
 ]
 
 if CONFIG['HOST_CC_TYPE'] not in ('msvc', 'clang-cl'):
