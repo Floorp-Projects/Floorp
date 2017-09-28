@@ -15,13 +15,13 @@ var global = this;
     return;
   }
 
-  var Ci = Components.interfaces;
+  const Ci = Components.interfaces;
   const gDeviceSizeWasPageSize = docShell.deviceSizeIsPageSize;
   const gFloatingScrollbarsStylesheet = Services.io.newURI("chrome://devtools/skin/floating-scrollbars-responsive-design.css");
-  var gRequiresFloatingScrollbars;
 
-  var active = false;
-  var resizeNotifications = false;
+  let requiresFloatingScrollbars;
+  let active = false;
+  let resizeNotifications = false;
 
   addMessageListener("ResponsiveMode:Start", startResponsiveMode);
   addMessageListener("ResponsiveMode:Stop", stopResponsiveMode);
@@ -38,7 +38,7 @@ var global = this;
     sendAsyncMessage("ResponsiveMode:IsActive:Done", { active });
   }
 
-  function startResponsiveMode({data:data}) {
+  function startResponsiveMode({ data }) {
     debug("START");
     if (active) {
       debug("ALREADY STARTED");
@@ -46,10 +46,11 @@ var global = this;
       return;
     }
     addMessageListener("ResponsiveMode:RequestScreenshot", screenshot);
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(WebProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
     docShell.deviceSizeIsPageSize = true;
-    gRequiresFloatingScrollbars = data.requiresFloatingScrollbars;
+    requiresFloatingScrollbars = data.requiresFloatingScrollbars;
     if (data.notifyOnResize) {
       startOnResize();
     }
@@ -104,7 +105,8 @@ var global = this;
     }
     active = false;
     removeMessageListener("ResponsiveMode:RequestScreenshot", screenshot);
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(WebProgressListener);
     docShell.deviceSizeIsPageSize = gDeviceSizeWasPageSize;
     restoreScrollbars();
@@ -113,7 +115,7 @@ var global = this;
   }
 
   function makeScrollbarsFloating() {
-    if (!gRequiresFloatingScrollbars) {
+    if (!requiresFloatingScrollbars) {
       return;
     }
 
@@ -126,7 +128,8 @@ var global = this;
 
     for (let d of allDocShells) {
       let win = d.contentViewer.DOMDocument.defaultView;
-      let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindowUtils);
       try {
         winUtils.loadSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
       } catch (e) { }
@@ -142,7 +145,8 @@ var global = this;
     }
     for (let d of allDocShells) {
       let win = d.contentViewer.DOMDocument.defaultView;
-      let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindowUtils);
       try {
         winUtils.removeSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
       } catch (e) { }
@@ -173,17 +177,17 @@ var global = this;
     sendAsyncMessage("ResponsiveMode:RequestScreenshot:Done", canvas.toDataURL());
   }
 
-  var WebProgressListener = {
+  let WebProgressListener = {
     onLocationChange(webProgress, request, URI, flags) {
       if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
         return;
       }
       makeScrollbarsFloating();
     },
-    QueryInterface: function QueryInterface(aIID) {
-      if (aIID.equals(Ci.nsIWebProgressListener) ||
-          aIID.equals(Ci.nsISupportsWeakReference) ||
-          aIID.equals(Ci.nsISupports)) {
+    QueryInterface: function QueryInterface(iid) {
+      if (iid.equals(Ci.nsIWebProgressListener) ||
+          iid.equals(Ci.nsISupportsWeakReference) ||
+          iid.equals(Ci.nsISupports)) {
         return this;
       }
       throw Components.results.NS_ERROR_NO_INTERFACE;

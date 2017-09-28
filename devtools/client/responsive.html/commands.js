@@ -4,14 +4,14 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci } = require("chrome");
 
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 
-const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"].
-                         getService(Ci.nsIStringBundleService).
-                         createBundle("chrome://branding/locale/brand.properties").
-                         GetStringFromName("brandShortName");
+const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
+                           .getService(Ci.nsIStringBundleService)
+                           .createBundle("chrome://branding/locale/brand.properties")
+                           .GetStringFromName("brandShortName");
 
 const Services = require("Services");
 const osString = Services.appinfo.OS;
@@ -28,7 +28,7 @@ exports.items = [
     name: "resize on",
     description: l10n.lookup("resizeModeOnDesc"),
     manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
-    exec: gcli_cmd_resize
+    exec: resize
   },
   {
     item: "command",
@@ -36,7 +36,7 @@ exports.items = [
     name: "resize off",
     description: l10n.lookup("resizeModeOffDesc"),
     manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
-    exec: gcli_cmd_resize
+    exec: resize
   },
   {
     item: "command",
@@ -44,30 +44,32 @@ exports.items = [
     name: "resize toggle",
     buttonId: "command-button-responsive",
     buttonClass: "command-button command-button-invertable",
-    tooltipText: l10n.lookupFormat("resizeModeToggleTooltip2",
-                                   [(osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M")]),
+    tooltipText: l10n.lookupFormat(
+      "resizeModeToggleTooltip2",
+      [(osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M")]
+    ),
     description: l10n.lookup("resizeModeToggleDesc"),
     manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
     state: {
-      isChecked: function (aTarget) {
-        if (!aTarget.tab) {
+      isChecked: function (target) {
+        if (!target.tab) {
           return false;
         }
-        return ResponsiveUIManager.isActiveForTab(aTarget.tab);
+        return ResponsiveUIManager.isActiveForTab(target.tab);
       },
-      onChange: function (aTarget, aChangeHandler) {
-        if (aTarget.tab) {
-          ResponsiveUIManager.on("on", aChangeHandler);
-          ResponsiveUIManager.on("off", aChangeHandler);
+      onChange: function (target, changeHandler) {
+        if (target.tab) {
+          ResponsiveUIManager.on("on", changeHandler);
+          ResponsiveUIManager.on("off", changeHandler);
         }
       },
-      offChange: function (aTarget, aChangeHandler) {
+      offChange: function (target, changeHandler) {
         // Do not check for target.tab as it may already be null during destroy
-        ResponsiveUIManager.off("on", aChangeHandler);
-        ResponsiveUIManager.off("off", aChangeHandler);
+        ResponsiveUIManager.off("on", changeHandler);
+        ResponsiveUIManager.off("off", changeHandler);
       },
     },
-    exec: gcli_cmd_resize
+    exec: resize
   },
   {
     item: "command",
@@ -86,11 +88,11 @@ exports.items = [
         description: l10n.lookup("resizePageArgHeightDesc"),
       },
     ],
-    exec: gcli_cmd_resize
+    exec: resize
   }
 ];
 
-function* gcli_cmd_resize(args, context) {
+function* resize(args, context) {
   let browserWindow = context.environment.chromeWindow;
   yield ResponsiveUIManager.handleGcliCommand(browserWindow,
                                               browserWindow.gBrowser.selectedTab,
