@@ -57,7 +57,7 @@ add_task(async function setup() {
     ["dom.disable_open_click_delay", 1000],
     ["dom.serviceWorkers.idle_timeout", 299999],
     ["dom.serviceWorkers.idle_extended_timeout", 299999],
-    ["browser.link.open_newwindow", 2],
+    ["browser.link.open_newwindow", 3],
   ]});
 });
 
@@ -77,8 +77,8 @@ add_task(async function test() {
   // wait for tab load
   await BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab));
 
-  // Waiting for new window.
-  let newWinPromise = BrowserTestUtils.waitForNewWindow();
+  // Waiting for new tab.
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   // here the test.
   let uci = await ContentTask.spawn(browser, URI, uri => {
@@ -108,10 +108,8 @@ add_task(async function test() {
 
   is(uci, USER_CONTEXT_ID, "Tab runs with UCI " + USER_CONTEXT_ID);
 
-  let newWin = await newWinPromise;
-  let newTab = newWin.gBrowser.selectedTab;
+  let newTab = await newTabPromise;
 
-  await BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
   is(newTab.getAttribute("usercontextid"), USER_CONTEXT_ID, "New tab has UCI equal " + USER_CONTEXT_ID);
 
   // wait for SW unregistration
@@ -128,6 +126,6 @@ add_task(async function test() {
 
   is(uci, USER_CONTEXT_ID, "Tab runs with UCI " + USER_CONTEXT_ID);
 
-  await BrowserTestUtils.closeWindow(newWin);
+  await BrowserTestUtils.removeTab(newTab);
   await BrowserTestUtils.removeTab(tab);
 });
