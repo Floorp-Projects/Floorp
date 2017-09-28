@@ -387,9 +387,12 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
  * compile-time for better performance, as opposed to determined at
  * runtime. Some platforms can have different page sizes at runtime
  * depending on kernel configuration, so they are opted out by default.
+ * Debug builds are opted out too, for test coverage.
  */
+#ifndef MOZ_DEBUG
 #if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) && !defined(__aarch64__)
 #define MALLOC_STATIC_PAGESIZE 1
+#endif
 #endif
 
 /* Various quantum-related settings. */
