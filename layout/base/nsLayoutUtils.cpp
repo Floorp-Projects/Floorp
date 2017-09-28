@@ -8217,7 +8217,7 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
         fType != LayoutFrameType::Inline &&
         // ignore width on radios and checkboxes since we enlarge them and
         // they have width/height in ua.css
-        fType != LayoutFrameType::FormControl) {
+        fType != LayoutFrameType::CheckboxRadio) {
       // ruby annotations should have the same inflation as its
       // grandparent, which is the ruby frame contains the annotation.
       if (fType == LayoutFrameType::RubyText) {

@@ -442,6 +442,10 @@ JSCompartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableH
         return true;
     }
 
+    // Ensure that the wrappee is exposed in case we are creating a new wrapper
+    // for a gray object.
+    ExposeObjectToActiveJS(obj);
+
     // Create a new wrapper for the object.
     auto wrap = cx->runtime()->wrapObjectCallbacks->wrap;
     RootedObject wrapper(cx, wrap(cx, existing, obj));
