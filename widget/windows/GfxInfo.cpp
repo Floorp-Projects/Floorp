@@ -20,6 +20,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "nsPrintfCString.h"
 #include "jsapi.h"
+#include <intrin.h>
 
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
@@ -975,6 +976,39 @@ WindowsVersionToOperatingSystem(int32_t aWindowsVersion)
     }
 }
 
+// Return true if the CPU supports AVX, but the operating system does not.
+#if defined(_M_X64)
+static inline bool
+DetectBrokenAVX()
+{
+  int regs[4];
+  __cpuid(regs, 0);
+  if (regs[0] == 0) {
+    // Level not supported.
+    return false;
+  }
+
+  __cpuid(regs, 1);
+
+  const unsigned AVX = 1u << 28;
+  const unsigned XSAVE = 1u << 26;
+  if ((regs[2] & (AVX|XSAVE)) != (AVX|XSAVE)) {
+    // AVX is not supported on this CPU.
+    return false;
+  }
+
+  const unsigned OSXSAVE = 1u << 27;
+  if ((regs[2] & OSXSAVE) != OSXSAVE) {
+    // AVX is supported, but the OS didn't enable it.
+    // This can be forced via bcdedit /set xsavedisable 1.
+    return true;
+  }
+
+  const unsigned AVX_CTRL_BITS = (1 << 1) | (1 << 2);
+  return (_xgetbv(0) & AVX_CTRL_BITS) != AVX_CTRL_BITS;
+}
+#endif
+
 const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
@@ -1288,6 +1322,15 @@ GfxInfo::GetGfxDriverInfo()
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelGMAX3000),
       nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, 1749, "FEATURE_FAILURE_INTEL_W7_D3D9_LAYERS");
+
+#if defined(_M_X64)
+    if (DetectBrokenAVX()) {
+      APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows7,
+        (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), GfxDriverInfo::allDevices,
+        nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_BUG_1403353");
+    }
+#endif
 
     ////////////////////////////////////
     // WebGL
