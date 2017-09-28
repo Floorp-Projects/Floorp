@@ -124,8 +124,6 @@ public:
   virtual void Start() = 0;
   /* Stop the graph, shutting down the thread. */
   virtual void Stop() = 0;
-  /* Resume after a stop */
-  virtual void Resume() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
   /* Remove Mixer callbacks when switching */
@@ -275,7 +273,6 @@ public:
   virtual ~ThreadedDriver();
   void Start() override;
   void Stop() override;
-  void Resume() override;
   void Revive() override;
   void RemoveCallback() override;
   /**
@@ -397,7 +394,6 @@ public:
   void Destroy() override;
   void Start() override;
   void Stop() override;
-  void Resume() override;
   void Revive() override;
   void RemoveCallback() override;
   void WaitForNextIteration() override;
