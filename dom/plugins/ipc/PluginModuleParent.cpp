@@ -540,7 +540,7 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
     if (!mIsBlocklisted && mIsFlashPlugin &&
         (Preferences::GetBool("dom.ipc.plugins.flash.disable-protected-mode", false) ||
          mSandboxLevel >= 2)) {
-        SendDisableFlashProtectedMode();
+        Unused << SendDisableFlashProtectedMode();
     }
 #endif
 
@@ -2435,7 +2435,10 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         if (supportsAsyncRender) {
           // Prefs indicates we want async plugin rendering, make sure
           // the flash module has support.
-          CallModuleSupportsAsyncRender(&supportsAsyncRender);
+          if(!CallModuleSupportsAsyncRender(&supportsAsyncRender)) {
+            *error = NPERR_GENERIC_ERROR;
+            return NS_ERROR_FAILURE;
+          }
         }
 #ifdef _WIN64
         // For 64-bit builds force windowless if the flash library doesn't support
