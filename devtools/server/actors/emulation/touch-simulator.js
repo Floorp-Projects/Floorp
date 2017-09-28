@@ -227,7 +227,7 @@ TouchSimulator.prototype = {
   },
 
   sendContextMenu({ target, clientX, clientY, screenX, screenY }) {
-    let view = target.ownerDocument.defaultView;
+    let view = target.ownerGlobal;
     let { MouseEvent } = view;
     let evt = new MouseEvent("contextmenu", {
       bubbles: true,
@@ -302,7 +302,7 @@ TouchSimulator.prototype = {
 
   getContent(target) {
     let win = (target && target.ownerDocument)
-      ? target.ownerDocument.defaultView
+      ? target.ownerGlobal
       : null;
     return win;
   },
