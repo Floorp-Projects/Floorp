@@ -50,9 +50,6 @@ const LAST_SQLITE_DB_SCHEMA           = 14;
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
-const PREF_E10S_BLOCKED_BY_ADDONS     = "extensions.e10sBlockedByAddons";
-const PREF_E10S_MULTI_BLOCKED_BY_ADDONS = "extensions.e10sMultiBlockedByAddons";
-const PREF_E10S_HAS_NONEXEMPT_ADDON   = "extensions.e10s.rollout.hasAddon";
 
 const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
 const KEY_APP_SYSTEM_DEFAULTS         = "app-system-defaults";
@@ -316,8 +313,6 @@ this.XPIDatabase = {
                                             ASYNC_SAVE_DELAY_MS);
     }
 
-    this.updateAddonsBlockingE10s();
-    this.updateAddonsBlockingE10sMulti();
     let promise = this._deferredSave.saveChanges();
     if (!this._schemaVersionSet) {
       this._schemaVersionSet = true;
@@ -1075,44 +1070,6 @@ this.XPIDatabase = {
 
     aAddon.active = aActive;
     this.saveChanges();
-  },
-
-  updateAddonsBlockingE10s() {
-    if (!this.addonDB) {
-      // jank-tastic! Must synchronously load DB if the theme switches from
-      // an XPI theme to a lightweight theme before the DB has loaded,
-      // because we're called from sync XPIProvider.addonChanged
-      logger.warn("Synchronous load of XPI database due to updateAddonsBlockingE10s()");
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_byType", XPIProvider.runPhase);
-      this.syncLoadDB(true);
-    }
-
-    let blockE10s = false;
-
-    Services.prefs.setBoolPref(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
-    for (let [, addon] of this.addonDB) {
-      let active = (addon.visible && !addon.disabled && !addon.pendingUninstall);
-
-      if (active && XPIProvider.isBlockingE10s(addon)) {
-        blockE10s = true;
-        break;
-      }
-    }
-    Services.prefs.setBoolPref(PREF_E10S_BLOCKED_BY_ADDONS, blockE10s);
-  },
-
-  updateAddonsBlockingE10sMulti() {
-    let blockMulti = false;
-
-    for (let [, addon] of this.addonDB) {
-      let active = (addon.visible && !addon.disabled && !addon.pendingUninstall);
-
-      if (active && XPIProvider.isBlockingE10sMulti(addon)) {
-        blockMulti = true;
-        break;
-      }
-    }
-    Services.prefs.setBoolPref(PREF_E10S_MULTI_BLOCKED_BY_ADDONS, blockMulti);
   },
 
   /**
