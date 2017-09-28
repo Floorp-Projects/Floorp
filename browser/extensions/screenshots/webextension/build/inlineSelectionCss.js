@@ -542,6 +542,18 @@ window.inlineSelectionCss = `
   padding-top: 20px;
   width: 400px; }
 
+#imageCroppedWarning {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  bottom: 0;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
+  font-size: 12px;
+  padding: 10px;
+  text-align: center;
+  width: 100%;
+  z-index: 2; }
+
 .myshots-all-buttons-container {
   display: flex;
   flex-direction: row-reverse;
