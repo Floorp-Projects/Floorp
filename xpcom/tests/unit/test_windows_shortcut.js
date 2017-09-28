@@ -52,10 +52,11 @@ function test_create_noargs(tempDir)
     win.setShortcut();
     do_throw("Creating a shortcut with no args (no target) should throw");
   }
-  catch(e if (e instanceof Ci.nsIException
-             && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST))
-  {
-
+  catch(e) {
+    if (!(e instanceof Ci.nsIException
+          && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
+      throw e;
+    }
   }
 }
 
@@ -75,10 +76,11 @@ function test_create_notarget(tempDir)
                     "Shortcut with no target");
     do_throw("Creating a shortcut with no target should throw");
   }
-  catch(e if (e instanceof Ci.nsIException
-             && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST))
-  {
-
+  catch(e) {
+    if (!(e instanceof Ci.nsIException
+          && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
+      throw e;
+    }
   }
 }
 
