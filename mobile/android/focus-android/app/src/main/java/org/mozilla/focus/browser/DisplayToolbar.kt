@@ -16,7 +16,7 @@ import org.mozilla.focus.widget.AnimatedProgressBar
 /**
  * The toolbar of the BrowserFragment; displaying the URL and other controls.
  */
-class DisplayToolbar : AppBarLayout, AppBarLayout.OnOffsetChangedListener {
+class DisplayToolbar(context: Context, attrs: AttributeSet) : AppBarLayout(context, attrs), AppBarLayout.OnOffsetChangedListener {
     private lateinit var toolbarContent: View
     private lateinit var progressView: AnimatedProgressBar
 
@@ -24,10 +24,6 @@ class DisplayToolbar : AppBarLayout, AppBarLayout.OnOffsetChangedListener {
         TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 2f, resources.displayMetrics)
     }
-
-    constructor(context: Context) : super(context)
-
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     override fun onFinishInflate() {
         super.onFinishInflate()
