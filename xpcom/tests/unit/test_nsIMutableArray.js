@@ -49,8 +49,8 @@ function test_insert_at_beginning() {
   do_check_eq(str, obj);
   // check the data of all the other objects
   for (let i = 1; i < arr.length; i++) {
-    let obj = arr.queryElementAt(i, Ci.nsISupportsString);
-    do_check_eq("element " + (i - 1), obj.data);
+    let obj2 = arr.queryElementAt(i, Ci.nsISupportsString);
+    do_check_eq("element " + (i - 1), obj2.data);
   }
 }
 
