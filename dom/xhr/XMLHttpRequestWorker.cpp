@@ -21,6 +21,7 @@
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
+#include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -30,7 +31,6 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
-#include "nsVariant.h"
 
 #include "XMLHttpRequestUpload.h"
 
@@ -1455,14 +1455,11 @@ OpenRunnable::MainThreadRunInternal()
 void
 SendRunnable::RunOnMainThread(ErrorResult& aRv)
 {
-  nsCOMPtr<nsIVariant> variant;
+  Nullable<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString> payload;
 
   if (HasData()) {
     AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
-
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-    MOZ_ASSERT(xpc);
 
     JS::Rooted<JSObject*> globalObject(cx, JS::CurrentGlobalOrNull(cx));
     if (NS_WARN_IF(!globalObject)) {
@@ -1482,19 +1479,30 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
       return;
     }
 
-    aRv = xpc->JSValToVariant(cx, body, getter_AddRefs(variant));
-    if (NS_WARN_IF(aRv.Failed())) {
+    Maybe<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVStringArgument> holder;
+    holder.emplace(payload.SetValue());
+    bool done = false, failed = false, tryNext;
+
+    if (body.isObject()) {
+      done = (failed = !holder.ref().TrySetToDocument(cx, &body, tryNext, false)) || !tryNext ||
+             (failed = !holder.ref().TrySetToBlob(cx, &body, tryNext, false)) || !tryNext ||
+             (failed = !holder.ref().TrySetToArrayBufferView(cx, &body, tryNext, false)) || !tryNext ||
+             (failed = !holder.ref().TrySetToArrayBuffer(cx, &body, tryNext, false)) || !tryNext ||
+             (failed = !holder.ref().TrySetToFormData(cx, &body, tryNext, false)) || !tryNext ||
+             (failed = !holder.ref().TrySetToURLSearchParams(cx, &body, tryNext, false)) || !tryNext;
+    }
+
+    if (!done) {
+      done = (failed = !holder.ref().TrySetToUSVString(cx, &body, tryNext)) || !tryNext;
+    }
+    if (failed || !done) {
+      aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
   }
   else {
-    RefPtr<nsVariant> wvariant = new nsVariant();
-
-    if (NS_FAILED(wvariant->SetAsAString(mStringBody))) {
-      MOZ_ASSERT(false, "This should never fail!");
-    }
-
-    variant = wvariant;
+    DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString& ref = payload.SetValue();
+    ref.SetAsUSVString().Rebind(mStringBody.Data(), mStringBody.Length());
   }
 
   // Send() has been already called, reset the proxy.
@@ -1520,7 +1528,7 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
 
   mProxy->mInnerChannelId++;
 
-  aRv = mProxy->mXHR->Send(variant);
+  mProxy->mXHR->Send(nullptr, payload, aRv);
 
   if (!aRv.Failed()) {
     mProxy->mOutstandingSendCount++;
