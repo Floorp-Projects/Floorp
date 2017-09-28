@@ -20,12 +20,6 @@
   }
 }
 
-@media (-moz-windows-compositor) {
-  #main-window {
-    background: transparent !important;
-  }
-}
-
 #toolbar-menubar {
   text-shadow: none !important;
 }
@@ -65,6 +59,12 @@
 
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
+  @media (-moz-windows-compositor) {
+    #main-window {
+      background: transparent !important;
+    }
+  }
+
   /* Always show full-height tab separators on tabs with borders. */
   .tabbrowser-tab::before {
     border-image: none !important;
