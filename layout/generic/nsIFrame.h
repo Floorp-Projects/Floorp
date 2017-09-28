@@ -13,32 +13,7 @@
 #error This header/class should only be used within Mozilla code. It should not be used by extensions.
 #endif
 
-#if (defined(XP_WIN) && !defined(HAVE_64BIT_BUILD)) || defined(ANDROID)
-// Blink's magic depth limit from its HTML parser (513) plus as much as fits in the
-// default run-time stack on armv7 Android on Dalvik when using display: block minus
-// a bit just to be sure. The Dalvik default stack crashes at 588. ART can do a few
-// frames more. Using the same number for 32-bit Windows for consistency. Over there,
-// Blink's magic depth of 513 doesn't fit in the default stack of 1 MB, but this magic
-// depth fits when the default is grown by mere 192 KB (tested in 64 KB increments).
-//
-// 32-bit Windows has a different limit compared to 64-bit desktop, because the
-// default stack size affects all threads and consumes address space. Fixing that
-// is bug 1257522.
-//
-// 32-bit Android on ARM already happens to have defaults that are close enough to
-// what makes sense as a temporary measure on Windows, so adjusting the Android
-// stack can be a follow-up. The stack on 64-bit ARM needs adjusting in any case
-// before 64-bit ARM can become tier-1. See bug 1400811.
-//
-// Ideally, we'd get rid of this smaller limit and make 32-bit Windows and Android
-// capable of working with the Linux/Mac/Win64 number below.
-#define MAX_REFLOW_DEPTH 585
-#else
-// Blink's magic depth limit from its HTML parser times two. Also just about fits
-// within the system default runtime stack limit of 8 MB on 64-bit Mac and Linux with
-// display: table-cell.
-#define MAX_REFLOW_DEPTH 1026
-#endif
+#define MAX_REFLOW_DEPTH 200
 
 /* nsIFrame is in the process of being deCOMtaminated, i.e., this file is eventually
    going to be eliminated, and all callers will use nsFrame instead.  At the moment
