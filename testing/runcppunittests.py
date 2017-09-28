@@ -84,7 +84,6 @@ class CPPUnitTests(object):
         """
         Add environment variables likely to be used across all platforms, including remote systems.
         """
-        env["MOZILLA_FIVE_HOME"] = self.xre_path
         env["MOZ_XRE_DIR"] = self.xre_path
         # TODO: switch this to just abort once all C++ unit tests have
         # been fixed to enable crash reporting
