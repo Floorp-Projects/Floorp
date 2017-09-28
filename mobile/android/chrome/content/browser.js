@@ -2821,7 +2821,7 @@ var NativeWindow = {
     // Returns a url associated with a node
     _getUrl: function(node) {
       if ((ChromeUtils.getClassName(node) === "HTMLAnchorElement" && node.href) ||
-          (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {
+          (ChromeUtils.getClassName(node) === "HTMLAreaElement" && node.href)) {
         return this._getLinkURL(node);
       } else if (node instanceof Ci.nsIImageLoadingContent && node.currentURI) {
         // The image is blocked by Tap-to-load Images
@@ -3052,9 +3052,9 @@ var NativeWindow = {
     _getLink: function(aElement) {
       if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
           ((ChromeUtils.getClassName(aElement) === "HTMLAnchorElement" && aElement.href) ||
-          (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
-          aElement instanceof Ci.nsIDOMHTMLLinkElement ||
-          aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
+           (ChromeUtils.getClassName(aElement) === "HTMLAreaElement" && aElement.href) ||
+           aElement instanceof Ci.nsIDOMHTMLLinkElement ||
+           aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
         try {
           let url = this._getLinkURL(aElement);
           return Services.io.newURI(url);
@@ -3201,7 +3201,7 @@ var LightWeightThemeWebInstaller = {
 
     let allowButtonText = Strings.browser.GetStringFromName("lwthemeInstallRequest.allowButton");
     let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
-    let hostname = IDNService.convertToDisplayIDN(node.ownerDocument.location.hostname);
+    let hostname = IDNService.convertToDisplayIDN(node.ownerDocument.location.hostname, {});
     let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [hostname], 1);
     let buttons = [{
       label: allowButtonText,
@@ -4776,7 +4776,7 @@ var BrowserEventHandler = {
   _getLinkURI: function(aElement) {
     if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
         ((ChromeUtils.getClassName(aElement) === "HTMLAnchorElement" && aElement.href) ||
-        (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href))) {
+         (ChromeUtils.getClassName(aElement) === "HTMLAreaElement" && aElement.href))) {
       try {
         return Services.io.newURI(aElement.href);
       } catch (e) {}

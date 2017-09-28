@@ -102,7 +102,7 @@ add_task(async function v4_upgrade() {
       serverResp = (await serverKeys.fetch(Service.resource(Service.cryptoKeysURL))).response;
       do_check_true(serverResp.success);
 
-      serverDecrypted = serverKeys.decrypt(Service.identity.syncKeyBundle);
+      serverDecrypted = await serverKeys.decrypt(Service.identity.syncKeyBundle);
       _("Retrieved WBO:       " + JSON.stringify(serverDecrypted));
       _("serverKeys:          " + JSON.stringify(serverKeys));
 
@@ -126,7 +126,7 @@ add_task(async function v4_upgrade() {
     async function set_server_keys(pair) {
       serverDecrypted.default = pair;
       serverKeys.cleartext = serverDecrypted;
-      serverKeys.encrypt(Service.identity.syncKeyBundle);
+      await serverKeys.encrypt(Service.identity.syncKeyBundle);
       await serverKeys.upload(Service.resource(Service.cryptoKeysURL));
     }
 
@@ -203,9 +203,9 @@ add_task(async function v5_upgrade() {
     // -- keys decrypted with a different sync key, for example.
     _("Testing v4 -> v5 (or similar) upgrade.");
     async function update_server_keys(syncKeyBundle, wboName, collWBO) {
-      generateNewKeys(Service.collectionKeys);
+      await generateNewKeys(Service.collectionKeys);
       let serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
-      serverKeys.encrypt(syncKeyBundle);
+      await serverKeys.encrypt(syncKeyBundle);
       let res = Service.resource(Service.storageURL + collWBO);
       do_check_true((await serverKeys.upload(res)).success);
     }
@@ -221,12 +221,12 @@ add_task(async function v5_upgrade() {
 
     // Fill the keys with bad data.
     let badKeys = new BulkKeyBundle("crypto");
-    badKeys.generateRandom();
+    await badKeys.generateRandom();
     await update_server_keys(badKeys, "keys", "crypto/keys");  // v4
     await update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
 
     _("Generating new keys.");
-    generateNewKeys(Service.collectionKeys);
+    await generateNewKeys(Service.collectionKeys);
 
     // Now sync and see what happens. It should be a version fail, not a crypto
     // fail.

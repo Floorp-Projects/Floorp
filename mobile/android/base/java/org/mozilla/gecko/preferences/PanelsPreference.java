@@ -40,9 +40,6 @@ public class PanelsPreference extends CustomListPreference {
     private static final int INDEX_MOVE_UP_BUTTON = 0;
     private static final int INDEX_MOVE_DOWN_BUTTON = 1;
 
-    private String LABEL_HIDE;
-    private String LABEL_SHOW;
-
     private View preferenceView;
     protected boolean mIsHidden;
     private final boolean mIsRemovable;
@@ -54,11 +51,14 @@ public class PanelsPreference extends CustomListPreference {
     private int mPositionState = -1;
     private final int mIndex;
 
-    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable, int index, boolean animate) {
+    public PanelsPreference(final Context context, final CustomListCategory parentCategory, final boolean isRemovable,
+            final boolean isHidden, final int index, final boolean animate) {
         super(context, parentCategory);
         mIsRemovable = isRemovable;
         mIndex = index;
         mAnimate = animate;
+
+        setHidden(isHidden);
     }
 
     @Override
@@ -103,10 +103,9 @@ public class PanelsPreference extends CustomListPreference {
         }
 
         // Built-in panels can't be removed, so use show/hide options.
-        LABEL_HIDE = res.getString(R.string.pref_panels_hide);
-        LABEL_SHOW = res.getString(R.string.pref_panels_show);
+        final String labelShowHide = res.getString(mIsHidden ? R.string.pref_panels_show : R.string.pref_panels_hide);
 
-        return new String[] { LABEL_SET_AS_DEFAULT, LABEL_HIDE, labelReorder };
+        return new String[] { LABEL_SET_AS_DEFAULT, labelShowHide, labelReorder };
     }
 
     @Override
@@ -151,18 +150,6 @@ public class PanelsPreference extends CustomListPreference {
                 Log.w(LOGTAG, "Selected index out of range: " + index);
         }
     }
-
-    @Override
-    protected void configureShownDialog() {
-        super.configureShownDialog();
-
-        // Handle Show/Hide buttons.
-        if (!mIsRemovable) {
-            final TextView hideButton = (TextView) mDialog.getListView().getChildAt(INDEX_DISPLAY_BUTTON);
-            hideButton.setText(mIsHidden ? LABEL_SHOW : LABEL_HIDE);
-        }
-    }
-
 
     private Dialog makeReorderDialog() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());

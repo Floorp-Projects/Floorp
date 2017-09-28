@@ -44,7 +44,7 @@ Top Site interactions
 Three event types are recorded:
 
 1) User clicked on a Top Site: event="loadurl.1", method="listitem"
-2) User clicked on the menu button: event="show.1", method="contextmenu"
+2) User long-clicked on on a Top Site: event="show.1", method="contextmenu"
 3) User swiped left/right (only for Activity Stream topsites): event="action.1", method="list", extras="swipe_forward"/"swipe_back"
 
 For each click event (1/2), in addition to global extras, the following information is recorded:
@@ -64,6 +64,11 @@ Subtype indicates a reason an item which is being interacted with appeared in th
 - "pinned": a pinned top site, specifically a non-positioned "Activity Stream pinned" site
 - "suggested": a suggested top site, one of the default ones displayed when there's not enough browsing history available
 - "top": a frecency-based top site, based on browsing history. Neither "pinned" nor "suggested".
+
+**Important note on the suggested source_subtype:** "suggested" will only be returned the first time a user clicks on a
+particular suggested site: for all subsequent clicks on this same site, "top" will be returned (assuming the site is
+never pinned). The reason is that once a suggested site has been visited once, it becomes part of a user's history and
+is no longer suggested.
 
 Top Stories (Pocket) interactions
 ---------------------------------
@@ -90,6 +95,20 @@ For "loadurl.1" event, the following extra information is also recorded:
         ...
         "count": number, /* total number of stories displayed */
     }
+
+For "show.1" event, the following extra information is also recorded:
+
+.. code-block:: js
+
+    extras: {
+        ...
+        "interaction": "menu_button"/"long_click"
+    }
+
+When the user opens the context menu with...
+
+- the 3-dot menu, "menu_button" is recorded
+- a long click, "long_click" is recorded
 
 One event type is recorded for interaction with the Top Stories section title UI:
 1) User clicks on the "MORE" link in the Top Stories section title: event="action.1", method="button"
@@ -123,6 +142,7 @@ For both event types, in addition to global extras, the following information is
     }
 
 Subtype indicates reason an item being which is being interacted with appeared in the Highlights:
+
 - "visited": a website has been visited recently
 - "bookmarked": a website has been bookmarked recently
 
@@ -134,6 +154,20 @@ For "loadurl.1" event, the following extra information is also recorded:
         ...
         "count": number /* total number of highlights displayed */
     }
+
+For "show.1" event, the following extra information is also recorded:
+
+.. code-block:: js
+
+    extras: {
+        ...
+        "interaction": "menu_button"/"long_click"
+    }
+
+When the user opens the context menu with...
+
+- the 3-dot menu, "menu_button" is recorded
+- a long click, "long_click" is recorded
 
 Context Menu interactions
 -------------------------
@@ -180,7 +214,7 @@ Full Examples
 =============
 Following examples of events are here to provide a better feel for the overall shape of telemetry data being recorded.
 
-1) User with an active Firefox Account clicked on a menu item for a third highlight ("visited") [prefs enabled: top-stories, bookmarks, visited] :
+1) User with an active Firefox Account clicked on a menu button for the third highlight ("visited") [prefs enabled: top-stories, bookmarks, visited] :
     ::
 
         session="activitystream.1"
@@ -191,7 +225,8 @@ Following examples of events are here to provide a better feel for the overall s
             'as_user_preferences': 28,
             'source_type': 'highlights',
             'source_subtype': 'visited',
-            'action_position': 2
+            'action_position': 2,
+            'interaction': 'menu_button'
         }"
 
 2) User with no active Firefox Account clicked on a second highlight (recent bookmark), with total of 7 highlights being displayed [prefs enabled: bookmarks] :
