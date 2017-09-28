@@ -212,7 +212,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     });
   }
 
-  function testShippingOtpionAttribute() {
+  function testShippingOptionAttribute() {
     return new Promise((resolve, reject) => {
       const details = {
         total: {
@@ -247,14 +247,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
                                              details,
                                              {requestShipping: false});
       ok(payRequest1, "PaymentRequest should be created");
-      ok(!payRequest1.shippingOption,
+      is(payRequest1.shippingOption, null,
          "request.shippingOption should be null in default, when options.requestShipping is false");
       details.shippingOptions[0].selected = true;
       const payRequest2 = new PaymentRequest(simplestMethods,
                                              details,
                                              {requestShipping: false});
       ok(payRequest2, "PaymentRequest should be created");
-      ok(!payRequest2.shippingOption,
+      is(payRequest2.shippingOption, null,
          "request.shippingOption should be null in default, when options.requestShipping is false");
       const payRequest3 = new PaymentRequest(simplestMethods,
                                              details,
@@ -328,7 +328,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     .then(testWithDuplicateShippingOptionsParameters)
     .then(testMultipleRequests)
     .then(testCrossOriginTopLevelPrincipal)
-    .then(testShippingOtpionAttribute)
+    .then(testShippingOptionAttribute)
     .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);
