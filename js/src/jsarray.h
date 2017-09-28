@@ -166,7 +166,7 @@ extern bool
 array_join(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern void
-ArrayShiftMoveElements(JSObject* obj);
+ArrayShiftMoveElements(NativeObject* obj);
 
 extern bool
 array_shift(JSContext* cx, unsigned argc, js::Value* vp);
