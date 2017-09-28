@@ -2427,10 +2427,10 @@ static bool
 CopyArray(JSContext* cx, HandleArrayObject arr, MutableHandleValue result)
 {
     uint32_t length = arr->length();
-    JSObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, arr, length, TenuredObject);
+    ArrayObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, arr, length, TenuredObject);
     if (!nobj)
         return false;
-    EnsureArrayGroupAnalyzed(cx, nobj);
+    EnsureArrayGroupAnalyzed(cx, nobj); //XXX
     CopyBoxedOrUnboxedDenseElements(cx, nobj, arr, 0, 0, length);
 
     result.setObject(*nobj);
@@ -4870,16 +4870,17 @@ ICCall_ScriptedFunCall::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMo
 // Rest_Fallback
 //
 
-static bool DoRestFallback(JSContext* cx, BaselineFrame* frame, ICRest_Fallback* stub,
-                           MutableHandleValue res)
+static bool
+DoRestFallback(JSContext* cx, BaselineFrame* frame, ICRest_Fallback* stub,
+               MutableHandleValue res)
 {
     unsigned numFormals = frame->numFormalArgs() - 1;
     unsigned numActuals = frame->numActualArgs();
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
     Value* rest = frame->argv() + numFormals;
 
-    JSObject* obj = ObjectGroup::newArrayObject(cx, rest, numRest, GenericObject,
-                                                ObjectGroup::NewArrayKind::UnknownIndex);
+    ArrayObject* obj = ObjectGroup::newArrayObject(cx, rest, numRest, GenericObject,
+                                                   ObjectGroup::NewArrayKind::UnknownIndex);
     if (!obj)
         return false;
     res.setObject(*obj);
