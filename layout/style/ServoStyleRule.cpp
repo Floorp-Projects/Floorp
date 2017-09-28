@@ -282,7 +282,7 @@ ServoStyleRule::SelectorMatchesElement(Element* aElement,
 {
   CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
   if (!aPseudo.IsEmpty()) {
-    nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
+    RefPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
     pseudoType = nsCSSPseudoElements::GetPseudoType(
         pseudoElt, CSSEnabledState::eIgnoreEnabledState);
 

@@ -112,7 +112,7 @@ HTMLAllCollection::GetDocumentAllList(const nsAString& aID)
 {
   return mNamedMap.LookupForAdd(aID).OrInsert(
     [this, &aID] () {
-      nsCOMPtr<nsIAtom> id = NS_Atomize(aID);
+      RefPtr<nsIAtom> id = NS_Atomize(aID);
       return new nsContentList(mDocument, DocAllResultMatch, nullptr,
                                nullptr, true, id);
     });

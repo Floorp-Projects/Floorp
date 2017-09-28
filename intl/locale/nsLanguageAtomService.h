@@ -14,7 +14,7 @@
 #include "mozilla/NotNull.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsInterfaceHashtable.h"
+#include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 class Encoding;
@@ -50,8 +50,8 @@ public:
   already_AddRefed<nsIAtom> GetUncachedLanguageGroup(nsIAtom* aLanguage) const;
 
 private:
-  nsInterfaceHashtable<nsISupportsHashKey, nsIAtom> mLangToGroup;
-  nsCOMPtr<nsIAtom> mLocaleLanguage;
+  nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, nsIAtom> mLangToGroup;
+  RefPtr<nsIAtom> mLocaleLanguage;
 };
 
 #endif

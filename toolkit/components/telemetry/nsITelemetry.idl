@@ -355,7 +355,7 @@ interface nsITelemetry : nsISupports
   /**
    * Serializes the scalars from the given dataset to a JSON-style object and resets them.
    * The returned structure looks like:
-   *   {"process": {"group1.probe":1,"group1.other_probe":false,...}, ... }.
+   *   {"process": {"category1.probe":1,"category1.other_probe":false,...}, ... }.
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
    * @param [aClear=false] Whether to clear out the scalars after snapshotting.
@@ -398,7 +398,7 @@ interface nsITelemetry : nsISupports
    * Serializes the keyed scalars from the given dataset to a JSON-style object and
    * resets them.
    * The returned structure looks like:
-   *   { "process": { "group1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
+   *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
    * @param [aClear=false] Whether to clear out the scalars after snapshotting.
@@ -488,11 +488,11 @@ interface nsITelemetry : nsISupports
 
   /**
    * Parent process only. Register new scalars to record them from addons. This
-   * allows registering multiple scalars for a group. They will be valid only for
+   * allows registering multiple scalars for a category. They will be valid only for
    * the current Firefox session.
    * Note that scalars shipping in Firefox should be registered in Scalars.yaml.
    *
-   * @param aGroupName The unique group the scalars are registered in.
+   * @param aCategoryName The unique category the scalars are registered in.
    * @param aScalarData An object that contains registration data for multiple scalars in the form:
    *   {
    *     "sample_scalar": {
@@ -511,7 +511,7 @@ interface nsITelemetry : nsISupports
    *                                   recording it without error, but it will be discarded. Defaults to false.
    */
   [implicit_jscontext]
-  void registerScalars(in ACString aGroupName, in jsval aScalarData);
+  void registerScalars(in ACString aCategoryName, in jsval aScalarData);
 
   /**
    * Resets all the stored events. This is intended to be only used in tests.

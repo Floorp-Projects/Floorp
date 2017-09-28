@@ -25,14 +25,6 @@
     "filename": "jsshell.tar.xz"
   },
   {
-    "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
-    "size": 151322128,
-    "digest": "1d6d6e8bbf7535a4f1c8f1292562e30c868bfd3ac323992fc287be09f7fa3167c2f9e01dc98143967983e30488fe3ecaebff530ba4ec9113033d60af936c4f4d",
-    "algorithm": "sha512",
-    "filename": "rustc.tar.xz",
-    "unpack": true
-  },
-  {
     "size": 7797928,
     "visibility": "public",
     "digest": "7bb5c7b3586179a7805ae60b025b7856cb8dbed66da1b7962bc446d94ea6fa45ed55ebfe065d2d82690c68bf71bdab613e97f53da79b85e3185955461f751256",

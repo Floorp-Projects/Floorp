@@ -26,7 +26,7 @@ private:
 
     nsCOMPtr<mozIStorageStatement> mStatement;
 
-    nsCOMArray<nsIAtom> mColumnNames;
+    nsTArray<RefPtr<nsIAtom>> mColumnNames;
 
     ~nsXULTemplateResultSetStorage() {}
 

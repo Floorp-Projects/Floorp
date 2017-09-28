@@ -111,8 +111,8 @@ public:
   }
 
   nsCOMPtr<nsINode>             mTarget;
-  nsCOMPtr<nsIAtom>             mType;
-  nsCOMPtr<nsIAtom>             mAttrName;
+  RefPtr<nsIAtom>             mType;
+  RefPtr<nsIAtom>             mAttrName;
   nsString                      mAttrNamespace;
   nsString                      mPrevValue;
   RefPtr<nsSimpleContentList> mAddedNodes;
@@ -217,8 +217,8 @@ public:
     mAttributeOldValue = aOldValue;
   }
 
-  nsCOMArray<nsIAtom>& AttributeFilter() { return mAttributeFilter; }
-  void SetAttributeFilter(nsCOMArray<nsIAtom>&& aFilter)
+  nsTArray<RefPtr<nsIAtom>>& AttributeFilter() { return mAttributeFilter; }
+  void SetAttributeFilter(nsTArray<RefPtr<nsIAtom>>&& aFilter)
   {
     NS_ASSERTION(!mParent, "Shouldn't have parent");
     mAttributeFilter.Clear();
@@ -305,8 +305,8 @@ protected:
       return false;
     }
 
-    nsCOMArray<nsIAtom>& filters = AttributeFilter();
-    for (int32_t i = 0; i < filters.Count(); ++i) {
+    nsTArray<RefPtr<nsIAtom>>& filters = AttributeFilter();
+    for (size_t i = 0; i < filters.Length(); ++i) {
       if (filters[i] == aAttr) {
         return true;
       }
@@ -336,7 +336,7 @@ private:
   bool                               mAllAttributes;
   bool                               mAttributeOldValue;
   bool                               mAnimations;
-  nsCOMArray<nsIAtom>                mAttributeFilter;
+  nsTArray<RefPtr<nsIAtom>>          mAttributeFilter;
 };
 
 

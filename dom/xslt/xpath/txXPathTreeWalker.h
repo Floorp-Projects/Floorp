@@ -205,7 +205,7 @@ txXPathNodeUtils::localNameEquals(const txXPathNode& aNode,
         return aNode.Content()->NodeInfo()->Equals(aLocalName);
     }
 
-    nsCOMPtr<nsIAtom> localName = txXPathNodeUtils::getLocalName(aNode);
+    RefPtr<nsIAtom> localName = txXPathNodeUtils::getLocalName(aNode);
 
     return localName == aLocalName;
 }

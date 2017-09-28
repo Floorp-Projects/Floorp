@@ -37,13 +37,12 @@ EventListenerChange::~EventListenerChange()
 EventListenerChange::EventListenerChange(dom::EventTarget* aTarget) :
   mTarget(aTarget)
 {
-  mChangedListenerNames = nsArrayBase::Create();
 }
 
 void
 EventListenerChange::AddChangedListenerName(nsIAtom* aEventName)
 {
-  mChangedListenerNames->AppendElement(aEventName, false);
+  mChangedListenerNames.AppendElement(aEventName);
 }
 
 NS_IMETHODIMP
@@ -60,13 +59,9 @@ EventListenerChange::GetCountOfEventListenerChangesAffectingAccessibility(
 {
   *aCount = 0;
 
-  uint32_t length;
-  nsresult rv = mChangedListenerNames->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  size_t length = mChangedListenerNames.Length();
   for (size_t i = 0; i < length; i++) {
-    nsCOMPtr<nsIAtom> listenerName =
-      do_QueryElementAt(mChangedListenerNames, i);
+    RefPtr<nsIAtom> listenerName = mChangedListenerNames[i];
 
     // These are the event listener changes which may make an element
     // accessible or inaccessible.

@@ -5014,6 +5014,27 @@
     "bug_numbers": [1338082],
     "description": "Negative cache duration (ms) received in fullhash response from any v4 provider"
   },
+  "URLCLASSIFIER_THREATHIT_NETWORK_ERROR": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["tnguyen@mozilla.com, safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "n_values": 30,
+    "bug_numbers": [1351147],
+    "description": "Whether or not an error was encountered while sending a Safe Browsing ThreatHit report. (0=sucess, 1=unknown error, 2=already connected, 3=not connected, 4=connection refused,5=net timeout, 6=offline, 7=port access not allowed, 8=net reset, 9=net interrupt, 10=proxy connection refused, 11=partial transfer, 12=inadequate security, 13=unknown host, 14=dns lookup queue full, 15=unknown proxy host)"
+  },
+  "URLCLASSIFIER_THREATHIT_REMOTE_STATUS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["tnguyen@mozilla.com, safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "n_values": 16,
+    "bug_numbers": [1351147],
+    "description": "Server HTTP status code from Safe Browsing ThreatHit report. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
+  },
+
   "CSP_DOCUMENTS_COUNT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
@@ -5206,6 +5227,16 @@
     "high": 513,
     "n_buckets" : 64,
     "description": "The width dimension of the 'sizes' attribute for <link rel=icon>."
+  },
+  "PAGE_METADATA_SIZE": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 500,
+    "n_buckets": 10,
+    "alert_emails": ["najiang@mozilla.com", "activity-stream@mozilla.com"],
+    "bug_numbers": [1399880],
+    "description": "The size of the description and preview image url for page metadata (Bytes)"
   },
   "FENNEC_DISTRIBUTION_REFERRER_INVALID": {
     "record_in_processes": ["main", "content"],
@@ -7268,7 +7299,8 @@
       "eChannelOpen",
       "eRedirect",
       "abort",
-      "timeout"
+      "timeout",
+      "eTooLate"
     ],
     "description": "Counts of the different ways sending a Telemetry ping can fail."
   },

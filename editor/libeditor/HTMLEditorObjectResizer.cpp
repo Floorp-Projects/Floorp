@@ -190,7 +190,7 @@ HTMLEditor::CreateShadow(nsIContent& aParentContent,
                          Element& aOriginalObject)
 {
   // let's create an image through the element factory
-  nsCOMPtr<nsIAtom> name;
+  RefPtr<nsIAtom> name;
   if (HTMLEditUtils::IsImage(&aOriginalObject)) {
     name = nsGkAtoms::img;
   } else {
@@ -224,7 +224,7 @@ HTMLEditor::SetAllResizersPosition()
   // get the size of resizers
   nsAutoString value;
   float resizerWidth, resizerHeight;
-  nsCOMPtr<nsIAtom> dummyUnit;
+  RefPtr<nsIAtom> dummyUnit;
   mCSSEditUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::width,
                                      value);
   mCSSEditUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));

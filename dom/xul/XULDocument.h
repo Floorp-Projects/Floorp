@@ -763,7 +763,7 @@ protected:
       // Note if mAttrName isn't used, this is the name of the attr, otherwise
       // this is the value of the attribute.
       nsString                mAttr;
-      nsCOMPtr<nsIAtom>       mAttrName;
+      RefPtr<nsIAtom>       mAttrName;
       bool                    mSetAttr;
       bool                    mNeedsAttrChange;
 

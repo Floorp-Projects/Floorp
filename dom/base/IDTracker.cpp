@@ -120,7 +120,7 @@ IDTracker::Reset(nsIContent* aFromContent, nsIURI* aURI,
   }
 
   if (aWatch) {
-    nsCOMPtr<nsIAtom> atom = NS_Atomize(ref);
+    RefPtr<nsIAtom> atom = NS_Atomize(ref);
     if (!atom)
       return;
     atom.swap(mWatchID);
@@ -142,7 +142,7 @@ IDTracker::ResetWithID(nsIContent* aFromContent, const nsString& aID,
   // XXX Need to take care of XBL/XBL2
 
   if (aWatch) {
-    nsCOMPtr<nsIAtom> atom = NS_Atomize(aID);
+    RefPtr<nsIAtom> atom = NS_Atomize(aID);
     if (!atom)
       return;
     atom.swap(mWatchID);

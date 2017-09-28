@@ -42,7 +42,7 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  nsCOMPtr<nsIAtom> mAtom;
+  RefPtr<nsIAtom> mAtom;
   nsAtomList*       mNext;
 private:
   nsAtomList* Clone(bool aDeep) const;
@@ -130,8 +130,8 @@ public:
 
   nsString        mValue;
   nsAttrSelector* mNext;
-  nsCOMPtr<nsIAtom> mLowercaseAttr;
-  nsCOMPtr<nsIAtom> mCasedAttr;
+  RefPtr<nsIAtom> mLowercaseAttr;
+  RefPtr<nsIAtom> mCasedAttr;
   int32_t         mNameSpace;
   uint8_t         mFunction;
   ValueCaseSensitivity mValueCaseSensitivity;
@@ -226,8 +226,8 @@ public:
   // but in case-insensitive documents (HTML) mLowercaseTag is lowercase.
   // Also, for pseudo-elements mCasedTag will be null but mLowercaseTag
   // contains their name.
-  nsCOMPtr<nsIAtom> mLowercaseTag;
-  nsCOMPtr<nsIAtom> mCasedTag;
+  RefPtr<nsIAtom> mLowercaseTag;
+  RefPtr<nsIAtom> mCasedTag;
   nsAtomList*     mIDList;
   nsAtomList*     mClassList;
   nsPseudoClassList* mPseudoClassList; // atom for the pseudo, string for

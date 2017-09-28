@@ -99,7 +99,10 @@ module.exports = envConfig => {
         "devtools/shared/DevToolsUtils":
           path.join(__dirname, "./webpack/devtools-utils-sham.js"),
         "devtools/shared/locales": path.join(__dirname, "../../shared/locales/en-US"),
-        "devtools/shared/platform": path.join(__dirname, "../../shared/platform/content"),
+        "devtools/shared/platform/clipboard": path.join(__dirname,
+          "../../client/shared/webpack/shims/platform-clipboard-stub"),
+        "devtools/shared/platform/stack": path.join(__dirname,
+          "../../client/shared/webpack/shims/platform-clipboard-stub"),
         "devtools": path.join(__dirname, "../../"),
         "gcli": path.join(__dirname, "../../shared/gcli/source/lib/gcli"),
         "method": path.join(__dirname, "../../../addon-sdk/source/lib/method"),

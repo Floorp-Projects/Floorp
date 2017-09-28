@@ -61,7 +61,7 @@ DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
     return nullptr;
   }
 
-  nsCOMPtr<nsIAtom> name = NS_Atomize(aQualifiedName);
+  RefPtr<nsIAtom> name = NS_Atomize(aQualifiedName);
   if (!name) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;

@@ -227,6 +227,8 @@ message ThreatHit {
     TAB_URL = 2;
     // A redirect URL that was fetched before hitting the final TAB_URL.
     TAB_REDIRECT = 3;
+    // A resource loaded within the final TAB_URL.
+    TAB_RESOURCE = 4;
   }
 
   // A single resource related to a threat hit.
@@ -246,6 +248,21 @@ message ThreatHit {
 
   // The resources related to the threat hit.
   repeated ThreatSource resources = 4;
+
+  // Client-reported identification.
+  optional ClientInfo client_info = 5;
+
+  // Details about the user that encountered the threat.
+  message UserInfo {
+    // The UN M.49 region code associated with the user's location.
+    optional string region_code = 1;
+
+    // Unique ID stable over a week or two
+    optional bytes user_id = 2;
+  }
+
+  // Details about the user that encountered the threat.
+  optional UserInfo user_info = 6;
 }
 
 // Types of threats.

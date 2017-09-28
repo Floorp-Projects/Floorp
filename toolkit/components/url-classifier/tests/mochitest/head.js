@@ -34,3 +34,16 @@ function hash(str) {
 
   return hasher.finish(true);
 }
+
+var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished");
+}
+
+

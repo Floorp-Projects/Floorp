@@ -32,7 +32,7 @@ public:
     if (aInfo.type() == MaybeInfo::TClassifierInfo) {
       mCallback->OnClassifyComplete(aResult, aInfo.get_ClassifierInfo().list(),
                                     aInfo.get_ClassifierInfo().provider(),
-                                    aInfo.get_ClassifierInfo().prefix());
+                                    aInfo.get_ClassifierInfo().fullhash());
     }
     return IPC_OK();
   }
