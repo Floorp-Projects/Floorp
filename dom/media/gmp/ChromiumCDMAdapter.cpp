@@ -9,7 +9,6 @@
 #include "VideoUtils.h"
 #include "gmp-api/gmp-entrypoints.h"
 #include "gmp-api/gmp-video-codec.h"
-#include "gmp-api/gmp-platform.h"
 #include "WidevineUtils.h"
 #include "GMPLog.h"
 #include "mozilla/Move.h"

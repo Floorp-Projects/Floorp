@@ -12,21 +12,6 @@
 
 namespace mozilla {
 
-GMPErr
-ToGMPErr(cdm::Status aStatus)
-{
-  switch (aStatus) {
-    case cdm::kSuccess: return GMPNoErr;
-    case cdm::kNeedMoreData: return GMPGenericErr;
-    case cdm::kNoKey: return GMPNoKeyErr;
-    case cdm::kInitializationError: return GMPGenericErr;
-    case cdm::kDecryptError: return GMPCryptoErr;
-    case cdm::kDecodeError: return GMPDecodeErr;
-    case cdm::kDeferredInitialization: return GMPGenericErr;
-    default: return GMPGenericErr;
-  }
-}
-
 WidevineBuffer::WidevineBuffer(size_t aSize)
 {
   GMP_LOG("WidevineBuffer(size=%zu) created", aSize);
