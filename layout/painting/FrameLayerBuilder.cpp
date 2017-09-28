@@ -2132,16 +2132,16 @@ FrameLayerBuilder::ClearCachedGeometry(nsDisplayItem* aItem)
   }
 }
 
-/* static */ Layer*
-FrameLayerBuilder::GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+/* static */ DisplayItemData*
+FrameLayerBuilder::GetOldDataFor(nsDisplayItem* aItem)
 {
-  const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
+  const SmallPointerArray<DisplayItemData>& array = aItem->Frame()->DisplayItemData();
 
   for (uint32_t i = 0; i < array.Length(); i++) {
     DisplayItemData *data = DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
 
-    if (data->mDisplayItemKey == aDisplayItemKey) {
-      return data->mLayer;
+    if (data->mDisplayItemKey == aItem->GetPerFrameKey()) {
+      return data;
     }
   }
   return nullptr;
