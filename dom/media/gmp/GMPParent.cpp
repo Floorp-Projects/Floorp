@@ -691,22 +691,6 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
       }
     }
 
-    if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
-      mCanDecrypt = true;
-
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-      if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {
-        nsPrintfCString msg(
-          "GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
-          " but this system can't sandbox it; not loading.",
-          mDisplayName.get());
-        printf_stderr("%s\n", msg.get());
-        LOGD("%s", msg.get());
-        return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-      }
-#endif
-    }
-
     mCapabilities.AppendElement(Move(cap));
   }
 
