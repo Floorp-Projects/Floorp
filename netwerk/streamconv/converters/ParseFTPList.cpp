@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ParseFTPList.h"
+#include <algorithm>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -466,46 +467,17 @@ int ParseFTPList(const char *line, struct list_state *state,
             while (pos < toklen[1] && (tokens[1][pos]) != '/')
               pos++;
 
-/*
- * I've never seen size come back in bytes, its always in blocks, and
- * the following test fails. So, always perform the "size in blocks".
- * I'm leaving the "size in bytes" code if'd out in case we ever need
- * to re-instate it.
-*/
-#if 0
-            if (pos < toklen[1] && ( (pos<<1) > (toklen[1]-1) ||
-                 (strtoul(tokens[1], (char **)0, 10) >
-                  strtoul(tokens[1]+pos+1, (char **)0, 10))        ))
-            {                                   /* size is in bytes */
-              if (pos > (sizeof(result->fe_size)-1))
-                pos = sizeof(result->fe_size)-1;
-              memcpy( result->fe_size, tokens[1], pos );
-              result->fe_size[pos] = '\0';
-            }
-            else /* size is in blocks */
-#endif
-            {
-              /* size requires multiplication by blocksize.
-               *
-               * We could assume blocksize is 512 (like Lynx does) and
-               * shift by 9, but that might not be right. Even if it
-               * were, doing that wouldn't reflect what the file's
-               * real size was. The sanest thing to do is not use the
-               * LISTing's filesize, so we won't (like ftpmirror).
-               *
-               * ulltoa(((unsigned long long)fsz)<<9, result->fe_size, 10);
-               *
-               * A block is always 512 bytes on OpenVMS, compute size.
-               * So its rounded up to the next block, so what, its better
-               * than not showing the size at all.
-               * A block is always 512 bytes on OpenVMS, compute size.
-               * So its rounded up to the next block, so what, its better
-               * than not showing the size at all.
-              */
-              uint64_t fsz = uint64_t(strtoul(tokens[1], (char **)0, 10) * 512);
-              SprintfLiteral(result->fe_size, "%" PRId64, fsz);
-            }
-
+            /*
+             * On OpenVMS, the size is given in blocks. A block is 512
+             * bytes. This can only approximate the size of the file,
+             * but that's better than not showing a size at all.
+             * numBlocks is clamped to UINT32_MAX to make 32-bit and
+             * 64-bit builds return consistent results.
+             */
+            uint64_t numBlocks = strtoul(tokens[1], nullptr, 10);
+            numBlocks = std::min(numBlocks, (uint64_t)UINT32_MAX);
+            uint64_t fileSize = numBlocks * 512;
+            SprintfLiteral(result->fe_size, "%" PRIu64, fileSize);
           } /* if (result->fe_type != 'd') */
 
           p = tokens[2] + 2;
