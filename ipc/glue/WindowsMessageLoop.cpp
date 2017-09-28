@@ -231,7 +231,7 @@ DumpNeuteredMessage(HWND hwnd, UINT uMsg)
   // classify messages
   if (uMsg < WM_USER) {
     int idx = 0;
-    while (mozilla::widget::gAllEvents[idx].mId != (long)uMsg &&
+    while (mozilla::widget::gAllEvents[idx].mId != uMsg &&
            mozilla::widget::gAllEvents[idx].mStr != nullptr) {
       idx++;
     }
