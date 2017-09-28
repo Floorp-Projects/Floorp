@@ -39,7 +39,6 @@
 #include "nsViewManager.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsSubDocumentFrame.h"
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
 #include "nsRegion.h"
@@ -3426,15 +3425,13 @@ nsLayoutUtils::CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFram
       content, presShell, displayportMargins, 0, aRepaintMode);
 }
 
-bool
+void
 nsLayoutUtils::MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
-                                      nsIFrame* aScrollFrame,
-                                      RepaintMode aRepaintMode)
-{
+                                      nsIFrame* aScrollFrame) {
   nsIContent* content = aScrollFrame->GetContent();
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollFrame);
   if (!content || !scrollableFrame) {
-    return false;
+    return;
   }
 
   bool haveDisplayPort = HasDisplayPort(content);
@@ -3450,7 +3447,7 @@ nsLayoutUtils::MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
 
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
-      CalculateAndSetDisplayPortMargins(scrollableFrame, aRepaintMode);
+      CalculateAndSetDisplayPortMargins(scrollableFrame, nsLayoutUtils::RepaintMode::DoNotRepaint);
 #ifdef DEBUG
       haveDisplayPort = HasDisplayPort(content);
       MOZ_ASSERT(haveDisplayPort, "should have a displayport after having just set it");
@@ -3459,9 +3456,7 @@ nsLayoutUtils::MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
 
     // Record that the we now have a scrollable display port.
     aBuilder.SetHaveScrollableDisplayPort();
-    return true;
   }
-  return false;
 }
 
 nsIScrollableFrame*
@@ -3498,43 +3493,6 @@ nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(nsIFrame* aFra
         aRepaintMode);
     }
   }
-}
-
-bool
-nsLayoutUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
-  nsIFrame* aFrame, nsDisplayListBuilder& aBuilder)
-{
-  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
-  if (sf) {
-    if (MaybeCreateDisplayPort(aBuilder, aFrame, RepaintMode::Repaint)) {
-      return true;
-    }
-  }
-  if (aFrame->IsPlaceholderFrame()) {
-    nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
-    if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(
-          placeholder->GetOutOfFlowFrame(), aBuilder)) {
-      return true;
-    }
-  }
-  if (aFrame->IsSubDocumentFrame()) {
-    nsIPresShell* presShell =
-      static_cast<nsSubDocumentFrame*>(aFrame)->GetSubdocumentPresShellForPainting(0);
-    nsIFrame* root = presShell ? presShell->GetRootFrame() : nullptr;
-    if (root) {
-      if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(root, aBuilder)) {
-        return true;
-      }
-    }
-  }
-
-  for (nsIFrame* child : aFrame->PrincipalChildList()) {
-    if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(child, aBuilder)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 void
@@ -3725,11 +3683,6 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       canvasArea.UnionRect(canvasArea,
         canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame));
     }
-  }
-
-  builder.ClearHaveScrollableDisplayPort();
-  if (builder.IsPaintingToWindow()) {
-    MaybeCreateDisplayPortInFirstScrollFrameEncountered(aFrame, builder);
   }
 
   nsRect dirtyRect = visibleRegion.GetBounds();
