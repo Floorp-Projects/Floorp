@@ -568,9 +568,7 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
-  , mOutputChannels(mGraphImpl->AudioChannelCount())
-  , mScratchBuffer(std::max<uint32_t>(1, mOutputChannels))
-  , mBuffer(std::max<uint32_t>(1, mOutputChannels))
+  , mOutputChannels(0)
   , mSampleRate(0)
   , mInputChannels(1)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
@@ -652,6 +650,11 @@ AudioCallbackDriver::Init()
   } else {
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
+
+  // Query and set the number of channels this AudioCallbackDriver will use.
+  mOutputChannels = std::max<uint32_t>(1, mGraphImpl->AudioChannelCount());
+  mBuffer = AudioCallbackBufferWrapper<AudioDataValue>(mOutputChannels);
+  mScratchBuffer = SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2>(mOutputChannels);
 
   output.channels = mOutputChannels;
   output.layout = CUBEB_LAYOUT_UNDEFINED;
