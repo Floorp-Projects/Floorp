@@ -54,11 +54,11 @@ function run_test() {
 
   dataFile = do_get_file("data/bug121341-2.properties");
 
-  var channel = NetUtil.newChannel({
+  var channel2 = NetUtil.newChannel({
     uri: ios.newFileURI(dataFile, null, null),
     loadUsingSystemPrincipal: true
   });
-  inp = channel.open2();
+  inp = channel2.open2();
 
   var properties2 = Components.classes["@mozilla.org/persistent-properties;1"].
                     createInstance(Components.interfaces.nsIPersistentProperties);

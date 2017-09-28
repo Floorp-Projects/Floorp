@@ -21,6 +21,7 @@ function test_not_initialized() {
             .createInstance(Ci.nsIPipe);
   try {
     var dummy = p.outputStream;
+    dump("dummy: " + dummy + "\n");
     throw Cr.NS_ERROR_FAILURE;
   } catch (e) {
     if (e.result != Cr.NS_ERROR_NOT_INITIALIZED)

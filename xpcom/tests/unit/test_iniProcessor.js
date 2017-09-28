@@ -13,7 +13,7 @@ function parserForFile(filename) {
         parser = factory.createINIParser(file);
         do_check_true(!!parser);
     } catch (e) {
-	dump("INFO | caught error: " + e);
+        dump("INFO | caught error: " + e);
         // checkParserOutput will handle a null parser when it's expected.
     }
     return parser;

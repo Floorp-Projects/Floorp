@@ -13,7 +13,7 @@ var nameArray = [
 
 function getTempDir() {
     var dirService = Cc["@mozilla.org/file/directory_service;1"]
-	.getService(Ci.nsIProperties);
+        .getService(Ci.nsIProperties);
     return dirService.get("TmpD", Ci.nsIFile);
 }
 
@@ -23,7 +23,7 @@ function create_file(fileName) {
     outFile.createUnique(outFile.NORMAL_FILE_TYPE, 0o600);
 
     var stream = Cc["@mozilla.org/network/file-output-stream;1"]
-	.createInstance(Ci.nsIFileOutputStream);
+        .createInstance(Ci.nsIFileOutputStream);
     stream.init(outFile, 0x02 | 0x08 | 0x20, 0o600, 0);
     stream.write("foo", 3);
     stream.close();
@@ -42,6 +42,6 @@ function test_create(fileName) {
 
 function run_test() {
     for (var i = 0; i < nameArray.length; ++i) {
-	test_create(nameArray[i]);
+        test_create(nameArray[i]);
     }
 }
