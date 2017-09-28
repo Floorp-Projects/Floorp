@@ -403,9 +403,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement, nsGenericHTMLElement,
                                    mPrintState, mOriginalCanvas,
                                    mOffscreenCanvas)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement,
-                                             nsGenericHTMLElement,
-                                             nsIDOMHTMLCanvasElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLCanvasElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
 
@@ -458,10 +456,6 @@ HTMLCanvasElement::GetWidthHeight()
 
   return size;
 }
-
-NS_IMPL_UINT_ATTR_DEFAULT_VALUE(HTMLCanvasElement, Width, width, DEFAULT_CANVAS_WIDTH)
-NS_IMPL_UINT_ATTR_DEFAULT_VALUE(HTMLCanvasElement, Height, height, DEFAULT_CANVAS_HEIGHT)
-NS_IMPL_BOOL_ATTR(HTMLCanvasElement, MozOpaque, moz_opaque)
 
 nsresult
 HTMLCanvasElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
