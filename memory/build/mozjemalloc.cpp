@@ -1758,106 +1758,87 @@ malloc_rtree_new(unsigned bits)
 	return (ret);
 }
 
-#define	MALLOC_RTREE_GET_GENERATE(f)					\
-/* The least significant bits of the key are ignored. */		\
-static inline void *							\
-f(malloc_rtree_t *rtree, uintptr_t key)					\
-{									\
-	void *ret;							\
-	uintptr_t subkey;						\
-	unsigned i, lshift, height, bits;				\
-	void **node, **child;						\
-									\
-	MALLOC_RTREE_LOCK(&rtree->lock);				\
-	for (i = lshift = 0, height = rtree->height, node = rtree->root;\
-	    i < height - 1;						\
-	    i++, lshift += bits, node = child) {			\
-		bits = rtree->level2bits[i];				\
-		subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);	\
-		child = (void**)node[subkey];				\
-		if (!child) {						\
-			MALLOC_RTREE_UNLOCK(&rtree->lock);		\
-			return nullptr;					\
-		}							\
-	}								\
-									\
-	/*								\
-	 * node is a leaf, so it contains values rather than node	\
-	 * pointers.							\
-	 */								\
-	bits = rtree->level2bits[i];					\
-	subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);		\
-	ret = node[subkey];						\
-	MALLOC_RTREE_UNLOCK(&rtree->lock);				\
-									\
-	MALLOC_RTREE_GET_VALIDATE					\
-	return (ret);							\
+static inline void**
+malloc_rtree_get_slot(malloc_rtree_t* aTree, uintptr_t aKey, bool aCreate = false)
+{
+  uintptr_t subkey;
+  unsigned i, lshift, height, bits;
+  void** node;
+  void** child;
+
+  for (i = lshift = 0, height = aTree->height, node = aTree->root;
+       i < height - 1;
+       i++, lshift += bits, node = child) {
+    bits = aTree->level2bits[i];
+    subkey = (aKey << lshift) >> ((SIZEOF_PTR << 3) - bits);
+    child = (void**) node[subkey];
+    if (!child && aCreate) {
+      child = (void**) base_calloc(1 << aTree->level2bits[i + 1], sizeof(void*));
+      if (child) {
+        node[subkey] = child;
+      }
+    }
+    if (!child) {
+      return nullptr;
+    }
+  }
+
+  /*
+   * node is a leaf, so it contains values rather than node
+   * pointers.
+   */
+  bits = aTree->level2bits[i];
+  subkey = (aKey << lshift) >> ((SIZEOF_PTR << 3) - bits);
+  return &node[subkey];
 }
 
-#ifdef MOZ_DEBUG
-#  define MALLOC_RTREE_LOCK(l)		malloc_spin_lock(l)
-#  define MALLOC_RTREE_UNLOCK(l)	malloc_spin_unlock(l)
-#  define MALLOC_RTREE_GET_VALIDATE
-MALLOC_RTREE_GET_GENERATE(malloc_rtree_get_locked)
-#  undef MALLOC_RTREE_LOCK
-#  undef MALLOC_RTREE_UNLOCK
-#  undef MALLOC_RTREE_GET_VALIDATE
-#endif
+static inline void*
+malloc_rtree_get(malloc_rtree_t* aTree, uintptr_t aKey)
+{
+  void* ret = nullptr;
 
-#define	MALLOC_RTREE_LOCK(l)
-#define	MALLOC_RTREE_UNLOCK(l)
+  void** slot = malloc_rtree_get_slot(aTree, aKey);
+
+  if (slot) {
+    ret = *slot;
+  }
 #ifdef MOZ_DEBUG
-   /*
-    * Suppose that it were possible for a jemalloc-allocated chunk to be
-    * munmap()ped, followed by a different allocator in another thread re-using
-    * overlapping virtual memory, all without invalidating the cached rtree
-    * value.  The result would be a false positive (the rtree would claim that
-    * jemalloc owns memory that it had actually discarded).  I don't think this
-    * scenario is possible, but the following assertion is a prudent sanity
-    * check.
-    */
-#  define MALLOC_RTREE_GET_VALIDATE					\
-	MOZ_ASSERT(malloc_rtree_get_locked(rtree, key) == ret);
-#else
-#  define MALLOC_RTREE_GET_VALIDATE
+  malloc_spin_lock(&aTree->lock);
+  /*
+   * Suppose that it were possible for a jemalloc-allocated chunk to be
+   * munmap()ped, followed by a different allocator in another thread re-using
+   * overlapping virtual memory, all without invalidating the cached rtree
+   * value.  The result would be a false positive (the rtree would claim that
+   * jemalloc owns memory that it had actually discarded).  I don't think this
+   * scenario is possible, but the following assertion is a prudent sanity
+   * check.
+   */
+  if (!slot) {
+    // In case a slot has been created in the meantime.
+    slot = malloc_rtree_get_slot(aTree, aKey);
+  }
+  if (slot) {
+    // The malloc_spin_lock call above should act as a memory barrier, forcing
+    // the compiler to emit a new read instruction for *slot.
+    MOZ_ASSERT(ret == *slot);
+  } else {
+    MOZ_ASSERT(ret == nullptr);
+  }
+  malloc_spin_unlock(&aTree->lock);
 #endif
-MALLOC_RTREE_GET_GENERATE(malloc_rtree_get)
-#undef MALLOC_RTREE_LOCK
-#undef MALLOC_RTREE_UNLOCK
-#undef MALLOC_RTREE_GET_VALIDATE
+  return ret;
+}
 
 static inline bool
-malloc_rtree_set(malloc_rtree_t *rtree, uintptr_t key, void *val)
+malloc_rtree_set(malloc_rtree_t *aTree, uintptr_t aKey, void* aValue)
 {
-	uintptr_t subkey;
-	unsigned i, lshift, height, bits;
-	void **node, **child;
-
-	malloc_spin_lock(&rtree->lock);
-	for (i = lshift = 0, height = rtree->height, node = rtree->root;
-	    i < height - 1;
-	    i++, lshift += bits, node = child) {
-		bits = rtree->level2bits[i];
-		subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
-		child = (void**)node[subkey];
-		if (!child) {
-			child = (void**)base_calloc(1, sizeof(void *) <<
-			    rtree->level2bits[i+1]);
-			if (!child) {
-				malloc_spin_unlock(&rtree->lock);
-				return (true);
-			}
-			node[subkey] = child;
-		}
-	}
-
-	/* node is a leaf, so it contains values rather than node pointers. */
-	bits = rtree->level2bits[i];
-	subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
-	node[subkey] = val;
-	malloc_spin_unlock(&rtree->lock);
-
-	return (false);
+  malloc_spin_lock(&aTree->lock);
+  void** slot = malloc_rtree_get_slot(aTree, aKey, /* create */ true);
+  if (slot) {
+    *slot = aValue;
+  }
+  malloc_spin_unlock(&aTree->lock);
+  return !slot;
 }
 
 /* pages_trim, chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked
