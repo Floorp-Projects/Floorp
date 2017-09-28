@@ -1151,7 +1151,7 @@ SyncEngine.prototype = {
 
       try {
         try {
-          item.decrypt(key);
+          await item.decrypt(key);
         } catch (ex) {
           if (!Utils.isHMACMismatch(ex)) {
             throw ex;
@@ -1163,7 +1163,7 @@ SyncEngine.prototype = {
               // Try decrypting again, typically because we've got new keys.
               self._log.info("Trying decrypt again...");
               key = self.service.collectionKeys.keyForCollection(self.name);
-              item.decrypt(key);
+              await item.decrypt(key);
               strategy = null;
             } catch (ex) {
               if (!Utils.isHMACMismatch(ex)) {
@@ -1669,8 +1669,7 @@ SyncEngine.prototype = {
           }
           if (this._log.level <= Log.Level.Trace)
             this._log.trace("Outgoing: " + out);
-
-          out.encrypt(this.service.collectionKeys.keyForCollection(this.name));
+          await out.encrypt(this.service.collectionKeys.keyForCollection(this.name));
           ok = true;
         } catch (ex) {
           this._log.warn("Error creating record", ex);
@@ -1796,7 +1795,7 @@ SyncEngine.prototype = {
       let json = (await test.get()).obj[0];
       let record = new this._recordObj();
       record.deserialize(json);
-      record.decrypt(key);
+      await record.decrypt(key);
       canDecrypt = true;
     } catch (ex) {
       if (Async.isShutdownException(ex)) {

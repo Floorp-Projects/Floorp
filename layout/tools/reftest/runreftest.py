@@ -709,6 +709,9 @@ class RefTest(object):
                      outputTimeout=timeout)
         proc = runner.process_handler
 
+        # Used to defer a possible IOError exception from Marionette
+        marionette_exception = None
+
         if self.use_marionette:
             marionette_args = {
                 'socket_timeout': options.marionette_socket_timeout,
@@ -720,16 +723,24 @@ class RefTest(object):
                 marionette_args['host'] = host
                 marionette_args['port'] = int(port)
 
-            marionette = Marionette(**marionette_args)
-            marionette.start_session()
+            try:
+                marionette = Marionette(**marionette_args)
+                marionette.start_session()
 
-            addons = Addons(marionette)
-            if options.specialPowersExtensionPath:
-                addons.install(options.specialPowersExtensionPath, temp=True)
+                addons = Addons(marionette)
+                if options.specialPowersExtensionPath:
+                    addons.install(options.specialPowersExtensionPath, temp=True)
 
-            addons.install(options.reftestExtensionPath, temp=True)
+                addons.install(options.reftestExtensionPath, temp=True)
 
-            marionette.delete_session()
+                marionette.delete_session()
+            except IOError:
+                # Any IOError as thrown by Marionette means that something is
+                # wrong with the process, like a crash or the socket is no
+                # longer open. We defer raising this specific error so that
+                # post-test checks for leaks and crashes are performed and
+                # reported first.
+                marionette_exception = sys.exc_info()
 
         status = runner.wait()
         runner.process_handler = None
@@ -744,10 +755,15 @@ class RefTest(object):
 
         crashed = mozcrash.log_crashes(self.log, os.path.join(profile.profile, 'minidumps'),
                                        symbolsPath, test=self.lastTestSeen)
-
-        runner.cleanup()
         if not status and crashed:
             status = 1
+
+        runner.cleanup()
+
+        if marionette_exception is not None:
+            exc, value, tb = marionette_exception
+            raise exc, value, tb
+
         return status, self.lastTestSeen
 
     def runSerialTests(self, manifests, options, cmdargs=None):

@@ -23,6 +23,13 @@ VRDisplayPresentation::VRDisplayPresentation(VRDisplayClient *aDisplayClient,
   CreateLayers();
 }
 
+void
+VRDisplayPresentation::UpdateLayers(const nsTArray<mozilla::dom::VRLayer>& aLayers)
+{
+  mDOMLayers = aLayers;
+  CreateLayers();
+}
+
 uint32_t
 VRDisplayPresentation::GetGroup() const
 {
@@ -32,10 +39,15 @@ VRDisplayPresentation::GetGroup() const
 void
 VRDisplayPresentation::CreateLayers()
 {
-  if (mLayers.Length()) {
+  VRManagerChild *manager = VRManagerChild::Get();
+  if (!manager) {
+    // This should not happen, but let's log it and avoid a crash in case
+    // of regression.
+    NS_WARNING("VRManagerChild::Get returned null!");
     return;
   }
 
+  unsigned int iLayer=0;
   for (dom::VRLayer& layer : mDOMLayers) {
     dom::HTMLCanvasElement* canvasElement = layer.mSource;
     if (!canvasElement) {
@@ -73,12 +85,6 @@ VRDisplayPresentation::CreateLayers()
       continue;
     }
 
-    VRManagerChild *manager = VRManagerChild::Get();
-    if (!manager) {
-      NS_WARNING("VRManagerChild::Get returned null!");
-      continue;
-    }
-
     nsCOMPtr<nsIEventTarget> target;
     nsIDocument* doc;
     doc = canvasElement->OwnerDoc();
@@ -86,19 +92,26 @@ VRDisplayPresentation::CreateLayers()
       target = doc->EventTargetFor(TaskCategory::Other);
     }
 
-    RefPtr<VRLayerChild> vrLayer =
-      static_cast<VRLayerChild*>(manager->CreateVRLayer(mDisplayClient->GetDisplayInfo().GetDisplayID(),
-                                                        leftBounds, rightBounds, target,
-                                                        mGroup));
-    if (!vrLayer) {
-      NS_WARNING("CreateVRLayer returned null!");
-      continue;
+    if (mLayers.Length() <= iLayer) {
+      // Not enough layers, let's add one
+      RefPtr<VRLayerChild> vrLayer =
+        static_cast<VRLayerChild*>(manager->CreateVRLayer(mDisplayClient->GetDisplayInfo().GetDisplayID(),
+                                                          target, mGroup));
+      if (!vrLayer) {
+        NS_WARNING("CreateVRLayer returned null!");
+        continue;
+      }
+      vrLayer->Initialize(canvasElement, leftBounds, rightBounds);
+      mLayers.AppendElement(vrLayer);
+    } else {
+      // We already have a layer, let's update it
+      mLayers[iLayer]->Initialize(canvasElement, leftBounds, rightBounds);
     }
-
-    vrLayer->Initialize(canvasElement);
-
-    mLayers.AppendElement(vrLayer);
+    iLayer++;
   }
+
+  // Truncate any excess layers that weren't included in the updated list
+  mLayers.SetLength(iLayer);
 }
 
 void

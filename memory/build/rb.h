@@ -1,4 +1,11 @@
-/******************************************************************************
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Portions of this file were originally under the following license:
  *
  * Copyright (C) 2008 Jason Evans <jasone@FreeBSD.org>.
  * All rights reserved.
@@ -29,14 +36,12 @@
  *
  ******************************************************************************
  *
- * cpp macro implementation of left-leaning red-black trees.
+ * C++ template implementation of left-leaning red-black trees.
  *
  * Usage:
  *
- *   (Optional.)
  *   #define SIZEOF_PTR ...
  *   #define SIZEOF_PTR_2POW ...
- *   #define RB_NO_C99_VARARRAYS
  *
  *   #include <rb.h>
  *   ...
@@ -45,780 +50,757 @@
  * color bits are stored in the least significant bit of right-child pointers,
  * thus making node linkage as compact as is possible for red-black trees.
  *
- * Some macros use a comparison function pointer, which is expected to have the
- * following prototype:
- *
- *   int (a_cmp *)(a_type *a_node, a_type *a_other);
- *                         ^^^^^^
- *                      or a_key
+ * The RedBlackTree template expects two type arguments: the type of the nodes,
+ * containing a RedBlackTreeNode, and a trait providing two methods:
+ *  - a GetTreeNode method that returns a reference to the RedBlackTreeNode
+ *    corresponding to a given node with the following signature:
+ *      static RedBlackTreeNode<T>& GetTreeNode(T*)
+ *  - a Compare function with the following signature:
+ *      static int Compare(T* aNode, T* aOther)
+ *                            ^^^^^
+ *                         or aKey
  *
  * Interpretation of comparision function return values:
  *
- *   -1 : a_node <  a_other
- *    0 : a_node == a_other
- *    1 : a_node >  a_other
+ *   -1 : aNode <  aOther
+ *    0 : aNode == aOther
+ *    1 : aNode >  aOther
  *
- * In all cases, the a_node or a_key macro argument is the first argument to the
+ * In all cases, the aNode or aKey argument is the first argument to the
  * comparison function, which makes it possible to write comparison functions
  * that treat the first argument specially.
  *
  ******************************************************************************/
 
 #ifndef RB_H_
-#define	RB_H_
+#define RB_H_
+
+enum NodeColor
+{
+  Black = 0,
+  Red = 1,
+};
 
 /* Node structure. */
-#define	rb_node(a_type)							\
-struct {								\
-    a_type *rbn_left;							\
-    a_type *rbn_right_red;						\
-}
+template <typename T>
+class RedBlackTreeNode
+{
+  T* mLeft;
+  /* The lowest bit is the color */
+  T* mRightAndColor;
 
-/* Root structure. */
-#define	rb_tree(a_type)							\
-struct {								\
-    a_type *rbt_root;							\
-    a_type rbt_nil;							\
-}
+public:
+  T* Left()
+  {
+    return mLeft;
+  }
 
-/* Left accessors. */
-#define	rbp_left_get(a_type, a_field, a_node)				\
-    ((a_node)->a_field.rbn_left)
-#define	rbp_left_set(a_type, a_field, a_node, a_left) do {		\
-    (a_node)->a_field.rbn_left = a_left;				\
-} while (0)
+  void SetLeft(T* aValue)
+  {
+    mLeft = aValue;
+  }
 
-/* Right accessors. */
-#define	rbp_right_get(a_type, a_field, a_node)				\
-    ((a_type *) (((intptr_t) (a_node)->a_field.rbn_right_red)		\
-      & ((ssize_t)-2)))
-#define	rbp_right_set(a_type, a_field, a_node, a_right) do {		\
-    (a_node)->a_field.rbn_right_red = (a_type *) (((uintptr_t) a_right)	\
-      | (((uintptr_t) (a_node)->a_field.rbn_right_red) & ((size_t)1)));	\
-} while (0)
+  T* Right()
+  {
+    return reinterpret_cast<T*>(
+      reinterpret_cast<uintptr_t>(mRightAndColor) & uintptr_t(~1));
+  }
 
-/* Color accessors. */
-#define	rbp_red_get(a_type, a_field, a_node)				\
-    ((bool) (((uintptr_t) (a_node)->a_field.rbn_right_red)		\
-      & ((size_t)1)))
-#define	rbp_color_set(a_type, a_field, a_node, a_red) do {		\
-    (a_node)->a_field.rbn_right_red = (a_type *) ((((intptr_t)		\
-      (a_node)->a_field.rbn_right_red) & ((ssize_t)-2))			\
-      | ((ssize_t)a_red));						\
-} while (0)
-#define	rbp_red_set(a_type, a_field, a_node) do {			\
-    (a_node)->a_field.rbn_right_red = (a_type *) (((uintptr_t)		\
-      (a_node)->a_field.rbn_right_red) | ((size_t)1));			\
-} while (0)
-#define	rbp_black_set(a_type, a_field, a_node) do {			\
-    (a_node)->a_field.rbn_right_red = (a_type *) (((intptr_t)		\
-      (a_node)->a_field.rbn_right_red) & ((ssize_t)-2));		\
-} while (0)
+  void SetRight(T* aValue)
+  {
+    mRightAndColor = reinterpret_cast<T*>(
+      (reinterpret_cast<uintptr_t>(aValue) & uintptr_t(~1)) | Color());
+  }
 
-/* Node initializer. */
-#define	rbp_node_new(a_type, a_field, a_tree, a_node) do {		\
-    rbp_left_set(a_type, a_field, (a_node), &(a_tree)->rbt_nil);	\
-    rbp_right_set(a_type, a_field, (a_node), &(a_tree)->rbt_nil);	\
-    rbp_red_set(a_type, a_field, (a_node));				\
-} while (0)
+  NodeColor Color()
+  {
+    return static_cast<NodeColor>(reinterpret_cast<uintptr_t>(mRightAndColor) & 1);
+  }
 
-/* Tree initializer. */
-#define	rb_new(a_type, a_field, a_tree) do {				\
-    (a_tree)->rbt_root = &(a_tree)->rbt_nil;				\
-    rbp_node_new(a_type, a_field, a_tree, &(a_tree)->rbt_nil);		\
-    rbp_black_set(a_type, a_field, &(a_tree)->rbt_nil);			\
-} while (0)
+  bool IsBlack()
+  {
+    return Color() == NodeColor::Black;
+  }
 
-/* Tree operations. */
-#define	rbp_black_height(a_type, a_field, a_tree, r_height) do {	\
-    a_type *rbp_bh_t;							\
-    for (rbp_bh_t = (a_tree)->rbt_root, (r_height) = 0;			\
-      rbp_bh_t != &(a_tree)->rbt_nil;					\
-      rbp_bh_t = rbp_left_get(a_type, a_field, rbp_bh_t)) {		\
-	if (rbp_red_get(a_type, a_field, rbp_bh_t) == false) {		\
-	    (r_height)++;						\
-	}								\
-    }									\
-} while (0)
+  bool IsRed()
+  {
+    return Color() == NodeColor::Red;
+  }
 
-#define	rbp_first(a_type, a_field, a_tree, a_root, r_node) do {		\
-    for ((r_node) = (a_root);						\
-      rbp_left_get(a_type, a_field, (r_node)) != &(a_tree)->rbt_nil;	\
-      (r_node) = rbp_left_get(a_type, a_field, (r_node))) {		\
-    }									\
-} while (0)
+  void SetColor(NodeColor aColor)
+  {
+    mRightAndColor = reinterpret_cast<T*>(
+      (reinterpret_cast<uintptr_t>(mRightAndColor) & uintptr_t(~1)) | aColor);
+  }
+};
 
-#define	rbp_last(a_type, a_field, a_tree, a_root, r_node) do {		\
-    for ((r_node) = (a_root);						\
-      rbp_right_get(a_type, a_field, (r_node)) != &(a_tree)->rbt_nil;	\
-      (r_node) = rbp_right_get(a_type, a_field, (r_node))) {		\
-    }									\
-} while (0)
+/* Tree structure. */
+template<typename T, typename Trait>
+class RedBlackTree
+{
+public:
+  void Init()
+  {
+    mRoot = &mSentinel;
+    mSentinel.SetLeft(&mSentinel);
+    mSentinel.SetRight(&mSentinel);
+    mSentinel.SetColor(NodeColor::Black);
+  }
 
-#define	rbp_next(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    if (rbp_right_get(a_type, a_field, (a_node))			\
-      != &(a_tree)->rbt_nil) {						\
-	rbp_first(a_type, a_field, a_tree, rbp_right_get(a_type,	\
-	  a_field, (a_node)), (r_node));				\
-    } else {								\
-	a_type *rbp_n_t = (a_tree)->rbt_root;				\
-	MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);			\
-	(r_node) = &(a_tree)->rbt_nil;					\
-	while (true) {							\
-	    int rbp_n_cmp = (a_cmp)((a_node), rbp_n_t);			\
-	    if (rbp_n_cmp < 0) {					\
-		(r_node) = rbp_n_t;					\
-		rbp_n_t = rbp_left_get(a_type, a_field, rbp_n_t);	\
-	    } else if (rbp_n_cmp > 0) {					\
-		rbp_n_t = rbp_right_get(a_type, a_field, rbp_n_t);	\
-	    } else {							\
-		break;							\
-	    }								\
-	    MOZ_ASSERT(rbp_n_t != &(a_tree)->rbt_nil);			\
-	}								\
-    }									\
-} while (0)
+  T* First(T* aStart = nullptr)
+  {
+    return First(reinterpret_cast<TreeNode*>(aStart));
+  }
 
-#define	rbp_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    if (rbp_left_get(a_type, a_field, (a_node)) != &(a_tree)->rbt_nil) {\
-	rbp_last(a_type, a_field, a_tree, rbp_left_get(a_type,		\
-	  a_field, (a_node)), (r_node));				\
-    } else {								\
-	a_type *rbp_p_t = (a_tree)->rbt_root;				\
-	MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);			\
-	(r_node) = &(a_tree)->rbt_nil;					\
-	while (true) {							\
-	    int rbp_p_cmp = (a_cmp)((a_node), rbp_p_t);			\
-	    if (rbp_p_cmp < 0) {					\
-		rbp_p_t = rbp_left_get(a_type, a_field, rbp_p_t);	\
-	    } else if (rbp_p_cmp > 0) {					\
-		(r_node) = rbp_p_t;					\
-		rbp_p_t = rbp_right_get(a_type, a_field, rbp_p_t);	\
-	    } else {							\
-		break;							\
-	    }								\
-	    MOZ_ASSERT(rbp_p_t != &(a_tree)->rbt_nil);			\
-	}								\
-    }									\
-} while (0)
+  T* Last(T* aStart = nullptr)
+  {
+    return Last(reinterpret_cast<TreeNode*>(aStart));
+  }
 
-#define	rb_first(a_type, a_field, a_tree, r_node) do {			\
-    rbp_first(a_type, a_field, a_tree, (a_tree)->rbt_root, (r_node));	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+  T* Next(T* aNode)
+  {
+    return Next(reinterpret_cast<TreeNode*>(aNode));
+  }
 
-#define	rb_last(a_type, a_field, a_tree, r_node) do {			\
-    rbp_last(a_type, a_field, a_tree, (a_tree)->rbt_root, r_node);	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+  T* Prev(T* aNode)
+  {
+    return Prev(reinterpret_cast<TreeNode*>(aNode));
+  }
 
-#define	rb_next(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    rbp_next(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+  T* Search(T* aKey)
+  {
+    return Search(reinterpret_cast<TreeNode*>(aKey));
+  }
 
-#define	rb_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
-    rbp_prev(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));	\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+  /* Find a match if it exists. Otherwise, find the next greater node, if one
+   * exists */
+  T* SearchOrNext(T* aKey)
+  {
+    return SearchOrNext(reinterpret_cast<TreeNode*>(aKey));
+  }
 
-#define	rb_search(a_type, a_field, a_cmp, a_tree, a_key, r_node) do {	\
-    int rbp_se_cmp;							\
-    (r_node) = (a_tree)->rbt_root;					\
-    while ((r_node) != &(a_tree)->rbt_nil				\
-      && (rbp_se_cmp = (a_cmp)((a_key), (r_node))) != 0) {		\
-	if (rbp_se_cmp < 0) {						\
-	    (r_node) = rbp_left_get(a_type, a_field, (r_node));		\
-	} else {							\
-	    (r_node) = rbp_right_get(a_type, a_field, (r_node));	\
-	}								\
-    }									\
-    if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = nullptr;						\
-    }									\
-} while (0)
+  void Insert(T* aNode)
+  {
+    Insert(reinterpret_cast<TreeNode*>(aNode));
+  }
 
-/*
- * Find a match if it exists.  Otherwise, find the next greater node, if one
- * exists.
- */
-#define	rb_nsearch(a_type, a_field, a_cmp, a_tree, a_key, r_node) do {	\
-    a_type *rbp_ns_t = (a_tree)->rbt_root;				\
-    (r_node) = nullptr;							\
-    while (rbp_ns_t != &(a_tree)->rbt_nil) {				\
-	int rbp_ns_cmp = (a_cmp)((a_key), rbp_ns_t);			\
-	if (rbp_ns_cmp < 0) {						\
-	    (r_node) = rbp_ns_t;					\
-	    rbp_ns_t = rbp_left_get(a_type, a_field, rbp_ns_t);		\
-	} else if (rbp_ns_cmp > 0) {					\
-	    rbp_ns_t = rbp_right_get(a_type, a_field, rbp_ns_t);	\
-	} else {							\
-	    (r_node) = rbp_ns_t;					\
-	    break;							\
-	}								\
-    }									\
-} while (0)
+  void Remove(T* aNode)
+  {
+    return Remove(reinterpret_cast<TreeNode*>(aNode));
+  }
 
-/*
- * Find a match if it exists.  Otherwise, find the previous lesser node, if one
- * exists.
- */
-#define	rbp_rotate_left(a_type, a_field, a_node, r_node) do {		\
-    (r_node) = rbp_right_get(a_type, a_field, (a_node));		\
-    rbp_right_set(a_type, a_field, (a_node),				\
-      rbp_left_get(a_type, a_field, (r_node)));				\
-    rbp_left_set(a_type, a_field, (r_node), (a_node));			\
-} while (0)
+private:
+  /* Helper class to avoid having all the tree traversal code further below
+   * have to use Trait::GetTreeNode, adding visual noise. */
+  struct TreeNode : public T
+  {
+    TreeNode* Left()
+    {
+      return (TreeNode*)Trait::GetTreeNode(this).Left();
+    }
 
-#define	rbp_rotate_right(a_type, a_field, a_node, r_node) do {		\
-    (r_node) = rbp_left_get(a_type, a_field, (a_node));			\
-    rbp_left_set(a_type, a_field, (a_node),				\
-      rbp_right_get(a_type, a_field, (r_node)));			\
-    rbp_right_set(a_type, a_field, (r_node), (a_node));			\
-} while (0)
+    void SetLeft(T* aValue)
+    {
+      Trait::GetTreeNode(this).SetLeft(aValue);
+    }
 
-#define	rbp_lean_left(a_type, a_field, a_node, r_node) do {		\
-    bool rbp_ll_red;							\
-    rbp_rotate_left(a_type, a_field, (a_node), (r_node));		\
-    rbp_ll_red = rbp_red_get(a_type, a_field, (a_node));		\
-    rbp_color_set(a_type, a_field, (r_node), rbp_ll_red);		\
-    rbp_red_set(a_type, a_field, (a_node));				\
-} while (0)
+    TreeNode* Right()
+    {
+      return (TreeNode*)Trait::GetTreeNode(this).Right();
+    }
 
-#define	rbp_lean_right(a_type, a_field, a_node, r_node) do {		\
-    bool rbp_lr_red;							\
-    rbp_rotate_right(a_type, a_field, (a_node), (r_node));		\
-    rbp_lr_red = rbp_red_get(a_type, a_field, (a_node));		\
-    rbp_color_set(a_type, a_field, (r_node), rbp_lr_red);		\
-    rbp_red_set(a_type, a_field, (a_node));				\
-} while (0)
+    void SetRight(T* aValue)
+    {
+      Trait::GetTreeNode(this).SetRight(aValue);
+    }
 
-#define	rbp_move_red_left(a_type, a_field, a_node, r_node) do {		\
-    a_type *rbp_mrl_t, *rbp_mrl_u;					\
-    rbp_mrl_t = rbp_left_get(a_type, a_field, (a_node));		\
-    rbp_red_set(a_type, a_field, rbp_mrl_t);				\
-    rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));		\
-    rbp_mrl_u = rbp_left_get(a_type, a_field, rbp_mrl_t);		\
-    if (rbp_red_get(a_type, a_field, rbp_mrl_u)) {			\
-	rbp_rotate_right(a_type, a_field, rbp_mrl_t, rbp_mrl_u);	\
-	rbp_right_set(a_type, a_field, (a_node), rbp_mrl_u);		\
-	rbp_rotate_left(a_type, a_field, (a_node), (r_node));		\
-	rbp_mrl_t = rbp_right_get(a_type, a_field, (a_node));		\
-	if (rbp_red_get(a_type, a_field, rbp_mrl_t)) {			\
-	    rbp_black_set(a_type, a_field, rbp_mrl_t);			\
-	    rbp_red_set(a_type, a_field, (a_node));			\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrl_t);	\
-	    rbp_left_set(a_type, a_field, (r_node), rbp_mrl_t);		\
-	} else {							\
-	    rbp_black_set(a_type, a_field, (a_node));			\
-	}								\
-    } else {								\
-	rbp_red_set(a_type, a_field, (a_node));				\
-	rbp_rotate_left(a_type, a_field, (a_node), (r_node));		\
-    }									\
-} while (0)
+    NodeColor Color()
+    {
+      return Trait::GetTreeNode(this).Color();
+    }
 
-#define	rbp_move_red_right(a_type, a_field, a_node, r_node) do {	\
-    a_type *rbp_mrr_t;							\
-    rbp_mrr_t = rbp_left_get(a_type, a_field, (a_node));		\
-    if (rbp_red_get(a_type, a_field, rbp_mrr_t)) {			\
-	a_type *rbp_mrr_u, *rbp_mrr_v;					\
-	rbp_mrr_u = rbp_right_get(a_type, a_field, rbp_mrr_t);		\
-	rbp_mrr_v = rbp_left_get(a_type, a_field, rbp_mrr_u);		\
-	if (rbp_red_get(a_type, a_field, rbp_mrr_v)) {			\
-	    rbp_color_set(a_type, a_field, rbp_mrr_u,			\
-	      rbp_red_get(a_type, a_field, (a_node)));			\
-	    rbp_black_set(a_type, a_field, rbp_mrr_v);			\
-	    rbp_rotate_left(a_type, a_field, rbp_mrr_t, rbp_mrr_u);	\
-	    rbp_left_set(a_type, a_field, (a_node), rbp_mrr_u);		\
-	    rbp_rotate_right(a_type, a_field, (a_node), (r_node));	\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);	\
-	    rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);	\
-	} else {							\
-	    rbp_color_set(a_type, a_field, rbp_mrr_t,			\
-	      rbp_red_get(a_type, a_field, (a_node)));			\
-	    rbp_red_set(a_type, a_field, rbp_mrr_u);			\
-	    rbp_rotate_right(a_type, a_field, (a_node), (r_node));	\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);	\
-	    rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);	\
-	}								\
-	rbp_red_set(a_type, a_field, (a_node));				\
-    } else {								\
-	rbp_red_set(a_type, a_field, rbp_mrr_t);			\
-	rbp_mrr_t = rbp_left_get(a_type, a_field, rbp_mrr_t);		\
-	if (rbp_red_get(a_type, a_field, rbp_mrr_t)) {			\
-	    rbp_black_set(a_type, a_field, rbp_mrr_t);			\
-	    rbp_rotate_right(a_type, a_field, (a_node), (r_node));	\
-	    rbp_rotate_left(a_type, a_field, (a_node), rbp_mrr_t);	\
-	    rbp_right_set(a_type, a_field, (r_node), rbp_mrr_t);	\
-	} else {							\
-	    rbp_rotate_left(a_type, a_field, (a_node), (r_node));	\
-	}								\
-    }									\
-} while (0)
+    bool IsRed()
+    {
+      return Trait::GetTreeNode(this).IsRed();
+    }
 
-#define	rb_insert(a_type, a_field, a_cmp, a_tree, a_node) do {		\
-    a_type rbp_i_s;							\
-    a_type *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;		\
-    int rbp_i_cmp = 0;							\
-    rbp_i_g = &(a_tree)->rbt_nil;					\
-    rbp_left_set(a_type, a_field, &rbp_i_s, (a_tree)->rbt_root);	\
-    rbp_right_set(a_type, a_field, &rbp_i_s, &(a_tree)->rbt_nil);	\
-    rbp_black_set(a_type, a_field, &rbp_i_s);				\
-    rbp_i_p = &rbp_i_s;							\
-    rbp_i_c = (a_tree)->rbt_root;					\
-    /* Iteratively search down the tree for the insertion point,      */\
-    /* splitting 4-nodes as they are encountered.  At the end of each */\
-    /* iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down    */\
-    /* the tree, assuming a sufficiently deep tree.                   */\
-    while (rbp_i_c != &(a_tree)->rbt_nil) {				\
-	rbp_i_t = rbp_left_get(a_type, a_field, rbp_i_c);		\
-	rbp_i_u = rbp_left_get(a_type, a_field, rbp_i_t);		\
-	if (rbp_red_get(a_type, a_field, rbp_i_t)			\
-	  && rbp_red_get(a_type, a_field, rbp_i_u)) {			\
-	    /* rbp_i_c is the top of a logical 4-node, so split it.   */\
-	    /* This iteration does not move down the tree, due to the */\
-	    /* disruptiveness of node splitting.                      */\
-	    /*                                                        */\
-	    /* Rotate right.                                          */\
-	    rbp_rotate_right(a_type, a_field, rbp_i_c, rbp_i_t);	\
-	    /* Pass red links up one level.                           */\
-	    rbp_i_u = rbp_left_get(a_type, a_field, rbp_i_t);		\
-	    rbp_black_set(a_type, a_field, rbp_i_u);			\
-	    if (rbp_left_get(a_type, a_field, rbp_i_p) == rbp_i_c) {	\
-		rbp_left_set(a_type, a_field, rbp_i_p, rbp_i_t);	\
-		rbp_i_c = rbp_i_t;					\
-	    } else {							\
-		/* rbp_i_c was the right child of rbp_i_p, so rotate  */\
-		/* left in order to maintain the left-leaning         */\
-		/* invariant.                                         */\
-		MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_p)	\
-		  == rbp_i_c);						\
-		rbp_right_set(a_type, a_field, rbp_i_p, rbp_i_t);	\
-		rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_u);	\
-		if (rbp_left_get(a_type, a_field, rbp_i_g) == rbp_i_p) {\
-		    rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_u);	\
-		} else {						\
-		    MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_i_g)	\
-		      == rbp_i_p);					\
-		    rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_u);	\
-		}							\
-		rbp_i_p = rbp_i_u;					\
-		rbp_i_cmp = (a_cmp)((a_node), rbp_i_p);			\
-		if (rbp_i_cmp < 0) {					\
-		    rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_p);	\
-		} else {						\
-		    MOZ_ASSERT(rbp_i_cmp > 0);				\
-		    rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_p);	\
-		}							\
-		continue;						\
-	    }								\
-	}								\
-	rbp_i_g = rbp_i_p;						\
-	rbp_i_p = rbp_i_c;						\
-	rbp_i_cmp = (a_cmp)((a_node), rbp_i_c);				\
-	if (rbp_i_cmp < 0) {						\
-	    rbp_i_c = rbp_left_get(a_type, a_field, rbp_i_c);		\
-	} else {							\
-	    MOZ_ASSERT(rbp_i_cmp > 0);					\
-	    rbp_i_c = rbp_right_get(a_type, a_field, rbp_i_c);		\
-	}								\
-    }									\
-    /* rbp_i_p now refers to the node under which to insert.          */\
-    rbp_node_new(a_type, a_field, a_tree, (a_node));			\
-    if (rbp_i_cmp > 0) {						\
-	rbp_right_set(a_type, a_field, rbp_i_p, (a_node));		\
-	rbp_lean_left(a_type, a_field, rbp_i_p, rbp_i_t);		\
-	if (rbp_left_get(a_type, a_field, rbp_i_g) == rbp_i_p) {	\
-	    rbp_left_set(a_type, a_field, rbp_i_g, rbp_i_t);		\
-	} else if (rbp_right_get(a_type, a_field, rbp_i_g) == rbp_i_p) {\
-	    rbp_right_set(a_type, a_field, rbp_i_g, rbp_i_t);		\
-	}								\
-    } else {								\
-	rbp_left_set(a_type, a_field, rbp_i_p, (a_node));		\
-    }									\
-    /* Update the root and make sure that it is black.                */\
-    (a_tree)->rbt_root = rbp_left_get(a_type, a_field, &rbp_i_s);	\
-    rbp_black_set(a_type, a_field, (a_tree)->rbt_root);			\
-} while (0)
+    bool IsBlack()
+    {
+      return Trait::GetTreeNode(this).IsBlack();
+    }
 
-#define	rb_remove(a_type, a_field, a_cmp, a_tree, a_node) do {		\
-    a_type rbp_r_s;							\
-    a_type *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;		\
-    int rbp_r_cmp;							\
-    rbp_left_set(a_type, a_field, &rbp_r_s, (a_tree)->rbt_root);	\
-    rbp_right_set(a_type, a_field, &rbp_r_s, &(a_tree)->rbt_nil);	\
-    rbp_black_set(a_type, a_field, &rbp_r_s);				\
-    rbp_r_p = &rbp_r_s;							\
-    rbp_r_c = (a_tree)->rbt_root;					\
-    rbp_r_xp = &(a_tree)->rbt_nil;					\
-    /* Iterate down the tree, but always transform 2-nodes to 3- or   */\
-    /* 4-nodes in order to maintain the invariant that the current    */\
-    /* node is not a 2-node.  This allows simple deletion once a leaf */\
-    /* is reached.  Handle the root specially though, since there may */\
-    /* be no way to convert it from a 2-node to a 3-node.             */\
-    rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);				\
-    if (rbp_r_cmp < 0) {						\
-	rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);		\
-	rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);		\
-	if (rbp_red_get(a_type, a_field, rbp_r_t) == false		\
-	  && rbp_red_get(a_type, a_field, rbp_r_u) == false) {		\
-	    /* Apply standard transform to prepare for left move.     */\
-	    rbp_move_red_left(a_type, a_field, rbp_r_c, rbp_r_t);	\
-	    rbp_black_set(a_type, a_field, rbp_r_t);			\
-	    rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);		\
-	    rbp_r_c = rbp_r_t;						\
-	} else {							\
-	    /* Move left.                                             */\
-	    rbp_r_p = rbp_r_c;						\
-	    rbp_r_c = rbp_left_get(a_type, a_field, rbp_r_c);		\
-	}								\
-    } else {								\
-	if (rbp_r_cmp == 0) {						\
-	    MOZ_ASSERT((a_node) == rbp_r_c);				\
-	    if (rbp_right_get(a_type, a_field, rbp_r_c)			\
-	      == &(a_tree)->rbt_nil) {					\
-		/* Delete root node (which is also a leaf node).      */\
-		if (rbp_left_get(a_type, a_field, rbp_r_c)		\
-		  != &(a_tree)->rbt_nil) {				\
-		    rbp_lean_right(a_type, a_field, rbp_r_c, rbp_r_t);	\
-		    rbp_right_set(a_type, a_field, rbp_r_t,		\
-		      &(a_tree)->rbt_nil);				\
-		} else {						\
-		    rbp_r_t = &(a_tree)->rbt_nil;			\
-		}							\
-		rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);	\
-	    } else {							\
-		/* This is the node we want to delete, but we will    */\
-		/* instead swap it with its successor and delete the  */\
-		/* successor.  Record enough information to do the    */\
-		/* swap later.  rbp_r_xp is the a_node's parent.      */\
-		rbp_r_xp = rbp_r_p;					\
-		rbp_r_cmp = 1; /* Note that deletion is incomplete.   */\
-	    }								\
-	}								\
-	if (rbp_r_cmp == 1) {						\
-	    if (rbp_red_get(a_type, a_field, rbp_left_get(a_type,	\
-	      a_field, rbp_right_get(a_type, a_field, rbp_r_c)))	\
-	      == false) {						\
-		rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);	\
-		if (rbp_red_get(a_type, a_field, rbp_r_t)) {		\
-		    /* Standard transform.                            */\
-		    rbp_move_red_right(a_type, a_field, rbp_r_c,	\
-		      rbp_r_t);						\
-		} else {						\
-		    /* Root-specific transform.                       */\
-		    rbp_red_set(a_type, a_field, rbp_r_c);		\
-		    rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);	\
-		    if (rbp_red_get(a_type, a_field, rbp_r_u)) {	\
-			rbp_black_set(a_type, a_field, rbp_r_u);	\
-			rbp_rotate_right(a_type, a_field, rbp_r_c,	\
-			  rbp_r_t);					\
-			rbp_rotate_left(a_type, a_field, rbp_r_c,	\
-			  rbp_r_u);					\
-			rbp_right_set(a_type, a_field, rbp_r_t,		\
-			  rbp_r_u);					\
-		    } else {						\
-			rbp_red_set(a_type, a_field, rbp_r_t);		\
-			rbp_rotate_left(a_type, a_field, rbp_r_c,	\
-			  rbp_r_t);					\
-		    }							\
-		}							\
-		rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);	\
-		rbp_r_c = rbp_r_t;					\
-	    } else {							\
-		/* Move right.                                        */\
-		rbp_r_p = rbp_r_c;					\
-		rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);	\
-	    }								\
-	}								\
-    }									\
-    if (rbp_r_cmp != 0) {						\
-	while (true) {							\
-	    MOZ_ASSERT(rbp_r_p != &(a_tree)->rbt_nil);			\
-	    rbp_r_cmp = (a_cmp)((a_node), rbp_r_c);			\
-	    if (rbp_r_cmp < 0) {					\
-		rbp_r_t = rbp_left_get(a_type, a_field, rbp_r_c);	\
-		if (rbp_r_t == &(a_tree)->rbt_nil) {			\
-		    /* rbp_r_c now refers to the successor node to    */\
-		    /* relocate, and rbp_r_xp/a_node refer to the     */\
-		    /* context for the relocation.                    */\
-		    if (rbp_left_get(a_type, a_field, rbp_r_xp)		\
-		      == (a_node)) {					\
-			rbp_left_set(a_type, a_field, rbp_r_xp,		\
-			  rbp_r_c);					\
-		    } else {						\
-			MOZ_ASSERT(rbp_right_get(a_type, a_field,	\
-			  rbp_r_xp) == (a_node));			\
-			rbp_right_set(a_type, a_field, rbp_r_xp,	\
-			  rbp_r_c);					\
-		    }							\
-		    rbp_left_set(a_type, a_field, rbp_r_c,		\
-		      rbp_left_get(a_type, a_field, (a_node)));		\
-		    rbp_right_set(a_type, a_field, rbp_r_c,		\
-		      rbp_right_get(a_type, a_field, (a_node)));	\
-		    rbp_color_set(a_type, a_field, rbp_r_c,		\
-		      rbp_red_get(a_type, a_field, (a_node)));		\
-		    if (rbp_left_get(a_type, a_field, rbp_r_p)		\
-		      == rbp_r_c) {					\
-			rbp_left_set(a_type, a_field, rbp_r_p,		\
-			  &(a_tree)->rbt_nil);				\
-		    } else {						\
-			MOZ_ASSERT(rbp_right_get(a_type, a_field, rbp_r_p)\
-			  == rbp_r_c);					\
-			rbp_right_set(a_type, a_field, rbp_r_p,		\
-			  &(a_tree)->rbt_nil);				\
-		    }							\
-		    break;						\
-		}							\
-		rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);	\
-		if (rbp_red_get(a_type, a_field, rbp_r_t) == false	\
-		  && rbp_red_get(a_type, a_field, rbp_r_u) == false) {	\
-		    rbp_move_red_left(a_type, a_field, rbp_r_c,		\
-		      rbp_r_t);						\
-		    if (rbp_left_get(a_type, a_field, rbp_r_p)		\
-		      == rbp_r_c) {					\
-			rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);\
-		    } else {						\
-			rbp_right_set(a_type, a_field, rbp_r_p,		\
-			  rbp_r_t);					\
-		    }							\
-		    rbp_r_c = rbp_r_t;					\
-		} else {						\
-		    rbp_r_p = rbp_r_c;					\
-		    rbp_r_c = rbp_left_get(a_type, a_field, rbp_r_c);	\
-		}							\
-	    } else {							\
-		/* Check whether to delete this node (it has to be    */\
-		/* the correct node and a leaf node).                 */\
-		if (rbp_r_cmp == 0) {					\
-		    MOZ_ASSERT((a_node) == rbp_r_c);			\
-		    if (rbp_right_get(a_type, a_field, rbp_r_c)		\
-		      == &(a_tree)->rbt_nil) {				\
-			/* Delete leaf node.                          */\
-			if (rbp_left_get(a_type, a_field, rbp_r_c)	\
-			  != &(a_tree)->rbt_nil) {			\
-			    rbp_lean_right(a_type, a_field, rbp_r_c,	\
-			      rbp_r_t);					\
-			    rbp_right_set(a_type, a_field, rbp_r_t,	\
-			      &(a_tree)->rbt_nil);			\
-			} else {					\
-			    rbp_r_t = &(a_tree)->rbt_nil;		\
-			}						\
-			if (rbp_left_get(a_type, a_field, rbp_r_p)	\
-			  == rbp_r_c) {					\
-			    rbp_left_set(a_type, a_field, rbp_r_p,	\
-			      rbp_r_t);					\
-			} else {					\
-			    rbp_right_set(a_type, a_field, rbp_r_p,	\
-			      rbp_r_t);					\
-			}						\
-			break;						\
-		    } else {						\
-			/* This is the node we want to delete, but we */\
-			/* will instead swap it with its successor    */\
-			/* and delete the successor.  Record enough   */\
-			/* information to do the swap later.          */\
-			/* rbp_r_xp is a_node's parent.               */\
-			rbp_r_xp = rbp_r_p;				\
-		    }							\
-		}							\
-		rbp_r_t = rbp_right_get(a_type, a_field, rbp_r_c);	\
-		rbp_r_u = rbp_left_get(a_type, a_field, rbp_r_t);	\
-		if (rbp_red_get(a_type, a_field, rbp_r_u) == false) {	\
-		    rbp_move_red_right(a_type, a_field, rbp_r_c,	\
-		      rbp_r_t);						\
-		    if (rbp_left_get(a_type, a_field, rbp_r_p)		\
-		      == rbp_r_c) {					\
-			rbp_left_set(a_type, a_field, rbp_r_p, rbp_r_t);\
-		    } else {						\
-			rbp_right_set(a_type, a_field, rbp_r_p,		\
-			  rbp_r_t);					\
-		    }							\
-		    rbp_r_c = rbp_r_t;					\
-		} else {						\
-		    rbp_r_p = rbp_r_c;					\
-		    rbp_r_c = rbp_right_get(a_type, a_field, rbp_r_c);	\
-		}							\
-	    }								\
-	}								\
-    }									\
-    /* Update root.                                                   */\
-    (a_tree)->rbt_root = rbp_left_get(a_type, a_field, &rbp_r_s);	\
-} while (0)
+    void SetColor(NodeColor aColor)
+    {
+      Trait::GetTreeNode(this).SetColor(aColor);
+    }
+  };
 
-/*
- * The rb_wrap() macro provides a convenient way to wrap functions around the
- * cpp macros.  The main benefits of wrapping are that 1) repeated macro
- * expansion can cause code bloat, especially for rb_{insert,remove)(), and
- * 2) type, linkage, comparison functions, etc. need not be specified at every
- * call point.
- */
+  TreeNode* mRoot;
+  TreeNode mSentinel;
 
-#define	rb_wrap(a_attr, a_prefix, a_tree_type, a_type, a_field, a_cmp)	\
-a_attr void								\
-a_prefix##new(a_tree_type *tree) {					\
-    rb_new(a_type, a_field, tree);					\
-}									\
-a_attr a_type *								\
-a_prefix##first(a_tree_type *tree) {					\
-    a_type *ret;							\
-    rb_first(a_type, a_field, tree, ret);				\
-    return (ret);							\
-}									\
-a_attr a_type *								\
-a_prefix##last(a_tree_type *tree) {					\
-    a_type *ret;							\
-    rb_last(a_type, a_field, tree, ret);				\
-    return (ret);							\
-}									\
-a_attr a_type *								\
-a_prefix##next(a_tree_type *tree, a_type *node) {			\
-    a_type *ret;							\
-    rb_next(a_type, a_field, a_cmp, tree, node, ret);			\
-    return (ret);							\
-}									\
-a_attr a_type *								\
-a_prefix##prev(a_tree_type *tree, a_type *node) {			\
-    a_type *ret;							\
-    rb_prev(a_type, a_field, a_cmp, tree, node, ret);			\
-    return (ret);							\
-}									\
-a_attr a_type *								\
-a_prefix##search(a_tree_type *tree, a_type *key) {			\
-    a_type *ret;							\
-    rb_search(a_type, a_field, a_cmp, tree, key, ret);			\
-    return (ret);							\
-}									\
-a_attr a_type *								\
-a_prefix##nsearch(a_tree_type *tree, a_type *key) {			\
-    a_type *ret;							\
-    rb_nsearch(a_type, a_field, a_cmp, tree, key, ret);			\
-    return (ret);							\
-}									\
-a_attr void								\
-a_prefix##insert(a_tree_type *tree, a_type *node) {			\
-    rb_insert(a_type, a_field, a_cmp, tree, node);			\
-}									\
-a_attr void								\
-a_prefix##remove(a_tree_type *tree, a_type *node) {			\
-    rb_remove(a_type, a_field, a_cmp, tree, node);			\
-}
+  TreeNode* First(TreeNode* aStart)
+  {
+    TreeNode* ret;
+    for (ret = aStart ? aStart : mRoot; ret->Left() != &mSentinel;
+         ret = ret->Left()) {
+    }
+    return (ret == &mSentinel) ? nullptr : ret;
+  }
 
-/*
- * The iterators simulate recursion via an array of pointers that store the
- * current path.  This is critical to performance, since a series of calls to
- * rb_{next,prev}() would require time proportional to (n lg n), whereas this
- * implementation only requires time proportional to (n).
- *
- * Since the iterators cache a path down the tree, any tree modification may
- * cause the cached path to become invalid.  In order to continue iteration,
- * use something like the following sequence:
- *
- *   {
- *       a_type *node, *tnode;
- *
- *       rb_foreach_begin(a_type, a_field, a_tree, node) {
- *           ...
- *           rb_next(a_type, a_field, a_cmp, a_tree, node, tnode);
- *           rb_remove(a_type, a_field, a_cmp, a_tree, node);
- *           ...
- *       } rb_foreach_end(a_type, a_field, a_tree, node)
- *   }
- *
- * Note that this idiom is not advised if every iteration modifies the tree,
- * since in that case there is no algorithmic complexity improvement over a
- * series of rb_{next,prev}() calls, thus making the setup overhead wasted
- * effort.
- */
+  TreeNode* Last(TreeNode* aStart)
+  {
+    TreeNode* ret;
+    for (ret = aStart ? aStart : mRoot; ret->Right() != &mSentinel;
+         ret = ret->Right()) {
+    }
+    return (ret == &mSentinel) ? nullptr : ret;
+  }
 
-#ifdef RB_NO_C99_VARARRAYS
-   /*
-    * Avoid using variable-length arrays, at the cost of using more stack space.
-    * Size the path arrays such that they are always large enough, even if a
-    * tree consumes all of memory.  Since each node must contain a minimum of
-    * two pointers, there can never be more nodes than:
-    *
-    *   1 << ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1))
-    *
-    * Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
-    * is:
-    *
-    *   (3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
-    *
-    * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
-    * systems, respectively (approximatly 348 and 1440 bytes, respectively).
-    */
-#  define rbp_compute_f_height(a_type, a_field, a_tree)
-#  define rbp_f_height	(3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
-#else
-#  define rbp_compute_f_height(a_type, a_field, a_tree)			\
-    /* Compute the maximum possible tree depth (3X the black height). */\
-    unsigned rbp_f_height;						\
-    rbp_black_height(a_type, a_field, a_tree, rbp_f_height);		\
-    rbp_f_height *= 3;
-#endif
+  TreeNode* Next(TreeNode* aNode)
+  {
+    TreeNode* ret;
+    if (aNode->Right() != &mSentinel) {
+      ret = First(aNode->Right());
+    } else {
+      TreeNode* rbp_n_t = mRoot;
+      MOZ_ASSERT(rbp_n_t != &mSentinel);
+      ret = &mSentinel;
+      while (true) {
+        int rbp_n_cmp = Trait::Compare(aNode, rbp_n_t);
+        if (rbp_n_cmp < 0) {
+          ret = rbp_n_t;
+          rbp_n_t = rbp_n_t->Left();
+        } else if (rbp_n_cmp > 0) {
+          rbp_n_t = rbp_n_t->Right();
+        } else {
+          break;
+        }
+        MOZ_ASSERT(rbp_n_t != &mSentinel);
+      }
+    }
+    return (ret == &mSentinel) ? nullptr : ret;
+  }
 
-#define	rb_foreach_begin(a_type, a_field, a_tree, a_var) {		\
-    rbp_compute_f_height(a_type, a_field, a_tree)			\
-    {									\
-	/* Initialize the path to contain the left spine.             */\
-	a_type *rbp_f_path[rbp_f_height];				\
-	a_type *rbp_f_node;						\
-	bool rbp_f_synced = false;					\
-	unsigned rbp_f_depth = 0;					\
-	if ((a_tree)->rbt_root != &(a_tree)->rbt_nil) {			\
-	    rbp_f_path[rbp_f_depth] = (a_tree)->rbt_root;		\
-	    rbp_f_depth++;						\
-	    while ((rbp_f_node = rbp_left_get(a_type, a_field,		\
-	      rbp_f_path[rbp_f_depth-1])) != &(a_tree)->rbt_nil) {	\
-		rbp_f_path[rbp_f_depth] = rbp_f_node;			\
-		rbp_f_depth++;						\
-	    }								\
-	}								\
-	/* While the path is non-empty, iterate.                      */\
-	while (rbp_f_depth > 0) {					\
-	    (a_var) = rbp_f_path[rbp_f_depth-1];
+  TreeNode* Prev(TreeNode* aNode)
+  {
+    TreeNode* ret;
+    if (aNode->Left() != &mSentinel) {
+      ret = Last(aNode->Left());
+    } else {
+      TreeNode* rbp_p_t = mRoot;
+      MOZ_ASSERT(rbp_p_t != &mSentinel);
+      ret = &mSentinel;
+      while (true) {
+        int rbp_p_cmp = Trait::Compare(aNode, rbp_p_t);
+        if (rbp_p_cmp < 0) {
+          rbp_p_t = rbp_p_t->Left();
+        } else if (rbp_p_cmp > 0) {
+          ret = rbp_p_t;
+          rbp_p_t = rbp_p_t->Right();
+        } else {
+          break;
+        }
+        MOZ_ASSERT(rbp_p_t != &mSentinel);
+      }
+    }
+    return (ret == &mSentinel) ? nullptr : ret;
+  }
 
-#define	rb_foreach_end(a_type, a_field, a_tree, a_var)			\
-	    if (rbp_f_synced) {						\
-		rbp_f_synced = false;					\
-		continue;						\
-	    }								\
-	    /* Find the successor.                                    */\
-	    if ((rbp_f_node = rbp_right_get(a_type, a_field,		\
-	      rbp_f_path[rbp_f_depth-1])) != &(a_tree)->rbt_nil) {	\
-	        /* The successor is the left-most node in the right   */\
-		/* subtree.                                           */\
-		rbp_f_path[rbp_f_depth] = rbp_f_node;			\
-		rbp_f_depth++;						\
-		while ((rbp_f_node = rbp_left_get(a_type, a_field,	\
-		  rbp_f_path[rbp_f_depth-1])) != &(a_tree)->rbt_nil) {	\
-		    rbp_f_path[rbp_f_depth] = rbp_f_node;		\
-		    rbp_f_depth++;					\
-		}							\
-	    } else {							\
-		/* The successor is above the current node.  Unwind   */\
-		/* until a left-leaning edge is removed from the      */\
-		/* path, or the path is empty.                        */\
-		for (rbp_f_depth--; rbp_f_depth > 0; rbp_f_depth--) {	\
-		    if (rbp_left_get(a_type, a_field,			\
-		      rbp_f_path[rbp_f_depth-1])			\
-		      == rbp_f_path[rbp_f_depth]) {			\
-			break;						\
-		    }							\
-		}							\
-	    }								\
-	}								\
-    }									\
-}
+  TreeNode* Search(TreeNode* aKey)
+  {
+    TreeNode* ret = mRoot;
+    int rbp_se_cmp;
+    while (ret != &mSentinel && (rbp_se_cmp = Trait::Compare(aKey, ret)) != 0) {
+      if (rbp_se_cmp < 0) {
+        ret = ret->Left();
+      } else {
+        ret = ret->Right();
+      }
+    }
+    return (ret == &mSentinel) ? nullptr : ret;
+  }
+
+  TreeNode* SearchOrNext(TreeNode* aKey)
+  {
+    TreeNode* ret = nullptr;
+    TreeNode* rbp_ns_t = mRoot;
+    while (rbp_ns_t != &mSentinel) {
+      int rbp_ns_cmp = Trait::Compare(aKey, rbp_ns_t);
+      if (rbp_ns_cmp < 0) {
+        ret = rbp_ns_t;
+        rbp_ns_t = rbp_ns_t->Left();
+      } else if (rbp_ns_cmp > 0) {
+        rbp_ns_t = rbp_ns_t->Right();
+      } else {
+        ret = rbp_ns_t;
+        break;
+      }
+    }
+    return ret;
+  }
+
+  void Insert(TreeNode* aNode)
+  {
+    TreeNode rbp_i_s;
+    TreeNode *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;
+    int rbp_i_cmp = 0;
+    rbp_i_g = &mSentinel;
+    rbp_i_s.SetLeft(mRoot);
+    rbp_i_s.SetRight(&mSentinel);
+    rbp_i_s.SetColor(NodeColor::Black);
+    rbp_i_p = &rbp_i_s;
+    rbp_i_c = mRoot;
+    /* Iteratively search down the tree for the insertion point,
+     * splitting 4-nodes as they are encountered. At the end of each
+     * iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down
+     * the tree, assuming a sufficiently deep tree. */
+    while (rbp_i_c != &mSentinel) {
+      rbp_i_t = rbp_i_c->Left();
+      rbp_i_u = rbp_i_t->Left();
+      if (rbp_i_t->IsRed() && rbp_i_u->IsRed()) {
+        /* rbp_i_c is the top of a logical 4-node, so split it.
+         * This iteration does not move down the tree, due to the
+         * disruptiveness of node splitting.
+         *
+         * Rotate right. */
+        rbp_i_t = RotateRight(rbp_i_c);
+        /* Pass red links up one level. */
+        rbp_i_u = rbp_i_t->Left();
+        rbp_i_u->SetColor(NodeColor::Black);
+        if (rbp_i_p->Left() == rbp_i_c) {
+          rbp_i_p->SetLeft(rbp_i_t);
+          rbp_i_c = rbp_i_t;
+        } else {
+          /* rbp_i_c was the right child of rbp_i_p, so rotate
+           * left in order to maintain the left-leaning invariant. */
+          MOZ_ASSERT(rbp_i_p->Right() == rbp_i_c);
+          rbp_i_p->SetRight(rbp_i_t);
+          rbp_i_u = LeanLeft(rbp_i_p);
+          if (rbp_i_g->Left() == rbp_i_p) {
+            rbp_i_g->SetLeft(rbp_i_u);
+          } else {
+            MOZ_ASSERT(rbp_i_g->Right() == rbp_i_p);
+            rbp_i_g->SetRight(rbp_i_u);
+          }
+          rbp_i_p = rbp_i_u;
+          rbp_i_cmp = Trait::Compare(aNode, rbp_i_p);
+          if (rbp_i_cmp < 0) {
+            rbp_i_c = rbp_i_p->Left();
+          } else {
+            MOZ_ASSERT(rbp_i_cmp > 0);
+            rbp_i_c = rbp_i_p->Right();
+          }
+          continue;
+        }
+      }
+      rbp_i_g = rbp_i_p;
+      rbp_i_p = rbp_i_c;
+      rbp_i_cmp = Trait::Compare(aNode, rbp_i_c);
+      if (rbp_i_cmp < 0) {
+        rbp_i_c = rbp_i_c->Left();
+      } else {
+        MOZ_ASSERT(rbp_i_cmp > 0);
+        rbp_i_c = rbp_i_c->Right();
+      }
+    }
+    /* rbp_i_p now refers to the node under which to insert. */
+    aNode->SetLeft(&mSentinel);
+    aNode->SetRight(&mSentinel);
+    aNode->SetColor(NodeColor::Red);
+    if (rbp_i_cmp > 0) {
+      rbp_i_p->SetRight(aNode);
+      rbp_i_t = LeanLeft(rbp_i_p);
+      if (rbp_i_g->Left() == rbp_i_p) {
+        rbp_i_g->SetLeft(rbp_i_t);
+      } else if (rbp_i_g->Right() == rbp_i_p) {
+        rbp_i_g->SetRight(rbp_i_t);
+      }
+    } else {
+      rbp_i_p->SetLeft(aNode);
+    }
+    /* Update the root and make sure that it is black. */
+    mRoot = rbp_i_s.Left();
+    mRoot->SetColor(NodeColor::Black);
+  }
+
+  void Remove(TreeNode* aNode)
+  {
+    TreeNode rbp_r_s;
+    TreeNode *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;
+    int rbp_r_cmp;
+    rbp_r_s.SetLeft(mRoot);
+    rbp_r_s.SetRight(&mSentinel);
+    rbp_r_s.SetColor(NodeColor::Black);
+    rbp_r_p = &rbp_r_s;
+    rbp_r_c = mRoot;
+    rbp_r_xp = &mSentinel;
+    /* Iterate down the tree, but always transform 2-nodes to 3- or
+     * 4-nodes in order to maintain the invariant that the current
+     * node is not a 2-node. This allows simple deletion once a leaf
+     * is reached. Handle the root specially though, since there may
+     * be no way to convert it from a 2-node to a 3-node. */
+    rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
+    if (rbp_r_cmp < 0) {
+      rbp_r_t = rbp_r_c->Left();
+      rbp_r_u = rbp_r_t->Left();
+      if (rbp_r_t->IsBlack() && rbp_r_u->IsBlack()) {
+        /* Apply standard transform to prepare for left move. */
+        rbp_r_t = MoveRedLeft(rbp_r_c);
+        rbp_r_t->SetColor(NodeColor::Black);
+        rbp_r_p->SetLeft(rbp_r_t);
+        rbp_r_c = rbp_r_t;
+      } else {
+        /* Move left. */
+        rbp_r_p = rbp_r_c;
+        rbp_r_c = rbp_r_c->Left();
+      }
+    } else {
+      if (rbp_r_cmp == 0) {
+        MOZ_ASSERT(aNode == rbp_r_c);
+        if (rbp_r_c->Right() == &mSentinel) {
+          /* Delete root node (which is also a leaf node). */
+          if (rbp_r_c->Left() != &mSentinel) {
+            rbp_r_t = LeanRight(rbp_r_c);
+            rbp_r_t->SetRight(&mSentinel);
+          } else {
+            rbp_r_t = &mSentinel;
+          }
+          rbp_r_p->SetLeft(rbp_r_t);
+        } else {
+          /* This is the node we want to delete, but we will
+           * instead swap it with its successor and delete the
+           * successor. Record enough information to do the
+           * swap later. rbp_r_xp is the aNode's parent. */
+          rbp_r_xp = rbp_r_p;
+          rbp_r_cmp = 1; /* Note that deletion is incomplete. */
+        }
+      }
+      if (rbp_r_cmp == 1) {
+        if (rbp_r_c->Right()->Left()->IsBlack()) {
+          rbp_r_t = rbp_r_c->Left();
+          if (rbp_r_t->IsRed()) {
+            /* Standard transform. */
+            rbp_r_t = MoveRedRight(rbp_r_c);
+          } else {
+            /* Root-specific transform. */
+            rbp_r_c->SetColor(NodeColor::Red);
+            rbp_r_u = rbp_r_t->Left();
+            if (rbp_r_u->IsRed()) {
+              rbp_r_u->SetColor(NodeColor::Black);
+              rbp_r_t = RotateRight(rbp_r_c);
+              rbp_r_u = RotateLeft(rbp_r_c);
+              rbp_r_t->SetRight(rbp_r_u);
+            } else {
+              rbp_r_t->SetColor(NodeColor::Red);
+              rbp_r_t = RotateLeft(rbp_r_c);
+            }
+          }
+          rbp_r_p->SetLeft(rbp_r_t);
+          rbp_r_c = rbp_r_t;
+        } else {
+          /* Move right. */
+          rbp_r_p = rbp_r_c;
+          rbp_r_c = rbp_r_c->Right();
+        }
+      }
+    }
+    if (rbp_r_cmp != 0) {
+      while (true) {
+        MOZ_ASSERT(rbp_r_p != &mSentinel);
+        rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
+        if (rbp_r_cmp < 0) {
+          rbp_r_t = rbp_r_c->Left();
+          if (rbp_r_t == &mSentinel) {
+            /* rbp_r_c now refers to the successor node to
+             * relocate, and rbp_r_xp/aNode refer to the
+             * context for the relocation. */
+            if (rbp_r_xp->Left() == (aNode)) {
+              rbp_r_xp->SetLeft(rbp_r_c);
+            } else {
+              MOZ_ASSERT(rbp_r_xp->Right() == (aNode));
+              rbp_r_xp->SetRight(rbp_r_c);
+            }
+            rbp_r_c->SetLeft(aNode->Left());
+            rbp_r_c->SetRight(aNode->Right());
+            rbp_r_c->SetColor(aNode->Color());
+            if (rbp_r_p->Left() == rbp_r_c) {
+              rbp_r_p->SetLeft(&mSentinel);
+            } else {
+              MOZ_ASSERT(rbp_r_p->Right() == rbp_r_c);
+              rbp_r_p->SetRight(&mSentinel);
+            }
+            break;
+          }
+          rbp_r_u = rbp_r_t->Left();
+          if (rbp_r_t->IsBlack() && rbp_r_u->IsBlack()) {
+            rbp_r_t = MoveRedLeft(rbp_r_c);
+            if (rbp_r_p->Left() == rbp_r_c) {
+              rbp_r_p->SetLeft(rbp_r_t);
+            } else {
+              rbp_r_p->SetRight(rbp_r_t);
+            }
+            rbp_r_c = rbp_r_t;
+          } else {
+            rbp_r_p = rbp_r_c;
+            rbp_r_c = rbp_r_c->Left();
+          }
+        } else {
+          /* Check whether to delete this node (it has to be
+           * the correct node and a leaf node). */
+          if (rbp_r_cmp == 0) {
+            MOZ_ASSERT(aNode == rbp_r_c);
+            if (rbp_r_c->Right() == &mSentinel) {
+              /* Delete leaf node. */
+              if (rbp_r_c->Left() != &mSentinel) {
+                rbp_r_t = LeanRight(rbp_r_c);
+                rbp_r_t->SetRight(&mSentinel);
+              } else {
+                rbp_r_t = &mSentinel;
+              }
+              if (rbp_r_p->Left() == rbp_r_c) {
+                rbp_r_p->SetLeft(rbp_r_t);
+              } else {
+                rbp_r_p->SetRight(rbp_r_t);
+              }
+              break;
+            } else {
+              /* This is the node we want to delete, but we
+               * will instead swap it with its successor
+               * and delete the successor. Record enough
+               * information to do the swap later.
+               * rbp_r_xp is aNode's parent. */
+              rbp_r_xp = rbp_r_p;
+            }
+          }
+          rbp_r_t = rbp_r_c->Right();
+          rbp_r_u = rbp_r_t->Left();
+          if (rbp_r_u->IsBlack()) {
+            rbp_r_t = MoveRedRight(rbp_r_c);
+            if (rbp_r_p->Left() == rbp_r_c) {
+              rbp_r_p->SetLeft(rbp_r_t);
+            } else {
+              rbp_r_p->SetRight(rbp_r_t);
+            }
+            rbp_r_c = rbp_r_t;
+          } else {
+            rbp_r_p = rbp_r_c;
+            rbp_r_c = rbp_r_c->Right();
+          }
+        }
+      }
+    }
+    /* Update root. */
+    mRoot = rbp_r_s.Left();
+  }
+
+  TreeNode* RotateLeft(TreeNode* aNode)
+  {
+    TreeNode* node = aNode->Right();
+    aNode->SetRight(node->Left());
+    node->SetLeft(aNode);
+    return node;
+  }
+
+  TreeNode* RotateRight(TreeNode* aNode)
+  {
+    TreeNode* node = aNode->Left();
+    aNode->SetLeft(node->Right());
+    node->SetRight(aNode);
+    return node;
+  }
+
+  TreeNode* LeanLeft(TreeNode* aNode)
+  {
+    TreeNode* node = RotateLeft(aNode);
+    NodeColor color = aNode->Color();
+    node->SetColor(color);
+    aNode->SetColor(NodeColor::Red);
+    return node;
+  }
+
+  TreeNode* LeanRight(TreeNode* aNode)
+  {
+    TreeNode* node = RotateRight(aNode);
+    NodeColor color = aNode->Color();
+    node->SetColor(color);
+    aNode->SetColor(NodeColor::Red);
+    return node;
+  }
+
+  TreeNode* MoveRedLeft(TreeNode* aNode)
+  {
+    TreeNode* node;
+    TreeNode *rbp_mrl_t, *rbp_mrl_u;
+    rbp_mrl_t = aNode->Left();
+    rbp_mrl_t->SetColor(NodeColor::Red);
+    rbp_mrl_t = aNode->Right();
+    rbp_mrl_u = rbp_mrl_t->Left();
+    if (rbp_mrl_u->IsRed()) {
+      rbp_mrl_u = RotateRight(rbp_mrl_t);
+      aNode->SetRight(rbp_mrl_u);
+      node = RotateLeft(aNode);
+      rbp_mrl_t = aNode->Right();
+      if (rbp_mrl_t->IsRed()) {
+        rbp_mrl_t->SetColor(NodeColor::Black);
+        aNode->SetColor(NodeColor::Red);
+        rbp_mrl_t = RotateLeft(aNode);
+        node->SetLeft(rbp_mrl_t);
+      } else {
+        aNode->SetColor(NodeColor::Black);
+      }
+    } else {
+      aNode->SetColor(NodeColor::Red);
+      node = RotateLeft(aNode);
+    }
+    return node;
+  }
+
+  TreeNode* MoveRedRight(TreeNode* aNode)
+  {
+    TreeNode* node;
+    TreeNode* rbp_mrr_t;
+    rbp_mrr_t = aNode->Left();
+    if (rbp_mrr_t->IsRed()) {
+      TreeNode *rbp_mrr_u, *rbp_mrr_v;
+      rbp_mrr_u = rbp_mrr_t->Right();
+      rbp_mrr_v = rbp_mrr_u->Left();
+      if (rbp_mrr_v->IsRed()) {
+        rbp_mrr_u->SetColor(aNode->Color());
+        rbp_mrr_v->SetColor(NodeColor::Black);
+        rbp_mrr_u = RotateLeft(rbp_mrr_t);
+        aNode->SetLeft(rbp_mrr_u);
+        node = RotateRight(aNode);
+        rbp_mrr_t = RotateLeft(aNode);
+        node->SetRight(rbp_mrr_t);
+      } else {
+        rbp_mrr_t->SetColor(aNode->Color());
+        rbp_mrr_u->SetColor(NodeColor::Red);
+        node = RotateRight(aNode);
+        rbp_mrr_t = RotateLeft(aNode);
+        node->SetRight(rbp_mrr_t);
+      }
+      aNode->SetColor(NodeColor::Red);
+    } else {
+      rbp_mrr_t->SetColor(NodeColor::Red);
+      rbp_mrr_t = rbp_mrr_t->Left();
+      if (rbp_mrr_t->IsRed()) {
+        rbp_mrr_t->SetColor(NodeColor::Black);
+        node = RotateRight(aNode);
+        rbp_mrr_t = RotateLeft(aNode);
+        node->SetRight(rbp_mrr_t);
+      } else {
+        node = RotateLeft(aNode);
+      }
+    }
+    return node;
+  }
+
+  /*
+   * The iterator simulates recursion via an array of pointers that store the
+   * current path.  This is critical to performance, since a series of calls to
+   * rb_{next,prev}() would require time proportional to (n lg n), whereas this
+   * implementation only requires time proportional to (n).
+   *
+   * Since the iterator caches a path down the tree, any tree modification may
+   * cause the cached path to become invalid. Don't modify the tree during an
+   * iteration.
+   */
+
+  /*
+   * Size the path arrays such that they are always large enough, even if a
+   * tree consumes all of memory.  Since each node must contain a minimum of
+   * two pointers, there can never be more nodes than:
+   *
+   *   1 << ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1))
+   *
+   * Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
+   * is:
+   *
+   *   (3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
+   *
+   * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
+   * systems, respectively (approximately 348 and 1440 bytes, respectively).
+   */
+public:
+  class Iterator
+  {
+    TreeNode* mSentinel;
+    TreeNode* mPath[3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1))];
+    unsigned mDepth;
+
+  public:
+    explicit Iterator(RedBlackTree<T, Trait>* aTree)
+      : mSentinel(&aTree->mSentinel)
+      , mDepth(0)
+    {
+      /* Initialize the path to contain the left spine. */
+      if (aTree->mRoot != mSentinel) {
+        TreeNode* node;
+        mPath[mDepth++] = aTree->mRoot;
+        while ((node = mPath[mDepth - 1]->Left()) != mSentinel) {
+          mPath[mDepth++] = node;
+        }
+      }
+    }
+
+    class Item
+    {
+      Iterator* mIterator;
+      T* mItem;
+
+    public:
+      Item(Iterator* aIterator, T* aItem)
+        : mIterator(aIterator)
+        , mItem(aItem)
+      { }
+
+      bool operator!=(const Item& aOther) const
+      {
+        return (mIterator != aOther.mIterator) || (mItem != aOther.mItem);
+      }
+
+      T* operator*() const { return mItem; }
+
+      const Item& operator++()
+      {
+        mItem = mIterator->Next();
+        return *this;
+      }
+    };
+
+    Item begin()
+    {
+      return Item(this, mDepth > 0 ? mPath[mDepth - 1] : nullptr);
+    }
+
+    Item end()
+    {
+      return Item(this, nullptr);
+    }
+
+    TreeNode* Next()
+    {
+      TreeNode* node;
+      if ((node = mPath[mDepth - 1]->Right()) != mSentinel) {
+        /* The successor is the left-most node in the right subtree. */
+        mPath[mDepth++] = node;
+        while ((node = mPath[mDepth - 1]->Left()) != mSentinel) {
+          mPath[mDepth++] = node;
+        }
+      } else {
+        /* The successor is above the current node.  Unwind until a
+         * left-leaning edge is removed from the path, of the path is empty. */
+        for (mDepth--; mDepth > 0; mDepth--) {
+          if (mPath[mDepth - 1]->Left() == mPath[mDepth]) {
+            break;
+          }
+        }
+      }
+      return mDepth > 0 ? mPath[mDepth - 1] : nullptr;
+    }
+  };
+
+  Iterator iter() { return Iterator(this); }
+};
 
 #endif /* RB_H_ */
