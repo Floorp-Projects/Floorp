@@ -71,7 +71,7 @@ public:
                         const nsTArray<uint8_t>& aMessage) override;
 
   void OnExpirationChange(const nsAString& aSessionId,
-                          GMPTimestamp aExpiryTime) override;
+                          UnixTime aExpiryTime) override;
 
   void OnSessionClosed(const nsAString& aSessionId) override;
 
