@@ -647,12 +647,12 @@ struct ExtentTreeBoundsTrait : public ExtentTreeTrait
  */
 
 class AddressRadixTree {
- // Size of each radix tree node (must be a power of 2).
+ // Size of each radix tree node (as a power of 2).
  // This impacts tree depth.
 #if (SIZEOF_PTR == 4)
-  static const size_t kNodeSize = 1U << 14;
+  static const size_t kNodeSize2Pow = 14;
 #else
-  static const size_t kNodeSize = CACHELINE;
+  static const size_t kNodeSize2Pow = CACHELINE_2POW;
 #endif
 
   malloc_spinlock_t mLock;
@@ -1739,8 +1739,7 @@ AddressRadixTree::Create(unsigned aBits)
   AddressRadixTree* ret;
   unsigned bits_per_level, height, i;
 
-  bits_per_level = ffs(pow2_ceil((AddressRadixTree::kNodeSize /
-      sizeof(void*)))) - 1;
+  bits_per_level = AddressRadixTree::kNodeSize2Pow - SIZEOF_PTR_2POW;
   height = aBits / bits_per_level;
   if (height * bits_per_level != aBits) {
     height++;
