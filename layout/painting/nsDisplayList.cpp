@@ -8063,13 +8063,15 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
     animationsId = 0;
   }
 
+  gfx::Matrix4x4Typed<LayerPixel, LayerPixel> boundTransform = ViewAs<gfx::Matrix4x4Typed<LayerPixel, LayerPixel>>(newTransformMatrix);
+
   nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc,
                            aBuilder,
                            aDisplayListBuilder,
                            this,
                            mStoredList.GetChildren(),
-                           &newTransformMatrix,
+                           &boundTransform,
                            animationsId,
                            nullptr,
                            transformForSC,
