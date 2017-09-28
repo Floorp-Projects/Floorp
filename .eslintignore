@@ -8,7 +8,6 @@ obj*/**
 # If you are enabling a directory, please add directory specific exclusions
 # below.
 chrome/**
-config/**
 docshell/**
 editor/**
 embedding/**
@@ -36,6 +35,7 @@ xpcom/**
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.
 build/**
+config/**
 db/**
 gradle/**
 hal/**
