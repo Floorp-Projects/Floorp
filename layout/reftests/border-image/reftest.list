@@ -7,7 +7,7 @@
 # clipping on Windows. (Any other fix would have a significant perf cost.)
 fuzzy-if(winWidget,1,1) == multicolor-image-2.html multicolor-image-2-ref.html
 == multicolor-image-3.html multicolor-image-3-ref.html
-== multicolor-image-4.html multicolor-image-4-ref.html
+fails-if(webrender) == multicolor-image-4.html multicolor-image-4-ref.html
 == multicolor-image-5.html multicolor-image-5-ref.html
 == transparent-image-1.html transparent-image-1-ref.html
 != repeat-image-1.html repeat-image-1-ref.html
