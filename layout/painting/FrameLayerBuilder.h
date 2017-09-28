@@ -64,7 +64,7 @@ public:
   friend class FrameLayerBuilder;
 
   uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
-  layers::Layer* GetLayer() { return mLayer; }
+  layers::Layer* GetLayer() const { return mLayer; }
   nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
   void Invalidate() { mIsInvalid = true; }
   void ClearAnimationCompositorState();
@@ -504,7 +504,7 @@ public:
 
   void ClearCachedGeometry(nsDisplayItem* aItem);
 
-  static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+  static DisplayItemData* GetOldDataFor(nsDisplayItem* aItem);
 
   /**
    * Return the layer that all display items of aFrame were assigned to in the
