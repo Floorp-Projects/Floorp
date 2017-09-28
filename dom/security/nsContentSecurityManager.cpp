@@ -98,16 +98,6 @@ ValidateSecurityFlags(nsILoadInfo* aLoadInfo)
   return NS_OK;
 }
 
-static bool SchemeIs(nsIURI* aURI, const char* aScheme)
-{
-  nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
-  NS_ENSURE_TRUE(baseURI, false);
-
-  bool isScheme = false;
-  return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
-}
-
-
 static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo)
 {
   // Editor apps get special treatment here, editors can load images
@@ -190,7 +180,7 @@ DoSOPChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo, nsIChannel* aChannel)
 {
   if (aLoadInfo->GetAllowChrome() &&
       (URIHasFlags(aURI, nsIProtocolHandler::URI_IS_UI_RESOURCE) ||
-       SchemeIs(aURI, "moz-safe-about"))) {
+       nsContentUtils::SchemeIs(aURI, "moz-safe-about"))) {
     // UI resources are allowed.
     return DoCheckLoadURIChecks(aURI, aLoadInfo);
   }

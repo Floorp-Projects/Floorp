@@ -136,20 +136,20 @@ CryptoWrapper.prototype = {
    *
    * Optional key bundle overrides the collection key lookup.
    */
-  encrypt: function encrypt(keyBundle) {
+  async encrypt(keyBundle) {
     if (!keyBundle) {
       throw new Error("A key bundle must be supplied to encrypt.");
     }
 
     this.IV = Weave.Crypto.generateRandomIV();
-    this.ciphertext = Weave.Crypto.encrypt(JSON.stringify(this.cleartext),
-                                           keyBundle.encryptionKeyB64, this.IV);
+    this.ciphertext = await Weave.Crypto.encrypt(JSON.stringify(this.cleartext),
+                                                 keyBundle.encryptionKeyB64, this.IV);
     this.hmac = this.ciphertextHMAC(keyBundle);
     this.cleartext = null;
   },
 
   // Optional key bundle.
-  decrypt: function decrypt(keyBundle) {
+  async decrypt(keyBundle) {
     if (!this.ciphertext) {
       throw new Error("No ciphertext: nothing to decrypt?");
     }
@@ -166,8 +166,8 @@ CryptoWrapper.prototype = {
     }
 
     // Handle invalid data here. Elsewhere we assume that cleartext is an object.
-    let cleartext = Weave.Crypto.decrypt(this.ciphertext,
-                                         keyBundle.encryptionKeyB64, this.IV);
+    let cleartext = await Weave.Crypto.decrypt(this.ciphertext,
+                                               keyBundle.encryptionKeyB64, this.IV);
     let json_result = JSON.parse(cleartext);
 
     if (json_result && (json_result instanceof Object)) {
@@ -389,16 +389,16 @@ CollectionKeyManager.prototype = {
   /**
    * Compute a new default key, and new keys for any specified collections.
    */
-  newKeys(collections) {
-    let newDefaultKeyBundle = this.newDefaultKeyBundle();
+  async newKeys(collections) {
+    let newDefaultKeyBundle = await this.newDefaultKeyBundle();
 
     let newColls = {};
     if (collections) {
-      collections.forEach(function(c) {
+      for (let c of collections) {
         let b = new BulkKeyBundle(c);
-        b.generateRandom();
+        await b.generateRandom();
         newColls[c] = b;
-      });
+      }
     }
     return [newDefaultKeyBundle, newColls];
   },
@@ -407,9 +407,9 @@ CollectionKeyManager.prototype = {
    * Generates new keys, but does not replace our local copy. Use this to
    * verify an upload before storing.
    */
-  generateNewKeysWBO(collections) {
+  async generateNewKeysWBO(collections) {
     let newDefaultKey, newColls;
-    [newDefaultKey, newColls] = this.newKeys(collections);
+    [newDefaultKey, newColls] = await this.newKeys(collections);
 
     return this._makeWBO(newColls, newDefaultKey);
   },
@@ -419,17 +419,17 @@ CollectionKeyManager.prototype = {
    *
    * @returns {BulkKeyBundle}
    */
-  newDefaultKeyBundle() {
+  async newDefaultKeyBundle() {
     const key = new BulkKeyBundle(DEFAULT_KEYBUNDLE_NAME);
-    key.generateRandom();
+    await key.generateRandom();
     return key;
   },
 
   /**
    * Create a new default key and store it as this._default, since without one you cannot use setContents.
    */
-  generateDefaultKey() {
-    this._default = this.newDefaultKeyBundle();
+  async generateDefaultKey() {
+    this._default = await this.newDefaultKeyBundle();
   },
 
   /**
@@ -451,7 +451,7 @@ CollectionKeyManager.prototype = {
    * given collections (creating new ones for collections where we
    * don't already have keys).
    */
-  ensureKeysFor(collections) {
+  async ensureKeysFor(collections) {
     const newKeys = Object.assign({}, this._collections);
     for (let c of collections) {
       if (newKeys[c]) {
@@ -459,7 +459,7 @@ CollectionKeyManager.prototype = {
       }
 
       const b = new BulkKeyBundle(c);
-      b.generateRandom();
+      await b.generateRandom();
       newKeys[c] = b;
     }
     return new CollectionKeyManager(this.lastModified, this._default, newKeys);
@@ -559,7 +559,7 @@ CollectionKeyManager.prototype = {
     return sameDefault ? collComparison.changed : true;
   },
 
-  updateContents: function updateContents(syncKeyBundle, storage_keys) {
+  async updateContents(syncKeyBundle, storage_keys) {
     let log = this._log;
     log.info("Updating collection keys...");
 
@@ -569,7 +569,7 @@ CollectionKeyManager.prototype = {
 
     let payload;
     try {
-      payload = storage_keys.decrypt(syncKeyBundle);
+      payload = await storage_keys.decrypt(syncKeyBundle);
     } catch (ex) {
       log.warn("Got exception decrypting storage keys with sync key.", ex);
       log.info("Aborting updateContents. Rethrowing.");

@@ -176,7 +176,7 @@ add_task(async function test_disabled_install_semantics() {
   server.start();
   await SyncTestingInfrastructure(server, USER, PASSWORD);
 
-  generateNewKeys(Service.collectionKeys);
+  await generateNewKeys(Service.collectionKeys);
 
   let contents = {
     meta: {global: {engines: {addons: {version: engine.version,

@@ -25,9 +25,14 @@ function getBookmarkWBO(server, guid) {
   return coll.wbo(guid);
 }
 
+add_task(async function setup() {
+  initTestLogging("Trace");
+  await generateNewKeys(Service.collectionKeys);
+})
+
 add_task(async function test_decline_undecline() {
   let engine = Service.engineManager.get("bookmarks");
-  let server = serverForFoo(engine);
+  let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
   try {
@@ -56,8 +61,3 @@ add_task(async function test_decline_undecline() {
   }
 });
 
-function run_test() {
-  initTestLogging("Trace");
-  generateNewKeys(Service.collectionKeys);
-  run_next_test();
-}

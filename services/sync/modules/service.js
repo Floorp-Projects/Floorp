@@ -267,7 +267,7 @@ Sync11Service.prototype = {
   async handleFetchedKeys(syncKey, cryptoKeys, skipReset) {
     // Don't want to wipe if we're just starting up!
     let wasBlank = this.collectionKeys.isClear;
-    let keysChanged = this.collectionKeys.updateContents(syncKey, cryptoKeys);
+    let keysChanged = await this.collectionKeys.updateContents(syncKey, cryptoKeys);
 
     if (keysChanged && !wasBlank) {
       this._log.debug("Keys changed: " + JSON.stringify(keysChanged));
@@ -724,9 +724,9 @@ Sync11Service.prototype = {
 
   async generateNewSymmetricKeys() {
     this._log.info("Generating new keys WBO...");
-    let wbo = this.collectionKeys.generateNewKeysWBO();
+    let wbo = await this.collectionKeys.generateNewKeysWBO();
     this._log.info("Encrypting new key bundle.");
-    wbo.encrypt(this.identity.syncKeyBundle);
+    await wbo.encrypt(this.identity.syncKeyBundle);
 
     let uploadRes = await this._uploadCryptoKeys(wbo, 0);
     if (uploadRes.status != 200) {

@@ -17,6 +17,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
@@ -7822,27 +7823,118 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
   }
 }
 
+enum class StyleDataType
+{
+  InlineStyle,
+  SMILOverride,
+  RestyleBits,
+  ServoData,
+};
+
 // Recursively check whether this node or its descendants contain any
 // pre-existing style declaration or any shared restyle flags.
-static bool
-NodeContainsAnyStyleData(nsINode* aNode)
+static EnumSet<StyleDataType>
+StyleDataTypesWithNode(nsINode* aNode)
 {
+  EnumSet<StyleDataType> result;
   if (aNode->IsElement()) {
     Element* elem = aNode->AsElement();
-    if (elem->GetInlineStyleDeclaration() ||
-        elem->GetSMILOverrideStyleDeclaration() ||
-        elem->HasAnyOfFlags(ELEMENT_SHARED_RESTYLE_BITS) ||
-        elem->HasServoData()) {
-      return true;
+    if (elem->GetInlineStyleDeclaration()) {
+      result += StyleDataType::InlineStyle;
+    }
+    if (elem->GetSMILOverrideStyleDeclaration()) {
+      result += StyleDataType::SMILOverride;
+    }
+    if (elem->HasAnyOfFlags(ELEMENT_SHARED_RESTYLE_BITS)) {
+      result += StyleDataType::RestyleBits;
+    }
+    if (elem->HasServoData()) {
+      result += StyleDataType::ServoData;
     }
   }
   for (nsIContent* child = aNode->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    if (NodeContainsAnyStyleData(child)) {
-      return true;
+    result += StyleDataTypesWithNode(child);
+  }
+  return result;
+}
+
+static void
+CheckCrossStyleBackendAdoption(nsIDocument* aOldDoc,
+                               nsIDocument* aNewDoc, nsINode* aAdoptedNode)
+{
+  EnumSet<StyleDataType> styleDataTypes = StyleDataTypesWithNode(aAdoptedNode);
+  if (styleDataTypes.isEmpty()) {
+    return;
+  }
+#ifdef MOZ_CRASHREPORTER
+  // We are adopting node with pre-existing style data across style
+  // backend. We want some more information to help diagnose when that
+  // can happen.
+  nsAutoCString note;
+  nsIDocument* geckoDoc;
+  if (aOldDoc->GetStyleBackendType() == StyleBackendType::Servo) {
+    note.AppendLiteral("Servo -> Gecko");
+    geckoDoc = aNewDoc;
+  } else {
+    note.AppendLiteral("Gecko -> Servo");
+    geckoDoc = aOldDoc;
+  }
+  note.AppendLiteral(", with style data:");
+#define APPEND_STYLE_DATA_TYPE(type_)                   \
+  if (styleDataTypes.contains(StyleDataType::type_)) {  \
+    note.AppendLiteral(" " #type_);                     \
+  }
+  APPEND_STYLE_DATA_TYPE(InlineStyle)
+  APPEND_STYLE_DATA_TYPE(SMILOverride)
+  APPEND_STYLE_DATA_TYPE(RestyleBits)
+  APPEND_STYLE_DATA_TYPE(ServoData)
+#undef APPEND_STYLE_DATA_TYPE
+
+  note.AppendLiteral("\nGecko doc: ");
+  if (nsContentUtils::IsSystemPrincipal(geckoDoc->NodePrincipal())) {
+    note.AppendLiteral("system, ");
+  }
+  if (geckoDoc->IsXULDocument()) {
+    note.AppendLiteral("XUL, ");
+  }
+  note.AppendLiteral("content-type: ");
+  nsAutoString contentType;
+  geckoDoc->GetContentType(contentType);
+  AppendUTF16toUTF8(contentType, note);
+  if (nsIURI* geckoURI = geckoDoc->GetOriginalURI()) {
+    static const char* const INTERNAL_SCHEMES[] = {
+      "about",
+      "addons",
+      "chrome",
+      "resource",
+      "moz-extension",
+      "moz-icon",
+    };
+    note.AppendLiteral(", url: ");
+    bool internalScheme = false;
+    for (const char* scheme : INTERNAL_SCHEMES) {
+      if (nsContentUtils::SchemeIs(geckoURI, scheme)) {
+        internalScheme = true;
+        break;
+      }
+    }
+    if (internalScheme) {
+      nsAutoCString spec;
+      geckoURI->GetSpec(spec);
+      note.Append(spec);
+    } else {
+      nsAutoCString scheme;
+      geckoURI->GetScheme(scheme);
+      note.Append(scheme);
+      note.AppendLiteral(": (omitted)");
     }
   }
-  return false;
+  note.Append('\n');
+  CrashReporter::AppendAppNotesToCrashReport(note);
+#endif // MOZ_CRASHREPORTER
+  MOZ_CRASH("Must not adopt a node with pre-existing style data "
+            "into a document with different style backend");
 }
 
 nsINode*
@@ -7962,9 +8054,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
   if (!sameDocument) {
     if (MOZ_UNLIKELY(oldDocument->GetStyleBackendType() != GetStyleBackendType())) {
       NS_WARNING("Adopting node across different style backend");
-      MOZ_RELEASE_ASSERT(!NodeContainsAnyStyleData(adoptedNode),
-                         "Must not adopt a node with pre-existing style data "
-                         "into a document with different style backend");
+      CheckCrossStyleBackendAdoption(oldDocument, this, adoptedNode);
     }
     newScope = GetWrapper();
     if (!newScope && GetScopeObject() && GetScopeObject()->GetGlobalJSObject()) {

@@ -46,9 +46,11 @@ add_task(async function test_locally_changed_keys() {
     await Service.engineManager.register(HistoryEngine);
     Service.engineManager.unregister("addons");
 
-    function corrupt_local_keys() {
-      Service.collectionKeys._default.keyPair = [Weave.Crypto.generateRandomKey(),
-                                                 Weave.Crypto.generateRandomKey()];
+    async function corrupt_local_keys() {
+      Service.collectionKeys._default.keyPair = [
+        await Weave.Crypto.generateRandomKey(),
+        await Weave.Crypto.generateRandomKey()
+      ];
     }
 
     _("Setting meta.");
@@ -62,9 +64,9 @@ add_task(async function test_locally_changed_keys() {
     _("New meta/global: " + JSON.stringify(johndoe.collection("meta").wbo("global")));
 
     // Upload keys.
-    generateNewKeys(Service.collectionKeys);
+    await generateNewKeys(Service.collectionKeys);
     let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Service.identity.syncKeyBundle);
+    await serverKeys.encrypt(Service.identity.syncKeyBundle);
     do_check_true((await serverKeys.upload(Service.resource(Service.cryptoKeysURL))).success);
 
     // Check that login works.
@@ -95,7 +97,7 @@ add_task(async function test_locally_changed_keys() {
         sortindex: i,
         visits: [{date: (modified - 5) * 1000000, type: visitType}],
         deleted: false};
-      w.encrypt(liveKeys);
+      await w.encrypt(liveKeys);
 
       let payload = {ciphertext: w.ciphertext,
                      IV:         w.IV,
@@ -111,12 +113,12 @@ add_task(async function test_locally_changed_keys() {
     let rec = new CryptoWrapper("history", "record-no--0");
     await rec.fetch(Service.resource(Service.storageURL + "history/record-no--0"));
     _(JSON.stringify(rec));
-    do_check_true(!!rec.decrypt(liveKeys));
+    do_check_true(!!await rec.decrypt(liveKeys));
 
     do_check_eq(hmacErrorCount, 0);
 
     // Fill local key cache with bad data.
-    corrupt_local_keys();
+    await corrupt_local_keys();
     _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
 
     do_check_eq(hmacErrorCount, 0);
@@ -151,7 +153,7 @@ add_task(async function test_locally_changed_keys() {
         sortindex: i,
         visits: [{date: (modified - 5 ) * 1000000, type: visitType}],
         deleted: false};
-      w.encrypt(Service.collectionKeys.keyForCollection("history"));
+      await w.encrypt(Service.collectionKeys.keyForCollection("history"));
       w.hmac = w.hmac.toUpperCase();
 
       let payload = {ciphertext: w.ciphertext,

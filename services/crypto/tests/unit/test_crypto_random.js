@@ -2,7 +2,7 @@ Cu.import("resource://services-crypto/WeaveCrypto.js", this);
 
 var cryptoSvc = new WeaveCrypto();
 
-function run_test() {
+add_task(async function test_crypto_random() {
   if (this.gczeal) {
     _("Running crypto random tests with gczeal(2).");
     gczeal(2);
@@ -38,13 +38,13 @@ function run_test() {
   // Test random key generation
   var keydata, keydata2, iv;
 
-  keydata  = cryptoSvc.generateRandomKey();
+  keydata  = await cryptoSvc.generateRandomKey();
   do_check_eq(keydata.length, 44);
-  keydata2 = cryptoSvc.generateRandomKey();
+  keydata2 = await cryptoSvc.generateRandomKey();
   do_check_neq(keydata, keydata2); // sanity check for randomness
   iv = cryptoSvc.generateRandomIV();
   do_check_eq(iv.length, 24);
 
   if (this.gczeal)
     gczeal(0);
-}
+})
