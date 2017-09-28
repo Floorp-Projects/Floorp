@@ -464,6 +464,21 @@ public class testInputConnection extends JavascriptBridgeTest {
             // and there won't be a text/selection update as a result.
             assertTextAndSelectionAt("Can handle hiding input", ic, "foo", 3);
 
+            // Bug 1401737, Editable does not behave correctly after disconnecting from Gecko.
+            getJS().syncCall("blur_hiding_input");
+            processGeckoEvents();
+            processInputConnectionEvents();
+
+            ic.setComposingRegion(0, 3);
+            ic.commitText("bar", 1);
+            assertTextAndSelectionAt("Can set spans/text after blur", ic, "bar", 3);
+
+            ic.commitText("baz", 1);
+            assertTextAndSelectionAt("Can remove spans after blur", ic, "barbaz", 6);
+
+            ic.setSelection(0, 3);
+            assertTextAndSelection("Can set selection after blur", ic, "barbaz", 0, 3);
+
             // Make sure we don't leave behind stale events for the following test.
             processGeckoEvents();
             processInputConnectionEvents();
