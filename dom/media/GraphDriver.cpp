@@ -238,12 +238,6 @@ ThreadedDriver::Start()
 }
 
 void
-ThreadedDriver::Resume()
-{
-  Start();
-}
-
-void
 ThreadedDriver::Revive()
 {
   // Note: only called on MainThread, without monitor
@@ -770,16 +764,6 @@ AudioCallbackDriver::Destroy()
   LOG(LogLevel::Debug, ("AudioCallbackDriver destroyed."));
   mAudioInput = nullptr;
   mAudioStream.reset();
-}
-
-void
-AudioCallbackDriver::Resume()
-{
-  LOG(LogLevel::Debug,
-      ("Resuming audio threads for MediaStreamGraph %p", mGraphImpl));
-  if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
-    NS_WARNING("Could not start cubeb stream for MSG.");
-  }
 }
 
 void
