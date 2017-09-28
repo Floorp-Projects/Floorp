@@ -106,7 +106,7 @@ js::StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().wasmWorklist(lock, mode).append(task))
+    if (!HelperThreadState().wasmWorklist(lock, mode).pushBack(task))
         return false;
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
@@ -1802,7 +1802,7 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked, wasm::Compil
     MOZ_ASSERT(HelperThreadState().canStartWasmCompile(locked, mode));
     MOZ_ASSERT(idle());
 
-    currentTask.emplace(HelperThreadState().wasmWorklist(locked, mode).popCopy());
+    currentTask.emplace(HelperThreadState().wasmWorklist(locked, mode).popCopyFront());
 
     wasm::CompileTask* task = wasmTask();
     {
