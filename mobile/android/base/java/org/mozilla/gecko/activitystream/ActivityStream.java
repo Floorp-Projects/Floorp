@@ -32,6 +32,10 @@ public class ActivityStream {
         //   The only reason this method still exists is so that the old home panel code isn't
         //   suddenly unused and triggers all kinds of lint errors. However we should clean
         //   this up soon (Bug 1386725).
+        //
+        // N.B.: this switch can be used to create an old top sites configuration in order to test
+        // the upgrade path. HOWEVER, the old Top Sites code was partially removed in bug 1403755 so
+        // things may not work as expected.
         return true;
     }
 
