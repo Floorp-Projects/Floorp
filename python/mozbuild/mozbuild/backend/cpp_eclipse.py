@@ -113,6 +113,10 @@ class CppEclipseBackend(CommonBackend):
 
         self._write_launch_files(launch_dir)
 
+        ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.ui.prefs')
+        with open(ui_prefs_path, 'wb') as fh:
+            fh.write(STATIC_UI_PREFS);
+
         cdt_ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.ui.prefs')
         cdt_ui_prefs = STATIC_CDT_UI_PREFS
         # Here we generate the code formatter that will show up in the UI with
@@ -531,6 +535,10 @@ showWhitespaceCharacters=true
 spacesForTabs=true
 tabWidth=2
 undoHistorySize=200
+"""
+
+STATIC_UI_PREFS="""eclipse.preferences.version=1
+showIntro=false
 """
 
 STATIC_CDT_CORE_PREFS="""eclipse.preferences.version=1
