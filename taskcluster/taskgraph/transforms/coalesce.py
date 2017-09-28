@@ -34,6 +34,7 @@ def enable_coalescing(config, jobs):
             'aws-provisioner-v1/gecko-t-win7-32',
             'aws-provisioner-v1/gecko-t-win7-32-gpu',
             'aws-provisioner-v1/gecko-t-win10-64',
+            'aws-provisioner-v1/gecko-t-win10-64-gpu',
         ]:
             job['coalesce'] = {
                 'job-identifier': sha256(job["label"]).hexdigest()[:20],
