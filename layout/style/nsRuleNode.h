@@ -807,11 +807,17 @@ public:
                                  bool aConvertListItem = false);
   static void EnsureInlineDisplay(mozilla::StyleDisplay& display);
 
+  enum class FlushUserFontSet {
+    Yes,
+    No,
+  };
+
   static already_AddRefed<nsFontMetrics> GetMetricsFor(nsPresContext* aPresContext,
                                                        bool aIsVertical,
                                                        const nsStyleFont* aStyleFont,
                                                        nscoord aFontSize,
-                                                       bool aUseUserFontSet);
+                                                       bool aUseUserFontSet,
+                                                       FlushUserFontSet aFlushUserFontSet);
 
   static already_AddRefed<nsFontMetrics> GetMetricsFor(nsPresContext* aPresContext,
                                                        nsStyleContext* aStyleContext,

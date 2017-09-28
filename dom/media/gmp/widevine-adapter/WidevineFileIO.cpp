@@ -2,6 +2,8 @@
 #include "GMPLog.h"
 #include "WidevineUtils.h"
 
+#include "gmp-api/gmp-platform.h"
+
 using namespace cdm;
 
 // Declared in ChromiumCDMAdapter.cpp.

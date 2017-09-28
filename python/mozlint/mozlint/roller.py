@@ -11,11 +11,13 @@ import traceback
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import cpu_count
+from subprocess import CalledProcessError
+
+from mozversioncontrol import get_repository_object, MissingUpstreamRepo, InvalidRepoPath
 
 from .errors import LintersNotConfigured
 from .parser import Parser
 from .types import supported_types
-from .vcs import VCSHelper
 
 
 def _run_linters(config, paths, **lintargs):
@@ -55,13 +57,16 @@ class LintRoller(object):
     :param lintargs: Arguments to pass to the underlying linter(s).
     """
 
-    def __init__(self, root=None, **lintargs):
+    def __init__(self, root, **lintargs):
         self.parse = Parser()
-        self.vcs = VCSHelper.create()
+        try:
+            self.vcs = get_repository_object(root)
+        except InvalidRepoPath:
+            self.vcs = None
 
         self.linters = []
         self.lintargs = lintargs
-        self.lintargs['root'] = root or self.vcs.root or os.getcwd()
+        self.lintargs['root'] = root
 
         # linters that return non-zero
         self.failed = None
@@ -98,11 +103,23 @@ class LintRoller(object):
         if not self.linters:
             raise LintersNotConfigured
 
+        if not self.vcs and (workdir or outgoing):
+            print("error: '{}' is not a known repository, can't use "
+                  "--workdir or --outgoing".format(self.lintargs['root']))
+
         # Calculate files from VCS
-        if workdir:
-            paths.update(self.vcs.by_workdir(workdir))
-        if outgoing:
-            paths.update(self.vcs.by_outgoing(outgoing))
+        try:
+            if workdir:
+                paths.update(self.vcs.get_changed_files('AM', mode=workdir))
+            if outgoing:
+                try:
+                    paths.update(self.vcs.get_outgoing_files('AM', upstream=outgoing))
+                except MissingUpstreamRepo:
+                    print("warning: could not find default push, specify a remote for --outgoing")
+        except CalledProcessError as e:
+            print("error running: {}".format(' '.join(e.cmd)))
+            if e.output:
+                print(e.output)
 
         if not paths and (workdir or outgoing):
             print("warning: no files linted")

@@ -7,7 +7,6 @@
 #ifndef CDMCaps_h_
 #define CDMCaps_h_
 
-#include "gmp-decryption.h"
 #include "nsIThread.h"
 #include "nsTArray.h"
 #include "nsString.h"

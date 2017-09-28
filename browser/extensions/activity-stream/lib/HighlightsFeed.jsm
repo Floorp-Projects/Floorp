@@ -160,7 +160,7 @@ this.HighlightsFeed = class HighlightsFeed {
         break;
       case at.MIGRATION_COMPLETED:
       case at.PLACES_HISTORY_CLEARED:
-      case at.PLACES_LINK_DELETED:
+      case at.PLACES_LINKS_DELETED:
       case at.PLACES_LINK_BLOCKED:
         this.fetchHighlights(true);
         break;

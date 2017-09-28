@@ -89,7 +89,6 @@ bool
 nsCSSPseudoClasses::HasStringArg(Type aType)
 {
   return aType == Type::lang ||
-         aType == Type::mozEmptyExceptChildrenWithLocalname ||
          aType == Type::mozSystemMetric ||
          aType == Type::mozLocaleDir ||
          aType == Type::dir;

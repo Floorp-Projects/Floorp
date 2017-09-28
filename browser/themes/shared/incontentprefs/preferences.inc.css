@@ -582,6 +582,8 @@ button > hbox > label {
   width: 20px;
   height: 20px;
   vertical-align: text-bottom;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #updateDeck > hbox > label {

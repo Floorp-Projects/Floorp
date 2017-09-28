@@ -554,6 +554,7 @@ html|span.ac-emphasize-text-url {
   color: -moz-menubartext;
 }
 
+#nav-bar,
 #toolbar-menubar:not([autohide="true"]):not(:-moz-lwtheme):-moz-system-metric(menubar-drag),
 #TabsToolbar:not(:-moz-lwtheme):-moz-system-metric(menubar-drag) {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");

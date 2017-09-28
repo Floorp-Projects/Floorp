@@ -87,11 +87,6 @@ public:
                                 const nsACString& aNodeId,
                                 UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
     override;
-  NS_IMETHOD GetGMPDecryptor(GMPCrashHelper* aHelper,
-                             nsTArray<nsCString>* aTags,
-                             const nsACString& aNodeId,
-                             UniquePtr<GetGMPDecryptorCallback>&& aCallback)
-    override;
 
   // Helper for backwards compatibility with WebRTC/tests.
   NS_IMETHOD

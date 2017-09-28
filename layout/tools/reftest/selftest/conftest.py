@@ -44,16 +44,14 @@ def runtests(setup_test_harness, binary, parser):
         package_root = os.path.dirname(harness_root)
         options.update({
             'extraProfileFiles': [os.path.join(package_root, 'bin', 'plugins')],
-            'objPath': os.environ['PYTHON_TEST_TMP'],
             'reftestExtensionPath': os.path.join(harness_root, 'reftest'),
+            'sandboxReadWhitelist': [here, os.environ['PYTHON_TEST_TMP']],
             'utilityPath': os.path.join(package_root, 'bin'),
-            'workPath': here,
         })
     else:
         options.update({
             'extraProfileFiles': [os.path.join(build.topobjdir, 'dist', 'plugins')],
-            'objPath': build.topobjdir,
-            'workPath': build.topsrcdir,
+            'sandboxReadWhitelist': [build.topobjdir, build.topsrcdir],
         })
 
     def normalize(test):

@@ -9,9 +9,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 
 from .registry import register_callback_action
-from .util import create_tasks, find_decision_task
+from .util import create_tasks, fetch_graph_and_labels
 from taskgraph.util.taskcluster import get_artifact
-from taskgraph.taskgraph import TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +29,8 @@ logger = logging.getLogger(__name__)
     context=[],  # Applies to decision task
 )
 def run_missing_tests(parameters, input, task_group_id, task_id, task):
-    decision_task_id = find_decision_task(parameters)
-
-    full_task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
-    _, full_task_graph = TaskGraph.from_json(full_task_graph)
+    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(parameters)
     target_tasks = get_artifact(decision_task_id, "public/target-tasks.json")
-    label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
 
     # The idea here is to schedule all tasks of the `test` kind that were
     # targetted but did not appear in the final task-graph -- those were the

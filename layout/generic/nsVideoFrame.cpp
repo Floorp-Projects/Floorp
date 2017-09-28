@@ -314,6 +314,7 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
   // and a container frame for the caption.
   for (nsIFrame* child : mFrames) {
     nsSize oldChildSize = child->GetSize();
+    nsReflowStatus childStatus;
 
     if (child->GetContent() == mPosterImage) {
       // Reflow the poster frame.
@@ -321,6 +322,8 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
       ReflowOutput kidDesiredSize(aReflowInput);
       WritingMode wm = imageFrame->GetWritingMode();
       LogicalSize availableSize = aReflowInput.AvailableSize(wm);
+      availableSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+
       LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode()).
                              ConvertTo(wm, aMetrics.GetWritingMode());
       ReflowInput kidReflowInput(aPresContext,
@@ -339,7 +342,11 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
       kidReflowInput.SetComputedWidth(posterRenderRect.width);
       kidReflowInput.SetComputedHeight(posterRenderRect.height);
       ReflowChild(imageFrame, aPresContext, kidDesiredSize, kidReflowInput,
-                  posterRenderRect.x, posterRenderRect.y, 0, aStatus);
+                  posterRenderRect.x, posterRenderRect.y, 0, childStatus);
+      MOZ_ASSERT(childStatus.IsFullyComplete(),
+                 "We gave our child unconstrained available block-size, "
+                 "so it should be complete!");
+
       FinishReflowChild(imageFrame, aPresContext,
                         kidDesiredSize, &kidReflowInput,
                         posterRenderRect.x, posterRenderRect.y, 0);
@@ -371,7 +378,10 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
                                        availableSize);
       ReflowOutput kidDesiredSize(kidReflowInput);
       ReflowChild(child, aPresContext, kidDesiredSize, kidReflowInput,
-                  borderPadding.left, borderPadding.top, 0, aStatus);
+                  borderPadding.left, borderPadding.top, 0, childStatus);
+      MOZ_ASSERT(childStatus.IsFullyComplete(),
+                 "We gave our child unconstrained available block-size, "
+                 "so it should be complete!");
 
       if (child->GetContent() == mVideoControls && isBSizeShrinkWrapping) {
         // Resolve our own BSize based on the controls' size in the same axis.
@@ -413,6 +423,8 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsVideoFrame::Reflow: size=%d,%d",
                   aMetrics.Width(), aMetrics.Height()));
+
+  MOZ_ASSERT(aStatus.IsEmpty(), "This type of frame can't be split.");
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 

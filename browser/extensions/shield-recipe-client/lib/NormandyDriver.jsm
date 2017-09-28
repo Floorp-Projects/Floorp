@@ -21,6 +21,7 @@ Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm");
 Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm");
 Cu.import("resource://shield-recipe-client/lib/Sampling.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(
   this, "AddonStudies", "resource://shield-recipe-client/lib/AddonStudies.jsm");
 
@@ -82,7 +83,7 @@ this.NormandyDriver = function(sandboxManager) {
     client() {
       const appinfo = {
         version: Services.appinfo.version,
-        channel: Services.appinfo.defaultUpdateChannel,
+        channel: UpdateUtils.getUpdateChannel(false),
         isDefaultBrowser: ShellService.isDefaultBrowser() || null,
         searchEngine: null,
         syncSetup: Preferences.isSet("services.sync.username"),

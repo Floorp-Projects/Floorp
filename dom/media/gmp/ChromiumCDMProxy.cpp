@@ -494,7 +494,7 @@ ChromiumCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId)
 
 void
 ChromiumCDMProxy::OnExpirationChange(const nsAString& aSessionId,
-                                     GMPTimestamp aExpiryTime)
+                                     UnixTime aExpiryTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mKeys.IsNull()) {

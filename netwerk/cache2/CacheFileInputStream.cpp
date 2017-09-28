@@ -145,8 +145,9 @@ CacheFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     LOG(("CacheFileInputStream::ReadSegments() - Stream is closed. [this=%p, "
          "status=0x%08" PRIx32 "]", this, static_cast<uint32_t>(mStatus)));
 
-    if NS_FAILED(mStatus)
+    if (NS_FAILED(mStatus)) {
       return mStatus;
+    }
 
     return NS_OK;
   }
