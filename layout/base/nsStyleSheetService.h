@@ -74,7 +74,9 @@ private:
                                           nsISimpleEnumerator *aEnumerator,
                                           uint32_t             aSheetType);
 
-  int32_t FindSheetByURI(uint32_t aSheetType, nsIURI* aSheetURI);
+  int32_t FindSheetByURI(mozilla::StyleBackendType aBackendType,
+                         uint32_t aSheetType,
+                         nsIURI* aSheetURI);
 
   // Like LoadAndRegisterSheet, but doesn't notify.  If successful, the
   // new sheet will be the last sheet in mSheets[aSheetType].
