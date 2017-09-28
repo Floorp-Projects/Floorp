@@ -274,6 +274,8 @@ void PlatformUIThread::Stop() {
 
   PostMessage(hwnd_, WM_CLOSE, 0, 0);
 
+  hwnd_ = NULL;
+
   PlatformThread::Stop();
 }
 #endif
