@@ -191,7 +191,9 @@ WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
 
   mState = WCC_ONSTART;
 
-  mStatus = statusCode;
+  if (!mCanceled && NS_SUCCEEDED(mStatus)) {
+    mStatus = statusCode;
+  }
   mContentLength = contentLength;
   mCharsetSource = source;
   mCharset = charset;
