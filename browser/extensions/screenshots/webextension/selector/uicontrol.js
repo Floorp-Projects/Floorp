@@ -1,5 +1,5 @@
 /* globals log, catcher, util, ui, slides */
-/* globals shooter, callBackground, selectorLoader, assertIsTrusted */
+/* globals shooter, callBackground, selectorLoader, assertIsTrusted, buildSettings */
 
 "use strict";
 
@@ -45,8 +45,8 @@ this.uicontrol = (function() {
 
   const { watchFunction, watchPromise } = catcher;
 
-  const MAX_PAGE_HEIGHT = 5000;
-  const MAX_PAGE_WIDTH = 5000;
+  const MAX_PAGE_HEIGHT = buildSettings.maxImageHeight;
+  const MAX_PAGE_WIDTH = buildSettings.maxImageWidth;
   // An autoselection smaller than these will be ignored entirely:
   const MIN_DETECT_ABSOLUTE_HEIGHT = 10;
   const MIN_DETECT_ABSOLUTE_WIDTH = 30;
@@ -160,22 +160,28 @@ this.uicontrol = (function() {
     },
     onClickFullPage: () => {
       sendEvent("capture-full-page", "selection-button");
+      captureType = "fullPage";
       let width = Math.max(
         document.body.clientWidth,
         document.documentElement.clientWidth,
         document.body.scrollWidth,
         document.documentElement.scrollWidth);
+      if (width > MAX_PAGE_WIDTH) {
+        captureType = "fullPageTruncated";
+      }
       width = Math.min(width, MAX_PAGE_WIDTH);
       let height = Math.max(
         document.body.clientHeight,
         document.documentElement.clientHeight,
         document.body.scrollHeight,
         document.documentElement.scrollHeight);
+      if (height > MAX_PAGE_HEIGHT) {
+        captureType = "fullPageTruncated";
+      }
       height = Math.min(height, MAX_PAGE_HEIGHT);
       selectedPos = new Selection(
         0, 0,
         width, height);
-      captureType = 'fullPage';
       setState("previewing");
     },
     onSavePreview: () => {
@@ -368,7 +374,7 @@ this.uicontrol = (function() {
     start() {
       dataUrl = shooter.screenshotPage(selectedPos, captureType);
       ui.iframe.usePreview();
-      ui.Preview.display(dataUrl);
+      ui.Preview.display(dataUrl, captureType == "fullPageTruncated");
     }
   };
 
