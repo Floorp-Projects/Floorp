@@ -21,13 +21,6 @@ interface mozIMozIntlHelper : nsISupports
   [implicit_jscontext] void addGetLocaleInfo(in jsval intlObject);
 
   /**
-   * Adds a PluralRules constructor to the given object.  This function may only
-   * be called once within a realm/global object: calling it multiple times will
-   * throw.
-   */
-  [implicit_jscontext] void addPluralRulesConstructor(in jsval intlObject);
-
-  /**
    * Adds a MozDateTimeFormat contructor to the given object. This function may only
    * be called once within a realm/global object: calling it multiple times will
    * throw.
