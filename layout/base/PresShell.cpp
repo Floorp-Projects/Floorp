@@ -6789,7 +6789,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     mAPZFocusSequenceNumber = aEvent->mFocusSequenceNumber;
 
     // Schedule an empty transaction to transmit this focus update
-    aFrame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
+    aFrame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY, false);
   }
 
   if (PointerEventHandler::IsPointerEventEnabled()) {
@@ -8837,12 +8837,11 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     timeStart = TimeStamp::Now();
   }
 
-  target->SchedulePaint();
-  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(target);
-  while (parent) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
-    parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
-  }
+  // Schedule a paint, but don't actually mark this frame as changed for
+  // retained DL building purposes. If any child frames get moved, then
+  // they will schedule paint again. We could probaby skip this, and just
+  // schedule a similar paint when a frame is deleted.
+  target->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
 
   nsIURI* uri = mDocument->GetDocumentURI();
   nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");

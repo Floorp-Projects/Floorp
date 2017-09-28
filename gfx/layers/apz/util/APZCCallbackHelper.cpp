@@ -897,7 +897,7 @@ APZCCallbackHelper::NotifyFlushComplete(nsIPresShell* aShell)
   // so we ensure that we kick off a paint when an APZ flush is done. Note that
   // only chrome/testing code can trigger this behaviour.
   if (aShell && aShell->GetRootFrame()) {
-    aShell->GetRootFrame()->SchedulePaint();
+    aShell->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
   }
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();

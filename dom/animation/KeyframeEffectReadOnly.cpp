@@ -975,6 +975,11 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     effectSet->AddEffect(*this);
     mInEffectSet = true;
     UpdateEffectSet(effectSet);
+    nsIFrame* f = mTarget->mElement->GetPrimaryFrame();
+    while (f) {
+      f->MarkNeedsDisplayItemRebuild();
+      f = f->GetNextContinuation();
+    }
   } else if (!isRelevant && mInEffectSet) {
     UnregisterTarget();
   }
@@ -998,6 +1003,11 @@ KeyframeEffectReadOnly::UnregisterTarget()
     if (effectSet->IsEmpty()) {
       EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
     }
+  }
+  nsIFrame* f = mTarget->mElement->GetPrimaryFrame();
+  while (f) {
+    f->MarkNeedsDisplayItemRebuild();
+    f = f->GetNextContinuation();
   }
 }
 
