@@ -34,7 +34,6 @@
 #include "gmp-errors.h"
 #include "gmp-video-frame.h"
 #include "gmp-video-frame-encoded.h"
-#include "gmp-decryption.h"
 #include "mozilla/ipc/Shmem.h"
 #include "nsAutoPtr.h"
 
@@ -45,7 +44,6 @@ namespace gmp {
 
 class GMPVideoHostImpl;
 class GMPVideoEncodedFrameData;
-class GMPEncryptedBufferDataImpl;
 
 class GMPVideoEncodedFrameImpl: public GMPVideoEncodedFrame
 {
@@ -54,8 +52,6 @@ public:
   explicit GMPVideoEncodedFrameImpl(GMPVideoHostImpl* aHost);
   GMPVideoEncodedFrameImpl(const GMPVideoEncodedFrameData& aFrameData, GMPVideoHostImpl* aHost);
   virtual ~GMPVideoEncodedFrameImpl();
-
-  void InitCrypto(const CryptoSample& aCrypto);
 
   // This is called during a normal destroy sequence, which is
   // when a consumer is finished or during XPCOM shutdown.
@@ -97,7 +93,6 @@ public:
   uint8_t* Buffer() override;
   GMPBufferType BufferType() const override;
   void     SetBufferType(GMPBufferType aBufferType) override;
-  const    GMPEncryptedBufferMetadata* GetDecryptionData() const override;
 
 private:
   void DestroyBuffer();
@@ -112,7 +107,6 @@ private:
   GMPVideoHostImpl* mHost;
   ipc::Shmem mBuffer;
   GMPBufferType mBufferType;
-  nsAutoPtr<GMPEncryptedBufferDataImpl> mCrypto;
 };
 
 } // namespace gmp
