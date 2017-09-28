@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+from cStringIO import StringIO
 from functools import partial
 
 import mozunit
@@ -34,20 +35,31 @@ def test_output_pass(runtests):
 
 
 def test_output_fail(runtests):
+    formatter = pytest.importorskip('output').ReftestFormatter()
+
     status, lines = runtests('reftest-fail.list')
     assert status == 0
 
-    tbpl_status, log_level = get_mozharness_status(lines, status)
+    buf = StringIO()
+    tbpl_status, log_level = get_mozharness_status(
+        lines, status, formatter=formatter, buf=buf)
+
     assert tbpl_status == TBPL_WARNING
     assert log_level == WARNING
 
     test_status = filter_action('test_status', lines)
     assert len(test_status) == 3
     assert all(t['status'] == 'FAIL' for t in test_status)
+    assert all('reftest_screenshots' in t['extra'] for t in test_status)
 
     test_end = filter_action('test_end', lines)
     assert len(test_end) == 3
     assert all(t['status'] == 'OK' for t in test_end)
+
+    # ensure screenshots were printed
+    formatted = buf.getvalue()
+    assert 'REFTEST   IMAGE 1' in formatted
+    assert 'REFTEST   IMAGE 2' in formatted
 
 
 @pytest.mark.skip_mozinfo("!crashreporter")
