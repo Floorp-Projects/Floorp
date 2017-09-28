@@ -1367,7 +1367,10 @@ public:
   void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
                         TrackRate aRate, uint32_t aChannels);
 
-  void AssertOnGraphThreadOrNotRunning() const;
+  void AssertOnGraphThreadOrNotRunning() const
+  {
+    MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  }
 
 protected:
   explicit MediaStreamGraph(TrackRate aSampleRate)
@@ -1379,6 +1382,10 @@ protected:
   {
     MOZ_COUNT_DTOR(MediaStreamGraph);
   }
+
+  // Intended only for assertions, either on graph thread, not running, or
+  // with monitor held.
+  bool OnGraphThreadOrNotRunning() const;
 
   // Media graph thread only
   nsTArray<nsCOMPtr<nsIRunnable> > mPendingUpdateRunnables;
