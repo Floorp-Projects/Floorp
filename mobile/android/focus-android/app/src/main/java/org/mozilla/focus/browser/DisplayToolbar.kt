@@ -8,29 +8,18 @@ import android.content.Context
 import android.support.design.widget.AppBarLayout
 import android.util.AttributeSet
 import android.util.TypedValue
-import android.view.View
-
-import org.mozilla.focus.R
-import org.mozilla.focus.widget.AnimatedProgressBar
+import kotlinx.android.synthetic.main.browser_display_toolbar.view.*
 
 /**
  * The toolbar of the BrowserFragment; displaying the URL and other controls.
  */
 class DisplayToolbar(context: Context, attrs: AttributeSet) : AppBarLayout(context, attrs), AppBarLayout.OnOffsetChangedListener {
-    private lateinit var toolbarContent: View
-    private lateinit var progressView: AnimatedProgressBar
-
     private val collapsedProgressTranslationY: Float by lazy {
         TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 2f, resources.displayMetrics)
     }
 
-    override fun onFinishInflate() {
-        super.onFinishInflate()
-
-        toolbarContent = findViewById<View>(R.id.toolbar_content)
-        progressView = findViewById<AnimatedProgressBar>(R.id.progress)
-
+    init {
         addOnOffsetChangedListener(this)
     }
 
@@ -43,7 +32,7 @@ class DisplayToolbar(context: Context, attrs: AttributeSet) : AppBarLayout(conte
 
         // If the toolbar is collapsed then we will move the progress view so that it's
         // still fully visible.
-        progressView.translationY = if (isCollapsed) collapsedProgressTranslationY else 0f
+        progress.translationY = if (isCollapsed) collapsedProgressTranslationY else 0f
 
         if (verticalOffset == 0 || isCollapsed) {
             // If the app bar is completely expanded or collapsed we want full opacity. We

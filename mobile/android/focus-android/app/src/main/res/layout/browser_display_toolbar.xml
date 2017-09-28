@@ -20,7 +20,7 @@
         android:clipChildren="false">
 
         <include
-            android:id="@+id/toolbar_content"
+            android:id="@+id/toolbarContent"
             layout="@layout/toolbar"/>
 
         <org.mozilla.focus.widget.AnimatedProgressBar
