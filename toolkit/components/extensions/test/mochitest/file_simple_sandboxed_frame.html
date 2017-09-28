@@ -12,11 +12,6 @@
 let req = new XMLHttpRequest();
 req.open("GET", "/xhr_sandboxed");
 req.send();
-
-let sandbox = document.createElement("iframe");
-sandbox.setAttribute("sandbox", "allow-scripts");
-sandbox.setAttribute("src", "file_simple_sandboxed_subframe.html");
-document.documentElement.appendChild(sandbox);
 </script>
 <img src="file_image_great.png"/>
 </body>

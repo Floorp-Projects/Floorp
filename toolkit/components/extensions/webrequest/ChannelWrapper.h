@@ -153,8 +153,6 @@ public:
 
   int64_t ParentWindowId() const;
 
-  void GetFrameAncestors(dom::Nullable<nsTArray<dom::MozFrameAncestorInfo>>& aFrameAncestors, ErrorResult& aRv) const;
-
   bool IsSystemLoad() const;
 
   void GetOriginURL(nsCString& aRetVal) const;
@@ -177,6 +175,7 @@ public:
   void GetProxyInfo(dom::Nullable<dom::MozProxyInfo>& aRetVal, ErrorResult& aRv) const;
 
   void GetRemoteAddress(nsCString& aRetVal) const;
+
 
   void GetRequestHeaders(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv) const;
 
@@ -212,8 +211,6 @@ private:
   }
 
   uint64_t WindowId(nsILoadInfo* aLoadInfo) const;
-
-  nsresult GetFrameAncestors(nsILoadInfo* aLoadInfo, nsTArray<dom::MozFrameAncestorInfo>& aFrameAncestors) const;
 
   static uint64_t GetNextId()
   {
