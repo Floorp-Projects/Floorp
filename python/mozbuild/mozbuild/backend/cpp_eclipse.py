@@ -701,6 +701,7 @@ org.eclipse.cdt.core.formatter.use_tabs_only_for_leading_indentations=false
 """
 
 STATIC_CDT_UI_PREFS="""eclipse.preferences.version=1
+ensureNewlineAtEOF=false
 formatter_profile=_Mozilla
 formatter_settings_version=1
 org.eclipse.cdt.ui.formatterprofiles.version=1
