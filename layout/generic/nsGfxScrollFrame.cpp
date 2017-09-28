@@ -3302,6 +3302,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
+  // It's safe to get this value before the DecideScrollableLayer call below
+  // because that call cannot create a displayport for root scroll frames,
+  // and hence it cannot create an ignore scroll frame.
   bool ignoringThisScrollFrame =
     aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping();
 
