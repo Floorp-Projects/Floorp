@@ -54,7 +54,7 @@ async function doTests() {
       version: version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
-      local_is(res.errorCode, 2, "HTTPS origin for test2.example.com shouldn't work");
+      local_is(res.errorCode, 0, "HTTPS origin for test2.example.com should work");
   });
 
   // Test: Sub-sub-domain
@@ -62,7 +62,15 @@ async function doTests() {
       version: version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
-      local_is(res.errorCode, 2, "HTTPS origin for sub.test2.example.com shouldn't work");
+      local_is(res.errorCode, 0, "HTTPS origin for sub.test2.example.com should work");
+  });
+
+  // Test: TLD
+  await promiseU2FRegister("https://com/crazyAppID", [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_is(res.errorCode, 2, "HTTPS origin of the TLD should not work");
   });
 
   // Test: Dynamic origin
