@@ -27,10 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestUpload",
                                   "resource://gre/modules/WebRequestUpload.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "webReqService",
-                                   "@mozilla.org/addons/webrequest-service;1",
-                                   "mozIWebRequestService");
-
 XPCOMUtils.defineLazyGetter(this, "ExtensionError", () => ExtensionUtils.ExtensionError);
 
 function runLater(job) {
@@ -703,34 +699,6 @@ HttpObserverManager = {
     return Object.assign(data, extraData);
   },
 
-  registerChannel(channel, opts) {
-    if (!opts.blockingAllowed || !opts.addonId) {
-      return;
-    }
-
-    if (!channel.registeredFilters) {
-      channel.registeredFilters = new Map();
-    } else if (channel.registeredFilters.has(opts.addonId)) {
-      return;
-    }
-
-    let filter = webReqService.registerTraceableChannel(
-      channel.id,
-      channel.channel,
-      opts.addonId,
-      opts.tabParent);
-
-    channel.registeredFilters.set(opts.addonId, filter);
-  },
-
-  destroyFilters(channel) {
-    let filters = channel.registeredFilters || new Map();
-    for (let [key, filter] of filters.entries()) {
-      filter.destruct();
-      filters.delete(key);
-    }
-  },
-
   handleEvent(event) {
     let channel = event.currentTarget;
     switch (event.type) {
@@ -739,7 +707,6 @@ HttpObserverManager = {
           channel, "onError", {error: channel.errorString});
         break;
       case "start":
-        this.destroyFilters(channel);
         this.runChannelListener(channel, "onStart");
         break;
       case "stop":
@@ -777,8 +744,8 @@ HttpObserverManager = {
         }
         let data = Object.assign({}, commonData);
 
-        if (registerFilter && opts.blocking) {
-          this.registerChannel(channel, opts);
+        if (registerFilter && opts.blocking && opts.extension) {
+          channel.registerTraceableChannel(opts.extension, opts.tabParent);
         }
 
         if (opts.requestHeaders) {
@@ -919,7 +886,6 @@ HttpObserverManager = {
 
     // We want originalURI, this will provide a moz-ext rather than jar or file
     // uri on redirects.
-    this.destroyFilters(channel);
     this.runChannelListener(channel, "onRedirect", {redirectUrl: newChannel.originalURI.spec});
     channel.channel = newChannel;
   },
