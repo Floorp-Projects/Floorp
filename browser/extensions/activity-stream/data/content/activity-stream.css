@@ -92,7 +92,8 @@ body {
   background: #F9F9FA;
   color: #0C0C0D;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
-  font-size: 16px; }
+  font-size: 16px;
+  overflow-y: scroll; }
 
 h1,
 h2 {
