@@ -247,3 +247,60 @@ add_task(async function test_window_open_close_from_browserAction_popup() {
 
   await extension.unload();
 });
+
+add_task(async function test_window_open_in_named_win() {
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+
+  gBrowser.selectedTab = tab1;
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["webNavigation", "tabs", "<all_urls>"],
+    },
+  });
+
+  await extension.startup();
+
+  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
+
+  info("open a url in a new named window from a window.open call");
+
+  await runTestCase({
+    extension,
+    openNavTarget() {
+      extension.sendMessage({
+        type: "execute-contentscript",
+        code: `window.open("${OPENED_PAGE}#new-named-window-open", "TestWinName"); true;`,
+      });
+    },
+    expectedWebNavProps: {
+      sourceTabId: expectedSourceTab.sourceTabId,
+      sourceFrameId: 0,
+      url: `${OPENED_PAGE}#new-named-window-open`,
+    },
+  });
+
+  info("open a url in an existent named window from a window.open call");
+
+  await runTestCase({
+    extension,
+    openNavTarget() {
+      extension.sendMessage({
+        type: "execute-contentscript",
+        code: `window.open("${OPENED_PAGE}#existent-named-window-open", "TestWinName"); true;`,
+      });
+    },
+    expectedWebNavProps: {
+      sourceTabId: expectedSourceTab.sourceTabId,
+      sourceFrameId: 0,
+      url: `${OPENED_PAGE}#existent-named-window-open`,
+    },
+  });
+
+  assertNoPendingCreatedNavigationTargetData();
+
+  await BrowserTestUtils.removeTab(tab1);
+
+  await extension.unload();
+});
