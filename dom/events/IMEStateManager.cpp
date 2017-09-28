@@ -193,6 +193,9 @@ IMEStateManager::Shutdown()
   MOZ_ASSERT(!sTextCompositions || !sTextCompositions->Length());
   delete sTextCompositions;
   sTextCompositions = nullptr;
+  // All string instances in the global space need to be empty after XPCOM
+  // shutdown.
+  sActiveChildInputContext.ShutDown();
 }
 
 // static
