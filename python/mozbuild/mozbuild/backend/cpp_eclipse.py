@@ -117,6 +117,10 @@ class CppEclipseBackend(CommonBackend):
         with open(core_resources_prefs_path, 'wb') as fh:
             fh.write(STATIC_CORE_RESOURCES_PREFS);
 
+        core_runtime_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.core.runtime.prefs')
+        with open(core_runtime_prefs_path, 'wb') as fh:
+            fh.write(STATIC_CORE_RUNTIME_PREFS);
+
         ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.ui.prefs')
         with open(ui_prefs_path, 'wb') as fh:
             fh.write(STATIC_UI_PREFS);
@@ -544,6 +548,10 @@ undoHistorySize=200
 
 STATIC_CORE_RESOURCES_PREFS="""eclipse.preferences.version=1
 refresh.enabled=true
+"""
+
+STATIC_CORE_RUNTIME_PREFS="""eclipse.preferences.version=1
+content-types/org.eclipse.cdt.core.cxxSource/file-extensions=mm
 """
 
 STATIC_UI_PREFS="""eclipse.preferences.version=1
