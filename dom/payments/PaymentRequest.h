@@ -68,13 +68,16 @@ public:
 
   static nsresult
   IsValidDetailsInit(const PaymentDetailsInit& aDetails,
+                     const bool aRequestShipping,
                      nsAString& aErrorMsg);
 
   static nsresult
-  IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails);
+  IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails,
+                       const bool aRequestShipping);
 
   static nsresult
   IsValidDetailsBase(const PaymentDetailsBase& aDetails,
+                     const bool aRequestShipping,
                      nsAString& aErrorMsg);
 
   static already_AddRefed<PaymentRequest>
