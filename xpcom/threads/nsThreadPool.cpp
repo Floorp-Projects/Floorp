@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCOMArray.h"
 #include "nsIClassInfoImpl.h"
 #include "nsThreadPool.h"
 #include "nsThreadManager.h"
@@ -12,6 +13,7 @@
 #include "nsAutoPtr.h"
 #include "prinrval.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SystemGroup.h"
 #include "nsThreadSyncDispatch.h"
 
 using namespace mozilla;
