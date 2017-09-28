@@ -2005,6 +2005,9 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   // since the invariant we'd be breaking in that case is "HasServoData()
   // implies InComposedDoc()", which we rely on in various places.
   UnsetFlags(kAllServoDescendantBits);
+  if (document && document->GetServoRestyleRoot() == this) {
+    document->ClearServoRestyleRoot();
+  }
 }
 
 nsICSSDeclaration*
