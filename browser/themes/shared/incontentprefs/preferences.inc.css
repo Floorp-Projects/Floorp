@@ -696,12 +696,12 @@ button > hbox > label {
 }
 
 .search-tooltip {
+  max-width: 150px;
   font-size: 1.25rem;
   position: absolute;
   padding: 0 10px;
   background-color: #ffe900;
   border: 1px solid #d7b600;
-  -moz-user-select: none;
   bottom: 36px;
 }
 
@@ -730,6 +730,13 @@ button > hbox > label {
 
 .search-tooltip-parent {
   position: relative;
+}
+
+.search-tooltip > span {
+  -moz-user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .visually-hidden {
