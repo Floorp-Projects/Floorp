@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style></style>
+<script>
+function boom() {
+  a = document.createElement("x")
+  a.style.overflow = "o"
+  document.styleSheets[0].insertRule("i {}", 0)
+  requestIdleCallback(function() {
+    document.documentElement.className = "";
+  });
+}
+requestIdleCallback(boom)
+</script>
+</head>
+<i id=id0 style="margin: 15ch">
+<svg><animate xlink:href=#id0 attributeName=width to></svg>
+</html>

@@ -92,7 +92,8 @@ body {
   background: #F9F9FA;
   color: #0C0C0D;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
-  font-size: 16px; }
+  font-size: 16px;
+  overflow-y: scroll; }
 
 h1,
 h2 {
@@ -457,26 +458,24 @@ main {
     padding-inline-start: 3px; }
 
 .topsite-form .form-wrapper {
+  margin: auto;
+  max-width: 350px;
   padding: 15px 0; }
   .topsite-form .form-wrapper .field {
-    margin-inline-start: 205px;
     position: relative; }
   .topsite-form .form-wrapper .url input:not(:placeholder-shown):dir(rtl) {
     direction: ltr;
     text-align: right; }
   .topsite-form .form-wrapper .section-title {
-    margin-bottom: 5px;
-    margin-inline-start: 205px; }
+    margin-bottom: 5px; }
   .topsite-form .form-wrapper input[type='text'] {
     border: solid 1px rgba(12, 12, 13, 0.2);
     border-radius: 2px;
     margin: 5px 0;
     padding: 7px;
-    width: 350px; }
+    width: 100%; }
     .topsite-form .form-wrapper input[type='text']:focus {
       border: solid 1px rgba(12, 12, 13, 0.4); }
-    .topsite-form .form-wrapper input[type='text']::placeholder {
-      font-style: italic; }
   .topsite-form .form-wrapper .invalid input[type='text'] {
     border: solid 1px #D70022;
     box-shadow: 0 0 0 2px rgba(215, 0, 34, 0.35); }
@@ -676,28 +675,19 @@ main {
   width: 100%;
   height: 36px; }
   .search-wrapper input {
-    border: 0;
-    box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
     border: 1px solid rgba(0, 0, 0, 0.15);
-    box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
     border-radius: 3px;
-    border-radius: 4px;
+    box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
     color: inherit;
     padding: 0;
     padding-inline-end: 36px;
     padding-inline-start: 35px;
     width: 100%;
     font-size: 15px; }
-    .search-wrapper input:focus {
-      border-color: #0060DF;
-      box-shadow: 0 0 0 2px #0060DF;
-      z-index: 1; }
-    .search-wrapper input:focus + .search-button {
-      z-index: 1;
-      background-color: #0060DF;
-      background-image: url("chrome://browser/skin/forward.svg");
-      fill: #FFF;
-      -moz-context-properties: fill; }
+  .search-wrapper:active input,
+  .search-wrapper input:focus {
+    border-color: #0A84FF;
+    box-shadow: 0 0 0 2px #0A84FF; }
   .search-wrapper .search-label {
     background: url("chrome://browser/skin/search-glass.svg") no-repeat 12px center/16px;
     fill: rgba(12, 12, 13, 0.4);
@@ -705,8 +695,7 @@ main {
     position: absolute;
     offset-inline-start: 0;
     height: 100%;
-    width: 35px;
-    z-index: 2; }
+    width: 35px; }
   .search-wrapper .search-button {
     background: url("chrome://browser/skin/forward.svg") no-repeat center center;
     border-radius: 0 3px 3px 0;
@@ -718,11 +707,11 @@ main {
     height: 100%;
     offset-inline-end: 0;
     position: absolute; }
-    .search-wrapper .search-button:hover {
-      z-index: 1;
-      background-color: #0060DF;
-      fill: #FFF;
+    .search-wrapper .search-button:focus, .search-wrapper .search-button:hover {
+      background-color: rgba(12, 12, 13, 0.1);
       cursor: pointer; }
+    .search-wrapper .search-button:active {
+      background-color: rgba(12, 12, 13, 0.15); }
     .search-wrapper .search-button:dir(rtl) {
       transform: scaleX(-1); }
   .search-wrapper .contentSearchSuggestionTable {
@@ -1009,13 +998,11 @@ main {
     .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-title {
       color: #0060DF; }
   .card-outer .card-preview-image-outer {
+    background-color: #F9F9FA;
     position: relative;
-    background: linear-gradient(135deg, #B1B1B3, #D7D7DB);
     height: 122px;
     border-radius: 3px 3px 0 0;
     overflow: hidden; }
-    .card-outer .card-preview-image-outer:dir(rtl) {
-      background: linear-gradient(225deg, #B1B1B3, #D7D7DB); }
     .card-outer .card-preview-image-outer::after {
       border-bottom: 1px solid rgba(0, 0, 0, 0.05);
       bottom: 0;
@@ -1028,8 +1015,8 @@ main {
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      transition: opacity 1s;
-      opacity: 0; }
+      opacity: 0;
+      transition: opacity 1s cubic-bezier(0.07, 0.95, 0, 1); }
       .card-outer .card-preview-image-outer .card-preview-image.loaded {
         opacity: 1; }
   .card-outer .card-details {

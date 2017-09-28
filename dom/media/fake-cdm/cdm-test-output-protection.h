@@ -15,7 +15,7 @@
 #endif
 
 namespace mozilla {
-namespace gmptest {
+namespace cdmtest {
 
 #if defined(XP_WIN)
 typedef HRESULT(STDAPICALLTYPE * OPMGetVideoOutputsFromHMONITORProc)
@@ -125,5 +125,5 @@ TestOuputProtectionAPIs()
   FakeDecryptor::Message("OP tests completed");
 }
 
-} // namespace gmptest
+} // namespace cdmtest
 } // namespace mozilla

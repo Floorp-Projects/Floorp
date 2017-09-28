@@ -7,7 +7,6 @@
 #include "GMPVideoHost.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "GMPSharedMemManager.h"
-#include "GMPEncryptedBufferDataImpl.h"
 
 namespace mozilla {
 namespace gmp {
@@ -41,9 +40,6 @@ GMPVideoEncodedFrameImpl::GMPVideoEncodedFrameImpl(const GMPVideoEncodedFrameDat
   mBufferType(aFrameData.mBufferType())
 {
   MOZ_ASSERT(aHost);
-  if (aFrameData.mDecryptionData().mKeyId().Length() > 0) {
-    mCrypto = new GMPEncryptedBufferDataImpl(aFrameData.mDecryptionData());
-  }
   aHost->EncodedFrameCreated(this);
 }
 
@@ -53,18 +49,6 @@ GMPVideoEncodedFrameImpl::~GMPVideoEncodedFrameImpl()
   if (mHost) {
     mHost->EncodedFrameDestroyed(this);
   }
-}
-
-void
-GMPVideoEncodedFrameImpl::InitCrypto(const CryptoSample& aCrypto)
-{
-  mCrypto = new GMPEncryptedBufferDataImpl(aCrypto);
-}
-
-const GMPEncryptedBufferMetadata*
-GMPVideoEncodedFrameImpl::GetDecryptionData() const
-{
-  return mCrypto;
 }
 
 GMPVideoFrameFormat
@@ -105,9 +89,6 @@ GMPVideoEncodedFrameImpl::RelinquishFrameData(GMPVideoEncodedFrameData& aFrameDa
   aFrameData.mCompleteFrame() = mCompleteFrame;
   aFrameData.mBuffer() = mBuffer;
   aFrameData.mBufferType() = mBufferType;
-  if (mCrypto) {
-    mCrypto->RelinquishData(aFrameData.mDecryptionData());
-  }
 
   // This method is called right before Shmem is sent to another process.
   // We need to effectively zero out our member copy so that we don't
@@ -164,7 +145,6 @@ GMPVideoEncodedFrameImpl::CopyFrame(const GMPVideoEncodedFrame& aFrame)
   mSize = f.mSize; // already set...
   mCompleteFrame = f.mCompleteFrame;
   mBufferType = f.mBufferType;
-  mCrypto = new GMPEncryptedBufferDataImpl(*(f.mCrypto));
   // Don't copy host, that should have been set properly on object creation via host.
 
   return GMPNoErr;

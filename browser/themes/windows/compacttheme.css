@@ -20,12 +20,6 @@
   }
 }
 
-@media (-moz-windows-compositor) {
-  #main-window {
-    background: transparent !important;
-  }
-}
-
 #toolbar-menubar {
   text-shadow: none !important;
 }
@@ -46,6 +40,11 @@
 }
 
 @media (-moz-windows-glass) {
+  /* Set to full fill-opacity to improve visibility of toolbar buttons on aero glass. */
+  #TabsToolbar {
+    --toolbarbutton-icon-fill-opacity: 1;
+  }
+
   /* Make the menubar text readable on aero glass (copied from browser-aero.css). */
   #toolbar-menubar {
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
@@ -60,6 +59,12 @@
 
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
+  @media (-moz-windows-compositor) {
+    #main-window {
+      background: transparent !important;
+    }
+  }
+
   /* Always show full-height tab separators on tabs with borders. */
   .tabbrowser-tab::before {
     border-image: none !important;

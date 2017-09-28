@@ -10,7 +10,7 @@ import subprocess
 import mozunit
 import pytest
 
-from mozlint.vcs import VCSHelper, vcs_class
+from mozversioncontrol import get_repository_object
 
 
 setup = {
@@ -95,29 +95,28 @@ def assert_files(actual, expected):
     assert set(map(os.path.basename, actual)) == set(expected)
 
 
-def test_vcs_helper(repo):
-    vcs = VCSHelper.create()
-    assert vcs.__class__ == vcs_class[repo.vcs]
-    assert vcs.root == repo.strpath
+def test_workdir_outgoing(repo):
+    vcs = get_repository_object(repo.strpath)
+    assert vcs.path == repo.strpath
 
     remotepath = '../remoterepo' if repo.vcs == 'hg' else 'upstream/master'
 
     next(repo.setup)
 
-    assert_files(vcs.by_workdir('all'), ['bar', 'baz'])
+    assert_files(vcs.get_changed_files('AM', 'all'), ['bar', 'baz'])
     if repo.vcs == 'git':
-        assert_files(vcs.by_workdir('staged'), ['baz'])
+        assert_files(vcs.get_changed_files('AM', mode='staged'), ['baz'])
     elif repo.vcs == 'hg':
-        assert_files(vcs.by_workdir('staged'), ['bar', 'baz'])
-    assert_files(vcs.by_outgoing(), [])
-    assert_files(vcs.by_outgoing(remotepath), [])
+        assert_files(vcs.get_changed_files('AM', 'staged'), ['bar', 'baz'])
+    assert_files(vcs.get_outgoing_files('AM'), [])
+    assert_files(vcs.get_outgoing_files('AM', remotepath), [])
 
     next(repo.setup)
 
-    assert_files(vcs.by_workdir('all'), [])
-    assert_files(vcs.by_workdir('staged'), [])
-    assert_files(vcs.by_outgoing(), ['bar', 'baz'])
-    assert_files(vcs.by_outgoing(remotepath), ['bar', 'baz'])
+    assert_files(vcs.get_changed_files('AM', 'all'), [])
+    assert_files(vcs.get_changed_files('AM', 'staged'), [])
+    assert_files(vcs.get_outgoing_files('AM'), ['bar', 'baz'])
+    assert_files(vcs.get_outgoing_files('AM', remotepath), ['bar', 'baz'])
 
 
 if __name__ == '__main__':

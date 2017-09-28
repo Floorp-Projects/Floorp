@@ -343,7 +343,7 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor, nsHttpHeaderArray
             hdr = entry.headerNameOriginal;
         }
         rv = visitor->VisitHeader(hdr, entry.value);
-        if NS_FAILED(rv) {
+        if (NS_FAILED(rv)) {
             return rv;
         }
     }

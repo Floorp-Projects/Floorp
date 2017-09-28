@@ -642,14 +642,12 @@ hr[size="1"] {
 
 img:-moz-broken::before, input:-moz-broken::before,
 img:-moz-user-disabled::before, input:-moz-user-disabled::before,
-img:-moz-loading::before, input:-moz-loading::before,
-applet:-moz-empty-except-children-with-localname(param):-moz-broken::before,
-applet:-moz-empty-except-children-with-localname(param):-moz-user-disabled::before {
+img:-moz-loading::before, input:-moz-loading::before {
   content: -moz-alt-content !important;
   unicode-bidi: isolate;
 }
 
-:-moz-any(object,applet):-moz-any(:-moz-broken,:-moz-user-disabled) > *|* {
+object:-moz-any(:-moz-broken,:-moz-user-disabled) > *|* {
   /*
     Inherit in the object's alignment so that if we aren't aligned explicitly
     we'll end up in the right place vertically.  See bug 36997.  Note that this
@@ -659,7 +657,7 @@ applet:-moz-empty-except-children-with-localname(param):-moz-user-disabled::befo
 }
 
 img:-moz-suppressed, input:-moz-suppressed, object:-moz-suppressed,
-embed:-moz-suppressed, applet:-moz-suppressed {
+embed:-moz-suppressed {
   /*
     Set visibility too in case the page changes display.  Note that we _may_
     want to just set visibility and not display, in general, if we find that

@@ -9,7 +9,7 @@ This tests, tests the triggers that adjust the foreign_count when a bookmark is
 added or removed and also the maintenance task to fix wrong counts.
 */
 
-const T_URI = NetUtil.newURI("https://www.mozilla.org/firefox/nightly/firstrun/");
+const T_URI = Services.io.newURI("https://www.mozilla.org/firefox/nightly/firstrun/");
 
 async function getForeignCountForURL(conn, url) {
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -28,30 +28,36 @@ add_task(async function add_remove_change_bookmark_test() {
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 0);
 
   // Add 1st bookmark which should increment foreign_count by 1
-  let id1 = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                    T_URI, PlacesUtils.bookmarks.DEFAULT_INDEX, "First Run");
+  let bm1 = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "First Run",
+    url: T_URI,
+  });
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 1);
 
   // Add 2nd bookmark
-  let id2 = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
-                      T_URI, PlacesUtils.bookmarks.DEFAULT_INDEX, "First Run");
+  let bm2 = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "First Run",
+    url: T_URI,
+  });
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 2);
 
   // Remove 2nd bookmark which should decrement foreign_count by 1
-  PlacesUtils.bookmarks.removeItem(id2);
+  await PlacesUtils.bookmarks.remove(bm2);
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 1);
 
   // Change first bookmark's URI
-  const URI2 = NetUtil.newURI("http://www.mozilla.org");
-  PlacesUtils.bookmarks.changeBookmarkURI(id1, URI2);
+  const URI2 = Services.io.newURI("http://www.mozilla.org")
+  bm1.url = URI2;
+  bm1 = await PlacesUtils.bookmarks.update(bm1);
   // Check foreign count for original URI
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 0);
   // Check foreign count for new URI
   Assert.equal((await getForeignCountForURL(conn, URI2)), 1);
 
   // Cleanup - Remove changed bookmark
-  let id = PlacesUtils.bookmarks.getBookmarkIdsForURI(URI2);
-  PlacesUtils.bookmarks.removeItem(id);
+  await PlacesUtils.bookmarks.remove(bm1);
   Assert.equal((await getForeignCountForURL(conn, URI2)), 0);
 
 });

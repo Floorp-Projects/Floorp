@@ -7,6 +7,7 @@ var pairs = [
   ["javascript:", ""],
   ["javascript:1+1", "1+1"],
   ["javascript:document.domain", "document.domain"],
+  [" \u0001\u0002\u0003\u0004\u0005\u0006\u0007\u0008\u0009javascript:document.domain", "document.domain"],
   ["java\nscript:foo", "foo"],
   ["http://\nexample.com", "http://example.com"],
   ["http://\nexample.com\n", "http://example.com"],

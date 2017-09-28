@@ -34,9 +34,9 @@ with Files('GetUserMedia*'):
 DIRS += [
     'eme',
     'encoder',
+    'fake-cdm',
     'flac',
     'gmp',
-    'gmp-plugin',
     'gmp-plugin-openh264',
     'imagecapture',
     'ipc',
