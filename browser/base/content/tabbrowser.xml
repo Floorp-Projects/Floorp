@@ -7684,7 +7684,7 @@
                   class="tab-loading-burst"/>
         <xul:hbox xbl:inherits="pinned,selected=visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
-          <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected"
+          <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected,notselectedsinceload"
                     anonid="tab-throbber"
                     class="tab-throbber"
                     layer="true"/>
