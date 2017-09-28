@@ -92,14 +92,14 @@
   to { transform: perspective(5000px) rotateY(360deg); }
 }
 
-:root:not([uidensity=compact]) #PanelUI-button {
+:root:not([uidensity=compact]):not([chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
   border-inline-start: 1px solid;
   border-image: linear-gradient(transparent 4px, rgba(0,0,0,.1) 4px, rgba(0,0,0,.1) calc(100% - 4px), transparent calc(100% - 4px));
   border-image-slice: 1;
 }
 
-:root:not([uidensity=compact]) #nav-bar[brighttext] > #PanelUI-button {
+:root:not([uidensity=compact]):not([chromehidden~="toolbar"]) #nav-bar[brighttext] > #PanelUI-button {
   border-image-source: linear-gradient(transparent 4px, rgba(100%,100%,100%,.2) 4px, rgba(100%,100%,100%,.2) calc(100% - 4px), transparent calc(100% - 4px));
 }
 
