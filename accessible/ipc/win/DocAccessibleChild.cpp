@@ -227,10 +227,11 @@ DocAccessibleChild::SendTextChangeEvent(const uint64_t& aID,
                                         const int32_t& aStart,
                                         const uint32_t& aLen,
                                         const bool& aIsInsert,
-                                        const bool& aFromUser)
+                                        const bool& aFromUser,
+                                        const bool aDoSyncCheck)
 {
   if (IsConstructedInParentProcess()) {
-    if (aStr.Contains(L'\xfffc')) {
+    if (aDoSyncCheck && aStr.Contains(L'\xfffc')) {
       // The AT is going to need to reenter content while the event is being
       // dispatched synchronously.
       return PDocAccessibleChild::SendSyncTextChangeEvent(aID, aStr, aStart,

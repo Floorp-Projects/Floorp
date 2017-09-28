@@ -7,6 +7,7 @@
 #define NSSVGEFFECTS_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/IDTracker.h"
 #include "FrameProperties.h"
 #include "mozilla/dom/Element.h"
 #include "nsHashKeys.h"
@@ -16,7 +17,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
-#include "nsReferencedElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGUtils.h"
 #include "nsTHashtable.h"
@@ -113,6 +113,8 @@ class nsSVGIDRenderingObserver : public nsSVGRenderingObserver
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::dom::IDTracker IDTracker;
+
   nsSVGIDRenderingObserver(nsIURI* aURI, nsIContent* aObservingContent,
                          bool aReferenceImage);
   virtual ~nsSVGIDRenderingObserver();
@@ -123,14 +125,14 @@ protected:
   // This is called when the referenced resource changes.
   virtual void DoUpdate() override;
 
-  class SourceReference : public nsReferencedElement
+  class SourceReference : public IDTracker
   {
   public:
     explicit SourceReference(nsSVGIDRenderingObserver* aContainer) : mContainer(aContainer) {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
       mContainer->StopListening();
-      nsReferencedElement::ElementChanged(aFrom, aTo);
+      IDTracker::ElementChanged(aFrom, aTo);
       mContainer->StartListening();
       mContainer->DoUpdate();
     }

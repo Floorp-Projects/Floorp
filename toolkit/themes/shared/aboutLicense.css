@@ -1,0 +1,15 @@
+/* License Illustration */
+
+.license-header {
+  background-image: url("chrome://global/skin/illustrations/about-license.svg");
+  background-repeat: no-repeat;
+  background-position: right center;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  padding-inline-end: 320px;
+}
+
+body[dir="rtl"] .rights-header {
+  background-position-x: left;
+}

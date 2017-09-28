@@ -113,7 +113,7 @@ nsHyphenationManager::GetHyphenator(nsIAtom *aLocale)
       }
       int32_t i = localeStr.RFindChar('-');
       if (i > 1) {
-        localeStr.Replace(i, localeStr.Length() - i, "-*");
+        localeStr.ReplaceLiteral(i, localeStr.Length() - i, "-*");
         RefPtr<nsIAtom> fuzzyLocale = NS_Atomize(localeStr);
         return GetHyphenator(fuzzyLocale);
       } else {

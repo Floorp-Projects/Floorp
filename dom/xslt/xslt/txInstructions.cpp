@@ -39,7 +39,16 @@ txApplyDefaultElementTemplate::execute(txExecutionState& aEs)
 }
 
 nsresult
-txApplyImports::execute(txExecutionState& aEs)
+txApplyImportsEnd::execute(txExecutionState& aEs)
+{
+    aEs.popTemplateRule();
+    RefPtr<txParameterMap> paramMap = aEs.popParamMap();
+
+    return NS_OK;
+}
+
+nsresult
+txApplyImportsStart::execute(txExecutionState& aEs)
 {
     txExecutionState::TemplateRule* rule = aEs.getCurrentTemplateRule();
     // The frame is set to null when there is no current template rule, or
@@ -50,23 +59,22 @@ txApplyImports::execute(txExecutionState& aEs)
         return NS_ERROR_XSLT_EXECUTION_FAILURE;
     }
 
-    nsresult rv = aEs.pushParamMap(rule->mParams);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aEs.pushParamMap(rule->mParams);
 
     txStylesheet::ImportFrame* frame = 0;
     txExpandedName mode(rule->mModeNsId, rule->mModeLocalName);
     txInstruction* templ;
-    rv = aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
-                                       mode, &aEs, rule->mFrame, &templ,
-                                       &frame);
+    nsresult rv = aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
+                                                mode, &aEs, rule->mFrame, &templ,
+                                                &frame);
     NS_ENSURE_SUCCESS(rv, rv);
 
     aEs.pushTemplateRule(frame, mode, rule->mParams);
 
     rv = aEs.runTemplate(templ);
-
-    aEs.popTemplateRule();
-    aEs.popParamMap();
+    if (NS_FAILED(rv)) {
+      aEs.popTemplateRule();
+    }
 
     return rv;
 }
@@ -573,7 +581,7 @@ txNumber::execute(txExecutionState& aEs)
 nsresult
 txPopParams::execute(txExecutionState& aEs)
 {
-    delete aEs.popParamMap();
+    RefPtr<txParameterMap> paramMap = aEs.popParamMap();
 
     return NS_OK;
 }
@@ -694,7 +702,8 @@ txPushNullTemplateRule::execute(txExecutionState& aEs)
 nsresult
 txPushParams::execute(txExecutionState& aEs)
 {
-    return aEs.pushParamMap(nullptr);
+    aEs.pushParamMap(nullptr);
+    return NS_OK;
 }
 
 nsresult
@@ -760,8 +769,7 @@ txSetParam::execute(txExecutionState& aEs)
 {
     nsresult rv = NS_OK;
     if (!aEs.mTemplateParams) {
-        aEs.mTemplateParams = new txVariableMap;
-        NS_ENSURE_TRUE(aEs.mTemplateParams, NS_ERROR_OUT_OF_MEMORY);
+        aEs.mTemplateParams = new txParameterMap;
     }
 
     RefPtr<txAExprResult> exprRes;

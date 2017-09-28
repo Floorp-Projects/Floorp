@@ -1418,7 +1418,7 @@ js::RegExpGetSubstitution(JSContext* cx, HandleObject matchResult, HandleLinearS
                           size_t firstDollarIndex, MutableHandleValue rval)
 {
     MOZ_ASSERT(firstDollarIndex < replacement->length());
-    MOZ_ASSERT(matchResult->is<ArrayObject>() || matchResult->is<UnboxedArrayObject>());
+    MOZ_ASSERT(matchResult->is<ArrayObject>());
 
     // Step 1 (skipped).
 

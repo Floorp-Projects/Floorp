@@ -108,9 +108,11 @@ RequestContext::BeginLoad()
 
   LOG(("RequestContext::BeginLoad %p", this));
 
-  if (IsNeckoChild() && gNeckoChild) {
+  if (IsNeckoChild()) {
     // Tailing is not supported on the child process
-    gNeckoChild->SendRequestContextLoadBegin(mID);
+    if (gNeckoChild) {
+      gNeckoChild->SendRequestContextLoadBegin(mID);
+    }
     return NS_OK;
   }
 

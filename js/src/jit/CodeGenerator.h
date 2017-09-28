@@ -245,10 +245,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitSubstr(LSubstr* lir);
     void visitInitializedLength(LInitializedLength* lir);
     void visitSetInitializedLength(LSetInitializedLength* lir);
-    void visitUnboxedArrayLength(LUnboxedArrayLength* lir);
-    void visitUnboxedArrayInitializedLength(LUnboxedArrayInitializedLength* lir);
-    void visitIncrementUnboxedArrayInitializedLength(LIncrementUnboxedArrayInitializedLength* lir);
-    void visitSetUnboxedArrayInitializedLength(LSetUnboxedArrayInitializedLength* lir);
     void visitNotO(LNotO* ins);
     void visitNotV(LNotV* ins);
     void visitBoundsCheck(LBoundsCheck* lir);
