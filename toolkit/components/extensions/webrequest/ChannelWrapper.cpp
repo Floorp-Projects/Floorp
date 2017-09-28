@@ -20,6 +20,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsIContentPolicy.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -630,6 +631,39 @@ ChannelWrapper::GetFrameAncestors(nsILoadInfo* aLoadInfo, nsTArray<dom::MozFrame
 }
 
 /*****************************************************************************
+ * Response filtering
+ *****************************************************************************/
+
+void
+ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon, nsITabParent* aTabParent)
+{
+  mAddonEntries.Put(aAddon.Id(), aTabParent);
+  if (!mChannelEntry) {
+    mChannelEntry = WebRequestService::GetSingleton().RegisterChannel(this);
+    CheckEventListeners();
+  }
+}
+
+already_AddRefed<nsITraceableChannel>
+ChannelWrapper::GetTraceableChannel(nsIAtom* aAddonId, dom::nsIContentParent* aContentParent) const
+{
+  nsCOMPtr<nsITabParent> tabParent;
+  if (mAddonEntries.Get(aAddonId, getter_AddRefs(tabParent))) {
+    nsIContentParent* contentParent = nullptr;
+    if (tabParent) {
+      contentParent = static_cast<nsIContentParent*>(
+          static_cast<TabParent*>(tabParent.get())->Manager());
+    }
+
+    if (contentParent == aContentParent) {
+      nsCOMPtr<nsITraceableChannel> chan = QueryChannel();
+      return chan.forget();
+    }
+  }
+  return nullptr;
+}
+
+/*****************************************************************************
  * ...
  *****************************************************************************/
 
@@ -850,6 +884,7 @@ ChannelWrapper::ErrorCheck()
     nsAutoString error;
     GetErrorString(error);
     if (error.Length()) {
+      mChannelEntry = nullptr;
       mFiredErrorEvent = true;
       ChannelWrapperBinding::ClearCachedErrorStringValue(this);
       FireEvent(NS_LITERAL_STRING("error"));
@@ -885,6 +920,7 @@ ChannelWrapper::RequestListener::OnStartRequest(nsIRequest *request, nsISupports
 {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
+  mChannelWrapper->mChannelEntry = nullptr;
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(NS_LITERAL_STRING("start"));
 
@@ -897,6 +933,7 @@ ChannelWrapper::RequestListener::OnStopRequest(nsIRequest *request, nsISupports 
 {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
+  mChannelWrapper->mChannelEntry = nullptr;
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(NS_LITERAL_STRING("stop"));
 
@@ -948,7 +985,8 @@ ChannelWrapper::CheckEventListeners()
 {
   if (!mAddedStreamListener && (HasListenersFor(nsGkAtoms::onerror) ||
                                 HasListenersFor(nsGkAtoms::onstart) ||
-                                HasListenersFor(nsGkAtoms::onstop))) {
+                                HasListenersFor(nsGkAtoms::onstop) ||
+                                mChannelEntry)) {
     auto listener = MakeRefPtr<RequestListener>(this);
     if (!NS_WARN_IF(NS_FAILED(listener->Init()))) {
       mAddedStreamListener = true;

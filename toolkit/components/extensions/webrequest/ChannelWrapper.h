@@ -10,11 +10,14 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChannelWrapperBinding.h"
 
+#include "mozilla/WebRequestService.h"
 #include "mozilla/extensions/MatchPattern.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
@@ -22,7 +25,10 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIStreamListener.h"
+#include "nsITabParent.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsPointerHashKeys.h"
+#include "nsInterfaceHashtable.h"
 #include "nsWeakPtr.h"
 #include "nsWrapperCache.h"
 
@@ -32,8 +38,12 @@
 
 class nsIDOMElement;
 class nsILoadContext;
+class nsITraceableChannel;
 
 namespace mozilla {
+namespace dom {
+  class nsIContentParent;
+}
 namespace extensions {
 
 namespace detail {
@@ -97,10 +107,14 @@ namespace detail {
   };
 }
 
+class WebRequestChannelEntry;
+
 class ChannelWrapper final : public DOMEventTargetHelper
+                           , public SupportsWeakPtr<ChannelWrapper>
                            , private detail::ChannelHolder
 {
 public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ChannelWrapper)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ChannelWrapper, DOMEventTargetHelper)
 
@@ -128,6 +142,11 @@ public:
 
   void GetContentType(nsCString& aContentType) const;
   void SetContentType(const nsACString& aContentType);
+
+
+  void RegisterTraceableChannel(const WebExtensionPolicy& aAddon, nsITabParent* aTabParent);
+
+  already_AddRefed<nsITraceableChannel> GetTraceableChannel(nsIAtom* aAddonId, dom::nsIContentParent* aContentParent) const;
 
 
   void GetMethod(nsCString& aRetVal) const;
@@ -268,6 +287,9 @@ private:
   bool mAddedStreamListener = false;
   bool mFiredErrorEvent = false;
   bool mSuspended = false;
+
+
+  nsInterfaceHashtable<nsPtrHashKey<const nsIAtom>, nsITabParent> mAddonEntries;
 
 
   class RequestListener final : public nsIStreamListener
