@@ -86,15 +86,18 @@ add_task(async function test_reader_mode() {
   extension.sendMessage("enterReaderMode", true);
   tab = await extension.awaitMessage("tabUpdated");
   ok(tab.url.startsWith(READER_MODE_PREFIX), "Tab url indicates reader mode.");
+  ok(tab.isInReaderMode, "tab.isInReaderMode indicates reader mode.");
 
   extension.sendMessage("leaveReaderMode");
   tab = await extension.awaitMessage("tabUpdated");
   ok(!tab.url.startsWith(READER_MODE_PREFIX), "Tab url does not indicate reader mode.");
+  ok(!tab.isInReaderMode, "tab.isInReaderMode does not indicate reader mode.");
 
   extension.sendMessage("updateUrl", false, `${TEST_PATH}readerModeNonArticle.html`);
   tab = await extension.awaitMessage("tabUpdated");
   ok(!tab.url.startsWith(READER_MODE_PREFIX), "Tab url does not indicate reader mode.");
   ok(!tab.isArticle, "Tab is not readerable.");
+  ok(!tab.isInReaderMode, "tab.isInReaderMode does not indicate reader mode.");
 
   extension.sendMessage("enterReaderMode", false);
   await extension.awaitMessage("enterFailed");
