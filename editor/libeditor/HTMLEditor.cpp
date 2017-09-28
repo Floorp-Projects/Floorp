@@ -1728,7 +1728,6 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
 
   // get selection location
   nsCOMPtr<nsINode> parent = selection->GetRangeAt(0)->GetStartContainer();
-  int32_t offset = selection->GetRangeAt(0)->StartOffset();
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
 
   // is the selection collapsed?
@@ -1739,7 +1738,7 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   } else {
     // otherwise we want to look at the first editable node after
     // {parent,offset} and its ancestors for divs with alignment on them
-    nodeToExamine = parent->GetChildAt(offset);
+    nodeToExamine = selection->GetRangeAt(0)->GetChildAtStartOffset();
     //GetNextNode(parent, offset, true, address_of(nodeToExamine));
   }
 
