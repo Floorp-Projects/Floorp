@@ -1,5 +1,7 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+/* global registerAppManifest */
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 

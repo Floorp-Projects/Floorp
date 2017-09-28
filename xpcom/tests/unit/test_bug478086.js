@@ -13,7 +13,7 @@ function run_test() {
     root.initWithPath("\\\\.");
   } else {
     return; // XXX disabled, since this causes intermittent failures on Mac (bug 481369).
-    root.initWithPath("/");
+    // root.initWithPath("/");
   }
   var drives = root.directoryEntries;
   do_check_true(drives.hasMoreElements());

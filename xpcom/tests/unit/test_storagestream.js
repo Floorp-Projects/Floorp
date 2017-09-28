@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "unusedVariable" }] */
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
@@ -24,7 +26,7 @@ function test1() {
              .createInstance(Ci.nsIStorageStream);
   ss.init(1024, 1024, null);
 
-  var out = ss.getOutputStream(0);
+  var unusedVariable = ss.getOutputStream(0);
   var inp2 = ss.newInputStream(0);
   do_check_eq(inp2.available(), 0);
   do_check_true(inp2.isNonBlocking());
@@ -59,7 +61,7 @@ function test2() {
   var out = ss.getOutputStream(0);
   out.write("", 0);
   try {
-    var inp2 = ss.newInputStream(0);
+    ss.newInputStream(0);
   } catch (e) {
     do_throw("shouldn't throw exception when new input stream created");
   }
@@ -87,7 +89,7 @@ function test3() {
   try {
     var threw = false;
     var bis = BIS(inp);
-    var dummy = bis.readByteArray(5);
+    bis.readByteArray(5);
   } catch (e) {
     if (e.result != Cr.NS_BASE_STREAM_WOULD_BLOCK)
       do_throw("wrong error thrown: " + e);
