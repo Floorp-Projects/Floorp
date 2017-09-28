@@ -44,7 +44,7 @@ CalculateMD5(const char *data, DWORD dataSize,
 
   if (!CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_FULL,
                            CRYPT_VERIFYCONTEXT)) {
-    if (NTE_BAD_KEYSET != GetLastError()) {
+    if ((DWORD)NTE_BAD_KEYSET != GetLastError()) {
       return FALSE;
     }
 
