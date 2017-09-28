@@ -78,13 +78,13 @@ class GeckoViewNavigation extends GeckoViewModule {
           " aWhere=" + aWhere +
           " aFlags=" + aFlags);
 
-    if (!aUri || !this.isRegistered) {
+    if (!this.isRegistered) {
       return false;
     }
 
     let message = {
       type: "GeckoView:OnLoadUri",
-      uri: aUri.displaySpec,
+      uri: aUri ? aUri.displaySpec : "",
       where: aWhere,
       flags: aFlags
     };
