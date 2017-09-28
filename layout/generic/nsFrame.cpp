@@ -2612,6 +2612,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     inTransform = true;
   }
 
+  bool hasOverrideDirtyRect = false;
+  if (HasOverrideDirtyRegion() && !aBuilder->InInvalidSubtree()) {
+    nsDisplayListBuilder::DisplayListBuildingData* data =
+      GetProperty(nsDisplayListBuilder::DisplayListBuildingRect());
+    if (data) {
+      dirtyRect = data->mDirtyRect.Intersect(visibleRect);
+      hasOverrideDirtyRect = true;
+    }
+  }
   bool usingFilter = StyleEffects()->HasFilters();
   bool usingMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
   bool usingSVGEffects = usingFilter || usingMask;
