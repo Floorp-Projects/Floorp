@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.util;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -30,7 +31,7 @@ import java.lang.reflect.Constructor;
 public class ShortcutUtils {
     private static final String LOG_TAG = "ShortcutUtils";
 
-	public static void createHomescreenIcon(final Intent shortcutIntent, final String aTitle,
+    public static void createHomescreenIcon(final Intent shortcutIntent, final String aTitle,
                                              final String aURI, final Bitmap aIcon) {
         final Context context = GeckoAppShell.getApplicationContext();
 
@@ -63,6 +64,7 @@ public class ShortcutUtils {
         urlAnnotations.insertHomeScreenShortcut(context.getContentResolver(), aURI, true);
     }
 
+    @TargetApi(26)
     private static void createHomescreenIcon26(final Context context, final Intent shortcutIntent,
                                                final String aTitle, final String aURI, final Bitmap aIcon) {
         try {
