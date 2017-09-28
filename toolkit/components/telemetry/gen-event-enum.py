@@ -72,7 +72,7 @@ def main(output, *filenames):
 
         print("};\n", file=output)
 
-    print("const uint32_t EventCount = %d;\n" % index, file=output)
+    print("constexpr uint32_t EventCount = %d;\n" % index, file=output)
 
     print(file_footer, file=output)
 
