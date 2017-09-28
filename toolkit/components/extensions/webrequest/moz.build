@@ -4,16 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPIDL_SOURCES += [
-    'mozIWebRequestService.idl',
-    'nsIWebRequestListener.idl',
-]
-
-XPIDL_MODULE = 'webextensions'
-
 UNIFIED_SOURCES += [
     'ChannelWrapper.cpp',
-    'nsWebRequestListener.cpp',
     'StreamFilter.cpp',
     'StreamFilterChild.cpp',
     'StreamFilterEvents.cpp',
@@ -23,10 +15,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     'PStreamFilter.ipdl',
-]
-
-EXPORTS += [
-    'nsWebRequestListener.h',
 ]
 
 EXPORTS.mozilla += [

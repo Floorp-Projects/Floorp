@@ -1156,19 +1156,19 @@ js::CloneObject(JSContext* cx, HandleObject obj, Handle<js::TaggedProto> proto)
 }
 
 static bool
-GetScriptArrayObjectElements(JSContext* cx, HandleObject obj, MutableHandle<GCVector<Value>> values)
+GetScriptArrayObjectElements(JSContext* cx, HandleArrayObject arr,
+                             MutableHandle<GCVector<Value>> values)
 {
-    MOZ_ASSERT(!obj->isSingleton());
-    MOZ_ASSERT(obj->is<ArrayObject>());
-    MOZ_ASSERT_IF(obj->isNative(), !obj->as<NativeObject>().isIndexed());
+    MOZ_ASSERT(!arr->isSingleton());
+    MOZ_ASSERT(!arr->isIndexed());
 
-    size_t length = GetAnyBoxedOrUnboxedArrayLength(obj);
+    size_t length = arr->length();
     if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), length))
         return false;
 
-    size_t initlen = GetAnyBoxedOrUnboxedInitializedLength(obj);
+    size_t initlen = arr->getDenseInitializedLength();
     for (size_t i = 0; i < initlen; i++)
-        values[i].set(GetAnyBoxedOrUnboxedDenseElement(obj, i));
+        values[i].set(arr->getDenseElement(i));
 
     return true;
 }
@@ -1246,7 +1246,7 @@ js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj, NewObjectKind newKin
 
     if (obj->is<ArrayObject>()) {
         Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
-        if (!GetScriptArrayObjectElements(cx, obj, &values))
+        if (!GetScriptArrayObjectElements(cx, obj.as<ArrayObject>(), &values))
             return nullptr;
 
         // Deep clone any elements.
@@ -1374,8 +1374,11 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
 
     if (isArray) {
         Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
-        if (mode == XDR_ENCODE && !GetScriptArrayObjectElements(cx, obj, &values))
-            return false;
+        if (mode == XDR_ENCODE) {
+            RootedArrayObject arr(cx, &obj->as<ArrayObject>());
+            if (!GetScriptArrayObjectElements(cx, arr, &values))
+                return false;
+        }
 
         uint32_t initialized;
         if (mode == XDR_ENCODE)
@@ -2969,7 +2972,7 @@ js::WatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id, JS::Hand
 
     WatchpointMap* wpmap = cx->compartment()->watchpointMap;
     if (!wpmap) {
-        wpmap = cx->runtime()->new_<WatchpointMap>();
+        wpmap = cx->zone()->new_<WatchpointMap>();
         if (!wpmap || !wpmap->init()) {
             ReportOutOfMemory(cx);
             js_delete(wpmap);

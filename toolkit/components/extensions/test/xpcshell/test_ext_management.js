@@ -22,6 +22,7 @@ add_task(async function test_management_getAll() {
       },
       name: id,
       version: "1.0",
+      short_name: id,
       permissions: ["management"],
     };
   }
@@ -55,11 +56,18 @@ add_task(async function test_management_getAll() {
   for (let id of [id1, id2]) {
     let addon = addons.find(a => { return a.id === id; });
     equal(addon.name, id, `The extension with id ${id} was returned by getAll.`);
+    equal(addon.shortName, id, "Additional extension metadata was correct");
   }
 
   extension2.sendMessage("getAddon", id1);
   let addon = await extension2.awaitMessage("addon");
   equal(addon.name, id1, `The extension with id ${id1} was returned by get.`);
+  equal(addon.shortName, id1, "Additional extension metadata was correct");
+
+  extension2.sendMessage("getAddon", id2);
+  addon = await extension2.awaitMessage("addon");
+  equal(addon.name, id2, `The extension with id ${id2} was returned by get.`);
+  equal(addon.shortName, id2, "Additional extension metadata was correct");
 
   await extension2.unload();
   await extension1.unload();

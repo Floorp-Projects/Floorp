@@ -643,7 +643,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     } else {
         gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
     }
-    gl.clear_color(0.3, 0.0, 0.0, 1.0);
+    gl.clear_color(0.0, 0.0, 0.0, 1.0);
 
     let version = gl.get_string(gl::VERSION);
 

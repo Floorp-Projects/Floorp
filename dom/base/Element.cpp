@@ -154,6 +154,7 @@
 #include "DOMIntersectionObserver.h"
 
 #include "nsISpeculativeConnect.h"
+#include "nsIIOService.h"
 
 #include "DOMMatrix.h"
 

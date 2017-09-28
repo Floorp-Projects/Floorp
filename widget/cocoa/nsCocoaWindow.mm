@@ -3156,10 +3156,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   if (changed) {
     [self updateContentViewSize];
     [self reflowTitlebarElements];
-    if ([self respondsToSelector:@selector(setTitleVisibility:)]) {
-      [self setTitleVisibility:mDrawsIntoWindowFrame ? NSWindowTitleHidden :
-                                                       NSWindowTitleVisible];
-    }
     if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
       [self setTitlebarAppearsTransparent:mDrawsIntoWindowFrame];
     }
@@ -3174,6 +3170,10 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle
 {
   mDrawTitle = aDrawTitle;
+  if ([self respondsToSelector:@selector(setTitleVisibility:)]) {
+    [self setTitleVisibility:mDrawTitle ? NSWindowTitleVisible :
+                                          NSWindowTitleHidden];
+  }
 }
 
 - (BOOL)wantsTitleDrawn

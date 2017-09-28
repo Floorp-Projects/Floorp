@@ -48,7 +48,6 @@
 #include "vm/CommonPropertyNames.h"
 #include "vm/DateTime.h"
 #include "vm/GeckoProfiler.h"
-#include "vm/MallocProvider.h"
 #include "vm/Scope.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Stack.h"
@@ -981,6 +980,8 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     JS_FRIEND_API(void*) onOutOfMemoryCanGC(js::AllocFunction allocator, size_t nbytes,
                                             void* reallocPtr = nullptr);
 
+    static const unsigned LARGE_ALLOCATION = 25 * 1024 * 1024;
+
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes* runtime);
 
   private:
@@ -1015,38 +1016,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     /* See comment for JS::SetOutOfMemoryCallback in jsapi.h. */
     js::ActiveThreadData<JS::OutOfMemoryCallback> oomCallback;
     js::ActiveThreadData<void*> oomCallbackData;
-
-    /*
-     * These variations of malloc/calloc/realloc will call the
-     * large-allocation-failure callback on OOM and retry the allocation.
-     */
-    static const unsigned LARGE_ALLOCATION = 25 * 1024 * 1024;
-
-    template <typename T>
-    T* pod_callocCanGC(size_t numElems) {
-        T* p = pod_calloc<T>(numElems);
-        if (MOZ_LIKELY(!!p))
-            return p;
-        size_t bytes;
-        if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes))) {
-            reportAllocationOverflow();
-            return nullptr;
-        }
-        return static_cast<T*>(onOutOfMemoryCanGC(js::AllocFunction::Calloc, bytes));
-    }
-
-    template <typename T>
-    T* pod_reallocCanGC(T* p, size_t oldSize, size_t newSize) {
-        T* p2 = pod_realloc<T>(p, oldSize, newSize);
-        if (MOZ_LIKELY(!!p2))
-            return p2;
-        size_t bytes;
-        if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes))) {
-            reportAllocationOverflow();
-            return nullptr;
-        }
-        return static_cast<T*>(onOutOfMemoryCanGC(js::AllocFunction::Realloc, bytes, p));
-    }
 
     /*
      * Debugger.Memory functions like takeCensus use this embedding-provided
@@ -1326,62 +1295,6 @@ SetValueRangeToNull(Value* vec, size_t len)
 {
     SetValueRangeToNull(vec, vec + len);
 }
-
-/*
- * Allocation policy that uses JSRuntime::pod_malloc and friends, so that
- * memory pressure is properly accounted for. This is suitable for
- * long-lived objects owned by the JSRuntime.
- *
- * Since it doesn't hold a JSContext (those may not live long enough), it
- * can't report out-of-memory conditions itself; the caller must check for
- * OOM and take the appropriate action.
- *
- * FIXME bug 647103 - replace these *AllocPolicy names.
- */
-class RuntimeAllocPolicy
-{
-    JSRuntime* const runtime;
-
-  public:
-    MOZ_IMPLICIT RuntimeAllocPolicy(JSRuntime* rt) : runtime(rt) {}
-
-    template <typename T>
-    T* maybe_pod_malloc(size_t numElems) {
-        return runtime->maybe_pod_malloc<T>(numElems);
-    }
-
-    template <typename T>
-    T* maybe_pod_calloc(size_t numElems) {
-        return runtime->maybe_pod_calloc<T>(numElems);
-    }
-
-    template <typename T>
-    T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
-        return runtime->maybe_pod_realloc<T>(p, oldSize, newSize);
-    }
-
-    template <typename T>
-    T* pod_malloc(size_t numElems) {
-        return runtime->pod_malloc<T>(numElems);
-    }
-
-    template <typename T>
-    T* pod_calloc(size_t numElems) {
-        return runtime->pod_calloc<T>(numElems);
-    }
-
-    template <typename T>
-    T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
-        return runtime->pod_realloc<T>(p, oldSize, newSize);
-    }
-
-    void free_(void* p) { js_free(p); }
-    void reportAllocOverflow() const {}
-
-    bool checkSimulatedOOM() const {
-        return !js::oom::ShouldFailWithOOM();
-    }
-};
 
 extern const JSSecurityCallbacks NullSecurityCallbacks;
 

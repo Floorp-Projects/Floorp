@@ -102,7 +102,7 @@ const StrongPromise = {
   },
   observe(subject, topic, tag) {
     const pos = tag.indexOf("|");
-    const channel = tag.substr(0, pos);
+    const channel = Number(tag.substr(0, pos));
     const location = tag.substr(pos + 1);
     const message = `Promised response from onMessage listener at ${location} went out of scope`;
     MessageChannel.abortChannel(channel, {message});
@@ -828,9 +828,16 @@ class ChildAPIManager {
 
         if (listener) {
           let args = data.args.deserialize(this.context.cloneScope);
-          let fire = () => this.context.runSafeWithoutClone(listener, ...args);
-          return (data.handlingUserInput) ?
-                 withHandlingUserInput(this.context.contentWindow, fire) : fire();
+          let fire = () => this.context.applySafeWithoutClone(listener, args);
+          return Promise.resolve(
+            data.handlingUserInput ? withHandlingUserInput(this.context.contentWindow, fire)
+                                   : fire())
+            .then(result => {
+              if (result !== undefined) {
+                return new StructuredCloneHolder(result, this.context.cloneScope);
+              }
+              return result;
+            });
         }
         if (!map.removedIds.has(data.listenerId)) {
           Services.console.logStringMessage(

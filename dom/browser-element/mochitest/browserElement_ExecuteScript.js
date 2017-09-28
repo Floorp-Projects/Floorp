@@ -66,32 +66,32 @@ function runTest() {
         … syntax error
       `, {url});
     }, bail).then(bail, (error) => {
-      is(error.name, 'SyntaxError: illegal character', `scriptId: ${scriptId++}`);
+      is(error.message, 'SyntaxError: illegal character', `scriptId: ${scriptId++}`);
       return iframe.executeScript(`
         window
       `, {url});
     }).then(bail, (error) => {
-      is(error.name, 'Script last expression must be a promise or a JSON object', `scriptId: ${scriptId++}`);
+      is(error.message, 'Script last expression must be a promise or a JSON object', `scriptId: ${scriptId++}`);
       return iframe.executeScript(`
           new Promise((resolve, reject) => {
             reject('BOOM');
           });
       `, {url});
     }).then(bail, (error) => {
-      is(error.name, 'BOOM', `scriptId: ${scriptId++}`);
+      is(error.message, 'BOOM', `scriptId: ${scriptId++}`);
       return iframe.executeScript(`
           new Promise((resolve, reject) => {
             resolve(window);
           });
       `, {url});
     }).then(bail, (error) => {
-      is(error.name, 'Value returned (resolve) by promise is not a valid JSON object', `scriptId: ${scriptId++}`);
+      is(error.message, 'Value returned (resolve) by promise is not a valid JSON object', `scriptId: ${scriptId++}`);
       return iframe.executeScript('window.btoa("a")', {url})
     }, bail).then(rv => {
       ok(c(rv, 'YQ=='), `scriptId: ${scriptId++}`);
       return iframe.executeScript('window.wrappedJSObject.btoa("a")', {url})
     }, bail).then(bail, (error) => {
-      is(error.name, 'TypeError: window.wrappedJSObject is undefined', `scriptId: ${scriptId++}`);
+      is(error.message, 'TypeError: window.wrappedJSObject is undefined', `scriptId: ${scriptId++}`);
       return iframe.executeScript('42', {})
     }).then(bail, error => {
       is(error.name, 'InvalidAccessError', `scriptId: ${scriptId++}`);
@@ -100,16 +100,16 @@ function runTest() {
       is(error.name, 'InvalidAccessError', `scriptId: ${scriptId++}`);
       return iframe.executeScript('43', { url: 'http://foo.com' });
     }).then(bail, (error) => {
-      is(error.name, 'URL mismatches', `scriptId: ${scriptId++}`);
+      is(error.message, 'URL mismatches', `scriptId: ${scriptId++}`);
       return iframe.executeScript('43', { url: '_' });
     }, bail).then(bail, (error) => {
-      is(error.name, 'Malformed URL', `scriptId: ${scriptId++}`);
+      is(error.message, 'Malformed URL', `scriptId: ${scriptId++}`);
       return iframe.executeScript('43', { origin: 'http://foo.com' });
     }, bail).then(bail, (error) => {
-      is(error.name, 'Origin mismatches', `scriptId: ${scriptId++}`);
+      is(error.message, 'Origin mismatches', `scriptId: ${scriptId++}`);
       return iframe.executeScript('43', { origin: 'https://example.org' });
     }, bail).then(bail, (error) => {
-      is(error.name, 'Origin mismatches', `scriptId: ${scriptId++}`);
+      is(error.message, 'Origin mismatches', `scriptId: ${scriptId++}`);
       SimpleTest.finish();
     });
   }

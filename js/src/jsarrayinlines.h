@@ -21,8 +21,8 @@ namespace js {
 inline bool
 GetElement(JSContext* cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
 {
-    if (index < GetAnyBoxedOrUnboxedInitializedLength(obj)) {
-        vp.set(GetAnyBoxedOrUnboxedDenseElement(obj, index));
+    if (obj->isNative() && index < obj->as<NativeObject>().getDenseInitializedLength()) {
+        vp.set(obj->as<NativeObject>().getDenseElement(index));
         if (!vp.isMagic(JS_ELEMENTS_HOLE))
             return true;
     }
