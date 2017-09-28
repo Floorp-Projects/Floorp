@@ -7,6 +7,7 @@
 #include "nsError.h"
 #include "nsIPresShell.h"
 #include "nsNodeUtils.h"
+#include "nsIFrame.h"
 #include "mozilla/Likely.h"
 #include "mozilla/UniquePtr.h"
 
@@ -483,6 +484,10 @@ nsHtml5TreeBuilder::appendElement(nsIContentHandle* aChild, nsIContentHandle* aP
 {
   NS_PRECONDITION(aChild, "Null child");
   NS_PRECONDITION(aParent, "Null parent");
+  if (deepTreeSurrogateParent) {
+    return;
+  }
+
   if (mBuilder) {
     nsresult rv = nsHtml5TreeOperation::Append(static_cast<nsIContent*>(aChild),
                                                static_cast<nsIContent*>(aParent),
@@ -589,11 +594,12 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
   MOZ_ASSERT(!aStart, "aStart must always be zero.");
 
   if (mBuilder) {
-    nsresult rv =
-      nsHtml5TreeOperation::AppendText(aBuffer, // XXX aStart always ignored???
-                                       aLength,
-                                       static_cast<nsIContent*>(aParent),
-                                       mBuilder);
+    nsresult rv = nsHtml5TreeOperation::AppendText(
+      aBuffer, // XXX aStart always ignored???
+      aLength,
+      static_cast<nsIContent*>(deepTreeSurrogateParent ?
+                               deepTreeSurrogateParent : aParent),
+      mBuilder);
     if (NS_FAILED(rv)) {
       MarkAsBrokenAndRequestSuspension(rv);
     }
@@ -613,7 +619,8 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpAppendText, bufferCopy, aLength, aParent);
+  treeOp->Init(eTreeOpAppendText, bufferCopy, aLength,
+      deepTreeSurrogateParent ? deepTreeSurrogateParent : aParent);
 }
 
 void
@@ -622,6 +629,10 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, 
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
   MOZ_ASSERT(!aStart, "aStart must always be zero.");
+
+  if (deepTreeSurrogateParent) {
+    return;
+  }
 
   if (mBuilder) {
     nsresult rv = nsHtml5TreeOperation::AppendComment(
@@ -732,6 +743,7 @@ void
 nsHtml5TreeBuilder::start(bool fragment)
 {
   mCurrentHtmlScriptIsAsyncOrDefer = false;
+  deepTreeSurrogateParent = nullptr;
 #ifdef DEBUG
   mActive = true;
 #endif
@@ -798,6 +810,13 @@ nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent
    * table elements shouldn't be used as surrogate parents for user experience
    * reasons.
    */
+  if (!deepTreeSurrogateParent && currentPtr >= MAX_REFLOW_DEPTH &&
+      !(aName == nsGkAtoms::script || aName == nsGkAtoms::table ||
+        aName == nsGkAtoms::thead || aName == nsGkAtoms::tfoot ||
+        aName == nsGkAtoms::tbody || aName == nsGkAtoms::tr ||
+        aName == nsGkAtoms::colgroup || aName == nsGkAtoms::style)) {
+    deepTreeSurrogateParent = aElement;
+  }
   if (aNamespace != kNameSpaceID_XHTML) {
     return;
   }
@@ -843,6 +862,9 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
   NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
   NS_ASSERTION(aName, "Element doesn't have local name!");
   NS_ASSERTION(aElement, "No element!");
+  if (deepTreeSurrogateParent && currentPtr <= MAX_REFLOW_DEPTH) {
+    deepTreeSurrogateParent = nullptr;
+  }
   if (aNamespace == kNameSpaceID_MathML) {
     return;
   }
@@ -1288,18 +1310,6 @@ nsHtml5TreeBuilder::EnableViewSource(nsHtml5Highlighter* aHighlighter)
 {
   MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
   mViewSource = aHighlighter;
-}
-
-void
-nsHtml5TreeBuilder::errDeepTree()
-{
-  if (MOZ_UNLIKELY(mViewSource)) {
-    mViewSource->AddErrorToCurrentRun("errDeepTree");
-  } else if (!mBuilder) {
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    MOZ_ASSERT(treeOp, "Tree op allocation failed.");
-    treeOp->InitDeepTree(tokenizer->getLineNumber());
-  }
 }
 
 void

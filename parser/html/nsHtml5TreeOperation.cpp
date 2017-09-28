@@ -1011,11 +1011,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       aBuilder->MaybeComplainAboutCharset(msgId, error, (uint32_t)lineNumber);
       return NS_OK;
     }
-    case eTreeOpMaybeComplainAboutDeepTree: {
-      int32_t lineNumber = mOne.integer;
-      aBuilder->MaybeComplainAboutDeepTree((uint32_t)lineNumber);
-      return NS_OK;
-    }
     case eTreeOpAddClass: {
       nsIContent* node = *(mOne.node);
       char16_t* str = mTwo.unicharPtr;
