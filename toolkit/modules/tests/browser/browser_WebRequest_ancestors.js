@@ -15,9 +15,10 @@ add_task(async function test_ancestors_exist() {
     deferred.resolve();
   }
 
-  WebRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: new MatchPatternSet(["http://mochi.test/*"])}, ["blocking"]);
+  // Filter on a path to ensure the root favicon request doesn't confuse the test.
+  WebRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: new MatchPatternSet(["http://mochi.test/test/*"])}, ["blocking"]);
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/test/");
   await deferred.promise;
   await BrowserTestUtils.removeTab(tab);
 
@@ -47,7 +48,7 @@ add_task(async function test_ancestors_null() {
     });
   }
 
-  await fetch("http://mochi.test:8888/");
+  await fetch("http://mochi.test:8888/test/");
   await deferred.promise;
 
   WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
