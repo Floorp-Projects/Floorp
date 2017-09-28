@@ -19,7 +19,6 @@ static mozilla::LazyLogModule gU2FLog("u2fmanager");
 
 NS_NAMED_LITERAL_STRING(kFinishEnrollment, "navigator.id.finishEnrollment");
 NS_NAMED_LITERAL_STRING(kGetAssertion, "navigator.id.getAssertion");
-NS_NAMED_LITERAL_STRING(kRequiredU2FVersion, "U2F_V2");
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(U2F)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

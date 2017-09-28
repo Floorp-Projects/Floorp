@@ -357,6 +357,7 @@ U2FManager::FinishRegister(nsTArray<uint8_t>& aRegBuffer)
 
   // Assemble a response object to return
   RegisterResponse response;
+  response.mVersion.Construct(kRequiredU2FVersion);
   response.mClientData.Construct(clientDataBase64);
   response.mRegistrationData.Construct(registrationDataBase64);
   response.mErrorCode.Construct(static_cast<uint32_t>(ErrorCode::OK));
