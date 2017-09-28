@@ -80,9 +80,9 @@ public:
   GenerateFallbackData(nsDisplayItem* aItem,
                        wr::DisplayListBuilder& aBuilder,
                        wr::IpcResourceUpdateQueue& aResourceUpdates,
-                       const StackingContextHelper& aSc,
                        nsDisplayListBuilder* aDisplayListBuilder,
-                       LayerRect& aImageRect);
+                       LayerRect& aImageRect,
+                       LayerPoint& aOffset);
 
   Maybe<wr::WrImageMask> BuildWrMaskImage(nsDisplayItem* aItem,
                                           wr::DisplayListBuilder& aBuilder,
