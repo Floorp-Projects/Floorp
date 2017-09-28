@@ -385,8 +385,7 @@ static void ChooseContextMap(int quality,
    context values, based on the entropy reduction of histograms over the
    first 5 bits of literals. */
 static BROTLI_BOOL ShouldUseComplexStaticContextMap(const uint8_t* input,
-    size_t start_pos, size_t length, size_t mask, int quality,
-    size_t size_hint, ContextType* literal_context_mode,
+    size_t start_pos, size_t length, size_t mask, int quality, size_t size_hint,
     size_t* num_literal_contexts, const uint32_t** literal_context_map) {
   static const uint32_t kStaticContextMapComplexUTF8[64] = {
     11, 11, 12, 12, /* 0 special */
@@ -457,7 +456,6 @@ static BROTLI_BOOL ShouldUseComplexStaticContextMap(const uint8_t* input,
     if (entropy[2] > 3.0 || entropy[1] - entropy[2] < 0.2) {
       return BROTLI_FALSE;
     } else {
-      *literal_context_mode = CONTEXT_UTF8;
       *num_literal_contexts = 13;
       *literal_context_map = kStaticContextMapComplexUTF8;
       return BROTLI_TRUE;
@@ -466,13 +464,12 @@ static BROTLI_BOOL ShouldUseComplexStaticContextMap(const uint8_t* input,
 }
 
 static void DecideOverLiteralContextModeling(const uint8_t* input,
-    size_t start_pos, size_t length, size_t mask, int quality,
-    size_t size_hint, ContextType* literal_context_mode,
+    size_t start_pos, size_t length, size_t mask, int quality, size_t size_hint,
     size_t* num_literal_contexts, const uint32_t** literal_context_map) {
   if (quality < MIN_QUALITY_FOR_CONTEXT_MODELING || length < 64) {
     return;
   } else if (ShouldUseComplexStaticContextMap(
-      input, start_pos, length, mask, quality, size_hint, literal_context_mode,
+      input, start_pos, length, mask, quality, size_hint,
       num_literal_contexts, literal_context_map)) {
     /* Context map was already set, nothing else to do. */
   } else {
@@ -492,7 +489,6 @@ static void DecideOverLiteralContextModeling(const uint8_t* input,
         prev = lut[literal >> 6] * 3;
       }
     }
-    *literal_context_mode = CONTEXT_UTF8;
     ChooseContextMap(quality, &bigram_prefix_histo[0], num_literal_contexts,
                      literal_context_map);
   }
@@ -596,7 +592,7 @@ static void WriteMetaBlockInternal(MemoryManager* m,
       if (!params->disable_literal_context_modeling) {
         DecideOverLiteralContextModeling(
             data, wrapped_last_flush_pos, bytes, mask, params->quality,
-            params->size_hint, &literal_context_mode, &num_literal_contexts,
+            params->size_hint, &num_literal_contexts,
             &literal_context_map);
       }
       BrotliBuildMetaBlockGreedy(m, data, wrapped_last_flush_pos, mask,
@@ -830,36 +826,6 @@ static void CopyInputToRingBuffer(BrotliEncoderState* s,
        ring-buffer. */
     memset(ringbuffer_->buffer_ + ringbuffer_->pos_, 0, 7);
   }
-}
-
-void BrotliEncoderSetCustomDictionary(BrotliEncoderState* s, size_t size,
-                                      const uint8_t* dict) {
-  size_t max_dict_size = BROTLI_MAX_BACKWARD_LIMIT(s->params.lgwin);
-  size_t dict_size = size;
-  MemoryManager* m = &s->memory_manager_;
-
-  if (!EnsureInitialized(s)) return;
-
-  if (dict_size == 0 ||
-      s->params.quality == FAST_ONE_PASS_COMPRESSION_QUALITY ||
-      s->params.quality == FAST_TWO_PASS_COMPRESSION_QUALITY) {
-    return;
-  }
-  if (size > max_dict_size) {
-    dict += size - max_dict_size;
-    dict_size = max_dict_size;
-  }
-  CopyInputToRingBuffer(s, dict_size, dict);
-  s->last_flush_pos_ = dict_size;
-  s->last_processed_pos_ = dict_size;
-  if (dict_size > 0) {
-    s->prev_byte_ = dict[dict_size - 1];
-  }
-  if (dict_size > 1) {
-    s->prev_byte2_ = dict[dict_size - 2];
-  }
-  HasherPrependCustomDictionary(m, &s->hasher_, &s->params, dict_size, dict);
-  if (BROTLI_IS_OOM(m)) return;
 }
 
 /* Marks all input as processed.
@@ -1208,7 +1174,8 @@ static BROTLI_BOOL BrotliCompressBufferQuality10(
       }
       BrotliZopfliCreateCommands(block_size, block_start, max_backward_limit,
                                  &nodes[0], dist_cache, &last_insert_len,
-                                 &commands[num_commands], &num_literals);
+                                 &params, &commands[num_commands],
+                                 &num_literals);
       num_commands += path_size;
       block_start += block_size;
       metablock_size += block_size;
@@ -1791,23 +1758,6 @@ const uint8_t* BrotliEncoderTakeOutput(BrotliEncoderState* s, size_t* size) {
 uint32_t BrotliEncoderVersion(void) {
   return BROTLI_VERSION;
 }
-
-
-/* DEPRECATED >>> */
-size_t BrotliEncoderInputBlockSize(BrotliEncoderState* s) {
-  return InputBlockSize(s);
-}
-void BrotliEncoderCopyInputToRingBuffer(BrotliEncoderState* s,
-                                        const size_t input_size,
-                                        const uint8_t* input_buffer) {
-  CopyInputToRingBuffer(s, input_size, input_buffer);
-}
-BROTLI_BOOL BrotliEncoderWriteData(
-    BrotliEncoderState* s, const BROTLI_BOOL is_last,
-    const BROTLI_BOOL force_flush, size_t* out_size, uint8_t** output) {
-  return EncodeData(s, is_last, force_flush, out_size, output);
-}
-/* <<< DEPRECATED */
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }  /* extern "C" */
