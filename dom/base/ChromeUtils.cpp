@@ -326,5 +326,20 @@ ChromeUtils::IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
          aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
 }
 
+/* static */ void
+ChromeUtils::CorruptRuleHashAndCrash(GlobalObject& aGlobal,
+                                     unsigned long aIndex)
+{
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
+  NS_ENSURE_TRUE_VOID(win);
+  nsIDocument* doc = win->GetExtantDoc();
+  NS_ENSURE_TRUE_VOID(doc);
+  nsIPresShell* shell = doc->GetShell();
+  NS_ENSURE_TRUE_VOID(shell);
+  NS_ENSURE_TRUE_VOID(shell->StyleSet() && shell->StyleSet()->IsServo());
+  ServoStyleSet* set = shell->StyleSet()->AsServo();
+  set->CorruptRuleHashAndCrash(aIndex);
+}
+
 } // namespace dom
 } // namespace mozilla
