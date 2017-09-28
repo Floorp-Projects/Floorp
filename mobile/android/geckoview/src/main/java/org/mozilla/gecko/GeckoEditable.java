@@ -1399,6 +1399,15 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         return String.valueOf(value);
     }
 
+    private static String getPrintableChar(char chr) {
+        if (chr >= 0x20 && chr <= 0x7e) {
+            return String.valueOf(chr);
+        } else if (chr == '\n') {
+            return "\u21b2";
+        }
+        return String.format("%04x", (int) chr);
+    }
+
     static StringBuilder debugAppend(StringBuilder sb, Object obj) {
         if (obj == null) {
             sb.append("null");
@@ -1408,8 +1417,20 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
             sb.append("GeckoEditableChild");
         } else if (Proxy.isProxyClass(obj.getClass())) {
             debugAppend(sb, Proxy.getInvocationHandler(obj));
+        } else if (obj instanceof Character) {
+            sb.append('\'').append(getPrintableChar((Character) obj)).append('\'');
         } else if (obj instanceof CharSequence) {
-            sb.append('"').append(obj.toString().replace('\n', '\u21b2')).append('"');
+            final String str = obj.toString();
+            sb.append('"');
+            for (int i = 0; i < str.length(); i++) {
+              final char chr = str.charAt(i);
+              if (chr >= 0x20 && chr <= 0x7e) {
+                sb.append(chr);
+              } else {
+                sb.append(getPrintableChar(chr));
+              }
+            }
+            sb.append('"');
         } else if (obj.getClass().isArray()) {
             sb.append(obj.getClass().getComponentType().getSimpleName()).append('[')
               .append(Array.getLength(obj)).append(']');
