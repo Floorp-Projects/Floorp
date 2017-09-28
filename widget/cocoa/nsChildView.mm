@@ -2560,12 +2560,11 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
     FindFirstRectOfType(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeToolbox).YMost();
 
   ToolbarWindow* win = (ToolbarWindow*)[mView window];
-  bool drawsContentsIntoWindowFrame = [win drawsContentsIntoWindowFrame];
   int32_t titlebarHeight = CocoaPointsToDevPixels([win titlebarHeight]);
-  int32_t contentOffset = drawsContentsIntoWindowFrame ? titlebarHeight : 0;
-  int32_t devUnifiedHeight = titlebarHeight + unifiedToolbarBottom - contentOffset;
+  int32_t devUnifiedHeight = titlebarHeight + unifiedToolbarBottom;
   [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
-  int32_t devSheetPosition = titlebarHeight + std::max(toolboxBottom, unifiedToolbarBottom) - contentOffset;
+  int32_t devSheetPosition = titlebarHeight +
+                             std::max(toolboxBottom, unifiedToolbarBottom);
   [win setSheetAttachmentPosition:DevPixelsToCocoaPoints(devSheetPosition)];
 
   // Update titlebar control offsets.
