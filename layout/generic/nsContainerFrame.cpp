@@ -1685,6 +1685,50 @@ nsContainerFrame::PullNextInFlowChild(ContinuationTraversingState& aState)
   return frame;
 }
 
+/* static */ void
+nsContainerFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
+                                               nsIFrame* aFrame,
+                                               bool aReparentSiblings)
+{
+  // XXXbz this would be better if it took a nsFrameList or a frame
+  // list slice....
+  NS_ASSERTION(aOurLineContainer->GetNextContinuation() ||
+               aOurLineContainer->GetPrevContinuation(),
+               "Don't call this when we have no continuation, it's a waste");
+  if (!aFrame) {
+    NS_ASSERTION(aReparentSiblings, "Why did we get called?");
+    return;
+  }
+
+  nsBlockFrame* frameBlock = nsLayoutUtils::GetFloatContainingBlock(aFrame);
+  if (!frameBlock || frameBlock == aOurLineContainer) {
+    return;
+  }
+
+  nsBlockFrame* ourBlock = nsLayoutUtils::GetAsBlock(aOurLineContainer);
+  NS_ASSERTION(ourBlock, "Not a block, but broke vertically?");
+
+  while (true) {
+    ourBlock->ReparentFloats(aFrame, frameBlock, false);
+
+    if (!aReparentSiblings)
+      return;
+    nsIFrame* next = aFrame->GetNextSibling();
+    if (!next)
+      return;
+    if (next->GetParent() == aFrame->GetParent()) {
+      aFrame = next;
+      continue;
+    }
+    // This is paranoid and will hardly ever get hit ... but we can't actually
+    // trust that the frames in the sibling chain all have the same parent,
+    // because lazy reparenting may be going on. If we find a different
+    // parent we need to redo our analysis.
+    ReparentFloatsForInlineChild(aOurLineContainer, next, aReparentSiblings);
+    return;
+  }
+}
+
 bool
 nsContainerFrame::ResolvedOrientationIsVertical()
 {
