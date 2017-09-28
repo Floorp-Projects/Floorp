@@ -1390,6 +1390,12 @@ nsDisplayListBuilder::ResetMarkedFramesForDisplayList()
 }
 
 void
+nsDisplayListBuilder::ClearFixedBackgroundDisplayData()
+{
+  CurrentPresShellState()->mFixedBackgroundDisplayData = Nothing();
+}
+
+void
 nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
                                                const nsFrameList& aFrames) {
   for (nsIFrame* e : aFrames) {
