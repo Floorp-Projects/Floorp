@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using GMPBufferType from "gmp-video-codec.h";
-using GMPMediaKeyStatus from "gmp-decryption.h";
 
 namespace mozilla {
 namespace gmp {
@@ -13,14 +12,6 @@ struct NodeIdData {
   nsString mOrigin;
   nsString mTopLevelOrigin;
   nsString mGMPName;
-};
-
-struct GMPDecryptionData {
-  uint8_t[] mKeyId;
-  uint8_t[] mIV;
-  uint16_t[] mClearBytes;
-  uint32_t[] mCipherBytes;
-  nsCString[] mSessionIds;
 };
 
 struct GMPVideoEncodedFrameData
@@ -34,7 +25,6 @@ struct GMPVideoEncodedFrameData
   GMPBufferType mBufferType;
   Shmem mBuffer;
   bool mCompleteFrame;
-  GMPDecryptionData mDecryptionData;
 };
 
 struct GMPPlaneData
@@ -53,11 +43,6 @@ struct GMPVideoi420FrameData
   int32_t mHeight;
   uint64_t mTimestamp; // microseconds
   uint64_t mDuration; // microseconds
-};
-
-struct GMPKeyInformation {
-  uint8_t[] keyId;
-  GMPMediaKeyStatus status;
 };
 
 struct CDMInputBuffer {

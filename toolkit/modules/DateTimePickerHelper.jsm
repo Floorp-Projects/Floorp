@@ -90,6 +90,7 @@ this.DateTimePickerHelper = {
         if (browser) {
           browser.messageManager.sendAsyncMessage("FormDateTime:PickerClosed");
         }
+        this.picker.closePicker();
         this.close();
         break;
       }

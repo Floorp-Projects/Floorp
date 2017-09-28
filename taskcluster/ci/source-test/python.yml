@@ -150,6 +150,29 @@ mozlint:
             - 'python/mozlint/**'
             - 'python/mach_commands.py'
 
+mozversioncontrol:
+    description: python/mozversioncontrol unit tests
+    platform: linux64/opt
+    treeherder:
+        symbol: py(vcs)
+        kind: test
+        tier: 2
+    worker-type:
+        by-platform:
+            linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        by-platform:
+            linux64.*:
+                docker-image: {in-tree: "lint"}
+                max-run-time: 3600
+    run:
+        using: mach
+        mach: python-test --subsuite mozversioncontrol
+    when:
+        files-changed:
+            - 'python/mozversioncontrol/**'
+            - 'python/mach_commands.py'
+
 reftest-harness:
     description: layout/tools/reftest unittests
     platform:

@@ -7791,15 +7791,19 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
     Element *element = aNode->AsElement();
     const nsDOMAttributeMap *map = element->GetAttributeMap();
     if (map) {
-      // This non-standard style of iteration is presumably used because some
-      // of the code in the loop body can trigger element removal, which
-      // invalidates the iterator.
       while (true) {
-        auto iter = map->mAttributeCache.ConstIter();
-        if (iter.Done()) {
-          break;
+        nsCOMPtr<nsIAttribute> attr;
+        {
+          // Use an iterator to get an arbitrary attribute from the
+          // cache. The iterator must be destroyed before any other
+          // operations on mAttributeCache, to avoid hash table
+          // assertions.
+          auto iter = map->mAttributeCache.ConstIter();
+          if (iter.Done()) {
+            break;
+          }
+          attr = iter.UserData();
         }
-        nsCOMPtr<nsIAttribute> attr = iter.UserData();
         NS_ASSERTION(attr.get(),
                      "non-nsIAttribute somehow made it into the hashmap?!");
 
@@ -13608,6 +13612,29 @@ nsIDocument::ReportHasScrollLinkedEffect()
                                   "ScrollLinkedEffectFound2");
 }
 
+#ifdef MOZ_STYLO
+// URL-based blacklist for stylo.
+static bool
+ShouldUseGeckoBackend(nsIURI* aDocumentURI)
+{
+  if (!aDocumentURI) {
+    return false;
+  }
+  bool isScheme = false;
+  if (NS_SUCCEEDED(aDocumentURI->SchemeIs("about", &isScheme))) {
+    nsAutoCString path;
+    aDocumentURI->GetFilePath(path);
+    // about:reader requires support of :scope pseudo-class so we have
+    // to use Gecko backend for now. See bug 1402094.
+    // This should be fixed by bug 1204818.
+    if (path.EqualsLiteral("reader")) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif // MOZ_STYLO
+
 void
 nsIDocument::UpdateStyleBackendType()
 {
@@ -13626,7 +13653,7 @@ nsIDocument::UpdateStyleBackendType()
     // Note that, since tests can have XUL support, we still need to
     // explicitly exclude XUL documents here.
     if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
-        !IsXULDocument()) {
+        !IsXULDocument() && !ShouldUseGeckoBackend(mDocumentURI)) {
       mStyleBackendType = StyleBackendType::Servo;
     }
   }

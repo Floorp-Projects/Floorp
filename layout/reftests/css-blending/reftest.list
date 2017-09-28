@@ -1,11 +1,11 @@
 pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color-ref.html
-pref(layout.css.mix-blend-mode.enabled,true) == blend-gradient-background-color.html blend-gradient-background-color-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) fuzzy-if(webrender,1-1,7875-7875) == blend-gradient-background-color.html blend-gradient-background-color-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
 fuzzy-if(skiaContent,1,30000) pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == background-blending-alpha.html background-blending-alpha-ref.html
-pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-color.html background-blending-gradient-color-ref.html
+pref(layout.css.background-blend-mode.enabled,true) fuzzy-if(webrender,1-1,7875-7875) == background-blending-gradient-color.html background-blending-gradient-color-ref.html
 fuzzy-if(azureSkiaGL,3,7597) fuzzy-if(cocoaWidget,3,7597) fuzzy-if(d2d,1,3800) fuzzy-if(d3d11,1,4200) fuzzy-if(skiaContent,2,9450) pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
 fuzzy-if(azureSkiaGL,2,7174) pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
 fuzzy-if(azureSkia||d2d||gtkWidget,1,10000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-jpg.html background-blending-image-color-ref.html

@@ -358,11 +358,20 @@ describe("Reducers", () => {
     });
     it("should remove blocked and deleted urls from all rows in all sections", () => {
       const blockAction = {type: at.PLACES_LINK_BLOCKED, data: {url: "www.foo.bar"}};
-      const deleteAction = {type: at.PLACES_LINK_DELETED, data: {url: "www.foo.bar"}};
+      const deleteAction = {type: at.PLACES_LINKS_DELETED, data: ["www.foo.bar"]};
       const newBlockState = Sections(oldState, blockAction);
       const newDeleteState = Sections(oldState, deleteAction);
       newBlockState.concat(newDeleteState).forEach(section => {
         assert.deepEqual(section.rows, [{url: "www.other.url"}]);
+      });
+    });
+    it("should remove all deleted urls", () => {
+      const deleteAction = {type: at.PLACES_LINKS_DELETED, data: ["www.foo.bar", "www.other.url"]};
+
+      const newState = Sections(oldState, deleteAction);
+
+      newState.forEach(section => {
+        assert.lengthOf(section.rows, 0);
       });
     });
     it("should not update state for empty action.data on PLACES_BOOKMARK_ADDED", () => {

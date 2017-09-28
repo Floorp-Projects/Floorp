@@ -18,8 +18,6 @@ PerformanceMeasure::PerformanceMeasure(nsISupports* aParent,
   mStartTime(aStartTime),
   mDuration(aEndTime - aStartTime)
 {
-  // mParent is null in workers.
-  MOZ_ASSERT(mParent || !NS_IsMainThread());
 }
 
 PerformanceMeasure::~PerformanceMeasure()

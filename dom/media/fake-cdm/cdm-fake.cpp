@@ -33,57 +33,36 @@
  *************************************************************************************
  */
 
-#include <stdint.h>
-#include <cstdio>
-#include <cstring>
-#include <string>
-#include <memory>
-
-#include "gmp-platform.h"
-#include "gmp-video-decode.h"
-
-#if defined(GMP_FAKE_SUPPORT_DECRYPT)
-#include "gmp-decryption.h"
-#include "gmp-test-decryptor.h"
-#include "gmp-test-storage.h"
-#endif
-
-#if defined(_MSC_VER)
-#define PUBLIC_FUNC __declspec(dllexport)
-#else
-#define PUBLIC_FUNC
-#endif
-
-GMPPlatformAPI* g_platform_api = nullptr;
+#include "stddef.h"
+#include "cdm-test-decryptor.h"
+#include "content_decryption_module.h"
+#include "content_decryption_module_ext.h"
 
 extern "C" {
 
-  PUBLIC_FUNC GMPErr
-  GMPInit (GMPPlatformAPI* aPlatformAPI) {
-    g_platform_api = aPlatformAPI;
-    return GMPNoErr;
-  }
+CDM_API
+void INITIALIZE_CDM_MODULE() {
 
-  PUBLIC_FUNC GMPErr
-  GMPGetAPI (const char* aApiName, void* aHostAPI, void** aPluginApi) {
-    if (!strcmp (aApiName, GMP_API_VIDEO_DECODER)) {
-      // Note: Deliberately advertise in our .info file that we support
-      // video-decode, but we fail the "get" call here to simulate what
-      // happens when decoder init fails.
-      return GMPGenericErr;
-#if defined(GMP_FAKE_SUPPORT_DECRYPT)
-    }
-    if (!strcmp (aApiName, GMP_API_DECRYPTOR)) {
-      *aPluginApi = new FakeDecryptor();
-      return GMPNoErr;
-#endif
-    }
-    return GMPGenericErr;
-  }
+}
 
-  PUBLIC_FUNC void
-  GMPShutdown (void) {
-    g_platform_api = nullptr;
-  }
+CDM_API
+void* CreateCdmInstance(int cdm_interface_version,
+                        const char* key_system,
+                        uint32_t key_system_size,
+                        GetCdmHostFunc get_cdm_host_func,
+                        void* user_data)
+{
+  cdm::Host_8* host = static_cast<cdm::Host_8*>(
+    get_cdm_host_func(cdm_interface_version, user_data));
+  return new FakeDecryptor(host);
+}
+
+
+CDM_API
+bool
+VerifyCdmHost_0(const cdm::HostFile* aHostFiles, uint32_t aNumFiles)
+{
+  return true;
+}
 
 } // extern "C"

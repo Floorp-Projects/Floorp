@@ -1799,17 +1799,7 @@ toolbar#nav-bar {
            '5.1' in platform.version() and options.e10s:
             prefs['layers.acceleration.disabled'] = True
 
-        sandbox_whitelist_paths = [SCRIPT_DIR]
-        try:
-            if options.workPath:
-                sandbox_whitelist_paths.append(options.workPath)
-        except AttributeError:
-            pass
-        try:
-            if options.objPath:
-                sandbox_whitelist_paths.append(options.objPath)
-        except AttributeError:
-            pass
+        sandbox_whitelist_paths = [SCRIPT_DIR] + options.sandboxReadWhitelist
         if (platform.system() == "Linux" or
             platform.system() in ("Windows", "Microsoft")):
             # Trailing slashes are needed to indicate directories on Linux and Windows

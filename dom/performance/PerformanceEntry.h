@@ -89,6 +89,7 @@ public:
 protected:
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+private:
   nsCOMPtr<nsISupports> mParent;
   nsString mName;
   nsString mEntryType;

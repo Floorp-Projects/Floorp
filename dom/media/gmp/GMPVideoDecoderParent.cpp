@@ -123,27 +123,15 @@ GMPVideoDecoderParent::InitDecode(const GMPVideoCodec& aCodecSettings,
   return NS_OK;
 }
 
-static nsCString
-CryptoInfo(const GMPUniquePtr<GMPVideoEncodedFrame>& aInputFrame)
-{
-  const GMPEncryptedBufferMetadata* crypto = aInputFrame->GetDecryptionData();
-  if (!crypto) {
-    return EmptyCString();
-  }
-  return nsPrintfCString(" kid=%s",
-                         ToHexString(crypto->KeyId(), crypto->KeyIdSize()).get());
-}
-
 nsresult
 GMPVideoDecoderParent::Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
                               bool aMissingFrames,
                               const nsTArray<uint8_t>& aCodecSpecificInfo,
                               int64_t aRenderTimeMs)
 {
-  LOGV(("GMPVideoDecoderParent[%p]::Decode() timestamp=%" PRId64 " keyframe=%d%s",
+  LOGV(("GMPVideoDecoderParent[%p]::Decode() timestamp=%" PRId64 " keyframe=%d",
         this, aInputFrame->TimeStamp(),
-        aInputFrame->FrameType() == kGMPKeyFrame,
-        CryptoInfo(aInputFrame).get()));
+        aInputFrame->FrameType() == kGMPKeyFrame));
 
   if (!mIsOpen) {
     LOGE(("GMPVideoDecoderParent[%p]::Decode() ERROR; dead GMPVideoDecoder", this));

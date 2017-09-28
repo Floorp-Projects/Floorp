@@ -52,6 +52,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PRNGFixes;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UIAsyncTask;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -570,12 +571,21 @@ public class GeckoApplication extends Application
         intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
         context.sendBroadcast(intent);
 
-        // Remember interaction
-        final UrlAnnotations urlAnnotations = BrowserDB.from(context).getUrlAnnotations();
-        urlAnnotations.insertHomeScreenShortcut(context.getContentResolver(), aURI, true);
+        (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
+            @Override
+            public Void doInBackground() {
+                // Remember interaction, post to background thread to prevent violating StrictMode policy.
+                final UrlAnnotations urlAnnotations = BrowserDB.from(context).getUrlAnnotations();
+                urlAnnotations.insertHomeScreenShortcut(context.getContentResolver(), aURI, true);
+                return null;
+            }
 
-        // After shortcut is created, show the mobile desktop.
-        ActivityUtils.goToHomeScreen(context);
+            @Override
+            public void onPostExecute(Void aVoid) {
+                // After shortcut is created and db entry is inserted, show the mobile desktop.
+                ActivityUtils.goToHomeScreen(context);
+            }
+        }).execute();
     }
 
     private static Bitmap getLauncherIcon(Bitmap aSource, int size) {

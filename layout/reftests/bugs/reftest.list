@@ -867,7 +867,7 @@ fuzzy-if(skiaContent,2,5) == 402629-3.html 402629-3-ref.html
 == 403129-3.html 403129-3-ref.html
 == 403129-4.html 403129-4-ref.html
 random == 403134-1.html 403134-1-ref.html # bug 405377
-== 403181-1.xml 403181-1-ref.xml
+fails-if(webrender) == 403181-1.xml 403181-1-ref.xml
 == 403249-1a.html 403249-1-ref.html
 == 403249-1b.html 403249-1-ref.html
 == 403249-2a.html 403249-2-ref.html
@@ -1014,7 +1014,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421436-1b.html 421436-1-ref.html
 fuzzy-if(skiaContent,1,5) == 421632-1.html 421632-1-ref.html
 != 421710-1.html about:blank
-fails-if(Android) fails-if(usesRepeatResampling) == 421885-1.xml 421885-1-ref.xml
+fails-if(Android) fails-if(usesRepeatResampling) fails-if(webrender) == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422249-1.html 422249-1-ref.html
 == 422394-1.html 422394-1-ref.html
@@ -1164,13 +1164,13 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 445142-1c.html 445142-1-ref.html
 == 445142-2a.html 445142-2-ref.html
 == 445142-2b.html 445142-2-ref.html
-fails-if(usesRepeatResampling) == 446100-1a.html about:blank
-fails-if(Android) fails-if(usesRepeatResampling) == 446100-1b.html about:blank
-fails-if(Android) fails-if(usesRepeatResampling) == 446100-1c.html about:blank
-fails-if(usesRepeatResampling) == 446100-1d.html about:blank
-fails-if(usesRepeatResampling) == 446100-1e.html about:blank
+fails-if(usesRepeatResampling) fails-if(webrender) == 446100-1a.html about:blank
+fails-if(Android) fails-if(usesRepeatResampling) fails-if(webrender) == 446100-1b.html about:blank
+fails-if(Android) fails-if(usesRepeatResampling) fails-if(webrender) == 446100-1c.html about:blank
+fails-if(usesRepeatResampling) fails-if(webrender) == 446100-1d.html about:blank
+fails-if(usesRepeatResampling) fails-if(webrender) == 446100-1e.html about:blank
 == 446100-1f.html about:blank
-fails-if(usesRepeatResampling) fails-if(Android) == 446100-1g.html about:blank
+fails-if(usesRepeatResampling) fails-if(Android) fails-if(webrender) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
 fuzzy(127,2) fails-if(webrender) == 448193.html 448193-ref.html # bug 1382896 for webrender
@@ -1235,7 +1235,7 @@ fuzzy-if(skiaContent,1,12000) fails-if(webrender) == 461512-1.html 461512-1-ref.
 == 463204-1.html 463204-1-ref.html
 fuzzy-if(webrender,16-16,3425-3425) == 463217-1.xul 463217-1-ref.xul
 == 463952-1.html 463952-1-ref.html
-fails-if(webrender) == 464811-1.html 464811-1-ref.html
+== 464811-1.html 464811-1-ref.html
 == 465574-1.html 465574-1-ref.html # bug 421436
 == 466258-1.html 466258-1-ref.html
 == 466395-1.html 466395-1-ref.html
@@ -1973,7 +1973,7 @@ random-if(!winWidget) == 1273154-2.html 1273154-2-ref.html # depends on Windows 
 != 1276161-1a.html 1276161-1b.html
 == 1275411-1.html 1275411-1-ref.html
 == 1288255.html 1288255-ref.html
-fuzzy(8,1900) == 1291528.html 1291528-ref.html
+fuzzy(8,1900) fails-if(webrender) == 1291528.html 1291528-ref.html
 # Buttons in 2 pages have different position and the rendering result can be
 # different, but they should use the same button style and the background color
 # should be same.  |fuzzy()| here allows the difference in border, but not

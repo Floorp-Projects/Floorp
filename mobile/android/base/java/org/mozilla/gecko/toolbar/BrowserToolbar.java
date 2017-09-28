@@ -262,7 +262,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                     String url = tab.getURL();
                     if (url == null) {
                         menu.findItem(R.id.copyurl).setVisible(false);
-                        menu.findItem(R.id.add_to_launcher).setVisible(false);
+                        MenuUtils.safeSetVisible(menu, R.id.add_to_launcher, false);
                         menu.findItem(R.id.set_as_homepage).setVisible(false);
                     }
 
@@ -273,7 +273,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                 } else {
                     // if there is no tab, remove anything tab dependent
                     menu.findItem(R.id.copyurl).setVisible(false);
-                    menu.findItem(R.id.add_to_launcher).setVisible(false);
+                    MenuUtils.safeSetVisible(menu, R.id.add_to_launcher, false);
                     menu.findItem(R.id.set_as_homepage).setVisible(false);
                     MenuUtils.safeSetVisible(menu, R.id.subscribe, false);
                     MenuUtils.safeSetVisible(menu, R.id.add_search_engine, false);

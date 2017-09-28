@@ -8,8 +8,6 @@
 
 #include "stddef.h"
 #include "content_decryption_module.h"
-#include "gmp-api/gmp-decryption.h"
-#include "gmp-api/gmp-platform.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "mozilla/Logging.h"
@@ -31,16 +29,6 @@ namespace mozilla {
       return rv;                                                               \
     }                                                                          \
   }
-
-GMPErr
-ToGMPErr(cdm::Status aStatus);
-
-void InitInputBuffer(const GMPEncryptedBufferMetadata* aCrypto,
-                     int64_t aTimestamp,
-                     const uint8_t* aData,
-                     size_t aDataSize,
-                     cdm::InputBuffer &aInputBuffer,
-                     nsTArray<cdm::SubsampleEntry> &aSubsamples);
 
 namespace gmp {
 class CDMShmemBuffer;
