@@ -55,6 +55,23 @@ private:
   gfx::IntSize mSize;
 };
 
+class RenderDXGIYCbCrTextureHostOGL final : public RenderTextureHostOGL
+{
+public:
+  explicit RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHandles)[3],
+                                         gfx::IntSize aSize);
+
+  virtual void SetGLContext(gl::GLContext* aContext) override;
+
+  virtual bool Lock() override;
+  virtual void Unlock() override;
+
+  virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const;
+  virtual GLuint GetGLHandle(uint8_t aChannelIndex) const;
+
+private:
+  virtual ~RenderDXGIYCbCrTextureHostOGL();
+};
 } // namespace wr
 } // namespace mozilla
 
