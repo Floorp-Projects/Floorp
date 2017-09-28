@@ -7225,12 +7225,35 @@ nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
   for (;;) {
     if (!f->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
       f = f->PresContext()->FrameManager()->GetRootFrame();
+      if (!f) {
+        return aFrame;
+      }
     } else if (IsPopup(f)) {
       return f;
     }
     nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       return f;
+    f = parent;
+  }
+}
+
+/* static */ nsIFrame*
+nsLayoutUtils::GetViewportFrame(nsIFrame* aFrame)
+{
+  nsIFrame* f = aFrame;
+
+  for (;;) {
+    MOZ_ASSERT(f);
+    if (f->Type() == LayoutFrameType::Viewport) {
+      return f;
+    }
+
+    nsIFrame* parent = GetCrossDocParentFrame(f);
+    if (!parent) {
+      return f;
+    }
+
     f = parent;
   }
 }

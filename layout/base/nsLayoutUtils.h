@@ -2026,6 +2026,11 @@ public:
   static nsIFrame* GetDisplayRootFrame(nsIFrame* aFrame);
 
   /**
+   * Find the nearest viewport frame that is an ancestor of the given frame.
+   */
+  static nsIFrame* GetViewportFrame(nsIFrame* aFrame);
+
+  /**
    * Get the reference frame that would be used when constructing a
    * display item for this frame.  Rather than using their own frame
    * as a reference frame.)
