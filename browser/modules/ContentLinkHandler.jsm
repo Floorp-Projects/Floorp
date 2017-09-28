@@ -156,7 +156,7 @@ function faviconTimeoutCallback(aFaviconLoads, aPageUrl, aChromeGlobal) {
       if (!largestRichIcon || largestRichIcon.width < icon.width) {
         largestRichIcon = icon;
       }
-    } else if (!defaultIcon) {
+    } else {
       defaultIcon = icon;
     }
   }
