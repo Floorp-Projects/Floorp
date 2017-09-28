@@ -2349,16 +2349,15 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   NS_ENSURE_STATE(range);
 
   nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
-  uint32_t startOffset = range->StartOffset();
+  nsIContent* startNode = range->GetChildAtStartOffset();
 
   nsCOMPtr<nsINode> endContainer = range->GetEndContainer();
-  uint32_t endOffset = range->EndOffset();
+  nsIContent* endNode = range->GetChildAtEndOffset();
 
   // Optimization for a single selected element
   if (startContainer && startContainer == endContainer &&
-      endOffset - startOffset == 1) {
-    nsCOMPtr<nsINode> selectedNode =
-      startContainer->GetChildAt(static_cast<int32_t>(startOffset));
+      startNode && endNode && startNode->GetNextSibling() == endNode) {
+    nsCOMPtr<nsINode> selectedNode = startNode;
     if (selectedNode) {
       selectedNode->AsDOMNode()->GetNodeName(domTagName);
       ToLowerCase(domTagName);
