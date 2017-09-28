@@ -113,6 +113,10 @@ class CppEclipseBackend(CommonBackend):
 
         self._write_launch_files(launch_dir)
 
+        core_resources_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.core.resources.prefs')
+        with open(core_resources_prefs_path, 'wb') as fh:
+            fh.write(STATIC_CORE_RESOURCES_PREFS);
+
         ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.ui.prefs')
         with open(ui_prefs_path, 'wb') as fh:
             fh.write(STATIC_UI_PREFS);
@@ -535,6 +539,11 @@ showWhitespaceCharacters=true
 spacesForTabs=true
 tabWidth=2
 undoHistorySize=200
+"""
+
+
+STATIC_CORE_RESOURCES_PREFS="""eclipse.preferences.version=1
+refresh.enabled=true
 """
 
 STATIC_UI_PREFS="""eclipse.preferences.version=1
