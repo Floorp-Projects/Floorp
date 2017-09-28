@@ -70,15 +70,14 @@ void main(void) {
     //note: the blend mode is not compatible with clipping
     oFragColor = texture(sColor0, tc);
 #else
-    float alpha = texture(sColor0, tc).a;
+    vec4 color = texture(sColor0, tc) * vColor;
 #ifdef WR_FEATURE_TRANSFORM
     float a = 0.0;
     init_transform_fs(vLocalPos, a);
-    alpha *= a;
+    color.a *= a;
 #endif
-    vec4 color = vColor;
-    alpha = min(alpha, do_clip());
-    oFragColor = vec4(vColor.rgb, vColor.a * alpha);
+    color.a = min(color.a, do_clip());
+    oFragColor = color;
 #endif
 }
 #endif

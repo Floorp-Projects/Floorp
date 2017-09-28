@@ -186,7 +186,9 @@ impl FontContext {
         // Apply extra pixel of padding for subpixel AA, due to the filter.
         let padding = match font.render_mode {
             FontRenderMode::Subpixel => self.lcd_extra_pixels * 64,
-            FontRenderMode::Alpha | FontRenderMode::Mono => 0,
+            FontRenderMode::Alpha |
+            FontRenderMode::Mono |
+            FontRenderMode::Bitmap => 0,
         };
         cbox.xMin -= padding as FT_Pos;
         cbox.xMax += padding as FT_Pos;
@@ -262,6 +264,11 @@ impl FontContext {
         slot.and_then(|slot| self.get_glyph_dimensions_impl(slot, font, key))
     }
 
+    pub fn is_bitmap_font(&mut self, _font_key: FontKey) -> bool {
+        // TODO(gw): Support bitmap fonts in Freetype.
+        false
+    }
+
     pub fn rasterize_glyph(
         &mut self,
         font: &FontInstance,
@@ -276,6 +283,7 @@ impl FontContext {
             FontRenderMode::Mono => FT_Render_Mode::FT_RENDER_MODE_MONO,
             FontRenderMode::Alpha => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
             FontRenderMode::Subpixel => FT_Render_Mode::FT_RENDER_MODE_LCD,
+            FontRenderMode::Bitmap => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
         };
 
         // Get dimensions of the glyph, to see if we need to rasterize it.
