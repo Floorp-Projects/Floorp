@@ -2935,11 +2935,6 @@ MediaManager::AddWindowID(uint64_t aWindowId,
     return;
   }
 
-  auto* window = nsGlobalWindow::GetInnerWindowWithId(aWindowId);
-  if (window) {
-    window->AsInner()->UpdateUserMediaCount(1);
-  }
-
   GetActiveWindows()->Put(aWindowId, aListener);
 }
 
@@ -2954,8 +2949,6 @@ MediaManager::RemoveWindowID(uint64_t aWindowId)
     LOG(("No inner window for %" PRIu64, aWindowId));
     return;
   }
-
-  window->AsInner()->UpdateUserMediaCount(-1);
 
   nsPIDOMWindowOuter* outer = window->AsInner()->GetOuterWindow();
   if (!outer) {
