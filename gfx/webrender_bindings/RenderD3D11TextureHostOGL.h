@@ -53,6 +53,8 @@ private:
 
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
+
+  bool mLocked;
 };
 
 class RenderDXGIYCbCrTextureHostOGL final : public RenderTextureHostOGL
@@ -71,7 +73,28 @@ public:
 
 private:
   virtual ~RenderDXGIYCbCrTextureHostOGL();
+
+  bool EnsureLockable();
+
+  void DeleteTextureHandle();
+
+  RefPtr<gl::GLContext> mGL;
+
+  WindowsHandle mHandles[3];
+  RefPtr<ID3D11Texture2D> mTextures[3];
+  RefPtr<IDXGIKeyedMutex> mKeyedMutexs[3];
+
+  EGLSurface mSurfaces[3];
+  EGLStreamKHR mStreams[3];
+
+  // The gl handles for Y, Cb and Cr data.
+  GLuint mTextureHandles[3];
+
+  gfx::IntSize mSize;
+
+  bool mLocked;
 };
+
 } // namespace wr
 } // namespace mozilla
 
