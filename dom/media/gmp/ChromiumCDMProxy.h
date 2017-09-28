@@ -130,4 +130,4 @@ private:
 
 } // namespace mozilla
 
-#endif // GMPCDMProxy_h_
+#endif // ChromiumCDMProxy_h_
