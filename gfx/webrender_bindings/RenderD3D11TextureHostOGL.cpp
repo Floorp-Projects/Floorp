@@ -250,5 +250,50 @@ RenderDXGITextureHostOGL::GetSize(uint8_t aChannelIndex) const
   }
 }
 
+RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHandles)[3],
+                                                             gfx::IntSize aSize)
+{
+    MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
+}
+
+RenderDXGIYCbCrTextureHostOGL::~RenderDXGIYCbCrTextureHostOGL()
+{
+  MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
+}
+
+void
+RenderDXGIYCbCrTextureHostOGL::SetGLContext(gl::GLContext* aContext)
+{
+
+}
+
+bool
+RenderDXGIYCbCrTextureHostOGL::Lock()
+{
+  return false;
+}
+
+void
+RenderDXGIYCbCrTextureHostOGL::Unlock()
+{
+
+}
+
+GLuint
+RenderDXGIYCbCrTextureHostOGL::GetGLHandle(uint8_t aChannelIndex) const
+{
+  MOZ_ASSERT(aChannelIndex < 3);
+
+  return 0;
+}
+
+gfx::IntSize
+RenderDXGIYCbCrTextureHostOGL::GetSize(uint8_t aChannelIndex) const
+{
+  MOZ_ASSERT(aChannelIndex < 3);
+
+  return gfx::IntSize();
+}
+
 } // namespace wr
 } // namespace mozilla
