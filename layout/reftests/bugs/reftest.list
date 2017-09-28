@@ -53,8 +53,6 @@ skip-if(isDebugBuild||Android||AddressSanitizer||(winWidget&&(!is64Bit))) == 256
 # Debug builds have larger stack frames, so skipped.
 # Making Android on aarch64 not crash is bug 1400811.
 skip-if(isDebugBuild||(Android&&is64Bit)) == 256180-4.html 256180-4-ref.html
-skip-if(isDebugBuild||(Android&&is64Bit)) == 256180-5.html 256180-5-ref.html
-skip-if(isDebugBuild||(Android&&is64Bit)) == 256180-6.html 256180-6-ref.html
 == 25888-1l.html 25888-1l-ref.html
 != 25888-1l.html 25888-1l-notref.html
 == 25888-1r.html 25888-1r-ref.html
