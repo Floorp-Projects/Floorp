@@ -3132,6 +3132,13 @@ pref("layout.display-list.dump", false);
 pref("layout.display-list.dump-content", false);
 pref("layout.display-list.dump-parent", false);
 
+// Toggle retaining display lists between paints
+#ifdef ANDROID
+pref("layout.display-list.retain", false);
+#else
+pref("layout.display-list.retain", false);
+#endif
+
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
