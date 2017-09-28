@@ -872,18 +872,12 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aPrevSibling,
                           InlineReflowInput& aState)
 {
-  NS_PRECONDITION(aFromChild, "null pointer");
-  NS_PRECONDITION(aPrevSibling, "pushing first child");
-  NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
-
 #ifdef NOISY_PUSHING
   printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n",
          this, aFromChild, aPrevSibling);
 #endif
 
-  // Add the frames to our overflow list (let our next in flow drain
-  // our overflow list when it is ready)
-  SetOverflowFrames(mFrames.RemoveFramesAfter(aPrevSibling));
+  PushChildrenToOverflow(aFromChild, aPrevSibling);
   if (aState.mLineLayout) {
     aState.mLineLayout->SetDirtyNextLine();
   }
