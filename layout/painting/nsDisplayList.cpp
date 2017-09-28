@@ -1803,24 +1803,43 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
   // contents, so for example we'd fail to clip frames that have a clip path
   // applied to them. But the current dirty rect doesn't get reset in that
   // case, so we use it to make this case work.
-  nsRect borderBox = aFrame->GetRectRelativeToSelf().Intersect(mDirtyRect);
+  nsRect borderBox = aFrame->GetRectRelativeToSelf().Intersect(mVisibleRect);
   borderBox += ToReferenceFrame(aFrame);
   const DisplayItemClipChain* clip = ClipState().GetCurrentCombinedClipChain(this);
   borderBox = ApplyAllClipNonRoundedIntersection(clip, borderBox);
-  if (!borderBox.IsEmpty()) {
-    LayoutDeviceRect devPixelBorderBox =
-      LayoutDevicePixel::FromAppUnits(borderBox, aFrame->PresContext()->AppUnitsPerDevPixel());
-    LayoutDeviceRect transformedDevPixelBorderBox =
-      TransformBy(referenceFrameToRootReferenceFrame, devPixelBorderBox);
-    transformedDevPixelBorderBox.Round();
-    LayoutDeviceIntRect transformedDevPixelBorderBoxInt;
-    if (transformedDevPixelBorderBox.ToIntRect(&transformedDevPixelBorderBoxInt)) {
-      if (styleUI->mWindowDragging == StyleWindowDragging::Drag) {
-        mWindowDraggingRegion.OrWith(transformedDevPixelBorderBoxInt);
-      } else {
-        mWindowNoDraggingRegion.OrWith(transformedDevPixelBorderBoxInt);
-      }
-    }
+  if (borderBox.IsEmpty()) {
+    return;
+  }
+
+  LayoutDeviceRect devPixelBorderBox =
+    LayoutDevicePixel::FromAppUnits(borderBox, aFrame->PresContext()->AppUnitsPerDevPixel());
+
+  LayoutDeviceRect transformedDevPixelBorderBox =
+    TransformBy(referenceFrameToRootReferenceFrame, devPixelBorderBox);
+  transformedDevPixelBorderBox.Round();
+  LayoutDeviceIntRect transformedDevPixelBorderBoxInt;
+
+  if (!transformedDevPixelBorderBox.ToIntRect(&transformedDevPixelBorderBoxInt)) {
+    return;
+  }
+
+  LayoutDeviceIntRegion& region =
+    styleUI->mWindowDragging == StyleWindowDragging::Drag
+      ? mWindowDraggingRegion : mWindowNoDraggingRegion;
+
+  if (!IsRetainingDisplayList()) {
+    region.OrWith(transformedDevPixelBorderBoxInt);
+    return;
+  }
+
+  if (styleUI->mWindowDragging == StyleWindowDragging::Drag) {
+    mWindowDraggingFrames.emplace_back(aFrame);
+    mWindowDraggingRects.AppendElement(
+      nsRegion::RectToBox(transformedDevPixelBorderBoxInt.ToUnknownRect()));
+  } else {
+    mWindowNoDraggingFrames.emplace_back(aFrame);
+    mWindowNoDraggingRects.AppendElement(
+      nsRegion::RectToBox(transformedDevPixelBorderBoxInt.ToUnknownRect()));
   }
 }
 
@@ -1828,8 +1847,61 @@ LayoutDeviceIntRegion
 nsDisplayListBuilder::GetWindowDraggingRegion() const
 {
   LayoutDeviceIntRegion result;
-  result.Sub(mWindowDraggingRegion, mWindowNoDraggingRegion);;
+  if (!IsRetainingDisplayList()) {
+    result.Sub(mWindowDraggingRegion, mWindowNoDraggingRegion);
+    return result;
+  }
+
+  LayoutDeviceIntRegion dragRegion((mozilla::gfx::ArrayView<pixman_box32_t>(mWindowDraggingRects)));
+  LayoutDeviceIntRegion noDragRegion((mozilla::gfx::ArrayView<pixman_box32_t>(mWindowNoDraggingRects)));
+
+  result.Sub(dragRegion, noDragRegion);
   return result;
+}
+
+void
+nsDisplayListBuilder::RemoveModifiedWindowDraggingRegion()
+{
+  uint32_t i = 0;
+  uint32_t length = mWindowDraggingFrames.size();
+  while (i < length) {
+    if (!mWindowDraggingFrames[i].IsAlive() ||
+        mWindowDraggingFrames[i]->IsFrameModified()) {
+      // Swap the modified frame to the end of the vector so that
+      // we can remove them all at the end in one go.
+      mWindowDraggingFrames[i] = mWindowDraggingFrames[length - 1];
+      mWindowDraggingRects[i] = mWindowDraggingRects[length - 1];
+      length--;
+    } else {
+      i++;
+    }
+  }
+  mWindowDraggingFrames.resize(length);
+  mWindowDraggingRects.SetLength(length);
+
+  i = 0;
+  length = mWindowNoDraggingFrames.size();
+  while (i < length) {
+    if (!mWindowNoDraggingFrames[i].IsAlive() ||
+        mWindowNoDraggingFrames[i]->IsFrameModified()) {
+      mWindowNoDraggingFrames[i] = mWindowNoDraggingFrames[length - 1];
+      mWindowNoDraggingRects[i] = mWindowNoDraggingRects[length - 1];
+      length--;
+    } else {
+      i++;
+    }
+  }
+  mWindowNoDraggingFrames.resize(length);
+  mWindowNoDraggingRects.SetLength(length);
+}
+
+void
+nsDisplayListBuilder::ClearWindowDraggingRegion()
+{
+  mWindowDraggingFrames.clear();
+  mWindowDraggingRects.Clear();
+  mWindowNoDraggingFrames.clear();
+  mWindowNoDraggingRects.Clear();
 }
 
 const uint32_t gWillChangeAreaMultiplier = 3;
