@@ -14,4 +14,4 @@ The in-tree copy is updated by running
   sh update.sh
 from within the modules/brotli directory.
 
-Current version: [commit 46c1a881b41bb638c76247558aa04b1591af3aa7].
+Current version: [commit 5b4769990dc14a2bd466d2599c946c5652cba4b2].
