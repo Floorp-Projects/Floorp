@@ -1079,10 +1079,9 @@ public:
     return slots ? slots->mShadowRoot.get() : nullptr;
   }
 
-private:
+  void ScrollIntoView();
+  void ScrollIntoView(bool aTop);
   void ScrollIntoView(const ScrollIntoViewOptions &aOptions);
-public:
-  void ScrollIntoView(const BooleanOrScrollIntoViewOptions& aObject);
   void Scroll(double aXScroll, double aYScroll);
   void Scroll(const ScrollToOptions& aOptions);
   void ScrollTo(double aXScroll, double aYScroll);
