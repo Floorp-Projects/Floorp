@@ -412,7 +412,8 @@ public:
    */
   nsDisplayListBuilder(nsIFrame* aReferenceFrame,
                        nsDisplayListBuilderMode aMode,
-                       bool aBuildCaret);
+                       bool aBuildCaret,
+                       bool aRetainingDisplayList = false);
   ~nsDisplayListBuilder();
 
   void BeginFrame();
@@ -606,9 +607,18 @@ public:
    * @return Returns true if we should include the caret in any display lists
    * that we make.
    */
-  bool IsBuildingCaret() { return mBuildCaret; }
+  bool IsBuildingCaret() const { return mBuildCaret; }
 
   bool IsRetainingDisplayList() const { return mRetainingDisplayList; }
+
+  bool IsPartialUpdate() const { return mPartialUpdate; }
+  void SetPartialUpdate(bool aPartial) { mPartialUpdate = aPartial; }
+
+  bool IsBuilding() const { return mIsBuilding; }
+  void SetIsBuilding(bool aIsBuilding)
+  {
+    mIsBuilding = aIsBuilding;
+  }
 
   /**
    * Allows callers to selectively override the regular paint suppression checks,
@@ -1710,6 +1720,7 @@ private:
   bool                           mCurrentScrollbarWillHaveLayer;
   bool                           mBuildCaret;
   bool                           mRetainingDisplayList;
+  bool                           mPartialUpdate;
   bool                           mIgnoreSuppression;
   bool                           mIsAtRootOfPseudoStackingContext;
   bool                           mIncludeAllOutOfFlows;
@@ -1736,6 +1747,7 @@ private:
   bool                           mAsyncPanZoomEnabled;
   bool                           mBuildingInvisibleItems;
   bool                           mHitTestShouldStopAtFirstOpaque;
+  bool                           mIsBuilding;
 };
 
 class nsDisplayItem;
@@ -1811,6 +1823,7 @@ public:
     , mAnimatedGeometryRoot(nullptr)
     , mForceNotVisible(false)
     , mDisableSubpixelAA(false)
+    , mReusedItem(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -1880,6 +1893,7 @@ public:
     , mVisibleRect(aOther.mVisibleRect)
     , mForceNotVisible(aOther.mForceNotVisible)
     , mDisableSubpixelAA(aOther.mDisableSubpixelAA)
+    , mReusedItem(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -1917,6 +1931,8 @@ public:
    */
   virtual uint32_t GetPerFrameKey() const { return uint32_t(GetType()); }
 
+  uint8_t GetFlags() { return GetDisplayItemFlagsForType(GetType()); }
+
   /**
    * This is called after we've constructed a display list for event handling.
    * When this is called, we've already ensured that aRect intersects the
@@ -1937,7 +1953,14 @@ public:
    * items by z-index and content order and for some other uses. Never
    * returns null.
    */
-  inline nsIFrame* Frame() const { return mFrame; }
+  inline nsIFrame* Frame() const
+  {
+    MOZ_ASSERT(mFrame, "Trying to use display item after deletion!");
+    return mFrame;
+  }
+
+  bool HasDeletedFrame() const { return !mFrame; }
+
   /**
    * Compute the used z-index of our frame; returns zero for elements to which
    * z-index does not apply, and for z-index:auto.
@@ -2490,9 +2513,18 @@ public:
 
   bool BackfaceIsHidden() const { return mFrame->BackfaceIsHidden(); }
 
-  bool In3DContextAndBackfaceIsHidden() const
+  bool In3DContextAndBackfaceIsHidden()
   {
-    return Frame()->In3DContextAndBackfaceIsHidden();
+    if (mBackfaceHidden) {
+      return *mBackfaceHidden;
+    }
+
+    // We never need to invalidate this cached value since we're
+    // guaranteed to rebuild the display item entirely if it changes.
+    bool backfaceHidden = Frame()->In3DContextAndBackfaceIsHidden();
+    mBackfaceHidden.emplace(backfaceHidden);
+
+    return backfaceHidden;
   }
 
   bool HasSameTypeAndClip(const nsDisplayItem* aOther) const
@@ -2505,6 +2537,18 @@ public:
   {
     return mFrame->GetContent() == aOther->Frame()->GetContent();
   }
+
+  bool IsReused() const
+  {
+    return mReusedItem;
+  }
+
+  void SetReused(bool aReused)
+  {
+    mReusedItem = aReused;
+  }
+
+  virtual bool CanBeReused() const { return true; }
 
   virtual nsIFrame* GetDependentFrame()
   {
@@ -2536,10 +2580,12 @@ protected:
   nsRect    mVisibleRect;
   bool      mForceNotVisible;
   bool      mDisableSubpixelAA;
+  bool      mReusedItem;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool      mPainted;
 #endif
+  mozilla::Maybe<bool> mBackfaceHidden;
 
   struct {
     nsRect mVisibleRect;
@@ -2575,6 +2621,7 @@ public:
    */
   explicit nsDisplayList(nsDisplayListBuilder* aBuilder)
     : mBuilder(aBuilder)
+    , mLength(0)
     , mIsOpaque(false)
     , mForceTransparentSurface(false)
   {
@@ -2597,6 +2644,7 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(mBuilder->DebugContains(aItem));
     mTop->mAbove = aItem;
     mTop = aItem;
+    mLength++;
   }
 
   /**
@@ -2632,6 +2680,7 @@ public:
     if (mTop == &mSentinel) {
       mTop = aItem;
     }
+    mLength++;
   }
 
   /**
@@ -2644,6 +2693,8 @@ public:
       mTop = aList->mTop;
       aList->mTop = &aList->mSentinel;
       aList->mSentinel.mAbove = nullptr;
+      mLength += aList->mLength;
+      aList->mLength = 0;
     }
   }
 
@@ -2661,6 +2712,8 @@ public:
 
       aList->mTop = &aList->mSentinel;
       aList->mSentinel.mAbove = nullptr;
+      mLength += aList->mLength;
+      aList->mLength = 0;
     }
   }
 
@@ -2871,12 +2924,10 @@ public:
   }
 
 private:
-  // This class is only used on stack, so we don't have to worry about leaking
-  // it.  Don't let us be heap-allocated!
-  void* operator new(size_t sz) CPP_THROW_NEW;
-
   nsDisplayItemLink  mSentinel;
   nsDisplayItemLink* mTop;
+
+  uint32_t mLength;
 
   // This is set to true by FrameLayerBuilder if the final visible region
   // is empty (i.e. everything that was visible is covered by some

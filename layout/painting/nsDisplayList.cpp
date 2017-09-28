@@ -909,7 +909,7 @@ nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::InsertScrollFrame(nsI
 }
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
-    nsDisplayListBuilderMode aMode, bool aBuildCaret)
+    nsDisplayListBuilderMode aMode, bool aBuildCaret, bool aRetainingDisplayList)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
       mLayerEventRegions(nullptr),
@@ -918,7 +918,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentContainerASR(nullptr),
       mCurrentFrame(aReferenceFrame),
       mCurrentReferenceFrame(aReferenceFrame),
-      mRootAGR(AnimatedGeometryRoot::CreateAGRForFrame(aReferenceFrame, nullptr, true, false)),
+      mRootAGR(AnimatedGeometryRoot::CreateAGRForFrame(aReferenceFrame, nullptr, true, aRetainingDisplayList)),
       mCurrentAGR(mRootAGR),
       mUsedAGRBudget(0),
       mDirtyRect(-1,-1,-1,-1),
@@ -935,7 +935,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsBuildingScrollbar(false),
       mCurrentScrollbarWillHaveLayer(false),
       mBuildCaret(aBuildCaret),
-      mRetainingDisplayList(false),
+      mRetainingDisplayList(aRetainingDisplayList),
+      mPartialUpdate(false),
       mIgnoreSuppression(false),
       mIsAtRootOfPseudoStackingContext(false),
       mIncludeAllOutOfFlows(false),
@@ -956,7 +957,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mForceLayerForScrollParent(false),
       mAsyncPanZoomEnabled(nsLayoutUtils::AsyncPanZoomEnabled(aReferenceFrame)),
       mBuildingInvisibleItems(false),
-      mHitTestShouldStopAtFirstOpaque(false)
+      mHitTestShouldStopAtFirstOpaque(false),
+      mIsBuilding(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
@@ -2466,11 +2468,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 }
 
 uint32_t nsDisplayList::Count() const {
-  uint32_t count = 0;
-  for (nsDisplayItem* i = GetBottom(); i; i = i->GetAbove()) {
-    ++count;
-  }
-  return count;
+  return mLength;
 }
 
 nsDisplayItem* nsDisplayList::RemoveBottom() {
@@ -2483,6 +2481,7 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
     mTop = &mSentinel;
   }
   item->mAbove = nullptr;
+  mLength--;
   return item;
 }
 
@@ -2735,6 +2734,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   , mAnimatedGeometryRoot(nullptr)
   , mForceNotVisible(aBuilder->IsBuildingInvisibleItems())
   , mDisableSubpixelAA(false)
+  , mReusedItem(false)
 #ifdef MOZ_DUMP_PAINTING
   , mPainted(false)
 #endif
