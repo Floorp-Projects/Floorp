@@ -10,6 +10,9 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChannelWrapperBinding.h"
 
+#include "mozilla/extensions/MatchPattern.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
@@ -145,9 +148,14 @@ public:
   IMPL_EVENT_HANDLER(stop);
 
 
-  already_AddRefed<nsIURI> GetFinalURI(ErrorResult& aRv) const;
+  already_AddRefed<nsIURI> FinalURI() const;
 
-  void GetFinalURL(nsCString& aRetVal, ErrorResult& aRv) const;
+  void GetFinalURL(nsString& aRetVal) const;
+
+
+  bool Matches(const dom::MozRequestFilter& aFilter,
+               const WebExtensionPolicy* aExtension,
+               const dom::MozRequestMatchOptions& aOptions) const;
 
 
   already_AddRefed<nsILoadInfo> GetLoadInfo() const
@@ -228,6 +236,11 @@ private:
   }
 
   void FireEvent(const nsAString& aType);
+
+
+  const URLInfo& FinalURLInfo() const;
+  const URLInfo* DocumentURLInfo() const;
+
 
   uint64_t WindowId(nsILoadInfo* aLoadInfo) const;
 

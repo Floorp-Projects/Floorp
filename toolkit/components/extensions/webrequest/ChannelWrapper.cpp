@@ -82,14 +82,15 @@ ChannelWrapper::SetChannel(nsIChannel* aChannel)
 {
   detail::ChannelHolder::SetChannel(aChannel);
   ClearCachedAttributes();
+  ChannelWrapperBinding::ClearCachedFinalURIValue(this);
+  ChannelWrapperBinding::ClearCachedFinalURLValue(this);
+  mFinalURLInfo.reset();
+  ChannelWrapperBinding::ClearCachedProxyInfoValue(this);
 }
 
 void
 ChannelWrapper::ClearCachedAttributes()
 {
-  ChannelWrapperBinding::ClearCachedFinalURIValue(this);
-  ChannelWrapperBinding::ClearCachedFinalURLValue(this);
-  ChannelWrapperBinding::ClearCachedProxyInfoValue(this);
   ChannelWrapperBinding::ClearCachedRemoteAddressValue(this);
   ChannelWrapperBinding::ClearCachedStatusCodeValue(this);
   ChannelWrapperBinding::ClearCachedStatusLineValue(this);
@@ -370,7 +371,7 @@ ChannelWrapper::IsSystemLoad() const
 bool
 ChannelWrapper::GetCanModify(ErrorResult& aRv) const
 {
-  nsCOMPtr<nsIURI> uri = GetFinalURI(aRv);
+  nsCOMPtr<nsIURI> uri = FinalURI();
   nsAutoCString spec;
   if (uri) {
     uri->GetSpec(spec);
@@ -439,6 +440,93 @@ ChannelWrapper::GetDocumentURL(nsCString& aRetVal) const
     Unused << uri->GetSpec(aRetVal);
   }
 }
+
+
+const URLInfo&
+ChannelWrapper::FinalURLInfo() const
+{
+  if (mFinalURLInfo.isNothing()) {
+    ErrorResult rv;
+    nsCOMPtr<nsIURI> uri = FinalURI();
+    MOZ_ASSERT(uri);
+    mFinalURLInfo.emplace(uri.get(), true);
+
+    // If this is a WebSocket request, mangle the URL so that the scheme is
+    // ws: or wss:, as appropriate.
+    auto& url = mFinalURLInfo.ref();
+    if (Type() == MozContentPolicyType::Websocket &&
+        (url.Scheme() == nsGkAtoms::http ||
+         url.Scheme() == nsGkAtoms::https)) {
+      nsAutoCString spec(url.CSpec());
+      spec.Replace(0, 4, NS_LITERAL_CSTRING("ws"));
+
+      Unused << NS_NewURI(getter_AddRefs(uri), spec);
+      MOZ_RELEASE_ASSERT(uri);
+      mFinalURLInfo.reset();
+      mFinalURLInfo.emplace(uri.get(), true);
+    }
+  }
+  return mFinalURLInfo.ref();
+}
+
+const URLInfo*
+ChannelWrapper::DocumentURLInfo() const
+{
+  if (mDocumentURLInfo.isNothing()) {
+    nsCOMPtr<nsIURI> uri = GetDocumentURI();
+    if (!uri) {
+      return nullptr;
+    }
+    mDocumentURLInfo.emplace(uri.get(), true);
+  }
+  return &mDocumentURLInfo.ref();
+}
+
+
+bool
+ChannelWrapper::Matches(const dom::MozRequestFilter& aFilter,
+                        const WebExtensionPolicy* aExtension,
+                        const dom::MozRequestMatchOptions& aOptions) const
+{
+  if (!HaveChannel()) {
+    return false;
+  }
+
+  if (!aFilter.mTypes.IsNull() && !aFilter.mTypes.Value().Contains(Type())) {
+    return false;
+  }
+
+  auto& urlInfo = FinalURLInfo();
+  if (aFilter.mUrls && !aFilter.mUrls->Matches(urlInfo)) {
+    return false;
+  }
+
+  if (aExtension) {
+    if (!aExtension->CanAccessURI(urlInfo)) {
+      return false;
+    }
+
+    bool isProxy = aOptions.mIsProxy && aExtension->HasPermission(nsGkAtoms::proxy);
+    if (!isProxy && IsSystemLoad()) {
+      return false;
+    }
+
+    if (auto origin = DocumentURLInfo()) {
+      nsAutoCString baseURL;
+      aExtension->GetBaseURL(baseURL);
+
+      if (!isProxy &&
+          !StringBeginsWith(origin->CSpec(), baseURL) &&
+          !aExtension->CanAccessURI(*origin)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+
 
 int64_t
 NormalizeWindowID(nsILoadInfo* aLoadInfo, uint64_t windowID)
@@ -654,25 +742,20 @@ ChannelWrapper::GetStatusLine(nsCString& aRetVal) const
  *****************************************************************************/
 
 already_AddRefed<nsIURI>
-ChannelWrapper::GetFinalURI(ErrorResult& aRv) const
+ChannelWrapper::FinalURI() const
 {
-  nsresult rv = NS_ERROR_UNEXPECTED;
   nsCOMPtr<nsIURI> uri;
   if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
-    rv = NS_GetFinalChannelURI(chan, getter_AddRefs(uri));
-  }
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+    NS_GetFinalChannelURI(chan, getter_AddRefs(uri));
   }
   return uri.forget();
 }
 
 void
-ChannelWrapper::GetFinalURL(nsCString& aRetVal, ErrorResult& aRv) const
+ChannelWrapper::GetFinalURL(nsString& aRetVal) const
 {
-  nsCOMPtr<nsIURI> uri = GetFinalURI(aRv);
-  if (uri) {
-    Unused << uri->GetSpec(aRetVal);
+  if (HaveChannel()) {
+    aRetVal = FinalURLInfo().Spec();
   }
 }
 
