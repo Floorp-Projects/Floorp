@@ -2630,6 +2630,14 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       hasOverrideDirtyRect = true;
     }
   }
+  // Always build the entire display list if we previously had a blend
+  // container since a partial build might make us think we no longer
+  // need the container even though the merged result will.
+  if (aBuilder->IsRetainingDisplayList() && BuiltBlendContainer()) {
+    dirtyRect = visibleRect;
+    aBuilder->MarkFrameModifiedDuringBuilding(this);
+  }
+
   bool usingFilter = StyleEffects()->HasFilters();
   bool usingMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
   bool usingSVGEffects = usingFilter || usingMask;
@@ -2749,7 +2757,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       aBuilder->MarkPreserve3DFramesForDisplayList(this);
     }
 
-    MarkAbsoluteFramesForDisplayList(aBuilder);
+    aBuilder->AdjustWindowDraggingRegion(this);
 
     nsDisplayLayerEventRegions* eventRegions = nullptr;
     if (aBuilder->IsBuildingLayerEventRegions()) {
@@ -2757,8 +2765,57 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       eventRegions->AddFrame(aBuilder, this);
       aBuilder->SetLayerEventRegions(eventRegions);
     }
-    aBuilder->AdjustWindowDraggingRegion(this);
+
+    MarkAbsoluteFramesForDisplayList(aBuilder);
     BuildDisplayList(aBuilder, set);
+
+    // Blend modes are a real pain for retained display lists. We build a blend
+    // container item if the built list contains any blend mode items within
+    // the current stacking context. This can change without an invalidation
+    // to the stacking context frame, or the blend mode frame (e.g. by moving
+    // an intermediate frame).
+    // When we gain/remove a blend container item, we need to mark this frame
+    // as invalid and have the full display list for merging to track
+    // the change correctly.
+    // It seems really hard to track this in advance, as the bookkeeping
+    // required to note which stacking contexts have blend descendants
+    // is complex and likely to be buggy.
+    // Instead we're doing the sad thing, detecting it afterwards, and just
+    // repeating display list building if it changed.
+
+    // If we changed whether we're going to build a blend mode item,
+    // then we need to make sure we're marked as invalid and we've built
+    // the full display list.
+    if (aBuilder->ContainsBlendMode() != BuiltBlendContainer() &&
+        aBuilder->IsRetainingDisplayList()) {
+      SetBuiltBlendContainer(aBuilder->ContainsBlendMode());
+      aBuilder->MarkFrameModifiedDuringBuilding(this);
+
+      // If we did a partial build then delete all the items we just built
+      // and repeat building with the full area.
+      if (!aBuilder->GetDirtyRect().Contains(aBuilder->GetVisibleRect())) {
+        aBuilder->SetDirtyRect(aBuilder->GetVisibleRect());
+        set.DeleteAll(aBuilder);
+
+        if (eventRegions) {
+          eventRegions->Destroy(aBuilder);
+          eventRegions = new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
+          eventRegions->AddFrame(aBuilder, this);
+          aBuilder->SetLayerEventRegions(eventRegions);
+        }
+
+        // If this is the root frame, then the previous call to
+        // MarkAbsoluteFramesForDisplayList might have stored some fixed
+        // background data. Clear that now.
+        if (!GetParent()) {
+          aBuilder->ClearFixedBackgroundDisplayData();
+        }
+
+        MarkAbsoluteFramesForDisplayList(aBuilder);
+        BuildDisplayList(aBuilder, set);
+      }
+    }
+
     if (eventRegions) {
       // If the event regions item ended up empty, throw it away rather than
       // adding it to the display list.
