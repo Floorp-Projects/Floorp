@@ -2233,6 +2233,14 @@ ClientAuthDataRunnable::RunOnTargetThread()
   void* wincx = mSocketInfo;
   nsresult rv;
 
+  if (NS_FAILED(CheckForSmartCardChanges())) {
+    mRV = SECFailure;
+    *mPRetCert = nullptr;
+    *mPRetKey = nullptr;
+    mErrorCodeToReport = SEC_ERROR_LIBRARY_FAILURE;
+    return;
+  }
+
   nsCOMPtr<nsIX509Cert> socketClientCert;
   mSocketInfo->GetClientCert(getter_AddRefs(socketClientCert));
 

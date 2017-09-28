@@ -25,6 +25,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Vector.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsClientAuthRemember.h"
@@ -56,10 +57,6 @@
 #include "sslerr.h"
 #include "sslproto.h"
 #include "prmem.h"
-
-#ifndef MOZ_NO_SMART_CARDS
-#include "nsSmartCardMonitor.h"
-#endif
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
@@ -203,9 +200,6 @@ nsNSSComponent::nsNSSComponent()
   , mLoadableRootsLoadedResult(NS_ERROR_FAILURE)
   , mMutex("nsNSSComponent.mMutex")
   , mNSSInitialized(false)
-#ifndef MOZ_NO_SMART_CARDS
-  , mThreadList(nullptr)
-#endif
 {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ctor\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -286,76 +280,6 @@ nsNSSComponent::GetNSSBundleString(const char* name, nsAString& outString)
 
   return rv;
 }
-
-#ifndef MOZ_NO_SMART_CARDS
-nsresult
-nsNSSComponent::LaunchSmartCardThreads()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  AutoSECMODListReadLock lock;
-  SECMODModuleList* list = SECMOD_GetDefaultModuleList();
-  nsresult rv;
-  while (list) {
-    rv = LaunchSmartCardThread(list->module);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    list = list->next;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::LaunchSmartCardThread(SECMODModule* module)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  SmartCardMonitoringThread* newThread;
-  if (SECMOD_HasRemovableSlots(module)) {
-    if (!mThreadList) {
-      mThreadList = new SmartCardThreadList();
-    }
-    newThread = new SmartCardMonitoringThread(module);
-    // newThread is adopted by the add.
-    return mThreadList->Add(newThread);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::ShutdownSmartCardThread(SECMODModule* module)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  if (!mThreadList) {
-    return NS_OK;
-  }
-  mThreadList->Remove(module);
-  return NS_OK;
-}
-
-void
-nsNSSComponent::ShutdownSmartCardThreads()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return;
-  }
-
-  delete mThreadList;
-  mThreadList = nullptr;
-}
-#endif // MOZ_NO_SMART_CARDS
 
 #ifdef XP_WIN
 static bool
@@ -1149,10 +1073,14 @@ nsNSSComponent::HasActiveSmartCards(bool& result)
   nsNSSShutDownPreventionLock lock;
   MutexAutoLock nsNSSComponentLock(mMutex);
 
-  // A non-null list means at least one smart card thread was active
-  if (mThreadList) {
-    result = true;
-    return NS_OK;
+  AutoSECMODListReadLock secmodLock;
+  SECMODModuleList* list = SECMOD_GetDefaultModuleList();
+  while (list) {
+    if (SECMOD_HasRemovableSlots(list->module)) {
+      result = true;
+      return NS_OK;
+    }
+    list = list->next;
   }
 #endif
   result = false;
@@ -1203,7 +1131,51 @@ nsNSSComponent::BlockUntilLoadableRootsLoaded()
     }
   }
   MOZ_ASSERT(mLoadableRootsLoaded);
+
   return mLoadableRootsLoadedResult;
+}
+
+nsresult
+nsNSSComponent::CheckForSmartCardChanges()
+{
+#ifndef MOZ_NO_SMART_CARDS
+  nsNSSShutDownPreventionLock lock;
+  MutexAutoLock nsNSSComponentLock(mMutex);
+
+  if (!mNSSInitialized) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // SECMOD_UpdateSlotList attempts to acquire the list lock as well,
+  // so we have to do this in two steps. The lock protects the list itself, so
+  // if we get our own owned references to the modules we're interested in,
+  // there's no thread safety concern here.
+  Vector<UniqueSECMODModule> modulesWithRemovableSlots;
+  {
+    AutoSECMODListReadLock secmodLock;
+    SECMODModuleList* list = SECMOD_GetDefaultModuleList();
+    while (list) {
+      if (SECMOD_HasRemovableSlots(list->module)) {
+        UniqueSECMODModule module(SECMOD_ReferenceModule(list->module));
+        if (!modulesWithRemovableSlots.append(Move(module))) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      list = list->next;
+    }
+  }
+  for (auto& module : modulesWithRemovableSlots) {
+    // Best-effort.
+    Unused << SECMOD_UpdateSlotList(module.get());
+    for (int i = 0; i < module->slotCount; i++) {
+      // We actually don't care about the return value here - we just need to
+      // call this to get NSS to update its view of this slot.
+      Unused << PK11_IsPresent(module->slots[i]);
+    }
+  }
+#endif
+
+  return NS_OK;
 }
 
 // Returns by reference the path to the directory containing the file that has
@@ -2129,15 +2101,6 @@ nsNSSComponent::InitializeNSS()
   // dynamic options from prefs
   setValidationOptions(true);
 
-#ifndef MOZ_NO_SMART_CARDS
-  rv = LaunchSmartCardThreads();
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-            ("failed to start smart card threads"));
-    return rv;
-  }
-#endif
-
   mozilla::pkix::RegisterErrorTable();
 
   if (PK11_IsFIPS()) {
@@ -2229,9 +2192,6 @@ nsNSSComponent::ShutdownNSS()
 
   Preferences::RemoveObserver(this, "security.");
 
-#ifndef MOZ_NO_SMART_CARDS
-  ShutdownSmartCardThreads();
-#endif
   SSL_ClearSessionCache();
   // TLSServerSocket may be run with the session cache enabled. This ensures
   // those resources are cleaned up.
