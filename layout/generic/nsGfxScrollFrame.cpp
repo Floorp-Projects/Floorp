@@ -3320,9 +3320,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     dirtyRect = dirtyRect.Intersect(mScrollPort);
   }
 
-  bool usingDisplayPortInvalidRect = false;
+  bool dirtyRectHasBeenOverriden = false;
   Unused << DecideScrollableLayer(aBuilder, &visibleRect, &dirtyRect,
-              /* aSetBase = */ !mIsRoot);
+              /* aSetBase = */ !mIsRoot, &dirtyRectHasBeenOverriden);
 
   if (aBuilder->IsForFrameVisibility()) {
     // We expand the dirty rect to catch frames just outside of the scroll port.
@@ -3593,7 +3593,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsRect copyOfDirtyRect = dirtyRect;
         nsRect copyOfVisibleRect = visibleRect;
         Unused << DecideScrollableLayer(aBuilder, &copyOfVisibleRect, &copyOfDirtyRect,
-                    /* aSetBase = */ false);
+                    /* aSetBase = */ false, nullptr);
         if (mWillBuildScrollableLayer) {
           asrSetter.InsertScrollFrame(sf);
         }
@@ -3639,7 +3639,8 @@ bool
 ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                                          nsRect* aVisibleRect,
                                          nsRect* aDirtyRect,
-                                         bool aSetBase)
+                                         bool aSetBase,
+                                         bool* aDirtyRectHasBeenOverriden)
 {
   // Save and check if this changes so we can recompute the current agr.
   bool oldWillBuildScrollableLayer = mWillBuildScrollableLayer;
@@ -3745,7 +3746,21 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
     if (usingDisplayPort) {
       // Override the dirty rectangle if the displayport has been set.
       *aVisibleRect = displayPort;
-      *aDirtyRect = displayPort;
+      if (!aBuilder->IsPartialUpdate() || aBuilder->InInvalidSubtree()) {
+        *aDirtyRect = displayPort;
+        if (aDirtyRectHasBeenOverriden) {
+          *aDirtyRectHasBeenOverriden = true;
+        }
+      } else if (mOuter->HasOverrideDirtyRegion()) {
+        nsRect* rect =
+          mOuter->GetProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
+        if (rect) {
+          *aDirtyRect = *rect;
+          if (aDirtyRectHasBeenOverriden) {
+            *aDirtyRectHasBeenOverriden = true;
+          }
+        }
+      }
     } else if (mIsRoot) {
       // The displayPort getter takes care of adjusting for resolution. So if
       // we have resolution but no displayPort then we need to adjust for

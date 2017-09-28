@@ -627,6 +627,7 @@ public:
     , mForceDescendIntoIfVisible(false)
     , mBuiltDisplayList(false)
     , mFrameIsModified(false)
+    , mHasOverrideDirtyRegion(false)
     , mMayHaveWillChangeBudget(false)
     , mIsPrimaryFrame(false)
   {
@@ -4107,6 +4108,9 @@ public:
   bool IsFrameModified() { return mFrameIsModified; }
   void SetFrameIsModified(bool aFrameIsModified) { mFrameIsModified = aFrameIsModified; }
 
+  bool HasOverrideDirtyRegion() { return mHasOverrideDirtyRegion; }
+  void SetHasOverrideDirtyRegion(bool aHasDirtyRegion) { mHasOverrideDirtyRegion = aHasDirtyRegion; }
+
   bool MayHaveWillChangeBudget() { return mMayHaveWillChangeBudget; }
   void SetMayHaveWillChangeBudget(bool aHasBudget) { mMayHaveWillChangeBudget = aHasBudget; }
 
@@ -4288,6 +4292,8 @@ protected:
 
   bool mFrameIsModified : 1;
 
+  bool mHasOverrideDirtyRegion : 1;
+
   /**
    * True if frame has will-change, and currently has display
    * items consuming some of the will-change budget.
@@ -4302,7 +4308,7 @@ private:
 
 protected:
 
-  // There is a 5-bit gap left here.
+  // There is a 4-bit gap left here.
 
   // Helpers
   /**
