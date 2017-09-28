@@ -54,6 +54,8 @@ OSXVersionToOperatingSystem(uint32_t aOSXVersion)
         return OperatingSystem::OSX10_11;
       case 12:
         return OperatingSystem::OSX10_12;
+      case 13:
+        return OperatingSystem::OSX10_13;
     }
   }
 
