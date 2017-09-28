@@ -179,8 +179,7 @@ def create_parser(mach_interface=False):
     add_arg('--stylo-threads', type=int,
             dest='stylothreads',
             help='If given, run Stylo with a certain number of threads')
-    add_arg('--profile', type=str, default=None,
-            help="Downloads a profile from TaskCluster and uses it")
+
     add_logging_group(parser)
     return parser
 
