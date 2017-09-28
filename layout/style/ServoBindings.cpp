@@ -11,6 +11,7 @@
 #include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
 #include "gfxFontFeatures.h"
+#include "jsfriendapi.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSCounterStyleRule.h"
@@ -2637,6 +2638,20 @@ Gecko_GetSystemPageSize()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mozilla::ipc::SharedMemory::SystemPageSize();
+}
+
+void
+Gecko_ProtectBuffer(void* aBuffer, size_t aSize)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  js::ProtectBuffer(aBuffer, aSize);
+}
+
+void
+Gecko_UnprotectBuffer(void* aBuffer, size_t aSize)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  js::UnprotectBuffer(aBuffer, aSize);
 }
 
 NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
