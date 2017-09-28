@@ -779,6 +779,10 @@ mochitest-gpu:
     treeherder-symbol: tc-M(gpu)
     loopback-video: true
     virtualization: virtual-with-gpu
+    worker-type:
+        by-test-platform:
+            windows10-64.*: buildbot-bridge/buildbot-bridge
+            default: null
     e10s:
         by-test-platform:
             windows7-32/debug: both
