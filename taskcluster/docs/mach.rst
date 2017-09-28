@@ -24,19 +24,26 @@ graph-generation process and output the results.
 ``mach taskgraph morphed``
    Get the morhped task graph
 
-Each of these commands takes an optional ``--parameters`` option giving a file
+See :doc:`how-tos` for further practical tips on debugging task-graph mechanics
+locally.
+
+Parameters
+----------
+
+Each of these commands takes an optional ``--parameters`` argument giving a file
 with parameters to guide the graph generation.  The decision task helpfully
 produces such a file on every run, and that is generally the easiest way to get
 a parameter file.  The parameter keys and values are described in
 :doc:`parameters`; using that information, you may modify an existing
 ``parameters.yml`` or create your own.  The ``--parameters`` option can also
-take an argument of the form ``project=<project>`` which will fetch the
-parameters from the latest push on that project; or ``task-id=<task-id>`` which
-will fetch the parameters from the given decision task. It defaults to
-``project=mozilla-central``.
+take the following forms:
 
-See :doc:`how-tos` for further practical tips on debugging task-graph mechanics
-locally.
+``project=<project>``
+   Fetch the parameters from the latest push on that project
+``task-id=<task-id>``
+   Fetch the parameters from the given decision task id
+
+If not specified, parameters will default to ``project=mozilla-central``.
 
 Taskgraph JSON Format
 ---------------------
