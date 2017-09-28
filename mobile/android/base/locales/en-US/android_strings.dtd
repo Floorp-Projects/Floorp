@@ -92,6 +92,7 @@
      in the folder. -->
 <!ENTITY bookmark_folder_items "&formatD; items">
 <!ENTITY bookmark_folder_one_item "1 item">
+<!ENTITY bookmark_folder_updated "Folder updated">
 <!ENTITY bookmark_parent_folder "Parent Folder">
 <!ENTITY bookmark_add_folder "Add new folder">
 
