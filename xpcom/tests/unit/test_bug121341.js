@@ -5,7 +5,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 function run_test() {
   var ios = Components.classes["@mozilla.org/network/io-service;1"].
             getService(Components.interfaces.nsIIOService);
-                      
+
   var dataFile = do_get_file("data/bug121341.properties");
   var channel = NetUtil.newChannel({
     uri: ios.newFileURI(dataFile, null, null),
@@ -65,7 +65,6 @@ function run_test() {
   try {
     properties2.load(inp);
     do_throw("load() didn't fail");
-  }
-  catch (e) {
+  } catch (e) {
   }
 }

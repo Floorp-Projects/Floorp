@@ -15,9 +15,9 @@ function INIProcessorFactory() {
 
 INIProcessorFactory.prototype = {
     classID: Components.ID("{6ec5f479-8e13-4403-b6ca-fe4c2dca14fd}"),
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIINIParserFactory]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIINIParserFactory]),
 
-    createINIParser : function (aINIFile) {
+    createINIParser(aINIFile) {
         return new INIProcessor(aINIFile);
     }
 
@@ -35,9 +35,9 @@ function INIProcessor(aFile) {
 }
 
 INIProcessor.prototype = {
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIINIParser, Ci.nsIINIParserWriter]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIINIParser, Ci.nsIINIParserWriter]),
 
-    __utf8Converter : null, // UCS2 <--> UTF8 string conversion
+    __utf8Converter: null, // UCS2 <--> UTF8 string conversion
     get _utf8Converter() {
         if (!this.__utf8Converter) {
             this.__utf8Converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
@@ -47,7 +47,7 @@ INIProcessor.prototype = {
         return this.__utf8Converter;
     },
 
-    __utf16leConverter : null, // UCS2 <--> UTF16LE string conversion
+    __utf16leConverter: null, // UCS2 <--> UTF16LE string conversion
     get _utf16leConverter() {
         if (!this.__utf16leConverter) {
             this.__utf16leConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
@@ -57,18 +57,18 @@ INIProcessor.prototype = {
         return this.__utf16leConverter;
     },
 
-    _utfConverterReset : function() {
+    _utfConverterReset() {
         this.__utf8Converter = null;
         this.__utf16leConverter = null;
     },
 
-    _iniFile : null,
-    _iniData : null,
+    _iniFile: null,
+    _iniData: null,
 
     /*
      * Reads the INI file and stores the data internally.
      */
-    _readFile : function() {
+    _readFile() {
         // If file doesn't exist, there's nothing to do.
         if (!this._iniFile.exists() || 0 == this._iniFile.fileSize)
             return;
@@ -85,14 +85,14 @@ INIProcessor.prototype = {
 
     // nsIINIParser
 
-    getSections : function() {
+    getSections() {
         let sections = [];
         for (let section in this._iniData)
             sections.push(section);
         return new stringEnumerator(sections);
     },
 
-    getKeys : function(aSection) {
+    getKeys(aSection) {
         let keys = [];
         if (aSection in this._iniData)
             for (let key in this._iniData[aSection])
@@ -100,7 +100,7 @@ INIProcessor.prototype = {
         return new stringEnumerator(keys);
     },
 
-    getString : function(aSection, aKey) {
+    getString(aSection, aKey) {
         if (!(aSection in this._iniData))
             throw Cr.NS_ERROR_FAILURE;
         if (!(aKey in this._iniData[aSection]))
@@ -111,7 +111,7 @@ INIProcessor.prototype = {
 
     // nsIINIParserWriter
 
-    setString : function(aSection, aKey, aValue) {
+    setString(aSection, aKey, aValue) {
         const isSectionIllegal = /[\0\r\n\[\]]/;
         const isKeyValIllegal  = /[\0\r\n=]/;
 
@@ -128,7 +128,7 @@ INIProcessor.prototype = {
         this._iniData[aSection][aKey] = aValue;
     },
 
-    writeFile : function(aFile, aFlags) {
+    writeFile(aFile, aFlags) {
 
         let converter;
         function writeLine(data) {
@@ -152,7 +152,7 @@ INIProcessor.prototype = {
         outputStream.QueryInterface(Ci.nsISafeOutputStream); // for .finish()
 
         if (Ci.nsIINIParserWriter.WRITE_UTF16 == aFlags
-         && 'nsIWindowsRegKey' in Ci) {
+         && "nsIWindowsRegKey" in Ci) {
             outputStream.write("\xFF\xFE", 2);
             converter = this._utf16leConverter;
         } else {
@@ -174,16 +174,16 @@ function stringEnumerator(stringArray) {
     this._strings = stringArray;
 }
 stringEnumerator.prototype = {
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIUTF8StringEnumerator]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIUTF8StringEnumerator]),
 
-    _strings : null,
+    _strings: null,
     _enumIndex: 0,
 
-    hasMore : function() {
+    hasMore() {
         return (this._enumIndex < this._strings.length);
     },
 
-    getNext : function() {
+    getNext() {
         return this._strings[this._enumIndex++];
     }
 };
