@@ -93,19 +93,6 @@ void GraphDriver::EnsureNextIteration()
   mGraphImpl->EnsureNextIteration();
 }
 
-void GraphDriver::Shutdown()
-{
-  if (AsAudioCallbackDriver()) {
-    LOG(LogLevel::Debug,
-        ("Releasing audio driver off main thread (GraphDriver::Shutdown)."));
-    RefPtr<AsyncCubebTask> releaseEvent =
-      new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebOperation::SHUTDOWN);
-    releaseEvent->Dispatch(NS_DISPATCH_SYNC);
-  } else {
-    Stop();
-  }
-}
-
 bool GraphDriver::Switching()
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
@@ -262,7 +249,7 @@ ThreadedDriver::RemoveCallback()
 }
 
 void
-ThreadedDriver::Stop()
+ThreadedDriver::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
   // mGraph's thread is not running so it's OK to do whatever here
@@ -861,6 +848,16 @@ AudioCallbackDriver::WakeUp()
 {
   mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
   mGraphImpl->GetMonitor().Notify();
+}
+
+void
+AudioCallbackDriver::Shutdown()
+{
+  LOG(LogLevel::Debug,
+      ("Releasing audio driver off main thread (GraphDriver::Shutdown)."));
+  RefPtr<AsyncCubebTask> releaseEvent =
+    new AsyncCubebTask(this, AsyncCubebOperation::SHUTDOWN);
+  releaseEvent->Dispatch(NS_DISPATCH_SYNC);
 }
 
 #if defined(XP_WIN)
