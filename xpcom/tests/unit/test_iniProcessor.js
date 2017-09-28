@@ -12,12 +12,12 @@ function parserForFile(filename) {
         do_check_true(!!file);
         parser = factory.createINIParser(file);
         do_check_true(!!parser);
-    } catch(e) {
+    } catch (e) {
 	dump("INFO | caught error: " + e);
         // checkParserOutput will handle a null parser when it's expected.
     }
     return parser;
-    
+
 }
 
 function checkParserOutput(parser, expected) {
@@ -84,13 +84,13 @@ var testdata = [
     { filename: "data/iniparser11.ini", reference: { section1: { name1: "value1" } } },
     { filename: "data/iniparser12.ini", reference: { section1: { name1: "value1" } } },
     { filename: "data/iniparser13.ini", reference: { section1: { name1: "value1" } } },
-    { filename: "data/iniparser14.ini", reference: 
+    { filename: "data/iniparser14.ini", reference:
                     { section1: { name1: "value1", name2: "value2" },
                       section2: { name1: "value1", name2: "foopy"  }} },
-    { filename: "data/iniparser15.ini", reference: 
+    { filename: "data/iniparser15.ini", reference:
                     { section1: { name1: "newValue1" },
                       section2: { name1: "foopy"     }} },
-    { filename: "data/iniparser16.ini", reference: 
+    { filename: "data/iniparser16.ini", reference:
                     { "☺♫": { "♫": "☻", "♪": "♥"  },
                        "☼": { "♣": "♠", "♦": "♥"  }} },
 
@@ -131,7 +131,7 @@ var testdata = [
 
     let os = Cc["@mozilla.org/xre/app-info;1"]
              .getService(Ci.nsIXULRuntime).OS;
-    if("WINNT" === os) {
+    if ("WINNT" === os) {
         testdata.push( { filename: "data/iniparser01-utf16leBOM.ini",
                          reference: testdata[0].reference } );
         testdata.push( { filename: "data/iniparser02-utf16leBOM.ini",
@@ -175,7 +175,7 @@ do_check_true(!!factory);
 // and read it back to ensure that nothing changed.
 while (testnum < testdata.length) {
     dump("\nINFO | test #" + ++testnum);
-    let filename = testdata[testnum -1].filename;
+    let filename = testdata[testnum - 1].filename;
     dump(", filename " + filename + "\n");
     let parser = parserForFile(filename);
     checkParserOutput(parser, testdata[testnum - 1].reference);
@@ -282,7 +282,7 @@ caughtError = false;
 try { parser.SetString("ok", "ok", "bad="); } catch (e) { caughtError = true; }
 do_check_true(caughtError);
 
-} catch(e) {
+} catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;
 }
 }

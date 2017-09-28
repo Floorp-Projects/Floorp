@@ -7,8 +7,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
 
-function run_test()
-{
+function run_test() {
   // Generate a leaf name that is 255 characters long.
   var longLeafName = new Array(256).join("T");
 
@@ -21,8 +20,7 @@ function run_test()
   try {
     tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     do_throw("Creating an item in a folder with a very long name should throw");
-  }
-  catch (e) {
+  } catch (e) {
     if (!(e instanceof Ci.nsIException &&
           e.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH)) {
       throw e;

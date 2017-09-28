@@ -12,11 +12,10 @@
 var Cu = Components.utils;
 const { byteSize } = Cu.getJSTestingFunctions();
 
-function run_test()
-{
+function run_test() {
   const objects = [
     {},
-    { w: 1, x: 2, y: 3, z:4, a: 5 },
+    { w: 1, x: 2, y: 3, z: 4, a: 5 },
     [],
     Array(10).fill(null),
     new RegExp("(2|two) problems", "g"),
