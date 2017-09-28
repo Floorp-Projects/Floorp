@@ -329,6 +329,79 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
     mCurrRules.mXbpExpr = LExpr(NODEREF, DW_REG_INTEL_XBP, 0);
   }
 
+#elif defined(GP_ARCH_mips64)
+  // ---------------- mips ---------------- //
+  //
+  // Now, can we add the rule to our summary?  This depends on whether
+  // the registers and the overall expression are representable.  This
+  // is the heart of the summarisation process.
+   switch (aNewReg) {
+
+    case DW_REG_CFA:
+      // This is a rule that defines the CFA.  The only forms we can
+      // represent are: = SP+offset or = FP+offset.
+      if (how != NODEREF) {
+        reason1 = "rule for DW_REG_CFA: invalid |how|";
+        goto cant_summarise;
+      }
+      if (oldReg != DW_REG_MIPS_SP && oldReg != DW_REG_MIPS_FP) {
+        reason1 = "rule for DW_REG_CFA: invalid |oldReg|";
+        goto cant_summarise;
+      }
+      mCurrRules.mCfaExpr = LExpr(how, oldReg, offset);
+      break;
+
+   case DW_REG_MIPS_SP: case DW_REG_MIPS_FP: case DW_REG_MIPS_PC: {
+      // This is a new rule for SP, FP or PC (the return address).
+      switch (how) {
+        case NODEREF: case DEREF:
+          // Check the old register is one we're tracking.
+          if (!registerIsTracked((DW_REG_NUMBER)oldReg) &&
+              oldReg != DW_REG_CFA) {
+            reason1 = "rule for SP/FP/PC: uses untracked reg";
+            goto cant_summarise;
+          }
+          break;
+        case PFXEXPR: {
+          // Check that the prefix expression only mentions tracked registers.
+          const vector<PfxInstr>* pfxInstrs = mSecMap->GetPfxInstrs();
+          reason2 = checkPfxExpr(pfxInstrs, offset);
+          if (reason2) {
+            reason1 = "rule for SP/FP/PC: ";
+            goto cant_summarise;
+          }
+          break;
+        }
+        default:
+          goto cant_summarise;
+      }
+      LExpr expr = LExpr(how, oldReg, offset);
+      switch (aNewReg) {
+        case DW_REG_MIPS_FP: mCurrRules.mFPexpr = expr; break;
+        case DW_REG_MIPS_SP: mCurrRules.mSPexpr = expr; break;
+        case DW_REG_MIPS_PC: mCurrRules.mPCexpr = expr; break;
+        default: MOZ_CRASH("impossible value for aNewReg");
+      }
+      break;
+    }
+    default:
+      // Leave |reason1| and |reason2| unset here, for the reasons
+      // explained in the analogous point in the ARM case just above.
+      goto cant_summarise;
+  }
+
+  // On MIPS, it seems the old SP value before the call is always the
+  // same as the CFA.  Therefore, in the absence of any other way to
+  // recover the SP, specify that the CFA should be copied.
+  if (mCurrRules.mSPexpr.mHow == UNKNOWN) {
+    mCurrRules.mSPexpr = LExpr(NODEREF, DW_REG_CFA, 0);
+  }
+
+  // Also, gcc says "Undef" for FP when it is unchanged.
+  if (mCurrRules.mFPexpr.mHow == UNKNOWN) {
+    mCurrRules.mFPexpr = LExpr(NODEREF, DW_REG_MIPS_FP, 0);
+  }
+
 #else
 
 # error "Unsupported arch"
