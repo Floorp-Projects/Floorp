@@ -4,10 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'console-api-call.js',
-    'console-command.js',
-    'default-renderer.js',
-    'evaluation-result.js',
-    'network-event-message.js',
-    'page-error.js',
+    'ConsoleApiCall.js',
+    'ConsoleCommand.js',
+    'DefaultRenderer.js',
+    'EvaluationResult.js',
+    'NetworkEventMessage.js',
+    'PageError.js',
 )

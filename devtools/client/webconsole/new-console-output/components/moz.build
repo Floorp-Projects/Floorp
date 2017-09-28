@@ -8,16 +8,16 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'collapse-button.js',
-    'console-output.js',
-    'console-table.js',
-    'filter-bar.js',
-    'filter-button.js',
-    'filter-checkbox.js',
-    'grip-message-body.js',
-    'message-container.js',
-    'message-icon.js',
-    'message-indent.js',
-    'message-repeat.js',
-    'message.js'
+    'CollapseButton.js',
+    'ConsoleOutput.js',
+    'ConsoleTable.js',
+    'FilterBar.js',
+    'FilterButton.js',
+    'FilterCheckbox.js',
+    'GripMessageBody.js',
+    'Message.js',
+    'MessageContainer.js',
+    'MessageIcon.js',
+    'MessageIndent.js',
+    'MessageRepeat.js'
 )

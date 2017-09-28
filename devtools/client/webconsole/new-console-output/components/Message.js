@@ -16,10 +16,10 @@ const {
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const {MESSAGE_SOURCE} = require("devtools/client/webconsole/new-console-output/constants");
-const CollapseButton = require("devtools/client/webconsole/new-console-output/components/collapse-button");
-const MessageIndent = require("devtools/client/webconsole/new-console-output/components/message-indent").MessageIndent;
-const MessageIcon = require("devtools/client/webconsole/new-console-output/components/message-icon");
-const MessageRepeat = require("devtools/client/webconsole/new-console-output/components/message-repeat");
+const CollapseButton = require("devtools/client/webconsole/new-console-output/components/CollapseButton");
+const MessageIndent = require("devtools/client/webconsole/new-console-output/components/MessageIndent").MessageIndent;
+const MessageIcon = require("devtools/client/webconsole/new-console-output/components/MessageIcon");
+const MessageRepeat = require("devtools/client/webconsole/new-console-output/components/MessageRepeat");
 const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
 const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
 
