@@ -963,6 +963,55 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
   }
 }
 
+void
+nsIFrame::MarkNeedsDisplayItemRebuild()
+{
+  if (!gfxPrefs::LayoutRetainDisplayList() || !XRE_IsContentProcess() ||
+      IsFrameModified()) {
+    // Skip non-content processes and frames that are already marked modified.
+    return;
+  }
+
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+  MOZ_ASSERT(displayRoot);
+
+  nsIFrame* viewport = nsLayoutUtils::GetViewportFrame(this);
+  MOZ_ASSERT(viewport);
+
+  std::vector<WeakFrame>* modifiedFrames =
+    viewport->GetProperty(nsIFrame::ModifiedFrameList());
+
+  if (!modifiedFrames) {
+    modifiedFrames = new std::vector<WeakFrame>();
+    viewport->SetProperty(nsIFrame::ModifiedFrameList(), modifiedFrames);
+  }
+
+  modifiedFrames->emplace_back(this);
+
+  // TODO: this is a bit of a hack. We are using ModifiedFrameList property to
+  // decide whether we are trying to reuse the display list.
+  if (displayRoot != viewport &&
+      !displayRoot->HasProperty(nsIFrame::ModifiedFrameList())) {
+    displayRoot->SetProperty(nsIFrame::ModifiedFrameList(),
+                             new std::vector<WeakFrame>());
+  }
+
+  MOZ_ASSERT(PresContext()->LayoutPhaseCount(eLayoutPhase_DisplayListBuilding) == 0);
+  SetFrameIsModified(true);
+
+  // Hopefully this is cheap, but we could use a frame state bit to note
+  // the presence of dependencies to speed it up.
+  DisplayItemArray* items = GetProperty(DisplayItems());
+  if (items) {
+    for (nsDisplayItem* i : *items) {
+      if (i->GetDependentFrame() == this &&
+          !i->HasDeletedFrame()) {
+        i->Frame()->MarkNeedsDisplayItemRebuild();
+      }
+    }
+  }
+}
+
 // Subclass hook for style post processing
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
