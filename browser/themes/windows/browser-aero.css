@@ -23,17 +23,21 @@
 }
 
 @media (-moz-windows-compositor) {
+  #main-window {
+    -moz-appearance: -moz-win-glass;
+  }
+
+
+  /* On win10, if we don't set this on the entire browser container including
+   * the sidebar, if the sidebar is open the accent color bleeds through in
+   * the titlebar */
+  #browser {
+    -moz-appearance: -moz-win-exclude-glass;
+  }
+
   @media not all and (-moz-os-version: windows-win7) {
     @media not all and (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
-        :root[sizemode=normal][tabsintitlebar] {
-          border-top: 1px solid -moz-win-accentcolor;
-        }
-
-        :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive {
-          border-top-color: rgba(0,0,0,.2);
-        }
-
         :root:not(:-moz-lwtheme) {
           background-color: hsl(0, 0%, 78%);
         }
@@ -62,14 +66,6 @@
       @media (-moz-windows-default-theme: 0) {
         :root {
           background-color: transparent;
-          -moz-appearance: -moz-win-glass;
-        }
-
-        /* On win10, if we don't set this on the entire browser container including
-         * the sidebar, if the sidebar is open the accent color bleeds through in
-         * the titlebar */
-        #browser {
-          -moz-appearance: -moz-win-exclude-glass;
         }
       }
 
@@ -234,13 +230,13 @@
 
   @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
-    :root {
-      background-color: transparent;
-      -moz-appearance: -moz-win-borderless-glass;
+    #main-window[sizemode="maximized"] #titlebar-buttonbox {
+      margin-inline-end: 3px;
     }
 
-    :root[sizemode="maximized"] #titlebar-buttonbox {
-      margin-inline-end: 3px;
+    #main-window {
+      background-color: transparent;
+      -moz-appearance: -moz-win-borderless-glass;
     }
 
     /* These should be hidden w/ glass enabled. Windows draws its own buttons. */
@@ -251,6 +247,10 @@
     /* The borders on the glass frame are ours, and inside #browser, and on
      * win7 we want to make sure they are "glassy", so we can't use #browser
      * as the exclude-glass container. We use #appcontent instead. */
+    #browser {
+      -moz-appearance: none;
+    }
+
     #appcontent {
       -moz-appearance: -moz-win-exclude-glass;
     }
