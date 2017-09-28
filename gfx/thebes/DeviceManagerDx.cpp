@@ -689,7 +689,7 @@ DisableAdvancedLayers(FeatureStatus aStatus, const nsCString aMessage, const nsC
 
   FeatureFailure info(aStatus, aMessage, aFailureId);
   if (GPUParent* gpu = GPUParent::GetSingleton()) {
-    gpu->SendUpdateFeature(Feature::ADVANCED_LAYERS, info);
+    Unused << gpu->SendUpdateFeature(Feature::ADVANCED_LAYERS, info);
   }
 
   if (aFailureId.Length()) {
