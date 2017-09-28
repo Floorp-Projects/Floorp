@@ -1472,20 +1472,6 @@ nsContainerFrame::SetPropTableFrames(nsFrameList* aFrameList,
   SetProperty(aProperty, aFrameList);
 }
 
-/**
- * Push aFromChild and its next siblings to the next-in-flow. Change the
- * geometric parent of each frame that's pushed. If there is no next-in-flow
- * the frames are placed on the overflow list (and the geometric parent is
- * left unchanged).
- *
- * Updates the next-in-flow's child count. Does <b>not</b> update the
- * pusher's child count.
- *
- * @param   aFromChild the first child frame to push. It is disconnected from
- *            aPrevSibling
- * @param   aPrevSibling aFromChild's previous sibling. Must not be null. It's
- *            an error to push a parent's first child frame
- */
 void
 nsContainerFrame::PushChildren(nsIFrame* aFromChild,
                                nsIFrame* aPrevSibling)
@@ -1516,14 +1502,6 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild,
   }
 }
 
-/**
- * Moves any frames on the overflow lists (the prev-in-flow's overflow list and
- * the receiver's overflow list) to the child list.
- *
- * Updates this frame's child count and content mapping.
- *
- * @return  true if any frames were moved and false otherwise
- */
 bool
 nsContainerFrame::MoveOverflowToChildList()
 {
