@@ -21,7 +21,6 @@
 #include "nsIXULAppInfo.h"
 #include "nsIConsoleService.h"
 #include "mozilla/Unused.h"
-#include "GMPDecryptorParent.h"
 #include "nsComponentManagerUtils.h"
 #include "runnable_utils.h"
 #include "VideoUtils.h"
@@ -420,50 +419,6 @@ GeckoMediaPluginService::GetGMPVideoEncoder(GMPCrashHelper* aHelper,
       [rawCallback] {
         UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
         callback->Done(nullptr, nullptr);
-      });
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPDecryptor(GMPCrashHelper* aHelper,
-                                         nsTArray<nsCString>* aTags,
-                                         const nsACString& aNodeId,
-                                         UniquePtr<GetGMPDecryptorCallback>&& aCallback)
-{
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-  if (!SandboxInfo::Get().CanSandboxMedia()) {
-    NS_WARNING("GeckoMediaPluginService::GetGMPDecryptor: "
-               "EME decryption not available without sandboxing support.");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-#endif
-
-  MOZ_ASSERT(mGMPThread->EventTarget()->IsOnCurrentThread());
-  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aCallback);
-
-  if (mShuttingDownOnGMPThread) {
-    return NS_ERROR_FAILURE;
-  }
-
-  GetGMPDecryptorCallback* rawCallback = aCallback.release();
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
-  RefPtr<GMPCrashHelper> helper(aHelper);
-  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_DECRYPTOR), *aTags)
-    ->Then(thread, __func__,
-      [rawCallback, helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
-        RefPtr<GMPContentParent> parent = wrapper->mParent;
-        UniquePtr<GetGMPDecryptorCallback> callback(rawCallback);
-        GMPDecryptorParent* actor = nullptr;
-        if (parent && NS_SUCCEEDED(parent->GetGMPDecryptor(&actor))) {
-          actor->SetCrashHelper(helper);
-        }
-        callback->Done(actor);
-      },
-      [rawCallback] {
-        UniquePtr<GetGMPDecryptorCallback> callback(rawCallback);
-        callback->Done(nullptr);
       });
 
   return NS_OK;

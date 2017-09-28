@@ -124,23 +124,6 @@ interface mozIGeckoMediaPluginService : nsISupports
                           in GetGMPVideoEncoderCallback callback);
 
   /**
-   * Returns a decryption session manager that supports the specified tags.
-   * The array of tags should at least contain a key system tag, and optionally
-   * other tags.
-   * Callable only on GMP thread.
-   * This is an asynchronous operation, the Done method of the callback object
-   * will be called on the GMP thread with the result (which might be null in
-   * the case of failure). This method always takes ownership of the callback
-   * object, but if this method returns an error then the Done method of the
-   * callback object will not be called at all.
-   */
-  [noscript]
-  void getGMPDecryptor(in GMPCrashHelperPtr helper,
-                       in TagArray tags,
-                       in ACString nodeId,
-                       in GetGMPDecryptorCallback callback);
-
-  /**
    * Gets the NodeId for a (origin, urlbarOrigin) pair.
    */
   [noscript]
