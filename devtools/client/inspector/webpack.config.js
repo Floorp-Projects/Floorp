@@ -102,7 +102,7 @@ module.exports = envConfig => {
         "devtools/shared/platform/clipboard": path.join(__dirname,
           "../../client/shared/webpack/shims/platform-clipboard-stub"),
         "devtools/shared/platform/stack": path.join(__dirname,
-          "../../client/shared/webpack/shims/platform-clipboard-stub"),
+          "../../client/shared/webpack/shims/platform-stack-stub"),
         "devtools": path.join(__dirname, "../../"),
         "gcli": path.join(__dirname, "../../shared/gcli/source/lib/gcli"),
         "method": path.join(__dirname, "../../../addon-sdk/source/lib/method"),
