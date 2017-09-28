@@ -1516,7 +1516,7 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 }
 
 bool
-nsContainerFrame::MoveOverflowToChildList()
+nsContainerFrame::MoveOverflowToChildList(nsIFrame* aLineContainer)
 {
   bool result = false;
 
@@ -1526,9 +1526,23 @@ nsContainerFrame::MoveOverflowToChildList()
     AutoFrameListPtr prevOverflowFrames(PresContext(),
                                         prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
-      // Tables are special; they can have repeated header/footer
-      // frames on mFrames at this point.
-      NS_ASSERTION(mFrames.IsEmpty() || IsTableFrame(), "bad overflow list");
+      // Overflow frames from prev-in-flow should have been pushed to
+      // this frame directly if we have already existed, so there should
+      // be no frame in mFrames when we steal frames from overflow list
+      // of prev-in-flow. However, there are two special cases:
+      // * tables can have repeated header/footer frames at this point,
+      // * inline frames always push frames into overflow list rather
+      //   than next-in-flow, so that floats reparenting can be handled
+      //   properly below.
+      NS_ASSERTION(mFrames.IsEmpty() || IsTableFrame() || aLineContainer,
+                   "bad overflow list");
+      // If we are on a frame which has line container, we may need to
+      // reparent floats from prev-in-flow to our line container.
+      if (aLineContainer && aLineContainer->GetPrevContinuation()) {
+        ReparentFloatsForInlineChild(aLineContainer,
+                                     prevOverflowFrames->FirstChild(),
+                                     true);
+      }
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
       nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames,
