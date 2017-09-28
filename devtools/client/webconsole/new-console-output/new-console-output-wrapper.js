@@ -13,8 +13,8 @@ const { createContextMenu } = require("devtools/client/webconsole/new-console-ou
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
-const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
+const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleOutput"));
+const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/FilterBar"));
 
 let store = null;
 
