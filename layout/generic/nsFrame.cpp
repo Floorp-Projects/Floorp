@@ -1129,6 +1129,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS |
                   NS_FRAME_SIMPLE_DISPLAYLIST);
+  this->MarkNeedsDisplayItemRebuild();
 
   mMayHaveRoundedCorners = true;
 }
@@ -6574,7 +6575,7 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                                 0.0f);
 }
 
-static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot, nsIFrame* aFrame)
+static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot, nsIFrame* aFrame, bool aFrameChanged = true)
 {
   MOZ_ASSERT(aDisplayRoot == nsLayoutUtils::GetDisplayRootFrame(aFrame));
   SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
@@ -6584,6 +6585,12 @@ static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot, nsIFrame* aFram
          !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
   }
+
+  if (!aFrameChanged) {
+    return;
+  }
+
+  aFrame->MarkNeedsDisplayItemRebuild();
 }
 
 void
@@ -6621,6 +6628,8 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
   if (aHasDisplayItem) {
     aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
   }
+
+  aFrame->MarkNeedsDisplayItemRebuild();
   SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
   bool needsSchedulePaint = false;
   if (nsLayoutUtils::IsPopup(aFrame)) {
@@ -6849,10 +6858,10 @@ nsIFrame::IsInvalid(nsRect& aRect)
 }
 
 void
-nsIFrame::SchedulePaint(PaintType aType)
+nsIFrame::SchedulePaint(PaintType aType, bool aFrameChanged)
 {
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
-  InvalidateRenderingObservers(displayRoot, this);
+  InvalidateRenderingObservers(displayRoot, this, aFrameChanged);
   SchedulePaintInternal(displayRoot, this, aType);
 }
 
@@ -10561,6 +10570,8 @@ nsIFrame::SetParent(nsContainerFrame* aParent)
   // the way up the frame tree.
   if (aParent->HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
     InvalidateFrame();
+  } else {
+    SchedulePaint();
   }
 }
 

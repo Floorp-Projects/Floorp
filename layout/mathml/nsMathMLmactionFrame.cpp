@@ -200,6 +200,8 @@ nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
 {
   bool needsReflow = false;
 
+  InvalidateFrame();
+
   if (aAttribute == nsGkAtoms::actiontype_) {
     // updating mActionType ...
     int32_t oldActionType = mActionType;

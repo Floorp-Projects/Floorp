@@ -4909,7 +4909,7 @@ FrameLayerBuilder::CheckInLayerTreeCompressionMode()
 
   // If we wanted to be in layer tree compression mode, but weren't, then scheduled
   // a delayed repaint where we will be.
-  mRootPresContext->PresShell()->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DELAYED_COMPRESS);
+  mRootPresContext->PresShell()->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DELAYED_COMPRESS, false);
 
   return false;
 }
