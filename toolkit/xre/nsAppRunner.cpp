@@ -955,7 +955,6 @@ nsXULAppInfo::GetRemoteType(nsAString& aRemoteType)
 static bool gBrowserTabsRemoteAutostart = false;
 static uint64_t gBrowserTabsRemoteStatus = 0;
 static bool gBrowserTabsRemoteAutostartInitialized = false;
-static bool gListeningForCohortChange = false;
 
 NS_IMETHODIMP
 nsXULAppInfo::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) {
@@ -5141,15 +5140,6 @@ MultiprocessBlockPolicy()
 
 namespace mozilla {
 
-static void
-CohortChanged(const char* aPref, void* aClosure)
-{
-  // Reset to the default state and recompute on the next call.
-  gBrowserTabsRemoteAutostartInitialized = false;
-  gBrowserTabsRemoteAutostart = false;
-  Preferences::UnregisterCallback(CohortChanged, "e10s.rollout.cohort");
-}
-
 bool
 BrowserTabsRemoteAutostart()
 {
@@ -5162,15 +5152,6 @@ BrowserTabsRemoteAutostart()
   if (XRE_IsContentProcess()) {
     gBrowserTabsRemoteAutostart = true;
     return gBrowserTabsRemoteAutostart;
-  }
-
-  // This is a pretty heinous hack. On the first launch, we end up retrieving
-  // whether e10s is enabled setting up a document very early in startup. This
-  // caches that e10s is off before the e10srollout extension can run. See
-  // bug 1372824 comment 3 for a more thorough explanation.
-  if (!gListeningForCohortChange) {
-    gListeningForCohortChange = true;
-    Preferences::RegisterCallback(CohortChanged, "e10s.rollout.cohort");
   }
 
   bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
@@ -5231,30 +5212,7 @@ GetMaxWebProcessCount()
 
   const char* optInPref = "dom.ipc.processCount";
   uint32_t optInPrefValue = Preferences::GetInt(optInPref, 1);
-  const char* useDefaultPerformanceSettings =
-    "browser.preferences.defaultPerformanceSettings.enabled";
-  bool useDefaultPerformanceSettingsValue =
-    Preferences::GetBool(useDefaultPerformanceSettings, true);
-
-  // If the user has set dom.ipc.processCount, or if they have opt out of
-  // default performances settings from about:preferences, respect their
-  // decision regardless of add-ons that might affect their experience or
-  // experiment cohort.
-  if (Preferences::HasUserValue(optInPref) || !useDefaultPerformanceSettingsValue) {
-    return std::max(1u, optInPrefValue);
-  }
-
-#ifdef RELEASE_OR_BETA
-  // For our rollout on Release and Beta, we set this pref from the
-  // e10srollout extension. On Nightly, we don't touch the pref at all,
-  // allowing stale values to disable e10s-multi for certain users.
-  if (Preferences::HasUserValue("dom.ipc.processCount.web")) {
-    // The user didn't opt in or out so read the .web version of the pref.
-    return std::max(1, Preferences::GetInt("dom.ipc.processCount.web", 1));
-  }
-#endif
-
-  return optInPrefValue;
+  return std::max(1u, optInPrefValue);
 }
 
 const char*
