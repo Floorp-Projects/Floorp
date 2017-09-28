@@ -904,6 +904,9 @@ public:
 
   LayoutDeviceIntRegion GetWindowDraggingRegion() const;
 
+  void RemoveModifiedWindowDraggingRegion();
+  void ClearWindowDraggingRegion();
+
   /**
    * Allocate memory in our arena. It will only be freed when this display list
    * builder is destroyed. This memory holds nsDisplayItems. nsDisplayItem
@@ -1715,7 +1718,13 @@ private:
   nsRect                         mDirtyRect;
   nsRegion                       mWindowExcludeGlassRegion;
   nsRegion                       mWindowOpaqueRegion;
+
+  std::vector<WeakFrame>         mWindowDraggingFrames;
+  nsTArray<pixman_box32_t>       mWindowDraggingRects;
   LayoutDeviceIntRegion          mWindowDraggingRegion;
+
+  std::vector<WeakFrame>         mWindowNoDraggingFrames;
+  nsTArray<pixman_box32_t>       mWindowNoDraggingRects;
   LayoutDeviceIntRegion          mWindowNoDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
