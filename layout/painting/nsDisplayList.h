@@ -54,6 +54,7 @@ class nsDisplayList;
 class nsDisplayTableItem;
 class nsISelection;
 class nsIScrollableFrame;
+class nsSubDocumentFrame;
 class nsDisplayLayerEventRegions;
 class nsDisplayScrollInfoLayer;
 class nsCaret;
@@ -618,7 +619,13 @@ public:
   void SetIsBuilding(bool aIsBuilding)
   {
     mIsBuilding = aIsBuilding;
+    for (nsIFrame* f : mModifiedFramesDuringBuilding) {
+      f->SetFrameIsModified(false);
+    }
+    mModifiedFramesDuringBuilding.Clear();
   }
+
+  bool InInvalidSubtree() const { return mInInvalidSubtree; }
 
   /**
    * Allows callers to selectively override the regular paint suppression checks,
@@ -992,7 +999,8 @@ public:
         mPrevAGR(aBuilder->mCurrentAGR),
         mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext),
         mPrevAncestorHasApzAwareEventHandler(aBuilder->mAncestorHasApzAwareEventHandler),
-        mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems)
+        mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),
+        mPrevInInvalidSubtree(aBuilder->mInInvalidSubtree)
     {
       if (aForChild->IsTransformed()) {
         aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
@@ -1018,6 +1026,7 @@ public:
       aBuilder->mVisibleRect = aVisibleRect;
       aBuilder->mDirtyRect = aDirtyRect;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
+      aBuilder->mInInvalidSubtree = aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
     }
     void SetReferenceFrameAndCurrentOffset(const nsIFrame* aFrame, const nsPoint& aOffset) {
       mBuilder->mCurrentReferenceFrame = aFrame;
@@ -1043,6 +1052,7 @@ public:
       mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
       mBuilder->mAncestorHasApzAwareEventHandler = mPrevAncestorHasApzAwareEventHandler;
       mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
+      mBuilder->mInInvalidSubtree = mPrevInInvalidSubtree;
     }
   private:
     nsDisplayListBuilder* mBuilder;
@@ -1057,6 +1067,7 @@ public:
     bool                  mPrevIsAtRootOfPseudoStackingContext;
     bool                  mPrevAncestorHasApzAwareEventHandler;
     bool                  mPrevBuildingInvisibleItems;
+    bool                  mPrevInInvalidSubtree;
   };
 
   /**
@@ -1567,6 +1578,14 @@ public:
     mBuildingInvisibleItems = aBuildingInvisibleItems;
   }
 
+  void MarkFrameModifiedDuringBuilding(nsIFrame* aFrame)
+  {
+    if (!aFrame->IsFrameModified()) {
+      mModifiedFramesDuringBuilding.AppendElement(aFrame);
+      aFrame->SetFrameIsModified(true);
+    }
+  }
+
   /**
    * This is a convenience function to ease the transition until AGRs and ASRs
    * are unified.
@@ -1689,6 +1708,8 @@ private:
   // Set of frames already counted in budget
   nsTHashtable<nsPtrHashKey<nsIFrame> > mAGRBudgetSet;
 
+  nsTArray<nsIFrame*>           mModifiedFramesDuringBuilding;
+
   // Relative to mCurrentFrame.
   nsRect                         mVisibleRect;
   nsRect                         mDirtyRect;
@@ -1748,6 +1769,7 @@ private:
   bool                           mBuildingInvisibleItems;
   bool                           mHitTestShouldStopAtFirstOpaque;
   bool                           mIsBuilding;
+  bool                           mInInvalidSubtree;
 };
 
 class nsDisplayItem;

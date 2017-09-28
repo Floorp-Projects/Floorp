@@ -958,7 +958,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mAsyncPanZoomEnabled(nsLayoutUtils::AsyncPanZoomEnabled(aReferenceFrame)),
       mBuildingInvisibleItems(false),
       mHitTestShouldStopAtFirstOpaque(false),
-      mIsBuilding(false)
+      mIsBuilding(false),
+      mInInvalidSubtree(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 

@@ -626,6 +626,7 @@ public:
     , mReflowRequestedForCharDataChange(false)
     , mForceDescendIntoIfVisible(false)
     , mBuiltDisplayList(false)
+    , mFrameIsModified(false)
     , mIsPrimaryFrame(false)
   {
     mozilla::PodZero(&mOverflow);
@@ -1235,6 +1236,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(GenConProperty, ContentArray,
                                       DestroyContentArray)
 
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ModifiedFrameList, std::vector<WeakFrame>)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayItems, DisplayItemArray)
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BidiDataProperty, mozilla::FrameBidiData)
@@ -3069,6 +3071,8 @@ public:
                          const nsRect* aFrameDamageRect = nullptr,
                          uint32_t aFlags = 0);
 
+  void MarkNeedsDisplayItemRebuild();
+
   /**
    * Returns a rect that encompasses everything that might be painted by
    * this frame.  This includes this frame, all its descendant frames, this
@@ -4099,6 +4103,9 @@ public:
   bool BuiltDisplayList() { return mBuiltDisplayList; }
   void SetBuiltDisplayList(bool aBuilt) { mBuiltDisplayList = aBuilt; }
 
+  bool IsFrameModified() { return mFrameIsModified; }
+  void SetFrameIsModified(bool aFrameIsModified) { mFrameIsModified = aFrameIsModified; }
+
 protected:
 
   /**
@@ -4274,6 +4281,8 @@ protected:
    * display list building.
    */
   bool mBuiltDisplayList : 1;
+
+  bool mFrameIsModified : 1;
 
 private:
   /**
