@@ -111,7 +111,7 @@ function test_multiplex_streams() {
   var caught = false;
   try {
     seekable.seek(Ci.nsISeekableStream.NS_SEEK_END, 15);
-  } catch(e) {
+  } catch (e) {
     caught = true;
   }
   do_check_eq(caught, true);

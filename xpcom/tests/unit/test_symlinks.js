@@ -36,8 +36,7 @@ function makeSymLink(from, toName, relative) {
 
   if (relative) {
     createSymLink(from.leafName, to.path);
-  }
-  else {
+  } else {
     createSymLink(from.path, to.path);
   }
 
@@ -52,8 +51,7 @@ function makeSymLink(from, toName, relative) {
     // XXXjag wish I could set followLinks to false so we'd just get
     // the symlink's direct target instead of the final target.
     do_check_eq(from.target, to.target);
-  }
-  else {
+  } else {
     do_check_eq(from.path, to.target);
   }
 
@@ -94,8 +92,7 @@ function setupTestDir(testDir, relative) {
   try {
     makeSymLink(loop, LOOP_LINK, relative);
     do_check_true(false);
-  }
-  catch (e) {
+  } catch (e) {
   }
 }
 

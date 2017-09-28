@@ -11,30 +11,24 @@ var CC = Components.Constructor;
 
 var Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
 
-function run_test()
-{
+function run_test() {
   test_not_initialized();
   test_ends_are_threadsafe();
 }
 
-function test_not_initialized()
-{
+function test_not_initialized() {
   var p = Cc["@mozilla.org/pipe;1"]
             .createInstance(Ci.nsIPipe);
-  try
-  {
+  try {
     var dummy = p.outputStream;
     throw Cr.NS_ERROR_FAILURE;
-  }
-  catch (e)
-  {
+  } catch (e) {
     if (e.result != Cr.NS_ERROR_NOT_INITIALIZED)
       do_throw("using a pipe before initializing it should throw NS_ERROR_NOT_INITIALIZED");
   }
 }
 
-function test_ends_are_threadsafe()
-{
+function test_ends_are_threadsafe() {
   var p, is, os;
 
   p = new Pipe(true, true, 1024, 1, null);
