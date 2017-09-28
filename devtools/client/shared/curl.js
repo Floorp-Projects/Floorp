@@ -88,20 +88,20 @@ const Curl = {
       postData.push(escapeString(text));
       ignoredHeaders.add("content-length");
     }
-
-    // Add method.
-    // For GET and POST requests this is not necessary as GET is the
-    // default. If --data or --binary is added POST is the default.
-    if (!(data.method == "GET" || data.method == "POST")) {
-      command.push("-X");
-      command.push(data.method);
-    }
+    // curl generates the host header itself based on the given URL
+    ignoredHeaders.add("host");
 
     // Add -I (HEAD)
     // For servers that supports HEAD.
     // This will fetch the header of a document only.
     if (data.method == "HEAD") {
       command.push("-I");
+    } else if (!(data.method == "GET" || data.method == "POST")) {
+      // Add method.
+      // For HEAD, GET and POST requests this is not necessary. GET is the
+      // default, if --data or --binary is added POST is used, -I implies HEAD.
+      command.push("-X");
+      command.push(data.method);
     }
 
     // Add request headers.
