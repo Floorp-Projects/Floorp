@@ -16,6 +16,7 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.text.format.DateUtils;
 
+import org.junit.Assert;
 import org.mozilla.focus.R;
 
 import java.io.BufferedReader;
@@ -34,6 +35,7 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.view.KeyEvent.KEYCODE_ENTER;
+import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.allOf;
 
 // This test visits each page and checks whether some essential elements are being displayed
@@ -300,5 +302,14 @@ public final class TestHelper {
 
             return builder.toString();
         }
+    }
+
+    static void waitForWebSiteTitleLoad() {
+        UiObject titleMsg = mDevice.findObject(new UiSelector()
+                .description("focus test page")
+                .enabled(true));
+
+        assertTrue(webView.waitForExists(waitingTime));
+        Assert.assertTrue("Website title loaded", titleMsg.waitForExists(waitingTime));
     }
 }

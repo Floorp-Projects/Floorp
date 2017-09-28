@@ -99,6 +99,7 @@ public class SwitchContextTest {
             .description("Smiley face")
             .enabled(true));
 
+
     @Test
     public void ForegroundTest() throws InterruptedException, UiObjectNotFoundException {
 
@@ -111,8 +112,7 @@ public class SwitchContextTest {
         TestHelper.pressEnterKey();
 
         // Assert website is loaded
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-        Assert.assertTrue("Website title loaded", titleMsg.exists());
+        TestHelper.waitForWebSiteTitleLoad();
         assertTrue(rabbitImage.exists());
 
         // Switch out of Focus, pull down system bar and select open action
@@ -129,7 +129,7 @@ public class SwitchContextTest {
         // Verify that it's on the main view, showing the previous browsing session
         TestHelper.browserURLbar.waitForExists(waitingTime);
         assertTrue(TestHelper.browserURLbar.exists());
-        Assert.assertTrue("Website title loaded", titleMsg.exists());
+        TestHelper.waitForWebSiteTitleLoad();
         assertTrue(rabbitImage.exists());
     }
 
@@ -145,8 +145,7 @@ public class SwitchContextTest {
         TestHelper.pressEnterKey();
 
         // Assert website is loaded
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-        Assert.assertTrue("Website title loaded", titleMsg.exists());
+        TestHelper.waitForWebSiteTitleLoad();
         assertTrue(rabbitImage.exists());
 
         // Switch out of Focus, pull down system bar and select open action
@@ -187,9 +186,7 @@ public class SwitchContextTest {
         TestHelper.pressEnterKey();
 
         // Assert website is loaded
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-        assertTrue(titleMsg.waitForExists(waitingTime));
-        Assert.assertTrue("Website title loaded", titleMsg.exists());
+        TestHelper.waitForWebSiteTitleLoad();
         junit.framework.Assert.assertTrue(rabbitImage.exists());
 
         // Switch out of Focus, open settings app
@@ -224,7 +221,7 @@ public class SwitchContextTest {
         // Verify that it's on the main view, showing the previous browsing session
         TestHelper.browserURLbar.waitForExists(waitingTime);
         assertTrue(TestHelper.browserURLbar.exists());
-        Assert.assertTrue("Website title loaded", titleMsg.exists());
+        TestHelper.waitForWebSiteTitleLoad();
         assertTrue(rabbitImage.exists());
     }
 }

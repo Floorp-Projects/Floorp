@@ -25,7 +25,6 @@ import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
-import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
@@ -88,9 +87,6 @@ public class DownloadTest {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
-    private UiObject titleMsg = TestHelper.mDevice.findObject(new UiSelector()
-            .description("focus test page")
-            .enabled(true));
     private UiObject downloadIcon = TestHelper.mDevice.findObject(new UiSelector()
             .description("download icon")
             .enabled(true));
@@ -115,7 +111,6 @@ public class DownloadTest {
 
     @Test
     public void DownloadFileTest() throws InterruptedException, UiObjectNotFoundException, IOException {
-        final String imagePath = webServer.url(TEST_PATH).toString() + "rabbit.jpg";
 
         // Load website with service worker
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -123,10 +118,7 @@ public class DownloadTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-
-        // Assert website is loaded
-        Assert.assertTrue("Website title loaded", titleMsg.exists());
+        TestHelper.waitForWebSiteTitleLoad();
 
         // Find download icon tap it
         Assert.assertTrue(downloadIcon.isClickable());
