@@ -627,6 +627,7 @@ public:
     , mForceDescendIntoIfVisible(false)
     , mBuiltDisplayList(false)
     , mFrameIsModified(false)
+    , mMayHaveWillChangeBudget(false)
     , mIsPrimaryFrame(false)
   {
     mozilla::PodZero(&mOverflow);
@@ -4106,6 +4107,9 @@ public:
   bool IsFrameModified() { return mFrameIsModified; }
   void SetFrameIsModified(bool aFrameIsModified) { mFrameIsModified = aFrameIsModified; }
 
+  bool MayHaveWillChangeBudget() { return mMayHaveWillChangeBudget; }
+  void SetMayHaveWillChangeBudget(bool aHasBudget) { mMayHaveWillChangeBudget = aHasBudget; }
+
 protected:
 
   /**
@@ -4284,6 +4288,12 @@ protected:
 
   bool mFrameIsModified : 1;
 
+  /**
+   * True if frame has will-change, and currently has display
+   * items consuming some of the will-change budget.
+   */
+  bool mMayHaveWillChangeBudget : 1;
+
 private:
   /**
    * True if this is the primary frame for mContent.
@@ -4292,7 +4302,7 @@ private:
 
 protected:
 
-  // There is a 7-bit gap left here.
+  // There is a 5-bit gap left here.
 
   // Helpers
   /**
