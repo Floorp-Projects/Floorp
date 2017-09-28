@@ -841,6 +841,17 @@ JS_WrapValue(JSContext* cx, MutableHandleValue vp)
     return cx->compartment()->wrap(cx, vp);
 }
 
+static void
+ReleaseAssertObjectHasNoWrappers(JSContext* cx, HandleObject target)
+{
+    RootedValue origv(cx, ObjectValue(*target));
+
+    for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
+        if (WrapperMap::Ptr wp = c->lookupWrapper(origv))
+            MOZ_CRASH("wrapper found for target object");
+    }
+}
+
 /*
  * Identity remapping. Not for casual consumers.
  *
@@ -879,6 +890,8 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
     MOZ_ASSERT(origobj != target);
     MOZ_ASSERT(!origobj->is<CrossCompartmentWrapperObject>());
     MOZ_ASSERT(!target->is<CrossCompartmentWrapperObject>());
+    MOZ_ASSERT(origobj->getClass() == target->getClass());
+    ReleaseAssertObjectHasNoWrappers(cx, target);
 
     RootedValue origv(cx, ObjectValue(*origobj));
     RootedObject newIdentity(cx);
