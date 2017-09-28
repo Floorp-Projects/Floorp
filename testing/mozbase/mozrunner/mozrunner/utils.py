@@ -104,7 +104,6 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
     preloadEnvVar = None
     if mozinfo.isUnix:
         envVar = "LD_LIBRARY_PATH"
-        env['MOZILLA_FIVE_HOME'] = xrePath
         dmdLibrary = "libdmd.so"
         preloadEnvVar = "LD_PRELOAD"
     elif mozinfo.isMac:
