@@ -470,6 +470,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   if (NS_FAILED(BlockUntilLoadableRootsLoaded())) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
+  if (NS_FAILED(CheckForSmartCardChanges())) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
 
   if (evOidPolicy) {
     *evOidPolicy = SEC_OID_UNKNOWN;

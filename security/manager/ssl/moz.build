@@ -144,11 +144,6 @@ IPDL_SOURCES += [
     'PPSMContentDownloader.ipdl',
 ]
 
-if not CONFIG['MOZ_NO_SMART_CARDS']:
-    UNIFIED_SOURCES += [
-        'nsSmartCardMonitor.cpp',
-    ]
-
 if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
         'nsCertTree.cpp',

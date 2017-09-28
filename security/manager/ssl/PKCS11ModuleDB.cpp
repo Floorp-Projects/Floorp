@@ -46,20 +46,6 @@ PKCS11ModuleDB::DeleteModule(const nsAString& aModuleName)
   }
 
   NS_ConvertUTF16toUTF8 moduleName(aModuleName);
-  // Introduce additional scope for module so all references to it are released
-  // before we call SECMOD_DeleteModule, below.
-#ifndef MOZ_NO_SMART_CARDS
-  {
-    UniqueSECMODModule module(SECMOD_FindModule(moduleName.get()));
-    if (!module) {
-      return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsINSSComponent> nssComponent(
-      do_GetService(PSM_COMPONENT_CONTRACTID));
-    nssComponent->ShutdownSmartCardThread(module.get());
-  }
-#endif
-
   // modType is an output variable. We ignore it.
   int32_t modType;
   SECStatus srv = SECMOD_DeleteModule(moduleName.get(), &modType);
@@ -148,12 +134,6 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
   if (!module) {
     return NS_ERROR_FAILURE;
   }
-
-#ifndef MOZ_NO_SMART_CARDS
-  nsCOMPtr<nsINSSComponent> nssComponent(
-    do_GetService(PSM_COMPONENT_CONTRACTID));
-  nssComponent->LaunchSmartCardThread(module.get());
-#endif
 
   nsAutoString scalarKey;
   GetModuleNameForTelemetry(module.get(), scalarKey);
