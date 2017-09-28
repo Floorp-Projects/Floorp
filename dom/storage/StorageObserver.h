@@ -57,6 +57,10 @@ public:
 private:
   virtual ~StorageObserver() {}
 
+  nsresult
+  ClearMatchingOrigin(const char16_t* aData,
+                      nsACString& aOriginScope);
+
   static void TestingPrefChanged(const char* aPrefName, void* aClosure);
 
   static StorageObserver* sSelf;

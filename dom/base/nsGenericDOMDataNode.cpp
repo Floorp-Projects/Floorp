@@ -297,7 +297,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
       NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED,
       this);
 
-  nsCOMPtr<nsIAtom> oldValue;
+  RefPtr<nsIAtom> oldValue;
   if (haveMutationListeners) {
     oldValue = GetCurrentValueAtom();
   }

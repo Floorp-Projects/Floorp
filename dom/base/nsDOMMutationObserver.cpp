@@ -683,7 +683,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
     return;
   }
 
-  nsCOMArray<nsIAtom> filters;
+  nsTArray<RefPtr<nsIAtom>> filters;
   bool allAttrs = true;
   if (aOptions.mAttributeFilter.WasPassed()) {
     allAttrs = false;
@@ -767,18 +767,18 @@ nsDOMMutationObserver::GetObservingInfo(
     info.mCharacterDataOldValue.Construct(mr->CharacterDataOldValue());
     info.mNativeAnonymousChildList = mr->NativeAnonymousChildList();
     info.mAnimations = mr->Animations();
-    nsCOMArray<nsIAtom>& filters = mr->AttributeFilter();
-    if (filters.Count()) {
+    nsTArray<RefPtr<nsIAtom>>& filters = mr->AttributeFilter();
+    if (filters.Length()) {
       info.mAttributeFilter.Construct();
       mozilla::dom::Sequence<nsString>& filtersAsStrings =
         info.mAttributeFilter.Value();
-      nsString* strings = filtersAsStrings.AppendElements(filters.Count(),
+      nsString* strings = filtersAsStrings.AppendElements(filters.Length(),
                                                           mozilla::fallible);
       if (!strings) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return;
       }
-      for (int32_t j = 0; j < filters.Count(); ++j) {
+      for (size_t j = 0; j < filters.Length(); ++j) {
         filters[j]->ToString(strings[j]);
       }
     }

@@ -23,12 +23,12 @@ public:
   NS_IMETHOD OnClassifyComplete(nsresult aErrorCode,
                                 const nsACString& aList,
                                 const nsACString& aProvider,
-                                const nsACString& aPrefix)
+                                const nsACString& aFullHash)
   {
     if (mIPCOpen) {
       ClassifierInfo info = ClassifierInfo(nsCString(aList),
                                            nsCString(aProvider),
-                                           nsCString(aPrefix));
+                                           nsCString(aFullHash));
       Unused << BaseProtocol::Send__delete__(this, info, aErrorCode);
     }
     return NS_OK;

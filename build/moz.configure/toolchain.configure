@@ -808,12 +808,22 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 'Only clang/llvm 3.6 or newer is supported.')
 
         if info.type == 'msvc':
+            # 19.00 is VS2015.
+            # 19.10+ is VS2017+.
             if info.version < '19.00.24213':
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported.\n'
                     'You must install Visual C++ 2015 Update 3 or newer in '
                     'order to build.\n'
+                    'See https://developer.mozilla.org/en/'
+                    'Windows_Build_Prerequisites' % info.version)
+
+            if info.version >= '19.10' and info.version < '19.11.25506':
+                raise FatalCheckError(
+                    'This version (%s) of the MSVC compiler is not supported.\n'
+                    'You must install Visual C++ 2017 15.3 or newer in order '
+                    'to build.\n'
                     'See https://developer.mozilla.org/en/'
                     'Windows_Build_Prerequisites' % info.version)
 

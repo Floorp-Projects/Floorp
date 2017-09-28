@@ -24,7 +24,7 @@ nsXULTemplateResultXML::nsXULTemplateResultXML(nsXMLQuery* aQuery,
 {
     // If the node has an id, create the uri from it. Otherwise, there isn't
     // anything to identify the node with so just use a somewhat random number.
-    nsCOMPtr<nsIAtom> id = mNode->GetID();
+    RefPtr<nsIAtom> id = mNode->GetID();
     if (id) {
       nsCOMPtr<nsIURI> uri = mNode->GetBaseURI();
       nsAutoCString spec;

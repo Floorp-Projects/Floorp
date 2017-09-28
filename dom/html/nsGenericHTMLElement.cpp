@@ -2200,7 +2200,7 @@ nsGenericHTMLFormElement::AddFormIdObserver()
   GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
   NS_ASSERTION(!formId.IsEmpty(),
                "@form value should not be the empty string!");
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(formId);
+  RefPtr<nsIAtom> atom = NS_Atomize(formId);
 
   return doc->AddIDTargetObserver(atom, FormIdUpdated, this, false);
 }
@@ -2229,7 +2229,7 @@ nsGenericHTMLFormElement::RemoveFormIdObserver()
   GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
   NS_ASSERTION(!formId.IsEmpty(),
                "@form value should not be the empty string!");
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(formId);
+  RefPtr<nsIAtom> atom = NS_Atomize(formId);
 
   doc->RemoveIDTargetObserver(atom, FormIdUpdated, this, false);
 }

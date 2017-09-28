@@ -74,7 +74,7 @@ class nsXMLQuery final : public nsISupports
 
     nsXULTemplateQueryProcessorXML* mProcessor;
 
-    nsCOMPtr<nsIAtom> mMemberVariable;
+    RefPtr<nsIAtom> mMemberVariable;
 
     nsAutoPtr<mozilla::dom::XPathExpression> mResultsExpr;
 

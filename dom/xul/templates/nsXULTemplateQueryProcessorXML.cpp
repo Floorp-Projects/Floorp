@@ -272,7 +272,7 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
                     return rv.StealNSResult();
                 }
 
-                nsCOMPtr<nsIAtom> varatom = NS_Atomize(var);
+                RefPtr<nsIAtom> varatom = NS_Atomize(var);
 
                 query->AddBinding(varatom, Move(compiledexpr));
             }

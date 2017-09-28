@@ -676,7 +676,9 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
         break;
       case "add":
         log("Add to form history " + change);
-        change.guid = generateGUID();
+        if (!change.guid) {
+          change.guid = generateGUID();
+        }
         stmt = makeAddStatement(change, now, bindingArrays);
         notifications.push(["formhistory-add", change.guid]);
         break;
@@ -922,13 +924,12 @@ this.FormHistory = {
           }
           break;
         case "add":
-          if (change.guid) {
-            throw Components.Exception(
-              "op='add' cannot contain field 'guid'. Either use op='update' " +
-                "explicitly or make 'guid' undefined.",
-              Cr.NS_ERROR_ILLEGAL_VALUE);
-          } else if (change.fieldname && change.value) {
+          if (change.fieldname && change.value) {
             validateOpData(change, "Add");
+          } else {
+            throw Components.Exception(
+              "update op='add' must have a fieldname and a value.",
+              Cr.NS_ERROR_ILLEGAL_VALUE);
           }
           break;
         default:
@@ -1037,7 +1038,7 @@ this.FormHistory = {
      */
 
     let query = "/* do not warn (bug 496471): can't use an index */ " +
-                "SELECT value, " +
+                "SELECT value, guid, " +
                 "ROUND( " +
                     "timesUsed / MAX(1.0, (lastUsed - firstUsed) / :timeGroupingSize) * " +
                     "MAX(1.0, :maxTimeGroupings - (:now - lastUsed) / :timeGroupingSize) * " +
@@ -1073,9 +1074,11 @@ this.FormHistory = {
       handleResult(aResultSet) {
         for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
           let value = row.getResultByName("value");
+          let guid = row.getResultByName("guid");
           let frecency = row.getResultByName("frecency");
           let entry = {
             text:          value,
+            guid,
             textLowerCase: value.toLowerCase(),
             frecency,
             totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses")),

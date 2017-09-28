@@ -52,7 +52,7 @@ FileChannelParent::NotifyTrackingResource()
 NS_IMETHODIMP
 FileChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aProvider,
-                                            const nsACString& aPrefix)
+                                            const nsACString& aFullHash)
 {
   // nothing to do
   return NS_OK;

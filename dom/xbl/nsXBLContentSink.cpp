@@ -274,7 +274,7 @@ nsXBLContentSink::HandleEndElement(const char16_t *aName)
 
   if (mState != eXBL_InDocument) {
     int32_t nameSpaceID;
-    nsCOMPtr<nsIAtom> prefix, localName;
+    RefPtr<nsIAtom> prefix, localName;
     nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
 
@@ -574,7 +574,7 @@ nsXBLContentSink::ConstructBinding(uint32_t aLineNumber)
 static bool
 FindValue(const char16_t **aAtts, nsIAtom *aAtom, const char16_t **aResult)
 {
-  nsCOMPtr<nsIAtom> prefix, localName;
+  RefPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
     int32_t nameSpaceID;
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
@@ -607,7 +607,7 @@ nsXBLContentSink::ConstructHandler(const char16_t **aAtts, uint32_t aLineNumber)
   const char16_t* preventdefault = nullptr;
   const char16_t* allowuntrusted = nullptr;
 
-  nsCOMPtr<nsIAtom> prefix, localName;
+  RefPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
     int32_t nameSpaceID;
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
@@ -705,7 +705,7 @@ nsXBLContentSink::ConstructImplementation(const char16_t **aAtts)
 
   const char16_t* name = nullptr;
 
-  nsCOMPtr<nsIAtom> prefix, localName;
+  RefPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
     int32_t nameSpaceID;
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
@@ -737,7 +737,7 @@ nsXBLContentSink::ConstructField(const char16_t **aAtts, uint32_t aLineNumber)
   const char16_t* name     = nullptr;
   const char16_t* readonly = nullptr;
 
-  nsCOMPtr<nsIAtom> prefix, localName;
+  RefPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
     int32_t nameSpaceID;
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
@@ -774,7 +774,7 @@ nsXBLContentSink::ConstructProperty(const char16_t **aAtts, uint32_t aLineNumber
   const char16_t* onset    = nullptr;
   bool exposeToUntrustedContent = false;
 
-  nsCOMPtr<nsIAtom> prefix, localName;
+  RefPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
     int32_t nameSpaceID;
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
@@ -908,7 +908,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts,
   aElement->mNumAttributes = aAttsCount;
 
   // Copy the attributes into the prototype
-  nsCOMPtr<nsIAtom> prefix, localName;
+  RefPtr<nsIAtom> prefix, localName;
 
   uint32_t i;
   for (i = 0; i < aAttsCount; ++i) {

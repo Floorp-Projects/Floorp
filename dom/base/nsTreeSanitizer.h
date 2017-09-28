@@ -130,7 +130,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      *                           attribute unsanitized
      */
     void SanitizeAttributes(mozilla::dom::Element* aElement,
-                            nsTHashtable<nsISupportsHashKey>* aAllowed,
+                            nsTHashtable<nsRefPtrHashKey<nsIAtom>>* aAllowed,
                             nsIAtom*** aURLs,
                             bool aAllowXLink,
                             bool aAllowStyle,
@@ -186,37 +186,37 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
     /**
      * The whitelist of HTML elements.
      */
-    static nsTHashtable<nsISupportsHashKey>* sElementsHTML;
+    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sElementsHTML;
 
     /**
      * The whitelist of non-presentational HTML attributes.
      */
-    static nsTHashtable<nsISupportsHashKey>* sAttributesHTML;
+    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sAttributesHTML;
 
     /**
      * The whitelist of presentational HTML attributes.
      */
-    static nsTHashtable<nsISupportsHashKey>* sPresAttributesHTML;
+    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sPresAttributesHTML;
 
     /**
      * The whitelist of SVG elements.
      */
-    static nsTHashtable<nsISupportsHashKey>* sElementsSVG;
+    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sElementsSVG;
 
     /**
      * The whitelist of SVG attributes.
      */
-    static nsTHashtable<nsISupportsHashKey>* sAttributesSVG;
+    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sAttributesSVG;
 
     /**
      * The whitelist of SVG elements.
      */
-    static nsTHashtable<nsISupportsHashKey>* sElementsMathML;
+    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sElementsMathML;
 
     /**
      * The whitelist of MathML attributes.
      */
-    static nsTHashtable<nsISupportsHashKey>* sAttributesMathML;
+    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sAttributesMathML;
 
     /**
      * Reusable null principal for URL checks.

@@ -74,7 +74,7 @@ public:
   // To send SetClassifierMatchedInfo message over background channel.
   bool OnSetClassifierMatchedInfo(const nsACString& aList,
                                   const nsACString& aProvider,
-                                  const nsACString& aPrefix);
+                                  const nsACString& aFullHash);
 
 protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;

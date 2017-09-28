@@ -550,7 +550,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
       EnumAttributesInfo enumInfo = GetEnumInfo();
       for (i = 0; i < enumInfo.mEnumCount; i++) {
         if (aAttribute == *enumInfo.mEnumInfo[i].mName) {
-          nsCOMPtr<nsIAtom> valAtom = NS_Atomize(aValue);
+          RefPtr<nsIAtom> valAtom = NS_Atomize(aValue);
           rv = enumInfo.mEnums[i].SetBaseValueAtom(valAtom, this);
           if (NS_FAILED(rv)) {
             enumInfo.Reset(i);
@@ -1290,7 +1290,7 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
       mDecl->AsGecko()->ValueAppended(propertyID);
       mDecl->AsGecko()->CompressFrom(&block);
     } else {
-      nsCOMPtr<nsIAtom> atom = NS_Atomize(aMappedAttrValue);
+      RefPtr<nsIAtom> atom = NS_Atomize(aMappedAttrValue);
       Servo_DeclarationBlock_SetIdentStringValue(mDecl->AsServo()->Raw(), propertyID, atom);
     }
   }

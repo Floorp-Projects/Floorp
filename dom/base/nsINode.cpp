@@ -811,7 +811,7 @@ nsINode::SetUserData(const nsAString &aKey, nsIVariant *aData, nsIVariant **aRes
   OwnerDoc()->WarnOnceAbout(nsIDocument::eGetSetUserData);
   *aResult = nullptr;
 
-  nsCOMPtr<nsIAtom> key = NS_Atomize(aKey);
+  RefPtr<nsIAtom> key = NS_Atomize(aKey);
   if (!key) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -864,7 +864,7 @@ nsIVariant*
 nsINode::GetUserData(const nsAString& aKey)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eGetSetUserData);
-  nsCOMPtr<nsIAtom> key = NS_Atomize(aKey);
+  RefPtr<nsIAtom> key = NS_Atomize(aKey);
   if (!key) {
     return nullptr;
   }

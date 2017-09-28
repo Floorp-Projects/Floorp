@@ -137,7 +137,7 @@ private:
   nsTreeColumns* mColumns;
 
   nsString mId;
-  nsCOMPtr<nsIAtom> mAtom;
+  RefPtr<nsIAtom> mAtom;
 
   int32_t mIndex;
 

@@ -732,8 +732,6 @@ void
 TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
              nsTArray<void*>& aArray);
 
-const char* StringFromIPCMessageType(uint32_t aMessageType);
-
 } // namespace ipc
 
 template<typename Protocol>

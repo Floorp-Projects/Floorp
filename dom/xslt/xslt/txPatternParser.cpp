@@ -129,7 +129,7 @@ nsresult txPatternParser::createLocPathPattern(txExprLexer& aLexer,
         case Token::FUNCTION_NAME_AND_PAREN:
             // id(Literal) or key(Literal, Literal)
             {
-                nsCOMPtr<nsIAtom> nameAtom =
+                RefPtr<nsIAtom> nameAtom =
                     NS_Atomize(aLexer.nextToken()->Value());
                 if (nameAtom == nsGkAtoms::id) {
                     rv = createIdPattern(aLexer, stepPattern);
@@ -239,7 +239,7 @@ nsresult txPatternParser::createKeyPattern(txExprLexer& aLexer,
     const char16_t* colon;
     if (!XMLUtils::isValidQName(PromiseFlatString(key), &colon))
         return NS_ERROR_XPATH_PARSE_FAILURE;
-    nsCOMPtr<nsIAtom> prefix, localName;
+    RefPtr<nsIAtom> prefix, localName;
     int32_t namespaceID;
     nsresult rv = resolveQName(key, getter_AddRefs(prefix), aContext,
                                getter_AddRefs(localName), namespaceID);
@@ -278,7 +278,7 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
         tok = aLexer.nextToken();
 
         // resolve QName
-        nsCOMPtr<nsIAtom> prefix, lName;
+        RefPtr<nsIAtom> prefix, lName;
         int32_t nspace;
         rv = resolveQName(tok->Value(), getter_AddRefs(prefix), aContext,
                           getter_AddRefs(lName), nspace, true);

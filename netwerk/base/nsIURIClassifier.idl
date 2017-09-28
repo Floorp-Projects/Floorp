@@ -34,13 +34,13 @@ interface nsIURIClassifierCallback : nsISupports
    *        Name of the list that matched
    * @param aProvider
    *        Name of provider that matched
-   * @param aPrefix
-   *        Hash prefix of URL that matched
+   * @param aFullHash
+   *        Full hash of URL that matched
    */
   void onClassifyComplete(in nsresult aErrorCode,
                           in ACString aList,
                           in ACString aProvider,
-                          in ACString aPrefix);
+                          in ACString aFullHash);
 };
 
 /**
@@ -101,4 +101,13 @@ interface nsIURIClassifier : nsISupports
    * This is an internal interface used only for testing purposes.
    */
   ACString classifyLocal(in nsIURI aURI, in ACString aTables);
+
+  /**
+   * Report to the provider that a Safe Browsing warning was shown.
+   *
+   * @param aChannel
+   *        Channel for which the URL matched something on the threat list.
+   */
+
+  void sendThreatHitReport(in nsIChannel aChannel);
 };

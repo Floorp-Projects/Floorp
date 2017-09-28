@@ -102,7 +102,7 @@ private:
   nsresult GetDescriptor(nsCSSCounterDesc aDescID, nsAString& aValue);
   nsresult SetDescriptor(nsCSSCounterDesc aDescID, const nsAString& aValue);
 
-  nsCOMPtr<nsIAtom> mName;
+  RefPtr<nsIAtom> mName;
   nsCSSValue mValues[eCSSCounterDesc_COUNT];
   uint32_t   mGeneration;
 };

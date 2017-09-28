@@ -22,12 +22,12 @@ interface nsIClassifiedChannel : nsISupports
    *        Name of the Safe Browsing list that matched (e.g. goog-phish-shavar).
    * @param aProvider
    *        Name of the Safe Browsing provider that matched (e.g. google)
-   * @param aPrefix
-   *        Hash prefix of URL that matched Safe Browsing list.
+   * @param aFullHash
+   *        Full hash of URL that matched Safe Browsing list.
    */
   void setMatchedInfo(in ACString aList,
                       in ACString aProvider,
-                      in ACString aPrefix);
+                      in ACString aFullHash);
 
   /**
    * Name of the list that matched
@@ -40,8 +40,8 @@ interface nsIClassifiedChannel : nsISupports
   readonly attribute ACString matchedProvider;
 
   /**
-   * Hash prefix of URL that matched
+   * Full hash of URL that matched
    */
-  readonly attribute ACString matchedPrefix;
+  readonly attribute ACString matchedFullHash;
 
 };
