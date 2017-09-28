@@ -27,7 +27,7 @@ void nsEscCharSetProber::Reset(void)
 
 nsProbingState nsEscCharSetProber::HandleData(const char* aBuf, uint32_t aLen)
 {
-  nsSMState codingState;
+  uint32_t codingState;
   uint32_t i;
 
   for ( i = 0; i < aLen && mState == eDetecting; i++)
