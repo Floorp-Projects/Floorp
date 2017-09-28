@@ -1457,32 +1457,8 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         } else {
             target = mText.getShadowText();
         }
-        Object ret;
-        try {
-            ret = method.invoke(target, args);
-        } catch (InvocationTargetException e) {
-            // Bug 817386
-            // Most likely Gecko has changed the text while GeckoInputConnection is
-            // trying to access the text. If we pass through the exception here, Fennec
-            // will crash due to a lack of exception handler. Log the exception and
-            // return an empty value instead.
-            if (!(e.getCause() instanceof IndexOutOfBoundsException)) {
-                // Only handle IndexOutOfBoundsException for now,
-                // as other exceptions might signal other bugs
-                throw e;
-            }
-            Log.w(LOGTAG, "Exception in GeckoEditable." + method.getName(), e.getCause());
-            Class<?> retClass = method.getReturnType();
-            if (retClass == Character.TYPE) {
-                ret = '\0';
-            } else if (retClass == Integer.TYPE) {
-                ret = 0;
-            } else if (retClass == String.class) {
-                ret = "";
-            } else {
-                ret = null;
-            }
-        }
+
+        final Object ret = method.invoke(target, args);
         if (DEBUG) {
             StringBuilder log = new StringBuilder(method.getName());
             log.append("(");
