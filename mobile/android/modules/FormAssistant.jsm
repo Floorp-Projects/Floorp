@@ -296,10 +296,10 @@ var FormAssistant = {
   // Only show a validation message if the user submitted an invalid form,
   // there's a non-empty message string, and the element is the correct type
   _isValidateable: function(aElement) {
-    return (aElement instanceof Ci.nsIDOMHTMLInputElement ||
-            aElement instanceof Ci.nsIDOMHTMLTextAreaElement ||
-            aElement instanceof Ci.nsIDOMHTMLSelectElement ||
-            aElement instanceof Ci.nsIDOMHTMLButtonElement) &&
+    return (ChromeUtils.getClassName(aElement) === "HTMLInputElement" ||
+            ChromeUtils.getClassName(aElement) === "HTMLTextAreaElement" ||
+            ChromeUtils.getClassName(aElement) === "HTMLSelectElement" ||
+            ChromeUtils.getClassName(aElement) === "HTMLButtonElement") &&
            aElement.matches(":-moz-ui-invalid") &&
            aElement.validationMessage;
   },
