@@ -67,6 +67,7 @@ const CONTENT = {
           log.debug("Set addresses sync to", checked);
         },
       },
+      hideClose: true,
     },
   },
   update: {
@@ -91,6 +92,7 @@ const CONTENT = {
     options: {
       persistWhileVisible: true,
       popupIconURL: "chrome://formautofill/content/icon-address-update.svg",
+      hideClose: true,
     },
   },
   creditCard: {
@@ -119,6 +121,7 @@ const CONTENT = {
     options: {
       persistWhileVisible: true,
       popupIconURL: "chrome://formautofill/content/icon-credit-card.svg",
+      hideClose: true,
     },
   },
 };

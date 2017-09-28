@@ -145,7 +145,7 @@ protected:
 
 private:
   nsTArray<nsIContent*> mInsertedChildren; // WEAK
-  nsTArray<nsCOMPtr<nsIAtom> > mIncludes;
+  nsTArray<RefPtr<nsIAtom> > mIncludes;
 };
 
 } // namespace dom

@@ -1164,7 +1164,7 @@ HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
       aChannelStatus == NS_ERROR_BLOCKED_URI ||
       aChannelStatus == NS_ERROR_HARMFUL_URI ||
       aChannelStatus == NS_ERROR_PHISHING_URI) {
-    nsCString list, provider, prefix;
+    nsCString list, provider, fullhash;
 
     nsresult rv = GetMatchedList(list);
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -1172,10 +1172,10 @@ HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
     rv = GetMatchedProvider(provider);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    rv = GetMatchedPrefix(prefix);
+    rv = GetMatchedFullHash(fullhash);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    nsChannelClassifier::SetBlockedContent(this, aChannelStatus, list, provider, prefix);
+    nsChannelClassifier::SetBlockedContent(this, aChannelStatus, list, provider, fullhash);
   }
 
   MOZ_ASSERT(!mOnStopRequestCalled,
@@ -1818,7 +1818,7 @@ HttpChannelChild::FlushedForDiversion()
 void
 HttpChannelChild::ProcessSetClassifierMatchedInfo(const nsCString& aList,
                                                   const nsCString& aProvider,
-                                                  const nsCString& aPrefix)
+                                                  const nsCString& aFullHash)
 {
   LOG(("HttpChannelChild::ProcessSetClassifierMatchedInfo [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
@@ -1828,7 +1828,7 @@ HttpChannelChild::ProcessSetClassifierMatchedInfo(const nsCString& aList,
     NewRunnableMethod<const nsCString, const nsCString, const nsCString>
       ("HttpChannelChild::SetMatchedInfo",
        this, &HttpChannelChild::SetMatchedInfo,
-       aList, aProvider, aPrefix),
+       aList, aProvider, aFullHash),
     NS_DISPATCH_NORMAL);
 }
 

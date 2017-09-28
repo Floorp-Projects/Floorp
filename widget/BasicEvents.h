@@ -574,7 +574,7 @@ public:
   // If JS creates an event with unknown event type or known event type but
   // for different event interface, the event type is stored to this.
   // NOTE: This is always used if the instance is a WidgetCommandEvent instance.
-  nsCOMPtr<nsIAtom> mSpecifiedEventType;
+  RefPtr<nsIAtom> mSpecifiedEventType;
 
   // nsIAtom isn't available on non-main thread due to unsafe.  Therefore,
   // mSpecifiedEventTypeString is used instead of mSpecifiedEventType if

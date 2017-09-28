@@ -294,7 +294,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
 
     if (aNode.isContent()) {
         if (aNode.mNode->IsElement()) {
-            nsCOMPtr<nsIAtom> localName =
+            RefPtr<nsIAtom> localName =
                 aNode.Content()->NodeInfo()->NameAtom();
             return localName.forget();
         }
@@ -310,7 +310,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
         return nullptr;
     }
 
-    nsCOMPtr<nsIAtom> localName = aNode.Content()->
+    RefPtr<nsIAtom> localName = aNode.Content()->
         GetAttrNameAt(aNode.mIndex)->LocalName();
 
     return localName.forget();

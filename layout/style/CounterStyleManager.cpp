@@ -1138,7 +1138,7 @@ private:
   CounterStyle* GetExtends();
   CounterStyle* GetExtendsRoot();
 
-  nsCOMPtr<nsIAtom> mName;
+  RefPtr<nsIAtom> mName;
 
   // CounterStyleManager should always overlive any CounterStyle as it
   // is owned by nsPresContext, and will be released after all nodes and

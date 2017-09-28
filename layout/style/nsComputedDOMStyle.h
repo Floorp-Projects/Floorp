@@ -745,7 +745,7 @@ private:
    * if the pres arena from which it was allocated goes away.
    */
   mozilla::ArenaRefPtr<nsStyleContext> mStyleContext;
-  nsCOMPtr<nsIAtom> mPseudo;
+  RefPtr<nsIAtom> mPseudo;
 
   /*
    * While computing style data, the primary frame for mContent --- named "outer"

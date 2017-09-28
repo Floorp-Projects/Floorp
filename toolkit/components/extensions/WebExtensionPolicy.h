@@ -159,7 +159,7 @@ private:
 
   nsCOMPtr<nsISupports> mParent;
 
-  nsCOMPtr<nsIAtom> mId;
+  RefPtr<nsIAtom> mId;
   nsCString mHostname;
   nsCOMPtr<nsIURI> mBaseURI;
 

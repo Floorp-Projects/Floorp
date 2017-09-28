@@ -38,7 +38,9 @@ define(function (require, exports, module) {
       data: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.array,
-        PropTypes.object
+        PropTypes.object,
+        PropTypes.bool,
+        PropTypes.number
       ]),
       jsonTextLength: PropTypes.number,
       searchFilter: PropTypes.string,

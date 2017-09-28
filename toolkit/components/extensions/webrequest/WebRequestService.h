@@ -59,7 +59,7 @@ private:
     void Detach();
 
     const RefPtr<dom::TabParent> mTabParent;
-    const nsCOMPtr<nsIAtom> mAddonId;
+    const RefPtr<nsIAtom> mAddonId;
 
   private:
     const uint64_t mChannelId;

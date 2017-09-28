@@ -59,7 +59,7 @@ public:
     {
     }
 
-    nsCOMPtr<nsIAtom> mAtom;
+    RefPtr<nsIAtom> mAtom;
     const nsString mString;
   };
 

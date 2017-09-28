@@ -56,7 +56,7 @@ public:
 
   WebExtensionPolicy* GetByID(const nsAString& aAddonId)
   {
-    nsCOMPtr<nsIAtom> atom = NS_AtomizeMainThread(aAddonId);
+    RefPtr<nsIAtom> atom = NS_AtomizeMainThread(aAddonId);
     return GetByID(atom);
   }
 

@@ -30,6 +30,7 @@ void protobuf_ShutdownFile_safebrowsing_2eproto() {
   delete FindFullHashesResponse::default_instance_;
   delete ThreatHit::default_instance_;
   delete ThreatHit_ThreatSource::default_instance_;
+  delete ThreatHit_UserInfo::default_instance_;
   delete ClientInfo::default_instance_;
   delete ChromeClientInfo::default_instance_;
   delete Checksum::default_instance_;
@@ -70,6 +71,7 @@ void protobuf_AddDesc_safebrowsing_2eproto() {
   FindFullHashesResponse::default_instance_ = new FindFullHashesResponse();
   ThreatHit::default_instance_ = new ThreatHit();
   ThreatHit_ThreatSource::default_instance_ = new ThreatHit_ThreatSource();
+  ThreatHit_UserInfo::default_instance_ = new ThreatHit_UserInfo();
   ClientInfo::default_instance_ = new ClientInfo();
   ChromeClientInfo::default_instance_ = new ChromeClientInfo();
   Checksum::default_instance_ = new Checksum();
@@ -96,6 +98,7 @@ void protobuf_AddDesc_safebrowsing_2eproto() {
   FindFullHashesResponse::default_instance_->InitAsDefaultInstance();
   ThreatHit::default_instance_->InitAsDefaultInstance();
   ThreatHit_ThreatSource::default_instance_->InitAsDefaultInstance();
+  ThreatHit_UserInfo::default_instance_->InitAsDefaultInstance();
   ClientInfo::default_instance_->InitAsDefaultInstance();
   ChromeClientInfo::default_instance_->InitAsDefaultInstance();
   Checksum::default_instance_->InitAsDefaultInstance();
@@ -3629,6 +3632,7 @@ bool ThreatHit_ThreatSourceType_IsValid(int value) {
     case 1:
     case 2:
     case 3:
+    case 4:
       return true;
     default:
       return false;
@@ -3640,6 +3644,7 @@ const ThreatHit_ThreatSourceType ThreatHit::THREAT_SOURCE_TYPE_UNSPECIFIED;
 const ThreatHit_ThreatSourceType ThreatHit::MATCHING_URL;
 const ThreatHit_ThreatSourceType ThreatHit::TAB_URL;
 const ThreatHit_ThreatSourceType ThreatHit::TAB_REDIRECT;
+const ThreatHit_ThreatSourceType ThreatHit::TAB_RESOURCE;
 const ThreatHit_ThreatSourceType ThreatHit::ThreatSourceType_MIN;
 const ThreatHit_ThreatSourceType ThreatHit::ThreatSourceType_MAX;
 const int ThreatHit::ThreatSourceType_ARRAYSIZE;
@@ -3965,10 +3970,252 @@ void ThreatHit_ThreatSource::Swap(ThreatHit_ThreatSource* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
+const int ThreatHit_UserInfo::kRegionCodeFieldNumber;
+const int ThreatHit_UserInfo::kUserIdFieldNumber;
+#endif  // !_MSC_VER
+
+ThreatHit_UserInfo::ThreatHit_UserInfo()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatHit.UserInfo)
+}
+
+void ThreatHit_UserInfo::InitAsDefaultInstance() {
+}
+
+ThreatHit_UserInfo::ThreatHit_UserInfo(const ThreatHit_UserInfo& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+  // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatHit.UserInfo)
+}
+
+void ThreatHit_UserInfo::SharedCtor() {
+  ::google::protobuf::internal::GetEmptyString();
+  _cached_size_ = 0;
+  region_code_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  user_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+ThreatHit_UserInfo::~ThreatHit_UserInfo() {
+  // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatHit.UserInfo)
+  SharedDtor();
+}
+
+void ThreatHit_UserInfo::SharedDtor() {
+  if (region_code_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete region_code_;
+  }
+  if (user_id_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete user_id_;
+  }
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
+  if (this != default_instance_) {
+  #endif
+  }
+}
+
+void ThreatHit_UserInfo::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ThreatHit_UserInfo& ThreatHit_UserInfo::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_safebrowsing_2eproto();
+#else
+  if (default_instance_ == NULL) protobuf_AddDesc_safebrowsing_2eproto();
+#endif
+  return *default_instance_;
+}
+
+ThreatHit_UserInfo* ThreatHit_UserInfo::default_instance_ = NULL;
+
+ThreatHit_UserInfo* ThreatHit_UserInfo::New() const {
+  return new ThreatHit_UserInfo;
+}
+
+void ThreatHit_UserInfo::Clear() {
+  if (_has_bits_[0 / 32] & 3) {
+    if (has_region_code()) {
+      if (region_code_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        region_code_->clear();
+      }
+    }
+    if (has_user_id()) {
+      if (user_id_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        user_id_->clear();
+      }
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->clear();
+}
+
+bool ThreatHit_UserInfo::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::StringOutputStream unknown_fields_string(
+      mutable_unknown_fields());
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string);
+  // @@protoc_insertion_point(parse_start:mozilla.safebrowsing.ThreatHit.UserInfo)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string region_code = 1;
+      case 1: {
+        if (tag == 10) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_region_code()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(18)) goto parse_user_id;
+        break;
+      }
+
+      // optional bytes user_id = 2;
+      case 2: {
+        if (tag == 18) {
+         parse_user_id:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_user_id()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectAtEnd()) goto success;
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:mozilla.safebrowsing.ThreatHit.UserInfo)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:mozilla.safebrowsing.ThreatHit.UserInfo)
+  return false;
+#undef DO_
+}
+
+void ThreatHit_UserInfo::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:mozilla.safebrowsing.ThreatHit.UserInfo)
+  // optional string region_code = 1;
+  if (has_region_code()) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->region_code(), output);
+  }
+
+  // optional bytes user_id = 2;
+  if (has_user_id()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      2, this->user_id(), output);
+  }
+
+  output->WriteRaw(unknown_fields().data(),
+                   unknown_fields().size());
+  // @@protoc_insertion_point(serialize_end:mozilla.safebrowsing.ThreatHit.UserInfo)
+}
+
+int ThreatHit_UserInfo::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional string region_code = 1;
+    if (has_region_code()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->region_code());
+    }
+
+    // optional bytes user_id = 2;
+    if (has_user_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->user_id());
+    }
+
+  }
+  total_size += unknown_fields().size();
+
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ThreatHit_UserInfo::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ThreatHit_UserInfo*>(&from));
+}
+
+void ThreatHit_UserInfo::MergeFrom(const ThreatHit_UserInfo& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_region_code()) {
+      set_region_code(from.region_code());
+    }
+    if (from.has_user_id()) {
+      set_user_id(from.user_id());
+    }
+  }
+  mutable_unknown_fields()->append(from.unknown_fields());
+}
+
+void ThreatHit_UserInfo::CopyFrom(const ThreatHit_UserInfo& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ThreatHit_UserInfo::IsInitialized() const {
+
+  return true;
+}
+
+void ThreatHit_UserInfo::Swap(ThreatHit_UserInfo* other) {
+  if (other != this) {
+    std::swap(region_code_, other->region_code_);
+    std::swap(user_id_, other->user_id_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.swap(other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string ThreatHit_UserInfo::GetTypeName() const {
+  return "mozilla.safebrowsing.ThreatHit.UserInfo";
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
 const int ThreatHit::kThreatTypeFieldNumber;
 const int ThreatHit::kPlatformTypeFieldNumber;
 const int ThreatHit::kEntryFieldNumber;
 const int ThreatHit::kResourcesFieldNumber;
+const int ThreatHit::kClientInfoFieldNumber;
+const int ThreatHit::kUserInfoFieldNumber;
 #endif  // !_MSC_VER
 
 ThreatHit::ThreatHit()
@@ -3984,6 +4231,18 @@ void ThreatHit::InitAsDefaultInstance() {
 #else
   entry_ = const_cast< ::mozilla::safebrowsing::ThreatEntry*>(&::mozilla::safebrowsing::ThreatEntry::default_instance());
 #endif
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  client_info_ = const_cast< ::mozilla::safebrowsing::ClientInfo*>(
+      ::mozilla::safebrowsing::ClientInfo::internal_default_instance());
+#else
+  client_info_ = const_cast< ::mozilla::safebrowsing::ClientInfo*>(&::mozilla::safebrowsing::ClientInfo::default_instance());
+#endif
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  user_info_ = const_cast< ::mozilla::safebrowsing::ThreatHit_UserInfo*>(
+      ::mozilla::safebrowsing::ThreatHit_UserInfo::internal_default_instance());
+#else
+  user_info_ = const_cast< ::mozilla::safebrowsing::ThreatHit_UserInfo*>(&::mozilla::safebrowsing::ThreatHit_UserInfo::default_instance());
+#endif
 }
 
 ThreatHit::ThreatHit(const ThreatHit& from)
@@ -3998,6 +4257,8 @@ void ThreatHit::SharedCtor() {
   threat_type_ = 0;
   platform_type_ = 0;
   entry_ = NULL;
+  client_info_ = NULL;
+  user_info_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -4013,6 +4274,8 @@ void ThreatHit::SharedDtor() {
   if (this != default_instance_) {
   #endif
     delete entry_;
+    delete client_info_;
+    delete user_info_;
   }
 }
 
@@ -4047,10 +4310,16 @@ void ThreatHit::Clear() {
     ::memset(&first, 0, n);                                \
   } while (0)
 
-  if (_has_bits_[0 / 32] & 7) {
+  if (_has_bits_[0 / 32] & 55) {
     ZR_(threat_type_, platform_type_);
     if (has_entry()) {
       if (entry_ != NULL) entry_->::mozilla::safebrowsing::ThreatEntry::Clear();
+    }
+    if (has_client_info()) {
+      if (client_info_ != NULL) client_info_->::mozilla::safebrowsing::ClientInfo::Clear();
+    }
+    if (has_user_info()) {
+      if (user_info_ != NULL) user_info_->::mozilla::safebrowsing::ThreatHit_UserInfo::Clear();
     }
   }
 
@@ -4140,6 +4409,32 @@ bool ThreatHit::MergePartialFromCodedStream(
           goto handle_unusual;
         }
         if (input->ExpectTag(34)) goto parse_resources;
+        if (input->ExpectTag(42)) goto parse_client_info;
+        break;
+      }
+
+      // optional .mozilla.safebrowsing.ClientInfo client_info = 5;
+      case 5: {
+        if (tag == 42) {
+         parse_client_info:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_client_info()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(50)) goto parse_user_info;
+        break;
+      }
+
+      // optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
+      case 6: {
+        if (tag == 50) {
+         parse_user_info:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_user_info()));
+        } else {
+          goto handle_unusual;
+        }
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -4193,6 +4488,18 @@ void ThreatHit::SerializeWithCachedSizes(
       4, this->resources(i), output);
   }
 
+  // optional .mozilla.safebrowsing.ClientInfo client_info = 5;
+  if (has_client_info()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      5, this->client_info(), output);
+  }
+
+  // optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
+  if (has_user_info()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      6, this->user_info(), output);
+  }
+
   output->WriteRaw(unknown_fields().data(),
                    unknown_fields().size());
   // @@protoc_insertion_point(serialize_end:mozilla.safebrowsing.ThreatHit)
@@ -4219,6 +4526,20 @@ int ThreatHit::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->entry());
+    }
+
+    // optional .mozilla.safebrowsing.ClientInfo client_info = 5;
+    if (has_client_info()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->client_info());
+    }
+
+    // optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
+    if (has_user_info()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->user_info());
     }
 
   }
@@ -4256,6 +4577,12 @@ void ThreatHit::MergeFrom(const ThreatHit& from) {
     if (from.has_entry()) {
       mutable_entry()->::mozilla::safebrowsing::ThreatEntry::MergeFrom(from.entry());
     }
+    if (from.has_client_info()) {
+      mutable_client_info()->::mozilla::safebrowsing::ClientInfo::MergeFrom(from.client_info());
+    }
+    if (from.has_user_info()) {
+      mutable_user_info()->::mozilla::safebrowsing::ThreatHit_UserInfo::MergeFrom(from.user_info());
+    }
   }
   mutable_unknown_fields()->append(from.unknown_fields());
 }
@@ -4277,6 +4604,8 @@ void ThreatHit::Swap(ThreatHit* other) {
     std::swap(platform_type_, other->platform_type_);
     std::swap(entry_, other->entry_);
     resources_.Swap(&other->resources_);
+    std::swap(client_info_, other->client_info_);
+    std::swap(user_info_, other->user_info_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.swap(other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

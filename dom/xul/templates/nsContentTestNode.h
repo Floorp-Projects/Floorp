@@ -40,8 +40,8 @@ public:
 protected:
     nsXULTemplateQueryProcessorRDF *mProcessor;
     nsIDOMDocument* mDocument;
-    nsCOMPtr<nsIAtom> mRefVariable;
-    nsCOMPtr<nsIAtom> mTag;
+    RefPtr<nsIAtom> mRefVariable;
+    RefPtr<nsIAtom> mTag;
 };
 
 #endif // nsContentTestNode_h__

@@ -1596,7 +1596,7 @@ RemoveOneProperty(mozilla::HTMLEditor* aHTMLEditor,
   MOZ_ASSERT(aHTMLEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
-  nsCOMPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
+  RefPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
   return aHTMLEditor->RemoveInlineProperty(styleAtom, EmptyString());
@@ -1627,7 +1627,7 @@ SetTextProperty(mozilla::HTMLEditor* aHTMLEditor,
   MOZ_ASSERT(aHTMLEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
-  nsCOMPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
+  RefPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
   return aHTMLEditor->SetInlineProperty(styleAtom,

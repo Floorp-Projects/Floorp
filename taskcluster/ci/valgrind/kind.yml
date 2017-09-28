@@ -44,4 +44,5 @@ jobs:
         toolchains:
             - linux64-clang
             - linux64-gcc
+            - linux64-rust
             - linux64-sccache

@@ -225,8 +225,8 @@ CustomElementDefinition*
 CustomElementRegistry::LookupCustomElementDefinition(const nsAString& aLocalName,
                                                      const nsAString* aIs) const
 {
-  nsCOMPtr<nsIAtom> localNameAtom = NS_Atomize(aLocalName);
-  nsCOMPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : localNameAtom;
+  RefPtr<nsIAtom> localNameAtom = NS_Atomize(aLocalName);
+  RefPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : localNameAtom;
 
   CustomElementDefinition* data = mCustomDefinitions.GetWeak(typeAtom);
   if (data && data->mLocalName == localNameAtom) {
@@ -261,7 +261,7 @@ CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTy
   // Candidate may be a custom element through extension,
   // in which case the custom element type name will not
   // match the element tag name. e.g. <button is="x-button">.
-  nsCOMPtr<nsIAtom> typeName = aTypeName;
+  RefPtr<nsIAtom> typeName = aTypeName;
   if (!typeName) {
     typeName = info->NameAtom();
   }
@@ -280,8 +280,8 @@ void
 CustomElementRegistry::SetupCustomElement(Element* aElement,
                                           const nsAString* aTypeExtension)
 {
-  nsCOMPtr<nsIAtom> tagAtom = aElement->NodeInfo()->NameAtom();
-  nsCOMPtr<nsIAtom> typeAtom = aTypeExtension ?
+  RefPtr<nsIAtom> tagAtom = aElement->NodeInfo()->NameAtom();
+  RefPtr<nsIAtom> typeAtom = aTypeExtension ?
     NS_Atomize(*aTypeExtension) : tagAtom;
 
   if (aTypeExtension && !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::is)) {
@@ -430,7 +430,7 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
   }
 
   if (aType == nsIDocument::eAttributeChanged) {
-    nsCOMPtr<nsIAtom> attrName = NS_Atomize(aArgs->name);
+    RefPtr<nsIAtom> attrName = NS_Atomize(aArgs->name);
     if (definition->mObservedAttributes.IsEmpty() ||
         !definition->mObservedAttributes.Contains(attrName)) {
       return;
@@ -576,7 +576,7 @@ CustomElementRegistry::Define(const nsAString& aName,
    * 2. If name is not a valid custom element name, then throw a "SyntaxError"
    *    DOMException and abort these steps.
    */
-  nsCOMPtr<nsIAtom> nameAtom(NS_Atomize(aName));
+  RefPtr<nsIAtom> nameAtom(NS_Atomize(aName));
   if (!nsContentUtils::IsCustomElementName(nameAtom)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
@@ -618,7 +618,7 @@ CustomElementRegistry::Define(const nsAString& aName,
    */
   nsAutoString localName(aName);
   if (aOptions.mExtends.WasPassed()) {
-    nsCOMPtr<nsIAtom> extendsAtom(NS_Atomize(aOptions.mExtends.Value()));
+    RefPtr<nsIAtom> extendsAtom(NS_Atomize(aOptions.mExtends.Value()));
     if (nsContentUtils::IsCustomElementName(extendsAtom)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
@@ -647,7 +647,7 @@ CustomElementRegistry::Define(const nsAString& aName,
 
   JS::Rooted<JSObject*> constructorPrototype(cx);
   nsAutoPtr<LifecycleCallbacks> callbacksHolder(new LifecycleCallbacks());
-  nsCOMArray<nsIAtom> observedAttributes;
+  nsTArray<RefPtr<nsIAtom>> observedAttributes;
   { // Set mIsCustomDefinitionRunning.
     /**
      * 9. Set this CustomElementRegistry's element definition is running flag.
@@ -778,7 +778,7 @@ CustomElementRegistry::Define(const nsAString& aName,
    *     lifecycleCallbacks.
    */
   // Associate the definition with the custom element.
-  nsCOMPtr<nsIAtom> localNameAtom(NS_Atomize(localName));
+  RefPtr<nsIAtom> localNameAtom(NS_Atomize(localName));
   LifecycleCallbacks* callbacks = callbacksHolder.forget();
 
   /**
@@ -829,7 +829,7 @@ void
 CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
                            JS::MutableHandle<JS::Value> aRetVal)
 {
-  nsCOMPtr<nsIAtom> nameAtom(NS_Atomize(aName));
+  RefPtr<nsIAtom> nameAtom(NS_Atomize(aName));
   CustomElementDefinition* data = mCustomDefinitions.GetWeak(nameAtom);
 
   if (!data) {
@@ -850,7 +850,7 @@ CustomElementRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsIAtom> nameAtom(NS_Atomize(aName));
+  RefPtr<nsIAtom> nameAtom(NS_Atomize(aName));
   if (!nsContentUtils::IsCustomElementName(nameAtom)) {
     promise->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
     return promise.forget();
@@ -1165,7 +1165,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CustomElementDefinition, Release)
 CustomElementDefinition::CustomElementDefinition(nsIAtom* aType,
                                                  nsIAtom* aLocalName,
                                                  Function* aConstructor,
-                                                 nsCOMArray<nsIAtom>&& aObservedAttributes,
+                                                 nsTArray<RefPtr<nsIAtom>>&& aObservedAttributes,
                                                  JSObject* aPrototype,
                                                  LifecycleCallbacks* aCallbacks,
                                                  uint32_t aDocOrder)

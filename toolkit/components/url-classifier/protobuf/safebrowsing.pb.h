@@ -46,6 +46,7 @@ class FindFullHashesRequest;
 class FindFullHashesResponse;
 class ThreatHit;
 class ThreatHit_ThreatSource;
+class ThreatHit_UserInfo;
 class ClientInfo;
 class ChromeClientInfo;
 class Checksum;
@@ -74,11 +75,12 @@ enum ThreatHit_ThreatSourceType {
   ThreatHit_ThreatSourceType_THREAT_SOURCE_TYPE_UNSPECIFIED = 0,
   ThreatHit_ThreatSourceType_MATCHING_URL = 1,
   ThreatHit_ThreatSourceType_TAB_URL = 2,
-  ThreatHit_ThreatSourceType_TAB_REDIRECT = 3
+  ThreatHit_ThreatSourceType_TAB_REDIRECT = 3,
+  ThreatHit_ThreatSourceType_TAB_RESOURCE = 4
 };
 bool ThreatHit_ThreatSourceType_IsValid(int value);
 const ThreatHit_ThreatSourceType ThreatHit_ThreatSourceType_ThreatSourceType_MIN = ThreatHit_ThreatSourceType_THREAT_SOURCE_TYPE_UNSPECIFIED;
-const ThreatHit_ThreatSourceType ThreatHit_ThreatSourceType_ThreatSourceType_MAX = ThreatHit_ThreatSourceType_TAB_REDIRECT;
+const ThreatHit_ThreatSourceType ThreatHit_ThreatSourceType_ThreatSourceType_MAX = ThreatHit_ThreatSourceType_TAB_RESOURCE;
 const int ThreatHit_ThreatSourceType_ThreatSourceType_ARRAYSIZE = ThreatHit_ThreatSourceType_ThreatSourceType_MAX + 1;
 
 enum ChromeClientInfo_SafeBrowsingReportingPopulation {
@@ -1685,6 +1687,117 @@ class ThreatHit_ThreatSource : public ::google::protobuf::MessageLite {
 };
 // -------------------------------------------------------------------
 
+class ThreatHit_UserInfo : public ::google::protobuf::MessageLite {
+ public:
+  ThreatHit_UserInfo();
+  virtual ~ThreatHit_UserInfo();
+
+  ThreatHit_UserInfo(const ThreatHit_UserInfo& from);
+
+  inline ThreatHit_UserInfo& operator=(const ThreatHit_UserInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::std::string& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::std::string* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ThreatHit_UserInfo& default_instance();
+
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  // Returns the internal default instance pointer. This function can
+  // return NULL thus should not be used by the user. This is intended
+  // for Protobuf internal code. Please use default_instance() declared
+  // above instead.
+  static inline const ThreatHit_UserInfo* internal_default_instance() {
+    return default_instance_;
+  }
+  #endif
+
+  void Swap(ThreatHit_UserInfo* other);
+
+  // implements Message ----------------------------------------------
+
+  ThreatHit_UserInfo* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const ThreatHit_UserInfo& from);
+  void MergeFrom(const ThreatHit_UserInfo& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  void DiscardUnknownFields();
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::std::string GetTypeName() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string region_code = 1;
+  inline bool has_region_code() const;
+  inline void clear_region_code();
+  static const int kRegionCodeFieldNumber = 1;
+  inline const ::std::string& region_code() const;
+  inline void set_region_code(const ::std::string& value);
+  inline void set_region_code(const char* value);
+  inline void set_region_code(const char* value, size_t size);
+  inline ::std::string* mutable_region_code();
+  inline ::std::string* release_region_code();
+  inline void set_allocated_region_code(::std::string* region_code);
+
+  // optional bytes user_id = 2;
+  inline bool has_user_id() const;
+  inline void clear_user_id();
+  static const int kUserIdFieldNumber = 2;
+  inline const ::std::string& user_id() const;
+  inline void set_user_id(const ::std::string& value);
+  inline void set_user_id(const char* value);
+  inline void set_user_id(const void* value, size_t size);
+  inline ::std::string* mutable_user_id();
+  inline ::std::string* release_user_id();
+  inline void set_allocated_user_id(::std::string* user_id);
+
+  // @@protoc_insertion_point(class_scope:mozilla.safebrowsing.ThreatHit.UserInfo)
+ private:
+  inline void set_has_region_code();
+  inline void clear_has_region_code();
+  inline void set_has_user_id();
+  inline void clear_has_user_id();
+
+  ::std::string _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::std::string* region_code_;
+  ::std::string* user_id_;
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  friend void  protobuf_AddDesc_safebrowsing_2eproto_impl();
+  #else
+  friend void  protobuf_AddDesc_safebrowsing_2eproto();
+  #endif
+  friend void protobuf_AssignDesc_safebrowsing_2eproto();
+  friend void protobuf_ShutdownFile_safebrowsing_2eproto();
+
+  void InitAsDefaultInstance();
+  static ThreatHit_UserInfo* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class ThreatHit : public ::google::protobuf::MessageLite {
  public:
   ThreatHit();
@@ -1745,12 +1858,14 @@ class ThreatHit : public ::google::protobuf::MessageLite {
   // nested types ----------------------------------------------------
 
   typedef ThreatHit_ThreatSource ThreatSource;
+  typedef ThreatHit_UserInfo UserInfo;
 
   typedef ThreatHit_ThreatSourceType ThreatSourceType;
   static const ThreatSourceType THREAT_SOURCE_TYPE_UNSPECIFIED = ThreatHit_ThreatSourceType_THREAT_SOURCE_TYPE_UNSPECIFIED;
   static const ThreatSourceType MATCHING_URL = ThreatHit_ThreatSourceType_MATCHING_URL;
   static const ThreatSourceType TAB_URL = ThreatHit_ThreatSourceType_TAB_URL;
   static const ThreatSourceType TAB_REDIRECT = ThreatHit_ThreatSourceType_TAB_REDIRECT;
+  static const ThreatSourceType TAB_RESOURCE = ThreatHit_ThreatSourceType_TAB_RESOURCE;
   static inline bool ThreatSourceType_IsValid(int value) {
     return ThreatHit_ThreatSourceType_IsValid(value);
   }
@@ -1798,6 +1913,24 @@ class ThreatHit : public ::google::protobuf::MessageLite {
   inline ::google::protobuf::RepeatedPtrField< ::mozilla::safebrowsing::ThreatHit_ThreatSource >*
       mutable_resources();
 
+  // optional .mozilla.safebrowsing.ClientInfo client_info = 5;
+  inline bool has_client_info() const;
+  inline void clear_client_info();
+  static const int kClientInfoFieldNumber = 5;
+  inline const ::mozilla::safebrowsing::ClientInfo& client_info() const;
+  inline ::mozilla::safebrowsing::ClientInfo* mutable_client_info();
+  inline ::mozilla::safebrowsing::ClientInfo* release_client_info();
+  inline void set_allocated_client_info(::mozilla::safebrowsing::ClientInfo* client_info);
+
+  // optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
+  inline bool has_user_info() const;
+  inline void clear_user_info();
+  static const int kUserInfoFieldNumber = 6;
+  inline const ::mozilla::safebrowsing::ThreatHit_UserInfo& user_info() const;
+  inline ::mozilla::safebrowsing::ThreatHit_UserInfo* mutable_user_info();
+  inline ::mozilla::safebrowsing::ThreatHit_UserInfo* release_user_info();
+  inline void set_allocated_user_info(::mozilla::safebrowsing::ThreatHit_UserInfo* user_info);
+
   // @@protoc_insertion_point(class_scope:mozilla.safebrowsing.ThreatHit)
  private:
   inline void set_has_threat_type();
@@ -1806,6 +1939,10 @@ class ThreatHit : public ::google::protobuf::MessageLite {
   inline void clear_has_platform_type();
   inline void set_has_entry();
   inline void clear_has_entry();
+  inline void set_has_client_info();
+  inline void clear_has_client_info();
+  inline void set_has_user_info();
+  inline void clear_has_user_info();
 
   ::std::string _unknown_fields_;
 
@@ -1815,6 +1952,8 @@ class ThreatHit : public ::google::protobuf::MessageLite {
   int platform_type_;
   ::mozilla::safebrowsing::ThreatEntry* entry_;
   ::google::protobuf::RepeatedPtrField< ::mozilla::safebrowsing::ThreatHit_ThreatSource > resources_;
+  ::mozilla::safebrowsing::ClientInfo* client_info_;
+  ::mozilla::safebrowsing::ThreatHit_UserInfo* user_info_;
   #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
   friend void  protobuf_AddDesc_safebrowsing_2eproto_impl();
   #else
@@ -5082,6 +5221,162 @@ inline void ThreatHit_ThreatSource::set_allocated_referrer(::std::string* referr
 
 // -------------------------------------------------------------------
 
+// ThreatHit_UserInfo
+
+// optional string region_code = 1;
+inline bool ThreatHit_UserInfo::has_region_code() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ThreatHit_UserInfo::set_has_region_code() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ThreatHit_UserInfo::clear_has_region_code() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ThreatHit_UserInfo::clear_region_code() {
+  if (region_code_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    region_code_->clear();
+  }
+  clear_has_region_code();
+}
+inline const ::std::string& ThreatHit_UserInfo::region_code() const {
+  // @@protoc_insertion_point(field_get:mozilla.safebrowsing.ThreatHit.UserInfo.region_code)
+  return *region_code_;
+}
+inline void ThreatHit_UserInfo::set_region_code(const ::std::string& value) {
+  set_has_region_code();
+  if (region_code_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    region_code_ = new ::std::string;
+  }
+  region_code_->assign(value);
+  // @@protoc_insertion_point(field_set:mozilla.safebrowsing.ThreatHit.UserInfo.region_code)
+}
+inline void ThreatHit_UserInfo::set_region_code(const char* value) {
+  set_has_region_code();
+  if (region_code_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    region_code_ = new ::std::string;
+  }
+  region_code_->assign(value);
+  // @@protoc_insertion_point(field_set_char:mozilla.safebrowsing.ThreatHit.UserInfo.region_code)
+}
+inline void ThreatHit_UserInfo::set_region_code(const char* value, size_t size) {
+  set_has_region_code();
+  if (region_code_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    region_code_ = new ::std::string;
+  }
+  region_code_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:mozilla.safebrowsing.ThreatHit.UserInfo.region_code)
+}
+inline ::std::string* ThreatHit_UserInfo::mutable_region_code() {
+  set_has_region_code();
+  if (region_code_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    region_code_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:mozilla.safebrowsing.ThreatHit.UserInfo.region_code)
+  return region_code_;
+}
+inline ::std::string* ThreatHit_UserInfo::release_region_code() {
+  clear_has_region_code();
+  if (region_code_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = region_code_;
+    region_code_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ThreatHit_UserInfo::set_allocated_region_code(::std::string* region_code) {
+  if (region_code_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete region_code_;
+  }
+  if (region_code) {
+    set_has_region_code();
+    region_code_ = region_code;
+  } else {
+    clear_has_region_code();
+    region_code_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.safebrowsing.ThreatHit.UserInfo.region_code)
+}
+
+// optional bytes user_id = 2;
+inline bool ThreatHit_UserInfo::has_user_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ThreatHit_UserInfo::set_has_user_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ThreatHit_UserInfo::clear_has_user_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ThreatHit_UserInfo::clear_user_id() {
+  if (user_id_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    user_id_->clear();
+  }
+  clear_has_user_id();
+}
+inline const ::std::string& ThreatHit_UserInfo::user_id() const {
+  // @@protoc_insertion_point(field_get:mozilla.safebrowsing.ThreatHit.UserInfo.user_id)
+  return *user_id_;
+}
+inline void ThreatHit_UserInfo::set_user_id(const ::std::string& value) {
+  set_has_user_id();
+  if (user_id_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    user_id_ = new ::std::string;
+  }
+  user_id_->assign(value);
+  // @@protoc_insertion_point(field_set:mozilla.safebrowsing.ThreatHit.UserInfo.user_id)
+}
+inline void ThreatHit_UserInfo::set_user_id(const char* value) {
+  set_has_user_id();
+  if (user_id_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    user_id_ = new ::std::string;
+  }
+  user_id_->assign(value);
+  // @@protoc_insertion_point(field_set_char:mozilla.safebrowsing.ThreatHit.UserInfo.user_id)
+}
+inline void ThreatHit_UserInfo::set_user_id(const void* value, size_t size) {
+  set_has_user_id();
+  if (user_id_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    user_id_ = new ::std::string;
+  }
+  user_id_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:mozilla.safebrowsing.ThreatHit.UserInfo.user_id)
+}
+inline ::std::string* ThreatHit_UserInfo::mutable_user_id() {
+  set_has_user_id();
+  if (user_id_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    user_id_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:mozilla.safebrowsing.ThreatHit.UserInfo.user_id)
+  return user_id_;
+}
+inline ::std::string* ThreatHit_UserInfo::release_user_id() {
+  clear_has_user_id();
+  if (user_id_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = user_id_;
+    user_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ThreatHit_UserInfo::set_allocated_user_id(::std::string* user_id) {
+  if (user_id_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete user_id_;
+  }
+  if (user_id) {
+    set_has_user_id();
+    user_id_ = user_id;
+  } else {
+    clear_has_user_id();
+    user_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.safebrowsing.ThreatHit.UserInfo.user_id)
+}
+
+// -------------------------------------------------------------------
+
 // ThreatHit
 
 // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
@@ -5207,6 +5502,96 @@ inline ::google::protobuf::RepeatedPtrField< ::mozilla::safebrowsing::ThreatHit_
 ThreatHit::mutable_resources() {
   // @@protoc_insertion_point(field_mutable_list:mozilla.safebrowsing.ThreatHit.resources)
   return &resources_;
+}
+
+// optional .mozilla.safebrowsing.ClientInfo client_info = 5;
+inline bool ThreatHit::has_client_info() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ThreatHit::set_has_client_info() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ThreatHit::clear_has_client_info() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ThreatHit::clear_client_info() {
+  if (client_info_ != NULL) client_info_->::mozilla::safebrowsing::ClientInfo::Clear();
+  clear_has_client_info();
+}
+inline const ::mozilla::safebrowsing::ClientInfo& ThreatHit::client_info() const {
+  // @@protoc_insertion_point(field_get:mozilla.safebrowsing.ThreatHit.client_info)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return client_info_ != NULL ? *client_info_ : *default_instance().client_info_;
+#else
+  return client_info_ != NULL ? *client_info_ : *default_instance_->client_info_;
+#endif
+}
+inline ::mozilla::safebrowsing::ClientInfo* ThreatHit::mutable_client_info() {
+  set_has_client_info();
+  if (client_info_ == NULL) client_info_ = new ::mozilla::safebrowsing::ClientInfo;
+  // @@protoc_insertion_point(field_mutable:mozilla.safebrowsing.ThreatHit.client_info)
+  return client_info_;
+}
+inline ::mozilla::safebrowsing::ClientInfo* ThreatHit::release_client_info() {
+  clear_has_client_info();
+  ::mozilla::safebrowsing::ClientInfo* temp = client_info_;
+  client_info_ = NULL;
+  return temp;
+}
+inline void ThreatHit::set_allocated_client_info(::mozilla::safebrowsing::ClientInfo* client_info) {
+  delete client_info_;
+  client_info_ = client_info;
+  if (client_info) {
+    set_has_client_info();
+  } else {
+    clear_has_client_info();
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.safebrowsing.ThreatHit.client_info)
+}
+
+// optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
+inline bool ThreatHit::has_user_info() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ThreatHit::set_has_user_info() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ThreatHit::clear_has_user_info() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ThreatHit::clear_user_info() {
+  if (user_info_ != NULL) user_info_->::mozilla::safebrowsing::ThreatHit_UserInfo::Clear();
+  clear_has_user_info();
+}
+inline const ::mozilla::safebrowsing::ThreatHit_UserInfo& ThreatHit::user_info() const {
+  // @@protoc_insertion_point(field_get:mozilla.safebrowsing.ThreatHit.user_info)
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  return user_info_ != NULL ? *user_info_ : *default_instance().user_info_;
+#else
+  return user_info_ != NULL ? *user_info_ : *default_instance_->user_info_;
+#endif
+}
+inline ::mozilla::safebrowsing::ThreatHit_UserInfo* ThreatHit::mutable_user_info() {
+  set_has_user_info();
+  if (user_info_ == NULL) user_info_ = new ::mozilla::safebrowsing::ThreatHit_UserInfo;
+  // @@protoc_insertion_point(field_mutable:mozilla.safebrowsing.ThreatHit.user_info)
+  return user_info_;
+}
+inline ::mozilla::safebrowsing::ThreatHit_UserInfo* ThreatHit::release_user_info() {
+  clear_has_user_info();
+  ::mozilla::safebrowsing::ThreatHit_UserInfo* temp = user_info_;
+  user_info_ = NULL;
+  return temp;
+}
+inline void ThreatHit::set_allocated_user_info(::mozilla::safebrowsing::ThreatHit_UserInfo* user_info) {
+  delete user_info_;
+  user_info_ = user_info;
+  if (user_info) {
+    set_has_user_info();
+  } else {
+    clear_has_user_info();
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.safebrowsing.ThreatHit.user_info)
 }
 
 // -------------------------------------------------------------------

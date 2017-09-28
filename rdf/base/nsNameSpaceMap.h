@@ -23,7 +23,7 @@ public:
         ~Entry() { MOZ_COUNT_DTOR(nsNameSpaceMap::Entry); }
 
         nsCString mURI;
-        nsCOMPtr<nsIAtom> mPrefix;
+        RefPtr<nsIAtom> mPrefix;
 
         Entry* mNext;
     };

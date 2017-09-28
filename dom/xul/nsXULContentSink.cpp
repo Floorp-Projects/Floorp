@@ -396,7 +396,7 @@ XULContentSinkImpl::NormalizeAttributeString(const char16_t *aExpatName,
                                              nsAttrName &aName)
 {
     int32_t nameSpaceID;
-    nsCOMPtr<nsIAtom> prefix, localName;
+    RefPtr<nsIAtom> prefix, localName;
     nsContentUtils::SplitExpatName(aExpatName, getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
 
@@ -450,7 +450,7 @@ XULContentSinkImpl::HandleStartElement(const char16_t *aName,
   }
 
   int32_t nameSpaceID;
-  nsCOMPtr<nsIAtom> prefix, localName;
+  RefPtr<nsIAtom> prefix, localName;
   nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
                                  getter_AddRefs(localName), &nameSpaceID);
 

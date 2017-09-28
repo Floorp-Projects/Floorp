@@ -1955,7 +1955,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
       nsCOMPtr<nsIContent> parent = node;
       nsCOMPtr<nsIContent> topChild = node;
 
-      nsCOMPtr<nsIAtom> listAtom = NS_Atomize(aListType);
+      RefPtr<nsIAtom> listAtom = NS_Atomize(aListType);
       while (!CanContainTag(*parent, *listAtom)) {
         topChild = parent;
         parent = parent->GetParent();
@@ -2092,7 +2092,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
       nsCOMPtr<nsIContent> parent = node;
       nsCOMPtr<nsIContent> topChild = node;
 
-      nsCOMPtr<nsIAtom> blockAtom = NS_Atomize(aBlockType);
+      RefPtr<nsIAtom> blockAtom = NS_Atomize(aBlockType);
       while (!CanContainTag(*parent, *blockAtom)) {
         NS_ENSURE_TRUE(parent->GetParent(), NS_ERROR_FAILURE);
         topChild = parent;
@@ -2523,7 +2523,7 @@ HTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   // the transaction system
 
   // New call to use instead to get proper HTML element, bug 39919
-  nsCOMPtr<nsIAtom> realTagAtom = NS_Atomize(realTagName);
+  RefPtr<nsIAtom> realTagAtom = NS_Atomize(realTagName);
   RefPtr<Element> newElement = CreateHTMLContent(realTagAtom);
   if (!newElement) {
     return nullptr;

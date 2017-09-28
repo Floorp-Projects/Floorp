@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* exported initialize, destroy */
+/* exported initialize, destroy, Promise */
 
 "use strict";
 
@@ -20,6 +20,7 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const App = createFactory(require("devtools/client/memory/app"));
 const Store = require("devtools/client/memory/store");
 const { assert } = require("devtools/shared/DevToolsUtils");
+const Promise = require("Promise");
 
 /**
  * The current target, toolbox, MemoryFront, and HeapAnalysesClient,

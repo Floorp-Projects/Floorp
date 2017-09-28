@@ -261,7 +261,7 @@ ServoKeyframesRule::GetName(nsAString& aName)
 NS_IMETHODIMP
 ServoKeyframesRule::SetName(const nsAString& aName)
 {
-  nsCOMPtr<nsIAtom> name = NS_Atomize(aName);
+  RefPtr<nsIAtom> name = NS_Atomize(aName);
   nsIAtom* oldName = Servo_KeyframesRule_GetName(mRawRule);
   if (name == oldName) {
     return NS_OK;

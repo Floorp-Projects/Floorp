@@ -172,6 +172,10 @@ function lazyRequireGetter(obj, property, module, destructure) {
 exports.modules = {
   "Services": Object.create(Services),
   promise,
+  // Expose "chrome" Promise, which aren't related to any document
+  // and so are never frozen, even if the browser loader module which
+  // pull it is destroyed. See bug 1402779.
+  Promise,
   PromiseDebugging,
   ChromeUtils,
   ThreadSafeChromeUtils,

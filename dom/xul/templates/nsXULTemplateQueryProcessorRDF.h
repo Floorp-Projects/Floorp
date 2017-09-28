@@ -292,7 +292,7 @@ protected:
     TestNode* mSimpleRuleMemberTest;
 
     // the reference variable
-    nsCOMPtr<nsIAtom> mRefVariable;
+    RefPtr<nsIAtom> mRefVariable;
 
     // the last ref that was calculated, used for simple rules
     nsCOMPtr<nsIXULTemplateResult> mLastRef;

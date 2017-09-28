@@ -2283,7 +2283,7 @@ NS_IMETHODIMP
 nsCSSCounterStyleRule::SetName(const nsAString& aName)
 {
   nsCSSParser parser;
-  if (nsCOMPtr<nsIAtom> name = parser.ParseCounterStyleName(aName, nullptr)) {
+  if (RefPtr<nsIAtom> name = parser.ParseCounterStyleName(aName, nullptr)) {
     nsIDocument* doc = GetDocument();
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 

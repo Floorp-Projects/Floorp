@@ -363,7 +363,7 @@ txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
         case Token::VAR_REFERENCE :
             lexer.nextToken();
             {
-                nsCOMPtr<nsIAtom> prefix, lName;
+                RefPtr<nsIAtom> prefix, lName;
                 int32_t nspace;
                 nsresult rv = resolveQName(tok->Value(), getter_AddRefs(prefix),
                                            aContext, getter_AddRefs(lName),
@@ -424,7 +424,7 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
                  "FunctionCall expected");
 
     //-- compare function names
-    nsCOMPtr<nsIAtom> prefix, lName;
+    RefPtr<nsIAtom> prefix, lName;
     int32_t namespaceID;
     nsresult rv = resolveQName(tok->Value(), getter_AddRefs(prefix), aContext,
                                getter_AddRefs(lName), namespaceID);
@@ -482,7 +482,7 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
         {
             //-- eat token
             lexer.nextToken();
-            nsCOMPtr<nsIAtom> axis = NS_Atomize(tok->Value());
+            RefPtr<nsIAtom> axis = NS_Atomize(tok->Value());
             if (axis == nsGkAtoms::ancestor) {
                 axisIdentifier = LocationStep::ANCESTOR_AXIS;
             }
@@ -556,7 +556,7 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
         if (tok->mType == Token::CNAME) {
             lexer.nextToken();
             // resolve QName
-            nsCOMPtr<nsIAtom> prefix, lName;
+            RefPtr<nsIAtom> prefix, lName;
             int32_t nspace;
             rv = resolveQName(tok->Value(), getter_AddRefs(prefix),
                               aContext, getter_AddRefs(lName),

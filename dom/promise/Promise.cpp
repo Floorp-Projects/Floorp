@@ -540,6 +540,22 @@ Promise::PerformMicroTaskCheckpoint()
   return true;
 }
 
+bool
+Promise::IsWorkerDebuggerMicroTaskEmpty()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "Wrong thread!");
+
+  CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
+  if (!context) {
+    return true;
+  }
+
+  std::queue<nsCOMPtr<nsIRunnable>>* microtaskQueue =
+    &context->GetDebuggerPromiseMicroTaskQueue();
+
+  return microtaskQueue->empty();
+}
+
 void
 Promise::PerformWorkerMicroTaskCheckpoint()
 {

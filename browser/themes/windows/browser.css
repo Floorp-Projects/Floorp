@@ -115,7 +115,8 @@
       --tabs-border: #4A4A4F;
     }
 
-    #TabsToolbar:not(:-moz-lwtheme) {
+    #TabsToolbar:not(:-moz-lwtheme),
+    #TabsToolbar:not(:-moz-lwtheme) toolbarbutton[disabled="true"] {
       color: hsl(240,9%,98%);
     }
 
@@ -519,9 +520,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 .urlbar-textbox-container {
   -moz-box-align: stretch;
-}
-.urlbar-input-box {
-  margin: 0;
 }
 
 /* ::::: URL Bar Zoom Reset Button ::::: */

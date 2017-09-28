@@ -193,7 +193,7 @@ public:
     TX_DECL_PATTERN;
 
 private:
-    nsCOMArray<nsIAtom> mIds;
+    nsTArray<RefPtr<nsIAtom>> mIds;
 };
 
 class txKeyPattern : public txPattern
@@ -214,7 +214,7 @@ public:
 private:
     txExpandedName mName;
 #ifdef TX_TO_STRING
-    nsCOMPtr<nsIAtom> mPrefix;
+    RefPtr<nsIAtom> mPrefix;
 #endif
     nsString mValue;
 };

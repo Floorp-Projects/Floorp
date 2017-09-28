@@ -1255,7 +1255,7 @@ EditorBase::SetAttribute(nsIDOMElement* aElement,
   }
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
 
   return SetAttribute(element, attribute, aValue);
 }
@@ -1300,7 +1300,7 @@ EditorBase::RemoveAttribute(nsIDOMElement* aElement,
   }
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
 
   return RemoveAttribute(element, attribute);
 }
@@ -1414,7 +1414,7 @@ EditorBase::CreateNode(const nsAString& aTag,
                        int32_t aPosition,
                        nsIDOMNode** aNewNode)
 {
-  nsCOMPtr<nsIAtom> tag = NS_Atomize(aTag);
+  RefPtr<nsIAtom> tag = NS_Atomize(aTag);
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
   NS_ENSURE_STATE(parent);
   *aNewNode = GetAsDOMNode(CreateNode(tag, parent, aPosition).take());
@@ -2284,7 +2284,7 @@ EditorBase::CloneAttribute(const nsAString& aAttribute,
   nsCOMPtr<Element> sourceElement = do_QueryInterface(aSourceNode);
   NS_ENSURE_TRUE(destElement && sourceElement, NS_ERROR_NO_INTERFACE);
 
-  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
   return CloneAttribute(attribute, destElement, sourceElement);
 }
 
@@ -4736,7 +4736,7 @@ EditorBase::SetAttributeOrEquivalent(nsIDOMElement* aElement,
   if (NS_WARN_IF(!element)) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
   return SetAttributeOrEquivalent(element, attribute, aValue,
                                   aSuppressTransaction);
 }
@@ -4750,7 +4750,7 @@ EditorBase::RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
   if (NS_WARN_IF(!element)) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
+  RefPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
   return RemoveAttributeOrEquivalent(element, attribute, aSuppressTransaction);
 }
 

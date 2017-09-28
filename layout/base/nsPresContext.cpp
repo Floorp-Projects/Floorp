@@ -1996,7 +1996,7 @@ void
 nsPresContext::CacheAllLangs()
 {
   if (mFontGroupCacheDirty) {
-    nsCOMPtr<nsIAtom> thisLang = nsStyleFont::GetLanguage(this);
+    RefPtr<nsIAtom> thisLang = nsStyleFont::GetLanguage(this);
     GetDefaultFont(kPresContext_DefaultVariableFont_ID, thisLang.get());
     GetDefaultFont(kPresContext_DefaultVariableFont_ID, nsGkAtoms::x_math);
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1362599#c12

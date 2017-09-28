@@ -120,7 +120,7 @@ private:
     nsIID mIID;
     uint16_t mMethodIndex;
 #ifdef TX_TO_STRING
-    nsCOMPtr<nsIAtom> mName;
+    RefPtr<nsIAtom> mName;
 #endif
     nsCOMPtr<nsISupports> mState;
 };

@@ -293,6 +293,8 @@ function checkItem(aExpected, aNode) {
   let id = aNode.itemId;
 
   return (async function() {
+    let bookmark = await PlacesUtils.bookmarks.fetch(aNode.bookmarkGuid);
+
     for (let prop in aExpected) {
       switch (prop) {
         case "type":
@@ -307,11 +309,11 @@ function checkItem(aExpected, aNode) {
                       aExpected.description);
           break;
         case "dateAdded":
-          do_check_eq(PlacesUtils.bookmarks.getItemDateAdded(id),
+          do_check_eq(PlacesUtils.toPRTime(bookmark.dateAdded),
                       aExpected.dateAdded);
           break;
         case "lastModified":
-          do_check_eq(PlacesUtils.bookmarks.getItemLastModified(id),
+          do_check_eq(PlacesUtils.toPRTime(bookmark.lastModified),
                       aExpected.lastModified);
           break;
         case "url":

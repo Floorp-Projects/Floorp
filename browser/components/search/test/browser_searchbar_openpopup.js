@@ -479,7 +479,10 @@ add_task(async function dont_consume_clicks() {
 // Dropping text to the searchbar should open the popup
 add_task(async function drop_opens_popup() {
   let promise = promiseEvent(searchPopup, "popupshown");
-  EventUtils.synthesizeDrop(searchIcon, textbox.inputField, [[ {type: "text/plain", data: "foo" } ]], "move", window);
+  // Use a source for the drop that is outside of the search bar area, to avoid
+  // it receiving a mousedown and causing the popup to sometimes open.
+  let homeButton = document.getElementById("home-button");
+  EventUtils.synthesizeDrop(homeButton, textbox.inputField, [[ {type: "text/plain", data: "foo" } ]], "move", window);
   await promise;
 
   isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");

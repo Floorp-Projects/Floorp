@@ -91,6 +91,10 @@ addon.install = async function(path, temporary = false) {
   let file = new FileUtils.File(path);
   let addon;
 
+  if (!file.exists()) {
+    throw new UnknownError(`Could not find add-on at '${path}'`);
+  }
+
   try {
     if (temporary) {
       addon = await AddonManager.installTemporaryAddon(file);

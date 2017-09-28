@@ -107,7 +107,17 @@ const clearIndexedDB = async function(options) {
 };
 
 const clearLocalStorage = async function(options) {
-  Services.obs.notifyObservers(null, "extension:purge-localStorage");
+  if (options.since) {
+    return Promise.reject(
+      {message: "Firefox does not support clearing localStorage with 'since'."});
+  }
+  if (options.hostnames) {
+    for (let hostname of options.hostnames) {
+      Services.obs.notifyObservers(null, "extension:purge-localStorage", hostname);
+    }
+  } else {
+    Services.obs.notifyObservers(null, "extension:purge-localStorage");
+  }
 };
 
 const clearPasswords = async function(options) {

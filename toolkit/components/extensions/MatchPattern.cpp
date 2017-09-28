@@ -292,7 +292,7 @@ MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath, 
     return;
   }
 
-  nsCOMPtr<nsIAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
+  RefPtr<nsIAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
   if (scheme == nsGkAtoms::_asterisk) {
     mSchemes = AtomSet::Get<WILDCARD_SCHEMES>();
   } else if (permittedSchemes->Contains(scheme) || scheme == nsGkAtoms::moz_extension) {

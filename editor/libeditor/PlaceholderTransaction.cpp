@@ -167,7 +167,7 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
          mName.get() == nsGkAtoms::IMETxnName    ||
          mName.get() == nsGkAtoms::DeleteTxnName) && !mCommitted) {
       if (absorbingTransaction) {
-        nsCOMPtr<nsIAtom> atom;
+        RefPtr<nsIAtom> atom;
         absorbingTransaction->GetTxnName(getter_AddRefs(atom));
         if (atom && atom == mName) {
           // check if start selection of next placeholder matches

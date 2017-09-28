@@ -333,15 +333,31 @@ this.TelemetryStopwatch = {
    */
   finishKeyed(aHistogram, aKey, aObj, aCanceledOkay) {
     return TelemetryStopwatchImpl.finish(aHistogram, aObj, aKey, aCanceledOkay);
-  }
+  },
+
+  /**
+   * Set the testing mode. Used by tests.
+   */
+  setTestModeEnabled(testing) {
+    TelemetryStopwatchImpl.suppressErrors(true);
+  },
 };
 
 this.TelemetryStopwatchImpl = {
+  // Suppress errors. Used when testing.
+  _suppressErrors: false,
+
+  suppressErrors(suppress) {
+    this._suppressErrors = suppress;
+  },
+
   start(histogram, object, key) {
     if (Timers.has(histogram, object, key)) {
       Timers.delete(histogram, object, key);
-      Cu.reportError(`TelemetryStopwatch: key "${histogram}" was already ` +
-                     "initialized");
+      if (!this._suppressErrors) {
+        Cu.reportError(`TelemetryStopwatch: key "${histogram}" was already ` +
+                       "initialized");
+      }
       return false;
     }
 
@@ -359,7 +375,7 @@ this.TelemetryStopwatchImpl = {
   timeElapsed(histogram, object, key, aCanceledOkay) {
     let startTime = Timers.get(histogram, object, key);
     if (startTime === null) {
-      if (!aCanceledOkay) {
+      if (!aCanceledOkay && !this._suppressErrors) {
         Cu.reportError("TelemetryStopwatch: requesting elapsed time for " +
                        `nonexisting stopwatch. Histogram: "${histogram}", ` +
                        `key: "${key}"`);
@@ -371,9 +387,11 @@ this.TelemetryStopwatchImpl = {
       let delta = Components.utils.now() - startTime
       return Math.round(delta);
     } catch (e) {
-      Cu.reportError("TelemetryStopwatch: failed to calculate elapsed time " +
-                     `for Histogram: "${histogram}", key: "${key}", ` +
-                     `exception: ${Log.exceptionStr(e)}`);
+      if (!this._suppressErrors) {
+        Cu.reportError("TelemetryStopwatch: failed to calculate elapsed time " +
+                       `for Histogram: "${histogram}", key: "${key}", ` +
+                       `exception: ${Log.exceptionStr(e)}`);
+      }
       return -1;
     }
   },
@@ -391,9 +409,11 @@ this.TelemetryStopwatchImpl = {
         Telemetry.getHistogramById(histogram).add(delta);
       }
     } catch (e) {
-      Cu.reportError("TelemetryStopwatch: failed to update the Histogram " +
-                     `"${histogram}", using key: "${key}", ` +
-                     `exception: ${Log.exceptionStr(e)}`);
+      if (!this._suppressErrors) {
+        Cu.reportError("TelemetryStopwatch: failed to update the Histogram " +
+                       `"${histogram}", using key: "${key}", ` +
+                       `exception: ${Log.exceptionStr(e)}`);
+      }
       return false;
     }
 

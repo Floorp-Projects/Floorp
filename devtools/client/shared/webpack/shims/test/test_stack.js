@@ -9,14 +9,11 @@
 var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
-// Make sure to explicitly require the content version of this module.
-// We have to use the ".." trick due to the way the loader remaps
-// devtools/shared/platform.
 const {
   callFunctionWithAsyncStack,
   getStack,
   describeNthCaller
-} = require("devtools/shared/platform/../content/stack");
+} = require("devtools/client/shared/webpack/shims/platform-stack-stub");
 
 function f3() {
   return describeNthCaller(2);

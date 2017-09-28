@@ -531,7 +531,7 @@ public:
   nsIAtom* GetAttribute() const { return mAttribute; }
 
 private:
-  nsCOMPtr<nsIAtom> mAttribute;
+  RefPtr<nsIAtom> mAttribute;
 
   virtual ~AccObjectAttrChangedEvent() { }
 };
