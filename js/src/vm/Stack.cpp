@@ -1760,10 +1760,10 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
     wasm::UnwindState unwindState;
     MOZ_ALWAYS_TRUE(wasm::StartUnwinding(*this, state, &unwindState, &ignoredUnwound));
 
-    void* unwindPC = unwindState.pc;
-    MOZ_ASSERT(compartment()->wasm.lookupCode(unwindPC)->lookupRange(unwindPC)->isFunction());
+    void* pc = unwindState.pc;
+    MOZ_ASSERT(compartment()->wasm.lookupCode(pc)->lookupRange(pc)->isFunction());
 
-    cx_->runtime()->startWasmInterrupt(state.pc, unwindPC);
+    cx_->runtime()->startWasmInterrupt(state.pc, pc);
     setWasmExitFP(unwindState.fp);
 
     MOZ_ASSERT(compartment() == unwindState.fp->tls->instance->compartment());

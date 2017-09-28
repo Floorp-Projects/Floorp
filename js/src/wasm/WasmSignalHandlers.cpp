@@ -994,12 +994,11 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     JitActivation* activation = cx->activation()->asJit();
 
-    const CodeSegment* codeSegment;
-    const Code* code = activation->compartment()->wasm.lookupCode(pc, &codeSegment);
-    if (!code)
+    const CodeSegment* codeSegment = activation->compartment()->wasm.lookupCodeSegment(pc);
+    if (!codeSegment)
         return false;
 
-    const Instance* instance = LookupFaultingInstance(*code, pc, ContextToFP(context));
+    const Instance* instance = LookupFaultingInstance(*codeSegment, pc, ContextToFP(context));
     if (!instance) {
         // On Windows, it is possible for InterruptRunningJitCode to execute
         // between a faulting heap access and the handling of the fault due
@@ -1011,6 +1010,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // case and silence the exception ourselves (the exception will
         // retrigger after the interrupt jumps back to resumePC).
 
+        const Code* code = codeSegment->code();
         for (auto t : code->tiers()) {
             if (pc == code->segment(t).interruptCode() &&
                 activation->isWasmInterrupted() &&
@@ -1137,11 +1137,11 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         return false;
     JitActivation* activation = cx->activation()->asJit();
 
-    const Code* code = activation->compartment()->wasm.lookupCode(pc);
-    if (!code)
+    const CodeSegment* codeSegment = activation->compartment()->wasm.lookupCodeSegment(pc);
+    if (!codeSegment)
         return false;
 
-    const Instance* instance = LookupFaultingInstance(*code, pc, ContextToFP(&context));
+    const Instance* instance = LookupFaultingInstance(*codeSegment, pc, ContextToFP(&context));
     if (!instance)
         return false;
 
@@ -1348,12 +1348,11 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
     JitActivation* activation = cx->activation()->asJit();
 
-    const CodeSegment* segment;
-    const Code* code = activation->compartment()->wasm.lookupCode(pc, &segment);
-    if (!code)
+    const CodeSegment* segment = activation->compartment()->wasm.lookupCodeSegment(pc);
+    if (!segment)
         return false;
 
-    const Instance* instance = LookupFaultingInstance(*code, pc, ContextToFP(context));
+    const Instance* instance = LookupFaultingInstance(*segment, pc, ContextToFP(context));
     if (!instance)
         return false;
 
@@ -1458,11 +1457,13 @@ wasm::InInterruptibleCode(JSContext* cx, uint8_t* pc, const CodeSegment** cs)
     if (!cx->compartment())
         return false;
 
-    const Code* code = cx->compartment()->wasm.lookupCode(pc);
-    if (!code)
+    *cs = cx->compartment()->wasm.lookupCodeSegment(pc);
+    if (!*cs)
         return false;
 
-    const CodeRange* codeRange = code->lookupRange(pc, cs);
+    const Code* code = (*cs)->code();
+
+    const CodeRange* codeRange = code->lookupRange(pc);
     return codeRange && codeRange->isFunction();
 }
 

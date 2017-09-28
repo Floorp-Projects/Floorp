@@ -277,7 +277,7 @@ Module::notifyCompilationListeners()
 
 void
 Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                    UniqueConstCodeSegment code2, ModuleEnvironment* env2)
+                    UniqueCodeSegment code2, ModuleEnvironment* env2)
 {
     // Install the data in the data structures. They will not be visible yet.
 
