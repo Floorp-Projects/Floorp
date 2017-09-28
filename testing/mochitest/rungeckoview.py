@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
 
 import posixpath
 import shutil
@@ -193,8 +192,8 @@ class GeckoviewTestRunner:
                 # minidumps directory is automatically created when the app
                 # (first) starts, so its lack of presence is a hint that
                 # something went wrong.
-                print("Automation Error: No crash directory (%s) found on remote device" %
-                      remote_dir)
+                print "Automation Error: No crash directory (%s) found on remote device" % \
+                    remote_dir
                 # Whilst no crash was found, the run should still display as a failure
                 return True
             self.dm.getDirectory(remote_dir, dump_dir)
