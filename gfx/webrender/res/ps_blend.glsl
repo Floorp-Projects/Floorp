@@ -116,7 +116,12 @@ vec4 HueRotate(vec4 Cs, float amount) {
 }
 
 vec4 Invert(vec4 Cs, float amount) {
-    return mix(Cs, vec4(1.0, 1.0, 1.0, Cs.a) - vec4(Cs.rgb, 0.0), amount);
+    Cs.rgb /= Cs.a;
+
+    vec3 color = mix(Cs.rgb, vec3(1.0) - Cs.rgb, amount);
+
+    // Pre-multiply the alpha into the output value.
+    return vec4(color.rgb * Cs.a, Cs.a);
 }
 
 vec4 Saturate(vec4 Cs, float amount) {
@@ -132,7 +137,16 @@ vec4 Sepia(vec4 Cs, float amount) {
 }
 
 vec4 Brightness(vec4 Cs, float amount) {
-    return vec4(Cs.rgb * amount, Cs.a);
+    // Un-premultiply the input.
+    Cs.rgb /= Cs.a;
+
+    // Apply the brightness factor.
+    // Resulting color needs to be clamped to output range
+    // since we are pre-multiplying alpha in the shader.
+    vec3 color = clamp(Cs.rgb * amount, vec3(0.0), vec3(1.0));
+
+    // Pre-multiply the alpha into the output value.
+    return vec4(color.rgb * Cs.a, Cs.a);
 }
 
 vec4 Opacity(vec4 Cs, float amount) {

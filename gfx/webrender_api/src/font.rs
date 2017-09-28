@@ -93,6 +93,7 @@ pub enum FontRenderMode {
     Mono = 0,
     Alpha,
     Subpixel,
+    Bitmap,
 }
 
 #[repr(u32)]
@@ -129,6 +130,7 @@ impl FontRenderMode {
     // Combine two font render modes such that the lesser amount of AA limits the AA of the result.
     pub fn limit_by(self, other: FontRenderMode) -> FontRenderMode {
         match (self, other) {
+            (FontRenderMode::Bitmap, _) | (_, FontRenderMode::Bitmap) => FontRenderMode::Bitmap,
             (FontRenderMode::Subpixel, _) | (_, FontRenderMode::Mono) => other,
             _ => self,
         }
@@ -237,8 +239,14 @@ impl FontInstance {
         // In alpha/mono mode, the color of the font is irrelevant.
         // Forcing it to black in those cases saves rasterizing glyphs
         // of different colors when not needed.
-        if render_mode != FontRenderMode::Subpixel {
-            color = ColorF::new(0.0, 0.0, 0.0, 1.0);
+        match render_mode {
+            FontRenderMode::Alpha | FontRenderMode::Mono => {
+                color = ColorF::new(0.0, 0.0, 0.0, 1.0);
+            }
+            FontRenderMode::Bitmap => {
+                color = ColorF::new(1.0, 1.0, 1.0, 1.0);
+            }
+            FontRenderMode::Subpixel => {}
         }
 
         FontInstance {

@@ -11,7 +11,7 @@ use core_foundation::base::TCFType;
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::string::{CFString, CFStringRef};
-use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedLast};
+use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedFirst, kCGImageAlphaPremultipliedLast};
 use core_graphics::base::kCGBitmapByteOrder32Little;
 use core_graphics::color_space::CGColorSpace;
 use core_graphics::context::{CGContext, CGTextDrawingMode};
@@ -20,7 +20,7 @@ use core_graphics::font::{CGFont, CGFontRef, CGGlyph};
 use core_graphics::geometry::{CGPoint, CGRect, CGSize};
 use core_text;
 use core_text::font::{CTFont, CTFontRef};
-use core_text::font_descriptor::kCTFontDefaultOrientation;
+use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{Color as ColorLut, GammaLut};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
@@ -422,6 +422,18 @@ impl FontContext {
         }
     }
 
+    pub fn is_bitmap_font(&mut self, font_key: FontKey) -> bool {
+        match self.get_ct_font(font_key, Au(16 * 60), &[]) {
+            Some(ref ct_font) => {
+                let traits = ct_font.symbolic_traits();
+                (traits & kCTFontColorGlyphsTrait) != 0
+            }
+            None => {
+                false
+            }
+        }
+    }
+
     pub fn rasterize_glyph(
         &mut self,
         font: &FontInstance,
@@ -440,8 +452,15 @@ impl FontContext {
         }
 
         let context_flags = match font.render_mode {
-            FontRenderMode::Subpixel => kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst,
-            FontRenderMode::Alpha | FontRenderMode::Mono => kCGImageAlphaPremultipliedLast,
+            FontRenderMode::Subpixel => {
+                kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst
+            }
+            FontRenderMode::Alpha | FontRenderMode::Mono => {
+                kCGImageAlphaPremultipliedLast
+            }
+            FontRenderMode::Bitmap => {
+                kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst
+            }
         };
 
         let mut cg_context = CGContext::create_bitmap_context(
@@ -476,10 +495,11 @@ impl FontContext {
         // For alpha/mono, WR ignores all channels other than alpha.
         // Also note that WR expects text to be black bg with white text, so invert
         // when we draw the glyphs.
-        let (antialias, smooth) = match font.render_mode {
-            FontRenderMode::Subpixel => (true, true),
-            FontRenderMode::Alpha => (true, false),
-            FontRenderMode::Mono => (false, false),
+        let (antialias, smooth, bg_color) = match font.render_mode {
+            FontRenderMode::Subpixel => (true, true, 1.0),
+            FontRenderMode::Alpha => (true, false, 1.0),
+            FontRenderMode::Bitmap => (true, false, 0.0),
+            FontRenderMode::Mono => (false, false, 1.0),
         };
 
         // These are always true in Gecko, even for non-AA fonts
@@ -503,7 +523,7 @@ impl FontContext {
 
         // Always draw black text on a white background
         // Fill the background
-        cg_context.set_rgb_fill_color(1.0, 1.0, 1.0, 1.0);
+        cg_context.set_rgb_fill_color(bg_color, bg_color, bg_color, bg_color);
         let rect = CGRect {
             origin: CGPoint { x: 0.0, y: 0.0 },
             size: CGSize {
@@ -520,45 +540,45 @@ impl FontContext {
 
         let mut rasterized_pixels = cg_context.data().to_vec();
 
-        // Convert to linear space for subpixel AA.
-        // We explicitly do not do this for grayscale AA
-        if font.render_mode == FontRenderMode::Subpixel {
-            self.gamma_lut.coregraphics_convert_to_linear_bgra(
+        if font.render_mode != FontRenderMode::Bitmap {
+            // Convert to linear space for subpixel AA.
+            // We explicitly do not do this for grayscale AA
+            if font.render_mode == FontRenderMode::Subpixel {
+                self.gamma_lut.coregraphics_convert_to_linear_bgra(
+                    &mut rasterized_pixels,
+                    metrics.rasterized_width as usize,
+                    metrics.rasterized_height as usize,
+                );
+            }
+
+            // We need to invert the pixels back since right now
+            // transparent pixels are actually opaque white.
+            for i in 0 .. metrics.rasterized_height {
+                let current_height = (i * metrics.rasterized_width * 4) as usize;
+                let end_row = current_height + (metrics.rasterized_width as usize * 4);
+
+                for pixel in rasterized_pixels[current_height .. end_row].chunks_mut(4) {
+                    pixel[0] = 255 - pixel[0];
+                    pixel[1] = 255 - pixel[1];
+                    pixel[2] = 255 - pixel[2];
+
+                    pixel[3] = match font.render_mode {
+                        FontRenderMode::Subpixel => 255,
+                        _ => {
+                            pixel[0]
+                        }
+                    }; // end match
+                } // end row
+            } // end height
+
+            self.gamma_correct_pixels(
                 &mut rasterized_pixels,
                 metrics.rasterized_width as usize,
                 metrics.rasterized_height as usize,
+                font.render_mode,
+                font.color,
             );
         }
-
-        // We need to invert the pixels back since right now
-        // transparent pixels are actually opaque white.
-        for i in 0 .. metrics.rasterized_height {
-            let current_height = (i * metrics.rasterized_width * 4) as usize;
-            let end_row = current_height + (metrics.rasterized_width as usize * 4);
-
-            for pixel in rasterized_pixels[current_height .. end_row].chunks_mut(4) {
-                pixel[0] = 255 - pixel[0];
-                pixel[1] = 255 - pixel[1];
-                pixel[2] = 255 - pixel[2];
-
-                pixel[3] = match font.render_mode {
-                    FontRenderMode::Subpixel => 255,
-                    _ => {
-                        assert_eq!(pixel[0], pixel[1]);
-                        assert_eq!(pixel[0], pixel[2]);
-                        pixel[0]
-                    }
-                }; // end match
-            } // end row
-        } // end height
-
-        self.gamma_correct_pixels(
-            &mut rasterized_pixels,
-            metrics.rasterized_width as usize,
-            metrics.rasterized_height as usize,
-            font.render_mode,
-            font.color,
-        );
 
         Some(RasterizedGlyph {
             left: metrics.rasterized_left as f32,

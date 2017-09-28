@@ -38,6 +38,13 @@ impl ClipAndScrollInfo {
     }
 }
 
+/// A tag that can be used to identify items during hit testing. If the tag
+/// is missing then the item doesn't take part in hit testing at all. This
+/// is composed of two numbers. In Servo, the first is an identifier while the
+/// second is used to select the cursor that should be used during mouse
+/// movement.
+pub type ItemTag = (u64, u8);
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct DisplayItem {
     pub item: SpecificDisplayItem,
@@ -50,6 +57,7 @@ pub struct PrimitiveInfo<T> {
     pub rect: TypedRect<f32, T>,
     pub local_clip: LocalClip,
     pub is_backface_visible: bool,
+    pub tag: Option<ItemTag>,
 }
 
 impl LayerPrimitiveInfo {
@@ -68,6 +76,7 @@ impl LayerPrimitiveInfo {
             rect: rect,
             local_clip: clip,
             is_backface_visible: true,
+            tag: None,
         }
     }
 }
