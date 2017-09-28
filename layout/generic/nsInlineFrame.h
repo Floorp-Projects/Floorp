@@ -158,15 +158,6 @@ protected:
                          nsIFrame* aFrame,
                          nsReflowStatus& aStatus);
 
-  /**
-   * Reparent floats whose placeholders are inline descendants of aFrame from
-   * whatever block they're currently parented by to aOurBlock.
-   * @param aReparentSiblings if this is true, we follow aFrame's
-   * GetNextSibling chain reparenting them all
-   */
-  void ReparentFloatsForInlineChild(nsIFrame* aOurBlock, nsIFrame* aFrame,
-                                    bool aReparentSiblings);
-
   virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,
                                  InlineReflowInput& rs,
                                  bool* aIsComplete);
