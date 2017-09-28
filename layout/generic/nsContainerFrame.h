@@ -634,18 +634,22 @@ protected:
   bool MoveOverflowToChildList();
 
   /**
-   * Push aFromChild and its next siblings to the next-in-flow. Change
-   * the geometric parent of each frame that's pushed. If there is no
-   * next-in-flow the frames are placed on the overflow list (and the
-   * geometric parent is left unchanged).
+   * Push aFromChild and its next siblings to the overflow list.
+   *
+   * @param aFromChild the first child frame to push. It is disconnected
+   *          from aPrevSibling
+   * @param aPrevSibling aFrameChild's previous sibling. Must not be null.
+   *          It's an error to push a parent's first child frame.
+   */
+  void PushChildrenToOverflow(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
+
+  /**
+   * Same as above, except that this pushes frames to the next-in-flow
+   * frame and changes the geometric parent of the pushed frames when
+   * there is a next-in-flow frame.
    *
    * Updates the next-in-flow's child count. Does <b>not</b> update the
    * pusher's child count.
-   *
-   * @param   aFromChild the first child frame to push. It is disconnected from
-   *            aPrevSibling
-   * @param   aPrevSibling aFromChild's previous sibling. Must not be null.
-   *            It's an error to push a parent's first child frame
    */
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
