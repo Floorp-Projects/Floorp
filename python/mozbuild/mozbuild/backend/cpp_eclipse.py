@@ -730,6 +730,7 @@ ensureNewlineAtEOF=false
 formatter_profile=_Mozilla
 formatter_settings_version=1
 org.eclipse.cdt.ui.formatterprofiles.version=1
+scalability.numberOfLines=15000
 """
 
 NOINDEX_TEMPLATE = """eclipse.preferences.version=1
