@@ -356,7 +356,6 @@ class Simulator {
 
     // wasm async interrupt / fault support
     bool wasm_interrupt_;
-    wasm::SharedCode wasm_code_;
 
     // Debugger input.
     char* lastDebuggerInput_;

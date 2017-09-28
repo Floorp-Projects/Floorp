@@ -1641,9 +1641,8 @@ Simulator::handleWasmInterrupt()
     void* fp = (void*)getRegister(Register::fp);
 
     JitActivation* activation = TlsContext.get()->activation()->asJit();
-    const wasm::CodeSegment* segment;
-    const wasm::Code* code = activation->compartment()->wasm.lookupCode(pc, &segment);
-    if (!code || !segment->containsFunctionPC(pc))
+    const wasm::CodeSegment* segment = activation->compartment()->wasm.lookupCodeSegment(pc);
+    if (!segment || !segment->containsCodePC(pc))
         return;
 
     // fp can be null during the prologue/epilogue of the entry function.
@@ -1672,23 +1671,20 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
     void* pc = reinterpret_cast<void*>(get_pc());
     uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));
 
-    // Cache the wasm::Code to avoid lookup on every load/store.
-    if (!wasm_code_ || !wasm_code_->containsCodePC(pc))
-        wasm_code_ = act->compartment()->wasm.lookupCode(pc);
-    if (!wasm_code_)
+    const wasm::CodeSegment* segment = act->compartment()->wasm.lookupCodeSegment(pc);
+    if (!segment)
         return false;
 
-    wasm::Instance* instance = wasm::LookupFaultingInstance(*wasm_code_, pc, fp);
+    wasm::Instance* instance = wasm::LookupFaultingInstance(*segment, pc, fp);
     if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 
     LLBit_ = false;
 
-    const wasm::CodeSegment* segment;
     const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc, &segment);
     if (!memoryAccess) {
         startInterrupt(act);
-        if (!instance->code().containsCodePC(pc, &segment))
+        if (!instance->code().containsCodePC(pc))
             MOZ_CRASH("Cannot map PC to trap handler");
         set_pc(int32_t(segment->outOfBoundsCode()));
         return true;

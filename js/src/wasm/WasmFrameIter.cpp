@@ -678,10 +678,12 @@ js::wasm::StartUnwinding(const JitActivation& activation, const RegisterState& r
     // that pushed the JitActivation.
     const CodeRange* codeRange;
     uint8_t* codeBase;
-    const Code* code = activation.compartment()->wasm.lookupCode(pc);
-    if (code) {
-        const CodeSegment* codeSegment;
-        codeRange = code->lookupRange(pc, &codeSegment);
+    const Code* code = nullptr;
+
+    const CodeSegment* codeSegment = activation.compartment()->wasm.lookupCodeSegment(pc);
+    if (codeSegment) {
+        code = codeSegment->code();
+        codeRange = code->lookupRange(pc);
         codeBase = codeSegment->base();
     } else if (!LookupBuiltinThunk(pc, &codeRange, &codeBase)) {
         return false;
@@ -1084,7 +1086,7 @@ ProfilingFrameIterator::label() const
 }
 
 Instance*
-wasm::LookupFaultingInstance(const Code& code, void* pc, void* fp)
+wasm::LookupFaultingInstance(const CodeSegment& codeSegment, void* pc, void* fp)
 {
     // Assume bug-caused faults can be raised at any PC and apply the logic of
     // ProfilingFrameIterator to reject any pc outside the (post-prologue,
@@ -1092,19 +1094,18 @@ wasm::LookupFaultingInstance(const Code& code, void* pc, void* fp)
     // simulators which call this function at every load/store before even
     // knowing whether there is a fault.
 
-    const CodeSegment* codeSegment;
-    const CodeRange* codeRange = code.lookupRange(pc, &codeSegment);
+    const CodeRange* codeRange = codeSegment.code()->lookupRange(pc);
     if (!codeRange || !codeRange->isFunction())
         return nullptr;
 
-    size_t offsetInModule = ((uint8_t*)pc) - codeSegment->base();
+    size_t offsetInModule = ((uint8_t*)pc) - codeSegment.base();
     if (offsetInModule < codeRange->funcNormalEntry() + SetFP)
         return nullptr;
     if (offsetInModule >= codeRange->ret() - PoppedFP)
         return nullptr;
 
     Instance* instance = reinterpret_cast<Frame*>(fp)->tls->instance;
-    MOZ_RELEASE_ASSERT(&instance->code() == &code);
+    MOZ_RELEASE_ASSERT(&instance->code() == codeSegment.code());
     return instance;
 }
 
@@ -1117,7 +1118,7 @@ wasm::InCompiledCode(void* pc)
 
     MOZ_RELEASE_ASSERT(!cx->handlingSegFault);
 
-    if (cx->compartment()->wasm.lookupCode(pc))
+    if (cx->compartment()->wasm.lookupCodeSegment(pc))
         return true;
 
     const CodeRange* codeRange;

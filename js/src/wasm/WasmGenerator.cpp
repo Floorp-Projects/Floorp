@@ -920,7 +920,7 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     return true;
 }
 
-UniqueConstCodeSegment
+UniqueCodeSegment
 ModuleGenerator::finishCodeSegment(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(finishedFuncDefs_);
@@ -975,7 +975,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(mode() == CompileMode::Once || mode() == CompileMode::Tier1);
 
-    UniqueConstCodeSegment codeSegment = finishCodeSegment(bytecode);
+    UniqueCodeSegment codeSegment = finishCodeSegment(bytecode);
     if (!codeSegment)
         return nullptr;
 
@@ -1030,7 +1030,7 @@ ModuleGenerator::finishTier2(Module& module)
     if (cancelled_ && *cancelled_)
         return false;
 
-    UniqueConstCodeSegment codeSegment = finishCodeSegment(module.bytecode());
+    UniqueCodeSegment codeSegment = finishCodeSegment(module.bytecode());
     if (!codeSegment)
         return false;
 
