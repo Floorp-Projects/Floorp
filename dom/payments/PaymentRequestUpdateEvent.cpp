@@ -68,16 +68,15 @@ PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value
   }
 
   // Validate and canonicalize the details
-  nsresult rv = mRequest->IsValidDetailsUpdate(details);
+  // requestShipping must be true here. PaymentRequestUpdateEvent is only
+  // dispatched when shippingAddress/shippingOption is changed, and it also means
+  // Options.RequestShipping must be true while creating the corresponding
+  // PaymentRequest.
+  nsresult rv = mRequest->IsValidDetailsUpdate(details, true/*aRequestShipping*/);
   if (NS_FAILED(rv)) {
     mRequest->AbortUpdate(rv);
     return;
   }
-
-  // [TODO]
-  // If the data member of modifier is present,
-  // let serializedData be the result of JSON-serializing modifier.data into a string.
-  // null if it is not.
 
   // Update the PaymentRequest with the new details
   if (NS_FAILED(mRequest->UpdatePayment(aCx, details))) {
