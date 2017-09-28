@@ -314,8 +314,8 @@ protected:
                                         ITfRange* aRange,
                                         bool aPreserveSelection);
   HRESULT  RecordCompositionStartAction(ITfCompositionView* aComposition,
-                                        LONG aStart,
-                                        LONG aLength,
+                                        ULONG aStart,
+                                        ULONG aLength,
                                         bool aPreserveSelection);
   HRESULT  RecordCompositionUpdateAction();
   HRESULT  RecordCompositionEndAction();
@@ -692,7 +692,7 @@ protected:
    *                            COMPOSITION_START and COMPOSITION_END and
    *                            aStart and aLength match their information.
    */
-  bool WasTextInsertedWithoutCompositionAt(LONG aStart, LONG aLength) const
+  bool WasTextInsertedWithoutCompositionAt(ULONG aStart, ULONG aLength) const
   {
     if (mPendingActions.Length() < 2) {
       return false;
