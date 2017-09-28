@@ -113,15 +113,24 @@ interface ChannelWrapper : EventTarget {
    * The final URI of the channel (as returned by NS_GetFinalChannelURI) after
    * any redirects have been processed.
    */
-  [Cached, GetterThrows, Pure]
+  [Cached, Pure]
   readonly attribute URI finalURI;
 
   /**
    * The string version of finalURI (but cheaper to access than
    * finalURI.spec).
    */
-  [Cached, GetterThrows, Pure]
-  readonly attribute ByteString finalURL;
+  [Cached, Pure]
+  readonly attribute DOMString finalURL;
+
+
+  /**
+   * Returns true if the request matches the given request filter, and the
+   * given extension has permission to access it.
+   */
+  boolean matches(optional MozRequestFilter filter,
+                  optional WebExtensionPolicy? extension = null,
+                  optional MozRequestMatchOptions options);
 
 
   /**
@@ -371,4 +380,28 @@ dictionary MozProxyInfo {
 dictionary MozFrameAncestorInfo {
   required ByteString url;
   required unsigned long long frameId;
+};
+
+/**
+ * An object used for filtering requests.
+ */
+dictionary MozRequestFilter {
+  /**
+   * If present, the request only matches if its `type` attribute matches one
+   * of the given types.
+   */
+  sequence<MozContentPolicyType>? types = null;
+
+  /**
+   * If present, the request only matches if its finalURI matches the given
+   * match pattern set.
+   */
+  MatchPatternSet? urls = null;
+};
+
+dictionary MozRequestMatchOptions {
+  /**
+   * True if we're matching for the proxy portion of a proxied request.
+   */
+  boolean isProxy = false;
 };

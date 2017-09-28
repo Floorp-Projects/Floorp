@@ -130,13 +130,21 @@ private:
 // A helper class to lazily retrieve, transcode, and atomize certain URI
 // properties the first time they're used, and cache the results, so that they
 // can be used across multiple match operations.
-class MOZ_STACK_CLASS URLInfo final
+class URLInfo final
 {
 public:
   MOZ_IMPLICIT URLInfo(nsIURI* aURI)
     : mURI(aURI)
   {
     mHost.SetIsVoid(true);
+  }
+
+  URLInfo(nsIURI* aURI, bool aNoRef)
+    : URLInfo(aURI)
+  {
+    if (aNoRef) {
+      mURINoRef = mURI;
+    }
   }
 
   URLInfo(const URLInfo& aOther)
@@ -150,6 +158,7 @@ public:
   const nsString& Path() const;
   const nsString& FilePath() const;
   const nsString& Spec() const;
+  const nsCString& CSpec() const;
 
   bool InheritsPrincipal() const;
 
@@ -162,9 +171,10 @@ private:
   mutable RefPtr<nsIAtom> mScheme;
   mutable nsCString mHost;
 
-  mutable nsAutoString mPath;
-  mutable nsAutoString mFilePath;
-  mutable nsAutoString mSpec;
+  mutable nsString mPath;
+  mutable nsString mFilePath;
+  mutable nsString mSpec;
+  mutable nsCString mCSpec;
 
   mutable Maybe<bool> mInheritsPrincipal;
 };

@@ -240,7 +240,6 @@ var ContentPolicyManager = {
       let response = null;
       let listenerKind = "onStop";
       let data = Object.assign({requestId, browser, serialize: serializeRequestData}, msg.data);
-      data.URI = data.url;
 
       delete data.ids;
       try {
@@ -263,15 +262,31 @@ var ContentPolicyManager = {
     return {};
   },
 
+  shouldRunListener(policyType, url, opts) {
+    let {filter} = opts;
+
+    if (filter.types && !filter.types.includes(policyType)) {
+      return false;
+    }
+
+    if (filter.urls && !filter.urls.matches(url)) {
+      return false;
+    }
+
+    let {extension} = opts;
+    if (extension && !extension.allowedOrigins.matches(url)) {
+      return false;
+    }
+
+    return true;
+  },
+
   runChannelListener(kind, data) {
     let listeners = HttpObserverManager.listeners[kind];
-    let uri = Services.io.newURI(data.url);
-    let policyType = data.type;
     for (let [callback, opts] of listeners.entries()) {
-      if (!HttpObserverManager.shouldRunListener(policyType, uri, opts.filter)) {
-        continue;
+      if (this.shouldRunListener(data.type, data.url, opts)) {
+        callback(data);
       }
-      callback(data);
     }
   },
 
@@ -661,24 +676,10 @@ HttpObserverManager = {
     }
   },
 
-  shouldRunListener(policyType, uri, filter) {
-    // force the protocol to be ws again.
-    if (policyType == "websocket" && ["http", "https"].includes(uri.scheme)) {
-      uri = Services.io.newURI(`ws${uri.spec.substring(4)}`);
-    }
-
-    if (filter.types && !filter.types.includes(policyType)) {
-      return false;
-    }
-
-    return !filter.urls || filter.urls.matches(uri);
-  },
-
   getRequestData(channel, extraData) {
     let data = {
       requestId: String(channel.id),
       url: channel.finalURL,
-      URI: channel.finalURI,
       method: channel.method,
       browser: channel.browserElement,
       type: channel.type,
@@ -686,12 +687,11 @@ HttpObserverManager = {
 
       originUrl: channel.originURL || undefined,
       documentUrl: channel.documentURL || undefined,
-      originURI: channel.originURI,
-      documentURI: channel.documentURI,
-      isSystemPrincipal: channel.isSystemLoad,
 
       windowId: channel.windowId,
       parentWindowId: channel.parentWindowId,
+
+      frameAncestors: channel.frameAncestors || undefined,
 
       ip: channel.remoteAddress,
 
@@ -699,18 +699,6 @@ HttpObserverManager = {
 
       serialize: serializeRequestData,
     };
-
-    try {
-      let {frameAncestors} = channel;
-      if (frameAncestors !== null) {
-        data.frameAncestors = frameAncestors;
-      }
-    } catch (e) {}
-
-    // force the protocol to be ws again.
-    if (data.type == "websocket" && data.url.startsWith("http")) {
-      data.url = `ws${data.url.substring(4)}`;
-    }
 
     return Object.assign(data, extraData);
   },
@@ -774,10 +762,9 @@ HttpObserverManager = {
       let registerFilter = ["opening", "modify", "afterModify", "headersReceived", "authRequired", "onRedirect"].includes(kind);
 
       let commonData = null;
-      let uri = channel.finalURI;
       let requestBody;
       for (let [callback, opts] of this.listeners[kind].entries()) {
-        if (!this.shouldRunListener(channel.type, uri, opts.filter)) {
+        if (!channel.matches(opts.filter, opts.extension, extraData)) {
           continue;
         }
 
@@ -902,13 +889,13 @@ HttpObserverManager = {
     }
   },
 
-  shouldHookListener(listener, channel) {
+  shouldHookListener(listener, channel, extraData) {
     if (listener.size == 0) {
       return false;
     }
 
     for (let opts of listener.values()) {
-      if (this.shouldRunListener(channel.type, channel.finalURI, opts.filter)) {
+      if (channel.matches(opts.filter, opts.extension, extraData)) {
         return true;
       }
     }
@@ -920,7 +907,8 @@ HttpObserverManager = {
       this.runChannelListener(channel, "headersReceived");
     }
 
-    if (!channel.hasAuthRequestor && this.shouldHookListener(this.listeners.authRequired, channel)) {
+    if (!channel.hasAuthRequestor &&
+        this.shouldHookListener(this.listeners.authRequired, channel, {isProxy: true})) {
       channel.channel.notificationCallbacks = new AuthRequestor(channel.channel, this);
       channel.hasAuthRequestor = true;
     }
