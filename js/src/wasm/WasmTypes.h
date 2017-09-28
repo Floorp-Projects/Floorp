@@ -1650,12 +1650,7 @@ static const unsigned PageSize = 64 * 1024;
 
 static const unsigned MaxMemoryAccessSize = sizeof(Val);
 
-#ifdef JS_CODEGEN_X64
-
-// All other code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64 so that
-// it is easy to use the huge-mapping optimization for other 64-bit platforms in
-// the future.
-# define WASM_HUGE_MEMORY
+#ifdef WASM_HUGE_MEMORY
 
 // On WASM_HUGE_MEMORY platforms, every asm.js or WebAssembly memory
 // unconditionally allocates a huge region of virtual memory of size
