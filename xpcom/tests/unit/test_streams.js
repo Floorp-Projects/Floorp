@@ -130,24 +130,33 @@ function test_binary_streams() {
   try {
     os.writeBoolean(false);
     do_throw("Not reached!");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException &&
+          e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+      throw e;
+    }
     // do nothing
   }
 
   try {
     is.available();
     do_throw("Not reached!");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException &&
+          e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+      throw e;
+    }
     // do nothing
   }
 
   try {
     is.readBoolean();
     do_throw("Not reached!");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_ERROR_FAILURE)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException &&
+          e.result == Cr.NS_ERROR_FAILURE)) {
+      throw e;
+    }
     // do nothing
   }
 }

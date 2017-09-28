@@ -22,8 +22,11 @@ function run_test()
     tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     do_throw("Creating an item in a folder with a very long name should throw");
   }
-  catch (e if (e instanceof Ci.nsIException &&
-               e.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH)) {
+  catch (e) {
+    if (!(e instanceof Ci.nsIException &&
+          e.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH)) {
+      throw e;
+    }
     // We expect the function not to crash but to raise this exception.
   }
 }
