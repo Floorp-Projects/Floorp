@@ -1075,6 +1075,25 @@ StyleShapeSource::operator=(const StyleShapeSource& aOther)
 }
 
 bool
+StyleShapeSource::operator==(const StyleShapeSource& aOther) const
+{
+  if (mType != aOther.mType) {
+    return false;
+  }
+
+  if (mType == StyleShapeSourceType::URL) {
+    return DefinitelyEqualURIs(mURL, aOther.mURL);
+  } else if (mType == StyleShapeSourceType::Shape) {
+    return *mBasicShape == *aOther.mBasicShape &&
+      mReferenceBox == aOther.mReferenceBox;
+  } else if (mType == StyleShapeSourceType::Box) {
+    return mReferenceBox == aOther.mReferenceBox;
+  }
+
+  return true;
+}
+
+bool
 StyleShapeSource::SetURL(css::URLValue* aValue)
 {
   MOZ_ASSERT(aValue);
@@ -1301,7 +1320,7 @@ nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!mClipPath.DefinitelyEquals(aNewData.mClipPath)) {
+  if (mClipPath != aNewData.mClipPath) {
     hint |= nsChangeHint_UpdateEffects |
             nsChangeHint_RepaintFrame;
     // clip-path changes require that we update the PreEffectsBBoxProperty,
@@ -3654,7 +3673,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     hint |= nsChangeHint_ReflowHintsForFloatAreaChange;
   }
 
-  if (!mShapeOutside.DefinitelyEquals(aNewData.mShapeOutside)) {
+  if (mShapeOutside != aNewData.mShapeOutside) {
     if (aNewData.mFloat != StyleFloat::None) {
       // If we are floating, and our shape-outside property changes, our
       // descendants are not impacted, but our ancestor and siblings are.
