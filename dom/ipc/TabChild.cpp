@@ -2113,6 +2113,13 @@ TabChild::RecvCompositionEvent(const WidgetCompositionEvent& aEvent)
 }
 
 mozilla::ipc::IPCResult
+TabChild::RecvNormalPriorityCompositionEvent(
+            const WidgetCompositionEvent& aEvent)
+{
+  return RecvCompositionEvent(aEvent);
+}
+
+mozilla::ipc::IPCResult
 TabChild::RecvSelectionEvent(const WidgetSelectionEvent& aEvent)
 {
   WidgetSelectionEvent localEvent(aEvent);
@@ -2120,6 +2127,12 @@ TabChild::RecvSelectionEvent(const WidgetSelectionEvent& aEvent)
   DispatchWidgetEventViaAPZ(localEvent);
   Unused << SendOnEventNeedingAckHandled(aEvent.mMessage);
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabChild::RecvNormalPrioritySelectionEvent(const WidgetSelectionEvent& aEvent)
+{
+  return RecvSelectionEvent(aEvent);
 }
 
 mozilla::ipc::IPCResult

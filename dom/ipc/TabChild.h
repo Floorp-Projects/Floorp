@@ -463,7 +463,15 @@ public:
   RecvCompositionEvent(const mozilla::WidgetCompositionEvent& aEvent) override;
 
   virtual mozilla::ipc::IPCResult
+  RecvNormalPriorityCompositionEvent(
+    const mozilla::WidgetCompositionEvent& aEvent) override;
+
+  virtual mozilla::ipc::IPCResult
   RecvSelectionEvent(const mozilla::WidgetSelectionEvent& aEvent) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvNormalPrioritySelectionEvent(
+    const mozilla::WidgetSelectionEvent& aEvent) override;
 
   virtual mozilla::ipc::IPCResult
   RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
