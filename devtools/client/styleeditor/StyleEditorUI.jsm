@@ -264,6 +264,7 @@ StyleEditorUI.prototype = {
       try {
         yield this._addStyleSheet(sheet);
       } catch (e) {
+        console.error(e);
         this.emit("error", { key: LOAD_ERROR });
       }
     }
