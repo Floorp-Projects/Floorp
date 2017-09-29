@@ -1690,7 +1690,8 @@ function MediaTestManager() {
 
     var onTimeout = () => {
       this.hasTimeout = true;
-      ok(false, `${token} timed out!`);
+      ok(false, "Test timed out!");
+      info(`${token} timed out!`);
       this.finished(token);
     };
     // Default timeout to 180s for each test.
