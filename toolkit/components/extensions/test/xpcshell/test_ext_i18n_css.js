@@ -101,6 +101,9 @@ async function test_i18n_css(options = {}) {
 
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
+  // workaround for extension may not be ready for applying foo.css
+  await new Promise(do_execute_soon);
+
   let maxWidth = await ContentTask.spawn(contentPage.browser, {}, async function() {
     /* globals content */
     let style = content.getComputedStyle(content.document.body);
