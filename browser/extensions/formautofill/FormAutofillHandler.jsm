@@ -516,26 +516,6 @@ FormAutofillHandler.prototype = {
     fieldDetail.state = nextState;
   },
 
-  _isAddressRecordCreatable(record) {
-    let hasName = 0;
-    let length = 0;
-    for (let key of Object.keys(record)) {
-      if (!record[key]) {
-        continue;
-      }
-      if (FormAutofillUtils.getCategoryFromFieldName(key) == "name") {
-        hasName = 1;
-        continue;
-      }
-      length++;
-    }
-    return (length + hasName) >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
-  },
-
-  _isCreditCardRecordCreatable(record) {
-    return record["cc-number"] && FormAutofillUtils.isCCNumber(record["cc-number"]);
-  },
-
   /**
    * Return the records that is converted from address/creditCard fieldDetails and
    * only valid form records are included.
@@ -601,14 +581,17 @@ FormAutofillHandler.prototype = {
 
     this._normalizeAddress(data.address);
 
-    if (data.address && !this._isAddressRecordCreatable(data.address.record)) {
+    if (data.address &&
+        Object.values(data.address.record).filter(v => v).length <
+        FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD) {
       log.debug("No address record saving since there are only",
                      Object.keys(data.address.record).length,
                      "usable fields");
       delete data.address;
     }
 
-    if (data.creditCard && !this._isCreditCardRecordCreatable(data.creditCard.record)) {
+    if (data.creditCard && (!data.creditCard.record["cc-number"] ||
+        !FormAutofillUtils.isCCNumber(data.creditCard.record["cc-number"]))) {
       log.debug("No credit card record saving since card number is invalid");
       delete data.creditCard;
     }
