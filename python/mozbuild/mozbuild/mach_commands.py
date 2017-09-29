@@ -2196,7 +2196,7 @@ class StaticAnalysis(MachCommandBase):
                           'the analysis is only performed on the files changed '
                           'in the patch streamed through stdin.  This is called '
                           'the diff mode.')
-    @CommandArgument('--checks', '-c', default='-*', metavar='checks',
+    @CommandArgument('--checks', '-c', default='-*,mozilla-*', metavar='checks',
         help='Static analysis checks to enable.  By default, this enables only '
              'custom Mozilla checks, but can be any clang-tidy checks syntax.')
     @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
@@ -2206,7 +2206,7 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--fix', '-f', default=False, action='store_true',
                      help='Try to autofix errors detected by clang-tidy checkers.')
     def check(self, source=None, jobs=2, strip=1, verbose=False,
-              checks='-*', fix=False):
+              checks='-*,mozilla-*', fix=False):
         self._set_log_level(verbose)
         rc = self._build_compile_db(verbose=verbose)
         if rc != 0:
@@ -2221,9 +2221,6 @@ class StaticAnalysis(MachCommandBase):
             return rc
 
         python = self.virtualenv_manager.python_path
-
-        if checks == '-*':
-            checks = self._get_checks()
 
         common_args = ['-clang-tidy-binary', self._clang_tidy_path,
                        '-checks=%s' % checks,
@@ -2298,21 +2295,6 @@ class StaticAnalysis(MachCommandBase):
             return rc
         args = [self._clang_tidy_path, '-list-checks', '-checks=-*,mozilla-*']
         return self._run_command_in_objdir(args=args, pass_thru=True)
-
-    def _get_checks(self):
-        checks = '-*'
-        import yaml
-        with open(mozpath.join(self.topsrcdir, "tools", "clang-tidy", "config.yaml")) as f:
-            try:
-                config = yaml.load(f)
-                for item in config['clang_checkers']:
-                    if item['publish']:
-                        checks += ',' + item['name']
-            except Exception:
-                print('Looks like config.yaml is not valid, so we are unable to '
-                      'determine default checkers, using \'-checks=-*,mozilla-*\'')
-                checks += ',mozilla-*'
-        return checks
 
     def _get_config_environment(self):
         ran_configure = False
