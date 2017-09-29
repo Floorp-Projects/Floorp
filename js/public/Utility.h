@@ -202,6 +202,54 @@ HadSimulatedStackOOM()
     return stackCheckCounter >= maxStackChecks;
 }
 
+/*
+ * Interrupt testing support, similar to OOM testing functions.
+ */
+
+extern JS_PUBLIC_DATA(uint32_t) interruptTargetThread;
+extern JS_PUBLIC_DATA(uint64_t) maxInterruptChecks;
+extern JS_PUBLIC_DATA(uint64_t) interruptCheckCounter;
+extern JS_PUBLIC_DATA(bool) interruptCheckFailAlways;
+
+extern void
+SimulateInterruptAfter(uint64_t checks, uint32_t thread, bool always);
+
+extern void
+ResetSimulatedInterrupt();
+
+inline bool
+IsThreadSimulatingInterrupt()
+{
+    return js::oom::interruptTargetThread && js::oom::interruptTargetThread == js::oom::GetThreadType();
+}
+
+inline bool
+IsSimulatedInterruptCheck()
+{
+    return IsThreadSimulatingInterrupt() &&
+           (interruptCheckCounter == maxInterruptChecks || (interruptCheckCounter > maxInterruptChecks && interruptCheckFailAlways));
+}
+
+inline bool
+ShouldFailWithInterrupt()
+{
+    if (!IsThreadSimulatingInterrupt())
+        return false;
+
+    interruptCheckCounter++;
+    if (IsSimulatedInterruptCheck()) {
+        JS_OOM_CALL_BP_FUNC();
+        return true;
+    }
+    return false;
+}
+
+inline bool
+HadSimulatedInterrupt()
+{
+    return interruptCheckCounter >= maxInterruptChecks;
+}
+
 } /* namespace oom */
 } /* namespace js */
 
@@ -231,12 +279,21 @@ HadSimulatedStackOOM()
         }                                                                     \
     } while (0)
 
+#  define JS_INTERRUPT_POSSIBLY_FAIL()                                        \
+    do {                                                                      \
+        if (MOZ_UNLIKELY(js::oom::ShouldFailWithInterrupt())) {               \
+            cx->interrupt_ = true;                                            \
+            return cx->handleInterrupt();                                     \
+        }                                                                     \
+    } while (0)
+
 # else
 
 #  define JS_OOM_POSSIBLY_FAIL() do {} while(0)
 #  define JS_OOM_POSSIBLY_FAIL_BOOL() do {} while(0)
 #  define JS_STACK_OOM_POSSIBLY_FAIL() do {} while(0)
 #  define JS_STACK_OOM_POSSIBLY_FAIL_REPORT() do {} while(0)
+#  define JS_INTERRUPT_POSSIBLY_FAIL() do {} while(0)
 namespace js {
 namespace oom {
 static inline bool IsSimulatedOOMAllocation() { return false; }

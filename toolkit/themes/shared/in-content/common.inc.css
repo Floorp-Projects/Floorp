@@ -899,14 +899,6 @@ xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection
   transform: scaleY(-1);
 }
 
-xul|treecol > xul|label.treecol-text {
-  font-size: 1rem;
-}
-
-xul|treechildren {
-  font-size: 1rem !important;
-}
-
 /* This is the only way to increase the height of a tree row unfortunately */
 xul|treechildren::-moz-tree-row {
   min-height: 2em;

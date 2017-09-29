@@ -466,7 +466,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, delegate);
   }
 
-  public void maybeRegisterDevice(Context context, AndroidFxAccount fxAccount) {
+  private void maybeRegisterDevice(Context context, AndroidFxAccount fxAccount) {
     // Register the device if necessary (asynchronous, in another thread).
     // As part of device registration, we obtain a PushSubscription, register our push endpoint
     // with FxA, and update account data with fxaDeviceId, which is part of our synced

@@ -1199,6 +1199,8 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
   mSessions.AppendElement();
   mSessions.LastElement() = new Session(this, timeSlice);
   mSessions.LastElement()->Start();
+  mStartTime = TimeStamp::Now();
+  Telemetry::ScalarAdd(Telemetry::ScalarID::MEDIARECORDER_RECORDING_COUNT, 1);
 }
 
 void
@@ -1574,6 +1576,12 @@ MediaRecorder::StopForSessionDestruction()
   mState = RecordingState::Inactive;
   MOZ_ASSERT(mSessions.Length() > 0);
   mSessions.LastElement()->Stop();
+  // This is a coarse calculation and does not reflect the duration of the
+  // final recording for reasons such as pauses. However it allows us an idea
+  // of how long people are running their recorders for.
+  TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
+  Telemetry::Accumulate(Telemetry::MEDIA_RECORDER_RECORDING_DURATION,
+                        timeDelta.ToSeconds());
 }
 
 void
