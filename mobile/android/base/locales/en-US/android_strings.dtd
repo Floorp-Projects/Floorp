@@ -478,7 +478,7 @@
 <!ENTITY contextmenu_open_new_tab "Open in New Tab">
 <!ENTITY contextmenu_open_private_tab "Open in Private Tab">
 <!ENTITY contextmenu_remove "Remove">
-<!ENTITY contextmenu_add_to_launcher "Add Page Shortcut">
+<!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
 <!ENTITY contextmenu_set_as_homepage "Set as Homepage">
 <!ENTITY contextmenu_share "Share">
 <!ENTITY contextmenu_pasteandgo "Paste &amp; Go">
@@ -812,7 +812,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY whatsnew_notification_title "&brandShortName; is up to date">
 <!ENTITY whatsnew_notification_summary "Find out what\'s new in this version">
 
-<!ENTITY promotion_add_to_homescreen "Add page shortcut">
+<!ENTITY promotion_add_to_homescreen "Add to home screen">
 
 <!ENTITY helper_first_offline_bookmark_title "Read offline">
 <!ENTITY helper_first_offline_bookmark_message "Find your Reader View items in Bookmarks, even offline.">
