@@ -316,12 +316,12 @@ function subviewShown(aSubview) {
     let timeoutId = win.setTimeout(() => {
       reject("Subview (" + aSubview.id + ") did not show within 20 seconds.");
     }, 20000);
-    function onViewShowing(e) {
-      aSubview.removeEventListener("ViewShowing", onViewShowing);
+    function onViewShown(e) {
+      aSubview.removeEventListener("ViewShown", onViewShown);
       win.clearTimeout(timeoutId);
       resolve();
     }
-    aSubview.addEventListener("ViewShowing", onViewShowing);
+    aSubview.addEventListener("ViewShown", onViewShown);
   });
 }
 

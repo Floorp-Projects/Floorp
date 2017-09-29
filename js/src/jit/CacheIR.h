@@ -201,7 +201,7 @@ extern const char* CacheKindNames[];
     _(MegamorphicLoadSlotByValueResult)   \
     _(MegamorphicStoreSlot)               \
     _(MegamorphicSetElement)              \
-    _(MegamorphicHasOwnResult)            \
+    _(MegamorphicHasPropResult)           \
                                           \
     /* See CacheIR.cpp 'DOM proxies' comment. */ \
     _(LoadDOMExpandoValue)                \
@@ -254,7 +254,7 @@ extern const char* CacheKindNames[];
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
     _(CallProxyGetByValueResult)          \
-    _(CallProxyHasOwnResult)              \
+    _(CallProxyHasPropResult)             \
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadStringResult)                   \
@@ -842,9 +842,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(strict));
     }
-    void megamorphicHasOwnResult(ObjOperandId obj, ValOperandId id) {
-        writeOpWithOperandId(CacheOp::MegamorphicHasOwnResult, obj);
+    void megamorphicHasPropResult(ObjOperandId obj, ValOperandId id, bool hasOwn) {
+        writeOpWithOperandId(CacheOp::MegamorphicHasPropResult, obj);
         writeOperandId(id);
+        buffer_.writeByte(uint32_t(hasOwn));
     }
 
     void loadBooleanResult(bool val) {
@@ -939,9 +940,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
         writeOperandId(idVal);
     }
-    void callProxyHasOwnResult(ObjOperandId obj, ValOperandId idVal) {
-        writeOpWithOperandId(CacheOp::CallProxyHasOwnResult, obj);
+    void callProxyHasPropResult(ObjOperandId obj, ValOperandId idVal, bool hasOwn) {
+        writeOpWithOperandId(CacheOp::CallProxyHasPropResult, obj);
         writeOperandId(idVal);
+        buffer_.writeByte(uint32_t(hasOwn));
     }
     void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
@@ -1412,10 +1414,22 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
                         uint32_t index, Int32OperandId indexId);
     bool tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
                             uint32_t index, Int32OperandId indexId);
-    bool tryAttachNative(HandleObject obj, ObjOperandId objId,
-                         HandleId key, ValOperandId keyId);
-    bool tryAttachNativeDoesNotExist(HandleObject obj, ObjOperandId objId,
-                                     HandleId key, ValOperandId keyId);
+    bool tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
+                            HandleId key, ValOperandId keyId);
+    bool tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
+    bool tryAttachNative(JSObject* obj, ObjOperandId objId,
+                         jsid key, ValOperandId keyId,
+                         PropertyResult prop, JSObject* holder);
+    bool tryAttachUnboxed(JSObject* obj, ObjOperandId objId,
+                          jsid key, ValOperandId keyId);
+    bool tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId,
+                                 jsid key, ValOperandId keyId);
+    bool tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
+                              jsid key, ValOperandId keyId);
+    bool tryAttachSlotDoesNotExist(JSObject* obj, ObjOperandId objId,
+                                   jsid key, ValOperandId keyId);
+    bool tryAttachDoesNotExist(HandleObject obj, ObjOperandId objId,
+                               HandleId key, ValOperandId keyId);
     bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
                                ValOperandId keyId);
 

@@ -60,7 +60,7 @@ namespace jit {
     _(CallPrintString)                    \
     _(Breakpoint)                         \
     _(MegamorphicLoadSlotByValueResult)   \
-    _(MegamorphicHasOwnResult)            \
+    _(MegamorphicHasPropResult)           \
     _(WrapResult)
 
 // Represents a Value on the Baseline frame's expression stack. Slot 0 is the

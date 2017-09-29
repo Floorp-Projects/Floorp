@@ -21,7 +21,7 @@ window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
-    let Frame = React.createFactory(browserRequire("devtools/client/shared/components/frame"));
+    let Frame = React.createFactory(browserRequire("devtools/client/shared/components/Frame"));
     ok(Frame, "Should get Frame");
 
     // Check when there's a column

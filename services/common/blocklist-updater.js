@@ -18,6 +18,7 @@ const PREF_BLOCKLIST_CHANGES_PATH       = "services.blocklist.changes.path";
 const PREF_BLOCKLIST_LAST_UPDATE        = "services.blocklist.last_update_seconds";
 const PREF_BLOCKLIST_LAST_ETAG          = "services.blocklist.last_etag";
 const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
+const PREF_BLOCKLIST_LOAD_DUMP          = "services.blocklist.load_dump";
 
 // Telemetry update source identifier.
 const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
@@ -177,4 +178,6 @@ this.checkVersions = async function() {
   if (currentEtag) {
     Services.prefs.setCharPref(PREF_BLOCKLIST_LAST_ETAG, currentEtag);
   }
+
+  Services.obs.notifyObservers(null, "blocklist-updater-versions-checked");
 };

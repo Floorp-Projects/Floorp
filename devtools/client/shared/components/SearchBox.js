@@ -8,7 +8,7 @@
 
 const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const AutocompletePopup = createFactory(require("devtools/client/shared/components/autocomplete-popup"));
+const AutocompletePopup = createFactory(require("devtools/client/shared/components/AutoCompletePopup"));
 
 /**
  * A generic search box component for use across devtools

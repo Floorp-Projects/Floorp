@@ -234,8 +234,8 @@ function WebConsoleFrame(webConsoleOwner) {
 
   this.React = require("devtools/client/shared/vendor/react");
   this.ReactDOM = require("devtools/client/shared/vendor/react-dom");
-  this.FrameView = this.React.createFactory(require("devtools/client/shared/components/frame"));
-  this.StackTraceView = this.React.createFactory(require("devtools/client/shared/components/stack-trace"));
+  this.FrameView = this.React.createFactory(require("devtools/client/shared/components/Frame"));
+  this.StackTraceView = this.React.createFactory(require("devtools/client/shared/components/StackTrace"));
 
   this._telemetry = new Telemetry();
 

@@ -162,30 +162,6 @@ protected:
   virtual ~MediaStreamTrackListener() {}
 };
 
-
-/**
- * This is a base class for media graph thread listener direct callbacks
- * from within AppendToTrack(). Note that your regular listener will
- * still get NotifyQueuedTrackChanges() callbacks from the MSG thread, so
- * you must be careful to ignore them if AddDirectListener was successful.
- */
-class DirectMediaStreamListener : public MediaStreamListener
-{
-public:
-  virtual ~DirectMediaStreamListener() {}
-
-  /*
-   * This will be called on any DirectMediaStreamListener added to a
-   * a SourceMediaStream when AppendToTrack() is called.  The MediaSegment
-   * will be the RawSegment (unresampled) if available in AppendToTrack().
-   * Note that NotifyQueuedTrackChanges() calls will also still occur.
-   */
-  virtual void NotifyRealtimeData(MediaStreamGraph* aGraph, TrackID aID,
-                                  StreamTime aTrackOffset,
-                                  uint32_t aTrackEvents,
-                                  const MediaSegment& aMedia) {}
-};
-
 /**
  * This is a base class for media graph thread listener direct callbacks from
  * within AppendToTrack(). It is bound to a certain track and can only be

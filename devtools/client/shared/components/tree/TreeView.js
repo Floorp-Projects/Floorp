@@ -11,9 +11,9 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { ObjectProvider } = require("./object-provider");
-  const TreeRow = React.createFactory(require("./tree-row"));
-  const TreeHeader = React.createFactory(require("./tree-header"));
+  const { ObjectProvider } = require("./ObjectProvider");
+  const TreeRow = React.createFactory(require("./TreeRow"));
+  const TreeHeader = React.createFactory(require("./TreeHeader"));
 
   // Shortcuts
   const DOM = React.DOM;

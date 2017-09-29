@@ -27,8 +27,7 @@
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
     /* Always show light toolbar elements on aero surface. */
-    #TabsToolbar,
-    #TabsToolbar toolbarbutton[disabled="true"] {
+    #TabsToolbar {
       color: hsl(240,9%,98%);
     }
 
@@ -119,11 +118,6 @@
    * the native background color at all, and these are !important for the same reason as above. */
   border-left: none !important;
   border-right: none !important;
-}
-
-/* Disable dragging like in the default theme: */
-#main-window[tabsintitlebar] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):-moz-lwtheme {
-  -moz-window-dragging: no-drag;
 }
 
 @media (-moz-os-version: windows-win10) {

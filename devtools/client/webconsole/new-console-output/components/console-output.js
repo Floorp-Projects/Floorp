@@ -57,6 +57,10 @@ const ConsoleOutput = createClass({
   componentWillUpdate(nextProps, nextState) {
     const outputNode = this.outputNode;
     if (!outputNode || !outputNode.lastChild) {
+      // Force a scroll to bottom when messages are added to an empty console.
+      // This makes the console stay pinned to the bottom if a batch of messages
+      // are added after a page refresh (Bug 1402237).
+      this.shouldScrollBottom = true;
       return;
     }
 

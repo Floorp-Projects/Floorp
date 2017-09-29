@@ -150,7 +150,7 @@ this.browserAction = class extends ExtensionAPI {
         view.setAttribute("flex", "1");
         view.setAttribute("extension", true);
 
-        document.getElementById("PanelUI-multiView").appendChild(view);
+        document.getElementById("appMenu-viewCache").appendChild(view);
 
         if (this.extension.hasPermission("menus") ||
             this.extension.hasPermission("contextMenus")) {

@@ -487,7 +487,7 @@ Inspector.prototype = {
    */
   setupSplitter: function () {
     let SplitBox = this.React.createFactory(this.browserRequire(
-      "devtools/client/shared/components/splitter/split-box"));
+      "devtools/client/shared/components/splitter/SplitBox"));
 
     let { width, height } = this.getSidebarSize();
     let splitter = SplitBox({
