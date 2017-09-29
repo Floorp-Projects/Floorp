@@ -676,6 +676,11 @@ static int nr_ice_candidate_resolved_cb(void *cb_arg, nr_transport_addr *addr)
       ABORT(R_NOT_FOUND);
     }
 
+    if (nr_transport_addr_check_compatibility(addr, &cand->base)) {
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Skipping STUN server because of link local mis-match for candidate %s",cand->ctx->label,cand->label);
+      ABORT(R_NOT_FOUND);
+    }
+
     /* Copy the address */
     if(r=nr_transport_addr_copy(&cand->stun_server_addr,addr))
       ABORT(r);
