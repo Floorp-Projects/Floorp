@@ -331,6 +331,12 @@ impl RenderBackend {
                     DocumentOp::ScrolledNop
                 }
             }
+            DocumentMsg::HitTest(pipeline_id, point, flags, tx) => {
+                profile_scope!("HitTest");
+                let result = doc.frame.hit_test(pipeline_id, point, flags);
+                tx.send(result).unwrap();
+                DocumentOp::Nop
+            }
             DocumentMsg::ScrollNodeWithId(origin, id, clamp) => {
                 profile_scope!("ScrollNodeWithScrollId");
                 let _timer = profile_counters.total_time.timer();

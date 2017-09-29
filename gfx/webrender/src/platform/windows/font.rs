@@ -38,7 +38,7 @@ pub struct RasterizedGlyph {
 
 fn dwrite_texture_type(render_mode: FontRenderMode) -> dwrote::DWRITE_TEXTURE_TYPE {
     match render_mode {
-        FontRenderMode::Mono => dwrote::DWRITE_TEXTURE_ALIASED_1x1,
+        FontRenderMode::Mono | FontRenderMode::Bitmap => dwrote::DWRITE_TEXTURE_ALIASED_1x1,
         FontRenderMode::Alpha | FontRenderMode::Subpixel => dwrote::DWRITE_TEXTURE_CLEARTYPE_3x1,
     }
 }
@@ -56,7 +56,7 @@ fn dwrite_measure_mode(
     }
 
     match render_mode {
-        FontRenderMode::Mono => dwrote::DWRITE_MEASURING_MODE_GDI_NATURAL,
+        FontRenderMode::Mono | FontRenderMode::Bitmap => dwrote::DWRITE_MEASURING_MODE_GDI_NATURAL,
         FontRenderMode::Alpha | FontRenderMode::Subpixel => dwrote::DWRITE_MEASURING_MODE_NATURAL,
     }
 }
@@ -77,7 +77,7 @@ fn dwrite_render_mode(
     }
 
     let dwrite_render_mode = match render_mode {
-        FontRenderMode::Mono => dwrote::DWRITE_RENDERING_MODE_ALIASED,
+        FontRenderMode::Mono | FontRenderMode::Bitmap => dwrote::DWRITE_RENDERING_MODE_ALIASED,
         FontRenderMode::Alpha | FontRenderMode::Subpixel => {
             font_face.get_recommended_rendering_mode_default_params(em_size, 1.0, measure_mode)
         }
@@ -264,6 +264,9 @@ impl FontContext {
     // TODO: Decide whether all fonts should return RGB or BGR
     fn convert_to_rgba(&self, pixels: &[u8], render_mode: FontRenderMode) -> Vec<u8> {
         match render_mode {
+            FontRenderMode::Bitmap => {
+                unreachable!("TODO: bitmap fonts");
+            }
             FontRenderMode::Mono => {
                 let mut rgba_pixels: Vec<u8> = vec![0; pixels.len() * 4];
                 for i in 0 .. pixels.len() {
@@ -299,6 +302,11 @@ impl FontContext {
                 rgba_pixels
             }
         }
+    }
+
+    pub fn is_bitmap_font(&mut self, _font_key: FontKey) -> bool {
+        // TODO(gw): Support bitmap fonts in DWrite.
+        false
     }
 
     pub fn rasterize_glyph(

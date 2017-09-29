@@ -344,6 +344,9 @@ impl ResourceCache {
                 requested_render_mode = render_mode;
             }
         }
+        if self.glyph_rasterizer.is_bitmap_font(font_key) {
+            requested_render_mode = requested_render_mode.limit_by(FontRenderMode::Bitmap);
+        }
         if requested_render_mode == FontRenderMode::Mono {
             subpx_dir = SubpixelDirection::None;
         }

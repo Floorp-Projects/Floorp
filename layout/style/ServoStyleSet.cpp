@@ -1571,6 +1571,13 @@ ServoStyleSet::ReparentStyleContext(ServoStyleContext* aStyleContext,
                              aElement, mRawSet.get()).Consume();
 }
 
+void
+ServoStyleSet::CorruptRuleHashAndCrash(unsigned long aIndex)
+{
+  Servo_CorruptRuleHashAndCrash(mRawSet.get(), (size_t) aIndex);
+
+}
+
 NS_IMPL_ISUPPORTS(UACacheReporter, nsIMemoryReporter)
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoUACacheMallocSizeOf)

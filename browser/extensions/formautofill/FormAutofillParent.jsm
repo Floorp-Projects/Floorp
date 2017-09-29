@@ -454,8 +454,15 @@ FormAutofillParent.prototype = {
       return;
     }
 
-    await this.profileStorage.creditCards.normalizeCCNumberFields(creditCard.record);
-    this.profileStorage.creditCards.add(creditCard.record);
+    try {
+      await this.profileStorage.creditCards.normalizeCCNumberFields(creditCard.record);
+      this.profileStorage.creditCards.add(creditCard.record);
+    } catch (e) {
+      if (e.result != Cr.NS_ERROR_ABORT) {
+        throw e;
+      }
+      log.warn("User canceled master password entry");
+    }
   },
 
   _onFormSubmit(data, target) {
