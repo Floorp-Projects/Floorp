@@ -395,7 +395,7 @@ SurfaceTextureSource::GetTextureTransform()
   gfx::Matrix4x4 ret;
 
   const auto& surf = java::sdk::SurfaceTexture::LocalRef(java::sdk::SurfaceTexture::Ref::From(mSurfTex));
-  AndroidSurfaceTexture::GetTransformMatrix(surf, ret);
+  AndroidSurfaceTexture::GetTransformMatrix(surf, &ret);
 
   return ret;
 }
