@@ -487,6 +487,9 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 // This should match Chromium's audio indicator delay.
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
+// The minimum tab width in pixels
+pref("browser.tabs.tabMinWidth", 50);
+
 pref("browser.ctrlTab.previews", false);
 
 // By default, do not export HTML at shutdown.
