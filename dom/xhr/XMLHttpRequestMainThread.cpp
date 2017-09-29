@@ -2933,6 +2933,26 @@ XMLHttpRequestMainThread::Send(JSContext* aCx,
 }
 
 nsresult
+XMLHttpRequestMainThread::MaybeSilentSendFailure(nsresult aRv)
+{
+  // Per spec, silently fail on async request failures; throw for sync.
+  if (mFlagSynchronous) {
+    mState = State::done;
+    return NS_ERROR_DOM_NETWORK_ERR;
+  }
+
+  // Defer the actual sending of async events just in case listeners
+  // are attached after the send() method is called.
+  Unused << NS_WARN_IF(NS_FAILED(
+    DispatchToMainThread(NewRunnableMethod<ProgressEventType>(
+      "dom::XMLHttpRequestMainThread::CloseRequestWithError",
+      this,
+      &XMLHttpRequestMainThread::CloseRequestWithError,
+      ProgressEventType::error))));
+  return NS_OK;
+}
+
+nsresult
 XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2958,7 +2978,8 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
   // as per spec. We really should create the channel here in send(), but
   // we have internal code relying on the channel being created in open().
   if (!mChannel) {
-    return NS_ERROR_DOM_NETWORK_ERR;
+    mFlagSend = true; // so CloseRequestWithError sets us to DONE.
+    return MaybeSilentSendFailure(NS_ERROR_DOM_NETWORK_ERR);
   }
 
   PopulateNetworkInterfaceId();
@@ -3111,19 +3132,7 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
   }
 
   if (!mChannel) {
-    // Per spec, silently fail on async request failures; throw for sync.
-    if (mFlagSynchronous) {
-      mState = State::done;
-      return NS_ERROR_DOM_NETWORK_ERR;
-    } else {
-      // Defer the actual sending of async events just in case listeners
-      // are attached after the send() method is called.
-      return DispatchToMainThread(NewRunnableMethod<ProgressEventType>(
-        "dom::XMLHttpRequestMainThread::CloseRequestWithError",
-        this,
-        &XMLHttpRequestMainThread::CloseRequestWithError,
-        ProgressEventType::error));
-    }
+    return MaybeSilentSendFailure(NS_ERROR_DOM_NETWORK_ERR);
   }
 
   return rv;

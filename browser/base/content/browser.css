@@ -90,12 +90,12 @@ panel[hidden] panelview {
   transition: transform var(--panelui-subview-transition-duration);
 }
 
-panelview:not([mainview]):not([current]) {
+panelview:not([mainview]):not([current]):not([in-transition]) {
   transition: visibility 0s linear var(--panelui-subview-transition-duration);
   visibility: collapse;
 }
 
-photonpanelmultiview panelview:not([current]) {
+photonpanelmultiview panelview:not([current]):not([in-transition]) {
   transition: none;
   visibility: collapse;
 }
@@ -242,6 +242,10 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 %ifdef CAN_DRAW_IN_TITLEBAR
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) ~ #TabsToolbar > .titlebar-placeholder,
+%endif
+%ifndef MOZ_WIDGET_COCOA
+#main-window:not([sizemode=normal]) .titlebar-placeholder[type="pre-tabs"],
+#main-window:not([sizemode=normal]) .titlebar-placeholder[type="post-tabs"],
 %endif
 #main-window:not([chromemargin]) > #titlebar,
 #main-window[inFullscreen] > #titlebar,

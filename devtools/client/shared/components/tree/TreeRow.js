@@ -12,8 +12,8 @@ define(function (require, exports, module) {
   const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
   // Tree
-  const TreeCell = React.createFactory(require("./tree-cell"));
-  const LabelCell = React.createFactory(require("./label-cell"));
+  const TreeCell = React.createFactory(require("./TreeCell"));
+  const LabelCell = React.createFactory(require("./LabelCell"));
 
   // Scroll
   const { scrollIntoViewIfNeeded } = require("devtools/client/shared/scroll");

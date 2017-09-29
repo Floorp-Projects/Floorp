@@ -878,7 +878,6 @@ pref("gfx.webrender.force-angle", true);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
-pref("gfx.webrender.layers-free", true);
 pref("gfx.webrender.blob-images", false);
 
 // WebRender debugging utilities.
@@ -1918,7 +1917,7 @@ pref("network.IDN_show_punycode", false);
 // IDN-safe. Otherwise, they're treated as unsafe and punycode will be used
 // for displaying them in the UI (e.g. URL bar), unless they conform to one of
 // the profiles specified in
-// http://www.unicode.org/reports/tr36/proposed.html#Security_Levels_and_Alerts
+// https://www.unicode.org/reports/tr39/#Restriction_Level_Detection
 // If "network.IDN.restriction_profile" is "high", the Highly Restrictive
 // profile is used.
 // If "network.IDN.restriction_profile" is "moderate", the Moderately
@@ -1927,7 +1926,7 @@ pref("network.IDN_show_punycode", false);
 // Note that these preferences are referred to ONLY when
 // "network.IDN_show_punycode" is false. In other words, all IDNs will be shown
 // in punycode if "network.IDN_show_punycode" is true.
-pref("network.IDN.restriction_profile", "moderate");
+pref("network.IDN.restriction_profile", "high");
 pref("network.IDN.use_whitelist", false);
 
 // ccTLDs
@@ -2654,9 +2653,6 @@ pref("services.blocklist.signing.enforced", true);
 
 // Enable blocklists via the services settings mechanism
 pref("services.blocklist.update_enabled", true);
-
-// Enable certificate blocklist updates via services settings
-pref("security.onecrl.via.amo", false);
 
 
 // Modifier key prefs: default to Windows settings,

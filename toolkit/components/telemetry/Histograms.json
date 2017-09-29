@@ -6530,6 +6530,46 @@
     "releaseChannelCollection": "opt-out",
     "description":"Count how the Preferences are opened."
   },
+  "FX_PAGE_ACTION_ADDED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["gijs@mozilla.com"],
+    "bug_numbers": [1393843],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
+               "sendToDevice", "other"],
+    "description": "Count how many times people add items to the url bar"
+  },
+  "FX_PAGE_ACTION_REMOVED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["gijs@mozilla.com"],
+    "bug_numbers": [1393843],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
+               "sendToDevice", "other"],
+    "description": "Count how many times people remove items from the url bar"
+  },
+  "FX_PAGE_ACTION_URLBAR_USED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["gijs@mozilla.com"],
+    "bug_numbers": [1393843],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
+               "sendToDevice", "other"],
+    "description": "Count how many times people use items in the url bar"
+  },
+  "FX_PAGE_ACTION_PANEL_USED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["gijs@mozilla.com"],
+    "bug_numbers": [1393843],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
+               "sendToDevice", "other"],
+    "description": "Count how many times people use items from the main page action button"
+  },
   "INPUT_EVENT_RESPONSE_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],

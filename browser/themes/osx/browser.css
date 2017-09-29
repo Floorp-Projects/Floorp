@@ -715,11 +715,11 @@ html|span.ac-emphasize-text-url {
 #sidebar-box {
   -moz-appearance: -moz-mac-source-list;
   -moz-font-smoothing-background-color: -moz-mac-source-list;
+  /* Default font size is 11px on mac, so this is 12px */
+  font-size: 1.0909rem;
 }
 
 #sidebar-header {
-  /* system font size is a bit smaller in mac, so need more ems. */
-  font-size: 1.4545em;
   border-bottom: 1px solid hsla(240, 5%, 5%, .1);
   background-color: transparent;
 }

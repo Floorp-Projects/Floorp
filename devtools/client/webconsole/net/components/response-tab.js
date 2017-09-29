@@ -6,7 +6,7 @@
 const React = require("devtools/client/shared/vendor/react");
 
 // Reps
-const TreeView = React.createFactory(require("devtools/client/shared/components/tree/tree-view"));
+const TreeView = React.createFactory(require("devtools/client/shared/components/tree/TreeView"));
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 

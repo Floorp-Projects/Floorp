@@ -85,7 +85,8 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 /* Default findbar text color doesn't look good - Bug 1125677 */
 .browserContainer > findbar .findbar-find-status,
-.browserContainer > findbar .found-matches {
+.browserContainer > findbar .found-matches,
+.browserContainer > findbar .findbar-button {
   color: inherit;
 }
 
