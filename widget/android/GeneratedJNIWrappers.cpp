@@ -1816,6 +1816,14 @@ auto CodecProxy::IsAdaptivePlaybackSupported() const -> bool
     return mozilla::jni::Method<IsAdaptivePlaybackSupported_t>::Call(CodecProxy::mCtx, nullptr);
 }
 
+constexpr char CodecProxy::IsTunneledPlaybackSupported_t::name[];
+constexpr char CodecProxy::IsTunneledPlaybackSupported_t::signature[];
+
+auto CodecProxy::IsTunneledPlaybackSupported() const -> bool
+{
+    return mozilla::jni::Method<IsTunneledPlaybackSupported_t>::Call(CodecProxy::mCtx, nullptr);
+}
+
 constexpr char CodecProxy::Release_t::name[];
 constexpr char CodecProxy::Release_t::signature[];
 
