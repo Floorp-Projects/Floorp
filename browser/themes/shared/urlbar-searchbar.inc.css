@@ -48,6 +48,11 @@
   min-height: 32px;
 }
 
+:root[chromehidden~="toolbar"] #urlbar {
+  /* Remove excess space between the address bar and the menu button in popups. */
+  margin-inline-end: 0;
+}
+
 #urlbar-container {
   -moz-box-align: center;
 }
