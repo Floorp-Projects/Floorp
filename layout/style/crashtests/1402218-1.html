@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<style>
+#wrapper::first-line {}
+</style>
+<body>
+<div id="wrapper">
+  <div id="test"></div>
+</div>
+<script>
+  document.querySelector('#test').style.position = 'absolute';
+  document.body.offsetHeight;
+  document.querySelector('#wrapper').style.color = 'green';
+  document.querySelector('#test').style.position = '';
+</script>
+</body>
