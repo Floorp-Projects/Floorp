@@ -729,19 +729,23 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame, FlushType aFlushType)
 }
 
 void
-Element::ScrollIntoView()
+Element::ScrollIntoView(const BooleanOrScrollIntoViewOptions& aObject)
 {
-  ScrollIntoView(ScrollIntoViewOptions());
-}
-
-void
-Element::ScrollIntoView(bool aTop)
-{
-  ScrollIntoViewOptions options;
-  if (!aTop) {
-    options.mBlock = ScrollLogicalPosition::End;
+  if (aObject.IsScrollIntoViewOptions()) {
+    return ScrollIntoView(aObject.GetAsScrollIntoViewOptions());
   }
-  ScrollIntoView(options);
+
+  MOZ_DIAGNOSTIC_ASSERT(aObject.IsBoolean());
+
+  ScrollIntoViewOptions options;
+  if (aObject.GetAsBoolean()) {
+    options.mBlock = ScrollLogicalPosition::Start;
+    options.mInline = ScrollLogicalPosition::Nearest;
+  } else {
+    options.mBlock = ScrollLogicalPosition::End;
+    options.mInline = ScrollLogicalPosition::Nearest;
+  }
+  return ScrollIntoView(options);
 }
 
 void
@@ -758,9 +762,41 @@ Element::ScrollIntoView(const ScrollIntoViewOptions &aOptions)
     return;
   }
 
-  int16_t vpercent = (aOptions.mBlock == ScrollLogicalPosition::Start)
-                       ? nsIPresShell::SCROLL_TOP
-                       : nsIPresShell::SCROLL_BOTTOM;
+  int16_t vpercent = nsIPresShell::SCROLL_CENTER;
+  switch (aOptions.mBlock) {
+    case ScrollLogicalPosition::Start:
+      vpercent = nsIPresShell::SCROLL_TOP;
+      break;
+    case ScrollLogicalPosition::Center:
+      vpercent = nsIPresShell::SCROLL_CENTER;
+      break;
+    case ScrollLogicalPosition::End:
+      vpercent = nsIPresShell::SCROLL_BOTTOM;
+      break;
+    case ScrollLogicalPosition::Nearest:
+      vpercent = nsIPresShell::SCROLL_MINIMUM;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected ScrollLogicalPosition value");
+  }
+
+  int16_t hpercent = nsIPresShell::SCROLL_CENTER;
+  switch (aOptions.mInline) {
+    case ScrollLogicalPosition::Start:
+      hpercent = nsIPresShell::SCROLL_LEFT;
+      break;
+    case ScrollLogicalPosition::Center:
+      hpercent = nsIPresShell::SCROLL_CENTER;
+      break;
+    case ScrollLogicalPosition::End:
+      hpercent = nsIPresShell::SCROLL_RIGHT;
+      break;
+    case ScrollLogicalPosition::Nearest:
+      hpercent = nsIPresShell::SCROLL_MINIMUM;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected ScrollLogicalPosition value");
+  }
 
   uint32_t flags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
   if (aOptions.mBehavior == ScrollBehavior::Smooth) {
@@ -773,7 +809,9 @@ Element::ScrollIntoView(const ScrollIntoViewOptions &aOptions)
                                    nsIPresShell::ScrollAxis(
                                      vpercent,
                                      nsIPresShell::SCROLL_ALWAYS),
-                                   nsIPresShell::ScrollAxis(),
+                                   nsIPresShell::ScrollAxis(
+                                     hpercent,
+                                     nsIPresShell::SCROLL_ALWAYS),
                                    flags);
 }
 
@@ -2006,6 +2044,9 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   // since the invariant we'd be breaking in that case is "HasServoData()
   // implies InComposedDoc()", which we rely on in various places.
   UnsetFlags(kAllServoDescendantBits);
+  if (document && document->GetServoRestyleRoot() == this) {
+    document->ClearServoRestyleRoot();
+  }
 }
 
 nsICSSDeclaration*
@@ -4292,6 +4333,7 @@ BitsArePropagated(const Element* aElement, uint32_t aBits, nsINode* aRestyleRoot
     nsINode* parentNode = curr->GetParentNode();
     curr = curr->GetFlattenedTreeParentElementForStyle();
     MOZ_ASSERT_IF(!curr,
+                  !parentNode || // can only happen mid-unbind.
                   parentNode == aElement->OwnerDoc() ||
                   parentNode == parentNode->OwnerDoc()->GetRootElement());
   }
@@ -4454,7 +4496,10 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     }
   }
 
+  // See the comment in nsIDocument::SetServoRestyleRoot about the !IsElement()
+  // check there. Same justification here.
   MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||
+             !doc->GetServoRestyleRoot()->IsElement() ||
              nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(
                aElement, doc->GetServoRestyleRoot()));
   MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||

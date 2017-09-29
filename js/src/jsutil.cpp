@@ -50,6 +50,11 @@ JS_PUBLIC_DATA(uint64_t) maxStackChecks = UINT64_MAX;
 JS_PUBLIC_DATA(uint64_t) stackCheckCounter = 0;
 JS_PUBLIC_DATA(bool) stackCheckFailAlways = true;
 
+JS_PUBLIC_DATA(uint32_t) interruptTargetThread = 0;
+JS_PUBLIC_DATA(uint64_t) maxInterruptChecks = UINT64_MAX;
+JS_PUBLIC_DATA(uint64_t) interruptCheckCounter = 0;
+JS_PUBLIC_DATA(bool) interruptCheckFailAlways = true;
+
 bool
 InitThreadType(void) {
     return threadType.init();
@@ -131,6 +136,35 @@ ResetSimulatedStackOOM()
     stackCheckFailAlways = false;
 }
 
+void
+SimulateInterruptAfter(uint64_t checks, uint32_t thread, bool always)
+{
+    Maybe<AutoLockHelperThreadState> lock;
+    if (IsHelperThreadType(interruptTargetThread) || IsHelperThreadType(thread)) {
+        lock.emplace();
+        HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    }
+
+    MOZ_ASSERT(interruptCheckCounter + checks > interruptCheckCounter);
+    MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
+    interruptTargetThread = thread;
+    maxInterruptChecks = interruptCheckCounter + checks;
+    interruptCheckFailAlways = always;
+}
+
+void
+ResetSimulatedInterrupt()
+{
+    Maybe<AutoLockHelperThreadState> lock;
+    if (IsHelperThreadType(interruptTargetThread)) {
+        lock.emplace();
+        HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    }
+
+    interruptTargetThread = THREAD_TYPE_NONE;
+    maxInterruptChecks = UINT64_MAX;
+    interruptCheckFailAlways = false;
+}
 
 } // namespace oom
 } // namespace js

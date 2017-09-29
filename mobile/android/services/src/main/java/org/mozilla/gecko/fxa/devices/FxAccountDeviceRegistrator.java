@@ -19,6 +19,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
@@ -26,6 +27,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
@@ -288,15 +290,16 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     fxAccount.setDeviceRegistrationTimestamp(0L);
   }
 
-  @Nullable
   private static String getClientName(final AndroidFxAccount fxAccount, final Context context) {
     try {
       final SharedPreferencesClientsDataDelegate clientsDataDelegate =
           new SharedPreferencesClientsDataDelegate(fxAccount.getSyncPrefs(), context);
       return clientsDataDelegate.getClientName();
-    } catch (UnsupportedEncodingException | GeneralSecurityException e) {
+    } catch (IOException | GeneralSecurityException e) {
       Log.e(LOG_TAG, "Unable to get client name.", e);
-      return null;
+      // It's possible we're racing against account pickler.
+      // In either case, it should be always safe to perform registration using our default name.
+      return FxAccountUtils.defaultClientName(context);
     }
   }
 

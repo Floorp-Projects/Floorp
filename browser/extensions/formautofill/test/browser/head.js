@@ -9,6 +9,8 @@
 
 "use strict";
 
+Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
+
 const MANAGE_ADDRESSES_DIALOG_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const MANAGE_CREDIT_CARDS_DIALOG_URL = "chrome://formautofill/content/manageCreditCards.xhtml";
 const EDIT_ADDRESS_DIALOG_URL = "chrome://formautofill/content/editAddress.xhtml";
@@ -189,6 +191,13 @@ function removeCreditCards(guids) {
   return TestUtils.topicObserved("formautofill-storage-changed");
 }
 
+function getNotification(index = 0) {
+  let notifications = PopupNotifications.panel.childNodes;
+  ok(notifications.length > 0, "at least one notification displayed");
+  ok(true, notifications.length + " notification(s)");
+  return notifications[index];
+}
+
 /**
  * Clicks the popup notification button and wait for popup hidden.
  *
@@ -197,19 +206,17 @@ function removeCreditCards(guids) {
  */
 async function clickDoorhangerButton(button, index) {
   let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
-  let notifications = PopupNotifications.panel.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
-  ok(true, notifications.length + " notification(s)");
-  let notification = notifications[0];
 
   if (button == MAIN_BUTTON || button == SECONDARY_BUTTON) {
-    EventUtils.synthesizeMouseAtCenter(notification[button], {});
+    EventUtils.synthesizeMouseAtCenter(getNotification()[button], {});
   } else if (button == MENU_BUTTON) {
     // Click the dropmarker arrow and wait for the menu to show up.
+    await sleep(); // menubutton needs extra time for binding
+    let notification = getNotification();
+    ok(notification.menubutton, "notification menupopup displayed");
     let dropdownPromise =
       BrowserTestUtils.waitForEvent(notification.menupopup, "popupshown");
     await EventUtils.synthesizeMouseAtCenter(notification.menubutton, {});
-    ok(true, "notification menupopup displayed");
     await dropdownPromise;
 
     let actionMenuItem = notification.querySelectorAll("menuitem")[index];
@@ -219,19 +226,23 @@ async function clickDoorhangerButton(button, index) {
 }
 
 function getDoorhangerCheckbox() {
-  let notifications = PopupNotifications.panel.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
-  ok(true, notifications.length + " notification(s)");
-  return notifications[0].checkbox;
+  return getNotification().checkbox;
 }
 
-// Wait for master password dialog and cancel to close it.
-function waitForMasterPasswordDialog() {
+
+// Wait for the master password dialog to popup and enter the password to log in
+// if "login" is "true" or dismiss it directly if otherwise.
+function waitForMasterPasswordDialog(login = false) {
   let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
-  return dialogShown.then(function([subject]) {
+  return dialogShown.then(([subject]) => {
     let dialog = subject.Dialog;
     is(dialog.args.title, "Password Required", "Master password dialog shown");
-    dialog.ui.button1.click();
+    if (login) {
+      dialog.ui.password1Textbox.value = LoginTestUtils.masterPassword.masterPassword;
+      dialog.ui.button0.click();
+    } else {
+      dialog.ui.button1.click();
+    }
   });
 }
 

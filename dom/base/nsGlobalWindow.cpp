@@ -6274,7 +6274,7 @@ nsGlobalWindow::GetMozInnerScreenY(CallerType aCallerType, ErrorResult& aError)
   FORWARD_TO_OUTER_OR_THROW(GetMozInnerScreenYOuter, (aCallerType), aError, 0);
 }
 
-float
+double
 nsGlobalWindow::GetDevicePixelRatioOuter(CallerType aCallerType)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
@@ -6299,11 +6299,11 @@ nsGlobalWindow::GetDevicePixelRatioOuter(CallerType aCallerType)
     return overrideDPPX;
   }
 
-  return float(nsPresContext::AppUnitsPerCSSPixel())/
-      presContext->AppUnitsPerDevPixel();
+  return double(nsPresContext::AppUnitsPerCSSPixel()) /
+         double(presContext->AppUnitsPerDevPixel());
 }
 
-float
+double
 nsGlobalWindow::GetDevicePixelRatio(CallerType aCallerType, ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetDevicePixelRatioOuter, (aCallerType), aError, 0.0);

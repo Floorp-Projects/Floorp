@@ -15,6 +15,7 @@ flat varying float vLayer;
 
 #ifdef WR_FEATURE_TRANSFORM
 varying vec3 vLocalPos;
+flat varying vec4 vLocalRect;
 #else
 varying vec2 vLocalPos;
 #endif
@@ -34,6 +35,7 @@ void main(void) {
                                                     prim.task,
                                                     prim.local_rect);
     vLocalPos = vi.local_pos;
+    vLocalRect = vec4(prim.local_rect.p0, prim.local_rect.p0 + prim.local_rect.size);
 #else
     VertexInfo vi = write_vertex(prim.local_rect,
                                  prim.local_clip_rect,
@@ -89,7 +91,7 @@ void main(void) {
 
     // We clamp the texture coordinate calculation here to the local rectangle boundaries,
     // which makes the edge of the texture stretch instead of repeat.
-    vec2 relative_pos_in_rect = clamp(pos, vLocalBounds.xy, vLocalBounds.zw) - vLocalBounds.xy;
+    vec2 relative_pos_in_rect = clamp(pos, vLocalRect.xy, vLocalRect.zw) - vLocalRect.xy;
 #else
     float alpha = 1.0;
     vec2 relative_pos_in_rect = vLocalPos;

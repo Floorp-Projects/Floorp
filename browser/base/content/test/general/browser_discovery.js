@@ -1,9 +1,11 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 add_task(async function() {
-  let rootDir = getRootDirectory(gTestPath);
-  let url = rootDir + "discovery.html";
+  let url = "http://mochi.test:8888/browser/browser/base/content/test/general/discovery.html";
   info("Test icons discovery");
+  // First we need to clear the failed favicons cache, since previous tests
+  // likely added this non-existing icon, and useDefaultIcon would skip it.
+  PlacesUtils.favicons.removeFailedFavicon(makeURI("http://mochi.test:8888/favicon.ico"));
   await BrowserTestUtils.withNewTab(url, iconDiscovery);
   info("Test search discovery");
   await BrowserTestUtils.withNewTab(url, searchDiscovery);
@@ -28,6 +30,12 @@ let iconDiscoveryTests = [
 ];
 
 async function iconDiscovery() {
+  // Since the page doesn't have an icon, we should try using the root domain
+  // icon.
+  await BrowserTestUtils.waitForCondition(() => {
+    return gBrowser.getIcon() == "http://mochi.test:8888/favicon.ico";
+  }, "wait for default icon load to finish");
+
   for (let testCase of iconDiscoveryTests) {
     if (testCase.pass == undefined)
       testCase.pass = true;
@@ -37,8 +45,8 @@ async function iconDiscovery() {
     gBrowser.setIcon(gBrowser.selectedTab, null);
 
     let promiseLinkAdded =
-      BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
-                                    false, null, true);
+      BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
+                                           false, null, true);
     let promiseMessage = new Promise(resolve => {
       let mm = window.messageManager;
       mm.addMessageListener("Link:SetIcon", function listenForIcon(msg) {
@@ -66,7 +74,7 @@ async function iconDiscovery() {
       try {
         await BrowserTestUtils.waitForCondition(() => {
           return gBrowser.getIcon() != null;
-        }, "wait for icon load to finish", 100, 5);
+        }, "wait for icon load to finish", 100, 20);
         ok(testCase.pass, testCase.text);
       } catch (ex) {
         ok(!testCase.pass, testCase.text);
@@ -115,8 +123,8 @@ async function searchDiscovery() {
     testCase.title = testCase.title || searchDiscoveryTests.indexOf(testCase);
 
     let promiseLinkAdded =
-      BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
-                                    false, null, true);
+      BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
+                                           false, null, true);
 
     await ContentTask.spawn(gBrowser.selectedBrowser, testCase, test => {
       let doc = content.document;
@@ -146,10 +154,9 @@ async function searchDiscovery() {
   }
 
   info("Test multiple engines with the same title");
-  let count = 0;
   let promiseLinkAdded =
-    BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
-                                  false, () => ++count == 2, true);
+    BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
+      false, e => e.target.href == "http://second.mozilla.com/search.xml", true);
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     let doc = content.document;
     let head = doc.getElementById("linkparent");

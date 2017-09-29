@@ -23,12 +23,6 @@ static const char pluginSandboxRules[] = R"(
   (allow signal (target self))
   (allow sysctl-read)
   (allow iokit-open (iokit-user-client-class "IOHIDParamUserClient"))
-  (allow mach-lookup
-      (global-name "com.apple.cfprefsd.agent")
-      (global-name "com.apple.cfprefsd.daemon")
-      (global-name "com.apple.system.opendirectoryd.libinfo")
-      (global-name "com.apple.system.logger")
-      (global-name "com.apple.ls.boxd"))
   (allow file-read*
       (literal "/etc")
       (literal "/dev/random")
