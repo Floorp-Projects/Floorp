@@ -1472,20 +1472,19 @@ nsContainerFrame::SetPropTableFrames(nsFrameList* aFrameList,
   SetProperty(aProperty, aFrameList);
 }
 
-/**
- * Push aFromChild and its next siblings to the next-in-flow. Change the
- * geometric parent of each frame that's pushed. If there is no next-in-flow
- * the frames are placed on the overflow list (and the geometric parent is
- * left unchanged).
- *
- * Updates the next-in-flow's child count. Does <b>not</b> update the
- * pusher's child count.
- *
- * @param   aFromChild the first child frame to push. It is disconnected from
- *            aPrevSibling
- * @param   aPrevSibling aFromChild's previous sibling. Must not be null. It's
- *            an error to push a parent's first child frame
- */
+void
+nsContainerFrame::PushChildrenToOverflow(nsIFrame* aFromChild,
+                                         nsIFrame* aPrevSibling)
+{
+  NS_PRECONDITION(aFromChild, "null pointer");
+  NS_PRECONDITION(aPrevSibling, "pushing first child");
+  NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
+
+  // Add the frames to our overflow list (let our next in flow drain
+  // our overflow list when it is ready)
+  SetOverflowFrames(mFrames.RemoveFramesAfter(aPrevSibling));
+}
+
 void
 nsContainerFrame::PushChildren(nsIFrame* aFromChild,
                                nsIFrame* aPrevSibling)
@@ -1516,16 +1515,8 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild,
   }
 }
 
-/**
- * Moves any frames on the overflow lists (the prev-in-flow's overflow list and
- * the receiver's overflow list) to the child list.
- *
- * Updates this frame's child count and content mapping.
- *
- * @return  true if any frames were moved and false otherwise
- */
 bool
-nsContainerFrame::MoveOverflowToChildList()
+nsContainerFrame::MoveOverflowToChildList(nsIFrame* aLineContainer)
 {
   bool result = false;
 
@@ -1535,9 +1526,23 @@ nsContainerFrame::MoveOverflowToChildList()
     AutoFrameListPtr prevOverflowFrames(PresContext(),
                                         prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
-      // Tables are special; they can have repeated header/footer
-      // frames on mFrames at this point.
-      NS_ASSERTION(mFrames.IsEmpty() || IsTableFrame(), "bad overflow list");
+      // Overflow frames from prev-in-flow should have been pushed to
+      // this frame directly if we have already existed, so there should
+      // be no frame in mFrames when we steal frames from overflow list
+      // of prev-in-flow. However, there are two special cases:
+      // * tables can have repeated header/footer frames at this point,
+      // * inline frames always push frames into overflow list rather
+      //   than next-in-flow, so that floats reparenting can be handled
+      //   properly below.
+      NS_ASSERTION(mFrames.IsEmpty() || IsTableFrame() || aLineContainer,
+                   "bad overflow list");
+      // If we are on a frame which has line container, we may need to
+      // reparent floats from prev-in-flow to our line container.
+      if (aLineContainer && aLineContainer->GetPrevContinuation()) {
+        ReparentFloatsForInlineChild(aLineContainer,
+                                     prevOverflowFrames->FirstChild(),
+                                     true);
+      }
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
       nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames,
@@ -1683,6 +1688,50 @@ nsContainerFrame::PullNextInFlowChild(ContinuationTraversingState& aState)
     nsContainerFrame::ReparentFrameView(frame, nextInFlow, this);
   }
   return frame;
+}
+
+/* static */ void
+nsContainerFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
+                                               nsIFrame* aFrame,
+                                               bool aReparentSiblings)
+{
+  // XXXbz this would be better if it took a nsFrameList or a frame
+  // list slice....
+  NS_ASSERTION(aOurLineContainer->GetNextContinuation() ||
+               aOurLineContainer->GetPrevContinuation(),
+               "Don't call this when we have no continuation, it's a waste");
+  if (!aFrame) {
+    NS_ASSERTION(aReparentSiblings, "Why did we get called?");
+    return;
+  }
+
+  nsBlockFrame* frameBlock = nsLayoutUtils::GetFloatContainingBlock(aFrame);
+  if (!frameBlock || frameBlock == aOurLineContainer) {
+    return;
+  }
+
+  nsBlockFrame* ourBlock = nsLayoutUtils::GetAsBlock(aOurLineContainer);
+  NS_ASSERTION(ourBlock, "Not a block, but broke vertically?");
+
+  while (true) {
+    ourBlock->ReparentFloats(aFrame, frameBlock, false);
+
+    if (!aReparentSiblings)
+      return;
+    nsIFrame* next = aFrame->GetNextSibling();
+    if (!next)
+      return;
+    if (next->GetParent() == aFrame->GetParent()) {
+      aFrame = next;
+      continue;
+    }
+    // This is paranoid and will hardly ever get hit ... but we can't actually
+    // trust that the frames in the sibling chain all have the same parent,
+    // because lazy reparenting may be going on. If we find a different
+    // parent we need to redo our analysis.
+    ReparentFloatsForInlineChild(aOurLineContainer, next, aReparentSiblings);
+    return;
+  }
 }
 
 bool
