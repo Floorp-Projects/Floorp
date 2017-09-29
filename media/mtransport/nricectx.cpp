@@ -1043,8 +1043,21 @@ nsresult NrIceCtx::ParseGlobalAttributes(std::vector<std::string> attrs) {
   return NS_OK;
 }
 
+bool NrIceCtx::HasStreamsToConnect() const {
+  for (auto& stream : streams_) {
+    if (stream && stream->state() != NrIceMediaStream::ICE_CLOSED) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsresult NrIceCtx::StartChecks(bool offerer) {
   int r;
+  if (!HasStreamsToConnect()) {
+    // Nothing to do
+    return NS_OK;
+  }
 
   offerer_ = offerer;
   ice_start_time_ = TimeStamp::Now();
