@@ -2259,19 +2259,10 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg, ErrorResult& aErr
     propertyHolder = nullptr;
   }
 
-  // Expandos from other compartments are attached to the target JS object.
-  // Copy them over, and let the old ones die a natural death.
-
-  // Note that at this point the DOM_OBJECT_SLOT for |newobj| has not been set.
-  // CloneExpandoChain() will use this property of |newobj| when it calls
-  // preserveWrapper() via attachExpandoObject() if |aObj| has expandos set, and
-  // preserveWrapper() will not do anything in this case.  This is safe because
-  // if expandos are present then the wrapper will already have been preserved
-  // for this native.
-  if (!xpc::XrayUtils::CloneExpandoChain(aCx, newobj, aObj)) {
-    aError.StealExceptionFromJSContext(aCx);
-    return;
-  }
+  // Grab a reference to the chain of objects that carry aObj's Xray expando
+  // properties (from all compartments). Transplanting will blow this away;
+  // we'll restore it manually afterwards.
+  JS::Rooted<JSObject*> expandoChain(aCx, xpc::XrayUtils::GetExpandoChain(aObj));
 
   // We've set up |newobj|, so we make it own the native by setting its reserved
   // slot and nulling out the reserved slot of |obj|.
@@ -2285,6 +2276,14 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg, ErrorResult& aErr
 
   aObj = xpc::TransplantObject(aCx, aObj, newobj);
   if (!aObj) {
+    MOZ_CRASH();
+  }
+
+  // Copy Xray expando properties to the new wrapper.
+  if (!xpc::XrayUtils::CloneExpandoChain(aCx, aObj, expandoChain)) {
+    // Failure here means some expandos were not copied over. The object graph
+    // and the Xray machinery are left in a consistent state, but mysteriously
+    // losing these expandos is too weird to allow.
     MOZ_CRASH();
   }
 
