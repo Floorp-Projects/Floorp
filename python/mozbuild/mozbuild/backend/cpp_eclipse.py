@@ -227,6 +227,8 @@ class CppEclipseBackend(CommonBackend):
 
         project = project.replace('@PROJECT_NAME@', self._project_name)
         project = project.replace('@PROJECT_TOPSRCDIR@', self.environment.topsrcdir)
+        project = project.replace('@GENERATED_IPDL_FILES@', os.path.join(self.environment.topobjdir, "ipc", "ipdl"))
+        project = project.replace('@GENERATED_WEBIDL_FILES@', os.path.join(self.environment.topobjdir, "dom", "bindings"))
         fh.write(project)
 
     def _write_cproject(self, fh):
@@ -282,6 +284,16 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                         <name>tree</name>
                         <type>2</type>
                         <location>@PROJECT_TOPSRCDIR@</location>
+                </link>
+                <link>
+                        <name>generated-ipdl</name>
+                        <type>2</type>
+                        <location>@GENERATED_IPDL_FILES@</location>
+                </link>
+                <link>
+                        <name>generated-webidl</name>
+                        <type>2</type>
+                        <location>@GENERATED_WEBIDL_FILES@</location>
                 </link>
         </linkedResources>
         <filteredResources>
