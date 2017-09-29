@@ -131,7 +131,7 @@
   "lz4.js": ["Lz4"],
   "lz4_internal.js": ["Primitives"],
   "main.js": ["Weave"],
-  "MatchPattern.jsm": ["MatchPattern", "MatchGlobs", "MatchURLFilters"],
+  "MatchURLFilters.jsm": ["MatchURLFilters"],
   "mcc_iso3166_table.jsm": ["MCC_ISO3166_TABLE"],
   "message.js": ["Command", "Message", "MessageOrigin", "Response"],
   "MessageContext.jsm": ["MessageContext"],
