@@ -35,9 +35,14 @@ namespace xpc {
 
 namespace XrayUtils {
 
-bool IsXPCWNHolderClass(const JSClass* clasp);
+bool
+IsXPCWNHolderClass(const JSClass* clasp);
 
-bool CloneExpandoChain(JSContext* cx, JSObject* src, JSObject* dst);
+JSObject*
+GetExpandoChain(JS::HandleObject target);
+
+bool
+CloneExpandoChain(JSContext* cx, JS::HandleObject dst, JS::HandleObject srcChain);
 
 bool
 IsTransparent(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id);
@@ -114,7 +119,7 @@ public:
 
     JSObject* getExpandoChain(JS::HandleObject obj);
     bool setExpandoChain(JSContext* cx, JS::HandleObject obj, JS::HandleObject chain);
-    bool cloneExpandoChain(JSContext* cx, JS::HandleObject dst, JS::HandleObject src);
+    bool cloneExpandoChain(JSContext* cx, JS::HandleObject dst, JS::HandleObject srcChain);
 
 protected:
     static const JSClass HolderClass;
