@@ -11,6 +11,7 @@
 #include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
 #include "gfxFontFeatures.h"
+#include "jsfriendapi.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSCounterStyleRule.h"
@@ -68,6 +69,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/URLExtraData.h"
 
@@ -2629,6 +2631,27 @@ Gecko_ShouldCreateStyleThreadPool()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return !mozilla::BrowserTabsRemoteAutostart() || XRE_IsContentProcess();
+}
+
+size_t
+Gecko_GetSystemPageSize()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mozilla::ipc::SharedMemory::SystemPageSize();
+}
+
+void
+Gecko_ProtectBuffer(void* aBuffer, size_t aSize)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  js::ProtectBuffer(aBuffer, aSize);
+}
+
+void
+Gecko_UnprotectBuffer(void* aBuffer, size_t aSize)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  js::UnprotectBuffer(aBuffer, aSize);
 }
 
 NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);

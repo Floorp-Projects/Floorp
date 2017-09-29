@@ -633,6 +633,21 @@ webrtc.nicer:
       - 'main'
       - 'content'
 
+mediarecorder:
+  recording_count:
+    bug_numbers:
+      - 1400757
+    description: >
+      The number of times a MediaRecorder has been started. Recorded when a MediaRecorder starts
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - bvandyk@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
 # The following section contains content process base counters.
 dom.contentprocess:
   troubled_due_to_memory:

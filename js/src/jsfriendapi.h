@@ -3122,6 +3122,13 @@ SetCooperativeYieldCallback(JSContext* cx, YieldCallback callback);
 extern JS_FRIEND_API(bool)
 SystemZoneAvailable(JSContext* cx);
 
+// Protects/unprotects a page-sized buffer as read-only, associating a special crash
+// handler to make access violations easier to spot on crash-stats.
+extern JS_FRIEND_API(void)
+ProtectBuffer(void* buffer, size_t size);
+extern JS_FRIEND_API(void)
+UnprotectBuffer(void* buffer, size_t size);
+
 } /* namespace js */
 
 #endif /* jsfriendapi_h */

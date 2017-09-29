@@ -5,6 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
+const Services = require("Services");
 
 const { ChromeDebuggerActor } = require("devtools/server/actors/script");
 const { WebConsoleActor } = require("devtools/server/actors/webconsole");
@@ -27,11 +28,30 @@ function ChildProcessActor(connection) {
     shouldAddNewGlobalAsDebuggee: global => true
   });
 
+  let sandboxPrototype = {
+    get tabs() {
+      let tabs = [];
+      let windowEnumerator = Services.ww.getWindowEnumerator();
+      while (windowEnumerator.hasMoreElements()) {
+        let window = windowEnumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
+        let tabChildGlobal = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIDocShell)
+                                   .sameTypeRootTreeItem
+                                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIContentFrameMessageManager);
+        tabs.push(tabChildGlobal);
+      }
+      return tabs;
+    },
+  };
+
   // Scope into which the webconsole executes:
-  // An empty sandbox with chrome privileges
+  // A sandbox with chrome privileges with a `tabs` getter.
   let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
     .createInstance(Ci.nsIPrincipal);
-  let sandbox = Cu.Sandbox(systemPrincipal);
+  let sandbox = Cu.Sandbox(systemPrincipal, {
+    sandboxPrototype,
+  });
   this._consoleScope = sandbox;
 
   this._workerList = null;

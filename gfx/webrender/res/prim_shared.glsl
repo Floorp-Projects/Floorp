@@ -549,6 +549,10 @@ TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
 
     vec2 current_local_pos, prev_local_pos, next_local_pos;
 
+    // Clamp to the two local clip rects.
+    local_rect.p0 = clamp_rect(clamp_rect(local_rect.p0, local_clip_rect), layer.local_clip_rect);
+    local_rect.p1 = clamp_rect(clamp_rect(local_rect.p1, local_clip_rect), layer.local_clip_rect);
+
     // Select the current vertex and the previous/next vertices,
     // based on the vertex ID that is known based on the instance rect.
     switch (gl_VertexID) {

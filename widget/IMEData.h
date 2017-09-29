@@ -279,6 +279,18 @@ struct InputContext final
   {
   }
 
+  // If InputContext instance is a static variable, any heap allocated stuff
+  // of its members need to be deleted at XPCOM shutdown.  Otherwise, it's
+  // detected as memory leak.
+  void ShutDown()
+  {
+    // The buffer for nsString will be released with a call of SetCapacity(0).
+    // Truncate() isn't enough because it just sets length to 0.
+    mHTMLInputType.SetCapacity(0);
+    mHTMLInputInputmode.SetCapacity(0);
+    mActionHint.SetCapacity(0);
+  }
+
   bool IsPasswordEditor() const
   {
     return mHTMLInputType.LowerCaseEqualsLiteral("password");

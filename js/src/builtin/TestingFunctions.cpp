@@ -1797,6 +1797,139 @@ StackTest(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setUndefined();
     return true;
 }
+
+static bool
+FailingInterruptCallback(JSContext* cx)
+{
+    return false;
+}
+
+static bool
+InterruptTest(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1 || args.length() > 2) {
+        JS_ReportErrorASCII(cx, "interruptTest() takes exactly 1 argument.");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+        JS_ReportErrorASCII(cx, "The argument to interruptTest() must be a function.");
+        return false;
+    }
+
+    if (disableOOMFunctions) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    RootedFunction function(cx, &args[0].toObject().as<JSFunction>());
+
+    bool verbose = EnvVarIsDefined("OOM_VERBOSE");
+
+    unsigned threadStart = THREAD_TYPE_COOPERATING;
+    unsigned threadEnd = THREAD_TYPE_MAX;
+
+    // Test a single thread type if specified by the OOM_THREAD environment variable.
+    int threadOption = 0;
+    if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
+        if (threadOption < THREAD_TYPE_COOPERATING || threadOption > THREAD_TYPE_MAX) {
+            JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
+            return false;
+        }
+
+        threadStart = threadOption;
+        threadEnd = threadOption + 1;
+    }
+
+    if (cx->runningOOMTest) {
+        JS_ReportErrorASCII(cx, "Nested call to oomTest(), stackTest() or interruptTest() is not allowed.");
+        return false;
+    }
+    cx->runningOOMTest = true;
+
+    MOZ_ASSERT(!cx->isExceptionPending());
+
+    size_t compartmentCount = CountCompartments(cx);
+
+#ifdef JS_GC_ZEAL
+    JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
+#endif
+
+    JSInterruptCallback *prevEnd = cx->interruptCallbacks().end();
+    JS_AddInterruptCallback(cx, FailingInterruptCallback);
+
+    for (unsigned thread = threadStart; thread < threadEnd; thread++) {
+        if (verbose)
+            fprintf(stderr, "thread %d\n", thread);
+
+        unsigned check = 1;
+        bool handledInterrupt;
+        do {
+            if (verbose)
+                fprintf(stderr, "  check %d\n", check);
+
+            MOZ_ASSERT(!cx->isExceptionPending());
+
+            js::oom::SimulateInterruptAfter(check, thread, false);
+
+            RootedValue result(cx);
+            bool ok = JS_CallFunction(cx, cx->global(), function,
+                                      HandleValueArray::empty(), &result);
+
+            handledInterrupt = js::oom::HadSimulatedInterrupt();
+            js::oom::ResetSimulatedInterrupt();
+
+            MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
+
+            if (ok) {
+                MOZ_ASSERT(!cx->isExceptionPending(),
+                           "Thunk execution succeeded but an exception was raised - "
+                           "missing error check?");
+            }
+
+            // Note that it is possible that the function throws an exception
+            // unconnected to OOM, in which case we ignore it. More correct
+            // would be to have the caller pass some kind of exception
+            // specification and to check the exception against it.
+
+            cx->clearPendingException();
+
+            // Some tests create a new compartment or zone on every
+            // iteration. Our GC is triggered by GC allocations and not by
+            // number of compartments or zones, so these won't normally get
+            // cleaned up. The check here stops some tests running out of
+            // memory.
+            if (CountCompartments(cx) > compartmentCount + 100) {
+                JS_GC(cx);
+                compartmentCount = CountCompartments(cx);
+            }
+
+#ifdef JS_TRACE_LOGGING
+            // Reset the TraceLogger state if enabled.
+            TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+            if (logger->enabled()) {
+                while (logger->enabled())
+                    logger->disable();
+                logger->enable(cx);
+            }
+#endif
+
+            check++;
+        } while (handledInterrupt);
+
+        if (verbose) {
+            fprintf(stderr, "  finished after %d checks\n", check - 2);
+        }
+    }
+
+    // Clear any interrupt callbacks we added within this function
+    cx->interruptCallbacks().erase(prevEnd, cx->interruptCallbacks().end());
+    cx->runningOOMTest = false;
+    args.rval().setUndefined();
+    return true;
+}
 #endif
 
 static bool
@@ -4767,6 +4900,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  This function behaves exactly like oomTest with the difference that\n"
 "  instead of simulating regular OOM conditions, it simulates the engine\n"
 "  running out of stack space (failing recursion check)."),
+
+    JS_FN_HELP("interruptTest", InterruptTest, 0, 0,
+"interruptTest(function)",
+"  This function simulates interrupts similar to how oomTest simulates OOM conditions."),
 #endif
 
     JS_FN_HELP("settlePromiseNow", SettlePromiseNow, 1, 0,

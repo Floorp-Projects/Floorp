@@ -1,7 +1,5 @@
 "use strict";
 
-Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
-
 const TEST_SELECTORS = {
   selRecords: "#credit-cards",
   btnRemove: "#remove",

@@ -246,6 +246,12 @@ impl GlyphRasterizer {
             .get_glyph_dimensions(font, glyph_key)
     }
 
+    pub fn is_bitmap_font(&self, font_key: FontKey) -> bool {
+        self.font_contexts
+            .lock_shared_context()
+            .is_bitmap_font(font_key)
+    }
+
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
         self.font_contexts
             .lock_shared_context()
