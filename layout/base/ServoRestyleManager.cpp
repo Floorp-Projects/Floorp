@@ -78,6 +78,12 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
     return parent;
   }
 
+  if (aFrame.IsLetterFrame()) {
+    // Ditto for ::first-letter. A first-letter always arrives here via its
+    // direct parent, except when it's parented to a ::first-line.
+    return parent->IsLineFrame() ? parent->GetParent() : parent;
+  }
+
   parent = FirstContinuationOrPartOfIBSplit(parent);
 
   // We've handled already anon boxes and bullet frames, so now we're looking at
@@ -567,6 +573,8 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
 static void
 UpdateFirstLetterIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
 {
+  MOZ_ASSERT(!aFrame->IsFrameOfType(nsIFrame::eBlockFrame),
+             "You're probably duplicating work with UpdatePseudoElementStyles!");
   if (!aFrame->HasFirstLetterChild()) {
     return;
   }
@@ -574,10 +582,11 @@ UpdateFirstLetterIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
   // We need to find the block the first-letter is associated with so we can
   // find the right element for the first-letter's style resolution.  Might as
   // well just delegate the whole thing to that block.
-  nsIFrame* block = aFrame;
+  nsIFrame* block = aFrame->GetParent();
   while (!block->IsFrameOfType(nsIFrame::eBlockFrame)) {
     block = block->GetParent();
   }
+
   static_cast<nsBlockFrame*>(block->FirstContinuation())->
     UpdateFirstLetterStyle(aRestyleState);
 }
@@ -638,12 +647,10 @@ static void
 UpdateFramePseudoElementStyles(nsIFrame* aFrame,
                                ServoRestyleState& aRestyleState)
 {
-  // first-letter needs to be updated before first-line, because first-line can
-  // change the style of the first-letter.
-  UpdateFirstLetterIfNeeded(aFrame, aRestyleState);
-
   if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
     static_cast<nsBlockFrame*>(aFrame)->UpdatePseudoElementStyles(aRestyleState);
+  } else {
+    UpdateFirstLetterIfNeeded(aFrame, aRestyleState);
   }
 
   UpdateBackdropIfNeeded(

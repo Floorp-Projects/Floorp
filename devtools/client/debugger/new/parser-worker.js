@@ -28903,6 +28903,10 @@ var _getSymbols2 = _interopRequireDefault(_getSymbols);
 
 var _ast = __webpack_require__(1051);
 
+var _getScopes = __webpack_require__(1186);
+
+var _getScopes2 = _interopRequireDefault(_getScopes);
+
 var _sources = __webpack_require__(1171);
 
 var _getOutOfScopeLocations = __webpack_require__(1072);
@@ -28926,7 +28930,9 @@ self.onmessage = workerHandler({
   getClosestExpression: _closest.getClosestExpression,
   getOutOfScopeLocations: _getOutOfScopeLocations2.default,
   getSymbols: _getSymbols2.default,
+  getScopes: _getScopes2.default,
   clearSymbols: _getSymbols.clearSymbols,
+  clearScopes: _getScopes.clearScopes,
   clearASTs: _ast.clearASTs,
   hasSource: _sources.hasSource,
   setSource: _sources.setSource,
@@ -29397,6 +29403,15 @@ function getComments(ast) {
   }));
 }
 
+function getClassName(path) {
+  var classDeclaration = path.findParent(_p => _p.isClassDeclaration());
+  if (!classDeclaration) {
+    return null;
+  }
+
+  return classDeclaration.node.id.name;
+}
+
 function extractSymbols(source) {
   var functions = [];
   var variables = [];
@@ -29414,6 +29429,7 @@ function extractSymbols(source) {
       if ((0, _helpers.isFunction)(path)) {
         functions.push({
           name: (0, _getFunctionName2.default)(path),
+          klass: getClassName(path),
           location: path.node.loc,
           parameterNames: getFunctionParameterNames(path),
           identifier: path.node.id
@@ -29671,12 +29687,7 @@ function getSnippet(path, prevPath) {
 }
 
 function formatSymbols(source) {
-  var _getSymbols = getSymbols(source),
-      objectProperties = _getSymbols.objectProperties,
-      memberExpressions = _getSymbols.memberExpressions,
-      callExpressions = _getSymbols.callExpressions,
-      identifiers = _getSymbols.identifiers,
-      variables = _getSymbols.variables;
+  var symbols = getSymbols(source);
 
   function formatLocation(loc) {
     if (!loc) {
@@ -29696,10 +29707,11 @@ function formatSymbols(source) {
     var exprLoc = formatLocation(symbol.expressionLocation);
     var params = symbol.parameterNames ? symbol.parameterNames.join(", ") : "";
     var expression = symbol.expression || "";
-    return `${loc} ${exprLoc} ${expression} ${symbol.name} ${params}`;
+    var klass = symbol.klass || "";
+    return `${loc} ${exprLoc} ${expression} ${symbol.name} ${params} ${klass}`;
   }
 
-  return ["properties", objectProperties.map(summarize).join("\n"), "member expressions", memberExpressions.map(summarize).join("\n"), "call expressions", callExpressions.map(summarize).join("\n"), "identifiers", identifiers.map(summarize).join("\n"), "variables", variables.map(summarize).join("\n")].join("\n");
+  return Object.keys(symbols).map(name => `${name}:\n ${symbols[name].map(summarize).join("\n")}`);
 }
 
 function clearSymbols() {
@@ -33055,6 +33067,301 @@ function getSource(sourceId) {
 function clearSources() {
   cachedSources = new Map();
 }
+
+/***/ }),
+/* 1172 */,
+/* 1173 */,
+/* 1174 */,
+/* 1175 */,
+/* 1176 */,
+/* 1177 */,
+/* 1178 */,
+/* 1179 */,
+/* 1180 */,
+/* 1181 */,
+/* 1182 */,
+/* 1183 */,
+/* 1184 */,
+/* 1185 */,
+/* 1186 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getScopes;
+exports.clearScopes = clearScopes;
+
+var _ast = __webpack_require__(1051);
+
+var _sources = __webpack_require__(1171);
+
+var _parser = __webpack_require__(1187);
+
+var parsedScopesCache = new Map();
+
+function getScopes(location) {
+  var sourceId = location.sourceId;
+
+  var parsedScopes = parsedScopesCache.get(sourceId);
+  if (!parsedScopes) {
+    var visitor = (0, _parser.createParseJSScopeVisitor)(sourceId);
+    (0, _ast.traverseAst)((0, _sources.getSource)(sourceId), visitor.traverseVisitor);
+    parsedScopes = visitor.toParsedScopes();
+    parsedScopesCache.set(sourceId, parsedScopes);
+  }
+  return (0, _parser.findScopes)(parsedScopes, location);
+}
+
+function clearScopes() {
+  parsedScopesCache = new Map();
+}
+
+/***/ }),
+/* 1187 */
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+function createTempScope(type, parent, loc) {
+  const result = {
+    type,
+    parent,
+    children: [],
+    loc: loc,
+    names: Object.create(null)
+  };
+  if (parent) {
+    parent.children.push(result);
+  }
+  return result;
+}
+
+function isNode(node, type) {
+  return node ? node.type === type : false;
+}
+
+function getFunctionScope(scope) {
+  let s = scope;
+  while (s.type !== "Function" && s.type !== "Script") {
+    if (!s.parent) {
+      return s;
+    }
+    s = s.parent;
+  }
+  return s;
+}
+
+function fromBabelLocation(location, sourceId) {
+  return {
+    sourceId,
+    line: location.line,
+    column: location.column
+  };
+}
+
+function parseDeclarator(declaratorId, targetScope, type) {
+  if (isNode(declaratorId, "Identifier")) {
+    targetScope.names[declaratorId.name] = { type, refs: [] };
+  } else if (isNode(declaratorId, "ObjectPattern")) {
+    declaratorId.properties.forEach(prop => {
+      parseDeclarator(prop.value, targetScope, type);
+    });
+  } else if (isNode(declaratorId, "ArrayPattern")) {
+    declaratorId.elements.forEach(item => {
+      parseDeclarator(item, targetScope, type);
+    });
+  } else if (isNode(declaratorId, "AssignmentPattern")) {
+    parseDeclarator(declaratorId.left, targetScope, type);
+  } else if (isNode(declaratorId, "RestElement")) {
+    parseDeclarator(declaratorId.argument, targetScope, type);
+  }
+}
+
+function isLetOrConst(node) {
+  return node.kind === "let" || node.kind === "const";
+}
+
+function hasLetOrConst(path) {
+  return path.node.body.some(node => {
+    if (!isNode(node, "VariableDeclaration")) {
+      return false;
+    }
+    return isLetOrConst(node);
+  });
+}
+
+function findIdentifierInScopes(scope, name) {
+  // Find nearest outer scope with the specifed name and add reference.
+  for (let s = scope; s; s = s.parent) {
+    if (name in s.names) {
+      return s;
+    }
+  }
+  return null;
+}
+
+function toParsedScopes(children, sourceId) {
+  if (!children || children.length === 0) {
+    return undefined;
+  }
+  return children.map(scope => {
+    // Removing unneed information from TempScope such as parent reference and
+    // name types. We also need to convert BabelLocation to the Location type.
+    const bindings = Object.keys(scope.names).reduce((_bindings, n) => {
+      const nameRefs = scope.names[n];
+      switch (nameRefs.type) {
+        case "var":
+        case "let":
+        case "const":
+        case "param":
+          _bindings[n] = nameRefs.refs.map(location => {
+            return fromBabelLocation(location, sourceId);
+          });
+          break;
+      }
+      return _bindings;
+    }, Object.create(null));
+    return {
+      start: fromBabelLocation(scope.loc.start, sourceId),
+      end: fromBabelLocation(scope.loc.end, sourceId),
+      type: scope.type.toLowerCase(),
+      bindings,
+      children: toParsedScopes(scope.children, sourceId)
+    };
+  });
+}
+
+/**
+ * Creates at visitor for babel-traverse that will parse/extract all bindings
+ * information from the source. See also findScopes to perform lookup of the
+ * scope information for specific location.
+ */
+function createParseJSScopeVisitor(sourceId) {
+  let parent = createTempScope("Global", null, null);
+  let savedParents = new WeakMap();
+  const traverseVisitor = {
+    enter(path) {
+      const tree = path.node;
+      const location = path.node.loc;
+      if (path.isProgram()) {
+        savedParents.set(path, parent);
+        parent = createTempScope("Script", parent, location);
+        return;
+      }
+      if (path.isFunctionDeclaration() || path.isFunctionExpression() || path.isArrowFunctionExpression()) {
+        savedParents.set(path, parent);
+        const scope = createTempScope("Function", parent, location);
+        if (isNode(tree.id, "Identifier")) {
+          const functionName = { type: "fn", refs: [] };
+          getFunctionScope(parent).names[tree.id.name] = functionName;
+          scope.names[tree.id.name] = functionName;
+        }
+        tree.params.forEach(param => parseDeclarator(param, scope, "param"));
+        parent = scope;
+        return;
+      }
+      if (path.isForInStatement() || path.isForStatement()) {
+        const init = tree.init || tree.left;
+        if (isNode(init, "VariableDeclaration") && isLetOrConst(init)) {
+          // Debugger will create new lexical environment for the for.
+          savedParents.set(path, parent);
+          parent = createTempScope("For", parent, location);
+        }
+        return;
+      }
+      if (path.isCatchClause()) {
+        savedParents.set(path, parent);
+        parent = createTempScope("Catch", parent, location);
+        parseDeclarator(tree.param, parent, "param");
+        return;
+      }
+      if (path.isBlockStatement()) {
+        if (hasLetOrConst(path)) {
+          // Debugger will create new lexical environment for the block.
+          savedParents.set(path, parent);
+          parent = createTempScope("Block", parent, location);
+        }
+        return;
+      }
+      if (path.isVariableDeclaration()) {
+        // Finds right lexical environment
+        const hoistAt = !isLetOrConst(tree) ? getFunctionScope(parent) : parent;
+        tree.declarations.forEach(declarator => {
+          parseDeclarator(declarator.id, hoistAt, tree.kind);
+        });
+        return;
+      }
+      if (path.isIdentifier()) {
+        const scope = findIdentifierInScopes(parent, tree.name);
+        if (scope) {
+          scope.names[tree.name].refs.push(tree.loc.start);
+        }
+      }
+    },
+    exit(path) {
+      const savedParent = savedParents.get(path);
+      if (savedParent) {
+        parent = savedParent;
+        savedParents.delete(path);
+      }
+    }
+  };
+  return {
+    traverseVisitor,
+    toParsedScopes() {
+      return toParsedScopes(parent.children, sourceId) || [];
+    }
+  };
+}
+
+function compareLocations(a, b) {
+  // According to type of Location.column can be undefined, if will not be the
+  // case here, ignoring flow error.
+  // $FlowIgnore
+  return a.line == b.line ? a.column - b.column : a.line - b.line;
+}
+
+/**
+ * Searches all scopes and their bindings at the specific location.
+ */
+function findScopes(scopes, location) {
+  // Find inner most in the tree structure.
+  let searchInScopes = scopes;
+  const found = [];
+  while (searchInScopes) {
+    let foundOne = searchInScopes.some(s => {
+      if (compareLocations(s.start, location) <= 0 && compareLocations(location, s.end) < 0) {
+        // Found the next scope, trying to search recusevly in its children.
+        found.unshift(s);
+        searchInScopes = s.children;
+        return true;
+      }
+      return false;
+    });
+    if (!foundOne) {
+      break;
+    }
+  }
+  return found.map(i => {
+    return {
+      type: i.type,
+      start: i.start,
+      end: i.end,
+      bindings: i.bindings
+    };
+  });
+}
+
+module.exports = {
+  createParseJSScopeVisitor,
+  findScopes
+};
 
 /***/ })
 /******/ ]);

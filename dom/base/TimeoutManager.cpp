@@ -1235,7 +1235,6 @@ TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const
 {
   // A window can be throttled using budget if
   // * It isn't active
-  // * If it isn't using user media
   // * If it isn't using WebRTC
   // * If it hasn't got open WebSockets
   // * If it hasn't got active IndexedDB databases
@@ -1254,11 +1253,6 @@ TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const
 
   // Check if there are any active IndexedDB databases
   if (mWindow.AsInner()->HasActiveIndexedDBDatabases()) {
-    return false;
-  }
-
-  // Check if we have active GetUserMedia
-  if (mWindow.AsInner()->HasActiveUserMedia()) {
     return false;
   }
 

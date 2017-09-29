@@ -158,11 +158,11 @@ NS_IMPL_RELEASE_INHERITED(MediaRecorder, DOMEventTargetHelper)
 /**
  * Session is an object to represent a single recording event.
  * In original design, all recording context is stored in MediaRecorder, which causes
- * a problem if someone calls MediaRecoder::Stop and MedaiRecorder::Start quickly.
+ * a problem if someone calls MediaRecorder::Stop and MediaRecorder::Start quickly.
  * To prevent blocking main thread, media encoding is executed in a second thread,
  * named as Read Thread. For the same reason, we do not wait Read Thread shutdown in
- * MediaRecorder::Stop. If someone call MediaRecoder::Start before Read Thread shutdown,
- * the same recording context in MediaRecoder might be access by two Reading Threads,
+ * MediaRecorder::Stop. If someone call MediaRecorder::Start before Read Thread shutdown,
+ * the same recording context in MediaRecorder might be access by two Reading Threads,
  * which cause a  problem.
  * In the new design, we put recording context into Session object, including Read
  * Thread.  Each Session has its own recording context and Read Thread, problem is been
@@ -1045,7 +1045,7 @@ private:
   }
 
 private:
-  // Hold reference to MediaRecoder that ensure MediaRecorder is alive
+  // Hold reference to MediaRecorder that ensure MediaRecorder is alive
   // if there is an active session. Access ONLY on main thread.
   RefPtr<MediaRecorder> mRecorder;
 

@@ -563,14 +563,13 @@ private:
                 rbp_r_p->SetRight(rbp_r_t);
               }
               break;
-            } else {
-              /* This is the node we want to delete, but we
-               * will instead swap it with its successor
-               * and delete the successor. Record enough
-               * information to do the swap later.
-               * rbp_r_xp is aNode's parent. */
-              rbp_r_xp = rbp_r_p;
             }
+            /* This is the node we want to delete, but we
+             * will instead swap it with its successor
+             * and delete the successor. Record enough
+             * information to do the swap later.
+             * rbp_r_xp is aNode's parent. */
+            rbp_r_xp = rbp_r_p;
           }
           rbp_r_t = rbp_r_c->Right();
           rbp_r_u = rbp_r_t->Left();

@@ -1891,6 +1891,9 @@ Decoder::DecodeSpecialCondition(Instruction* instr)
               case 15: option = "sy";    break;
             }
             switch (instr->Bits(7, 4)) {
+              case 1:
+                Print("clrex");
+                break;
               case 4:
                 out_buffer_pos_ += SNPrintF(out_buffer_ + out_buffer_pos_,
                                             "dsb %s", option);
