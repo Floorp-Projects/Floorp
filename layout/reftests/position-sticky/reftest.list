@@ -1,9 +1,9 @@
 == top-1.html top-1-ref.html
 fuzzy-if(Android,6,1568) == top-2.html top-2-ref.html
-fuzzy-if(Android,6,2729) == top-3.html top-3-ref.html
-== top-4.html top-4-ref.html
-== top-5.html top-5-ref.html
-fuzzy-if(Android,2,1568) == top-6.html top-6-ref.html
+fuzzy-if(Android,6,2729) fails-if(webrender) == top-3.html top-3-ref.html
+fails-if(webrender) == top-4.html top-4-ref.html
+fails-if(webrender) == top-5.html top-5-ref.html
+fuzzy-if(Android,2,1568) fails-if(webrender) == top-6.html top-6-ref.html
 == bottom-1.html bottom-1-ref.html
 == bottom-2a.html bottom-2-ref.html
 == bottom-2b.html bottom-2-ref.html
@@ -11,17 +11,17 @@ fuzzy-if(Android,2,1568) == top-6.html top-6-ref.html
 == bottom-3.html bottom-3-ref.html
 == bottom-4.html bottom-4-ref.html
 fuzzy-if(Android,2,4) == left-1.html left-1-ref.html
-fuzzy-if(Android,2,4) == left-2.html left-2-ref.html
-== left-3.html left-3-ref.html
+fuzzy-if(Android,2,4) fails-if(webrender) == left-2.html left-2-ref.html
+fails-if(webrender) == left-3.html left-3-ref.html
 fails-if(webrender) == right-1.html right-1-ref.html
 fuzzy-if(Android,2,4) fails-if(webrender) == right-2.html right-2-ref.html
 fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
-== margin-1.html margin-1-ref.html
+fails-if(webrender) == margin-1.html margin-1-ref.html
 == padding-1.html padding-1-ref.html
-== padding-2.html padding-2-ref.html
+fails-if(webrender) == padding-2.html padding-2-ref.html
 fails-if(webrender) == padding-3.html padding-3-ref.html
 == overcontain-1.html overcontain-1-ref.html
-== initial-1.html initial-1-ref.html
+fails-if(webrender) == initial-1.html initial-1-ref.html
 == initial-scroll-1.html initial-scroll-1-ref.html
 == scrollframe-reflow-1.html scrollframe-reflow-1-ref.html
 == scrollframe-reflow-2.html scrollframe-reflow-2-ref.html
@@ -29,10 +29,10 @@ fails-if(webrender) == padding-3.html padding-3-ref.html
 fuzzy-if(Android,2,3) == stacking-context-1.html stacking-context-1-ref.html
 == top-bottom-1.html top-bottom-1-ref.html
 == top-bottom-2.html top-bottom-2-ref.html
-== top-bottom-3.html top-bottom-3-ref.html
+fails-if(webrender) == top-bottom-3.html top-bottom-3-ref.html
 == left-right-1.html left-right-1-ref.html
 == left-right-2.html left-right-2-ref.html
-== left-right-3.html left-right-3-ref.html
+fails-if(webrender) == left-right-3.html left-right-3-ref.html
 fuzzy-if(Android,4,810) fails-if(webrender) == containing-block-1.html containing-block-1-ref.html
 == overconstrained-1.html overconstrained-1-ref.html
 == overconstrained-2.html overconstrained-2-ref.html
