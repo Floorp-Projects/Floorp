@@ -25,6 +25,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.util.DateUtil;
 import org.mozilla.gecko.Experiments;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.text.DateFormat;
@@ -86,7 +87,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
         final Calendar nowCalendar = Calendar.getInstance();
         final DateFormat pingCreationDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
-        payload.put(ARCHITECTURE, Build.CPU_ABI);
+        payload.put(ARCHITECTURE, HardwareUtils.getRealAbi());
         payload.put(DEVICE, deviceDescriptor);
         payload.put(LOCALE, Locales.getLanguageTag(Locale.getDefault()));
         payload.put(OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
