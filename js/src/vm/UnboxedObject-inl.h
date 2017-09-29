@@ -168,44 +168,6 @@ UnboxedPlainObject::layout() const
     return group()->unboxedLayout();
 }
 
-/////////////////////////////////////////////////////////////////////
-// Template methods for NativeObject and UnboxedArrayObject accesses.
-/////////////////////////////////////////////////////////////////////
-
-static inline DenseElementResult
-SetOrExtendBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
-                                       uint32_t start, const Value* vp, uint32_t count,
-                                       ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update)
-{
-    NativeObject* nobj = &obj->as<NativeObject>();
-
-    if (nobj->denseElementsAreFrozen())
-        return DenseElementResult::Incomplete;
-
-    if (obj->is<ArrayObject>() &&
-        !obj->as<ArrayObject>().lengthIsWritable() &&
-        start + count >= obj->as<ArrayObject>().length())
-    {
-        return DenseElementResult::Incomplete;
-    }
-
-    DenseElementResult result = nobj->ensureDenseElements(cx, start, count);
-    if (result != DenseElementResult::Success)
-        return result;
-
-    if (obj->is<ArrayObject>() && start + count >= obj->as<ArrayObject>().length())
-        obj->as<ArrayObject>().setLengthInt32(start + count);
-
-    if (updateTypes == ShouldUpdateTypes::DontUpdate && !nobj->shouldConvertDoubleElements()) {
-        nobj->copyDenseElements(start, vp, count);
-    } else {
-        for (size_t i = 0; i < count; i++)
-            nobj->setDenseElementWithType(cx, start + i, vp[i]);
-    }
-
-    return DenseElementResult::Success;
-}
-
 } // namespace js
 
 #endif // vm_UnboxedObject_inl_h

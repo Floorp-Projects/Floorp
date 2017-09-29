@@ -338,8 +338,8 @@ ElementAdder::append(JSContext* cx, HandleValue v)
 {
     MOZ_ASSERT(index_ < length_);
     if (resObj_) {
-        DenseElementResult result =
-            SetOrExtendBoxedOrUnboxedDenseElements(cx, resObj_, index_, v.address(), 1);
+        NativeObject* resObj = &resObj_->as<NativeObject>();
+        DenseElementResult result = resObj->setOrExtendDenseElements(cx, index_, v.address(), 1);
         if (result == DenseElementResult::Failure)
             return false;
         if (result == DenseElementResult::Incomplete) {
@@ -1491,9 +1491,9 @@ SetArrayElements(JSContext* cx, HandleObject obj, uint64_t start,
         return true;
 
     if (!ObjectMayHaveExtraIndexedProperties(obj) && start <= UINT32_MAX) {
-        DenseElementResult result =
-            SetOrExtendBoxedOrUnboxedDenseElements(cx, obj, uint32_t(start), vector, count,
-                                                   updateTypes);
+        NativeObject* nobj = &obj->as<NativeObject>();
+        DenseElementResult result = nobj->setOrExtendDenseElements(cx, uint32_t(start), vector,
+                                                                   count, updateTypes);
         if (result != DenseElementResult::Incomplete)
             return result == DenseElementResult::Success;
     }
@@ -2283,8 +2283,8 @@ js::array_push(JSContext* cx, unsigned argc, Value* vp)
 
     if (!ObjectMayHaveExtraIndexedProperties(obj) && length <= UINT32_MAX) {
         DenseElementResult result =
-            SetOrExtendBoxedOrUnboxedDenseElements(cx, obj, uint32_t(length),
-                                                   args.array(), args.length());
+            obj->as<NativeObject>().setOrExtendDenseElements(cx, uint32_t(length),
+                                                             args.array(), args.length());
         if (result != DenseElementResult::Incomplete) {
             if (result == DenseElementResult::Failure)
                 return false;
@@ -2292,9 +2292,8 @@ js::array_push(JSContext* cx, unsigned argc, Value* vp)
             uint32_t newlength = uint32_t(length) + args.length();
             args.rval().setNumber(newlength);
 
-            // SetOrExtendAnyBoxedOrUnboxedDenseElements takes care of updating the
-            // length for boxed and unboxed arrays. Handle updates to the length of
-            // non-arrays here.
+            // setOrExtendDenseElements takes care of updating the length for
+            // arrays. Handle updates to the length of non-arrays here.
             if (!obj->is<ArrayObject>()) {
                 MOZ_ASSERT(obj->is<NativeObject>());
                 return SetLengthProperty(cx, obj, newlength);
@@ -4016,8 +4015,7 @@ js::NewCopiedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group,
     if (!obj)
         return nullptr;
 
-    DenseElementResult result =
-        SetOrExtendBoxedOrUnboxedDenseElements(cx, obj, 0, vp, length, updateTypes);
+    DenseElementResult result = obj->setOrExtendDenseElements(cx, 0, vp, length, updateTypes);
     if (result == DenseElementResult::Failure)
         return nullptr;
 
