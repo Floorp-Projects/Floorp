@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>MSE: seekable attribute after end of stream</title>
+  <title>MSE: seekable attribute after end of stream with split appendBuffer</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="mediasource.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -14,11 +14,12 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/webm");
+    var sb = ms.addSourceBuffer("video/mp4");
 
-    fetchWithXHR("seek.webm", async function (arrayBuffer) {
-      info("- append buffer -");
-      sb.appendBuffer(new Uint8Array(arrayBuffer));
+    fetchWithXHR("bipbop/bipbop2s.mp4", async function (arrayBuffer) {
+      info("- append first buffer -");
+      // 25819 is the offset of the first media segment's end
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25819));
 
       info("- wait for metadata -");
       await once(v, "loadedmetadata");
@@ -26,17 +27,24 @@ runWithMSE(function (ms, v) {
       info("- wait for updateend -");
       await once(sb, "updateend");
 
+      info("- append second buffer -");
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 25819));
+      await once(sb, "updateend");
+
       info("- check seekable -");
+      var target = 1.3;
       ok(v.seekable.length, "Resource is seekable");
       is(v.seekable.start(0), 0, "Seekable's start point is correct");
       is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
+      ok(v.seekable.length &&
+         target >= v.seekable.start(0) &&
+         target < v.seekable.end(0), "Target is within seekable range");
 
       info("- call end of stream -");
       ms.endOfStream();
       await once(ms, "sourceended");
 
       info("- check seekable -");
-      var target = 2;
       ok(v.seekable.length, "Resource is seekable");
       is(v.seekable.start(0), 0, "Seekable's start point is correct");
       is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
@@ -47,6 +55,7 @@ runWithMSE(function (ms, v) {
     });
   });
 });
+
 </script>
 </pre>
 </body>
