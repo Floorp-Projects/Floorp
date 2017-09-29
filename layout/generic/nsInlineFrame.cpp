@@ -294,50 +294,6 @@ nsInlineFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const
   return ComputeSimpleTightBounds(aDrawTarget);
 }
 
-void
-nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
-                                            nsIFrame* aFrame,
-                                            bool aReparentSiblings)
-{
-  // XXXbz this would be better if it took a nsFrameList or a frame
-  // list slice....
-  NS_ASSERTION(aOurLineContainer->GetNextContinuation() ||
-               aOurLineContainer->GetPrevContinuation(),
-               "Don't call this when we have no continuation, it's a waste");
-  if (!aFrame) {
-    NS_ASSERTION(aReparentSiblings, "Why did we get called?");
-    return;
-  }
-
-  nsBlockFrame* frameBlock = nsLayoutUtils::GetFloatContainingBlock(aFrame);
-  if (!frameBlock || frameBlock == aOurLineContainer) {
-    return;
-  }
-
-  nsBlockFrame* ourBlock = nsLayoutUtils::GetAsBlock(aOurLineContainer);
-  NS_ASSERTION(ourBlock, "Not a block, but broke vertically?");
-
-  while (true) {
-    ourBlock->ReparentFloats(aFrame, frameBlock, false);
-
-    if (!aReparentSiblings)
-      return;
-    nsIFrame* next = aFrame->GetNextSibling();
-    if (!next)
-      return;
-    if (next->GetParent() == aFrame->GetParent()) {
-      aFrame = next;
-      continue;
-    }
-    // This is paranoid and will hardly ever get hit ... but we can't actually
-    // trust that the frames in the sibling chain all have the same parent,
-    // because lazy reparenting may be going on. If we find a different
-    // parent we need to redo our analysis.
-    ReparentFloatsForInlineChild(aOurLineContainer, next, aReparentSiblings);
-    return;
-  }
-}
-
 static void
 ReparentChildListStyle(nsPresContext* aPresContext,
                        const nsFrameList::Slice& aFrames,
@@ -916,18 +872,12 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aPrevSibling,
                           InlineReflowInput& aState)
 {
-  NS_PRECONDITION(aFromChild, "null pointer");
-  NS_PRECONDITION(aPrevSibling, "pushing first child");
-  NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
-
 #ifdef NOISY_PUSHING
   printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n",
          this, aFromChild, aPrevSibling);
 #endif
 
-  // Add the frames to our overflow list (let our next in flow drain
-  // our overflow list when it is ready)
-  SetOverflowFrames(mFrames.RemoveFramesAfter(aPrevSibling));
+  PushChildrenToOverflow(aFromChild, aPrevSibling);
   if (aState.mLineLayout) {
     aState.mLineLayout->SetDirtyNextLine();
   }

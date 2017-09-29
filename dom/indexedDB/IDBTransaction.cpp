@@ -239,6 +239,11 @@ IDBTransaction::Create(JSContext* aCx, IDBDatabase* aDatabase,
     nsAutoPtr<WorkerHolder> workerHolder(
       new WorkerHolder(workerPrivate, transaction));
     if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate, Canceling))) {
+      // Silence the destructor assertion if we never made this object live.
+#ifdef DEBUG
+      MOZ_ASSERT(!transaction->mSentCommitOrAbort);
+      transaction->mSentCommitOrAbort = true;
+#endif
       return nullptr;
     }
 

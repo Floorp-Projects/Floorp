@@ -954,10 +954,18 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       return rv;
     }
 
+    OptionalURIParams uriToLoad;
+    if (aURI) {
+      SerializeURI(aURI, uriToLoad);
+    } else {
+      uriToLoad = mozilla::void_t();
+    }
+
     windowCreated =
       SendCreateWindow(aTabOpener, newChild, renderFrame,
                        aChromeFlags, aCalledFromJS, aPositionSpecified,
                        aSizeSpecified,
+                       uriToLoad,
                        features,
                        baseURIString,
                        fullZoom,

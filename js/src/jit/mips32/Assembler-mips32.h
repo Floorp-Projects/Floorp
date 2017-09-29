@@ -157,6 +157,8 @@ class Assembler : public AssemblerMIPSShared
     void bind(RepatchLabel* label);
     static void Bind(uint8_t* rawCode, CodeOffset label, CodeOffset target);
 
+    void processCodeLabels(uint8_t* rawCode);
+
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 

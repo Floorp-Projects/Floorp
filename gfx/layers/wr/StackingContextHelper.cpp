@@ -14,6 +14,7 @@ namespace layers {
 
 StackingContextHelper::StackingContextHelper()
   : mBuilder(nullptr)
+  , mScale(1.0f, 1.0f)
 {
   // mOrigin remains at 0,0
 }
@@ -24,6 +25,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const Maybe<gfx::Matrix4x4>& aTransform,
                                              const nsTArray<wr::WrFilterOp>& aFilters)
   : mBuilder(&aBuilder)
+  , mScale(1.0f, 1.0f)
 {
   wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aLayer->BoundsForStackingContext());
   Layer* layer = aLayer->GetLayer();
@@ -48,6 +50,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              gfx::Matrix4x4* aTransformPtr,
                                              const nsTArray<wr::WrFilterOp>& aFilters)
   : mBuilder(&aBuilder)
+  , mScale(1.0f, 1.0f)
 {
   wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aLayer->BoundsForStackingContext());
   if (aTransformPtr) {
@@ -71,7 +74,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              nsDisplayListBuilder* aDisplayListBuilder,
                                              nsDisplayItem* aItem,
                                              nsDisplayList* aDisplayList,
-                                             gfx::Matrix4x4Typed<LayerPixel, LayerPixel>* aBoundTransform,
+                                             const gfx::Matrix4x4* aBoundTransform,
                                              uint64_t aAnimationsId,
                                              float* aOpacityPtr,
                                              gfx::Matrix4x4* aTransformPtr,
@@ -80,10 +83,17 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const gfx::CompositionOp& aMixBlendMode,
                                              bool aBackfaceVisible)
   : mBuilder(&aBuilder)
+  , mScale(1.0f, 1.0f)
 {
   bool is2d = !aTransformPtr || (aTransformPtr->Is2D() && !aPerspectivePtr);
   if (aTransformPtr) {
     mTransform = *aTransformPtr;
+  }
+
+  // Compute scale for fallback rendering.
+  gfx::Matrix transform2d;
+  if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d)) {
+    mScale = transform2d.ScaleFactors(true) * aParentSC.mScale;
   }
 
   mBuilder->PushStackingContext(wr::LayoutRect(),

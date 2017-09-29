@@ -124,6 +124,7 @@
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
+#include "mozilla/dom/PointerEventHandler.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -259,7 +260,7 @@ nsLayoutStatics::Initialize()
   nsHtml5Module::InitializeStatics();
   mozilla::dom::FallbackEncoding::Initialize();
   nsLayoutUtils::Initialize();
-  nsIPresShell::InitializeStatics();
+  PointerEventHandler::InitializeStatics();
   TouchManager::InitializeStatics();
   ContentPrincipal::InitializeStatics();
 
@@ -400,7 +401,7 @@ nsLayoutStatics::Shutdown()
 
   nsCORSListenerProxy::Shutdown();
 
-  nsIPresShell::ReleaseStatics();
+  PointerEventHandler::ReleaseStatics();
 
   TouchManager::ReleaseStatics();
 
