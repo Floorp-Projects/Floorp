@@ -1114,10 +1114,11 @@ or run without that action (ie: --no-{action})"
         )
         c = self.config
         dirs = self.query_abs_dirs()
+        toolchains = os.environ.get('MOZ_TOOLCHAINS')
         manifest_src = os.environ.get('TOOLTOOL_MANIFEST')
         if not manifest_src:
             manifest_src = c.get('tooltool_manifest_src')
-        if not manifest_src:
+        if not manifest_src and not toolchains:
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
         tooltool_manifest_path = os.path.join(dirs['abs_src_dir'],
                                               manifest_src)
@@ -1141,7 +1142,6 @@ or run without that action (ie: --no-{action})"
         cache = c['env'].get('TOOLTOOL_CACHE')
         if cache:
             cmd.extend(['--cache-dir', cache])
-        toolchains = os.environ.get('MOZ_TOOLCHAINS')
         if toolchains:
             cmd.extend(toolchains.split())
         self.info(str(cmd))

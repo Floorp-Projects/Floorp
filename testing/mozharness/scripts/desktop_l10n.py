@@ -1047,10 +1047,11 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         env = self.query_bootstrap_env()
         config = self.config
         dirs = self.query_abs_dirs()
+        toolchains = os.environ.get('MOZ_TOOLCHAINS')
         manifest_src = os.environ.get('TOOLTOOL_MANIFEST')
         if not manifest_src:
             manifest_src = config.get('tooltool_manifest_src')
-        if not manifest_src:
+        if not manifest_src and not toolchains:
             return
         tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
                                               manifest_src)
@@ -1080,7 +1081,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         cache = config['bootstrap_env'].get('TOOLTOOL_CACHE')
         if cache:
             cmd.extend(['--cache-dir', cache])
-        toolchains = os.environ.get('MOZ_TOOLCHAINS')
         if toolchains:
             cmd.extend(toolchains.split())
         self.info(str(cmd))
