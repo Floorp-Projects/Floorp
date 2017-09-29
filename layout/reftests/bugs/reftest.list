@@ -1807,7 +1807,7 @@ fuzzy-if(Android,1,1) fuzzy-if(skiaContent,1,160000) fails-if(webrender) == 9426
 fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html
 == 950436-1.html 950436-1-ref.html
-fails-if(webrender) == 957770-1.svg 957770-1-ref.svg
+== 957770-1.svg 957770-1-ref.svg
 == 960277-1.html 960277-1-ref.html
 fuzzy-if(skiaContent,1,80) == 961887-1.html 961887-1-ref.html
 == 961887-2.html 961887-2-ref.html
