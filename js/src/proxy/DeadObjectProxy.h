@@ -21,7 +21,14 @@ enum DeadProxyIsCallableIsConstructorOption
     DeadProxyIsCallableIsConstructor
 };
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+enum class DeadProxyBackgroundFinalized
+{
+    Yes,
+    No
+};
+
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BackgroundFinalized>
 class DeadObjectProxy : public BaseProxyHandler
 {
   public:
@@ -68,6 +75,10 @@ class DeadObjectProxy : public BaseProxyHandler
     }
     virtual bool isConstructor(JSObject* obj) const override {
         return CC == DeadProxyIsCallableIsConstructor || CC == DeadProxyNotCallableIsConstructor;
+    }
+
+    virtual bool finalizeInBackground(const JS::Value& priv) const override {
+        return BackgroundFinalized == DeadProxyBackgroundFinalized::Yes;
     }
 
     static const DeadObjectProxy* singleton() {
