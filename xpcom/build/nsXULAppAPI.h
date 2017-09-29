@@ -205,9 +205,12 @@ XRE_API(nsresult,
 
 /**
  * Get the path of the running application binary and store it in aResult.
+ * @param aArgv0  The value passed as argv[0] of main(). This value is only
+ *                used on *nix, and only when other methods of determining
+ *                the binary path have failed.
  */
 XRE_API(nsresult,
-        XRE_GetBinaryPath, (nsIFile** aResult))
+        XRE_GetBinaryPath, (const char* aArgv0, nsIFile** aResult))
 
 /**
  * Get the static module built in to libxul.
