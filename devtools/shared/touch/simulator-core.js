@@ -24,14 +24,14 @@ var systemAppOrigin = (function () {
 var threshold = Services.prefs.getIntPref("ui.dragThresholdX", 25);
 var delay = Services.prefs.getIntPref("ui.click_hold_context_menus.delay", 500);
 
-function TouchSimulator(simulatorTarget) {
+function SimulatorCore(simulatorTarget) {
   this.simulatorTarget = simulatorTarget;
 }
 
 /**
  * Simulate touch events for platforms where they aren't generally available.
  */
-TouchSimulator.prototype = {
+SimulatorCore.prototype = {
   events: [
     "mousedown",
     "mousemove",
@@ -354,4 +354,4 @@ TouchSimulator.prototype = {
   }
 };
 
-exports.TouchSimulator = TouchSimulator;
+exports.SimulatorCore = SimulatorCore;
