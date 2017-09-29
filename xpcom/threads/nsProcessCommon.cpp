@@ -122,7 +122,7 @@ nsProcess::Init(nsIFile* aExecutable)
 
 
 #if defined(XP_WIN)
-// Out param `aWideCmdLine` must be PR_Freed by the caller.
+// Out param `aWideCmdLine` must be free()d by the caller.
 static int
 assembleCmdLine(char* const* aArgv, wchar_t** aWideCmdLine, UINT aCodePage)
 {

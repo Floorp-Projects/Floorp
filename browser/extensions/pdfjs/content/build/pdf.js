@@ -1511,6 +1511,9 @@ class DOMCMapReaderFactory {
     this.isCompressed = isCompressed;
   }
   fetch({ name }) {
+    if (!this.baseUrl) {
+      return Promise.reject(new Error('CMap baseUrl must be specified, ' + 'see "PDFJS.cMapUrl" (and also "PDFJS.cMapPacked").'));
+    }
     if (!name) {
       return Promise.reject(new Error('CMap name must be specified.'));
     }
@@ -1990,6 +1993,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
+  let apiVersion = '1.9.607';
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
   source.chunkedViewerLoading = !!pdfDataRangeTransport;
@@ -1999,6 +2003,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
+    apiVersion,
     source: {
       data: source.data,
       url: source.url,
@@ -3309,8 +3314,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.9.597';
-  exports.build = build = 'f3987bba';
+  exports.version = version = '1.9.607';
+  exports.build = build = 'b3f84112';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -5049,8 +5054,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '1.9.597';
-var pdfjsBuild = 'f3987bba';
+var pdfjsVersion = '1.9.607';
+var pdfjsBuild = 'b3f84112';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(13);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -8176,8 +8181,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '1.9.597';
-  PDFJS.build = 'f3987bba';
+  PDFJS.version = '1.9.607';
+  PDFJS.build = 'b3f84112';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {

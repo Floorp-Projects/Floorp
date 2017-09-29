@@ -23,7 +23,7 @@ add_task(async function() {
   toggleCallStack(dbg);
 
   const notPaused = findElement(dbg, "callStackBody").innerText;
-  is(notPaused, "Not Paused", "Not paused message is shown");
+  is(notPaused, "Not paused", "Not paused message is shown");
 
   invokeInTab("firstCall");
   await waitForPaused(dbg);
@@ -47,13 +47,13 @@ add_task(async function() {
   // check to make sure that the toggle button isn't there
   let button = toggleButton(dbg);
   let frames = findAllElements(dbg, "frames");
-  is(button.innerText, "Expand Rows", "toggle button should be expand");
+  is(button.innerText, "Expand rows", "toggle button should be expand");
   is(frames.length, 7, "There should be at most seven frames");
 
   button.click();
 
   button = toggleButton(dbg);
   frames = findAllElements(dbg, "frames");
-  is(button.innerText, "Collapse Rows", "toggle button should be collapsed");
+  is(button.innerText, "Collapse rows", "toggle button should be collapsed");
   is(frames.length, 22, "All of the frames should be shown");
 });

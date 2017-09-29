@@ -8713,11 +8713,10 @@ CodeGenerator::visitFallibleStoreElementV(LFallibleStoreElementV* lir)
     masm.bind(&isFrozen);
 }
 
-typedef bool (*SetDenseOrUnboxedArrayElementFn)(JSContext*, HandleObject, int32_t,
-                                                HandleValue, bool strict);
-static const VMFunction SetDenseOrUnboxedArrayElementInfo =
-    FunctionInfo<SetDenseOrUnboxedArrayElementFn>(SetDenseOrUnboxedArrayElement,
-                                                  "SetDenseOrUnboxedArrayElement");
+typedef bool (*SetDenseElementFn)(JSContext*, HandleNativeObject, int32_t, HandleValue,
+                                  bool strict);
+static const VMFunction SetDenseElementInfo =
+    FunctionInfo<SetDenseElementFn>(jit::SetDenseElement, "SetDenseElement");
 
 void
 CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
@@ -8826,7 +8825,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     else
         pushArg(ToRegister(index));
     pushArg(object);
-    callVM(SetDenseOrUnboxedArrayElementInfo, ins);
+    callVM(SetDenseElementInfo, ins);
 
     restoreLive(ins);
     masm.jump(ool->rejoin());
@@ -9015,7 +9014,7 @@ CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT* lir)
     emitArrayPopShift(lir, lir->mir(), obj, elements, length, out);
 }
 
-typedef bool (*ArrayPushDenseFn)(JSContext*, HandleObject, HandleValue, uint32_t*);
+typedef bool (*ArrayPushDenseFn)(JSContext*, HandleArrayObject, HandleValue, uint32_t*);
 static const VMFunction ArrayPushDenseInfo =
     FunctionInfo<ArrayPushDenseFn>(jit::ArrayPushDense, "ArrayPushDense");
 

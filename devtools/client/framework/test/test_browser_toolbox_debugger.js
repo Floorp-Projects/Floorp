@@ -20,7 +20,7 @@ Task.spawn(function* () {
   info("Loaded, selecting the test script to debug");
   // First expand the domain
   let domain = [...document.querySelectorAll(".tree-node")].find(node => {
-    return node.textContent == "mozilla.org";
+    return node.textContent.trim() == "mozilla.org";
   });
   let arrow = domain.querySelector(".arrow");
   arrow.click();

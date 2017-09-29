@@ -2430,12 +2430,30 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
     // In some other cases, aNode is the anonymous DIV, and offset points to the
     // terminating mozBR.  In that case, we'll adjust aInOutNode and
     // aInOutOffset to the preceding text node, if any.
-    if (offset > 0 && node->GetChildAt(offset - 1) &&
-        node->GetChildAt(offset - 1)->IsNodeOfType(nsINode::eTEXT)) {
-      NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
-      aNode = node->GetChildAt(offset - 1);
-      aOffset = static_cast<int32_t>(aNode->Length());
-      return;
+    if (offset) {
+      if (offset == static_cast<int32_t>(node->GetChildCount())) {
+        // If offset points to the last child, use a fast path that avoids calling
+        // GetChildAt() which may perform a linear search.
+        nsIContent* child = node->GetLastChild();
+        while (child) {
+          if (child->IsNodeOfType(nsINode::eTEXT)) {
+            NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
+            aNode = child;
+            aOffset = static_cast<int32_t>(aNode->Length());
+            return;
+          }
+          child = child->GetPreviousSibling();
+        }
+      } else {
+        // Fall back to a slow path that uses GetChildAt().
+        nsIContent* child = node->GetChildAt(offset - 1);
+        if (child && child->IsNodeOfType(nsINode::eTEXT)) {
+          NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
+          aNode = child;
+          aOffset = static_cast<int32_t>(aNode->Length());
+          return;
+        }
+      }
     }
   }
 

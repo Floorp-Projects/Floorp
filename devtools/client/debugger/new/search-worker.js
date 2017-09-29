@@ -600,6 +600,87 @@ module.exports = {
 
 /***/ }),
 
+/***/ 1172:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const md5 = __webpack_require__(248);
+
+function originalToGeneratedId(originalId) {
+  const match = originalId.match(/(.*)\/originalSource/);
+  return match ? match[1] : "";
+}
+
+function generatedToOriginalId(generatedId, url) {
+  return `${generatedId}/originalSource-${md5(url)}`;
+}
+
+function isOriginalId(id) {
+  return !!id.match(/\/originalSource/);
+}
+
+function isGeneratedId(id) {
+  return !isOriginalId(id);
+}
+
+/**
+ * Trims the query part or reference identifier of a URL string, if necessary.
+ */
+function trimUrlQuery(url) {
+  let length = url.length;
+  let q1 = url.indexOf("?");
+  let q2 = url.indexOf("&");
+  let q3 = url.indexOf("#");
+  let q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
+
+  return url.slice(0, q);
+}
+
+// Map suffix to content type.
+const contentMap = {
+  "js": "text/javascript",
+  "jsm": "text/javascript",
+  "ts": "text/typescript",
+  "tsx": "text/typescript-jsx",
+  "jsx": "text/jsx",
+  "coffee": "text/coffeescript",
+  "elm": "text/elm",
+  "cljs": "text/x-clojure"
+};
+
+/**
+ * Returns the content type for the specified URL.  If no specific
+ * content type can be determined, "text/plain" is returned.
+ *
+ * @return String
+ *         The content type.
+ */
+function getContentType(url) {
+  url = trimUrlQuery(url);
+  let dot = url.lastIndexOf(".");
+  if (dot >= 0) {
+    let name = url.substring(dot + 1);
+    if (name in contentMap) {
+      return contentMap[name];
+    }
+  }
+  return "text/plain";
+}
+
+module.exports = {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isOriginalId,
+  isGeneratedId,
+  getContentType,
+  contentMapForTesting: contentMap
+};
+
+/***/ }),
+
 /***/ 1173:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -907,7 +988,7 @@ function shouldPrettyPrint(source) {
   }
 
   var _isPretty = isPretty(source);
-  var _isJavaScript = isJavaScript(source.url);
+  var _isJavaScript = isJavaScript(source);
   var isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
   var hasSourceMap = source.sourceMapURL;
 
@@ -928,10 +1009,8 @@ function shouldPrettyPrint(source) {
  * @memberof utils/source
  * @static
  */
-function isJavaScript(url) {
-  var contentType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
-
-  return url && /\.(jsm|js)?$/.test(trimUrlQuery(url)) || contentType.includes("javascript");
+function isJavaScript(source) {
+  return source.url && /\.(jsm|js)?$/.test(trimUrlQuery(source.url)) || !!(source.contentType && source.contentType.includes("javascript"));
 }
 
 /**
@@ -2608,7 +2687,7 @@ const {
   generatedToOriginalId,
   isGeneratedId,
   isOriginalId
-} = __webpack_require__(899);
+} = __webpack_require__(1172);
 
 const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1165);
 
@@ -2617,6 +2696,7 @@ const dispatcher = new WorkerDispatcher();
 const getOriginalURLs = dispatcher.task("getOriginalURLs");
 const getGeneratedLocation = dispatcher.task("getGeneratedLocation");
 const getOriginalLocation = dispatcher.task("getOriginalLocation");
+const getLocationScopes = dispatcher.task("getLocationScopes");
 const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
 const applySourceMap = dispatcher.task("applySourceMap");
 const clearSourceMaps = dispatcher.task("clearSourceMaps");
@@ -2631,92 +2711,12 @@ module.exports = {
   getOriginalURLs,
   getGeneratedLocation,
   getOriginalLocation,
+  getLocationScopes,
   getOriginalSourceText,
   applySourceMap,
   clearSourceMaps,
   startSourceMapWorker: dispatcher.start.bind(dispatcher),
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
-};
-
-/***/ }),
-
-/***/ 899:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const md5 = __webpack_require__(248);
-
-function originalToGeneratedId(originalId) {
-  const match = originalId.match(/(.*)\/originalSource/);
-  return match ? match[1] : "";
-}
-
-function generatedToOriginalId(generatedId, url) {
-  return `${generatedId}/originalSource-${md5(url)}`;
-}
-
-function isOriginalId(id) {
-  return !!id.match(/\/originalSource/);
-}
-
-function isGeneratedId(id) {
-  return !isOriginalId(id);
-}
-
-/**
- * Trims the query part or reference identifier of a URL string, if necessary.
- */
-function trimUrlQuery(url) {
-  let length = url.length;
-  let q1 = url.indexOf("?");
-  let q2 = url.indexOf("&");
-  let q3 = url.indexOf("#");
-  let q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
-
-  return url.slice(0, q);
-}
-
-// Map suffix to content type.
-const contentMap = {
-  "js": "text/javascript",
-  "jsm": "text/javascript",
-  "ts": "text/typescript",
-  "tsx": "text/typescript-jsx",
-  "jsx": "text/jsx",
-  "coffee": "text/coffeescript",
-  "elm": "text/elm",
-  "cljs": "text/x-clojure"
-};
-
-/**
- * Returns the content type for the specified URL.  If no specific
- * content type can be determined, "text/plain" is returned.
- *
- * @return String
- *         The content type.
- */
-function getContentType(url) {
-  url = trimUrlQuery(url);
-  let dot = url.lastIndexOf(".");
-  if (dot >= 0) {
-    let name = url.substring(dot + 1);
-    if (name in contentMap) {
-      return contentMap[name];
-    }
-  }
-  return "text/plain";
-}
-
-module.exports = {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isOriginalId,
-  isGeneratedId,
-  getContentType,
-  contentMapForTesting: contentMap
 };
 
 /***/ }),
