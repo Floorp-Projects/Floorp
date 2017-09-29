@@ -11,6 +11,7 @@ DIRS += [
 DevToolsModules(
     'commandline-browser.css',
     'common.css',
+    'responsivedesign.css',
     'splitters.css',
     'toolbars.css',
     'variables.css',
