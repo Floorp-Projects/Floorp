@@ -559,12 +559,18 @@ EditorBase::IsSelectionEditable()
     return anchorNode && IsEditable(anchorNode);
   }
 
+  nsINode* anchorNode = selection->GetAnchorNode();
+  nsINode* focusNode = selection->GetFocusNode();
+  if (!anchorNode || !focusNode) {
+    return false;
+  }
+
   // Per the editing spec as of June 2012: we have to have a selection whose
   // start and end nodes are editable, and which share an ancestor editing
   // host.  (Bug 766387.)
   bool isSelectionEditable = selection->RangeCount() &&
-                             selection->GetAnchorNode()->IsEditable() &&
-                             selection->GetFocusNode()->IsEditable();
+                             anchorNode->IsEditable() &&
+                             focusNode->IsEditable();
   if (!isSelectionEditable) {
     return false;
   }
