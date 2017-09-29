@@ -158,17 +158,31 @@ NativeObject::copyDenseElements(uint32_t dstStart, const Value* src, uint32_t co
 }
 
 inline void
-NativeObject::initDenseElements(uint32_t dstStart, const Value* src, uint32_t count)
+NativeObject::initDenseElements(NativeObject* src, uint32_t srcStart, uint32_t count)
 {
-    MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+    MOZ_ASSERT(src->getDenseInitializedLength() >= srcStart + count);
+
+    const Value* vp = src->getDenseElements() + srcStart;
+    initDenseElements(vp, count);
+}
+
+inline void
+NativeObject::initDenseElements(const Value* src, uint32_t count)
+{
+    MOZ_ASSERT(getDenseInitializedLength() == 0);
+    MOZ_ASSERT(count <= getDenseCapacity());
     MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(!denseElementsAreFrozen());
+
+    setDenseInitializedLength(count);
+
 #ifdef DEBUG
     for (uint32_t i = 0; i < count; ++i)
         checkStoredValue(src[i]);
 #endif
-    memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
-    elementsRangeWriteBarrierPost(dstStart, count);
+
+    memcpy(elements_, src, count * sizeof(HeapSlot));
+    elementsRangeWriteBarrierPost(0, count);
 }
 
 inline bool

@@ -2661,14 +2661,12 @@ CopyDenseArrayElements(JSContext* cx, HandleNativeObject obj, uint32_t begin, ui
     if (!narr)
         return nullptr;
 
-    MOZ_ASSERT(count >= narr->as<ArrayObject>().length());
-    narr->as<ArrayObject>().setLength(cx, count);
+    MOZ_ASSERT(count >= narr->length());
+    narr->setLength(cx, count);
 
-    if (newlength) {
-        DebugOnly<DenseElementResult> result =
-            CopyBoxedOrUnboxedDenseElements(cx, narr, obj, 0, begin, newlength);
-        MOZ_ASSERT(result.value == DenseElementResult::Success);
-    }
+    if (newlength > 0)
+        narr->initDenseElements(obj, begin, newlength);
+
     return narr;
 }
 
@@ -3336,10 +3334,10 @@ ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr, int32_t beginArg, int32_t
     size_t initlen = arr->getDenseInitializedLength();
     if (initlen > begin) {
         uint32_t newlength = Min<uint32_t>(initlen - begin, count);
-        if (newlength) {
+        if (newlength > 0) {
             if (!result->ensureElements(cx, newlength))
                 return false;
-            CopyBoxedOrUnboxedDenseElements(cx, result, arr, 0, begin, newlength);
+            result->initDenseElements(arr, begin, newlength);
         }
     }
 
@@ -3844,11 +3842,10 @@ js::NewDenseCopiedArray(JSContext* cx, uint32_t length, const Value* values,
         return nullptr;
 
     MOZ_ASSERT(arr->getDenseCapacity() >= length);
-
-    arr->setDenseInitializedLength(values ? length : 0);
+    MOZ_ASSERT(arr->getDenseInitializedLength() == 0);
 
     if (values)
-        arr->initDenseElements(0, values, length);
+        arr->initDenseElements(values, length);
 
     return arr;
 }
