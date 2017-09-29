@@ -4,7 +4,7 @@
 var Cu = Components.utils;
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {DebuggerClient} = require("devtools/shared/client/main");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/main");
 
 const Services = require("Services");

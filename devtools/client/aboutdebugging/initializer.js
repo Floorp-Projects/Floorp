@@ -13,7 +13,7 @@ const { BrowserLoader } = Components.utils.import(
   "resource://devtools/client/shared/browser-loader.js", {});
 
 loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/main", true);
+  "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "DebuggerServer",
   "devtools/server/main", true);
 loader.lazyRequireGetter(this, "Telemetry",

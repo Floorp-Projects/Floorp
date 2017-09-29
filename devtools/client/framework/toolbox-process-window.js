@@ -16,7 +16,7 @@ var { gDevTools } = require("devtools/client/framework/devtools");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var Services = require("Services");
-var { DebuggerClient } = require("devtools/shared/client/main");
+var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { PrefsHelper } = require("devtools/client/shared/prefs");
 var { Task } = require("devtools/shared/task");
 
