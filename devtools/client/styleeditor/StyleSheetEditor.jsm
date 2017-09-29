@@ -297,6 +297,7 @@ StyleSheetEditor.prototype = {
                      ", the editor was destroyed");
         console.error(e);
       } else {
+        console.error(e);
         this.emit("error", { key: LOAD_ERROR, append: this.styleSheet.href });
         throw e;
       }
