@@ -1,3 +1,8 @@
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+
+const runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+
 function callback(result) {
   do_check_eq(result, Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT);
   do_test_finished();
@@ -24,5 +29,3 @@ function run_test() {
           });
     })
 }
-load('test_ipcshell_child.js');
-
