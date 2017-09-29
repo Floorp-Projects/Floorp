@@ -279,18 +279,19 @@ VRManagerParent::RecvSetHaveEventListener(const bool& aHaveEventListener)
 mozilla::ipc::IPCResult
 VRManagerParent::RecvControllerListenerAdded()
 {
+  // Force update the available controllers for GamepadManager,
+  // remove the existing controllers and sync them by NotifyVsync().
   VRManager* vm = VRManager::Get();
+  vm->RemoveControllers();
   mHaveControllerListener = true;
-  // Ask the connected gamepads to be added to GamepadManager
-  vm->ScanForControllers();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 VRManagerParent::RecvControllerListenerRemoved()
 {
-  VRManager* vm = VRManager::Get();
   mHaveControllerListener = false;
+  VRManager* vm = VRManager::Get();
   vm->RemoveControllers();
   return IPC_OK();
 }

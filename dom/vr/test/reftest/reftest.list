@@ -1,4 +1,5 @@
 # WebVR Reftests
+# Please confirm there is no other VR display connected. Otherwise, VRPuppetDisplay can't be attached.
 default-preferences pref(dom.vr.puppet.enabled,true) pref(dom.vr.test.enabled,true) pref(dom.vr.require-gesture,false) pref(dom.vr.puppet.submitframe,1)
 
 # VR SubmitFrame is only implemented for D3D11.1 and MacOSX now.
