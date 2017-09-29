@@ -51,10 +51,9 @@ public:
 
   // This method can be called just once.
   // The callback will be called when the Blob is ready.
-  // The return value is the total size of the blob, when created.
-  uint64_t GetBlobWhenReady(nsISupports* aParent,
-                            const nsACString& aContentType,
-                            MutableBlobStorageCallback* aCallback);
+  void GetBlobWhenReady(nsISupports* aParent,
+                        const nsACString& aContentType,
+                        MutableBlobStorageCallback* aCallback);
 
   void TemporaryFileCreated(PRFileDesc* aFD);
 

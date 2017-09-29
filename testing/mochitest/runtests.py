@@ -1654,30 +1654,49 @@ toolbar#nav-bar {
 
         return browserEnv
 
-    def killNamedProc(self, pname):
+    def killNamedProc(self, pname, orphans=True):
         """ Kill processes matching the given command name """
         self.log.info("Checking for %s processes..." % pname)
 
-        def _psInfo(line):
-            if pname in line:
-                self.log.info(line)
+        if HAVE_PSUTIL:
+            for proc in psutil.process_iter():
+                try:
+                    if proc.name() == pname:
+                        procd = proc.as_dict(attrs=['pid', 'ppid', 'name', 'username'])
+                        if proc.ppid() == 1 or not orphans:
+                            self.log.info("killing %s" % procd)
+                            killPid(proc.pid, self.log)
+                        else:
+                            self.log.info("NOT killing %s (not an orphan?)" % procd)
+                except:
+                    # may not be able to access process info for all processes
+                    continue
+        else:
+            def _psInfo(line):
+                if pname in line:
+                    self.log.info(line)
 
-        process = mozprocess.ProcessHandler(['ps', '-f'],
-                                            processOutputLine=_psInfo)
-        process.run()
-        process.wait()
+            process = mozprocess.ProcessHandler(['ps', '-f'],
+                                                processOutputLine=_psInfo)
+            process.run()
+            process.wait()
 
-        def _psKill(line):
-            parts = line.split()
-            if len(parts) == 3 and parts[0].isdigit():
-                pid = int(parts[0])
-                if parts[2] == pname:
-                    self.log.info("killing %s with pid %d" % (pname, pid))
-                    killPid(pid, self.log)
-        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
-                                            processOutputLine=_psKill)
-        process.run()
-        process.wait()
+            def _psKill(line):
+                parts = line.split()
+                if len(parts) == 3 and parts[0].isdigit():
+                    pid = int(parts[0])
+                    ppid = int(parts[1])
+                    if parts[2] == pname:
+                        if ppid == 1 or not orphans:
+                            self.log.info("killing %s (pid %d)" % (pname, pid))
+                            killPid(pid, self.log)
+                        else:
+                            self.log.info("NOT killing %s (pid %d) (not an orphan?)" %
+                                          (pname, pid))
+            process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
+                                                processOutputLine=_psKill)
+            process.run()
+            process.wait()
 
     def execute_start_script(self):
         if not self.start_script or not self.marionette:

@@ -1728,7 +1728,6 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
 
   // get selection location
   nsCOMPtr<nsINode> parent = selection->GetRangeAt(0)->GetStartContainer();
-  int32_t offset = selection->GetRangeAt(0)->StartOffset();
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
 
   // is the selection collapsed?
@@ -1739,7 +1738,7 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   } else {
     // otherwise we want to look at the first editable node after
     // {parent,offset} and its ancestors for divs with alignment on them
-    nodeToExamine = parent->GetChildAt(offset);
+    nodeToExamine = selection->GetRangeAt(0)->GetChildAtStartOffset();
     //GetNextNode(parent, offset, true, address_of(nodeToExamine));
   }
 
@@ -2350,16 +2349,15 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   NS_ENSURE_STATE(range);
 
   nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
-  uint32_t startOffset = range->StartOffset();
+  nsIContent* startNode = range->GetChildAtStartOffset();
 
   nsCOMPtr<nsINode> endContainer = range->GetEndContainer();
-  uint32_t endOffset = range->EndOffset();
+  nsIContent* endNode = range->GetChildAtEndOffset();
 
   // Optimization for a single selected element
   if (startContainer && startContainer == endContainer &&
-      endOffset - startOffset == 1) {
-    nsCOMPtr<nsINode> selectedNode =
-      startContainer->GetChildAt(static_cast<int32_t>(startOffset));
+      startNode && endNode && startNode->GetNextSibling() == endNode) {
+    nsCOMPtr<nsINode> selectedNode = startNode;
     if (selectedNode) {
       selectedNode->AsDOMNode()->GetNodeName(domTagName);
       ToLowerCase(domTagName);

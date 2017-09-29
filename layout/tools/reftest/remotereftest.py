@@ -6,6 +6,7 @@ from contextlib import closing
 import sys
 import logging
 import os
+import psutil
 import signal
 import time
 import tempfile
@@ -14,7 +15,6 @@ import urllib2
 
 import mozdevice
 import mozinfo
-import mozprocess
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
@@ -240,34 +240,25 @@ class RemoteReftest(RefTest):
     def stopWebServer(self, options):
         self.server.stop()
 
-    def killNamedProc(self, pname):
+    def killNamedProc(self, pname, orphans=True):
         """ Kill processes matching the given command name """
         self.log.info("Checking for %s processes..." % pname)
 
-        def _psInfo(line):
-            if pname in line:
-                self.log.info(line)
-        process = mozprocess.ProcessHandler(['ps', '-f'],
-                                            processOutputLine=_psInfo)
-        process.run()
-        process.wait()
-
-        def _psKill(line):
-            parts = line.split()
-            if len(parts) == 3 and parts[0].isdigit():
-                pid = int(parts[0])
-                if parts[2] == pname:
-                    self.log.info("killing %s with pid %d" % (pname, pid))
-                    try:
-                        os.kill(
-                            pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-                    except Exception as e:
-                        self.log.info("Failed to kill process %d: %s" %
-                                      (pid, str(e)))
-        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
-                                            processOutputLine=_psKill)
-        process.run()
-        process.wait()
+        for proc in psutil.process_iter():
+            try:
+                if proc.name() == pname:
+                    procd = proc.as_dict(attrs=['pid', 'ppid', 'name', 'username'])
+                    if proc.ppid() == 1 or not orphans:
+                        self.log.info("killing %s" % procd)
+                        try:
+                            os.kill(proc.pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+                        except Exception as e:
+                            self.log.info("Failed to kill process %d: %s" % (proc.pid, str(e)))
+                    else:
+                        self.log.info("NOT killing %s (not an orphan?)" % procd)
+            except:
+                # may not be able to access process info for all processes
+                continue
 
     def createReftestProfile(self, options, manifest, startAfter=None):
         profile = RefTest.createReftestProfile(self,
