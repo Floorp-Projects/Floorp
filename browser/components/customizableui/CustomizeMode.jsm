@@ -1648,7 +1648,8 @@ CustomizeMode.prototype = {
     __dumpDragData(aEvent);
     let item = aEvent.target;
     while (item && item.localName != "toolbarpaletteitem") {
-      if (item.localName == "toolbar") {
+      if (item.localName == "toolbar" || item.id == kPaletteId ||
+          item.id == "customization-panelHolder") {
         return;
       }
       item = item.parentNode;
@@ -1694,6 +1695,8 @@ CustomizeMode.prototype = {
           this._setDragActive(item.previousSibling, "after", draggedItem.id, placeForItem);
           this._dragOverItem = item.previousSibling;
         }
+        let currentArea = this._getCustomizableParent(item);
+        currentArea.setAttribute("draggingover", "true");
       }
       this._initializeDragAfterMove = null;
       this.window.clearTimeout(this._dragInitializeTimeout);
@@ -1802,6 +1805,7 @@ CustomizeMode.prototype = {
         this._setDragActive(dragOverItem, dragValue, draggedItemId, targetAreaType);
       }
       this._dragOverItem = dragOverItem;
+      targetArea.setAttribute("draggingover", "true");
     }
 
     aEvent.preventDefault();
@@ -2135,6 +2139,10 @@ CustomizeMode.prototype = {
     if (!currentArea) {
       return;
     }
+    let nextArea = aNextItem ? this._getCustomizableParent(aNextItem) : null;
+    if (currentArea != nextArea) {
+      currentArea.removeAttribute("draggingover");
+    }
     let areaType = CustomizableUI.getAreaType(currentArea.id);
     if (areaType) {
       if (aNoTransition) {
@@ -2155,7 +2163,6 @@ CustomizeMode.prototype = {
     } else {
       aItem.removeAttribute("dragover");
       if (aNextItem) {
-        let nextArea = this._getCustomizableParent(aNextItem);
         if (nextArea == currentArea) {
           // No need to do anything if we're still dragging in this area:
           return;
@@ -2243,7 +2250,7 @@ CustomizeMode.prototype = {
       // Deal with drag/drop on the padding of the panel.
       let containingPanelHolder = aElement.closest("#customization-panelHolder");
       if (containingPanelHolder) {
-        return containingPanelHolder.firstChild;
+        return containingPanelHolder.querySelector("#widget-overflow-fixed-list");
       }
     }
 
