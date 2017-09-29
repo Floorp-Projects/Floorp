@@ -18,6 +18,22 @@ class MissingVCSTool(Exception):
     """Represents a failure to find a version control tool binary."""
 
 
+class MissingVCSInfo(Exception):
+    """Represents a general failure to resolve a VCS interface."""
+
+
+class MissingConfigureInfo(MissingVCSInfo):
+    """Represents error finding VCS info from configure data."""
+
+
+class InvalidRepoPath(Exception):
+    """Represents a failure to find a VCS repo at a specified path."""
+
+
+class MissingUpstreamRepo(Exception):
+    """Represents a failure to automatically detect an upstream repo."""
+
+
 def get_tool_path(tool):
     """Obtain the path of `tool`."""
     if os.path.isabs(tool) and os.path.exists(tool):
@@ -33,7 +49,7 @@ def get_tool_path(tool):
     except which.WhichError:
         try:
             return which.which(tool)
-        except which.WhichError as e:
+        except which.WhichError:
             pass
 
     raise MissingVCSTool('Unable to obtain %s path. Try running '
@@ -58,6 +74,7 @@ class Repository(object):
         self._tool = get_tool_path(tool)
         self._env = os.environ.copy()
         self._version = None
+        self._valid_diff_filter = ('m', 'a', 'd')
 
     def __enter__(self):
         return self
@@ -65,10 +82,18 @@ class Repository(object):
     def __exit__(self, exc_type, exc_value, exc_tb):
         pass
 
-    def _run(self, *args):
-        return subprocess.check_output((self._tool, ) + args,
-                                       cwd=self.path,
-                                       env=self._env)
+    def _run(self, *args, **runargs):
+        return_codes = runargs.get('return_codes', [])
+
+        cmd = (self._tool,) + args
+        try:
+            return subprocess.check_output(cmd,
+                                           cwd=self.path,
+                                           env=self._env)
+        except subprocess.CalledProcessError as e:
+            if e.returncode in return_codes:
+                return ''
+            raise
 
     @property
     def tool_version(self):
@@ -98,14 +123,36 @@ class Repository(object):
         """
 
     @abc.abstractmethod
-    def get_modified_files(self):
-        '''Return a list of files that are modified in this repository's
-        working copy.'''
+    def get_upstream(self):
+        """Reference to the upstream remote."""
 
     @abc.abstractmethod
-    def get_added_files(self):
-        '''Return a list of files that are added in this repository's
-        working copy.'''
+    def get_changed_files(self, diff_filter, mode='unstaged'):
+        """Return a list of files that are changed in this repository's
+        working copy.
+
+        ``diff_filter`` controls which kinds of modifications are returned.
+        It is a string which may only contain the following characters:
+
+            A - Include files that were added
+            D - Include files that were deleted
+            M - Include files that were modified
+
+        By default, all three will be included.
+
+        ``mode`` can be one of 'unstaged', 'staged' or 'all'. Only has an
+        affect on git. Defaults to 'unstaged'.
+        """
+
+    @abc.abstractmethod
+    def get_outgoing_files(self, diff_filter, upstream='default'):
+        """Return a list of changed files compared to upstream.
+
+        ``diff_filter`` works the same as `get_changed_files`.
+        ``upstream`` is a remote ref to compare against. If unspecified,
+        this will be determined automatically. If there is no remote ref,
+        a MissingUpstreamRepo exception will be raised.
+        """
 
     @abc.abstractmethod
     def add_remove_files(self, path):
@@ -196,13 +243,38 @@ class HgRepository(Repository):
 
             return False
 
-    def get_modified_files(self):
-        # Use --no-status to print just the filename.
-        return self._run('status', '--modified', '--no-status').splitlines()
+    def get_upstream(self):
+        return 'default'
 
-    def get_added_files(self):
+    def _format_diff_filter(self, diff_filter):
+        df = diff_filter.lower()
+        assert all(f in self._valid_diff_filter for f in df)
+
+        # Mercurial uses 'r' to denote removed files whereas git uses 'd'.
+        if 'd' in df:
+            df.replace('d', 'r')
+
+        return df.lower()
+
+    def get_changed_files(self, diff_filter='ADM', mode='unstaged'):
+        df = self._format_diff_filter(diff_filter)
+
         # Use --no-status to print just the filename.
-        return self._run('status', '--added', '--no-status').splitlines()
+        return self._run('status', '--no-status', '-{}'.format(df)).splitlines()
+
+    def get_outgoing_files(self, diff_filter='ADM', upstream='default'):
+        df = self._format_diff_filter(diff_filter)
+
+        template = ''
+        if 'a' in df:
+            template += "{file_adds % '\\n{file}'}"
+        if 'd' in df:
+            template += "{file_dels % '\\n{file}'}"
+        if 'm' in df:
+            template += "{file_mods % '\\n{file}'}"
+
+        return self._run('outgoing', '-r', '.', '--quiet',
+                         '--template', template, upstream, return_codes=(1,)).split()
 
     def add_remove_files(self, path):
         args = ['addremove', path]
@@ -245,11 +317,35 @@ class GitRepository(Repository):
         # Not yet implemented.
         return False
 
-    def get_modified_files(self):
-        return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
+    def get_upstream(self):
+        ref = self._run('symbolic-ref', '-q', 'HEAD').strip()
+        upstream = self._run('for-each-ref', '--format=%(upstream:short)', ref).strip()
 
-    def get_added_files(self):
-        return self._run('diff', '--diff-filter=A', '--name-only').splitlines()
+        if not upstream:
+            raise MissingUpstreamRepo("Could not detect an upstream repository.")
+
+        return upstream
+
+    def get_changed_files(self, diff_filter='ADM', mode='unstaged'):
+        assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
+
+        cmd = ['diff', '--diff-filter={}'.format(diff_filter.upper()), '--name-only']
+        if mode == 'staged':
+            cmd.append('--cached')
+        elif mode == 'all':
+            cmd.append('HEAD')
+
+        return self._run(*cmd).splitlines()
+
+    def get_outgoing_files(self, diff_filter='ADM', upstream='default'):
+        assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
+
+        if upstream == 'default':
+            upstream = self.get_upstream()
+
+        compare = '{}..HEAD'.format(upstream)
+        return self._run('log', '--name-only', '--diff-filter={}'.format(diff_filter.upper()),
+                         '--oneline', '--pretty=format:', compare).splitlines()
 
     def add_remove_files(self, path):
         self._run('add', path)
@@ -270,10 +366,6 @@ class GitRepository(Repository):
         return not len(self._run(*args).strip())
 
 
-class InvalidRepoPath(Exception):
-    """Represents a failure to find a VCS repo at a specified path."""
-
-
 def get_repository_object(path, hg='hg', git='git'):
     '''Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
@@ -285,14 +377,6 @@ def get_repository_object(path, hg='hg', git='git'):
     else:
         raise InvalidRepoPath('Unknown VCS, or not a source checkout: %s' %
                               path)
-
-
-class MissingVCSInfo(Exception):
-    """Represents a general failure to resolve a VCS interface."""
-
-
-class MissingConfigureInfo(MissingVCSInfo):
-    """Represents error finding VCS info from configure data."""
 
 
 def get_repository_from_build_config(config):

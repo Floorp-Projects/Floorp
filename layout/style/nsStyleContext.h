@@ -73,17 +73,8 @@ public:
   inline void Release();
 
 #ifdef DEBUG
-  void FrameAddRef() {
-    ++mFrameRefCnt;
-  }
-
-  void FrameRelease() {
-    --mFrameRefCnt;
-  }
-
-  uint32_t FrameRefCnt() const {
-    return mFrameRefCnt;
-  }
+  void FrameAddRef();
+  void FrameRelease();
 #endif
 
   inline nsPresContext* PresContext() const;
@@ -350,9 +341,6 @@ protected:
   uint64_t                mBits;
 
 #ifdef DEBUG
-  uint32_t                mFrameRefCnt; // number of frames that use this
-                                        // as their style context
-
   static bool DependencyAllowed(nsStyleStructID aOuterSID,
                                 nsStyleStructID aInnerSID)
   {

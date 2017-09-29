@@ -374,7 +374,7 @@ void
 MediaSource::EndOfStream(const MediaResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("EndOfStream(aError=%" PRId32")", static_cast<uint32_t>(aError.Code()));
+  MSE_API("EndOfStream(aError=%s)", aError.ErrorName().get());
 
   SetReadyState(MediaSourceReadyState::Ended);
   mSourceBuffers->Ended();

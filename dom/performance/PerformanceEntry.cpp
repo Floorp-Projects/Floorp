@@ -28,8 +28,6 @@ PerformanceEntry::PerformanceEntry(nsISupports* aParent,
   mName(aName),
   mEntryType(aEntryType)
 {
-  // mParent is null in workers.
-  MOZ_ASSERT(mParent || !NS_IsMainThread());
 }
 
 PerformanceEntry::~PerformanceEntry()

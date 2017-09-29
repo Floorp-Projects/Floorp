@@ -60,7 +60,7 @@ class VendorRust(MozbuildObject):
         on the user. Allow changes to Cargo.{toml,lock} since that's
         likely to be a common use case.
         '''
-        modified = [f for f in self.repository.get_modified_files() if os.path.basename(f) not in ('Cargo.toml', 'Cargo.lock')]
+        modified = [f for f in self.repository.get_changed_files('M') if os.path.basename(f) not in ('Cargo.toml', 'Cargo.lock')]
         if modified:
             self.log(logging.ERROR, 'modified_files', {},
                      '''You have uncommitted changes to the following files:
@@ -296,7 +296,7 @@ license file's hash.
         FILESIZE_LIMIT = 100 * 1024
         large_files = set()
         cumulative_added_size = 0
-        for f in self.repository.get_added_files():
+        for f in self.repository.get_changed_files('A'):
             path = mozpath.join(self.topsrcdir, f)
             size = os.stat(path).st_size
             cumulative_added_size += size

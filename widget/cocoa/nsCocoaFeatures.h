@@ -21,6 +21,7 @@ public:
   static bool OnYosemiteOrLater();
   static bool OnElCapitanOrLater();
   static bool OnSierraOrLater();
+  static bool OnHighSierraOrLater();
 
   static bool IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix=0);
 

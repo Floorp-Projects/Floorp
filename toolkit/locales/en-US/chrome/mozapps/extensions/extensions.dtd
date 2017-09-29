@@ -23,8 +23,6 @@
 <!ENTITY getThemes.description                "Looking to personalize your browser?">
 <!ENTITY getThemes.learnMore                  "Choose from thousands of themes.">
 
-<!ENTITY cmd.back.tooltip                     "Go back one page">
-<!ENTITY cmd.forward.tooltip                  "Go forward one page">
 
 <!ENTITY showUnsignedExtensions.button.label  "Some extensions could not be verified">
 <!ENTITY showAllExtensions.button.label       "Show all extensions">

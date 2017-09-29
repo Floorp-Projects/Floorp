@@ -50,12 +50,6 @@
 #include "gmp-video-frame-i420.h"
 #include "gmp-video-frame-encoded.h"
 
-#if defined(GMP_FAKE_SUPPORT_DECRYPT)
-#include "gmp-decryption.h"
-#include "gmp-test-decryptor.h"
-#include "gmp-test-storage.h"
-#endif
-
 #include "mozilla/PodOperations.h"
 
 #if defined(_MSC_VER)
@@ -476,12 +470,6 @@ extern "C" {
     if (!strcmp (aApiName, GMP_API_VIDEO_ENCODER)) {
       *aPluginApi = new FakeVideoEncoder (static_cast<GMPVideoHost*> (aHostAPI));
       return GMPNoErr;
-#if defined(GMP_FAKE_SUPPORT_DECRYPT)
-    }
-    if (!strcmp (aApiName, GMP_API_DECRYPTOR)) {
-      *aPluginApi = new FakeDecryptor();
-      return GMPNoErr;
-#endif
     }
     return GMPGenericErr;
   }

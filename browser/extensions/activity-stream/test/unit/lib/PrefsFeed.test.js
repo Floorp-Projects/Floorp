@@ -4,6 +4,7 @@ const {PrerenderData} = require("common/PrerenderData.jsm");
 const {initialPrefs} = PrerenderData;
 
 const PRERENDER_PREF_NAME = "prerender";
+const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 
 describe("PrefsFeed", () => {
   let feed;
@@ -60,6 +61,44 @@ describe("PrefsFeed", () => {
       FAKE_PREFS.set("showSearch", false);
       feed.onAction({type: at.INIT});
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
+    });
+  });
+  describe("Onboarding", () => {
+    let sandbox;
+    let defaultBranch;
+    beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+      defaultBranch = {setBoolPref: sandbox.stub()};
+      sandbox.stub(global.Services.prefs, "getDefaultBranch").returns(defaultBranch);
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+    it("should set ONBOARDING_FINISHED_PREF to true if prefs.feeds.snippets if false", () => {
+      FAKE_PREFS.set("feeds.snippets", false);
+      feed.onAction({type: at.INIT});
+      assert.calledWith(defaultBranch.setBoolPref, ONBOARDING_FINISHED_PREF, true);
+    });
+    it("should not set ONBOARDING_FINISHED_PREF if prefs.feeds.snippets is true", () => {
+      FAKE_PREFS.set("feeds.snippets", true);
+      feed.onAction({type: at.INIT});
+      assert.notCalled(defaultBranch.setBoolPref);
+    });
+    it("should set ONBOARDING_FINISHED_PREF to true if the feeds.snippets pref changes to false", () => {
+      feed.onPrefChanged("feeds.snippets", false);
+      assert.calledWith(defaultBranch.setBoolPref, ONBOARDING_FINISHED_PREF, true);
+    });
+    it("should set ONBOARDING_FINISHED_PREF to false if the feeds.snippets pref changes to true", () => {
+      feed.onPrefChanged("feeds.snippets", true);
+      assert.calledWith(defaultBranch.setBoolPref, ONBOARDING_FINISHED_PREF, false);
+    });
+    it("should not set ONBOARDING_FINISHED_PREF if an unrelated pref changes", () => {
+      feed.onPrefChanged("foo", true);
+      assert.notCalled(defaultBranch.setBoolPref);
+    });
+    it("should set ONBOARDING_FINISHED_PREF to true if a DISABLE_ONBOARDING action was received", () => {
+      feed.onAction({type: at.DISABLE_ONBOARDING});
+      assert.calledWith(defaultBranch.setBoolPref, ONBOARDING_FINISHED_PREF, true);
     });
   });
   describe("onPrefChanged prerendering", () => {

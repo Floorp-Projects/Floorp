@@ -866,13 +866,12 @@ Gecko_GetLookAndFeelSystemColor(int32_t aId,
 bool
 Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
                            CSSPseudoClassType aType,
-                           const char16_t* aIdent,
-                           bool* aSetSlowSelectorFlag)
+                           const char16_t* aIdent)
 {
   EventStates dummyMask; // mask is never read because we pass aDependence=nullptr
   return nsCSSRuleProcessor::StringPseudoMatches(aElement, aType, aIdent,
-                                                 aElement->OwnerDoc(), true,
-                                                 dummyMask, aSetSlowSelectorFlag, nullptr);
+                                                 aElement->OwnerDoc(),
+                                                 dummyMask, nullptr);
 }
 
 bool
@@ -2482,9 +2481,10 @@ Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
 
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
   presContext->SetUsesExChUnits(true);
-  RefPtr<nsFontMetrics> fm = nsRuleNode::GetMetricsFor(presContext, aIsVertical,
-                                                       aFont, aFontSize,
-                                                       aUseUserFontSet);
+  RefPtr<nsFontMetrics> fm = nsRuleNode::GetMetricsFor(
+      presContext, aIsVertical, aFont, aFontSize, aUseUserFontSet,
+      nsRuleNode::FlushUserFontSet::No);
+
   ret.mXSize = fm->XHeight();
   gfxFloat zeroWidth = fm->GetThebesFontGroup()->GetFirstValidFont()->
                            GetMetrics(fm->Orientation()).zeroOrAveCharWidth;

@@ -45,108 +45,49 @@ let expected = {
   "file_image_good.png": {
     type: "image",
     toplevel: true,
-    origin: "file_simple_xhr.html",
   },
   "example.txt": {
     type: "xmlhttprequest",
     toplevel: true,
-    origin: "file_simple_xhr.html",
   },
-  // sub frames will have the origin and first ancestor is the
-  // parent document
   "file_simple_xhr_frame.html": {
     type: "sub_frame",
     toplevelParent: true,
-    origin: "file_simple_xhr.html",
-    parent: "file_simple_xhr.html",
-  },
-  // a resource in a sub frame will have origin of the subframe,
-  // but the ancestor chain starts with the parent document
-  "xhr_resource": {
-    type: "xmlhttprequest",
-    origin: "file_simple_xhr_frame.html",
-    parent: "file_simple_xhr.html",
   },
   "file_image_bad.png": {
     type: "image",
-    depth: 2,
-    origin: "file_simple_xhr_frame.html",
-    parent: "file_simple_xhr.html",
+  },
+  "xhr_resource": {
+    type: "xmlhttprequest",
   },
   "file_simple_xhr_frame2.html": {
     type: "sub_frame",
-    depth: 2,
-    origin: "file_simple_xhr_frame.html",
-    parent: "file_simple_xhr_frame.html",
   },
-  "file_image_redirect.png": {
+  "file_image_bad.png#2": {
     type: "image",
-    depth: 2,
-    origin: "file_simple_xhr_frame2.html",
-    parent: "file_simple_xhr_frame.html",
   },
   "xhr_resource_2": {
     type: "xmlhttprequest",
-    depth: 2,
-    origin: "file_simple_xhr_frame2.html",
-    parent: "file_simple_xhr_frame.html",
   },
-  // Last frame tests content policy frame ancestors.
-  "webRequestTest": {
-    type: "sub_frame",
-    depth: 3,
-    origin: "file_simple_xhr_frame2.html",
-    parent: "file_simple_xhr_frame2.html",
-  },
-  // This is loaded in a sandbox iframe.  originUrl is not availabe for that,
-  // and requests within a sandboxed iframe will additionally have an empty
-  // url on their immediate parent/ancestor.
+  // This is loaded in a sandbox iframe.
   "file_simple_sandboxed_frame.html": {
     type: "sub_frame",
-    depth: 3,
-    parent: "file_simple_xhr_frame2.html",
   },
   "xhr_sandboxed": {
     type: "xmlhttprequest",
     sandboxed: true,
-    depth: 3,
-    parent: "",
   },
   "file_image_great.png": {
     type: "image",
     sandboxed: true,
-    depth: 3,
-    parent: "",
-  },
-  "file_simple_sandboxed_subframe.html": {
-    type: "sub_frame",
-    depth: 4,
-    parent: "",
   },
 };
 
 function checkDetails(details) {
   let url = new URL(details.url);
-  let filename = url.pathname.split(url.protocol == "data:" ? "," : "/").pop();
+  let filename = url.pathname.split("/").pop();
   let expect = expected[filename];
   is(expect.type, details.type, `${details.type} type matches`);
-  if (details.parentFrameId == -1) {
-    is(details.frameAncestors.length, 0, "no ancestors for main_frame requests");
-  } else if (details.parentFrameId == 0) {
-    is(details.frameAncestors.length, 1, "one ancestors for sub_frame requests");
-  } else {
-    ok(details.frameAncestors.length > 1, "have multiple ancestors for deep subframe requests");
-    is(details.frameAncestors.length, expect.depth, "have multiple ancestors for deep subframe requests");
-  }
-  if (details.parentFrameId > -1) {
-    ok(!expect.origin || details.originUrl.includes(expect.origin), "origin url is correct");
-    is(details.frameAncestors[0].frameId, details.parentFrameId, "first ancestor matches request.parentFrameId");
-    ok(details.frameAncestors[0].url.includes(expect.parent), "ancestor parent page correct");
-    is(details.frameAncestors[details.frameAncestors.length - 1].frameId, 0, "last ancestor is always zero");
-    // All our tests should be somewhere within the frame that we set topframe in the query string.  That
-    // frame will always be the last ancestor.
-    ok(details.frameAncestors[details.frameAncestors.length - 1].url.includes("topframe=true"), "last ancestor is always topframe");
-  }
   if (expect.toplevel) {
     is(details.frameId, 0, "expect load at top level");
     is(details.parentFrameId, -1, "expect top level frame to have no parent");
@@ -154,10 +95,8 @@ function checkDetails(details) {
     ok(details.frameId > 0, "expect sub_frame to load into a new frame");
     if (expect.toplevelParent) {
       is(details.parentFrameId, 0, "expect sub_frame to have top level parent");
-      is(details.frameAncestors.length, 1, "one ancestor for top sub_frame request");
     } else {
       ok(details.parentFrameId > 0, "expect sub_frame to have parent");
-      ok(details.frameAncestors.length > 1, "sub_frame has ancestors");
     }
     expect.subframeId = details.frameId;
     expect.parentId = details.parentFrameId;
@@ -182,7 +121,7 @@ add_task(async function test_webRequest_main_frame() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
-  let a = addLink(`file_simple_xhr.html?topframe=true&nocache=${Math.random()}`);
+  let a = addLink(`file_simple_xhr.html?nocache=${Math.random()}`);
   a.click();
 
   for (let i = 0; i < Object.keys(expected).length; i++) {
@@ -194,6 +133,7 @@ add_task(async function test_webRequest_main_frame() {
   await closed;
   await extension.unload();
 });
+
 </script>
 </head>
 <body>

@@ -124,9 +124,6 @@ pref("network.predictor.preserve", 50); // percentage of predictor data to keep 
 // Use JS mDNS as a fallback
 pref("network.mdns.use_js_fallback", false);
 
-/* history max results display */
-pref("browser.display.history.maxresults", 100);
-
 /* How many times should have passed before the remote tabs list is refreshed */
 pref("browser.display.remotetabs.timeout", 10);
 

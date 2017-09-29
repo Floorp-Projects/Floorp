@@ -232,7 +232,9 @@ add_task(async function onItemChanged_title_bookmark() {
 
 add_task(async function onItemChanged_tags_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
-  let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
+  let guid = await PlacesUtils.promiseItemGuid(id);
+  let url = (await PlacesUtils.bookmarks.fetch(guid)).url;
+  let uri = Services.io.newURI(url);
   const TAG = "tag";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
@@ -386,7 +388,9 @@ add_task(async function onItemMoved_bookmark() {
 
 add_task(async function onItemRemoved_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
-  let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
+  let guid = await PlacesUtils.promiseItemGuid(id);
+  let url = (await PlacesUtils.bookmarks.fetch(guid)).url;
+  let uri = Services.io.newURI(url);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemChanged", "onItemRemoved"

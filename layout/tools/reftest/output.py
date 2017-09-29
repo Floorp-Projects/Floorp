@@ -52,23 +52,13 @@ class ReftestFormatter(TbplFormatter):
         return status_msg
 
     def test_status(self, data):
+        extra = data.get('extra', {})
         test = data['test']
 
         status_msg = self._format_status(data)
         output_text = "%s | %s | %s" % (status_msg, test, data.get("subtest", "unknown test"))
         if data.get('message'):
             output_text += " | %s" % data['message']
-        return output_text + "\n"
-
-    def test_end(self, data):
-        extra = data.get('extra', {})
-        status = data['status']
-        test = data['test']
-
-        output_text = ""
-        if status != "OK":
-            status_msg = self._format_status(data)
-            output_text = "%s | %s | %s" % (status_msg, test, data.get("message", ""))
 
         if "reftest_screenshots" in extra:
             screenshots = extra["reftest_screenshots"]
@@ -81,6 +71,17 @@ class ReftestFormatter(TbplFormatter):
                                 image_1, image_2)
             elif len(screenshots) == 1:
                 output_text += "\nREFTEST   IMAGE: data:image/png;base64,%s" % image_1
+
+        return output_text + "\n"
+
+    def test_end(self, data):
+        status = data['status']
+        test = data['test']
+
+        output_text = ""
+        if status != "OK":
+            status_msg = self._format_status(data)
+            output_text = "%s | %s | %s" % (status_msg, test, data.get("message", ""))
 
         if output_text:
             output_text += "\nREFTEST "

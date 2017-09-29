@@ -44,11 +44,6 @@ function onBeforeRequest(details) {
       let page1id = windowIDs.get(URL);
       ok(details.windowId != page1id, "sub-frame gets its own window ID");
       is(details.parentWindowId, page1id, "parent window id is correct");
-
-      is(details.frameAncestors.length, 1, "correctly has only one ancestor");
-      let ancestor = details.frameAncestors[0];
-      ok(ancestor.url.includes("page1"), "parent window url seems correct");
-      is(ancestor.frameId, page1id, "parent window id is correct");
     }
   }
   if (details.url.indexOf("_bad.") != -1) {

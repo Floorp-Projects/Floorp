@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
-#include "mozilla/JSObjectHolder.h"
 
 #include "ServiceWorkerClient.h"
 #include "ServiceWorkerManager.h"
@@ -671,9 +670,6 @@ private:
     MOZ_DIAGNOSTIC_ASSERT(aWindow);
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
 
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal = workerPrivate->GetPrincipal();
-    MOZ_DIAGNOSTIC_ASSERT(triggeringPrincipal);
-
     // [[1. Let url be the result of parsing url with entry settings object's API
     //   base URL.]]
     nsCOMPtr<nsIURI> uri;
@@ -698,25 +694,6 @@ private:
     }
 
     if (XRE_IsContentProcess()) {
-
-      // Let's create a sandbox in order to have a valid JSContext and correctly
-      // propagate the SubjectPrincipal.
-      AutoJSAPI jsapi;
-      jsapi.Init();
-
-      JSContext* cx = jsapi.cx();
-
-      nsIXPConnect* xpc = nsContentUtils::XPConnect();
-      MOZ_ASSERT(xpc, "This should never be null!");
-
-      JS::Rooted<JSObject*> sandbox(cx);
-      rv = xpc->CreateSandbox(cx, triggeringPrincipal, sandbox.address());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      JSAutoCompartment ac(cx, sandbox);
-
       // ContentProcess
       nsCOMPtr<nsIWindowWatcher> wwatch =
         do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
@@ -776,6 +753,9 @@ private:
     if (NS_WARN_IF(!bwin)) {
       return NS_ERROR_FAILURE;
     }
+
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal = workerPrivate->GetPrincipal();
+    MOZ_DIAGNOSTIC_ASSERT(triggeringPrincipal);
 
     nsCOMPtr<mozIDOMWindowProxy> win;
     rv = bwin->OpenURI(uri, nullptr,

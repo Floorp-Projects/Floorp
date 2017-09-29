@@ -11,11 +11,9 @@ import logging
 
 from slugid import nice as slugid
 
-from .util import (find_decision_task, create_task_from_def)
+from .util import (create_task_from_def, fetch_graph_and_labels)
 from .registry import register_callback_action
-from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.parameterization import resolve_task_references
-from taskgraph.taskgraph import TaskGraph
 
 TASKCLUSTER_QUEUE_URL = "https://queue.taskcluster.net/v1/task"
 
@@ -82,11 +80,7 @@ logger = logging.getLogger(__name__)
     }
 )
 def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
-    decision_task_id = find_decision_task(parameters)
-
-    full_task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
-    _, full_task_graph = TaskGraph.from_json(full_task_graph)
-    label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
+    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(parameters)
 
     pre_task = full_task_graph.tasks[task['metadata']['name']]
 

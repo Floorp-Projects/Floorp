@@ -38,7 +38,6 @@ class PingCentre {
     }
 
     this._topic = options.topic;
-    this._filter = options.filter;
     this._prefs = Services.prefs.getBranch("");
 
     this._setPingEndpoint(options.topic, options.overrideEndpointPref);
@@ -92,12 +91,12 @@ class PingCentre {
     this._fhrEnabled = this._prefs.getBoolPref(prefKey);
   }
 
-  _createExperimentsString(activeExperiments) {
+  _createExperimentsString(activeExperiments, filter) {
     let experimentsString = "";
     for (let experimentID in activeExperiments) {
       if (!activeExperiments[experimentID] ||
           !activeExperiments[experimentID].branch ||
-          (this._filter && !experimentID.includes(this._filter))) {
+          (filter && !experimentID.includes(filter))) {
         continue;
       }
       let expString = `${experimentID}:${activeExperiments[experimentID].branch}`;
@@ -106,9 +105,10 @@ class PingCentre {
     return experimentsString;
   }
 
-  async sendPing(data) {
+  async sendPing(data, options) {
+    let filter = options && options.filter;
     let experiments = TelemetryEnvironment.getActiveExperiments();
-    let experimentsString = this._createExperimentsString(experiments);
+    let experimentsString = this._createExperimentsString(experiments, filter);
     if (!this.enabled) {
       return Promise.resolve();
     }

@@ -409,8 +409,8 @@ OmxDataDecoder::EmptyBufferFailure(OmxBufferFailureHolder aFailureHolder)
 void
 OmxDataDecoder::NotifyError(OMX_ERRORTYPE aOmxError, const char* aLine, const MediaResult& aError)
 {
-  LOG("NotifyError %d (%" PRIu32 ") at %s", static_cast<int>(aOmxError),
-      static_cast<uint32_t>(aError.Code()), aLine);
+  LOG("NotifyError %d (%s) at %s", static_cast<int>(aOmxError),
+      aError.ErrorName().get(), aLine);
   mDecodedData.Clear();
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);

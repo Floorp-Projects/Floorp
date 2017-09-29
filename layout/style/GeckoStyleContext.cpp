@@ -45,6 +45,7 @@ GeckoStyleContext::GeckoStyleContext(GeckoStyleContext* aParent,
   , mParent(aParent)
 #ifdef DEBUG
   , mComputingStruct(nsStyleStructID_None)
+  , mFrameRefCnt(0)
 #endif
 {
   mBits |= NS_STYLE_CONTEXT_IS_GECKO;

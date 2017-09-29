@@ -294,10 +294,16 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
   case HTTP_COMPRESS_DEFLATE:
 
     if (mInpBuffer != nullptr && streamLen > mInpBufferLen) {
-      mInpBuffer = (unsigned char *) realloc(mInpBuffer, mInpBufferLen = streamLen);
+      unsigned char* originalInpBuffer = mInpBuffer;
+      if (!(mInpBuffer = (unsigned char *) realloc(originalInpBuffer, mInpBufferLen = streamLen))) {
+        free(originalInpBuffer);
+      }
 
       if (mOutBufferLen < streamLen * 2) {
-        mOutBuffer = (unsigned char *) realloc(mOutBuffer, mOutBufferLen = streamLen * 3);
+        unsigned char* originalOutBuffer = mOutBuffer;
+        if (!(mOutBuffer = (unsigned char *) realloc(mOutBuffer, mOutBufferLen = streamLen * 3))) {
+          free(originalOutBuffer);
+        }
       }
 
       if (mInpBuffer == nullptr || mOutBuffer == nullptr) {

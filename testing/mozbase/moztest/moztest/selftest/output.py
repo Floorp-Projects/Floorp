@@ -20,7 +20,7 @@ from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.errors import HarnessErrorList
 
 
-def get_mozharness_status(suite, lines, status):
+def get_mozharness_status(suite, lines, status, formatter=None, buf=None):
     """Given list of log lines, determine what the mozharness status would be."""
     parser = StructuredOutputParser(
         config={'log_level': INFO},
@@ -29,15 +29,18 @@ def get_mozharness_status(suite, lines, status):
         suite_category=suite,
     )
 
+    if formatter:
+        parser.formatter = formatter
+
     # Processing the log with mozharness will re-print all the output to stdout
     # Since this exact same output has already been printed by the actual test
     # run, temporarily redirect stdout to devnull.
-    with open(os.devnull, 'w') as fh:
-        orig = sys.stdout
-        sys.stdout = fh
-        for line in lines:
-            parser.parse_single_line(json.dumps(line))
-        sys.stdout = orig
+    buf = buf or open(os.devnull, 'w')
+    orig = sys.stdout
+    sys.stdout = buf
+    for line in lines:
+        parser.parse_single_line(json.dumps(line))
+    sys.stdout = orig
     return parser.evaluate_parser(status)
 
 

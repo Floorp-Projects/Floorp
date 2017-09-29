@@ -185,24 +185,6 @@ geckodriver supports a number of [capabilities]:
   <td>Defines the SOCKS proxy version. This property has only to be set
    when <code>proxyType</code> is set to <code>manual</code>.
  </tr>
-
- <tr>
-  <td><code>socksUsername</code>
-  <td>string
-  <td>Defines the username used
-   when authenticating with a SOCKS proxy.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
- </tr>
-
- <tr>
-  <td><code>socksPassword</code>
-  <td>string
-  <td>Defines the password used
-   when authenticating with a SOCKS proxy.
-   This property should only be set
-   when <code>proxyType</code> is <code>manual</code>.
- </tr>
 </table>
 
 
