@@ -28,6 +28,7 @@ DIRS += [
     'sourcemap',
     'sprintfjs',
     'specs',
+    'touch',
     'transport',
     'webconsole',
     'worker',
