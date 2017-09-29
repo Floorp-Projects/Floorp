@@ -257,8 +257,8 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
   },
 };
 
-// GCLI commands in ./commands.js listen for events from this object to know
-// when the UI for a tab has opened or closed.
+// GCLI commands in ../responsivedesign/resize-commands.js listen for events
+// from this object to know when the UI for a tab has opened or closed.
 EventEmitter.decorate(ResponsiveUIManager);
 
 /**
