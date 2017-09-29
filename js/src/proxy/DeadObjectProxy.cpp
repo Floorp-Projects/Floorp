@@ -20,73 +20,81 @@ ReportDead(JSContext *cx)
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id,
-                                              MutableHandle<PropertyDescriptor> desc) const
+DeadObjectProxy<CC, BF>::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id,
+                                                  MutableHandle<PropertyDescriptor> desc) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
-                                    Handle<PropertyDescriptor> desc,
-                                    ObjectOpResult& result) const
+DeadObjectProxy<CC, BF>::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
+                                        Handle<PropertyDescriptor> desc,
+                                        ObjectOpResult& result) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::ownPropertyKeys(JSContext* cx, HandleObject wrapper,
-                                     AutoIdVector& props) const
+DeadObjectProxy<CC, BF>::ownPropertyKeys(JSContext* cx, HandleObject wrapper,
+                                         AutoIdVector& props) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::delete_(JSContext* cx, HandleObject wrapper, HandleId id,
-                             ObjectOpResult& result) const
+DeadObjectProxy<CC, BF>::delete_(JSContext* cx, HandleObject wrapper, HandleId id,
+                                 ObjectOpResult& result) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::getPrototype(JSContext* cx, HandleObject proxy,
-                                  MutableHandleObject protop) const
+DeadObjectProxy<CC, BF>::getPrototype(JSContext* cx, HandleObject proxy,
+                                      MutableHandleObject protop) const
 {
     protop.set(nullptr);
     return true;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
-                                            MutableHandleObject protop) const
+DeadObjectProxy<CC, BF>::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                                MutableHandleObject protop) const
 {
     *isOrdinary = false;
     return true;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::preventExtensions(JSContext* cx, HandleObject proxy,
-                                       ObjectOpResult& result) const
+DeadObjectProxy<CC, BF>::preventExtensions(JSContext* cx, HandleObject proxy,
+                                           ObjectOpResult& result) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const
+DeadObjectProxy<CC, BF>::isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const
 {
     // This is kind of meaningless, but dead-object semantics aside,
     // [[Extensible]] always being true is consistent with other proxy types.
@@ -94,95 +102,141 @@ DeadObjectProxy<CC>::isExtensible(JSContext* cx, HandleObject proxy, bool* exten
     return true;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::call(JSContext* cx, HandleObject wrapper, const CallArgs& args) const
+DeadObjectProxy<CC, BF>::call(JSContext* cx, HandleObject wrapper, const CallArgs& args) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::construct(JSContext* cx, HandleObject wrapper, const CallArgs& args) const
+DeadObjectProxy<CC, BF>::construct(JSContext* cx, HandleObject wrapper, const CallArgs& args) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                                const CallArgs& args) const
+DeadObjectProxy<CC, BF>::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
+                                    const CallArgs& args) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
-                                 bool* bp) const
+DeadObjectProxy<CC, BF>::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
+                                     bool* bp) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls) const
+DeadObjectProxy<CC, BF>::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 bool
-DeadObjectProxy<CC>::isArray(JSContext* cx, HandleObject obj, JS::IsArrayAnswer* answer) const
+DeadObjectProxy<CC, BF>::isArray(JSContext* cx, HandleObject obj, JS::IsArrayAnswer* answer) const
 {
     ReportDead(cx);
     return false;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 const char*
-DeadObjectProxy<CC>::className(JSContext* cx, HandleObject wrapper) const
+DeadObjectProxy<CC, BF>::className(JSContext* cx, HandleObject wrapper) const
 {
     return "DeadObject";
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 JSString*
-DeadObjectProxy<CC>::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const
+DeadObjectProxy<CC, BF>::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const
 {
     ReportDead(cx);
     return nullptr;
 }
 
-template <DeadProxyIsCallableIsConstructorOption CC>
+template <DeadProxyIsCallableIsConstructorOption CC,
+          DeadProxyBackgroundFinalized BF>
 RegExpShared*
-DeadObjectProxy<CC>::regexp_toShared(JSContext* cx, HandleObject proxy) const
+DeadObjectProxy<CC, BF>::regexp_toShared(JSContext* cx, HandleObject proxy) const
 {
     ReportDead(cx);
     return nullptr;
 }
 
 template <>
-const char DeadObjectProxy<DeadProxyNotCallableNotConstructor>::family = 0;
+const char DeadObjectProxy<DeadProxyNotCallableNotConstructor,
+                           DeadProxyBackgroundFinalized::Yes>::family = 0;
 template <>
-const char DeadObjectProxy<DeadProxyNotCallableIsConstructor>::family = 0;
+const char DeadObjectProxy<DeadProxyNotCallableNotConstructor,
+                           DeadProxyBackgroundFinalized::No>::family = 0;
 template <>
-const char DeadObjectProxy<DeadProxyIsCallableNotConstructor>::family = 0;
+const char DeadObjectProxy<DeadProxyNotCallableIsConstructor,
+                           DeadProxyBackgroundFinalized::Yes>::family = 0;
 template <>
-const char DeadObjectProxy<DeadProxyIsCallableIsConstructor>::family = 0;
+const char DeadObjectProxy<DeadProxyNotCallableIsConstructor,
+                           DeadProxyBackgroundFinalized::No>::family = 0;
+template <>
+const char DeadObjectProxy<DeadProxyIsCallableNotConstructor,
+                           DeadProxyBackgroundFinalized::Yes>::family = 0;
+template <>
+const char DeadObjectProxy<DeadProxyIsCallableNotConstructor,
+                           DeadProxyBackgroundFinalized::No>::family = 0;
+template <>
+const char DeadObjectProxy<DeadProxyIsCallableIsConstructor,
+                           DeadProxyBackgroundFinalized::Yes>::family = 0;
+template <>
+const char DeadObjectProxy<DeadProxyIsCallableIsConstructor,
+                           DeadProxyBackgroundFinalized::No>::family = 0;
 
 bool
 js::IsDeadProxyObject(JSObject* obj)
 {
-    return IsDerivedProxyObject(obj, DeadObjectProxy<DeadProxyNotCallableNotConstructor>::singleton()) ||
-           IsDerivedProxyObject(obj, DeadObjectProxy<DeadProxyIsCallableIsConstructor>::singleton()) ||
-           IsDerivedProxyObject(obj, DeadObjectProxy<DeadProxyIsCallableNotConstructor>::singleton()) ||
-           IsDerivedProxyObject(obj, DeadObjectProxy<DeadProxyNotCallableIsConstructor>::singleton());
+    return
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyNotCallableNotConstructor,
+                          DeadProxyBackgroundFinalized::Yes>::singleton()) ||
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyNotCallableNotConstructor,
+                          DeadProxyBackgroundFinalized::No>::singleton()) ||
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyIsCallableIsConstructor,
+                          DeadProxyBackgroundFinalized::Yes>::singleton()) ||
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyIsCallableIsConstructor,
+                          DeadProxyBackgroundFinalized::No>::singleton()) ||
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyIsCallableNotConstructor,
+                          DeadProxyBackgroundFinalized::Yes>::singleton()) ||
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyIsCallableNotConstructor,
+                          DeadProxyBackgroundFinalized::No>::singleton()) ||
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyNotCallableIsConstructor,
+                          DeadProxyBackgroundFinalized::Yes>::singleton()) ||
+        IsDerivedProxyObject(obj,
+          DeadObjectProxy<DeadProxyNotCallableIsConstructor,
+                          DeadProxyBackgroundFinalized::No>::singleton());
 }
 
 
@@ -190,19 +244,48 @@ const BaseProxyHandler*
 js::SelectDeadProxyHandler(ProxyObject* obj)
 {
     // When nuking scripted proxies, isCallable and isConstructor values for
-    // the proxy needs to be preserved.
+    // the proxy needs to be preserved.  So does background-finalization status.
     uint32_t callable = obj->handler()->isCallable(obj);
     uint32_t constructor = obj->handler()->isConstructor(obj);
+    bool finalizeInBackground = obj->handler()->finalizeInBackground(obj->private_());
 
     if (callable) {
-        if (constructor)
-            return DeadObjectProxy<DeadProxyIsCallableIsConstructor>::singleton();
-        return DeadObjectProxy<DeadProxyIsCallableNotConstructor>::singleton();
+        if (constructor) {
+            if (finalizeInBackground) {
+                return DeadObjectProxy<DeadProxyIsCallableIsConstructor,
+                                       DeadProxyBackgroundFinalized::Yes>::singleton();
+            } else {
+                return DeadObjectProxy<DeadProxyIsCallableIsConstructor,
+                                       DeadProxyBackgroundFinalized::No>::singleton();
+            }
+        }
+
+        if (finalizeInBackground) {
+            return DeadObjectProxy<DeadProxyIsCallableNotConstructor,
+                                   DeadProxyBackgroundFinalized::Yes>::singleton();
+        }
+
+        return DeadObjectProxy<DeadProxyIsCallableNotConstructor,
+                               DeadProxyBackgroundFinalized::No>::singleton();
     }
 
-    if (constructor)
-        return DeadObjectProxy<DeadProxyNotCallableIsConstructor>::singleton();
-    return DeadObjectProxy<DeadProxyNotCallableNotConstructor>::singleton();
+    if (constructor) {
+        if (finalizeInBackground) {
+            return DeadObjectProxy<DeadProxyNotCallableIsConstructor,
+                                   DeadProxyBackgroundFinalized::Yes>::singleton();
+        }
+
+        return DeadObjectProxy<DeadProxyNotCallableIsConstructor,
+                               DeadProxyBackgroundFinalized::No>::singleton();
+    }
+
+    if (finalizeInBackground) {
+        return DeadObjectProxy<DeadProxyNotCallableNotConstructor,
+                               DeadProxyBackgroundFinalized::Yes>::singleton();
+    }
+
+    return DeadObjectProxy<DeadProxyNotCallableNotConstructor,
+                           DeadProxyBackgroundFinalized::No>::singleton();
 }
 
 JSObject*
@@ -214,7 +297,8 @@ js::NewDeadProxyObject(JSContext* cx, JSObject* origObj)
     if (origObj && origObj->is<ProxyObject>())
         handler = SelectDeadProxyHandler(&origObj->as<ProxyObject>());
     else
-        handler = DeadObjectProxy<DeadProxyNotCallableNotConstructor>::singleton();
+        handler = DeadObjectProxy<DeadProxyNotCallableNotConstructor,
+                                  DeadProxyBackgroundFinalized::Yes>::singleton();
 
     return NewProxyObject(cx, handler, NullHandleValue, nullptr, ProxyOptions());
 }
