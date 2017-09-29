@@ -237,8 +237,13 @@ then
 	moz_bail "Cannot execute $MOZ_PROGRAM."
 fi
 #
+##
+## Set MOZILLA_FIVE_HOME
+##
+MOZILLA_FIVE_HOME=$MOZ_DIST_BIN
+
 if [ -z "$MRE_HOME" ]; then
-    MRE_HOME=$MOZ_DIST_BIN"
+    MRE_HOME=$MOZILLA_FIVE_HOME
 fi
 ##
 ## Set LD_LIBRARY_PATH
@@ -310,6 +315,7 @@ export GNOME_DISABLE_CRASH_DIALOG
 
 if [ "$moz_debug" -eq 1 ]
 then
+  echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
   echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
   if [ -n "$LD_LIBRARYN32_PATH" ]
   then
@@ -343,7 +349,7 @@ then
   echo "moz_debugger_args=$moz_debugger_args"
 fi
 #
-export LD_LIBRARY_PATH
+export MOZILLA_FIVE_HOME LD_LIBRARY_PATH
 export SHLIB_PATH LIBPATH LIBRARY_PATH ADDON_PATH DYLD_LIBRARY_PATH
 
 if [ $moz_debug -eq 1 ]
