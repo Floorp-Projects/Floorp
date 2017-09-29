@@ -502,6 +502,13 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin: 0;
 }
 
+#customization-panelHeader {
+  font-size: 1.3em;
+  font-weight: 500;
+  padding: 2px 12px;
+  margin: 0;
+}
+
 #customization-panelHolder > #widget-overflow-fixed-list {
   padding-top: 10px;
   min-height: 225px;
