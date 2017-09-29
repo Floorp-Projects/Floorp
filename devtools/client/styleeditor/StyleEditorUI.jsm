@@ -30,6 +30,7 @@ const {PrefObserver} = require("devtools/client/shared/prefs");
 const csscoverage = require("devtools/shared/fronts/csscoverage");
 const {console} = require("resource://gre/modules/Console.jsm");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
+const {OriginalSource} = require("devtools/client/styleeditor/original-source");
 
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 
@@ -333,11 +334,19 @@ StyleEditorUI.prototype = {
       let promise = (async () => {
         let editor = await this._addStyleSheetEditor(styleSheet, isNew);
 
-        if (!Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
+        let toolbox = gDevTools.getToolbox(this._target);
+        let sourceMapService = toolbox.sourceMapService;
+        if (!sourceMapService) {
           return editor;
         }
 
-        let sources = await styleSheet.getOriginalSources();
+        let {href, nodeHref, actorID: id, sourceMapURL} = styleSheet;
+        let url = href || nodeHref;
+        let sources = await sourceMapService.getOriginalURLs({
+          id,
+          url,
+          sourceMapURL,
+        });
         // A single generated sheet might map to multiple original
         // sheets, so make editors for each of them.
         if (sources && sources.length) {
@@ -346,11 +355,14 @@ StyleEditorUI.prototype = {
           editor = null;
 
           for (let source of sources) {
+            let generatedId = sourceMapService.generatedToOriginalId(id, source);
+            let original = new OriginalSource(source, generatedId, sourceMapService);
+
             // set so the first sheet will be selected, even if it's a source
-            source.styleSheetIndex = styleSheet.styleSheetIndex;
-            source.relatedStyleSheet = styleSheet;
-            source.relatedEditorName = parentEditorName;
-            await this._addStyleSheetEditor(source);
+            original.styleSheetIndex = styleSheet.styleSheetIndex;
+            original.relatedStyleSheet = styleSheet;
+            original.relatedEditorName = parentEditorName;
+            await this._addStyleSheetEditor(original);
           }
         }
 
@@ -920,7 +932,9 @@ StyleEditorUI.prototype = {
           styleSheet: parentStyleSheet
         };
         if (editor.styleSheet.isOriginalSource) {
-          location = yield editor.cssSheet.getOriginalLocation(line, column);
+          let styleSheet = editor.cssSheet;
+          location = yield editor.styleSheet.getOriginalLocation(styleSheet, line,
+                                                                 column);
         }
 
         // this @media rule is from a different original source
