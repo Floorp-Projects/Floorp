@@ -112,6 +112,52 @@ const {
 
 const {DEBUG} = AppConstants;
 
+// Idle callback timeout for low-priority message dispatch.
+const LOW_PRIORITY_TIMEOUT_MS = 250;
+
+const MESSAGE_MESSAGES = "MessageChannel:Messages";
+const MESSAGE_RESPONSE = "MessageChannel:Response";
+
+// ESLint can't tell that these are referenced, so tell it that they're
+// exported to make it happy.
+/* exported _deferredResult, _makeDeferred */
+var _deferredResult;
+var _makeDeferred = (resolve, reject) => {
+  // We use arrow functions here and refer to the outer variables via
+  // `this`, to avoid a lexical name lookup. Yes, it makes a difference.
+  // No, I don't like it any more than you do.
+  this._deferredResult.resolve = resolve;
+  this._deferredResult.reject = reject;
+};
+
+/**
+ * Helper to create a new Promise without allocating any closures to
+ * receive its resolution functions.
+ *
+ * I know what you're thinking: "This is crazy. There is no possible way
+ * this can be necessary. Just use the ordinary Promise constructor the
+ * way it was meant to be used, you lunatic."
+ *
+ * And, against all odds, it turns out that you're wrong. Creating
+ * lambdas to receive promise resolution functions consistently turns
+ * out to be one of the most expensive parts of message dispatch in this
+ * code.
+ *
+ * So we do the stupid micro-optimization, and try to live with
+ * ourselves for it.
+ *
+ * (See also bug 1404950.)
+ *
+ * @returns {object}
+ */
+let Deferred = () => {
+  let res = {};
+  this._deferredResult = res;
+  res.promise = new Promise(this._makeDeferred);
+  this._deferredResult = null;
+  return res;
+};
+
 /**
  * Handles the mapping and dispatching of messages to their registered
  * handlers. There is one broker per message manager and class of
@@ -149,14 +195,20 @@ class FilteringMessageManager {
   }
 
   /**
-   * Receives a message from our message manager, maps it to a handler, and
-   * passes the result to our message callback.
+   * Receives a set of messages from our message manager, maps each to a
+   * handler, and passes the results to our message callbacks.
    */
   receiveMessage({data, target}) {
-    let handlers = Array.from(this.getHandlers(data.messageName, data.sender || null, data.recipient));
+    data.forEach(msg => {
+      if (msg) {
+        let handlers = Array.from(this.getHandlers(msg.messageName,
+                                                   msg.sender || null,
+                                                   msg.recipient));
 
-    data.target = target;
-    this.callback(handlers, data);
+        msg.target = target;
+        this.callback(handlers, msg);
+      }
+    });
   }
 
   /**
@@ -173,8 +225,8 @@ class FilteringMessageManager {
   * getHandlers(messageName, sender, recipient) {
     let handlers = this.handlers.get(messageName) || new Set();
     for (let handler of handlers) {
-      if (MessageChannel.matchesFilter(handler.messageFilterStrict || {}, recipient) &&
-          MessageChannel.matchesFilter(handler.messageFilterPermissive || {}, recipient, false) &&
+      if (MessageChannel.matchesFilter(handler.messageFilterStrict || null, recipient) &&
+          MessageChannel.matchesFilter(handler.messageFilterPermissive || null, recipient, false) &&
           (!handler.filterMessage || handler.filterMessage(sender, recipient))) {
         yield handler;
       }
@@ -218,10 +270,86 @@ class FilteringMessageManager {
 }
 
 /**
- * A simplified subclass of FilteringMessageManager that only supports
- * one handler per message, and does not support filtering.
+ * A message dispatch and response manager that wrapse a single native
+ * message manager. Handles dispatching messages through the manager
+ * (optionally coalescing several low-priority messages and dispatching
+ * them during an idle slice), and mapping their responses to the
+ * appropriate response callbacks.
+ *
+ * Note that this is a simplified subclass of FilteringMessageManager
+ * that only supports one handler per message, and does not support
+ * filtering.
  */
 class ResponseManager extends FilteringMessageManager {
+  constructor(messageName, callback, messageManager) {
+    super(messageName, callback, messageManager);
+
+    this.idleMessages = [];
+    this.idleScheduled = false;
+    this.onIdle = this.onIdle.bind(this);
+  }
+
+  /**
+   * Schedules a new idle callback to dispatch pending low-priority
+   * messages, if one is not already scheduled.
+   */
+  scheduleIdleCallback() {
+    if (!this.idleScheduled) {
+      ChromeUtils.idleDispatch(this.onIdle, {timeout: LOW_PRIORITY_TIMEOUT_MS});
+      this.idleScheduled = true;
+    }
+  }
+
+  /**
+   * Called when the event queue is idle, and dispatches any pending
+   * low-priority messages in a single chunk.
+   *
+   * @param {IdleDeadline} deadline
+   */
+  onIdle(deadline) {
+    this.idleScheduled = false;
+
+    let messages = this.idleMessages;
+    this.idleMessages = [];
+
+    let msgs = messages.map(msg => msg.getMessage());
+    try {
+      this.messageManager.sendAsyncMessage(MESSAGE_MESSAGES, msgs);
+    } catch (e) {
+      for (let msg of messages) {
+        msg.reject(e);
+      }
+    }
+  }
+
+  /**
+   * Sends a message through our wrapped message manager, or schedules
+   * it for low-priority dispatch during an idle callback.
+   *
+   * @param {any} message
+   *        The message to send.
+   * @param {object} [options]
+   *        Message dispatch options.
+   * @param {boolean} [options.lowPriority = false]
+   *        If true, dispatches the message in a single chunk with other
+   *        low-priority messages the next time the event queue is idle.
+   */
+  sendMessage(message, options = {}) {
+    if (options.lowPriority) {
+      this.idleMessages.push(message);
+      this.scheduleIdleCallback();
+    } else {
+      this.messageManager.sendAsyncMessage(MESSAGE_MESSAGES, [message.getMessage()]);
+    }
+  }
+
+  receiveMessage({data, target}) {
+    data.target = target;
+
+    this.callback(this.handlers.get(data.messageName),
+                  data);
+  }
+
   * getHandlers(messageName, sender, recipient) {
     let handler = this.handlers.get(messageName);
     if (handler) {
@@ -291,11 +419,12 @@ class FilteringMessageManagerMap extends Map {
    * @returns {FilteringMessageManager}
    */
   get(target) {
-    if (this.has(target)) {
-      return super.get(target);
+    let broker = super.get(target);
+    if (broker) {
+      return broker;
     }
 
-    let broker = new this._constructor(this.messageName, this.callback, target);
+    broker = new this._constructor(this.messageName, this.callback, target);
     this.set(target, broker);
 
     if (target instanceof Ci.nsIDOMEventTarget) {
@@ -310,8 +439,102 @@ class FilteringMessageManagerMap extends Map {
   }
 }
 
-const MESSAGE_MESSAGE = "MessageChannel:Message";
-const MESSAGE_RESPONSE = "MessageChannel:Response";
+/**
+ * Represents a message being sent through a MessageChannel, which may
+ * or may not have been dispatched yet, and is pending a response.
+ *
+ * When a response has been received, or the message has been canceled,
+ * this class is responsible for settling the response promise as
+ * appropriate.
+ *
+ * @param {number} channelId
+ *        The unique ID for this message.
+ * @param {any} message
+ *        The message contents.
+ * @param {object} sender
+ *        An object describing the sender of the message, used by
+ *        `abortResponses` to determine whether the message should be
+ *        aborted.
+ * @param {ResponseManager} broker
+ *        The response broker on which we're expected to receive a
+ *        reply.
+ */
+class PendingMessage {
+  constructor(channelId, message, sender, broker) {
+    this.channelId = channelId;
+    this.message = message;
+    this.sender = sender;
+    this.broker = broker;
+    this.deferred = Deferred();
+
+    MessageChannel.pendingResponses.add(this);
+  }
+
+  /**
+   * Cleans up after this message once we've received or aborted a
+   * response.
+   */
+  cleanup() {
+    if (this.broker) {
+      this.broker.removeHandler(this.channelId, this);
+      MessageChannel.pendingResponses.delete(this);
+
+      this.message = null;
+      this.broker = null;
+    }
+  }
+
+  /**
+   * Returns the promise which will resolve when we've received or
+   * aborted a response to this message.
+   */
+  get promise() {
+    return this.deferred.promise;
+  }
+
+  /**
+   * Resolves the message's response promise, and cleans up.
+   *
+   * @param {any} value
+   */
+  resolve(value) {
+    this.cleanup();
+    this.deferred.resolve(value);
+  }
+
+  /**
+   * Rejects the message's response promise, and cleans up.
+   *
+   * @param {any} value
+   */
+  reject(value) {
+    this.cleanup();
+    this.deferred.reject(value);
+  }
+
+  get messageManager() {
+    return this.broker.messageManager;
+  }
+
+  /**
+   * Returns the contents of the message to be sent over a message
+   * manager, and registers the response with our response broker.
+   *
+   * Returns null if the response has already been canceled, and the
+   * message should not be sent.
+   *
+   * @returns {any}
+   */
+  getMessage() {
+    let msg = null;
+    if (this.broker) {
+      this.broker.addHandler(this.channelId, this);
+      msg = this.message;
+      this.message = null;
+    }
+    return msg;
+  }
+}
 
 this.MessageChannel = {
   init() {
@@ -319,7 +542,7 @@ this.MessageChannel = {
     Services.obs.addObserver(this, "message-manager-disconnect");
 
     this.messageManagers = new FilteringMessageManagerMap(
-      MESSAGE_MESSAGE, this._handleMessage.bind(this));
+      MESSAGE_MESSAGES, this._handleMessage.bind(this));
 
     this.responseManagers = new FilteringMessageManagerMap(
       MESSAGE_RESPONSE, this._handleResponse.bind(this),
@@ -436,7 +659,7 @@ this.MessageChannel = {
    * and the behavior varies depending on the value of the `strict`
    * parameter.
    *
-   * @param {object} filter
+   * @param {object?} filter
    *    The filter object to match against.
    * @param {object} data
    *    The data object being matched.
@@ -448,6 +671,9 @@ this.MessageChannel = {
    * @returns {boolean} True if the objects match.
    */
   matchesFilter(filter, data, strict = true) {
+    if (!filter) {
+      return true;
+    }
     if (strict) {
       return Object.keys(filter).every(key => {
         return key in data && data[key] === filter[key];
@@ -575,7 +801,12 @@ this.MessageChannel = {
    *    message to the sender, and as a filter to prematurely
    *    abort responses when the sender is being destroyed.
    *    @see `abortResponses`.
-   * @param {integer} [options.responseType=RESPONSE_SINGLE]
+   * @param {boolean} [options.lowPriority = false]
+   *    If true, treat this as a low-priority message, and attempt to
+   *    send it in the same chunk as other messages to the same target
+   *    the next time the event queue is idle. This option reduces
+   *    messaging overhead at the expense of adding some latency.
+   * @param {integer} [options.responseType = RESPONSE_SINGLE]
    *    Specifies the type of response expected. See the `RESPONSE_*`
    *    contents for details.
    * @returns {Promise}
@@ -591,7 +822,7 @@ this.MessageChannel = {
 
     if (responseType == this.RESPONSE_NONE) {
       try {
-        target.sendAsyncMessage(MESSAGE_MESSAGE, message);
+        target.sendAsyncMessage(MESSAGE_MESSAGES, [message]);
       } catch (e) {
         // Caller is not expecting a reply, so dump the error to the console.
         Cu.reportError(e);
@@ -600,36 +831,15 @@ this.MessageChannel = {
       return Promise.resolve();  // Not expecting any reply.
     }
 
-    let deferred = {};
-    deferred.promise = new Promise((resolve, reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
-    });
-    deferred.sender = recipient;
-    deferred.messageManager = target;
-    deferred.channelId = channelId;
-
-    // The channel ID is used as the message name when routing responses.
-    // Add a message listener to the response broker, and remove it once
-    // we've gotten (or canceled) a response.
     let broker = this.responseManagers.get(target);
-    broker.addHandler(channelId, deferred);
-
-    this.pendingResponses.add(deferred);
-
-    let cleanup = () => {
-      broker.removeHandler(channelId, deferred);
-      this.pendingResponses.delete(deferred);
-    };
-    deferred.promise.then(cleanup, cleanup);
-
-    try {
-      target.sendAsyncMessage(MESSAGE_MESSAGE, message);
-    } catch (e) {
-      deferred.reject(e);
-    }
+    let pending = new PendingMessage(channelId, message, recipient, broker);
     message = null;
-    return deferred.promise;
+    try {
+      broker.sendMessage(pending, options);
+    } catch (e) {
+      pending.reject(e);
+    }
+    return pending.promise;
   },
 
   _callHandlers(handlers, data) {
@@ -781,29 +991,26 @@ this.MessageChannel = {
   /**
    * Handles message callbacks from the response brokers.
    *
-   * Each handler object is a deferred object created by `sendMessage`, and
-   * should be resolved or rejected based on the contents of the response.
-   *
-   * @param {Array<MessageHandler>} handlers
+   * @param {MessageHandler?} handler
+   *        A deferred object created by `sendMessage`, to be resolved
+   *        or rejected based on the contents of the response.
    * @param {object} data
    * @param {nsIMessageSender|{messageManager:nsIMessageSender}} data.target
    */
-  _handleResponse(handlers, data) {
+  _handleResponse(handler, data) {
     // If we have an error at this point, we have handler to report it to,
     // so just log it.
-    if (handlers.length == 0) {
+    if (!handler) {
       if (this.abortedResponses.has(data.messageName)) {
         this.abortedResponses.delete(data.messageName);
         Services.console.logStringMessage(`Ignoring response to aborted listener for ${data.messageName}`);
       } else {
         Cu.reportError(`No matching message response handler for ${data.messageName}`);
       }
-    } else if (handlers.length > 1) {
-      Cu.reportError(`Multiple matching response handlers for ${data.messageName}`);
     } else if (data.result === this.RESULT_SUCCESS) {
-      handlers[0].resolve(data.value);
+      handler.resolve(data.value);
     } else {
-      handlers[0].reject(data.error);
+      handler.reject(data.error);
     }
   },
 
