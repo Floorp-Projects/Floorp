@@ -81,26 +81,13 @@ DocAccessibleChildBase::SerializeTree(Accessible* aRoot,
 }
 
 void
-DocAccessibleChildBase::InsertIntoIpcTree(Accessible* aParent,
-                                          Accessible* aChild,
-                                          uint32_t aIdxInParent)
-{
-  uint64_t parentID = aParent->IsDoc() ?
-    0 : reinterpret_cast<uint64_t>(aParent->UniqueID());
-  nsTArray<AccessibleData> shownTree;
-  ShowEventData data(parentID, aIdxInParent, shownTree, true);
-  SerializeTree(aChild, data.NewTree());
-  MaybeSendShowEvent(data, false);
-}
-
-void
 DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent)
 {
   Accessible* parent = aShowEvent->Parent();
   uint64_t parentID = parent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(parent->UniqueID());
   uint32_t idxInParent = aShowEvent->GetAccessible()->IndexInParent();
   nsTArray<AccessibleData> shownTree;
-  ShowEventData data(parentID, idxInParent, shownTree, false);
+  ShowEventData data(parentID, idxInParent, shownTree);
   SerializeTree(aShowEvent->GetAccessible(), data.NewTree());
   MaybeSendShowEvent(data, aShowEvent->IsFromUserInput());
 }
