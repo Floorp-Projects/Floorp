@@ -68,6 +68,23 @@ add_test(function test_fromJSON() {
     Assert.throws(() => cookie.fromJSON({value: invalidType}), "Cookie value must be string");
   }
 
+  // domain
+  for (let invalidType of [42, true, [], {}, null]) {
+    let test = {
+      name: "foo",
+      value: "bar",
+      domain: invalidType
+    };
+    Assert.throws(() => cookie.fromJSON(test), "Cookie domain must be string");
+  }
+  let test = {
+    name: "foo",
+    value: "bar",
+    domain: "domain"
+  };
+  let parsedCookie = cookie.fromJSON(test);
+  equal(parsedCookie.domain, ".domain");
+
   // path
   for (let invalidType of [42, true, [], {}, null]) {
     let test = {
@@ -130,6 +147,7 @@ add_test(function test_fromJSON() {
   let full = cookie.fromJSON({
     name: "name",
     value: "value",
+    domain: ".domain",
     path: "path",
     secure: true,
     httpOnly: true,
@@ -138,6 +156,7 @@ add_test(function test_fromJSON() {
   });
   equal("name", full.name);
   equal("value", full.value);
+  equal(".domain", full.domain);
   equal("path", full.path);
   equal(true, full.secure);
   equal(true, full.httpOnly);
@@ -162,7 +181,7 @@ add_test(function test_add() {
         "Cookie must have string value");
     Assert.throws(
         () => cookie.add({name: "name", value: "value", domain: invalidType}),
-        "Cookie must have string value");
+        "Cookie must have string domain");
   }
 
   cookie.add({
