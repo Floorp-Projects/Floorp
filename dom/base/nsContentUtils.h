@@ -3203,11 +3203,12 @@ public:
    */
   static bool IsMessageInputEvent(const IPC::Message& aMsg);
 
+  static void AsyncPrecreateStringBundles();
+
 private:
   static bool InitializeEventTable();
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
-  static void AsyncPrecreateStringBundles();
 
   static bool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);
