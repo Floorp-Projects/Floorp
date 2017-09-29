@@ -305,8 +305,10 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
        || mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
 #endif
        ) &&
-      (!mImageAllocator || mImageAllocator->GetCompositorBackendType()
-                           != layers::LayersBackend::LAYERS_BASIC)) {
+      (!mImageAllocator || (mImageAllocator->GetCompositorBackendType()
+                            != layers::LayersBackend::LAYERS_BASIC &&
+                            mImageAllocator->GetCompositorBackendType()
+                            != layers::LayersBackend::LAYERS_OPENGL))) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("unsupported format type (hdr)"));
   }
