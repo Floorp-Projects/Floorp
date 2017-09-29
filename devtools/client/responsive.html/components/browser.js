@@ -15,8 +15,6 @@ const { DOM: dom, createClass, addons, PropTypes } =
 const e10s = require("../utils/e10s");
 const message = require("../utils/message");
 
-const FRAME_SCRIPT = "resource://devtools/client/responsive.html/browser/content.js";
-
 module.exports = createClass({
 
   /**
@@ -85,7 +83,8 @@ module.exports = createClass({
     e10s.on(mm, "OnContentResize", onContentResize);
 
     let ready = e10s.once(mm, "ChildScriptReady");
-    mm.loadFrameScript(FRAME_SCRIPT, true);
+    mm.loadFrameScript("resource://devtools/client/responsivedesign/" +
+                       "responsivedesign-child.js", true);
     yield ready;
 
     let browserWindow = getToplevelWindow(window);
