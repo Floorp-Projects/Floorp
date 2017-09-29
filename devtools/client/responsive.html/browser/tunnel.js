@@ -54,6 +54,9 @@ const PROPERTIES_FROM_BROWSER_WINDOW = [
   // This is used by ContentClick.jsm when opening links in ways other than just
   // navigating the viewport.
   "whereToOpenLink",
+  // This is used by various event handlers, typically to call `getTabForBrowser` to map
+  // a browser back to a tab.
+  "gBrowser",
 ];
 
 /**
