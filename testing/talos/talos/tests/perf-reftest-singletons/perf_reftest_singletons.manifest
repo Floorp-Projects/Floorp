@@ -11,3 +11,5 @@
 % http://localhost/tests/perf-reftest-singletons/coalesce-2.html
 % http://localhost/tests/perf-reftest-singletons/parent-basic-singleton.html
 % http://localhost/tests/perf-reftest-singletons/tiny-traversal-singleton.html
+% http://localhost/tests/perf-reftest-singletons/nth-index-1.html
+% http://localhost/tests/perf-reftest-singletons/nth-index-2.html
