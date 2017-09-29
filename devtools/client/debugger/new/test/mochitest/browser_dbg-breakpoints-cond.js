@@ -39,21 +39,21 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   await selectSource(dbg, "simple2");
 
-  // Adding a conditional Breakpoint
+  dump('Adding a conditional Breakpoint\n')
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
-  // Editing a conditional Breakpoint
+  dump('Editing a conditional breakpoint\n')
   await setConditionalBreakpoint(dbg, 5, "2");
   await waitForDispatch(dbg, "SET_BREAKPOINT_CONDITION");
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "12", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
-  // Removing a conditional breakpoint
+  dump("Removing a conditional breakpoint\n")
   clickElement(dbg, "gutter", 5);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   bp = findBreakpoint(dbg, "simple2", 5);
