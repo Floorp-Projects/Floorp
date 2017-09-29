@@ -2304,7 +2304,12 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& aEvent)
   if (!mContentCache.OnCompositionEvent(aEvent)) {
     return true;
   }
-  if (NS_WARN_IF(!PBrowserParent::SendCompositionEvent(aEvent))) {
+
+  bool ret =
+    Manager()->AsContentParent()->IsInputPriorityEventEnabled()
+      ? PBrowserParent::SendCompositionEvent(aEvent)
+      : PBrowserParent::SendNormalPriorityCompositionEvent(aEvent);
+  if (NS_WARN_IF(!ret)) {
     return false;
   }
   MOZ_ASSERT(aEvent.HasBeenPostedToRemoteProcess());
@@ -2322,7 +2327,11 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& aEvent)
     return true;
   }
   mContentCache.OnSelectionEvent(aEvent);
-  if (NS_WARN_IF(!PBrowserParent::SendSelectionEvent(aEvent))) {
+  bool ret =
+    Manager()->AsContentParent()->IsInputPriorityEventEnabled()
+      ? PBrowserParent::SendSelectionEvent(aEvent)
+      : PBrowserParent::SendNormalPrioritySelectionEvent(aEvent);
+  if (NS_WARN_IF(!ret)) {
     return false;
   }
   MOZ_ASSERT(aEvent.HasBeenPostedToRemoteProcess());
