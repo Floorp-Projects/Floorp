@@ -186,3 +186,43 @@ def android_toolchain_prefix(target, toolchain):
 
 imply_option('--with-toolchain-prefix', android_toolchain_prefix,
              reason='--with-android-ndk')
+
+option(env='STLPORT_CPPFLAGS',
+       nargs=1,
+       help='Options compiler should pass for standard C++ library')
+
+@depends('STLPORT_CPPFLAGS', ndk)
+@imports(_from='os.path', _import='isdir')
+def stlport_cppflags(value, ndk):
+    if value and len(value):
+        return value
+    if not ndk:
+        return
+
+    ndk_base = os.path.join(ndk, 'sources', 'cxx-stl')
+    cxx_base = os.path.join(ndk_base, 'llvm-libc++')
+    cxx_include = os.path.join(cxx_base, 'libcxx', 'include')
+    cxxabi_base = os.path.join(ndk_base, 'llvm-libc++abi')
+    cxxabi_include = os.path.join(cxxabi_base, 'libcxxabi', 'include')
+
+    if not isdir(cxx_include):
+        # NDK r13 removes the inner "libcxx" directory.
+        cxx_include = os.path.join(cxx_base, 'include')
+        if not isdir(cxx_include):
+            die("Couldn't find path to libc++ includes in the android ndk")
+
+    if not isdir(cxxabi_include):
+        # NDK r13 removes the inner "libcxxabi" directory.
+        cxxabi_include = os.path.join(cxxabi_base, 'include')
+        if not isdir(cxxabi_include):
+            die("Couldn't find path to libc++abi includes in the android ndk")
+
+    # Add android/support/include/ for prototyping long double math
+    # functions, locale-specific C library functions, multibyte support,
+    # etc.
+    return "-I%s -I%s -I%s" % (cxx_include,
+                               os.path.join(ndk, 'sources', 'android',
+                                            'support', 'include'),
+                               cxxabi_include)
+
+add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
