@@ -31,8 +31,7 @@ struct WebAudioDecodeJob final
 {
   // You may omit both the success and failure callback, or you must pass both.
   // The callbacks are only necessary for asynchronous operation.
-  WebAudioDecodeJob(const nsACString& aContentType,
-                    dom::AudioContext* aContext,
+  WebAudioDecodeJob(dom::AudioContext* aContext,
                     dom::Promise* aPromise,
                     dom::DecodeSuccessCallback* aSuccessCallback = nullptr,
                     dom::DecodeErrorCallback* aFailureCallback = nullptr);
@@ -57,7 +56,6 @@ struct WebAudioDecodeJob final
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   AudioChunk mBuffer;
-  nsCString mContentType;
   RefPtr<dom::AudioContext> mContext;
   RefPtr<dom::Promise> mPromise;
   RefPtr<dom::DecodeSuccessCallback> mSuccessCallback;
