@@ -396,6 +396,38 @@ NativeObject::ensureDenseElements(JSContext* cx, uint32_t index, uint32_t extra)
     return DenseElementResult::Success;
 }
 
+inline DenseElementResult
+NativeObject::setOrExtendDenseElements(JSContext* cx, uint32_t start, const Value* vp,
+                                       uint32_t count,
+                                       ShouldUpdateTypes updateTypes)
+{
+    if (denseElementsAreFrozen())
+        return DenseElementResult::Incomplete;
+
+    if (is<ArrayObject>() &&
+        !as<ArrayObject>().lengthIsWritable() &&
+        start + count >= as<ArrayObject>().length())
+    {
+        return DenseElementResult::Incomplete;
+    }
+
+    DenseElementResult result = ensureDenseElements(cx, start, count);
+    if (result != DenseElementResult::Success)
+        return result;
+
+    if (is<ArrayObject>() && start + count >= as<ArrayObject>().length())
+        as<ArrayObject>().setLengthInt32(start + count);
+
+    if (updateTypes == ShouldUpdateTypes::DontUpdate && !shouldConvertDoubleElements()) {
+        copyDenseElements(start, vp, count);
+    } else {
+        for (size_t i = 0; i < count; i++)
+            setDenseElementWithType(cx, start + i, vp[i]);
+    }
+
+    return DenseElementResult::Success;
+}
+
 inline Value
 NativeObject::getDenseOrTypedArrayElement(uint32_t idx)
 {
