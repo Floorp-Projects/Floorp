@@ -67,10 +67,28 @@
    of a table. */
 *|*::-moz-table-column {
   display: table-column !important;
+  /* Make sure anonymous columns don't interfere with hit testing.  Basically,
+   * they should pretend as much as possible to not exist (since in the spec
+   * they do not exist).
+   *
+   * Please make sure to not reintroduce
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1403293 if you change this
+   * bit!
+   */
+  visibility: hidden !important;
 }
 
 *|*::-moz-table-column-group {
   display: table-column-group !important;
+  /* Make sure anonymous colgroups don't interfere with hit testing.  Basically,
+   * they should pretend as much as possible to not exist (since in the spec
+   * they do not exist).
+   *
+   * Please make sure to not reintroduce
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1403293 if you change this
+   * bit!
+   */
+  visibility: hidden !important;
 }
 
 *|*::-moz-table-row-group {
