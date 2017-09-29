@@ -2382,6 +2382,20 @@ SetInitializedLength(JSContext* cx, NativeObject* obj, size_t initlen)
 }
 
 static DenseElementResult
+MoveDenseElements(JSContext* cx, NativeObject* obj, uint32_t dstStart, uint32_t srcStart,
+                  uint32_t length)
+{
+    if (obj->denseElementsAreFrozen())
+        return DenseElementResult::Incomplete;
+
+    if (!obj->maybeCopyElementsForWrite(cx))
+        return DenseElementResult::Failure;
+    obj->moveDenseElements(dstStart, srcStart, length);
+
+    return DenseElementResult::Success;
+}
+
+static DenseElementResult
 ArrayShiftDenseKernel(JSContext* cx, HandleObject obj, MutableHandleValue rval)
 {
     if (!IsPackedArray(obj) && ObjectMayHaveExtraIndexedProperties(obj))
@@ -2401,7 +2415,7 @@ ArrayShiftDenseKernel(JSContext* cx, HandleObject obj, MutableHandleValue rval)
     if (obj->as<NativeObject>().tryShiftDenseElements(1))
         return DenseElementResult::Success;
 
-    DenseElementResult result = MoveBoxedOrUnboxedDenseElements(cx, obj, 0, 1, initlen - 1);
+    DenseElementResult result = MoveDenseElements(cx, &obj->as<NativeObject>(), 0, 1, initlen - 1);
     if (result != DenseElementResult::Success)
         return result;
 
@@ -2854,16 +2868,16 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
             MOZ_ASSERT(sourceIndex <= len && targetIndex <= len && len <= UINT32_MAX,
                        "sourceIndex and targetIndex are uint32 array indices");
             MOZ_ASSERT(finalLength < len, "finalLength is strictly less than len");
+            MOZ_ASSERT(obj->isNative());
 
             /* Steps 15.a-b. */
             if (targetIndex != 0 ||
-                !obj->is<NativeObject>() ||
                 !obj->as<NativeObject>().tryShiftDenseElements(sourceIndex))
             {
-                DenseElementResult result =
-                    MoveBoxedOrUnboxedDenseElements(cx, obj, uint32_t(targetIndex),
-                                                    uint32_t(sourceIndex),
-                                                    uint32_t(len - sourceIndex));
+                DenseElementResult result = MoveDenseElements(cx, &obj->as<NativeObject>(),
+                                                              uint32_t(targetIndex),
+                                                              uint32_t(sourceIndex),
+                                                              uint32_t(len - sourceIndex));
                 MOZ_ASSERT(result != DenseElementResult::Incomplete);
                 if (result == DenseElementResult::Failure)
                     return false;
@@ -2960,10 +2974,10 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
             uint32_t start = uint32_t(actualStart);
             uint32_t length = uint32_t(len);
 
-            DenseElementResult result =
-                MoveBoxedOrUnboxedDenseElements(cx, obj, start + itemCount,
-                                                start + deleteCount,
-                                                length - (start + deleteCount));
+            DenseElementResult result = MoveDenseElements(cx, &obj->as<NativeObject>(),
+                                                          start + itemCount,
+                                                          start + deleteCount,
+                                                          length - (start + deleteCount));
             MOZ_ASSERT(result != DenseElementResult::Incomplete);
             if (result == DenseElementResult::Failure)
                 return false;
