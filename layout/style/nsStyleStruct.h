@@ -2454,35 +2454,7 @@ struct StyleShapeSource
 
   StyleShapeSource& operator=(const StyleShapeSource& aOther);
 
-  bool operator==(const StyleShapeSource& aOther) const
-  {
-    return EqualsInternal<true>(aOther);
-  }
-
-  bool DefinitelyEquals(const StyleShapeSource& aOther) const
-  {
-    return EqualsInternal<false>(aOther);
-  }
-
-  template<bool aPrecise>
-  bool EqualsInternal(const StyleShapeSource& aOther) const
-  {
-    if (mType != aOther.mType) {
-      return false;
-    }
-
-    if (mType == StyleShapeSourceType::URL) {
-      return aPrecise ? mURL->Equals(*aOther.mURL)
-                      : mURL->DefinitelyEqualURIs(*aOther.mURL);
-    } else if (mType == StyleShapeSourceType::Shape) {
-      return *mBasicShape == *aOther.mBasicShape &&
-             mReferenceBox == aOther.mReferenceBox;
-    } else if (mType == StyleShapeSourceType::Box) {
-      return mReferenceBox == aOther.mReferenceBox;
-    }
-
-    return true;
-  }
+  bool operator==(const StyleShapeSource& aOther) const;
 
   bool operator!=(const StyleShapeSource& aOther) const
   {
