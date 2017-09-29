@@ -11,6 +11,10 @@ async function waitForSourceCount(dbg, i) {
   });
 }
 
+function getLabel(dbg, index) {
+  return findElement(dbg, "sourceNode", index).textContent.trim();
+}
+
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html");
   const { selectors: { getSelectedSource }, getState } = dbg;
@@ -53,11 +57,7 @@ add_task(async function() {
   });
 
   await waitForSourceCount(dbg, 9);
-  is(
-    findElement(dbg, "sourceNode", 7).textContent,
-    "math.min.js",
-    "The dynamic script exists"
-  );
+  is(getLabel(dbg, 7), "math.min.js", "The dynamic script exists");
 
   // Make sure named eval sources appear in the list.
 });
@@ -72,20 +72,6 @@ add_task(async function() {
     content.eval("window.evaledFunc = function() {} //# sourceURL=evaled.js");
   });
   await waitForSourceCount(dbg, 3);
-  is(
-    findElement(dbg, "sourceNode", 3).textContent,
-    "(no domain)",
-    "the folder exists"
-  );
 
-  // work around: the folder is rendered at the bottom, so we close the
-  // root folder and open the (no domain) folder
-  await clickElement(dbg, "sourceArrow", 3);
-  await waitForSourceCount(dbg, 4);
-
-  is(
-    findElement(dbg, "sourceNode", 4).textContent,
-    "evaled.js",
-    "the eval script exists"
-  );
+  is(getLabel(dbg, 3), "evaled.js", "the eval script exists");
 });
