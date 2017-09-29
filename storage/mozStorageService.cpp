@@ -24,6 +24,7 @@
 #include "mozIStoragePendingStatement.h"
 
 #include "sqlite3.h"
+#include "mozilla/AutoSQLiteLifetime.h"
 
 #ifdef SQLITE_OS_WIN
 // "windows.h" was included and it can #define lots of things we care about...
@@ -31,13 +32,6 @@
 #endif
 
 #include "nsIPromptService.h"
-
-#ifdef MOZ_STORAGE_MEMORY
-#  include "mozmemory.h"
-#  ifdef MOZ_DMD
-#    include "DMD.h"
-#  endif
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Defines
@@ -282,12 +276,6 @@ Service::~Service()
   if (rc != SQLITE_OK)
     NS_WARNING("Failed to unregister sqlite vfs wrapper.");
 
-  // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
-  // there is nothing actionable we can do in that case.
-  rc = ::sqlite3_shutdown();
-  if (rc != SQLITE_OK)
-    NS_WARNING("sqlite3 did not shutdown cleanly.");
-
   shutdown(); // To release sXPConnect.
 
   gService = nullptr;
@@ -400,121 +388,7 @@ Service::shutdown()
 }
 
 sqlite3_vfs *ConstructTelemetryVFS();
-
-#ifdef MOZ_STORAGE_MEMORY
-
-namespace {
-
-// By default, SQLite tracks the size of all its heap blocks by adding an extra
-// 8 bytes at the start of the block to hold the size.  Unfortunately, this
-// causes a lot of 2^N-sized allocations to be rounded up by jemalloc
-// allocator, wasting memory.  For example, a request for 1024 bytes has 8
-// bytes added, becoming a request for 1032 bytes, and jemalloc rounds this up
-// to 2048 bytes, wasting 1012 bytes.  (See bug 676189 for more details.)
-//
-// So we register jemalloc as the malloc implementation, which avoids this
-// 8-byte overhead, and thus a lot of waste.  This requires us to provide a
-// function, sqliteMemRoundup(), which computes the actual size that will be
-// allocated for a given request.  SQLite uses this function before all
-// allocations, and may be able to use any excess bytes caused by the rounding.
-//
-// Note: the wrappers for malloc, realloc and moz_malloc_usable_size are
-// necessary because the sqlite_mem_methods type signatures differ slightly
-// from the standard ones -- they use int instead of size_t.  But we don't need
-// a wrapper for free.
-
-#ifdef MOZ_DMD
-
-// sqlite does its own memory accounting, and we use its numbers in our memory
-// reporters.  But we don't want sqlite's heap blocks to show up in DMD's
-// output as unreported, so we mark them as reported when they're allocated and
-// mark them as unreported when they are freed.
-//
-// In other words, we are marking all sqlite heap blocks as reported even
-// though we're not reporting them ourselves.  Instead we're trusting that
-// sqlite is fully and correctly accounting for all of its heap blocks via its
-// own memory accounting.  Well, we don't have to trust it entirely, because
-// it's easy to keep track (while doing this DMD-specific marking) of exactly
-// how much memory SQLite is using.  And we can compare that against what
-// SQLite reports it is using.
-
-MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(SqliteMallocSizeOfOnAlloc)
-MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(SqliteMallocSizeOfOnFree)
-
-#endif
-
-static void *sqliteMemMalloc(int n)
-{
-  void* p = ::malloc(n);
-#ifdef MOZ_DMD
-  gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
-#endif
-  return p;
-}
-
-static void sqliteMemFree(void *p)
-{
-#ifdef MOZ_DMD
-  gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
-#endif
-  ::free(p);
-}
-
-static void *sqliteMemRealloc(void *p, int n)
-{
-#ifdef MOZ_DMD
-  gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
-  void *pnew = ::realloc(p, n);
-  if (pnew) {
-    gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(pnew);
-  } else {
-    // realloc failed;  undo the SqliteMallocSizeOfOnFree from above
-    gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
-  }
-  return pnew;
-#else
-  return ::realloc(p, n);
-#endif
-}
-
-static int sqliteMemSize(void *p)
-{
-  return ::moz_malloc_usable_size(p);
-}
-
-static int sqliteMemRoundup(int n)
-{
-  n = malloc_good_size(n);
-
-  // jemalloc can return blocks of size 2 and 4, but SQLite requires that all
-  // allocations be 8-aligned.  So we round up sub-8 requests to 8.  This
-  // wastes a small amount of memory but is obviously safe.
-  return n <= 8 ? 8 : n;
-}
-
-static int sqliteMemInit(void *p)
-{
-  return 0;
-}
-
-static void sqliteMemShutdown(void *p)
-{
-}
-
-const sqlite3_mem_methods memMethods = {
-  &sqliteMemMalloc,
-  &sqliteMemFree,
-  &sqliteMemRealloc,
-  &sqliteMemSize,
-  &sqliteMemRoundup,
-  &sqliteMemInit,
-  &sqliteMemShutdown,
-  nullptr
-};
-
-} // namespace
-
-#endif  // MOZ_STORAGE_MEMORY
+const char *GetVFSName();
 
 static const char* sObserverTopics[] = {
   "memory-pressure",
@@ -527,28 +401,13 @@ Service::initialize()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be initialized on the main thread");
 
-  int rc;
-
-#ifdef MOZ_STORAGE_MEMORY
-  rc = ::sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
-  if (rc != SQLITE_OK)
-    return convertResultCode(rc);
-#endif
-
-  // TODO (bug 1191405): do not preallocate the connections caches until we
-  // have figured the impact on our consumers and memory.
-  sqlite3_config(SQLITE_CONFIG_PAGECACHE, NULL, 0, 0);
-
-  // Explicitly initialize sqlite3.  Although this is implicitly called by
-  // various sqlite3 functions (and the sqlite3_open calls in our case),
-  // the documentation suggests calling this directly.  So we do.
-  rc = ::sqlite3_initialize();
+  int rc = AutoSQLiteLifetime::getInitResult();
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
   mSqliteVFS = ConstructTelemetryVFS();
   if (mSqliteVFS) {
-    rc = sqlite3_vfs_register(mSqliteVFS, 1);
+    rc = sqlite3_vfs_register(mSqliteVFS, 0);
     if (rc != SQLITE_OK)
       return convertResultCode(rc);
   } else {
