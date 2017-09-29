@@ -1453,9 +1453,6 @@ class ActivationIterator
   protected:
     Activation* activation_;
 
-  private:
-    void settle();
-
   public:
     explicit ActivationIterator(JSContext* cx);
 
@@ -1494,7 +1491,6 @@ class JitActivation : public Activation
     uint8_t* packedExitFP_;
 
     JitActivation* prevJitActivation_;
-    bool active_;
 
     // Rematerialized Ion frames which has info copied out of snapshots. Maps
     // frame pointers (i.e. packedExitFP_) to a vector of rematerializations of all
@@ -1541,13 +1537,8 @@ class JitActivation : public Activation
 #endif
 
   public:
-    explicit JitActivation(JSContext* cx, bool active = true);
+    explicit JitActivation(JSContext* cx);
     ~JitActivation();
-
-    bool isActive() const {
-        return active_;
-    }
-    void setActive(JSContext* cx, bool active = true);
 
     bool isProfiling() const {
         // All JitActivations can be profiled.
@@ -1577,11 +1568,6 @@ class JitActivation : public Activation
     }
     void setJSExitFP(uint8_t* fp) {
         packedExitFP_ = fp;
-    }
-
-    static size_t offsetOfActiveUint8() {
-        MOZ_ASSERT(sizeof(bool) == 1);
-        return offsetof(JitActivation, active_);
     }
 
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -1621,7 +1607,6 @@ class JitActivation : public Activation
     void removeRematerializedFrame(uint8_t* top);
 
     void traceRematerializedFrames(JSTracer* trc);
-
 
     // Register the results of on Ion frame recovery.
     bool registerIonFrameRecovery(RInstructionResults&& results);

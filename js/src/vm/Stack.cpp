@@ -1519,32 +1519,25 @@ ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken e
 
 /*****************************************************************************/
 
-jit::JitActivation::JitActivation(JSContext* cx, bool active)
+jit::JitActivation::JitActivation(JSContext* cx)
   : Activation(cx, Jit),
     packedExitFP_(nullptr),
     prevJitActivation_(cx->jitActivation),
-    active_(active),
     rematerializedFrames_(nullptr),
     ionRecovery_(cx),
     bailoutData_(nullptr),
     lastProfilingFrame_(nullptr),
     lastProfilingCallSite_(nullptr)
 {
-    if (active) {
-        cx->jitActivation = this;
-        registerProfiling();
-    }
+    cx->jitActivation = this;
+    registerProfiling();
 }
 
 jit::JitActivation::~JitActivation()
 {
-    if (active_) {
-        if (isProfiling())
-            unregisterProfiling();
-        cx_->jitActivation = prevJitActivation_;
-    } else {
-        MOZ_ASSERT(cx_->jitActivation == prevJitActivation_);
-    }
+    if (isProfiling())
+        unregisterProfiling();
+    cx_->jitActivation = prevJitActivation_;
 
     // All reocvered value are taken from activation during the bailout.
     MOZ_ASSERT(ionRecovery_.empty());
@@ -1571,31 +1564,6 @@ jit::JitActivation::cleanBailoutData()
 {
     MOZ_ASSERT(bailoutData_);
     bailoutData_ = nullptr;
-}
-
-// setActive() is inlined in GenerateJitExit() with explicit masm instructions so
-// changes to the logic here need to be reflected in GenerateJitExit() in the enable
-// and disable activation instruction sequences.
-void
-jit::JitActivation::setActive(JSContext* cx, bool active)
-{
-    // Only allowed to deactivate/activate if activation is top.
-    // (Not tested and will probably fail in other situations.)
-    MOZ_ASSERT(cx->activation_ == this);
-    MOZ_ASSERT(active != active_);
-
-    if (active) {
-        *((volatile bool*) active_) = true;
-        MOZ_ASSERT(prevJitActivation_ == cx->jitActivation);
-        cx->jitActivation = this;
-
-        registerProfiling();
-    } else {
-        unregisterProfiling();
-
-        cx->jitActivation = prevJitActivation_;
-        *((volatile bool*) active_) = false;
-    }
 }
 
 void
@@ -1843,20 +1811,13 @@ Activation::unregisterProfiling()
 {
     MOZ_ASSERT(isProfiling());
     MOZ_ASSERT(cx_->profilingActivation_ == this);
-
-    // There may be a non-active jit activation in the linked list.  Skip past it.
-    Activation* prevProfiling = prevProfiling_;
-    while (prevProfiling && prevProfiling->isJit() && !prevProfiling->asJit()->isActive())
-        prevProfiling = prevProfiling->prevProfiling_;
-
-    cx_->profilingActivation_ = prevProfiling;
+    cx_->profilingActivation_ = prevProfiling_;
 }
 
 ActivationIterator::ActivationIterator(JSContext* cx)
   : activation_(cx->activation_)
 {
     MOZ_ASSERT(cx == TlsContext.get());
-    settle();
 }
 
 ActivationIterator::ActivationIterator(JSContext* cx, const CooperatingContext& target)
@@ -1873,8 +1834,6 @@ ActivationIterator::ActivationIterator(JSContext* cx, const CooperatingContext& 
     // Tolerate a null target context, in case we are iterating over the
     // activations for a zone group that is not in use by any thread.
     activation_ = target.context() ? target.context()->activation_.ref() : nullptr;
-
-    settle();
 }
 
 ActivationIterator&
@@ -1882,16 +1841,7 @@ ActivationIterator::operator++()
 {
     MOZ_ASSERT(activation_);
     activation_ = activation_->prev();
-    settle();
     return *this;
-}
-
-void
-ActivationIterator::settle()
-{
-    // Stop at the next active activation.
-    while (!done() && activation_->isJit() && !activation_->asJit()->isActive())
-        activation_ = activation_->prev();
 }
 
 JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const RegisterState& state,
@@ -1965,11 +1915,6 @@ JS::ProfilingFrameIterator::settle()
     while (iteratorDone()) {
         iteratorDestroy();
         activation_ = activation_->prevProfiling();
-
-        // Skip past any non-active jit activations in the list.
-        while (activation_ && activation_->isJit() && !activation_->asJit()->isActive())
-            activation_ = activation_->prevProfiling();
-
         if (!activation_)
             return;
         iteratorConstruct();
@@ -1984,7 +1929,6 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
     MOZ_ASSERT(activation_->isJit());
 
     jit::JitActivation* activation = activation_->asJit();
-    MOZ_ASSERT(activation->isActive());
 
     // We want to know if we should start with a wasm profiling frame iterator
     // or not. To determine this, there are three possibilities:
@@ -2010,7 +1954,6 @@ JS::ProfilingFrameIterator::iteratorConstruct()
     MOZ_ASSERT(activation_->isJit());
 
     jit::JitActivation* activation = activation_->asJit();
-    MOZ_ASSERT(activation->isActive());
 
     // The same reasoning as in the above iteratorConstruct variant applies
     // here, except that it's even simpler: since this activation is higher up
