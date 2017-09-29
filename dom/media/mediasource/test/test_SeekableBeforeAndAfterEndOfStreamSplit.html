@@ -32,16 +32,19 @@ runWithMSE(function (ms, v) {
       await once(sb, "updateend");
 
       info("- check seekable -");
+      var target = 2;
       ok(v.seekable.length, "Resource is seekable");
       is(v.seekable.start(0), 0, "Seekable's start point is correct");
       is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
+      ok(v.seekable.length &&
+         target >= v.seekable.start(0) &&
+         target < v.seekable.end(0), "Target is within seekable range");
 
       info("- call end of stream -");
       ms.endOfStream();
       await once(ms, "sourceended");
 
       info("- check seekable -");
-      var target = 2;
       ok(v.seekable.length, "Resource is seekable");
       is(v.seekable.start(0), 0, "Seekable's start point is correct");
       is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");
