@@ -233,7 +233,7 @@ def get_decision_parameters(options):
         None: True,
     }[parameters['try_mode']]
 
-    return Parameters(parameters)
+    return Parameters(**parameters)
 
 
 def write_artifact(filename, data):
