@@ -68,16 +68,13 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
     return parent;
   }
 
-  if (aFrame.IsLineFrame() || aFrame.IsLetterFrame()) {
+  if (aFrame.IsLineFrame()) {
     // A ::first-line always ends up here via its block, which is therefore the
     // right expected owner.  That block can be an
     // anonymous box.  For example, we could have a ::first-line on a columnated
     // block; the blockframe is the column-content anonymous box in that case.
     // So we don't want to end up in the code below, which steps out of anon
     // boxes.  Just return the parent of the line frame, which is the block.
-    //
-    // Ditto for ::first-letter. A first-letter always arrives here via its
-    // direct parent.
     return parent;
   }
 
@@ -570,8 +567,6 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
 static void
 UpdateFirstLetterIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
 {
-  MOZ_ASSERT(!aFrame->IsFrameOfType(nsIFrame::eBlockFrame),
-             "You're probably duplicating work with UpdatePseudoElementStyles!");
   if (!aFrame->HasFirstLetterChild()) {
     return;
   }
@@ -579,11 +574,10 @@ UpdateFirstLetterIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
   // We need to find the block the first-letter is associated with so we can
   // find the right element for the first-letter's style resolution.  Might as
   // well just delegate the whole thing to that block.
-  nsIFrame* block = aFrame->GetParent();
+  nsIFrame* block = aFrame;
   while (!block->IsFrameOfType(nsIFrame::eBlockFrame)) {
     block = block->GetParent();
   }
-
   static_cast<nsBlockFrame*>(block->FirstContinuation())->
     UpdateFirstLetterStyle(aRestyleState);
 }
@@ -644,10 +638,12 @@ static void
 UpdateFramePseudoElementStyles(nsIFrame* aFrame,
                                ServoRestyleState& aRestyleState)
 {
+  // first-letter needs to be updated before first-line, because first-line can
+  // change the style of the first-letter.
+  UpdateFirstLetterIfNeeded(aFrame, aRestyleState);
+
   if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
     static_cast<nsBlockFrame*>(aFrame)->UpdatePseudoElementStyles(aRestyleState);
-  } else {
-    UpdateFirstLetterIfNeeded(aFrame, aRestyleState);
   }
 
   UpdateBackdropIfNeeded(
