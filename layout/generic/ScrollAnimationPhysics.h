@@ -8,88 +8,26 @@
 
 #include "mozilla/TimeStamp.h"
 #include "nsPoint.h"
-#include "nsSMILKeySpline.h"
 
 namespace mozilla {
 
-struct ScrollAnimationPhysicsSettings
-{
-  // These values are minimum and maximum animation duration per event,
-  // and a global ratio which defines how longer is the animation's duration
-  // compared to the average recent events intervals (such that for a relatively
-  // consistent events rate, the next event arrives before current animation ends)
-  int32_t mMinMS;
-  int32_t mMaxMS;
-  double mIntervalRatio;
-};
-
-// This is the base class for driving scroll wheel animation on both the
-// compositor and main thread.
 class ScrollAnimationPhysics
 {
 public:
-  typedef mozilla::TimeStamp TimeStamp;
-  typedef mozilla::TimeDuration TimeDuration;
-
-  explicit ScrollAnimationPhysics(nsPoint aStartPos,
-                                  const ScrollAnimationPhysicsSettings& aSettings);
-
-  void Update(TimeStamp aTime,
-              nsPoint aDestination,
-              const nsSize& aCurrentVelocity);
+  virtual void Update(const TimeStamp& aTime,
+                      const nsPoint& aDestination,
+                      const nsSize& aCurrentVelocity) = 0;
 
   // Get the velocity at a point in time in nscoords/sec.
-  nsSize VelocityAt(TimeStamp aTime);
+  virtual nsSize VelocityAt(const TimeStamp& aTime) = 0;
 
   // Returns the expected scroll position at a given point in time, in app
   // units, relative to the scroll frame.
-  nsPoint PositionAt(TimeStamp aTime);
+  virtual nsPoint PositionAt(const TimeStamp& aTime) = 0;
 
-  bool IsFinished(TimeStamp aTime) {
-    return aTime > mStartTime + mDuration;
-  }
+  virtual bool IsFinished(const TimeStamp& aTime) = 0;
 
-protected:
-  double ProgressAt(TimeStamp aTime) const {
-    return clamped((aTime - mStartTime) / mDuration, 0.0, 1.0);
-  }
-
-  nscoord VelocityComponent(double aTimeProgress,
-                            const nsSMILKeySpline& aTimingFunction,
-                            nscoord aStart, nscoord aDestination) const;
-
-  // Calculate duration, possibly dynamically according to events rate and
-  // event origin. (also maintain previous timestamps - which are only used
-  // here).
-  TimeDuration ComputeDuration(TimeStamp aTime);
-
-  // Initializes the timing function in such a way that the current velocity is
-  // preserved.
-  void InitTimingFunction(nsSMILKeySpline& aTimingFunction,
-                          nscoord aCurrentPos, nscoord aCurrentVelocity,
-                          nscoord aDestination);
-
-  // Initialize event history.
-  void InitializeHistory(TimeStamp aTime);
-
-  // Cached Preferences values.
-  ScrollAnimationPhysicsSettings mSettings;
-
-  // mPrevEventTime holds previous 3 timestamps for intervals averaging (to
-  // reduce duration fluctuations). When AsyncScroll is constructed and no
-  // previous timestamps are available (indicated with mIsFirstIteration),
-  // initialize mPrevEventTime using imaginary previous timestamps with maximum
-  // relevant intervals between them.
-  TimeStamp mPrevEventTime[3];
-
-  TimeStamp mStartTime;
-
-  nsPoint mStartPos;
-  nsPoint mDestination;
-  TimeDuration mDuration;
-  nsSMILKeySpline mTimingFunctionX;
-  nsSMILKeySpline mTimingFunctionY;
-  bool mIsFirstIteration;
+  virtual ~ScrollAnimationPhysics() {}
 };
 
 // Helper for accelerated wheel deltas. This can be called from the main thread

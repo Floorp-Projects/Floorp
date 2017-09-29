@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ScrollAnimationPhysics.h"
+#include "ScrollAnimationBezierPhysics.h"
 #include "gfxPrefs.h"
 
 using namespace mozilla;
 
-ScrollAnimationPhysics::ScrollAnimationPhysics(nsPoint aStartPos,
-                                const ScrollAnimationPhysicsSettings& aSettings)
+ScrollAnimationBezierPhysics::ScrollAnimationBezierPhysics(const nsPoint& aStartPos,
+                                const ScrollAnimationBezierPhysicsSettings& aSettings)
  : mSettings(aSettings)
  , mStartPos(aStartPos)
  , mIsFirstIteration(true)
@@ -17,9 +17,9 @@ ScrollAnimationPhysics::ScrollAnimationPhysics(nsPoint aStartPos,
 }
 
 void
-ScrollAnimationPhysics::Update(TimeStamp aTime,
-                               nsPoint aDestination,
-                               const nsSize& aCurrentVelocity)
+ScrollAnimationBezierPhysics::Update(const TimeStamp& aTime,
+                                     const nsPoint& aDestination,
+                                     const nsSize& aCurrentVelocity)
 {
   if (mIsFirstIteration) {
     InitializeHistory(aTime);
@@ -53,7 +53,7 @@ ScrollAnimationPhysics::Update(TimeStamp aTime,
 }
 
 TimeDuration
-ScrollAnimationPhysics::ComputeDuration(TimeStamp aTime)
+ScrollAnimationBezierPhysics::ComputeDuration(const TimeStamp& aTime)
 {
   // Average last 3 delta durations (rounding errors up to 2ms are negligible for us)
   int32_t eventsDeltaMs = (aTime - mPrevEventTime[2]).ToMilliseconds() / 3;
@@ -74,7 +74,7 @@ ScrollAnimationPhysics::ComputeDuration(TimeStamp aTime)
 }
 
 void
-ScrollAnimationPhysics::InitializeHistory(TimeStamp aTime)
+ScrollAnimationBezierPhysics::InitializeHistory(const TimeStamp& aTime)
 {
   // Starting a new scroll (i.e. not when extending an existing scroll animation),
   // create imaginary prev timestamps with maximum relevant intervals between them.
@@ -88,10 +88,10 @@ ScrollAnimationPhysics::InitializeHistory(TimeStamp aTime)
 }
 
 void
-ScrollAnimationPhysics::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
-                                           nscoord aCurrentPos,
-                                           nscoord aCurrentVelocity,
-                                           nscoord aDestination)
+ScrollAnimationBezierPhysics::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
+                                                 nscoord aCurrentPos,
+                                                 nscoord aCurrentVelocity,
+                                                 nscoord aDestination)
 {
   if (aDestination == aCurrentPos || gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
     aTimingFunction.Init(0, 0, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
@@ -107,7 +107,7 @@ ScrollAnimationPhysics::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
 }
 
 nsPoint
-ScrollAnimationPhysics::PositionAt(TimeStamp aTime)
+ScrollAnimationBezierPhysics::PositionAt(const TimeStamp& aTime)
 {
   if (IsFinished(aTime)) {
     return mDestination;
@@ -120,7 +120,7 @@ ScrollAnimationPhysics::PositionAt(TimeStamp aTime)
 }
 
 nsSize
-ScrollAnimationPhysics::VelocityAt(TimeStamp aTime)
+ScrollAnimationBezierPhysics::VelocityAt(const TimeStamp& aTime)
 {
   if (IsFinished(aTime)) {
     return nsSize(0, 0);
@@ -134,10 +134,10 @@ ScrollAnimationPhysics::VelocityAt(TimeStamp aTime)
 }
 
 nscoord
-ScrollAnimationPhysics::VelocityComponent(double aTimeProgress,
-                                          const nsSMILKeySpline& aTimingFunction,
-                                          nscoord aStart,
-                                          nscoord aDestination) const
+ScrollAnimationBezierPhysics::VelocityComponent(double aTimeProgress,
+                                                const nsSMILKeySpline& aTimingFunction,
+                                                nscoord aStart,
+                                                nscoord aDestination) const
 {
   double dt, dxy;
   aTimingFunction.GetSplineDerivativeValues(aTimeProgress, dt, dxy);
