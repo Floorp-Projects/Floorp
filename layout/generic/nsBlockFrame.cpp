@@ -7581,6 +7581,12 @@ nsBlockFrame::ResolveBidi()
 void
 nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
 {
+  // first-letter needs to be updated before first-line, because first-line can
+  // change the style of the first-letter.
+  if (HasFirstLetterChild()) {
+    UpdateFirstLetterStyle(aRestyleState);
+  }
+
   if (nsBulletFrame* bullet = GetBullet()) {
     CSSPseudoElementType type = bullet->StyleContext()->GetPseudoType();
     RefPtr<nsStyleContext> newBulletStyle =

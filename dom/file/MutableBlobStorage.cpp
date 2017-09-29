@@ -413,7 +413,7 @@ MutableBlobStorage::~MutableBlobStorage()
   }
 }
 
-uint64_t
+void
 MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
                                      const nsACString& aContentType,
                                      MutableBlobStorageCallback* aCallback)
@@ -433,7 +433,7 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
       RefPtr<Runnable> runnable =
         new BlobCreationDoneRunnable(this, aCallback, nullptr, mErrorResult);
       EventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-      return 0;
+      return;
     }
 
     // We want to wait until all the WriteRunnable are completed. The way we do
@@ -442,7 +442,7 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
     RefPtr<Runnable> runnable =
       new LastRunnable(this, aParent, aContentType, aCallback);
     DispatchToIOThread(runnable.forget());
-    return mDataLen;
+    return;
   }
 
   // If we are waiting for the temporary file, it's better to wait...
@@ -450,7 +450,7 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
     mPendingParent = aParent;
     mPendingContentType = aContentType;
     mPendingCallback = aCallback;
-    return mDataLen;
+    return;
   }
 
   RefPtr<BlobImpl> blobImpl;
@@ -472,10 +472,8 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
 
   nsresult error = EventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(error))) {
-    return 0;
+    return;
   }
-
-  return mDataLen;
 }
 
 nsresult

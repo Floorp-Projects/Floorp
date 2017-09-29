@@ -562,7 +562,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
     successCallback = &aSuccessCallback.Value();
   }
   UniquePtr<WebAudioDecodeJob> job(
-    new WebAudioDecodeJob(contentType, this,
+    new WebAudioDecodeJob(this,
                           promise, successCallback, failureCallback));
   AsyncDecodeWebAudio(contentType.get(), data, length, *job);
   // Transfer the ownership to mDecodeJobs
