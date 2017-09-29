@@ -8,7 +8,7 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const {LongStringClient} = require("devtools/shared/client/main");
+const LongStringClient = require("devtools/shared/client/long-string-client");
 
 /**
  * A WebConsoleClient is used as a front end for the WebConsoleActor that is

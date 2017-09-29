@@ -6,7 +6,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { ObjectClient } = require("devtools/shared/client/main");
+const ObjectClient = require("devtools/shared/client/object-client");
 
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/old-event-emitter");

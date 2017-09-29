@@ -16,7 +16,7 @@ const PanelHeader = createFactory(require("../panel-header"));
 const TargetList = createFactory(require("../target-list"));
 
 loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/main", true);
+  "devtools/shared/client/debugger-client", true);
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");

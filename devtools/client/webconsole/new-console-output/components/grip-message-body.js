@@ -17,7 +17,7 @@ const {
   createFactory,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { ObjectClient } = require("devtools/shared/client/main");
+const ObjectClient = require("devtools/shared/client/object-client");
 const {
   MESSAGE_TYPE,
   JSTERM_COMMANDS,

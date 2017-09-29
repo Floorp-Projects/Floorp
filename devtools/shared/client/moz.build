@@ -14,7 +14,6 @@ DevToolsModules(
     'environment-client.js',
     'event-source.js',
     'long-string-client.js',
-    'main.js',
     'object-client.js',
     'property-iterator-client.js',
     'root-client.js',

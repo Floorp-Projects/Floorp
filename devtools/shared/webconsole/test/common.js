@@ -16,7 +16,8 @@ const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {Task} = require("devtools/shared/task");
 const {DebuggerServer} = require("devtools/server/main");
-const {DebuggerClient, ObjectClient} = require("devtools/shared/client/main");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+const ObjectClient = require("devtools/shared/client/object-client");
 const Services = require("Services");
 
 function initCommon() {
