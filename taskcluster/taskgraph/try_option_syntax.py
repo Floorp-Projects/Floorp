@@ -304,6 +304,8 @@ class TryOptionSyntax(object):
         self.no_retry = False
 
         options = parameters['try_options']
+        if not options:
+            return None
         self.jobs = self.parse_jobs(options['jobs'])
         self.build_types = self.parse_build_types(options['build_types'], full_task_graph)
         self.platforms = self.parse_platforms(options['platforms'], full_task_graph)
