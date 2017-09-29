@@ -58,7 +58,7 @@ add_task(async function test_legacy_indexedDB_storagePersistent_unlimitedStorage
 
         browser.test.notifyPass("indexeddb-storagePersistent-unlimitedStorage-done");
       } catch (error) {
-        const loggedError = error instanceof DOMError ? error.message : error;
+        const loggedError = error instanceof DOMException ? error.message : error;
         browser.test.fail(`error while testing persistent IndexedDB storage: ${loggedError}`);
         browser.test.notifyFail("indexeddb-storagePersistent-unlimitedStorage-done");
       }

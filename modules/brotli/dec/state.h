@@ -172,7 +172,7 @@ struct BrotliDecoderStateStruct {
   uint32_t space;
 
   HuffmanCode table[32];
-  /* List of of symbol chains. */
+  /* List of heads of symbol chains. */
   uint16_t* symbol_lists;
   /* Storage from symbol_lists. */
   uint16_t symbols_lists_array[BROTLI_HUFFMAN_MAX_CODE_LENGTH + 1 +
@@ -197,10 +197,6 @@ struct BrotliDecoderStateStruct {
   uint32_t mtf_upper_bound;
   uint32_t mtf[64 + 1];
 
-  /* For custom dictionaries */
-  const uint8_t* custom_dict;
-  int custom_dict_size;
-
   /* less used attributes are in the end of this struct */
   /* States inside function calls */
   BrotliRunningMetablockHeaderState substate_metablock_header;
@@ -215,6 +211,7 @@ struct BrotliDecoderStateStruct {
   unsigned int is_uncompressed : 1;
   unsigned int is_metadata : 1;
   unsigned int should_wrap_ringbuffer : 1;
+  unsigned int canny_ringbuffer_allocation : 1;
   unsigned int size_nibbles : 8;
   uint32_t window_bits;
 

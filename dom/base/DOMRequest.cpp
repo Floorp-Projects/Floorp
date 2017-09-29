@@ -6,7 +6,7 @@
 
 #include "DOMRequest.h"
 
-#include "DOMError.h"
+#include "DOMException.h"
 #include "nsThreadUtils.h"
 #include "DOMCursor.h"
 #include "mozilla/ErrorResult.h"
@@ -17,7 +17,7 @@
 #include "nsContentUtils.h"
 
 using mozilla::dom::AnyCallback;
-using mozilla::dom::DOMError;
+using mozilla::dom::DOMException;
 using mozilla::dom::DOMRequest;
 using mozilla::dom::DOMRequestService;
 using mozilla::dom::DOMCursor;
@@ -108,7 +108,7 @@ DOMRequest::GetResult(JS::MutableHandle<JS::Value> aResult)
 NS_IMETHODIMP
 DOMRequest::GetError(nsISupports** aError)
 {
-  NS_IF_ADDREF(*aError = GetError());
+  NS_IF_ADDREF(*aError = static_cast<Exception*>(GetError()));
   return NS_OK;
 }
 
@@ -140,7 +140,9 @@ DOMRequest::FireError(const nsAString& aError)
   NS_ASSERTION(mResult.isUndefined(), "mResult shouldn't have been set!");
 
   mDone = true;
-  mError = new DOMError(GetOwner(), aError);
+  // XXX Error code chosen arbitrarily
+  mError = DOMException::Create(NS_ERROR_DOM_UNKNOWN_ERR,
+                                NS_ConvertUTF16toUTF8(aError));
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
 
@@ -157,7 +159,7 @@ DOMRequest::FireError(nsresult aError)
   NS_ASSERTION(mResult.isUndefined(), "mResult shouldn't have been set!");
 
   mDone = true;
-  mError = new DOMError(GetOwner(), aError);
+  mError = DOMException::Create(aError);
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
 
@@ -167,7 +169,7 @@ DOMRequest::FireError(nsresult aError)
 }
 
 void
-DOMRequest::FireDetailedError(DOMError* aError)
+DOMRequest::FireDetailedError(DOMException* aError)
 {
   NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
   NS_ASSERTION(!mError, "mError shouldn't have been set!");
@@ -286,9 +288,9 @@ DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
                                      nsISupports* aError)
 {
   NS_ENSURE_STATE(aRequest);
-  nsCOMPtr<DOMError> err = do_QueryInterface(aError);
+  nsCOMPtr<nsIException> err = do_QueryInterface(aError);
   NS_ENSURE_STATE(err);
-  static_cast<DOMRequest*>(aRequest)->FireDetailedError(err);
+  static_cast<DOMRequest*>(aRequest)->FireDetailedError(static_cast<DOMException*>(err.get()));
 
   return NS_OK;
 }

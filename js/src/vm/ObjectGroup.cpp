@@ -793,7 +793,7 @@ GetValueTypeForTable(const Value& v)
     return type;
 }
 
-/* static */ JSObject*
+/* static */ ArrayObject*
 ObjectGroup::newArrayObject(JSContext* cx,
                             const Value* vp, size_t length,
                             NewObjectKind newKind, NewArrayKind arrayKind)
@@ -876,8 +876,6 @@ ObjectGroup::newArrayObject(JSContext* cx,
     // information, but make sure when creating an unboxed array that the
     // common element type is suitable for the unboxed representation.
     ShouldUpdateTypes updateTypes = ShouldUpdateTypes::DontUpdate;
-    if (!MaybeAnalyzeBeforeCreatingLargeArray(cx, group, vp, length))
-        return nullptr;
     if (group->maybePreliminaryObjects())
         group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
 
@@ -1484,18 +1482,6 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* scriptArg, jsbytecode*
         }
     }
 
-    if (kind == JSProto_Array &&
-        (JSOp(*pc) == JSOP_NEWARRAY || IsCallPC(pc)) &&
-        cx->options().unboxedArrays())
-    {
-        PreliminaryObjectArrayWithTemplate* preliminaryObjects =
-            cx->new_<PreliminaryObjectArrayWithTemplate>(nullptr);
-        if (preliminaryObjects)
-            res->setPreliminaryObjects(preliminaryObjects);
-        else
-            cx->recoverFromOutOfMemory();
-    }
-
     if (!table->add(p, key, res)) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -1720,15 +1706,6 @@ ObjectGroupCompartment::getStringSplitStringGroup(JSContext* cx)
     group = makeGroup(cx, clasp, tagged, /* initialFlags = */ 0);
     if (!group)
         return nullptr;
-
-    if (cx->options().unboxedArrays()) {
-        PreliminaryObjectArrayWithTemplate* preliminaryObjects =
-            cx->new_<PreliminaryObjectArrayWithTemplate>(nullptr);
-        if (preliminaryObjects)
-            group->setPreliminaryObjects(preliminaryObjects);
-        else
-            cx->recoverFromOutOfMemory();
-    }
 
     groups.stringSplitStringGroup.set(group);
     return group;

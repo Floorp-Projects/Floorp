@@ -6,7 +6,7 @@
 MY_TEMP_DIR=`mktemp -d -t brotli_update.XXXXXX` || exit 1
 
 git clone https://github.com/google/brotli ${MY_TEMP_DIR}/brotli
-git -C ${MY_TEMP_DIR}/brotli checkout v0.6.0
+git -C ${MY_TEMP_DIR}/brotli checkout v1.0.1
 
 COMMIT=$(git -C ${MY_TEMP_DIR}/brotli rev-parse HEAD)
 perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[commit ${COMMIT}]/" README.mozilla;
@@ -15,7 +15,7 @@ DIRS="common dec enc include tools"
 
 for d in $DIRS; do
 	rm -rf $d
-	mv ${MY_TEMP_DIR}/brotli/$d $d
+	mv ${MY_TEMP_DIR}/brotli/c/$d $d
 done
 rm -rf ${MY_TEMP_DIR}
 

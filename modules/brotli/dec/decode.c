@@ -39,6 +39,11 @@ extern "C" {
 #define HUFFMAN_TABLE_BITS 8U
 #define HUFFMAN_TABLE_MASK 0xff
 
+/* We need the slack region for the following reasons:
+    - doing up to two 16-byte copies for fast backward copying
+    - inserting transformed dictionary word (5 prefix + 24 base + 8 suffix) */
+static const uint32_t kRingBufferWriteAheadSlack = 42;
+
 static const uint8_t kCodeLengthCodeOrder[BROTLI_CODE_LENGTH_CODES] = {
   1, 2, 3, 4, 0, 5, 17, 6, 16, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 };
@@ -51,6 +56,17 @@ static const uint8_t kCodeLengthPrefixLength[16] = {
 static const uint8_t kCodeLengthPrefixValue[16] = {
   0, 4, 3, 2, 0, 4, 3, 1, 0, 4, 3, 2, 0, 4, 3, 5,
 };
+
+BROTLI_BOOL BrotliDecoderSetParameter(
+    BrotliDecoderState* state, BrotliDecoderParameter p, uint32_t value) {
+  switch (p) {
+    case BROTLI_DECODER_PARAM_DISABLE_RING_BUFFER_REALLOCATION:
+      state->canny_ringbuffer_allocation = !!value ? 0 : 1;
+      return BROTLI_TRUE;
+
+    default: return BROTLI_FALSE;
+  }
+}
 
 BrotliDecoderState* BrotliDecoderCreateInstance(
     brotli_alloc_func alloc_func, brotli_free_func free_func, void* opaque) {
@@ -66,7 +82,6 @@ BrotliDecoderState* BrotliDecoderCreateInstance(
   }
   BrotliDecoderStateInitWithCustomAllocators(
       state, alloc_func, free_func, opaque);
-  state->error_code = BROTLI_DECODER_NO_ERROR;
   return state;
 }
 
@@ -1211,7 +1226,9 @@ static BrotliDecoderErrorCode BROTLI_NOINLINE WriteRingBuffer(
   BROTLI_LOG_UINT(to_write);
   BROTLI_LOG_UINT(num_written);
   s->partial_pos_out += num_written;
-  if (total_out) *total_out = s->partial_pos_out - (size_t)s->custom_dict_size;
+  if (total_out) {
+    *total_out = s->partial_pos_out;
+  }
   if (num_written < to_write) {
     if (s->ringbuffer_size == (1 << s->window_bits) || force) {
       return BROTLI_DECODER_NEEDS_MORE_OUTPUT;
@@ -1243,22 +1260,16 @@ static void BROTLI_NOINLINE WrapRingBuffer(BrotliDecoderState* s) {
 
    Last two bytes of ring-buffer are initialized to 0, so context calculation
    could be done uniformly for the first two and all other positions.
-
-   Custom dictionary, if any, is copied to the end of ring-buffer.
 */
 static BROTLI_BOOL BROTLI_NOINLINE BrotliEnsureRingBuffer(
     BrotliDecoderState* s) {
-  /* We need the slack region for the following reasons:
-      - doing up to two 16-byte copies for fast backward copying
-      - inserting transformed dictionary word (5 prefix + 24 base + 8 suffix) */
-  static const int kRingBufferWriteAheadSlack = 42;
   uint8_t* old_ringbuffer = s->ringbuffer;
   if (s->ringbuffer_size == s->new_ringbuffer_size) {
     return BROTLI_TRUE;
   }
 
-  s->ringbuffer = (uint8_t*)BROTLI_ALLOC(s, (size_t)(s->new_ringbuffer_size +
-      kRingBufferWriteAheadSlack));
+  s->ringbuffer = (uint8_t*)BROTLI_ALLOC(s, (size_t)(s->new_ringbuffer_size) +
+      kRingBufferWriteAheadSlack);
   if (s->ringbuffer == 0) {
     /* Restore previous value. */
     s->ringbuffer = old_ringbuffer;
@@ -1267,13 +1278,7 @@ static BROTLI_BOOL BROTLI_NOINLINE BrotliEnsureRingBuffer(
   s->ringbuffer[s->new_ringbuffer_size - 2] = 0;
   s->ringbuffer[s->new_ringbuffer_size - 1] = 0;
 
-  if (!old_ringbuffer) {
-    if (s->custom_dict) {
-      memcpy(s->ringbuffer, s->custom_dict, (size_t)s->custom_dict_size);
-      s->partial_pos_out = (size_t)s->custom_dict_size;
-      s->pos = s->custom_dict_size;
-    }
-  } else {
+  if (!!old_ringbuffer) {
     memcpy(s->ringbuffer, old_ringbuffer, (size_t)s->pos);
     BROTLI_FREE(s, old_ringbuffer);
   }
@@ -1362,16 +1367,20 @@ static void BROTLI_NOINLINE BrotliCalculateRingBufferSize(
   }
 
   if (!s->ringbuffer) {
-    /* Custom dictionary counts as a "virtual" output. */
-    output_size = s->custom_dict_size;
+    output_size = 0;
   } else {
     output_size = s->pos;
   }
   output_size += s->meta_block_remaining_len;
   min_size = min_size < output_size ? output_size : min_size;
 
-  while ((new_ringbuffer_size >> 1) >= min_size) {
-    new_ringbuffer_size >>= 1;
+  if (!!s->canny_ringbuffer_allocation) {
+    /* Reduce ring buffer size to save memory when server is unscrupulous.
+       In worst case memory usage might be 1.5x bigger for a short period of
+       ring buffer reallocation.*/
+    while ((new_ringbuffer_size >> 1) >= min_size) {
+      new_ringbuffer_size >>= 1;
+    }
   }
 
   s->new_ringbuffer_size = new_ringbuffer_size;
@@ -1736,17 +1745,20 @@ CommandPostDecodeLiterals:
   /* Apply copy of LZ77 back-reference, or static dictionary reference if
   the distance is larger than the max LZ77 distance */
   if (s->distance_code > s->max_distance) {
+    int address = s->distance_code - s->max_distance - 1;
     if (i >= BROTLI_MIN_DICTIONARY_WORD_LENGTH &&
         i <= BROTLI_MAX_DICTIONARY_WORD_LENGTH) {
       int offset = (int)s->dictionary->offsets_by_length[i];
-      int word_id = s->distance_code - s->max_distance - 1;
       uint32_t shift = s->dictionary->size_bits_by_length[i];
       int mask = (int)BitMask(shift);
-      int word_idx = word_id & mask;
-      int transform_idx = word_id >> shift;
+      int word_idx = address & mask;
+      int transform_idx = address >> shift;
       /* Compensate double distance-ring-buffer roll. */
       s->dist_rb_idx += s->distance_context;
       offset += word_idx * i;
+      if (BROTLI_PREDICT_FALSE(!s->dictionary->data)) {
+        return BROTLI_FAILURE(BROTLI_DECODER_ERROR_DICTIONARY_NOT_SET);
+      }
       if (transform_idx < kNumTransforms) {
         const uint8_t* word = &s->dictionary->data[offset];
         int len = i;
@@ -1899,6 +1911,10 @@ BrotliDecoderResult BrotliDecoderDecompressStream(
     size_t* available_out, uint8_t** next_out, size_t* total_out) {
   BrotliDecoderErrorCode result = BROTLI_DECODER_SUCCESS;
   BrotliBitReader* br = &s->br;
+  /* Do not try to process further in a case of unrecoverable error. */
+  if ((int)s->error_code < 0) {
+    return BROTLI_DECODER_RESULT_ERROR;
+  }
   if (*available_out && (!next_out || !*next_out)) {
     return SaveErrorCode(
         s, BROTLI_FAILURE(BROTLI_DECODER_ERROR_INVALID_ARGUMENTS));
@@ -1919,7 +1935,13 @@ BrotliDecoderResult BrotliDecoderDecompressStream(
     if (result != BROTLI_DECODER_SUCCESS) { /* Error, needs more input/output */
       if (result == BROTLI_DECODER_NEEDS_MORE_INPUT) {
         if (s->ringbuffer != 0) { /* Pro-actively push output. */
-          WriteRingBuffer(s, available_out, next_out, total_out, BROTLI_TRUE);
+          BrotliDecoderErrorCode intermediate_result = WriteRingBuffer(s,
+              available_out, next_out, total_out, BROTLI_TRUE);
+          /* WriteRingBuffer checks s->meta_block_remaining_len validity. */
+          if ((int)intermediate_result < 0) {
+            result = intermediate_result;
+            break;
+          }
         }
         if (s->buffer_length != 0) { /* Used with internal buffer. */
           if (br->avail_in == 0) { /* Successfully finished read transaction. */
@@ -1993,11 +2015,6 @@ BrotliDecoderResult BrotliDecoderDecompressStream(
         }
         /* Maximum distance, see section 9.1. of the spec. */
         s->max_backward_distance = (1 << s->window_bits) - BROTLI_WINDOW_GAP;
-        /* Limit custom dictionary size. */
-        if (s->custom_dict_size >= s->max_backward_distance) {
-          s->custom_dict += s->custom_dict_size - s->max_backward_distance;
-          s->custom_dict_size = s->max_backward_distance;
-        }
 
         /* Allocate memory for both block_type_trees and block_len_trees. */
         s->block_type_trees = (HuffmanCode*)BROTLI_ALLOC(s,
@@ -2294,16 +2311,11 @@ BrotliDecoderResult BrotliDecoderDecompressStream(
   return SaveErrorCode(s, result);
 }
 
-void BrotliDecoderSetCustomDictionary(
-    BrotliDecoderState* s, size_t size, const uint8_t* dict) {
-  if (size > (1u << 24)) {
-    return;
-  }
-  s->custom_dict = dict;
-  s->custom_dict_size = (int)size;
-}
-
 BROTLI_BOOL BrotliDecoderHasMoreOutput(const BrotliDecoderState* s) {
+  /* After unrecoverable error remaining output is considered nonsensical. */
+  if ((int)s->error_code < 0) {
+    return BROTLI_FALSE;
+  }
   return TO_BROTLI_BOOL(
       s->ringbuffer != 0 && UnwrittenBytes(s, BROTLI_FALSE) != 0);
 }
@@ -2313,17 +2325,20 @@ const uint8_t* BrotliDecoderTakeOutput(BrotliDecoderState* s, size_t* size) {
   size_t available_out = *size ? *size : 1u << 24;
   size_t requested_out = available_out;
   BrotliDecoderErrorCode status;
-  if (s->ringbuffer == 0) {
+  if ((s->ringbuffer == 0) || ((int)s->error_code < 0)) {
     *size = 0;
     return 0;
   }
   WrapRingBuffer(s);
   status = WriteRingBuffer(s, &available_out, &result, 0, BROTLI_TRUE);
+  /* Either WriteRingBuffer returns those "success" codes... */
   if (status == BROTLI_DECODER_SUCCESS ||
       status == BROTLI_DECODER_NEEDS_MORE_OUTPUT) {
     *size = requested_out - available_out;
   } else {
-    /* This might happen if previous decoder error code was ignored. */
+    /* ... or stream is broken. Normally this should be caught by
+       BrotliDecoderDecompressStream, this is just a safeguard. */
+    if ((int)status < 0) SaveErrorCode(s, status);
     *size = 0;
     result = 0;
   }

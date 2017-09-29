@@ -16,6 +16,10 @@ if (AppConstants.platform == "win" && AppConstants.DEBUG) {
   Services.prefs.setBoolPref("extensions.webextensions.remote", false);
 }
 
+Components.utils.import("resource://testing-common/PromiseTestUtils.jsm");
+
+PromiseTestUtils.expectUncaughtRejection(/Message manager disconnected/);
+
 /* globals browser*/
 
 const profileDir = gProfD.clone();
