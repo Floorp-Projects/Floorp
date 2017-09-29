@@ -29,6 +29,7 @@ class COMPtrHolder
 public:
   typedef ProxyUniquePtr<Interface> COMPtrType;
   typedef COMPtrHolder<Interface, _IID> ThisType;
+  typedef typename detail::EnvironmentSelector<Interface>::Type EnvType;
 
   COMPtrHolder() {}
 
@@ -38,6 +39,12 @@ public:
 
   explicit COMPtrHolder(COMPtrType&& aPtr)
     : mPtr(Forward<COMPtrType>(aPtr))
+  {
+  }
+
+  COMPtrHolder(COMPtrType&& aPtr, const ActivationContext& aActCtx)
+    : mPtr(Forward<COMPtrType>(aPtr))
+    , mActCtx(aActCtx)
   {
   }
 
@@ -54,6 +61,11 @@ public:
   void Set(COMPtrType&& aPtr)
   {
     mPtr = Forward<COMPtrType>(aPtr);
+  }
+
+  void SetActCtx(const ActivationContext& aActCtx)
+  {
+    mActCtx = aActCtx;
   }
 
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -123,7 +135,8 @@ public:
 
 private:
   // This is mutable to facilitate the above operator= hack
-  mutable COMPtrType mPtr;
+  mutable COMPtrType  mPtr;
+  ActivationContext   mActCtx;
 
 #if defined(MOZ_CONTENT_SANDBOX)
   // This is mutable so that we may optionally store a reference to a marshaled
@@ -151,11 +164,13 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
     const bool sIsStreamPreservationNeeded = false;
 #endif // defined(MOZ_CONTENT_SANDBOX)
 
+    paramType::EnvType env;
+
     mozilla::mscom::ProxyStreamFlags flags = sIsStreamPreservationNeeded ?
          mozilla::mscom::ProxyStreamFlags::ePreservable :
          mozilla::mscom::ProxyStreamFlags::eDefault;
 
-    mozilla::mscom::ProxyStream proxyStream(_IID, aParam.Get(), flags);
+    mozilla::mscom::ProxyStream proxyStream(_IID, aParam.Get(), &env, flags);
     int bufLen;
     const BYTE* buf = proxyStream.GetBuffer(bufLen);
     MOZ_ASSERT(buf || !bufLen);
@@ -193,7 +208,9 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
       }
     }
 
-    mozilla::mscom::ProxyStream proxyStream(_IID, buf.get(), length);
+    paramType::EnvType env;
+
+    mozilla::mscom::ProxyStream proxyStream(_IID, buf.get(), length, &env);
     if (!proxyStream.IsValid()) {
 #if defined(MOZ_CRASHREPORTER)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamValid"),
