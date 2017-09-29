@@ -242,8 +242,9 @@ class Theme {
 
   /**
    * Unloads the currently applied theme.
+   * @param {Object} targetWindow The window the theme should be unloaded from
    */
-  unload() {
+  unload(targetWindow) {
     let lwtStyles = {
       headerURL: "",
       accentcolor: "",
@@ -253,6 +254,10 @@ class Theme {
       textcolor: "",
       icons: {},
     };
+
+    if (targetWindow) {
+      lwtStyles.window = getWinUtils(targetWindow).outerWindowID;
+    }
 
     for (let icon of ICONS) {
       lwtStyles.icons[`--${icon}--icon`] = "";
@@ -313,7 +318,7 @@ this.theme = class extends ExtensionAPI {
           }
           this.theme.load(details, browserWindow);
         },
-        reset: () => {
+        reset: (windowId) => {
           if (!gThemesEnabled) {
             // Return early if themes are disabled.
             return;
@@ -324,7 +329,12 @@ this.theme = class extends ExtensionAPI {
             return;
           }
 
-          this.theme.unload();
+          let browserWindow;
+          if (windowId !== null) {
+            browserWindow = windowTracker.getWindow(windowId, context);
+          }
+
+          this.theme.unload(browserWindow);
         },
       },
     };
