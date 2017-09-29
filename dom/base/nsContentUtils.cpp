@@ -801,7 +801,9 @@ nsContentUtils::Init()
   }
   uuidGenerator.forget(&sUUIDGenerator);
 
-  AsyncPrecreateStringBundles();
+  if (XRE_IsParentProcess()) {
+    AsyncPrecreateStringBundles();
+  }
 
   RefPtr<UserInteractionObserver> uio = new UserInteractionObserver();
   uio->Init();
