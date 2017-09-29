@@ -19,7 +19,6 @@ browser.jar:
     content/browser/schemas/menus_internal.json
     content/browser/schemas/omnibox.json
     content/browser/schemas/page_action.json
-    content/browser/schemas/pkcs11.json
     content/browser/schemas/sessions.json
     content/browser/schemas/sidebar_action.json
     content/browser/schemas/tabs.json
