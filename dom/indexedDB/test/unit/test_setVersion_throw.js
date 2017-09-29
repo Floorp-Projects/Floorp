@@ -47,7 +47,7 @@ function* testSteps()
   event.preventDefault();
 
   is(event.type, "error", "Got an error event for db 2");
-  ok(event.target.error instanceof DOMError, "Request has a DOMError");
+  ok(event.target.error instanceof DOMException, "Request has a DOMException");
   is(event.target.error.name, "AbortError", "Request has AbortError");
 
   finishTest();

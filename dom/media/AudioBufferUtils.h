@@ -33,15 +33,41 @@ template<typename T>
 class AudioCallbackBufferWrapper
 {
 public:
+  AudioCallbackBufferWrapper()
+    : mBuffer(nullptr)
+    , mSamples(0)
+    , mSampleWriteOffset(1)
+    , mChannels(0)
+  {}
+
   explicit AudioCallbackBufferWrapper(uint32_t aChannels)
-    : mBuffer(nullptr),
-      mSamples(0),
-      mSampleWriteOffset(1),
-      mChannels(aChannels)
+    : mBuffer(nullptr)
+    , mSamples(0)
+    , mSampleWriteOffset(1)
+    , mChannels(aChannels)
 
   {
     MOZ_ASSERT(aChannels);
   }
+
+  AudioCallbackBufferWrapper& operator=(const AudioCallbackBufferWrapper& aOther)
+  {
+    MOZ_ASSERT(!aOther.mBuffer,
+               "Don't use this ctor after AudioCallbackDriver::Init");
+    MOZ_ASSERT(aOther.mSamples == 0,
+               "Don't use this ctor after AudioCallbackDriver::Init");
+    MOZ_ASSERT(aOther.mSampleWriteOffset == 1,
+               "Don't use this ctor after AudioCallbackDriver::Init");
+    MOZ_ASSERT(aOther.mChannels != 0);
+
+    mBuffer = nullptr;
+    mSamples = 0;
+    mSampleWriteOffset = 1;
+    mChannels = aOther.mChannels;
+
+    return *this;
+  }
+
   /**
    * Set the buffer in this wrapper. This is to be called at the beginning of
    * the callback.
@@ -109,7 +135,7 @@ private:
   /* The position at which new samples should be written. We want to return to
    * the audio callback iff this is equal to mSamples. */
   uint32_t mSampleWriteOffset;
-  uint32_t const mChannels;
+  uint32_t mChannels;
 };
 
 /**
@@ -122,6 +148,12 @@ template<typename T, uint32_t BLOCK_SIZE>
 class SpillBuffer
 {
 public:
+  SpillBuffer()
+    : mBuffer(nullptr)
+    , mPosition(0)
+    , mChannels(0)
+  {}
+
   explicit SpillBuffer(uint32_t aChannels)
   : mPosition(0)
   , mChannels(aChannels)
@@ -129,6 +161,25 @@ public:
     MOZ_ASSERT(aChannels);
     mBuffer = MakeUnique<T[]>(BLOCK_SIZE * mChannels);
     PodZero(mBuffer.get(), BLOCK_SIZE * mChannels);
+  }
+
+  SpillBuffer& operator=(SpillBuffer& aOther)
+  {
+    MOZ_ASSERT(aOther.mPosition == 0,
+        "Don't use this ctor after AudioCallbackDriver::Init");
+    MOZ_ASSERT(aOther.mChannels != 0);
+    MOZ_ASSERT(aOther.mBuffer);
+
+    mPosition = aOther.mPosition;
+    mChannels = aOther.mChannels;
+    mBuffer = Move(aOther.mBuffer);
+
+    return *this;
+  }
+
+  SpillBuffer& operator=(SpillBuffer&& aOther)
+  {
+    return this->operator=(aOther);
   }
 
   /* Empty the spill buffer into the buffer of the audio callback. This returns
@@ -170,7 +221,7 @@ private:
   /* The current write position, in samples, in the buffer when filling, or the
    * amount of buffer filled when emptying. */
   uint32_t mPosition;
-  uint32_t const mChannels;
+  uint32_t mChannels;
 };
 
 } // namespace mozilla

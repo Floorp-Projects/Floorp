@@ -5816,19 +5816,17 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
 };
 
 // Like LStoreElementV, but supports indexes >= initialized length.
-class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 1>
+class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(StoreElementHoleV)
 
     LStoreElementHoleV(const LAllocation& object, const LAllocation& elements,
-                       const LAllocation& index, const LBoxAllocation& value,
-                       const LDefinition& temp) {
+                       const LAllocation& index, const LBoxAllocation& value) {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setBoxOperand(Value, value);
-        setTemp(0, temp);
     }
 
     static const size_t Value = 3;
@@ -5848,19 +5846,17 @@ class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 1>
 };
 
 // Like LStoreElementT, but supports indexes >= initialized length.
-class LStoreElementHoleT : public LInstructionHelper<0, 4, 1>
+class LStoreElementHoleT : public LInstructionHelper<0, 4, 0>
 {
   public:
     LIR_HEADER(StoreElementHoleT)
 
     LStoreElementHoleT(const LAllocation& object, const LAllocation& elements,
-                       const LAllocation& index, const LAllocation& value,
-                       const LDefinition& temp) {
+                       const LAllocation& index, const LAllocation& value) {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setOperand(3, value);
-        setTemp(0, temp);
     }
 
     const MStoreElementHole* mir() const {
@@ -5881,19 +5877,17 @@ class LStoreElementHoleT : public LInstructionHelper<0, 4, 1>
 };
 
 // Like LStoreElementV, but can just ignore assignment (for eg. frozen objects)
-class LFallibleStoreElementV : public LInstructionHelper<0, 3 + BOX_PIECES, 1>
+class LFallibleStoreElementV : public LInstructionHelper<0, 3 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(FallibleStoreElementV)
 
     LFallibleStoreElementV(const LAllocation& object, const LAllocation& elements,
-                           const LAllocation& index, const LBoxAllocation& value,
-                           const LDefinition& temp) {
+                           const LAllocation& index, const LBoxAllocation& value) {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setBoxOperand(Value, value);
-        setTemp(0, temp);
     }
 
     static const size_t Value = 3;
@@ -5913,19 +5907,17 @@ class LFallibleStoreElementV : public LInstructionHelper<0, 3 + BOX_PIECES, 1>
 };
 
 // Like LStoreElementT, but can just ignore assignment (for eg. frozen objects)
-class LFallibleStoreElementT : public LInstructionHelper<0, 4, 1>
+class LFallibleStoreElementT : public LInstructionHelper<0, 4, 0>
 {
   public:
     LIR_HEADER(FallibleStoreElementT)
 
     LFallibleStoreElementT(const LAllocation& object, const LAllocation& elements,
-                           const LAllocation& index, const LAllocation& value,
-                           const LDefinition& temp) {
+                           const LAllocation& index, const LAllocation& value) {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setOperand(3, value);
-        setTemp(0, temp);
     }
 
     const MFallibleStoreElement* mir() const {

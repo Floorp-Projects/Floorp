@@ -59,7 +59,7 @@ public:
 
   Result<nsString, nsresult> GetURL(const nsAString& aPath) const;
 
-  bool CanAccessURI(nsIURI* aURI, bool aExplicit = false) const
+  bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false) const
   {
     return mHostPermissions && mHostPermissions->Matches(aURI, aExplicit);
   }

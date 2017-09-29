@@ -62,9 +62,9 @@ static const uint64_t kCutoffTransforms =
 
 typedef struct HasherSearchResult {
   size_t len;
-  size_t len_x_code; /* == len ^ len_code */
   size_t distance;
   score_t score;
+  int len_code_delta; /* == len_code - len */
 } HasherSearchResult;
 
 /* kHashMul32 multiplier has these properties:
@@ -173,27 +173,29 @@ static BROTLI_INLINE BROTLI_BOOL TestStaticDictionaryItem(
     backward = max_backward + dist + 1 +
         (transform_id << dictionary->size_bits_by_length[len]);
   }
+  if (backward >= BROTLI_MAX_DISTANCE) {
+    return BROTLI_FALSE;
+  }
   score = BackwardReferenceScore(matchlen, backward);
   if (score < out->score) {
     return BROTLI_FALSE;
   }
   out->len = matchlen;
-  out->len_x_code = len ^ matchlen;
+  out->len_code_delta = (int)len - (int)matchlen;
   out->distance = backward;
   out->score = score;
   return BROTLI_TRUE;
 }
 
-static BROTLI_INLINE BROTLI_BOOL SearchInStaticDictionary(
+static BROTLI_INLINE void SearchInStaticDictionary(
     const BrotliDictionary* dictionary, const uint16_t* dictionary_hash,
     HasherHandle handle, const uint8_t* data, size_t max_length,
     size_t max_backward, HasherSearchResult* out, BROTLI_BOOL shallow) {
   size_t key;
   size_t i;
-  BROTLI_BOOL is_match_found = BROTLI_FALSE;
   HasherCommon* self = GetHasherCommon(handle);
   if (self->dict_num_matches < (self->dict_num_lookups >> 7)) {
-    return BROTLI_FALSE;
+    return;
   }
   key = Hash14(data) << 1;
   for (i = 0; i < (shallow ? 1u : 2u); ++i, ++key) {
@@ -204,11 +206,9 @@ static BROTLI_INLINE BROTLI_BOOL SearchInStaticDictionary(
           dictionary, item, data, max_length, max_backward, out);
       if (item_matches) {
         self->dict_num_matches++;
-        is_match_found = BROTLI_TRUE;
       }
     }
   }
-  return is_match_found;
 }
 
 typedef struct BackwardMatch {
@@ -417,30 +417,6 @@ static BROTLI_INLINE void HasherSetup(MemoryManager* m, HasherHandle* handle,
         common->dict_num_matches = 0;
     }
     common->is_prepared_ = BROTLI_TRUE;
-  }
-}
-
-/* Custom LZ77 window. */
-static BROTLI_INLINE void HasherPrependCustomDictionary(
-    MemoryManager* m, HasherHandle* handle, BrotliEncoderParams* params,
-    const size_t size, const uint8_t* dict) {
-  size_t overlap;
-  size_t i;
-  HasherHandle self;
-  HasherSetup(m, handle, params, dict, 0, size, BROTLI_FALSE);
-  if (BROTLI_IS_OOM(m)) return;
-  self = *handle;
-  switch (GetHasherCommon(self)->params.type) {
-#define PREPEND_(N)                             \
-    case N:                                     \
-      overlap = (StoreLookaheadH ## N()) - 1;   \
-      for (i = 0; i + overlap < size; i++) {    \
-        StoreH ## N(self, dict, ~(size_t)0, i); \
-      }                                         \
-      break;
-    FOR_ALL_HASHERS(PREPEND_)
-#undef PREPEND_
-    default: break;
   }
 }
 

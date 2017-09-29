@@ -68,7 +68,7 @@ const TaskUtils = {
    *
    * @return {Promise}
    * @resolve {ArrayBuffer} In case of success, the bytes contained in the blob.
-   * @reject {DOMError} In case of error, the underlying DOMError.
+   * @reject {DOMException} In case of error, the underlying DOMException.
    */
   readBlob: function readBlob(blob) {
     return new Promise((resolve, reject) => {

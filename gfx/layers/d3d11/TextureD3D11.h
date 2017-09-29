@@ -398,6 +398,8 @@ public:
 
   virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
 
+  virtual uint32_t NumSubTextures() const override;
+
   virtual void PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
                                    ResourceUpdateOp aOp,
                                    const Range<wr::ImageKey>& aImageKeys,

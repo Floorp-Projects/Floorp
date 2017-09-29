@@ -26,7 +26,7 @@ class ErrorResult;
 
 namespace dom {
 
-class DOMError;
+class DOMException;
 class IDBCursor;
 class IDBDatabase;
 class IDBFactory;
@@ -49,7 +49,7 @@ protected:
   RefPtr<IDBTransaction> mTransaction;
 
   JS::Heap<JS::Value> mResultVal;
-  RefPtr<DOMError> mError;
+  RefPtr<DOMException> mError;
 
   nsString mFilename;
   uint64_t mLoggingSerialNumber;
@@ -109,7 +109,7 @@ public:
   }
 #endif
 
-  DOMError*
+  DOMException*
   GetErrorAfterResult() const
 #ifdef DEBUG
   ;
@@ -119,7 +119,7 @@ public:
   }
 #endif
 
-  DOMError*
+  DOMException*
   GetError(ErrorResult& aRv);
 
   void

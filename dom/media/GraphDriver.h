@@ -453,8 +453,8 @@ public:
 
   uint32_t OutputChannelCount()
   {
-    MOZ_ASSERT(mOuputChannels != 0 && mOuputChannels <= 8);
-    return mOuputChannels;
+    MOZ_ASSERT(mOutputChannels != 0 && mOutputChannels <= 8);
+    return mOutputChannels;
   }
 
   /* Enqueue a promise that is going to be resolved when a specific operation
@@ -493,7 +493,7 @@ private:
   friend class AsyncCubebTask;
   bool Init();
   /* MediaStreamGraphs are always down/up mixed to output channels. */
-  uint32_t mOuputChannels;
+  uint32_t mOutputChannels;
   /* The size of this buffer comes from the fact that some audio backends can
    * call back with a number of frames lower than one block (128 frames), so we
    * need to keep at most two block in the SpillBuffer, because we always round
