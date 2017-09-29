@@ -192,6 +192,21 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
+    public synchronized boolean isTunneledPlaybackSupported()
+    {
+      if (mRemote == null) {
+          Log.e(LOGTAG, "cannot check isTunneledPlaybackSupported with an ended codec");
+          return false;
+      }
+      try {
+            return mRemote.isTunneledPlaybackSupported();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @WrapForJNI
     public synchronized boolean input(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot send input to an ended codec");
