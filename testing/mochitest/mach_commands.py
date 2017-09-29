@@ -411,6 +411,10 @@ class MachCommands(MachCommandBase):
             if result:
                 overall = result
 
+            # Halt tests on keyboard interrupt
+            if result == -1:
+                break
+
         # TODO consolidate summaries from all suites
         return overall
 

@@ -3047,14 +3047,13 @@ static bool
 Clone(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject parent(cx);
-    RootedObject funobj(cx);
 
-    if (!args.length()) {
+    if (args.length() == 0) {
         JS_ReportErrorASCII(cx, "Invalid arguments to clone");
         return false;
     }
 
+    RootedObject funobj(cx);
     {
         Maybe<JSAutoCompartment> ac;
         RootedObject obj(cx, args[0].isPrimitive() ? nullptr : &args[0].toObject());
@@ -3074,19 +3073,20 @@ Clone(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
+    RootedObject env(cx);
     if (args.length() > 1) {
-        if (!JS_ValueToObject(cx, args[1], &parent))
+        if (!JS_ValueToObject(cx, args[1], &env))
             return false;
     } else {
-        parent = js::GetGlobalForObjectCrossCompartment(&args.callee());
+        env = js::GetGlobalForObjectCrossCompartment(&args.callee());
     }
 
     // Should it worry us that we might be getting with wrappers
     // around with wrappers here?
-    JS::AutoObjectVector scopeChain(cx);
-    if (!parent->is<GlobalObject>() && !scopeChain.append(parent))
+    JS::AutoObjectVector envChain(cx);
+    if (env && !env->is<GlobalObject>() && !envChain.append(env))
         return false;
-    JSObject* clone = JS::CloneFunctionObject(cx, funobj, scopeChain);
+    JSObject* clone = JS::CloneFunctionObject(cx, funobj, envChain);
     if (!clone)
         return false;
     args.rval().setObject(*clone);
@@ -6213,6 +6213,10 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpecWithHelp shell_functions[] = {
+    JS_FN_HELP("clone", Clone, 1, 0,
+"clone(fun[, scope])",
+"  Clone function object."),
+
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
 "  Get or force a script compilation version number."),
@@ -6694,10 +6698,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 };
 
 static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
-    JS_FN_HELP("clone", Clone, 1, 0,
-"clone(fun[, scope])",
-"  Clone function object."),
-
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"

@@ -1986,33 +1986,33 @@ Simulator::writeDW(int32_t addr, int32_t value1, int32_t value2)
 int32_t
 Simulator::readExDW(int32_t addr, int32_t* hibits)
 {
-#if defined(__clang__) && defined(__i386)
-    // This is OK for now, we don't yet generate LDREXD.
-    MOZ_CRASH("Unimplemented - 8-byte atomics are unsupported in Clang on i386");
-#else
     if ((addr & 3) == 0) {
         SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
+        // The spec says that the low part of value shall be read from addr and
+        // the high part shall be read from addr+4.  On a little-endian system
+        // where we read a 64-bit quadword the low part of the value will be in
+        // the low part of the quadword, and the high part of the value in the
+        // high part of the quadword.
         uint64_t value = loadRelaxed(ptr);
         exclusiveMonitorSet(value);
-        *hibits = int32_t(value);
-        return int32_t(value >> 32);
+        *hibits = int32_t(value >> 32);
+        return int32_t(value);
     }
     printf("Unaligned read at 0x%08x\n", addr);
     MOZ_CRASH();
     return 0;
-#endif
 }
 
 int32_t
 Simulator::writeExDW(int32_t addr, int32_t value1, int32_t value2)
 {
-#if defined(__clang__) && defined(__i386)
-    // This is OK for now, we don't yet generate STREXD.
-    MOZ_CRASH("Unimplemented - 8-byte atomics are unsupported in Clang on i386");
-#else
     if ((addr & 3) == 0) {
         SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
-        uint64_t value = (uint64_t(value1) << 32) | uint32_t(value2);
+        // The spec says that value1 shall be stored at addr and value2 at
+        // addr+4.  On a little-endian system that means constructing a 64-bit
+        // value where value1 is in the low half of a 64-bit quadword and value2
+        // is in the high half of the quadword.
+        uint64_t value = (uint64_t(value2) << 32) | uint32_t(value1);
         bool held;
         uint64_t expected = exclusiveMonitorGetAndClear(&held);
         if (!held)
@@ -2023,7 +2023,6 @@ Simulator::writeExDW(int32_t addr, int32_t value1, int32_t value2)
         printf("Unaligned write at 0x%08x\n", addr);
         MOZ_CRASH();
     }
-#endif
 }
 
 uintptr_t
@@ -4689,6 +4688,9 @@ Simulator::decodeSpecialCondition(SimInstruction* instr)
       case 0xA:
         if (instr->bits(31,20) == 0xf57) {
             switch (instr->bits(7,4)) {
+              case 1: // CLREX
+                exclusiveMonitorClear();
+                break;
               case 5: // DMB
                 AtomicOperations::fenceSeqCst();
                 break;

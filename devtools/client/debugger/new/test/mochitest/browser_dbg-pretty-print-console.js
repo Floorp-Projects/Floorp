@@ -10,7 +10,7 @@ async function waitFor(condition) {
   return condition();
 }
 
-add_task(async function () {
+add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
   invokeInTab("arithmetic");
 
@@ -19,7 +19,9 @@ add_task(async function () {
   const console = await toolbox.selectTool("webconsole");
   const hud = console.hud;
 
-  let node = await waitFor(() => hud.ui.outputNode.querySelector(".frame-link-source"));
+  let node = await waitFor(() =>
+    hud.ui.outputNode.querySelector(".frame-link-source")
+  );
   const initialLocation = "math.min.js:3:65";
   is(node.textContent, initialLocation, "location is correct in minified code");
 
@@ -43,5 +45,9 @@ add_task(async function () {
     return found;
   });
 
-  is(node.textContent, "math.min.js:formatted:22", "location is correct in minified code");
+  is(
+    node.textContent,
+    "math.min.js:formatted:22",
+    "location is correct in minified code"
+  );
 });
