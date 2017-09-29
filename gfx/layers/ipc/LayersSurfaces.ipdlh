@@ -100,12 +100,15 @@ struct RGBDescriptor {
 
 struct YCbCrDescriptor {
   IntSize ySize;
+  uint32_t yStride;
   IntSize cbCrSize;
+  uint32_t cbCrStride;
   uint32_t yOffset;
   uint32_t cbOffset;
   uint32_t crOffset;
   StereoMode stereoMode;
   YUVColorSpace yUVColorSpace;
+  uint32_t bitDepth;
   bool hasIntermediateBuffer;
 };
 
