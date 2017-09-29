@@ -71,14 +71,13 @@ const char* const kFragBody_RGBA = "\
 const char* const kFragBody_CrYCb = "\
     VARYING vec2 vTexCoord0;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
-    uniform mat4 uColorMatrix;                                               \n\
+    uniform MAT4X3 uColorMatrix;                                             \n\
                                                                              \n\
     void main(void)                                                          \n\
     {                                                                        \n\
         vec4 yuv = vec4(TEXTURE(uTex0, vTexCoord0).gbr,                      \n\
                         1.0);                                                \n\
-        vec4 rgb = uColorMatrix * yuv;                                       \n\
-        FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
+        FRAG_COLOR = vec4((uColorMatrix * yuv).rgb, 1.0);                    \n\
     }                                                                        \n\
 ";
 const char* const kFragBody_NV12 = "\
@@ -86,15 +85,14 @@ const char* const kFragBody_NV12 = "\
     VARYING vec2 vTexCoord1;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
     uniform SAMPLER uTex1;                                                   \n\
-    uniform mat4 uColorMatrix;                                               \n\
+    uniform MAT4X3 uColorMatrix;                                             \n\
                                                                              \n\
     void main(void)                                                          \n\
     {                                                                        \n\
         vec4 yuv = vec4(TEXTURE(uTex0, vTexCoord0).x,                        \n\
                         TEXTURE(uTex1, vTexCoord1).xy,                       \n\
                         1.0);                                                \n\
-        vec4 rgb = uColorMatrix * yuv;                                       \n\
-        FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
+        FRAG_COLOR = vec4((uColorMatrix * yuv).rgb, 1.0);                    \n\
     }                                                                        \n\
 ";
 const char* const kFragBody_PlanarYUV = "\
@@ -103,7 +101,7 @@ const char* const kFragBody_PlanarYUV = "\
     uniform SAMPLER uTex0;                                                   \n\
     uniform SAMPLER uTex1;                                                   \n\
     uniform SAMPLER uTex2;                                                   \n\
-    uniform mat4 uColorMatrix;                                               \n\
+    uniform MAT4X3 uColorMatrix;                                             \n\
                                                                              \n\
     void main(void)                                                          \n\
     {                                                                        \n\
@@ -111,8 +109,7 @@ const char* const kFragBody_PlanarYUV = "\
                         TEXTURE(uTex1, vTexCoord1).x,                        \n\
                         TEXTURE(uTex2, vTexCoord1).x,                        \n\
                         1.0);                                                \n\
-        vec4 rgb = uColorMatrix * yuv;                                       \n\
-        FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
+        FRAG_COLOR = vec4((uColorMatrix * yuv).rgb, 1.0);                    \n\
     }                                                                        \n\
 ";
 
@@ -376,11 +373,29 @@ DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
     , mLoc_uTexMatrix0(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix0"))
     , mLoc_uTexMatrix1(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix1"))
     , mLoc_uColorMatrix(mParent.mGL->fGetUniformLocation(mProg, "uColorMatrix"))
+    , mType_uColorMatrix(0)
 {
     MOZ_ASSERT(mLoc_uDestMatrix != -1);
     MOZ_ASSERT(mLoc_uTexMatrix0 != -1);
     if (mLoc_uColorMatrix != -1) {
         MOZ_ASSERT(mLoc_uTexMatrix1 != -1);
+
+        const auto& gl = mParent.mGL;
+        int32_t numActiveUniforms = 0;
+        gl->fGetProgramiv(mProg, LOCAL_GL_ACTIVE_UNIFORMS, &numActiveUniforms);
+
+        const size_t kMaxNameSize = 32;
+        char name[kMaxNameSize] = {0};
+        GLint size = 0;
+        GLenum type = 0;
+        for (int32_t i = 0; i < numActiveUniforms; i++) {
+            gl->fGetActiveUniform(mProg, i, kMaxNameSize, nullptr, &size, &type, name);
+            if (strcmp("uColorMatrix", name) == 0) {
+                mType_uColorMatrix = type;
+                break;
+            }
+        }
+        MOZ_ASSERT(mType_uColorMatrix);
     }
 }
 
@@ -429,7 +444,23 @@ DrawBlitProg::Draw(const BaseArgs& args, const YUVArgs* const argsYUV) const
         gl->fUniformMatrix3fv(mLoc_uTexMatrix1, 1, false, argsYUV->texMatrix1.m);
 
         const auto& colorMatrix = gfxUtils::YuvToRgbMatrix4x4ColumnMajor(argsYUV->colorSpace);
-        gl->fUniformMatrix4fv(mLoc_uColorMatrix, 1, false, colorMatrix);
+        float mat4x3[4*3];
+        switch (mType_uColorMatrix) {
+        case LOCAL_GL_FLOAT_MAT4:
+            gl->fUniformMatrix4fv(mLoc_uColorMatrix, 1, false, colorMatrix);
+            break;
+        case LOCAL_GL_FLOAT_MAT4x3:
+            for (int x = 0; x < 4; x++) {
+                for (int y = 0; y < 3; y++) {
+                    mat4x3[3*x+y] = colorMatrix[4*x+y];
+                }
+            }
+            gl->fUniformMatrix4x3fv(mLoc_uColorMatrix, 1, false, mat4x3);
+            break;
+        default:
+            gfxCriticalError() << "Bad mType_uColorMatrix: "
+                               << gfx::hexa(mType_uColorMatrix);
+        }
     }
 
     // --
@@ -513,8 +544,12 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
 
     // --
 
-    if (!mGL->IsGLES()) {
-        const auto glslVersion = mGL->ShadingLanguageVersion();
+    const auto glslVersion = mGL->ShadingLanguageVersion();
+    if (mGL->IsGLES()) {
+        if (glslVersion >= 300) {
+            mDrawBlitProg_VersionLine = nsPrintfCString("#version %u es\n", glslVersion);
+        }
+    } else {
         if (glslVersion >= 130) {
             mDrawBlitProg_VersionLine = nsPrintfCString("#version %u\n", glslVersion);
         }
@@ -588,7 +623,6 @@ GLBlitHelper::GetDrawBlitProg(const DrawBlitProg::Key& key) const
     return pair.second;
 }
 
-
 const DrawBlitProg*
 GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
 {
@@ -604,11 +638,16 @@ GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
         #if __VERSION__ >= 130                                               \n\
             #define VARYING in                                               \n\
             #define FRAG_COLOR oFragColor                                    \n\
-                                                                             \n\
             out vec4 FRAG_COLOR;                                             \n\
         #else                                                                \n\
             #define VARYING varying                                          \n\
             #define FRAG_COLOR gl_FragColor                                  \n\
+        #endif                                                               \n\
+                                                                             \n\
+        #if __VERSION__ >= 120                                               \n\
+            #define MAT4X3 mat4x3                                            \n\
+        #else                                                                \n\
+            #define MAT4X3 mat4                                              \n\
         #endif                                                               \n\
     ";
 
