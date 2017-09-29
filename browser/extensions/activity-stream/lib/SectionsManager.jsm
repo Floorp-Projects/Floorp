@@ -52,6 +52,10 @@ const BUILT_IN_SECTIONS = {
     title: {id: "header_highlights"},
     maxRows: 3,
     availableContextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
+    infoOption: {
+      header: {id: "settings_pane_highlights_header"},
+      body: {id: "settings_pane_highlights_body2"}
+    },
     emptyState: {
       message: {id: "highlights_empty_state"},
       icon: "highlights"

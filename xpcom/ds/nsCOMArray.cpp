@@ -8,6 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "nsQuickSort.h"
 
 #include "nsCOMPtr.h"
 

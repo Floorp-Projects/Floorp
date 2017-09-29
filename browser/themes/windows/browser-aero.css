@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %filter substitution
-%define toolbarShadowColor hsla(209,67%,12%,0.35)
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
@@ -260,7 +259,7 @@
     /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
      * Borders for win7 are below, win10 doesn't need them. */
     #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
-      border-top: 1px solid @toolbarShadowColor@;
+      border-top: 1px solid @glassShadowColor@;
     }
   }
 
@@ -290,13 +289,13 @@
     /* Vertical toolbar border */
     #main-window[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
     #main-window[sizemode=normal] #navigator-toolbox:-moz-lwtheme {
-      border-left: 1px solid @toolbarShadowColor@;
-      border-right: 1px solid @toolbarShadowColor@;
+      border-left: 1px solid @glassShadowColor@;
+      border-right: 1px solid @glassShadowColor@;
       background-clip: padding-box;
     }
 
     #main-window[sizemode=normal] #navigator-toolbox:not(:-moz-lwtheme)::after {
-      box-shadow: 1px 0 0 @toolbarShadowColor@, -1px 0 0 @toolbarShadowColor@;
+      box-shadow: 1px 0 0 @glassShadowColor@, -1px 0 0 @glassShadowColor@;
       margin-left: 1px;
       margin-right: 1px;
     }
@@ -304,12 +303,12 @@
     #main-window[sizemode=normal] #browser-border-start,
     #main-window[sizemode=normal] #browser-border-end {
       display: -moz-box;
-      background-color: @toolbarShadowColor@;
+      background-color: @glassShadowColor@;
       width: 1px;
     }
 
     #main-window[sizemode=normal] #browser-bottombox {
-      border: 1px solid @toolbarShadowColor@;
+      border: 1px solid @glassShadowColor@;
       border-top-style: none;
       background-clip: padding-box;
     }
@@ -321,11 +320,6 @@
 }
 
 @media (-moz-windows-glass) {
-  #main-window[sizemode=normal] #nav-bar {
-    border-top-left-radius: 2.5px;
-    border-top-right-radius: 2.5px;
-  }
-
   /* Set to full fill-opacity to improve visibility of toolbar buttons on aero glass. */
   #TabsToolbar:not(:-moz-lwtheme) {
     --toolbarbutton-icon-fill-opacity: 1;

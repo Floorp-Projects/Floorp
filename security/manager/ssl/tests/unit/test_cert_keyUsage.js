@@ -14,7 +14,7 @@ const caList = [ "ca-no-keyUsage-extension", "ca-missing-keyCertSign",
 const eeList = [ "ee-no-keyUsage-extension", "ee-keyCertSign-only",
                  "ee-keyEncipherment-only", "ee-keyCertSign-and-keyEncipherment" ];
 
-const caUsage = [ certificateUsageSSLCA, certificateUsageVerifyCA ];
+const caUsage = [ certificateUsageSSLCA ];
 const allEEUsages = [ certificateUsageSSLClient, certificateUsageSSLServer,
                       certificateUsageEmailSigner, certificateUsageEmailRecipient,
                       certificateUsageObjectSigner ];

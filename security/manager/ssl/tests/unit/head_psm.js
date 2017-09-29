@@ -91,8 +91,6 @@ const certificateUsageSSLCA                  = 0x0008;
 const certificateUsageEmailSigner            = 0x0010;
 const certificateUsageEmailRecipient         = 0x0020;
 const certificateUsageObjectSigner           = 0x0040;
-const certificateUsageVerifyCA               = 0x0100;
-const certificateUsageStatusResponder        = 0x0400;
 
 // A map from the name of a certificate usage to the value of the usage.
 // Useful for printing debugging information and for enumerating all supported
@@ -104,8 +102,6 @@ const allCertificateUsages = {
   certificateUsageEmailSigner,
   certificateUsageEmailRecipient,
   certificateUsageObjectSigner,
-  certificateUsageVerifyCA,
-  certificateUsageStatusResponder
 };
 
 const NO_FLAGS = 0;

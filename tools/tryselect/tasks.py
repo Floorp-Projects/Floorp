@@ -5,16 +5,32 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import sys
 
 from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
 
 from taskgraph.generator import TaskGraphGenerator
-from taskgraph.parameters import load_parameters_file
+from taskgraph.parameters import (
+    ParameterMismatch,
+    load_parameters_file,
+)
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
+
+
+PARAMETER_MISMATCH = """
+ERROR - The parameters being used to generate tasks differ from those defined
+in your working copy:
+
+    {}
+
+To fix this, either rebase onto the latest mozilla-central or pass in
+-p/--parameters. For more information on how to define parameters, see:
+https://firefox-source-docs.mozilla.org/taskcluster/taskcluster/mach.html#parameters
+"""
 
 
 def invalidate(cache):
@@ -45,8 +61,12 @@ def generate_tasks(params=None, full=False):
         os.makedirs(cache_dir)
 
     print("Task configuration changed, generating {}".format(attr.replace('_', ' ')))
-    params = load_parameters_file(params)
-    params.check()
+    try:
+        params = load_parameters_file(params)
+        params.check()
+    except ParameterMismatch as e:
+        print(PARAMETER_MISMATCH.format(e.args[0]))
+        sys.exit(1)
 
     cwd = os.getcwd()
     os.chdir(build.topsrcdir)

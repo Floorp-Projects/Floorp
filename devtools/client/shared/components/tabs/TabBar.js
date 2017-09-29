@@ -9,7 +9,7 @@
 "use strict";
 
 const { DOM, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
-const Tabs = createFactory(require("devtools/client/shared/components/tabs/tabs").Tabs);
+const Tabs = createFactory(require("devtools/client/shared/components/tabs/Tabs").Tabs);
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");

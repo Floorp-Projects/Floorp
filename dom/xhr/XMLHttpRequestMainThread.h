@@ -308,6 +308,7 @@ public:
 private:
   virtual ~XMLHttpRequestMainThread();
 
+  nsresult MaybeSilentSendFailure(nsresult aRv);
   nsresult SendInternal(const BodyExtractorBase* aBody);
 
   bool IsCrossSiteCORSRequest() const;

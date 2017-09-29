@@ -19,10 +19,10 @@ const { Rep } = REPS;
 const { FILTER_SEARCH_DELAY } = require("../constants");
 
 // Components
-const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
-const TreeViewClass = require("devtools/client/shared/components/tree/tree-view");
+const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
+const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const TreeView = createFactory(TreeViewClass);
-const TreeRow = createFactory(require("devtools/client/shared/components/tree/tree-row"));
+const TreeRow = createFactory(require("devtools/client/shared/components/tree/TreeRow"));
 const SourceEditor = createFactory(require("./source-editor"));
 
 const { div, tr, td } = DOM;

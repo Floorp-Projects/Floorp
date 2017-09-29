@@ -34,7 +34,6 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
                       const char** aOutBadConstraint) override;
     nsresult Deallocate(AllocationHandle* aHandle) override;
     nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID, const mozilla::PrincipalHandle&) override;
-    void SetDirectListeners(bool aHasDirectListeners) override {};
     void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime, const mozilla::PrincipalHandle& aPrincipalHandle) override;
     nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID) override;
     nsresult Restart(AllocationHandle* aHandle,

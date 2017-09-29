@@ -4,7 +4,7 @@
 "use strict";
 
 const { createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
-const Tree = createFactory(require("devtools/client/shared/components/tree"));
+const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 const WaterfallTreeRow = createFactory(require("./waterfall-tree-row"));
 
 // Keep in sync with var(--waterfall-tree-row-height) in performance.css

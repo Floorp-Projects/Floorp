@@ -71,7 +71,21 @@ add_task(async function test_check_maybeSync() {
 
   const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
+  let notificationObserved = false;
+
+  // Ensure that the blocklist-updater-versions-checked notification works
+  let certblockObserver = {
+    observe(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(this, "blocklist-updater-versions-checked");
+      notificationObserved = true;
+    }
+  };
+
+  Services.obs.addObserver(certblockObserver, "blocklist-updater-versions-checked");
+
   await updater.checkVersions();
+
+  do_check_true(notificationObserved, "a notification should have been observed");
 
   // check the last_update is updated
   do_check_eq(Services.prefs.getIntPref(PREF_LAST_UPDATE), 2);
@@ -110,13 +124,16 @@ add_task(async function test_check_maybeSync() {
   }
   server.registerPathHandler(changesPath, simulateErrorResponse);
 
-  // checkVersions() fails with adequate error.
+  // checkVersions() fails with adequate error and no notification.
   let error;
+  notificationObserved = false;
+  Services.obs.addObserver(certblockObserver, "blocklist-updater-versions-checked");
   try {
     await updater.checkVersions();
   } catch (e) {
     error = e;
   }
+  do_check_false(notificationObserved, "a notification should not have been observed");
   do_check_true(/Polling for changes failed/.test(error.message));
   // When an error occurs, last update was not overwritten (see Date header above).
   do_check_eq(Services.prefs.getIntPref(PREF_LAST_UPDATE), 2);
