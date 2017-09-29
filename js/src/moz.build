@@ -646,6 +646,13 @@ if CONFIG['NIGHTLY_BUILD']:
 if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True
 
+# Wasm code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64
+# so that it is easy to use the huge-mapping optimization for other
+# 64-bit platforms in the future.
+
+if CONFIG['JS_CODEGEN_X64']:
+    DEFINES['WASM_HUGE_MEMORY'] = True
+
 if CONFIG['MOZ_DEBUG'] or CONFIG['NIGHTLY_BUILD']:
     DEFINES['JS_CACHEIR_SPEW'] = True
 

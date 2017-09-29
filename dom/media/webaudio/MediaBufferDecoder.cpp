@@ -514,13 +514,11 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
   }
 }
 
-WebAudioDecodeJob::WebAudioDecodeJob(const nsACString& aContentType,
-                                     AudioContext* aContext,
+WebAudioDecodeJob::WebAudioDecodeJob(AudioContext* aContext,
                                      Promise* aPromise,
                                      DecodeSuccessCallback* aSuccessCallback,
                                      DecodeErrorCallback* aFailureCallback)
-  : mContentType(aContentType)
-  , mContext(aContext)
+  : mContext(aContext)
   , mPromise(aPromise)
   , mSuccessCallback(aSuccessCallback)
   , mFailureCallback(aFailureCallback)
@@ -609,7 +607,6 @@ size_t
 WebAudioDecodeJob::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = 0;
-  amount += mContentType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   if (mSuccessCallback) {
     amount += mSuccessCallback->SizeOfIncludingThis(aMallocSizeOf);
   }
