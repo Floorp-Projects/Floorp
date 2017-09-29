@@ -122,9 +122,9 @@ LightweightThemeConsumer.prototype = {
     // so if we don't reset first, it'll keep the old value.
     root.style.removeProperty("--lwt-text-color");
     root.style.removeProperty("--lwt-accent-color");
-    let textcolor = aData.textcolor || "black";
+    let textcolor = this._sanitizeCSSColor(aData.textcolor) || "black";
     _setProperty(root, active, "--lwt-text-color", textcolor);
-    _setProperty(root, active, "--lwt-accent-color", aData.accentcolor || "white");
+    _setProperty(root, active, "--lwt-accent-color", this._sanitizeCSSColor(aData.accentcolor) || "white");
     if (active) {
       let dummy = this._doc.createElement("dummy");
       dummy.style.color = textcolor;
@@ -161,6 +161,19 @@ LightweightThemeConsumer.prototype = {
 
     Services.obs.notifyObservers(this._win, "lightweight-theme-window-updated",
                                  JSON.stringify(aData));
+  },
+
+  _sanitizeCSSColor(cssColor) {
+    // style.color normalizes color values and rejects invalid ones, so a
+    // simple round trip gets us a sanitized color value.
+    let span = this._doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
+    span.style.color = cssColor;
+    cssColor = span.style.color;
+    if (cssColor == "transparent" ||
+        cssColor == "rgba(0, 0, 0, 0)") {
+      return "";
+    }
+    return cssColor;
   }
 }
 
