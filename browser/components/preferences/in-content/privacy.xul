@@ -514,7 +514,7 @@
           <checkbox id="trackingProtectionPBM"
                     preference="privacy.trackingprotection.pbmode.enabled"
                     accesskey="&trackingProtectionPBM6.accesskey;"/>
-          <label flex="1">&trackingProtectionPBM6.label;<label id="trackingProtectionPBMLearnMore"
+          <label flex="1">&trackingProtectionPBM6.label;<spacer class="tail-with-learn-more" /><label id="trackingProtectionPBMLearnMore"
                  class="learnMore text-link">&trackingProtectionPBMLearnMore.label;</label>
           </label>
         </hbox>
