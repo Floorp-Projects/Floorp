@@ -317,6 +317,8 @@ private:
   StreamState mState;
 
   DataSource& mDataSource;
+
+  bool mPrefillQuirk;
 };
 
 } // namespace mozilla
