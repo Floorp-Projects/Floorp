@@ -468,7 +468,7 @@ function getElementFromPoint(document, x, y) {
       }
     }
     if (node instanceof Ci.nsIDOMHTMLIFrameElement ||
-        node instanceof Ci.nsIDOMHTMLFrameElement) {
+        ChromeUtils.getClassName(node) === "HTMLFrameElement") {
       let subnode = getElementFromPoint(node.contentDocument, x, y);
       if (subnode) {
         node = subnode;
