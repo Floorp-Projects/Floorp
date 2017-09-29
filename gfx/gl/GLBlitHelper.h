@@ -70,6 +70,7 @@ class DrawBlitProg final
     const GLint mLoc_uTexMatrix0;
     const GLint mLoc_uTexMatrix1;
     const GLint mLoc_uColorMatrix;
+    GLenum mType_uColorMatrix;
 
 public:
     struct Key final {
