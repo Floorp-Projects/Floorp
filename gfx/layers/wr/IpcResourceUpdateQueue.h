@@ -61,11 +61,11 @@ protected:
 
 class IpcResourceUpdateQueue {
 public:
-  // TODO: 32768 is completely arbitrary, needs some adjustments.
-  // Because we are using shmems, the size should be a multiple of the page size, and keep in mind
-  // that each shmem has guard pages, one of which contains meta-data so at least an extra page
-  // is mapped under the hood (so having a lot of smaller shmems = overhead).
-  explicit IpcResourceUpdateQueue(ipc::IShmemAllocator* aAllocator, size_t aChunkSize = 32768);
+  // Because we are using shmems, the size should be a multiple of the page size.
+  // Each shmem has two guard pages, and the minimum shmem size (at least one Windows)
+  // is 64k which is already quite large for a lot of the resources we use here.
+  // So we pick 64k - 2 * 4k = 57344 bytes as the defautl alloc
+  explicit IpcResourceUpdateQueue(ipc::IShmemAllocator* aAllocator, size_t aChunkSize = 57344);
 
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,

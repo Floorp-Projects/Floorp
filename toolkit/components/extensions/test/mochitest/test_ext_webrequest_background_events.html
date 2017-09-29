@@ -33,11 +33,17 @@ add_task(async function test_webRequest_serviceworker_events() {
         "onHeadersReceived",
         "onResponseStarted",
         "onCompleted",
+        "onErrorOccurred",
       ]);
 
       function listener(name, details) {
         browser.test.assertTrue(eventNames.has(name), `recieved ${name}`);
         eventNames.delete(name);
+        if (name == "onCompleted") {
+          eventNames.delete("onErrorOccurred");
+        } else if (name == "onErrorOccurred") {
+          eventNames.delete("onCompleted");
+        }
         if (eventNames.size == 0) {
           browser.test.sendMessage("done");
         }

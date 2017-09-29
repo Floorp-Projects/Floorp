@@ -873,9 +873,9 @@ bool
 DXGITextureHostD3D11::Lock()
 {
   if (!mProvider) {
-    // Make an early return here if we call SetCompositor() with an incompatible
-    // compositor. This check tries to prevent the problem where we use that
-    // incompatible compositor to compose this texture.
+    // Make an early return here if we call SetTextureSourceProvider() with an
+    // incompatible compositor. This check tries to prevent the problem where we
+    // use that incompatible compositor to compose this texture.
     return false;
   }
 
@@ -886,8 +886,8 @@ bool
 DXGITextureHostD3D11::LockWithoutCompositor()
 {
   // Unlike the normal Lock() function, this function may be called when
-  // mCompositor is nullptr such as during WebVR frame submission. So, there is
-  // no 'mCompositor' checking here.
+  // mProvider is nullptr such as during WebVR frame submission. So, there is
+  // no 'mProvider' checking here.
   if (!mDevice) {
     mDevice = DeviceManagerDx::Get()->GetCompositorDevice();
   }
@@ -1085,6 +1085,8 @@ DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
     }
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
+      MOZ_ASSERT(GetSize().width % 2 == 0);
+      MOZ_ASSERT(GetSize().height % 2 == 0);
 
       wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
       wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::R8G8);
@@ -1291,7 +1293,17 @@ DXGIYCbCrTextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aText
 void
 DXGIYCbCrTextureHostD3D11::CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
 {
-  // We use AddImage() directly. It's no corresponding RenderTextureHost.
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderDXGIYCbCrTextureHostOGL(mHandles, mSize);
+
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId), texture.forget());
+}
+
+uint32_t
+DXGIYCbCrTextureHostD3D11::NumSubTextures() const
+{
+  // ycbcr use 3 sub textures.
+  return 3;
 }
 
 void
@@ -1300,37 +1312,22 @@ DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResourc
                                                const Range<wr::ImageKey>& aImageKeys,
                                                const wr::ExternalImageId& aExtID)
 {
-  // TODO - This implementation is very slow (read-back, copy on the copy and re-upload).
+  MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
+  MOZ_ASSERT(aImageKeys.length() == 3);
+  MOZ_ASSERT(GetSize().width % 2 == 0);
+  MOZ_ASSERT(GetSize().height % 2 == 0);
 
-  MOZ_ASSERT(mTextures[0] && mTextures[1] && mTextures[2]);
-  MOZ_ASSERT(aImageKeys.length() == 1);
+  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
+                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
+  auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
 
-  // There are 3 A8 channel data in DXGIYCbCrTextureHostD3D11, but ANGLE doesn't
-  // support for converting the D3D A8 texture to OpenGL texture handle. So, we
-  // use the DataSourceSurface to get the raw buffer and push that raw buffer
-  // into WR using AddImage().
-  NS_WARNING("WR doesn't support DXGIYCbCrTextureHostD3D11 directly. It's a slower path.");
-
-  RefPtr<DataSourceSurface> dataSourceSurface = GetAsSurface();
-  if (!dataSourceSurface) {
-    return;
-  }
-  DataSourceSurface::MappedSurface map;
-  if (!dataSourceSurface->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
-    return;
-  }
-
-  IntSize size = dataSourceSurface->GetSize();
-  wr::ImageDescriptor descriptor(size, map.mStride, dataSourceSurface->GetFormat());
-  wr::Vec_u8 imgBytes;
-  imgBytes.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
-  if (aOp == TextureHost::ADD_IMAGE) {
-    aResources.AddImage(aImageKeys[0], descriptor, imgBytes);
-  } else {
-    aResources.UpdateImageBuffer(aImageKeys[0], descriptor, imgBytes);
-  }
-
-  dataSourceSurface->Unmap();
+  // y
+  wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
+  // cb and cr
+  wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::A8);
+  (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
+  (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
+  (aResources.*method)(aImageKeys[2], descriptor1, aExtID, bufferType, 2);
 }
 
 void
@@ -1340,9 +1337,16 @@ DXGIYCbCrTextureHostD3D11::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                             wr::ImageRendering aFilter,
                                             const Range<wr::ImageKey>& aImageKeys)
 {
-  // 1 image key
-  MOZ_ASSERT(aImageKeys.length() == 1);
-  aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0]);
+  MOZ_ASSERT(aImageKeys.length() == 3);
+
+  aBuilder.PushYCbCrPlanarImage(aBounds,
+                                aClip,
+                                true,
+                                aImageKeys[0],
+                                aImageKeys[1],
+                                aImageKeys[2],
+                                wr::WrYuvColorSpace::Rec601,
+                                aFilter);
 }
 
 bool

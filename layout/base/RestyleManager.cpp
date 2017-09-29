@@ -1422,8 +1422,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       break;
     }
 
-    nsStyleChangeData& mutable_data = aChangeList[i];
-    const nsStyleChangeData& data = mutable_data;
+    const nsStyleChangeData& data = aChangeList[i];
     nsIFrame* frame = data.mFrame;
     nsIContent* content = data.mContent;
     nsChangeHint hint = data.mHint;

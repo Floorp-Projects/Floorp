@@ -2007,7 +2007,7 @@ BuildTextRunsScanner::GetNextBreakBeforeFrame(uint32_t* aIndex)
 }
 
 // Bug 1403220: Suspected MSVC PGO miscompilation
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 #pragma optimize("", off)
 #endif
 static gfxFontGroup*
@@ -2028,7 +2028,7 @@ GetFontGroupForFrame(const nsIFrame* aFrame, float aFontSizeInflation,
   // not actually happen. But we should fix this.
   return fontGroup;
 }
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 #pragma optimize("", on)
 #endif
 

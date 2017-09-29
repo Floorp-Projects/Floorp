@@ -262,22 +262,25 @@ class Script {
 
   async injectInto(window) {
     let context = this.extension.getContext(window);
+    try {
+      if (this.runAt === "document_end") {
+        await promiseDocumentReady(window.document);
+      } else if (this.runAt === "document_idle") {
+        let readyThenIdle = promiseDocumentReady(window.document).then(() => {
+          return new Promise(resolve =>
+            window.requestIdleCallback(resolve, {timeout: idleTimeout}));
+        });
 
-    if (this.runAt === "document_end") {
-      await promiseDocumentReady(window.document);
-    } else if (this.runAt === "document_idle") {
-      let readyThenIdle = promiseDocumentReady(window.document).then(() => {
-        return new Promise(resolve =>
-          window.requestIdleCallback(resolve, {timeout: idleTimeout}));
-      });
+        await Promise.race([
+          readyThenIdle,
+          promiseDocumentLoaded(window.document),
+        ]);
+      }
 
-      await Promise.race([
-        readyThenIdle,
-        promiseDocumentLoaded(window.document),
-      ]);
+      return this.inject(context);
+    } catch (e) {
+      return Promise.reject(context.normalizeError(e));
     }
-
-    return this.inject(context);
   }
 
   /**
@@ -728,8 +731,14 @@ this.ExtensionContent = {
       return null;
     };
 
-    let promises = Array.from(this.enumerateWindows(global.docShell), executeInWin)
-                        .filter(promise => promise);
+    let promises;
+    try {
+      promises = Array.from(this.enumerateWindows(global.docShell), executeInWin)
+                      .filter(promise => promise);
+    } catch (e) {
+      Cu.reportError(e);
+      return Promise.reject({message: "An unexpected error occurred"});
+    }
 
     if (!promises.length) {
       if (options.frame_id) {
@@ -774,7 +783,12 @@ this.ExtensionContent = {
                                                docShell.ENUMERATE_FORWARDS);
 
     for (let docShell of XPCOMUtils.IterSimpleEnumerator(enum_, Ci.nsIInterfaceRequestor)) {
-      yield docShell.getInterface(Ci.nsIDOMWindow);
+      try {
+        yield docShell.getInterface(Ci.nsIDOMWindow);
+      } catch (e) {
+        // This can fail if the docShell is being destroyed, so just
+        // ignore the error.
+      }
     }
   },
 };

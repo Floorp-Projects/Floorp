@@ -19,7 +19,7 @@ interface IDBRequest : EventTarget {
     readonly    attribute any                  result;
 
     [Throws]
-    readonly    attribute DOMError?            error;
+    readonly    attribute DOMException?        error;
 
     readonly    attribute (IDBObjectStore or IDBIndex or IDBCursor)? source;
     readonly    attribute IDBTransaction?      transaction;

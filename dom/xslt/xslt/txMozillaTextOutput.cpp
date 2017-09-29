@@ -82,8 +82,13 @@ txMozillaTextOutput::endDocument(nsresult aResult)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // This should really be handled by nsIDocument::EndLoad
-    MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
-               nsIDocument::READYSTATE_LOADING, "Bad readyState");
+    if (mObserver) {
+        MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
+                   nsIDocument::READYSTATE_LOADING, "Bad readyState");
+    } else {
+        MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
+                   nsIDocument::READYSTATE_INTERACTIVE, "Bad readyState");
+    }
     mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
 
     if (NS_SUCCEEDED(aResult)) {

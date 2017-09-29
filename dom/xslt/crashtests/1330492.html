@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<script id=o_xml type="text/plain"><?xml version="1.0" encoding="UTF-8"?>
+<ffsy></ffsy>
+</script>
+<script id=o_xslt type="text/plain"><?xml version="1.0" encoding="UTF-8"?>
+<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+  <xsl:output method="text" />
+</xsl:transform>
+</script>
+<script>
+addEventListener("DOMContentLoaded", function(){
+  let doc = new DOMParser();
+  let xml = doc.parseFromString(o_xml.textContent, "text/xml");
+  let xsltPrs = new XSLTProcessor();
+  let xsl = doc.parseFromString(o_xslt.textContent, "text/xml");
+  xsltPrs.importStylesheet(xsl);
+  xsltPrs.transformToFragment(xml, document);
+});
+</script>
+</html>

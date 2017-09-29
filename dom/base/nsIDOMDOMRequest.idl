@@ -17,7 +17,7 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
 
   readonly attribute jsval result;
 
-  // DOMError
+  // DOMException
   readonly attribute nsISupports error;
 };
 

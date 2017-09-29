@@ -89,12 +89,13 @@ TransportSecurityInfo::SetOriginAttributes(
   mOriginAttributes = aOriginAttributes;
 }
 
-PRErrorCode
-TransportSecurityInfo::GetErrorCode() const
+NS_IMETHODIMP
+TransportSecurityInfo::GetErrorCode(int32_t* state)
 {
   MutexAutoLock lock(mMutex);
 
-  return mErrorCode;
+  *state = mErrorCode;
+  return NS_OK;
 }
 
 void
@@ -254,13 +255,6 @@ TransportSecurityInfo::formatErrorMessage(const MutexAutoLock& /*proofOfLock*/,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-TransportSecurityInfo::GetErrorCode(int32_t* state)
-{
-  *state = GetErrorCode();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
