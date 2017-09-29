@@ -1042,37 +1042,17 @@ StyleBasicShape::GetShapeTypeName() const
 // StyleShapeSource
 
 StyleShapeSource::StyleShapeSource(const StyleShapeSource& aSource)
-  : StyleShapeSource()
 {
-  if (aSource.mType == StyleShapeSourceType::URL) {
-    SetURL(aSource.mURL);
-  } else if (aSource.mType == StyleShapeSourceType::Shape) {
-    SetBasicShape(MakeUnique<StyleBasicShape>(*aSource.mBasicShape),
-                  aSource.mReferenceBox);
-  } else if (aSource.mType == StyleShapeSourceType::Box) {
-    SetReferenceBox(aSource.mReferenceBox);
-  }
+  DoCopy(aSource);
 }
 
 StyleShapeSource&
 StyleShapeSource::operator=(const StyleShapeSource& aOther)
 {
-  if (this == &aOther) {
-    return *this;
+  if (this != &aOther) {
+    DoCopy(aOther);
   }
 
-  if (aOther.mType == StyleShapeSourceType::URL) {
-    SetURL(aOther.mURL);
-  } else if (aOther.mType == StyleShapeSourceType::Shape) {
-    SetBasicShape(MakeUnique<StyleBasicShape>(*aOther.mBasicShape),
-                  aOther.mReferenceBox);
-  } else if (aOther.mType == StyleShapeSourceType::Box) {
-    SetReferenceBox(aOther.mReferenceBox);
-  } else {
-    ReleaseRef();
-    mReferenceBox = StyleGeometryBox::NoBox;
-    mType = StyleShapeSourceType::None;
-  }
   return *this;
 }
 
@@ -1084,7 +1064,7 @@ StyleShapeSource::operator==(const StyleShapeSource& aOther) const
   }
 
   if (mType == StyleShapeSourceType::URL) {
-    return DefinitelyEqualURIs(mURL, aOther.mURL);
+    return DefinitelyEqualURIs(GetURL(), aOther.GetURL());
   } else if (mType == StyleShapeSourceType::Shape) {
     return *mBasicShape == *aOther.mBasicShape &&
       mReferenceBox == aOther.mReferenceBox;
@@ -1099,9 +1079,10 @@ bool
 StyleShapeSource::SetURL(css::URLValue* aValue)
 {
   MOZ_ASSERT(aValue);
-  ReleaseRef();
-  mURL = aValue;
-  mURL->AddRef();
+  if (!mShapeImage) {
+    mShapeImage = MakeUnique<nsStyleImage>();
+  }
+  mShapeImage->SetURLValue(do_AddRef(aValue));
   mType = StyleShapeSourceType::URL;
   return true;
 }
@@ -1111,7 +1092,6 @@ StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
                                 StyleGeometryBox aReferenceBox)
 {
   NS_ASSERTION(aBasicShape, "expected pointer");
-  ReleaseRef();
   mBasicShape = Move(aBasicShape);
   mReferenceBox = aReferenceBox;
   mType = StyleShapeSourceType::Shape;
@@ -1120,20 +1100,33 @@ StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
 void
 StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
 {
-  ReleaseRef();
   mReferenceBox = aReferenceBox;
   mType = StyleShapeSourceType::Box;
 }
 
 void
-StyleShapeSource::ReleaseRef()
+StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
 {
-  if (mType == StyleShapeSourceType::URL) {
-    NS_ASSERTION(mURL, "expected pointer");
-    mURL->Release();
-  }
 
-  mURL = nullptr;
+  switch (aOther.mType) {
+    case StyleShapeSourceType::None:
+      mReferenceBox = StyleGeometryBox::NoBox;
+      mType = StyleShapeSourceType::None;
+      break;
+
+    case StyleShapeSourceType::URL:
+      SetURL(aOther.GetURL());
+      break;
+
+    case StyleShapeSourceType::Shape:
+      SetBasicShape(MakeUnique<StyleBasicShape>(*aOther.GetBasicShape()),
+                    aOther.GetReferenceBox());
+      break;
+
+    case StyleShapeSourceType::Box:
+      SetReferenceBox(aOther.GetReferenceBox());
+      break;
+  }
 }
 
 // --------------------
