@@ -2236,7 +2236,7 @@ HTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
 
     // Try to get the actual selected node
     if (anchorNode->HasChildNodes() && anchorNode->IsContent()) {
-      node = anchorNode->GetChildAt(selection->AnchorOffset());
+      node = selection->GetChildAtAnchorOffset();
     }
     // Anchor node is probably a text node - just use that
     if (!node) {
