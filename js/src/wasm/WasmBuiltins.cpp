@@ -67,7 +67,6 @@ CallingActivation()
 {
     Activation* act = TlsContext.get()->activation();
     MOZ_ASSERT(act->asJit()->hasWasmExitFP());
-    MOZ_ASSERT(act->asJit()->isActive(), "WasmCall pushes an active JitActivation");
     return act->asJit();
 }
 
