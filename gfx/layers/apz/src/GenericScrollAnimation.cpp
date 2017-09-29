@@ -9,15 +9,17 @@
 #include "AsyncPanZoomController.h"
 #include "gfxPrefs.h"
 #include "nsPoint.h"
+#include "ScrollAnimationPhysics.h"
+#include "ScrollAnimationBezierPhysics.h"
 
 namespace mozilla {
 namespace layers {
 
 GenericScrollAnimation::GenericScrollAnimation(AsyncPanZoomController& aApzc,
                                                const nsPoint& aInitialPosition,
-                                               const ScrollAnimationPhysicsSettings& aSettings)
+                                               const ScrollAnimationBezierPhysicsSettings& aSettings)
   : mApzc(aApzc)
-  , mAnimationPhysics(MakeUnique<ScrollAnimationPhysics>(aInitialPosition, aSettings))
+  , mAnimationPhysics(MakeUnique<ScrollAnimationBezierPhysics>(aInitialPosition, aSettings))
   , mFinalDestination(aInitialPosition)
   , mForceVerticalOverscroll(false)
 {

@@ -58,6 +58,7 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "ScrollAnimationPhysics.h"
+#include "ScrollAnimationBezierPhysics.h"
 #include "ScrollSnap.h"
 #include "UnitTransforms.h"
 #include "nsPluginFrame.h"
@@ -1910,7 +1911,7 @@ private:
  * Calculate duration, possibly dynamically according to events rate and event origin.
  * (also maintain previous timestamps - which are only used here).
  */
-static ScrollAnimationPhysicsSettings
+static ScrollAnimationBezierPhysicsSettings
 ComputeAnimationSettingsForOrigin(nsIAtom *aOrigin)
 {
   int32_t minMS = 0;
@@ -1947,7 +1948,7 @@ ComputeAnimationSettingsForOrigin(nsIAtom *aOrigin)
   // Duration should be at least as long as the intervals -> ratio is at least 1
   intervalRatio = std::max(1.0, intervalRatio);
 
-  return ScrollAnimationPhysicsSettings { minMS, maxMS, intervalRatio };
+  return ScrollAnimationBezierPhysicsSettings { minMS, maxMS, intervalRatio };
 }
 
 void
@@ -1971,8 +1972,9 @@ ScrollFrameHelper::AsyncScroll::InitSmoothScroll(TimeStamp aTime,
   // Read preferences only on first iteration or for a different event origin.
   if (!mAnimationPhysics || aOrigin != mOrigin) {
     mOrigin = aOrigin;
-    ScrollAnimationPhysicsSettings settings = ComputeAnimationSettingsForOrigin(mOrigin);
-    mAnimationPhysics = MakeUnique<ScrollAnimationPhysics>(aInitialPosition, settings);
+    ScrollAnimationBezierPhysicsSettings settings = ComputeAnimationSettingsForOrigin(mOrigin);
+    mAnimationPhysics =
+      MakeUnique<ScrollAnimationBezierPhysics>(aInitialPosition, settings);
   }
 
   mRange = aRange;
