@@ -9,7 +9,7 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const { ObjectClient } = require("devtools/shared/client/main");
+const ObjectClient = require("devtools/shared/client/object-client");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { MODE } = require("devtools/client/shared/components/reps/reps");

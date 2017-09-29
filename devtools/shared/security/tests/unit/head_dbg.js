@@ -12,7 +12,7 @@ const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const xpcInspector = require("xpcInspector");
 const { DebuggerServer } = require("devtools/server/main");
-const { DebuggerClient } = require("devtools/shared/client/main");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 // We do not want to log packets by default, because in some tests,
 // we can be sending large amounts of data. The test harness has

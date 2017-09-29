@@ -7,7 +7,7 @@ const Cu = Components.utils;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const { Task } = require("devtools/shared/task");
-const { DebuggerClient } = require("devtools/shared/client/main");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
 const { MemoryFront } = require("devtools/shared/fronts/memory");
