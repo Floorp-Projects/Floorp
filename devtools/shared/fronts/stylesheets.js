@@ -5,7 +5,6 @@
 
 const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const {
-  originalSourceSpec,
   mediaRuleSpec,
   styleSheetSpec,
   styleSheetsSpec
@@ -17,35 +16,6 @@ loader.lazyRequireGetter(this, "getIndentationFromPrefs",
   "devtools/shared/indentation", true);
 loader.lazyRequireGetter(this, "getIndentationFromString",
   "devtools/shared/indentation", true);
-
-/**
- * The client-side counterpart for an OriginalSourceActor.
- */
-const OriginalSourceFront = FrontClassWithSpec(originalSourceSpec, {
-  initialize: function (client, form) {
-    Front.prototype.initialize.call(this, client, form);
-
-    this.isOriginalSource = true;
-  },
-
-  form: function (form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actor;
-    this._form = form;
-  },
-
-  get href() {
-    return this._form.url;
-  },
-  get url() {
-    return this._form.url;
-  }
-});
-
-exports.OriginalSourceFront = OriginalSourceFront;
 
 /**
  * Corresponding client-side front for a MediaRuleActor.
