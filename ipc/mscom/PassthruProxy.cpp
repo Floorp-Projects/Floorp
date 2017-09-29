@@ -24,15 +24,15 @@ PassthruProxy::PassthruProxy()
 {
 }
 
-PassthruProxy::PassthruProxy(REFIID aIidToWrap, uint32_t aVTableSize,
-                             NotNull<IUnknown*> aObjToWrap)
+PassthruProxy::PassthruProxy(ProxyStream::Environment* aEnv, REFIID aIidToWrap,
+                             uint32_t aVTableSize, NotNull<IUnknown*> aObjToWrap)
   : mRefCnt(0)
   , mWrappedIid(aIidToWrap)
   , mVTableSize(aVTableSize)
   , mVTable(nullptr)
   , mForgetPreservedStream(false)
 {
-  ProxyStream proxyStream(aIidToWrap, aObjToWrap,
+  ProxyStream proxyStream(aIidToWrap, aObjToWrap, aEnv,
                           ProxyStreamFlags::ePreservable);
   mPreservedStream = Move(proxyStream.GetPreservedStream());
   MOZ_ASSERT(mPreservedStream);

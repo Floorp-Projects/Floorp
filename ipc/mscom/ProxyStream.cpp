@@ -13,6 +13,7 @@
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/ProxyStream.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/ScopeExit.h"
 
 #if defined(MOZ_CRASHREPORTER)
 #include "mozilla/mscom/Objref.h"
@@ -39,7 +40,7 @@ ProxyStream::ProxyStream()
 // GetBuffer() fails with this variant, but that's okay because we're just
 // reconstructing the stream from a buffer anyway.
 ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
-                         const int aInitBufSize)
+                         const int aInitBufSize, Environment* aEnv)
   : mGlobalLockedBuf(nullptr)
   , mHGlobal(nullptr)
   , mBufSize(aInitBufSize)
@@ -93,11 +94,28 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   // actual interface later.
 
 #if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
-  auto marshalFn = [this, &strActCtx, &manifestPath, &unmarshalResult, &aIID]() -> void
+  auto marshalFn = [this, &strActCtx, &manifestPath, &unmarshalResult, &aIID, aEnv]() -> void
 #else
-  auto marshalFn = [this, &unmarshalResult, &aIID]() -> void
+  auto marshalFn = [this, &unmarshalResult, &aIID, aEnv]() -> void
 #endif // defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
   {
+    if (aEnv) {
+      bool pushOk = aEnv->Push();
+      MOZ_DIAGNOSTIC_ASSERT(pushOk);
+      if (!pushOk) {
+        return;
+      }
+    }
+
+    auto popEnv = MakeScopeExit([aEnv]() -> void {
+      if (!aEnv) {
+        return;
+      }
+
+      bool popOk = aEnv->Pop();
+      MOZ_DIAGNOSTIC_ASSERT(popOk);
+    });
+
 #if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
     auto curActCtx = ActivationContext::GetCurrent();
     if (curActCtx.isOk()) {
@@ -269,7 +287,7 @@ ProxyStream::GetInterface(void** aOutInterface)
   return true;
 }
 
-ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject,
+ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
                          ProxyStreamFlags aFlags)
   : mGlobalLockedBuf(nullptr)
   , mHGlobal(nullptr)
@@ -295,13 +313,30 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject,
 
   auto marshalFn = [this, &aIID, aObject, mshlFlags, &stream, &streamSize,
                     &hglobal, &createStreamResult, &marshalResult, &statResult,
-                    &getHGlobalResult, &manifestPath]() -> void
+                    &getHGlobalResult, aEnv, &manifestPath]() -> void
 #else
   auto marshalFn = [this, &aIID, aObject, mshlFlags, &stream, &streamSize,
                     &hglobal, &createStreamResult, &marshalResult, &statResult,
-                    &getHGlobalResult]() -> void
+                    &getHGlobalResult, aEnv]() -> void
 #endif // defined(MOZ_CRASHREPORTER)
   {
+    if (aEnv) {
+      bool pushOk = aEnv->Push();
+      MOZ_DIAGNOSTIC_ASSERT(pushOk);
+      if (!pushOk) {
+        return;
+      }
+    }
+
+    auto popEnv = MakeScopeExit([aEnv]() -> void {
+      if (!aEnv) {
+        return;
+      }
+
+      bool popOk = aEnv->Pop();
+      MOZ_DIAGNOSTIC_ASSERT(popOk);
+    });
+
     createStreamResult = ::CreateStreamOnHGlobal(nullptr, TRUE,
                                                  getter_AddRefs(stream));
     if (FAILED(createStreamResult)) {
