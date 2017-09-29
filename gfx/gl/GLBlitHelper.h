@@ -41,21 +41,40 @@ bool
 GuessDivisors(const gfx::IntSize& ySize, const gfx::IntSize& uvSize,
               gfx::IntSize* const out_divisors);
 
+template<uint8_t N>
+struct Mat
+{
+    float m[N*N]; // column-major, for GL
+
+    float& at(const uint8_t x, const uint8_t y) {
+        return m[N*x+y];
+    }
+
+    static Mat<N> Zero();
+    static Mat<N> I();
+
+    Mat<N> operator*(const Mat<N>& r) const;
+};
+typedef Mat<3> Mat3;
+
+Mat3 SubRectMat3(float x, float y, float w, float h);
+Mat3 SubRectMat3(const gfx::IntRect& subrect, const gfx::IntSize& size);
+Mat3 SubRectMat3(const gfx::IntRect& bigSubrect, const gfx::IntSize& smallSize,
+                 const gfx::IntSize& divisors);
+
 class DrawBlitProg final
 {
     const GLBlitHelper& mParent;
     const GLuint mProg;
-    const GLint mLoc_u1ForYFlip;
-    const GLint mLoc_uSrcRect;
-    const GLint mLoc_uTexSize0;
-    const GLint mLoc_uTexSize1;
-    const GLint mLoc_uDivisors;
+    const GLint mLoc_uDestMatrix;
+    const GLint mLoc_uTexMatrix0;
+    const GLint mLoc_uTexMatrix1;
     const GLint mLoc_uColorMatrix;
 
 public:
     struct Key final {
-        const char* fragHeader;
-        const char* fragBody;
+        const char* const fragHeader;
+        const char* const fragBody;
 
         bool operator <(const Key& x) const {
             if (fragHeader != x.fragHeader)
@@ -68,14 +87,13 @@ public:
     ~DrawBlitProg();
 
     struct BaseArgs final {
-        gfx::IntSize destSize;
+        Mat3 texMatrix0;
         bool yFlip;
-        gfx::IntRect srcRect;
-        gfx::IntSize texSize0;
+        gfx::IntSize destSize; // Always needed for (at least) setting the viewport.
+        Maybe<gfx::IntRect> destRect;
     };
     struct YUVArgs final {
-        gfx::IntSize texSize1;
-        gfx::IntSize divisors;
+        Mat3 texMatrix1;
         YUVColorSpace colorSpace;
     };
 
@@ -181,8 +199,8 @@ private:
     bool BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
                         const gfx::IntRect& clipRect,
                         const gfx::IntSize& ySize, const gfx::IntSize& uvSize,
-                        const YUVColorSpace colorSpace,
-                        const gfx::IntSize& destSize, OriginPos destOrigin) const;
+                        const YUVColorSpace colorSpace, const gfx::IntSize& destSize,
+                        OriginPos destOrigin) const;
 
     bool BlitAnglePlanes(uint8_t numPlanes, const RefPtr<ID3D11Texture2D>* texD3DList,
                          const DrawBlitProg* prog, const DrawBlitProg::BaseArgs& baseArgs,
