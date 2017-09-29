@@ -64,7 +64,12 @@ public class SearchWidget extends AppWidgetProvider {
     public void onReceive(final Context context, final Intent intent) {
         // This will hold the intent to redispatch.
         final Intent redirect;
-        switch (intent.getAction()) {
+        final String action = intent.getAction();
+        if (action == null) {
+          super.onReceive(context, intent);
+          return;
+        }
+        switch (action) {
             case ACTION_LAUNCH_BROWSER:
                 redirect = buildRedirectIntent(Intent.ACTION_MAIN,
                                                context.getPackageName(),
