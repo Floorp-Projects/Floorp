@@ -120,11 +120,6 @@
   border-right: none !important;
 }
 
-/* Disable dragging like in the default theme: */
-#main-window[tabsintitlebar] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):-moz-lwtheme {
-  -moz-window-dragging: no-drag;
-}
-
 @media (-moz-os-version: windows-win10) {
   .titlebar-button:-moz-lwtheme {
     -moz-context-properties: stroke;
