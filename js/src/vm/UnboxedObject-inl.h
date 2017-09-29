@@ -222,24 +222,6 @@ MoveBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, uint32_t dstStart,
     return DenseElementResult::Success;
 }
 
-static inline DenseElementResult
-CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
-                                uint32_t dstStart, uint32_t srcStart, uint32_t length)
-{
-    MOZ_ASSERT(src->isNative());
-    MOZ_ASSERT(dst->isNative());
-    MOZ_ASSERT(dst->as<NativeObject>().getDenseInitializedLength() == dstStart);
-    MOZ_ASSERT(src->as<NativeObject>().getDenseInitializedLength() >= srcStart + length);
-    MOZ_ASSERT(dst->as<NativeObject>().getDenseCapacity() >= dstStart + length);
-
-    dst->as<NativeObject>().setDenseInitializedLength(dstStart + length);
-
-    const Value* vp = src->as<NativeObject>().getDenseElements() + srcStart;
-    dst->as<NativeObject>().initDenseElements(dstStart, vp, length);
-
-    return DenseElementResult::Success;
-}
-
 } // namespace js
 
 #endif // vm_UnboxedObject_inl_h
