@@ -251,22 +251,22 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
   nsresult rv;
 
   RefPtr<StyleSheet> geckoSheet;
+  RefPtr<StyleSheet> servoSheet;
 
   rv = LoadSheet(aSheetURI, parsingMode, StyleBackendType::Gecko, &geckoSheet);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(geckoSheet);
-  mGeckoSheets[aSheetType].AppendElement(geckoSheet);
 
 #ifdef MOZ_STYLO
   if (nsLayoutUtils::StyloSupportedInCurrentProcess()) {
-    RefPtr<StyleSheet> servoSheet;
-
     rv = LoadSheet(aSheetURI, parsingMode, StyleBackendType::Servo, &servoSheet);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(servoSheet);
-    mServoSheets[aSheetType].AppendElement(servoSheet);
   }
 #endif
+
+  mGeckoSheets[aSheetType].AppendElement(geckoSheet);
+  mServoSheets[aSheetType].AppendElement(servoSheet);
 
   return NS_OK;
 }
