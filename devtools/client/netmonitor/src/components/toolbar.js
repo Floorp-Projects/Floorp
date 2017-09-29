@@ -25,7 +25,7 @@ const { autocompleteProvider } = require("../utils/filter-autocomplete-provider"
 const { L10N } = require("../utils/l10n");
 
 // Components
-const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
+const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 
 const { button, div, input, label, span } = DOM;
 

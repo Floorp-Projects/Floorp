@@ -235,8 +235,6 @@ public:
    */
   void NotifyRemoved();
 
-  void NotifyDirectListeners(MediaStreamGraph* aGraph, bool aHasListeners);
-
   bool Activated() const
   {
     return mActivated;
@@ -3817,12 +3815,6 @@ SourceListener::NotifyEvent(MediaStreamGraph* aGraph,
                                          &SourceListener::NotifyRemoved),
                        NS_DISPATCH_NORMAL);
       break;
-    case MediaStreamGraphEvent::EVENT_HAS_DIRECT_LISTENERS:
-      NotifyDirectListeners(aGraph, true);
-      break;
-    case MediaStreamGraphEvent::EVENT_HAS_NO_DIRECT_LISTENERS:
-      NotifyDirectListeners(aGraph, false);
-      break;
     default:
       break;
   }
@@ -3856,21 +3848,6 @@ SourceListener::NotifyRemoved()
   }
 
   mWindowListener = nullptr;
-}
-
-void
-SourceListener::NotifyDirectListeners(MediaStreamGraph* aGraph,
-                                      bool aHasListeners)
-{
-  if (!mVideoDevice) {
-    return;
-  }
-
-  auto& videoDevice = mVideoDevice;
-  MediaManager::PostTask(NewTaskFrom([videoDevice, aHasListeners]() {
-    videoDevice->GetSource()->SetDirectListeners(aHasListeners);
-    return NS_OK;
-  }));
 }
 
 bool

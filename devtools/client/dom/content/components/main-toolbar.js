@@ -14,7 +14,7 @@ const { createFactories } = require("devtools/client/shared/react-utils");
 const { Toolbar, ToolbarButton } = createFactories(require("devtools/client/jsonview/components/reps/toolbar"));
 
 // DOM Panel
-const SearchBox = React.createFactory(require("devtools/client/shared/components/search-box"));
+const SearchBox = React.createFactory(require("devtools/client/shared/components/SearchBox"));
 
 // Actions
 const { fetchProperties } = require("../actions/grips");

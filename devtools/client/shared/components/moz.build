@@ -12,16 +12,16 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'autocomplete-popup.js',
-    'frame.js',
-    'h-split-box.js',
-    'notification-box.css',
-    'notification-box.js',
-    'search-box.js',
-    'sidebar-toggle.css',
-    'sidebar-toggle.js',
-    'stack-trace.js',
-    'tree.js',
+    'AutoCompletePopup.js',
+    'Frame.js',
+    'HSplitBox.js',
+    'NotificationBox.css',
+    'NotificationBox.js',
+    'SearchBox.js',
+    'SidebarToggle.css',
+    'SidebarToggle.js',
+    'StackTrace.js',
+    'Tree.js',
 )
 
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']

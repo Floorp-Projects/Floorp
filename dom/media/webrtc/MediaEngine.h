@@ -275,9 +275,6 @@ public:
    * immediately after. */
   virtual nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) = 0;
 
-  /* tell the source if there are any direct listeners attached */
-  virtual void SetDirectListeners(bool) = 0;
-
   /* Called when the stream wants more data */
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,

@@ -399,6 +399,27 @@ this.PageActions = {
     }
   },
 
+  logTelemetry(type, action, node = null) {
+    const kAllowedLabels = ["pocket", "screenshots", "webcompat"].concat(
+      gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id)
+    );
+
+    if (type == "used") {
+      type = (node && node.closest("#urlbar-container")) ? "urlbar_used" : "panel_used";
+    }
+    let histogramID = "FX_PAGE_ACTION_" + type.toUpperCase();
+    try {
+      let histogram = Services.telemetry.getHistogramById(histogramID);
+      if (kAllowedLabels.includes(action.labelForHistogram)) {
+        histogram.add(action.labelForHistogram);
+      } else {
+        histogram.add("other");
+      }
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  },
+
   _storePersistedActions() {
     let json = JSON.stringify(this._persistedActions);
     Services.prefs.setStringPref(PREF_PERSISTED_ACTIONS, json);
@@ -538,6 +559,7 @@ function Action(options) {
     title: !options._isSeparator,
     anchorIDOverride: false,
     iconURL: false,
+    labelForHistogram: false,
     nodeAttributes: false,
     onBeforePlacedInWindow: false,
     onCommand: false,
@@ -665,6 +687,10 @@ Action.prototype = {
    */
   get subview() {
     return this._subview;
+  },
+
+  get labelForHistogram() {
+    return this._labelForHistogram || this._id;
   },
 
   /**
@@ -959,6 +985,9 @@ this.PageActions.ACTION_ID_BUILT_IN_SEPARATOR = ACTION_ID_BUILT_IN_SEPARATOR;
 // Sorted in the order in which they should appear in the page action panel.
 // Does not include the page actions of extensions bundled with the browser.
 // They're added by the relevant extension code.
+// NOTE: If you add items to this list (or system add-on actions that we
+// want to keep track of), make sure to also update Histograms.json for the
+// new actions.
 var gBuiltInActions = [
 
   // bookmark

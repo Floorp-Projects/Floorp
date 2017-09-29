@@ -24,7 +24,7 @@ window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
-    let { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/notification-box");
+    let { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
 
     const renderedBox = shallowRenderComponent(NotificationBox, {});
     is(renderedBox.type, "div", "NotificationBox is rendered as <div>");

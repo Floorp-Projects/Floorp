@@ -83,7 +83,7 @@ static const char contentSandboxRules[] = R"(
     (literal "/private/etc/localtime")
     (literal "/home")
     (literal "/net")
-    (regex "^/private/tmp/KSInstallAction\."))
+    (regex #"^/private/tmp/KSInstallAction\."))
 
   ; Allow read access to standard special files.
   (allow file-read*
@@ -170,9 +170,9 @@ static const char contentSandboxRules[] = R"(
            (home-regex (string-append "/Library/Preferences/" (regex-quote domain)))))
 
   (allow ipc-posix-shm-read-data ipc-posix-shm-write-data
-    (ipc-posix-name-regex "^CFPBS:"))
+    (ipc-posix-name-regex #"^CFPBS:"))
   (allow ipc-posix-shm-read* ipc-posix-shm-write-data
-    (ipc-posix-name-regex "^AudioIO"))
+    (ipc-posix-name-regex #"^AudioIO"))
 
   (allow signal (target self))
 
@@ -263,7 +263,7 @@ static const char contentSandboxRules[] = R"(
 ; Per-user and system-wide Extensions dir
   (allow file-read*
       (home-regex "/Library/Application Support/[^/]+/Extensions/[^/]/")
-      (regex "/Library/Application Support/[^/]+/Extensions/[^/]/"))
+      (regex #"^/Library/Application Support/[^/]+/Extensions/[^/]/"))
 
 ; The following rules impose file access restrictions which get
 ; more restrictive in higher levels. When file-origin-specific
@@ -278,37 +278,29 @@ static const char contentSandboxRules[] = R"(
 ;          no read/write access to $PROFILE,
 ;          read access permitted to $PROFILE/{extensions,chrome}
   (if (string=? sandbox-level-2 "TRUE")
-    (if (string=? hasFilePrivileges "TRUE")
-      ; This process has blanket file read privileges
-      (allow file-read*)
-      ; This process does not have blanket file read privileges
-      (begin
-        ; bug 1201935
-        (allow file-read* (home-subpath "/Library/Caches/TemporaryItems"))
-        (if (string=? hasProfileDir "TRUE")
-          ; we have a profile dir
-          (begin
-            (allow file-read* (require-all
-                (require-not (home-subpath "/Library"))
-                (require-not (subpath profileDir))))
-            (allow file-read*
-                (profile-subpath "/extensions")
-                (profile-subpath "/chrome")))
-          ; we don't have a profile dir
-          (allow file-read* (require-not (home-subpath "/Library")))))))
-
-  ; level 3: no global read/write access,
-  ;          read access permitted to $PROFILE/{extensions,chrome}
-  (if (string=? sandbox-level-3 "TRUE")
-    (if (string=? hasFilePrivileges "TRUE")
-      ; This process has blanket file read privileges
-      (allow file-read*)
-      ; This process does not have blanket file read privileges
+    (begin
+      ; bug 1201935
+      (allow file-read* (home-subpath "/Library/Caches/TemporaryItems"))
       (if (string=? hasProfileDir "TRUE")
         ; we have a profile dir
-          (allow file-read*
-            (profile-subpath "/extensions")
-            (profile-subpath "/chrome")))))
+        (allow file-read* (require-all
+          (require-not (home-subpath "/Library"))
+          (require-not (subpath profileDir))))
+        ; we don't have a profile dir
+        (allow file-read* (require-not (home-subpath "/Library"))))))
+
+  ; level 3: Does not have any of it's own rules. The global rules provide:
+  ;          no global read/write access,
+  ;          read access permitted to $PROFILE/{extensions,chrome}
+  (if (string=? hasFilePrivileges "TRUE")
+    ; This process has blanket file read privileges
+    (allow file-read*))
+
+  (if (string=? hasProfileDir "TRUE")
+    ; we have a profile dir
+    (allow file-read*
+      (profile-subpath "/extensions")
+      (profile-subpath "/chrome")))
 
 ; accelerated graphics
   (allow-shared-preferences-read "com.apple.opengl")

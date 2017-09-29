@@ -31,7 +31,6 @@ class DOMLocalMediaStream;
 class DOMMediaStream;
 class MediaStream;
 class MediaInputPort;
-class DirectMediaStreamListener;
 class MediaStreamGraph;
 class ProcessedMediaStream;
 
@@ -446,13 +445,6 @@ public:
    * needs special treatment.
    */
   virtual MediaStream* GetCameraStream() const { return nullptr; }
-
-  /**
-   * Allows users to get access to media data without going through graph
-   * queuing. Returns a bool to let us know if direct data will be delivered.
-   */
-  bool AddDirectListener(DirectMediaStreamListener *aListener);
-  void RemoveDirectListener(DirectMediaStreamListener *aListener);
 
   /**
    * Legacy method that returns true when the playback stream has finished.

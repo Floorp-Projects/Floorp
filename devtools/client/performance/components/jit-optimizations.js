@@ -9,9 +9,9 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
-const Tree = createFactory(require("../../shared/components/tree"));
+const Tree = createFactory(require("../../shared/components/Tree"));
 const OptimizationsItem = createFactory(require("./jit-optimizations-item"));
-const FrameView = createFactory(require("../../shared/components/frame"));
+const FrameView = createFactory(require("../../shared/components/Frame"));
 const JIT_TITLE = L10N.getStr("jit.title");
 // If TREE_ROW_HEIGHT changes, be sure to change `var(--jit-tree-row-height)`
 // in `devtools/client/themes/jit-optimizations.css`

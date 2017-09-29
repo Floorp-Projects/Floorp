@@ -1,5 +1,5 @@
 const {reducers, INITIAL_STATE, insertPinned} = require("common/Reducers.jsm");
-const {TopSites, App, Snippets, Prefs, Dialog, Sections} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane} = reducers;
 
 const {actionTypes: at} = require("common/Actions.jsm");
 
@@ -522,6 +522,21 @@ describe("Reducers", () => {
     it("should reset to the initial state on a SNIPPETS_RESET action", () => {
       const state = Snippets({initalized: true, foo: "bar"}, {type: at.SNIPPETS_RESET});
       assert.equal(state, INITIAL_STATE.Snippets);
+    });
+  });
+  describe("PreferencesPane", () => {
+    it("should return INITIAL_STATE by default", () => {
+      assert.equal(INITIAL_STATE.PreferencesPane, PreferencesPane(undefined, {type: "non_existent"}));
+    });
+    it("should toggle visible to true on SETTINGS_OPEN", () => {
+      const action = {type: at.SETTINGS_OPEN};
+      const nextState = PreferencesPane(INITIAL_STATE.PreferencesPane, action);
+      assert.isTrue(nextState.visible);
+    });
+    it("should toggle visible to false on SETTINGS_CLOSE", () => {
+      const action = {type: at.SETTINGS_CLOSE};
+      const nextState = PreferencesPane(INITIAL_STATE.PreferencesPane, action);
+      assert.isFalse(nextState.visible);
     });
   });
 });
