@@ -85,6 +85,10 @@ def main(argv):
                 # the script.
                 deps |= set(iter_modules_in_path(buildconfig.topsrcdir,
                                                  buildconfig.topobjdir))
+                # Add dependencies on any buildconfig items that were accessed
+                # by the script.
+                deps |= set(buildconfig.get_dependencies())
+
                 mk = Makefile()
                 mk.create_rule([args.output_file]).add_dependencies(deps)
                 with FileAvoidWrite(args.dep_file) as dep_file:

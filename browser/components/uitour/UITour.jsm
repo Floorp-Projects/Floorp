@@ -1078,15 +1078,16 @@ this.UITour = {
       shouldOpenAppMenu = true;
     } else if (this.targetIsInPageActionPanel(aTarget)) {
       shouldOpenPageActionPanel = true;
-      // Ensure the panel visibility so as to ensure the visibility of
-      // the target element inside the panel otherwise
-      // we would be rejected in the below `isElementVisible` checking.
+      // Ensure the panel visibility so as to ensure the visibility of the target
+      // element inside the panel otherwise we would be rejected in the below
+      // `isElementVisible` checking.
       aChromeWindow.BrowserPageActions.panelNode.hidden = false;
     }
 
-    // Prevent showing a panel at an undefined position.
-    if (!this.isElementVisible(aTarget.node)) {
-      return Promise.reject(`_ensureTarget: Reject the ${aTarget.name} target since it isn't visible.`);
+    // Prevent showing a panel at an undefined position, but when it's tucked
+    // away inside a panel, we skip this check.
+    if (!aTarget.node.closest("panelview") && !this.isElementVisible(aTarget.node)) {
+      return Promise.reject(`_ensureTarget: Reject the ${aTarget.name || aTarget.targetName} target since it isn't visible.`);
     }
 
     let menuToOpen = null;

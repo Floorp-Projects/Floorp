@@ -27,7 +27,7 @@ add_task(async function() {
   let ee_usages = [ certificateUsageSSLClient, certificateUsageSSLServer,
                     certificateUsageEmailSigner, certificateUsageEmailRecipient,
                     certificateUsageObjectSigner ];
-  let ca_usages = [ certificateUsageSSLCA, certificateUsageVerifyCA ];
+  let ca_usages = [ certificateUsageSSLCA ];
   let eku_usages = [ certificateUsageSSLClient, certificateUsageSSLServer ];
 
   // Load the ca into mem

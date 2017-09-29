@@ -40,6 +40,8 @@ const FAVICON_REQUEST_TIMEOUT = 60 * 1000;
 // Map from windows to arrays of data about pending favicon loads.
 let gFaviconLoadDataMap = new Map();
 
+const ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD = 10;
+
 // copied from utilityOverlay.js
 const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
 const PREF_LOAD_BOOKMARKS_IN_BACKGROUND = "browser.tabs.loadBookmarksInBackground";
@@ -1539,7 +1541,41 @@ this.PlacesUIUtils = {
     if (!info)
       return null;
     return this.promiseNodeLikeFromFetchInfo(info);
-  }
+  },
+
+  /**
+   * This function wraps potentially large places transaction operations
+   * with batch notifications to the result node, hence switching the views
+   * to batch mode.
+   *
+   * @param {nsINavHistoryResult} resultNode The result node to turn on batching.
+   * @note If resultNode is not supplied, the function will pass-through to
+   *       functionToWrap.
+   * @param {Integer} itemsBeingChanged The count of items being changed. If the
+   *                                    count is lower than a threshold, then
+   *                                    batching won't be set.
+   * @param {Function} functionToWrap The function to
+   */
+  async batchUpdatesForNode(resultNode, itemsBeingChanged, functionToWrap) {
+    if (!resultNode) {
+      await functionToWrap();
+      return;
+    }
+
+    resultNode = resultNode.QueryInterface(Ci.nsINavBookmarkObserver);
+
+    if (itemsBeingChanged > ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD) {
+      resultNode.onBeginUpdateBatch();
+    }
+
+    try {
+      await functionToWrap();
+    } finally {
+      if (itemsBeingChanged > ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD) {
+        resultNode.onEndUpdateBatch();
+      }
+    }
+  },
 };
 
 

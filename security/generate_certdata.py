@@ -9,7 +9,7 @@ import subprocess
 
 def main(output, *inputs):
     env=dict(os.environ)
-    env['PERL'] = buildconfig.substs['PERL']
+    env['PERL'] = str(buildconfig.substs['PERL'])
     output.write(subprocess.check_output([buildconfig.substs['PYTHON'],
                  inputs[0], inputs[2]], env=env))
     return None

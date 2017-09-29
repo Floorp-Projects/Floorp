@@ -35,15 +35,16 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
 
     await document.getElementById("nav-bar").overflowable.show();
 
+    let subview = document.getElementById(subviewId);
     let button = document.getElementById(buttonId);
     button.click();
+    await BrowserTestUtils.waitForEvent(subview, "ViewShown");
 
-    await BrowserTestUtils.waitForEvent(PanelUI.overflowPanel, "ViewShown");
-    let subview = document.getElementById(subviewId);
-    ok(subview.firstChild, "Subview should have a kid");
-    is(subview.firstChild.localName, "toolbarbutton", "There should be no separators to start with");
+    let subviewBody = subview.firstChild;
+    ok(subviewBody.firstChild, "Subview should have a kid");
+    is(subviewBody.firstChild.localName, "toolbarbutton", "There should be no separators to start with");
 
-    for (let kid of subview.children) {
+    for (let kid of subviewBody.children) {
       if (kid.localName == "menuseparator") {
         ok(kid.previousSibling && kid.previousSibling.localName != "menuseparator",
            "Separators should never have another separator next to them, and should never be the first node.");
@@ -58,7 +59,7 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
   };
 }
 
-add_task(checkSeparatorInsertion("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));
+add_task(checkSeparatorInsertion("menuWebDeveloperPopup", "developer-button", "PanelUI-developer"));
 
 registerCleanupFunction(function() {
   for (let el of tempElements) {

@@ -39,7 +39,7 @@ window.onload = async function () {
 
   let React = browserRequire("devtools/client/shared/vendor/react");
   let SearchBox = React.createFactory(
-    browserRequire("devtools/client/shared/components/search-box")
+    browserRequire("devtools/client/shared/components/SearchBox")
   );
   const { component, $ } = await createComponentTest(SearchBox, {
     type: "search",

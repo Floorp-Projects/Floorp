@@ -1453,11 +1453,14 @@ PlacesTreeView.prototype = {
     // since this information is specific to the tree view.
     let ip = this._getInsertionPoint(aRow, aOrientation);
     if (ip) {
-      PlacesControllerDragHelper.onDrop(ip, aDataTransfer)
-                                .catch(Components.utils.reportError);
+      PlacesControllerDragHelper.onDrop(ip, aDataTransfer, this)
+                                .catch(Components.utils.reportError)
+                                .then(() => {
+                                  // We should only clear the drop target once
+                                  // the onDrop is complete, as it is an async function.
+                                  PlacesControllerDragHelper.currentDropTarget = null;
+                                });
     }
-
-    PlacesControllerDragHelper.currentDropTarget = null;
   },
 
   getParentIndex: function PTV_getParentIndex(aRow) {

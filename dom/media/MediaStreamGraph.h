@@ -157,7 +157,6 @@ class AudioNodeEngine;
 class AudioNodeExternalInputStream;
 class AudioNodeStream;
 class AudioSegment;
-class DirectMediaStreamListener;
 class DirectMediaStreamTrackListener;
 class MediaInputPort;
 class MediaStreamGraphImpl;
@@ -703,8 +702,6 @@ public:
    */
   void NotifyListenersEventImpl(MediaStreamGraphEvent aEvent);
   void NotifyListenersEvent(MediaStreamGraphEvent aEvent);
-  void AddDirectListener(DirectMediaStreamListener* aListener);
-  void RemoveDirectListener(DirectMediaStreamListener* aListener);
 
   enum {
     ADDTRACK_QUEUED    = 0x01 // Queue track add until FinishAddTracks()
@@ -893,7 +890,6 @@ protected:
   TimeStamp mStreamTracksStartTimeStamp;
   nsTArray<TrackData> mUpdateTracks;
   nsTArray<TrackData> mPendingTracks;
-  nsTArray<RefPtr<DirectMediaStreamListener>> mDirectListeners;
   nsTArray<TrackBound<DirectMediaStreamTrackListener>> mDirectTrackListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
