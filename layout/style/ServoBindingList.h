@@ -673,6 +673,10 @@ SERVO_BINDING_FUNC(Servo_ReleaseArcStringData, void,
 SERVO_BINDING_FUNC(Servo_CloneArcStringData, mozilla::ServoRawOffsetArc<RustString>,
                    const mozilla::ServoRawOffsetArc<RustString>* string);
 
+SERVO_BINDING_FUNC(Servo_CorruptRuleHashAndCrash, void,
+                   RawServoStyleSetBorrowed set,
+                   size_t index);
+
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
   SERVO_BINDING_FUNC(Servo_##name_##_AddRef, void, type_##Borrowed) \

@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF};
-use api::{ComplexClipRegion, DeviceUintRect, DeviceUintSize, DisplayItemRef, Epoch, FilterOp};
-use api::{ImageDisplayItem, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize,
-          LayerToScrollTransform};
-use api::{LayerVector2D, LayoutSize, LayoutTransform, LocalClip, PipelineId};
-use api::{ScrollClamping, ScrollEventPhase, ScrollLayerState, ScrollLocation};
-use api::{ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext, TileOffset};
-use api::{TransformStyle, WorldPoint};
+use api::{BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF, ComplexClipRegion};
+use api::{DeviceUintRect, DeviceUintSize, DisplayItemRef, Epoch, FilterOp, HitTestFlags};
+use api::{HitTestResult, ImageDisplayItem, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect};
+use api::{LayerSize, LayerToScrollTransform, LayerVector2D, LayoutSize, LayoutTransform};
+use api::{LocalClip, PipelineId, ScrollClamping, ScrollEventPhase, ScrollLayerState};
+use api::{ScrollLocation, ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext};
+use api::{TileOffset, TransformStyle, WorldPoint};
 use clip::ClipRegion;
 use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
@@ -241,6 +240,18 @@ impl Frame {
         self.clip_scroll_tree.scroll(scroll_location, cursor, phase)
     }
 
+    pub fn hit_test(&mut self,
+                    pipeline_id: Option<PipelineId>,
+                    point: WorldPoint,
+                    flags: HitTestFlags)
+                    -> HitTestResult {
+        if let Some(ref builder) = self.frame_builder {
+            builder.hit_test(&self.clip_scroll_tree, pipeline_id, point, flags)
+        } else {
+            HitTestResult::default()
+        }
+    }
+
     pub fn tick_scrolling_bounce_animations(&mut self) {
         self.clip_scroll_tree.tick_scrolling_bounce_animations();
     }
@@ -434,6 +445,7 @@ impl Frame {
                 &reference_frame_bounds,
                 &transform,
                 origin,
+                false,
                 &mut self.clip_scroll_tree,
             );
             context.replacements.push((context_scroll_node_id, clip_id));
@@ -511,6 +523,7 @@ impl Frame {
             &iframe_rect,
             &transform,
             origin,
+            true,
             &mut self.clip_scroll_tree,
         );
 
@@ -623,6 +636,7 @@ impl Frame {
                     rect: LayerRect::zero(),
                     local_clip: *item.local_clip(),
                     is_backface_visible: prim_info.is_backface_visible,
+                    tag: prim_info.tag,
                 };
 
                 context.builder.add_line(
@@ -1291,6 +1305,7 @@ fn try_to_add_rectangle_splitting_on_clip(
         rect: inner_unclipped_rect,
         local_clip: LocalClip::from(*info.local_clip.clip_rect()),
         is_backface_visible: info.is_backface_visible,
+        tag: None,
     };
 
     context.builder.add_solid_rectangle(

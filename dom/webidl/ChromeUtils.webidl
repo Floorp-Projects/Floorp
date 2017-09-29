@@ -101,6 +101,12 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    */
   [Throws]
   static object shallowClone(object obj, optional object? target = null);
+
+  /**
+   * Temporary testing method to verify that nightly builds will crash when
+   * the rulehash is corrupted. See bug 1403397.
+   */
+  static void corruptRuleHashAndCrash(unsigned long index);
 };
 
 /**

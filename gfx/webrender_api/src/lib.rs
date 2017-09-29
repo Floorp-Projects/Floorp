@@ -7,6 +7,8 @@
 
 extern crate app_units;
 extern crate bincode;
+#[macro_use]
+extern crate bitflags;
 extern crate byteorder;
 #[cfg(feature = "nightly")]
 extern crate core;

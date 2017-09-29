@@ -119,6 +119,66 @@ impl ClipScrollTree {
             .unwrap_or(self.topmost_scrolling_node_id())
     }
 
+    pub fn is_point_clipped_in_for_node(
+        &self,
+        point: WorldPoint,
+        node_id: &ClipId,
+        cache: &mut FastHashMap<ClipId, Option<LayerPoint>>,
+        clip_store: &ClipStore
+    ) -> bool {
+        if let Some(point) = cache.get(node_id) {
+            return point.is_some();
+        }
+
+        let node = self.nodes.get(node_id).unwrap();
+        let parent_clipped_in = match node.parent {
+            None => true, // This is the root node.
+            Some(ref parent_id) => {
+                self.is_point_clipped_in_for_node(point, parent_id, cache, clip_store)
+            }
+        };
+
+        if !parent_clipped_in {
+            cache.insert(*node_id, None);
+            return false;
+        }
+
+        let transform = node.world_viewport_transform;
+        let transformed_point = match transform.inverse() {
+            Some(inverted) => inverted.transform_point2d(&point),
+            None => {
+                cache.insert(*node_id, None);
+                return false;
+            }
+        };
+
+        let point_in_layer = transformed_point - node.local_viewport_rect.origin.to_vector();
+        let clip_info = match node.node_type {
+            NodeType::Clip(ref info) => info,
+            _ => {
+                cache.insert(*node_id, Some(point_in_layer));
+                return true;
+            }
+        };
+
+        if !node.local_clip_rect.contains(&transformed_point) {
+            cache.insert(*node_id, None);
+            return false;
+        }
+
+        let point_in_clips = transformed_point - clip_info.clip_rect.origin.to_vector();
+        for &(ref clip, _) in clip_store.get(&clip_info.clip_sources).clips() {
+            if !clip.contains(&point_in_clips) {
+                cache.insert(*node_id, None);
+                return false;
+            }
+        }
+
+        cache.insert(*node_id, Some(point_in_layer));
+
+        true
+    }
+
     pub fn get_scroll_node_state(&self) -> Vec<ScrollLayerState> {
         let mut result = vec![];
         for (id, node) in self.nodes.iter() {
@@ -342,12 +402,17 @@ impl ClipScrollTree {
         origin_in_parent_reference_frame: LayerVector2D,
         pipeline_id: PipelineId,
         parent_id: Option<ClipId>,
+        root_for_pipeline: bool,
     ) -> ClipId {
-        let reference_frame_id = self.generate_new_clip_id(pipeline_id);
+        let reference_frame_id = if root_for_pipeline {
+            ClipId::root_reference_frame(pipeline_id)
+        } else {
+            self.generate_new_clip_id(pipeline_id)
+        };
+
         let node = ClipScrollNode::new_reference_frame(
             parent_id,
             rect,
-            rect.size,
             transform,
             origin_in_parent_reference_frame,
             pipeline_id,
@@ -415,6 +480,7 @@ impl ClipScrollTree {
             }
             NodeType::ScrollFrame(scrolling_info) => {
                 pt.new_level(format!("ScrollFrame"));
+                pt.add_item(format!("scrollable_size: {:?}", scrolling_info.scrollable_size));
                 pt.add_item(format!("scroll.offset: {:?}", scrolling_info.offset));
             }
             NodeType::StickyFrame(sticky_frame_info) => {
@@ -423,7 +489,6 @@ impl ClipScrollTree {
             }
         }
 
-        pt.add_item(format!("content_size: {:?}", node.content_size));
         pt.add_item(format!(
             "local_viewport_rect: {:?}",
             node.local_viewport_rect
@@ -461,5 +526,16 @@ impl ClipScrollTree {
         if !self.nodes.is_empty() {
             self.print_node(&self.root_reference_frame_id, pt, clip_store);
         }
+    }
+
+    pub fn make_node_relative_point_absolute(
+        &self,
+        pipeline_id: Option<PipelineId>,
+        point: &LayerPoint
+    ) -> WorldPoint {
+        pipeline_id.and_then(|id| self.nodes.get(&ClipId::root_reference_frame(id)))
+                   .map(|node| node.world_viewport_transform.transform_point2d(point))
+                   .unwrap_or_else(|| WorldPoint::new(point.x, point.y))
+
     }
 }

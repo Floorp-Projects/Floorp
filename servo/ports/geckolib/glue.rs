@@ -181,6 +181,10 @@ pub extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
 
     // Initialize the dummy url data
     unsafe { DUMMY_URL_DATA = dummy_url_data; }
+
+    // Set the system page size.
+    let page_size = unsafe { bindings::Gecko_GetSystemPageSize() };
+    ::hashglobe::SYSTEM_PAGE_SIZE.store(page_size, ::std::sync::atomic::Ordering::Relaxed);
 }
 
 #[no_mangle]
@@ -1772,21 +1776,31 @@ pub extern "C" fn Servo_ResolvePseudoStyle(element: RawGeckoElementBorrowed,
      -> ServoStyleContextStrong
 {
     let element = GeckoElement(element);
-    let data = unsafe { element.ensure_data() };
     let doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
 
     debug!("Servo_ResolvePseudoStyle: {:?} {:?}, is_probe: {}",
            element, PseudoElement::from_pseudo_type(pseudo_type), is_probe);
 
-    // FIXME(bholley): Assert against this.
-    if !data.has_styles() {
-        warn!("Calling Servo_ResolvePseudoStyle on unstyled element");
-        return if is_probe {
-            Strong::null()
-        } else {
-            doc_data.default_computed_values().clone().into()
-        };
-    }
+    let data = element.borrow_data();
+
+    let data = match data.as_ref() {
+        Some(data) if data.has_styles() => data,
+        _ => {
+            // FIXME(bholley, emilio): Assert against this.
+            //
+            // Known offender is nsMathMLmoFrame::MarkIntrinsicISizesDirty,
+            // which goes and does a bunch of work involving style resolution.
+            //
+            // Bug 1403865 tracks fixing it, and potentially adding an assert
+            // here instead.
+            warn!("Calling Servo_ResolvePseudoStyle on unstyled element");
+            return if is_probe {
+                Strong::null()
+            } else {
+                doc_data.default_computed_values().clone().into()
+            };
+        }
+    };
 
     let pseudo = PseudoElement::from_pseudo_type(pseudo_type)
                     .expect("ResolvePseudoStyle with a non-pseudo?");
@@ -4041,4 +4055,10 @@ pub extern "C" fn Servo_HasPendingRestyleAncestor(element: RawGeckoElementBorrow
         element = e.traversal_parent();
     }
     false
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_CorruptRuleHashAndCrash(set: RawServoStyleSetBorrowed, index: usize) {
+    let per_doc_data = PerDocumentStyleData::from_ffi(set).borrow();
+    per_doc_data.stylist.corrupt_rule_hash_and_crash(index);
 }

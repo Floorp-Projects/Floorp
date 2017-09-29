@@ -481,6 +481,11 @@ public:
                        ServoStyleContext* aNewLayoutParent,
                        Element* aElement);
 
+  /**
+   * Temporary testing method. See bug 1403397.
+   */
+  void CorruptRuleHashAndCrash(unsigned long aIndex);
+
 private:
   friend class AutoSetInServoTraversal;
   friend class AutoPrepareTraversal;

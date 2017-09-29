@@ -1604,6 +1604,11 @@ public:
     AccurateSeekingState::Enter(Move(aCurrentSeekJob),
                                 EventVisibility::Suppressed);
 
+    // Once seekToNextFrame() is called, we assume the user is likely to keep
+    // calling seekToNextFrame() repeatedly, and so, we should prevent the MDSM
+    // from getting into Dormant state.
+    mMaster->mMinimizePreroll = false;
+
     return mFutureSeekJob.mPromise.Ensure(__func__);
   }
 
