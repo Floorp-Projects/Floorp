@@ -483,10 +483,10 @@ class Code : public ShareableBase<Code>
 
     // Metadata lookup functions:
 
-    const CallSite* lookupCallSite(void* returnAddress, const CodeSegment** segment = nullptr) const;
+    const CallSite* lookupCallSite(void* returnAddress) const;
     const CodeRange* lookupRange(void* pc) const;
-    const MemoryAccess* lookupMemoryAccess(void* pc, const CodeSegment** segment = nullptr) const;
-    bool containsCodePC(const void* pc, const CodeSegment** segmentp = nullptr) const;
+    const MemoryAccess* lookupMemoryAccess(void* pc) const;
+    bool containsCodePC(const void* pc) const;
 
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.

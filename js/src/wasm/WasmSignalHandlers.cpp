@@ -781,20 +781,18 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
 
 MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                   const Instance& instance, JitActivation* activation, uint8_t** ppc)
+                   const CodeSegment* segment, const Instance& instance, JitActivation* activation,
+                   uint8_t** ppc)
 {
     MOZ_RELEASE_ASSERT(instance.code().containsCodePC(pc));
 
-    const CodeSegment* segment;
-    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc, &segment);
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
         // If there is no associated MemoryAccess for the faulting PC, this must be
         // experimental SIMD.js or Atomics. When these are converted to
         // non-experimental wasm features, this case, as well as outOfBoundsCode,
         // can be removed.
         activation->startWasmInterrupt(ToRegisterState(context));
-        if (!instance.code().containsCodePC(pc, &segment))
-            MOZ_CRASH("Cannot map PC to trap handler");
         *ppc = segment->outOfBoundsCode();
         return;
     }
@@ -930,17 +928,15 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
 
 MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                   const Instance& instance, JitActivation* activation, uint8_t** ppc)
+                   const CodeSegment* segment, const Instance& instance, JitActivation* activation,
+                   uint8_t** ppc)
 {
     MOZ_RELEASE_ASSERT(instance.code().containsCodePC(pc));
 
-    const CodeSegment* segment;
-    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc, &segment);
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
         // See explanation in the WASM_HUGE_MEMORY HandleMemoryAccess.
         activation->startWasmInterrupt(ToRegisterState(context));
-        if (!instance.code().containsCodePC(pc, &segment))
-            MOZ_CRASH("Cannot map PC to trap handler");
         *ppc = segment->outOfBoundsCode();
         return;
     }
@@ -1009,17 +1005,9 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // always the logically-faulting pc). Fortunately, we can detect this
         // case and silence the exception ourselves (the exception will
         // retrigger after the interrupt jumps back to resumePC).
-
-        const Code* code = codeSegment->code();
-        for (auto t : code->tiers()) {
-            if (pc == code->segment(t).interruptCode() &&
-                activation->isWasmInterrupted() &&
-                code->segment(t).containsCodePC(activation->wasmResumePC()))
-            {
-                return true;
-            }
-        }
-        return false;
+        return activation->isWasmInterrupted() &&
+               pc == codeSegment->interruptCode() &&
+               codeSegment->containsCodePC(activation->wasmResumePC());
     }
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(record->ExceptionInformation[1]);
@@ -1041,7 +1029,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         activation->finishWasmInterrupt();
     }
 
-    HandleMemoryAccess(context, pc, faultingAddress, *instance, activation, ppc);
+    HandleMemoryAccess(context, pc, faultingAddress, codeSegment, *instance, activation, ppc);
     return true;
 }
 
@@ -1152,7 +1140,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    HandleMemoryAccess(&context, pc, faultingAddress, *instance, activation, ppc);
+    HandleMemoryAccess(&context, pc, faultingAddress, codeSegment, *instance, activation, ppc);
 
     // Update the thread state with the new pc and register values.
     kret = thread_set_state(cxThread, float_state, (thread_state_t)&context.float_, float_state_count);
@@ -1389,7 +1377,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     }
 #endif
 
-    HandleMemoryAccess(context, pc, faultingAddress, *instance, activation, ppc);
+    HandleMemoryAccess(context, pc, faultingAddress, segment, *instance, activation, ppc);
     return true;
 }
 
