@@ -25,7 +25,9 @@ const logger = Log.repository.getLogger("Marionette");
 this.EXPORTED_SYMBOLS = ["element"];
 
 const DOCUMENT_POSITION_DISCONNECTED = 1;
+
 const XMLNS = "http://www.w3.org/1999/xhtml";
+const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator);
@@ -946,8 +948,7 @@ element.scrollIntoView = function(el) {
 };
 
 element.isXULElement = function(el) {
-  let ns = atom.getElementAttribute(el, "namespaceURI");
-  return ns.indexOf("there.is.only.xul") >= 0;
+  return el.namespaceURI === XULNS;
 };
 
 const boolEls = {
