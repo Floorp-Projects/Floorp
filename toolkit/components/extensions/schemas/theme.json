@@ -482,7 +482,14 @@
         "type": "function",
         "async": true,
         "description": "Removes the updates made to the theme.",
-        "parameters": []
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "windowId",
+            "optional": true,
+            "description": "The id of the window to reset. No id resets all windows."
+          }
+        ]
       }
     ]
   }
