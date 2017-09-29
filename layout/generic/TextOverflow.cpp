@@ -26,6 +26,8 @@
 #include "nsISelection.h"
 #include "TextDrawTarget.h"
 
+using mozilla::layout::TextDrawTarget;
+
 namespace mozilla {
 namespace css {
 
