@@ -31,6 +31,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
+Cu.importGlobalProperties(["CSS"]);
+
 XPCOMUtils.defineLazyModuleGetter(this, "DragPositionManager",
                                   "resource:///modules/DragPositionManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
@@ -328,7 +330,7 @@ CustomizeMode.prototype = {
       await this._wrapToolbarItems();
       this.populatePalette();
 
-      this._addDragHandlers(this.visiblePalette);
+      this._setupPaletteDragging();
 
       window.gNavToolbox.addEventListener("toolbarvisibilitychange", this);
 
@@ -438,8 +440,7 @@ CustomizeMode.prototype = {
 
       window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
-      DragPositionManager.stop();
-      this._removeDragHandlers(this.visiblePalette);
+      this._teardownPaletteDragging();
 
       await this._unwrapToolbarItems();
 
@@ -1510,6 +1511,42 @@ CustomizeMode.prototype = {
     }
   },
 
+  /**
+   * We handle dragover/drop on the outer palette separately
+   * to avoid overlap with other drag/drop handlers.
+   */
+  _setupPaletteDragging() {
+    this._addDragHandlers(this.visiblePalette);
+
+    this.paletteDragHandler = (aEvent) => {
+      let originalTarget = aEvent.originalTarget;
+      if (this._isUnwantedDragDrop(aEvent) ||
+          this.visiblePalette.contains(originalTarget) ||
+          this.document.getElementById("customization-panelHolder").contains(originalTarget)) {
+        return;
+      }
+      // We have a dragover/drop on the palette.
+      if (aEvent.type == "dragover") {
+        this._onDragOver(aEvent, this.visiblePalette);
+      } else {
+        this._onDragDrop(aEvent, this.visiblePalette);
+      }
+    };
+    let contentContainer = this.document.getElementById("customization-content-container");
+    contentContainer.addEventListener("dragover", this.paletteDragHandler, true);
+    contentContainer.addEventListener("drop", this.paletteDragHandler, true);
+  },
+
+  _teardownPaletteDragging() {
+    DragPositionManager.stop();
+    this._removeDragHandlers(this.visiblePalette);
+
+    let contentContainer = this.document.getElementById("customization-content-container");
+    contentContainer.removeEventListener("dragover", this.paletteDragHandler, true);
+    contentContainer.removeEventListener("drop", this.paletteDragHandler, true);
+    delete this.paletteDragHandler;
+  },
+
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
@@ -1653,7 +1690,7 @@ CustomizeMode.prototype = {
     this._dragInitializeTimeout = this.window.setTimeout(this._initializeDragAfterMove, 0);
   },
 
-  _onDragOver(aEvent) {
+  _onDragOver(aEvent, aOverrideTarget) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
@@ -1672,7 +1709,7 @@ CustomizeMode.prototype = {
     let draggedItemId =
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
-    let targetArea = this._getCustomizableParent(aEvent.currentTarget);
+    let targetArea = this._getCustomizableParent(aOverrideTarget || aEvent.currentTarget);
     let originArea = this._getCustomizableParent(draggedWrapper);
 
     // Do nothing if the target or origin are not customizable.
@@ -1760,7 +1797,7 @@ CustomizeMode.prototype = {
     aEvent.stopPropagation();
   },
 
-  _onDragDrop(aEvent) {
+  _onDragDrop(aEvent, aOverrideTarget) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
@@ -1769,7 +1806,7 @@ CustomizeMode.prototype = {
     this._initializeDragAfterMove = null;
     this.window.clearTimeout(this._dragInitializeTimeout);
 
-    let targetArea = this._getCustomizableParent(aEvent.currentTarget);
+    let targetArea = this._getCustomizableParent(aOverrideTarget || aEvent.currentTarget);
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
     let draggedItemId =
@@ -2182,7 +2219,7 @@ CustomizeMode.prototype = {
 
   _getCustomizableParent(aElement) {
     if (aElement) {
-      // Deal with drag/drop on the padding of the panel in photon.
+      // Deal with drag/drop on the padding of the panel.
       let containingPanelHolder = aElement.closest("#customization-panelHolder");
       if (containingPanelHolder) {
         return containingPanelHolder.firstChild;
@@ -2191,18 +2228,14 @@ CustomizeMode.prototype = {
 
     let areas = CustomizableUI.areas;
     areas.push(kPaletteId);
-    while (aElement) {
-      if (areas.indexOf(aElement.id) != -1) {
-        return aElement;
-      }
-      aElement = aElement.parentNode;
-    }
-
-    return null;
+    return aElement.closest(areas.map(a => "#" + CSS.escape(a)).join(","));
   },
 
   _getDragOverNode(aEvent, aAreaElement, aAreaType, aDraggedItemId) {
     let expectedParent = aAreaElement.customizationTarget || aAreaElement;
+    if (!expectedParent.contains(aEvent.target)) {
+      return expectedParent;
+    }
     // Our tests are stupid. Cope:
     if (!aEvent.clientX && !aEvent.clientY) {
       return aEvent.target;
@@ -2214,14 +2247,7 @@ CustomizeMode.prototype = {
 
     // Ensure this is within the container
     let boundsContainer = expectedParent;
-    // NB: because the panel UI itself is inside a scrolling container, we need
-    // to use the parent bounds (otherwise, if the panel UI is scrolled down,
-    // the numbers we get are in window coordinates which leads to various kinds
-    // of weirdness)
-    if (boundsContainer == this.panelUIContents) {
-      boundsContainer = boundsContainer.parentNode;
-    }
-    let bounds = boundsContainer.getBoundingClientRect();
+    let bounds = this._dwu.getBoundsWithoutFlushing(boundsContainer);
     dragX = Math.min(bounds.right, Math.max(dragX, bounds.left));
     dragY = Math.min(bounds.bottom, Math.max(dragY, bounds.top));
 
@@ -2235,14 +2261,7 @@ CustomizeMode.prototype = {
       let positionManager = DragPositionManager.getManagerForArea(aAreaElement);
       // Make it relative to the container:
       dragX -= bounds.left;
-      // NB: but if we're in the panel UI, we need to use the actual panel
-      // contents instead of the scrolling container to determine our origin
-      // offset against:
-      if (expectedParent == this.panelUIContents) {
-        dragY -= this.panelUIContents.getBoundingClientRect().top;
-      } else {
-        dragY -= bounds.top;
-      }
+      dragY -= bounds.top;
       // Find the closest node:
       targetNode = positionManager.find(aAreaElement, dragX, dragY, aDraggedItemId);
     }
