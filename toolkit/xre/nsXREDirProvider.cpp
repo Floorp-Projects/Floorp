@@ -426,9 +426,9 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_LOCAL_ROOT_DIR)) {
     rv = GetUserProfilesLocalDir(getter_AddRefs(file), nullptr, nullptr, nullptr);
   }
-  else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE)) {
+  else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE) && gArgv[0]) {
     nsCOMPtr<nsIFile> lf;
-    rv = XRE_GetBinaryPath(getter_AddRefs(lf));
+    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
     if (NS_SUCCEEDED(rv))
       file = lf;
   }
@@ -928,7 +928,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
     if (mozilla::Preferences::GetBool("plugins.load_appdir_plugins", false)) {
       nsCOMPtr<nsIFile> appdir;
-      rv = XRE_GetBinaryPath(getter_AddRefs(appdir));
+      rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(appdir));
       if (NS_SUCCEEDED(rv)) {
         appdir->SetNativeLeafName(NS_LITERAL_CSTRING("plugins"));
         directories.AppendObject(appdir);
