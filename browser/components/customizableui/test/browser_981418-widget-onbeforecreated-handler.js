@@ -8,7 +8,6 @@ const kWidgetId = "test-981418-widget-onbeforecreated";
 
 // Should be able to add broken view widget
 add_task(async function testAddOnBeforeCreatedWidget() {
-  let viewShownDeferred = Promise.defer();
   let onBeforeCreatedCalled = false;
   let widgetSpec = {
     id: kWidgetId,
@@ -17,73 +16,47 @@ add_task(async function testAddOnBeforeCreatedWidget() {
     onBeforeCreated(doc) {
       let view = doc.createElement("panelview");
       view.id = kWidgetId + "idontexistyet";
-      document.getElementById("PanelUI-multiView").appendChild(view);
+      document.getElementById("appMenu-viewCache").appendChild(view);
       onBeforeCreatedCalled = true;
-    },
-    onViewShowing() {
-      viewShownDeferred.resolve();
     }
   };
 
-  let noError = true;
-  try {
-    CustomizableUI.createWidget(widgetSpec);
-    CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_NAVBAR);
-  } catch (ex) {
-    Cu.reportError(ex);
-    noError = false;
-  }
-  ok(noError, "Should not throw an exception trying to add the widget.");
+  CustomizableUI.createWidget(widgetSpec);
+  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_NAVBAR);
+
   ok(onBeforeCreatedCalled, "onBeforeCreated should have been called");
 
   let widgetNode = document.getElementById(kWidgetId);
+  let viewNode = document.getElementById(kWidgetId + "idontexistyet");
   ok(widgetNode, "Widget should exist");
-  if (widgetNode) {
-    try {
-      widgetNode.click();
+  ok(viewNode, "Panelview should exist");
+  widgetNode.click();
 
-      let tempPanel = document.getElementById("customizationui-widget-panel");
-      let panelShownPromise = promisePanelElementShown(window, tempPanel);
+  let tempPanel = document.getElementById("customizationui-widget-panel");
+  let panelShownPromise = promisePanelElementShown(window, tempPanel);
 
-      let shownTimeout = setTimeout(() => viewShownDeferred.reject("Panel not shown within 20s"), 20000);
-      await viewShownDeferred.promise;
-      await panelShownPromise;
-      clearTimeout(shownTimeout);
-      ok(true, "Found view shown");
+  await Promise.all([
+    BrowserTestUtils.waitForEvent(viewNode, "ViewShown"),
+    panelShownPromise
+  ]);
 
-      let panelHiddenPromise = promisePanelElementHidden(window, tempPanel);
-      tempPanel.hidePopup();
-      await panelHiddenPromise;
+  let panelHiddenPromise = promisePanelElementHidden(window, tempPanel);
+  tempPanel.hidePopup();
+  await panelHiddenPromise;
 
-      CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-      await waitForOverflowButtonShown();
-      await document.getElementById("nav-bar").overflowable.show();
+  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  await waitForOverflowButtonShown();
+  await document.getElementById("nav-bar").overflowable.show();
 
-      viewShownDeferred = Promise.defer();
-      widgetNode.click();
+  widgetNode.click();
 
-      shownTimeout = setTimeout(() => viewShownDeferred.reject("Panel not shown within 20s"), 20000);
-      await viewShownDeferred.promise;
-      clearTimeout(shownTimeout);
-      ok(true, "Found view shown");
+  await BrowserTestUtils.waitForEvent(viewNode, "ViewShown");
 
-      let panelHidden = promiseOverflowHidden(window);
-      PanelUI.overflowPanel.hidePopup();
-      await panelHidden;
-    } catch (ex) {
-      ok(false, "Unexpected exception (like a timeout for one of the yields) " +
-                "when testing view widget.");
-    }
-  }
+  let panelHidden = promiseOverflowHidden(window);
+  PanelUI.overflowPanel.hidePopup();
+  await panelHidden;
 
-  noError = true;
-  try {
-    CustomizableUI.destroyWidget(kWidgetId);
-  } catch (ex) {
-    Cu.reportError(ex);
-    noError = false;
-  }
-  ok(noError, "Should not throw an exception trying to remove the broken view widget.");
+  CustomizableUI.destroyWidget(kWidgetId);
 });
 
 add_task(async function asyncCleanup() {

@@ -194,10 +194,6 @@
   transform: translateX(-@menuPanelWidth@);
 }
 
-panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
-  display: none;
-}
-
 panelview {
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
