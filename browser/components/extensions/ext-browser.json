@@ -122,14 +122,6 @@
       ["pageAction"]
     ]
   },
-  "pkcs11": {
-    "url": "chrome://browser/content/ext-pkcs11.js",
-    "schema": "chrome://browser/content/schemas/pkcs11.json",
-    "scopes": ["addon_parent"],
-    "paths": [
-      ["pkcs11"]
-    ]
-  },
   "geckoProfiler": {
     "url": "chrome://browser/content/ext-geckoProfiler.js",
     "schema": "chrome://browser/content/schemas/geckoProfiler.json",
