@@ -151,5 +151,8 @@
       "icon": "highlights",
       "initialized": false
     }
-  ]
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
 };
