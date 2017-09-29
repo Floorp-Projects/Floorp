@@ -321,11 +321,6 @@
 }
 
 @media (-moz-windows-glass) {
-  #main-window[sizemode=normal] #nav-bar {
-    border-top-left-radius: 2.5px;
-    border-top-right-radius: 2.5px;
-  }
-
   /* Set to full fill-opacity to improve visibility of toolbar buttons on aero glass. */
   #TabsToolbar:not(:-moz-lwtheme) {
     --toolbarbutton-icon-fill-opacity: 1;
