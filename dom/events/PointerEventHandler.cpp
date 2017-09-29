@@ -108,6 +108,10 @@ PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent)
                                               pointerEvent->mIsPrimary));
     }
     break;
+  case ePointerCancel:
+    // pointercancel means a pointer is unlikely to continue to produce pointer
+    // events. In that case, we should turn off active state or remove the
+    // pointer from active pointers.
   case ePointerUp:
     // In this case we remove information about pointer or turn off active state
     if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
