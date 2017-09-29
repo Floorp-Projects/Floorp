@@ -1637,7 +1637,7 @@ HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
-== 619117-1.html 619117-1-ref.html
+fails-if(webrender) == 619117-1.html 619117-1-ref.html
 HTTP(..) == 619511-1.html 619511-1-ref.html
 skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
 skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
@@ -1815,7 +1815,7 @@ fuzzy-if(skiaContent,1,80) == 961887-1.html 961887-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,3712) fails-if(webrender) == 966992-1.html 966992-1-ref.html
 skip-if(Android) == 966510-1.html 966510-1-ref.html # scrollable elements other than the root probably won't work well on android until bug 776030 is fixed
 skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
-fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1-ref.svg
+fuzzy-if(skiaContent,1,123) fails-if(webrender) == 978911-1.svg 978911-1-ref.svg
 == 983084-1.html 983084-1-ref.html
 == 983084-2.html 983084-2-ref.html
 == 983084-3.html 983084-1-ref.html
