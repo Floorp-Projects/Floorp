@@ -1681,7 +1681,7 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
 
     LLBit_ = false;
 
-    const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc, &segment);
+    const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
         startInterrupt(act);
         if (!instance->code().containsCodePC(pc))

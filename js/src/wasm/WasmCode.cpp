@@ -737,15 +737,12 @@ Code::segment(Tier tier) const
 }
 
 bool
-Code::containsCodePC(const void* pc, const CodeSegment** segmentp) const
+Code::containsCodePC(const void* pc) const
 {
     for (auto t : tiers()) {
         const CodeSegment& cs = segment(t);
-        if (cs.containsCodePC(pc)) {
-            if (segmentp)
-                *segmentp = &cs;
+        if (cs.containsCodePC(pc))
             return true;
-        }
     }
     return false;
 }
@@ -800,7 +797,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
 }
 
 const CallSite*
-Code::lookupCallSite(void* returnAddress, const CodeSegment** segmentp) const
+Code::lookupCallSite(void* returnAddress) const
 {
     for (auto t : tiers()) {
         uint32_t target = ((uint8_t*)returnAddress) - segment(t).base();
@@ -810,11 +807,7 @@ Code::lookupCallSite(void* returnAddress, const CodeSegment** segmentp) const
         size_t match;
         if (BinarySearch(CallSiteRetAddrOffset(metadata(t).callSites), lowerBound, upperBound,
                          target, &match))
-        {
-            if (segmentp)
-                *segmentp = &segment(t);
             return &metadata(t).callSites[match];
-        }
     }
 
     return nullptr;
@@ -843,7 +836,7 @@ struct MemoryAccessOffset
 };
 
 const MemoryAccess*
-Code::lookupMemoryAccess(void* pc, const CodeSegment** segmentp) const
+Code::lookupMemoryAccess(void* pc) const
 {
     for (auto t : tiers()) {
         const MemoryAccessVector& memoryAccesses = metadata(t).memoryAccesses;
@@ -857,8 +850,6 @@ Code::lookupMemoryAccess(void* pc, const CodeSegment** segmentp) const
                          &match))
         {
             MOZ_ASSERT(segment(t).containsCodePC(pc));
-            if (segmentp)
-                *segmentp = &segment(t);
             return &memoryAccesses[match];
         }
     }
