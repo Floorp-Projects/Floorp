@@ -401,15 +401,18 @@ protected:
 
     MOZ_ASSERT(!wp->GetWindow());
 
-    AutoSafeJSContext cx;
+    AutoJSAPI jsapi;
+    jsapi.Init();
+
+    JSContext* cx = jsapi.cx();
 
     JS::Rooted<JSObject*> global(cx, mConsole->GetOrCreateSandbox(cx, wp->GetPrincipal()));
     if (NS_WARN_IF(!global)) {
       return;
     }
 
-    // The CreateSandbox call returns a proxy to the actual sandbox object. We
-    // don't need a proxy here.
+    // The GetOrCreateSandbox call returns a proxy to the actual sandbox object.
+    // We don't need a proxy here.
     global = js::UncheckedUnwrap(global);
 
     JSAutoCompartment ac(cx, global);
