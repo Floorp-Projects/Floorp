@@ -1989,6 +1989,9 @@ function show(selected) {
 }
 
 function showSubSection(selected) {
+  if (!selected) {
+    return;
+  }
   let current_selection = document.querySelector(".category-subsection.selected");
   if (current_selection)
     current_selection.classList.remove("selected");
@@ -2161,8 +2164,8 @@ function onLoad() {
 
   // Update ping data when async Telemetry init is finished.
   Telemetry.asyncFetchTelemetryData(async () => {
-    urlStateRestore();
     await PingPicker.update();
+    urlStateRestore();
   });
 }
 
