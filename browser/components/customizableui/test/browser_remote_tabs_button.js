@@ -7,7 +7,7 @@
 let syncService = {};
 Components.utils.import("resource://services-sync/service.js", syncService);
 const service = syncService.Service;
-Components.utils.import("resource://services-sync/UIState.jsm");
+const {UIState} = Components.utils.import("resource://services-sync/UIState.jsm", {});
 
 let getState;
 let originalSync;
