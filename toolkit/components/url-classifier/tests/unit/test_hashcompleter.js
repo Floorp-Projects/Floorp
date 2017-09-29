@@ -205,9 +205,9 @@ function getRandomCompletionSet(forceServerError) {
       completion.forceServerError = true;
     }
     if (completion.expectCompletion) {
-      // Generate a random alpha-numeric string of length at most 6 for the
+      // Generate a random alpha-numeric string of length start with "test" for the
       // table name.
-      completion.table = (rand.nextNum(31)).toString(36);
+      completion.table = "test" + (rand.nextNum(31)).toString(36);
 
       completion.chunkId = rand.nextNum(16);
     }

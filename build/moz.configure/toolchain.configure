@@ -96,7 +96,7 @@ add_old_configure_assignment('MACOSX_DEPLOYMENT_TARGET', macos_target)
 # Xcode state
 # ===========
 
-option('--disable-xcode-checks',
+js_option('--disable-xcode-checks',
        help='Do not check that Xcode is installed and properly configured')
 
 @depends(host, '--disable-xcode-checks')

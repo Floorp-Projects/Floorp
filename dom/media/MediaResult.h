@@ -61,10 +61,8 @@ public:
     if (NS_SUCCEEDED(mCode)) {
       return nsCString();
     }
-    nsCString name;
-    GetErrorName(mCode, name);
     return nsPrintfCString("%s (0x%08" PRIx32 ")%s%s",
-                           name.get(),
+                           ErrorName().get(),
                            static_cast<uint32_t>(mCode),
                            mMessage.IsEmpty() ? "" : " - ",
                            mMessage.get());

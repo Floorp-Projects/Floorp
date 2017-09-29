@@ -168,7 +168,7 @@
             "type": "array",
             "default": [],
             "items": {
-              "$ref": "Permission",
+              "$ref": "PermissionOrOrigin",
               "onError": "warn"
             },
             "optional": true
@@ -177,7 +177,7 @@
           "optional_permissions": {
             "type": "array",
             "items": {
-              "$ref": "OptionalPermission",
+              "$ref": "OptionalPermissionOrOrigin",
               "onError": "warn"
             },
             "optional": true,
@@ -374,7 +374,13 @@
               "idle",
               "notifications"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "id": "OptionalPermissionOrOrigin",
+        "choices": [
+          { "$ref": "OptionalPermission" },
           { "$ref": "MatchPattern" }
         ]
       },
@@ -390,6 +396,13 @@
               "unlimitedStorage"
             ]
           }
+        ]
+      },
+      {
+        "id": "PermissionOrOrigin",
+        "choices": [
+          { "$ref": "Permission" },
+          { "$ref": "MatchPattern" }
         ]
       },
       {

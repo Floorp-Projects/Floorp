@@ -7,17 +7,16 @@
 FINAL_TARGET = 'dist/bin/gmp-fake/1.0'
 
 FINAL_TARGET_FILES += [
-    'fake.info',
-    'fake.voucher',
+    'manifest.json',
 ]
 
 SOURCES += [
-        'gmp-fake.cpp',
-        'gmp-test-decryptor.cpp',
-        'gmp-test-storage.cpp',
+        'cdm-fake.cpp',
+        'cdm-test-decryptor.cpp',
+        'cdm-test-storage.cpp',
 ]
 
-DEFINES['GMP_FAKE_SUPPORT_DECRYPT'] = True
+DEFINES['CDM_IMPLEMENTATION'] = True
 
 SharedLibrary("fake")
 

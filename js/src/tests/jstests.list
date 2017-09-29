@@ -361,11 +361,7 @@ skip script test262/language/statements/with/cptn-abrupt-empty.js
 skip script test262/language/statements/with/cptn-nrml.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1289882
-skip script test262/intl402/NumberFormat/prototype/formatToParts/formatToParts.js
 skip script test262/intl402/NumberFormat/prototype/formatToParts/length.js
-skip script test262/intl402/NumberFormat/prototype/formatToParts/main.js
-skip script test262/intl402/NumberFormat/prototype/formatToParts/name.js
-skip script test262/intl402/NumberFormat/prototype/formatToParts/return-abrupt-tonumber.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1296234
 skip script test262/intl402/Collator/prototype/compare/compare-function-name.js

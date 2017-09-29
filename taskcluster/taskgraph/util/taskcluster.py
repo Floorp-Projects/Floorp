@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import datetime
 import functools
 import yaml
 import requests
@@ -27,9 +28,12 @@ def get_session():
     return session
 
 
-def _do_request(url):
+def _do_request(url, content=None):
     session = get_session()
-    response = session.get(url, stream=True)
+    if content is None:
+        response = session.get(url, stream=True)
+    else:
+        response = session.post(url, json=content)
     if response.status_code >= 400:
         # Consume content before raise_for_status, so that the connection can be
         # reused.
@@ -74,12 +78,12 @@ def list_artifacts(task_id, use_proxy=False):
     return response.json()['artifacts']
 
 
-def get_index_url(index_path, use_proxy=False):
+def get_index_url(index_path, use_proxy=False, multiple=False):
     if use_proxy:
-        INDEX_URL = 'http://taskcluster/index/v1/task/{}'
+        INDEX_URL = 'http://taskcluster/index/v1/task{}/{}'
     else:
-        INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
-    return INDEX_URL.format(index_path)
+        INDEX_URL = 'https://index.taskcluster.net/v1/task{}/{}'
+    return INDEX_URL.format('s' if multiple else '', index_path)
 
 
 def find_task_id(index_path, use_proxy=False):
@@ -96,6 +100,30 @@ def get_artifact_from_index(index_path, artifact_path, use_proxy=False):
     full_path = index_path + '/artifacts/' + artifact_path
     response = _do_request(get_index_url(full_path, use_proxy))
     return _handle_artifact(full_path, response)
+
+
+def list_tasks(index_path, use_proxy=False):
+    """
+    Returns a list of task_ids where each task_id is indexed under a path
+    in the index. Results are sorted by expiration date from oldest to newest.
+    """
+    results = []
+    data = {}
+    while True:
+        response = _do_request(get_index_url(index_path, use_proxy, multiple=True), data)
+        response = response.json()
+        results += response['tasks']
+        if response.get('continuationToken'):
+            data = {'continuationToken': response.get('continuationToken')}
+        else:
+            break
+
+    # We can sort on expires because in the general case
+    # all of these tasks should be created with the same expires time so they end up in
+    # order from earliest to latest action. If more correctness is needed, consider
+    # fetching each task and sorting on the created date.
+    results.sort(key=lambda t: datetime.datetime.strptime(t['expires'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+    return [t['taskId'] for t in results]
 
 
 def get_task_url(task_id, use_proxy=False):

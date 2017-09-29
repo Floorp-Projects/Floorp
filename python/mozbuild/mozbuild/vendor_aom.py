@@ -200,7 +200,7 @@ Please check manually and update the vendor script.
         in the working copy, since we're going to change some state
         on the user.
         '''
-        modified = self.repository.get_modified_files()
+        modified = self.repository.get_changed_files('M')
         if modified:
             self.log(logging.ERROR, 'modified_files', {},
                      '''You have uncommitted changes to the following files:

@@ -35,7 +35,6 @@
 #define GMP_VIDEO_FRAME_ENCODED_h_
 
 #include <stdint.h>
-#include "gmp-decryption.h"
 #include "gmp-video-frame.h"
 #include "gmp-video-codec.h"
 
@@ -90,10 +89,6 @@ public:
   virtual uint8_t*       Buffer() = 0;
   virtual GMPBufferType  BufferType() const = 0;
   virtual void     SetBufferType(GMPBufferType aBufferType) = 0;
-
-  // Get metadata describing how this frame is encrypted, or nullptr if the
-  // frame is not encrypted.
-  virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const = 0;
 };
 
 #endif // GMP_VIDEO_FRAME_ENCODED_h_

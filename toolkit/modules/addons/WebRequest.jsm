@@ -171,7 +171,7 @@ const MAYBE_CACHED_EVENTS = new Set([
 
 const OPTIONAL_PROPERTIES = [
   "requestHeaders", "responseHeaders", "statusCode", "statusLine", "error", "redirectUrl",
-  "requestBody", "scheme", "realm", "isProxy", "challenger", "proxyInfo", "ip", "frameAncestors",
+  "requestBody", "scheme", "realm", "isProxy", "challenger", "proxyInfo", "ip",
 ];
 
 function serializeRequestData(eventName) {

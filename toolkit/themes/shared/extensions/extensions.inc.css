@@ -298,12 +298,6 @@ button.warning {
   fill: currentColor;
 }
 
-#back-btn:-moz-locale-dir(rtl),
-#forward-btn:-moz-locale-dir(ltr) {
-  transform: scaleX(-1);
-}
-
-
 /*** sorters ***/
 
 .sort-controls {

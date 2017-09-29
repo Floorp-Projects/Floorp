@@ -322,6 +322,7 @@ function HashCompleterRequest(aCompleter, aGethashUrl) {
   this._shuttingDown = false;
   this.gethashUrl = aGethashUrl;
 
+  this.provider = "";
   // Multiple partial hashes can be associated with the same tables
   // so we use a map here.
   this.tableNames = new Map();
@@ -357,6 +358,10 @@ HashCompleterRequest.prototype = {
       this.tableNames.set(aTableName);
 
       // Assuming all tables with the same gethash URL have the same provider
+      if (this.provider == "") {
+        this.provider = gUrlUtil.getProvider(aTableName);
+      }
+
       if (this.telemetryProvider == "") {
         this.telemetryProvider = gUrlUtil.getTelemetryProvider(aTableName);
       }
@@ -669,6 +674,13 @@ HashCompleterRequest.prototype = {
   // This adds a complete hash to any entry in |this._requests| that matches
   // the hash.
   handleItem: function HCR_handleItem(aData) {
+    let provider = gUrlUtil.getProvider(aData.tableName);
+    if (provider != this.provider) {
+      log("Ignoring table " + aData.tableName + " since it belongs to " + provider +
+          " while the response came from " + this.provider + ".");
+      return;
+    }
+
     for (let i = 0; i < this._requests.length; i++) {
       let request = this._requests[i];
       if (aData.completeHash.startsWith(request.partialHash)) {
@@ -764,7 +776,8 @@ HashCompleterRequest.prototype = {
       }
     }
     let success = Components.isSuccessCode(aStatusCode);
-    log("Received a " + httpStatus + " status code from the gethash server (success=" + success + ").");
+    log("Received a " + httpStatus + " status code from the " + this.provider +
+        " gethash server (success=" + success + ").");
 
     Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS2").
       add(this.telemetryProvider, httpStatusToBucket(httpStatus));

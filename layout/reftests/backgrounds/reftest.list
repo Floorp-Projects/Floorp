@@ -126,7 +126,7 @@ random-if(OSX==1010) == background-size-monster-rem.html background-size-monster
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html # bug 1073209
+fails-if(!webrender) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html # bug 1073209
 
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
@@ -174,7 +174,7 @@ fuzzy(80,500) fuzzy-if(skiaContent,109,908) fails-if(webrender) == attachment-lo
 fuzzy-if(skiaContent,1,8) fuzzy-if(webrender,1,84) == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
 == background-repeat-large-area.html background-repeat-large-area-ref.html
 
-fuzzy(30,474) fuzzy-if(skiaContent,31,474) fails-if(webrender) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html
+fuzzy(30,474) fuzzy-if(skiaContent,31,474) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html
 
 skip-if(!cocoaWidget) == background-repeat-resampling.html background-repeat-resampling-ref.html
 
