@@ -68,7 +68,7 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
   {
     stack: [
       "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
-      "_cleanupTransitionPhase@resource:///modules/PanelMultiView.jsm",
+      "hideAllViewsExcept@resource:///modules/PanelMultiView.jsm",
     ],
 
     times: 2, // This number should only ever go down - never up.
