@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ComplexClipRegion, LayoutRect};
-use api::{DeviceIntRect, DevicePoint, DeviceRect, DeviceSize};
-use api::{LayerRect, LayerToWorldTransform, WorldPoint3D};
-use euclid::{Point2D, Rect, Size2D};
-use euclid::{TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D, TypedTransform3D};
+use api::{BorderRadius, ComplexClipRegion, DeviceIntRect, DevicePoint, DeviceRect, DeviceSize};
+use api::{LayerRect, LayerToWorldTransform, LayoutRect, WorldPoint3D};
+use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D};
+use euclid::TypedTransform3D;
 use num_traits::Zero;
 use std::f32::consts::FRAC_1_SQRT_2;
 

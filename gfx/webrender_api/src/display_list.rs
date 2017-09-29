@@ -343,6 +343,7 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
             rect: info.rect.translate(&offset),
             local_clip: info.local_clip.create_with_offset(offset),
             is_backface_visible: info.is_backface_visible,
+            tag: info.tag,
         }
     }
 
@@ -997,6 +998,7 @@ impl DisplayListBuilder {
             rect: content_rect,
             local_clip: LocalClip::from(clip_rect),
             is_backface_visible: true,
+            tag: None,
         };
 
         self.push_item(item, &info);

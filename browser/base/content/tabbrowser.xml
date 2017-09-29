@@ -759,6 +759,7 @@
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
                       aWebProgress && aWebProgress.isTopLevel) {
                     this.mTab.setAttribute("busy", "true");
+                    this.mTab._notselectedsinceload = !this.mTab.selected;
                     this._syncThrobberAnimations();
                   }
 
@@ -778,6 +779,12 @@
                       Components.isSuccessCode(aStatus) &&
                       !this.mTabBrowser.tabAnimationsInProgress &&
                       Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+                    if (this.mTab._notselectedsinceload) {
+                      this.mTab.setAttribute("notselectedsinceload", "true");
+                    } else {
+                      this.mTab.removeAttribute("notselectedsinceload");
+                    }
+
                     this.mTab.setAttribute("bursting", "true");
                   }
 
@@ -971,6 +978,25 @@
         null
       </field>
 
+      <method name="storeIcon">
+        <parameter name="aBrowser"/>
+        <parameter name="aURI"/>
+        <parameter name="aLoadingPrincipal"/>
+        <parameter name="aRequestContextID"/>
+        <body>
+          <![CDATA[
+          try {
+            if (!(aURI instanceof Ci.nsIURI)) {
+              aURI = makeURI(aURI);
+            }
+            PlacesUIUtils.loadFavicon(aBrowser, aLoadingPrincipal, aURI, aRequestContextID);
+          } catch (ex) {
+            Components.utils.reportError(ex);
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="setIcon">
         <parameter name="aTab"/>
         <parameter name="aURI"/>
@@ -1047,15 +1073,19 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            var browser = this.getBrowserForTab(aTab);
-            var documentURI = browser.documentURI;
-            var icon = null;
+            let browser = this.getBrowserForTab(aTab);
+            let documentURI = browser.documentURI;
+            let requestContextID = browser.contentRequestContextID;
+            let loadingPrincipal = browser.contentPrincipal;
+            let icon = null;
 
             if (browser.imageDocument) {
               if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
                 let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
                 if (browser.imageDocument.width <= sz &&
                     browser.imageDocument.height <= sz) {
+                  // Don't try to store the icon in Places, regardless it would
+                  // be skipped (see Bug 403651).
                   icon = browser.currentURI;
                 }
               }
@@ -1065,10 +1095,13 @@
             // do the right thing with about:-style error pages.  Bug 453442
             if (!icon && this.shouldLoadFavIcon(documentURI)) {
               let url = documentURI.prePath + "/favicon.ico";
-              if (!this.isFailedIcon(url))
+              if (!this.isFailedIcon(url)) {
                 icon = url;
+                this.storeIcon(browser, icon, loadingPrincipal, requestContextID);
+              }
             }
-            this.setIcon(aTab, icon, browser.contentPrincipal, browser.contentRequestContextID);
+
+            this.setIcon(aTab, icon, loadingPrincipal, requestContextID);
           ]]>
         </body>
       </method>
@@ -6572,6 +6605,8 @@
         <body><![CDATA[
           if (this.getAttribute("overflow") == "true")
             this.mTabstrip.ensureElementIsVisible(this.selectedItem, aInstant);
+
+          this.selectedItem._notselectedsinceload = false;
         ]]></body>
       </method>
 
@@ -7644,12 +7679,12 @@
           <xul:spacer flex="1"/>
           <xul:hbox class="tab-bottom-line"/>
         </xul:vbox>
-        <xul:hbox xbl:inherits="pinned,bursting"
+        <xul:hbox xbl:inherits="pinned,bursting,notselectedsinceload"
                   anonid="tab-loading-burst"
                   class="tab-loading-burst"/>
         <xul:hbox xbl:inherits="pinned,selected=visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
-          <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected"
+          <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected,notselectedsinceload"
                     anonid="tab-throbber"
                     class="tab-throbber"
                     layer="true"/>

@@ -1909,12 +1909,16 @@ WebrtcVideoConduit::OnSinkWantsChanged(
     rtc::Optional<int> max_pixel_count = wants.max_pixel_count;
     rtc::Optional<int> max_pixel_count_step_up = wants.max_pixel_count_step_up;
 
-    if (max_pixel_count.value_or(max_fs) > max_fs) {
-      max_pixel_count = rtc::Optional<int>(max_fs);
-    }
+    if (max_fs > 0) {
+      // max_fs was explicitly set by signaling and needs to be accounted for
 
-    if (max_pixel_count_step_up.value_or(max_fs) > max_fs) {
-      max_pixel_count_step_up = rtc::Optional<int>(max_fs);
+      if (max_pixel_count.value_or(max_fs) > max_fs) {
+        max_pixel_count = rtc::Optional<int>(max_fs);
+      }
+
+      if (max_pixel_count_step_up.value_or(max_fs) > max_fs) {
+        max_pixel_count_step_up = rtc::Optional<int>(max_fs);
+      }
     }
 
     mVideoAdapter.OnResolutionRequest(max_pixel_count,
