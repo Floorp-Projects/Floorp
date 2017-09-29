@@ -2437,15 +2437,12 @@ private:
 
 struct StyleShapeSource final
 {
-  StyleShapeSource()
-    : mURL(nullptr)
-  {}
+  StyleShapeSource() = default;
 
   StyleShapeSource(const StyleShapeSource& aSource);
 
   ~StyleShapeSource()
   {
-    ReleaseRef();
   }
 
   StyleShapeSource& operator=(const StyleShapeSource& aOther);
@@ -2465,7 +2462,9 @@ struct StyleShapeSource final
   css::URLValue* GetURL() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::URL, "Wrong shape source type!");
-    return mURL;
+    return mShapeImage
+      ? static_cast<css::URLValue*>(mShapeImage->GetURLValue())
+      : nullptr;
   }
 
   bool SetURL(css::URLValue* aValue);
@@ -2490,14 +2489,12 @@ struct StyleShapeSource final
   void SetReferenceBox(StyleGeometryBox aReferenceBox);
 
 private:
-  void ReleaseRef();
-
   void* operator new(size_t) = delete;
 
+  void DoCopy(const StyleShapeSource& aOther);
+
   mozilla::UniquePtr<StyleBasicShape> mBasicShape;
-  union {
-    css::URLValue* mURL;
-  };
+  mozilla::UniquePtr<nsStyleImage> mShapeImage;
   StyleShapeSourceType mType = StyleShapeSourceType::None;
   StyleGeometryBox mReferenceBox = StyleGeometryBox::NoBox;
 };
