@@ -28,7 +28,7 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
     private static final String JS_EVENT = "Robocop:TestJSEvent";
     private static final String JS_RESPONSE_EVENT = "Robocop:TestJSResponse";
 
-    private static final long WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS = 20000; // 20 seconds
+    private static final long WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS = 40000; // 40 seconds
 
     private boolean handledAsyncEvent;
 
@@ -441,7 +441,7 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
                 continue;
             }
 
-            dispatchMessageForResponse(scope, responseEvent, "success", key, refBundle);
+            dispatchMessageForResponse(scope, responseEvent, mode, key, refBundle);
             count++;
 
             if (wait) {

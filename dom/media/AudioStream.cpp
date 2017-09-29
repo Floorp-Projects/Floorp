@@ -122,6 +122,7 @@ AudioStream::AudioStream(DataSource& aSource)
   , mDumpFile(nullptr)
   , mState(INITIALIZED)
   , mDataSource(aSource)
+  , mPrefillQuirk(false)
 {
 #if defined(XP_WIN)
   if (XRE_IsContentProcess()) {
@@ -355,6 +356,10 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aChannelMap, uint32_t aRate)
     CubebUtils::ReportCubebStreamInitFailure(true);
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
+
+  // cubeb's winmm backend prefills buffers on init rather than stream start.
+  // See https://github.com/kinetiknz/cubeb/issues/150
+  mPrefillQuirk = !strcmp(cubeb_get_backend_id(cubebContext), "winmm");
 
   return OpenCubeb(cubebContext, params, startTime, CubebUtils::GetFirstStream());
 }
@@ -630,7 +635,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   auto writer = AudioBufferWriter(
     reinterpret_cast<AudioDataValue*>(aBuffer), mOutChannels, aFrames);
 
-  if (!strcmp(cubeb_get_backend_id(CubebUtils::GetCubebContext()), "winmm")) {
+  if (mPrefillQuirk) {
     // Don't consume audio data until Start() is called.
     // Expected only with cubeb winmm backend.
     if (mState == INITIALIZED) {

@@ -3470,6 +3470,12 @@ nsBrowserAccess.prototype = {
     return this._getBrowser(aURI, null, aWhere, aFlags, null);
   },
 
+  createContentWindowInFrame: function browser_createContentWindowInFrame(
+                              aURI, aParams, aWhere, aFlags,
+                              aNextTabParentId, aName) {
+    return this._getBrowser(null, null, aWhere, aFlags, null);
+  },
+
   isTabContentWindow: function(aWindow) {
     return BrowserApp.getBrowserForWindow(aWindow) != null;
   },

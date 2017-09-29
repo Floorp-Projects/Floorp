@@ -101,6 +101,27 @@ AssemblerMIPSShared::appendRawCode(const uint8_t* code, size_t numBytes)
     return m_buffer.appendRawCode(code, numBytes);
 }
 
+bool
+AssemblerMIPSShared::reserve(size_t size)
+{
+    // This buffer uses fixed-size chunks so there's no point in reserving
+    // now vs. on-demand.
+    return !oom();
+}
+
+bool
+AssemblerMIPSShared::swapBuffer(wasm::Bytes& bytes)
+{
+    // For now, specialize to the one use case. As long as wasm::Bytes is a
+    // Vector, not a linked-list of chunks, there's not much we can do other
+    // than copy.
+    MOZ_ASSERT(bytes.empty());
+    if (!bytes.resize(bytesNeeded()))
+        return false;
+    m_buffer.executableCopy(bytes.begin());
+    return true;
+}
+
 uint32_t
 AssemblerMIPSShared::actualIndex(uint32_t idx_) const
 {
@@ -125,15 +146,6 @@ AssemblerMIPSShared::copyDataRelocationTable(uint8_t* dest)
 {
     if (dataRelocations_.length())
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
-}
-
-void
-AssemblerMIPSShared::processCodeLabels(uint8_t* rawCode)
-{
-    for (size_t i = 0; i < codeLabels_.length(); i++) {
-        CodeLabel label = codeLabels_[i];
-        Bind(rawCode, *label.patchAt(), *label.target());
-    }
 }
 
 AssemblerMIPSShared::Condition

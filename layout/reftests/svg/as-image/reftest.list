@@ -99,11 +99,11 @@ fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,tru
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,350) fails-if(webrender) == img-simple-3.html  img-simple-3-ref.html
+fuzzy-if(skiaContent,255,350) == img-simple-3.html  img-simple-3-ref.html
 == img-simple-4.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,90) fails-if(webrender) == img-simple-5.html  img-simple-5-ref.html
+fuzzy-if(skiaContent,255,90) == img-simple-5.html  img-simple-5-ref.html
 == img-simple-6.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,27) fails-if(webrender) == img-simple-7.html  img-simple-7-ref.html
+fuzzy-if(skiaContent,255,27) == img-simple-7.html  img-simple-7-ref.html
 
 # Test with mix of <html:img> and <svg:image> referring to the same images,
 # with a variety of preserveAspectRatio values in play.
@@ -135,22 +135,22 @@ fails-if(webrender) == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2
 fails-if(webrender) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
 fails-if(webrender) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
 
-fails-if(webrender) == img-height-meet-1.html   img-height-meet-1-ref.html
+== img-height-meet-1.html   img-height-meet-1-ref.html
 fails-if(webrender) == img-height-meet-2.html   img-height-meet-2-ref.html
 fails-if(webrender) == img-height-slice-1.html  img-height-slice-1-ref.html
 fails-if(webrender) == img-height-slice-2.html  img-height-slice-2-ref.html
 
-fails-if(webrender) == img-width-meet-1.html   img-width-meet-1-ref.html
+== img-width-meet-1.html   img-width-meet-1-ref.html
 fails-if(webrender) == img-width-meet-2.html   img-width-meet-2-ref.html
 fails-if(webrender) == img-width-slice-1.html  img-width-slice-1-ref.html
 fails-if(webrender) == img-width-slice-2.html  img-width-slice-2-ref.html
 
 # Alternate version of "width & height both non-%-valued" tests, but now
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
-fails-if(webrender) == img-novb-widthAndHeight-meet-1-em.html  img-novb-widthAndHeight-all-1-ref.html
-fails-if(webrender) == img-novb-widthAndHeight-meet-1-px.html  img-novb-widthAndHeight-all-1-ref.html
-fails-if(webrender) == img-novb-widthAndHeight-slice-1-em.html img-novb-widthAndHeight-all-1-ref.html
-fails-if(webrender) == img-novb-widthAndHeight-slice-1-px.html img-novb-widthAndHeight-all-1-ref.html
+== img-novb-widthAndHeight-meet-1-em.html  img-novb-widthAndHeight-all-1-ref.html
+== img-novb-widthAndHeight-meet-1-px.html  img-novb-widthAndHeight-all-1-ref.html
+== img-novb-widthAndHeight-slice-1-em.html img-novb-widthAndHeight-all-1-ref.html
+== img-novb-widthAndHeight-slice-1-px.html img-novb-widthAndHeight-all-1-ref.html
 
 # Alternate versions of "only one dimension is non-%-valued" tests, but now
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior

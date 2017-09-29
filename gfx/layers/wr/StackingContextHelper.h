@@ -52,7 +52,7 @@ public:
                         nsDisplayListBuilder* aDisplayListBuilder,
                         nsDisplayItem* aItem,
                         nsDisplayList* aDisplayList,
-                        gfx::Matrix4x4Typed<LayerPixel, LayerPixel>* aBoundTransform,
+                        const gfx::Matrix4x4* aBoundTransform,
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
                         gfx::Matrix4x4* aTransformPtr,
@@ -86,12 +86,16 @@ public:
   // Same but for points
   wr::LayoutPoint ToRelativeLayoutPoint(const LayerPoint& aPoint) const;
 
+  // Export the inherited scale
+  gfx::Size GetInheritedScale() const { return mScale; }
+
   bool IsBackfaceVisible() const { return mTransform.IsBackfaceVisible(); }
 
 private:
   wr::DisplayListBuilder* mBuilder;
   LayerPoint mOrigin;
   gfx::Matrix4x4 mTransform;
+  gfx::Size mScale;
 };
 
 } // namespace layers
