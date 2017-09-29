@@ -1,0 +1,56 @@
+target: obj-x86_64-pc-linux-gnu
+# It is used by 'mach static-analysis' and 'mozreview static-analysis bot'
+# in order to have consistency across the used checkers.
+# All the clang checks used by the static-analysis tools.
+clang_checkers:
+ - name: -*
+   publish: no
+ - name: clang-analyzer-deadcode.DeadStores
+   publish: yes
+ - name: clang-analyzer-security.*
+   publish: no
+ - name: misc-assert-side-effect
+   publish: yes
+ - name: misc-suspicious-missing-comma
+   publish: yes
+ - name: misc-suspicious-semicolon
+   publish: yes
+ - name: modernize-loop-convert
+   publish: yes
+ - name: modernize-raw-string-literal
+   publish: yes
+ - name: modernize-redundant-void-arg
+   publish: no
+ - name: modernize-shrink-to-fit
+   publish: yes
+ - name: modernize-use-equals-default
+   publish: yes
+ - name: modernize-use-equals-delete
+   publish: yes
+ - name: modernize-use-nullptr
+   publish: yes
+ - name: modernize-use-override
+   publish: yes
+ - name: mozilla-*
+   publish: yes
+ - name: performance-*
+   publish: yes
+ - name: readability-container-size-empty
+   publish: yes
+ - name: readability-else-after-return
+   publish: yes
+ - name: readability-misleading-indentation
+   publish: yes
+ - name: readability-redundant-control-flow
+   publish: yes
+ - name: readability-redundant-smartptr-get
+   publish: no
+ - name: readability-uniqueptr-delete-release
+   publish: yes
+ - name: modernize-use-auto # (controversial, see bug 1371052)
+   publish: no
+ - name: modernize-use-bool-literals # (too noisy because of `while (0)` in many macros)
+   publish: no
+
+# Third party files from mozilla-central
+third_party: tools/rewriting/ThirdPartyPaths.txt
