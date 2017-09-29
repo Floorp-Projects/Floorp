@@ -116,16 +116,15 @@ LightweightThemeConsumer.prototype = {
 
     let root = this._doc.documentElement;
     let active = !!aData.headerURL;
-    let stateChanging = (active != this._active);
 
     // We need to clear these either way: either because the theme is being removed,
     // or because we are applying a new theme and the data might be bogus CSS,
     // so if we don't reset first, it'll keep the old value.
     root.style.removeProperty("--lwt-text-color");
     root.style.removeProperty("--lwt-accent-color");
-    let textcolor = aData.textcolor || "black";
+    let textcolor = this._sanitizeCSSColor(aData.textcolor) || "black";
     _setProperty(root, active, "--lwt-text-color", textcolor);
-    _setProperty(root, active, "--lwt-accent-color", aData.accentcolor || "white");
+    _setProperty(root, active, "--lwt-accent-color", this._sanitizeCSSColor(aData.accentcolor) || "white");
     if (active) {
       let dummy = this._doc.createElement("dummy");
       dummy.style.color = textcolor;
@@ -160,29 +159,21 @@ LightweightThemeConsumer.prototype = {
     else
       root.removeAttribute("lwthemefooter");
 
-    // On OS X, we extend the lightweight theme into the titlebar, which means setting
-    // the chromemargin attribute. Some XUL applications already draw in the titlebar,
-    // so we need to save the chromemargin value before we overwrite it with the value
-    // that lets us draw in the titlebar. We stash this value on the root attribute so
-    // that XUL applications have the ability to invalidate the saved value.
-    if (AppConstants.platform == "macosx" && stateChanging) {
-      if (!root.hasAttribute("chromemargin-nonlwtheme")) {
-        root.setAttribute("chromemargin-nonlwtheme", root.getAttribute("chromemargin"));
-      }
-
-      if (active) {
-        root.setAttribute("chromemargin", "0,-1,-1,-1");
-      } else {
-        let defaultChromemargin = root.getAttribute("chromemargin-nonlwtheme");
-        if (defaultChromemargin) {
-          root.setAttribute("chromemargin", defaultChromemargin);
-        } else {
-          root.removeAttribute("chromemargin");
-        }
-      }
-    }
     Services.obs.notifyObservers(this._win, "lightweight-theme-window-updated",
                                  JSON.stringify(aData));
+  },
+
+  _sanitizeCSSColor(cssColor) {
+    // style.color normalizes color values and rejects invalid ones, so a
+    // simple round trip gets us a sanitized color value.
+    let span = this._doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
+    span.style.color = cssColor;
+    cssColor = span.style.color;
+    if (cssColor == "transparent" ||
+        cssColor == "rgba(0, 0, 0, 0)") {
+      return "";
+    }
+    return cssColor;
   }
 }
 

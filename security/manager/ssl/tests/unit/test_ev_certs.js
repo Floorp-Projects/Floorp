@@ -279,10 +279,8 @@ add_task(async function oneCRLTests() {
   await ensureVerifiesAsEV("test-oid-path");
 
   clearOCSPCache();
-  // test that setting "security.onecrl.via.amo" results in the correct
-  // OCSP behavior when services.blocklist.onecrl.checked is in the distant past
-  // and blacklist-background-update-timer is recent
-  Services.prefs.setBoolPref("security.onecrl.via.amo", false);
+  // test the OCSP behavior when services.blocklist.onecrl.checked is in the
+  // distant past and blacklist-background-update-timer is recent
   // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
   Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds",
                             108000);
@@ -297,9 +295,7 @@ add_task(async function oneCRLTests() {
   await ensureVerifiesAsEV("test-oid-path");
 
   clearOCSPCache();
-  // test that setting "security.onecrl.via.amo" results in the correct
-  // OCSP behavior when services.blocklist.onecrl.checked is recent
-  Services.prefs.setBoolPref("security.onecrl.via.amo", false);
+  // test the OCSP behavior when services.blocklist.onecrl.checked is recent
   // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
   Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds",
                             108000);
@@ -310,7 +306,6 @@ add_task(async function oneCRLTests() {
   await ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
   await ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
 
-  Services.prefs.clearUserPref("security.onecrl.via.amo");
   Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
   Services.prefs.clearUserPref("services.blocklist.onecrl.checked");
   Services.prefs.clearUserPref(

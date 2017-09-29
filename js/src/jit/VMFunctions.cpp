@@ -1781,8 +1781,9 @@ ObjectHasGetterSetter(JSContext* cx, JSObject* objArg, Shape* propShape)
     }
 }
 
+template <bool HasOwn>
 bool
-HasOwnNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp)
+HasNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp)
 {
     AutoUnsafeCallWithABI unsafe;
 
@@ -1792,31 +1793,50 @@ HasOwnNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp)
     if (!ValueToAtomOrSymbol(cx, idVal, &id))
         return false;
 
-    if (!obj->isNative()) {
-        if (obj->is<UnboxedPlainObject>()) {
-            bool res = obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id);
-            vp[1].setBoolean(res);
-            return true;
-        }
-        return false;
-    }
+    do {
+        if (obj->isNative()) {
+            if (obj->as<NativeObject>().lastProperty()->search(cx, id)) {
+                vp[1].setBoolean(true);
+                return true;
+            }
 
-    NativeObject* nobj = &obj->as<NativeObject>();
-    if (nobj->lastProperty()->search(cx, id)) {
-        vp[1].setBoolean(true);
-        return true;
-    }
-
-    // Property not found. Watch out for Class hooks.
-    if (MOZ_UNLIKELY(!nobj->is<PlainObject>())) {
-        if (ClassMayResolveId(cx->names(), nobj->getClass(), id, nobj))
+            // Fail if there's a resolve hook, unless the mayResolve hook tells
+            // us the resolve hook won't define a property with this id.
+            if (MOZ_UNLIKELY(ClassMayResolveId(cx->names(), obj->getClass(), id, obj)))
+                return false;
+        } else if (obj->is<UnboxedPlainObject>()) {
+            if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id)) {
+                vp[1].setBoolean(true);
+                return true;
+            }
+        } else if (obj->is<TypedObject>()) {
+            if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
+                vp[1].setBoolean(true);
+                return true;
+            }
+        } else {
             return false;
-    }
+        }
+
+        // If implementing Object.hasOwnProperty, don't follow protochain.
+        if (HasOwn)
+            break;
+
+        // Get prototype. Objects that may allow dynamic prototypes are already
+        // filtered out above.
+        obj = obj->staticPrototype();
+    } while (obj);
 
     // Missing property.
     vp[1].setBoolean(false);
     return true;
 }
+
+template bool
+HasNativeDataProperty<true>(JSContext* cx, JSObject* obj, Value* vp);
+
+template bool
+HasNativeDataProperty<false>(JSContext* cx, JSObject* obj, Value* vp);
 
 JSString*
 TypeOfObject(JSObject* obj, JSRuntime* rt)

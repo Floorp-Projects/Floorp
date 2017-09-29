@@ -214,26 +214,32 @@ richlistitem.download button {
   -moz-binding: url("chrome://browser/content/downloads/download.xml#download-subview-toolbarbutton");
 }
 
-/* When a Download is hovered that has an [openLabel] attribute set, which means
-   that the file exists and can be opened, hide the status label.
-   When a Download is hovered - specifically on the secondary action button - that
-   has a [retryLabel] attribute set, which means that the file does not exist and
-   the download failed earlier, hide the status label. */
-.subviewbutton.download:hover:-moz-any([openLabel],[retryLabel][buttonover]) > .toolbarbutton-text > .status-full,
-/* When a Download is not hovered at all or the secondary action button is hovered,
-   hide the 'Open File' status label. */
-.subviewbutton.download:-moz-any(:not(:hover),[buttonover]) > .toolbarbutton-text > .status-open,
-/* When a Download is not hovered at all, or when it's hovered but specifically
-   not the secondary action button or when the [retryLabel] is not set, hide the
-   'Retry Downloads' label. */
-.subviewbutton.download:-moz-any(:not(:hover),:hover:not([buttonover]),:not([retryLabel])) > .toolbarbutton-text > .status-retry,
-/* When a Download is not hovered at all, or when it's hovered but specifically
-   not the secondary action button or when the file does not exist, hide the
-   'Open Containing Folder' label. */
-.subviewbutton.download:-moz-any(:not(:hover),:hover:not([buttonover]),:not([exists])) > .toolbarbutton-text > .status-show,
+/* Hide all status labels by default and selectively display one at a time,
+   depending on the state of the Download. */
+.subviewbutton.download > .toolbarbutton-text > .status-text,
 /* When a Download is not hovered at all, hide the secondary action button. */
 .subviewbutton.download:not(:hover) > .action-button,
 /* Always hide the label of the secondary action button. */
 .subviewbutton.download > .action-button > .toolbarbutton-text {
   display: none;
+}
+
+/* When a Download is _not_ hovered, display the full status message. */
+.subviewbutton.download:not(:hover) > .toolbarbutton-text > .status-full,
+/* When a Download is hovered when the file doesn't exist and cannot be retried,
+   keep showing the full status message. */
+.subviewbutton.download:hover:-moz-any(:not([openLabel]),:not([exists])):not([retryLabel]) > .toolbarbutton-text > .status-full,
+/* When a Download is hovered and the it can be retried, but the action button
+   is _not_ hovered, keep showing the full status message. */
+.subviewbutton.download:hover[retryLabel]:not([buttonover]) > .toolbarbutton-text > .status-full,
+/* When a Download is hovered and the file can be opened, but the action button
+   is _not_ hovered, show the 'Open File' status label. */
+.subviewbutton.download:hover[openLabel][exists]:not([buttonover]) > .toolbarbutton-text > .status-open,
+/* When a Download is hovered - its action button explicitly - and it can be
+   retried, show the 'Retry Download' label. */
+.subviewbutton.download:hover[retryLabel][buttonover] > .toolbarbutton-text > .status-retry,
+/* When a Download is hovered - its action button explicitly - and the file can
+   be shown in the OS's shell, show the 'Open Containing Folder' label. */
+.subviewbutton.download:hover[openLabel][exists][buttonover] > .toolbarbutton-text > .status-show {
+  display: inline;
 }

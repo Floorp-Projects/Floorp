@@ -288,26 +288,11 @@ var TabsInTitlebar = {
 
 function updateTitlebarDisplay() {
   if (AppConstants.platform == "macosx") {
-    // OS X and the other platforms differ enough to necessitate this kind of
-    // special-casing. Like the other platforms where we CAN_DRAW_IN_TITLEBAR,
-    // we draw in the OS X titlebar when putting the tabs up there. However, OS X
-    // also draws in the titlebar when a lightweight theme is applied, regardless
-    // of whether or not the tabs are drawn in the titlebar.
     if (TabsInTitlebar.enabled) {
-      document.documentElement.setAttribute("chromemargin-nonlwtheme", "0,-1,-1,-1");
       document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
       document.documentElement.removeAttribute("drawtitle");
     } else {
-      // We set chromemargin-nonlwtheme to "" instead of removing it as a way of
-      // making sure that LightweightThemeConsumer doesn't take it upon itself to
-      // detect this value again if and when we do a lwtheme state change.
-      document.documentElement.setAttribute("chromemargin-nonlwtheme", "");
-      let isCustomizing = document.documentElement.hasAttribute("customizing");
-      let hasLWTheme = document.documentElement.hasAttribute("lwtheme");
-      let isPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
-      if ((!hasLWTheme || isCustomizing) && !isPrivate) {
-        document.documentElement.removeAttribute("chromemargin");
-      }
+      document.documentElement.removeAttribute("chromemargin");
       document.documentElement.setAttribute("drawtitle", "true");
     }
   } else if (TabsInTitlebar.enabled) {

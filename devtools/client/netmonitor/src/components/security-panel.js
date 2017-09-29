@@ -13,7 +13,7 @@ const { L10N } = require("../utils/l10n");
 const { getUrlHost } = require("../utils/request-utils");
 
 // Components
-const TreeViewClass = require("devtools/client/shared/components/tree/tree-view");
+const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const PropertiesView = createFactory(require("./properties-view"));
 
 const { div, input, span } = DOM;

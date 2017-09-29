@@ -808,7 +808,9 @@ PlacesController.prototype = {
     }
 
     if (transactions.length) {
-      await PlacesTransactions.batch(transactions);
+      await PlacesUIUtils.batchUpdatesForNode(this._view.result, transactions.length, async () => {
+        await PlacesTransactions.batch(transactions);
+      });
     }
   },
 
@@ -966,7 +968,9 @@ PlacesController.prototype = {
 
     if (transactions.length > 0) {
       if (PlacesUIUtils.useAsyncTransactions) {
-        await PlacesTransactions.batch(transactions);
+        await PlacesUIUtils.batchUpdatesForNode(this._view.result, transactions.length, async () => {
+          await PlacesTransactions.batch(transactions);
+        });
       } else {
         var txn = new PlacesAggregatedTransaction(txnName, transactions);
         PlacesUtils.transactionManager.doTransaction(txn);
@@ -1304,30 +1308,39 @@ PlacesController.prototype = {
         let urls = items.filter(item => "uri" in item).map(item => Services.io.newURI(item.uri));
         await PlacesTransactions.Tag({ urls, tag: ip.tagName }).transact();
       } else {
-        await PlacesTransactions.batch(async function() {
-          let insertionIndex = await ip.getIndex();
-          let parent = ip.guid;
+        let transactionData = [];
 
-          for (let item of items) {
-            let doCopy = action == "copy";
+        let insertionIndex = await ip.getIndex();
+        let parent = ip.guid;
 
-            // If this is not a copy, check for safety that we can move the
-            // source, otherwise report an error and fallback to a copy.
-            if (!doCopy &&
-                !PlacesControllerDragHelper.canMoveUnwrappedNode(item)) {
-              Components.utils.reportError("Tried to move an unmovable " +
-                             "Places node, reverting to a copy operation.");
-              doCopy = true;
-            }
-            let guid = await PlacesUIUtils.getTransactionForData(
-              item, type, parent, insertionIndex, doCopy).transact();
-            itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
+        for (let item of items) {
+          let doCopy = action == "copy";
 
-            // Adjust index to make sure items are pasted in the correct
-            // position.  If index is DEFAULT_INDEX, items are just appended.
-            if (insertionIndex != PlacesUtils.bookmarks.DEFAULT_INDEX)
-              insertionIndex++;
+          // If this is not a copy, check for safety that we can move the
+          // source, otherwise report an error and fallback to a copy.
+          if (!doCopy &&
+              !PlacesControllerDragHelper.canMoveUnwrappedNode(item)) {
+            Components.utils.reportError("Tried to move an unmovable " +
+                           "Places node, reverting to a copy operation.");
+            doCopy = true;
           }
+
+          transactionData.push([item, type, parent, insertionIndex, doCopy]);
+
+          // Adjust index to make sure items are pasted in the correct
+          // position.  If index is DEFAULT_INDEX, items are just appended.
+          if (insertionIndex != PlacesUtils.bookmarks.DEFAULT_INDEX)
+            insertionIndex++;
+        }
+
+        await PlacesUIUtils.batchUpdatesForNode(this._view.result, transactionData.length, async () => {
+          await PlacesTransactions.batch(async () => {
+            for (let item of transactionData) {
+              let guid = await PlacesUIUtils.getTransactionForData(
+                ...item).transact();
+              itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
+            }
+          });
         });
       }
     } else {
@@ -1581,10 +1594,15 @@ var PlacesControllerDragHelper = {
 
   /**
    * Handles the drop of one or more items onto a view.
-   * @param   insertionPoint
-   *          The insertion point where the items should be dropped
+   *
+   * @param {Object} insertionPoint The insertion point where the items should
+   *                                be dropped.
+   * @param {Object} dt             The dataTransfer information for the drop.
+   * @param {Object} view           The tree view where this object is being
+   *                                dropped to. This allows batching to take
+   *                                place.
    */
-  async onDrop(insertionPoint, dt) {
+  async onDrop(insertionPoint, dt, view) {
     let doCopy = ["copy", "link"].includes(dt.dropEffect);
 
     let transactions = [];
@@ -1707,7 +1725,9 @@ var PlacesControllerDragHelper = {
       return;
     }
     if (PlacesUIUtils.useAsyncTransactions) {
-      await PlacesTransactions.batch(transactions);
+      await PlacesUIUtils.batchUpdatesForNode(view && view.result, transactions.length, async () => {
+        await PlacesTransactions.batch(transactions);
+      });
     } else {
       let txn = new PlacesAggregatedTransaction("DropItems", transactions);
       PlacesUtils.transactionManager.doTransaction(txn);

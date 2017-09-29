@@ -6687,6 +6687,13 @@ nsIFrame::SchedulePaint(PaintType aType)
   SchedulePaintInternal(displayRoot, this, aType);
 }
 
+void
+nsIFrame::SchedulePaintWithoutInvalidatingObservers(PaintType aType)
+{
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+  SchedulePaintInternal(displayRoot, this, aType);
+}
+
 Layer*
 nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
                           const nsIntRect* aDamageRect,

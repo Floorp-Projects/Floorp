@@ -675,8 +675,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
                                 certificateUsageSSLCA |
                                 certificateUsageEmailSigner |
                                 certificateUsageEmailRecipient |
-                                certificateUsageObjectSigner |
-                                certificateUsageStatusResponder;
+                                certificateUsageObjectSigner;
   for (int usage = certificateUsageSSLClient;
        usage < certificateUsageAnyCA && !nssChain;
        usage = usage << 1) {

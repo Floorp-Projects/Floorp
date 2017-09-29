@@ -265,6 +265,16 @@ ln -s /builds/worker/artifacts artifacts &&
                         'groupSymbol': 'AC',
                         'symbol': symbol,
                     },
+                    'parent': task_group_id,
+                    'action': {
+                        'name': name,
+                        'context': {
+                            'taskGroupId': task_group_id,
+                            'taskId': {'$eval': 'taskId'},
+                            'input': {'$eval': 'input'},
+                            'parameters': {'$eval': 'parameters'},
+                        },
+                    },
                 },
             }
         mem['registered'] = True
