@@ -5,7 +5,6 @@
 
 #include "GMPContentChild.h"
 #include "GMPChild.h"
-#include "GMPDecryptorChild.h"
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
 #include "ChromiumCDMChild.h"
@@ -48,21 +47,6 @@ void
 GMPContentChild::ProcessingError(Result aCode, const char* aReason)
 {
   mGMPChild->ProcessingError(aCode, aReason);
-}
-
-PGMPDecryptorChild*
-GMPContentChild::AllocPGMPDecryptorChild()
-{
-  GMPDecryptorChild* actor = new GMPDecryptorChild(this);
-  actor->AddRef();
-  return actor;
-}
-
-bool
-GMPContentChild::DeallocPGMPDecryptorChild(PGMPDecryptorChild* aActor)
-{
-  static_cast<GMPDecryptorChild*>(aActor)->Release();
-  return true;
 }
 
 PGMPVideoDecoderChild*
@@ -108,22 +92,6 @@ GMPContentChild::DeallocPChromiumCDMChild(PChromiumCDMChild* aActor)
 {
   static_cast<ChromiumCDMChild*>(aActor)->Release();
   return true;
-}
-
-mozilla::ipc::IPCResult
-GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
-{
-  GMPDecryptorChild* child = static_cast<GMPDecryptorChild*>(aActor);
-
-  void* ptr = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, nullptr, &ptr, child->DecryptorId());
-  if (err != GMPNoErr || !ptr) {
-    NS_WARNING("GMPGetAPI call failed trying to construct decryptor.");
-    return IPC_FAIL_NO_REASON(this);
-  }
-  child->Init(static_cast<GMPDecryptor*>(ptr));
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -183,12 +151,6 @@ void
 GMPContentChild::CloseActive()
 {
   // Invalidate and remove any remaining API objects.
-  const ManagedContainer<PGMPDecryptorChild>& decryptors =
-    ManagedPGMPDecryptorChild();
-  for (auto iter = decryptors.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->SendShutdown();
-  }
-
   const ManagedContainer<PGMPVideoDecoderChild>& videoDecoders =
     ManagedPGMPVideoDecoderChild();
   for (auto iter = videoDecoders.ConstIter(); !iter.Done(); iter.Next()) {
@@ -210,8 +172,7 @@ GMPContentChild::CloseActive()
 bool
 GMPContentChild::IsUsed()
 {
-  return !ManagedPGMPDecryptorChild().IsEmpty() ||
-         !ManagedPGMPVideoDecoderChild().IsEmpty() ||
+  return !ManagedPGMPVideoDecoderChild().IsEmpty() ||
          !ManagedPGMPVideoEncoderChild().IsEmpty() ||
          !ManagedPChromiumCDMChild().IsEmpty();
 }

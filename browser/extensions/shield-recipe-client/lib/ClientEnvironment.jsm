@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ShellService", "resource:///modules/ShellService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryArchive", "resource://gre/modules/TelemetryArchive.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NormandyApi", "resource://shield-recipe-client/lib/NormandyApi.jsm");
 XPCOMUtils.defineLazyModuleGetter(
     this,
@@ -107,7 +108,7 @@ this.ClientEnvironment = {
       const mostRecentPings = {};
       for (const ping of pings) {
         if (ping.type in mostRecentPings) {
-          if (mostRecentPings[ping.type].timeStampCreated < ping.timeStampCreated) {
+          if (mostRecentPings[ping.type].timestampCreated < ping.timestampCreated) {
             mostRecentPings[ping.type] = ping;
           }
         } else {
@@ -128,7 +129,7 @@ this.ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "channel", () => {
-      return Services.appinfo.defaultUpdateChannel;
+      return UpdateUtils.getUpdateChannel(false);
     });
 
     XPCOMUtils.defineLazyGetter(environment, "isDefaultBrowser", () => {

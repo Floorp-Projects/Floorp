@@ -179,14 +179,6 @@ impl SpecNewSessionParameters {
                     return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
                                                    "socksVersion was not a number"))
                 },
-                "socksUsername" => if !value.is_string() {
-                    return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                   "socksUsername was not a string"))
-                },
-                "socksPassword" => if !value.is_string() {
-                    return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                   "socksPassword was not a string"))
-                },
                 x => return Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
                     format!("{} was not a valid proxy configuration capability", x)))

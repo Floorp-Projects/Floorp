@@ -1,12 +1,12 @@
 # background-repeat round/space test cases
-fails-if(webrender) == background-repeat-space-1a.html background-repeat-space-1-ref.html
-fails-if(webrender) == background-repeat-space-1b.html background-repeat-space-1-ref.html
-fails-if(webrender) == background-repeat-space-1c.html background-repeat-space-1-ref.html
+== background-repeat-space-1a.html background-repeat-space-1-ref.html
+== background-repeat-space-1b.html background-repeat-space-1-ref.html
+== background-repeat-space-1c.html background-repeat-space-1-ref.html
 == background-repeat-space-2.html background-repeat-space-2-ref.html
-fuzzy-if(webrender,1-1,128-128) == background-repeat-space-3.html background-repeat-space-3-ref.html
-fails-if(webrender) == background-repeat-space-4.html background-repeat-space-4-ref.html
-fails-if(webrender) == background-repeat-space-5.html background-repeat-space-5-ref.html
-fails-if(webrender) == background-repeat-space-6.html background-repeat-space-6-ref.html
+== background-repeat-space-3.html background-repeat-space-3-ref.html
+== background-repeat-space-4.html background-repeat-space-4-ref.html
+== background-repeat-space-5.html background-repeat-space-5-ref.html
+== background-repeat-space-6.html background-repeat-space-6-ref.html
 == background-repeat-space-7.html background-repeat-space-7-ref.html
 == background-repeat-space-8.html background-repeat-space-8-ref.html
 == background-repeat-space-9.html background-repeat-space-9-ref.html
@@ -21,8 +21,8 @@ fails-if(webrender) == background-repeat-space-6.html background-repeat-space-6-
 == background-repeat-round-4.html background-repeat-round-4-ref.html
 
 #border-image test cases
-== border-image-repeat-round-1.html border-image-repeat-round-1-ref.html
-== border-image-repeat-round-2.html border-image-repeat-round-2-ref.html
+fuzzy-if(webrender,10-10,576-576) == border-image-repeat-round-1.html border-image-repeat-round-1-ref.html
+fuzzy-if(webrender,7-7,216-216) == border-image-repeat-round-2.html border-image-repeat-round-2-ref.html
 == border-image-repeat-space-1.html border-image-repeat-space-1-ref.html
 == border-image-repeat-space-2.html border-image-repeat-space-2-ref.html
 == border-image-repeat-space-3.html border-image-repeat-space-3-ref.html

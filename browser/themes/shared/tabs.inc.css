@@ -528,21 +528,15 @@ tabbrowser {
 
 /* Tab separators */
 
-%ifdef CAN_DRAW_IN_TITLEBAR
-/* Add space for dragging the window */
-%ifdef MOZ_WIDGET_COCOA
-:root[tabsintitlebar]:not([sizemode=fullscreen]) .titlebar-placeholder[type="pre-tabs"]
-%elifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar][sizemode=normal] #toolbar-menubar[autohide=true] ~ #TabsToolbar > .titlebar-placeholder[type="pre-tabs"]
-%else
-:root[tabsintitlebar][sizemode=normal] #TabsToolbar > .titlebar-placeholder[type="pre-tabs"]
-%endif
-{
+.titlebar-placeholder[type="pre-tabs"],
+.titlebar-placeholder[type="post-tabs"] {
   width: 40px;
+}
+
+.titlebar-placeholder[type="pre-tabs"] {
   border-inline-end: 1px solid;
   opacity: 0.2;
 }
-%endif
 
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {

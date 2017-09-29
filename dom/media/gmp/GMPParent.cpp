@@ -691,22 +691,6 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
       }
     }
 
-    if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
-      mCanDecrypt = true;
-
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-      if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {
-        nsPrintfCString msg(
-          "GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
-          " but this system can't sandbox it; not loading.",
-          mDisplayName.get());
-        printf_stderr("%s\n", msg.get());
-        LOGD("%s", msg.get());
-        return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-      }
-#endif
-    }
-
     mCapabilities.AppendElement(Move(cap));
   }
 
@@ -789,6 +773,11 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
     // psapi.dll added for GetMappedFileNameW, which could possibly be avoided
     // in future versions, see bug 1383611 for details.
     mLibs = NS_LITERAL_CSTRING("dxva2.dll, psapi.dll");
+#endif
+  } else if (mDisplayName.EqualsASCII("fake")) {
+    kEMEKeySystem = NS_LITERAL_CSTRING("fake");
+#if XP_WIN
+    mLibs = NS_LITERAL_CSTRING("dxva2.dll");
 #endif
   } else {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);

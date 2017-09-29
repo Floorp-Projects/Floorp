@@ -11,92 +11,100 @@ const NUM_ITEMS = NUM_BOOKMARKS + NUM_SEPARATORS + NUM_FOLDERS;
 const MIN_RAND = -5;
 const MAX_RAND = 40;
 
-var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
-
-function check_contiguous_indexes(aBookmarks) {
+async function check_contiguous_indexes(bookmarks) {
   var indexes = [];
-  aBookmarks.forEach(function(aBookmarkId) {
-    let bmIndex = bs.getItemIndex(aBookmarkId);
-    dump("Index: " + bmIndex + "\n");
-    dump("Checking duplicates\n");
-    do_check_eq(indexes.indexOf(bmIndex), -1);
-    dump("Checking out of range, found " + aBookmarks.length + " items\n");
-    do_check_true(bmIndex >= 0 && bmIndex < aBookmarks.length);
+  for (let bm of bookmarks) {
+    let bmIndex = (await PlacesUtils.bookmarks.fetch(bm.guid)).index;
+    do_print(`Index: ${bmIndex}\n`);
+    do_print("Checking duplicates\n");
+    do_check_false(indexes.includes(bmIndex));
+    do_print(`Checking out of range, found ${bookmarks.length} items\n`);
+    do_check_true(bmIndex >= 0 && bmIndex < bookmarks.length);
     indexes.push(bmIndex);
-  });
-  dump("Checking all valid indexes have been used\n");
-  do_check_eq(indexes.length, aBookmarks.length);
+  }
+  do_print("Checking all valid indexes have been used\n");
+  do_check_eq(indexes.length, bookmarks.length);
 }
 
-// main
-function run_test() {
-  var bookmarks = [];
+add_task(async function test_bookmarks_indexing() {
+  let bookmarks = [];
   // Insert bookmarks with random indexes.
   for (let i = 0; bookmarks.length < NUM_BOOKMARKS; i++) {
     let randIndex = Math.round(MIN_RAND + (Math.random() * (MAX_RAND - MIN_RAND)));
     try {
-      let id = bs.insertBookmark(bs.unfiledBookmarksFolder,
-                                 uri("http://" + i + ".mozilla.org/"),
-                                 randIndex, "Test bookmark " + i);
+      let bm = await PlacesUtils.bookmarks.insert({
+        index: randIndex,
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        title: `Test bookmark ${i}`,
+        url: `http://${i}.mozilla.org/`,
+      });
       if (randIndex < -1)
         do_throw("Creating a bookmark at an invalid index should throw");
-      bookmarks.push(id);
+      bookmarks.push(bm);
     } catch (ex) {
       if (randIndex >= -1)
         do_throw("Creating a bookmark at a valid index should not throw");
     }
   }
-  check_contiguous_indexes(bookmarks);
+  await check_contiguous_indexes(bookmarks);
 
   // Insert separators with random indexes.
   for (let i = 0; bookmarks.length < NUM_BOOKMARKS + NUM_SEPARATORS; i++) {
     let randIndex = Math.round(MIN_RAND + (Math.random() * (MAX_RAND - MIN_RAND)));
     try {
-      let id = bs.insertSeparator(bs.unfiledBookmarksFolder, randIndex);
+      let bm = await PlacesUtils.bookmarks.insert({
+        index: randIndex,
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+      });
       if (randIndex < -1)
         do_throw("Creating a separator at an invalid index should throw");
-      bookmarks.push(id);
+      bookmarks.push(bm);
     } catch (ex) {
       if (randIndex >= -1)
         do_throw("Creating a separator at a valid index should not throw");
     }
   }
-  check_contiguous_indexes(bookmarks);
+  await check_contiguous_indexes(bookmarks);
 
   // Insert folders with random indexes.
   for (let i = 0; bookmarks.length < NUM_ITEMS; i++) {
     let randIndex = Math.round(MIN_RAND + (Math.random() * (MAX_RAND - MIN_RAND)));
     try {
-      let id = bs.createFolder(bs.unfiledBookmarksFolder,
-                               "Test folder " + i, randIndex);
+      let bm = await PlacesUtils.bookmarks.insert({
+        index: randIndex,
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        title: `Test folder ${i}`,
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      });
       if (randIndex < -1)
         do_throw("Creating a folder at an invalid index should throw");
-      bookmarks.push(id);
+      bookmarks.push(bm);
     } catch (ex) {
       if (randIndex >= -1)
         do_throw("Creating a folder at a valid index should not throw");
     }
   }
-  check_contiguous_indexes(bookmarks);
+  await check_contiguous_indexes(bookmarks);
 
   // Execute some random bookmark delete.
   for (let i = 0; i < Math.ceil(NUM_ITEMS / 4); i++) {
-    let id = bookmarks.splice(Math.floor(Math.random() * bookmarks.length), 1);
-    dump("Removing item with id " + id + "\n");
-    bs.removeItem(id);
+    let bm = bookmarks.splice(Math.floor(Math.random() * bookmarks.length), 1)[0];
+    do_print(`Removing item with guid ${bm.guid}\n`);
+    await PlacesUtils.bookmarks.remove(bm);
   }
-  check_contiguous_indexes(bookmarks);
+  await check_contiguous_indexes(bookmarks);
 
   // Execute some random bookmark move.  This will also try to move it to
   // invalid index values.
   for (let i = 0; i < Math.ceil(NUM_ITEMS / 4); i++) {
     let randIndex = Math.floor(Math.random() * bookmarks.length);
-    let id = bookmarks[randIndex];
+    let bm = bookmarks[randIndex];
     let newIndex = Math.round(MIN_RAND + (Math.random() * (MAX_RAND - MIN_RAND)));
-    dump("Moving item with id " + id + " to index " + newIndex + "\n");
+    do_print(`Moving item with guid ${bm.guid} to index ${newIndex}\n`);
     try {
-      bs.moveItem(id, bs.unfiledBookmarksFolder, newIndex);
+      bm.index = newIndex;
+      await PlacesUtils.bookmarks.update(bm);
       if (newIndex < -1)
         do_throw("Moving an item to a negative index should throw\n");
     } catch (ex) {
@@ -105,16 +113,5 @@ function run_test() {
     }
 
   }
-  check_contiguous_indexes(bookmarks);
-
-  // Ensure setItemIndex throws if we pass it a negative index.
-  try {
-    bs.setItemIndex(bookmarks[0], -1);
-    do_throw("setItemIndex should throw for a negative index");
-  } catch (ex) {}
-  // Ensure setItemIndex throws if we pass it a bad itemId.
-  try {
-    bs.setItemIndex(0, 5);
-    do_throw("setItemIndex should throw for a bad itemId");
-  } catch (ex) {}
-}
+  await check_contiguous_indexes(bookmarks);
+});

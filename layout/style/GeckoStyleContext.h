@@ -290,11 +290,24 @@ public:
     }
   };
 
+  void FrameAddRef() {
+    ++mFrameRefCnt;
+  }
+
+  void FrameRelease() {
+    --mFrameRefCnt;
+  }
+
+  uint32_t FrameRefCnt() const {
+    return mFrameRefCnt;
+  }
 private:
   // Used to check for undeclared dependencies.
   // See AUTO_CHECK_DEPENDENCY in nsStyleContextInlines.h.
   nsStyleStructID         mComputingStruct;
 
+  uint32_t                mFrameRefCnt; // number of frames that use this
+                                        // as their style context
 #define AUTO_CHECK_DEPENDENCY(gecko_, sid_) \
   mozilla::GeckoStyleContext::AutoCheckDependency checkNesting_(gecko_, sid_)
 #else

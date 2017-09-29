@@ -23,7 +23,6 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsIConsoleService.h"
 #include "mozilla/Unused.h"
-#include "GMPDecryptorParent.h"
 #include "nsComponentManagerUtils.h"
 #include "runnable_utils.h"
 #include "VideoUtils.h"

@@ -153,10 +153,6 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: miscellaneous formatting ::::: */
 
-:root:-moz-lwtheme {
-  -moz-appearance: none;
-}
-
 :root:-moz-lwtheme-darktext {
   text-shadow: 0 -0.5px 1.5px white;
 }

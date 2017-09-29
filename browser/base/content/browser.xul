@@ -634,7 +634,7 @@
 
 #ifdef CAN_DRAW_IN_TITLEBAR
       <hbox class="titlebar-placeholder" type="pre-tabs"
-              skipintoolbarset="true"/>
+            skipintoolbarset="true"/>
 #endif
 
       <tabs id="tabbrowser-tabs"
@@ -680,6 +680,12 @@
           <menuseparator id="alltabs-popup-separator-2"/>
         </menupopup>
       </toolbarbutton>
+
+#ifdef CAN_DRAW_IN_TITLEBAR
+      <hbox class="titlebar-placeholder" type="post-tabs"
+            ordinal="1000"
+            skipintoolbarset="true"/>
+#endif
 
       <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;"
               ordinal="1000"

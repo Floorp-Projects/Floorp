@@ -107,7 +107,7 @@ impl Default for mp4parse_codec {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct mp4parse_track_info {
     pub track_type: mp4parse_track_type,
     pub codec: mp4parse_codec,
@@ -129,6 +129,7 @@ pub struct mp4parse_indice {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct mp4parse_byte_data {
     pub length: u32,
     // cheddar can't handle generic type, so it needs to be multiple data types here.
@@ -164,7 +165,7 @@ pub struct mp4parse_pssh_info {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct mp4parse_sinf_info {
     pub is_encrypted: u32,
     pub iv_size: u8,
@@ -172,7 +173,7 @@ pub struct mp4parse_sinf_info {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct mp4parse_track_audio_info {
     pub channels: u16,
     pub bit_depth: u16,
@@ -184,7 +185,7 @@ pub struct mp4parse_track_audio_info {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct mp4parse_track_video_info {
     pub display_width: u32,
     pub display_height: u32,
@@ -196,7 +197,7 @@ pub struct mp4parse_track_video_info {
 }
 
 #[repr(C)]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct mp4parse_fragment_info {
     pub fragment_duration: u64,
     // TODO:
@@ -832,11 +833,11 @@ impl<'a> Iterator for SampleToChunkIterator<'a> {
         let has_chunk = self.chunks.next()
             .or_else(|| {
                 self.chunks = match (self.stsc_peek_iter.next(), self.stsc_peek_iter.peek()) {
-                    (Some(next), Some(peek)) => {
+                    (Some(next), Some(peek)) if next.first_chunk > 0 && peek.first_chunk > 0 => {
                         self.sample_count = next.samples_per_chunk;
                         ((next.first_chunk - 1) .. (peek.first_chunk - 1))
                     },
-                    (Some(next), None) => {
+                    (Some(next), None) if next.first_chunk > 0 => {
                         self.sample_count = next.samples_per_chunk;
                         // Total chunk number in 'stsc' could be different to 'stco',
                         // there could be more chunks at the last 'stsc' record.
@@ -844,8 +845,11 @@ impl<'a> Iterator for SampleToChunkIterator<'a> {
                     },
                     _ => (0 .. 0),
                 };
-                self.remain_chunk_count -= self.chunks.len() as u32;
-                self.chunks.next()
+
+                self.remain_chunk_count.checked_sub(self.chunks.len() as u32).and_then(|res| {
+                    self.remain_chunk_count = res;
+                    self.chunks.next()
+                })
             });
 
         has_chunk.map_or(None, |id| { Some((id, self.sample_count)) })

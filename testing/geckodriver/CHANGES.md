@@ -3,6 +3,14 @@ Change log
 
 All notable changes to this program is documented in this file.
 
+Unreleased
+----------
+
+### Removed
+
+- Removed `socksUsername` and `socksPassword` because both are no longer
+  valid keys for proxy capabilities
+
 
 0.19.0 (2017-09-16)
 -------------------

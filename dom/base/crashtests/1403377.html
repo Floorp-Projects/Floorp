@@ -1,0 +1,18 @@
+<script>
+function fzfn(e){
+  let nc=window.frames[0].document.body.childElementCount;
+  let o=window.frames[0].document.body.childNodes[1%nc];
+  document.getElementById('b').appendChild(o.parentNode.removeChild(o));
+}
+window.onload=function(){
+  document.body.onerror=fzfn;
+  document.getElementById('c').addEventListener('DOMNodeRemoved', fzfn, true);
+  document.getElementById('c').attributes[0].name=='id';
+  window.frames[0].document.body.appendChild(document.getElementById('c'));
+  document.getElementById('a').innerHTML=document.createElement('multicol').outerHTML;
+}
+</script>
+<iframe></iframe>
+<script id='a'></script>
+<script id='b'></script>
+<script id='c'></script>

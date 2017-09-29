@@ -805,38 +805,6 @@ add_test(function() {
   });
 });
 
-// Tests that when displaying in-content and opened in the background the back
-// and forward buttons still appear when switching tabs
-add_test(function() {
-
-  var tab = BrowserTestUtils.addTab(gBrowser, "about:addons");
-  var browser = gBrowser.getBrowserForTab(tab);
-
-  browser.addEventListener("pageshow", function listener(event) {
-    if (event.target.location.href != "about:addons")
-      return;
-    browser.removeEventListener("pageshow", listener, true);
-
-    wait_for_manager_load(browser.contentWindow.wrappedJSObject, function() {
-      wait_for_view_load(browser.contentWindow.wrappedJSObject, function(aManager) {
-        gBrowser.selectedTab = tab;
-
-        var doc = aManager.document;
-        var btn = document.getElementById("back-button");
-        if (!btn || is_hidden(btn)) {
-          is_element_visible(doc.getElementById("back-btn"), "Back button should not be hidden");
-          is_element_visible(doc.getElementById("forward-btn"), "Forward button should not be hidden");
-        } else {
-          is_element_hidden(doc.getElementById("back-btn"), "Back button should be hidden");
-          is_element_hidden(doc.getElementById("forward-btn"), "Forward button should be hidden");
-        }
-
-        close_manager(aManager, run_next_test);
-      });
-    });
-  }, true);
-});
-
 // Tests that refreshing the disicovery pane integrates properly with history
 add_test(function() {
   open_manager("addons://list/plugin", function(aManager) {
