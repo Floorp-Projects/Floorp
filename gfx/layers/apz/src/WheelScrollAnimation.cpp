@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WheelScrollAnimation.h"
+#include "ScrollAnimationBezierPhysics.h"
 
 #include "AsyncPanZoomController.h"
 #include "gfxPrefs.h"
@@ -13,7 +14,7 @@
 namespace mozilla {
 namespace layers {
 
-static ScrollAnimationPhysicsSettings
+static ScrollAnimationBezierPhysicsSettings
 SettingsForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
 {
   int32_t minMS = 0;
@@ -37,7 +38,7 @@ SettingsForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
   double intervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
   intervalRatio = std::max(1.0, intervalRatio);
-  return ScrollAnimationPhysicsSettings { minMS, maxMS, intervalRatio };
+  return ScrollAnimationBezierPhysicsSettings { minMS, maxMS, intervalRatio };
 }
 
 WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc,

@@ -5,13 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "KeyboardScrollAnimation.h"
+#include "ScrollAnimationBezierPhysics.h"
 
 #include "gfxPrefs.h"
 
 namespace mozilla {
 namespace layers {
 
-static ScrollAnimationPhysicsSettings
+static ScrollAnimationBezierPhysicsSettings
 SettingsForType(KeyboardScrollAction::KeyboardScrollActionType aType)
 {
   int32_t minMS = 0;
@@ -39,7 +40,7 @@ SettingsForType(KeyboardScrollAction::KeyboardScrollActionType aType)
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
   double intervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
   intervalRatio = std::max(1.0, intervalRatio);
-  return ScrollAnimationPhysicsSettings { minMS, maxMS, intervalRatio };
+  return ScrollAnimationBezierPhysicsSettings { minMS, maxMS, intervalRatio };
 }
 
 KeyboardScrollAnimation::KeyboardScrollAnimation(AsyncPanZoomController& aApzc,
