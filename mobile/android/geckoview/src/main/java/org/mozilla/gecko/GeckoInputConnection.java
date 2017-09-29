@@ -556,7 +556,8 @@ class GeckoInputConnection
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
         else if (mIMEState == IME_STATE_PLUGIN)
             outAttrs.inputType = InputType.TYPE_NULL; // "send key events" mode
-        else if (mIMETypeHint.equalsIgnoreCase("url"))
+        else if (mIMETypeHint.equalsIgnoreCase("url") ||
+                 mIMETypeHint.equalsIgnoreCase("mozAwesomebar"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
         else if (mIMETypeHint.equalsIgnoreCase("email"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
