@@ -17,9 +17,7 @@ waitForExplicitFinish();
 add_task(function* () {
   Services.prefs.setBoolPref(MAP_PREF, true);
 
-  let { ui, onMediaListChanged } = yield openStyleEditorForURL(TESTCASE_URI);
-
-  yield onMediaListChanged;
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 1, "correct number of editors");
 

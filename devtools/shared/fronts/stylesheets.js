@@ -143,6 +143,9 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
   get ruleCount() {
     return this._form.ruleCount;
   },
+  get sourceMapURL() {
+    return this._form.sourceMapURL;
+  },
 
   /**
    * Get the indentation to use for edits to this style sheet.
