@@ -18,7 +18,6 @@ extensions/universalchardet/**
 gfx/**
 image/**
 intl/**
-ipc/**
 layout/**
 media/**
 memory/**
