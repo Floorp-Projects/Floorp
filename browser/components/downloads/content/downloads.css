@@ -228,7 +228,7 @@ richlistitem.download button {
 .subviewbutton.download:not(:hover) > .toolbarbutton-text > .status-full,
 /* When a Download is hovered when the file doesn't exist and cannot be retried,
    keep showing the full status message. */
-.subviewbutton.download:hover:not([openLabel]):not([exists]):not([retryLabel]) > .toolbarbutton-text > .status-full,
+.subviewbutton.download:hover:-moz-any(:not([openLabel]),:not([exists])):not([retryLabel]) > .toolbarbutton-text > .status-full,
 /* When a Download is hovered and the it can be retried, but the action button
    is _not_ hovered, keep showing the full status message. */
 .subviewbutton.download:hover[retryLabel]:not([buttonover]) > .toolbarbutton-text > .status-full,
