@@ -212,13 +212,14 @@ public:
       *aOutIsRecycled = true;
     }
 
-    if (!frame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
-      frame->AddProperty(nsIFrame::WebRenderUserDataProperty(),
-                         new nsIFrame::WebRenderUserDataTable());
-    }
-
     nsIFrame::WebRenderUserDataTable* userDataTable =
       frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
+
+    if (!userDataTable) {
+      userDataTable = new nsIFrame::WebRenderUserDataTable();
+      frame->AddProperty(nsIFrame::WebRenderUserDataProperty(), userDataTable);
+    }
+
     RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
     if (!data || (data->GetType() != T::Type()) || !data->IsDataValid(this)) {
       // To recreate a new user data, we should remove the data from the table first.
