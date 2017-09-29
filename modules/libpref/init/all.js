@@ -2655,9 +2655,6 @@ pref("services.blocklist.signing.enforced", true);
 // Enable blocklists via the services settings mechanism
 pref("services.blocklist.update_enabled", true);
 
-// Enable certificate blocklist updates via services settings
-pref("security.onecrl.via.amo", false);
-
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
