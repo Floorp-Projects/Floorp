@@ -309,8 +309,15 @@ Service::unregisterConnection(Connection *aConnection)
         // Ensure the connection is released on its opening thread.  Note, we
         // must use .forget().take() so that we can manually cast to an
         // unambiguous nsISupports type.
+        //
+        // We specify aAlwaysProxy=true because if we don't, the destructor for
+        // the connection will be invoked if the connection is owned by the
+        // main thread.  And since the Connection destructor calls Close() and
+        // that may in turn call SpinningSynchronousClose() if the connection
+        // was not properly shutdown, that can lead to re-entrancy problems.
         NS_ProxyRelease(
-          "storage::Service::mConnections", thread, mConnections[i].forget());
+          "storage::Service::mConnections", thread, mConnections[i].forget(),
+          true);
 
         mConnections.RemoveElementAt(i);
         return;
