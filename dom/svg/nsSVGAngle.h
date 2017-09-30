@@ -73,6 +73,9 @@ public:
     ToDOMAnimatedAngle(nsSVGElement* aSVGElement);
   mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
+  static bool GetValueFromString(const nsAString& aString,
+                                 float& aValue,
+                                 uint16_t* aUnitType);
   static float GetDegreesPerUnit(uint8_t aUnit);
 
 private:
