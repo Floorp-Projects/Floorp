@@ -393,6 +393,11 @@ var FormAutofillContent = {
   notify(formElement, domWin) {
     this.log.debug("Notifying form early submission");
 
+    if (!FormAutofillUtils.isAutofillEnabled) {
+      this.log.debug("Form Autofill is disabled");
+      return true;
+    }
+
     if (domWin && PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
       this.log.debug("Ignoring submission in a private window");
       return true;
