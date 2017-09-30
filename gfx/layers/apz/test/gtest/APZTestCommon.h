@@ -231,39 +231,39 @@ public:
   }
 
   void SetFrameMetrics(const FrameMetrics& metrics) {
-    ReentrantMonitorAutoEnter lock(mMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     mFrameMetrics = metrics;
   }
 
   FrameMetrics& GetFrameMetrics() {
-    ReentrantMonitorAutoEnter lock(mMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mFrameMetrics;
   }
 
   ScrollMetadata& GetScrollMetadata() {
-    ReentrantMonitorAutoEnter lock(mMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mScrollMetadata;
   }
 
   const FrameMetrics& GetFrameMetrics() const {
-    ReentrantMonitorAutoEnter lock(mMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mFrameMetrics;
   }
 
   using AsyncPanZoomController::GetVelocityVector;
 
   void AssertStateIsReset() const {
-    ReentrantMonitorAutoEnter lock(mMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     EXPECT_EQ(NOTHING, mState);
   }
 
   void AssertStateIsFling() const {
-    ReentrantMonitorAutoEnter lock(mMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     EXPECT_EQ(FLING, mState);
   }
 
   void AssertAxisLocked(ScrollDirection aDirection) const {
-    ReentrantMonitorAutoEnter lock(mMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     switch (aDirection) {
     case ScrollDirection::NONE:
       EXPECT_EQ(PANNING, mState);
