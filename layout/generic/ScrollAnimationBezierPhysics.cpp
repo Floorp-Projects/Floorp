@@ -3,22 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AsyncScrollBase.h"
+#include "ScrollAnimationBezierPhysics.h"
 #include "gfxPrefs.h"
 
 using namespace mozilla;
 
-AsyncScrollBase::AsyncScrollBase(nsPoint aStartPos)
- : mIsFirstIteration(true)
+ScrollAnimationBezierPhysics::ScrollAnimationBezierPhysics(const nsPoint& aStartPos,
+                                const ScrollAnimationBezierPhysicsSettings& aSettings)
+ : mSettings(aSettings)
  , mStartPos(aStartPos)
+ , mIsFirstIteration(true)
 {
 }
 
 void
-AsyncScrollBase::Update(TimeStamp aTime,
-                        nsPoint aDestination,
-                        const nsSize& aCurrentVelocity)
+ScrollAnimationBezierPhysics::Update(const TimeStamp& aTime,
+                                     const nsPoint& aDestination,
+                                     const nsSize& aCurrentVelocity)
 {
+  if (mIsFirstIteration) {
+    InitializeHistory(aTime);
+  }
+
   TimeDuration duration = ComputeDuration(aTime);
   nsSize currentVelocity = aCurrentVelocity;
 
@@ -47,7 +53,7 @@ AsyncScrollBase::Update(TimeStamp aTime,
 }
 
 TimeDuration
-AsyncScrollBase::ComputeDuration(TimeStamp aTime)
+ScrollAnimationBezierPhysics::ComputeDuration(const TimeStamp& aTime)
 {
   // Average last 3 delta durations (rounding errors up to 2ms are negligible for us)
   int32_t eventsDeltaMs = (aTime - mPrevEventTime[2]).ToMilliseconds() / 3;
@@ -60,29 +66,32 @@ AsyncScrollBase::ComputeDuration(TimeStamp aTime)
   // it's easier to follow, but reduce the duration to make it feel more snappy when
   // scrolling quickly. To reduce fluctuations of the duration, we average event
   // intervals using the recent 4 timestamps (now + three prev -> 3 intervals).
-  int32_t durationMS = clamped<int32_t>(eventsDeltaMs * mIntervalRatio, mOriginMinMS, mOriginMaxMS);
+  int32_t durationMS =
+    clamped<int32_t>(eventsDeltaMs * mSettings.mIntervalRatio,
+                     mSettings.mMinMS, mSettings.mMaxMS);
 
   return TimeDuration::FromMilliseconds(durationMS);
 }
 
 void
-AsyncScrollBase::InitializeHistory(TimeStamp aTime)
+ScrollAnimationBezierPhysics::InitializeHistory(const TimeStamp& aTime)
 {
   // Starting a new scroll (i.e. not when extending an existing scroll animation),
   // create imaginary prev timestamps with maximum relevant intervals between them.
 
   // Longest relevant interval (which results in maximum duration)
-  TimeDuration maxDelta = TimeDuration::FromMilliseconds(mOriginMaxMS / mIntervalRatio);
+  TimeDuration maxDelta =
+    TimeDuration::FromMilliseconds(mSettings.mMaxMS / mSettings.mIntervalRatio);
   mPrevEventTime[0] = aTime              - maxDelta;
   mPrevEventTime[1] = mPrevEventTime[0]  - maxDelta;
   mPrevEventTime[2] = mPrevEventTime[1]  - maxDelta;
 }
 
 void
-AsyncScrollBase::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
-                                    nscoord aCurrentPos,
-                                    nscoord aCurrentVelocity,
-                                    nscoord aDestination)
+ScrollAnimationBezierPhysics::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
+                                                 nscoord aCurrentPos,
+                                                 nscoord aCurrentVelocity,
+                                                 nscoord aDestination)
 {
   if (aDestination == aCurrentPos || gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
     aTimingFunction.Init(0, 0, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
@@ -98,8 +107,12 @@ AsyncScrollBase::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
 }
 
 nsPoint
-AsyncScrollBase::PositionAt(TimeStamp aTime) const
+ScrollAnimationBezierPhysics::PositionAt(const TimeStamp& aTime)
 {
+  if (IsFinished(aTime)) {
+    return mDestination;
+  }
+
   double progressX = mTimingFunctionX.GetSplineValue(ProgressAt(aTime));
   double progressY = mTimingFunctionY.GetSplineValue(ProgressAt(aTime));
   return nsPoint(NSToCoordRound((1 - progressX) * mStartPos.x + progressX * mDestination.x),
@@ -107,8 +120,12 @@ AsyncScrollBase::PositionAt(TimeStamp aTime) const
 }
 
 nsSize
-AsyncScrollBase::VelocityAt(TimeStamp aTime) const
+ScrollAnimationBezierPhysics::VelocityAt(const TimeStamp& aTime)
 {
+  if (IsFinished(aTime)) {
+    return nsSize(0, 0);
+  }
+
   double timeProgress = ProgressAt(aTime);
   return nsSize(VelocityComponent(timeProgress, mTimingFunctionX,
                                   mStartPos.x, mDestination.x),
@@ -117,10 +134,10 @@ AsyncScrollBase::VelocityAt(TimeStamp aTime) const
 }
 
 nscoord
-AsyncScrollBase::VelocityComponent(double aTimeProgress,
-                                   const nsSMILKeySpline& aTimingFunction,
-                                   nscoord aStart,
-                                   nscoord aDestination) const
+ScrollAnimationBezierPhysics::VelocityComponent(double aTimeProgress,
+                                                const nsSMILKeySpline& aTimingFunction,
+                                                nscoord aStart,
+                                                nscoord aDestination) const
 {
   double dt, dxy;
   aTimingFunction.GetSplineDerivativeValues(aTimeProgress, dt, dxy);

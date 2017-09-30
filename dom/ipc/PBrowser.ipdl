@@ -729,9 +729,11 @@ child:
                    int32_t aModifiers,
                    bool aPreventDefault);
 
-    async CompositionEvent(WidgetCompositionEvent event);
+    prio(input) async CompositionEvent(WidgetCompositionEvent event);
+    async NormalPriorityCompositionEvent(WidgetCompositionEvent event);
 
-    async SelectionEvent(WidgetSelectionEvent event);
+    prio(input) async SelectionEvent(WidgetSelectionEvent event);
+    async NormalPrioritySelectionEvent(WidgetSelectionEvent event);
 
     /**
      * Call PasteTransferable via a controller on the content process

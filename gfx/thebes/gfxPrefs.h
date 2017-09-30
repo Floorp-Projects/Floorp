@@ -404,6 +404,21 @@ private:
   DECL_GFX_PREF(Live, "general.smoothScroll.stopDecelerationWeighting",
                 SmoothScrollStopDecelerationWeighting, float, 0.4f);
 
+  DECL_GFX_PREF(Live, "general.smoothScroll.msdPhysics.enabled",
+                SmoothScrollMSDPhysicsEnabled, bool, false);
+  DECL_GFX_PREF(Live, "general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS",
+                SmoothScrollMSDPhysicsContinuousMotionMaxDeltaMS, int32_t, 120);
+  DECL_GFX_PREF(Live, "general.smoothScroll.msdPhysics.motionBeginSpringConstant",
+                SmoothScrollMSDPhysicsMotionBeginSpringConstant, int32_t, 1250);
+  DECL_GFX_PREF(Live, "general.smoothScroll.msdPhysics.slowdownMinDeltaMS",
+                SmoothScrollMSDPhysicsSlowdownMinDeltaMS, int32_t, 12);
+  DECL_GFX_PREF(Live, "general.smoothScroll.msdPhysics.slowdownMinDeltaRatio",
+                SmoothScrollMSDPhysicsSlowdownMinDeltaRatio, float, 1.3f);
+  DECL_GFX_PREF(Live, "general.smoothScroll.msdPhysics.slowdownSpringConstant",
+                SmoothScrollMSDPhysicsSlowdownSpringConstant, int32_t, 2000);
+  DECL_GFX_PREF(Live, "general.smoothScroll.msdPhysics.regularSpringConstant",
+                SmoothScrollMSDPhysicsRegularSpringConstant, int32_t, 1000);
+
   DECL_GFX_PREF(Once, "gfx.android.rgb16.force",               AndroidRGB16Force, bool, false);
 #if defined(ANDROID)
   DECL_GFX_PREF(Once, "gfx.apitrace.enabled",                  UseApitrace, bool, false);

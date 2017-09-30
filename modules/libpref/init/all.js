@@ -2806,6 +2806,14 @@ pref("general.smoothScroll.durationToIntervalRatio", 200);
 // These two prefs determine the timing function.
 pref("general.smoothScroll.currentVelocityWeighting", "0.25");
 pref("general.smoothScroll.stopDecelerationWeighting", "0.4");
+// Alternative smooth scroll physics ("MSD" = Mass-Spring-Damper)
+pref("general.smoothScroll.msdPhysics.enabled", false);
+pref("general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS", 120);
+pref("general.smoothScroll.msdPhysics.motionBeginSpringConstant", 1250);
+pref("general.smoothScroll.msdPhysics.slowdownMinDeltaMS", 12);
+pref("general.smoothScroll.msdPhysics.slowdownMinDeltaRatio", "1.3");
+pref("general.smoothScroll.msdPhysics.slowdownSpringConstant", 2000);
+pref("general.smoothScroll.msdPhysics.regularSpringConstant", 1000);
 
 pref("profile.confirm_automigration",true);
 // profile.migration_behavior determines how the profiles root is set
