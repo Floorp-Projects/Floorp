@@ -21,7 +21,7 @@
 #include "nsPresContext.h"
 #include "prtime.h"
 #include "Units.h"
-#include "AsyncScrollBase.h"
+#include "ScrollAnimationPhysics.h"
 
 namespace mozilla {
 
