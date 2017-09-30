@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.31 - July 27, 2017
+ libpng version 1.6.34 - September 29, 2017
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2017 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.31 - July 27, 2017
+ libpng versions 0.97, January 1998, through 1.6.34 - September 29, 2017
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2017 Glenn Randers-Pehrson
 
@@ -688,8 +688,9 @@ where 0x7fffffffL means unlimited.  You can retrieve this limit with
    chunk_cache_max = png_get_chunk_cache_max(png_ptr);
 
 Libpng imposes a limit of 8 Megabytes (8,000,000 bytes) on the amount of
-memory that a compressed chunk other than IDAT can occupy, when decompressed.
-You can change this limit with
+memory that any chunk other than IDAT can occupy, originally or when
+decompressed (prior to libpng-1.6.32 the limit was only applied to compressed
+chunks after decompression). You can change this limit with
 
    png_set_chunk_malloc_max(png_ptr, user_chunk_malloc_max);
 
@@ -985,8 +986,17 @@ premultiplication.
 
     png_set_alpha_mode(pp, PNG_ALPHA_PNG, PNG_DEFAULT_sRGB);
 
-This is the default libpng handling of the alpha channel - it is not
-pre-multiplied into the color components.  In addition the call states
+Choices for the alpha_mode are
+
+    PNG_ALPHA_PNG           0 /* according to the PNG standard */
+    PNG_ALPHA_STANDARD      1 /* according to Porter/Duff */
+    PNG_ALPHA_ASSOCIATED    1 /* as above; this is the normal practice */
+    PNG_ALPHA_PREMULTIPLIED 1 /* as above */
+    PNG_ALPHA_OPTIMIZED     2 /* 'PNG' for opaque pixels, else 'STANDARD' */
+    PNG_ALPHA_BROKEN        3 /* the alpha channel is gamma encoded */
+
+PNG_ALPHA_PNG is the default libpng handling of the alpha channel. It is not
+pre-multiplied into the color components. In addition the call states
 that the output is for a sRGB system and causes all PNG files without gAMA
 chunks to be assumed to be encoded using sRGB.
 
@@ -1001,7 +1011,7 @@ early Mac systems behaved.
 This is the classic Jim Blinn approach and will work in academic
 environments where everything is done by the book.  It has the shortcoming
 of assuming that input PNG data with no gamma information is linear - this
-is unlikely to be correct unless the PNG files where generated locally.
+is unlikely to be correct unless the PNG files were generated locally.
 Most of the time the output precision will be so low as to show
 significant banding in dark areas of the image.
 
@@ -1453,7 +1463,7 @@ png_set_rgb_to_gray()).
                      the single transparent color for
                      non-paletted images (PNG_INFO_tRNS)
 
-    png_get_eXIf(png_ptr, info_ptr, &exif);
+    png_get_eXIf_1(png_ptr, info_ptr, &num_exif, &exif);
                      (PNG_INFO_eXIf)
 
     exif           - Exif profile (array of png_byte)
@@ -3103,9 +3113,9 @@ width, height, bit_depth, and color_type must be the same in each call.
                      single transparent color for
                      non-paletted images (PNG_INFO_tRNS)
 
-    png_set_eXIf(png_ptr, info_ptr, exif);
+    png_set_eXIf_1(png_ptr, info_ptr, num_exif, exif);
 
-    hist           - Exif profile (array of
+    exif           - Exif profile (array of
                      png_byte) (PNG_INFO_eXIf)
 
     png_set_hIST(png_ptr, info_ptr, hist);
@@ -5404,7 +5414,7 @@ Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.31 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.34 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer
