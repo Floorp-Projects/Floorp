@@ -68,7 +68,7 @@ add_test(function test_Command_ctor() {
   let cmd = new Command(42, "bar", {bar: "baz"});
   let msg = cmd.toPacket();
 
-  equal(Command.TYPE, msg[0]);
+  equal(Command.Type, msg[0]);
   equal(cmd.id, msg[1]);
   equal(cmd.name, msg[2]);
   equal(cmd.parameters, msg[3]);
@@ -105,8 +105,8 @@ add_test(function test_Command_fromPacket() {
   run_next_test();
 });
 
-add_test(function test_Command_TYPE() {
-  equal(0, Command.TYPE);
+add_test(function test_Command_Type() {
+  equal(0, Command.Type);
   run_next_test();
 });
 
@@ -200,7 +200,7 @@ add_test(function test_Response_toPacket() {
   let resp = new Response(42, () => {});
   let msg = resp.toPacket();
 
-  equal(Response.TYPE, msg[0]);
+  equal(Response.Type, msg[0]);
   equal(resp.id, msg[1]);
   equal(resp.error, msg[2]);
   equal(resp.body, msg[3]);
@@ -239,7 +239,7 @@ add_test(function test_Response_fromPacket() {
   run_next_test();
 });
 
-add_test(function test_Response_TYPE() {
-  equal(1, Response.TYPE);
+add_test(function test_Response_Type() {
+  equal(1, Response.Type);
   run_next_test();
 });
