@@ -733,7 +733,8 @@ PatchJump(CodeLocationJump& jump_, CodeLocationLabel label,
 void
 PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitZoneGroup::BackedgeTarget target);
 
-typedef js::jit::AssemblerBuffer<1024, Instruction> MIPSBuffer;
+static constexpr int32_t SliceSize = 1024;
+typedef js::jit::AssemblerBuffer<SliceSize, Instruction> MIPSBuffer;
 
 class MIPSBufferWithExecutableCopy : public MIPSBuffer
 {
@@ -751,6 +752,11 @@ class MIPSBufferWithExecutableCopy : public MIPSBuffer
     bool appendRawCode(const uint8_t* code, size_t numBytes) {
         if (this->oom())
             return false;
+        while (numBytes > SliceSize) {
+            this->putBytes(SliceSize, code);
+            numBytes -= SliceSize;
+            code += SliceSize;
+        }
         this->putBytes(numBytes, code);
         return !this->oom();
     }
