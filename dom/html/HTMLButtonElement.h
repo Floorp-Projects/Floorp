@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLButtonElement.h"
 #include "nsIConstraintValidation.h"
 
 namespace mozilla {
@@ -18,12 +17,10 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
-                                public nsIDOMHTMLButtonElement,
                                 public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;
-  using nsGenericHTMLFormElementWithState::GetFormAction;
 
   explicit HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                              FromParser aFromParser = NOT_FROM_PARSER);
@@ -43,9 +40,6 @@ public:
   {
     return true;
   }
-
-  // nsIDOMHTMLButtonElement
-  NS_DECL_NSIDOMHTMLBUTTONELEMENT
 
   // overriden nsIFormControl methods
   NS_IMETHOD Reset() override;
@@ -120,17 +114,17 @@ public:
   }
   // nsGenericHTMLFormElement::GetForm is fine.
   using nsGenericHTMLFormElement::GetForm;
-  // XPCOM GetFormAction is fine.
+  // GetFormAction implemented in superclass
   void SetFormAction(const nsAString& aFormAction, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::formaction, aFormAction, aRv);
   }
-  // XPCOM GetFormEnctype is fine.
+  void GetFormEnctype(nsAString& aFormEncType);
   void SetFormEnctype(const nsAString& aFormEnctype, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::formenctype, aFormEnctype, aRv);
   }
-  // XPCOM GetFormMethod is fine.
+  void GetFormMethod(nsAString& aFormMethod);
   void SetFormMethod(const nsAString& aFormMethod, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::formmethod, aFormMethod, aRv);
@@ -143,22 +137,31 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::formnovalidate, aFormNoValidate, aError);
   }
-  // XPCOM GetFormTarget is fine.
+  void GetFormTarget(DOMString& aFormTarget)
+  {
+    GetHTMLAttr(nsGkAtoms::formtarget, aFormTarget);
+  }
   void SetFormTarget(const nsAString& aFormTarget, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::formtarget, aFormTarget, aRv);
   }
-  // XPCOM GetName is fine.
+  void GetName(DOMString& aName)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aName);
+  }
   void SetName(const nsAString& aName, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::name, aName, aRv);
   }
-  // XPCOM GetType is fine.
+  void GetType(nsAString& aType);
   void SetType(const nsAString& aType, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::type, aType, aRv);
   }
-  // XPCOM GetValue is fine.
+  void GetValue(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::value, aValue);
+  }
   void SetValue(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
