@@ -90,10 +90,10 @@ GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
   aValueAsString.Append(unitString);
 }
 
-static bool
-GetValueFromString(const nsAString& aString,
-                   float& aValue,
-                   uint16_t* aUnitType)
+/* static */ bool
+nsSVGAngle::GetValueFromString(const nsAString& aString,
+                               float& aValue,
+                               uint16_t* aUnitType)
 {
   RangedPtr<const char16_t> iter =
     SVGContentUtils::GetStartRangedPtr(aString);
