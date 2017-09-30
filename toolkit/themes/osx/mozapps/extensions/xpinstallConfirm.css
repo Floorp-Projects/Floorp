@@ -77,7 +77,7 @@ installitem[type="locale"] .xpinstallItemIcon {
 }
 
 installitem[type="plugin"] .xpinstallItemIcon {
-  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.svg");
 }
 
 installitem[type="dictionary"] .xpinstallItemIcon {
