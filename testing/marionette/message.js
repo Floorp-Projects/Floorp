@@ -85,32 +85,42 @@ Message.Origin = {
  * Marionette socket using the {@link fromPacket} function.  The format of
  * a message is:
  *
- *     [type, id, name, params]
+ * <pre>
+ *     [<var>type</var>, <var>id</var>, <var>name</var>, <var>params</var>]
+ * </pre>
  *
  * where
  *
- *   type (integer)
- *     Must be zero (integer). Zero means that this message is a command.
+ * <dl>
+ *   <dt><var>type</var> (integer)
+ *   <dd>
+ *     Must be zero (integer).  Zero means that this message is
+ *     a command.
  *
- *   id (integer)
- *     Integer used as a sequence number.  The server replies with the
- *     same ID for the response.
+ *   <dt><var>id</var> (integer)
+ *   <dd>
+ *     Integer used as a sequence number.  The server replies with
+ *     the same ID for the response.
  *
- *   name (string)
- *     String representing the command name with an associated set of
- *     remote end steps.
+ *   <dt><var>name</var> (string)
+ *   <dd>
+ *     String representing the command name with an associated set
+ *     of remote end steps.
  *
- *   params (JSON Object or null)
+ *   <dt><var>params</var> (JSON Object or null)
+ *   <dd>
  *     Object of command function arguments.  The keys of this object
  *     must be strings, but the values can be arbitrary values.
+ * </dl>
  *
- * A command has an associated message {@code id} that prevents the
- * dispatcher from sending responses in the wrong order.
+ * A command has an associated message <var>id</var> that prevents
+ * the dispatcher from sending responses in the wrong order.
  *
  * The command may also have optional error- and result handlers that
  * are called when the client returns with a response.  These are
- * {@code function onerror({Object})}, {@code function onresult({Object})},
- * and {@code function onresult({Response})}.
+ * <code>function onerror({Object})</code>,
+ * <code>function onresult({Object})</code>, and
+ * <code>function onresult({Response})</code>:
  *
  * @param {number} messageID
  *     Message ID unique identifying this message.
@@ -139,7 +149,7 @@ class Command extends Message {
    *
    * @param {Response} resp
    *     The response to pass on to the result or error to the
-   *     {@code onerror} or {@code onresult} handlers to.
+   *     <code>onerror</code> or <code>onresult</code> handlers to.
    */
   onresponse(resp) {
     if (this.onerror && resp.error) {
@@ -222,9 +232,10 @@ const validator = {
  * mutually exclusionary fields on the input against the existing data
  * in the body.
  *
- * For example setting the {@code error} property on the body when
- * {@code value}, {@code sessionId}, or {@code capabilities} have been
- * set previously will cause an error.
+ * For example setting the <code>error</code> property on
+ * the body when <code>value</code>, <code>sessionId</code>, or
+ * <code>capabilities</code> have been set previously will cause
+ * an error.
  */
 const ResponseBody = () => new Proxy({}, validator);
 
@@ -244,9 +255,10 @@ const ResponseBody = () => new Proxy({}, validator);
  * you modify the body property on the response.  The body property can
  * also be replaced completely.
  *
- * The response is sent implicitly by CommandProcessor when a command
- * has finished executing, and any modifications made subsequent to that
- * will have no effect.
+ * The response is sent implicitly by
+ * {@link server.TCPConnection#execute when a command has finished
+ * executing, and any modifications made subsequent to that will have
+ * no effect.
  *
  * @param {number} messageID
  *     Message ID tied to the corresponding command request this is
@@ -280,7 +292,8 @@ class Response extends Message {
   }
 
   /**
-   * Sends response using the response handler provided on construction.
+   * Sends response using the response handler provided on
+   * construction.
    *
    * @throws {RangeError}
    *     If the response has already been sent.
@@ -294,7 +307,7 @@ class Response extends Message {
   }
 
   /**
-   * Send given Error to client.
+   * Send error to client.
    *
    * Turns the response into an error response, clears any previously
    * set body data, and sends it using the response handler provided
@@ -304,8 +317,8 @@ class Response extends Message {
    *     The Error instance to send.
    *
    * @throws {Error}
-   *     If the {@code error} is not a WebDriverError, the error is
-   *     propagated.
+   *     If <var>err</var> is not a {@link WebDriverError}, the error
+   *     is propagated, i.e. rethrown.
    */
   sendError(err) {
     this.error = error.wrap(err).toJSON();
