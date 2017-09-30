@@ -49,10 +49,10 @@ class Message {
     const [type] = data;
 
     switch (type) {
-      case Command.TYPE:
+      case Command.Type:
         return Command.fromPacket(data);
 
-      case Response.TYPE:
+      case Response.Type:
         return Response.fromPacket(data);
 
       default:
@@ -157,7 +157,7 @@ class Command extends Message {
    */
   toPacket() {
     return [
-      Command.TYPE,
+      Command.Type,
       this.id,
       this.name,
       this.parameters,
@@ -179,7 +179,7 @@ class Command extends Message {
    */
   static fromPacket(payload) {
     let [type, msgID, name, params] = payload;
-    assert.that(n => n === Command.TYPE)(type);
+    assert.that(n => n === Command.Type)(type);
 
     // if parameters are given but null, treat them as undefined
     if (params === null) {
@@ -189,7 +189,7 @@ class Command extends Message {
     return new Command(msgID, name, params);
   }
 }
-Command.TYPE = 0;
+Command.Type = 0;
 
 const validator = {
   exclusionary: {
@@ -326,7 +326,7 @@ class Response extends Message {
    */
   toPacket() {
     return [
-      Response.TYPE,
+      Response.Type,
       this.id,
       this.error,
       this.body,
@@ -348,7 +348,7 @@ class Response extends Message {
    */
   static fromPacket(payload) {
     let [type, msgID, err, body] = payload;
-    assert.that(n => n === Response.TYPE)(type);
+    assert.that(n => n === Response.Type)(type);
 
     let resp = new Response(msgID);
     resp.error = assert.string(err);
@@ -357,7 +357,7 @@ class Response extends Message {
     return resp;
   }
 }
-Response.TYPE = 1;
+Response.Type = 1;
 
 this.Message = Message;
 this.Command = Command;
