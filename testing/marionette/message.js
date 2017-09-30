@@ -13,7 +13,6 @@ const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
 this.EXPORTED_SYMBOLS = [
   "Command",
   "Message",
-  "MessageOrigin",
   "Response",
 ];
 
@@ -65,13 +64,13 @@ class Message {
 
 /**
  * Messages may originate from either the server or the client.
- * Because the remote protocol is full duplex, both endpoints may be the
- * origin of both commands and responses.
+ * Because the remote protocol is full duplex, both endpoints may be
+ * the origin of both commands and responses.
  *
  * @enum
  * @see {@link Message}
  */
-const MessageOrigin = {
+Message.Origin = {
   /** Indicates that the message originates from the client. */
   Client: 0,
   /** Indicates that the message originates from the server. */
@@ -130,7 +129,7 @@ class Command extends Message {
     this.onerror = null;
     this.onresult = null;
 
-    this.origin = MessageOrigin.Client;
+    this.origin = Message.Origin.Client;
     this.sent = false;
   }
 
@@ -264,7 +263,7 @@ class Response extends Message {
     this.error = null;
     this.body = ResponseBody();
 
-    this.origin = MessageOrigin.Server;
+    this.origin = Message.Origin.Server;
     this.sent = false;
   }
 
