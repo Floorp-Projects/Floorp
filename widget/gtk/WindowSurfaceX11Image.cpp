@@ -93,7 +93,7 @@ WindowSurfaceX11Image::Commit(const LayoutDeviceIntRegion& aInvalidRegion)
   }
 
   gfx::IntRect bounds = aInvalidRegion.GetBounds().ToUnknownRect();
-  gfx::Rect rect(0, 0, bounds.XMost(), bounds.YMost());
+  gfx::Rect rect(bounds);
   if (rect.IsEmpty()) {
     return;
   }
