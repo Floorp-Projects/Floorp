@@ -52,7 +52,7 @@
 }
 
 .addon-info[type="plugin"] #icon {
-  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.svg");
 }
 
 .addon-info[type="dictionary"] #icon {
