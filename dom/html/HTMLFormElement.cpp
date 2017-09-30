@@ -66,13 +66,13 @@
 
 #include "nsIConstraintValidation.h"
 
-#include "nsIDOMHTMLButtonElement.h"
 #include "nsSandboxFlags.h"
 
 #include "nsIContentSecurityPolicy.h"
 
 // images
 #include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/HTMLButtonElement.h"
 
 // construction, destruction
 NS_IMPL_NS_NEW_HTML_ELEMENT(Form)
@@ -1649,7 +1649,7 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
     if (inputElement) {
       inputElement->GetFormAction(action);
     } else {
-      nsCOMPtr<nsIDOMHTMLButtonElement> buttonElement = do_QueryInterface(aOriginatingElement);
+      auto buttonElement = HTMLButtonElement::FromContent(aOriginatingElement);
       if (buttonElement) {
         buttonElement->GetFormAction(action);
       } else {
