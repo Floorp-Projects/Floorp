@@ -18,11 +18,6 @@ toolkit.jar:
   skin/classic/mozapps/extensions/eula.css                        (extensions/eula.css)
   skin/classic/mozapps/extensions/blocklist.css                   (extensions/blocklist.css)
 * skin/classic/mozapps/extensions/newaddon.css                    (extensions/newaddon.css)
-  skin/classic/mozapps/plugins/notifyPluginGeneric.png            (plugins/notifyPluginGeneric.png)
-  skin/classic/mozapps/plugins/pluginGeneric.png                  (plugins/pluginGeneric.png)
-  skin/classic/mozapps/plugins/pluginBlocked.png                  (plugins/pluginBlocked.png)
-  skin/classic/mozapps/plugins/pluginBlocked-64.png               (plugins/pluginBlocked-64.png)
-  skin/classic/mozapps/plugins/pluginGeneric-16.png               (plugins/pluginGeneric-16.png)
   skin/classic/mozapps/plugins/pluginHelp-16.png                  (plugins/pluginHelp-16.png)
   skin/classic/mozapps/profile/profileicon.png                    (profile/profileicon.png)
   skin/classic/mozapps/profile/profileSelection.css               (profile/profileSelection.css)
@@ -38,4 +33,3 @@ toolkit.jar:
 #elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
-% override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/notifyPluginGeneric.png

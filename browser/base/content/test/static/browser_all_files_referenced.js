@@ -154,8 +154,6 @@ var whitelist = [
   // Bug 1348533
   {file: "chrome://mozapps/skin/downloads/buttons.png", platforms: ["macosx"]},
   {file: "chrome://mozapps/skin/downloads/downloadButtons.png", platforms: ["linux", "win"]},
-  // Bug 1348556
-  {file: "chrome://mozapps/skin/plugins/pluginBlocked.png"},
   // Bug 1348558
   {file: "chrome://mozapps/skin/update/downloadButtons.png",
    platforms: ["linux"]},
