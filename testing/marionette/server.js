@@ -490,7 +490,7 @@ server.TCPConnection = class {
     let msg;
     try {
       msg = Message.fromPacket(data);
-      msg.origin = MessageOrigin.Client;
+      msg.origin = Message.Origin.Client;
       this.log_(msg);
     } catch (e) {
       let resp = this.createResponse(data[1]);
@@ -619,7 +619,7 @@ server.TCPConnection = class {
    *     The command or response to send.
    */
   send(msg) {
-    msg.origin = MessageOrigin.Server;
+    msg.origin = Message.Origin.Server;
     if (msg instanceof Command) {
       this.commands_.set(msg.id, msg);
       this.sendToEmulator(msg);
@@ -665,9 +665,8 @@ server.TCPConnection = class {
   }
 
   log_(msg) {
-    let a = (msg.origin == MessageOrigin.Client ? " -> " : " <- ");
-    let s = JSON.stringify(msg.toMsg());
-    logger.trace(this.id + a + s);
+    let dir = (msg.origin == Message.Origin.Client ? "->" : "<-");
+    logger.trace(`${this.id} ${dir} ${msg}`);
   }
 
   toString() {
