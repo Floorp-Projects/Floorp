@@ -12,7 +12,7 @@
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
   padding: 0;
-  margin: 0 5px;
+  margin: 3px 5px;
   min-height: 30px;
   overflow: -moz-hidden-unscrollable;
 }
