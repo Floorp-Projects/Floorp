@@ -7,9 +7,9 @@ const {utils: Cu} = Components;
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/message.js");
 
-add_test(function test_MessageOrigin() {
-  equal(0, MessageOrigin.Client);
-  equal(1, MessageOrigin.Server);
+add_test(function test_Message_Origin() {
+  equal(0, Message.Origin.Client);
+  equal(1, Message.Origin.Server);
 
   run_next_test();
 });
@@ -34,7 +34,7 @@ add_test(function test_Command() {
   deepEqual({bar: "baz"}, cmd.parameters);
   equal(null, cmd.onerror);
   equal(null, cmd.onresult);
-  equal(MessageOrigin.Client, cmd.origin);
+  equal(Message.Origin.Client, cmd.origin);
   equal(false, cmd.sent);
 
   run_next_test();
@@ -117,7 +117,7 @@ add_test(function test_Response_ctor() {
   equal(42, resp.id);
   equal(null, resp.error);
   ok("origin" in resp);
-  equal(MessageOrigin.Server, resp.origin);
+  equal(Message.Origin.Server, resp.origin);
   equal(false, resp.sent);
   equal(handler, resp.respHandler_);
 
