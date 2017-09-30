@@ -58,7 +58,7 @@ menuitem[appHandlerIcon="feed"] {
 
 richlistitem[appHandlerIcon="plugin"],
 menuitem[appHandlerIcon="plugin"] {
-  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric-16.png");
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.svg");
 }
 
 /* Repeat what menu.css does for .menuitem-iconic */
