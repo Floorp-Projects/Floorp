@@ -138,10 +138,10 @@ BrowserCLH.prototype = {
           "focus", "blur", "click", "input",
         ], {
           handler: event => {
-            if (event.target instanceof Ci.nsIDOMHTMLInputElement ||
-                event.target instanceof Ci.nsIDOMHTMLTextAreaElement ||
-                event.target instanceof Ci.nsIDOMHTMLSelectElement ||
-                event.target instanceof Ci.nsIDOMHTMLButtonElement) {
+            if (ChromeUtils.getClassName(event.target) === "HTMLInputElement" ||
+                ChromeUtils.getClassName(event.target) === "HTMLTextAreaElement" ||
+                ChromeUtils.getClassName(event.target) === "HTMLSelectElement" ||
+                ChromeUtils.getClassName(event.target) === "HTMLButtonElement") {
               // Only load FormAssistant when the event target is what we care about.
               return this.FormAssistant;
             }

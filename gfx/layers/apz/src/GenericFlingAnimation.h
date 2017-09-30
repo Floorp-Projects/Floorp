@@ -46,11 +46,11 @@ public:
     // This ensures that we don't take the 'overscroll' path in Sample()
     // on account of one axis which can't scroll having a velocity.
     if (!mOverscrollHandoffChain->CanScrollInDirection(&mApzc, ScrollDirection::HORIZONTAL)) {
-      ReentrantMonitorAutoEnter lock(mApzc.mMonitor);
+      RecursiveMutexAutoLock lock(mApzc.mRecursiveMutex);
       mApzc.mX.SetVelocity(0);
     }
     if (!mOverscrollHandoffChain->CanScrollInDirection(&mApzc, ScrollDirection::VERTICAL)) {
-      ReentrantMonitorAutoEnter lock(mApzc.mMonitor);
+      RecursiveMutexAutoLock lock(mApzc.mRecursiveMutex);
       mApzc.mY.SetVelocity(0);
     }
 
@@ -108,7 +108,7 @@ public:
       // Start a snap-back animation on the overscrolled APZC.
       // Note:
       //   This needs to be a deferred task even though it can safely run
-      //   while holding mMonitor, because otherwise, if the overscrolled APZC
+      //   while holding mRecursiveMutex, because otherwise, if the overscrolled APZC
       //   is this one, then the SetState(NOTHING) in UpdateAnimation will
       //   stomp on the SetState(SNAP_BACK) it does.
       mDeferredTasks.AppendElement(NewRunnableMethod<AsyncPanZoomController*>(
@@ -159,10 +159,10 @@ public:
       // there is an APZC further in the handoff chain which is pannable; if
       // there isn't, we take the new fling ourselves, entering an overscrolled
       // state.
-      // Note: APZC is holding mMonitor, so directly calling
+      // Note: APZC is holding mRecursiveMutex, so directly calling
       // HandleFlingOverscroll() (which acquires the tree lock) would violate
       // the lock ordering. Instead we schedule HandleFlingOverscroll() to be
-      // called after mMonitor is released.
+      // called after mRecursiveMutex is released.
       FLING_LOG("%p fling went into overscroll, handing off with velocity %s\n", &mApzc, Stringify(velocity).c_str());
       mDeferredTasks.AppendElement(
         NewRunnableMethod<ParentLayerPoint,
