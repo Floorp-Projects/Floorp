@@ -68,7 +68,6 @@ with Files('nsVideoFrame.*'):
     BUG_COMPONENT = ('Core', 'Audio/Video')
 
 EXPORTS += [
-    'AsyncScrollBase.h',
     'nsCanvasFrame.h',
     'nsContainerFrame.h',
     'nsDirection.h',
@@ -101,6 +100,9 @@ EXPORTS += [
     'nsTextFrameUtils.h',
     'nsTextRunTransformations.h',
     'RubyUtils.h',
+    'ScrollAnimationBezierPhysics.h',
+    'ScrollAnimationMSDPhysics.h',
+    'ScrollAnimationPhysics.h',
     'ScrollbarActivity.h',
     'ScrollSnap.h',
     'TextDrawTarget.h',
@@ -122,7 +124,6 @@ EXPORTS.mozilla.layout += [
 ]
 
 UNIFIED_SOURCES += [
-    'AsyncScrollBase.cpp',
     'BlockReflowInput.cpp',
     'BRFrame.cpp',
     'CSSAlignUtils.cpp',
@@ -177,6 +178,8 @@ UNIFIED_SOURCES += [
     'ReflowInput.cpp',
     'ReflowOutput.cpp',
     'RubyUtils.cpp',
+    'ScrollAnimationBezierPhysics.cpp',
+    'ScrollAnimationMSDPhysics.cpp',
     'ScrollbarActivity.cpp',
     'ScrollSnap.cpp',
     'ScrollVelocityQueue.cpp',
