@@ -22,7 +22,11 @@ const {
   error,
   UnknownCommandError,
 } = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/message.js");
+const {
+  Command,
+  Message,
+  Response,
+} = Cu.import("chrome://marionette/content/message.js", {});
 const {DebuggerTransport} =
     Cu.import("chrome://marionette/content/transport.js", {});
 
