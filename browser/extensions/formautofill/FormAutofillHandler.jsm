@@ -550,8 +550,16 @@ FormAutofillHandler.prototype = {
    */
   createRecords() {
     let data = {};
+    let target = [];
 
-    ["address", "creditCard"].forEach(type => {
+    if (FormAutofillUtils.isAutofillAddressesEnabled) {
+      target.push("address");
+    }
+    if (FormAutofillUtils.isAutofillCreditCardsEnabled) {
+      target.push("creditCard");
+    }
+
+    target.forEach(type => {
       let details = this[type].fieldDetails;
       if (!details || details.length == 0) {
         return;
