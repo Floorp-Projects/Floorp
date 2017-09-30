@@ -8,6 +8,7 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/error.js");
+const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = [
   "Command",
@@ -15,6 +16,52 @@ this.EXPORTED_SYMBOLS = [
   "MessageOrigin",
   "Response",
 ];
+
+/** Representation of the packets transproted over the wire. */
+class Message {
+  /**
+   * @param {number} messageID
+   *     Message ID unique identifying this message.
+   */
+  constructor(messageID) {
+    this.id = assert.integer(messageID);
+  }
+
+  toString() {
+    return truncate`${this.toPacket()}`;
+  }
+
+  /**
+   * Converts a data packet into a {@link Command} or {@link Response}.
+   *
+   * @param {Array.<number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, method name or error, and parameters
+   *     or result.
+   *
+   * @return {Message}
+   *     Based on the message type, a {@link Command} or {@link Response}
+   *     instance.
+   *
+   * @throws {TypeError}
+   *     If the message type is not recognised.
+   */
+  static fromPacket(data) {
+    const [type] = data;
+
+    switch (type) {
+      case Command.TYPE:
+        return Command.fromPacket(data);
+
+      case Response.TYPE:
+        return Response.fromPacket(data);
+
+      default:
+        throw new TypeError(
+            "Unrecognised message type in packet: " + JSON.stringify(data));
+    }
+  }
+}
 
 /**
  * Messages may originate from either the server or the client.
@@ -32,47 +79,11 @@ const MessageOrigin = {
 };
 
 /**
- * Representation of the packets transproted over the wire.
- *
- * @class
- */
-this.Message = {};
-
-/**
- * Converts a data packet into a Command or Response type.
- *
- * @param {Array.<number, number, ?, ?>} data
- *     A four element array where the elements, in sequence, signifies
- *     message type, message ID, method name or error, and parameters
- *     or result.
- *
- * @return {Message}
- *     Based on the message type, a {@link Command} or {@link Response}
- *     instance.
- *
- * @throws {TypeError}
- *     If the message type is not recognised.
- */
-Message.fromMsg = function(data) {
-  switch (data[0]) {
-    case Command.TYPE:
-      return Command.fromMsg(data);
-
-    case Response.TYPE:
-      return Response.fromMsg(data);
-
-    default:
-      throw new TypeError(
-          "Unrecognised message type in packet: " + JSON.stringify(data));
-  }
-};
-
-/**
  * A command is a request from the client to run a series of remote end
  * steps and return a fitting response.
  *
  * The command can be synthesised from the message passed over the
- * Marionette socket using the {@code fromMsg} function.  The format of
+ * Marionette socket using the {@link fromPacket} function.  The format of
  * a message is:
  *
  *     [type, id, name, params]
@@ -102,16 +113,17 @@ Message.fromMsg = function(data) {
  * {@code function onerror({Object})}, {@code function onresult({Object})},
  * and {@code function onresult({Response})}.
  *
- * @param {number} msgId
+ * @param {number} messageID
  *     Message ID unique identifying this message.
  * @param {string} name
  *     Command name.
  * @param {Object.<string, ?>} params
  *     Command parameters.
  */
-class Command {
-  constructor(msgID, name, params = {}) {
-    this.id = assert.integer(msgID);
+class Command extends Message {
+  constructor(messageID, name, params = {}) {
+    super(messageID);
+
     this.name = assert.string(name);
     this.parameters = assert.object(params);
 
@@ -138,18 +150,36 @@ class Command {
     }
   }
 
-  toMsg() {
-    return [Command.TYPE, this.id, this.name, this.parameters];
+  /**
+   * Encodes the command to a packet.
+   *
+   * @return {Array}
+   *     Packet.
+   */
+  toPacket() {
+    return [
+      Command.TYPE,
+      this.id,
+      this.name,
+      this.parameters,
+    ];
   }
 
-  toString() {
-    return "Command {id: " + this.id + ", " +
-        "name: " + JSON.stringify(this.name) + ", " +
-        "parameters: " + JSON.stringify(this.parameters) + "}";
-  }
-
-  static fromMsg(msg) {
-    let [type, msgID, name, params] = msg;
+  /**
+   * Converts a data packet into {@link Command}.
+   *
+   * @param {Array.<number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, command name, and parameters.
+   *
+   * @return {Command}
+   *     Representation of packet.
+   *
+   * @throws {TypeError}
+   *     If the message type is not recognised.
+   */
+  static fromPacket(payload) {
+    let [type, msgID, name, params] = payload;
     assert.that(n => n === Command.TYPE)(type);
 
     // if parameters are given but null, treat them as undefined
@@ -160,7 +190,6 @@ class Command {
     return new Command(msgID, name, params);
   }
 }
-
 Command.TYPE = 0;
 
 const validator = {
@@ -220,15 +249,16 @@ const ResponseBody = () => new Proxy({}, validator);
  * has finished executing, and any modifications made subsequent to that
  * will have no effect.
  *
- * @param {number} msgID
- *     Message ID tied to the corresponding command request this is a
- *     response for.
+ * @param {number} messageID
+ *     Message ID tied to the corresponding command request this is
+ *     a response for.
  * @param {ResponseHandler} respHandler
  *     Function callback called on sending the response.
  */
-class Response {
-  constructor(msgID, respHandler = () => {}) {
-    this.id = assert.integer(msgID);
+class Response extends Message {
+  constructor(messageID, respHandler = () => {}) {
+    super(messageID);
+
     this.respHandler_ = assert.callable(respHandler);
 
     this.error = null;
@@ -289,18 +319,36 @@ class Response {
     }
   }
 
-  toMsg() {
-    return [Response.TYPE, this.id, this.error, this.body];
+  /**
+   * Encodes the response to a packet.
+   *
+   * @return {Array}
+   *     Packet.
+   */
+  toPacket() {
+    return [
+      Response.TYPE,
+      this.id,
+      this.error,
+      this.body,
+    ];
   }
 
-  toString() {
-    return "Response {id: " + this.id + ", " +
-        "error: " + JSON.stringify(this.error) + ", " +
-        "body: " + JSON.stringify(this.body) + "}";
-  }
-
-  static fromMsg(msg) {
-    let [type, msgID, err, body] = msg;
+  /**
+   * Converts a data packet into {@link Response}.
+   *
+   * @param {Array.<number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, error, and result.
+   *
+   * @return {Response}
+   *     Representation of packet.
+   *
+   * @throws {TypeError}
+   *     If the message type is not recognised.
+   */
+  static fromPacket(payload) {
+    let [type, msgID, err, body] = payload;
     assert.that(n => n === Response.TYPE)(type);
 
     let resp = new Response(msgID);
@@ -310,5 +358,8 @@ class Response {
     return resp;
   }
 }
-
 Response.TYPE = 1;
+
+this.Message = Message;
+this.Command = Command;
+this.Response = Response;
