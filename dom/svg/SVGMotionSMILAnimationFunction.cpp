@@ -431,20 +431,14 @@ SVGMotionSMILAnimationFunction::SetRotate(const nsAString& aRotate,
   } else {
     mRotateType = eRotateType_Explicit;
 
-    // Parse numeric angle string, with the help of a temp nsSVGAngle.
-    nsSVGAngle svgAngle;
-    svgAngle.Init();
-    nsresult rv = svgAngle.SetBaseValueString(aRotate, nullptr, false);
-    if (NS_FAILED(rv)) { // Parse error
+    uint16_t angleUnit;
+    if (!nsSVGAngle::GetValueFromString(aRotate, mRotateAngle, &angleUnit)) {
       mRotateAngle = 0.0f; // set default rotate angle
       // XXX report to console?
-      return rv;
+      return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    mRotateAngle = svgAngle.GetBaseValInSpecifiedUnits();
-
     // Convert to radian units, if we're not already in radians.
-    uint8_t angleUnit = svgAngle.GetBaseValueUnit();
     if (angleUnit != SVG_ANGLETYPE_RAD) {
       mRotateAngle *= nsSVGAngle::GetDegreesPerUnit(angleUnit) /
         nsSVGAngle::GetDegreesPerUnit(SVG_ANGLETYPE_RAD);
