@@ -685,24 +685,6 @@ MaybeInIteration(HandleObject obj, JSContext* cx)
     return false;
 }
 
-bool
-js::CanonicalizeArrayLengthValue(JSContext* cx, HandleValue v, uint32_t* newLen)
-{
-    double d;
-
-    if (!ToUint32(cx, v, newLen))
-        return false;
-
-    if (!ToNumber(cx, v, &d))
-        return false;
-
-    if (d == *newLen)
-        return true;
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
-    return false;
-}
-
 /* ES6 draft rev 34 (2015 Feb 20) 9.4.2.4 ArraySetLength */
 bool
 js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
@@ -726,11 +708,22 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     } else {
         // Step 2 is irrelevant in our implementation.
 
-        // Steps 3-7.
-        if (!CanonicalizeArrayLengthValue(cx, value, &newLen))
+        // Step 3.
+        if (!ToUint32(cx, value, &newLen))
             return false;
 
-        // Step 8 is irrelevant in our implementation.
+        // Step 4.
+        double d;
+        if (!ToNumber(cx, value, &d))
+            return false;
+
+        // Step 5.
+        if (d != newLen) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            return false;
+        }
+
+        // Steps 6-8 are irrelevant in our implementation.
     }
 
     // Steps 9-11.
