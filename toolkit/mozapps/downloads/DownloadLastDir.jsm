@@ -143,9 +143,13 @@ DownloadLastDir.prototype = {
         let file = plainPrefFile;
         if (aReason == Components.interfaces.nsIContentPrefCallback2.COMPLETE_OK &&
            result instanceof Components.interfaces.nsIContentPref) {
-          file = Components.classes["@mozilla.org/file/local;1"]
-                           .createInstance(Components.interfaces.nsIFile);
-          file.initWithPath(result.value);
+          try {
+            file = Components.classes["@mozilla.org/file/local;1"]
+                             .createInstance(Components.interfaces.nsIFile);
+            file.initWithPath(result.value);
+          } catch (e) {
+            file = plainPrefFile;
+          }
         }
         aCallback(file);
       }

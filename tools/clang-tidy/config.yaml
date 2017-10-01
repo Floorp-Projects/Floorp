@@ -1,0 +1,59 @@
+---
+target: obj-x86_64-pc-linux-gnu
+# It is used by 'mach static-analysis' and 'mozreview static-analysis bot'
+# in order to have consistency across the used checkers.
+# All the clang checks used by the static-analysis tools.
+clang_checkers:
+ - name: -*
+   publish: !!bool no
+ - name: clang-analyzer-deadcode.DeadStores
+   publish: !!bool yes
+ - name: clang-analyzer-security.*
+   publish: !!bool no
+ - name: misc-assert-side-effect
+   publish: !!bool yes
+ - name: misc-suspicious-missing-comma
+   publish: !!bool yes
+ - name: misc-suspicious-semicolon
+   publish: !!bool yes
+ - name: modernize-loop-convert
+   publish: !!bool yes
+ - name: modernize-raw-string-literal
+   publish: !!bool yes
+ - name: modernize-redundant-void-arg
+   publish: !!bool no
+ - name: modernize-shrink-to-fit
+   publish: !!bool yes
+ - name: modernize-use-equals-default
+   publish: !!bool yes
+ - name: modernize-use-equals-delete
+   publish: !!bool yes
+ - name: modernize-use-nullptr
+   publish: !!bool yes
+ - name: modernize-use-override
+   publish: !!bool yes
+ - name: mozilla-*
+   publish: !!bool yes
+ - name: performance-*
+   publish: !!bool yes
+ - name: readability-container-size-empty
+   publish: !!bool yes
+ - name: readability-else-after-return
+   publish: !!bool yes
+ - name: readability-misleading-indentation
+   publish: !!bool yes
+ - name: readability-redundant-control-flow
+   publish: !!bool yes
+ - name: readability-redundant-smartptr-get
+   publish: !!bool no
+ - name: readability-uniqueptr-delete-release
+   publish: !!bool yes
+ - name: modernize-use-auto
+   # Controversial, see bug 1371052.
+   publish: !!bool no
+ - name: modernize-use-bool-literals
+   # Too noisy because of `while (0)` in many macros.
+   publish: !!bool no
+
+# Third party files from mozilla-central
+third_party: tools/rewriting/ThirdPartyPaths.txt
