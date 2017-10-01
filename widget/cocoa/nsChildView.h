@@ -172,6 +172,11 @@ class WidgetRenderingContext;
 
   // Gestures support
   //
+  // mGestureState is used to detect when Cocoa has called both
+  // magnifyWithEvent and rotateWithEvent within the same
+  // beginGestureWithEvent and endGestureWithEvent sequence. We
+  // discard the spurious gesture event so as not to confuse Gecko.
+  //
   // mCumulativeMagnification keeps track of the total amount of
   // magnification peformed during a magnify gesture so that we can
   // send that value with the final MozMagnifyGesture event.
@@ -182,6 +187,7 @@ class WidgetRenderingContext;
   enum {
     eGestureState_None,
     eGestureState_StartGesture,
+    eGestureState_MagnifyGesture,
     eGestureState_RotateGesture
   } mGestureState;
   float mCumulativeMagnification;
@@ -247,6 +253,7 @@ class WidgetRenderingContext;
  */
 - (void)swipeWithEvent:(NSEvent *)anEvent;
 - (void)beginGestureWithEvent:(NSEvent *)anEvent;
+- (void)magnifyWithEvent:(NSEvent *)anEvent;
 - (void)smartMagnifyWithEvent:(NSEvent *)anEvent;
 - (void)rotateWithEvent:(NSEvent *)anEvent;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
