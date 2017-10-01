@@ -385,7 +385,7 @@
                       class="accessory-button"
                       label="&clearOnCloseSettings.label;"
                       accesskey="&clearOnCloseSettings.accesskey;"
-                      searchkeywords="&clearDataSettings2.label;
+                      searchkeywords="&clearDataSettings3.label;
                                       &historySection.label;
                                       &itemHistoryAndDownloads.label;
                                       &itemCookies.label;
