@@ -476,7 +476,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "7d6e69c48f1c"
+        "revision": "c92cc9ea2a63"
     }, 
     "nb-NO": {
         "platforms": [
