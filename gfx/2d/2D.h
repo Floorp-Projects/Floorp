@@ -210,7 +210,7 @@ struct DrawSurfaceOptions {
  * matching DrawTarget. Not adhering to this condition will make a draw call
  * fail.
  */
-class GradientStops : public RefCounted<GradientStops>
+class GradientStops : public external::AtomicRefCounted<GradientStops>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStops)
