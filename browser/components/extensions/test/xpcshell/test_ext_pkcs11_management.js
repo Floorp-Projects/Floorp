@@ -102,6 +102,7 @@ add_task(async function test_pkcs11() {
       browser.test.assertEq("Test PKCS11 Slot", slots[0].name, "The first slot name matches the expected name");
       browser.test.assertEq("Test PKCS11 Slot 二", slots[1].name, "The second slot name matches the expected name");
       browser.test.assertTrue(slots[1].token, "The second slot has a token");
+      browser.test.assertFalse(slots[2].token, "The third slot has no token");
       browser.test.assertEq("Test PKCS11 Tokeñ 2 Label", slots[1].token.name, "The token name matches the expected name");
       browser.test.assertEq("Test PKCS11 Manufacturer ID", slots[1].token.manufacturer, "The token manufacturer matches the expected manufacturer");
       browser.test.assertEq("0.0", slots[1].token.HWVersion, "The token hardware version matches the expected version");
