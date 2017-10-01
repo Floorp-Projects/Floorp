@@ -10,9 +10,9 @@ define(function (require, exports, module) {
   const { createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { JsonPanel } = createFactories(require("./json-panel"));
-  const { TextPanel } = createFactories(require("./text-panel"));
-  const { HeadersPanel } = createFactories(require("./headers-panel"));
+  const { JsonPanel } = createFactories(require("./JsonPanel"));
+  const { TextPanel } = createFactories(require("./TextPanel"));
+  const { HeadersPanel } = createFactories(require("./HeadersPanel"));
   const { Tabs, TabPanel } = createFactories(require("devtools/client/shared/components/tabs/Tabs"));
 
   /**

@@ -10,7 +10,7 @@ define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
+  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
   const { div, pre } = dom;
 
   /**
