@@ -617,7 +617,7 @@ class FlattenedPath;
 /** The path class is used to create (sets of) figures of any shape that can be
  * filled or stroked to a DrawTarget
  */
-class Path : public RefCounted<Path>
+class Path : public external::AtomicRefCounted<Path>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(Path)
