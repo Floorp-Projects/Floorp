@@ -13,7 +13,6 @@
 // Core Includes
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
 
 // Interfaces needed
 #include "nsCWebBrowser.h"
@@ -93,8 +92,7 @@ class nsWebBrowser final : public nsIWebBrowser,
 public:
   nsWebBrowser();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWebBrowser, nsIWebBrowser)
+  NS_DECL_ISUPPORTS
 
   NS_DECL_NSIBASEWINDOW
   NS_DECL_NSIDOCSHELLTREEITEM
