@@ -9,8 +9,6 @@
   font: message-box;
 
   --tab-line-selected-color: var(--blue-50);
-  /* Introduce a specific variable here to be able to special-case firebug theme */
-  --toolbar-icon-checked-filter: var(--theme-icon-checked-filter);
 }
 
 :root.theme-light {
@@ -36,9 +34,6 @@
 
 :root.theme-firebug {
   --proportional-font-family: Lucida Grande, Tahoma, sans-serif;
-
-  /* Do not use filters for Firebug checked icons: they are images, not SVGs */
-  --toolbar-icon-checked-filter: none;
 }
 
 .devtools-monospace {
@@ -266,8 +261,7 @@ checkbox:-moz-focusring {
   margin: 0 3px;
   transition: opacity 0.05s ease-in-out;
 
-  /* For text-as-image usage, match the SVG color */
-  color: #0b0b0b;
+  color: var(--theme-toolbar-color);
   direction: ltr;
   font-size: 11px;
 }
@@ -278,6 +272,10 @@ checkbox:-moz-focusring {
   background-size: cover;
   background-repeat: no-repeat;
   vertical-align: middle;
+}
+
+.devtools-button.checked:empty::before {
+  color: var(--theme-toolbar-checked-color);
 }
 
 /* Standalone buttons */
@@ -315,7 +313,7 @@ checkbox:-moz-focusring {
 .devtools-button.checked::before,
 .devtools-toolbarbutton:not([label])[checked=true] > image,
 .devtools-toolbarbutton:not([label])[open=true] > image {
-  filter: var(--toolbar-icon-checked-filter);
+  fill: var(--theme-toolbar-checked-color);
 }
 
 /* Button states */
