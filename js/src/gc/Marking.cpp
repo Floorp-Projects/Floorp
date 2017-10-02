@@ -3203,6 +3203,7 @@ js::TenuringTracer::moveToTenured(JSString* src)
 
     AllocKind dstKind = src->getAllocKind();
     Zone* zone = src->zone();
+    zone->tenuredStrings++;
 
     TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
     if (!t) {
