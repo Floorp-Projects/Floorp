@@ -59,7 +59,7 @@ OpenSharedTexture(ID3D11Device* const d3d, const WindowsHandle handle)
     auto hr = d3d->OpenSharedResource((HANDLE)handle, __uuidof(ID3D11Texture2D),
                                       (void**)(ID3D11Texture2D**)getter_AddRefs(tex));
     if (FAILED(hr)) {
-        MOZ_ASSERT(false, "OpenSharedResource should not fail");
+        gfxCriticalError() << "Error code from OpenSharedResource: " << gfx::hexa(hr);
         return nullptr;
     }
     return tex;
@@ -265,6 +265,10 @@ GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
     }
 
     const auto tex = OpenSharedTexture(d3d, handle);
+    if (!tex) {
+        MOZ_ASSERT(false, "Get a nullptr from OpenSharedResource.");
+        return false;
+    }
     const RefPtr<ID3D11Texture2D> texList[2] = { tex, tex };
     const EGLAttrib postAttribs0[] = {
         LOCAL_EGL_NATIVE_BUFFER_PLANE_OFFSET_IMG, 0,
