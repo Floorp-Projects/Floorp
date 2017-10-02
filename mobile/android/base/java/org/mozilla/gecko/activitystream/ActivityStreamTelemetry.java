@@ -79,6 +79,7 @@ public class ActivityStreamTelemetry {
     public static int getASUserPreferencesValue(final SharedPreferences sharedPreferences, final Resources res) {
         int bitPackedPrefValue = 0;
 
+        // todo: Add bit for isPocketAllowedByLocale.
         if (sharedPreferences.getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED, res.getBoolean(R.bool.pref_activitystream_pocket_enabled_default))) {
             bitPackedPrefValue += POCKET_ENABLED_VALUE;
         }
