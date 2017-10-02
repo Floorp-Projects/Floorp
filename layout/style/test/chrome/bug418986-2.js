@@ -34,7 +34,9 @@ var expected_values = [
                                 "landscape" : "portrait"]
 ];
 
-// These media queries return value 0 or 1 when the pref is off.
+// These media queries return value 0 or 1 when the pref is off, or never match
+// due to they being not available in non-chrome / UA pages.
+//
 // When the pref is on, they should not match.
 var suppressed_toggles = [
   "-moz-mac-graphite-theme",
@@ -49,6 +51,11 @@ var suppressed_toggles = [
   "-moz-windows-compositor",
   "-moz-windows-default-theme",
   "-moz-windows-glass",
+];
+
+// The toggles enabled in content pages, which would actually test to 0 or 1.
+const toggles_enabled_in_content = [
+  "-moz-touch-enabled",
 ];
 
 // Possible values for '-moz-os-version'
@@ -104,7 +111,7 @@ var testToggles = function (resisting) {
   suppressed_toggles.forEach(
     function (key) {
       var exists = keyValMatches(key, 0) || keyValMatches(key, 1);
-      if (resisting) {
+      if (resisting || toggles_enabled_in_content.indexOf(key) === -1) {
          ok(!exists, key + " should not exist.");
       } else {
          ok(exists, key + " should exist.");
@@ -200,7 +207,8 @@ var generateCSSLines = function (resisting) {
   lines += ".suppress { background-color: " + (resisting ? "green" : "red") + ";}\n";
   suppressed_toggles.forEach(
     function (key) {
-      lines += suppressedMediaQueryCSSLine(key, resisting ? "red" : "green");
+      let color = resisting ? "red" : "green";
+      lines += suppressedMediaQueryCSSLine(key, color);
     });
   if (OS === "WINNT") {
     lines += ".windows { background-color: " + (resisting ? "green" : "red") + ";}\n";
