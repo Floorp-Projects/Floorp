@@ -25,29 +25,34 @@ class SwizzleTest : public ANGLETest
         setConfigBlueBits(8);
         setConfigAlphaBits(8);
 
-        GLenum swizzles[] =
-        {
-            GL_RED,
-            GL_GREEN,
-            GL_BLUE,
-            GL_ALPHA,
-            GL_ZERO,
-            GL_ONE,
+        constexpr GLenum swizzles[] = {
+            GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_ZERO, GL_ONE,
         };
 
-        for (int r = 0; r < 6; r++)
+        // Only use every 13th swizzle permutation, use a prime number to make sure the permuations
+        // are somewhat evenly distributed.  Reduces the permuations from 1296 to 100.
+        constexpr size_t swizzleReductionFactor = 13;
+
+        size_t swizzleCount = 0;
+        for (GLenum r : swizzles)
         {
-            for (int g = 0; g < 6; g++)
+            for (GLenum g : swizzles)
             {
-                for (int b = 0; b < 6; b++)
+                for (GLenum b : swizzles)
                 {
-                    for (int a = 0; a < 6; a++)
+                    for (GLenum a : swizzles)
                     {
+                        swizzleCount++;
+                        if (swizzleCount % swizzleReductionFactor != 0)
+                        {
+                            continue;
+                        }
+
                         swizzlePermutation permutation;
-                        permutation.swizzleRed = swizzles[r];
-                        permutation.swizzleGreen = swizzles[g];
-                        permutation.swizzleBlue = swizzles[b];
-                        permutation.swizzleAlpha = swizzles[a];
+                        permutation.swizzleRed   = r;
+                        permutation.swizzleGreen = g;
+                        permutation.swizzleBlue  = b;
+                        permutation.swizzleAlpha = a;
                         mPermutations.push_back(permutation);
                     }
                 }
@@ -59,9 +64,8 @@ class SwizzleTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vertexShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vertexShaderSource =
+            R"(precision highp float;
             attribute vec4 position;
             varying vec2 texcoord;
 
@@ -69,20 +73,17 @@ class SwizzleTest : public ANGLETest
             {
                 gl_Position = position;
                 texcoord = (position.xy * 0.5) + 0.5;
-            }
-        );
+            })";
 
-        const std::string fragmentShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string fragmentShaderSource =
+            R"(precision highp float;
             uniform sampler2D tex;
             varying vec2 texcoord;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, texcoord);
-            }
-        );
+            })";
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         ASSERT_NE(0u, mProgram);
@@ -163,10 +164,8 @@ class SwizzleTest : public ANGLETest
 
         ASSERT_GL_NO_ERROR();
 
-        for (size_t i = 0; i < mPermutations.size(); i++)
+        for (const auto &permutation : mPermutations)
         {
-            const swizzlePermutation& permutation = mPermutations[i];
-
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, permutation.swizzleRed);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, permutation.swizzleGreen);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, permutation.swizzleBlue);
@@ -355,6 +354,12 @@ TEST_P(SwizzleTest, LA8_2D)
 
 TEST_P(SwizzleTest, L32F_2D)
 {
+    if (!extensionEnabled("GL_OES_texture_float"))
+    {
+        std::cout << "Test skipped due to missing GL_OES_texture_float." << std::endl;
+        return;
+    }
+
     GLfloat data[] = {0.7f};
     init2DTexture(GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT, data);
     runTest2D();
@@ -362,6 +367,12 @@ TEST_P(SwizzleTest, L32F_2D)
 
 TEST_P(SwizzleTest, A32F_2D)
 {
+    if (!extensionEnabled("GL_OES_texture_float"))
+    {
+        std::cout << "Test skipped due to missing GL_OES_texture_float." << std::endl;
+        return;
+    }
+
     GLfloat data[] = {
         0.4f,
     };
@@ -371,6 +382,12 @@ TEST_P(SwizzleTest, A32F_2D)
 
 TEST_P(SwizzleTest, LA32F_2D)
 {
+    if (!extensionEnabled("GL_OES_texture_float"))
+    {
+        std::cout << "Test skipped due to missing GL_OES_texture_float." << std::endl;
+        return;
+    }
+
     GLfloat data[] = {
         0.5f, 0.6f,
     };

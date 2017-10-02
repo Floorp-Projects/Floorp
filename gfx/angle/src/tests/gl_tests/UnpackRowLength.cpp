@@ -31,26 +31,22 @@ class UnpackRowLengthTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vertexShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vertexShaderSource =
+            R"(precision highp float;
             attribute vec4 position;
 
             void main()
             {
                 gl_Position = position;
-            }
-        );
+            })";
 
-        const std::string fragmentShaderSource = SHADER_SOURCE
-        (
-            uniform sampler2D tex;
+        const std::string fragmentShaderSource =
+            R"(uniform sampler2D tex;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, vec2(0.0, 1.0));
-            }
-        );
+            })";
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         if (mProgram == 0)

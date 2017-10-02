@@ -19,7 +19,7 @@ Query9::Query9(Renderer9 *renderer, GLenum type)
       mResult(GL_FALSE),
       mQueryFinished(false),
       mRenderer(renderer),
-      mQuery(NULL)
+      mQuery(nullptr)
 {
 }
 
@@ -36,7 +36,7 @@ gl::Error Query9::begin()
         HRESULT result = mRenderer->getDevice()->CreateQuery(d3dQueryType, &mQuery);
         if (FAILED(result))
         {
-            return gl::Error(GL_OUT_OF_MEMORY, "Internal query creation failed, result: 0x%X.", result);
+            return gl::OutOfMemory() << "Internal query creation failed, " << gl::FmtHR(result);
         }
     }
 
@@ -46,12 +46,11 @@ gl::Error Query9::begin()
         ASSERT(SUCCEEDED(result));
         if (FAILED(result))
         {
-            return gl::Error(GL_OUT_OF_MEMORY, "Failed to begin internal query, result: 0x%X.",
-                             result);
+            return gl::OutOfMemory() << "Failed to begin internal query, " << gl::FmtHR(result);
         }
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error Query9::end()
@@ -62,19 +61,19 @@ gl::Error Query9::end()
     ASSERT(SUCCEEDED(result));
     if (FAILED(result))
     {
-        return gl::Error(GL_OUT_OF_MEMORY, "Failed to end internal query, result: 0x%X.", result);
+        return gl::OutOfMemory() << "Failed to end internal query, " << gl::FmtHR(result);
     }
 
     mQueryFinished = false;
     mResult = GL_FALSE;
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error Query9::queryCounter()
 {
     UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION, "Unimplemented");
+    return gl::InternalError() << "Unimplemented";
 }
 
 template <typename T>
@@ -96,7 +95,7 @@ gl::Error Query9::getResultBase(T *params)
 
     ASSERT(mQueryFinished);
     *params = static_cast<T>(mResult);
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error Query9::getResult(GLint *params)
@@ -129,7 +128,7 @@ gl::Error Query9::isResultAvailable(bool *available)
 
     *available = mQueryFinished;
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error Query9::testQuery()
@@ -174,16 +173,16 @@ gl::Error Query9::testQuery()
         if (d3d9::isDeviceLostError(result))
         {
             mRenderer->notifyDeviceLost();
-            return gl::Error(GL_OUT_OF_MEMORY, "Failed to test get query result, device is lost.");
+            return gl::OutOfMemory() << "Failed to test get query result, device is lost.";
         }
         else if (mRenderer->testDeviceLost())
         {
             mRenderer->notifyDeviceLost();
-            return gl::Error(GL_OUT_OF_MEMORY, "Failed to test get query result, device is lost.");
+            return gl::OutOfMemory() << "Failed to test get query result, device is lost.";
         }
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 }

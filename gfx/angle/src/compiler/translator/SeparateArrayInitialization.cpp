@@ -3,7 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-// The SeparateArrayInitialization function splits each array initialization into a declaration and an assignment.
+// The SeparateArrayInitialization function splits each array initialization into a declaration and
+// an assignment.
 // Example:
 //     type[n] a = initializer;
 // will effectively become
@@ -30,6 +31,7 @@ class SeparateArrayInitTraverser : private TIntermTraverser
 {
   public:
     static void apply(TIntermNode *root);
+
   private:
     SeparateArrayInitTraverser();
     bool visitDeclaration(Visit, TIntermDeclaration *node) override;
@@ -42,8 +44,7 @@ void SeparateArrayInitTraverser::apply(TIntermNode *root)
     separateInit.updateTree();
 }
 
-SeparateArrayInitTraverser::SeparateArrayInitTraverser()
-    : TIntermTraverser(true, false, false)
+SeparateArrayInitTraverser::SeparateArrayInitTraverser() : TIntermTraverser(true, false, false)
 {
 }
 
@@ -81,7 +82,7 @@ bool SeparateArrayInitTraverser::visitDeclaration(Visit, TIntermDeclaration *nod
     return false;
 }
 
-} // namespace
+}  // namespace
 
 void SeparateArrayInitialization(TIntermNode *root)
 {

@@ -125,7 +125,7 @@ Error Stream::createConsumerGLTextureExternal(const AttributeMap &attributes, gl
         ASSERT(mPlanes[0].texture != nullptr);
         mPlanes[0].texture->bindStream(this);
         mConsumerType = ConsumerType::GLTextureRGB;
-        mPlaneCount = 1;
+        mPlaneCount   = 1;
     }
     else
     {
@@ -157,27 +157,26 @@ Error Stream::createConsumerGLTextureExternal(const AttributeMap &attributes, gl
     mContext = context;
     mState   = EGL_STREAM_STATE_CONNECTING_KHR;
 
-    return Error(EGL_SUCCESS);
+    return NoError();
 }
 
 Error Stream::createProducerD3D11TextureNV12(const AttributeMap &attributes)
 {
     ASSERT(mState == EGL_STREAM_STATE_CONNECTING_KHR);
-    ASSERT(mConsumerType == ConsumerType::GLTextureRGB ||
-           mConsumerType == ConsumerType::GLTextureYUV);
+    ASSERT(mConsumerType == ConsumerType::GLTextureYUV);
     ASSERT(mProducerType == ProducerType::NoProducer);
+    ASSERT(mPlaneCount == 2);
 
     mProducerImplementation = mDisplay->getImplementation()->createStreamProducerD3DTextureNV12(
         mConsumerType, attributes);
     mProducerType = ProducerType::D3D11TextureNV12;
     mState        = EGL_STREAM_STATE_EMPTY_KHR;
 
-    return Error(EGL_SUCCESS);
+    return NoError();
 }
 
-
 // Called when the consumer of this stream starts using the stream
-Error Stream::consumerAcquire()
+Error Stream::consumerAcquire(const gl::Context *context)
 {
     ASSERT(mState == EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR ||
            mState == EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR);
@@ -193,15 +192,15 @@ Error Stream::consumerAcquire()
     {
         if (mPlanes[i].texture != nullptr)
         {
-            mPlanes[i].texture->acquireImageFromStream(
-                mProducerImplementation->getGLFrameDescription(i));
+            ANGLE_TRY(mPlanes[i].texture->acquireImageFromStream(
+                context, mProducerImplementation->getGLFrameDescription(i)));
         }
     }
 
-    return Error(EGL_SUCCESS);
+    return NoError();
 }
 
-Error Stream::consumerRelease()
+Error Stream::consumerRelease(const gl::Context *context)
 {
     ASSERT(mState == EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR ||
            mState == EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR);
@@ -214,11 +213,11 @@ Error Stream::consumerRelease()
     {
         if (mPlanes[i].texture != nullptr)
         {
-            mPlanes[i].texture->releaseImageFromStream();
+            ANGLE_TRY(mPlanes[i].texture->releaseImageFromStream(context));
         }
     }
 
-    return Error(EGL_SUCCESS);
+    return NoError();
 }
 
 bool Stream::isConsumerBoundToContext(const gl::Context *context) const
@@ -227,14 +226,14 @@ bool Stream::isConsumerBoundToContext(const gl::Context *context) const
     return (context == mContext);
 }
 
-Error Stream::validateD3D11NV12Texture(void *texture, const AttributeMap &attributes) const
+Error Stream::validateD3D11NV12Texture(void *texture) const
 {
     ASSERT(mConsumerType == ConsumerType::GLTextureRGB ||
            mConsumerType == ConsumerType::GLTextureYUV);
     ASSERT(mProducerType == ProducerType::D3D11TextureNV12);
     ASSERT(mProducerImplementation != nullptr);
 
-    return mProducerImplementation->validateD3DNV12Texture(texture, attributes);
+    return mProducerImplementation->validateD3DNV12Texture(texture);
 }
 
 Error Stream::postD3D11NV12Texture(void *texture, const AttributeMap &attributes)
@@ -248,7 +247,7 @@ Error Stream::postD3D11NV12Texture(void *texture, const AttributeMap &attributes
 
     mState = EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR;
 
-    return Error(EGL_SUCCESS);
+    return NoError();
 }
 
 // This is called when a texture object associated with this stream is destroyed. Even if multiple

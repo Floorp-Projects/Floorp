@@ -22,30 +22,25 @@ namespace sh
 class TCache
 {
   public:
-
     static void initialize();
     static void destroy();
 
-    static const TType *getType(TBasicType basicType,
-                                TPrecision precision)
+    static const TType *getType(TBasicType basicType, TPrecision precision)
     {
-        return getType(basicType, precision, EvqTemporary,
-                       1, 1);
+        return getType(basicType, precision, EvqTemporary, 1, 1);
     }
     static const TType *getType(TBasicType basicType,
-                                unsigned char primarySize = 1,
+                                unsigned char primarySize   = 1,
                                 unsigned char secondarySize = 1)
     {
-        return getType(basicType, EbpUndefined, EvqGlobal,
-                       primarySize, secondarySize);
+        return getType(basicType, EbpUndefined, EvqGlobal, primarySize, secondarySize);
     }
     static const TType *getType(TBasicType basicType,
                                 TQualifier qualifier,
-                                unsigned char primarySize = 1,
+                                unsigned char primarySize   = 1,
                                 unsigned char secondarySize = 1)
     {
-        return getType(basicType, EbpUndefined, qualifier,
-                       primarySize, secondarySize);
+        return getType(basicType, EbpUndefined, qualifier, primarySize, secondarySize);
     }
     static const TType *getType(TBasicType basicType,
                                 TPrecision precision,
@@ -54,12 +49,9 @@ class TCache
                                 unsigned char secondarySize);
 
   private:
-    TCache()
-    {
-    }
+    TCache() {}
 
-    union TypeKey
-    {
+    union TypeKey {
         TypeKey(TBasicType basicType,
                 TPrecision precision,
                 TQualifier qualifier,
@@ -77,12 +69,9 @@ class TCache
         } components;
         uint64_t value;
 
-        bool operator < (const TypeKey &other) const
-        {
-            return value < other.value;
-        }
+        bool operator<(const TypeKey &other) const { return value < other.value; }
     };
-    typedef std::map<TypeKey, const TType*> TypeMap;
+    typedef std::map<TypeKey, const TType *> TypeMap;
 
     TypeMap mTypes;
     TPoolAllocator mAllocator;
