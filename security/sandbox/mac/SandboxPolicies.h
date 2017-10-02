@@ -52,7 +52,6 @@ static const char contentSandboxRules[] = R"(
   (define appPath (param "APP_PATH"))
   (define appBinaryPath (param "APP_BINARY_PATH"))
   (define appdir-path (param "APP_DIR"))
-  (define appTempDir (param "APP_TEMP_DIR"))
   (define hasProfileDir (param "HAS_SANDBOXED_PROFILE"))
   (define profileDir (param "PROFILE_DIR"))
   (define home-path (param "HOME_PATH"))
@@ -332,14 +331,6 @@ static const char contentSandboxRules[] = R"(
   (allow iokit-open
       (iokit-user-client-class "NVDVDContextTesla")
       (iokit-user-client-class "Gen6DVDContext"))
-
-  ; bug 1237847
-  (allow file-read* file-write-data
-    (subpath appTempDir))
-  (allow file-write-create
-    (require-all
-      (subpath appTempDir)
-      (vnode-type REGULAR-FILE)))
 
   ; Fonts
   (allow file-read*

@@ -165,8 +165,6 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.appBinaryPath.c_str());
       params.push_back("APP_DIR");
       params.push_back(aInfo.appDir.c_str());
-      params.push_back("APP_TEMP_DIR");
-      params.push_back(aInfo.appTempDir.c_str());
       params.push_back("PROFILE_DIR");
       params.push_back(aInfo.profileDir.c_str());
       params.push_back("HOME_PATH");
