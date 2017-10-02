@@ -3625,6 +3625,20 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
 #endif
 }
 
+TEST_F(JsepSessionTest, OfferWithBundleGroupNoTags)
+{
+  AddTracks(*mSessionOff, "audio,video");
+  AddTracks(*mSessionAns, "audio,video");
+
+  std::string offer = CreateOffer();
+  size_t i = offer.find("a=group:BUNDLE");
+  offer.insert(i, "a=group:BUNDLE\r\n");
+
+  SetLocalOffer(offer, CHECK_SUCCESS);
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+}
+
 static void
 Replace(const std::string& toReplace,
         const std::string& with,

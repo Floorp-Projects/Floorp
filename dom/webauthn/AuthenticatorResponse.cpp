@@ -58,7 +58,7 @@ AuthenticatorResponse::GetClientDataJSON(JSContext* aCx,
                                          JS::MutableHandle<JSObject*> aRetVal)
 {
   if (!mClientDataJSONCachedObj) {
-    mClientDataJSONCachedObj = mClientDataJSON.ToUint8Array(aCx);
+    mClientDataJSONCachedObj = mClientDataJSON.ToArrayBuffer(aCx);
   }
   aRetVal.set(mClientDataJSONCachedObj);
 }

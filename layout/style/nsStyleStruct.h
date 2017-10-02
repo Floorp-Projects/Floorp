@@ -2421,11 +2421,7 @@ public:
     return !(*this == aOther);
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StyleBasicShape);
-
 private:
-  ~StyleBasicShape() {}
-
   StyleBasicShapeType mType;
   StyleFillRule mFillRule;
 
@@ -2439,78 +2435,19 @@ private:
   nsStyleCorners mRadius;
 };
 
-struct StyleShapeSource
+struct StyleShapeSource final
 {
-  StyleShapeSource()
-    : mURL(nullptr)
-  {}
+  StyleShapeSource() = default;
 
-  StyleShapeSource(const StyleShapeSource& aSource)
-    : StyleShapeSource()
-  {
-    if (aSource.mType == StyleShapeSourceType::URL) {
-      SetURL(aSource.mURL);
-    } else if (aSource.mType == StyleShapeSourceType::Shape) {
-      SetBasicShape(aSource.mBasicShape, aSource.mReferenceBox);
-    } else if (aSource.mType == StyleShapeSourceType::Box) {
-      SetReferenceBox(aSource.mReferenceBox);
-    }
-  }
+  StyleShapeSource(const StyleShapeSource& aSource);
 
   ~StyleShapeSource()
   {
-    ReleaseRef();
   }
 
-  StyleShapeSource& operator=(const StyleShapeSource& aOther)
-  {
-    if (this == &aOther) {
-      return *this;
-    }
+  StyleShapeSource& operator=(const StyleShapeSource& aOther);
 
-    if (aOther.mType == StyleShapeSourceType::URL) {
-      SetURL(aOther.mURL);
-    } else if (aOther.mType == StyleShapeSourceType::Shape) {
-      SetBasicShape(aOther.mBasicShape, aOther.mReferenceBox);
-    } else if (aOther.mType == StyleShapeSourceType::Box) {
-      SetReferenceBox(aOther.mReferenceBox);
-    } else {
-      ReleaseRef();
-      mReferenceBox = StyleGeometryBox::NoBox;
-      mType = StyleShapeSourceType::None;
-    }
-    return *this;
-  }
-
-  bool operator==(const StyleShapeSource& aOther) const
-  {
-    return EqualsInternal<true>(aOther);
-  }
-
-  bool DefinitelyEquals(const StyleShapeSource& aOther) const
-  {
-    return EqualsInternal<false>(aOther);
-  }
-
-  template<bool aPrecise>
-  bool EqualsInternal(const StyleShapeSource& aOther) const
-  {
-    if (mType != aOther.mType) {
-      return false;
-    }
-
-    if (mType == StyleShapeSourceType::URL) {
-      return aPrecise ? mURL->Equals(*aOther.mURL)
-                      : mURL->DefinitelyEqualURIs(*aOther.mURL);
-    } else if (mType == StyleShapeSourceType::Shape) {
-      return *mBasicShape == *aOther.mBasicShape &&
-             mReferenceBox == aOther.mReferenceBox;
-    } else if (mType == StyleShapeSourceType::Box) {
-      return mReferenceBox == aOther.mReferenceBox;
-    }
-
-    return true;
-  }
+  bool operator==(const StyleShapeSource& aOther) const;
 
   bool operator!=(const StyleShapeSource& aOther) const
   {
@@ -2525,35 +2462,21 @@ struct StyleShapeSource
   css::URLValue* GetURL() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::URL, "Wrong shape source type!");
-    return mURL;
+    return mShapeImage
+      ? static_cast<css::URLValue*>(mShapeImage->GetURLValue())
+      : nullptr;
   }
 
-  bool SetURL(css::URLValue* aValue)
-  {
-    MOZ_ASSERT(aValue);
-    ReleaseRef();
-    mURL = aValue;
-    mURL->AddRef();
-    mType = StyleShapeSourceType::URL;
-    return true;
-  }
+  bool SetURL(css::URLValue* aValue);
 
-  StyleBasicShape* GetBasicShape() const
+  const UniquePtr<StyleBasicShape>& GetBasicShape() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::Shape, "Wrong shape source type!");
     return mBasicShape;
   }
 
-  void SetBasicShape(StyleBasicShape* aBasicShape,
-                     StyleGeometryBox aReferenceBox)
-  {
-    NS_ASSERTION(aBasicShape, "expected pointer");
-    ReleaseRef();
-    mBasicShape = aBasicShape;
-    mBasicShape->AddRef();
-    mReferenceBox = aReferenceBox;
-    mType = StyleShapeSourceType::Shape;
-  }
+  void SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
+                     StyleGeometryBox aReferenceBox);
 
   StyleGeometryBox GetReferenceBox() const
   {
@@ -2563,34 +2486,15 @@ struct StyleShapeSource
     return mReferenceBox;
   }
 
-  void SetReferenceBox(StyleGeometryBox aReferenceBox)
-  {
-    ReleaseRef();
-    mReferenceBox = aReferenceBox;
-    mType = StyleShapeSourceType::Box;
-  }
+  void SetReferenceBox(StyleGeometryBox aReferenceBox);
 
 private:
-  void ReleaseRef()
-  {
-    if (mType == StyleShapeSourceType::Shape) {
-      NS_ASSERTION(mBasicShape, "expected pointer");
-      mBasicShape->Release();
-    } else if (mType == StyleShapeSourceType::URL) {
-      NS_ASSERTION(mURL, "expected pointer");
-      mURL->Release();
-    }
-    // Both mBasicShape and mURL are pointers in a union. Nulling one of them
-    // nulls both of them.
-    mURL = nullptr;
-  }
-
   void* operator new(size_t) = delete;
 
-  union {
-    StyleBasicShape* mBasicShape;
-    css::URLValue* mURL;
-  };
+  void DoCopy(const StyleShapeSource& aOther);
+
+  mozilla::UniquePtr<StyleBasicShape> mBasicShape;
+  mozilla::UniquePtr<nsStyleImage> mShapeImage;
   StyleShapeSourceType mType = StyleShapeSourceType::None;
   StyleGeometryBox mReferenceBox = StyleGeometryBox::NoBox;
 };

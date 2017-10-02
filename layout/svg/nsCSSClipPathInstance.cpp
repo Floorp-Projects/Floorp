@@ -87,7 +87,7 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
     mTargetFrame->PresContext()->AppUnitsPerDevPixel();
   r = ToAppUnits(r.ToNearestPixels(appUnitsPerDevPixel), appUnitsPerDevPixel);
 
-  StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
+  const UniquePtr<StyleBasicShape>& basicShape = mClipPathStyle.GetBasicShape();
   switch (basicShape->GetShapeType()) {
     case StyleBasicShapeType::Circle:
       return CreateClipPathCircle(aDrawTarget, r);
@@ -110,7 +110,7 @@ already_AddRefed<Path>
 nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
                                             const nsRect& aRefBox)
 {
-  StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
+  const UniquePtr<StyleBasicShape>& basicShape = mClipPathStyle.GetBasicShape();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
@@ -130,7 +130,7 @@ already_AddRefed<Path>
 nsCSSClipPathInstance::CreateClipPathEllipse(DrawTarget* aDrawTarget,
                                              const nsRect& aRefBox)
 {
-  StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
+  const UniquePtr<StyleBasicShape>& basicShape = mClipPathStyle.GetBasicShape();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
@@ -150,7 +150,7 @@ already_AddRefed<Path>
 nsCSSClipPathInstance::CreateClipPathPolygon(DrawTarget* aDrawTarget,
                                              const nsRect& aRefBox)
 {
-  StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
+  const UniquePtr<StyleBasicShape>& basicShape = mClipPathStyle.GetBasicShape();
   FillRule fillRule = basicShape->GetFillRule() == StyleFillRule::Nonzero ?
                         FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(fillRule);
@@ -176,7 +176,7 @@ already_AddRefed<Path>
 nsCSSClipPathInstance::CreateClipPathInset(DrawTarget* aDrawTarget,
                                            const nsRect& aRefBox)
 {
-  StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
+  const UniquePtr<StyleBasicShape>& basicShape = mClipPathStyle.GetBasicShape();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 

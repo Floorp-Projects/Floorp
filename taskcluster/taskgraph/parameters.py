@@ -7,58 +7,85 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import json
+import time
 import yaml
-from mozbuild.util import ReadOnlyDict
+from datetime import datetime
+
+from mozbuild.util import ReadOnlyDict, memoize
+from mozversioncontrol import get_repository_object
+
+from . import GECKO
 
 
 class ParameterMismatch(Exception):
     """Raised when a parameters.yml has extra or missing parameters."""
 
 
+@memoize
+def get_head_ref():
+    return get_repository_object(GECKO).head_ref
+
+
 # Please keep this list sorted and in sync with taskcluster/docs/parameters.rst
-PARAMETER_NAMES = set([
-    'base_repository',
-    'build_date',
-    'filters',
-    'head_ref',
-    'head_repository',
-    'head_rev',
-    'include_nightly',
-    'level',
-    'message',
-    'moz_build_date',
-    'optimize_target_tasks',
-    'owner',
-    'project',
-    'pushdate',
-    'pushlog_id',
-    'release_history',
-    'target_tasks_method',
-    'try_mode',
-    'try_options',
-    'try_task_config',
-])
+# Parameters are of the form: {name: default}
+PARAMETERS = {
+    'base_repository': 'https://hg.mozilla.org/mozilla-unified',
+    'build_date': lambda: int(time.time()),
+    'filters': ['check_servo', 'target_tasks_method'],
+    'head_ref': get_head_ref,
+    'head_repository': 'https://hg.mozilla.org/mozilla-central',
+    'head_rev': get_head_ref,
+    'include_nightly': False,
+    'level': '3',
+    'message': '',
+    'moz_build_date': lambda: datetime.now().strftime("%Y%m%d%H%M%S"),
+    'optimize_target_tasks': True,
+    'owner': 'nobody@mozilla.com',
+    'project': 'mozilla-central',
+    'pushdate': lambda: int(time.time()),
+    'pushlog_id': '0',
+    'release_history': {},
+    'target_tasks_method': 'default',
+    'try_mode': None,
+    'try_options': None,
+    'try_task_config': None,
+}
 
 
 class Parameters(ReadOnlyDict):
     """An immutable dictionary with nicer KeyError messages on failure"""
+
+    def __init__(self, strict=True, **kwargs):
+        self.strict = strict
+
+        if not self.strict:
+            # apply defaults to missing parameters
+            for name, default in PARAMETERS.items():
+                if name not in kwargs:
+                    if callable(default):
+                        default = default()
+                    kwargs[name] = default
+
+        ReadOnlyDict.__init__(self, **kwargs)
+
     def check(self):
         names = set(self)
+        valid = set(PARAMETERS.keys())
         msg = []
 
-        missing = PARAMETER_NAMES - names
+        missing = valid - names
         if missing:
             msg.append("missing parameters: " + ", ".join(missing))
 
-        extra = names - PARAMETER_NAMES
-        if extra:
+        extra = names - valid
+        if extra and self.strict:
             msg.append("extra parameters: " + ", ".join(extra))
 
         if msg:
             raise ParameterMismatch("; ".join(msg))
 
     def __getitem__(self, k):
-        if k not in PARAMETER_NAMES:
+        if k not in PARAMETERS.keys():
             raise KeyError("no such parameter {!r}".format(k))
         try:
             return super(Parameters, self).__getitem__(k)
@@ -66,7 +93,7 @@ class Parameters(ReadOnlyDict):
             raise KeyError("taskgraph parameter {!r} not found".format(k))
 
 
-def load_parameters_file(filename):
+def load_parameters_file(filename, strict=True):
     """
     Load parameters from a path, url, decision task-id or project.
 
@@ -78,7 +105,7 @@ def load_parameters_file(filename):
     from taskgraph.util.taskcluster import get_artifact_url, find_task_id
 
     if not filename:
-        return Parameters()
+        return Parameters(strict=strict)
 
     try:
         # reading parameters from a local parameters.yml file
@@ -97,8 +124,8 @@ def load_parameters_file(filename):
         f = urllib.urlopen(filename)
 
     if filename.endswith('.yml'):
-        return Parameters(**yaml.safe_load(f))
+        return Parameters(strict=strict, **yaml.safe_load(f))
     elif filename.endswith('.json'):
-        return Parameters(**json.load(f))
+        return Parameters(strict=strict, **json.load(f))
     else:
         raise TypeError("Parameters file `{}` is not JSON or YAML".format(filename))

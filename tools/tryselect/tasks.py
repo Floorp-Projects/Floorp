@@ -62,7 +62,7 @@ def generate_tasks(params=None, full=False):
 
     print("Task configuration changed, generating {}".format(attr.replace('_', ' ')))
     try:
-        params = load_parameters_file(params)
+        params = load_parameters_file(params, strict=False)
         params.check()
     except ParameterMismatch as e:
         print(PARAMETER_MISMATCH.format(e.args[0]))

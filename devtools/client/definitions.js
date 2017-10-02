@@ -100,7 +100,7 @@ Tools.webConsole = {
   accesskey: l10n("webConsoleCmd.accesskey"),
   ordinal: 2,
   oldWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xul",
-  newWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xhtml",
+  newWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.html",
   icon: "chrome://devtools/skin/images/tool-webconsole.svg",
   invertIconForDarkTheme: true,
   label: l10n("ToolboxTabWebconsole.label"),

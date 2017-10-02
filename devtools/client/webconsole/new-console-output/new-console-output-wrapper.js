@@ -88,7 +88,7 @@ NewConsoleOutputWrapper.prototype = {
         this.jsterm.hud.owner.openLink(url);
       },
       createElement: nodename => {
-        return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);
+        return this.document.createElement(nodename);
       },
     };
 

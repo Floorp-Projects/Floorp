@@ -515,7 +515,7 @@
           </menulist>
         </hbox>
       </hbox>
-      <spacer flex="1" />
+
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox>
         <button id="advancedFonts"

@@ -1,8 +1,9 @@
 %include build/sparse-profiles/mach
 
 [include]
-# This file is read as part of validating the taskgraph.
-path:browser/locales/all-locales
+# These files are read as part of generating the taskgraph.
+path:browser/locales/l10n-changesets.json
+path:mobile/locales/l10n-changesets.json
 
 # Lots of random files in here are read. Just pull in the whole thing.
 path:build/
@@ -11,9 +12,6 @@ path:build/
 # processed in Files() reading mode in moz.build files.
 path:layout/tools/reftest/
 path:testing/web-platform/tests/tools/
-
-# This file is read as part of validating the taskgraph.
-path:mobile/locales/l10n-changesets.json
 
 # The main meat of this profile.
 path:taskcluster/
