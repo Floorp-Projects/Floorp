@@ -132,9 +132,8 @@ l10n_description_schema = Schema({
 transforms = TransformSequence()
 
 
-def _parse_locales_file(locales_file, platform=None):
+def _parse_locales_file(locales_file, platform):
     """ Parse the passed locales file for a list of locales.
-        If platform is unset matches all platforms.
     """
     locales = []
 
@@ -145,7 +144,7 @@ def _parse_locales_file(locales_file, platform=None):
             locales = {
                 locale: data['revision']
                 for locale, data in all_locales.items()
-                if 'android' in data['platforms']
+                if platform in data['platforms']
             }
         else:
             all_locales = f.read().split()
@@ -264,7 +263,9 @@ def handle_keyed_by(config, jobs):
 @transforms.add
 def all_locales_attribute(config, jobs):
     for job in jobs:
-        locales_with_changesets = _parse_locales_file(job["locales-file"])
+        locales_platform = job['attributes']['build_platform'].rstrip("-nightly")
+        locales_with_changesets = _parse_locales_file(job["locales-file"],
+                                                      platform=locales_platform)
         locales_with_changesets = _remove_locales(locales_with_changesets,
                                                   to_remove=job['ignore-locales'])
 
@@ -292,7 +293,7 @@ def chunk_locales(config, jobs):
                 )
                 chunked['mozharness']['options'] = chunked['mozharness'].get('options', [])
                 # chunkify doesn't work with dicts
-                locales_with_changesets_as_list = locales_with_changesets.items()
+                locales_with_changesets_as_list = sorted(locales_with_changesets.items())
                 chunked_locales = chunkify(locales_with_changesets_as_list, this_chunk, chunks)
                 chunked['mozharness']['options'].extend([
                     'locale={}:{}'.format(locale, changeset)
@@ -312,7 +313,7 @@ def chunk_locales(config, jobs):
             job['mozharness']['options'] = job['mozharness'].get('options', [])
             job['mozharness']['options'].extend([
                 'locale={}:{}'.format(locale, changeset)
-                for locale, changeset in locales_with_changesets.items()
+                for locale, changeset in sorted(locales_with_changesets.items())
             ])
             yield job
 

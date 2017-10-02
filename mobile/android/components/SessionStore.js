@@ -523,7 +523,6 @@ SessionStore.prototype = {
         }
         break;
       }
-      case "change":
       case "input":
       case "DOMAutoComplete": {
         let browser = aEvent.currentTarget;
@@ -631,7 +630,6 @@ SessionStore.prototype = {
     aBrowser.addEventListener("AboutReaderContentReady", this, true);
 
     // Use a combination of events to watch for text data changes
-    aBrowser.addEventListener("change", this, true);
     aBrowser.addEventListener("input", this, true);
     aBrowser.addEventListener("DOMAutoComplete", this, true);
 
@@ -660,7 +658,6 @@ SessionStore.prototype = {
     aBrowser.removeEventListener("load", this, true);
     aBrowser.removeEventListener("pageshow", this, true);
     aBrowser.removeEventListener("AboutReaderContentReady", this, true);
-    aBrowser.removeEventListener("change", this, true);
     aBrowser.removeEventListener("input", this, true);
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
     aBrowser.removeEventListener("scroll", this, true);

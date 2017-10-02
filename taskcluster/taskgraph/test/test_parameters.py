@@ -6,13 +6,18 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from taskgraph.parameters import Parameters, load_parameters_file, PARAMETER_NAMES
+from taskgraph.parameters import (
+    Parameters,
+    ParameterMismatch,
+    load_parameters_file,
+    PARAMETERS,
+)
 from mozunit import main, MockedOpen
 
 
 class TestParameters(unittest.TestCase):
 
-    vals = {n: n for n in PARAMETER_NAMES}
+    vals = {n: n for n in PARAMETERS.keys()}
 
     def test_Parameters_immutable(self):
         p = Parameters(**self.vals)
@@ -40,11 +45,17 @@ class TestParameters(unittest.TestCase):
 
     def test_Parameters_check_missing(self):
         p = Parameters()
-        self.assertRaises(Exception, lambda: p.check())
+        self.assertRaises(ParameterMismatch, lambda: p.check())
+
+        p = Parameters(strict=False)
+        p.check()  # should not raise
 
     def test_Parameters_check_extra(self):
         p = Parameters(xyz=10, **self.vals)
-        self.assertRaises(Exception, lambda: p.check())
+        self.assertRaises(ParameterMismatch, lambda: p.check())
+
+        p = Parameters(strict=False, xyz=10, **self.vals)
+        p.check()  # should not raise
 
     def test_load_parameters_file_yaml(self):
         with MockedOpen({"params.yml": "some: data\n"}):

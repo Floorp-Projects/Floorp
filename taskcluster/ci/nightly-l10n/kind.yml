@@ -27,7 +27,7 @@ job-template:
          android-api-16-nightly: Single Locale Repack
    locales-file:
       by-build-platform:
-         default: browser/locales/all-locales
+         default: browser/locales/l10n-changesets.json
          android-api-16-nightly: mobile/locales/l10n-changesets.json
    locales-per-chunk: 2
    run-on-projects: ['release']

@@ -1993,11 +1993,12 @@ Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* aShape, ServoBundl
   aShape->SetURL(url.get());
 }
 
-mozilla::StyleBasicShape*
-Gecko_NewBasicShape(mozilla::StyleBasicShapeType aType)
+void
+Gecko_NewBasicShape(mozilla::StyleShapeSource* aShape,
+                    mozilla::StyleBasicShapeType aType)
 {
-  RefPtr<StyleBasicShape> ptr = new mozilla::StyleBasicShape(aType);
-  return ptr.forget().take();
+  aShape->SetBasicShape(MakeUnique<mozilla::StyleBasicShape>(aType),
+                        StyleGeometryBox::NoBox);
 }
 
 void

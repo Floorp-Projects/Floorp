@@ -4158,7 +4158,7 @@ StyleShapeSourceToCSSArray(const StyleShapeSource& aShapeSource,
   MOZ_ASSERT(aResult->Count() == 2,
              "Expected array to be presized for a function and the sizing-box");
 
-  const StyleBasicShape* shape = aShapeSource.GetBasicShape();
+  const UniquePtr<StyleBasicShape>& shape = aShapeSource.GetBasicShape();
   nsCSSKeyword functionName = shape->GetShapeTypeName();
   RefPtr<nsCSSValue::Array> functionArray;
   switch (shape->GetShapeType()) {

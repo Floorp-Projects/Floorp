@@ -82,15 +82,19 @@ function string2buffer(str) {
 
 function buffer2string(buf) {
   let str = "";
-  buf.map(x => str += String.fromCharCode(x));
+  if (!(buf.constructor === Uint8Array)) {
+    buf = new Uint8Array(buf);
+  }
+  buf.map(function(x){ return str += String.fromCharCode(x) });
   return str;
 }
 
 function bytesToBase64(u8a){
   let CHUNK_SZ = 0x8000;
   let c = [];
-  for (let i = 0; i < u8a.length; i += CHUNK_SZ) {
-    c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
+  let array = new Uint8Array(u8a);
+  for (let i = 0; i < array.length; i += CHUNK_SZ) {
+    c.push(String.fromCharCode.apply(null, array.subarray(i, i + CHUNK_SZ)));
   }
   return window.btoa(c.join(""));
 }
@@ -134,25 +138,25 @@ function webAuthnDecodeCBORAttestation(aCborAttBuf) {
   let attObj = CBOR.decode(aCborAttBuf);
   console.log(":: Attestation CBOR Object ::");
   if (!("authData" in attObj && "fmt" in attObj && "attStmt" in attObj)) {
-    throw "Invalid CBOR Attestation Object";
+    return Promise.reject("Invalid CBOR Attestation Object");
   }
   if (!("sig" in attObj.attStmt && "x5c" in attObj.attStmt)) {
-    throw "Invalid CBOR Attestation Statement";
+    return Promise.reject("Invalid CBOR Attestation Statement");
   }
 
-  return webAuthnDecodeAttestation(attObj.authData)
-  .then(function (aAttestationObj) {
-    aAttestationObj.attestationObject = attObj;
-    return Promise.resolve(aAttestationObj);
+  return webAuthnDecodeAuthDataArray(new Uint8Array(attObj.authData))
+  .then(function (aAuthDataObj) {
+    attObj.authDataObj = aAuthDataObj;
+    return Promise.resolve(attObj);
   });
 }
 
-function webAuthnDecodeAttestation(aAuthData) {
+function webAuthnDecodeAuthDataArray(aAuthData) {
   let rpIdHash = aAuthData.slice(0, 32);
   let flags = aAuthData.slice(32, 33);
   let counter = aAuthData.slice(33, 37);
 
-  console.log(":: Attestation Object Data ::");
+  console.log(":: Authenticator Data ::");
   console.log("RP ID Hash: " + hexEncode(rpIdHash));
   console.log("Counter: " + hexEncode(counter) + " Flags: " + flags);
 
@@ -166,7 +170,7 @@ function webAuthnDecodeAttestation(aAuthData) {
   }
 
   if (aAuthData.length < 38) {
-    throw "Attestation Data flag was set, but not enough data passed in!";
+    return Promise.reject("Authenticator Data flag was set, but not enough data passed in!");
   }
 
   let attData = {};
@@ -174,16 +178,16 @@ function webAuthnDecodeAttestation(aAuthData) {
   attData.credIdLen = (aAuthData[53] << 8) + aAuthData[54];
   attData.credId = aAuthData.slice(55, 55 + attData.credIdLen);
 
-  console.log(":: Attestation Data ::");
+  console.log(":: Authenticator Data ::");
   console.log("AAGUID: " + hexEncode(attData.aaguid));
 
   cborPubKey = aAuthData.slice(55 + attData.credIdLen);
   var pubkeyObj = CBOR.decode(cborPubKey.buffer);
   if (!("alg" in pubkeyObj && "x" in pubkeyObj && "y" in pubkeyObj)) {
-    throw "Invalid CBOR Public Key Object";
+    return Promise.reject("Invalid CBOR Public Key Object");
   }
   if (pubkeyObj.alg != "ES256") {
-    throw "Unexpected public key algorithm";
+    return Promise.reject("Unexpected public key algorithm");
   }
 
   let pubKeyBytes = assemblePublicKeyBytesData(pubkeyObj.x, pubkeyObj.y);
@@ -249,20 +253,20 @@ function assemblePublicKeyBytesData(xCoord, yCoord) {
 
 function assembleSignedData(appParam, flags, counter, challengeParam) {
   let signedData = new Uint8Array(32 + 1 + 4 + 32);
-  appParam.map((x, i) => signedData[0 + i] = x);
-  signedData[32] = flags;
-  counter.map((x, i) => signedData[33 + i] = x);
-  challengeParam.map((x, i) => signedData[37 + i] = x);
+  new Uint8Array(appParam).map((x, i) => signedData[0 + i] = x);
+  signedData[32] = new Uint8Array(flags)[0];
+  new Uint8Array(counter).map((x, i) => signedData[33 + i] = x);
+  new Uint8Array(challengeParam).map((x, i) => signedData[37 + i] = x);
   return signedData;
 }
 
 function assembleRegistrationSignedData(appParam, challengeParam, keyHandle, pubKey) {
   let signedData = new Uint8Array(1 + 32 + 32 + keyHandle.length + 65);
   signedData[0] = 0x00;
-  appParam.map((x, i) => signedData[1 + i] = x);
-  challengeParam.map((x, i) => signedData[33 + i] = x);
-  keyHandle.map((x, i) => signedData[65 + i] = x);
-  pubKey.map((x, i) => signedData[65 + keyHandle.length + i] = x);
+  new Uint8Array(appParam).map((x, i) => signedData[1 + i] = x);
+  new Uint8Array(challengeParam).map((x, i) => signedData[33 + i] = x);
+  new Uint8Array(keyHandle).map((x, i) => signedData[65 + i] = x);
+  new Uint8Array(pubKey).map((x, i) => signedData[65 + keyHandle.length + i] = x);
   return signedData;
 }
 
@@ -279,7 +283,12 @@ function sanitizeSigArray(arr) {
 }
 
 function verifySignature(key, data, derSig) {
-  let sigAsn1 = org.pkijs.fromBER(derSig.buffer);
+  if (derSig.byteLength < 70) {
+    console.log("bad sig: " + hexEncode(new Uint8Array(derSig)))
+    return Promise.reject("Invalid signature length: " + derSig.byteLength);
+  }
+
+  let sigAsn1 = org.pkijs.fromBER(derSig);
   let sigR = new Uint8Array(sigAsn1.result.value_block.value[0].value_block.value_hex);
   let sigS = new Uint8Array(sigAsn1.result.value_block.value[1].value_block.value_hex);
 
