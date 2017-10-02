@@ -182,7 +182,7 @@ public class FxAccountStatusFragment
     tabsPreference.setOnPreferenceClickListener(this);
     passwordsPreference.setOnPreferenceClickListener(this);
 
-    syncOverMeteredPreference = (SwitchPreference) ensureFindPreference(FxAccountSyncAdapter.PREFS_SYNC_METERED);
+    syncOverMeteredPreference = (SwitchPreference) ensureFindPreference(FxAccountSyncAdapter.PREFS_SYNC_RESTRICT_METERED);
     syncOverMeteredPreference.setOnPreferenceChangeListener(this);
 
     deviceNamePreference = (EditTextPreference) ensureFindPreference("device_name");
@@ -951,7 +951,7 @@ public class FxAccountStatusFragment
 
     if (preference == syncOverMeteredPreference) {
       try {
-        fxAccount.getSyncPrefs().edit().putBoolean(FxAccountSyncAdapter.PREFS_SYNC_METERED, (Boolean) newValue).apply();
+        fxAccount.getSyncPrefs().edit().putBoolean(FxAccountSyncAdapter.PREFS_SYNC_RESTRICT_METERED, (Boolean) newValue).apply();
       } catch (Exception e) {
         Logger.error(LOG_TAG, "Failed to save the new for syncMeteredPreference");
       }
