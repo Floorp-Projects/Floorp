@@ -461,7 +461,7 @@ var BrowserPageActions = {
   },
 
   doCommandForAction(action, event, buttonNode) {
-    if (event.type == "click" && event.button != 0) {
+    if (event && event.type == "click" && event.button != 0) {
       return;
     }
     PageActions.logTelemetry("used", action, buttonNode);
