@@ -181,23 +181,18 @@
   flex-shrink: 0;
 }
 
-/* Don't apply any filter to non-invertable command button icons */
-.command-button:not(.command-button-invertable),
-/* icon-invertable-light-theme icons are white, so do not invert them for the dark theme */
-.theme-dark .devtools-tab.icon-invertable-light-theme > img,
-/* Since "highlighted" icons are green, we should omit the filter */
-.devtools-tab.icon-invertable.highlighted:not(.selected) > img {
-  filter: none;
-}
-
 .devtools-tab > label {
   white-space: nowrap;
   margin: 0 4px;
 }
 
-/* Apply selected icon filter to `invertable` icons */
-.devtools-tab.selected.icon-invertable > img {
-  filter: var(--theme-icon-selected-filter) !important;
+.devtools-tab > img {
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
+}
+
+.devtools-tab.selected > img {
+  fill: var(--theme-toolbar-selected-color);
 }
 
 .devtools-tab:not(.highlighted) > .highlighted-icon,

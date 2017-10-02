@@ -180,10 +180,9 @@
   background: var(--theme-selection-background);
 }
 
-/* Invert the colors of certain light theme images for displaying
- * inside of the dark theme.
+/*
+ * Apply the default fill color to toolbar icons
  */
-.devtools-tab.icon-invertable > img,
 .devtools-toolbarbutton > image,
 .devtools-button::before,
 .scrollbutton-up > .toolbarbutton-icon,
@@ -192,7 +191,8 @@
 #canvas-debugging-empty-notice-button .button-icon,
 #toggle-breakpoints[checked] > image,
 .event-tooltip-debugger-icon {
-  filter: var(--theme-icon-filter);
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
 }
 
 .hidden-labels-box:not(.visible) > label,
