@@ -7,6 +7,10 @@
 #ifndef mozilla_RangeBoundary_h
 #define mozilla_RangeBoundary_h
 
+#include "nsCOMPtr.h"
+#include "nsIContent.h"
+#include "mozilla/Maybe.h"
+
 namespace mozilla {
 
 // This class will maintain a reference to the child immediately
@@ -203,6 +207,27 @@ public:
     return Offset() <= Container()->Length();
   }
 
+  bool
+  IsStartOfContainer() const
+  {
+    // We're at the first point in the container if we don't have a reference,
+    // and our offset is 0. If we don't have a Ref, we should already have an
+    // offset, so we can just directly fetch it.
+    return !Ref() && mOffset.value() == 0;
+  }
+
+  bool
+  IsEndOfContainer() const
+  {
+    // We're at the last point in the container if Ref is a pointer to the last
+    // child in Container(), or our Offset() is the same as the length of our
+    // container. If we don't have a Ref, then we should already have an offset,
+    // so we can just directly fetch it.
+    return Ref()
+      ? !Ref()->GetNextSibling()
+      : mOffset.value() == Container()->Length();
+  }
+
   // Convenience methods for switching between the two types
   // of RangeBoundary.
   RangeBoundaryBase<nsINode*, nsIContent*>
@@ -225,6 +250,12 @@ public:
   {
     return mParent == aOther.mParent &&
       (mRef ? mRef == aOther.mRef : mOffset == aOther.mOffset);
+  }
+
+  template<typename A, typename B>
+  bool operator!=(const RangeBoundaryBase<A, B>& aOther) const
+  {
+    return !(*this == aOther);
   }
 
 private:
