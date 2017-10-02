@@ -634,6 +634,7 @@ ConvertKeyframeSequence(JSContext* aCx,
 {
   JS::Rooted<JS::Value> value(aCx);
   nsCSSParser parser(aDocument->CSSLoader());
+  ErrorResult parseEasingResult;
 
   for (;;) {
     bool done;
@@ -671,13 +672,6 @@ ConvertKeyframeSequence(JSContext* aCx,
       keyframe->mComposite.emplace(keyframeDict.mComposite.Value());
     }
 
-    ErrorResult rv;
-    keyframe->mTimingFunction =
-      TimingParams::ParseEasing(keyframeDict.mEasing, aDocument, rv);
-    if (rv.MaybeSetPendingException(aCx)) {
-      return false;
-    }
-
     // Look for additional property-values pairs on the object.
     nsTArray<PropertyValuesPair> propertyValuePairs;
     if (value.isObject()) {
@@ -688,6 +682,18 @@ ConvertKeyframeSequence(JSContext* aCx,
                                   propertyValuePairs)) {
         return false;
       }
+    }
+
+    if (!parseEasingResult.Failed()) {
+      keyframe->mTimingFunction =
+        TimingParams::ParseEasing(keyframeDict.mEasing,
+                                  aDocument,
+                                  parseEasingResult);
+      // Even if the above fails, we still need to continue reading off all the
+      // properties since checking the validity of easing should be treated as
+      // a separate step that happens *after* all the other processing in this
+      // loop since (since it is never likely to be handled by WebIDL unlike the
+      // rest of this loop).
     }
 
     for (PropertyValuesPair& pair : propertyValuePairs) {
@@ -714,6 +720,11 @@ ConvertKeyframeSequence(JSContext* aCx,
       }
 #endif
     }
+  }
+
+  // Throw any errors we encountered while parsing 'easing' properties.
+  if (parseEasingResult.MaybeSetPendingException(aCx)) {
+    return false;
   }
 
   return true;
@@ -1386,12 +1397,6 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
     composite.emplace(keyframeDict.mComposite.Value());
   }
 
-  Maybe<ComputedTimingFunction> easing =
-    TimingParams::ParseEasing(keyframeDict.mEasing, aDocument, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
   // Get all the property--value-list pairs off the object.
   JS::Rooted<JSObject*> object(aCx, &aValue.toObject());
   nsTArray<PropertyValuesPair> propertyValuesPairs;
@@ -1399,6 +1404,15 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
                               aDocument->GetStyleBackendType(),
                               propertyValuesPairs)) {
     aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Parse the easing property. We need to do this after reading off the
+  // property values since this is conceptually a separate step that happens
+  // after the WebIDL-like processing.
+  Maybe<ComputedTimingFunction> easing =
+    TimingParams::ParseEasing(keyframeDict.mEasing, aDocument, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
