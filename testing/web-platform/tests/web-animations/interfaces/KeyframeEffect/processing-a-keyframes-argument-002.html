@@ -12,7 +12,7 @@
 <script>
 'use strict';
 
-test(function() {
+test(() => {
   for (const [easing, expected] of gEasingParsingTests) {
     const effect = new KeyframeEffect(target, {
       left: ['10px', '20px'],
@@ -24,7 +24,7 @@ test(function() {
 }, 'easing values are parsed correctly when set on a property-indexed'
    + ' keyframe');
 
-test(function() {
+test(() => {
   for (const [easing, expected] of gEasingParsingTests) {
     const effect = new KeyframeEffect(target, [
       { offset: 0, left: '10px', easing: easing },
@@ -35,7 +35,7 @@ test(function() {
   }
 }, 'easing values are parsed correctly when using a keyframe sequence');
 
-test(function() {
+test(() => {
   for (const invalidEasing of gInvalidEasings) {
     assert_throws(new TypeError, () => {
       new KeyframeEffect(target, { easing: invalidEasing });
@@ -44,7 +44,7 @@ test(function() {
 }, 'Invalid easing values are correctly rejected when set on a property-'
    + 'indexed keyframe');
 
-test(function() {
+test(() => {
   for (const invalidEasing of gInvalidEasings) {
     assert_throws(new TypeError, () => {
       new KeyframeEffect(target, [{ easing: invalidEasing }]);
@@ -53,7 +53,7 @@ test(function() {
 }, 'Invalid easing values are correctly rejected when using a keyframe'
    + ' sequence');
 
-test(function(t) {
+test(() => {
   let propAccessCount = 0;
   const keyframe = {};
   const addProp = prop => {
@@ -73,7 +73,7 @@ test(function(t) {
     'All properties were read before throwing the easing error');
 }, 'Errors from invalid easings on a property-indexed keyframe are thrown after reading all properties');
 
-test(function(t) {
+test(() => {
   let propAccessCount = 0;
 
   const addProp = (keyframe, prop) => {
