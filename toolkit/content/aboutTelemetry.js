@@ -1275,6 +1275,8 @@ var Histogram = {
 
 var Search = {
 
+  HASH_SEARCH: "search=",
+
   // A list of ids of sections that do not support search.
   blacklist: [
     "raw-payload-section"
@@ -1419,6 +1421,8 @@ var Search = {
       }
     }
 
+    changeUrlSearch(text);
+
     if (!sectionParam) { // If we are not searching in all section.
       this.updateNoResults(text, noSearchResults);
     }
@@ -1452,6 +1456,7 @@ var Search = {
   },
 
   homeSearch(text) {
+    changeUrlSearch(text);
     if (text === "") {
       this.resetHome();
       return;
@@ -1918,6 +1923,29 @@ function changeUrlPath(selectedSection, subSection) {
 }
 
 /**
+ * Change the url according to the current search text
+ */
+function changeUrlSearch(searchText) {
+  let currentHash = window.location.hash;
+  let hashWithoutSearch = currentHash.split(Search.HASH_SEARCH)[0];
+  let hash = "";
+
+  if (!currentHash && !searchText) {
+    return;
+  }
+  if (!currentHash.includes(Search.HASH_SEARCH) && hashWithoutSearch) {
+    hashWithoutSearch += "_";
+  }
+  if (searchText) {
+    hash = hashWithoutSearch + Search.HASH_SEARCH + searchText.replace(/ /g, "+");
+  } else if (hashWithoutSearch) {
+    hash = hashWithoutSearch.slice(0, hashWithoutSearch.length - 1);
+  }
+
+  window.location.hash = hash;
+}
+
+/**
  * Change the section displayed
  */
 function show(selected) {
@@ -2072,10 +2100,10 @@ function setupListeners() {
   });
 }
 
-// Restore sections states
-function urlStateRestore() {
-  if (window.location.hash) {
-    let section = window.location.hash.slice(1).replace("-tab", "-section");
+// Restores the sections states
+function urlSectionRestore(hash) {
+  if (hash) {
+    let section = hash.replace("-tab", "-section");
     let subsection = section.split("_")[1];
     section = section.split("_")[0];
     let category = document.querySelector(".category[value=" + section + "]");
@@ -2087,6 +2115,24 @@ function urlStateRestore() {
         showSubSection(subcategory);
       }
     }
+  }
+}
+
+// Restore sections states and search terms
+function urlStateRestore() {
+  let hash = window.location.hash;
+  let searchQuery = "";
+  if (hash) {
+    hash = hash.slice(1);
+    if (hash.includes(Search.HASH_SEARCH)) {
+      searchQuery = hash.split(Search.HASH_SEARCH)[1].replace(/[+]/g, " ");
+      hash = hash.split(Search.HASH_SEARCH)[0];
+    }
+    urlSectionRestore(hash);
+  }
+  if (searchQuery) {
+    let search = document.getElementById("search");
+    search.value = searchQuery;
   }
 }
 

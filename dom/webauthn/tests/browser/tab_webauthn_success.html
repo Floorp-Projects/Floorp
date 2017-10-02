@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Full-run test for MakeCredential/GetAssertion for W3C Web Authentication</title>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="../pkijs/common.js"></script>
+  <script type="text/javascript" src="../pkijs/asn1.js"></script>
+  <script type="text/javascript" src="../pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="../pkijs/x509_simpl.js"></script>
+  <script type="text/javascript" src="../cbor/cbor.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<h1>Full-run test for MakeCredential/GetAssertion for W3C Web Authentication</h1>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265472">Mozilla Bug 1265472</a>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+let gCredentialChallenge = new Uint8Array(16);
+window.crypto.getRandomValues(gCredentialChallenge);
+let gAssertionChallenge = new Uint8Array(16);
+window.crypto.getRandomValues(gAssertionChallenge);
+
+// the WebAuthn browser chrome tests watch for an element 'result' to appear in the DOM
+function signalCompletion(aText) {
+  console.log(aText)
+  let result = document.createElement('h1');
+  result.id = "result";
+  result.textContent = aText;
+  document.body.append(result);
+}
+
+let gState = {};
+let makeCredentialOptions = {
+  rp: {id: document.domain, name: "none", icon: "none"},
+  user: {id: "none", name: "none", icon: "none", displayName: "none"},
+  challenge: gCredentialChallenge,
+  timeout: 5000, // the minimum timeout is actually 15 seconds
+  parameters: [{type: "public-key", algorithm: "ES256"}],
+};
+
+navigator.credentials.create({publicKey: makeCredentialOptions})
+.then(function (aNewCredentialInfo) {
+  gState.credential = aNewCredentialInfo;
+
+  return webAuthnDecodeCBORAttestation(aNewCredentialInfo.response.attestationObject);
+})
+.then(function testAssertion(aCredInfo) {
+  gState.publicKeyHandle = aCredInfo.authDataObj.publicKeyHandle;
+
+  let newCredential = {
+    type: "public-key",
+    id: new Uint8Array(gState.credential.rawId),
+    transports: ["usb"],
+  }
+
+  let publicKeyCredentialRequestOptions = {
+    challenge: gAssertionChallenge,
+    timeout: 5000, // the minimum timeout is actually 15 seconds
+    rpId: document.domain,
+    allowList: [newCredential]
+  };
+
+  return navigator.credentials.get({publicKey: publicKeyCredentialRequestOptions});
+})
+.then(function(aAssertion) {
+  let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
+
+  gState.assertion = aAssertion;
+
+  return webAuthnDecodeAuthDataArray(new Uint8Array(aAssertion.response.authenticatorData));
+})
+.then(function(aAttestationObj) {
+  gState.attestation = aAttestationObj;
+
+  // Make sure the RP ID hash matches what we calculate.
+  return crypto.subtle.digest("SHA-256", string2buffer(document.domain))
+  .then(function(calculatedRpIdHash) {
+    let calcHashStr = bytesToBase64UrlSafe(new Uint8Array(calculatedRpIdHash));
+    let providedHashStr = bytesToBase64UrlSafe(new Uint8Array(aAttestationObj.authDataObj.rpIdHash));
+
+    if (calcHashStr != providedHashStr) {
+      return Promise.reject("Calculated RP ID hash must match what the browser derived.");
+    }
+    return Promise.resolve(aAttestationObj);
+  });
+})
+.then(function(aAttestation) {
+  if (new Uint8Array(aAttestation.flags) != flag_TUP) {
+    return Promise.reject("Assertion's user presence byte not set correctly.");
+  }
+
+  let clientDataJSON = gState.assertion.response.clientDataJSON;
+  return deriveAppAndChallengeParam(document.domain, clientDataJSON, aAttestation);
+})
+.then(function(aParams) {
+  return assembleSignedData(aParams.appParam, aParams.attestation.flags,
+                            aParams.attestation.counter, aParams.challengeParam);
+})
+.then(function(aSignedData) {
+  let signature = gState.assertion.response.signature;
+  console.log(gState.publicKeyHandle, aSignedData, signature);
+  return verifySignature(gState.publicKeyHandle, aSignedData, new Uint8Array(signature));
+})
+.then(function(aSigVerifyResult) {
+  signalCompletion("Signing signature verified: " + aSigVerifyResult);
+  gState = {};
+})
+.catch(function(aReason) {
+  signalCompletion("Failure: " + aReason);
+  gState = {};
+});
+
+</script>
+
+</body>
+</html>

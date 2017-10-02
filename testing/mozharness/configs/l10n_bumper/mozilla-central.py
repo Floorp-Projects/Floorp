@@ -1,12 +1,17 @@
-MULTI_REPO = "mozilla-central"
-config = {
-    "log_name": "l10n_bumper",
+import sys
 
-    "exes": {
+MULTI_REPO = "mozilla-central"
+EXES = {}
+if sys.platform.startswith("linux"):
+    EXES = {
         # Get around the https warnings
         "hg": ["/usr/local/bin/hg", "--config", "web.cacerts=/etc/pki/tls/certs/ca-bundle.crt"],
         "hgtool.py": ["/usr/local/bin/hgtool.py"],
-    },
+    }
+
+config = {
+    "log_name": "l10n_bumper",
+    "exes": EXES,
 
     "gecko_pull_url": "https://hg.mozilla.org/{}".format(MULTI_REPO),
     "gecko_push_url": "ssh://hg.mozilla.org/{}".format(MULTI_REPO),
@@ -28,6 +33,19 @@ config = {
         }, {
             "platforms": ["android-multilocale"],
             "path": "mobile/android/locales/maemo-locales"
+        }],
+    }, {
+        "path": "browser/locales/central-changesets.json",
+        "format": "json",
+        "name": "Firefox l10n changesets",
+        "ignore_config": {
+            "ja": ["macosx64"],
+            "ja-JP-mac": ["linux", "linux64", "win32", "win64"],
+        },
+        "platform_configs": [{
+            "platforms": ["linux64", "linux", "macosx64",
+                          "win32", "win64"],
+            "path": "browser/locales/all-locales",
         }],
     }],
 }

@@ -774,7 +774,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
     mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeBoxRect, aWM,
                                            aContainerSize);
   } else if (shapeOutside.GetType() == StyleShapeSourceType::Shape) {
-    StyleBasicShape* const basicShape = shapeOutside.GetBasicShape();
+    const UniquePtr<StyleBasicShape>& basicShape = shapeOutside.GetBasicShape();
 
     switch (basicShape->GetShapeType()) {
       case StyleBasicShapeType::Polygon:
@@ -961,7 +961,7 @@ nsFloatManager::ShapeInfo::CreateShapeBox(
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateInset(
-  const StyleBasicShape* aBasicShape,
+  const UniquePtr<StyleBasicShape>& aBasicShape,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -993,7 +993,7 @@ nsFloatManager::ShapeInfo::CreateInset(
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
-  const StyleBasicShape* aBasicShape,
+  const UniquePtr<StyleBasicShape>& aBasicShape,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -1029,7 +1029,7 @@ nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreatePolygon(
-  const StyleBasicShape* aBasicShape,
+  const UniquePtr<StyleBasicShape>& aBasicShape,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
