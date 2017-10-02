@@ -30,6 +30,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.process.GeckoProcessManager;
+import org.mozilla.gecko.SysInfo;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IOUtils;
@@ -69,6 +70,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -1811,5 +1813,39 @@ public class GeckoAppShell
     @WrapForJNI
     private static int startGeckoServiceChildProcess(String type, String[] args, int crashFd, int ipcFd) {
         return GeckoProcessManager.getInstance().start(type, args, crashFd, ipcFd);
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    public static int getAudioOutputFramesPerBuffer() {
+        if (SysInfo.getVersion() < 17) {
+            return 0;
+        }
+        final AudioManager am = (AudioManager)getApplicationContext()
+                                .getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) {
+            return 0;
+        }
+        final String prop = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+        if (prop == null) {
+            return 0;
+        }
+        return Integer.parseInt(prop);
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    public static int getAudioOutputSampleRate() {
+        if (SysInfo.getVersion() < 17) {
+            return 0;
+        }
+        final AudioManager am = (AudioManager)getApplicationContext()
+                                .getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) {
+            return 0;
+        }
+        final String prop = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+        if (prop == null) {
+            return 0;
+        }
+        return Integer.parseInt(prop);
     }
 }
