@@ -6334,7 +6334,7 @@
     </resources>
 
     <content>
-      <xul:hbox align="end">
+      <xul:hbox class="tab-drop-indicator-box">
         <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
       </xul:hbox>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
