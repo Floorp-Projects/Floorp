@@ -198,6 +198,21 @@ public:
     {
     }
 
+    FontFamilyType FirstGeneric() const
+    {
+        for (const FontFamilyName& name : mNames) {
+            if (name.IsGeneric()) {
+                return name.mType;
+            }
+        }
+        return eFamily_none;
+    }
+
+    bool HasGeneric() const
+    {
+        return FirstGeneric() != eFamily_none;
+    }
+
     size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     {
       size_t n = 0;
@@ -259,6 +274,12 @@ public:
     {
     }
 
+    FontFamilyList(const SharedFontList* aFontlist)
+        : mFontlist(aFontlist->mNames)
+        , mDefaultFontType(eFamily_none)
+    {
+    }
+
     void Append(const FontFamilyName& aFamilyName) {
         mFontlist.AppendElement(aFamilyName);
     }
@@ -292,10 +313,9 @@ public:
                mDefaultFontType == aFontlist.mDefaultFontType;
     }
 
-    FontFamilyType FirstGeneric() const {
-        uint32_t len = mFontlist.Length();
-        for (uint32_t i = 0; i < len; i++) {
-            const FontFamilyName& name = mFontlist[i];
+    FontFamilyType FirstGeneric() const
+    {
+        for (const FontFamilyName& name : mFontlist) {
             if (name.IsGeneric()) {
                 return name.mType;
             }
@@ -303,7 +323,8 @@ public:
         return eFamily_none;
     }
 
-    bool HasGeneric() const {
+    bool HasGeneric() const
+    {
         return FirstGeneric() != eFamily_none;
     }
 
