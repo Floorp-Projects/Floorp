@@ -226,9 +226,8 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
   bool apzEnabled = AsyncPanZoomEnabled();
   EventRegions eventRegions;
 
-  nsDisplayList savedItems;
-  nsDisplayItem* item;
-  while ((item = aDisplayList->RemoveBottom()) != nullptr) {
+  for (nsDisplayItem* i = aDisplayList->GetBottom(); i; i = i->GetAbove()) {
+    nsDisplayItem* item = i;
     DisplayItemType itemType = item->GetType();
 
     // If the item is a event regions item, but is empty (has no regions in it)
@@ -237,7 +236,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
       if (eventRegions->IsEmpty()) {
-        item->Destroy(aDisplayListBuilder);
         continue;
       }
     }
@@ -254,7 +252,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       mergedItems.AppendElement(peek);
 
       // Move the iterator forward since we will merge this item.
-      item = peek;
+      i = peek;
     }
 
     if (mergedItems.Length() > 1) {
@@ -262,15 +260,13 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       MOZ_ASSERT(item && itemType == item->GetType());
     }
 
-    nsDisplayList* itemSameCoordinateSystemChildren
-      = item->GetSameCoordinateSystemChildren();
+    nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
     if (item->ShouldFlattenAway(aDisplayListBuilder)) {
-      aDisplayList->AppendToBottom(itemSameCoordinateSystemChildren);
-      item->Destroy(aDisplayListBuilder);
+      MOZ_ASSERT(childItems);
+      CreateWebRenderCommandsFromDisplayList(childItems, aDisplayListBuilder, aSc,
+                                             aBuilder, aResources);
       continue;
     }
-
-    savedItems.AppendToTop(item);
 
     bool forceNewLayerData = false;
     size_t layerCountBeforeRecursing = mLayerScrollData.size();
@@ -368,7 +364,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       mLayerScrollData.back().Initialize(mScrollData, item, descendants, stopAtAsr);
     }
   }
-  aDisplayList->AppendToTop(&savedItems);
 
   // If we have any event region info left over we need to flush it before we
   // return. Again, at this point the layer data list must be non-empty, and
