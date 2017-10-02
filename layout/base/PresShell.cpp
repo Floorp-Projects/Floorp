@@ -6359,7 +6359,10 @@ PresShell::Paint(nsView*         aViewToPaint,
                                 (layerManager->GetBackendType() == LayersBackend::LAYERS_BASIC);
 
       UniquePtr<LayerProperties> props;
-      if (computeInvalidRect) {
+      // For WR, the layermanager has no root layer. We want to avoid
+      // calling ComputeDifferences in that case because it assumes non-null
+      // and crashes.
+      if (computeInvalidRect && layerManager->GetRoot()) {
         props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
       }
 
