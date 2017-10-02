@@ -974,7 +974,6 @@ a.learn-more-link.webconsole-learn-more-link {
   background-color: var(--repeat-bubble-background-color);
   font-weight: normal;
   font-size: 0.8em;
-  height: auto;
 }
 
 /* Network Messages */
