@@ -258,6 +258,11 @@ public:
     Assign(aStr);
     return *this;
   }
+  self_type& operator=(self_type&& aStr)
+  {
+    Assign(mozilla::Move(aStr));
+    return *this;
+  }
   self_type& operator=(const substring_tuple_type& aTuple)
   {
     Assign(aTuple);

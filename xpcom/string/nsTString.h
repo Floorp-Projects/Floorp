@@ -98,6 +98,12 @@ public:
     this->Assign(aStr);
   }
 
+  nsTString(self_type&& aStr)
+    : substring_type(ClassFlags::NULL_TERMINATED)
+  {
+    this->Assign(mozilla::Move(aStr));
+  }
+
   MOZ_IMPLICIT nsTString(const substring_tuple_type& aTuple)
     : substring_type(ClassFlags::NULL_TERMINATED)
   {
@@ -109,6 +115,13 @@ public:
     : substring_type(ClassFlags::NULL_TERMINATED)
   {
     this->Assign(aReadable);
+  }
+
+  explicit
+  nsTString(substring_type&& aReadable)
+    : substring_type(ClassFlags::NULL_TERMINATED)
+  {
+    this->Assign(mozilla::Move(aReadable));
   }
 
 
@@ -128,6 +141,11 @@ public:
     this->Assign(aStr);
     return *this;
   }
+  self_type& operator=(self_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
+    return *this;
+  }
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename EnableIfChar16 = IsChar16>
   self_type& operator=(const char16ptr_t aStr)
@@ -139,6 +157,11 @@ public:
   self_type& operator=(const substring_type& aStr)
   {
     this->Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(substring_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
     return *this;
   }
   self_type& operator=(const substring_tuple_type& aTuple)
@@ -603,11 +626,24 @@ public:
     this->Assign(aStr);
   }
 
+  nsTAutoStringN(self_type&& aStr)
+    : self_type()
+  {
+    this->Assign(mozilla::Move(aStr));
+  }
+
   explicit
   nsTAutoStringN(const substring_type& aStr)
     : self_type()
   {
     this->Assign(aStr);
+  }
+
+  explicit
+  nsTAutoStringN(substring_type&& aStr)
+    : self_type()
+  {
+    this->Assign(mozilla::Move(aStr));
   }
 
   MOZ_IMPLICIT nsTAutoStringN(const substring_tuple_type& aTuple)
@@ -640,9 +676,19 @@ public:
     this->Assign(aStr);
     return *this;
   }
+  self_type& operator=(self_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
+    return *this;
+  }
   self_type& operator=(const substring_type& aStr)
   {
     this->Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(substring_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
     return *this;
   }
   self_type& operator=(const substring_tuple_type& aTuple)
