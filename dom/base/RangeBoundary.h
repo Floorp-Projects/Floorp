@@ -56,6 +56,8 @@ public:
     if (!mRef) {
       mOffset = mozilla::Some(0);
     } else {
+      NS_WARNING_ASSERTION(mRef->GetParentNode() == mParent,
+                           "Initializing RangeBoundary with invalid value");
       mOffset.reset();
     }
   }
@@ -71,13 +73,14 @@ public:
         mRef = aContainer->GetLastChild();
       } else if (aOffset != 0) {
         mRef = mParent->GetChildAt(aOffset - 1);
-        MOZ_ASSERT(mRef);
       }
 
-      MOZ_ASSERT_IF(!mRef, aOffset == 0);
+      NS_WARNING_ASSERTION(mRef || aOffset == 0,
+                           "Constructing RangeBoundary with invalid value");
     }
 
-    MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
+    NS_WARNING_ASSERTION(!mRef || mRef->GetParentNode() == mParent,
+                         "Constructing RangeBoundary with invalid value");
   }
 
   RangeBoundaryBase()
@@ -114,7 +117,7 @@ public:
       return nullptr;
     }
     if (!mRef) {
-      MOZ_ASSERT(Offset() == 0);
+      MOZ_ASSERT(Offset() == 0, "invalid RangeBoundary");
       return mParent->GetFirstChild();
     }
     MOZ_ASSERT(mParent->GetChildAt(Offset()) == mRef->GetNextSibling());
@@ -146,7 +149,8 @@ public:
     MOZ_ASSERT(mParent->IsContainerNode(), "Range is positioned on a text node!");
 
     if (!mRef) {
-      MOZ_ASSERT(mOffset.isSome() && mOffset.value() == 0);
+      MOZ_ASSERT(mOffset.isSome() && mOffset.value() == 0,
+                 "Invalidating offset of invalid RangeBoundary?");
       return;
     }
     mOffset.reset();
@@ -167,13 +171,16 @@ public:
         MOZ_ASSERT(mRef);
       }
 
-      MOZ_ASSERT_IF(!mRef, aOffset == 0);
+      NS_WARNING_ASSERTION(mRef || aOffset == 0,
+                           "Setting RangeBoundary to invalid value");
     } else {
       mRef = nullptr;
     }
 
     mOffset = mozilla::Some(aOffset);
-    MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
+
+    NS_WARNING_ASSERTION(!mRef || mRef->GetParentNode() == mParent,
+                         "Setting RangeBoundary to invalid value");
   }
 
   void
