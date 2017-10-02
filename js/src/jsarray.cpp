@@ -685,24 +685,6 @@ MaybeInIteration(HandleObject obj, JSContext* cx)
     return false;
 }
 
-bool
-js::CanonicalizeArrayLengthValue(JSContext* cx, HandleValue v, uint32_t* newLen)
-{
-    double d;
-
-    if (!ToUint32(cx, v, newLen))
-        return false;
-
-    if (!ToNumber(cx, v, &d))
-        return false;
-
-    if (d == *newLen)
-        return true;
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
-    return false;
-}
-
 /* ES6 draft rev 34 (2015 Feb 20) 9.4.2.4 ArraySetLength */
 bool
 js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
@@ -726,11 +708,22 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     } else {
         // Step 2 is irrelevant in our implementation.
 
-        // Steps 3-7.
-        if (!CanonicalizeArrayLengthValue(cx, value, &newLen))
+        // Step 3.
+        if (!ToUint32(cx, value, &newLen))
             return false;
 
-        // Step 8 is irrelevant in our implementation.
+        // Step 4.
+        double d;
+        if (!ToNumber(cx, value, &d))
+            return false;
+
+        // Step 5.
+        if (d != newLen) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            return false;
+        }
+
+        // Steps 6-8 are irrelevant in our implementation.
     }
 
     // Steps 9-11.
@@ -2019,10 +2012,6 @@ FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start, uint32_t coun
     MOZ_ASSERT(start < start + count, "count > 0 and start + count doesn't overflow");
 
     do {
-        // Unboxed arrays can't store undefined values, so don't try to
-        // optimize them here.
-        if (!obj->is<NativeObject>())
-            break;
         if (ObjectMayHaveExtraIndexedProperties(obj))
             break;
 
@@ -2517,17 +2506,9 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 3-4.
     if (args.length() > 0) {
-        // Only include a fast path for native objects. Unboxed arrays can't
-        // be optimized here because unshifting temporarily places holes at
-        // the start of the array.
-        // TODO: Implement unboxed array optimization similar to the one in
-        // array_splice_impl(), unshift() is a special version of splice():
-        // arr.unshift(...values) ~= arr.splice(0, 0, ...values).
         bool optimized = false;
         do {
             if (length > UINT32_MAX)
-                break;
-            if (!obj->isNative())
                 break;
             if (ObjectMayHaveExtraIndexedProperties(obj))
                 break;
@@ -2607,10 +2588,10 @@ enum class ArrayAccess {
 };
 
 /*
- * Returns true if this is a dense or unboxed array whose properties ending at
- * |endIndex| (exclusive) may be accessed (get, set, delete) directly through
- * its contiguous vector of elements without fear of getters, setters, etc.
- * along the prototype chain, or of enumerators requiring notification of
+ * Returns true if this is a dense array whose properties ending at |endIndex|
+ * (exclusive) may be accessed (get, set, delete) directly through its
+ * contiguous vector of elements without fear of getters, setters, etc. along
+ * the prototype chain, or of enumerators requiring notification of
  * modifications.
  */
 template <ArrayAccess Access>
@@ -3901,10 +3882,10 @@ js::NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc
     return arr;
 }
 
-// Return a new boxed or unboxed array with the specified length and allocated
-// capacity (up to maxLength), using the specified group if possible. If the
-// specified group cannot be used, ensure that the created array at least has
-// the given [[Prototype]].
+// Return a new array with the specified length and allocated capacity (up to
+// maxLength), using the specified group if possible. If the specified group
+// cannot be used, ensure that the created array at least has the given
+// [[Prototype]].
 template <uint32_t maxLength>
 static inline ArrayObject*
 NewArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
@@ -3912,10 +3893,7 @@ NewArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
 {
     MOZ_ASSERT(newKind != SingletonObject);
 
-    if (group->maybePreliminaryObjects())
-        group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
-
-    if (group->shouldPreTenure() || group->maybePreliminaryObjects())
+    if (group->shouldPreTenure())
         newKind = TenuredObject;
 
     RootedObject proto(cx, group->proto().toObject());
@@ -3929,9 +3907,6 @@ NewArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
     // new group.
     if (res->length() > INT32_MAX)
         res->setLength(cx, res->length());
-
-    if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects())
-        preliminaryObjects->registerNewObject(res);
 
     return res;
 }
@@ -3952,10 +3927,7 @@ js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, s
 // Return a new array with the default prototype and specified allocated
 // capacity and length. If possible, try to reuse the group of the input
 // object. The resulting array will either reuse the input object's group or
-// will have unknown property types. Additionally, the result will have the
-// same boxed/unboxed elements representation as the input object, unless
-// |length| is larger than the input object's initialized length (in which case
-// UnboxedArrayObject::MaximumCapacity might be exceeded).
+// will have unknown property types.
 template <uint32_t maxLength>
 static inline ArrayObject*
 NewArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length,
