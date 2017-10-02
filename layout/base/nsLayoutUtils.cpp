@@ -3678,7 +3678,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     MOZ_ASSERT(rootScrollableFrame);
     nsRect displayPortBase = aFrame->GetVisualOverflowRectRelativeToSelf();
     Unused << rootScrollableFrame->DecideScrollableLayer(&builder, &displayPortBase,
-                /* aAllowCreateDisplayPort = */ true);
+                /* aSetBase = */ true);
   }
 
   nsRegion visibleRegion;

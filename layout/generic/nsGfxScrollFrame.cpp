@@ -3300,9 +3300,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  // It's safe to get this value before the DecideScrollableLayer call below
-  // because that call cannot create a displayport for root scroll frames,
-  // and hence it cannot create an ignore scroll frame.
   bool ignoringThisScrollFrame =
     aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping();
 
@@ -3320,7 +3317,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   Unused << DecideScrollableLayer(aBuilder, &dirtyRect,
-              /* aAllowCreateDisplayPort = */ !mIsRoot);
+              /* aSetBase = */ !mIsRoot);
 
   bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
     nsLayoutUtils::HasDisplayPort(mOuter->GetContent());
@@ -3589,7 +3586,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         // It's too late to change the dirty rect so pass a copy.
         nsRect copyOfDirtyRect = dirtyRect;
         Unused << DecideScrollableLayer(aBuilder, &copyOfDirtyRect,
-                    /* aAllowCreateDisplayPort = */ false);
+                    /* aSetBase = */ false);
         if (mWillBuildScrollableLayer) {
           asrSetter.InsertScrollFrame(sf);
         }
@@ -3634,18 +3631,15 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 bool
 ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                                          nsRect* aDirtyRect,
-                                         bool aAllowCreateDisplayPort)
+                                         bool aSetBase)
 {
   // Save and check if this changes so we can recompute the current agr.
   bool oldWillBuildScrollableLayer = mWillBuildScrollableLayer;
 
-  bool wasUsingDisplayPort = false;
-  bool usingDisplayPort = false;
   nsIContent* content = mOuter->GetContent();
+  bool usingDisplayPort = nsLayoutUtils::HasDisplayPort(content);
   if (aBuilder->IsPaintingToWindow()) {
-    wasUsingDisplayPort = nsLayoutUtils::HasDisplayPort(content);
-
-    if (aAllowCreateDisplayPort) {
+    if (aSetBase) {
       nsRect displayportBase = *aDirtyRect;
       nsPresContext* pc = mOuter->PresContext();
       if (mIsRoot && (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
@@ -3659,9 +3653,7 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
 
         // Only restrict to the root composition bounds if necessary,
         // as the required coordinate transformation is expensive.
-        // Note that we call HasDisplayPort again instead of using
-        // wasUsingDisplayPort because we might have just created a display port.
-        if (nsLayoutUtils::HasDisplayPort(content)) {
+        if (usingDisplayPort) {
           const nsPresContext* rootPresContext =
             pc->GetToplevelContentDocumentPresContext();
           if (!rootPresContext) {
@@ -3734,8 +3726,8 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
       nsLayoutUtils::SetDisplayPortBase(mOuter->GetContent(), displayportBase);
     }
 
-    // If we don't have aAllowCreateDisplayPort == true then should have already
-    // been called with aAllowCreateDisplayPort == true which should have set a
+    // If we don't have aSetBase == true then should have already
+    // been called with aSetBase == true which should have set a
     // displayport base.
     MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
     nsRect displayPort;
@@ -3765,7 +3757,7 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
 
   // The cached animated geometry root for the display builder is out of
   // date if we just introduced a new animated geometry root.
-  if ((oldWillBuildScrollableLayer != mWillBuildScrollableLayer) || (wasUsingDisplayPort != usingDisplayPort)) {
+  if (oldWillBuildScrollableLayer != mWillBuildScrollableLayer) {
     aBuilder->RecomputeCurrentAnimatedGeometryRoot();
   }
 
