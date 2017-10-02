@@ -175,7 +175,10 @@
       <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
     </keyset>
 
-    <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">&helpButton2.label;</html:a>
+    <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">
+      <html:img class="help-icon" src="chrome://global/skin/icons/help.svg"/>
+      <html:span class="help-label">&helpButton2.label;</html:span>
+    </html:a>
 
     <vbox class="main-content" flex="1" align="start">
       <vbox class="pane-container">
