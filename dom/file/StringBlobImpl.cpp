@@ -44,7 +44,7 @@ StringBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
 }
 
 void
-StringBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
+StringBlobImpl::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   aRv = NS_NewCStringInputStream(aStream, mData);
 }

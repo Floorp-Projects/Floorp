@@ -1082,7 +1082,7 @@ DecodeBlob(Blob& aBlob)
   // Get the internal stream of the blob.
   nsCOMPtr<nsIInputStream> stream;
   ErrorResult error;
-  aBlob.Impl()->GetInternalStream(getter_AddRefs(stream), error);
+  aBlob.Impl()->CreateInputStream(getter_AddRefs(stream), error);
   if (NS_WARN_IF(error.Failed())) {
     error.SuppressException();
     return nullptr;
