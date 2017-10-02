@@ -3,11 +3,18 @@
 // Test UnwrapNumberFormat operation.
 
 const numberFormatFunctions = [];
-numberFormatFunctions.push(Intl.NumberFormat.prototype.resolvedOptions);
-numberFormatFunctions.push(Object.getOwnPropertyDescriptor(Intl.NumberFormat.prototype, "format").get);
-// "formatToParts" isn't yet enabled by default.
-if ("formatToParts" in Intl.NumberFormat.prototype)
-    numberFormatFunctions.push(Intl.NumberFormat.prototype.formatToParts);
+numberFormatFunctions.push({
+    function: Intl.NumberFormat.prototype.resolvedOptions,
+    unwrap: true,
+});
+numberFormatFunctions.push({
+    function: Object.getOwnPropertyDescriptor(Intl.NumberFormat.prototype, "format").get,
+    unwrap: true,
+});
+numberFormatFunctions.push({
+    function: Intl.NumberFormat.prototype.formatToParts,
+    unwrap: false,
+});
 
 function IsConstructor(o) {
   try {
@@ -60,7 +67,7 @@ function thisValues(C) {
 const intlFallbackSymbol = Object.getOwnPropertySymbols(Intl.NumberFormat.call(Object.create(Intl.NumberFormat.prototype)))[0];
 
 // Test Intl.NumberFormat.prototype methods.
-for (let numberFormatFunction of numberFormatFunctions) {
+for (let {function: numberFormatFunction, unwrap} of numberFormatFunctions) {
     // Test a TypeError is thrown when the this-value isn't an initialized
     // Intl.NumberFormat instance.
     for (let thisValue of thisValues(Intl.NumberFormat)) {
@@ -81,10 +88,15 @@ for (let numberFormatFunction of numberFormatFunctions) {
     }
 
     for (let thisValue of intlObjects(Intl.NumberFormat)) {
-        numberFormatFunction.call({
+        let obj = {
             __proto__: Intl.NumberFormat.prototype,
             [intlFallbackSymbol]: thisValue,
-        });
+        };
+        if (unwrap) {
+            numberFormatFunction.call(obj);
+        } else {
+            assertThrowsInstanceOf(() => numberFormatFunction.call(obj), TypeError);
+        }
     }
 
     // Ensure [[FallbackSymbol]] isn't retrieved for Intl.NumberFormat instances.
@@ -128,8 +140,8 @@ for (let numberFormatFunction of numberFormatFunctions) {
 
         delete Intl.NumberFormat[Symbol.hasInstance];
 
-        assertEq(hasInstanceCalled, true);
-        assertEq(symbolGetterCalled, true);
+        assertEq(hasInstanceCalled, unwrap);
+        assertEq(symbolGetterCalled, unwrap);
     }
 
     // Test with primitive values.
@@ -179,35 +191,21 @@ for (let numberFormatFunction of numberFormatFunctions) {
     }
 }
 
-// Test formatToParts() returns the correct result for objects initialized as Intl.NumberFormat instances.
-if ("formatToParts" in Intl.NumberFormat.prototype) {
-    // An actual Intl.NumberFormat instance.
-    let numberFormat = new Intl.NumberFormat();
+// Ensure formatToParts() doesn't use the fallback semantics.
+{
+    let formatToParts = Intl.NumberFormat.prototype.formatToParts;
 
     // An object initialized as a NumberFormat instance.
     let thisValue = Object.create(Intl.NumberFormat.prototype);
     Intl.NumberFormat.call(thisValue);
+    assertThrowsInstanceOf(() => formatToParts.call(thisValue), TypeError);
 
     // Object with [[FallbackSymbol]] set to NumberFormat instance.
     let fakeObj = {
         __proto__: Intl.NumberFormat.prototype,
-        [intlFallbackSymbol]: numberFormat,
+        [intlFallbackSymbol]: new Intl.NumberFormat(),
     };
-
-    function assertEqParts(actual, expected) {
-        assertEq(actual.length, expected.length, "parts count mismatch");
-        for (var i = 0; i < expected.length; i++) {
-            assertEq(actual[i].type, expected[i].type, "type mismatch at " + i);
-            assertEq(actual[i].value, expected[i].value, "value mismatch at " + i);
-        }
-    }
-
-    for (let number of [0, 1, 1.5, Infinity, NaN]) {
-        let expected = numberFormat.formatToParts(number);
-        assertEqParts(thisValue.formatToParts(number), expected);
-        assertEqParts(thisValue[intlFallbackSymbol].formatToParts(number), expected);
-        assertEqParts(fakeObj.formatToParts(number), expected);
-    }
+    assertThrowsInstanceOf(() => formatToParts.call(fakeObj), TypeError);
 }
 
 // Test resolvedOptions() returns the same results.
