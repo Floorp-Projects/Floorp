@@ -249,6 +249,9 @@ public:
   bool ShouldNotifyInvalidation() const { return mShouldNotifyInvalidation; }
   void SetNotifyInvalidation(bool aShouldNotifyInvalidation) { mShouldNotifyInvalidation = aShouldNotifyInvalidation; }
 
+  bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
+                                                const ScrollUpdateInfo& aUpdateInfo) override;
+
 private:
   /**
    * Take a snapshot of the parent context, and copy

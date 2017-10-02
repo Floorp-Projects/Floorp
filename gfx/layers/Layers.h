@@ -803,8 +803,8 @@ public:
    * per-scrollid basis. This is used for empty transactions that push over
    * scroll position updates to the APZ code.
    */
-  bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
-                                                const ScrollUpdateInfo& aUpdateInfo);
+  virtual bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
+                                                        const ScrollUpdateInfo& aUpdateInfo);
   Maybe<ScrollUpdateInfo> GetPendingScrollInfoUpdate(FrameMetrics::ViewID aScrollId);
   void ClearPendingScrollInfoUpdate();
 private:
