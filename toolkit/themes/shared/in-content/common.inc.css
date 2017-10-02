@@ -692,7 +692,6 @@ xul|*.radio-label-box {
 
 *|*#categories[keyboard-navigation="true"]:-moz-focusring > *|*.category[current] {
   border: var(--in-content-category-border-focus);
-  border-inline-start: none;
 }
 
 *|*.category-name {
@@ -727,14 +726,6 @@ xul|*.radio-label-box {
   .category {
     padding-inline-start: 13px; /* make category icons align center */
     margin-inline-end: 35px;
-  }
-
-  .help-button {
-    font-size: 0 !important;
-    margin-inline-start: 41px !important; /* make the question mark icon align center */
-    background-position: 10px !important;
-    padding-inline-start: 0px !important;
-    width: 36px !important;
   }
 
   .main-content {
