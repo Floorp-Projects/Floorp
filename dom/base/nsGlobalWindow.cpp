@@ -3601,6 +3601,8 @@ nsGlobalWindow::DetachFromDocShell()
     mContext = nullptr;
   }
 
+  mDocShell = nullptr; // Weak Reference
+
   NS_ASSERTION(!mNavigator, "Non-null mNavigator in outer window!");
 
   if (mFrames) {
