@@ -118,6 +118,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
     }
 
     mInnerWindowID = aLoadingContext->OwnerDoc()->InnerWindowID();
+    mAncestorPrincipals = aLoadingContext->OwnerDoc()->AncestorPrincipals();
+    mAncestorOuterWindowIDs = aLoadingContext->OwnerDoc()->AncestorOuterWindowIDs();
+    MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() == mAncestorOuterWindowIDs.Length());
 
     // When the element being loaded is a frame, we choose the frame's window
     // for the window ID and the frame element's window as the parent
@@ -277,6 +280,9 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   nsCOMPtr<nsIDocShell> docShell = aOuterWindow->GetDocShell();
   MOZ_ASSERT(docShell);
   mOriginAttributes = nsDocShell::Cast(docShell)->GetOriginAttributes();
+  mAncestorPrincipals = nsDocShell::Cast(docShell)->AncestorPrincipals();
+  mAncestorOuterWindowIDs = nsDocShell::Cast(docShell)->AncestorOuterWindowIDs();
+  MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() == mAncestorOuterWindowIDs.Length());
 
 #ifdef DEBUG
   if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
@@ -313,6 +319,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mRedirectChainIncludingInternalRedirects(
       rhs.mRedirectChainIncludingInternalRedirects)
   , mRedirectChain(rhs.mRedirectChain)
+  , mAncestorPrincipals(rhs.mAncestorPrincipals)
+  , mAncestorOuterWindowIDs(rhs.mAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
@@ -346,6 +354,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    const OriginAttributes& aOriginAttributes,
                    RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
                    RedirectHistoryArray& aRedirectChain,
+                   nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
+                   const nsTArray<uint64_t>& aAncestorOuterWindowIDs,
                    const nsTArray<nsCString>& aCorsUnsafeHeaders,
                    bool aForcePreflight,
                    bool aIsPreflight,
@@ -373,6 +383,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
   , mIsThirdPartyContext(aIsThirdPartyContext)
   , mOriginAttributes(aOriginAttributes)
+  , mAncestorPrincipals(Move(aAncestorPrincipals))
+  , mAncestorOuterWindowIDs(aAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
   , mForcePreflight(aForcePreflight)
   , mIsPreflight(aIsPreflight)
@@ -912,6 +924,18 @@ const RedirectHistoryArray&
 LoadInfo::RedirectChain()
 {
   return mRedirectChain;
+}
+
+const nsTArray<nsCOMPtr<nsIPrincipal>>&
+LoadInfo::AncestorPrincipals()
+{
+  return mAncestorPrincipals;
+}
+
+const nsTArray<uint64_t>&
+LoadInfo::AncestorOuterWindowIDs()
+{
+  return mAncestorOuterWindowIDs;
 }
 
 void
