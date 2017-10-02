@@ -160,19 +160,6 @@ public:
     size_t oldLength = glyphs.Length();
     glyphs.SetLength(oldLength + aBuffer.mNumGlyphs);
     PodCopy(glyphs.Elements() + oldLength, aBuffer.mGlyphs, aBuffer.mNumGlyphs);
-
-    // If there's a skew for synthetic italics we need to apply it, as the font
-    // code applies the inverse transformation to glyph positions in anticipation.
-    Matrix trans = GetTransform();
-    if (trans._21 != 0) {
-      Matrix skew = Matrix(1, trans._12,
-                           trans._21, 1,
-                           0, 0);
-      for (size_t i = oldLength; i < oldLength + aBuffer.mNumGlyphs; ++i) {
-        auto position = &glyphs[i].mPosition;
-        *position = skew.TransformPoint(*position);
-      }
-    }
   }
 
   void

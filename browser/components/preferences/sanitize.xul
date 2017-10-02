@@ -42,7 +42,7 @@
       <preference id="privacy.clearOnShutdown.siteSettings"          name="privacy.clearOnShutdown.siteSettings"          type="bool"/>
     </preferences>
 
-    <description>&clearDataSettings2.label;</description>
+    <description>&clearDataSettings3.label;</description>
 
     <groupbox orient="horizontal">
       <caption><label>&historySection.label;</label></caption>

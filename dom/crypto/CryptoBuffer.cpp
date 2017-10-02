@@ -161,6 +161,12 @@ CryptoBuffer::ToUint8Array(JSContext* aCx) const
   return Uint8Array::Create(aCx, Length(), Elements());
 }
 
+JSObject*
+CryptoBuffer::ToArrayBuffer(JSContext* aCx) const
+{
+  return ArrayBuffer::Create(aCx, Length(), Elements());
+}
+
 bool
 CryptoBuffer::ToNewUnsignedBuffer(uint8_t** aBuf, uint32_t* aBufLen) const
 {

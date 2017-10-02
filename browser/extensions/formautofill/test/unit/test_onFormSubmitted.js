@@ -483,6 +483,64 @@ add_task(async function handle_earlyformsubmit_event() {
   FormAutofillContent._onFormSubmit.restore();
 });
 
+add_task(async function autofill_disabled() {
+  let form = MOCK_DOC.getElementById("form1");
+  form.reset();
+
+  let testcase = {
+    "street-addr": "331 E. Evelyn Avenue",
+    "country": "US",
+    "tel": "+16509030800",
+    "cc-number": "1111222233334444",
+  };
+  for (let key in testcase) {
+    let input = MOCK_DOC.getElementById(key);
+    input.value = testcase[key];
+  }
+
+  let element = MOCK_DOC.getElementById(TARGET_ELEMENT_ID);
+  FormAutofillContent.identifyAutofillFields(element);
+
+  sinon.stub(FormAutofillContent, "_onFormSubmit");
+
+  // "_onFormSubmit" shouldn't be called if both "addresses" and "creditCards"
+  // are disabled.
+  Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", false);
+  Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
+  FormAutofillContent.notify(form);
+  do_check_eq(FormAutofillContent._onFormSubmit.called, false);
+  FormAutofillContent._onFormSubmit.reset();
+
+  // "_onFormSubmit" should be called as usual.
+  Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
+  Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
+  FormAutofillContent.notify(form);
+  do_check_eq(FormAutofillContent._onFormSubmit.called, true);
+  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].address, undefined);
+  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].creditCard, undefined);
+  FormAutofillContent._onFormSubmit.reset();
+
+  // "address" should be empty if "addresses" pref is disabled.
+  Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", false);
+  FormAutofillContent.notify(form);
+  do_check_eq(FormAutofillContent._onFormSubmit.called, true);
+  do_check_eq(FormAutofillContent._onFormSubmit.args[0][0].address, undefined);
+  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].creditCard, undefined);
+  FormAutofillContent._onFormSubmit.reset();
+  Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
+
+  // "creditCard" should be empty if "creditCards" pref is disabled.
+  Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
+  FormAutofillContent.notify(form);
+  do_check_eq(FormAutofillContent._onFormSubmit.called, true);
+  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].address, undefined);
+  do_check_eq(FormAutofillContent._onFormSubmit.args[0][0].creditCard, undefined);
+  FormAutofillContent._onFormSubmit.reset();
+  Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
+
+  FormAutofillContent._onFormSubmit.restore();
+});
+
 TESTCASES.forEach(testcase => {
   add_task(async function check_records_saving_is_called_correctly() {
     do_print("Starting testcase: " + testcase.description);

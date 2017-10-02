@@ -112,6 +112,10 @@ class Repository(object):
     def name(self):
         """Name of the tool."""
 
+    @abc.abstractproperty
+    def head_ref(self):
+        """Hash of HEAD revision."""
+
     @abc.abstractmethod
     def sparse_checkout_present(self):
         """Whether the working directory is using a sparse checkout.
@@ -203,6 +207,10 @@ class HgRepository(Repository):
     @property
     def name(self):
         return 'hg'
+
+    @property
+    def head_ref(self):
+        return self._run('log', '-r', '.', '-T', '{node}')
 
     def __enter__(self):
         if self._client.server is None:
@@ -312,6 +320,10 @@ class GitRepository(Repository):
     @property
     def name(self):
         return 'git'
+
+    @property
+    def head_ref(self):
+        return self._run('rev-parse', 'HEAD')
 
     def sparse_checkout_present(self):
         # Not yet implemented.
