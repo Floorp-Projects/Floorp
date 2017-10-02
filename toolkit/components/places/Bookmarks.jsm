@@ -1407,7 +1407,8 @@ function insertBookmark(item, parent) {
  * @returns {Boolean} True if the node is a Livemark, false otherwise.
  */
 function isLivemark(node) {
-  return node.annos && node.annos.some(anno => anno.name == PlacesUtils.LMANNO_FEEDURI);
+  return node.type == Bookmarks.TYPE_FOLDER && node.annos &&
+         node.annos.some(anno => anno.name == PlacesUtils.LMANNO_FEEDURI);
 }
 
 function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
