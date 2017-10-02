@@ -317,7 +317,7 @@ IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder, PropertyResult prop)
         return false;
 
     Shape* shape = prop.shape();
-    if (!shape->hasSlot() || !shape->hasDefaultGetter())
+    if (!shape->isDataProperty())
         return false;
 
     return true;
@@ -1242,7 +1242,7 @@ GetPropIRGenerator::tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId
         return false;
 
     Shape* shape = expando->lookup(cx_, id);
-    if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
+    if (!shape || !shape->isDataProperty())
         return false;
 
     maybeEmitIdGuard(id);
@@ -1924,7 +1924,7 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
         return false;
 
     // The property must be found, and it must be found as a normal data property.
-    if (!shape->hasDefaultGetter() || !shape->hasSlot())
+    if (!shape->isDataProperty())
         return false;
 
     // This might still be an uninitialized lexical.
@@ -2772,18 +2772,14 @@ static Shape*
 LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id)
 {
     Shape* shape = obj->lookupPure(id);
-    if (!shape || !shape->hasSlot() || !shape->hasDefaultSetter() || !shape->writable())
+    if (!shape || !shape->isDataProperty() || !shape->writable())
         return nullptr;
 
     // If this is an op like JSOP_INITELEM / [[DefineOwnProperty]], the
     // property's attributes may have to be changed too, so make sure it's a
     // simple data property.
-    if (IsPropertyInitOp(op) && (!shape->configurable() ||
-                                 !shape->enumerable() ||
-                                 !shape->hasDefaultGetter()))
-    {
+    if (IsPropertyInitOp(op) && (!shape->configurable() || !shape->enumerable()))
         return nullptr;
-    }
 
     return shape;
 }
@@ -3705,8 +3701,7 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
 
     // Basic shape checks.
     if (propShape->inDictionary() ||
-        !propShape->hasSlot() ||
-        !propShape->hasDefaultSetter() ||
+        !propShape->isDataProperty() ||
         !propShape->writable())
     {
         return false;

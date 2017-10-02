@@ -496,7 +496,7 @@ SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, HandleValu
         // Aliased var assigns ignore readonly attributes on the property, as
         // required for initializing 'const' closure variables.
         Shape* shape = obj->as<NativeObject>().lookup(cx, name);
-        MOZ_ASSERT(shape && shape->hasSlot());
+        MOZ_ASSERT(shape && shape->isDataProperty());
         obj->as<NativeObject>().setSlotWithType(cx, shape, value);
         return true;
     }
@@ -1602,7 +1602,7 @@ GetNativeDataProperty(JSContext* cx, NativeObject* obj, jsid id, Value* vp)
 
     while (true) {
         if (Shape* shape = obj->lastProperty()->search(cx, id)) {
-            if (!shape->hasSlot() || !shape->hasDefaultGetter())
+            if (!shape->isDataProperty())
                 return false;
 
             *vp = obj->getSlot(shape->slot());
@@ -1714,8 +1714,7 @@ SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* v
     NativeObject* nobj = &obj->as<NativeObject>();
     Shape* shape = nobj->lastProperty()->search(cx, NameToId(name));
     if (!shape ||
-        !shape->hasSlot() ||
-        !shape->hasDefaultSetter() ||
+        !shape->isDataProperty() ||
         !shape->writable() ||
         nobj->watched())
     {
