@@ -6,6 +6,9 @@
 
 SPHINX_TREES['crashreporter'] = 'docs'
 
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
+
 EXPORTS += [
     'nsExceptionHandler.h',
 ]
