@@ -199,37 +199,40 @@ def get_decision_parameters(options):
     task_config_file = os.path.join(os.getcwd(), 'try_task_config.json')
 
     # load try settings
-    parameters['try_mode'] = None
-    if os.path.isfile(task_config_file):
-        parameters['try_mode'] = 'try_task_config'
-        with open(task_config_file, 'r') as fh:
-            parameters['try_task_config'] = json.load(fh)
+    if project == 'try':
+        parameters['try_mode'] = None
+        if os.path.isfile(task_config_file):
+            parameters['try_mode'] = 'try_task_config'
+            with open(task_config_file, 'r') as fh:
+                parameters['try_task_config'] = json.load(fh)
+        else:
+            parameters['try_task_config'] = None
+
+        if 'try:' in parameters['message']:
+            parameters['try_mode'] = 'try_option_syntax'
+            args = parse_message(parameters['message'])
+            parameters['try_options'] = args
+        else:
+            parameters['try_options'] = None
+
+        if parameters['try_mode'] == 'try_option_syntax':
+            # Try option syntax is imprecise, so optimize away tasks even if they
+            # are selected by the syntax.
+            parameters['optimize_target_tasks'] = True
+        elif parameters['try_mode'] == 'try_task_config':
+            # The user has explicitly requested a set of jobs, so run them all
+            # regardless of optimization.  Their dependencies can be optimized,
+            # though.
+            parameters['optimize_target_tasks'] = False
+        else:
+            # For a try push with no task selection, apply the default optimization
+            # process to all of the tasks.
+            parameters['optimize_target_tasks'] = True
+
     else:
+        parameters['try_mode'] = None
         parameters['try_task_config'] = None
-
-    if 'try:' in parameters['message']:
-        parameters['try_mode'] = 'try_option_syntax'
-        args = parse_message(parameters['message'])
-        parameters['try_options'] = args
-    else:
         parameters['try_options'] = None
-
-    parameters['optimize_target_tasks'] = {
-        # The user has explicitly requested a set of jobs, so run them all
-        # regardless of optimization.  Their dependencies can be optimized,
-        # though.
-        'try_task_config': False,
-
-        # Always perform optimization.  This makes it difficult to use try
-        # pushes to run a task that would otherwise be optimized, but is a
-        # compromise to avoid essentially disabling optimization in try.
-        # to run tasks that would otherwise be optimized, ues try_task_config.
-        'try_option_syntax': True,
-
-        # since no try jobs have been specified, the standard target task will
-        # be applied, and tasks should be optimized out of that.
-        None: True,
-    }[parameters['try_mode']]
 
     return Parameters(**parameters)
 
