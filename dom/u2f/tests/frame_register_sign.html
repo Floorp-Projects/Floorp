@@ -109,15 +109,7 @@ async function doTests() {
     return importPublicKey(state.publicKeyBytes);
   }).then(function(key) {
     state.publicKey = key;
-    local_ok(true, "Imported public key");
-
-    // Ensure the attestation certificate is properly self-signed
-    return state.attestationCert.verify();
-  }).then(function(verified) {
-    if (!verified) {
-      local_ok(verified, "Cert problem: " + bytesToBase64UrlSafe(state.attestation));
-    }
-    local_ok(verified, "Register attestation signature verified");
+    local_isnot(key, undefined, "Imported public key");
   });
 
   state.regKey = {
