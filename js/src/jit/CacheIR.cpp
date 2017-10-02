@@ -387,6 +387,66 @@ IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
 }
 
 static bool
+CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id)
+{
+    if (obj->isNative()) {
+        // Don't handle proto chains with resolve hooks.
+        if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
+            return false;
+        if (obj->as<NativeObject>().contains(cx, id))
+            return false;
+    } else if (obj->is<UnboxedPlainObject>()) {
+        if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
+            return false;
+    } else if (obj->is<TypedObject>()) {
+        if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
+            return false;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+static bool
+CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id)
+{
+    JSObject* curObj = obj;
+    do {
+        if (!CheckHasNoSuchOwnProperty(cx, curObj, id))
+            return false;
+
+        if (!curObj->isNative()) {
+            // Non-native objects are only handled as the original receiver.
+            if (curObj != obj)
+                return false;
+        }
+
+        curObj = curObj->staticPrototype();
+    } while (curObj);
+
+    return true;
+}
+
+// Return whether obj is in some PreliminaryObjectArray and has a structure
+// that might change in the future.
+static bool
+IsPreliminaryObject(JSObject* obj)
+{
+    if (obj->isSingleton())
+        return false;
+
+    TypeNewScript* newScript = obj->group()->newScript();
+    if (newScript && !newScript->analyzed())
+        return true;
+
+    if (obj->group()->maybePreliminaryObjects())
+        return true;
+
+    return false;
+}
+
+static bool
 IsCacheableNoProperty(JSContext* cx, JSObject* obj, JSObject* holder, Shape* shape, jsid id,
                       jsbytecode* pc, GetPropertyResultFlags resultFlags)
 {
@@ -1193,6 +1253,18 @@ GetPropIRGenerator::tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId
     return true;
 }
 
+static TypedThingLayout
+GetTypedThingLayout(const Class* clasp)
+{
+    if (IsTypedArrayClass(clasp))
+        return Layout_TypedArray;
+    if (IsOutlineTypedObjectClass(clasp))
+        return Layout_OutlineTypedObject;
+    if (IsInlineTypedObjectClass(clasp))
+        return Layout_InlineTypedObject;
+    MOZ_CRASH("Bad object class");
+}
+
 bool
 GetPropIRGenerator::tryAttachTypedObject(HandleObject obj, ObjOperandId objId, HandleId id)
 {
@@ -1606,6 +1678,42 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
 
     trackAttached("DenseElementHole");
     return true;
+}
+
+static bool
+IsPrimitiveArrayTypedObject(JSObject* obj)
+{
+    if (!obj->is<TypedObject>())
+        return false;
+    TypeDescr& descr = obj->as<TypedObject>().typeDescr();
+    return descr.is<ArrayTypeDescr>() &&
+           descr.as<ArrayTypeDescr>().elementType().is<ScalarTypeDescr>();
+}
+
+static Scalar::Type
+PrimitiveArrayTypedObjectType(JSObject* obj)
+{
+    MOZ_ASSERT(IsPrimitiveArrayTypedObject(obj));
+    TypeDescr& descr = obj->as<TypedObject>().typeDescr();
+    return descr.as<ArrayTypeDescr>().elementType().as<ScalarTypeDescr>().type();
+}
+
+
+static Scalar::Type
+TypedThingElementType(JSObject* obj)
+{
+    return obj->is<TypedArrayObject>()
+           ? obj->as<TypedArrayObject>().type()
+           : PrimitiveArrayTypedObjectType(obj);
+}
+
+static bool
+TypedThingRequiresFloatingPoint(JSObject* obj)
+{
+    Scalar::Type type = TypedThingElementType(obj);
+    return type == Scalar::Uint32 ||
+           type == Scalar::Float32 ||
+           type == Scalar::Float64;
 }
 
 bool
