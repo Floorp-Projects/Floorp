@@ -277,13 +277,17 @@ public class WebAppActivity extends AppCompatActivity
             return false;
         }
 
-        CustomTabsIntent tab = new CustomTabsIntent.Builder()
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder()
             .addDefaultShareMenuItem()
-            .setToolbarColor(mManifest.getThemeColor())
             .setStartAnimations(this, R.anim.slide_in_right, R.anim.slide_out_left)
-            .setExitAnimations(this, R.anim.slide_in_left, R.anim.slide_out_right)
-            .build();
+            .setExitAnimations(this, R.anim.slide_in_left, R.anim.slide_out_right);
 
+        final Integer themeColor = mManifest.getThemeColor();
+        if (themeColor != null) {
+            builder.setToolbarColor(themeColor);
+        }
+
+        final CustomTabsIntent tab = builder.build();
         tab.intent.setClass(this, CustomTabsActivity.class);
         tab.launchUrl(this, url);
         return true;
