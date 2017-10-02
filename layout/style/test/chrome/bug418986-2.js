@@ -128,12 +128,7 @@ var testWindowsSpecific = function (resisting, queryName, possibleValues) {
       foundValue = val;
     }
   });
-  if (resisting) {
-    ok(!foundValue, queryName + " should have no match");
-  } else {
-    ok(foundValue, foundValue ? ("Match found: '" + queryName + ":" + foundValue + "'")
-                              : "Should have a match for '" + queryName + "'");
-  }
+  ok(!foundValue, queryName + " should have no match");
 };
 
 // __generateHtmlLines(resisting)__.
@@ -211,11 +206,11 @@ var generateCSSLines = function (resisting) {
       lines += suppressedMediaQueryCSSLine(key, color);
     });
   if (OS === "WINNT") {
-    lines += ".windows { background-color: " + (resisting ? "green" : "red") + ";}\n";
+    lines += ".windows { background-color: green; }\n";
     lines += windows_versions.map(val => "(-moz-os-version: " + val + ")").join(", ") +
-             " { #-moz-os-version { background-color: " + (resisting ? "red" : "green") + ";} }\n";
+             " { #-moz-os-version { background-color: red; } }\n";
     lines += windows_themes.map(val => "(-moz-windows-theme: " + val + ")").join(",") +
-             " { #-moz-windows-theme { background-color: " + (resisting ? "red" : "green") + ";} }\n";
+             " { #-moz-windows-theme { background-color: red; }\n";
   }
   return lines;
 };
