@@ -100,19 +100,23 @@ nsresult
 nsFilteredContentIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
                                 nsINode* aEndContainer, uint32_t aEndOffset)
 {
+  return Init(RawRangeBoundary(aStartContainer, aStartOffset),
+              RawRangeBoundary(aEndContainer, aEndOffset));
+}
+
+nsresult
+nsFilteredContentIterator::Init(const RawRangeBoundary& aStart,
+                                const RawRangeBoundary& aEnd)
+{
   RefPtr<nsRange> range;
-  nsresult rv = nsRange::CreateRange(aStartContainer, aStartOffset,
-                                     aEndContainer, aEndOffset,
-                                     getter_AddRefs(range));
+  nsresult rv = nsRange::CreateRange(aStart, aEnd, getter_AddRefs(range));
   if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!range) ||
       NS_WARN_IF(!range->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  MOZ_ASSERT(range->GetStartContainer() == aStartContainer);
-  MOZ_ASSERT(range->GetEndContainer() == aEndContainer);
-  MOZ_ASSERT(range->StartOffset() == aStartOffset);
-  MOZ_ASSERT(range->EndOffset() == aEndOffset);
+  MOZ_ASSERT(range->StartRef() == aStart);
+  MOZ_ASSERT(range->EndRef() == aEnd);
 
   mRange = Move(range);
 
