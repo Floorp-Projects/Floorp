@@ -551,7 +551,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitAtomOp(ParseNode* pn, JSOp op);
 
     MOZ_MUST_USE bool emitArrayLiteral(ParseNode* pn);
-    MOZ_MUST_USE bool emitArray(ParseNode* pn, uint32_t count, JSOp op);
+    MOZ_MUST_USE bool emitArray(ParseNode* pn, uint32_t count);
     MOZ_MUST_USE bool emitArrayComp(ParseNode* pn);
 
     MOZ_MUST_USE bool emitInternedScopeOp(uint32_t index, JSOp op);

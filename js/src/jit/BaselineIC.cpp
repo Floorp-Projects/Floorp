@@ -2014,13 +2014,6 @@ GetTemplateObjectForSimd(JSContext* cx, JSFunction* target, MutableHandleObject 
     return true;
 }
 
-static void
-EnsureArrayGroupAnalyzed(JSContext* cx, JSObject* obj)
-{
-    if (PreliminaryObjectArrayWithTemplate* objects = obj->group()->maybePreliminaryObjects())
-        objects->maybeAnalyze(cx, obj->group(), /* forceAnalyze = */ true);
-}
-
 static bool
 GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs& args,
                            MutableHandleObject res, bool* skipAttach)
@@ -2052,10 +2045,7 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
             // With this and other array templates, analyze the group so that
             // we don't end up with a template whose structure might change later.
             res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, count, TenuredObject));
-            if (!res)
-                return false;
-            EnsureArrayGroupAnalyzed(cx, res);
-            return true;
+            return !!res;
         }
     }
 
@@ -2080,10 +2070,7 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
                     return true;
                 }
                 res.set(NewFullyAllocatedArrayTryReuseGroup(cx, obj, 0, TenuredObject));
-                if (!res)
-                    return false;
-                EnsureArrayGroupAnalyzed(cx, res);
-                return true;
+                return !!res;
             }
         }
     }
@@ -2100,10 +2087,7 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
         }
 
         res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, 0, TenuredObject));
-        if (!res)
-            return false;
-        EnsureArrayGroupAnalyzed(cx, res);
-        return true;
+        return !!res;
     }
 
     if (native == StringConstructor) {
@@ -2430,7 +2414,6 @@ CopyArray(JSContext* cx, HandleArrayObject arr, MutableHandleValue result)
     ArrayObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, arr, length, TenuredObject);
     if (!nobj)
         return false;
-    EnsureArrayGroupAnalyzed(cx, nobj); //XXX
     nobj->initDenseElements(arr, 0, length);
 
     result.setObject(*nobj);

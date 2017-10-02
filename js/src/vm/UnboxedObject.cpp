@@ -1174,9 +1174,7 @@ bool
 js::TryConvertToUnboxedLayout(JSContext* cx, AutoEnterAnalysis& enter, Shape* templateShape,
                               ObjectGroup* group, PreliminaryObjectArray* objects)
 {
-    //XXX remove this after getting rid of array callers
-    if (!templateShape)
-        return true;
+    MOZ_ASSERT(templateShape);
 
     if (jit::JitOptions.disableUnboxedObjects)
         return true;

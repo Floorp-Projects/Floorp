@@ -9578,9 +9578,8 @@ class MLoadElement
     ALLOW_CLONE(MLoadElement)
 };
 
-// Load a value from the elements vector for a dense native or unboxed array.
-// If the index is out-of-bounds, or the indexed slot has a hole, undefined is
-// returned instead.
+// Load a value from the elements vector of a native object. If the index is
+// out-of-bounds, or the indexed slot has a hole, undefined is returned instead.
 class MLoadElementHole
   : public MTernaryInstruction,
     public SingleObjectPolicy::Data
@@ -9831,10 +9830,10 @@ class MStoreElement
     ALLOW_CLONE(MStoreElement)
 };
 
-// Like MStoreElement, but supports indexes >= initialized length, and can
-// handle unboxed arrays. The downside is that we cannot hoist the elements
-// vector and bounds check, since this instruction may update the (initialized)
-// length and reallocate the elements vector.
+// Like MStoreElement, but supports indexes >= initialized length. The downside
+// is that we cannot hoist the elements vector and bounds check, since this
+// instruction may update the (initialized) length and reallocate the elements
+// vector.
 class MStoreElementHole
   : public MQuaternaryInstruction,
     public MStoreElementCommon,

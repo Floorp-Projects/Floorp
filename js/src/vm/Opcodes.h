@@ -1282,17 +1282,7 @@
      *   Stack: propval, receiver, obj => obj[propval]
      */ \
     macro(JSOP_GETELEM_SUPER, 125, "getelem-super", NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC) \
-    /*
-     * Pushes newly created array for a spread call onto the stack. This has
-     * the same semantics as JSOP_NEWARRAY, but is distinguished to avoid
-     * using unboxed arrays in spread calls, which would make compiling spread
-     * calls in baseline more complex.
-     *   Category: Literals
-     *   Type: Array
-     *   Operands: uint32_t length
-     *   Stack: => obj
-     */ \
-    macro(JSOP_SPREADCALLARRAY, 126, "spreadcallarray", NULL, 5,  0,  1, JOF_UINT32) \
+    macro(JSOP_UNUSED126, 126, "unused126", NULL, 5,  0,  1, JOF_UINT32) \
     \
     /*
      * Defines the given function on the current scope.
