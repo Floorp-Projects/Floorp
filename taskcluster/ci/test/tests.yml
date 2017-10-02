@@ -1914,7 +1914,7 @@ test-verify:
         by-test-platform:
             # do not run on ccov; see also the enable_code_coverage transform
             linux64-ccov/.*: []
-            linux64.*: built-projects
+            default: built-projects
     tier: 2
     mozharness:
         script: desktop_unittest.py
