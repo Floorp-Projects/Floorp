@@ -89,6 +89,30 @@
 1143 MAC : dEQP-GLES2.functional.shaders.scoping.valid.function_parameter_hides_struct_type_* = FAIL
 1143 MAC : dEQP-GLES2.functional.shaders.random.trigonometric.vertex.65 = FAIL
 
+// Mac Intel specific
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.complex_rgb = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.complex_rgba = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.long_masked_rgb = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.long_masked_rgba = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.masked_rgb = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.masked_rgba = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.masked_scissored_rgb = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.masked_scissored_rgba = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.scissored_rgb = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.scissored_rgba = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.color_clear.short_scissored_rgb = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_alpha = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_luminance = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_luminance_alpha = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_rgb = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_rgba = FAIL
+2137 MAC INTEL : dEQP-GLES2.functional.shaders.discard.dynamic_loop_never = SKIP
+2137 MAC INTEL : dEQP-GLES2.functional.shaders.discard.function_static_loop_never = SKIP
+2137 MAC INTEL : dEQP-GLES2.functional.shaders.discard.static_loop_never = SKIP
+
+// Mac AMD specific
+2137 MAC AMD : dEQP-GLES2.functional.clipping.point.wide_point_clip = FAIL
+
 // Android only failures
 1484 ANDROID : dEQP-GLES2.functional.vertex_arrays.* = SKIP
 1485 ANDROID : dEQP-GLES2.functional.clipping.triangle_vertex.clip_three.clip_neg_x_neg_z_and_pos_x_pos_z_and_neg_x_neg_y_pos_z = FAIL

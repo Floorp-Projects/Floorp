@@ -17,19 +17,25 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include "common/angleutils.h"
-#include "common/debug.h"
 #include "EGLWindow.h"
 #include "OSWindow.h"
+#include "Timer.h"
+#include "common/angleutils.h"
+#include "common/debug.h"
+#include "platform/Platform.h"
 #include "test_utils/angle_test_configs.h"
 #include "test_utils/angle_test_instantiate.h"
-#include "Timer.h"
 
 class Event;
 
-#ifndef ASSERT_GL_NO_ERROR
+#if !defined(ASSERT_GL_NO_ERROR)
 #define ASSERT_GL_NO_ERROR() ASSERT_EQ(static_cast<GLenum>(GL_NO_ERROR), glGetError())
-#endif
+#endif  // !defined(ASSERT_GL_NO_ERROR)
+
+#if !defined(ASSERT_GLENUM_EQ)
+#define ASSERT_GLENUM_EQ(expected, actual) \
+    ASSERT_EQ(static_cast<GLenum>(expected), static_cast<GLenum>(actual))
+#endif  // !defined(ASSERT_GLENUM_EQ)
 
 class ANGLEPerfTest : public testing::Test, angle::NonCopyable
 {
@@ -61,6 +67,7 @@ class ANGLEPerfTest : public testing::Test, angle::NonCopyable
     std::string mSuffix;
     Timer *mTimer;
     double mRunTimeSeconds;
+    bool mSkipTest;
 
   private:
     unsigned int mNumStepsPerformed;
@@ -79,6 +86,9 @@ class ANGLERenderTest : public ANGLEPerfTest
 {
   public:
     ANGLERenderTest(const std::string &name, const RenderTestParams &testParams);
+    ANGLERenderTest(const std::string &name,
+                    const RenderTestParams &testParams,
+                    const std::vector<std::string> &extensionPrerequisites);
     ~ANGLERenderTest();
 
     virtual void initializeBenchmark() { }
@@ -90,6 +100,8 @@ class ANGLERenderTest : public ANGLEPerfTest
 
     OSWindow *getWindow();
 
+    virtual void overrideWorkaroundsD3D(angle::WorkaroundsD3D *workaroundsD3D) {}
+
   protected:
     const RenderTestParams &mTestParams;
 
@@ -100,8 +112,14 @@ class ANGLERenderTest : public ANGLEPerfTest
     void step() override;
     void finishTest() override;
 
+    bool areExtensionPrerequisitesFulfilled() const;
+
     EGLWindow *mEGLWindow;
     OSWindow *mOSWindow;
+    std::vector<std::string> mExtensionPrerequisites;
+    angle::PlatformMethods mPlatformMethods;
 };
+
+extern bool g_OnlyOneRunFrame;
 
 #endif // PERF_TESTS_ANGLE_PERF_TEST_H_

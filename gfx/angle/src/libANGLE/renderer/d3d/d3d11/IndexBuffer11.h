@@ -10,6 +10,7 @@
 #define LIBANGLE_RENDERER_D3D_D3D11_INDEXBUFFER11_H_
 
 #include "libANGLE/renderer/d3d/IndexBuffer.h"
+#include "libANGLE/renderer/d3d/d3d11/ResourceManager11.h"
 
 namespace rx
 {
@@ -33,17 +34,17 @@ class IndexBuffer11 : public IndexBuffer
     virtual gl::Error discard();
 
     DXGI_FORMAT getIndexFormat() const;
-    ID3D11Buffer *getBuffer() const;
+    const d3d11::Buffer &getBuffer() const;
 
   private:
     Renderer11 *const mRenderer;
 
-    ID3D11Buffer *mBuffer;
+    d3d11::Buffer mBuffer;
     unsigned int mBufferSize;
     GLenum mIndexType;
     bool mDynamicUsage;
 };
 
-}
+}  // namespace rx
 
 #endif // LIBANGLE_RENDERER_D3D_D3D11_INDEXBUFFER11_H_

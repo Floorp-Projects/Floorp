@@ -6,13 +6,15 @@
 
 // translator_fuzzer.cpp: A libfuzzer fuzzer for the shader translator.
 
-#include <stddef.h>
-#include <stdint.h>
-#include <unordered_map>
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <memory>
+#include <unordered_map>
 
-#include "compiler/translator/Compiler.h"
 #include "angle_gl.h"
+#include "compiler/translator/Compiler.h"
+#include "compiler/translator/util.h"
 
 using namespace sh;
 
@@ -42,7 +44,14 @@ struct hash<TranslatorCacheKey>
 };
 }  // namespace std
 
-static std::unordered_map<TranslatorCacheKey, TCompiler *> translators;
+struct TCompilerDeleter
+{
+    void operator()(TCompiler *compiler) const { DeleteCompiler(compiler); }
+};
+
+using UniqueTCompiler = std::unique_ptr<TCompiler, TCompilerDeleter>;
+
+static std::unordered_map<TranslatorCacheKey, UniqueTCompiler> translators;
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -76,6 +85,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         return 0;
     }
 
+    ShShaderOutput shaderOutput = static_cast<ShShaderOutput>(output);
+    if (!(IsOutputGLSL(shaderOutput) || IsOutputESSL(shaderOutput)) &&
+        (options & SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER) != 0u)
+    {
+        // This compiler option is only available in ESSL and GLSL.
+        return 0;
+    }
+
     std::vector<uint32_t> validOutputs;
     validOutputs.push_back(SH_ESSL_OUTPUT);
     validOutputs.push_back(SH_GLSL_COMPATIBILITY_OUTPUT);
@@ -105,7 +122,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     size -= kHeaderSize;
     data += kHeaderSize;
 
-    if (!ShInitialize())
+    if (!sh::Initialize())
     {
         return 0;
     }
@@ -117,16 +134,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     if (translators.find(key) == translators.end())
     {
-        TCompiler *translator = ConstructCompiler(type, static_cast<ShShaderSpec>(spec),
-                                                  static_cast<ShShaderOutput>(output));
+        UniqueTCompiler translator(
+            ConstructCompiler(type, static_cast<ShShaderSpec>(spec), shaderOutput));
 
-        if (!translator)
+        if (translator == nullptr)
         {
             return 0;
         }
 
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
 
         // Enable all the extensions to have more coverage
         resources.OES_standard_derivatives        = 1;
@@ -142,18 +159,18 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         resources.EXT_shader_framebuffer_fetch    = 1;
         resources.NV_shader_framebuffer_fetch     = 1;
         resources.ARM_shader_framebuffer_fetch    = 1;
+        resources.EXT_YUV_target                  = 1;
         resources.MaxDualSourceDrawBuffers        = 1;
 
         if (!translator->Init(resources))
         {
-            DeleteCompiler(translator);
             return 0;
         }
 
-        translators[key] = translator;
+        translators[key] = std::move(translator);
     }
 
-    TCompiler *translator = translators[key];
+    auto &translator = translators[key];
 
     const char *shaderStrings[] = {reinterpret_cast<const char *>(data)};
     translator->compile(shaderStrings, 1, options);

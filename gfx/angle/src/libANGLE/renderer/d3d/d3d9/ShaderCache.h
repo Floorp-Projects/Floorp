@@ -24,9 +24,7 @@ template <typename ShaderObject>
 class ShaderCache : angle::NonCopyable
 {
   public:
-    ShaderCache() : mDevice(NULL)
-    {
-    }
+    ShaderCache() : mDevice(nullptr) {}
 
     ~ShaderCache()
     {
@@ -47,14 +45,14 @@ class ShaderCache : angle::NonCopyable
         {
             it->second->AddRef();
             *outShaderObject = it->second;
-            return gl::Error(GL_NO_ERROR);
+            return gl::NoError();
         }
 
         ShaderObject *shader;
         HRESULT result = createShader(function, &shader);
         if (FAILED(result))
         {
-            return gl::Error(GL_OUT_OF_MEMORY, "Failed to create shader, result: 0x%X.", result);
+            return gl::OutOfMemory() << "Failed to create shader, " << gl::FmtHR(result);
         }
 
         // Random eviction policy.
@@ -68,7 +66,7 @@ class ShaderCache : angle::NonCopyable
         mMap[key] = shader;
 
         *outShaderObject = shader;
-        return gl::Error(GL_NO_ERROR);
+        return gl::NoError();
     }
 
     void clear()

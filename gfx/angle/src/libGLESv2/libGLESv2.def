@@ -231,6 +231,10 @@ EXPORTS
     glBindFragmentInputLocationCHROMIUM           @343
     glProgramPathFragmentInputGenCHROMIUM         @344
 
+    glFramebufferTextureMultiviewLayeredANGLE @413
+    glFramebufferTextureMultiviewSideBySideANGLE @414
+    glRequestExtensionANGLE         @415
+
     ; GLES 3.0 Functions
     glReadBuffer                    @180
     glDrawRangeElements             @181
@@ -408,7 +412,5 @@ EXPORTS
     glVertexBindingDivisor          @412
 
     ; ANGLE Platform Implementation
-    ANGLEPlatformCurrent            @290
-    ANGLEPlatformInitialize         @291
-    ANGLEPlatformShutdown           @292
-
+    ANGLEGetDisplayPlatform         @290
+    ANGLEResetDisplayPlatform       @291

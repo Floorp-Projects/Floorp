@@ -23,43 +23,50 @@ class VertexArrayGL : public VertexArrayImpl
     VertexArrayGL(const gl::VertexArrayState &data,
                   const FunctionsGL *functions,
                   StateManagerGL *stateManager);
-    ~VertexArrayGL() override;
+    void destroy(const gl::Context *context) override;
 
-    gl::Error syncDrawArraysState(const gl::AttributesMask &activeAttributesMask,
+    gl::Error syncDrawArraysState(const gl::Context *context,
+                                  const gl::AttributesMask &activeAttributesMask,
                                   GLint first,
                                   GLsizei count,
                                   GLsizei instanceCount) const;
-    gl::Error syncDrawElementsState(const gl::AttributesMask &activeAttributesMask,
+    gl::Error syncDrawElementsState(const gl::Context *context,
+                                    const gl::AttributesMask &activeAttributesMask,
                                     GLsizei count,
                                     GLenum type,
-                                    const GLvoid *indices,
+                                    const void *indices,
                                     GLsizei instanceCount,
                                     bool primitiveRestartEnabled,
-                                    const GLvoid **outIndices) const;
+                                    const void **outIndices) const;
+    gl::Error syncElementArrayState(const gl::Context *context) const;
 
     GLuint getVertexArrayID() const;
     GLuint getAppliedElementArrayBufferID() const;
 
-    void syncState(const gl::VertexArray::DirtyBits &dirtyBits) override;
+    void syncState(const gl::Context *context,
+                   const gl::VertexArray::DirtyBits &dirtyBits) override;
+    void applyNumViewsToDivisor(int numViews);
 
   private:
-    gl::Error syncDrawState(const gl::AttributesMask &activeAttributesMask,
+    gl::Error syncDrawState(const gl::Context *context,
+                            const gl::AttributesMask &activeAttributesMask,
                             GLint first,
                             GLsizei count,
                             GLenum type,
-                            const GLvoid *indices,
+                            const void *indices,
                             GLsizei instanceCount,
                             bool primitiveRestartEnabled,
-                            const GLvoid **outIndices) const;
+                            const void **outIndices) const;
 
     // Apply index data, only sets outIndexRange if attributesNeedStreaming is true
-    gl::Error syncIndexData(GLsizei count,
+    gl::Error syncIndexData(const gl::Context *context,
+                            GLsizei count,
                             GLenum type,
-                            const GLvoid *indices,
+                            const void *indices,
                             bool primitiveRestartEnabled,
                             bool attributesNeedStreaming,
                             gl::IndexRange *outIndexRange,
-                            const GLvoid **outIndices) const;
+                            const void **outIndices) const;
 
     // Returns the amount of space needed to stream all attributes that need streaming
     // and the data size of the largest attribute
@@ -76,15 +83,30 @@ class VertexArrayGL : public VertexArrayImpl
 
     void updateNeedsStreaming(size_t attribIndex);
     void updateAttribEnabled(size_t attribIndex);
-    void updateAttribPointer(size_t attribIndex);
+    void updateAttribPointer(const gl::Context *context, size_t attribIndex);
+
+    bool supportVertexAttribBinding() const;
+
+    void updateAttribFormat(size_t attribIndex);
+    void updateAttribBinding(size_t attribIndex);
+    void updateBindingBuffer(const gl::Context *context, size_t bindingIndex);
+    void updateBindingDivisor(size_t bindingIndex);
+
+    void callVertexAttribPointer(GLuint attribIndex,
+                                 const gl::VertexAttribute &attrib,
+                                 GLsizei stride,
+                                 GLintptr offset) const;
 
     const FunctionsGL *mFunctions;
     StateManagerGL *mStateManager;
 
     GLuint mVertexArrayID;
+    int mAppliedNumViews;
 
-    mutable BindingPointer<gl::Buffer> mAppliedElementArrayBuffer;
+    mutable gl::BindingPointer<gl::Buffer> mAppliedElementArrayBuffer;
+
     mutable std::vector<gl::VertexAttribute> mAppliedAttributes;
+    mutable std::vector<gl::VertexBinding> mAppliedBindings;
 
     mutable size_t mStreamingElementArrayBufferSize;
     mutable GLuint mStreamingElementArrayBuffer;
@@ -94,7 +116,6 @@ class VertexArrayGL : public VertexArrayImpl
 
     gl::AttributesMask mAttributesNeedStreaming;
 };
-
 }
 
-#endif // LIBANGLE_RENDERER_GL_VERTEXARRAYGL_H_
+#endif  // LIBANGLE_RENDERER_GL_VERTEXARRAYGL_H_

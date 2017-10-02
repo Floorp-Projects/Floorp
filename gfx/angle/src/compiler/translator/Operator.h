@@ -12,12 +12,21 @@
 //
 enum TOperator
 {
-    EOpNull,            // if in a node, should only mean a node is still being built
-    EOpFunctionCall,
-    EOpParameters,      // an aggregate listing the parameters to a function
+    EOpNull,  // if in a node, should only mean a node is still being built
 
-    EOpInvariantDeclaration, // Specialized declarations for attributing invariance
-    EOpPrototype,
+    // Call a function defined in the AST. This might be a user-defined function or a function
+    // inserted by an AST transformation.
+    EOpCallFunctionInAST,
+
+    // Call an internal helper function with a raw implementation - the implementation can't be
+    // subject to AST transformations. Raw functions have a few constraints to keep them compatible
+    // with AST traversers:
+    // * They should not return arrays.
+    // * They should not have out parameters.
+    EOpCallInternalRawFunction,
+
+    // Call a built-in function like a texture or image function.
+    EOpCallBuiltInFunction,
 
     //
     // Unary operators
@@ -26,7 +35,6 @@ enum TOperator
     EOpNegative,
     EOpPositive,
     EOpLogicalNot,
-    EOpVectorLogicalNot,
     EOpBitwiseNot,
 
     EOpPostIncrement,
@@ -34,8 +42,11 @@ enum TOperator
     EOpPreIncrement,
     EOpPreDecrement,
 
+    EOpArrayLength,
+
     //
-    // binary operations
+    // binary operations (ones with special GLSL syntax are used in TIntermBinary nodes, others in
+    // TIntermAggregate nodes)
     //
 
     EOpAdd,
@@ -43,20 +54,28 @@ enum TOperator
     EOpMul,
     EOpDiv,
     EOpIMod,
+
     EOpEqual,
     EOpNotEqual,
-    EOpVectorEqual,
-    EOpVectorNotEqual,
     EOpLessThan,
     EOpGreaterThan,
     EOpLessThanEqual,
     EOpGreaterThanEqual,
+
+    EOpEqualComponentWise,
+    EOpNotEqualComponentWise,
+    EOpLessThanComponentWise,
+    EOpLessThanEqualComponentWise,
+    EOpGreaterThanComponentWise,
+    EOpGreaterThanEqualComponentWise,
+
     EOpComma,
 
     EOpVectorTimesScalar,
     EOpVectorTimesMatrix,
     EOpMatrixTimesVector,
     EOpMatrixTimesScalar,
+    EOpMatrixTimesMatrix,
 
     EOpLogicalOr,
     EOpLogicalXor,
@@ -75,7 +94,7 @@ enum TOperator
     EOpIndexDirectInterfaceBlock,
 
     //
-    // Built-in functions potentially mapped to operators
+    // Built-in functions mapped to operators (either unary or with multiple parameters)
     //
 
     EOpRadians,
@@ -126,6 +145,9 @@ enum TOperator
     EOpIntBitsToFloat,
     EOpUintBitsToFloat,
 
+    EOpFrexp,
+    EOpLdexp,
+
     EOpPackSnorm2x16,
     EOpPackUnorm2x16,
     EOpPackHalf2x16,
@@ -133,21 +155,25 @@ enum TOperator
     EOpUnpackUnorm2x16,
     EOpUnpackHalf2x16,
 
+    EOpPackUnorm4x8,
+    EOpPackSnorm4x8,
+    EOpUnpackUnorm4x8,
+    EOpUnpackSnorm4x8,
+
     EOpLength,
     EOpDistance,
     EOpDot,
     EOpCross,
     EOpNormalize,
-    EOpFaceForward,
+    EOpFaceforward,
     EOpReflect,
     EOpRefract,
 
-    EOpDFdx,            // Fragment only, OES_standard_derivatives extension
-    EOpDFdy,            // Fragment only, OES_standard_derivatives extension
-    EOpFwidth,          // Fragment only, OES_standard_derivatives extension
+    EOpDFdx,    // Fragment only, OES_standard_derivatives extension
+    EOpDFdy,    // Fragment only, OES_standard_derivatives extension
+    EOpFwidth,  // Fragment only, OES_standard_derivatives extension
 
-    EOpMatrixTimesMatrix,
-
+    EOpMulMatrixComponentWise,
     EOpOuterProduct,
     EOpTranspose,
     EOpDeterminant,
@@ -155,46 +181,33 @@ enum TOperator
 
     EOpAny,
     EOpAll,
+    EOpLogicalNotComponentWise,
+
+    EOpBitfieldExtract,
+    EOpBitfieldInsert,
+    EOpBitfieldReverse,
+    EOpBitCount,
+    EOpFindLSB,
+    EOpFindMSB,
+    EOpUaddCarry,
+    EOpUsubBorrow,
+    EOpUmulExtended,
+    EOpImulExtended,
 
     //
     // Branch
     //
 
-    EOpKill,            // Fragment only
+    EOpKill,  // Fragment only
     EOpReturn,
     EOpBreak,
     EOpContinue,
 
     //
-    // Constructors
+    // Constructor
     //
 
-    EOpConstructInt,
-    EOpConstructUInt,
-    EOpConstructBool,
-    EOpConstructFloat,
-    EOpConstructVec2,
-    EOpConstructVec3,
-    EOpConstructVec4,
-    EOpConstructBVec2,
-    EOpConstructBVec3,
-    EOpConstructBVec4,
-    EOpConstructIVec2,
-    EOpConstructIVec3,
-    EOpConstructIVec4,
-    EOpConstructUVec2,
-    EOpConstructUVec3,
-    EOpConstructUVec4,
-    EOpConstructMat2,
-    EOpConstructMat2x3,
-    EOpConstructMat2x4,
-    EOpConstructMat3x2,
-    EOpConstructMat3,
-    EOpConstructMat3x4,
-    EOpConstructMat4x2,
-    EOpConstructMat4x3,
-    EOpConstructMat4,
-    EOpConstructStruct,
+    EOpConstruct,
 
     //
     // moves
@@ -217,11 +230,24 @@ enum TOperator
     EOpBitShiftRightAssign,
     EOpBitwiseAndAssign,
     EOpBitwiseXorAssign,
-    EOpBitwiseOrAssign
+    EOpBitwiseOrAssign,
+
+    //  barriers
+    EOpBarrier,
+    EOpMemoryBarrier,
+    EOpMemoryBarrierAtomicCounter,
+    EOpMemoryBarrierBuffer,
+    EOpMemoryBarrierImage,
+    EOpMemoryBarrierShared,
+    EOpGroupMemoryBarrier,
+
+    //  Geometry only
+    EOpEmitVertex,
+    EOpEndPrimitive
 };
 
 // Returns the string corresponding to the operator in GLSL
-const char* GetOperatorString(TOperator op);
+const char *GetOperatorString(TOperator op);
 
 // Say whether or not a binary or unary operation changes the value of a variable.
 bool IsAssignment(TOperator op);

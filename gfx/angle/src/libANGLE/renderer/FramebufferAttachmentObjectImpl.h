@@ -22,11 +22,13 @@ class FramebufferAttachmentObjectImpl : angle::NonCopyable
     FramebufferAttachmentObjectImpl() {}
     virtual ~FramebufferAttachmentObjectImpl() {}
 
-    virtual gl::Error getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
+    virtual gl::Error getAttachmentRenderTarget(const gl::Context *context,
+                                                GLenum binding,
+                                                const gl::ImageIndex &imageIndex,
                                                 FramebufferAttachmentRenderTarget **rtOut)
     {
         UNIMPLEMENTED();
-        return gl::Error(GL_OUT_OF_MEMORY, "getAttachmentRenderTarget not supported.");
+        return gl::OutOfMemory() << "getAttachmentRenderTarget not supported.";
     }
 };
 
