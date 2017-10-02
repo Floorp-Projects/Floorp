@@ -59,8 +59,6 @@
     <color name="photon_toolbar_text_color_private">#FFFFFF</color>
     <color name="photon_toolbar_image_tint">@color/photon_toolbar_text_color</color>
     <color name="photon_toolbar_image_tint_private">@color/photon_toolbar_text_color_private</color>
-    <color name="photon_toolbar_bg">#F7FAFC</color>
-    <color name="photon_toolbar_bg_private">#38383D</color>
 
     <color name="photon_search_item_text">@color/photon_text_main</color>
     <color name="photon_search_item_text_private">@color/photon_text_main_private</color>
@@ -100,8 +98,8 @@
     <color name="tab_strip_title_lwt">#272727</color>
 
     <!-- Status bar background color -->
-    <color name="status_bar_bg_color">@color/photon_toolbar_bg</color>
-    <color name="status_bar_bg_color_private">@color/photon_toolbar_bg_private</color>
+    <color name="status_bar_bg_color">#F9F9FA</color>
+    <color name="status_bar_bg_color_private">#38383D</color>
     <color name="status_bar_bg_color_tabs_tray">@color/photon_tabs_tray_bg</color>
     <color name="status_bar_bg_color_tablet">@color/photon_tabs_tray_bg</color>
 
