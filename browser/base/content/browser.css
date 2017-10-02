@@ -245,7 +245,6 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 %endif
 %ifndef MOZ_WIDGET_COCOA
 #main-window:not([sizemode=normal]) .titlebar-placeholder[type="pre-tabs"],
-#main-window:not([sizemode=normal]) .titlebar-placeholder[type="post-tabs"],
 %endif
 #main-window:not([chromemargin]) > #titlebar,
 #main-window[inFullscreen] > #titlebar,
