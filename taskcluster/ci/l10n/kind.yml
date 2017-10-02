@@ -46,6 +46,11 @@ job-template:
          android-api-16-l10n:
            in-tree: android-build
          win.*: null
+   toolchains:
+      by-build-platform:
+         default: []
+         android-api-16-l10n:
+            - proguard-jar
    tooltool:
       by-build-platform:
          default: public

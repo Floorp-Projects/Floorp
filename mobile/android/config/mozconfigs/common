@@ -108,3 +108,5 @@ export MOZ_PACKAGE_JSSHELL=1
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 
 JS_BINARY="$topsrcdir/mobile/android/config/js_wrapper.sh"
+
+export PROGUARD_JAR="$topsrcdir/proguard/lib/proguard.jar"
