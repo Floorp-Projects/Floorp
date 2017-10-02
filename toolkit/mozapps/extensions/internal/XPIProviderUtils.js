@@ -16,18 +16,17 @@ var Cr = Components.results;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AddonManager.jsm");
-/* globals AddonManagerPrivate*/
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
-                                  "resource://gre/modules/addons/AddonRepository.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredSave",
-                                  "resource://gre/modules/DeferredSave.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
                                    "@mozilla.org/extensions/blocklist;1",
                                    Ci.nsIBlocklistService);
@@ -280,16 +279,44 @@ this.XPIDatabase = {
   // Active add-on directories loaded from extensions.ini and prefs at startup.
   activeBundles: null,
 
+  _saveTask: null,
+
   // Saved error object if we fail to read an existing database
   _loadError: null,
+
+  // Saved error object if we fail to save the database
+  _saveError: null,
 
   // Error reported by our most recent attempt to read or write the database, if any
   get lastError() {
     if (this._loadError)
       return this._loadError;
-    if (this._deferredSave)
-      return this._deferredSave.lastError;
+    if (this._saveError)
+      return this._saveError;
     return null;
+  },
+
+  async _saveNow() {
+    try {
+      let json = JSON.stringify(this);
+      let path = this.jsonFile.path;
+      await OS.File.writeAtomic(path, json, {tmpPath: `${path}.tmp`});
+
+      if (!this._schemaVersionSet) {
+        // Update the XPIDB schema version preference the first time we
+        // successfully save the database.
+        logger.debug("XPI Database saved, setting schema version preference to " + DB_SCHEMA);
+        Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+        this._schemaVersionSet = true;
+
+        // Reading the DB worked once, so we don't need the load error
+        this._loadError = null;
+      }
+    } catch (error) {
+      logger.warn("Failed to save XPI database", error);
+      this._saveError = error;
+      throw error;
+    }
   },
 
   /**
@@ -307,47 +334,21 @@ this.XPIDatabase = {
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_late_stack", Log.stackTrace(err));
     }
 
-    if (!this._deferredSave) {
-      this._deferredSave = new DeferredSave(this.jsonFile.path,
-                                            () => JSON.stringify(this),
-                                            ASYNC_SAVE_DELAY_MS);
+    if (!this._saveTask) {
+      this._saveTask = new DeferredTask(() => this._saveNow(),
+                                        ASYNC_SAVE_DELAY_MS);
     }
 
-    let promise = this._deferredSave.saveChanges();
-    if (!this._schemaVersionSet) {
-      this._schemaVersionSet = true;
-      promise = promise.then(
-        count => {
-          // Update the XPIDB schema version preference the first time we successfully
-          // save the database.
-          logger.debug("XPI Database saved, setting schema version preference to " + DB_SCHEMA);
-          Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
-          // Reading the DB worked once, so we don't need the load error
-          this._loadError = null;
-        },
-        error => {
-          // Need to try setting the schema version again later
-          this._schemaVersionSet = false;
-          // this._deferredSave.lastError has the most recent error so we don't
-          // need this any more
-          this._loadError = null;
-
-          throw error;
-        });
-    }
-
-    promise.catch(error => {
-      logger.warn("Failed to save XPI database", error);
-    });
+    this._saveTask.arm();
   },
 
-  flush() {
+  async finalize() {
     // handle the "in memory only" and "saveChanges never called" cases
-    if (!this._deferredSave) {
-      return Promise.resolve(0);
+    if (!this._saveTask) {
+      return;
     }
 
-    return this._deferredSave.flush();
+    await this._saveTask.finalize();
   },
 
   /**
@@ -658,39 +659,26 @@ this.XPIDatabase = {
 
       this.initialized = false;
 
-      if (this._deferredSave) {
-        AddonManagerPrivate.recordSimpleMeasure(
-            "XPIDB_saves_total", this._deferredSave.totalSaves);
-        AddonManagerPrivate.recordSimpleMeasure(
-            "XPIDB_saves_overlapped", this._deferredSave.overlappedSaves);
-        AddonManagerPrivate.recordSimpleMeasure(
-            "XPIDB_saves_late", this._deferredSave.dirty ? 1 : 0);
-      }
-
       // If we're shutting down while still loading, finish loading
       // before everything else!
       if (this._dbPromise) {
         await this._dbPromise;
       }
 
-      // Await and pending DB writes and finish cleaning up.
-      try {
-        await this.flush();
-      } catch (error) {
-        logger.error("Flush of XPI database failed", error);
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_shutdownFlush_failed", 1);
+      // Await any pending DB writes and finish cleaning up.
+      await this.finalize();
+
+      if (this._saveError) {
         // If our last attempt to read or write the DB failed, force a new
         // extensions.ini to be written to disk on the next startup
         Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
-
-        throw error;
       }
 
       // Clear out the cached addons data loaded from JSON
       delete this.addonDB;
       delete this._dbPromise;
       // same for the deferred save
-      delete this._deferredSave;
+      delete this._saveTask;
       // re-enable the schema version setter
       delete this._schemaVersionSet;
     }
