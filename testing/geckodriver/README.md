@@ -164,6 +164,14 @@ geckodriver supports a number of [capabilities]:
  </tr>
 
  <tr>
+  <td><code>noProxy</code>
+  <td>list
+  <td>Lists the addresses for which the proxy should be bypassed.
+   This property should only be set when <code>proxyType</code>
+   is set to <code>manual</code>.
+ </tr>
+
+ <tr>
   <td><code>sslProxy</code>
   <td>string
   <td>Defines the proxy hostname with an optional port for encrypted TLS traffic.
