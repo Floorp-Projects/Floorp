@@ -117,9 +117,26 @@ ServoRestyleState::AssertOwner(const ServoRestyleState& aParent) const
   MOZ_ASSERT(mOwner);
   MOZ_ASSERT(!mOwner->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
   // We allow aParent.mOwner to be null, for cases when we're not starting at
-  // the root of the tree.
-  MOZ_ASSERT_IF(aParent.mOwner,
-                ExpectedOwnerForChild(*mOwner) == aParent.mOwner);
+  // the root of the tree.  We also allow aParent.mOwner to be somewhere up our
+  // expected owner chain not our immediate owner, which allows us creating long
+  // chains of ServoRestyleStates in some cases where it's just not worth it.
+#ifdef DEBUG
+  if (aParent.mOwner) {
+    const nsIFrame* owner = ExpectedOwnerForChild(*mOwner);
+    if (owner != aParent.mOwner) {
+      MOZ_ASSERT(IsAnonBox(*owner),
+                 "Should only have expected owner weirdness when anon boxes are involved");
+      bool found = false;
+      for (; owner; owner = ExpectedOwnerForChild(*owner)) {
+        if (owner == aParent.mOwner) {
+          found = true;
+          break;
+        }
+      }
+      MOZ_ASSERT(found, "Must have aParent.mOwner on our expected owner chain");
+    }
+  }
+#endif
 }
 
 nsChangeHint
