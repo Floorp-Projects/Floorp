@@ -952,10 +952,15 @@ nsDocShell::DestroyChildren()
   nsDocLoader::DestroyChildren();
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDocShell,
+                                   nsDocLoader,
+                                   mSessionStorageManager,
+                                   mScriptGlobal)
+
 NS_IMPL_ADDREF_INHERITED(nsDocShell, nsDocLoader)
 NS_IMPL_RELEASE_INHERITED(nsDocShell, nsDocLoader)
 
-NS_INTERFACE_MAP_BEGIN(nsDocShell)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
