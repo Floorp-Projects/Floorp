@@ -342,6 +342,10 @@ pref("browser.urlbar.oneOffSearches", true);
 // human readable (percent-decoded) URL on the clipboard.
 pref("browser.urlbar.decodeURLsOnCopy", false);
 
+// Whether or not to move tabs into the active window when using the "Switch to
+// Tab" feature of the awesomebar.
+pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
