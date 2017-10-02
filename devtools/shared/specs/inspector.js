@@ -10,9 +10,6 @@ const {
   generateActorSpec,
   types
 } = require("devtools/shared/protocol");
-const { nodeSpec } = require("devtools/shared/specs/node");
-
-exports.nodeSpec = nodeSpec;
 
 /**
  * Returned from any call that might return a node that isn't connected to root
