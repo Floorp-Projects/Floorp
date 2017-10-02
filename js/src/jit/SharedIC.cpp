@@ -1973,12 +1973,10 @@ CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id)
 }
 
 bool
-CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
-                       JSObject** lastProto, size_t* protoChainDepthOut)
+CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id)
 {
-    size_t depth = 0;
     JSObject* curObj = obj;
-    while (curObj) {
+    do {
         if (!CheckHasNoSuchOwnProperty(cx, curObj, id))
             return false;
 
@@ -1988,18 +1986,9 @@ CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                 return false;
         }
 
-        JSObject* proto = curObj->staticPrototype();
-        if (!proto)
-            break;
+        curObj = curObj->staticPrototype();
+    } while (curObj);
 
-        curObj = proto;
-        depth++;
-    }
-
-    if (lastProto)
-        *lastProto = curObj;
-    if (protoChainDepthOut)
-        *protoChainDepthOut = depth;
     return true;
 }
 

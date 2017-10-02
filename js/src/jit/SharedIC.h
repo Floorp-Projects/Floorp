@@ -2328,8 +2328,7 @@ MOZ_MUST_USE bool
 CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id);
 
 MOZ_MUST_USE bool
-CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
-                       JSObject** lastProto = nullptr, size_t* protoChainDepthOut = nullptr);
+CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id);
 
 void
 CheckForTypedObjectWithDetachedStorage(JSContext* cx, MacroAssembler& masm, Label* failure);
