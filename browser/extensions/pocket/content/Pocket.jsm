@@ -32,10 +32,6 @@ var Pocket = {
   /**
    * Functions related to the Pocket panel UI.
    */
-  onBeforeCommand(event) {
-    BrowserUtils.setToolbarButtonHeightProperty(event.target);
-  },
-
   onShownInPhotonPageActionPanel(panel, iframe) {
     let window = panel.ownerGlobal;
     window.pktUI.setPhotonPageActionPanelFrame(iframe);
