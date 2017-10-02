@@ -38,6 +38,8 @@ void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 
 void CSFLogV( CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args);
 
+int CSFLogTestLevel(CSFLogLevel priority);
+
 #ifdef __cplusplus
 }
 #endif
