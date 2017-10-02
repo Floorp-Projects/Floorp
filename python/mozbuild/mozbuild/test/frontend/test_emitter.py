@@ -190,9 +190,6 @@ class TestEmitterBasic(unittest.TestCase):
             'DEFFILE': 'baz.def',
             'MOZBUILD_LDFLAGS': ['-framework Foo', '-x', '-DELAYLOAD:foo.dll',
                                  '-DELAYLOAD:bar.dll'],
-            'MOZBUILD_HOST_CFLAGS': ['-funroll-loops', '-wall'],
-            'MOZBUILD_HOST_CXXFLAGS': ['-funroll-loops-harder',
-                                       '-wall-day-everyday'],
             'WIN32_EXE_LDFLAGS': ['-subsystem:console'],
         }
 
@@ -231,6 +228,58 @@ class TestEmitterBasic(unittest.TestCase):
         sources, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['DEBUG'], [])
+
+    def test_host_compile_flags(self):
+        reader = self.reader('host-compile-flags', extra_substs={
+            'HOST_CXXFLAGS': ['-Wall', '-Werror'],
+            'HOST_CFLAGS': ['-Werror', '-Wall'],
+        })
+        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['HOST_CXXFLAGS'], reader.config.substs['HOST_CXXFLAGS'])
+        self.assertEqual(flags.flags['HOST_CFLAGS'], reader.config.substs['HOST_CFLAGS'])
+        self.assertEqual(set(flags.flags['HOST_DEFINES']),
+                         set(['-DFOO', '-DBAZ="abcd"', '-UQUX', '-DBAR=7', '-DVALUE=xyz']))
+        self.assertEqual(flags.flags['MOZBUILD_HOST_CFLAGS'], ['-funroll-loops', '-host-arg'])
+        self.assertEqual(flags.flags['MOZBUILD_HOST_CXXFLAGS'], [])
+
+    def test_host_no_optimize_flags(self):
+        reader = self.reader('host-compile-flags', extra_substs={
+            'MOZ_OPTIMIZE': '',
+            'MOZ_OPTIMIZE_FLAGS': ['-O2'],
+        })
+        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['HOST_OPTIMIZE'], [])
+
+    def test_host_optimize_flags(self):
+        reader = self.reader('host-compile-flags', extra_substs={
+            'MOZ_OPTIMIZE': '1',
+            'MOZ_OPTIMIZE_FLAGS': ['-O2'],
+        })
+        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['HOST_OPTIMIZE'], ['-O2'])
+
+    def test_cross_optimize_flags(self):
+        reader = self.reader('host-compile-flags', extra_substs={
+            'MOZ_OPTIMIZE': '1',
+            'MOZ_OPTIMIZE_FLAGS': ['-O2'],
+            'HOST_OPTIMIZE_FLAGS': ['-O3'],
+            'CROSS_COMPILE': '1',
+        })
+        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['HOST_OPTIMIZE'], ['-O3'])
+
+    def test_host_rtl_flag(self):
+        reader = self.reader('host-compile-flags', extra_substs={
+            'OS_ARCH': 'WINNT',
+            'MOZ_DEBUG': '1',
+        })
+        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['RTL'], ['-MDd'])
 
     def test_compile_flags_validation(self):
         reader = self.reader('compile-flags-field-validation')
@@ -853,25 +902,6 @@ class TestEmitterBasic(unittest.TestCase):
 
         self.assertEqual(defines, expected)
 
-    def test_host_defines(self):
-        reader = self.reader('host-defines')
-        objs = self.read_topsrcdir(reader)
-
-        defines = {}
-        for o in objs:
-            if isinstance(o, HostDefines):
-                defines = o.defines
-
-        expected = {
-            'BAR': 7,
-            'BAZ': '"abcd"',
-            'FOO': True,
-            'VALUE': 'xyz',
-            'QUX': False,
-        }
-
-        self.assertEqual(defines, expected)
-
     def test_jar_manifests(self):
         reader = self.reader('jar-manifests')
         objs = self.read_topsrcdir(reader)
@@ -1015,11 +1045,15 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('host-sources')
         objs = self.read_topsrcdir(reader)
 
+        # This objdir will generate target flags.
         flags = objs.pop()
         self.assertIsInstance(flags, ComputedFlags)
         # The second to last object is a Linkable
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
+        # This objdir will also generate host flags.
+        flags = objs.pop()
+        self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, HostSources)

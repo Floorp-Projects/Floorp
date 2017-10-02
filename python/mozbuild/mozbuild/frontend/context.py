@@ -300,7 +300,51 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
             self.update(value)
 
 
-class CompileFlags(ContextDerivedValue, dict):
+class BaseCompileFlags(ContextDerivedValue, dict):
+    def __init__(self, context):
+        self._context = context
+        self._known_keys = set(k for k, v, _ in self.flag_variables)
+
+        # Providing defaults here doesn't play well with multiple templates
+        # modifying COMPILE_FLAGS from the same moz.build, because the merge
+        # done after the template runs can't tell which values coming from
+        # a template were set and which were provided as defaults.
+        template_name = getattr(context, 'template', None)
+        if template_name in (None, 'Gyp'):
+            dict.__init__(self, ((k, v if v is None else TypedList(unicode)(v))
+                                 for k, v, _ in self.flag_variables))
+        else:
+            dict.__init__(self)
+
+
+class HostCompileFlags(BaseCompileFlags):
+    def __init__(self, context):
+        self._context = context
+
+        self.flag_variables = (
+            ('HOST_CXXFLAGS', context.config.substs.get('HOST_CXXFLAGS'),
+             ('HOST_CXXFLAGS',)),
+            ('HOST_CFLAGS', context.config.substs.get('HOST_CFLAGS'),
+             ('HOST_CFLAGS',)),
+            ('HOST_OPTIMIZE', self._optimize_flags(),
+             ('HOST_CFLAGS', 'HOST_CXXFLAGS')),
+            ('RTL', None, ('HOST_CFLAGS',)),
+            ('HOST_DEFINES', None, ('HOST_CFLAGS', 'HOST_CXXFLAGS')),
+            ('MOZBUILD_HOST_CFLAGS', [], ('HOST_CFLAGS',)),
+            ('MOZBUILD_HOST_CXXFLAGS', [], ('HOST_CXXFLAGS',)),
+        )
+        BaseCompileFlags.__init__(self, context)
+
+    def _optimize_flags(self):
+        optimize_flags = []
+        if self._context.config.substs.get('CROSS_COMPILE'):
+            optimize_flags += self._context.config.substs.get('HOST_OPTIMIZE_FLAGS')
+        elif self._context.config.substs.get('MOZ_OPTIMIZE'):
+            optimize_flags += self._context.config.substs.get('MOZ_OPTIMIZE_FLAGS')
+        return optimize_flags
+
+
+class CompileFlags(BaseCompileFlags):
     def __init__(self, context):
         main_src_dir = mozpath.dirname(context.main_path)
         self._context = context
@@ -348,18 +392,8 @@ class CompileFlags(ContextDerivedValue, dict):
             ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
             ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
         )
-        self._known_keys = set(k for k, v, _ in self.flag_variables)
 
-        # Providing defaults here doesn't play well with multiple templates
-        # modifying COMPILE_FLAGS from the same moz.build, because the merge
-        # done after the template runs can't tell which values coming from
-        # a template were set and which were provided as defaults.
-        template_name = getattr(context, 'template', None)
-        if template_name in (None, 'Gyp'):
-            dict.__init__(self, ((k, v if v is None else TypedList(unicode)(v))
-                                 for k, v, _ in self.flag_variables))
-        else:
-            dict.__init__(self)
+        BaseCompileFlags.__init__(self, context)
 
     def _debug_flags(self):
         if (self._context.config.substs.get('MOZ_DEBUG') or
@@ -1888,6 +1922,11 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
+        """),
+
+    'HOST_COMPILE_FLAGS': (HostCompileFlags, dict,
+        """Recipe for host compile flags for this context. Not to be manipulated
+        directly.
         """),
 
     'HOST_DEFINES': (InitializedDefines, dict,
