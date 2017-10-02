@@ -114,12 +114,12 @@ GetZeroValueForUnit(StyleAnimationValue::Unit aUnit)
   }
 }
 
-// This method requires at least one of its arguments to be non-null.
-//
 // If one argument is null, this method updates it to point to "zero"
 // for the other argument's Unit (if applicable; otherwise, we return false).
 //
-// If neither argument is null, this method does nothing.
+// If neither argument is null, this method simply returns true.
+//
+// If both arguments are null, this method returns false.
 //
 // |aZeroValueStorage| should be a reference to a RefPtr<RawServoAnimationValue>.
 // This is used where we may need to allocate a new ServoAnimationValue to
@@ -131,7 +131,9 @@ FinalizeServoAnimationValues(const RefPtr<RawServoAnimationValue>*& aValue1,
                              const RefPtr<RawServoAnimationValue>*& aValue2,
                              RefPtr<RawServoAnimationValue>& aZeroValueStorage)
 {
-  MOZ_ASSERT(aValue1 || aValue2, "expecting at least one non-null value");
+  if (!aValue1 && !aValue2) {
+    return false;
+  }
 
   // Are we missing either val? (If so, it's an implied 0 in other val's units)
 
@@ -149,8 +151,9 @@ static bool
 FinalizeStyleAnimationValues(const StyleAnimationValue*& aValue1,
                              const StyleAnimationValue*& aValue2)
 {
-  MOZ_ASSERT(aValue1 || aValue2,
-             "expecting at least one non-null value");
+  if (!aValue1 && !aValue2) {
+    return false;
+  }
 
   if (!aValue1) {
     aValue1 = GetZeroValueForUnit(aValue2->GetUnit());
@@ -298,7 +301,7 @@ AddOrAccumulateForServo(nsSMILValue& aDest,
   MOZ_ASSERT(!aValueToAddWrapper || !aDestWrapper ||
              aValueToAddWrapper->mServoValues.Length() ==
                aDestWrapper->mServoValues.Length(),
-             "Both of values'length in the wrappers should be the same if "
+             "Both of values' length in the wrappers should be the same if "
              "both of them exist");
 
   for (size_t i = 0; i < len; i++) {
@@ -359,8 +362,15 @@ AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
 
   ValueWrapper* destWrapper = ExtractValueWrapper(aDest);
   const ValueWrapper* valueToAddWrapper = ExtractValueWrapper(aValueToAdd);
-  MOZ_ASSERT(destWrapper || valueToAddWrapper,
-             "need at least one fully-initialized value");
+
+  // If both of the values are empty just fail. This can happen in rare cases
+  // such as when the underlying animation produced an empty value.
+  //
+  // Technically, it doesn't matter what we return here since in either case it
+  // will produce the same result: an empty value.
+  if (!destWrapper && !valueToAddWrapper) {
+    return false;
+  }
 
   nsCSSPropertyID property = valueToAddWrapper
                              ? valueToAddWrapper->mPropID
