@@ -42,7 +42,7 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(HMONITOR hMonitor, HDC hdc,
                                                    &numVideoOutputs,
                                                    &opmVideoOutputArray);
   if (S_OK != hr) {
-    if (0x8007001f != hr && 0x80070032 != hr && 0xc02625e5 != hr) {
+    if ((HRESULT)0x8007001f != hr && (HRESULT)0x80070032 != hr && (HRESULT)0xc02625e5 != hr) {
       char msg[100];
       sprintf(msg, "FAIL OPMGetVideoOutputsFromHMONITOR call failed: HRESULT=0x%08x", hr);
       failureMsgs->push_back(msg);
