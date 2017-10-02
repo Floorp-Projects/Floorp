@@ -1,0 +1,13 @@
+<html class="reftest-wait">
+  <script>
+    a = document.createElement("style")
+    a.appendChild(document.createTextNode("*:first-letter { }"))
+    document.documentElement.appendChild(a)
+    a.style.display = "contents"
+    requestIdleCallback(() => {
+      a.appendChild(document.createElement("x"));
+      a.lastChild.offsetWidth;
+      document.documentElement.className = "";
+    })
+  </script>
+</html>
