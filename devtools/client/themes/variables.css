@@ -26,6 +26,7 @@
   --theme-toolbar-background: var(--grey-10);
   --theme-toolbar-color: var(--grey-90);
   --theme-toolbar-selected-color: var(--blue-60);
+  --theme-toolbar-checked-color: var(--blue-60);
   --theme-toolbar-background-hover: rgba(221, 225, 228, 0.66);
   --theme-toolbar-background-alt: #f5f5f5;
   --theme-toolbar-hover: var(--grey-20);
@@ -84,8 +85,6 @@
   --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
 
   /* Icon filters */
-  --theme-icon-filter: url(chrome://devtools/skin/images/filters.svg#icon-normal-light);
-  --theme-icon-selected-filter: url(chrome://devtools/skin/images/filters.svg#icon-selected-light);
   --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-light);
 
   /* Tooltips */
@@ -111,6 +110,7 @@
   --theme-toolbar-background: var(--grey-90);
   --theme-toolbar-color: var(--grey-40);
   --theme-toolbar-selected-color: white;
+  --theme-toolbar-checked-color: #75BFFF;
   --theme-toolbar-background-hover: #20232B;
   --theme-toolbar-background-alt: #2F343E;
   --theme-toolbar-hover: #252526;
@@ -169,8 +169,6 @@
   --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
 
   /* Icon filters */
-  --theme-icon-filter: url(chrome://devtools/skin/images/filters.svg#icon-normal-dark);
-  --theme-icon-selected-filter: url(chrome://devtools/skin/images/filters.svg#icon-selected-dark);
   --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-dark);
 
   /* Tooltips */
@@ -233,8 +231,6 @@
   --theme-pane-expand-image: url(chrome://devtools/skin/images/firebug/pane-expand.svg);
 
   /* Icon filters */
-  --theme-icon-filter: none;
-  --theme-icon-selected-filter: none;
   --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-light);
 
   /* Font size */
