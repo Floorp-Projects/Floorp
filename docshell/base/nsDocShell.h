@@ -1051,10 +1051,7 @@ protected:
   bool mEODForCurrentDocument : 1;
   bool mURIResultedInDocument : 1;
 
-  // mIsBeingDestroyed is set while the nsDocShell itself is being torn down,
-  // while mScriptGlobalDead is set after mScriptGlobal is torn down.
   bool mIsBeingDestroyed : 1;
-  bool mScriptGlobalDead : 1;
 
   bool mIsExecutingOnLoadHandler : 1;
 
