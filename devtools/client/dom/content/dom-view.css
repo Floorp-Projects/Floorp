@@ -97,6 +97,12 @@ body {
 }
 
 /******************************************************************************/
+/* Refresh button */
+#dom-refresh-button::before {
+  background-image: url("chrome://devtools/skin/images/reload.svg");
+}
+
+/******************************************************************************/
 /* Search box */
 .devtools-searchbox {
   margin-inline-start: auto; /* Align to the right */
