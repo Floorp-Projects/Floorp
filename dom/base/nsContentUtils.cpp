@@ -2884,6 +2884,20 @@ nsContentUtils::ComparePoints(nsIDOMNode* aParent1, int32_t aOffset1,
   return ComparePoints(parent1, aOffset1, parent2, aOffset2);
 }
 
+/* static */
+int32_t
+nsContentUtils::ComparePoints(const RawRangeBoundary& aFirst,
+                              const RawRangeBoundary& aSecond,
+                              bool* aDisconnected)
+{
+  if (NS_WARN_IF(!aFirst.IsSet()) || NS_WARN_IF(!aSecond.IsSet())) {
+    return -1;
+  }
+  return ComparePoints(aFirst.Container(), aFirst.Offset(),
+                       aSecond.Container(), aSecond.Offset(),
+                       aDisconnected);
+}
+
 inline bool
 IsCharInSet(const char* aSet,
             const char16_t aChar)
