@@ -13,6 +13,3 @@ XPCSHELL_TESTS_MANIFESTS += ["unit.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")
-
-with Files("harness/**"):
-    SCHEDULES.exclusive = ["marionette", "firefox-ui"]

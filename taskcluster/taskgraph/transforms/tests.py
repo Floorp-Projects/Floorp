@@ -939,7 +939,7 @@ def make_job_description(config, tests):
         if test.get('when'):
             jobdesc['when'] = test['when']
         else:
-            schedules = [suite, platform_family(test['build-platform'])]
+            schedules = [platform_family(test['build-platform'])]
             if config.params['project'] != 'try':
                 # for non-try branches, include SETA
                 jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
