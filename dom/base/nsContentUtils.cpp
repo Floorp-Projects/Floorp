@@ -801,7 +801,9 @@ nsContentUtils::Init()
   }
   uuidGenerator.forget(&sUUIDGenerator);
 
-  AsyncPrecreateStringBundles();
+  if (XRE_IsParentProcess()) {
+    AsyncPrecreateStringBundles();
+  }
 
   RefPtr<UserInteractionObserver> uio = new UserInteractionObserver();
   uio->Init();
@@ -2880,6 +2882,20 @@ nsContentUtils::ComparePoints(nsIDOMNode* aParent1, int32_t aOffset1,
   nsCOMPtr<nsINode> parent2 = do_QueryInterface(aParent2);
   NS_ENSURE_TRUE(parent1 && parent2, -1);
   return ComparePoints(parent1, aOffset1, parent2, aOffset2);
+}
+
+/* static */
+int32_t
+nsContentUtils::ComparePoints(const RawRangeBoundary& aFirst,
+                              const RawRangeBoundary& aSecond,
+                              bool* aDisconnected)
+{
+  if (NS_WARN_IF(!aFirst.IsSet()) || NS_WARN_IF(!aSecond.IsSet())) {
+    return -1;
+  }
+  return ComparePoints(aFirst.Container(), aFirst.Offset(),
+                       aSecond.Container(), aSecond.Offset(),
+                       aDisconnected);
 }
 
 inline bool
@@ -10178,6 +10194,7 @@ nsContentUtils::EnqueueUpgradeReaction(Element* aElement,
 nsContentUtils::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
                                          Element* aCustomElement,
                                          LifecycleCallbackArgs* aArgs,
+                                         LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
                                          CustomElementDefinition* aDefinition)
 {
   // No DocGroup means no custom element reactions stack.
@@ -10186,6 +10203,7 @@ nsContentUtils::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
   }
 
   CustomElementRegistry::EnqueueLifecycleCallback(aType, aCustomElement, aArgs,
+                                                  aAdoptedCallbackArgs,
                                                   aDefinition);
 }
 

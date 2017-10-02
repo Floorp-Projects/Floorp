@@ -331,7 +331,7 @@ IsOptimizableInitForSet(JSContext* cx, HandleObject setObject, HandleValue itera
 
     // Look up the 'add' value on the prototype object.
     Shape* addShape = setProto->lookup(cx, cx->names().add);
-    if (!addShape || !addShape->hasSlot())
+    if (!addShape || !addShape->isDataProperty())
         return true;
 
     // Get the referred value, ensure it holds the canonical add function.

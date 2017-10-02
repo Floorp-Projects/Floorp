@@ -184,7 +184,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
                         ThreadUtils.postToBackgroundThread(new Runnable() {
                             @Override
                             public void run() {
-                                GeckoApplication.createBrowserShortcut(title, url);
+                                GeckoApplication.createShortcut(title, url);
                             }
                         });
                     }

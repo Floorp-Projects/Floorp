@@ -57,7 +57,7 @@ MultipartBlobImpl::Create(nsTArray<RefPtr<BlobImpl>>&& aBlobImpls,
 }
 
 void
-MultipartBlobImpl::GetInternalStream(nsIInputStream** aStream,
+MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
                                      ErrorResult& aRv)
 {
   *aStream = nullptr;
@@ -74,7 +74,7 @@ MultipartBlobImpl::GetInternalStream(nsIInputStream** aStream,
     nsCOMPtr<nsIInputStream> scratchStream;
     BlobImpl* blobImpl = mBlobImpls.ElementAt(i).get();
 
-    blobImpl->GetInternalStream(getter_AddRefs(scratchStream), aRv);
+    blobImpl->CreateInputStream(getter_AddRefs(scratchStream), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }

@@ -66,6 +66,7 @@ from .data import (
     RustLibrary,
     HostRustLibrary,
     RustProgram,
+    RustTest,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -1123,6 +1124,15 @@ class TreeMetadataEmitter(LoggingMixin):
                 yield ChromeManifestEntry(context, 'chrome.manifest',
                                           Manifest('components',
                                                    mozpath.basename(c)))
+
+        if self.config.substs.get('MOZ_RUST_TESTS', None):
+            rust_test = context.get('RUST_TEST', None)
+            if rust_test:
+                # TODO: more sophisticated checking of the declared name vs.
+                # contents of the Cargo.toml file.
+                features = context.get('RUST_TEST_FEATURES', [])
+
+                yield RustTest(context, rust_test, features)
 
         for obj in self._process_test_manifests(context):
             yield obj
