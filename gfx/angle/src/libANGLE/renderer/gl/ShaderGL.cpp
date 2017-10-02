@@ -21,8 +21,15 @@ namespace rx
 
 ShaderGL::ShaderGL(const gl::ShaderState &data,
                    const FunctionsGL *functions,
-                   const WorkaroundsGL &workarounds)
-    : ShaderImpl(data), mFunctions(functions), mWorkarounds(workarounds), mShaderID(0)
+                   const WorkaroundsGL &workarounds,
+                   bool isWebGL,
+                   MultiviewImplementationTypeGL multiviewImplementationType)
+    : ShaderImpl(data),
+      mFunctions(functions),
+      mWorkarounds(workarounds),
+      mShaderID(0),
+      mIsWebGL(isWebGL),
+      mMultiviewImplementationType(multiviewImplementationType)
 {
     ASSERT(mFunctions);
 }
@@ -50,6 +57,11 @@ ShCompileOptions ShaderGL::prepareSourceAndReturnOptions(std::stringstream *sour
 
     ShCompileOptions options = SH_INIT_GL_POSITION;
 
+    if (mIsWebGL)
+    {
+        options |= SH_INIT_OUTPUT_VARIABLES;
+    }
+
     if (mWorkarounds.doWhileGLSLCausesGPUHang)
     {
         options |= SH_REWRITE_DO_WHILE_LOOPS;
@@ -70,6 +82,11 @@ ShCompileOptions ShaderGL::prepareSourceAndReturnOptions(std::stringstream *sour
         options |= SH_EMULATE_ISNAN_FLOAT_FUNCTION;
     }
 
+    if (mWorkarounds.emulateAtan2Float)
+    {
+        options |= SH_EMULATE_ATAN2_FLOAT_FUNCTION;
+    }
+
     if (mWorkarounds.useUnusedBlocksWithStandardOrSharedLayout)
     {
         options |= SH_USE_UNUSED_STANDARD_SHARED_BLOCKS;
@@ -83,6 +100,27 @@ ShCompileOptions ShaderGL::prepareSourceAndReturnOptions(std::stringstream *sour
     if (mWorkarounds.removeInvariantAndCentroidForESSL3)
     {
         options |= SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3;
+    }
+
+    if (mWorkarounds.rewriteFloatUnaryMinusOperator)
+    {
+        options |= SH_REWRITE_FLOAT_UNARY_MINUS_OPERATOR;
+    }
+
+    if (!mWorkarounds.dontInitializeUninitializedLocals)
+    {
+        options |= SH_INITIALIZE_UNINITIALIZED_LOCALS;
+    }
+
+    if (mWorkarounds.clampPointSize)
+    {
+        options |= SH_CLAMP_POINT_SIZE;
+    }
+
+    if (mMultiviewImplementationType == MultiviewImplementationTypeGL::NV_VIEWPORT_ARRAY2)
+    {
+        options |= SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW;
+        options |= SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER;
     }
 
     return options;
@@ -118,11 +156,11 @@ bool ShaderGL::postTranslateCompile(gl::Compiler *compiler, std::string *infoLog
             mShaderID = 0;
 
             *infoLog = &buf[0];
-            TRACE("\n%s", infoLog->c_str());
+            WARN() << std::endl << *infoLog;
         }
         else
         {
-            TRACE("\nShader compilation failed with no info log.");
+            WARN() << std::endl << "Shader compilation failed with no info log.";
         }
         return false;
     }
@@ -132,7 +170,7 @@ bool ShaderGL::postTranslateCompile(gl::Compiler *compiler, std::string *infoLog
 
 std::string ShaderGL::getDebugInfo() const
 {
-    return std::string();
+    return mData.getTranslatedSource();
 }
 
 GLuint ShaderGL::getShaderID() const

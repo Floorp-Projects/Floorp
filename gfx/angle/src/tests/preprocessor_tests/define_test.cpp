@@ -985,6 +985,27 @@ TEST_F(DefineTest, RecursiveMacroNameInsideIncompleteMacroInvocationInMacroExpan
     preprocess(input, expected);
 }
 
+// The name of the macro "a" is inside an incomplete macro invocation of macro "m()" in its own
+// expansion. Then the macro "a" is undef'd. This is a regression test for a memory management bug
+// where macro "a" would be freed on undef even though cleaning up the recursive macro invocation
+// would still need to refer to macro "a".
+TEST_F(DefineTest, UndefInsideRecursiveMacroInvocation)
+{
+    const char *input =
+        "#define m(a)\n"
+        "#define a m((a)\n"
+        "a\n"
+        "#undef a\n"
+        ")\n";
+    const char *expected =
+        "\n"
+        "\n"
+        "\n"
+        "\n"
+        "\n";
+    preprocess(input, expected);
+}
+
 // The macro invocations form a long chain. The macro expander should protect against stack overflow
 // and generate an error in this case.
 TEST_F(DefineTest, LongMacroInvocationChain)

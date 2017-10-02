@@ -12,10 +12,7 @@
 #include "common/debug.h"
 
 #include <initguid.h>
-
-#ifdef HAS_DIRECT_COMPOSITION
 #include <dcomp.h>
-#endif // HAS_DIRECT_COMPOSITION
 
 namespace rx
 {
@@ -25,30 +22,18 @@ NativeWindow11Win32::NativeWindow11Win32(EGLNativeWindowType window,
                                          bool directComposition)
     : NativeWindow11(window),
       mDirectComposition(directComposition),
-      mHasAlpha(hasAlpha)
-
-#ifdef HAS_DIRECT_COMPOSITION
-
-      , mDevice(nullptr),
+      mHasAlpha(hasAlpha),
+      mDevice(nullptr),
       mCompositionTarget(nullptr),
       mVisual(nullptr)
-
-#endif // HAS_DIRECT_COMPOSITION
-
 {
 }
 
 NativeWindow11Win32::~NativeWindow11Win32()
 {
-
-#ifdef HAS_DIRECT_COMPOSITION
-
     SafeRelease(mCompositionTarget);
     SafeRelease(mDevice);
     SafeRelease(mVisual);
-
-#endif // HAS_DIRECT_COMPOSITION
-
 }
 
 bool NativeWindow11Win32::initialize()
@@ -66,22 +51,22 @@ bool NativeWindow11Win32::isIconic() const
     return IsIconic(getNativeWindow()) == TRUE;
 }
 
-#ifdef ANGLE_ENABLE_D3D11
 HRESULT NativeWindow11Win32::createSwapChain(ID3D11Device *device,
                                              IDXGIFactory *factory,
                                              DXGI_FORMAT format,
                                              UINT width,
                                              UINT height,
+                                             UINT samples,
                                              IDXGISwapChain **swapChain)
 {
-    if (device == NULL || factory == NULL || swapChain == NULL || width == 0 || height == 0)
+    if (device == nullptr || factory == nullptr || swapChain == nullptr || width == 0 ||
+        height == 0)
     {
         return E_INVALIDARG;
     }
 
     if (mDirectComposition)
     {
-#ifdef HAS_DIRECT_COMPOSITION
         HMODULE dcomp = ::GetModuleHandle(TEXT("dcomp.dll"));
         if (!dcomp)
         {
@@ -157,9 +142,6 @@ HRESULT NativeWindow11Win32::createSwapChain(ID3D11Device *device,
         mCompositionTarget->SetRoot(mVisual);
         SafeRelease(factory2);
         return result;
-#else // HAS_DIRECT_COMPOSITION
-        return E_INVALIDARG;
-#endif // HAS_DIRECT_COMPOSITION		
     }
 
     // Use IDXGIFactory2::CreateSwapChainForHwnd if DXGI 1.2 is available to create a
@@ -172,8 +154,8 @@ HRESULT NativeWindow11Win32::createSwapChain(ID3D11Device *device,
         swapChainDesc.Height                = height;
         swapChainDesc.Format                = format;
         swapChainDesc.Stereo                = FALSE;
-        swapChainDesc.SampleDesc.Count      = 1;
-        swapChainDesc.SampleDesc.Quality = 0;
+        swapChainDesc.SampleDesc.Count      = samples;
+        swapChainDesc.SampleDesc.Quality    = 0;
         swapChainDesc.BufferUsage =
             DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_BACK_BUFFER;
         swapChainDesc.BufferCount   = 1;
@@ -206,7 +188,7 @@ HRESULT NativeWindow11Win32::createSwapChain(ID3D11Device *device,
         DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_BACK_BUFFER;
     swapChainDesc.Flags              = 0;
     swapChainDesc.OutputWindow       = getNativeWindow();
-    swapChainDesc.SampleDesc.Count   = 1;
+    swapChainDesc.SampleDesc.Count   = samples;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.Windowed           = TRUE;
     swapChainDesc.SwapEffect         = DXGI_SWAP_EFFECT_DISCARD;
@@ -218,20 +200,13 @@ HRESULT NativeWindow11Win32::createSwapChain(ID3D11Device *device,
     }
     return result;
 }
-#endif // ANGLE_ENABLE_D3D11
 
 void NativeWindow11Win32::commitChange()
 {
-
-#ifdef HAS_DIRECT_COMPOSITION
-
-  if (mDevice)
-  {
-    mDevice->Commit();
-  }
-
-#endif // HAS_DIRECT_COMPOSITION
-
+    if (mDevice)
+    {
+        mDevice->Commit();
+    }
 }
 
 // static
