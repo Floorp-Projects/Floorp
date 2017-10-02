@@ -48,7 +48,7 @@ var MainToolbar = React.createClass({
       Toolbar({},
         ToolbarButton({
           className: "refresh devtools-button",
-          id : "dom-refresh-button",
+          id: "dom-refresh-button",
           title: l10n.getStr("dom.refresh"),
           onClick: this.onRefresh
         }),
