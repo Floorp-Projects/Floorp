@@ -14,7 +14,7 @@ public:
   virtual ~nsLookAndFeel();
 
   virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
-  virtual void NativeInit() final {};
+  virtual void NativeInit() final;
   virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
   virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
   virtual bool GetFontImpl(FontID aID, nsString& aFontName,
