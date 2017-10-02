@@ -59,6 +59,14 @@ struct LoadInfoArgs
   OriginAttributes            originAttributes;
   RedirectHistoryEntryInfo[]  redirectChainIncludingInternalRedirects;
   RedirectHistoryEntryInfo[]  redirectChain;
+
+  /**
+   * Ancestor data for use with the WebRequest API.
+   * See nsILoadInfo.idl for details.
+   */
+  PrincipalInfo[]             ancestorPrincipals;
+  uint64_t[]                  ancestorOuterWindowIDs;
+
   nsCString[]                 corsUnsafeHeaders;
   bool                        forcePreflight;
   bool                        isPreflight;
