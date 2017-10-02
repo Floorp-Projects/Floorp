@@ -75,7 +75,7 @@ $archive = $ARGV[0];
 @marentries = `"$MAR" -t "$archive"`;
 $? && die("Couldn't run \"$MAR\" -t");
 
-system("$MAR -x \"$archive\"") == 0 ||
+system($MAR, "-x", $archive) == 0 ||
   die "Couldn't run $MAR -x";
 
 # Try to determine if the mar file contains bzip2 compressed files and if not
@@ -100,15 +100,15 @@ foreach (@marentries) {
 
     print "Decompressing: " . $file . "\n";
     if ($MAR_OLD_FORMAT) {
-      system("mv \"$file\" \"$file.bz2\"") == 0 ||
+      system("mv", $file, "$file.bz2") == 0 ||
         die "Couldn't mv \"$file\"";
-      system("\"$BZIP2\" -d \"$file.bz2\"") == 0 ||
+      system($BZIP2, "-d", "$file.bz2") == 0 ||
         die "Couldn't decompress \"$file\"";
     }
     else {
-      system("mv \"$file\" \"$file.xz\"") == 0 ||
+      system("mv", $file, "$file.xz") == 0 ||
         die "Couldn't mv \"$file\"";
-      system("\"$XZ\" -d \"$file.xz\"") == 0 ||
+      system($XZ, "-d", "$file.xz") == 0 ||
         die "Couldn't decompress \"$file\"";
     }
 }
