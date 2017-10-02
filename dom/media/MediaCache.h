@@ -435,8 +435,9 @@ private:
   // Instance of MediaCache to use with this MediaCacheStream.
   RefPtr<MediaCache> mMediaCache;
 
+  ChannelMediaResource* const mClient;
+
   // These fields are main-thread-only.
-  ChannelMediaResource*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   // True if CacheClientNotifyDataEnded has been called for this stream.
   bool                   mDidNotifyDataEnded;
@@ -460,13 +461,12 @@ private:
   bool mCacheSuspended;
   // True if the channel ended and we haven't seeked it again.
   bool mChannelEnded;
-  // The reported or discovered length of the data, or -1 if nothing is
-  // known
-  int64_t      mStreamLength;
 
-  // The following fields are protected by the cache's monitor can can be written
+  // The following fields are protected by the cache's monitor and can be written
   // by any thread.
 
+  // The reported or discovered length of the data, or -1 if nothing is known
+  int64_t mStreamLength = -1;
   // The offset where the next data from the channel will arrive
   int64_t mChannelOffset = 0;
   // The offset where the reader is positioned in the stream
@@ -498,8 +498,7 @@ private:
   // coming from an old channel and should be discarded.
   uint32_t mLoadID = 0;
 
-  // The following field is protected by the cache's monitor but are
-  // only written on the main thread.
+  bool mThrottleReadahead = false;
 
   // Data received for the block containing mChannelOffset. Data needs
   // to wait here so we can write back a complete block. The first
@@ -507,12 +506,12 @@ private:
   // the rest are garbage.
   // Heap allocate this buffer since the exact power-of-2 will cause allocation
   // slop when combined with the rest of the object members.
-  UniquePtr<uint8_t[]> mPartialBlockBuffer = MakeUnique<uint8_t[]>(BLOCK_SIZE);
+  // This partial buffer should always be read/write within the cache's monitor.
+  const UniquePtr<uint8_t[]> mPartialBlockBuffer =
+    MakeUnique<uint8_t[]>(BLOCK_SIZE);
 
   // True if associated with a private browsing window.
   const bool mIsPrivateBrowsing;
-
-  bool mThrottleReadahead = false;
 };
 
 } // namespace mozilla
