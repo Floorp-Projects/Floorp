@@ -828,6 +828,7 @@ nsDocShell::nsDocShell()
   , mEODForCurrentDocument(false)
   , mURIResultedInDocument(false)
   , mIsBeingDestroyed(false)
+  , mScriptGlobalDead(false)
   , mIsExecutingOnLoadHandler(false)
   , mIsPrintingOrPP(false)
   , mSavingOldViewer(false)
@@ -5978,8 +5979,9 @@ nsDocShell::Destroy()
   mParentWidget = nullptr;
   mCurrentURI = nullptr;
 
-  if (mScriptGlobal) {
+  if (mScriptGlobal && !mScriptGlobalDead) {
     mScriptGlobal->DetachFromDocShell();
+    mScriptGlobalDead = true;
   }
 
   if (mSessionHistory) {
@@ -13623,6 +13625,12 @@ NS_IMETHODIMP
 nsDocShell::EnsureScriptEnvironment()
 {
   if (mScriptGlobal) {
+    // If the script global is dead, we may still have it around but we don't
+    // want to expose it from methods such as GetInterface, as their consumers
+    // will expect a non-dead window.
+    if (mScriptGlobalDead) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
     return NS_OK;
   }
 
