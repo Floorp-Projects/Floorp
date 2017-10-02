@@ -713,23 +713,23 @@ function run() {
   expression_should_not_be_parseable("-moz-touch-enabled: true");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: true");
 
-  // windows theme media queries
-  expression_should_be_parseable("-moz-windows-theme: aero");
-  expression_should_be_parseable("-moz-windows-theme: aero-lite");
-  expression_should_be_parseable("-moz-windows-theme: luna-blue");
-  expression_should_be_parseable("-moz-windows-theme: luna-olive");
-  expression_should_be_parseable("-moz-windows-theme: luna-silver");
-  expression_should_be_parseable("-moz-windows-theme: royale");
-  expression_should_be_parseable("-moz-windows-theme: generic");
-  expression_should_be_parseable("-moz-windows-theme: zune");
-  expression_should_be_parseable("-moz-windows-theme: garbage");
+  // windows theme media queries (internal too, so not parseable).
+  expression_should_not_be_parseable("-moz-windows-theme: aero");
+  expression_should_not_be_parseable("-moz-windows-theme: aero-lite");
+  expression_should_not_be_parseable("-moz-windows-theme: luna-blue");
+  expression_should_not_be_parseable("-moz-windows-theme: luna-olive");
+  expression_should_not_be_parseable("-moz-windows-theme: luna-silver");
+  expression_should_not_be_parseable("-moz-windows-theme: royale");
+  expression_should_not_be_parseable("-moz-windows-theme: generic");
+  expression_should_not_be_parseable("-moz-windows-theme: zune");
+  expression_should_not_be_parseable("-moz-windows-theme: garbage");
   expression_should_not_be_parseable("-moz-windows-theme: ''");
   expression_should_not_be_parseable("-moz-windows-theme: ");
 
-  // os version media queries (currently windows only)
-  expression_should_be_parseable("-moz-os-version: windows-win7");
-  expression_should_be_parseable("-moz-os-version: windows-win8");
-  expression_should_be_parseable("-moz-os-version: windows-win10");
+  // os version media queries (currently windows only, and internal)
+  expression_should_not_be_parseable("-moz-os-version: windows-win7");
+  expression_should_not_be_parseable("-moz-os-version: windows-win8");
+  expression_should_not_be_parseable("-moz-os-version: windows-win10");
   expression_should_not_be_parseable("-moz-os-version: ");
 
   // OpenType SVG media features
