@@ -37,6 +37,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RangeBoundary.h"
 #include "nsIContentPolicy.h"
 #include "nsIDocument.h"
 #include "nsIDOMMouseEvent.h"
@@ -446,6 +447,9 @@ public:
                                bool* aDisconnected = nullptr);
   static int32_t ComparePoints(nsIDOMNode* aParent1, int32_t aOffset1,
                                nsIDOMNode* aParent2, int32_t aOffset2,
+                               bool* aDisconnected = nullptr);
+  static int32_t ComparePoints(const mozilla::RawRangeBoundary& aFirst,
+                               const mozilla::RawRangeBoundary& aSecond,
                                bool* aDisconnected = nullptr);
 
   /**
