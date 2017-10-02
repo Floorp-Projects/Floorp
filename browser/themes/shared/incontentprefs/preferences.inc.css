@@ -611,16 +611,14 @@ button > hbox > label {
   position: fixed;
   left: 0;
   bottom: 36px;
-  background-image: url("chrome://global/skin/icons/help.svg");
+  background-image: none;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   line-height: 22px;
   height: unset;
   min-height: 36px;
   width: 168px;
-  background-position: left 10px center;
-  background-size: 16px;
-  padding-inline-start: 38px;
+  padding-inline-start: 18px;
   margin-inline-start: 34px;
 }
 
@@ -639,6 +637,28 @@ button > hbox > label {
   color: var(--in-content-category-text);
   text-decoration: none;
   border-radius: 2px;
+}
+
+.help-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.help-label {
+  margin: 0 14px;
+}
+
+@media (max-width: 830px) {
+  .help-button {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+    margin-inline-start: 40px;
+  }
+
+  .help-label {
+    display: none;
+  }
 }
 
 .face-sad {
