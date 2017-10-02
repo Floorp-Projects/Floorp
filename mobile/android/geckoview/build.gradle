@@ -2,7 +2,39 @@ buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 
 apply plugin: 'com.android.library'
 
-def VERSION_NAME = '0.0.1'
+// This converts MOZ_APP_VERSION into an integer
+// version code.
+//
+// We take something like 58.1.2a1 and come out with 5800102
+// This gives us 3 digits for the major number, and 2 digits
+// each for the minor and build number. Beta and Release
+def computeVersionCode() {
+    String appVersion = mozconfig.substs.MOZ_APP_VERSION
+
+    // Split on the dot delimiter, e.g. 58.1.1a1 -> ["58, "1", "1a1"]
+    String[] parts = appVersion.split('\\.')
+
+    assert parts.size() == 2 || parts.size() == 3
+
+    // Strip out any milestone string ('a1' in the above example)
+    // Present in Nightly (or local) builds only.
+    parts.eachWithIndex { ver, index ->
+        parts[index] = ver.replaceFirst(/[a-zA-Z].*/, "")
+    }
+
+    // Major
+    int code = Integer.parseInt(parts[0]) * 100000
+
+    // Minor
+    code += Integer.parseInt(parts[1]) * 100
+
+    // Build
+    if (parts.size() == 3) {
+        code += Integer.parseInt(parts[2])
+    }
+
+    return code;
+}
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
@@ -16,11 +48,8 @@ android {
         minSdkVersion project.ext.minSdkVersion
         manifestPlaceholders = project.ext.manifestPlaceholders
 
-        // TODO: version GeckoView explicitly.  We'd like to avoid
-        // mozconfig.substs.ANDROID_VERSION_CODE, which won't be intuitive to
-        // consumer (and advances very quickly on pre-release channels).
-        versionCode 1
-        versionName VERSION_NAME
+        versionCode computeVersionCode()
+        versionName "${mozconfig.substs.MOZ_APP_VERSION}-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
         consumerProguardFiles 'proguard-rules.txt'
 
         // TODO: ensure these fields always agree with mobile/android/geckoview/BuildConfig.java.in,
@@ -39,6 +68,7 @@ android {
         buildConfigField 'String', "MOZ_APP_VERSION", "\"${mozconfig.substs.MOZ_APP_VERSION}\"";
         buildConfigField 'String', "MOZ_APP_DISPLAYNAME", "\"${mozconfig.substs.MOZ_APP_DISPLAYNAME}\"";
         buildConfigField 'String', "MOZ_APP_UA_NAME", "\"${mozconfig.substs.MOZ_APP_UA_NAME}\"";
+        buildConfigField 'String', "MOZ_UPDATE_CHANNEL", "\"${mozconfig.substs.MOZ_UPDATE_CHANNEL}\"";
 
         // MOZILLA_VERSION is oddly quoted from autoconf, but we don't have to handle it specially in Gradle.
         buildConfigField 'String', "MOZILLA_VERSION", "\"${mozconfig.substs.MOZILLA_VERSION}\"";
@@ -143,9 +173,9 @@ android.libraryVariants.all { variant ->
         destinationDir = new File(destinationDir, variant.baseName)
         source = files(variant.javaCompile.source)
         classpath = files(variant.javaCompile.classpath.files) + files(android.bootClasspath)
-        options.windowTitle("Mozilla GeckoView Android API $VERSION_NAME Reference")
-        options.docTitle("Mozilla GeckoView Android API $VERSION_NAME")
-        options.header("Mozilla GeckoView Android API $VERSION_NAME Reference")
+        options.windowTitle("Mozilla GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API Reference")
+        options.docTitle("Mozilla GeckoView ${mozconfig.substs.MOZ_APP_VERSION}")
+        options.header("Mozilla GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API Reference")
         options.bottom("&copy; 2016 Mozilla. All rights reserved.")
         options.links("http://docs.oracle.com/javase/7/docs/api/")
         options.linksOffline("http://d.android.com/reference/", "$System.env.ANDROID_HOME/docs/reference")
@@ -176,8 +206,8 @@ apply plugin: 'maven'
 uploadArchives {
     repositories.mavenDeployer {
         pom.groupId = 'org.mozilla'
-        pom.artifactId = 'geckoview'
-        pom.version = VERSION_NAME
+        pom.artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
+        pom.version = mozconfig.substs.MOZ_APP_VERSION
         pom.project {
             licenses {
                 license {
