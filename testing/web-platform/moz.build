@@ -23,13 +23,6 @@ TEST_HARNESS_FILES['web-platform'].certs = [
     'certs/web-platform.test.pem',
 ]
 
-with Files("**"):
-    SCHEDULES.exclusive = [
-        'web-platform-tests',
-        'web-platform-tests-reftests',
-        'web-platform-tests-wdspec',
-    ]
-
 with Files("update/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 

@@ -165,7 +165,6 @@ TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Mochitest")
-    SCHEDULES.exclusive = ['mochitest', 'robocop']
 
 with Files("*remote*"):
     BUG_COMPONENT = ("Firefox for Android", "Testing")
