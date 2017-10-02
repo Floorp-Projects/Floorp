@@ -84,6 +84,12 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
     return parent->IsLineFrame() ? parent->GetParent() : parent;
   }
 
+  if (parent->IsLetterFrame()) {
+    // Things never have ::first-letter as their expected parent.  Go
+    // on up to the ::first-letter's parent.
+    parent = parent->GetParent();
+  }
+
   parent = FirstContinuationOrPartOfIBSplit(parent);
 
   // We've handled already anon boxes and bullet frames, so now we're looking at
