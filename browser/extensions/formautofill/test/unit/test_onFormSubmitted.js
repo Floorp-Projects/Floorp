@@ -78,69 +78,6 @@ const TESTCASES = [
     },
   },
   {
-    description: "Trigger credit card saving",
-    formValue: {
-      "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
-      "cc-exp-month": 12,
-      "cc-exp-year": 2000,
-    },
-    expectedResult: {
-      formSubmission: true,
-      records: {
-        creditCard: {
-          guid: null,
-          record: {
-            "cc-name": "John Doe",
-            "cc-number": "1234567812345678",
-            "cc-exp-month": 12,
-            "cc-exp-year": 2000,
-          },
-          untouchedFields: [],
-        },
-      },
-    },
-  },
-  {
-    description: "Trigger address and credit card saving",
-    formValue: {
-      "street-addr": "331 E. Evelyn Avenue",
-      "country": "USA",
-      "tel": "1-650-903-0800",
-      "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
-      "cc-exp-month": 12,
-      "cc-exp-year": 2000,
-    },
-    expectedResult: {
-      formSubmission: true,
-      records: {
-        address: {
-          guid: null,
-          record: {
-            "street-address": "331 E. Evelyn Avenue",
-            "address-level1": "",
-            "address-level2": "",
-            "country": "USA",
-            "email": "",
-            "tel": "1-650-903-0800",
-          },
-          untouchedFields: [],
-        },
-        creditCard: {
-          guid: null,
-          record: {
-            "cc-name": "John Doe",
-            "cc-number": "1234567812345678",
-            "cc-exp-month": 12,
-            "cc-exp-year": 2000,
-          },
-          untouchedFields: [],
-        },
-      },
-    },
-  },
-  {
     description: "Profile saved with trimmed string",
     formValue: {
       "street-addr": "331 E. Evelyn Avenue  ",
@@ -480,6 +417,41 @@ add_task(async function handle_earlyformsubmit_event() {
 
   do_check_eq(FormAutofillContent.notify(fakeForm), true);
   do_check_eq(FormAutofillContent._onFormSubmit.called, false);
+  FormAutofillContent._onFormSubmit.restore();
+});
+
+add_task(async function autofill_disabled() {
+  let form = MOCK_DOC.getElementById("form1");
+  form.reset();
+
+  let testcase = {
+    "street-addr": "331 E. Evelyn Avenue",
+    "country": "US",
+    "tel": "+16509030800",
+  };
+  for (let key in testcase) {
+    let input = MOCK_DOC.getElementById(key);
+    input.value = testcase[key];
+  }
+
+  let element = MOCK_DOC.getElementById(TARGET_ELEMENT_ID);
+  FormAutofillContent.identifyAutofillFields(element);
+
+  sinon.stub(FormAutofillContent, "_onFormSubmit");
+
+  // "_onFormSubmit" shouldn't be called if "addresses" pref is disabled.
+  Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", false);
+  FormAutofillContent.notify(form);
+  do_check_eq(FormAutofillContent._onFormSubmit.called, false);
+  FormAutofillContent._onFormSubmit.reset();
+
+  // "_onFormSubmit" should be called as usual.
+  Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
+  FormAutofillContent.notify(form);
+  do_check_eq(FormAutofillContent._onFormSubmit.called, true);
+  do_check_neq(FormAutofillContent._onFormSubmit.args[0][0].address, undefined);
+  FormAutofillContent._onFormSubmit.reset();
+
   FormAutofillContent._onFormSubmit.restore();
 });
 
