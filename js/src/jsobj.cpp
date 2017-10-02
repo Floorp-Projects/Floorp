@@ -4155,6 +4155,8 @@ js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp)
         vp.setString(obj->as<StringObject>().unbox());
     else if (obj->is<DateObject>())
         vp.set(obj->as<DateObject>().UTCTime());
+    else if (obj->is<SymbolObject>())
+        vp.setSymbol(obj->as<SymbolObject>().unbox());
     else
         vp.setUndefined();
 
