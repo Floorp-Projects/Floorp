@@ -2472,7 +2472,7 @@ struct StyleShapeSource final
       : nullptr;
   }
 
-  bool SetURL(css::URLValue* aValue);
+  void SetURL(css::URLValue* aValue);
 
   const UniquePtr<StyleBasicShape>& GetBasicShape() const
   {
