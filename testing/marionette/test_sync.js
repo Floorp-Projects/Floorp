@@ -4,20 +4,20 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/sync.js");
+const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 const DEFAULT_TIMEOUT = 2000;
 
-add_task(async function test_until_types() {
+add_task(async function test_PollPromise_types() {
   for (let typ of [true, false, "foo", 42, [], {}]) {
-    strictEqual(typ, await wait.until(resolve => resolve(typ)));
+    strictEqual(typ, await new PollPromise(resolve => resolve(typ)));
   }
 });
 
-add_task(async function test_until_timeoutElapse() {
+add_task(async function test_PollPromise_timeoutElapse() {
   let nevals = 0;
   let start = new Date().getTime();
-  await wait.until((resolve, reject) => {
+  await new PollPromise((resolve, reject) => {
     ++nevals;
     reject();
   });
@@ -26,11 +26,11 @@ add_task(async function test_until_timeoutElapse() {
   greaterOrEqual(nevals, 15);
 });
 
-add_task(async function test_until_rethrowError() {
+add_task(async function test_PollPromise_rethrowError() {
   let nevals = 0;
   let err;
   try {
-    await wait.until(() => {
+    await PollPromise(() => {
       ++nevals;
       throw new Error();
     });
@@ -41,11 +41,11 @@ add_task(async function test_until_rethrowError() {
   ok(err instanceof Error);
 });
 
-add_task(async function test_until_noTimeout() {
+add_task(async function test_PollPromise_noTimeout() {
   // run at least once when timeout is 0
   let nevals = 0;
   let start = new Date().getTime();
-  await wait.until((resolve, reject) => {
+  await new PollPromise((resolve, reject) => {
     ++nevals;
     reject();
   }, 0);
@@ -54,10 +54,10 @@ add_task(async function test_until_noTimeout() {
   less((end - start), DEFAULT_TIMEOUT);
 });
 
-add_task(async function test_until_timeout() {
+add_task(async function test_PollPromise_timeout() {
   let nevals = 0;
   let start = new Date().getTime();
-  await wait.until((resolve, reject) => {
+  await new PollPromise((resolve, reject) => {
     ++nevals;
     reject();
   }, 100);
@@ -66,9 +66,9 @@ add_task(async function test_until_timeout() {
   greaterOrEqual((end - start), 100);
 });
 
-add_task(async function test_until_interval() {
+add_task(async function test_PollPromise_interval() {
   let nevals = 0;
-  await wait.until((resolve, reject) => {
+  await new PollPromise((resolve, reject) => {
     ++nevals;
     reject();
   }, 100, 100);
