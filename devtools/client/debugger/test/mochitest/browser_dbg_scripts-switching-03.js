@@ -50,7 +50,7 @@ function test() {
     }
 
     function testDebuggerLoadingError() {
-      ok(gEditor.getText().includes(gL10N.getFormatStr("errorLoadingText3", "")),
+      ok(gEditor.getText().includes(gL10N.getFormatStr("errorLoadingText2", "")),
          "The valid error loading message is displayed.");
     }
 

@@ -28919,8 +28919,6 @@ var _getEmptyLines = __webpack_require__(845);
 
 var _getEmptyLines2 = _interopRequireDefault(_getEmptyLines);
 
-var _validate = __webpack_require__(1207);
-
 var _devtoolsUtils = __webpack_require__(900);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -28941,8 +28939,7 @@ self.onmessage = workerHandler({
   clearSources: _sources.clearSources,
   getVariablesInScope: _scopes.getVariablesInScope,
   getNextStep: _steps.getNextStep,
-  getEmptyLines: _getEmptyLines2.default,
-  hasSyntaxError: _validate.hasSyntaxError
+  getEmptyLines: _getEmptyLines2.default
 });
 
 /***/ }),
@@ -29731,7 +29728,6 @@ function clearSymbols() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.parseExpression = parseExpression;
 exports.getAst = getAst;
 exports.clearASTs = clearASTs;
 exports.traverseAst = traverseAst;
@@ -29789,10 +29785,6 @@ function htmlParser(_ref) {
   return parse(source, {
     startLine: line
   });
-}
-
-function parseExpression(expression, opts) {
-  return babylon.parseExpression(expression, Object.assign({}, opts, { sourceType: "script" }));
 }
 
 function getAst(source) {
@@ -33370,48 +33362,6 @@ module.exports = {
   createParseJSScopeVisitor,
   findScopes
 };
-
-/***/ }),
-/* 1188 */,
-/* 1189 */,
-/* 1190 */,
-/* 1191 */,
-/* 1192 */,
-/* 1193 */,
-/* 1194 */,
-/* 1195 */,
-/* 1196 */,
-/* 1197 */,
-/* 1198 */,
-/* 1199 */,
-/* 1200 */,
-/* 1201 */,
-/* 1202 */,
-/* 1203 */,
-/* 1204 */,
-/* 1205 */,
-/* 1206 */,
-/* 1207 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.hasSyntaxError = hasSyntaxError;
-
-var _ast = __webpack_require__(1051);
-
-function hasSyntaxError(input) {
-  try {
-    (0, _ast.parseExpression)(input);
-    return false;
-  } catch (e) {
-    return `${e.name} : ${e.message}`;
-  }
-}
 
 /***/ })
 /******/ ]);
