@@ -34,6 +34,12 @@ var ProcessHangMonitor = {
   },
 
   /**
+   * Should only be set to true once the quit-application-granted notification
+   * has been fired.
+   */
+  _shuttingDown: false,
+
+  /**
    * Collection of hang reports that haven't expired or been dismissed
    * by the user. These are nsIHangReports.
    */
@@ -52,6 +58,7 @@ var ProcessHangMonitor = {
   init() {
     Services.obs.addObserver(this, "process-hang-report");
     Services.obs.addObserver(this, "clear-hang-report");
+    Services.obs.addObserver(this, "quit-application-granted");
     Services.obs.addObserver(this, "xpcom-shutdown");
     Services.ww.registerNotification(this);
   },
@@ -137,6 +144,27 @@ var ProcessHangMonitor = {
   },
 
   /**
+   * Terminate whatever is causing this report, be it an add-on, page script,
+   * or plug-in. This is done without updating any report notifications.
+   */
+  stopHang(report) {
+    switch (report.hangType) {
+      case report.SLOW_SCRIPT: {
+        if (report.addonId) {
+          report.terminateGlobal();
+        } else {
+          report.terminateScript();
+        }
+        break;
+      }
+      case report.PLUGIN_HANG: {
+        report.terminatePlugin();
+        break;
+      }
+    }
+  },
+
+  /**
    * Dismiss the notification, clear the report from the active list and set up
    * a new timer to track a wait period during which we won't notify.
    */
@@ -192,22 +220,31 @@ var ProcessHangMonitor = {
 
   observe(subject, topic, data) {
     switch (topic) {
-      case "xpcom-shutdown":
+      case "xpcom-shutdown": {
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, "process-hang-report");
         Services.obs.removeObserver(this, "clear-hang-report");
+        Services.obs.removeObserver(this, "quit-application-granted");
         Services.ww.unregisterNotification(this);
         break;
+      }
 
-      case "process-hang-report":
+      case "quit-application-granted": {
+        this.onQuitApplicationGranted();
+        break;
+      }
+
+      case "process-hang-report": {
         this.reportHang(subject.QueryInterface(Ci.nsIHangReport));
         break;
+      }
 
-      case "clear-hang-report":
+      case "clear-hang-report": {
         this.clearHang(subject.QueryInterface(Ci.nsIHangReport));
         break;
+      }
 
-      case "domwindowopened":
+      case "domwindowopened": {
         // Install event listeners on the new window in case one of
         // its tabs is already hung.
         let win = subject.QueryInterface(Ci.nsIDOMWindow);
@@ -217,6 +254,32 @@ var ProcessHangMonitor = {
         };
         win.addEventListener("load", listener, true);
         break;
+      }
+    }
+  },
+
+  /**
+   * Called early on in the shutdown sequence. We take this opportunity to
+   * take any pre-existing hang reports, and terminate them. We also put
+   * ourselves in a state so that if any more hang reports show up while
+   * we're shutting down, we terminate them immediately.
+   */
+  onQuitApplicationGranted() {
+    this._shuttingDown = true;
+    this.stopAllHangs();
+    this.updateWindows();
+  },
+
+  stopAllHangs() {
+    for (let report of this._activeReports) {
+      this.stopHang(report);
+    }
+
+    this._activeReports = new Set();
+
+    for (let [pausedReport, ] of this._pausedReports) {
+      this.stopHang(pausedReport);
+      this.removePausedReport(pausedReport);
     }
   },
 
@@ -275,6 +338,15 @@ var ProcessHangMonitor = {
    */
   updateWindows() {
     let e = Services.wm.getEnumerator("navigator:browser");
+
+    // If it turns out we have no windows (this can happen on macOS),
+    // we have no opportunity to ask the user whether or not they want
+    // to stop the hang or wait, so we'll opt for stopping the hang.
+    if (!e.hasMoreElements()) {
+      this.stopAllHangs();
+      return;
+    }
+
     while (e.hasMoreElements()) {
       let win = e.getNext();
 
@@ -419,6 +491,11 @@ var ProcessHangMonitor = {
    * before, show a notification for it in all open XUL windows.
    */
   reportHang(report) {
+    if (this._shuttingDown) {
+      this.stopHang(report);
+      return;
+    }
+
     // If this hang was already reported reset the timer for it.
     if (this._activeReports.has(report)) {
       // if this report is in active but doesn't have a notification associated
